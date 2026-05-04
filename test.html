@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schilders-calc · Supabase test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #f5f3ee;
+      color: #2c2825;
+      line-height: 1.5;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 0.3rem; }
+    .sub { color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
+    .card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #e0dcd4;
+      margin-bottom: 1rem;
+    }
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; }
+    input[type="email"] {
+      width: 100%;
+      padding: 0.7rem;
+      font-size: 1rem;
+      border: 1px solid #d0ccc4;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #e63329;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 0.7rem;
+    }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    button.secondary { background: #888; }
+    .status {
+      padding: 0.8rem;
+      border-radius: 6px;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .status.info { background: #e3f2fd; color: #1565c0; }
+    .status.ok { background: #e8f5e9; color: #2e7d32; }
+    .status.err { background: #ffebee; color: #c62828; }
+    .status.warn { background: #fff8e1; color: #f57f17; }
+    pre {
+      background: #f5f3ee;
+      padding: 0.8rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+    }
+    .meta {
+      font-size: 0.78rem;
+      color: #888;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Schilders-calc — Supabase test</h1>
+  <div class="sub">Test-pagina voor magic-link login en database-query</div>
+
+  <div id="loginCard" class="card" style="display:none;">
+    <label>Jouw email</label>
+    <input type="email" id="emailInput" placeholder="jouw@email.nl">
+    <button onclick="sendMagicLink()" id="sendBtn">Verstuur magic link</button>
+    <div id="loginStatus"></div>
+  </div>
+
+  <div id="loggedInCard" class="card" style="display:none;">
+    <p>Ingelogd als <strong id="userEmail"></strong></p>
+    <button class="secondary" onclick="signOut()">Uitloggen</button>
+    <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #e0dcd4;">
+    <h2 style="font-size: 1.1rem;">Database test</h2>
+    <p style="font-size: 0.9rem;">Probeer een rij op te halen uit de <code>settings</code>-tabel.</p>
+    <button onclick="testSelect()" id="testBtn">Test query</button>
+    <div id="testStatus"></div>
+  </div>
+
+  <div id="bootStatus" class="status info">Bezig met laden...</div>
+
+  <div class="meta">
+    Project: <code>gjcjpigirqbpkjkymbio</code> · v1
+  </div>
+
+  <!-- Supabase JS-bibliotheek (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
+    const REDIRECT_URL = 'https://gianernes.github.io/schilders-calc/test.html';
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    let supabase;
+    function setStatus(id, msg, kind) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = `<div class="status ${kind}">${msg}</div>`;
+    }
+
+    async function init() {
+      // Bibliotheek beschikbaar?
+      if (!window.supabase || !window.supabase.createClient) {
+        document.getElementById('bootStatus').className = 'status err';
+        document.getElementById('bootStatus').textContent = 'Supabase-bibliotheek niet geladen';
+        return;
+      }
+
+      try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+      } catch (err) {
+        document.getElementById('bootStatus').className = 'status err';
+        document.getElementById('bootStatus').textContent = 'Supabase init fout: ' + err.message;
+        return;
+      }
+
+      // Check sessie
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        document.getElementById('bootStatus').className = 'status err';
+        document.getElementById('bootStatus').textContent = 'Sessie-check fout: ' + error.message;
+        return;
+      }
+
+      document.getElementById('bootStatus').style.display = 'none';
+      if (session && session.user) {
+        // Ingelogd
+        document.getElementById('userEmail').textContent = session.user.email;
+        document.getElementById('loggedInCard').style.display = 'block';
+      } else {
+        // Niet ingelogd
+        document.getElementById('loginCard').style.display = 'block';
+      }
+
+      // Listen for auth state changes (bv. na klik op magic-link)
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          document.getElementById('loginCard').style.display = 'none';
+          document.getElementById('userEmail').textContent = session.user.email;
+          document.getElementById('loggedInCard').style.display = 'block';
+        } else if (event === 'SIGNED_OUT') {
+          document.getElementById('loggedInCard').style.display = 'none';
+          document.getElementById('loginCard').style.display = 'block';
+        }
+      });
+    }
+
+    // ============================================================
+    // ACTIES
+    // ============================================================
+    async function sendMagicLink() {
+      const email = document.getElementById('emailInput').value.trim();
+      if (!email) {
+        setStatus('loginStatus', 'Vul een email in', 'err');
+        return;
+      }
+      const btn = document.getElementById('sendBtn');
+      btn.disabled = true;
+      setStatus('loginStatus', 'Magic link wordt verstuurd...', 'info');
+
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: REDIRECT_URL,
+          shouldCreateUser: false  // sign-ups dicht — alleen bestaande users
+        }
+      });
+
+      btn.disabled = false;
+
+      if (error) {
+        setStatus('loginStatus', 'Fout: ' + error.message, 'err');
+        return;
+      }
+      setStatus('loginStatus', '✓ Check je inbox voor de magic link!', 'ok');
+    }
+
+    async function signOut() {
+      await supabase.auth.signOut();
+    }
+
+    async function testSelect() {
+      const btn = document.getElementById('testBtn');
+      btn.disabled = true;
+      setStatus('testStatus', 'Bezig met query...', 'info');
+
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .limit(1);
+
+      btn.disabled = false;
+
+      if (error) {
+        setStatus('testStatus', 'Query fout: ' + error.message, 'err');
+        return;
+      }
+      if (!data || !data.length) {
+        setStatus('testStatus', 'Geen data terug — settings-tabel is leeg?', 'warn');
+        return;
+      }
+      setStatus('testStatus', '✓ Query gelukt! Resultaat:<pre>' + JSON.stringify(data[0], null, 2) + '</pre>', 'ok');
+    }
+
+    // Start
+    init();
+  </script>
+</body>
+</html>
