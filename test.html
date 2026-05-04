@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -92,7 +93,7 @@
   <div id="bootStatus" class="status info">Bezig met laden...</div>
 
   <div class="meta">
-    Project: <code>gjcjpigirqbpkjkymbio</code> · v2
+    Project: <code>gjcjpigirqbpkjkymbio</code> · v3
   </div>
 
   <!-- Vang JS errors op zodat we ze zien zonder console te openen -->
@@ -126,7 +127,7 @@
     // ============================================================
     // INIT
     // ============================================================
-    let supabase;
+    let client;
     function setStatus(id, msg, kind) {
       const el = document.getElementById(id);
       if (!el) return;
@@ -142,7 +143,7 @@
       }
 
       try {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
       } catch (err) {
         document.getElementById('bootStatus').className = 'status err';
         document.getElementById('bootStatus').textContent = 'Supabase init fout: ' + err.message;
@@ -150,7 +151,7 @@
       }
 
       // Check sessie
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const { data: { session }, error } = await client.auth.getSession();
       if (error) {
         document.getElementById('bootStatus').className = 'status err';
         document.getElementById('bootStatus').textContent = 'Sessie-check fout: ' + error.message;
@@ -168,7 +169,7 @@
       }
 
       // Listen for auth state changes (bv. na klik op magic-link)
-      supabase.auth.onAuthStateChange((event, session) => {
+      client.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' && session) {
           document.getElementById('loginCard').style.display = 'none';
           document.getElementById('userEmail').textContent = session.user.email;
@@ -193,7 +194,7 @@
       btn.disabled = true;
       setStatus('loginStatus', 'Magic link wordt verstuurd...', 'info');
 
-      const { data, error } = await supabase.auth.signInWithOtp({
+      const { data, error } = await client.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: REDIRECT_URL,
@@ -211,7 +212,7 @@
     }
 
     async function signOut() {
-      await supabase.auth.signOut();
+      await client.auth.signOut();
     }
 
     async function testSelect() {
@@ -219,7 +220,7 @@
       btn.disabled = true;
       setStatus('testStatus', 'Bezig met query...', 'info');
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('settings')
         .select('*')
         .limit(1);
