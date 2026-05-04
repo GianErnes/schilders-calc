@@ -92,12 +92,30 @@
   <div id="bootStatus" class="status info">Bezig met laden...</div>
 
   <div class="meta">
-    Project: <code>gjcjpigirqbpkjkymbio</code> · v1
+    Project: <code>gjcjpigirqbpkjkymbio</code> · v2
   </div>
 
-  <!-- Supabase JS-bibliotheek (CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Vang JS errors op zodat we ze zien zonder console te openen -->
   <script>
+    window.addEventListener('error', function(e) {
+      const el = document.getElementById('bootStatus');
+      if (el) {
+        el.className = 'status err';
+        el.innerHTML = '❌ JavaScript fout: ' + (e.message || 'onbekend') + '<br><small>' + (e.filename || '') + ':' + (e.lineno || '') + '</small>';
+      }
+    });
+  </script>
+
+  <!-- Supabase JS-bibliotheek (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="document.getElementById('bootStatus').className='status err'; document.getElementById('bootStatus').innerHTML='❌ Supabase CDN niet bereikbaar';"></script>
+  <script>
+    // Eerste check: is de bibliotheek er?
+    if (typeof window.supabase === 'undefined') {
+      document.getElementById('bootStatus').className = 'status err';
+      document.getElementById('bootStatus').innerHTML = '❌ Supabase-bibliotheek niet geladen na CDN-call. Check console (rechtermuisknop → Inspecteer → tab Console).';
+    } else {
+      document.getElementById('bootStatus').innerHTML = '✓ Bibliotheek geladen, sessie checken...';
+    }
     // ============================================================
     // CONFIG
     // ============================================================
