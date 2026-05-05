@@ -1261,13 +1261,12 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.1.5 · Voorcalculatie</span>
+    <span class="subtitle">v3.2.0 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
     <div class="user-badge" id="userBadge" style="display:none;">
-      <strong id="userBadgeEmail"></strong>
-      <button class="btn-secondary btn" onclick="signOut()">Uitloggen</button>
+      <button class="btn-secondary btn" onclick="lock()">🔒 Vergrendelen</button>
     </div>
   </div>
 </header>
@@ -1287,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.1.5</h2>
-      <p>Fase 3b — bugfix. Materialen worden nu uitsluitend uit Supabase geladen — geen verwarrende standaardlijst meer als de cloud (tijdelijk) niet bereikbaar is. Bij een fout zie je een duidelijke melding.</p>
+      <h2>Welkom bij v3.2.0</h2>
+      <p>Build-fase auth is omgeschakeld naar incode-stijl (zoals voorraad-app). Geen Supabase Auth meer — geen trage token-refresh, geen rate limits, snelle calls. Voor de productie-versie komt er nog een beveiligings-pass terug.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1541,39 +1540,33 @@
   </div>
 </div>
 
-<!-- AUTH OVERLAY — shown when not logged in -->
+<!-- AUTH OVERLAY — incode-stijl (zoals voorraad-app) -->
 <div id="authOverlay" class="active">
   <div class="auth-card">
     <div class="brand" style="margin-bottom:1.5rem;">
       <div class="brand-mark"></div>
       <h1>Schilders Calculatie</h1>
     </div>
-    <h2>Inloggen</h2>
-    <p class="sub">Log in met je wachtwoord, of vraag een magic link aan.</p>
-    <label>E-mailadres</label>
-    <input type="email" id="authEmail" placeholder="jouw@email.nl">
-    <label style="margin-top:0.75rem;">Wachtwoord</label>
-    <input type="password" id="authPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter') signInWithPassword()">
-    <button class="btn" onclick="signInWithPassword()" id="authBtn" style="margin-top:0.75rem; width:100%;">Inloggen</button>
-    <div style="text-align:center; margin-top:0.85rem; padding-top:0.85rem; border-top:1px solid var(--paper-deep);">
-      <a href="#" onclick="event.preventDefault(); sendMagicLink()" style="font-size:0.82rem; color:var(--muted); text-decoration:underline;">Geen wachtwoord? Stuur me een magic link</a>
-    </div>
+    <h2>Toegangscode</h2>
+    <p class="sub">Vul de incode in om de app te ontgrendelen.</p>
+    <label>Incode</label>
+    <input type="password" id="authIncode" placeholder="••••••••••••••••" onkeydown="if(event.key==='Enter') unlock()" autocomplete="off">
+    <button class="btn" onclick="unlock()" id="authBtn" style="margin-top:0.75rem; width:100%;">Ontgrendelen</button>
     <div class="auth-msg" id="authMsg"></div>
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.1.5 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.2.0 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
 
 <script>
 // ============================================================
-// SUPABASE CONFIG & AUTH
+// SUPABASE CONFIG (alleen anon key, geen auth)
 // ============================================================
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
-const SUPABASE_KEY  = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
-const REDIRECT_URL  = 'https://gianernes.github.io/schilders-calc/';
+const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 
 let _sb = null;  // Supabase client (set in init)
 
@@ -1583,37 +1576,40 @@ function _showAuthMsg(msg, kind) {
   el.className = 'auth-msg ' + kind;
 }
 
-async function sendMagicLink() {
-  const email = document.getElementById('authEmail').value.trim();
-  if (!email) { _showAuthMsg('Vul een e-mailadres in.', 'err'); return; }
-  const btn = document.getElementById('authBtn');
-  btn.disabled = true;
-  _showAuthMsg('Bezig met versturen...', 'info');
-  const { error } = await _sb.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: REDIRECT_URL, shouldCreateUser: false }
-  });
-  btn.disabled = false;
-  if (error) { _showAuthMsg('Fout: ' + error.message, 'err'); return; }
-  _showAuthMsg('✓ Check je inbox voor de magic link!', 'ok');
+// ============================================================
+// INCODE AUTH (geen Supabase Auth — anon key + localStorage flag)
+// ============================================================
+const INCODE = 'Ernes-Calc-2026!';
+const UNLOCK_KEY = 'verfcalc_v3_unlocked';
+
+function _isUnlocked() {
+  try { return localStorage.getItem(UNLOCK_KEY) === '1'; } catch(e) { return false; }
 }
 
-async function signInWithPassword() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  if (!email) { _showAuthMsg('Vul een e-mailadres in.', 'err'); return; }
-  if (!password) { _showAuthMsg('Vul een wachtwoord in (of gebruik magic link).', 'err'); return; }
-  const btn = document.getElementById('authBtn');
-  btn.disabled = true;
-  _showAuthMsg('Bezig met inloggen...', 'info');
-  const { error } = await _sb.auth.signInWithPassword({ email, password });
-  btn.disabled = false;
-  if (error) { _showAuthMsg('Fout: ' + error.message, 'err'); return; }
-  // onAuthStateChange handelt de rest af (UI + dataload)
+function unlock() {
+  const code = document.getElementById('authIncode').value;
+  if (!code) { _showAuthMsg('Vul de incode in.', 'err'); return; }
+  if (code !== INCODE) { _showAuthMsg('Onjuiste incode.', 'err'); return; }
+  try { localStorage.setItem(UNLOCK_KEY, '1'); } catch(e) {}
+  _showApp();
+}
+
+function lock() {
+  try { localStorage.removeItem(UNLOCK_KEY); } catch(e) {}
+  document.getElementById('authIncode').value = '';
+  document.getElementById('authMsg').className = 'auth-msg';
+  document.getElementById('authOverlay').classList.add('active');
+  document.getElementById('userBadge').style.display = 'none';
+}
+
+async function _showApp() {
+  document.getElementById('authOverlay').classList.remove('active');
+  document.getElementById('userBadge').style.display = 'flex';
+  await loadData();
+  renderAll();
 }
 
 // Timeout-wrapper: Supabase-call die langer dan 30s duurt → foutmelding
-// (Supabase free tier kan koude starts hebben van 15-25s)
 async function _sbQuery(queryPromise, label = 'Supabase') {
   const timeout = new Promise((_, reject) =>
     setTimeout(() => reject(new Error('timeout')), 30000)
@@ -1631,21 +1627,6 @@ async function _sbQuery(queryPromise, label = 'Supabase') {
     }
     return { data: null, error: e };
   }
-}
-
-async function signOut() {
-  // Wis sessie lokaal (werkt ook zonder netwerk)
-  Object.keys(localStorage).filter(k => k.includes('supabase')).forEach(k => localStorage.removeItem(k));
-  document.getElementById('authOverlay').classList.add('active');
-  document.getElementById('userBadge').style.display = 'none';
-  try { await _sb.auth.signOut(); } catch(e) { /* netwerk kan weg zijn, dat is ok */ }
-}
-
-function _onLoginSuccess(user) {
-  document.getElementById('authOverlay').classList.remove('active');
-  const badge = document.getElementById('userBadge');
-  badge.style.display = 'flex';
-  document.getElementById('userBadgeEmail').textContent = user.email;
 }
 
 // ============================================================
@@ -4228,26 +4209,17 @@ function renderAll() {
 document.getElementById('dateStamp').textContent = new Date().toLocaleDateString('nl-NL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
 async function init() {
-  _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  // onAuthStateChange is de enige bron van sessie-info.
-  // INITIAL_SESSION leest uit localStorage — geen netwerk nodig, hangt nooit.
-  // SIGNED_IN  = verse magic-link login
-  // TOKEN_REFRESHED = token succesvol ververst op achtergrond
-  // SIGNED_OUT = uitgelogd of refresh mislukt
-  _sb.auth.onAuthStateChange(async (event, session) => {
-    if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-      _onLoginSuccess(session.user);
-      await loadData();
-      renderAll();
-    } else if (event === 'INITIAL_SESSION' && !session) {
-      document.getElementById('authOverlay').classList.add('active');
-    } else if (event === 'SIGNED_OUT') {
-      document.getElementById('authOverlay').classList.add('active');
-      document.getElementById('userBadge').style.display = 'none';
-    }
+  // Maak Supabase client (alleen anon key, geen auth)
+  _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
   });
-  // Geen getSession() meer — voorkomt hangende token-refresh bij opstart
+
+  // Check incode-flag in localStorage. Geen netwerk-call → instant.
+  if (_isUnlocked()) {
+    await _showApp();
+  } else {
+    document.getElementById('authOverlay').classList.add('active');
+  }
 }
 
 init();
