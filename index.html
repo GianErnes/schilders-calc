@@ -1593,10 +1593,29 @@ async function sendMagicLink() {
   _showAuthMsg('✓ Check je inbox voor de magic link!', 'ok');
 }
 
+// Timeout-wrapper: Supabase-call die langer dan 10s duurt → foutmelding
+async function _sbQuery(queryPromise, label = 'Supabase') {
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), 10000)
+  );
+  try {
+    return await Promise.race([queryPromise, timeout]);
+  } catch(e) {
+    if (e.message === 'timeout') {
+      _toast(`${label} — verbinding te langzaam. Refresh en log opnieuw in.`);
+    } else {
+      _toast(`${label} — fout: ${e.message}`);
+    }
+    return { data: null, error: e };
+  }
+}
+
 async function signOut() {
-  await _sb.auth.signOut();
+  // Wis sessie lokaal (werkt ook zonder netwerk)
+  Object.keys(localStorage).filter(k => k.includes('supabase')).forEach(k => localStorage.removeItem(k));
   document.getElementById('authOverlay').classList.add('active');
   document.getElementById('userBadge').style.display = 'none';
+  try { await _sb.auth.signOut(); } catch(e) { /* netwerk kan weg zijn, dat is ok */ }
 }
 
 function _onLoginSuccess(user) {
@@ -1887,32 +1906,38 @@ function _toast(msg, kind = 'err') {
 
 // INSERT nieuw materiaal → geeft DB-rij terug (met UUID)
 async function _insertMatDB(m) {
-  const { data: rows, error } = await _sb.from('materialen').insert([_mapMateriaalToDB(m)]).select();
-  if (error) { _toast('Fout bij opslaan: ' + error.message); return null; }
-  return rows && rows[0] ? _mapMateriaalFromDB(rows[0]) : null;
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('materialen').insert([_mapMateriaalToDB(m)]).select(), 'Materiaal opslaan'
+  );
+  if (error) { if (error.message !== 'timeout') _toast('Fout bij opslaan: ' + error.message); return null; }
+  if (!rows || !rows[0]) { _toast('Opgeslagen, maar geen bevestiging terug van DB'); return null; }
+  return _mapMateriaalFromDB(rows[0]);
 }
 
-// UPDATE bestaand materiaal (fire-and-forget, toont toast bij fout)
+// UPDATE bestaand materiaal (fire-and-forget met timeout)
 function _updateMatDB(m) {
-  _sb.from('materialen').update(_mapMateriaalToDB(m)).eq('id', m.id)
-    .then(({ error }) => { if (error) _toast('Fout bij opslaan: ' + error.message); });
+  _sbQuery(
+    _sb.from('materialen').update(_mapMateriaalToDB(m)).eq('id', m.id), 'Materiaal bijwerken'
+  ).then(({ error }) => { if (error && error.message !== 'timeout') _toast('Fout bij bijwerken: ' + error.message); });
 }
 
 // DELETE materiaal
 async function _deleteMatDB(id) {
-  const { error } = await _sb.from('materialen').delete().eq('id', id);
+  const { error } = await _sbQuery(
+    _sb.from('materialen').delete().eq('id', id), 'Materiaal verwijderen'
+  );
   if (error) { _toast('Fout bij verwijderen: ' + error.message); return false; }
   return true;
 }
 
-// Fetch materialen from Supabase — returns array (empty on error)
+// Fetch materialen from Supabase — returns array (empty on error/timeout)
 async function _fetchMaterialenFromDB() {
   if (!_sb) return [];
-  try {
-    const { data: rows, error } = await _sb.from('materialen').select('*').order('naam');
-    if (error) { console.warn('materialen fetch error:', error.message); return []; }
-    return (rows || []).map(_mapMateriaalFromDB);
-  } catch(e) { console.warn('materialen fetch exception:', e); return []; }
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('materialen').select('*').order('naam'), 'Materialen ophalen'
+  );
+  if (error || !rows) return [];
+  return rows.map(_mapMateriaalFromDB);
 }
 
 // ============================================================
@@ -4171,31 +4196,26 @@ function renderAll() {
 document.getElementById('dateStamp').textContent = new Date().toLocaleDateString('nl-NL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
 async function init() {
-  // Init Supabase client
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Listen for auth state changes (handles magic-link redirect)
+  // onAuthStateChange is de enige bron van sessie-info.
+  // INITIAL_SESSION leest uit localStorage — geen netwerk nodig, hangt nooit.
+  // SIGNED_IN  = verse magic-link login
+  // TOKEN_REFRESHED = token succesvol ververst op achtergrond
+  // SIGNED_OUT = uitgelogd of refresh mislukt
   _sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
+    if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
       _onLoginSuccess(session.user);
       await loadData();
       renderAll();
+    } else if (event === 'INITIAL_SESSION' && !session) {
+      document.getElementById('authOverlay').classList.add('active');
     } else if (event === 'SIGNED_OUT') {
       document.getElementById('authOverlay').classList.add('active');
       document.getElementById('userBadge').style.display = 'none';
     }
   });
-
-  // Check existing session
-  const { data: { session } } = await _sb.auth.getSession();
-  if (session && session.user) {
-    _onLoginSuccess(session.user);
-    await loadData();
-    renderAll();
-  } else {
-    // Show login overlay (already visible by default)
-    document.getElementById('authOverlay').classList.add('active');
-  }
+  // Geen getSession() meer — voorkomt hangende token-refresh bij opstart
 }
 
 init();
