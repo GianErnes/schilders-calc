@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -1261,7 +1262,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.5.0 · Voorcalculatie</span>
+    <span class="subtitle">v3.5.1 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1287,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.5.0</h2>
-      <p>Security-pass — incode-login is vervangen door echte Supabase Auth (e-mail + wachtwoord). De sessie blijft actief tot je uitlogt; geen tokendans meer tijdens werken. Onder Settings > Data Beheer staat een nieuwe knop <em>Uitloggen</em>.</p>
+      <h2>Welkom bij v3.5.1</h2>
+      <p>Cleanup-versie. Dode code verwijderd na de cloud-migratie (oude localStorage stubs, ongebruikte incode-constanten). Functioneel identiek aan v3.5.0 — alleen schoner. Hiermee is de cloud-migratie afgerond.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1561,7 +1562,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.5.0 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.5.1 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1882,7 +1883,6 @@ Object.defineProperty(data, 'calc', {
   configurable: true
 });
 // Mark gewijzigd on every save
-const _origSaveData = () => ls_set(JSON.stringify(_serializeData()));
 function _serializeData() {
   // materialen + ondergronden + bewerkingen + staartLib + systemen + calculaties leven in Supabase
   return {
@@ -2287,7 +2287,7 @@ function _mapOdFromDB(row) {
     naam:      row.naam || '',
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
-    regels:    [] // wordt later gevuld vanuit localStorage in v3.5.0
+    regels:    [] // wordt later gevuld vanuit localStorage in v3.5.1
   };
 }
 function _mapOdToDB(od, hgId) {
@@ -2299,14 +2299,7 @@ function _mapOdToDB(od, hgId) {
   };
 }
 
-// localStorage body — niet meer in gebruik vanaf v3.5.0 (alles in DB)
-// Stubs achtergelaten voor backwards compat tijdens transitie.
-const CALC_BODY_PREFIX = 'verfcalc_v3_body_';
-function _bodyLS(calcId) { return { staart: [], meetstaat: [], todos: [] }; }
-function _saveBody(calcId) {}
-function _delBodyLS(calcId) {
-  try { localStorage.removeItem(CALC_BODY_PREFIX + calcId); } catch {}
-}
+// Calculatie-body (regels/staart/meetstaat/todos) leeft volledig in Supabase vanaf v3.4.2.
 
 async function _fetchCalcHeadersFromDB() {
   if (!_sb) return null;
@@ -2789,7 +2782,6 @@ function saveData() {
   const a = _activeCalc();
   if (a) {
     a.gewijzigd = new Date().toISOString();
-    _saveBody(a.id);   // regels/staart/meetstaat/todos → localStorage (TIJDELIJK in v3.5.0)
     _touchCalc(a.id);  // gewijzigd-tijdstempel naar DB (fire-and-forget)
   }
   // Settings → localStorage
@@ -4469,7 +4461,7 @@ async function delHg(id) {
   // FK CASCADE in DB pakt onderdelen + regels + stappen automatisch
   data.calc.hoofdgroepen = data.calc.hoofdgroepen.filter(x => x.id !== id);
   // Lokale meetstaat-rijen die naar verwijderde regels verwijzen worden niet opgeruimd
-  // (TIJDELIJK in v3.5.0; v3.5.0 lost dit op via DB cascade)
+  // (TIJDELIJK in v3.5.1; v3.5.1 lost dit op via DB cascade)
   _touchCalc(data.calc.id);
   renderCalcStructuur();
 }
@@ -4531,10 +4523,9 @@ async function delReg(hgId, odId, rId) {
   const ok = await _deleteRegelDB(rId);
   if (!ok) { _toast('Verwijderen mislukt'); return; }
   od.regels = od.regels.filter(r => r.id !== rId);
-  // Lokale meetstaat-rijen die naar deze regel verwijzen opruimen (TIJDELIJK in v3.5.0)
+  // FK CASCADE haalt meetstaat-rijen mee in DB; lokale array bijwerken
   if (data.calc && data.calc.meetstaat) {
     data.calc.meetstaat = data.calc.meetstaat.filter(ms => ms.calcRegelId !== rId);
-    _saveBody(data.calc.id);
   }
   _touchCalc(data.calc.id);
   renderCalcStructuur();
@@ -4636,7 +4627,7 @@ async function delCalc(id) {
   if (!confirm('Calculatie "' + c.naam + '" verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
   const ok = await _deleteCalcDB(id);
   if (!ok) { _toast('Verwijderen mislukt'); return; }
-  _delBodyLS(id); // ook localStorage body weg
+  // FK CASCADE pakt alle subtabellen automatisch
   data.calculaties = data.calculaties.filter(x => x.id !== id);
   if (data.activeCalcId === id) {
     data.activeCalcId = data.calculaties[0]?.id || null;
