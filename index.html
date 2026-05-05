@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.3.0 · Voorcalculatie</span>
+    <span class="subtitle">v3.3.1 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.3.0</h2>
-      <p>Fase 3c.1 — Ondergronden zijn nu ook gekoppeld aan Supabase. Toevoegen, wijzigen, verwijderen en de volgorde wisselen synchroniseren naar de cloud. Bewerkingen, verfsystemen en staartkosten-templates volgen in 3c.2 en verder.</p>
+      <h2>Welkom bij v3.3.1</h2>
+      <p>Fase 3c.2 — Bewerkingen zijn nu ook gekoppeld aan Supabase. Toevoegen, wijzigen, dupliceren, verplaatsen en verwijderen synchroniseren naar de cloud. Verfsystemen + stappen en staartkosten-templates volgen hierna.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1556,7 +1556,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.3.0 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.3.1 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1801,9 +1801,10 @@ const defaultData = {
 };
 
 let data = JSON.parse(JSON.stringify(defaultData));
-// Materialen + ondergronden leven in Supabase — geen defaults meer in memory
+// Materialen + ondergronden + bewerkingen leven in Supabase — geen defaults meer in memory
 data.materialen = [];
 data.ondergronden = [];
+data.bewerkingen = [];
 
 // ============================================================
 // CALCULATIES ARCHIEF — actieve calc abstractie
@@ -1853,9 +1854,8 @@ Object.defineProperty(data, 'calc', {
 // Mark gewijzigd on every save
 const _origSaveData = () => ls_set(JSON.stringify(_serializeData()));
 function _serializeData() {
-  // materialen + ondergronden leven in Supabase — niet meer in localStorage
+  // materialen + ondergronden + bewerkingen leven in Supabase
   return {
-    bewerkingen: data.bewerkingen,
     systemen: data.systemen,
     staartLib: data.staartLib,
     calculaties: data.calculaties,
@@ -1993,6 +1993,59 @@ async function _deleteOndDB(id) {
 }
 
 // ============================================================
+// BEWERKINGEN MAPPING & DB
+// ============================================================
+function _mapBewFromDB(row) {
+  return {
+    id:           row.id,
+    naam:         row.naam        || '',
+    eenheid:      row.eenheid     || 'm²',
+    minuten:      parseFloat(row.minuten)  || 0,
+    ondergrondId: row.ondergrond_id || '',
+    materiaalId:  row.materiaal_id || '',
+    verbruik:     parseFloat(row.verbruik) || 0,
+    volgorde:     row.volgorde != null ? row.volgorde : 0
+  };
+}
+function _mapBewToDB(b) {
+  return {
+    naam:           b.naam      || '',
+    eenheid:        b.eenheid   || 'm²',
+    minuten:        b.minuten   || 0,
+    ondergrond_id:  b.ondergrondId || null,
+    materiaal_id:   b.materiaalId  || null,  // null als geen materiaal
+    verbruik:       b.verbruik  || 0,
+    volgorde:       b.volgorde != null ? b.volgorde : 0
+  };
+}
+async function _fetchBewerkingenFromDB() {
+  if (!_sb) return null;
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('bewerkingen').select('*').order('volgorde').order('naam'), 'Bewerkingen ophalen'
+  );
+  if (error) return null;
+  return (rows || []).map(_mapBewFromDB);
+}
+async function _insertBewDB(b) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('bewerkingen').insert([_mapBewToDB(b)]).select(), 'Bewerking opslaan'
+  );
+  if (error || !rows || !rows[0]) return null;
+  return _mapBewFromDB(rows[0]);
+}
+function _updateBewDB(b) {
+  _sbQuery(
+    _sb.from('bewerkingen').update(_mapBewToDB(b)).eq('id', b.id), 'Bewerking bijwerken'
+  ).then(({ error }) => { if (error && error.message !== 'timeout') _toast('Fout bij bijwerken: ' + error.message); });
+}
+async function _deleteBewDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('bewerkingen').delete().eq('id', id), 'Bewerking verwijderen'
+  );
+  return !error;
+}
+
+// ============================================================
 // LOAD DATA (async — materialen from Supabase, rest from localStorage)
 // ============================================================
 async function loadData() {
@@ -2002,7 +2055,7 @@ async function loadData() {
     try {
       const parsed = JSON.parse(saved);
       Object.keys(parsed).forEach(k => {
-        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden') data[k] = parsed[k];
+        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden' && k !== 'bewerkingen') data[k] = parsed[k];
       });
       // Migration: old format had `calc` as object
       if (parsed.calc && (!parsed.calculaties || !parsed.calculaties.length)) {
@@ -2078,6 +2131,12 @@ async function loadData() {
   const ondFromDB = await _fetchOndergrondenFromDB();
   if (ondFromDB !== null) {
     data.ondergronden = ondFromDB;
+  }
+
+  // 4. Fetch bewerkingen from Supabase
+  const bewFromDB = await _fetchBewerkingenFromDB();
+  if (bewFromDB !== null) {
+    data.bewerkingen = bewFromDB;
   }
 }
 
@@ -2331,10 +2390,9 @@ function renderBewerkingen() {
   c.innerHTML = html;
 }
 
-function moveBewInOnd(id, dir) {
+async function moveBewInOnd(id, dir) {
   const b = data.bewerkingen.find(x => x.id === id);
   if (!b) return;
-  // Find indices of bewerkingen in same ondergrond
   const sameOndIndices = [];
   data.bewerkingen.forEach((bb, i) => { if (bb.ondergrondId === b.ondergrondId) sameOndIndices.push(i); });
   const myPos = sameOndIndices.indexOf(data.bewerkingen.indexOf(b));
@@ -2343,28 +2401,68 @@ function moveBewInOnd(id, dir) {
   if (targetPos < 0 || targetPos >= sameOndIndices.length) return;
   const i = sameOndIndices[myPos];
   const j = sameOndIndices[targetPos];
+  // Swap volgorde-waarden
+  const a = data.bewerkingen[i];
+  const c = data.bewerkingen[j];
+  const tmp = a.volgorde;
+  a.volgorde = c.volgorde;
+  c.volgorde = tmp;
+  // Lokaal swappen voor directe UI
   [data.bewerkingen[i], data.bewerkingen[j]] = [data.bewerkingen[j], data.bewerkingen[i]];
-  saveData(); renderBewerkingen();
+  renderBewerkingen();
+  // Persistent in DB
+  _updateBewDB(a);
+  _updateBewDB(c);
 }
 function updBew(id, field, val) {
   const b = data.bewerkingen.find(x => x.id === id);
   if (!b) return;
   b[field] = val;
-  saveData();
+  _updateBewDB(b);
   renderBewerkingen(); renderSystemen(); renderTotals();
 }
-function addBewerking() { data.bewerkingen.push({id: uid('b'), naam: 'Nieuwe bewerking', eenheid: 'm²', minuten: 3, ondergrondId: data.ondergronden[0]?.id || '', materiaalId: '', verbruik: 0}); saveData(); renderBewerkingen(); }
-function delBew(id) { if(!confirm('Verwijderen?')) return; data.bewerkingen = data.bewerkingen.filter(b=>b.id!==id); saveData(); renderBewerkingen(); renderSystemen(); }
-function dupBew(id) {
+async function addBewerking() {
+  const btn = document.querySelector('button[onclick="addBewerking()"]');
+  let oldText;
+  if (btn) { oldText = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Bezig...'; }
+  const maxV = data.bewerkingen.reduce((m, b) => Math.max(m, b.volgorde || 0), 0);
+  const nieuw = {
+    naam: 'Nieuwe bewerking', eenheid: 'm²', minuten: 3,
+    ondergrondId: data.ondergronden[0]?.id || null,
+    materiaalId: null, verbruik: 0,
+    volgorde: maxV + 10
+  };
+  const saved = await _insertBewDB(nieuw);
+  if (btn) { btn.disabled = false; btn.textContent = oldText; }
+  if (!saved) return;
+  data.bewerkingen.push(saved);
+  renderBewerkingen();
+}
+async function delBew(id) {
+  if (!confirm('Verwijderen?')) return;
+  const ok = await _deleteBewDB(id);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  data.bewerkingen = data.bewerkingen.filter(b => b.id !== id);
+  renderBewerkingen(); renderSystemen();
+}
+async function dupBew(id) {
   const orig = data.bewerkingen.find(b => b.id === id);
   if (!orig) return;
-  const copy = JSON.parse(JSON.stringify(orig));
-  copy.id = uid('b');
-  copy.naam = orig.naam + ' (kopie)';
+  const copy = {
+    naam: orig.naam + ' (kopie)',
+    eenheid: orig.eenheid,
+    minuten: orig.minuten,
+    ondergrondId: orig.ondergrondId,
+    materiaalId: orig.materiaalId,
+    verbruik: orig.verbruik,
+    volgorde: (orig.volgorde || 0) + 1
+  };
+  const saved = await _insertBewDB(copy);
+  if (!saved) return;
   // Plaats direct na het origineel in de array
   const i = data.bewerkingen.indexOf(orig);
-  data.bewerkingen.splice(i + 1, 0, copy);
-  saveData(); renderBewerkingen();
+  data.bewerkingen.splice(i + 1, 0, saved);
+  renderBewerkingen();
 }
 // ============================================================
 // PDF EXPORT — print-friendly view of active calculation
