@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.1.3 · Voorcalculatie</span>
+    <span class="subtitle">v3.1.4 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1287,8 +1287,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.1.3</h2>
-      <p>Fase 3b — Materialen worden nu opgeslagen in Supabase: toevoegen, wijzigen en verwijderen synchroniseren direct met de cloud. Inloggen kan met wachtwoord (snel) of via magic link (zonder wachtwoord). De rest (bewerkingen, ondergronden, verfsystemen, calculaties, instellingen) volgt in fase 3c en verder.</p>
+      <h2>Welkom bij v3.1.4</h2>
+      <p>Fase 3b — bugfix. Materialen worden nu uitsluitend uit Supabase geladen — geen verwarrende standaardlijst meer als de cloud (tijdelijk) niet bereikbaar is. Bij een fout zie je een duidelijke melding.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1562,7 +1562,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.1.3 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.1.4 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1618,8 +1618,11 @@ async function _sbQuery(queryPromise, label = 'Supabase') {
     setTimeout(() => reject(new Error('timeout')), 10000)
   );
   try {
-    return await Promise.race([queryPromise, timeout]);
+    const result = await Promise.race([queryPromise, timeout]);
+    if (result && result.error) console.warn(`[${label}] error:`, result.error);
+    return result;
   } catch(e) {
+    console.warn(`[${label}] exception:`, e.message);
     if (e.message === 'timeout') {
       _toast(`${label} — verbinding te langzaam. Refresh en log opnieuw in.`);
     } else {
@@ -1816,6 +1819,8 @@ const defaultData = {
 };
 
 let data = JSON.parse(JSON.stringify(defaultData));
+// Materialen leven in Supabase — geen defaults meer in memory
+data.materialen = [];
 
 // ============================================================
 // CALCULATIES ARCHIEF — actieve calc abstractie
@@ -1949,14 +1954,15 @@ async function _deleteMatDB(id) {
   return true;
 }
 
-// Fetch materialen from Supabase — returns array (empty on error/timeout)
+// Fetch materialen from Supabase
+// Retourneert: array (mogelijk leeg) bij succes, null bij fout/timeout
 async function _fetchMaterialenFromDB() {
-  if (!_sb) return [];
+  if (!_sb) return null;
   const { data: rows, error } = await _sbQuery(
     _sb.from('materialen').select('*').order('naam'), 'Materialen ophalen'
   );
-  if (error || !rows) return [];
-  return rows.map(_mapMateriaalFromDB);
+  if (error) return null;
+  return (rows || []).map(_mapMateriaalFromDB);
 }
 
 // ============================================================
@@ -2033,12 +2039,13 @@ async function loadData() {
   }
   _ensureActiveCalc();
 
-  // 2. Fetch materialen from Supabase (overrides defaults/localStorage)
+  // 2. Fetch materialen from Supabase
+  // - Array (mogelijk leeg) → DB is bron, vervang volledig
+  // - null → fetch faalde, materialen blijft leeg, toast is al getoond
   const matFromDB = await _fetchMaterialenFromDB();
-  if (matFromDB.length > 0) {
+  if (matFromDB !== null) {
     data.materialen = matFromDB;
   }
-  // If DB returned empty, keep whatever defaults are in data.materialen
 }
 
 function saveData() {
