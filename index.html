@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.4.0 · Voorcalculatie</span>
+    <span class="subtitle">v3.4.1 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.4.0</h2>
-      <p>Fase 3d.1 — Calculaties, hoofdgroepen en onderdelen leven nu in Supabase. Bij openen van een calc worden hoofdgroepen + onderdelen lazy uit de cloud geladen. Regels, staart, meetstaat en todo's blijven nog tijdelijk lokaal in localStorage tot v3.4.1 en v3.4.2.</p>
+      <h2>Welkom bij v3.4.1</h2>
+      <p>Fase 3d.2 — Calc-regels en hun snapshot-stappen leven nu in Supabase. Bij toevoegen van een verfsysteem aan een onderdeel wordt de regel inclusief alle bevroren bewerkings- en materiaaldata opgeslagen. Wijzigingen aan regels (hoeveelheid, toeslag, percentages, stappen) syncen direct. Staart, meetstaat en todo's volgen in v3.4.2.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1556,7 +1556,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.4.0 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.4.1 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -2259,7 +2259,7 @@ function _mapOdFromDB(row) {
     naam:      row.naam || '',
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
-    regels:    [] // wordt later gevuld vanuit localStorage in v3.4.0
+    regels:    [] // wordt later gevuld vanuit localStorage in v3.4.1
   };
 }
 function _mapOdToDB(od, hgId) {
@@ -2271,33 +2271,25 @@ function _mapOdToDB(od, hgId) {
   };
 }
 
-// localStorage body — TIJDELIJK in v3.4.0 voor regels/staart/meetstaat/todos.
-// Wordt vervangen in v3.4.1 (regels) en v3.4.2 (rest).
+// localStorage body — TIJDELIJK in v3.4.1 voor staart/meetstaat/todos.
+// Wordt vervangen in v3.4.2.
 const CALC_BODY_PREFIX = 'verfcalc_v3_body_';
 function _bodyLS(calcId) {
   try {
     const raw = localStorage.getItem(CALC_BODY_PREFIX + calcId);
-    if (!raw) return { regelsByOd: {}, staart: [], meetstaat: [], todos: [] };
+    if (!raw) return { staart: [], meetstaat: [], todos: [] };
     const p = JSON.parse(raw);
     return {
-      regelsByOd: p.regelsByOd || {},
       staart:     p.staart     || [],
       meetstaat:  p.meetstaat  || [],
       todos:      p.todos      || []
     };
-  } catch { return { regelsByOd: {}, staart: [], meetstaat: [], todos: [] }; }
+  } catch { return { staart: [], meetstaat: [], todos: [] }; }
 }
 function _saveBody(calcId) {
   const c = data.calculaties.find(x => x.id === calcId);
   if (!c) return;
-  const regelsByOd = {};
-  (c.hoofdgroepen || []).forEach(hg => {
-    (hg.onderdelen || []).forEach(od => {
-      if (od.regels && od.regels.length) regelsByOd[od.id] = od.regels;
-    });
-  });
   const body = {
-    regelsByOd,
     staart:    c.staart    || [],
     meetstaat: c.meetstaat || [],
     todos:     c.todos     || []
@@ -2318,23 +2310,36 @@ async function _fetchCalcHeadersFromDB() {
 }
 async function _loadCalcBody(c) {
   if (c.__loaded) return true;
-  // Fetch hoofdgroepen + onderdelen via nested select
+  // Nested fetch: hg → od → regels → stappen
   const { data: hgRows, error } = await _sbQuery(
-    _sb.from('hoofdgroepen').select('*, onderdelen(*)').eq('calculatie_id', c.id).order('volgorde'),
-    'Hoofdgroepen ophalen'
+    _sb.from('hoofdgroepen')
+      .select('*, onderdelen(*, calc_regels(*, calc_regel_stappen(*)))')
+      .eq('calculatie_id', c.id)
+      .order('volgorde'),
+    'Calculatie laden'
   );
   if (error) return false;
-  const hgs = (hgRows || []).map(row => {
-    const ods = (row.onderdelen || []).slice().sort((a, b) => (a.volgorde||0) - (b.volgorde||0));
-    return _mapHgFromDB(row, ods);
+  const hgs = (hgRows || []).map(hgRow => {
+    const ods = (hgRow.onderdelen || [])
+      .slice().sort((a, b) => (a.volgorde||0) - (b.volgorde||0))
+      .map(odRow => {
+        const od = _mapOdFromDB(odRow);
+        const regels = (odRow.calc_regels || [])
+          .slice().sort((a, b) => (a.volgorde||0) - (b.volgorde||0))
+          .map(rRow => {
+            const stappen = (rRow.calc_regel_stappen || [])
+              .slice().sort((a, b) => (a.volgorde||0) - (b.volgorde||0));
+            return _mapRegelFromDB(rRow, stappen);
+          });
+        od.regels = regels;
+        return od;
+      });
+    const hg = _mapHgFromDB(hgRow, []);
+    hg.onderdelen = ods;
+    return hg;
   });
-  // Vul regels per od uit localStorage (tijdelijk in v3.4.0)
+  // Vul staart/meetstaat/todos uit localStorage (TIJDELIJK in v3.4.1)
   const body = _bodyLS(c.id);
-  hgs.forEach(hg => {
-    hg.onderdelen.forEach(od => {
-      od.regels = body.regelsByOd[od.id] || [];
-    });
-  });
   c.hoofdgroepen = hgs;
   c.staart    = body.staart;
   c.meetstaat = body.meetstaat;
@@ -2403,6 +2408,145 @@ function _updateOdDB(od, hgId) {
 async function _deleteOdDB(id) {
   const { error } = await _sbQuery(
     _sb.from('onderdelen').delete().eq('id', id), 'Onderdeel verwijderen'
+  );
+  return !error;
+}
+
+// ============================================================
+// CALC_REGELS (snapshot) MAPPING & DB
+// ============================================================
+function _mapRegelFromDB(row, stapRows) {
+  return {
+    id:                  row.id,
+    naam:                row.naam || '',
+    hoeveelheid:         parseFloat(row.hoeveelheid) || 0,
+    toeslag:             parseFloat(row.toeslag) || 0,
+    systeemId:           row.systeem_id || null,
+    systeemNaam:         row.systeem_naam || '',
+    systeemEenheid:      row.systeem_eenheid || 'm²',
+    systeemOndergrond:   row.systeem_ondergrond || '',
+    systeemOndergrondId: row.systeem_ondergrond_id || null,
+    systeemLocatie:      row.systeem_locatie || 'beide',
+    volgorde:            row.volgorde != null ? row.volgorde : 0,
+    stappen:             (stapRows || []).map(_mapStapFromDBSnapshot)
+  };
+}
+function _mapRegelToDB(r, odId) {
+  return {
+    onderdeel_id:           odId,
+    naam:                   r.naam || '',
+    hoeveelheid:            r.hoeveelheid || 0,
+    toeslag:                r.toeslag || 0,
+    systeem_id:             r.systeemId || null,
+    systeem_naam:           r.systeemNaam || '',
+    systeem_eenheid:        r.systeemEenheid || 'm²',
+    systeem_ondergrond:     r.systeemOndergrond || '',
+    systeem_ondergrond_id:  r.systeemOndergrondId || null,
+    systeem_locatie:        r.systeemLocatie || 'beide',
+    volgorde:               r.volgorde != null ? r.volgorde : 0
+  };
+}
+function _mapStapFromDBSnapshot(row) {
+  return {
+    id:               row.id,
+    bewerkingId:      row.bewerking_id || null,
+    bewerkingNaam:    row.bewerking_naam || '',
+    bewerkingEenheid: row.bewerking_eenheid || '',
+    minuten:          parseFloat(row.minuten) || 0,
+    percentage:       row.percentage != null ? parseFloat(row.percentage) : 100,
+    materiaalId:      row.materiaal_id || null,
+    materiaalNaam:    row.materiaal_naam || null,
+    materiaalEenheid: row.materiaal_eenheid || null,
+    materiaalPrijs:   parseFloat(row.materiaal_prijs) || 0,
+    materiaalGroep:   row.materiaal_groep || null,
+    verbruik:         parseFloat(row.verbruik) || 0,
+    volgorde:         row.volgorde != null ? row.volgorde : 0
+  };
+}
+function _mapStapToDBSnapshot(st, regelId, idx) {
+  return {
+    calc_regel_id:      regelId,
+    bewerking_id:       st.bewerkingId || null,
+    bewerking_naam:     st.bewerkingNaam || '',
+    bewerking_eenheid:  st.bewerkingEenheid || '',
+    minuten:            st.minuten || 0,
+    percentage:         st.percentage != null ? st.percentage : 100,
+    materiaal_id:       st.materiaalId || null,
+    materiaal_naam:     st.materiaalNaam || null,
+    materiaal_eenheid:  st.materiaalEenheid || null,
+    materiaal_prijs:    st.materiaalPrijs || 0,
+    materiaal_groep:    st.materiaalGroep || null,
+    verbruik:           st.verbruik || 0,
+    volgorde:           idx != null ? idx : (st.volgorde || 0)
+  };
+}
+async function _insertRegelDB(regel, odId) {
+  // 1) parent regel
+  const { data: pRows, error: pErr } = await _sbQuery(
+    _sb.from('calc_regels').insert([_mapRegelToDB(regel, odId)]).select(),
+    'Regel opslaan'
+  );
+  if (pErr || !pRows || !pRows[0]) return null;
+  const newId = pRows[0].id;
+  // 2) stappen (snapshot)
+  if (regel.stappen && regel.stappen.length) {
+    const rows = regel.stappen.map((st, i) => _mapStapToDBSnapshot(st, newId, i));
+    const { data: sRows, error: sErr } = await _sbQuery(
+      _sb.from('calc_regel_stappen').insert(rows).select(),
+      'Regel-stappen opslaan'
+    );
+    if (sErr) {
+      await _sbQuery(_sb.from('calc_regels').delete().eq('id', newId), 'Rollback regel');
+      return null;
+    }
+    return _mapRegelFromDB(pRows[0], sRows);
+  }
+  return _mapRegelFromDB(pRows[0], []);
+}
+function _updateRegelDB(regel, odId) {
+  // Alleen regel-velden updaten (niet stappen — die hebben aparte CRUD)
+  _sbQuery(
+    _sb.from('calc_regels').update(_mapRegelToDB(regel, odId)).eq('id', regel.id),
+    'Regel bijwerken'
+  ).then(({ error }) => { if (error && error.message !== 'timeout') _toast('Fout: ' + error.message); });
+}
+async function _deleteRegelDB(id) {
+  // FK CASCADE pakt stappen en meetstaat-rijen
+  const { error } = await _sbQuery(
+    _sb.from('calc_regels').delete().eq('id', id), 'Regel verwijderen'
+  );
+  return !error;
+}
+async function _insertStapSnapshotDB(stap, regelId, volgorde) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('calc_regel_stappen').insert([_mapStapToDBSnapshot(stap, regelId, volgorde)]).select(),
+    'Stap toevoegen'
+  );
+  if (error || !rows || !rows[0]) return null;
+  return _mapStapFromDBSnapshot(rows[0]);
+}
+function _updateStapSnapshotDB(stap) {
+  // Update specifiek deze stap (vooral gebruikt voor percentage en volgorde-swap)
+  const payload = {
+    bewerking_naam:     stap.bewerkingNaam,
+    bewerking_eenheid:  stap.bewerkingEenheid,
+    minuten:            stap.minuten || 0,
+    percentage:         stap.percentage != null ? stap.percentage : 100,
+    materiaal_naam:     stap.materiaalNaam,
+    materiaal_eenheid:  stap.materiaalEenheid,
+    materiaal_prijs:    stap.materiaalPrijs || 0,
+    materiaal_groep:    stap.materiaalGroep,
+    verbruik:           stap.verbruik || 0,
+    volgorde:           stap.volgorde != null ? stap.volgorde : 0
+  };
+  _sbQuery(
+    _sb.from('calc_regel_stappen').update(payload).eq('id', stap.id),
+    'Stap bijwerken'
+  ).then(({ error }) => { if (error && error.message !== 'timeout') _toast('Fout: ' + error.message); });
+}
+async function _deleteStapSnapshotDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('calc_regel_stappen').delete().eq('id', id), 'Stap verwijderen'
   );
   return !error;
 }
@@ -2512,7 +2656,7 @@ function saveData() {
   const a = _activeCalc();
   if (a) {
     a.gewijzigd = new Date().toISOString();
-    _saveBody(a.id);   // regels/staart/meetstaat/todos → localStorage (TIJDELIJK in v3.4.0)
+    _saveBody(a.id);   // regels/staart/meetstaat/todos → localStorage (TIJDELIJK in v3.4.1)
     _touchCalc(a.id);  // gewijzigd-tijdstempel naar DB (fire-and-forget)
   }
   // Settings → localStorage
@@ -3506,12 +3650,21 @@ async function saveSystem() {
       const od = _findOnderdeel(modalSysContext.hgId, modalSysContext.odId);
       if (od) {
         const snap = _snapshotSystem(savedId);
-        od.regels.push({ id: uid('r'), naam: '', systeemId: savedId, hoeveelheid: 0, toeslag: 0,
+        const maxV = (od.regels || []).reduce((m, r) => Math.max(m, r.volgorde || 0), 0);
+        const newRegel = {
+          naam: '', systeemId: savedId, hoeveelheid: 0, toeslag: 0,
           systeemNaam: snap.systeemNaam, systeemEenheid: snap.systeemEenheid,
-          systeemOndergrond: snap.systeemOndergrond, systeemOndergrondId: snap.systeemOndergrondId,
-          systeemLocatie: snap.systeemLocatie, stappen: snap.stappen
-        });
-        saveData(); // calc-data zit nog in localStorage (fase 3d)
+          systeemOndergrond: snap.systeemOndergrond,
+          systeemOndergrondId: snap.systeemOndergrondId,
+          systeemLocatie: snap.systeemLocatie,
+          volgorde: maxV + 10,
+          stappen: snap.stappen.map((st, i) => ({ ...st, volgorde: i }))
+        };
+        const savedRegel = await _insertRegelDB(newRegel, od.id);
+        if (savedRegel) {
+          od.regels.push(savedRegel);
+          _touchCalc(data.calc.id);
+        }
       }
     }
   }
@@ -4100,29 +4253,51 @@ function _findRegel(hgId, odId, rId) {
 function updRegelStap(hgId, odId, rId, idx, field, val) {
   const r = _findRegel(hgId, odId, rId); if (!r || !r.stappen[idx]) return;
   r.stappen[idx][field] = val;
-  saveData(); renderCalcStructuur(); renderTotals();
+  if (r.stappen[idx].id) _updateStapSnapshotDB(r.stappen[idx]);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur(); renderTotals();
 }
 function moveRegelStap(hgId, odId, rId, idx, dir) {
   const r = _findRegel(hgId, odId, rId); if (!r) return;
   const j = idx + dir;
   if (j < 0 || j >= r.stappen.length) return;
+  const a = r.stappen[idx];
+  const b = r.stappen[j];
+  // Swap volgorde-waarden, niet array-positie alleen
+  const tmp = a.volgorde;
+  a.volgorde = b.volgorde;
+  b.volgorde = tmp;
   [r.stappen[idx], r.stappen[j]] = [r.stappen[j], r.stappen[idx]];
-  saveData(); renderCalcStructuur(); renderTotals();
+  if (a.id) _updateStapSnapshotDB(a);
+  if (b.id) _updateStapSnapshotDB(b);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur(); renderTotals();
 }
-function delRegelStap(hgId, odId, rId, idx) {
+async function delRegelStap(hgId, odId, rId, idx) {
   if (!confirm('Stap verwijderen uit deze calculatie?')) return;
   const r = _findRegel(hgId, odId, rId); if (!r) return;
+  const stap = r.stappen[idx];
+  if (stap && stap.id) {
+    const ok = await _deleteStapSnapshotDB(stap.id);
+    if (!ok) { _toast('Verwijderen mislukt'); return; }
+  }
   r.stappen.splice(idx, 1);
-  saveData(); renderCalcStructuur(); renderTotals();
+  _touchCalc(data.calc.id);
+  renderCalcStructuur(); renderTotals();
 }
-function addRegelStap(hgId, odId, rId) {
+async function addRegelStap(hgId, odId, rId) {
   const r = _findRegel(hgId, odId, rId); if (!r) return;
   const sel = document.getElementById('addStep_' + rId);
   if (!sel || !sel.value) return;
   const snap = _snapshotBewerking(sel.value);
   if (!r.stappen) r.stappen = [];
-  r.stappen.push(snap);
-  saveData(); renderCalcStructuur(); renderTotals();
+  const newVolgorde = r.stappen.reduce((m, s) => Math.max(m, s.volgorde || 0), -1) + 1;
+  snap.volgorde = newVolgorde;
+  const saved = await _insertStapSnapshotDB(snap, r.id, newVolgorde);
+  if (!saved) return;
+  r.stappen.push(saved);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur(); renderTotals();
 }
 async function addHoofdgroep() {
   if (!data.calc) return;
@@ -4150,16 +4325,10 @@ async function delHg(id) {
   if (!confirm('Hoofdgroep verwijderen (incl. alles eronder)?')) return;
   const ok = await _deleteHgDB(id);
   if (!ok) { _toast('Verwijderen mislukt'); return; }
-  // Lokaal: orphan-regels uit body localStorage opruimen
-  const hg = data.calc.hoofdgroepen.find(x => x.id === id);
-  if (hg) {
-    (hg.onderdelen || []).forEach(od => {
-      // regels worden in v3.4.1 weggegooid via cascade; nu localStorage opruimen
-      // lokale state: regels-array verdwijnt mee met od
-    });
-  }
+  // FK CASCADE in DB pakt onderdelen + regels + stappen automatisch
   data.calc.hoofdgroepen = data.calc.hoofdgroepen.filter(x => x.id !== id);
-  _saveBody(data.calc.id);
+  // Lokale meetstaat-rijen die naar verwijderde regels verwijzen worden niet opgeruimd
+  // (TIJDELIJK in v3.4.1; v3.4.2 lost dit op via DB cascade)
   _touchCalc(data.calc.id);
   renderCalcStructuur();
 }
@@ -4194,7 +4363,7 @@ async function delOd(hgId, odId) {
   if (!ok) { _toast('Verwijderen mislukt'); return; }
   const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
   if (hg) hg.onderdelen = hg.onderdelen.filter(o => o.id !== odId);
-  _saveBody(data.calc.id);
+  // FK CASCADE in DB pakt regels + stappen automatisch
   _touchCalc(data.calc.id);
   renderCalcStructuur();
 }
@@ -4205,8 +4374,30 @@ function toggleOd(hgId, odId) {
   _updateOdDB(od, hgId);
   renderCalcStructuur();
 }
-function updReg(hgId, odId, rId, f, v) { const od = _findOnderdeel(hgId, odId); if(!od) return; const r = od.regels.find(x=>x.id===rId); if(r){r[f]=v; saveData(); renderCalcStructuur();} }
-function delReg(hgId, odId, rId) { const od = _findOnderdeel(hgId, odId); if(!od) return; od.regels = od.regels.filter(r=>r.id!==rId); saveData(); renderCalcStructuur(); }
+function updReg(hgId, odId, rId, f, v) {
+  const od = _findOnderdeel(hgId, odId);
+  if (!od) return;
+  const r = od.regels.find(x => x.id === rId);
+  if (!r) return;
+  r[f] = v;
+  _updateRegelDB(r, odId);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur();
+}
+async function delReg(hgId, odId, rId) {
+  const od = _findOnderdeel(hgId, odId);
+  if (!od) return;
+  const ok = await _deleteRegelDB(rId);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  od.regels = od.regels.filter(r => r.id !== rId);
+  // Lokale meetstaat-rijen die naar deze regel verwijzen opruimen (TIJDELIJK in v3.4.1)
+  if (data.calc && data.calc.meetstaat) {
+    data.calc.meetstaat = data.calc.meetstaat.filter(ms => ms.calcRegelId !== rId);
+    _saveBody(data.calc.id);
+  }
+  _touchCalc(data.calc.id);
+  renderCalcStructuur();
+}
 
 // ADD SYSTEM TO ONDERDEEL — search + filter
 let addSysCtx = null;
@@ -4246,18 +4437,28 @@ function renderAddSysList() {
     </div>`;
   }).join('');
 }
-function selectAddSys(sysId) {
+async function selectAddSys(sysId) {
   if (!addSysCtx) return;
   const od = _findOnderdeel(addSysCtx.hgId, addSysCtx.odId);
-  if (od) {
-    const snap = _snapshotSystem(sysId);
-    od.regels.push({ id: uid('r'), naam: '', systeemId: sysId, hoeveelheid: 0, toeslag: 0,
-      systeemNaam: snap.systeemNaam, systeemEenheid: snap.systeemEenheid,
-      systeemOndergrond: snap.systeemOndergrond, systeemOndergrondId: snap.systeemOndergrondId,
-      systeemLocatie: snap.systeemLocatie, stappen: snap.stappen
-    });
-  }
-  saveData(); closeAddSysModal(); renderCalcStructuur();
+  if (!od) { closeAddSysModal(); return; }
+  const snap = _snapshotSystem(sysId);
+  if (!snap) { closeAddSysModal(); return; }
+  const maxV = (od.regels || []).reduce((m, r) => Math.max(m, r.volgorde || 0), 0);
+  const newRegel = {
+    naam: '', systeemId: sysId, hoeveelheid: 0, toeslag: 0,
+    systeemNaam: snap.systeemNaam, systeemEenheid: snap.systeemEenheid,
+    systeemOndergrond: snap.systeemOndergrond,
+    systeemOndergrondId: snap.systeemOndergrondId,
+    systeemLocatie: snap.systeemLocatie,
+    volgorde: maxV + 10,
+    stappen: snap.stappen.map((st, i) => ({ ...st, volgorde: i }))
+  };
+  const saved = await _insertRegelDB(newRegel, od.id);
+  closeAddSysModal();
+  if (!saved) return;
+  od.regels.push(saved);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur();
 }
 function openSystemFromAdd() {
   modalSysContext = addSysCtx ? { ...addSysCtx } : null;
@@ -4333,8 +4534,7 @@ async function dupCalc(id) {
   const fresh = await _insertCalcDB(headerCopy);
   if (!fresh) return;
 
-  // 2. Kopieer hoofdgroepen + onderdelen + bouw od-id-mapping (oud → nieuw)
-  const odIdMap = {};
+  // 2. Kopieer hg → od → regels → stappen via DB
   for (const hg of (orig.hoofdgroepen || [])) {
     const newHg = await _insertHgDB({ naam: hg.naam, collapsed: hg.collapsed, volgorde: hg.volgorde }, fresh.id);
     if (!newHg) continue;
@@ -4342,28 +4542,31 @@ async function dupCalc(id) {
     for (const od of (hg.onderdelen || [])) {
       const newOd = await _insertOdDB({ naam: od.naam, collapsed: od.collapsed, volgorde: od.volgorde }, newHg.id);
       if (!newOd) continue;
-      odIdMap[od.id] = newOd.id;
-      // Kopieer regels via localStorage body (TIJDELIJK)
-      newOd.regels = (od.regels || []).map(r => {
-        const cr = JSON.parse(JSON.stringify(r));
-        cr.id = uid('r');
-        return cr;
-      });
+      newOd.regels = [];
+      for (const r of (od.regels || [])) {
+        const newRegel = await _insertRegelDB({
+          naam: r.naam, systeemId: r.systeemId, hoeveelheid: r.hoeveelheid, toeslag: r.toeslag,
+          systeemNaam: r.systeemNaam, systeemEenheid: r.systeemEenheid,
+          systeemOndergrond: r.systeemOndergrond, systeemOndergrondId: r.systeemOndergrondId,
+          systeemLocatie: r.systeemLocatie, volgorde: r.volgorde,
+          stappen: (r.stappen || []).map((st, i) => ({ ...st, volgorde: i }))
+        }, newOd.id);
+        if (newRegel) newOd.regels.push(newRegel);
+      }
       newHg.onderdelen.push(newOd);
     }
     fresh.hoofdgroepen.push(newHg);
   }
 
-  // 3. Kopieer staart, meetstaat, todos in lokale state (TIJDELIJK)
+  // 3. Staart, todos in lokale state (TIJDELIJK in v3.4.1)
   fresh.staart    = (orig.staart    || []).map(s => ({ ...s, id: uid('sk') }));
   fresh.todos     = (orig.todos     || []).map(t => ({ ...t, id: uid('td') }));
-  // Meetstaat-regels koppelen aan nieuwe regel-ids — moeilijk zonder regel-id-mapping (regels staan nog in localStorage)
-  // Voor nu: leeg laten. Gebruiker kan aanvullen.
+  // Meetstaat-regels koppelen aan nieuwe regel-ids = niet-triviaal — voor nu leeg
   fresh.meetstaat = [];
   fresh.__loaded = true;
 
   data.calculaties.unshift(fresh);
-  _saveBody(fresh.id); // body opslaan
+  _saveBody(fresh.id);
   renderDashboard();
 }
 async function setCalcStatus(id, status) {
