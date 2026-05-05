@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.1.4 · Voorcalculatie</span>
+    <span class="subtitle">v3.1.5 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1287,7 +1287,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.1.4</h2>
+      <h2>Welkom bij v3.1.5</h2>
       <p>Fase 3b — bugfix. Materialen worden nu uitsluitend uit Supabase geladen — geen verwarrende standaardlijst meer als de cloud (tijdelijk) niet bereikbaar is. Bij een fout zie je een duidelijke melding.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
@@ -1562,7 +1562,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.1.4 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.1.5 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1612,10 +1612,11 @@ async function signInWithPassword() {
   // onAuthStateChange handelt de rest af (UI + dataload)
 }
 
-// Timeout-wrapper: Supabase-call die langer dan 10s duurt → foutmelding
+// Timeout-wrapper: Supabase-call die langer dan 30s duurt → foutmelding
+// (Supabase free tier kan koude starts hebben van 15-25s)
 async function _sbQuery(queryPromise, label = 'Supabase') {
   const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), 10000)
+    setTimeout(() => reject(new Error('timeout')), 30000)
   );
   try {
     const result = await Promise.race([queryPromise, timeout]);
@@ -1624,7 +1625,7 @@ async function _sbQuery(queryPromise, label = 'Supabase') {
   } catch(e) {
     console.warn(`[${label}] exception:`, e.message);
     if (e.message === 'timeout') {
-      _toast(`${label} — verbinding te langzaam. Refresh en log opnieuw in.`);
+      _toast(`${label} duurt te lang (>30s). Probeer opnieuw.`);
     } else {
       _toast(`${label} — fout: ${e.message}`);
     }
@@ -2177,9 +2178,14 @@ function updMat(id, field, val) {
   }
 }
 async function addMaterial() {
+  // Disable knop met "bezig..." tijdens DB-call (kan tot 30s duren bij cold start)
+  const btn = document.querySelector('button[onclick="addMaterial()"]');
+  let oldText;
+  if (btn) { oldText = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Bezig...'; }
   const nieuw = { naam: 'Nieuw materiaal', merk: '', type: '', groep: 'Hulpmiddelen', eenheid: 'L', prijsPer: 0, rendement: 0 };
   const saved = await _insertMatDB(nieuw);
-  if (!saved) return; // fout al getoond via _toast
+  if (btn) { btn.disabled = false; btn.textContent = oldText; }
+  if (!saved) return;
   data.materialen.push(saved);
   renderMaterialen();
 }
