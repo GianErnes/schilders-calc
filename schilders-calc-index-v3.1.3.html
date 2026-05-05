@@ -1,0 +1,4243 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schilders Calculatie · v3.0.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Yoobi-inspired palette. Old variable names retained for backwards-compat. */
+    --ink: #1a1d21;            /* primary text */
+    --ink-soft: #4b5563;       /* secondary text */
+    --paper: #ffffff;          /* primary background */
+    --paper-warm: #f9fafb;     /* card / section background */
+    --paper-deep: #e5e7eb;     /* borders, dividers */
+    --accent: #e63329;         /* Yoobi red — primary accent / + buttons / active */
+    --accent-deep: #c62828;    /* darker red on hover */
+    --muted: #6b7280;          /* muted text */
+    --green: #16a34a;          /* success / geaccepteerd */
+    --blue: #2196f3;           /* secondary primary action / verzonden */
+    --blue-deep: #1976d2;      /* hover on blue */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+    --radius: 6px;
+    --radius-lg: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: #f5f6f7;
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--paper-deep);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    background: var(--paper);
+  }
+  .brand { display: flex; align-items: center; gap: 0.65rem; }
+  .brand-mark {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: var(--radius);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .brand-mark::after {
+    content: '';
+    position: absolute;
+    inset: 7px;
+    background: var(--paper);
+    border-radius: 2px;
+  }
+  h1 {
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .subtitle {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-left: 0.6rem;
+    margin-left: 0.4rem;
+    border-left: 1px solid var(--paper-deep);
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    border-bottom: 1px solid var(--paper-deep);
+    background: var(--paper);
+    padding: 0 1.5rem;
+    overflow-x: auto;
+  }
+  nav button {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.85rem 1.1rem;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  nav button:hover { color: var(--ink); }
+  nav button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+  }
+  nav button.active::before { content: none; }
+
+  main {
+    padding: 1.5rem;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  .panel { display: none; animation: fadeIn 0.2s; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--paper-deep);
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .panel-head h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .panel-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+
+  /* BUTTONS */
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: 1px solid var(--accent);
+    padding: 0.5rem 0.9rem;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .btn:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+  .btn-secondary {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--paper-deep);
+  }
+  .btn-secondary:hover { background: var(--paper-warm); border-color: var(--ink-soft); color: var(--ink); }
+  .btn-primary-blue {
+    background: var(--blue);
+    border-color: var(--blue);
+  }
+  .btn-primary-blue:hover { background: var(--blue-deep); border-color: var(--blue-deep); }
+  .btn-danger {
+    background: transparent;
+    color: var(--accent-deep);
+    border: 1px solid transparent;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .btn-danger:hover { background: #fef2f2; border-color: var(--accent-deep); }
+  .btn-sm { padding: 0.3rem 0.65rem; font-size: 0.72rem; }
+  .btn-icon {
+    padding: 0.25rem 0.45rem;
+    font-size: 0.75rem;
+    background: var(--paper);
+    color: var(--ink-soft);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  .btn-icon:hover { background: var(--paper-warm); color: var(--ink); border-color: var(--ink-soft); }
+
+  /* TABLES */
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    background: var(--paper);
+  }
+  .table-scroll table {
+    border: none;
+    border-radius: 0;
+    margin: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  th {
+    background: var(--paper-warm);
+    color: var(--ink-soft);
+    text-align: left;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--paper-deep);
+    white-space: nowrap;
+  }
+  td {
+    padding: 0.35rem 0.7rem;
+    border-bottom: 1px solid var(--paper-deep);
+    vertical-align: middle;
+    font-size: 0.85rem;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--paper-warm); }
+  td.right { text-align: right; }
+  td.num { font-variant-numeric: tabular-nums; }
+  /* Inputs/selects in tables: fill the cell width and stay compact */
+  td > input[type="text"], td > input[type="number"], td > input:not([type]), td > select {
+    width: 100%;
+    min-width: 80px;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.82rem;
+  }
+  /* Specifically for naam-fields: larger min-width so long names are readable */
+  td > input[type="text"]:not([step]), td > input:not([type]):not([step]) {
+    min-width: 180px;
+  }
+
+  /* FORMS */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.85rem;
+    background: var(--paper);
+    padding: 1.1rem;
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.25rem;
+  }
+  label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.01em;
+  }
+  input, select, textarea {
+    width: 100%;
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    padding: 0.45rem 0.6rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: var(--ink);
+    border-radius: var(--radius);
+    transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.12);
+  }
+  td input, td select { padding: 0.3rem 0.45rem; font-size: 0.82rem; }
+  input[type="number"] { font-variant-numeric: tabular-nums; }
+
+  /* SYSTEMS GRID */
+  .systems-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+  }
+  .system-card {
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.1rem;
+    transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  .system-card:hover {
+    border-color: var(--ink-soft);
+    box-shadow: var(--shadow-md);
+  }
+  .system-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    padding-right: 1rem;
+    color: var(--ink);
+  }
+  .system-card .badges { margin-bottom: 0.6rem; display: flex; gap: 0.35rem; flex-wrap: wrap; }
+  .ondergrond, .locatie-tag {
+    display: inline-block;
+    background: var(--paper-warm);
+    color: var(--ink-soft);
+    border: 1px solid var(--paper-deep);
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .locatie-tag.binnen { background: #e3f2fd; color: var(--blue-deep); border-color: #bbdefb; }
+  .locatie-tag.buiten { background: #e8f5e9; color: var(--green); border-color: #c8e6c9; }
+  .locatie-tag.beide { background: #fff3e0; color: var(--accent-deep); border-color: #ffccbc; }
+  .system-card ol {
+    list-style: none;
+    counter-reset: step;
+    margin: 0.65rem 0;
+    border-top: 1px solid var(--paper-deep);
+    padding-top: 0.65rem;
+  }
+  .system-card ol li {
+    counter-increment: step;
+    padding: 0.25rem 0 0.25rem 1.6rem;
+    position: relative;
+    font-size: 0.8rem;
+    color: var(--ink);
+  }
+  .system-card ol li::before {
+    content: counter(step, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0.3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .system-card .actions {
+    margin-top: 0.85rem;
+    display: flex;
+    gap: 0.4rem;
+    border-top: 1px solid var(--paper-deep);
+    padding-top: 0.75rem;
+  }
+  .system-totals {
+    font-size: 0.78rem;
+    color: var(--ink);
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--paper-deep);
+    font-variant-numeric: tabular-nums;
+  }
+  .syst-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.18rem 0;
+  }
+  .syst-label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .syst-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .syst-sub {
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: -0.3rem;
+  }
+  .syst-final {
+    margin-top: 0.3rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--paper-deep);
+  }
+  .syst-final .syst-val {
+    color: var(--accent-deep);
+    font-weight: 700;
+  }
+  .syst-final .syst-label {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* CALCULATIE */
+  .calc-layout { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; }
+  @media (max-width: 1100px) { .calc-layout { grid-template-columns: 1fr; } }
+
+  .hoofdgroep {
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius-lg);
+    margin-bottom: 0.85rem;
+    overflow: hidden;
+  }
+  .hoofdgroep-head {
+    background: var(--paper-warm);
+    color: var(--ink);
+    padding: 0.65rem 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--paper-deep);
+  }
+  .hoofdgroep-head .title { display: flex; align-items: center; gap: 0.5rem; flex: 1; }
+  .caret {
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+    cursor: pointer;
+    padding: 0.15rem 0.35rem;
+    color: var(--ink-soft);
+    user-select: none;
+  }
+  .hoofdgroep.collapsed .caret { transform: rotate(-90deg); }
+  .hoofdgroep-head input {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.2rem 0.4rem;
+    flex: 1;
+  }
+  .hoofdgroep-head input:focus {
+    background: var(--paper);
+    border-color: var(--paper-deep);
+    box-shadow: none;
+  }
+  .hoofdgroep-head .stats {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .hoofdgroep-body { padding: 0.85rem; }
+  .hoofdgroep.collapsed .hoofdgroep-body { display: none; }
+
+  .onderdeel {
+    background: var(--paper-warm);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    margin-bottom: 0.6rem;
+    overflow: hidden;
+  }
+  .onderdeel-head {
+    background: var(--paper);
+    padding: 0.45rem 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--paper-deep);
+  }
+  .onderdeel-head .title { display: flex; align-items: center; gap: 0.5rem; flex: 1; }
+  .onderdeel-head input {
+    background: transparent;
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.15rem 0.35rem;
+    flex: 1;
+  }
+  .onderdeel-head input:focus {
+    background: var(--paper);
+    border-color: var(--paper-deep);
+    box-shadow: none;
+  }
+  .onderdeel-head .stats {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .onderdeel-body { padding: 0.65rem; }
+  .onderdeel.collapsed .onderdeel-body { display: none; }
+  .onderdeel.collapsed .caret { transform: rotate(-90deg); }
+
+  .calc-regel {
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    padding: 0.55rem 0.7rem;
+    margin-bottom: 0.4rem;
+    display: grid;
+    grid-template-columns: 1.4fr 1.8fr 1fr 0.8fr 1.1fr;
+    gap: 0.55rem;
+    align-items: center;
+    font-size: 0.82rem;
+  }
+  @media (max-width: 768px) { .calc-regel { grid-template-columns: 1fr 1fr; gap: 0.35rem; } }
+  .calc-regel .systeem-naam { color: var(--ink-soft); font-size: 0.8rem; }
+  .calc-regel .systeem-link {
+    color: var(--blue);
+    cursor: pointer;
+    border-bottom: 1px dashed transparent;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .calc-regel .systeem-link:hover {
+    color: var(--blue-deep);
+    border-bottom-color: var(--blue-deep);
+  }
+  /* CALC-REGEL with snapshot stappen */
+  .calc-regel-wrap {
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    background: var(--paper);
+    overflow: hidden;
+  }
+  .calc-regel-wrap .calc-regel {
+    margin-bottom: 0;
+    border: none;
+    border-radius: 0;
+    border-bottom: 1px solid var(--paper-deep);
+    background: var(--paper);
+  }
+  .regel-stappen {
+    background: var(--paper-warm);
+    padding: 0.55rem 0.7rem;
+    font-size: 0.78rem;
+  }
+  .regel-stappen-titel {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 0.4rem;
+  }
+  .regel-stap {
+    display: grid;
+    grid-template-columns: 22px 2fr 1.6fr 0.6fr 0.7fr 90px;
+    gap: 0.4rem;
+    align-items: center;
+    padding: 0.3rem 0.45rem;
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    margin-bottom: 0.25rem;
+    font-size: 0.78rem;
+  }
+  .regel-stap-num {
+    background: var(--accent);
+    color: #fff;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    border-radius: 50%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+  }
+  .regel-stap-pct input {
+    padding: 0.2rem 0.35rem;
+    font-size: 0.75rem;
+    width: 50px;
+  }
+  .regel-stap-totaal {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .regel-stap-acties { display: flex; gap: 0.2rem; }
+  .regel-stap-add {
+    margin-top: 0.45rem;
+    padding-top: 0.45rem;
+    border-top: 1px dashed var(--paper-deep);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .regel-stappen-footer {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--paper-deep);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    font-size: 0.78rem;
+  }
+  .regel-stappen-footer .ft-label {
+    color: var(--ink-soft);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-right: 0.3rem;
+  }
+  .regel-stappen-footer .ft-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .regel-stappen-footer .ft-value.accent { color: var(--accent-deep); }
+
+  /* NOTITIES & TODOS */
+  .notities-paneel {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .notities-header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0.85rem;
+    background: var(--paper-warm);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--paper-deep);
+  }
+  .notities-paneel.collapsed .notities-header {
+    border-bottom: none;
+  }
+  .notities-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .notities-summary {
+    flex: 1;
+    font-size: 0.78rem;
+    color: var(--ink);
+  }
+  .notities-toggle {
+    color: var(--muted);
+    font-size: 0.7rem;
+  }
+  .notities-body {
+    padding: 0.85rem;
+  }
+  .notities-body textarea {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    resize: vertical;
+    min-height: 80px;
+  }
+  .todo-list {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--paper-deep);
+  }
+  .todo-list-titel {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 0.4rem;
+  }
+  .todo-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+  .todo-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .todo-row input[type="text"] {
+    flex: 1;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.85rem;
+  }
+  .todo-row.done input[type="text"] {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+
+  /* MEETSTAAT */
+  /* Hide number-input spinner buttons (we don't use them and they steal Enter key) */
+  table.meetstaat-tbl input[type="number"]::-webkit-outer-spin-button,
+  table.meetstaat-tbl input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  table.meetstaat-tbl input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  table.meetstaat-tbl input, table.meetstaat-tbl select {
+    width: 100%;
+    padding: 0.35rem 0.45rem;
+    font-size: 0.82rem;
+  }
+  table.meetstaat-tbl td { padding: 0.35rem 0.5rem; }
+  table.meetstaat-tbl input:disabled {
+    background: var(--paper-warm);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+  .ms-num {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    border-radius: 50%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .ms-totaal {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--accent-deep);
+  }
+  .ms-badge {
+    display: inline-block;
+    background: #f59e0b;
+    color: #fff;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    margin-top: 0.2rem;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .ms-badge:hover { background: #d97706; }
+  .ms-hoeveelheid-display {
+    background: var(--paper-warm);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+  }
+  .calc-regel .regel-stats {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* TOTALS PANEL */
+  .totals {
+    background: var(--paper);
+    color: var(--ink);
+    padding: 1.2rem;
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius-lg);
+  }
+  .totals h3 {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--paper-deep);
+  }
+  .totals .line {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.3rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .totals .line.indent {
+    padding-left: 0.85rem;
+    color: var(--ink-soft);
+    font-size: 0.72rem;
+  }
+  .totals .line.divider {
+    border-top: 1px solid var(--paper-deep);
+    margin-top: 0.4rem;
+    padding-top: 0.55rem;
+    font-weight: 600;
+  }
+  .totals .grand {
+    margin-top: 0.85rem;
+    padding: 0.75rem 0 0;
+    border-top: 2px solid var(--accent);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .totals .grand .label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .totals .grand .value {
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .totals .planning {
+    background: var(--paper-warm);
+    padding: 0.7rem 0.85rem;
+    margin-top: 0.85rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--paper-deep);
+  }
+  .totals .planning .big {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* SETTINGS / SECTION CARDS */
+  .settings-section {
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem;
+    margin-bottom: 0.85rem;
+  }
+  .settings-section h3 {
+    font-weight: 600;
+    margin-bottom: 0.85rem;
+    font-size: 1rem;
+    color: var(--ink);
+  }
+  .empty-state {
+    text-align: center;
+    padding: 1.75rem 1rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border: 1px dashed var(--paper-deep);
+    background: var(--paper-warm);
+    border-radius: var(--radius);
+  }
+
+  /* MODALS */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 29, 33, 0.5);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1rem;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--paper);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 980px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .modal-head {
+    background: var(--paper);
+    color: var(--ink);
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    border-bottom: 1px solid var(--paper-deep);
+  }
+  .modal-head h3 { font-weight: 600; font-size: 1.05rem; }
+  .modal-body { padding: 1.25rem; }
+  .modal-foot {
+    padding: 0.85rem 1.25rem;
+    border-top: 1px solid var(--paper-deep);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .close-x {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius);
+  }
+  .close-x:hover { background: var(--paper-warm); color: var(--ink); }
+
+  .werkbank-totals {
+    background: var(--paper-warm);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    padding: 0.95rem;
+    margin: 0.85rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.85rem;
+  }
+  .werkbank-totals .stat .label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 0.25rem;
+  }
+  .werkbank-totals .stat .value {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .werkbank-totals .stat.highlight .value { color: var(--accent); }
+
+  .search-select-item {
+    padding: 0.55rem 0.85rem;
+    cursor: pointer;
+    font-size: 0.82rem;
+    border-bottom: 1px solid var(--paper-deep);
+    background: var(--paper);
+  }
+  .search-select-item:hover { background: var(--paper-warm); }
+  .search-select-item .group-tag {
+    float: right;
+    font-size: 0.62rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--paper-warm);
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+  }
+
+  .step-row {
+    display: grid;
+    grid-template-columns: 24px 2fr 0.7fr 1.3fr 0.9fr 0.6fr 0.8fr 96px;
+    gap: 0.4rem;
+    align-items: center;
+    padding: 0.45rem 0.55rem;
+    background: var(--paper);
+    margin-bottom: 0.3rem;
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius);
+    font-size: 0.8rem;
+  }
+  .step-row .step-num {
+    background: var(--accent);
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    border-radius: 50%;
+  }
+  .step-row input { padding: 0.22rem 0.4rem; font-size: 0.78rem; }
+  .step-row .step-actions { display: flex; gap: 0.2rem; }
+  .step-row .step-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .step-row .step-info.right { text-align: right; }
+  .step-headers {
+    display: grid;
+    grid-template-columns: 24px 2fr 0.7fr 1.3fr 0.9fr 0.6fr 0.8fr 96px;
+    gap: 0.4rem;
+    padding: 0 0.55rem 0.3rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  footer {
+    border-top: 1px solid var(--paper-deep);
+    margin-top: 2.5rem;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--muted);
+    background: var(--paper);
+  }
+
+  /* INTRO BLOCK ON DASHBOARD */
+  .intro {
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .intro::before { content: none; }
+  .intro h2 {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+    color: var(--ink);
+  }
+  .intro p {
+    max-width: 65ch;
+    color: var(--ink-soft);
+    margin-bottom: 0.4rem;
+    font-size: 0.85rem;
+  }
+
+  /* SAVED TICK FEEDBACK */
+  .saved-tick {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--green);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+  }
+  .saved-tick.show {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* CLUSTER BLOCKS in materiaalopslag-instellingen */
+  .cluster-block {
+    margin-bottom: 1rem;
+  }
+  .cluster-block:last-child { margin-bottom: 0; }
+  .cluster-titel {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--paper-deep);
+  }
+  .cluster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.7rem;
+  }
+  /* BEWERKINGEN GROEPEN per ondergrond */
+  .bew-cluster {
+    margin-bottom: 1.4rem;
+  }
+  .bew-cluster:last-child { margin-bottom: 0; }
+  .bew-cluster-titel {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+    padding: 0.4rem 0.7rem;
+    background: var(--paper-warm);
+    border: 1px solid var(--paper-deep);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+  }
+
+  /* PRINT AREA — hidden during normal use, visible during print */
+  .print-only { display: none; }
+
+  @media print {
+    /* Hide everything except print area */
+    body > header, body > nav, body > main, body > footer, body > .modal-overlay { display: none !important; }
+    body { background: #fff !important; padding: 0; margin: 0; }
+    .print-only { display: block !important; }
+
+    .print-only {
+      font-family: 'Inter', sans-serif;
+      font-size: 10pt;
+      color: #000;
+      padding: 1.5cm;
+      max-width: 100%;
+    }
+    .print-only h1 {
+      font-size: 18pt;
+      font-weight: 700;
+      margin-bottom: 4pt;
+      color: #000;
+    }
+    .print-only h2 {
+      font-size: 13pt;
+      font-weight: 700;
+      margin-top: 14pt;
+      margin-bottom: 6pt;
+      padding-bottom: 3pt;
+      border-bottom: 1.5pt solid #000;
+      color: #000;
+    }
+    .print-only h3 {
+      font-size: 11pt;
+      font-weight: 600;
+      margin-top: 10pt;
+      margin-bottom: 4pt;
+      color: #444;
+    }
+    .print-only h4 {
+      font-size: 10pt;
+      font-weight: 600;
+      margin-top: 6pt;
+      margin-bottom: 3pt;
+      color: #666;
+    }
+    .print-only .meta {
+      font-size: 9pt;
+      color: #666;
+      margin-bottom: 12pt;
+    }
+    .print-only table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 4pt 0 8pt 0;
+      page-break-inside: avoid;
+      font-size: 9pt;
+    }
+    .print-only th, .print-only td {
+      border: 0.5pt solid #999;
+      padding: 3pt 5pt;
+      text-align: left;
+      vertical-align: top;
+    }
+    .print-only th {
+      background: #f0f0f0;
+      font-weight: 600;
+      font-size: 8.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .print-only td.right, .print-only th.right { text-align: right; }
+    .print-only .num { font-variant-numeric: tabular-nums; }
+    .print-only .totaal-row td {
+      font-weight: 700;
+      background: #f6f6f6;
+      border-top: 1pt solid #000;
+    }
+    .print-only .grand-row td {
+      font-weight: 700;
+      background: #1a1d21;
+      color: #fff;
+      font-size: 11pt;
+    }
+    .print-only .section { page-break-inside: avoid; margin-bottom: 8pt; }
+    .print-only .header-block {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 2pt solid #000;
+      padding-bottom: 6pt;
+      margin-bottom: 12pt;
+    }
+    .print-only .footer-block {
+      margin-top: 18pt;
+      padding-top: 6pt;
+      border-top: 0.5pt solid #999;
+      font-size: 8pt;
+      color: #888;
+      text-align: center;
+    }
+    .print-only .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4pt 14pt;
+      font-size: 9pt;
+      margin: 6pt 0 10pt 0;
+    }
+    .print-only .summary-grid .label { font-weight: 600; color: #555; }
+    .print-only .new-page { page-break-before: always; }
+  }
+
+  /* AUTH OVERLAY */
+  #authOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #f5f6f7;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+  #authOverlay.active { display: flex; }
+  .auth-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    border: 1px solid var(--paper-deep);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    max-width: 420px;
+    margin: 1rem;
+  }
+  .auth-card h2 { font-size: 1.2rem; margin-bottom: 0.3rem; }
+  .auth-card .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+  .auth-card label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .auth-card input[type="email"] { width: 100%; padding: 0.7rem; font-size: 1rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); box-sizing: border-box; font-family: inherit; }
+  .auth-msg { padding: 0.7rem 0.9rem; border-radius: var(--radius); margin-top: 0.75rem; font-size: 0.88rem; display: none; }
+  .auth-msg.ok { background: #e8f5e9; color: #2e7d32; display: block; }
+  .auth-msg.err { background: #ffebee; color: #c62828; display: block; }
+  .auth-msg.info { background: #e3f2fd; color: #1565c0; display: block; }
+
+  /* USER BADGE in header */
+  .user-badge { display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem; color: var(--muted); }
+  .user-badge strong { color: var(--ink); }
+  .user-badge button { font-size: 0.75rem; padding: 0.3rem 0.65rem; }
+</style>
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <h1>Schilders Calculatie</h1>
+    <span class="subtitle">v3.0.0 · Voorcalculatie</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:1.5rem;">
+    <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
+    <div class="user-badge" id="userBadge" style="display:none;">
+      <strong id="userBadgeEmail"></strong>
+      <button class="btn-secondary btn" onclick="signOut()">Uitloggen</button>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <button class="active" data-tab="dashboard">Dashboard</button>
+  <button data-tab="calculatie">Calculatie</button>
+  <button data-tab="meetstaat">Meetstaat</button>
+  <button data-tab="systemen">Verfsystemen</button>
+  <button data-tab="bewerkingen">Bewerkingen</button>
+  <button data-tab="materialen">Materialen</button>
+  <button data-tab="ondergronden">Ondergronden</button>
+  <button data-tab="instellingen">Instellingen</button>
+</nav>
+
+<main>
+
+  <section class="panel active" id="dashboard">
+    <div class="intro">
+      <h2>Welkom bij v3.0.0</h2>
+      <p>Fase 3a — Materialen worden nu geladen vanuit Supabase. De rest (bewerkingen, ondergronden, verfsystemen, calculaties, instellingen) volgt in de volgende fasen. Data is gedeeld via de cloud — geen lokale opslag meer.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+      <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
+      <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Bewerkingen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statBew">—</div></div>
+      <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Verfsystemen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statSys">—</div></div>
+      <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Ondergronden</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statOnd">—</div></div>
+      <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Uurloon</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statTar">—</div></div>
+    </div>
+    <div class="settings-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0;">Calculaties</h3>
+        <button class="btn" onclick="newCalc()">+ Nieuwe calculatie</button>
+      </div>
+      <div id="calculatiesArchief"></div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Workflow</h3>
+      <ol style="margin-left: 1.2rem; line-height: 1.8;">
+        <li>Beheer je <strong>materialen</strong>, <strong>bewerkingen</strong> en <strong>ondergronden</strong> (de bouwstenen)</li>
+        <li>Stel <strong>verfsystemen</strong> samen — recepten van bewerkingen met percentages per stap</li>
+        <li>Maak een <strong>calculatie</strong>: structuur (Buiten → gevels, Binnen → kamers), dan systemen per onderdeel</li>
+        <li>Stel <strong>tarieven</strong>, <strong>opslagpercentages per groep</strong> en <strong>staartkosten-templates</strong> in onder Instellingen</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="panel" id="calculatie">
+    <div class="panel-head">
+      <h2>Calculatie</h2>
+      <div class="panel-actions">
+        <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span>
+        <button class="btn-secondary btn" onclick="printCalc()">📄 Calculatie als PDF</button>
+        <button class="btn-secondary btn" onclick="newCalc()">+ Nieuwe</button>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div><label>Projectnaam</label><input type="text" id="calcProject" placeholder="bv. Kerkstraat 12"></div>
+      <div><label>Klant</label><input type="text" id="calcKlant"></div>
+      <div><label>Reisafstand (km enkele reis)</label><input type="number" id="calcReis" step="1" min="0"></div>
+      <div><label>Aantal schilders</label><input type="number" id="calcSchilders" step="1" min="1"></div>
+      <div><label>Uren per werkdag</label><input type="number" id="calcUurDag" step="0.5" min="1"></div>
+    </div>
+    <div id="notitiesPaneel"></div>
+    <div class="calc-layout">
+      <div>
+        <div id="calcStructuur"></div>
+        <button class="btn" onclick="addHoofdgroep()" style="margin-top: 0.5rem;">+ Hoofdgroep toevoegen</button>
+        <h3 style="margin-top: 2rem; margin-bottom: 0.75rem;">Staartkosten</h3>
+        <div id="staartList"></div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+          <select id="staartTpl" style="flex: 1; min-width: 200px;"></select>
+          <button class="btn-secondary btn" onclick="addStaartFromTpl()">+ Uit bibliotheek</button>
+          <button class="btn-secondary btn" onclick="addStaartCustom()">+ Eigen post</button>
+        </div>
+      </div>
+      <div class="totals">
+        <h3>Calculatie</h3>
+        <div id="totalsBody"><p style="opacity: 0.6;"><em>Voeg hoofdgroepen, onderdelen en regels toe.</em></p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="meetstaat">
+    <div class="panel-head">
+      <h2>Meetstaat</h2>
+      <div class="panel-actions">
+        <span id="meetstaatActiveCalcInfo" style="font-size:0.75rem; color:var(--ink-soft);"></span>
+      </div>
+    </div>
+    <div class="meetstaat-help" style="font-size:0.78rem; color:var(--ink-soft); margin-bottom:0.85rem; padding:0.7rem; background:var(--paper-warm); border:1px solid var(--paper-deep); border-radius:var(--radius);">
+      <strong>Meten in cm.</strong> Eén maat = lengte (lijstwerk). Twee maten = omtrek bij m¹, oppervlak bij m². <strong>Enter</strong> springt naar het volgende veld; aan het eind naar nieuwe regel. Calc-regel en omschrijving worden onthouden tot je ze wijzigt.
+    </div>
+    <div id="meetstaatLijst"></div>
+  </section>
+
+  <section class="panel" id="systemen">
+    <div class="panel-head">
+      <h2>Verfsystemen</h2>
+      <div class="panel-actions">
+        <select id="filterLocatie" onchange="renderSystemen()">
+          <option value="">Alle locaties</option>
+          <option value="binnen">Alleen binnen</option>
+          <option value="buiten">Alleen buiten</option>
+          <option value="beide">Alleen "beide"</option>
+        </select>
+        <button class="btn" onclick="openSystemModal()">+ Nieuw Systeem</button>
+      </div>
+    </div>
+    <div class="systems-grid" id="systemenLijst"></div>
+  </section>
+
+  <section class="panel" id="bewerkingen">
+    <div class="panel-head"><h2>Bewerkingen</h2><button class="btn" onclick="addBewerking()">+ Nieuwe Bewerking</button></div>
+    <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Tijd in <strong>minuten per eenheid</strong>. Materiaalverbruik in <strong>L/kg/stuk per eenheid</strong> (afhankelijk van materiaal).</em></p>
+    <div id="bewerkingenLijst"></div>
+  </section>
+
+  <section class="panel" id="materialen">
+    <div class="panel-head"><h2>Materialen</h2><button class="btn" onclick="addMaterial()">+ Nieuw Materiaal</button></div>
+    <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Inkoopprijs per eenheid. Verkoopprijs = inkoop × (1 + opslag van groep).</em></p>
+    <div id="materialenLijst"></div>
+  </section>
+
+  <section class="panel" id="ondergronden">
+    <div class="panel-head"><h2>Ondergronden</h2><button class="btn" onclick="addOndergrond()">+ Nieuwe Ondergrond</button></div>
+    <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Ondergronden gebruik je bij bewerkingen en verfsystemen.</em></p>
+    <div id="ondergrondenLijst"></div>
+  </section>
+
+  <section class="panel" id="instellingen">
+    <div class="panel-head"><h2>Instellingen</h2></div>
+    <div class="settings-section">
+      <h3>Uurtarieven</h3>
+      <div class="form-grid">
+        <div><label>Schilder (€/uur)</label><input type="number" id="setUurloon" step="0.5" onchange="updSetting('uurloon', this)"></div>
+        <div><label>Reistijd (€/uur)</label><input type="number" id="setReistijd" step="0.5" onchange="updSetting('reistijd', this)"></div>
+        <div><label>Reiskosten (€/km)</label><input type="number" id="setKm" step="0.05" onchange="updSetting('km', this)"></div>
+        <div><label>Gem. snelheid (km/u)</label><input type="number" id="setSnelheid" step="5" min="20" onchange="updSetting('snelheid', this)"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>Materiaalopslag per groep (%)</h3>
+      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>De marge die op de inkoopprijs komt om de verkoopprijs te bepalen.</em></p>
+      <div id="groepOpslagen"></div>
+    </div>
+    <div class="settings-section">
+      <h3>Algemene opslagen (%)</h3>
+      <div class="form-grid">
+        <div><label>Klein materiaal</label><input type="number" id="setKleinMat" step="0.5" onchange="updSetting('kleinMat', this)"></div>
+        <div><label>Afval / Milieu</label><input type="number" id="setAfval" step="0.5" onchange="updSetting('afval', this)"></div>
+        <div><label>ARBO / Veiligheid</label><input type="number" id="setArbo" step="0.5" onchange="updSetting('arbo', this)"></div>
+        <div><label>Risico</label><input type="number" id="setWinst" step="0.5" onchange="updSetting('winst', this)"></div>
+        <div><label>BTW</label><input type="number" id="setBtw" step="1" onchange="updSetting('btw', this)"></div>
+      </div>
+      <div style="margin-top: 1rem; padding: 0.85rem; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius);">
+        <label style="display: flex; align-items: center; gap: 0.6rem; margin: 0; font-size: 0.85rem; cursor: pointer;">
+          <input type="checkbox" id="setVolleDagen" onchange="updSettingBool('volleDagen', this)" style="width: auto; margin: 0;">
+          <span><strong>Volle dagen factureren</strong> — de laatste werkdag wordt automatisch tot heel afgerond, met een arbeidstoeslag voor de niet-werkbare uren. Per calculatie te overschrijven.</span>
+        </label>
+        <div style="margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--paper-deep); display: flex; align-items: center; gap: 0.7rem; font-size: 0.82rem;">
+          <label style="margin: 0; flex-shrink: 0;">Drempel afronding (dag-fractie):</label>
+          <input type="number" id="setAfrondingsDrempel" step="0.05" min="0" max="1" style="width: 80px;" onchange="updSetting('afrondingsDrempel', this)">
+          <span style="color: var(--ink-soft); font-size: 0.78rem;">Pas afronden naar boven als overschot ≥ deze waarde. Default 0,6 = "vanaf halve dag werk over → hele dag factureren".</span>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>Staartkosten-bibliotheek</h3>
+      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Veelgebruikte staartkosten als templates.</em></p>
+      <div id="staartLib"></div>
+      <button class="btn-secondary btn" onclick="addStaartLib()" style="margin-top: 0.5rem;">+ Template toevoegen</button>
+    </div>
+    <div class="settings-section">
+      <h3>Data Beheer</h3>
+      <button class="btn-secondary btn" onclick="exportData()">⇩ Exporteer alles (JSON)</button>
+      <button class="btn-secondary btn" onclick="document.getElementById('importFile').click()">⇧ Importeer</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn-danger btn" onclick="resetData()" style="margin-left: 0.5rem;">⌫ Reset naar voorbeelddata</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODALS placeholder, will be filled by next steps -->
+<!-- SYSTEM WERKBANK MODAL -->
+<div class="modal-overlay" id="systemModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="systemModalTitle">Verfsysteem bewerkingen</h3><button class="close-x" onclick="closeSystemModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid" style="margin-bottom: 1rem;">
+        <div><label>Naam</label><input type="text" id="sysNaam"></div>
+        <div><label>Ondergrond</label><select id="sysOnder" onchange="refreshModalBewSelect()"></select></div>
+        <div><label>Eenheid</label>
+          <select id="sysEenheid" onchange="renderWerkbankTotals()">
+            <option value="m²">m² (vlakwerk)</option>
+            <option value="m¹">m¹ (lijstwerk)</option>
+            <option value="stuk">per stuk</option>
+          </select>
+        </div>
+      </div>
+      <div class="step-headers">
+        <span>#</span><span>Bewerking</span><span style="text-align:right;">Min</span><span>Materiaal</span><span>Verbruik</span><span style="text-align:right;">%</span><span style="text-align:right;">€/eenh</span><span></span>
+      </div>
+      <div id="sysSteps"></div>
+      <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; align-items: end;">
+        <div style="flex: 1;"><label>Bewerking toevoegen</label><select id="sysAddBew"></select></div>
+        <button class="btn-secondary btn" onclick="addStepToSystem()">+ Toevoegen</button>
+      </div>
+      <div class="werkbank-totals" id="werkbankTotals"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="closeSystemModal()">Annuleren</button>
+      <button class="btn-secondary btn" onclick="saveSystemAsNew()">Opslaan als nieuw</button>
+      <button class="btn" onclick="saveSystem()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SYSTEM TO ONDERDEEL MODAL -->
+<div class="modal-overlay" id="addSysModal">
+  <div class="modal" style="max-width: 640px;">
+    <div class="modal-head"><h3>Verfsysteem toevoegen</h3><button class="close-x" onclick="closeAddSysModal()">✕</button></div>
+    <div class="modal-body">
+      <label>Zoek of kies een systeem</label>
+      <input type="text" id="addSysSearch" placeholder="Type om te zoeken..." oninput="renderAddSysList()">
+      <label style="margin-top: 0.75rem; cursor: pointer;"><input type="checkbox" id="addSysShowAll" onchange="renderAddSysList()" style="width: auto; margin-right: 0.4rem;"> Toon ook systemen die niet bij de locatie passen</label>
+      <div id="addSysList" style="margin-top: 0.75rem; max-height: 360px; overflow-y: auto; border: 1px solid var(--paper-deep);"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="openSystemFromAdd()">+ Nieuw systeem aanmaken</button>
+      <button class="btn-secondary btn" onclick="closeAddSysModal()">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- STAART POST MODAL -->
+<div class="modal-overlay" id="staartModal">
+  <div class="modal" style="max-width: 640px;">
+    <div class="modal-head"><h3 id="staartModalTitle">Staartkosten-post</h3><button class="close-x" onclick="closeStaartModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div style="grid-column: 1 / -1;"><label>Naam</label><input type="text" id="staartNaam"></div>
+        <div><label>Type</label>
+          <select id="staartType" onchange="updateStaartFields()">
+            <option value="vast">Vast bedrag</option>
+            <option value="dag">Per dag</option>
+            <option value="week">Per week</option>
+            <option value="eenheid">Per eenheid</option>
+            <option value="percent">Percentage</option>
+          </select>
+        </div>
+        <div id="staartEenheidWrap"><label>Eenheid</label><input type="text" id="staartEenheid" placeholder="m², m¹, stuk..."></div>
+        <div id="staartGrondslagWrap"><label>Grondslag</label>
+          <select id="staartGrondslag">
+            <option value="arbeid">Arbeid</option>
+            <option value="materiaal">Materiaal</option>
+            <option value="arbeid_materiaal">Arbeid + Materiaal</option>
+            <option value="subtotaal">Subtotaal (alle directe kosten)</option>
+          </select>
+        </div>
+        <div><label>Bedrag / Tarief / %</label><input type="number" id="staartBedrag" step="0.01"></div>
+        <div id="staartHoevWrap"><label>Hoeveelheid</label><input type="number" id="staartHoev" step="0.1"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="closeStaartModal()">Annuleren</button>
+      <button class="btn" onclick="saveStaart()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH OVERLAY — shown when not logged in -->
+<div id="authOverlay" class="active">
+  <div class="auth-card">
+    <div class="brand" style="margin-bottom:1.5rem;">
+      <div class="brand-mark"></div>
+      <h1>Schilders Calculatie</h1>
+    </div>
+    <h2>Inloggen</h2>
+    <p class="sub">Log in met je wachtwoord, of vraag een magic link aan.</p>
+    <label>E-mailadres</label>
+    <input type="email" id="authEmail" placeholder="jouw@email.nl">
+    <label style="margin-top:0.75rem;">Wachtwoord</label>
+    <input type="password" id="authPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter') signInWithPassword()">
+    <button class="btn" onclick="signInWithPassword()" id="authBtn" style="margin-top:0.75rem; width:100%;">Inloggen</button>
+    <div style="text-align:center; margin-top:0.85rem; padding-top:0.85rem; border-top:1px solid var(--paper-deep);">
+      <a href="#" onclick="event.preventDefault(); sendMagicLink()" style="font-size:0.82rem; color:var(--muted); text-decoration:underline;">Geen wachtwoord? Stuur me een magic link</a>
+    </div>
+    <div class="auth-msg" id="authMsg"></div>
+  </div>
+</div>
+
+<footer>Schilders Calculatie · v3.0.0 · Data via Supabase cloud</footer>
+
+<!-- PRINT AREA — only visible during print -->
+<div id="printArea" class="print-only"></div>
+
+<script>
+// ============================================================
+// SUPABASE CONFIG & AUTH
+// ============================================================
+const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
+const SUPABASE_KEY  = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
+const REDIRECT_URL  = 'https://gianernes.github.io/schilders-calc/';
+
+let _sb = null;  // Supabase client (set in init)
+
+function _showAuthMsg(msg, kind) {
+  const el = document.getElementById('authMsg');
+  el.textContent = msg;
+  el.className = 'auth-msg ' + kind;
+}
+
+async function sendMagicLink() {
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) { _showAuthMsg('Vul een e-mailadres in.', 'err'); return; }
+  const btn = document.getElementById('authBtn');
+  btn.disabled = true;
+  _showAuthMsg('Bezig met versturen...', 'info');
+  const { error } = await _sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: REDIRECT_URL, shouldCreateUser: false }
+  });
+  btn.disabled = false;
+  if (error) { _showAuthMsg('Fout: ' + error.message, 'err'); return; }
+  _showAuthMsg('✓ Check je inbox voor de magic link!', 'ok');
+}
+
+async function signInWithPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if (!email) { _showAuthMsg('Vul een e-mailadres in.', 'err'); return; }
+  if (!password) { _showAuthMsg('Vul een wachtwoord in (of gebruik magic link).', 'err'); return; }
+  const btn = document.getElementById('authBtn');
+  btn.disabled = true;
+  _showAuthMsg('Bezig met inloggen...', 'info');
+  const { error } = await _sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false;
+  if (error) { _showAuthMsg('Fout: ' + error.message, 'err'); return; }
+  // onAuthStateChange handelt de rest af (UI + dataload)
+}
+
+// Timeout-wrapper: Supabase-call die langer dan 10s duurt → foutmelding
+async function _sbQuery(queryPromise, label = 'Supabase') {
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), 10000)
+  );
+  try {
+    return await Promise.race([queryPromise, timeout]);
+  } catch(e) {
+    if (e.message === 'timeout') {
+      _toast(`${label} — verbinding te langzaam. Refresh en log opnieuw in.`);
+    } else {
+      _toast(`${label} — fout: ${e.message}`);
+    }
+    return { data: null, error: e };
+  }
+}
+
+async function signOut() {
+  // Wis sessie lokaal (werkt ook zonder netwerk)
+  Object.keys(localStorage).filter(k => k.includes('supabase')).forEach(k => localStorage.removeItem(k));
+  document.getElementById('authOverlay').classList.add('active');
+  document.getElementById('userBadge').style.display = 'none';
+  try { await _sb.auth.signOut(); } catch(e) { /* netwerk kan weg zijn, dat is ok */ }
+}
+
+function _onLoginSuccess(user) {
+  document.getElementById('authOverlay').classList.remove('active');
+  const badge = document.getElementById('userBadge');
+  badge.style.display = 'flex';
+  document.getElementById('userBadgeEmail').textContent = user.email;
+}
+
+// ============================================================
+// STORAGE & UTILS (non-materialen data still via localStorage)
+// ============================================================
+const STORAGE_KEY = 'verfcalc_v3';
+let _memStore = null;
+const ls_get = () => { try { return localStorage.getItem(STORAGE_KEY); } catch(e) { return _memStore; } };
+const ls_set = v => { try { localStorage.setItem(STORAGE_KEY, v); } catch(e) { _memStore = v; } };
+const uid = (p='x') => p + Date.now() + Math.random().toString(36).slice(2,6);
+const fmt = n => new Intl.NumberFormat('nl-NL', {minimumFractionDigits:2, maximumFractionDigits:2}).format(n||0);
+const fmt0 = n => new Intl.NumberFormat('nl-NL', {maximumFractionDigits:0}).format(n||0);
+const fmt1 = n => new Intl.NumberFormat('nl-NL', {minimumFractionDigits:1, maximumFractionDigits:1}).format(n||0);
+const fmt3 = n => new Intl.NumberFormat('nl-NL', {minimumFractionDigits:3, maximumFractionDigits:3}).format(n||0);
+const eur = n => '€ ' + fmt(n);
+
+const MATERIAAL_GROEPEN = [
+  'Afplakmateriaal',
+  'Behang',
+  'Binnenmuurverf',
+  'Buitenmuurverf',
+  'Dekverf synthetisch',
+  'Dekverf watergedragen',
+  'Gereedschap',
+  'Grondverf synthetisch',
+  'Grondverf watergedragen',
+  'Hulpmiddelen',
+  'Kwasten en rollers en toebehoren',
+  'Non paint',
+  'Reparatie middelen',
+  'Vernis/transparante verf',
+  'Voorstrijk, lijmen en kitten'
+];
+
+// Visual clustering for the settings UI
+const GROEP_CLUSTERS = [
+  {
+    naam: 'Verven',
+    groepen: [
+      'Binnenmuurverf',
+      'Buitenmuurverf',
+      'Dekverf synthetisch',
+      'Dekverf watergedragen',
+      'Grondverf synthetisch',
+      'Grondverf watergedragen',
+      'Vernis/transparante verf'
+    ]
+  },
+  {
+    naam: 'Klein materiaal & gereedschap',
+    groepen: [
+      'Afplakmateriaal',
+      'Gereedschap',
+      'Hulpmiddelen',
+      'Kwasten en rollers en toebehoren'
+    ]
+  },
+  {
+    naam: 'Speciaal & overig',
+    groepen: [
+      'Behang',
+      'Non paint',
+      'Reparatie middelen',
+      'Voorstrijk, lijmen en kitten'
+    ]
+  }
+];
+
+// Default opslag per groep
+const DEFAULT_GROEP_OPSLAGEN = {
+  'Binnenmuurverf': 30,
+  'Buitenmuurverf': 30,
+  'Dekverf synthetisch': 25,
+  'Dekverf watergedragen': 25,
+  'Grondverf synthetisch': 25,
+  'Grondverf watergedragen': 25,
+  'Vernis/transparante verf': 30,
+  'Afplakmateriaal': 40,
+  'Gereedschap': 40,
+  'Hulpmiddelen': 40,
+  'Kwasten en rollers en toebehoren': 40,
+  'Behang': 35,
+  'Non paint': 35,
+  'Reparatie middelen': 35,
+  'Voorstrijk, lijmen en kitten': 35
+};
+
+// Migration map for old group names → new group names
+const GROEP_MIGRATIE = {
+  'Muurverven en hulpmiddelen': 'Binnenmuurverf',
+  'Muurverven': 'Binnenmuurverf',
+  'Grondverven en lakken synthetisch': 'Grondverf synthetisch',
+  'Grondverven en lakken watergedragen': 'Grondverf watergedragen'
+};
+
+const defaultData = {
+  ondergronden: [
+    { id: 'o1', naam: 'Algemeen', locatie: 'beide' },
+    { id: 'o2', naam: 'Hout binnen', locatie: 'binnen' },
+    { id: 'o3', naam: 'Hout buiten', locatie: 'buiten' },
+    { id: 'o4', naam: 'Staal binnen', locatie: 'binnen' },
+    { id: 'o5', naam: 'Staal buiten', locatie: 'buiten' },
+    { id: 'o6', naam: 'Verzinkt', locatie: 'beide' },
+    { id: 'o7', naam: 'Stucwerk', locatie: 'beide' },
+    { id: 'o8', naam: 'Beton/Steen', locatie: 'beide' },
+    { id: 'o9', naam: 'Kunststof', locatie: 'beide' }
+  ],
+  materialen: [
+    { id: 'm1', naam: 'Sikkens Rubbol BL Satura', merk: 'Sikkens', type: 'Aflak watergedragen', groep: 'Dekverf watergedragen', eenheid: 'L', prijsPer: 32.50, rendement: 12 },
+    { id: 'm2', naam: 'Sikkens Rubbol AZ Plus', merk: 'Sikkens', type: 'Aflak terpentine', groep: 'Dekverf synthetisch', eenheid: 'L', prijsPer: 28.00, rendement: 13 },
+    { id: 'm3', naam: 'Sikkens Wapex 580', merk: 'Sikkens', type: 'Muurverf binnen', groep: 'Binnenmuurverf', eenheid: 'L', prijsPer: 9.50, rendement: 10 },
+    { id: 'm4', naam: 'Wijzonol BL Hechtprimer', merk: 'Wijzonol', type: 'Hechtprimer', groep: 'Grondverf watergedragen', eenheid: 'L', prijsPer: 22.50, rendement: 11 },
+    { id: 'm5', naam: 'Polyfilla Universeel', merk: 'Polyfilla', type: 'Plamuur', groep: 'Non paint', eenheid: 'kg', prijsPer: 5.00, rendement: 25 },
+    { id: 'm6', naam: 'Sigma S2U Allure', merk: 'Sigma', type: 'Muurverf binnen mat', groep: 'Binnenmuurverf', eenheid: 'L', prijsPer: 11.00, rendement: 9 },
+    { id: 'm7', naam: 'Schuurpapier korrel 120', merk: '3M', type: 'Schuurmateriaal', groep: 'Hulpmiddelen', eenheid: 'stuk', prijsPer: 0.40, rendement: 0 },
+    { id: 'm8', naam: 'Bison kit acryl', merk: 'Bison', type: 'Kit', groep: 'Non paint', eenheid: 'stuk', prijsPer: 5.80, rendement: 0 }
+  ],
+  bewerkingen: [
+    { id: 'b1', naam: 'Ontvetten / reinigen', eenheid: 'm²', minuten: 1.5, ondergrondId: 'o1', materiaalId: '', verbruik: 0 },
+    { id: 'b2', naam: 'Schuren vlak werk', eenheid: 'm²', minuten: 3.0, ondergrondId: 'o2', materiaalId: 'm7', verbruik: 0.05 },
+    { id: 'b3', naam: 'Schuren lijstwerk', eenheid: 'm¹', minuten: 2.4, ondergrondId: 'o3', materiaalId: 'm7', verbruik: 0.03 },
+    { id: 'b4', naam: 'Plamuren plaatselijk', eenheid: 'm²', minuten: 4.8, ondergrondId: 'o2', materiaalId: 'm5', verbruik: 0.05 },
+    { id: 'b5', naam: 'Grondlaag rollen', eenheid: 'm²', minuten: 3.6, ondergrondId: 'o2', materiaalId: 'm4', verbruik: 0.080 },
+    { id: 'b6', naam: 'Grondlaag kwast (kozijn)', eenheid: 'm¹', minuten: 4.2, ondergrondId: 'o3', materiaalId: 'm4', verbruik: 0.007 },
+    { id: 'b7', naam: 'Tussenlaag aflak rollen', eenheid: 'm²', minuten: 4.2, ondergrondId: 'o2', materiaalId: 'm1', verbruik: 0.080 },
+    { id: 'b8', naam: 'Eindlaag aflak rollen', eenheid: 'm²', minuten: 4.8, ondergrondId: 'o2', materiaalId: 'm1', verbruik: 0.080 },
+    { id: 'b9', naam: 'Eindlaag aflak kwast', eenheid: 'm¹', minuten: 6.0, ondergrondId: 'o3', materiaalId: 'm2', verbruik: 0.008 },
+    { id: 'b10', naam: 'Muurverf rollen 1 laag', eenheid: 'm²', minuten: 2.7, ondergrondId: 'o7', materiaalId: 'm3', verbruik: 0.150 },
+    { id: 'b11', naam: 'Afplakken / afdekken', eenheid: 'm²', minuten: 1.8, ondergrondId: 'o1', materiaalId: '', verbruik: 0 },
+    { id: 'b12', naam: 'Kitvoeg vernieuwen', eenheid: 'm¹', minuten: 5.0, ondergrondId: 'o3', materiaalId: 'm8', verbruik: 0.15 }
+  ],
+  systemen: [
+    { id: 's1', naam: 'Houten kozijn buiten - onderhoud', ondergrondId: 'o3', eenheid: 'm¹',
+      stappen: [
+        { bewerkingId: 'b1', percentage: 100 },
+        { bewerkingId: 'b3', percentage: 100 },
+        { bewerkingId: 'b6', percentage: 100 },
+        { bewerkingId: 'b9', percentage: 100 }
+      ] },
+    { id: 's2', naam: 'Binnenmuur stucwerk - 2-laags', ondergrondId: 'o7', eenheid: 'm²',
+      stappen: [
+        { bewerkingId: 'b11', percentage: 100 },
+        { bewerkingId: 'b10', percentage: 100 },
+        { bewerkingId: 'b10', percentage: 100 }
+      ] },
+    { id: 's3', naam: 'Binnendeur hout - onderhoud', ondergrondId: 'o2', eenheid: 'm²',
+      stappen: [
+        { bewerkingId: 'b1', percentage: 100 },
+        { bewerkingId: 'b2', percentage: 100 },
+        { bewerkingId: 'b4', percentage: 100 },
+        { bewerkingId: 'b7', percentage: 100 },
+        { bewerkingId: 'b8', percentage: 100 }
+      ] }
+  ],
+  staartLib: [
+    { id: 'sl1', naam: 'Hoogwerker', type: 'dag', bedrag: 175, eenheid: '', grondslag: '' },
+    { id: 'sl2', naam: 'Rolsteiger op-/afbouw', type: 'vast', bedrag: 120, eenheid: '', grondslag: '' },
+    { id: 'sl3', naam: 'Schaftwagen huur', type: 'dag', bedrag: 25, eenheid: '', grondslag: '' },
+    { id: 'sl4', naam: 'Toilet huur', type: 'dag', bedrag: 15, eenheid: '', grondslag: '' },
+    { id: 'sl5', naam: 'Afdekvlies', type: 'eenheid', bedrag: 0.40, eenheid: 'm²', grondslag: '' },
+    { id: 'sl6', naam: 'Klimtoeslag', type: 'percent', bedrag: 10, eenheid: '', grondslag: 'arbeid' }
+  ],
+  calculaties: [],
+  activeCalcId: null,
+  settings: {
+    uurloon: 48.00, reistijd: 35.00, km: 0.55, snelheid: 50,
+    kleinMat: 4, afval: 1.5, arbo: 2, winst: 10, btw: 21,
+    volleDagen: true,
+    afrondingsDrempel: 0.6,
+    groepOpslagen: { ...DEFAULT_GROEP_OPSLAGEN }
+  }
+};
+
+let data = JSON.parse(JSON.stringify(defaultData));
+
+// ============================================================
+// CALCULATIES ARCHIEF — actieve calc abstractie
+// ============================================================
+function _newCalcObj(naam = 'Nieuwe calculatie') {
+  return {
+    id: uid('c'),
+    naam,
+    klant: '',
+    reis: 0,
+    schilders: 2,
+    uurDag: 8,
+    volleDagenOverride: null, // null = volg globale instelling, true/false = forceer
+    status: 'concept',
+    aangemaakt: new Date().toISOString(),
+    gewijzigd: new Date().toISOString(),
+    hoofdgroepen: [
+      { id: uid('hg'), naam: 'Buiten', collapsed: false, onderdelen: [{ id: uid('od'), naam: 'Voorgevel', collapsed: false, regels: [] }] },
+      { id: uid('hg'), naam: 'Binnen', collapsed: false, onderdelen: [] }
+    ],
+    staart: [],
+    meetstaat: [],
+    notities: '',
+    todos: []
+  };
+}
+function _ensureActiveCalc() {
+  // make sure there's at least one calc and an active id
+  if (!data.calculaties || !data.calculaties.length) {
+    data.calculaties = [_newCalcObj('Calculatie 1')];
+    data.activeCalcId = data.calculaties[0].id;
+  }
+  if (!data.activeCalcId || !data.calculaties.find(c => c.id === data.activeCalcId)) {
+    data.activeCalcId = data.calculaties[0].id;
+  }
+}
+function _activeCalc() {
+  _ensureActiveCalc();
+  return data.calculaties.find(c => c.id === data.activeCalcId);
+}
+// Compatibility shim: data.calc points to active calculation
+// All existing code that uses data.calc.* keeps working.
+Object.defineProperty(data, 'calc', {
+  get: function() { return _activeCalc(); },
+  configurable: true
+});
+// Mark gewijzigd on every save
+const _origSaveData = () => ls_set(JSON.stringify(_serializeData()));
+function _serializeData() {
+  // strip the virtual property by serializing fields explicitly
+  return {
+    ondergronden: data.ondergronden,
+    bewerkingen: data.bewerkingen,
+    systemen: data.systemen,
+    staartLib: data.staartLib,
+    calculaties: data.calculaties,
+    activeCalcId: data.activeCalcId,
+    settings: data.settings
+  };
+}
+
+// ============================================================
+// MATERIAAL MAPPING: Supabase row → JS object
+// ============================================================
+function _mapMateriaalFromDB(row) {
+  return {
+    id:       row.id,
+    naam:     row.naam      || '',
+    merk:     row.merk      || '',
+    type:     row.type      || '',
+    groep:    MATERIAAL_GROEPEN.includes(row.groep) ? row.groep : 'Hulpmiddelen',
+    eenheid:  row.eenheid   || 'L',
+    prijsPer: parseFloat(row.prijs_per)  || 0,
+    rendement:parseFloat(row.rendement)  || 0
+  };
+}
+
+// JS object → DB row (geen id — DB genereert UUID bij INSERT)
+function _mapMateriaalToDB(m) {
+  return {
+    naam:      m.naam      || '',
+    merk:      m.merk      || '',
+    type:      m.type      || '',
+    groep:     m.groep     || 'Hulpmiddelen',
+    eenheid:   m.eenheid   || 'L',
+    prijs_per: m.prijsPer  || 0,
+    rendement: m.rendement || 0
+  };
+}
+
+// Eenvoudige toast voor foutmeldingen
+function _toast(msg, kind = 'err') {
+  let el = document.getElementById('_toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_toast';
+    el.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);padding:0.7rem 1.2rem;border-radius:6px;font-size:0.9rem;font-weight:500;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.15);pointer-events:none;transition:opacity 0.3s;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.background = kind === 'ok' ? '#e8f5e9' : '#ffebee';
+  el.style.color      = kind === 'ok' ? '#2e7d32'  : '#c62828';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 3500);
+}
+
+// INSERT nieuw materiaal → geeft DB-rij terug (met UUID)
+async function _insertMatDB(m) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('materialen').insert([_mapMateriaalToDB(m)]).select(), 'Materiaal opslaan'
+  );
+  if (error) { if (error.message !== 'timeout') _toast('Fout bij opslaan: ' + error.message); return null; }
+  if (!rows || !rows[0]) { _toast('Opgeslagen, maar geen bevestiging terug van DB'); return null; }
+  return _mapMateriaalFromDB(rows[0]);
+}
+
+// UPDATE bestaand materiaal (fire-and-forget met timeout)
+function _updateMatDB(m) {
+  _sbQuery(
+    _sb.from('materialen').update(_mapMateriaalToDB(m)).eq('id', m.id), 'Materiaal bijwerken'
+  ).then(({ error }) => { if (error && error.message !== 'timeout') _toast('Fout bij bijwerken: ' + error.message); });
+}
+
+// DELETE materiaal
+async function _deleteMatDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('materialen').delete().eq('id', id), 'Materiaal verwijderen'
+  );
+  if (error) { _toast('Fout bij verwijderen: ' + error.message); return false; }
+  return true;
+}
+
+// Fetch materialen from Supabase — returns array (empty on error/timeout)
+async function _fetchMaterialenFromDB() {
+  if (!_sb) return [];
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('materialen').select('*').order('naam'), 'Materialen ophalen'
+  );
+  if (error || !rows) return [];
+  return rows.map(_mapMateriaalFromDB);
+}
+
+// ============================================================
+// LOAD DATA (async — materialen from Supabase, rest from localStorage)
+// ============================================================
+async function loadData() {
+  // 1. Load non-materialen data from localStorage (same migration logic as before)
+  const saved = ls_get();
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      Object.keys(parsed).forEach(k => {
+        if (k !== 'calc' && k !== 'materialen') data[k] = parsed[k];
+      });
+      // Migration: old format had `calc` as object
+      if (parsed.calc && (!parsed.calculaties || !parsed.calculaties.length)) {
+        const old = parsed.calc;
+        const migrated = {
+          id: uid('c'), naam: old.project || 'Gemigreerde calculatie',
+          klant: old.klant || '', reis: old.reis || 0,
+          schilders: old.schilders || 2, uurDag: old.uurDag || 8,
+          status: 'concept', aangemaakt: new Date().toISOString(),
+          gewijzigd: new Date().toISOString(),
+          hoofdgroepen: old.hoofdgroepen || [], staart: old.staart || []
+        };
+        data.calculaties = [migrated]; data.activeCalcId = migrated.id;
+      }
+      // Settings migrations
+      if (data.settings && data.settings.groepOpslagen) {
+        Object.keys(GROEP_MIGRATIE).forEach(oldKey => {
+          const newKey = GROEP_MIGRATIE[oldKey];
+          if (data.settings.groepOpslagen[oldKey] !== undefined && data.settings.groepOpslagen[newKey] === undefined)
+            data.settings.groepOpslagen[newKey] = data.settings.groepOpslagen[oldKey];
+          delete data.settings.groepOpslagen[oldKey];
+        });
+      }
+      MATERIAAL_GROEPEN.forEach(g => {
+        if (data.settings.groepOpslagen[g] === undefined)
+          data.settings.groepOpslagen[g] = DEFAULT_GROEP_OPSLAGEN[g] ?? 30;
+      });
+      if (data.settings.snelheid === undefined) data.settings.snelheid = 50;
+      if (data.settings.volleDagen === undefined) data.settings.volleDagen = true;
+      if (data.settings.afrondingsDrempel === undefined) data.settings.afrondingsDrempel = 0.6;
+      // Ondergronden locatie migration
+      if (data.ondergronden) {
+        data.ondergronden.forEach(o => {
+          if (o.locatie === undefined) {
+            const n = (o.naam || '').toLowerCase();
+            o.locatie = n.includes('buiten') ? 'buiten' : n.includes('binnen') ? 'binnen' : 'beide';
+          }
+        });
+      }
+      if (data.systemen) data.systemen.forEach(s => { if (s.locatie !== undefined) delete s.locatie; });
+      // Calculaties migrations
+      if (data.calculaties && Array.isArray(data.calculaties)) {
+        data.calculaties.forEach(c => {
+          if (!c.meetstaat) c.meetstaat = [];
+          if (c.notities === undefined) c.notities = '';
+          if (!c.todos) c.todos = [];
+          if (c.hoofdgroepen) c.hoofdgroepen.forEach(hg => {
+            if (hg.onderdelen) hg.onderdelen.forEach(od => {
+              if (od.regels) od.regels.forEach(r => {
+                if (!r.stappen && r.systeemId) {
+                  const snap = _snapshotSystem(r.systeemId);
+                  if (snap) { r.systeemNaam = snap.systeemNaam; r.systeemEenheid = snap.systeemEenheid; r.systeemOndergrond = snap.systeemOndergrond; r.systeemOndergrondId = snap.systeemOndergrondId; r.systeemLocatie = snap.systeemLocatie; r.stappen = snap.stappen; }
+                  else { r.systeemNaam = '<verwijderd systeem>'; r.systeemEenheid = '—'; r.stappen = []; }
+                }
+              });
+            });
+          });
+        });
+      }
+    } catch(e) { console.warn('localStorage load failed', e); }
+  }
+  _ensureActiveCalc();
+
+  // 2. Fetch materialen from Supabase (overrides defaults/localStorage)
+  const matFromDB = await _fetchMaterialenFromDB();
+  if (matFromDB.length > 0) {
+    data.materialen = matFromDB;
+  }
+  // If DB returned empty, keep whatever defaults are in data.materialen
+}
+
+function saveData() {
+  const a = _activeCalc();
+  if (a) a.gewijzigd = new Date().toISOString();
+  // Fase 3a: save everything EXCEPT materialen to localStorage
+  // materialen writes komen in fase 3b
+  const payload = _serializeData();
+  ls_set(JSON.stringify(payload));
+}
+
+
+// ============================================================
+// NAV
+// ============================================================
+document.querySelectorAll('nav button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById(b.dataset.tab).classList.add('active');
+    if (b.dataset.tab === 'dashboard')     renderDashboard();
+    if (b.dataset.tab === 'meetstaat')     renderMeetstaat();
+    if (b.dataset.tab === 'materialen')    renderMaterialen();
+    if (b.dataset.tab === 'bewerkingen')   renderBewerkingen();
+    if (b.dataset.tab === 'ondergronden')  renderOndergronden();
+    if (b.dataset.tab === 'systemen')      renderSystemen();
+    if (b.dataset.tab === 'instellingen')  loadSettings();
+  });
+});
+
+// === MODULE PLACEHOLDERS — filled by following steps ===
+// ============================================================
+// ONDERGRONDEN
+// ============================================================
+function renderOndergronden() {
+  const c = document.getElementById('ondergrondenLijst');
+  if (!data.ondergronden.length) { c.innerHTML = '<div class="empty-state">Geen ondergronden.</div>'; return; }
+  let html = '<div class="table-scroll"><table><thead><tr><th style="width:80px;">Volgorde</th><th>Naam</th><th style="width:140px;">Locatie</th><th></th></tr></thead><tbody>';
+  data.ondergronden.forEach((o, i) => {
+    const used = data.bewerkingen.some(b => b.ondergrondId === o.id) || data.systemen.some(s => s.ondergrondId === o.id);
+    const loc = o.locatie || 'beide';
+    html += `<tr>
+      <td>
+        <button class="btn-icon" onclick="moveOnd('${o.id}',-1)" ${i===0?'disabled':''}>↑</button>
+        <button class="btn-icon" onclick="moveOnd('${o.id}',1)" ${i===data.ondergronden.length-1?'disabled':''}>↓</button>
+      </td>
+      <td><input value="${o.naam}" onchange="updOnd('${o.id}','naam',this.value)"></td>
+      <td>
+        <select onchange="updOnd('${o.id}','locatie',this.value)">
+          <option value="binnen" ${loc==='binnen'?'selected':''}>Binnen</option>
+          <option value="buiten" ${loc==='buiten'?'selected':''}>Buiten</option>
+          <option value="beide" ${loc==='beide'?'selected':''}>Beide</option>
+        </select>
+      </td>
+      <td class="right"><button class="btn btn-danger btn-sm" onclick="delOnd('${o.id}')" ${used?'disabled title="In gebruik"':''}>×</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+function moveOnd(id, dir) {
+  const i = data.ondergronden.findIndex(o => o.id === id);
+  if (i === -1) return;
+  const j = i + dir;
+  if (j < 0 || j >= data.ondergronden.length) return;
+  [data.ondergronden[i], data.ondergronden[j]] = [data.ondergronden[j], data.ondergronden[i]];
+  saveData(); renderOndergronden();
+}
+function updOnd(id, field, val) {
+  const o = data.ondergronden.find(x=>x.id===id);
+  if (!o) return;
+  o[field] = val;
+  saveData();
+  renderOndergronden();
+  if (field === 'naam' || field === 'locatie') {
+    renderBewerkingen();
+    renderSystemen();
+  }
+}
+function addOndergrond() { data.ondergronden.push({id: uid('o'), naam: 'Nieuw'}); saveData(); renderOndergronden(); renderBewerkingen(); }
+function delOnd(id) {
+  const used = data.bewerkingen.some(b => b.ondergrondId === id) || data.systemen.some(s => s.ondergrondId === id);
+  if (used) { alert('Deze ondergrond is in gebruik.'); return; }
+  if (!confirm('Verwijderen?')) return;
+  data.ondergronden = data.ondergronden.filter(o => o.id !== id);
+  saveData(); renderOndergronden();
+}
+// ============================================================
+// MATERIALEN
+// ============================================================
+function renderMaterialen() {
+  const c = document.getElementById('materialenLijst');
+  if (!data.materialen.length) { c.innerHTML = '<div class="empty-state">Geen materialen.</div>'; return; }
+  // Sort: group alphabetical, then name alphabetical (in-place is fine; render-only sort)
+  const sorted = [...data.materialen].sort((a,b) => {
+    const ga = (a.groep||'').toLowerCase();
+    const gb = (b.groep||'').toLowerCase();
+    if (ga !== gb) return ga.localeCompare(gb);
+    return (a.naam||'').toLowerCase().localeCompare((b.naam||'').toLowerCase());
+  });
+  let html = '<div class="table-scroll"><table><thead><tr><th>Naam</th><th>Merk</th><th>Groep</th><th>Eenh.</th><th class="right">€ Inkoop</th><th class="right">€ Verkoop</th><th></th></tr></thead><tbody>';
+  sorted.forEach(m => {
+    const groepOpts = MATERIAAL_GROEPEN.map(g => `<option ${g===m.groep?'selected':''}>${g}</option>`).join('');
+    const eenheidOpts = ['L','kg','stuk'].map(e => `<option ${e===m.eenheid?'selected':''}>${e}</option>`).join('');
+    const opslag = data.settings.groepOpslagen[m.groep] || 0;
+    const verkoop = (m.prijsPer || 0) * (1 + opslag/100);
+    html += `<tr>
+      <td><input value="${m.naam}" onchange="updMat('${m.id}','naam',this.value)"></td>
+      <td><input value="${m.merk||''}" onchange="updMat('${m.id}','merk',this.value)"></td>
+      <td><select onchange="updMat('${m.id}','groep',this.value)">${groepOpts}</select></td>
+      <td><select onchange="updMat('${m.id}','eenheid',this.value)">${eenheidOpts}</select></td>
+      <td class="num right"><input type="number" step="0.01" value="${m.prijsPer}" onchange="updMat('${m.id}','prijsPer',parseFloat(this.value))"></td>
+      <td class="num right" style="color:var(--accent-deep); font-weight:600;">€ ${fmt(verkoop)} <span style="color:var(--muted); font-size:0.7rem; font-weight:400;">+${opslag}%</span></td>
+      <td><button class="btn btn-danger btn-sm" onclick="delMat('${m.id}')">×</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+function updMat(id, field, val) {
+  const m = data.materialen.find(x => x.id === id);
+  if (!m) return;
+  m[field] = val;
+  // Schrijf naar Supabase (optimistisch — UI blijft direct reageren)
+  _updateMatDB(m);
+  if (['prijsPer','groep','eenheid','naam'].includes(field)) {
+    renderMaterialen(); renderBewerkingen(); renderSystemen(); renderTotals();
+  }
+}
+async function addMaterial() {
+  const nieuw = { naam: 'Nieuw materiaal', merk: '', type: '', groep: 'Hulpmiddelen', eenheid: 'L', prijsPer: 0, rendement: 0 };
+  const saved = await _insertMatDB(nieuw);
+  if (!saved) return; // fout al getoond via _toast
+  data.materialen.push(saved);
+  renderMaterialen();
+}
+async function delMat(id) {
+  if (!confirm('Verwijderen?')) return;
+  const ok = await _deleteMatDB(id);
+  if (!ok) return;
+  data.materialen = data.materialen.filter(m => m.id !== id);
+  renderMaterialen(); renderBewerkingen(); renderSystemen();
+}
+// ============================================================
+// BEWERKINGEN
+// ============================================================
+function renderBewerkingen() {
+  const c = document.getElementById('bewerkingenLijst');
+  if (!data.bewerkingen.length) { c.innerHTML = '<div class="empty-state">Geen bewerkingen.</div>'; return; }
+  const uurloon = data.settings.uurloon || 0;
+
+  // Group bewerkingen by ondergrond, preserving order within data.bewerkingen
+  const grouped = new Map();
+  // Initialize with all ondergronden so empty groups can also be shown if needed
+  data.ondergronden.forEach(o => grouped.set(o.id, []));
+  data.bewerkingen.forEach(b => {
+    if (!grouped.has(b.ondergrondId)) grouped.set(b.ondergrondId, []);
+    grouped.get(b.ondergrondId).push(b);
+  });
+
+  let html = '';
+  // Render each ondergrond in the order of data.ondergronden
+  data.ondergronden.forEach(o => {
+    const list = grouped.get(o.id) || [];
+    if (list.length === 0) return; // skip empty ondergronden
+    html += `<div class="bew-cluster">
+      <div class="bew-cluster-titel">${o.naam} <span style="color:var(--muted); font-weight:400; font-size:0.78em;">— ${list.length} ${list.length===1?'bewerking':'bewerkingen'}</span></div>
+      <div class="table-scroll"><table>
+        <thead><tr>
+          <th style="width:80px;">Volgorde</th>
+          <th>Naam</th>
+          <th>Eenh.</th>
+          <th class="right">Min/eenh</th>
+          <th>Materiaal</th>
+          <th class="right">Verbruik</th>
+          <th class="right">€ mat.</th>
+          <th class="right">€ totaal</th>
+          <th></th>
+        </tr></thead>
+        <tbody>`;
+    list.forEach((b, i) => {
+      const eenheidOpts = ['m²','m¹','stuk'].map(e => `<option ${e===b.eenheid?'selected':''}>${e}</option>`).join('');
+      const matOpts = '<option value="">— geen —</option>' + data.materialen.map(m => `<option value="${m.id}" ${m.id===b.materiaalId?'selected':''}>${m.naam}</option>`).join('');
+      const ondOpts = data.ondergronden.map(oo => `<option value="${oo.id}" ${oo.id===b.ondergrondId?'selected':''}>${oo.naam}</option>`).join('');
+      const mat = data.materialen.find(x => x.id === b.materiaalId);
+      const matEenheid = mat ? mat.eenheid : '—';
+      const matKosten = mat ? mat.prijsPer * (b.verbruik || 0) : 0;
+      const arbeidEur = (b.minuten / 60) * uurloon;
+      const totaal = arbeidEur + matKosten;
+      html += `<tr>
+        <td>
+          <button class="btn-icon" onclick="moveBewInOnd('${b.id}',-1)" ${i===0?'disabled':''}>↑</button>
+          <button class="btn-icon" onclick="moveBewInOnd('${b.id}',1)" ${i===list.length-1?'disabled':''}>↓</button>
+        </td>
+        <td><input value="${b.naam}" onchange="updBew('${b.id}','naam',this.value)"></td>
+        <td><select onchange="updBew('${b.id}','eenheid',this.value)">${eenheidOpts}</select></td>
+        <td class="num right"><input type="number" step="0.1" value="${b.minuten}" onchange="updBew('${b.id}','minuten',parseFloat(this.value))"></td>
+        <td><select onchange="updBew('${b.id}','materiaalId',this.value)">${matOpts}</select></td>
+        <td class="num right"><input type="number" step="0.001" value="${b.verbruik||0}" onchange="updBew('${b.id}','verbruik',parseFloat(this.value))" title="Verbruik in ${matEenheid} per ${b.eenheid}"> <span style="color:var(--muted); font-size:0.7rem;">${matEenheid}/${b.eenheid}</span></td>
+        <td class="num right" style="color:var(--ink-soft);">€ ${fmt(matKosten)}</td>
+        <td class="num right" style="color:var(--accent-deep); font-weight:600;">€ ${fmt(totaal)}</td>
+        <td>
+          <select onchange="updBew('${b.id}','ondergrondId',this.value)" title="Verplaats naar andere ondergrond" style="margin-bottom:0.2rem; font-size:0.7rem; padding:0.2rem;">${ondOpts}</select>
+          <button class="btn-icon" onclick="dupBew('${b.id}')" title="Dupliceren">⎘</button>
+          <button class="btn btn-danger btn-sm" onclick="delBew('${b.id}')">×</button>
+        </td>
+      </tr>`;
+    });
+    html += `</tbody></table></div></div>`;
+  });
+
+  // Bewerkingen with unknown ondergrond (shouldn't happen, but vangnet)
+  const orphans = [...grouped.entries()].filter(([id]) => !data.ondergronden.find(o => o.id === id)).flatMap(([,list]) => list);
+  if (orphans.length) {
+    html += `<div class="bew-cluster"><div class="bew-cluster-titel" style="color:var(--accent-deep);">⚠ Zonder ondergrond</div><p style="color:var(--muted); font-size:0.8rem;">${orphans.length} bewerkingen hebben geen geldige ondergrond.</p></div>`;
+  }
+
+  html += '<p style="color: var(--muted); font-size: 0.72rem; margin-top: 0.75rem;"><em>€ mat. = inkoopprijs × verbruik &nbsp;·&nbsp; € totaal = (min ÷ 60 × uurloon) + materiaal</em></p>';
+  c.innerHTML = html;
+}
+
+function moveBewInOnd(id, dir) {
+  const b = data.bewerkingen.find(x => x.id === id);
+  if (!b) return;
+  // Find indices of bewerkingen in same ondergrond
+  const sameOndIndices = [];
+  data.bewerkingen.forEach((bb, i) => { if (bb.ondergrondId === b.ondergrondId) sameOndIndices.push(i); });
+  const myPos = sameOndIndices.indexOf(data.bewerkingen.indexOf(b));
+  if (myPos === -1) return;
+  const targetPos = myPos + dir;
+  if (targetPos < 0 || targetPos >= sameOndIndices.length) return;
+  const i = sameOndIndices[myPos];
+  const j = sameOndIndices[targetPos];
+  [data.bewerkingen[i], data.bewerkingen[j]] = [data.bewerkingen[j], data.bewerkingen[i]];
+  saveData(); renderBewerkingen();
+}
+function updBew(id, field, val) {
+  const b = data.bewerkingen.find(x => x.id === id);
+  if (!b) return;
+  b[field] = val;
+  saveData();
+  renderBewerkingen(); renderSystemen(); renderTotals();
+}
+function addBewerking() { data.bewerkingen.push({id: uid('b'), naam: 'Nieuwe bewerking', eenheid: 'm²', minuten: 3, ondergrondId: data.ondergronden[0]?.id || '', materiaalId: '', verbruik: 0}); saveData(); renderBewerkingen(); }
+function delBew(id) { if(!confirm('Verwijderen?')) return; data.bewerkingen = data.bewerkingen.filter(b=>b.id!==id); saveData(); renderBewerkingen(); renderSystemen(); }
+function dupBew(id) {
+  const orig = data.bewerkingen.find(b => b.id === id);
+  if (!orig) return;
+  const copy = JSON.parse(JSON.stringify(orig));
+  copy.id = uid('b');
+  copy.naam = orig.naam + ' (kopie)';
+  // Plaats direct na het origineel in de array
+  const i = data.bewerkingen.indexOf(orig);
+  data.bewerkingen.splice(i + 1, 0, copy);
+  saveData(); renderBewerkingen();
+}
+// ============================================================
+// PDF EXPORT — print-friendly view of active calculation
+// ============================================================
+function printCalc() {
+  const c = data.calc;
+  if (!c) return;
+  const sett = data.settings;
+  const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+
+  const t = calcProjectTotalen();
+  const dagenWerkelijk = _calcDays();
+  const dagenFactureerbaar = _calcDaysFactureerbaar();
+  const volleDagen = _useVolleDagen();
+  const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
+  const afrondingsToeslag = volleDagen ? dagenVerschil * (c.schilders||0) * (c.uurDag||8) * sett.uurloon : 0;
+  const arbeidWerkelijk = t.arbeid;
+  const arbeid = arbeidWerkelijk + afrondingsToeslag;
+  const weken = _calcWeeks();
+  const reisAfstand = c.reis || 0;
+  const snelheid = sett.snelheid || 50;
+  const reisUren = dagenFactureerbaar * (c.schilders||0) * (reisAfstand / snelheid);
+  const reisKostenUren = reisUren * sett.reistijd;
+  const reisKm = dagenFactureerbaar * (reisAfstand * 2) * sett.km;
+  const reisTotaal = reisKostenUren + reisKm;
+  const kleinMat = t.matVerkoop * sett.kleinMat/100;
+  const afval = (arbeid + t.matVerkoop) * sett.afval/100;
+  const arbo = arbeid * sett.arbo/100;
+  const staartTotaal = calcStaartTotaal();
+  const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
+  const winstBedrag = directe * sett.winst/100;
+  const exBtw = directe + winstBedrag;
+  const btwBedrag = exBtw * sett.btw/100;
+  const totaal = exBtw + btwBedrag;
+
+  const STATUS_LABELS = { concept:'Concept', gereed:'Gereed', verzonden:'Verzonden', geaccepteerd:'Geaccepteerd', verloren:'Verloren' };
+
+  let html = '';
+
+  // Header
+  html += `<div class="header-block">
+    <div>
+      <h1>Schilders Calculatie</h1>
+      <div class="meta">Voorcalculatie · Intern document</div>
+    </div>
+    <div style="text-align: right; font-size: 9pt;">
+      <div><strong>${datum}</strong></div>
+      <div>Status: ${STATUS_LABELS[c.status]||c.status}</div>
+    </div>
+  </div>`;
+
+  // Project info
+  html += `<div class="section">
+    <h2>${c.naam || 'Calculatie'}</h2>
+    <div class="summary-grid">
+      <div><span class="label">Klant: </span>${c.klant||'—'}</div>
+      <div><span class="label">Aangemaakt: </span>${c.aangemaakt ? new Date(c.aangemaakt).toLocaleDateString('nl-NL') : '—'}</div>
+      <div><span class="label">Aantal schilders: </span>${c.schilders||0}</div>
+      <div><span class="label">Uren per werkdag: </span>${c.uurDag||8}</div>
+      <div><span class="label">Reisafstand (enkele reis): </span>${reisAfstand} km</div>
+      <div><span class="label">Werkdagen (werkelijk): </span>${fmt1(dagenWerkelijk)}</div>
+      ${dagenFactureerbaar !== dagenWerkelijk ? `<div><span class="label">Werkdagen (factureerbaar): </span><strong>${dagenFactureerbaar}</strong></div>` : ''}
+    </div>
+  </div>`;
+
+  // Notities & to-dos (alleen tonen als er content is)
+  const notitiesText = (c.notities || '').trim();
+  const todos = (c.todos || []);
+  if (notitiesText || todos.length) {
+    html += `<div class="section">
+      <h2>Notities &amp; taken</h2>`;
+    if (notitiesText) {
+      const safe = notitiesText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+      html += `<div style="margin-bottom: 0.7rem; padding: 0.6rem 0.8rem; background: #f8f6f1; border-left: 3px solid #999; font-style: italic;">${safe}</div>`;
+    }
+    if (todos.length) {
+      html += `<ul style="list-style: none; padding-left: 0; margin: 0;">`;
+      todos.forEach(t => {
+        const tekst = (t.tekst || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const mark = t.done ? '☑' : '☐';
+        const style = t.done ? 'text-decoration: line-through; color: #888;' : '';
+        html += `<li style="padding: 0.18rem 0; ${style}">${mark} ${tekst || '<em style="color:#aaa;">(leeg)</em>'}</li>`;
+      });
+      html += '</ul>';
+    }
+    html += `</div>`;
+  }
+
+  // Hoofdgroepen → onderdelen → regels
+  c.hoofdgroepen.forEach(hg => {
+    const hgT = calcHoofdgroepTotalen(hg);
+    html += `<div class="section">
+      <h2>${hg.naam}</h2>`;
+    if (!hg.onderdelen.length) {
+      html += `<div class="meta"><em>Geen onderdelen</em></div>`;
+    } else {
+      hg.onderdelen.forEach(od => {
+        const odT = calcOnderdeelTotalen(od);
+        html += `<h3>${od.naam}</h3>`;
+        if (!od.regels.length) {
+          html += `<div class="meta" style="margin-left:8pt;"><em>Geen regels</em></div>`;
+        } else {
+          html += `<table><thead><tr>
+            <th>Locatie / omschrijving</th>
+            <th>Verfsysteem</th>
+            <th class="right">Hoeveelheid</th>
+            <th class="right">% staat</th>
+            <th class="right">Uren</th>
+            <th class="right">Materiaal</th>
+            <th class="right">Verkoop</th>
+          </tr></thead><tbody>`;
+          od.regels.forEach(r => {
+            const s = data.systemen.find(x => x.id === r.systeemId);
+            const rt = calcRegelTotalen(r);
+            html += `<tr>
+              <td>${r.naam||'—'}</td>
+              <td>${s ? s.naam : '<em>verwijderd</em>'}</td>
+              <td class="num right">${fmt(r.hoeveelheid||0)} ${s?s.eenheid:''}</td>
+              <td class="num right">${r.toeslag||0}%</td>
+              <td class="num right">${fmt(rt.uren)} u</td>
+              <td class="num right">${eur(rt.matVerkoop)}</td>
+              <td class="num right">${eur(rt.verkoop)}</td>
+            </tr>`;
+          });
+          html += `<tr class="totaal-row">
+            <td colspan="4"><strong>Subtotaal ${od.naam}</strong></td>
+            <td class="num right">${fmt(odT.uren)} u</td>
+            <td class="num right">${eur(odT.matVerkoop)}</td>
+            <td class="num right">${eur(odT.verkoop)}</td>
+          </tr>`;
+          html += `</tbody></table>`;
+        }
+      });
+      html += `<table style="margin-top:6pt;"><tbody><tr class="totaal-row">
+        <td><strong>Totaal ${hg.naam}</strong></td>
+        <td class="num right">${fmt(hgT.uren)} uren</td>
+        <td class="num right">${eur(hgT.matVerkoop)} materiaal</td>
+        <td class="num right">${eur(hgT.verkoop)} verkoop</td>
+      </tr></tbody></table>`;
+    }
+    html += `</div>`;
+  });
+
+  // Staartkosten
+  if (c.staart && c.staart.length) {
+    html += `<div class="section">
+      <h2>Staartkosten</h2>
+      <table><thead><tr>
+        <th>Naam</th><th>Type</th><th>Detail</th><th class="right">Subtotaal</th>
+      </tr></thead><tbody>`;
+    c.staart.forEach(p => {
+      const sub = calcStaart(p);
+      let detail = '';
+      if (p.type === 'vast') detail = '€ ' + fmt(p.bedrag) + ' vast';
+      else if (p.type === 'dag') detail = '€ ' + fmt(p.bedrag) + '/dag × ' + dagenFactureerbaar + ' dagen';
+      else if (p.type === 'week') detail = '€ ' + fmt(p.bedrag) + '/week × ' + weken + ' weken';
+      else if (p.type === 'eenheid') detail = '€ ' + fmt(p.bedrag) + '/' + (p.eenheid||'eenh.') + ' × ' + fmt(p.hoeveelheid||0);
+      else if (p.type === 'percent') detail = fmt(p.bedrag) + '% over ' + p.grondslag;
+      html += `<tr>
+        <td>${p.naam}</td>
+        <td>${p.type}</td>
+        <td>${detail}</td>
+        <td class="num right">${eur(sub)}</td>
+      </tr>`;
+    });
+    html += `<tr class="totaal-row"><td colspan="3"><strong>Totaal staartkosten</strong></td><td class="num right">${eur(staartTotaal)}</td></tr>`;
+    html += `</tbody></table></div>`;
+  }
+
+  // Calculatie-opbouw
+  const arbeidRow = afrondingsToeslag > 0
+    ? `<tr><td>Arbeid (werkelijk)</td><td class="num right">${eur(arbeidWerkelijk)}</td></tr>
+       <tr><td>&nbsp;&nbsp;+ Afronding laatste dag (${fmt1(dagenVerschil)} dag)</td><td class="num right">${eur(afrondingsToeslag)}</td></tr>
+       <tr><td><strong>Arbeid totaal</strong></td><td class="num right"><strong>${eur(arbeid)}</strong></td></tr>`
+    : `<tr><td>Arbeid</td><td class="num right">${eur(arbeid)}</td></tr>`;
+  html += `<div class="section">
+    <h2>Calculatie-opbouw</h2>
+    <table><tbody>
+      <tr><td>Totaal uren</td><td class="num right">${fmt(t.uren)} u</td></tr>
+      ${arbeidRow}
+      <tr><td>Materiaal verkoop</td><td class="num right">${eur(t.matVerkoop)}</td></tr>
+      <tr><td>&nbsp;&nbsp;+ Klein materiaal (${sett.kleinMat}%)</td><td class="num right">${eur(kleinMat)}</td></tr>
+      <tr><td>&nbsp;&nbsp;+ Afval / milieu (${sett.afval}%)</td><td class="num right">${eur(afval)}</td></tr>
+      <tr><td>&nbsp;&nbsp;+ ARBO (${sett.arbo}%)</td><td class="num right">${eur(arbo)}</td></tr>
+      <tr><td>Reis (${fmt(reisUren)} u + ${fmt(dagenFactureerbaar*reisAfstand*2)} km)</td><td class="num right">${eur(reisTotaal)}</td></tr>
+      <tr><td>Staartkosten</td><td class="num right">${eur(staartTotaal)}</td></tr>
+      <tr class="totaal-row"><td><strong>Directe kosten</strong></td><td class="num right">${eur(directe)}</td></tr>
+      <tr><td>+ Risico (${sett.winst}%)</td><td class="num right">${eur(winstBedrag)}</td></tr>
+      <tr class="totaal-row"><td><strong>Excl. BTW</strong></td><td class="num right">${eur(exBtw)}</td></tr>
+      <tr><td>+ BTW (${sett.btw}%)</td><td class="num right">${eur(btwBedrag)}</td></tr>
+      <tr class="grand-row"><td><strong>Totaal incl. BTW</strong></td><td class="num right"><strong>${eur(totaal)}</strong></td></tr>
+    </tbody></table>
+  </div>`;
+
+  // Planning
+  html += `<div class="section">
+    <h2>Planning</h2>
+    <div class="summary-grid">
+      <div><span class="label">Totaal uren: </span>${fmt(t.uren)}</div>
+      <div><span class="label">Aantal schilders: </span>${c.schilders||0}</div>
+      <div><span class="label">Uren per werkdag: </span>${c.uurDag||8}</div>
+      <div><span class="label">Werkdagen werkelijk: </span>${fmt1(dagenWerkelijk)}</div>
+      <div><span class="label">Werkdagen factureerbaar: </span><strong>${dagenFactureerbaar}</strong></div>
+      <div><span class="label">Volle dagen factureren: </span>${volleDagen ? 'Ja' : 'Nee'}</div>
+    </div>
+  </div>`;
+
+  // Gebruikte instellingen
+  html += `<div class="section new-page">
+    <h2>Gebruikte instellingen</h2>
+    <h3>Tarieven</h3>
+    <table><tbody>
+      <tr><td>Schilder uurloon</td><td class="num right">${eur(sett.uurloon)}/u</td></tr>
+      <tr><td>Reistijd-tarief</td><td class="num right">${eur(sett.reistijd)}/u</td></tr>
+      <tr><td>Reiskosten</td><td class="num right">${eur(sett.km)}/km</td></tr>
+      <tr><td>Gemiddelde snelheid</td><td class="num right">${snelheid} km/u</td></tr>
+    </tbody></table>
+    <h3>Opslagen (%)</h3>
+    <table><tbody>
+      <tr><td>Klein materiaal</td><td class="num right">${sett.kleinMat}%</td></tr>
+      <tr><td>Afval / Milieu</td><td class="num right">${sett.afval}%</td></tr>
+      <tr><td>ARBO / Veiligheid</td><td class="num right">${sett.arbo}%</td></tr>
+      <tr><td>Risico</td><td class="num right">${sett.winst}%</td></tr>
+      <tr><td>BTW</td><td class="num right">${sett.btw}%</td></tr>
+    </tbody></table>
+    <h3>Materiaalopslag per groep</h3>
+    <table><tbody>`;
+  MATERIAAL_GROEPEN.forEach(g => {
+    html += `<tr><td>${g}</td><td class="num right">${sett.groepOpslagen[g]||0}%</td></tr>`;
+  });
+  html += `</tbody></table>
+  </div>`;
+
+  // Verfsystemen-specificatie per regel (uit snapshot)
+  const allRegels = [];
+  c.hoofdgroepen.forEach(hg => hg.onderdelen.forEach(od => od.regels.forEach(r => {
+    if (r.stappen && r.stappen.length) allRegels.push({ r, hgNaam: hg.naam, odNaam: od.naam });
+  })));
+  if (allRegels.length > 0) {
+    html += `<div class="section new-page">
+      <h2>Specificatie verfsystemen per regel</h2>
+      <div class="meta"><em>Snapshot van de gebruikte recepten zoals bevroren in de calculatie. Wijzigingen aan de bibliotheek na het toevoegen van de regel zijn hier niet meer in verwerkt.</em></div>`;
+    allRegels.forEach(({ r, hgNaam, odNaam }) => {
+      const sysCalc = calcRegelTotalen({ ...r, hoeveelheid: 1, toeslag: 0 });
+      let totMin = 0, totMatInk = 0;
+      r.stappen.forEach(st => { const cs = calcSnapshotStep(st); totMin += cs.minuten; totMatInk += cs.matInkoop; });
+      html += `<h3>${r.systeemNaam} <span style="color:#666; font-weight:400; font-size:0.85em;">— ${hgNaam} / ${odNaam}${r.naam ? ' / ' + r.naam : ''}</span></h3>
+        <div class="meta">${r.systeemOndergrond || '?'} · per ${r.systeemEenheid} · ${r.systeemLocatie || ''}</div>
+        <table><thead><tr>
+          <th>#</th><th>Bewerking</th><th class="right">%</th><th class="right">Min/eenh</th>
+          <th>Materiaal</th><th class="right">Verbruik</th><th class="right">€ inkoop</th>
+        </tr></thead><tbody>`;
+      r.stappen.forEach((st, i) => {
+        const cs = calcSnapshotStep(st);
+        const verbruikScaled = (st.verbruik || 0) * (st.percentage??100)/100;
+        html += `<tr>
+          <td>${i+1}</td>
+          <td>${st.bewerkingNaam}</td>
+          <td class="num right">${st.percentage??100}%</td>
+          <td class="num right">${fmt(cs.minuten)}</td>
+          <td>${st.materiaalNaam || '—'}</td>
+          <td class="num right">${st.materiaalNaam ? fmt3(verbruikScaled) + ' ' + st.materiaalEenheid : '—'}</td>
+          <td class="num right">${eur(cs.matInkoop)}</td>
+        </tr>`;
+      });
+      html += `<tr class="totaal-row">
+        <td colspan="3"><strong>Totaal per ${r.systeemEenheid}</strong></td>
+        <td class="num right">${fmt(totMin)} min</td>
+        <td colspan="2"></td>
+        <td class="num right">${eur(totMatInk)}</td>
+      </tr>`;
+      html += `</tbody></table>`;
+    });
+    html += `</div>`;
+  }
+
+  // Footer
+  html += `<div class="footer-block">
+    Schilders Calculatie · v2.4.1 · Geprint op ${datum}
+  </div>`;
+
+  document.getElementById('printArea').innerHTML = html;
+  // Trigger print
+  window.print();
+}
+// ============================================================
+// SNAPSHOT — bevries een verfsysteem in een calc-regel
+// ============================================================
+function _snapshotSystem(systeemId) {
+  // Returns full snapshot data for a regel: top-level system info + stappen array
+  const s = data.systemen.find(x => x.id === systeemId);
+  if (!s) return null;
+  const ond = data.ondergronden.find(o => o.id === s.ondergrondId);
+  return {
+    systeemId: s.id,
+    systeemNaam: s.naam,
+    systeemEenheid: s.eenheid,
+    systeemOndergrond: ond ? ond.naam : '',
+    systeemOndergrondId: s.ondergrondId,
+    systeemLocatie: ond ? (ond.locatie || 'beide') : 'beide',
+    stappen: s.stappen.map(st => _snapshotStap(st))
+  };
+}
+function _systeemLocatie(s) {
+  // Resolve a system's location via its ondergrond
+  if (!s) return 'beide';
+  const ond = data.ondergronden.find(o => o.id === s.ondergrondId);
+  return ond ? (ond.locatie || 'beide') : 'beide';
+}
+function _bewerkingenForOndergrond(ondId) {
+  // Returns bewerkingen that match the given ondergrond OR are on the "Algemeen" ondergrond
+  const algemeen = data.ondergronden.find(o => (o.naam || '').toLowerCase() === 'algemeen');
+  const algemeenId = algemeen ? algemeen.id : null;
+  return data.bewerkingen.filter(b =>
+    b.ondergrondId === ondId ||
+    (algemeenId && b.ondergrondId === algemeenId)
+  );
+}
+function _snapshotStap(stap) {
+  // Snapshot a single step: copy all bewerking + materiaal data into the stap
+  const b = data.bewerkingen.find(x => x.id === stap.bewerkingId);
+  if (!b) return {
+    bewerkingNaam: '<verwijderd>', bewerkingEenheid: '', minuten: 0,
+    percentage: stap.percentage ?? 100,
+    materiaalNaam: null, materiaalEenheid: null, materiaalPrijs: 0, materiaalGroep: null, verbruik: 0
+  };
+  const m = b.materiaalId ? data.materialen.find(x => x.id === b.materiaalId) : null;
+  return {
+    bewerkingId: b.id, // for reference only
+    bewerkingNaam: b.naam,
+    bewerkingEenheid: b.eenheid,
+    minuten: b.minuten || 0,
+    percentage: stap.percentage ?? 100,
+    materiaalId: m ? m.id : null,
+    materiaalNaam: m ? m.naam : null,
+    materiaalEenheid: m ? m.eenheid : null,
+    materiaalPrijs: m ? (m.prijsPer || 0) : 0,
+    materiaalGroep: m ? m.groep : null,
+    verbruik: b.verbruik || 0
+  };
+}
+function _snapshotBewerking(bewerkingId) {
+  // For when adding a single new step to an existing regel
+  return _snapshotStap({ bewerkingId, percentage: 100 });
+}
+
+// ============================================================
+// REKENMODEL — werkt op snapshots
+// ============================================================
+function calcSnapshotStep(stap) {
+  // Compute one step from snapshot data
+  const pct = (stap.percentage ?? 100) / 100;
+  const minuten = (stap.minuten || 0) * pct;
+  const uren = minuten / 60;
+  let matInkoop = 0, matVerkoop = 0;
+  if (stap.materiaalNaam) {
+    matInkoop = (stap.materiaalPrijs || 0) * (stap.verbruik || 0) * pct;
+    const opslag = data.settings.groepOpslagen[stap.materiaalGroep] || 0;
+    matVerkoop = matInkoop * (1 + opslag/100);
+  }
+  return { uren, minuten, matInkoop, matVerkoop };
+}
+// Backward-compat: old calcStep was for bibliotheek-side use in werkbank-modal
+function calcStep(stap) {
+  // Used in werkbank modal where stap = { bewerkingId, percentage }
+  const b = data.bewerkingen.find(x => x.id === stap.bewerkingId);
+  if (!b) return { uren: 0, minuten: 0, matInkoop: 0, matVerkoop: 0 };
+  const pct = (stap.percentage ?? 100) / 100;
+  const minuten = b.minuten * pct;
+  const uren = minuten / 60;
+  let matInkoop = 0, matVerkoop = 0;
+  if (b.materiaalId) {
+    const m = data.materialen.find(x => x.id === b.materiaalId);
+    if (m) {
+      matInkoop = m.prijsPer * (b.verbruik || 0) * pct;
+      const opslag = data.settings.groepOpslagen[m.groep] || 0;
+      matVerkoop = matInkoop * (1 + opslag/100);
+    }
+  }
+  return { uren, minuten, matInkoop, matVerkoop };
+}
+function calcSystem(s) {
+  // Used in werkbank modal — calculate library system from its bewerkingId-based steps
+  let minuten = 0, matInkoop = 0, matVerkoop = 0;
+  s.stappen.forEach(st => {
+    const c = calcStep(st);
+    minuten += c.minuten; matInkoop += c.matInkoop; matVerkoop += c.matVerkoop;
+  });
+  const uren = minuten / 60;
+  const arbeid = uren * (data.settings.uurloon || 0);
+  const kostprijs = arbeid + matInkoop;
+  const sett = data.settings;
+  const kleinMat = matVerkoop * (sett.kleinMat||0)/100;
+  const afval = (arbeid + matVerkoop) * (sett.afval||0)/100;
+  const arbo = arbeid * (sett.arbo||0)/100;
+  const directe = arbeid + matVerkoop + kleinMat + afval + arbo;
+  const subtotaal = directe;
+  const winstBedrag = subtotaal * (sett.winst||0)/100;
+  const verkoop = subtotaal + winstBedrag;
+  return { minuten, uren, matInkoop, matVerkoop, arbeid, kostprijs, verkoop };
+}
+function calcRegelTotalen(r) {
+  // Works with snapshot stappen on the regel itself
+  if (!r.hoeveelheid || !r.stappen || !r.stappen.length) {
+    return { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0, kostprijs:0, verkoop:0 };
+  }
+  let minuten = 0, matInkoop = 0, matVerkoop = 0;
+  r.stappen.forEach(st => {
+    const c = calcSnapshotStep(st);
+    minuten += c.minuten; matInkoop += c.matInkoop; matVerkoop += c.matVerkoop;
+  });
+  const uren = minuten / 60;
+  const arbeid = uren * (data.settings.uurloon || 0);
+  const sett = data.settings;
+  const kleinMat = matVerkoop * (sett.kleinMat||0)/100;
+  const afval = (arbeid + matVerkoop) * (sett.afval||0)/100;
+  const arbo = arbeid * (sett.arbo||0)/100;
+  const directe = arbeid + matVerkoop + kleinMat + afval + arbo;
+  const winstBedrag = directe * (sett.winst||0)/100;
+  const verkoop = directe + winstBedrag;
+  const kostprijs = arbeid + matInkoop;
+  const tF = 1 + (r.toeslag||0)/100;
+  return {
+    uren: uren * r.hoeveelheid * tF,
+    minuten: minuten * r.hoeveelheid * tF,
+    matInkoop: matInkoop * r.hoeveelheid,
+    matVerkoop: matVerkoop * r.hoeveelheid,
+    arbeid: arbeid * r.hoeveelheid * tF,
+    kostprijs: kostprijs * r.hoeveelheid * tF,
+    verkoop: verkoop * r.hoeveelheid * tF
+  };
+}
+function _sumTotals(items, fn) {
+  const t = { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0, kostprijs:0, verkoop:0 };
+  items.forEach(it => { const c = fn(it); Object.keys(t).forEach(k => t[k] += c[k]||0); });
+  return t;
+}
+function calcOnderdeelTotalen(od) { return _sumTotals(od.regels, calcRegelTotalen); }
+function calcHoofdgroepTotalen(hg) { return _sumTotals(hg.onderdelen, calcOnderdeelTotalen); }
+function calcProjectTotalen() { return _sumTotals(data.calc.hoofdgroepen, calcHoofdgroepTotalen); }
+function _calcDays() {
+  // werkelijke dagen op basis van uren / schilders / uur per dag
+  const t = calcProjectTotalen();
+  const u = t.uren;
+  const s = data.calc.schilders || 1;
+  const ud = data.calc.uurDag || 8;
+  if (u === 0) return 0;
+  const exact = u / s / ud;
+  // Internal precision: 2 decimals
+  return Math.round(exact * 100) / 100;
+}
+function _useVolleDagen() {
+  // Returns true if we should round up to whole days
+  const cOverride = data.calc.volleDagenOverride;
+  if (cOverride === true) return true;
+  if (cOverride === false) return false;
+  // null/undefined: use global setting
+  return data.settings.volleDagen !== false; // default true
+}
+function _calcDaysFactureerbaar() {
+  const d = _calcDays();
+  if (d === 0) return 0;
+  if (!_useVolleDagen()) return d;
+  // Onder 1 hele dag werk: altijd 1 dag factureren (je gaat hoe dan ook minstens 1 dag op locatie)
+  if (d < 1) return 1;
+  // Drempel: vanaf 1 dag — alleen naar boven afronden als overschot ≥ drempel
+  const drempel = data.settings.afrondingsDrempel ?? 0.6;
+  const heel = Math.floor(d);
+  // Round overschot to 2 decimals to avoid floating-point comparison issues
+  const overschot = Math.round((d - heel) * 100) / 100;
+  if (overschot === 0) return d; // exact heel
+  if (overschot >= drempel) return heel + 1; // boven drempel: omhoog afronden
+  return heel; // onder drempel: omlaag afronden
+}
+// ============================================================
+// SYSTEMEN — kaartjes-overzicht
+// ============================================================
+function renderSystemen() {
+  const c = document.getElementById('systemenLijst');
+  const filter = document.getElementById('filterLocatie')?.value || '';
+  let lijst = data.systemen;
+  if (filter) lijst = lijst.filter(s => {
+    const loc = _systeemLocatie(s);
+    return loc === filter || loc === 'beide';
+  });
+  if (!lijst.length) { c.innerHTML = '<div class="empty-state">Geen systemen.</div>'; return; }
+  let html = '';
+  lijst.forEach(s => {
+    const stappenHtml = s.stappen.map(st => {
+      const b = data.bewerkingen.find(x => x.id === st.bewerkingId);
+      if (!b) return `<li><em style="color:var(--accent-deep)">verwijderde bewerking</em></li>`;
+      const pct = st.percentage ?? 100;
+      return `<li>${b.naam} <span class="mono" style="color:var(--muted); font-size:0.72rem;">${pct}% · ${fmt(b.minuten*pct/100)} min</span></li>`;
+    }).join('');
+    const calc = calcSystem(s);
+    const ond = data.ondergronden.find(o => o.id === s.ondergrondId);
+    const loc = _systeemLocatie(s);
+    html += `<div class="system-card">
+      <h3>${s.naam}</h3>
+      <div class="badges">
+        <span class="ondergrond">${ond ? ond.naam : '?'} · ${s.eenheid}</span>
+        <span class="locatie-tag ${loc}">${loc}</span>
+      </div>
+      <ol>${stappenHtml}</ol>
+      <div class="system-totals">
+        <div class="syst-row"><span class="syst-label">Min</span> <span class="syst-val">${fmt(calc.minuten)} /${s.eenheid}</span> <span class="syst-sub">· ${fmt(calc.uren)} u</span></div>
+        <div class="syst-row"><span class="syst-label">Mat. inkoop</span> <span class="syst-val">€ ${fmt(calc.matInkoop)} /${s.eenheid}</span></div>
+        <div class="syst-row"><span class="syst-label">Kostprijs</span> <span class="syst-val">€ ${fmt(calc.kostprijs)} /${s.eenheid}</span></div>
+        <div class="syst-row syst-final"><span class="syst-label">Verkoop excl. BTW</span> <span class="syst-val">€ ${fmt(calc.verkoop)} /${s.eenheid}</span></div>
+      </div>
+      <div class="actions">
+        <button class="btn-secondary btn btn-sm" onclick="editSystem('${s.id}')">Bewerken</button>
+        <button class="btn btn-danger btn-sm" onclick="delSystem('${s.id}')">Verwijderen</button>
+      </div>
+    </div>`;
+  });
+  c.innerHTML = html;
+}
+function delSystem(id) { if(!confirm('Verwijderen?')) return; data.systemen = data.systemen.filter(s=>s.id!==id); saveData(); renderSystemen(); renderCalcStructuur(); renderTotals(); }
+// ============================================================
+// WERKBANK — verfsysteem bewerken met percentages en totalen
+// ============================================================
+let editingSystemId = null;
+let modalSteps = [];
+let modalSysContext = null;
+
+function openSystemModal() {
+  modalSysContext = null;
+  editingSystemId = null;
+  modalSteps = [];
+  document.getElementById('systemModalTitle').textContent = 'Nieuw Verfsysteem';
+  document.getElementById('sysNaam').value = '';
+  document.getElementById('sysOnder').innerHTML = data.ondergronden.map(o => `<option value="${o.id}">${o.naam}</option>`).join('');
+  document.getElementById('sysOnder').value = data.ondergronden[0]?.id || '';
+  document.getElementById('sysEenheid').value = 'm²';
+  refreshModalBewSelect();
+  renderModalSteps();
+  document.getElementById('systemModal').classList.add('active');
+}
+function editSystem(id) {
+  const s = data.systemen.find(x => x.id === id);
+  if (!s) return;
+  modalSysContext = null;
+  editingSystemId = id;
+  modalSteps = JSON.parse(JSON.stringify(s.stappen));
+  document.getElementById('systemModalTitle').textContent = 'Verfsysteem bewerkingen';
+  document.getElementById('sysNaam').value = s.naam;
+  document.getElementById('sysOnder').innerHTML = data.ondergronden.map(o => `<option value="${o.id}">${o.naam}</option>`).join('');
+  document.getElementById('sysOnder').value = s.ondergrondId;
+  document.getElementById('sysEenheid').value = s.eenheid;
+  refreshModalBewSelect();
+  renderModalSteps();
+  document.getElementById('systemModal').classList.add('active');
+}
+function closeSystemModal() { document.getElementById('systemModal').classList.remove('active'); }
+function refreshModalBewSelect() {
+  const ondId = document.getElementById('sysOnder')?.value || '';
+  const filtered = _bewerkingenForOndergrond(ondId);
+  const select = document.getElementById('sysAddBew');
+  if (filtered.length === 0) {
+    select.innerHTML = '<option value="" disabled selected>Geen bewerkingen voor deze ondergrond</option>';
+  } else {
+    const algemeen = data.ondergronden.find(o => (o.naam || '').toLowerCase() === 'algemeen');
+    const algemeenId = algemeen ? algemeen.id : null;
+    select.innerHTML = filtered.map(b => {
+      const tag = (algemeenId && b.ondergrondId === algemeenId) ? ' [algemeen]' : '';
+      return `<option value="${b.id}">${b.naam}${tag} (${b.minuten} min/${b.eenheid})</option>`;
+    }).join('');
+  }
+}
+function renderModalSteps() {
+  const c = document.getElementById('sysSteps');
+  if (!modalSteps.length) {
+    c.innerHTML = '<p style="color:var(--muted); font-style:italic; padding: 0.5rem;">Nog geen bewerkingen toegevoegd.</p>';
+  } else {
+    c.innerHTML = modalSteps.map((st, i) => {
+      const b = data.bewerkingen.find(x => x.id === st.bewerkingId);
+      if (!b) return `<div class="step-row"><span class="step-num">${i+1}</span><span style="grid-column: 2 / -1;"><em style="color:var(--accent-deep)">verwijderde bewerking</em></span></div>`;
+      const cs = calcStep(st);
+      const m = data.materialen.find(x => x.id === b.materiaalId);
+      const arbeidPart = cs.uren * (data.settings.uurloon || 0);
+      const totaal = arbeidPart + cs.matInkoop;
+      const verbruikScaled = b.verbruik * (st.percentage??100)/100;
+      return `<div class="step-row">
+        <span class="step-num">${i+1}</span>
+        <span><div>${b.naam}</div><div style="font-size:0.65rem; color:var(--muted); font-family:'JetBrains Mono', monospace; margin-top:0.1rem;">${b.eenheid}</div></span>
+        <span class="step-info right">${fmt(cs.minuten)}</span>
+        <span class="step-info">${m ? m.naam : '—'}</span>
+        <span class="step-info">${m ? fmt3(verbruikScaled) + ' ' + m.eenheid : '—'}</span>
+        <span><input type="number" step="5" min="0" max="500" value="${st.percentage ?? 100}" onchange="updStepPct(${i},this.value)"></span>
+        <span class="step-info right">€ ${fmt(totaal)}</span>
+        <span class="step-actions">
+          <button class="btn-icon" onclick="moveStep(${i},-1)" ${i===0?'disabled':''}>↑</button>
+          <button class="btn-icon" onclick="moveStep(${i},1)" ${i===modalSteps.length-1?'disabled':''}>↓</button>
+          <button class="btn-icon" onclick="removeStep(${i})" style="color:var(--accent-deep);">×</button>
+        </span>
+      </div>`;
+    }).join('');
+  }
+  renderWerkbankTotals();
+}
+function renderWerkbankTotals() {
+  const eenheid = document.getElementById('sysEenheid').value || 'm²';
+  let totMin = 0, totMatInkoop = 0, totMatVerkoop = 0;
+  modalSteps.forEach(st => {
+    const c = calcStep(st);
+    totMin += c.minuten; totMatInkoop += c.matInkoop; totMatVerkoop += c.matVerkoop;
+  });
+  const uren = totMin / 60;
+  const arbeid = uren * (data.settings.uurloon || 0);
+  const kostprijs = arbeid + totMatInkoop;
+  const sett = data.settings;
+  const kleinMat = totMatVerkoop * (sett.kleinMat||0)/100;
+  const afval = (arbeid + totMatVerkoop) * (sett.afval||0)/100;
+  const arbo = arbeid * (sett.arbo||0)/100;
+  const directe = arbeid + totMatVerkoop + kleinMat + afval + arbo;
+  const subtotaal = directe;
+  const winstBedrag = subtotaal * (sett.winst||0)/100;
+  const verkoop = subtotaal + winstBedrag;
+  document.getElementById('werkbankTotals').innerHTML = `
+    <div class="stat"><div class="label">Totaal minuten</div><div class="value">${fmt(totMin)} <span style="font-size:0.85rem; color:var(--paper-deep);">/${eenheid}</span></div></div>
+    <div class="stat"><div class="label">Materiaal inkoop</div><div class="value">€ ${fmt(totMatInkoop)}</div></div>
+    <div class="stat"><div class="label">Kostprijs</div><div class="value">€ ${fmt(kostprijs)}</div></div>
+    <div class="stat highlight"><div class="label">Verkoop excl. BTW</div><div class="value">€ ${fmt(verkoop)}</div></div>
+  `;
+}
+function updStepPct(i, val) { modalSteps[i].percentage = parseFloat(val) || 0; renderModalSteps(); }
+function moveStep(i, d) { const ni = i + d; if(ni<0||ni>=modalSteps.length) return; [modalSteps[i],modalSteps[ni]] = [modalSteps[ni],modalSteps[i]]; renderModalSteps(); }
+function removeStep(i) { modalSteps.splice(i,1); renderModalSteps(); }
+function addStepToSystem() { const id = document.getElementById('sysAddBew').value; if(!id) return; modalSteps.push({bewerkingId: id, percentage: 100}); renderModalSteps(); }
+
+function _systemFromModal() {
+  return {
+    naam: document.getElementById('sysNaam').value.trim(),
+    ondergrondId: document.getElementById('sysOnder').value,
+    eenheid: document.getElementById('sysEenheid').value,
+    stappen: modalSteps
+  };
+}
+function saveSystem() {
+  const s = _systemFromModal();
+  if (!s.naam) { alert('Geef het systeem een naam.'); return; }
+  let savedId = editingSystemId;
+  if (editingSystemId) {
+    const cur = data.systemen.find(x => x.id === editingSystemId);
+    Object.assign(cur, s);
+  } else {
+    savedId = uid('s');
+    data.systemen.push({ id: savedId, ...s });
+    if (modalSysContext) {
+      const od = _findOnderdeel(modalSysContext.hgId, modalSysContext.odId);
+      if (od) {
+        const snap = _snapshotSystem(savedId);
+        od.regels.push({ id: uid('r'), naam: '', systeemId: savedId, hoeveelheid: 0, toeslag: 0,
+          systeemNaam: snap.systeemNaam, systeemEenheid: snap.systeemEenheid,
+          systeemOndergrond: snap.systeemOndergrond, systeemOndergrondId: snap.systeemOndergrondId,
+          systeemLocatie: snap.systeemLocatie, stappen: snap.stappen
+        });
+      }
+    }
+  }
+  saveData(); renderSystemen(); renderCalcStructuur(); renderTotals(); closeSystemModal();
+}
+function saveSystemAsNew() {
+  const s = _systemFromModal();
+  if (!s.naam) { alert('Geef het systeem een naam.'); return; }
+  const newId = uid('s');
+  data.systemen.push({ id: newId, ...s });
+  saveData(); renderSystemen();
+  alert('Opgeslagen als nieuw systeem: "' + s.naam + '"');
+  closeSystemModal();
+}
+// ============================================================
+// CALCULATIE — hiërarchische structuur
+// ============================================================
+function _findOnderdeel(hgId, odId) {
+  const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
+  return hg ? hg.onderdelen.find(o => o.id === odId) : null;
+}
+// ============================================================
+// MEETSTAAT
+// ============================================================
+function _allCalcRegels() {
+  // Returns flat list of {hgId, hgNaam, odId, odNaam, regel} for all regels in active calc
+  const out = [];
+  data.calc.hoofdgroepen.forEach(hg => {
+    hg.onderdelen.forEach(od => {
+      od.regels.forEach(r => out.push({ hgId: hg.id, hgNaam: hg.naam, odId: od.id, odNaam: od.naam, regel: r }));
+    });
+  });
+  return out;
+}
+function _calcRegelLabel(r, ctx) {
+  // Build human-readable label for a calc-regel in the meetstaat dropdown
+  const naam = (r.naam || '').trim();
+  const sys = r.systeemNaam || '?';
+  const eenheid = r.systeemEenheid || '';
+  const onderdeel = ctx ? ctx.odNaam : '';
+  return `${onderdeel} · ${naam || sys} (${eenheid})`;
+}
+function _meetstaatRijTotaal(ms) {
+  // Returns { eenheid, totaal } based on the calc-regel referenced
+  const ctx = _allCalcRegels().find(x => x.regel.id === ms.calcRegelId);
+  if (!ctx) return { eenheid: '?', totaal: 0 };
+  const r = ctx.regel;
+  const eenheid = r.systeemEenheid || 'm²';
+  const hM = (ms.hCm || 0) / 100;
+  const bM = (ms.bCm || 0) / 100;
+  const aant = ms.aantal || 0;
+  let totaal = 0;
+  if (eenheid === 'stuk') {
+    totaal = aant;
+  } else if (eenheid === 'm¹') {
+    // één maat = lengte (alleen ingevulde maat × aantal); twee maten = omtrek (2h+2b) × aantal
+    if (hM === 0 || bM === 0) totaal = (hM + bM) * aant;
+    else totaal = (2*hM + 2*bM) * aant;
+  } else { // m²
+    totaal = hM * bM * aant;
+  }
+  return { eenheid, totaal };
+}
+function _meetstaatSomVoorRegel(regelId) {
+  // Sum totals for all meetstaat-rows belonging to this calc-regel
+  if (!data.calc.meetstaat) return 0;
+  return data.calc.meetstaat
+    .filter(ms => ms.calcRegelId === regelId)
+    .reduce((sum, ms) => sum + _meetstaatRijTotaal(ms).totaal, 0);
+}
+function _meetstaatAantalVoorRegel(regelId) {
+  if (!data.calc.meetstaat) return 0;
+  return data.calc.meetstaat.filter(ms => ms.calcRegelId === regelId).length;
+}
+function renderMeetstaat() {
+  const c = document.getElementById('meetstaatLijst');
+  if (!c) return;
+  const info = document.getElementById('meetstaatActiveCalcInfo');
+  if (info) info.textContent = `Calculatie: ${data.calc.naam || '(zonder naam)'}`;
+
+  const allRegels = _allCalcRegels();
+  if (!allRegels.length) {
+    c.innerHTML = '<div class="empty-state">Voeg eerst regels toe in de Calculatie-tab. Daarna kun je hier meten.</div>';
+    return;
+  }
+  if (!data.calc.meetstaat) data.calc.meetstaat = [];
+
+  // Build a map regelId → label for the dropdown
+  const regelOpts = allRegels.map(ctx =>
+    `<option value="${ctx.regel.id}">${_calcRegelLabel(ctx.regel, ctx)}</option>`
+  ).join('');
+
+  let html = `<div class="table-scroll"><table class="meetstaat-tbl"><thead><tr>
+    <th style="width:40px;">#</th>
+    <th style="min-width:240px;">Calc-regel</th>
+    <th style="min-width:160px;">Omschrijving</th>
+    <th style="width:90px;">h (cm)</th>
+    <th style="width:90px;">b (cm)</th>
+    <th style="width:70px;">aantal</th>
+    <th style="width:110px;" class="right">totaal</th>
+    <th style="min-width:160px;">opmerking</th>
+    <th style="width:50px;"></th>
+  </tr></thead><tbody>`;
+
+  data.calc.meetstaat.forEach((ms, idx) => {
+    const t = _meetstaatRijTotaal(ms);
+    const opts = allRegels.map(ctx =>
+      `<option value="${ctx.regel.id}" ${ctx.regel.id === ms.calcRegelId ? 'selected' : ''}>${_calcRegelLabel(ctx.regel, ctx)}</option>`
+    ).join('');
+    html += `<tr data-row="${idx}">
+      <td><span class="ms-num">${idx+1}</span></td>
+      <td><select data-field="calcRegelId" onchange="updMeetstaat(${idx},'calcRegelId',this.value)" onkeydown="msKey(event,${idx},0)">${opts}</select></td>
+      <td><input type="text" data-field="omschrijving" value="${ms.omschrijving||''}" onchange="updMeetstaat(${idx},'omschrijving',this.value)" onkeydown="msKey(event,${idx},1)"></td>
+      <td><input type="number" data-field="hCm" min="0" step="1" value="${ms.hCm||0}" onchange="updMeetstaat(${idx},'hCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},2)"></td>
+      <td><input type="number" data-field="bCm" min="0" step="1" value="${ms.bCm||0}" onchange="updMeetstaat(${idx},'bCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},3)"></td>
+      <td><input type="number" data-field="aantal" min="0" step="1" value="${ms.aantal||0}" onchange="updMeetstaat(${idx},'aantal',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},4)"></td>
+      <td class="num right ms-totaal">${fmt(t.totaal)} ${t.eenheid}</td>
+      <td><input type="text" data-field="opmerking" value="${ms.opmerking||''}" onchange="updMeetstaat(${idx},'opmerking',this.value)" onkeydown="msKey(event,${idx},5)"></td>
+      <td class="right"><button class="btn btn-danger btn-sm" onclick="delMeetstaat(${idx})">×</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  html += `<div style="margin-top:0.7rem;"><button class="btn-secondary btn" onclick="addMeetstaat()">+ Regel</button></div>`;
+
+  // Per calc-regel summary
+  const byRegel = {};
+  data.calc.meetstaat.forEach(ms => {
+    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0 };
+    const t = _meetstaatRijTotaal(ms);
+    byRegel[ms.calcRegelId].count++;
+    byRegel[ms.calcRegelId].totaal += t.totaal;
+  });
+  if (Object.keys(byRegel).length > 0) {
+    html += `<div class="ms-samenvatting" style="margin-top:1.5rem; padding:0.85rem; background:var(--paper-warm); border:1px solid var(--paper-deep); border-radius:var(--radius);">
+      <div style="font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:0.5rem;">Totalen per calc-regel</div>`;
+    Object.keys(byRegel).forEach(rid => {
+      const ctx = allRegels.find(x => x.regel.id === rid);
+      if (!ctx) return;
+      const r = ctx.regel;
+      const eenheid = r.systeemEenheid || '';
+      html += `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px dashed var(--paper-deep); font-size:0.85rem;">
+        <span>${_calcRegelLabel(r, ctx)} <span style="color:var(--muted);">(${byRegel[rid].count} regel${byRegel[rid].count===1?'':'s'})</span></span>
+        <span class="mono" style="font-weight:600;">${fmt(byRegel[rid].totaal)} ${eenheid}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  c.innerHTML = html;
+}
+function addMeetstaat() {
+  if (!data.calc.meetstaat) data.calc.meetstaat = [];
+  const allRegels = _allCalcRegels();
+  if (!allRegels.length) { alert('Voeg eerst regels toe in de Calculatie-tab.'); return; }
+  // Onthoud: laatste regel's calcRegelId en omschrijving
+  const last = data.calc.meetstaat[data.calc.meetstaat.length - 1];
+  const calcRegelId = last ? last.calcRegelId : allRegels[0].regel.id;
+  const omschrijving = last ? (last.omschrijving || '') : '';
+  data.calc.meetstaat.push({
+    id: uid('ms'),
+    calcRegelId,
+    omschrijving,
+    hCm: 0,
+    bCm: 0,
+    aantal: 1,
+    opmerking: ''
+  });
+  saveData();
+  renderMeetstaat();
+  // Focus on h-field of new row
+  setTimeout(() => {
+    const rows = document.querySelectorAll('#meetstaatLijst tbody tr');
+    const last = rows[rows.length - 1];
+    if (last) {
+      const hInput = last.querySelector('[data-field="hCm"]');
+      if (hInput) { hInput.focus(); hInput.select(); }
+    }
+  }, 50);
+}
+function updMeetstaat(idx, field, value) {
+  if (!data.calc.meetstaat || !data.calc.meetstaat[idx]) return;
+  data.calc.meetstaat[idx][field] = value;
+  saveData();
+  // Voor calcRegelId verandert de eenheid → volledige re-render nodig
+  if (field === 'calcRegelId') {
+    renderMeetstaat();
+    renderCalcStructuur();
+    renderTotals();
+    return;
+  }
+  // Voor andere velden: alleen totaal-cel + samenvatting updaten zonder DOM te slopen
+  const rows = document.querySelectorAll('#meetstaatLijst tbody tr');
+  const row = rows[idx];
+  if (row) {
+    const t = _meetstaatRijTotaal(data.calc.meetstaat[idx]);
+    const totaalCell = row.querySelector('.ms-totaal');
+    if (totaalCell) totaalCell.textContent = `${fmt(t.totaal)} ${t.eenheid}`;
+  }
+  // Sync calc-regel hoeveelheid + her-render calc-totalen (zonder meetstaat-render!)
+  renderCalcStructuur();
+  renderTotals();
+  // Update samenvatting onderaan zonder hele tabel opnieuw
+  _updateMeetstaatSamenvatting();
+}
+function _updateMeetstaatSamenvatting() {
+  // Find or rebuild the summary block (last child of #meetstaatLijst)
+  const c = document.getElementById('meetstaatLijst');
+  if (!c) return;
+  const oldSummary = c.querySelector('.ms-samenvatting');
+  const allRegels = _allCalcRegels();
+  const byRegel = {};
+  data.calc.meetstaat.forEach(ms => {
+    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0 };
+    const t = _meetstaatRijTotaal(ms);
+    byRegel[ms.calcRegelId].count++;
+    byRegel[ms.calcRegelId].totaal += t.totaal;
+  });
+  let html = '';
+  if (Object.keys(byRegel).length > 0) {
+    html = `<div class="ms-samenvatting" style="margin-top:1.5rem; padding:0.85rem; background:var(--paper-warm); border:1px solid var(--paper-deep); border-radius:var(--radius);">
+      <div style="font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:0.5rem;">Totalen per calc-regel</div>`;
+    Object.keys(byRegel).forEach(rid => {
+      const ctx = allRegels.find(x => x.regel.id === rid);
+      if (!ctx) return;
+      const r = ctx.regel;
+      const eenheid = r.systeemEenheid || '';
+      html += `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px dashed var(--paper-deep); font-size:0.85rem;">
+        <span>${_calcRegelLabel(r, ctx)} <span style="color:var(--muted);">(${byRegel[rid].count} regel${byRegel[rid].count===1?'':'s'})</span></span>
+        <span class="mono" style="font-weight:600;">${fmt(byRegel[rid].totaal)} ${eenheid}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  if (oldSummary) {
+    if (html) {
+      const wrap = document.createElement('div');
+      wrap.innerHTML = html;
+      oldSummary.replaceWith(wrap.firstElementChild);
+    } else {
+      oldSummary.remove();
+    }
+  } else if (html) {
+    c.insertAdjacentHTML('beforeend', html);
+  }
+}
+function delMeetstaat(idx) {
+  if (!data.calc.meetstaat || !data.calc.meetstaat[idx]) return;
+  data.calc.meetstaat.splice(idx, 1);
+  saveData();
+  renderMeetstaat();
+  renderCalcStructuur();
+  renderTotals();
+}
+function goToMeetstaat(regelId) {
+  // Switch to meetstaat tab
+  document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  const navBtn = document.querySelector('nav button[data-tab="meetstaat"]');
+  if (navBtn) navBtn.classList.add('active');
+  document.getElementById('meetstaat').classList.add('active');
+  renderMeetstaat();
+}
+function msKey(e, rowIdx, fieldIdx) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  // First save current field value (force change-event by blur)
+  const target = e.target;
+  // Sync data before moving focus
+  if (target.dataset.field) {
+    const f = target.dataset.field;
+    let val = target.value;
+    if (f === 'hCm' || f === 'bCm' || f === 'aantal') val = parseInt(val) || 0;
+    if (data.calc.meetstaat[rowIdx]) {
+      data.calc.meetstaat[rowIdx][f] = val;
+      saveData();
+    }
+  }
+  // Field order: 0=calcRegelId, 1=omschrijving, 2=hCm, 3=bCm, 4=aantal, 5=opmerking
+  if (fieldIdx < 5) {
+    const nextField = ['calcRegelId','omschrijving','hCm','bCm','aantal','opmerking'][fieldIdx+1];
+    const rows = document.querySelectorAll('#meetstaatLijst tbody tr');
+    const cur = rows[rowIdx];
+    if (cur) {
+      const next = cur.querySelector(`[data-field="${nextField}"]`);
+      if (next) {
+        next.focus();
+        if (next.select) next.select();
+      }
+    }
+    // Update totaal-cel & samenvatting (zonder re-render)
+    const rowsAgain = document.querySelectorAll('#meetstaatLijst tbody tr');
+    const row = rowsAgain[rowIdx];
+    if (row) {
+      const t = _meetstaatRijTotaal(data.calc.meetstaat[rowIdx]);
+      const totaalCell = row.querySelector('.ms-totaal');
+      if (totaalCell) totaalCell.textContent = `${fmt(t.totaal)} ${t.eenheid}`;
+    }
+    _updateMeetstaatSamenvatting();
+  } else {
+    // From opmerking → add new row
+    addMeetstaat();
+  }
+}
+// ============================================================
+// NOTITIES & TO-DOS — per calculatie
+// ============================================================
+// State per calc-id, zodat keuze niet doorlekt naar andere calcs
+let notitiesCollapsedState = {}; // { calcId: true|false (= user override) }
+function _isNotitiesCollapsed() {
+  if (!data.calc) return true;
+  const override = notitiesCollapsedState[data.calc.id];
+  if (override !== undefined) return override;
+  return !_calcHasNotities(); // default: open if content, collapsed if empty
+}
+function _calcHasNotities() {
+  if (!data.calc) return false;
+  const hasText = (data.calc.notities || '').trim().length > 0;
+  const hasTodos = (data.calc.todos || []).length > 0;
+  return hasText || hasTodos;
+}
+function renderNotitiesPaneel() {
+  const c = document.getElementById('notitiesPaneel');
+  if (!c) return;
+  if (!data.calc.todos) data.calc.todos = [];
+  if (data.calc.notities === undefined) data.calc.notities = '';
+
+  const hasContent = _calcHasNotities();
+  const collapsed = _isNotitiesCollapsed();
+  const todoCount = data.calc.todos.length;
+  const openTodos = data.calc.todos.filter(t => !t.done).length;
+  const summary = !hasContent
+    ? '<span style="color:var(--muted);">geen notities</span>'
+    : `<span>${(data.calc.notities || '').trim() ? '✎ ' : ''}${todoCount > 0 ? `${openTodos}/${todoCount} taken open` : ''}</span>`;
+
+  let html = `<div class="notities-paneel ${collapsed ? 'collapsed' : ''}">
+    <div class="notities-header" onclick="toggleNotities()">
+      <span class="notities-title">Notities & taken</span>
+      <span class="notities-summary">${summary}</span>
+      <span class="notities-toggle">${collapsed ? '▶' : '▼'}</span>
+    </div>`;
+  if (!collapsed) {
+    const todosHtml = data.calc.todos.map((t, i) => `
+      <div class="todo-row ${t.done ? 'done' : ''}">
+        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodo('${t.id}')">
+        <input type="text" value="${(t.tekst || '').replace(/"/g, '&quot;')}" placeholder="taak" onchange="updTodoTekst('${t.id}', this.value)">
+        <button class="btn-icon" onclick="delTodo('${t.id}')" title="Verwijder taak">×</button>
+      </div>
+    `).join('');
+    html += `
+      <div class="notities-body">
+        <textarea id="notitiesTextarea" rows="4" placeholder="Wensen klant, aandachtspunten, observaties..." onchange="updNotities(this.value)">${data.calc.notities || ''}</textarea>
+        <div class="todo-list">
+          <div class="todo-list-titel">Taken</div>
+          ${todosHtml}
+          <button class="btn-secondary btn btn-sm" onclick="addTodo()" style="margin-top: 0.4rem;">+ Taak</button>
+        </div>
+      </div>`;
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+function toggleNotities() {
+  // Simpel: huidige collapsed-state omdraaien
+  if (!data.calc) return;
+  const currentCollapsed = _isNotitiesCollapsed();
+  notitiesCollapsedState[data.calc.id] = !currentCollapsed;
+  renderNotitiesPaneel();
+}
+function updNotities(value) {
+  data.calc.notities = value;
+  saveData();
+  // Geen re-render nodig — textarea behoudt focus
+}
+function addTodo() {
+  if (!data.calc.todos) data.calc.todos = [];
+  data.calc.todos.push({ id: uid('td'), tekst: '', done: false });
+  notitiesCollapsedState[data.calc.id] = false; // forceer open
+  saveData();
+  renderNotitiesPaneel();
+  // Focus op de nieuwe input
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('.todo-row input[type="text"]');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }, 50);
+}
+function toggleTodo(id) {
+  const t = data.calc.todos.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveData();
+  renderNotitiesPaneel();
+}
+function updTodoTekst(id, value) {
+  const t = data.calc.todos.find(x => x.id === id);
+  if (!t) return;
+  t.tekst = value;
+  saveData();
+  // Geen re-render — input behoudt focus
+}
+function delTodo(id) {
+  data.calc.todos = data.calc.todos.filter(x => x.id !== id);
+  saveData();
+  renderNotitiesPaneel();
+}
+
+// ============================================================
+function _syncMeetstaatHoeveelheden() {
+  // Sync alle calc-regels die meetstaat-rijen hebben: r.hoeveelheid = som van metingen
+  if (!data.calc || !data.calc.hoofdgroepen) return;
+  data.calc.hoofdgroepen.forEach(hg => {
+    if (!hg.onderdelen) return;
+    hg.onderdelen.forEach(od => {
+      if (!od.regels) return;
+      od.regels.forEach(r => {
+        const aantal = _meetstaatAantalVoorRegel(r.id);
+        if (aantal > 0) {
+          const som = _meetstaatSomVoorRegel(r.id);
+          if (r.hoeveelheid !== som) r.hoeveelheid = som;
+        }
+      });
+    });
+  });
+}
+function renderCalcStructuur() {
+  // Eerst alle hoeveelheden syncen vanuit meetstaat — dan kloppen alle calc-totalen
+  _syncMeetstaatHoeveelheden();
+  const lbl = document.getElementById('calcActieveLabel');
+  if (lbl) {
+    const total = data.calculaties.length;
+    lbl.textContent = `Actief: ${data.calc.naam || '(zonder naam)'} · ${total} ${total === 1 ? 'calculatie' : 'calculaties'} totaal`;
+  }
+  document.getElementById('calcProject').value = data.calc.naam || '';
+  document.getElementById('calcKlant').value = data.calc.klant || '';
+  document.getElementById('calcReis').value = data.calc.reis || 0;
+  document.getElementById('calcSchilders').value = data.calc.schilders || 2;
+  document.getElementById('calcUurDag').value = data.calc.uurDag || 8;
+
+  renderNotitiesPaneel();
+
+  const c = document.getElementById('calcStructuur');
+  if (!data.calc.hoofdgroepen.length) {
+    c.innerHTML = '<div class="empty-state">Nog geen hoofdgroepen. Klik op "+ Hoofdgroep toevoegen".</div>';
+  } else {
+    c.innerHTML = data.calc.hoofdgroepen.map(hg => renderHoofdgroep(hg)).join('');
+  }
+  renderStaartList();
+  renderTotals();
+}
+function renderHoofdgroep(hg) {
+  const t = calcHoofdgroepTotalen(hg);
+  const onderdelenHtml = hg.onderdelen.length ? hg.onderdelen.map(od => renderOnderdeel(hg.id, od)).join('') :
+    '<p style="color:var(--muted); font-style:italic; padding: 0.5rem;">Geen onderdelen.</p>';
+  return `<div class="hoofdgroep ${hg.collapsed?'collapsed':''}">
+    <div class="hoofdgroep-head">
+      <span class="title">
+        <span class="caret" onclick="toggleHg('${hg.id}')">▼</span>
+        <input value="${hg.naam}" onchange="updHg('${hg.id}','naam',this.value)">
+      </span>
+      <span class="stats">${fmt(t.uren)} u · ${eur(t.verkoop)}</span>
+      <button class="btn btn-danger btn-sm" onclick="delHg('${hg.id}')">×</button>
+    </div>
+    <div class="hoofdgroep-body">
+      ${onderdelenHtml}
+      <button class="btn-secondary btn btn-sm" onclick="addOnderdeel('${hg.id}')" style="margin-top: 0.5rem;">+ Onderdeel toevoegen</button>
+    </div>
+  </div>`;
+}
+function renderOnderdeel(hgId, od) {
+  const t = calcOnderdeelTotalen(od);
+  const regelsHtml = od.regels.length ? od.regels.map(r => renderRegel(hgId, od.id, r)).join('') :
+    '<p style="color:var(--muted); font-style:italic; padding: 0.4rem; font-size: 0.85rem;">Nog geen regels in dit onderdeel.</p>';
+  return `<div class="onderdeel ${od.collapsed?'collapsed':''}">
+    <div class="onderdeel-head">
+      <span class="title">
+        <span class="caret" onclick="toggleOd('${hgId}','${od.id}')">▼</span>
+        <input value="${od.naam}" onchange="updOd('${hgId}','${od.id}','naam',this.value)">
+      </span>
+      <span class="stats">${fmt(t.uren)} u · ${eur(t.verkoop)}</span>
+      <button class="btn btn-danger btn-sm" onclick="delOd('${hgId}','${od.id}')">×</button>
+    </div>
+    <div class="onderdeel-body">
+      ${regelsHtml}
+      <button class="btn-secondary btn btn-sm" onclick="openAddSysModal('${hgId}','${od.id}')" style="margin-top: 0.4rem;">+ Verfsysteem toevoegen</button>
+    </div>
+  </div>`;
+}
+function renderRegel(hgId, odId, r) {
+  // Use snapshot data — no more lookups in bibliotheek
+  const sysNaam = r.systeemNaam || '<em>onbekend systeem</em>';
+  const eenheid = r.systeemEenheid || '—';
+  // Sync: als meetstaat-rijen, override hoeveelheid in object zelf VOORDAT we totalen berekenen
+  const msAantal = _meetstaatAantalVoorRegel(r.id);
+  const msSom = msAantal > 0 ? _meetstaatSomVoorRegel(r.id) : null;
+  if (msSom !== null && r.hoeveelheid !== msSom) {
+    r.hoeveelheid = msSom;
+  }
+  const t = calcRegelTotalen(r);
+  // Build stappen-detail block (always visible)
+  const stappenHtml = (r.stappen || []).map((st, i) => {
+    const cs = calcSnapshotStep(st);
+    const matInfo = st.materiaalNaam
+      ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid})</span>`
+      : '<span style="color:var(--muted);">—</span>';
+    const matKost = cs.matInkoop;
+    const arbeidKost = cs.uren * (data.settings.uurloon || 0);
+    const totaal = matKost + arbeidKost;
+    return `<div class="regel-stap">
+      <span class="regel-stap-num">${i+1}</span>
+      <span class="regel-stap-naam">
+        <strong>${st.bewerkingNaam}</strong>
+        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min</span>
+      </span>
+      <span class="regel-stap-mat">${matInfo}</span>
+      <span class="regel-stap-pct">
+        <input type="number" step="5" min="0" max="500" value="${st.percentage ?? 100}" onchange="updRegelStap('${hgId}','${odId}','${r.id}',${i},'percentage',parseFloat(this.value))" title="Percentage">
+        <span style="color:var(--muted); font-size:0.68rem;">%</span>
+      </span>
+      <span class="regel-stap-totaal">€ ${fmt(totaal)}</span>
+      <span class="regel-stap-acties">
+        <button class="btn-icon" onclick="moveRegelStap('${hgId}','${odId}','${r.id}',${i},-1)" ${i===0?'disabled':''}>↑</button>
+        <button class="btn-icon" onclick="moveRegelStap('${hgId}','${odId}','${r.id}',${i},1)" ${i===(r.stappen||[]).length-1?'disabled':''}>↓</button>
+        <button class="btn-icon" onclick="delRegelStap('${hgId}','${odId}','${r.id}',${i})" style="color:var(--accent-deep);">×</button>
+      </span>
+    </div>`;
+  }).join('');
+
+  // Build "add step" select (filter by ondergrond of this regel)
+  const ondId = r.systeemOndergrondId || '';
+  const filteredBew = _bewerkingenForOndergrond(ondId);
+  const algemeenOnd = data.ondergronden.find(o => (o.naam || '').toLowerCase() === 'algemeen');
+  const algemeenId = algemeenOnd ? algemeenOnd.id : null;
+  const addStepSelect = filteredBew.length === 0
+    ? `<span style="color:var(--muted); font-size:0.78rem;">Geen bewerkingen voor ${r.systeemOndergrond || 'deze ondergrond'}</span>`
+    : `<select id="addStep_${r.id}" style="padding:0.25rem 0.45rem; font-size:0.78rem; max-width:280px;">
+        ${filteredBew.map(b => {
+          const tag = (algemeenId && b.ondergrondId === algemeenId) ? ' [algemeen]' : '';
+          return `<option value="${b.id}">${b.naam}${tag} (${b.minuten} min/${b.eenheid})</option>`;
+        }).join('')}
+      </select>
+      <button class="btn-secondary btn btn-sm" onclick="addRegelStap('${hgId}','${odId}','${r.id}')">+ Stap</button>`;
+
+  // Hoeveelheid display (msSom is al hierboven berekend en gesynct)
+  const hoeveelHtml = msSom !== null
+    ? `<div class="ms-hoeveelheid-display" title="Hoeveelheid uit meetstaat — wijzig in Meetstaat-tab">${fmt(msSom)} <span style="color:var(--muted); font-size:0.7rem; font-weight:400;">${eenheid}</span></div><span class="ms-badge" onclick="goToMeetstaat('${r.id}')" title="Open in Meetstaat">📐 ${msAantal} meting${msAantal===1?'':'en'}</span>`
+    : `<input type="number" step="0.1" value="${r.hoeveelheid||0}" onchange="updReg('${hgId}','${odId}','${r.id}','hoeveelheid',parseFloat(this.value))"> <span style="color:var(--muted); font-size:0.7rem;">${eenheid}</span>`;
+
+  return `<div class="calc-regel-wrap">
+    <div class="calc-regel">
+      <div><input value="${r.naam||''}" placeholder="Locatie/omschrijving" onchange="updReg('${hgId}','${odId}','${r.id}','naam',this.value)"></div>
+      <div class="systeem-naam"><strong>${sysNaam}</strong> <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span></div>
+      <div>${hoeveelHtml}</div>
+      <div><input type="number" step="5" value="${r.toeslag||0}" onchange="updReg('${hgId}','${odId}','${r.id}','toeslag',parseFloat(this.value))" title="Toeslag voor staat (matig=15, slecht=30)"> <span style="color:var(--muted); font-size:0.7rem;">% staat</span></div>
+      <div class="regel-stats">
+        ${fmt(t.uren)} u<br>
+        <span style="color:var(--ink-soft); font-size:0.7rem;">mat. ${eur(t.matVerkoop)}</span><br>
+        ${eur(t.verkoop)} <button class="btn btn-danger btn-sm" onclick="delReg('${hgId}','${odId}','${r.id}')" style="margin-left:0.4rem;">×</button>
+      </div>
+    </div>
+    <div class="regel-stappen">
+      <div class="regel-stappen-titel">Bewerkingen in deze regel <span style="color:var(--muted); font-weight:400;">— wijzigingen blijven binnen deze calculatie</span></div>
+      ${stappenHtml || '<div style="color:var(--muted); font-size:0.78rem; padding:0.4rem 0;"><em>Geen bewerkingen.</em></div>'}
+      <div class="regel-stap-add">${addStepSelect}</div>
+      ${(r.stappen && r.stappen.length) ? (() => {
+        // Per-eenheid totalen op basis van snapshot (hoeveelheid=1, toeslag=0)
+        const perEenheid = calcRegelTotalen({ ...r, hoeveelheid: 1, toeslag: 0 });
+        return `<div class="regel-stappen-footer">
+          <div><span class="ft-label">Totaal min/${eenheid}</span> <span class="ft-value">${fmt(perEenheid.minuten)}</span></div>
+          <div><span class="ft-label">Verkoop excl. BTW /${eenheid}</span> <span class="ft-value accent">${eur(perEenheid.verkoop)}</span></div>
+        </div>`;
+      })() : ''}
+    </div>
+  </div>`;
+}
+// updRegelStap, moveRegelStap, delRegelStap, addRegelStap
+function _findRegel(hgId, odId, rId) {
+  const hg = data.calc.hoofdgroepen.find(x => x.id === hgId); if (!hg) return null;
+  const od = hg.onderdelen.find(x => x.id === odId); if (!od) return null;
+  return od.regels.find(x => x.id === rId);
+}
+function updRegelStap(hgId, odId, rId, idx, field, val) {
+  const r = _findRegel(hgId, odId, rId); if (!r || !r.stappen[idx]) return;
+  r.stappen[idx][field] = val;
+  saveData(); renderCalcStructuur(); renderTotals();
+}
+function moveRegelStap(hgId, odId, rId, idx, dir) {
+  const r = _findRegel(hgId, odId, rId); if (!r) return;
+  const j = idx + dir;
+  if (j < 0 || j >= r.stappen.length) return;
+  [r.stappen[idx], r.stappen[j]] = [r.stappen[j], r.stappen[idx]];
+  saveData(); renderCalcStructuur(); renderTotals();
+}
+function delRegelStap(hgId, odId, rId, idx) {
+  if (!confirm('Stap verwijderen uit deze calculatie?')) return;
+  const r = _findRegel(hgId, odId, rId); if (!r) return;
+  r.stappen.splice(idx, 1);
+  saveData(); renderCalcStructuur(); renderTotals();
+}
+function addRegelStap(hgId, odId, rId) {
+  const r = _findRegel(hgId, odId, rId); if (!r) return;
+  const sel = document.getElementById('addStep_' + rId);
+  if (!sel || !sel.value) return;
+  const snap = _snapshotBewerking(sel.value);
+  if (!r.stappen) r.stappen = [];
+  r.stappen.push(snap);
+  saveData(); renderCalcStructuur(); renderTotals();
+}
+function addHoofdgroep() {
+  const heeft = name => data.calc.hoofdgroepen.some(hg => hg.naam.toLowerCase() === name.toLowerCase());
+  let naam = 'Nieuwe hoofdgroep';
+  if (!heeft('Buiten')) naam = 'Buiten';
+  else if (!heeft('Binnen')) naam = 'Binnen';
+  data.calc.hoofdgroepen.push({ id: uid('hg'), naam, collapsed: false, onderdelen: [] });
+  saveData(); renderCalcStructuur();
+}
+function updHg(id, f, v) { const hg = data.calc.hoofdgroepen.find(x=>x.id===id); if(hg){hg[f]=v; saveData(); if(f==='naam') renderTotals(); else renderCalcStructuur();} }
+function delHg(id) { if(!confirm('Hoofdgroep verwijderen (incl. alles eronder)?')) return; data.calc.hoofdgroepen = data.calc.hoofdgroepen.filter(x=>x.id!==id); saveData(); renderCalcStructuur(); }
+function toggleHg(id) { const hg = data.calc.hoofdgroepen.find(x=>x.id===id); if(hg){hg.collapsed=!hg.collapsed; saveData(); renderCalcStructuur();} }
+function addOnderdeel(hgId) { const hg = data.calc.hoofdgroepen.find(x=>x.id===hgId); if(!hg) return; hg.onderdelen.push({id: uid('od'), naam: 'Nieuw onderdeel', collapsed: false, regels: []}); saveData(); renderCalcStructuur(); }
+function updOd(hgId, odId, f, v) { const od = _findOnderdeel(hgId, odId); if(od){od[f]=v; saveData(); if(f==='naam') renderTotals(); else renderCalcStructuur();} }
+function delOd(hgId, odId) { if(!confirm('Onderdeel verwijderen?')) return; const hg = data.calc.hoofdgroepen.find(x=>x.id===hgId); if(hg){hg.onderdelen = hg.onderdelen.filter(o=>o.id!==odId); saveData(); renderCalcStructuur();} }
+function toggleOd(hgId, odId) { const od = _findOnderdeel(hgId, odId); if(od){od.collapsed=!od.collapsed; saveData(); renderCalcStructuur();} }
+function updReg(hgId, odId, rId, f, v) { const od = _findOnderdeel(hgId, odId); if(!od) return; const r = od.regels.find(x=>x.id===rId); if(r){r[f]=v; saveData(); renderCalcStructuur();} }
+function delReg(hgId, odId, rId) { const od = _findOnderdeel(hgId, odId); if(!od) return; od.regels = od.regels.filter(r=>r.id!==rId); saveData(); renderCalcStructuur(); }
+
+// ADD SYSTEM TO ONDERDEEL — search + filter
+let addSysCtx = null;
+function openAddSysModal(hgId, odId) {
+  addSysCtx = { hgId, odId };
+  const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
+  const loc = (hg?.naam || '').toLowerCase();
+  let suggested = '';
+  if (loc.includes('buiten')) suggested = 'buiten';
+  else if (loc.includes('binnen')) suggested = 'binnen';
+  document.getElementById('addSysSearch').value = '';
+  document.getElementById('addSysShowAll').checked = false;
+  document.getElementById('addSysModal').classList.add('active');
+  document.getElementById('addSysModal').dataset.suggested = suggested;
+  renderAddSysList();
+}
+function closeAddSysModal() { document.getElementById('addSysModal').classList.remove('active'); addSysCtx = null; }
+function renderAddSysList() {
+  const q = document.getElementById('addSysSearch').value.toLowerCase().trim();
+  const showAll = document.getElementById('addSysShowAll').checked;
+  const suggested = document.getElementById('addSysModal').dataset.suggested;
+  let list = data.systemen.slice();
+  if (!showAll && suggested) list = list.filter(s => {
+    const loc = _systeemLocatie(s);
+    return loc === suggested || loc === 'beide';
+  });
+  if (q) list = list.filter(s => s.naam.toLowerCase().includes(q));
+  const c = document.getElementById('addSysList');
+  if (!list.length) { c.innerHTML = '<div class="empty-state" style="margin: 0;">Geen systemen gevonden.</div>'; return; }
+  c.innerHTML = list.map(s => {
+    const ond = data.ondergronden.find(o => o.id === s.ondergrondId);
+    const calc = calcSystem(s);
+    const loc = _systeemLocatie(s);
+    return `<div class="search-select-item" onclick="selectAddSys('${s.id}')">
+      <strong>${s.naam}</strong> <span class="group-tag">${loc}</span><br>
+      <span style="font-size:0.7rem; color:var(--muted);">${ond ? ond.naam : '?'} · ${s.eenheid} · € ${fmt(calc.verkoop)}/${s.eenheid} verkoop</span>
+    </div>`;
+  }).join('');
+}
+function selectAddSys(sysId) {
+  if (!addSysCtx) return;
+  const od = _findOnderdeel(addSysCtx.hgId, addSysCtx.odId);
+  if (od) {
+    const snap = _snapshotSystem(sysId);
+    od.regels.push({ id: uid('r'), naam: '', systeemId: sysId, hoeveelheid: 0, toeslag: 0,
+      systeemNaam: snap.systeemNaam, systeemEenheid: snap.systeemEenheid,
+      systeemOndergrond: snap.systeemOndergrond, systeemOndergrondId: snap.systeemOndergrondId,
+      systeemLocatie: snap.systeemLocatie, stappen: snap.stappen
+    });
+  }
+  saveData(); closeAddSysModal(); renderCalcStructuur();
+}
+function openSystemFromAdd() {
+  modalSysContext = addSysCtx ? { ...addSysCtx } : null;
+  closeAddSysModal();
+  openSystemModal();
+}
+function newCalc() {
+  const naam = prompt('Naam voor de nieuwe calculatie:', 'Calculatie ' + (data.calculaties.length + 1));
+  if (!naam) return;
+  const c = _newCalcObj(naam);
+  data.calculaties.push(c);
+  data.activeCalcId = c.id;
+  saveData(); renderCalcStructuur(); renderDashboard();
+}
+function openCalc(id) {
+  if (!data.calculaties.find(c => c.id === id)) return;
+  data.activeCalcId = id;
+  saveData(); renderCalcStructuur(); renderDashboard();
+  // switch to calculatie tab
+  document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  document.querySelector('nav button[data-tab="calculatie"]').classList.add('active');
+  document.getElementById('calculatie').classList.add('active');
+}
+function delCalc(id) {
+  const c = data.calculaties.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm('Calculatie "' + c.naam + '" verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
+  data.calculaties = data.calculaties.filter(x => x.id !== id);
+  if (data.activeCalcId === id) data.activeCalcId = data.calculaties[0]?.id || null;
+  _ensureActiveCalc();
+  saveData(); renderCalcStructuur(); renderDashboard();
+}
+function dupCalc(id) {
+  const c = data.calculaties.find(x => x.id === id);
+  if (!c) return;
+  const copy = JSON.parse(JSON.stringify(c));
+  copy.id = uid('c');
+  copy.naam = c.naam + ' (kopie)';
+  copy.status = 'concept';
+  copy.aangemaakt = new Date().toISOString();
+  copy.gewijzigd = new Date().toISOString();
+  // give new ids to nested entities to avoid collision
+  copy.hoofdgroepen.forEach(hg => {
+    hg.id = uid('hg');
+    hg.onderdelen.forEach(od => {
+      od.id = uid('od');
+      od.regels.forEach(r => { r.id = uid('r'); });
+    });
+  });
+  copy.staart.forEach(s => { s.id = uid('sk'); });
+  data.calculaties.push(copy);
+  saveData(); renderDashboard();
+}
+function setCalcStatus(id, status) {
+  const c = data.calculaties.find(x => x.id === id);
+  if (!c) return;
+  c.status = status;
+  saveData(); renderDashboard();
+}
+
+// header form binding
+document.addEventListener('input', e => {
+  const map = {calcProject:'naam', calcKlant:'klant', calcReis:'reis', calcSchilders:'schilders', calcUurDag:'uurDag'};
+  if (map[e.target.id]) {
+    const k = map[e.target.id];
+    data.calc[k] = ['reis','schilders','uurDag'].includes(k) ? (parseFloat(e.target.value)||0) : e.target.value;
+    saveData();
+    if (['reis','schilders','uurDag'].includes(k)) renderTotals();
+  }
+});
+// ============================================================
+// STAARTKOSTEN
+// ============================================================
+function calcStaart(p) {
+  if (p.type === 'vast') return p.bedrag || 0;
+  if (p.type === 'dag') return (p.bedrag||0) * _calcDaysFactureerbaar();
+  if (p.type === 'week') return (p.bedrag||0) * _calcWeeks();
+  if (p.type === 'eenheid') return (p.bedrag||0) * (p.hoeveelheid||0);
+  if (p.type === 'percent') {
+    const t = calcProjectTotalen();
+    let basis = 0;
+    if (p.grondslag === 'arbeid') basis = t.arbeid;
+    else if (p.grondslag === 'materiaal') basis = t.matVerkoop;
+    else if (p.grondslag === 'arbeid_materiaal') basis = t.arbeid + t.matVerkoop;
+    else if (p.grondslag === 'subtotaal') basis = t.verkoop;
+    return basis * (p.bedrag||0) / 100;
+  }
+  return 0;
+}
+function _calcWeeks() {
+  const d = _calcDaysFactureerbaar();
+  if (d === 0) return 0;
+  return Math.ceil(d / 5);
+}
+function calcStaartTotaal() { return data.calc.staart.reduce((s, p) => s + calcStaart(p), 0); }
+
+function renderStaartList() {
+  const c = document.getElementById('staartList');
+  if (!data.calc.staart.length) {
+    c.innerHTML = '<p style="color:var(--muted); font-style:italic; font-size:0.85rem;">Nog geen staartkosten.</p>';
+  } else {
+    let html = '<table style="background:var(--paper); font-size:0.82rem;"><thead><tr><th>Naam</th><th>Type</th><th>Bedrag</th><th>Hoev/grondsl.</th><th class="right">Subtotaal</th><th></th></tr></thead><tbody>';
+    data.calc.staart.forEach(p => {
+      const sub = calcStaart(p);
+      let detail = '';
+      if (p.type === 'vast') detail = '€ ' + fmt(p.bedrag);
+      else if (p.type === 'dag') detail = '€ ' + fmt(p.bedrag) + '/dag';
+      else if (p.type === 'week') detail = '€ ' + fmt(p.bedrag) + '/week';
+      else if (p.type === 'eenheid') detail = '€ ' + fmt(p.bedrag) + '/' + (p.eenheid||'eenh.');
+      else if (p.type === 'percent') detail = fmt(p.bedrag) + '%';
+      let hoev = '';
+      if (p.type === 'eenheid') hoev = fmt(p.hoeveelheid||0) + ' ' + (p.eenheid||'');
+      else if (p.type === 'dag') hoev = fmt(_calcDaysFactureerbaar()) + ' dagen';
+      else if (p.type === 'week') hoev = _calcWeeks() + ' weken';
+      else if (p.type === 'percent') hoev = '× ' + p.grondslag;
+      html += `<tr>
+        <td>${p.naam}</td>
+        <td>${detail}</td>
+        <td class="num right">${eur(p.bedrag)}</td>
+        <td>${hoev}</td>
+        <td class="num right" style="color:var(--accent-deep); font-weight:600;">${eur(sub)}</td>
+        <td><button class="btn-secondary btn btn-sm" onclick="editStaart('${p.id}')">✎</button> <button class="btn btn-danger btn-sm" onclick="delStaart('${p.id}')">×</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    c.innerHTML = html;
+  }
+  const sel = document.getElementById('staartTpl');
+  sel.innerHTML = '<option value="">— kies template —</option>' + data.staartLib.map(s => `<option value="${s.id}">${s.naam}</option>`).join('');
+}
+
+function addStaartFromTpl() {
+  const id = document.getElementById('staartTpl').value;
+  if (!id) return;
+  const t = data.staartLib.find(x => x.id === id);
+  if (!t) return;
+  data.calc.staart.push({ id: uid('sk'), naam: t.naam, type: t.type, bedrag: t.bedrag, eenheid: t.eenheid, grondslag: t.grondslag, hoeveelheid: 0 });
+  saveData(); renderStaartList(); renderTotals();
+}
+function addStaartCustom() {
+  const np = { id: uid('sk'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0 };
+  openStaartModal(np, 'newCalc');
+}
+
+let staartCtx = { id: null, mode: null }; // mode: 'editCalc' | 'newCalc' | 'editLib' | 'newLib'
+function openStaartModal(p, mode) {
+  staartCtx = { id: p.id, mode, payload: p };
+  const isLib = mode.endsWith('Lib');
+  document.getElementById('staartModalTitle').textContent = isLib ? 'Staartkosten-template' : 'Staartkosten-post';
+  document.getElementById('staartNaam').value = p.naam || '';
+  document.getElementById('staartType').value = p.type || 'vast';
+  document.getElementById('staartBedrag').value = p.bedrag || 0;
+  document.getElementById('staartEenheid').value = p.eenheid || '';
+  document.getElementById('staartGrondslag').value = p.grondslag || 'arbeid';
+  document.getElementById('staartHoev').value = p.hoeveelheid || 0;
+  updateStaartFields();
+  document.getElementById('staartModal').classList.add('active');
+}
+function editStaart(id) { const p = data.calc.staart.find(x=>x.id===id); if(p) openStaartModal(p, 'editCalc'); }
+function editStaartLib(id) { const p = data.staartLib.find(x=>x.id===id); if(p) openStaartModal(p, 'editLib'); }
+function updateStaartFields() {
+  const type = document.getElementById('staartType').value;
+  document.getElementById('staartEenheidWrap').style.display = type === 'eenheid' ? '' : 'none';
+  document.getElementById('staartGrondslagWrap').style.display = type === 'percent' ? '' : 'none';
+  document.getElementById('staartHoevWrap').style.display = type === 'eenheid' ? '' : 'none';
+}
+function saveStaart() {
+  const payload = {
+    naam: document.getElementById('staartNaam').value.trim(),
+    type: document.getElementById('staartType').value,
+    bedrag: parseFloat(document.getElementById('staartBedrag').value) || 0,
+    eenheid: document.getElementById('staartEenheid').value,
+    grondslag: document.getElementById('staartGrondslag').value,
+    hoeveelheid: parseFloat(document.getElementById('staartHoev').value) || 0,
+  };
+  if (!payload.naam) { alert('Geef een naam.'); return; }
+  if (staartCtx.mode === 'editCalc') {
+    const p = data.calc.staart.find(x => x.id === staartCtx.id);
+    if (p) Object.assign(p, payload);
+  } else if (staartCtx.mode === 'newCalc') {
+    data.calc.staart.push({ id: staartCtx.id, ...payload });
+  } else if (staartCtx.mode === 'editLib') {
+    const p = data.staartLib.find(x => x.id === staartCtx.id);
+    if (p) Object.assign(p, payload);
+  } else if (staartCtx.mode === 'newLib') {
+    data.staartLib.push({ id: staartCtx.id, ...payload });
+  }
+  saveData();
+  renderStaartList(); renderStaartLib(); renderTotals();
+  closeStaartModal();
+}
+function closeStaartModal() { document.getElementById('staartModal').classList.remove('active'); }
+function delStaart(id) { if(!confirm('Verwijderen?')) return; data.calc.staart = data.calc.staart.filter(p=>p.id!==id); saveData(); renderStaartList(); renderTotals(); }
+
+function renderStaartLib() {
+  const c = document.getElementById('staartLib');
+  if (!data.staartLib.length) { c.innerHTML = '<div class="empty-state">Geen templates.</div>'; return; }
+  let html = '<div class="table-scroll"><table><thead><tr><th>Naam</th><th>Type</th><th class="right">Bedrag</th><th>Detail</th><th></th></tr></thead><tbody>';
+  const sorted = [...data.staartLib].sort((a,b) => (a.naam||'').toLowerCase().localeCompare((b.naam||'').toLowerCase()));
+  sorted.forEach(p => {
+    let detail = '';
+    if (p.type === 'eenheid') detail = 'per ' + (p.eenheid||'?');
+    else if (p.type === 'percent') detail = '% over ' + p.grondslag;
+    else if (p.type === 'dag') detail = 'per dag';
+    else if (p.type === 'week') detail = 'per week';
+    else detail = 'vast';
+    html += `<tr>
+      <td>${p.naam}</td>
+      <td>${p.type}</td>
+      <td class="num right">${p.type==='percent' ? fmt(p.bedrag)+'%' : eur(p.bedrag)}</td>
+      <td>${detail}</td>
+      <td class="right"><button class="btn-secondary btn btn-sm" onclick="editStaartLib('${p.id}')">✎</button> <button class="btn btn-danger btn-sm" onclick="delStaartLib('${p.id}')">×</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+function addStaartLib() { const np = { id: uid('sl'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0 }; openStaartModal(np, 'newLib'); }
+function delStaartLib(id) { if(!confirm('Verwijderen?')) return; data.staartLib = data.staartLib.filter(p=>p.id!==id); saveData(); renderStaartLib(); renderStaartList(); }
+// ============================================================
+// TOTAALPANEEL CALCULATIE
+// ============================================================
+function renderTotals() {
+  // Eerst meetstaat-hoeveelheden syncen — dan kloppen alle berekeningen
+  _syncMeetstaatHoeveelheden();
+  const t = calcProjectTotalen();
+  const sett = data.settings;
+  const arbeidWerkelijk = t.arbeid;
+  const matVerkoop = t.matVerkoop;
+  const reisAfstand = data.calc.reis || 0;
+  const dagenWerkelijk = _calcDays();
+  const dagenFactureerbaar = _calcDaysFactureerbaar();
+  const volleDagen = _useVolleDagen();
+  // Afrondingstoeslag arbeid: verschil tussen factureerbaar en werkelijk × schilders × uurDag × uurloon
+  const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
+  const afrondingsToeslag = volleDagen ? dagenVerschil * (data.calc.schilders||0) * (data.calc.uurDag||8) * sett.uurloon : 0;
+  const arbeid = arbeidWerkelijk + afrondingsToeslag;
+  const snelheid = sett.snelheid || 50;
+  // Reisuren: alleen heenreis × schilders × factureerbare dagen
+  const reisUren = dagenFactureerbaar * (data.calc.schilders||0) * (reisAfstand / snelheid);
+  const reisKostenUren = reisUren * sett.reistijd;
+  // Kilometers: heen + terug × factureerbare dagen, één busje (geen × schilders)
+  const reisKm = dagenFactureerbaar * (reisAfstand * 2) * sett.km;
+  const reisTotaal = reisKostenUren + reisKm;
+  const kleinMat = matVerkoop * sett.kleinMat/100;
+  const afval = (arbeid + matVerkoop) * sett.afval/100;
+  const arbo = arbeid * sett.arbo/100;
+  const staartTotaal = calcStaartTotaal();
+  const directe = arbeid + matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
+  const subtotaal = directe;
+  const winstBedrag = subtotaal * sett.winst/100;
+  const exBtw = subtotaal + winstBedrag;
+  const btwBedrag = exBtw * sett.btw/100;
+  const totaal = exBtw + btwBedrag;
+
+  const body = document.getElementById('totalsBody');
+  if (t.uren === 0 && data.calc.staart.length === 0) {
+    body.innerHTML = '<p style="opacity: 0.6;"><em>Voeg hoofdgroepen, onderdelen en regels toe.</em></p>';
+    return;
+  }
+  // Toggle state for "volle dagen"
+  const cOverride = data.calc.volleDagenOverride;
+  const overrideText = cOverride === null || cOverride === undefined
+    ? `volgt instelling (${data.settings.volleDagen !== false ? 'aan' : 'uit'})`
+    : (cOverride ? 'aan (override)' : 'uit (override)');
+  const arbeidLine = afrondingsToeslag > 0
+    ? `<div class="line"><span>Arbeid</span><span>${eur(arbeidWerkelijk)}</span></div>
+       <div class="line indent"><span>+ afronding (${fmt1(dagenVerschil)} dag)</span><span>${eur(afrondingsToeslag)}</span></div>`
+    : `<div class="line"><span>Arbeid</span><span>${eur(arbeid)}</span></div>`;
+  body.innerHTML = `
+    <div class="line"><span>Totaal uren</span><span>${fmt(t.uren)} u</span></div>
+    ${arbeidLine}
+    <div class="line"><span>Materiaal verkoop</span><span>${eur(matVerkoop)}</span></div>
+    <div class="line indent"><span>+ klein mat.</span><span>${eur(kleinMat)}</span></div>
+    <div class="line indent"><span>+ afval</span><span>${eur(afval)}</span></div>
+    <div class="line indent"><span>+ ARBO</span><span>${eur(arbo)}</span></div>
+    <div class="line"><span>Reis (${fmt(reisUren)} u + km)</span><span>${eur(reisTotaal)}</span></div>
+    <div class="line"><span>Staartkosten</span><span>${eur(staartTotaal)}</span></div>
+    <div class="line divider"><span>Directe kosten</span><span>${eur(directe)}</span></div>
+    <div class="line indent"><span>+ risico</span><span>${eur(winstBedrag)}</span></div>
+    <div class="line"><span>Excl. BTW</span><span>${eur(exBtw)}</span></div>
+    <div class="line indent"><span>+ BTW</span><span>${eur(btwBedrag)}</span></div>
+    <div class="grand"><span class="label">Totaal incl.</span><span class="value">${eur(totaal)}</span></div>
+    <div class="planning">
+      <div style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.3rem;">Planning</div>
+      <div class="big">${fmt1(dagenWerkelijk)} werkdagen</div>
+      <div style="font-size: 0.72rem; color: var(--ink-soft); margin-top: 0.2rem;">${data.calc.schilders||0} schilders × ${data.calc.uurDag||8} u/dag</div>
+      ${(() => {
+        if (!volleDagen) return '';
+        const heel = Math.floor(dagenWerkelijk);
+        const overschot = +(dagenWerkelijk - heel).toFixed(2);
+        if (overschot === 0) return '';
+        const drempel = sett.afrondingsDrempel ?? 0.6;
+        if (dagenFactureerbaar > dagenWerkelijk) {
+          return `<div style="font-size: 0.72rem; color: var(--accent); margin-top: 0.3rem; font-weight: 600;">→ Factureerbaar: ${dagenFactureerbaar} hele dagen</div>`;
+        } else {
+          // drempel hield afronding tegen
+          return `<div style="font-size: 0.72rem; color: var(--ink-soft); margin-top: 0.3rem; font-style: italic;">overschot ${fmt1(overschot)} dag onder drempel ${fmt1(drempel)}</div>`;
+        }
+      })()}
+    </div>
+    <div class="volle-dagen-toggle" style="margin-top: 0.85rem; padding: 0.7rem; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); font-size: 0.78rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+        <strong>Volle dagen factureren</strong>
+        <select onchange="updVolleDagenOverride(this.value)" style="padding: 0.25rem 0.4rem; font-size: 0.75rem; min-width: 110px;">
+          <option value="null" ${cOverride === null || cOverride === undefined ? 'selected' : ''}>Volg instelling</option>
+          <option value="true" ${cOverride === true ? 'selected' : ''}>Aan</option>
+          <option value="false" ${cOverride === false ? 'selected' : ''}>Uit</option>
+        </select>
+      </div>
+      <div style="font-size: 0.7rem; color: var(--ink-soft); margin-top: 0.3rem;">${overrideText}</div>
+    </div>
+  `;
+  renderStaartList();
+}
+function updVolleDagenOverride(v) {
+  if (v === 'null') data.calc.volleDagenOverride = null;
+  else if (v === 'true') data.calc.volleDagenOverride = true;
+  else data.calc.volleDagenOverride = false;
+  saveData(); renderTotals();
+}
+
+// ============================================================
+// INSTELLINGEN
+// ============================================================
+function loadSettings() {
+  const s = data.settings;
+  document.getElementById('setUurloon').value = s.uurloon;
+  document.getElementById('setReistijd').value = s.reistijd;
+  document.getElementById('setKm').value = s.km;
+  document.getElementById('setSnelheid').value = s.snelheid ?? 50;
+  document.getElementById('setKleinMat').value = s.kleinMat;
+  document.getElementById('setAfval').value = s.afval;
+  document.getElementById('setArbo').value = s.arbo;
+  document.getElementById('setWinst').value = s.winst;
+  document.getElementById('setBtw').value = s.btw;
+  const cb = document.getElementById('setVolleDagen');
+  if (cb) cb.checked = s.volleDagen !== false;
+  const drempelInput = document.getElementById('setAfrondingsDrempel');
+  if (drempelInput) drempelInput.value = s.afrondingsDrempel ?? 0.6;
+  const c = document.getElementById('groepOpslagen');
+  c.innerHTML = GROEP_CLUSTERS.map(cluster => {
+    const inner = cluster.groepen.map(g => {
+      const v = s.groepOpslagen[g] ?? 0;
+      return `<div><label>${g}</label><input type="number" step="0.5" value="${v}" onchange="updGroepOpslag('${g}',this.value,this)"></div>`;
+    }).join('');
+    return `<div class="cluster-block">
+      <div class="cluster-titel">${cluster.naam}</div>
+      <div class="cluster-grid">${inner}</div>
+    </div>`;
+  }).join('');
+}
+function updGroepOpslag(g, v, inputEl) {
+  data.settings.groepOpslagen[g] = parseFloat(v) || 0;
+  saveData(); renderMaterialen(); renderSystemen(); renderTotals();
+  if (inputEl) showSavedTick(inputEl);
+}
+function updSetting(field, inputEl) {
+  const val = parseFloat(inputEl.value) || 0;
+  data.settings[field] = val;
+  saveData();
+  // Re-render everything that depends on settings
+  renderMaterialen(); renderBewerkingen(); renderSystemen(); renderTotals(); renderDashboard();
+  showSavedTick(inputEl);
+}
+function updSettingBool(field, inputEl) {
+  data.settings[field] = inputEl.checked;
+  saveData();
+  renderTotals(); renderDashboard();
+  showSavedTick(inputEl);
+}
+function showSavedTick(inputEl) {
+  // Find or create a check element next to the input
+  const wrap = inputEl.parentElement;
+  if (!wrap) return;
+  let tick = wrap.querySelector('.saved-tick');
+  if (!tick) {
+    tick = document.createElement('span');
+    tick.className = 'saved-tick';
+    tick.textContent = '✓';
+    wrap.style.position = 'relative';
+    wrap.appendChild(tick);
+  }
+  tick.classList.remove('show');
+  // Force reflow so animation restarts
+  void tick.offsetWidth;
+  tick.classList.add('show');
+  clearTimeout(tick._t);
+  tick._t = setTimeout(() => tick.classList.remove('show'), 1500);
+}
+// Keep saveSettings as alias for compatibility (no-op since auto-save handles it)
+function saveSettings() {
+  // All fields are auto-saved on change; this is just a safety net
+  saveData();
+  renderMaterialen(); renderBewerkingen(); renderSystemen(); renderTotals(); renderDashboard();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(_serializeData(), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'schilders-calc-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); URL.revokeObjectURL(url);
+}
+function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      Object.keys(parsed).forEach(k => { if (k !== 'calc') data[k] = parsed[k]; });
+      // Migration if needed
+      if (parsed.calc && (!parsed.calculaties || !parsed.calculaties.length)) {
+        const old = parsed.calc;
+        const migrated = {
+          id: uid('c'),
+          naam: old.project || old.naam || 'Gemigreerde calculatie',
+          klant: old.klant || '',
+          reis: old.reis || 0,
+          schilders: old.schilders || 2,
+          uurDag: old.uurDag || 8,
+          status: 'concept',
+          aangemaakt: new Date().toISOString(),
+          gewijzigd: new Date().toISOString(),
+          hoofdgroepen: old.hoofdgroepen || [],
+          staart: old.staart || []
+        };
+        data.calculaties = [migrated];
+        data.activeCalcId = migrated.id;
+      }
+      _ensureActiveCalc();
+      saveData(); renderAll();
+      alert('Geïmporteerd.');
+    } catch(err) { alert('Fout: '+err.message); }
+  };
+  reader.readAsText(file);
+}
+function resetData() {
+  if (!confirm('Alles overschrijven met voorbeelddata?')) return;
+  // Replace fields without breaking the data.calc property descriptor
+  const fresh = JSON.parse(JSON.stringify(defaultData));
+  Object.keys(fresh).forEach(k => { data[k] = fresh[k]; });
+  _ensureActiveCalc();
+  saveData(); renderAll();
+}
+
+// ============================================================
+// CALCULATIES ARCHIEF — render in dashboard
+// ============================================================
+function _calcTotalForArchive(c) {
+  // Compute total inclusive BTW for a calculation (without changing active)
+  // Uses snapshot stappen on regel
+  const sett = data.settings;
+  let arbeid = 0, matInkoop = 0, matVerkoop = 0, uren = 0;
+  c.hoofdgroepen.forEach(hg => hg.onderdelen.forEach(od => od.regels.forEach(r => {
+    if (!r.hoeveelheid || !r.stappen || !r.stappen.length) return;
+    let sm = 0, smI = 0, smV = 0;
+    r.stappen.forEach(st => {
+      const pct = (st.percentage ?? 100) / 100;
+      sm += (st.minuten || 0) * pct;
+      if (st.materiaalNaam) {
+        const mi = (st.materiaalPrijs || 0) * (st.verbruik || 0) * pct;
+        smI += mi;
+        smV += mi * (1 + (sett.groepOpslagen[st.materiaalGroep] || 0) / 100);
+      }
+    });
+    const tF = 1 + (r.toeslag || 0) / 100;
+    const sysUren = sm / 60;
+    const sysArbeid = sysUren * sett.uurloon;
+    arbeid += sysArbeid * r.hoeveelheid * tF;
+    matInkoop += smI * r.hoeveelheid;
+    matVerkoop += smV * r.hoeveelheid;
+    uren += sysUren * r.hoeveelheid * tF;
+  })));
+  // Reis & dagen
+  const dagenWerkelijk = uren > 0 ? Math.round((uren / (c.schilders || 1) / (c.uurDag || 8)) * 100) / 100 : 0;
+  // Resolve volle dagen: per-calc override OR global setting
+  let useVolle;
+  if (c.volleDagenOverride === true) useVolle = true;
+  else if (c.volleDagenOverride === false) useVolle = false;
+  else useVolle = sett.volleDagen !== false;
+  // Drempel-logica voor afronding factureerbare dagen
+  const drempel = sett.afrondingsDrempel ?? 0.6;
+  let dagenFactureerbaar;
+  if (dagenWerkelijk === 0) dagenFactureerbaar = 0;
+  else if (!useVolle) dagenFactureerbaar = dagenWerkelijk;
+  else if (dagenWerkelijk < 1) dagenFactureerbaar = 1; // klein klusje: altijd minstens 1 dag
+  else {
+    const heel = Math.floor(dagenWerkelijk);
+    const overschot = Math.round((dagenWerkelijk - heel) * 100) / 100;
+    if (overschot === 0) dagenFactureerbaar = dagenWerkelijk;
+    else if (overschot >= drempel) dagenFactureerbaar = heel + 1;
+    else dagenFactureerbaar = heel;
+  }
+  const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
+  const afrondingsToeslag = useVolle ? dagenVerschil * (c.schilders||0) * (c.uurDag||8) * sett.uurloon : 0;
+  arbeid += afrondingsToeslag;
+  const snelheid = sett.snelheid || 50;
+  const reisUren = dagenFactureerbaar * (c.schilders || 0) * ((c.reis || 0) / snelheid);
+  const reisTotaal = reisUren * sett.reistijd + dagenFactureerbaar * (c.reis || 0) * 2 * sett.km;
+  // Staart
+  let staartTotaal = 0;
+  const weken = dagenFactureerbaar > 0 ? Math.ceil(dagenFactureerbaar / 5) : 0;
+  c.staart.forEach(p => {
+    if (p.type === 'vast') staartTotaal += p.bedrag || 0;
+    else if (p.type === 'dag') staartTotaal += (p.bedrag || 0) * dagenFactureerbaar;
+    else if (p.type === 'week') staartTotaal += (p.bedrag || 0) * weken;
+    else if (p.type === 'eenheid') staartTotaal += (p.bedrag || 0) * (p.hoeveelheid || 0);
+    else if (p.type === 'percent') {
+      let basis = 0;
+      if (p.grondslag === 'arbeid') basis = arbeid;
+      else if (p.grondslag === 'materiaal') basis = matVerkoop;
+      else if (p.grondslag === 'arbeid_materiaal') basis = arbeid + matVerkoop;
+      staartTotaal += basis * (p.bedrag || 0) / 100;
+    }
+  });
+  // Opslagen
+  const kleinMat = matVerkoop * sett.kleinMat / 100;
+  const afval = (arbeid + matVerkoop) * sett.afval / 100;
+  const arbo = arbeid * sett.arbo / 100;
+  const directe = arbeid + matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
+  const sub = directe;
+  const wB = sub * sett.winst / 100;
+  const exBtw = sub + wB;
+  return { uren, totaal: exBtw * (1 + sett.btw / 100), exBtw };
+}
+
+function renderCalculatiesArchief() {
+  const c = document.getElementById('calculatiesArchief');
+  if (!c) return;
+  if (!data.calculaties.length) {
+    c.innerHTML = '<div class="empty-state">Nog geen calculaties. Maak een nieuwe.</div>';
+    return;
+  }
+  const STATUS_LABELS = { concept: 'Concept', gereed: 'Gereed', verzonden: 'Verzonden', geaccepteerd: 'Geaccepteerd', verloren: 'Verloren' };
+  const STATUS_COLORS = { concept: 'var(--muted)', gereed: '#f59e0b', verzonden: 'var(--blue)', geaccepteerd: 'var(--green)', verloren: 'var(--accent-deep)' };
+  // Sort by gewijzigd desc
+  const sorted = [...data.calculaties].sort((a, b) => (b.gewijzigd || '').localeCompare(a.gewijzigd || ''));
+  let html = '<div class="table-scroll"><table><thead><tr><th>Naam</th><th>Gewijzigd</th><th>Status</th><th class="right">Totaal incl. BTW</th><th></th></tr></thead><tbody>';
+  sorted.forEach(cl => {
+    const t = _calcTotalForArchive(cl);
+    const datum = cl.gewijzigd ? new Date(cl.gewijzigd).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+    const statusOpts = Object.keys(STATUS_LABELS).map(s => `<option value="${s}" ${s === cl.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('');
+    const isActive = cl.id === data.activeCalcId;
+    html += `<tr ${isActive ? 'style="background: rgba(194,65,12,0.06);"' : ''}>
+      <td><strong style="cursor: pointer; color: var(--accent-deep);" onclick="openCalc('${cl.id}')">${cl.naam || '<em>(zonder naam)</em>'}</strong>${isActive ? ' <span class="mono" style="font-size:0.65rem; color:var(--accent); margin-left:0.4rem;">● actief</span>' : ''}<br><span style="color: var(--muted); font-size: 0.78rem;">${cl.klant || ''}</span></td>
+      <td class="num">${datum}</td>
+      <td><select onchange="setCalcStatus('${cl.id}', this.value)" style="background: ${STATUS_COLORS[cl.status]}; color: var(--paper); border: none; padding: 0.25rem 0.4rem; font-size: 0.7rem;">${statusOpts}</select></td>
+      <td class="num right" style="color: var(--accent-deep); font-weight: 600;">${eur(t.totaal)}</td>
+      <td class="right">
+        <button class="btn-secondary btn btn-sm" onclick="openCalc('${cl.id}')">Openen</button>
+        <button class="btn-secondary btn btn-sm" onclick="dupCalc('${cl.id}')" title="Dupliceren">⎘</button>
+        <button class="btn btn-danger btn-sm" onclick="delCalc('${cl.id}')">×</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+
+function renderDashboard() {
+  document.getElementById('statMat').textContent = data.materialen.length;
+  document.getElementById('statBew').textContent = data.bewerkingen.length;
+  document.getElementById('statSys').textContent = data.systemen.length;
+  document.getElementById('statOnd').textContent = data.ondergronden.length;
+  document.getElementById('statTar').textContent = '€' + fmt0(data.settings.uurloon);
+  renderCalculatiesArchief();
+}
+// ============================================================
+// INIT
+// ============================================================
+// INIT (async — auth check first, then load data)
+// ============================================================
+function renderAll() {
+  renderOndergronden();
+  renderMaterialen();
+  renderBewerkingen();
+  renderSystemen();
+  renderCalcStructuur();
+  renderStaartLib();
+  loadSettings();
+  renderDashboard();
+}
+
+document.getElementById('dateStamp').textContent = new Date().toLocaleDateString('nl-NL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+async function init() {
+  _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // onAuthStateChange is de enige bron van sessie-info.
+  // INITIAL_SESSION leest uit localStorage — geen netwerk nodig, hangt nooit.
+  // SIGNED_IN  = verse magic-link login
+  // TOKEN_REFRESHED = token succesvol ververst op achtergrond
+  // SIGNED_OUT = uitgelogd of refresh mislukt
+  _sb.auth.onAuthStateChange(async (event, session) => {
+    if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+      _onLoginSuccess(session.user);
+      await loadData();
+      renderAll();
+    } else if (event === 'INITIAL_SESSION' && !session) {
+      document.getElementById('authOverlay').classList.add('active');
+    } else if (event === 'SIGNED_OUT') {
+      document.getElementById('authOverlay').classList.add('active');
+      document.getElementById('userBadge').style.display = 'none';
+    }
+  });
+  // Geen getSession() meer — voorkomt hangende token-refresh bij opstart
+}
+
+init();
+</script>
+</body>
+</html>
