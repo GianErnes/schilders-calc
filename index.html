@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.4.1 · Voorcalculatie</span>
+    <span class="subtitle">v3.4.2 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.4.1</h2>
-      <p>Fase 3d.2 — Calc-regels en hun snapshot-stappen leven nu in Supabase. Bij toevoegen van een verfsysteem aan een onderdeel wordt de regel inclusief alle bevroren bewerkings- en materiaaldata opgeslagen. Wijzigingen aan regels (hoeveelheid, toeslag, percentages, stappen) syncen direct. Staart, meetstaat en todo's volgen in v3.4.2.</p>
+      <h2>Welkom bij v3.4.2</h2>
+      <p>Fase 3d compleet — meetstaat, todo's en staartkosten per calculatie leven nu ook in Supabase. Alle data is cloud-bound. Volgende stap: eenmalige migratie van calculaties uit v2.4.1, en daarna de security-pass (Supabase Auth terug + gehashte incode).</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1556,7 +1556,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.4.1 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.4.2 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -2259,7 +2259,7 @@ function _mapOdFromDB(row) {
     naam:      row.naam || '',
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
-    regels:    [] // wordt later gevuld vanuit localStorage in v3.4.1
+    regels:    [] // wordt later gevuld vanuit localStorage in v3.4.2
   };
 }
 function _mapOdToDB(od, hgId) {
@@ -2271,31 +2271,11 @@ function _mapOdToDB(od, hgId) {
   };
 }
 
-// localStorage body — TIJDELIJK in v3.4.1 voor staart/meetstaat/todos.
-// Wordt vervangen in v3.4.2.
+// localStorage body — niet meer in gebruik vanaf v3.4.2 (alles in DB)
+// Stubs achtergelaten voor backwards compat tijdens transitie.
 const CALC_BODY_PREFIX = 'verfcalc_v3_body_';
-function _bodyLS(calcId) {
-  try {
-    const raw = localStorage.getItem(CALC_BODY_PREFIX + calcId);
-    if (!raw) return { staart: [], meetstaat: [], todos: [] };
-    const p = JSON.parse(raw);
-    return {
-      staart:     p.staart     || [],
-      meetstaat:  p.meetstaat  || [],
-      todos:      p.todos      || []
-    };
-  } catch { return { staart: [], meetstaat: [], todos: [] }; }
-}
-function _saveBody(calcId) {
-  const c = data.calculaties.find(x => x.id === calcId);
-  if (!c) return;
-  const body = {
-    staart:    c.staart    || [],
-    meetstaat: c.meetstaat || [],
-    todos:     c.todos     || []
-  };
-  try { localStorage.setItem(CALC_BODY_PREFIX + calcId, JSON.stringify(body)); } catch(e) {}
-}
+function _bodyLS(calcId) { return { staart: [], meetstaat: [], todos: [] }; }
+function _saveBody(calcId) {}
 function _delBodyLS(calcId) {
   try { localStorage.removeItem(CALC_BODY_PREFIX + calcId); } catch {}
 }
@@ -2310,16 +2290,21 @@ async function _fetchCalcHeadersFromDB() {
 }
 async function _loadCalcBody(c) {
   if (c.__loaded) return true;
-  // Nested fetch: hg → od → regels → stappen
-  const { data: hgRows, error } = await _sbQuery(
-    _sb.from('hoofdgroepen')
-      .select('*, onderdelen(*, calc_regels(*, calc_regel_stappen(*)))')
-      .eq('calculatie_id', c.id)
-      .order('volgorde'),
-    'Calculatie laden'
-  );
-  if (error) return false;
-  const hgs = (hgRows || []).map(hgRow => {
+  // Parallelle fetches: hg-tree + todos + staart + meetstaat
+  const [hgRes, todoRes, staartRes, msRes] = await Promise.all([
+    _sbQuery(
+      _sb.from('hoofdgroepen')
+        .select('*, onderdelen(*, calc_regels(*, calc_regel_stappen(*)))')
+        .eq('calculatie_id', c.id)
+        .order('volgorde'),
+      'Calculatie laden'
+    ),
+    _sbQuery(_sb.from('todos').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Taken laden'),
+    _sbQuery(_sb.from('staart').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Staart laden'),
+    _sbQuery(_sb.from('meetstaat').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Meetstaat laden')
+  ]);
+  if (hgRes.error) return false;
+  const hgs = (hgRes.data || []).map(hgRow => {
     const ods = (hgRow.onderdelen || [])
       .slice().sort((a, b) => (a.volgorde||0) - (b.volgorde||0))
       .map(odRow => {
@@ -2338,12 +2323,10 @@ async function _loadCalcBody(c) {
     hg.onderdelen = ods;
     return hg;
   });
-  // Vul staart/meetstaat/todos uit localStorage (TIJDELIJK in v3.4.1)
-  const body = _bodyLS(c.id);
   c.hoofdgroepen = hgs;
-  c.staart    = body.staart;
-  c.meetstaat = body.meetstaat;
-  c.todos     = body.todos;
+  c.todos     = (todoRes.data   || []).map(_mapTodoFromDB);
+  c.staart    = (staartRes.data || []).map(_mapStaartFromDB);
+  c.meetstaat = (msRes.data     || []).map(_mapMeetstaatFromDB);
   c.__loaded = true;
   return true;
 }
@@ -2552,6 +2535,128 @@ async function _deleteStapSnapshotDB(id) {
 }
 
 // ============================================================
+// TODOS PER CALC — MAPPING & DB
+// ============================================================
+function _mapTodoFromDB(row) {
+  return {
+    id:       row.id,
+    tekst:    row.tekst || '',
+    done:     !!row.done,
+    volgorde: row.volgorde != null ? row.volgorde : 0
+  };
+}
+function _mapTodoToDB(t, calcId, idx) {
+  return {
+    calculatie_id: calcId,
+    tekst:         t.tekst || '',
+    done:          !!t.done,
+    volgorde:      idx != null ? idx : (t.volgorde || 0)
+  };
+}
+async function _insertTodoDB(t, calcId, idx) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('todos').insert([_mapTodoToDB(t, calcId, idx)]).select(), 'Taak toevoegen'
+  );
+  if (error || !rows || !rows[0]) return null;
+  return _mapTodoFromDB(rows[0]);
+}
+function _updateTodoDB(t) {
+  _sbQuery(
+    _sb.from('todos').update({
+      tekst: t.tekst || '', done: !!t.done, volgorde: t.volgorde || 0
+    }).eq('id', t.id), 'Taak bijwerken'
+  ).then(() => {});
+}
+async function _deleteTodoDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('todos').delete().eq('id', id), 'Taak verwijderen'
+  );
+  return !error;
+}
+
+// ============================================================
+// STAART PER CALC — MAPPING & DB (zelfde velden als staart_lib + calculatie_id + volgorde)
+// ============================================================
+function _mapStaartCalcToDB(s, calcId, idx) {
+  return {
+    calculatie_id: calcId,
+    naam:        s.naam      || '',
+    type:        s.type      || 'vast',
+    bedrag:      s.bedrag    || 0,
+    eenheid:     s.eenheid   || '',
+    grondslag:   s.grondslag || '',
+    hoeveelheid: s.hoeveelheid || 0,
+    volgorde:    idx != null ? idx : (s.volgorde || 0)
+  };
+}
+async function _insertStaartCalcDB(s, calcId, idx) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('staart').insert([_mapStaartCalcToDB(s, calcId, idx)]).select(), 'Staartkost toevoegen'
+  );
+  if (error || !rows || !rows[0]) return null;
+  return _mapStaartFromDB(rows[0]); // hergebruik bestaande from-mapper
+}
+function _updateStaartCalcDB(s, calcId) {
+  _sbQuery(
+    _sb.from('staart').update(_mapStaartCalcToDB(s, calcId, s.volgorde || 0)).eq('id', s.id),
+    'Staartkost bijwerken'
+  ).then(() => {});
+}
+async function _deleteStaartCalcDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('staart').delete().eq('id', id), 'Staartkost verwijderen'
+  );
+  return !error;
+}
+
+// ============================================================
+// MEETSTAAT — MAPPING & DB
+// ============================================================
+function _mapMeetstaatFromDB(row) {
+  return {
+    id:           row.id,
+    calcRegelId:  row.calc_regel_id || '',
+    omschrijving: row.omschrijving || '',
+    hCm:          row.h_cm != null ? row.h_cm : 0,
+    bCm:          row.b_cm != null ? row.b_cm : 0,
+    aantal:       row.aantal != null ? row.aantal : 1,
+    opmerking:    row.opmerking || '',
+    volgorde:     row.volgorde != null ? row.volgorde : 0
+  };
+}
+function _mapMeetstaatToDB(ms, calcId, idx) {
+  return {
+    calculatie_id:  calcId,
+    calc_regel_id:  ms.calcRegelId || null,
+    omschrijving:   ms.omschrijving || '',
+    h_cm:           parseInt(ms.hCm) || 0,
+    b_cm:           parseInt(ms.bCm) || 0,
+    aantal:         parseInt(ms.aantal) || 1,
+    opmerking:      ms.opmerking || '',
+    volgorde:       idx != null ? idx : (ms.volgorde || 0)
+  };
+}
+async function _insertMeetstaatDB(ms, calcId, idx) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('meetstaat').insert([_mapMeetstaatToDB(ms, calcId, idx)]).select(), 'Meetstaat-rij toevoegen'
+  );
+  if (error || !rows || !rows[0]) return null;
+  return _mapMeetstaatFromDB(rows[0]);
+}
+function _updateMeetstaatDB(ms, calcId) {
+  _sbQuery(
+    _sb.from('meetstaat').update(_mapMeetstaatToDB(ms, calcId, ms.volgorde || 0)).eq('id', ms.id),
+    'Meetstaat-rij bijwerken'
+  ).then(() => {});
+}
+async function _deleteMeetstaatDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('meetstaat').delete().eq('id', id), 'Meetstaat-rij verwijderen'
+  );
+  return !error;
+}
+
+// ============================================================
 // LOAD DATA (async — materialen from Supabase, rest from localStorage)
 // ============================================================
 async function loadData() {
@@ -2656,7 +2761,7 @@ function saveData() {
   const a = _activeCalc();
   if (a) {
     a.gewijzigd = new Date().toISOString();
-    _saveBody(a.id);   // regels/staart/meetstaat/todos → localStorage (TIJDELIJK in v3.4.1)
+    _saveBody(a.id);   // regels/staart/meetstaat/todos → localStorage (TIJDELIJK in v3.4.2)
     _touchCalc(a.id);  // gewijzigd-tijdstempel naar DB (fire-and-forget)
   }
   // Settings → localStorage
@@ -3820,7 +3925,7 @@ function renderMeetstaat() {
 
   c.innerHTML = html;
 }
-function addMeetstaat() {
+async function addMeetstaat() {
   if (!data.calc.meetstaat) data.calc.meetstaat = [];
   const allRegels = _allCalcRegels();
   if (!allRegels.length) { alert('Voeg eerst regels toe in de Calculatie-tab.'); return; }
@@ -3828,23 +3933,20 @@ function addMeetstaat() {
   const last = data.calc.meetstaat[data.calc.meetstaat.length - 1];
   const calcRegelId = last ? last.calcRegelId : allRegels[0].regel.id;
   const omschrijving = last ? (last.omschrijving || '') : '';
-  data.calc.meetstaat.push({
-    id: uid('ms'),
-    calcRegelId,
-    omschrijving,
-    hCm: 0,
-    bCm: 0,
-    aantal: 1,
-    opmerking: ''
-  });
-  saveData();
+  const idx = data.calc.meetstaat.length;
+  const saved = await _insertMeetstaatDB({
+    calcRegelId, omschrijving, hCm: 0, bCm: 0, aantal: 1, opmerking: ''
+  }, data.calc.id, idx);
+  if (!saved) return;
+  data.calc.meetstaat.push(saved);
+  _touchCalc(data.calc.id);
   renderMeetstaat();
   // Focus on h-field of new row
   setTimeout(() => {
     const rows = document.querySelectorAll('#meetstaatLijst tbody tr');
-    const last = rows[rows.length - 1];
-    if (last) {
-      const hInput = last.querySelector('[data-field="hCm"]');
+    const lastRow = rows[rows.length - 1];
+    if (lastRow) {
+      const hInput = lastRow.querySelector('[data-field="hCm"]');
       if (hInput) { hInput.focus(); hInput.select(); }
     }
   }, 50);
@@ -3852,7 +3954,8 @@ function addMeetstaat() {
 function updMeetstaat(idx, field, value) {
   if (!data.calc.meetstaat || !data.calc.meetstaat[idx]) return;
   data.calc.meetstaat[idx][field] = value;
-  saveData();
+  if (data.calc.meetstaat[idx].id) _updateMeetstaatDB(data.calc.meetstaat[idx], data.calc.id);
+  _touchCalc(data.calc.id);
   // Voor calcRegelId verandert de eenheid → volledige re-render nodig
   if (field === 'calcRegelId') {
     renderMeetstaat();
@@ -3868,10 +3971,8 @@ function updMeetstaat(idx, field, value) {
     const totaalCell = row.querySelector('.ms-totaal');
     if (totaalCell) totaalCell.textContent = `${fmt(t.totaal)} ${t.eenheid}`;
   }
-  // Sync calc-regel hoeveelheid + her-render calc-totalen (zonder meetstaat-render!)
   renderCalcStructuur();
   renderTotals();
-  // Update samenvatting onderaan zonder hele tabel opnieuw
   _updateMeetstaatSamenvatting();
 }
 function _updateMeetstaatSamenvatting() {
@@ -3915,10 +4016,15 @@ function _updateMeetstaatSamenvatting() {
     c.insertAdjacentHTML('beforeend', html);
   }
 }
-function delMeetstaat(idx) {
+async function delMeetstaat(idx) {
   if (!data.calc.meetstaat || !data.calc.meetstaat[idx]) return;
+  const ms = data.calc.meetstaat[idx];
+  if (ms.id) {
+    const ok = await _deleteMeetstaatDB(ms.id);
+    if (!ok) { _toast('Verwijderen mislukt'); return; }
+  }
   data.calc.meetstaat.splice(idx, 1);
-  saveData();
+  _touchCalc(data.calc.id);
   renderMeetstaat();
   renderCalcStructuur();
   renderTotals();
@@ -4044,11 +4150,14 @@ function updNotities(value) {
   _touchCalc(data.calc.id);
   // Geen re-render nodig — textarea behoudt focus
 }
-function addTodo() {
+async function addTodo() {
   if (!data.calc.todos) data.calc.todos = [];
-  data.calc.todos.push({ id: uid('td'), tekst: '', done: false });
   notitiesCollapsedState[data.calc.id] = false; // forceer open
-  saveData();
+  const idx = data.calc.todos.length;
+  const saved = await _insertTodoDB({ tekst: '', done: false }, data.calc.id, idx);
+  if (!saved) return;
+  data.calc.todos.push(saved);
+  _touchCalc(data.calc.id);
   renderNotitiesPaneel();
   // Focus op de nieuwe input
   setTimeout(() => {
@@ -4060,19 +4169,23 @@ function toggleTodo(id) {
   const t = data.calc.todos.find(x => x.id === id);
   if (!t) return;
   t.done = !t.done;
-  saveData();
+  _updateTodoDB(t);
+  _touchCalc(data.calc.id);
   renderNotitiesPaneel();
 }
 function updTodoTekst(id, value) {
   const t = data.calc.todos.find(x => x.id === id);
   if (!t) return;
   t.tekst = value;
-  saveData();
+  _updateTodoDB(t);
+  _touchCalc(data.calc.id);
   // Geen re-render — input behoudt focus
 }
-function delTodo(id) {
+async function delTodo(id) {
+  const ok = await _deleteTodoDB(id);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
   data.calc.todos = data.calc.todos.filter(x => x.id !== id);
-  saveData();
+  _touchCalc(data.calc.id);
   renderNotitiesPaneel();
 }
 
@@ -4328,7 +4441,7 @@ async function delHg(id) {
   // FK CASCADE in DB pakt onderdelen + regels + stappen automatisch
   data.calc.hoofdgroepen = data.calc.hoofdgroepen.filter(x => x.id !== id);
   // Lokale meetstaat-rijen die naar verwijderde regels verwijzen worden niet opgeruimd
-  // (TIJDELIJK in v3.4.1; v3.4.2 lost dit op via DB cascade)
+  // (TIJDELIJK in v3.4.2; v3.4.2 lost dit op via DB cascade)
   _touchCalc(data.calc.id);
   renderCalcStructuur();
 }
@@ -4390,7 +4503,7 @@ async function delReg(hgId, odId, rId) {
   const ok = await _deleteRegelDB(rId);
   if (!ok) { _toast('Verwijderen mislukt'); return; }
   od.regels = od.regels.filter(r => r.id !== rId);
-  // Lokale meetstaat-rijen die naar deze regel verwijzen opruimen (TIJDELIJK in v3.4.1)
+  // Lokale meetstaat-rijen die naar deze regel verwijzen opruimen (TIJDELIJK in v3.4.2)
   if (data.calc && data.calc.meetstaat) {
     data.calc.meetstaat = data.calc.meetstaat.filter(ms => ms.calcRegelId !== rId);
     _saveBody(data.calc.id);
@@ -4535,6 +4648,8 @@ async function dupCalc(id) {
   if (!fresh) return;
 
   // 2. Kopieer hg → od → regels → stappen via DB
+  // En tegelijk: bouw oude→nieuwe regel-id mapping voor meetstaat-koppeling
+  const regelIdMap = {};
   for (const hg of (orig.hoofdgroepen || [])) {
     const newHg = await _insertHgDB({ naam: hg.naam, collapsed: hg.collapsed, volgorde: hg.volgorde }, fresh.id);
     if (!newHg) continue;
@@ -4551,22 +4666,46 @@ async function dupCalc(id) {
           systeemLocatie: r.systeemLocatie, volgorde: r.volgorde,
           stappen: (r.stappen || []).map((st, i) => ({ ...st, volgorde: i }))
         }, newOd.id);
-        if (newRegel) newOd.regels.push(newRegel);
+        if (newRegel) {
+          regelIdMap[r.id] = newRegel.id;
+          newOd.regels.push(newRegel);
+        }
       }
       newHg.onderdelen.push(newOd);
     }
     fresh.hoofdgroepen.push(newHg);
   }
 
-  // 3. Staart, todos in lokale state (TIJDELIJK in v3.4.1)
-  fresh.staart    = (orig.staart    || []).map(s => ({ ...s, id: uid('sk') }));
-  fresh.todos     = (orig.todos     || []).map(t => ({ ...t, id: uid('td') }));
-  // Meetstaat-regels koppelen aan nieuwe regel-ids = niet-triviaal — voor nu leeg
+  // 3. Todos kopieren naar DB
+  fresh.todos = [];
+  for (let i = 0; i < (orig.todos || []).length; i++) {
+    const t = orig.todos[i];
+    const saved = await _insertTodoDB({ tekst: t.tekst, done: t.done }, fresh.id, i);
+    if (saved) fresh.todos.push(saved);
+  }
+
+  // 4. Staart kopieren naar DB
+  fresh.staart = [];
+  for (let i = 0; i < (orig.staart || []).length; i++) {
+    const s = orig.staart[i];
+    const saved = await _insertStaartCalcDB(s, fresh.id, i);
+    if (saved) fresh.staart.push(saved);
+  }
+
+  // 5. Meetstaat kopieren — koppeling naar nieuwe regel-id via map
   fresh.meetstaat = [];
+  for (let i = 0; i < (orig.meetstaat || []).length; i++) {
+    const ms = orig.meetstaat[i];
+    const newRegelId = regelIdMap[ms.calcRegelId];
+    if (!newRegelId) continue; // skip wezen
+    const saved = await _insertMeetstaatDB({
+      ...ms, calcRegelId: newRegelId
+    }, fresh.id, i);
+    if (saved) fresh.meetstaat.push(saved);
+  }
   fresh.__loaded = true;
 
   data.calculaties.unshift(fresh);
-  _saveBody(fresh.id);
   renderDashboard();
 }
 async function setCalcStatus(id, status) {
@@ -4696,12 +4835,19 @@ async function saveStaart() {
   if (!payload.naam) { alert('Geef een naam.'); return; }
   if (staartCtx.mode === 'editCalc') {
     const p = data.calc.staart.find(x => x.id === staartCtx.id);
-    if (p) Object.assign(p, payload);
-    saveData();
+    if (p) {
+      Object.assign(p, payload);
+      _updateStaartCalcDB(p, data.calc.id);
+      _touchCalc(data.calc.id);
+    }
     renderStaartList(); renderTotals();
   } else if (staartCtx.mode === 'newCalc') {
-    data.calc.staart.push({ id: staartCtx.id, ...payload });
-    saveData();
+    const idx = (data.calc.staart || []).length;
+    const saved = await _insertStaartCalcDB(payload, data.calc.id, idx);
+    if (!saved) { closeStaartModal(); return; }
+    if (!data.calc.staart) data.calc.staart = [];
+    data.calc.staart.push(saved);
+    _touchCalc(data.calc.id);
     renderStaartList(); renderTotals();
   } else if (staartCtx.mode === 'editLib') {
     const p = data.staartLib.find(x => x.id === staartCtx.id);
@@ -4719,7 +4865,14 @@ async function saveStaart() {
   closeStaartModal();
 }
 function closeStaartModal() { document.getElementById('staartModal').classList.remove('active'); }
-function delStaart(id) { if(!confirm('Verwijderen?')) return; data.calc.staart = data.calc.staart.filter(p=>p.id!==id); saveData(); renderStaartList(); renderTotals(); }
+async function delStaart(id) {
+  if (!confirm('Verwijderen?')) return;
+  const ok = await _deleteStaartCalcDB(id);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  data.calc.staart = data.calc.staart.filter(p => p.id !== id);
+  _touchCalc(data.calc.id);
+  renderStaartList(); renderTotals();
+}
 
 function renderStaartLib() {
   const c = document.getElementById('staartLib');
