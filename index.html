@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.4.3 · Voorcalculatie</span>
+    <span class="subtitle">v3.5.0 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.4.3</h2>
-      <p>Calculatie-import — onder Settings > Data Beheer staat een nieuwe knop om al je v2.4.1-calculaties (inclusief hoofdgroepen, onderdelen, regels, snapshot-stappen, todo's, staart en meetstaat) in één klap naar Supabase over te zetten. Daarna is alleen de security-pass nog over.</p>
+      <h2>Welkom bij v3.5.0</h2>
+      <p>Security-pass — incode-login is vervangen door echte Supabase Auth (e-mail + wachtwoord). De sessie blijft actief tot je uitlogt; geen tokendans meer tijdens werken. Onder Settings > Data Beheer staat een nieuwe knop <em>Uitloggen</em>.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1448,6 +1448,7 @@
       <input type="file" id="importLibFile" accept=".json" style="display:none" onchange="importLibFromV241(event)">
       <button class="btn-secondary btn" onclick="document.getElementById('importCalcFile').click()">⇧ Importeer calculaties uit v2.4.1</button>
       <input type="file" id="importCalcFile" accept=".json" style="display:none" onchange="importCalcsFromV241(event)">
+      <button class="btn-danger btn" onclick="logout()" style="margin-left:0.5rem;">⎋ Uitloggen</button>
       <p style="color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; font-style: italic;">De bibliotheek-import is bedoeld voor de eenmalige migratie van je v2.4.1 data (materialen, ondergronden, bewerkingen, staart-templates en verfsystemen). Calculaties komen later.</p>
     </div>
   </section>
@@ -1542,23 +1543,25 @@
   </div>
 </div>
 
-<!-- AUTH OVERLAY — incode-stijl (zoals voorraad-app) -->
+<!-- AUTH OVERLAY — Supabase email+wachtwoord login -->
 <div id="authOverlay" class="active">
   <div class="auth-card">
     <div class="brand" style="margin-bottom:1.5rem;">
       <div class="brand-mark"></div>
       <h1>Schilders Calculatie</h1>
     </div>
-    <h2>Toegangscode</h2>
-    <p class="sub">Vul de incode in om de app te ontgrendelen.</p>
-    <label>Incode</label>
-    <input type="password" id="authIncode" placeholder="••••••••••••••••" onkeydown="if(event.key==='Enter') unlock()" autocomplete="off">
-    <button class="btn" onclick="unlock()" id="authBtn" style="margin-top:0.75rem; width:100%;">Ontgrendelen</button>
+    <h2>Inloggen</h2>
+    <p class="sub">Vul je e-mail en wachtwoord in om de app te openen.</p>
+    <label>E-mail</label>
+    <input type="email" id="authEmail" placeholder="naam@bedrijf.nl" autocomplete="username">
+    <label style="margin-top:0.6rem;">Wachtwoord</label>
+    <input type="password" id="authPassword" placeholder="••••••••••••••••" onkeydown="if(event.key==='Enter') login()" autocomplete="current-password">
+    <button class="btn" onclick="login()" id="authBtn" style="margin-top:0.75rem; width:100%;">Inloggen</button>
     <div class="auth-msg" id="authMsg"></div>
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.4.3 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.5.0 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1579,27 +1582,50 @@ function _showAuthMsg(msg, kind) {
 }
 
 // ============================================================
-// INCODE AUTH (geen Supabase Auth — anon key + localStorage flag)
+// AUTH — Supabase email + wachtwoord
 // ============================================================
-const INCODE = 'Ernes-Calc-2026!';
-const UNLOCK_KEY = 'verfcalc_v3_unlocked';
-
-function _isUnlocked() {
-  try { return localStorage.getItem(UNLOCK_KEY) === '1'; } catch(e) { return false; }
+async function _isAuthenticated() {
+  if (!_sb) return false;
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    return !!session;
+  } catch(e) { return false; }
 }
 
-function unlock() {
-  const code = document.getElementById('authIncode').value;
-  if (!code) { _showAuthMsg('Vul de incode in.', 'err'); return; }
-  if (code !== INCODE) { _showAuthMsg('Onjuiste incode.', 'err'); return; }
-  try { localStorage.setItem(UNLOCK_KEY, '1'); } catch(e) {}
-  _showApp();
+async function login() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if (!email || !password) { _showAuthMsg('Vul e-mail en wachtwoord in.', 'err'); return; }
+  const btn = document.getElementById('authBtn');
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Inloggen...';
+  _showAuthMsg('', '');
+  try {
+    const { error } = await _sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      _showAuthMsg('Inloggen mislukt: ' + error.message, 'err');
+      btn.disabled = false; btn.textContent = oldText;
+      return;
+    }
+    btn.disabled = false; btn.textContent = oldText;
+    document.getElementById('authPassword').value = '';
+    await _showApp();
+  } catch(err) {
+    _showAuthMsg('Onverwachte fout: ' + (err.message || err), 'err');
+    btn.disabled = false; btn.textContent = oldText;
+  }
 }
 
-function lock() {
-  try { localStorage.removeItem(UNLOCK_KEY); } catch(e) {}
-  document.getElementById('authIncode').value = '';
+async function logout() {
+  if (!confirm('Uitloggen?')) return;
+  try { await _sb.auth.signOut(); } catch(e) {}
+  // Wis lokale data zodat volgende user niet andermans cache ziet
+  data.calculaties = [];
+  data.activeCalcId = null;
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
   document.getElementById('authMsg').className = 'auth-msg';
+  document.getElementById('authMsg').textContent = '';
   document.getElementById('authOverlay').classList.add('active');
   document.getElementById('userBadge').style.display = 'none';
 }
@@ -2261,7 +2287,7 @@ function _mapOdFromDB(row) {
     naam:      row.naam || '',
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
-    regels:    [] // wordt later gevuld vanuit localStorage in v3.4.3
+    regels:    [] // wordt later gevuld vanuit localStorage in v3.5.0
   };
 }
 function _mapOdToDB(od, hgId) {
@@ -2273,7 +2299,7 @@ function _mapOdToDB(od, hgId) {
   };
 }
 
-// localStorage body — niet meer in gebruik vanaf v3.4.3 (alles in DB)
+// localStorage body — niet meer in gebruik vanaf v3.5.0 (alles in DB)
 // Stubs achtergelaten voor backwards compat tijdens transitie.
 const CALC_BODY_PREFIX = 'verfcalc_v3_body_';
 function _bodyLS(calcId) { return { staart: [], meetstaat: [], todos: [] }; }
@@ -2763,7 +2789,7 @@ function saveData() {
   const a = _activeCalc();
   if (a) {
     a.gewijzigd = new Date().toISOString();
-    _saveBody(a.id);   // regels/staart/meetstaat/todos → localStorage (TIJDELIJK in v3.4.3)
+    _saveBody(a.id);   // regels/staart/meetstaat/todos → localStorage (TIJDELIJK in v3.5.0)
     _touchCalc(a.id);  // gewijzigd-tijdstempel naar DB (fire-and-forget)
   }
   // Settings → localStorage
@@ -4443,7 +4469,7 @@ async function delHg(id) {
   // FK CASCADE in DB pakt onderdelen + regels + stappen automatisch
   data.calc.hoofdgroepen = data.calc.hoofdgroepen.filter(x => x.id !== id);
   // Lokale meetstaat-rijen die naar verwijderde regels verwijzen worden niet opgeruimd
-  // (TIJDELIJK in v3.4.3; v3.4.3 lost dit op via DB cascade)
+  // (TIJDELIJK in v3.5.0; v3.5.0 lost dit op via DB cascade)
   _touchCalc(data.calc.id);
   renderCalcStructuur();
 }
@@ -4505,7 +4531,7 @@ async function delReg(hgId, odId, rId) {
   const ok = await _deleteRegelDB(rId);
   if (!ok) { _toast('Verwijderen mislukt'); return; }
   od.regels = od.regels.filter(r => r.id !== rId);
-  // Lokale meetstaat-rijen die naar deze regel verwijzen opruimen (TIJDELIJK in v3.4.3)
+  // Lokale meetstaat-rijen die naar deze regel verwijzen opruimen (TIJDELIJK in v3.5.0)
   if (data.calc && data.calc.meetstaat) {
     data.calc.meetstaat = data.calc.meetstaat.filter(ms => ms.calcRegelId !== rId);
     _saveBody(data.calc.id);
@@ -5589,13 +5615,13 @@ function renderAll() {
 document.getElementById('dateStamp').textContent = new Date().toLocaleDateString('nl-NL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
 async function init() {
-  // Maak Supabase client (alleen anon key, geen auth)
+  // Maak Supabase client met Auth ingeschakeld
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
   });
 
-  // Check incode-flag in localStorage. Geen netwerk-call → instant.
-  if (_isUnlocked()) {
+  // Check of er al een sessie is
+  if (await _isAuthenticated()) {
     await _showApp();
   } else {
     document.getElementById('authOverlay').classList.add('active');
