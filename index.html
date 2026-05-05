@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.3.2 · Voorcalculatie</span>
+    <span class="subtitle">v3.3.3 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.3.2</h2>
-      <p>Fase 3c.3 — Staartkosten-templates zijn nu ook gekoppeld aan Supabase. Toevoegen, wijzigen en verwijderen van templates synchroniseren naar de cloud. Verfsystemen + stappen volgen hierna.</p>
+      <h2>Welkom bij v3.3.3</h2>
+      <p>Fase 3c.4 — Verfsystemen + bewerkingsstappen zijn nu volledig in Supabase. Het wijzigen van een systeem doet een full-replace van de stappen (ouders + kinderen samen). Daarmee is de bibliotheek-fase compleet — calculaties volgen in fase 3d.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1556,7 +1556,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.3.2 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.3.3 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1801,11 +1801,12 @@ const defaultData = {
 };
 
 let data = JSON.parse(JSON.stringify(defaultData));
-// Materialen + ondergronden + bewerkingen + staartLib leven in Supabase — geen defaults meer in memory
+// Materialen + ondergronden + bewerkingen + staartLib + systemen leven in Supabase — geen defaults meer in memory
 data.materialen = [];
 data.ondergronden = [];
 data.bewerkingen = [];
 data.staartLib = [];
+data.systemen = [];
 
 // ============================================================
 // CALCULATIES ARCHIEF — actieve calc abstractie
@@ -1855,9 +1856,8 @@ Object.defineProperty(data, 'calc', {
 // Mark gewijzigd on every save
 const _origSaveData = () => ls_set(JSON.stringify(_serializeData()));
 function _serializeData() {
-  // materialen + ondergronden + bewerkingen + staartLib leven in Supabase
+  // materialen + ondergronden + bewerkingen + staartLib + systemen leven in Supabase
   return {
-    systemen: data.systemen,
     calculaties: data.calculaties,
     activeCalcId: data.activeCalcId,
     settings: data.settings
@@ -2097,6 +2097,115 @@ async function _deleteStaartDB(id) {
 }
 
 // ============================================================
+// VERFSYSTEMEN + STAPPEN MAPPING & DB
+// ============================================================
+function _mapSysFromDB(row, stappen) {
+  return {
+    id:           row.id,
+    naam:         row.naam      || '',
+    ondergrondId: row.ondergrond_id || '',
+    eenheid:      row.eenheid   || 'm²',
+    stappen:      (stappen || []).map(_mapStapFromDB)
+  };
+}
+function _mapSysToDB(s) {
+  return {
+    naam:          s.naam      || '',
+    ondergrond_id: s.ondergrondId || null,
+    eenheid:       s.eenheid   || 'm²'
+  };
+}
+function _mapStapFromDB(row) {
+  return {
+    id:           row.id,
+    bewerkingId:  row.bewerking_id || '',
+    percentage:   parseFloat(row.percentage) || 0,
+    volgorde:     row.volgorde != null ? row.volgorde : 0
+  };
+}
+function _mapStapToDB(st, verfsysteemId, idx) {
+  return {
+    verfsysteem_id: verfsysteemId,
+    bewerking_id:   st.bewerkingId || null,
+    percentage:     st.percentage  != null ? st.percentage : 100,
+    volgorde:       idx
+  };
+}
+async function _fetchVerfsystemenFromDB() {
+  if (!_sb) return null;
+  const [parentsRes, stappenRes] = await Promise.all([
+    _sbQuery(_sb.from('verfsystemen').select('*').order('naam'), 'Verfsystemen ophalen'),
+    _sbQuery(_sb.from('verfsysteem_stappen').select('*').order('volgorde'), 'Verfsysteem-stappen ophalen')
+  ]);
+  if (parentsRes.error || stappenRes.error) return null;
+  const parents = parentsRes.data || [];
+  const stappen = stappenRes.data || [];
+  return parents.map(p => _mapSysFromDB(p, stappen.filter(st => st.verfsysteem_id === p.id)));
+}
+async function _insertVerfsysteemDB(s) {
+  // 1) parent
+  const { data: pRows, error: pErr } = await _sbQuery(
+    _sb.from('verfsystemen').insert([_mapSysToDB(s)]).select(), 'Verfsysteem opslaan'
+  );
+  if (pErr || !pRows || !pRows[0]) return null;
+  const parentId = pRows[0].id;
+  // 2) stappen (als er zijn)
+  if (s.stappen && s.stappen.length) {
+    const rows = s.stappen.map((st, i) => _mapStapToDB(st, parentId, i));
+    const { error: sErr } = await _sbQuery(
+      _sb.from('verfsysteem_stappen').insert(rows), 'Verfsysteem-stappen opslaan'
+    );
+    if (sErr) {
+      // parent staat al — verwijder die om consistentie te bewaren
+      await _sbQuery(_sb.from('verfsystemen').delete().eq('id', parentId), 'Rollback verfsysteem');
+      return null;
+    }
+  }
+  // 3) opnieuw ophalen voor up-to-date stap-IDs
+  const stappenRes = await _sbQuery(
+    _sb.from('verfsysteem_stappen').select('*').eq('verfsysteem_id', parentId).order('volgorde'),
+    'Stappen herladen'
+  );
+  return _mapSysFromDB(pRows[0], stappenRes.data || []);
+}
+async function _updateVerfsysteemDB(s) {
+  // 1) parent UPDATE
+  const { error: pErr } = await _sbQuery(
+    _sb.from('verfsystemen').update(_mapSysToDB(s)).eq('id', s.id), 'Verfsysteem bijwerken'
+  );
+  if (pErr) return null;
+  // 2) stappen full replace: DELETE oude, INSERT nieuwe
+  const { error: dErr } = await _sbQuery(
+    _sb.from('verfsysteem_stappen').delete().eq('verfsysteem_id', s.id), 'Oude stappen wissen'
+  );
+  if (dErr) return null;
+  if (s.stappen && s.stappen.length) {
+    const rows = s.stappen.map((st, i) => _mapStapToDB(st, s.id, i));
+    const { error: iErr } = await _sbQuery(
+      _sb.from('verfsysteem_stappen').insert(rows), 'Nieuwe stappen opslaan'
+    );
+    if (iErr) return null;
+  }
+  // 3) opnieuw ophalen voor up-to-date stap-IDs
+  const stappenRes = await _sbQuery(
+    _sb.from('verfsysteem_stappen').select('*').eq('verfsysteem_id', s.id).order('volgorde'),
+    'Stappen herladen'
+  );
+  // Build refreshed system from existing parent fields + fresh stappen
+  return {
+    id: s.id, naam: s.naam, ondergrondId: s.ondergrondId, eenheid: s.eenheid,
+    stappen: (stappenRes.data || []).map(_mapStapFromDB)
+  };
+}
+async function _deleteVerfsysteemDB(id) {
+  // FK heeft ON DELETE CASCADE, dus stappen gaan automatisch mee
+  const { error } = await _sbQuery(
+    _sb.from('verfsystemen').delete().eq('id', id), 'Verfsysteem verwijderen'
+  );
+  return !error;
+}
+
+// ============================================================
 // LOAD DATA (async — materialen from Supabase, rest from localStorage)
 // ============================================================
 async function loadData() {
@@ -2106,7 +2215,7 @@ async function loadData() {
     try {
       const parsed = JSON.parse(saved);
       Object.keys(parsed).forEach(k => {
-        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden' && k !== 'bewerkingen' && k !== 'staartLib') data[k] = parsed[k];
+        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden' && k !== 'bewerkingen' && k !== 'staartLib' && k !== 'systemen') data[k] = parsed[k];
       });
       // Migration: old format had `calc` as object
       if (parsed.calc && (!parsed.calculaties || !parsed.calculaties.length)) {
@@ -2194,6 +2303,12 @@ async function loadData() {
   const staartFromDB = await _fetchStaartLibFromDB();
   if (staartFromDB !== null) {
     data.staartLib = staartFromDB;
+  }
+
+  // 6. Fetch verfsystemen + stappen from Supabase
+  const sysFromDB = await _fetchVerfsystemenFromDB();
+  if (sysFromDB !== null) {
+    data.systemen = sysFromDB;
   }
 }
 
@@ -3038,7 +3153,13 @@ function renderSystemen() {
   });
   c.innerHTML = html;
 }
-function delSystem(id) { if(!confirm('Verwijderen?')) return; data.systemen = data.systemen.filter(s=>s.id!==id); saveData(); renderSystemen(); renderCalcStructuur(); renderTotals(); }
+async function delSystem(id) {
+  if (!confirm('Verwijderen?')) return;
+  const ok = await _deleteVerfsysteemDB(id);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  data.systemen = data.systemen.filter(s => s.id !== id);
+  renderSystemen(); renderCalcStructuur(); renderTotals();
+}
 // ============================================================
 // WERKBANK — verfsysteem bewerken met percentages en totalen
 // ============================================================
@@ -3159,16 +3280,30 @@ function _systemFromModal() {
     stappen: modalSteps
   };
 }
-function saveSystem() {
+async function saveSystem() {
   const s = _systemFromModal();
   if (!s.naam) { alert('Geef het systeem een naam.'); return; }
+  const btn = document.querySelector('#systemModal button.btn[onclick="saveSystem()"]');
+  let oldText;
+  if (btn) { oldText = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Bezig...'; }
+
   let savedId = editingSystemId;
+  let savedSystem;
   if (editingSystemId) {
+    // Bestaand: full replace via _updateVerfsysteemDB
+    s.id = editingSystemId;
+    savedSystem = await _updateVerfsysteemDB(s);
+    if (btn) { btn.disabled = false; btn.textContent = oldText; }
+    if (!savedSystem) return;
     const cur = data.systemen.find(x => x.id === editingSystemId);
-    Object.assign(cur, s);
+    Object.assign(cur, savedSystem);
   } else {
-    savedId = uid('s');
-    data.systemen.push({ id: savedId, ...s });
+    // Nieuw: INSERT parent + stappen
+    savedSystem = await _insertVerfsysteemDB(s);
+    if (btn) { btn.disabled = false; btn.textContent = oldText; }
+    if (!savedSystem) return;
+    savedId = savedSystem.id;
+    data.systemen.push(savedSystem);
     if (modalSysContext) {
       const od = _findOnderdeel(modalSysContext.hgId, modalSysContext.odId);
       if (od) {
@@ -3178,17 +3313,23 @@ function saveSystem() {
           systeemOndergrond: snap.systeemOndergrond, systeemOndergrondId: snap.systeemOndergrondId,
           systeemLocatie: snap.systeemLocatie, stappen: snap.stappen
         });
+        saveData(); // calc-data zit nog in localStorage (fase 3d)
       }
     }
   }
-  saveData(); renderSystemen(); renderCalcStructuur(); renderTotals(); closeSystemModal();
+  renderSystemen(); renderCalcStructuur(); renderTotals(); closeSystemModal();
 }
-function saveSystemAsNew() {
+async function saveSystemAsNew() {
   const s = _systemFromModal();
   if (!s.naam) { alert('Geef het systeem een naam.'); return; }
-  const newId = uid('s');
-  data.systemen.push({ id: newId, ...s });
-  saveData(); renderSystemen();
+  const btn = document.querySelector('#systemModal button.btn[onclick="saveSystemAsNew()"]');
+  let oldText;
+  if (btn) { oldText = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Bezig...'; }
+  const savedSystem = await _insertVerfsysteemDB(s);
+  if (btn) { btn.disabled = false; btn.textContent = oldText; }
+  if (!savedSystem) return;
+  data.systemen.push(savedSystem);
+  renderSystemen();
   alert('Opgeslagen als nieuw systeem: "' + s.naam + '"');
   closeSystemModal();
 }
