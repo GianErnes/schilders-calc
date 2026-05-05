@@ -1830,7 +1830,6 @@ function _serializeData() {
   // strip the virtual property by serializing fields explicitly
   return {
     ondergronden: data.ondergronden,
-    materialen: data.materialen,
     bewerkingen: data.bewerkingen,
     systemen: data.systemen,
     staartLib: data.staartLib,
@@ -1854,6 +1853,56 @@ function _mapMateriaalFromDB(row) {
     prijsPer: parseFloat(row.prijs_per)  || 0,
     rendement:parseFloat(row.rendement)  || 0
   };
+}
+
+// JS object → DB row (geen id — DB genereert UUID bij INSERT)
+function _mapMateriaalToDB(m) {
+  return {
+    naam:      m.naam      || '',
+    merk:      m.merk      || '',
+    type:      m.type      || '',
+    groep:     m.groep     || 'Hulpmiddelen',
+    eenheid:   m.eenheid   || 'L',
+    prijs_per: m.prijsPer  || 0,
+    rendement: m.rendement || 0
+  };
+}
+
+// Eenvoudige toast voor foutmeldingen
+function _toast(msg, kind = 'err') {
+  let el = document.getElementById('_toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_toast';
+    el.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);padding:0.7rem 1.2rem;border-radius:6px;font-size:0.9rem;font-weight:500;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.15);pointer-events:none;transition:opacity 0.3s;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.background = kind === 'ok' ? '#e8f5e9' : '#ffebee';
+  el.style.color      = kind === 'ok' ? '#2e7d32'  : '#c62828';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 3500);
+}
+
+// INSERT nieuw materiaal → geeft DB-rij terug (met UUID)
+async function _insertMatDB(m) {
+  const { data: rows, error } = await _sb.from('materialen').insert([_mapMateriaalToDB(m)]).select();
+  if (error) { _toast('Fout bij opslaan: ' + error.message); return null; }
+  return rows && rows[0] ? _mapMateriaalFromDB(rows[0]) : null;
+}
+
+// UPDATE bestaand materiaal (fire-and-forget, toont toast bij fout)
+function _updateMatDB(m) {
+  _sb.from('materialen').update(_mapMateriaalToDB(m)).eq('id', m.id)
+    .then(({ error }) => { if (error) _toast('Fout bij opslaan: ' + error.message); });
+}
+
+// DELETE materiaal
+async function _deleteMatDB(id) {
+  const { error } = await _sb.from('materialen').delete().eq('id', id);
+  if (error) { _toast('Fout bij verwijderen: ' + error.message); return false; }
+  return true;
 }
 
 // Fetch materialen from Supabase — returns array (empty on error)
@@ -2065,13 +2114,26 @@ function updMat(id, field, val) {
   const m = data.materialen.find(x => x.id === id);
   if (!m) return;
   m[field] = val;
-  saveData();
+  // Schrijf naar Supabase (optimistisch — UI blijft direct reageren)
+  _updateMatDB(m);
   if (['prijsPer','groep','eenheid','naam'].includes(field)) {
     renderMaterialen(); renderBewerkingen(); renderSystemen(); renderTotals();
   }
 }
-function addMaterial() { data.materialen.push({id: uid('m'), naam: 'Nieuw materiaal', merk: '', type: '', groep: 'Hulpmiddelen', eenheid: 'L', prijsPer: 0, rendement: 0}); saveData(); renderMaterialen(); }
-function delMat(id) { if(!confirm('Verwijderen?')) return; data.materialen = data.materialen.filter(m=>m.id!==id); saveData(); renderMaterialen(); renderBewerkingen(); renderSystemen(); }
+async function addMaterial() {
+  const nieuw = { naam: 'Nieuw materiaal', merk: '', type: '', groep: 'Hulpmiddelen', eenheid: 'L', prijsPer: 0, rendement: 0 };
+  const saved = await _insertMatDB(nieuw);
+  if (!saved) return; // fout al getoond via _toast
+  data.materialen.push(saved);
+  renderMaterialen();
+}
+async function delMat(id) {
+  if (!confirm('Verwijderen?')) return;
+  const ok = await _deleteMatDB(id);
+  if (!ok) return;
+  data.materialen = data.materialen.filter(m => m.id !== id);
+  renderMaterialen(); renderBewerkingen(); renderSystemen();
+}
 // ============================================================
 // BEWERKINGEN
 // ============================================================
