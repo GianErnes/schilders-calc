@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.4.2 · Voorcalculatie</span>
+    <span class="subtitle">v3.4.3 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.4.2</h2>
-      <p>Fase 3d compleet — meetstaat, todo's en staartkosten per calculatie leven nu ook in Supabase. Alle data is cloud-bound. Volgende stap: eenmalige migratie van calculaties uit v2.4.1, en daarna de security-pass (Supabase Auth terug + gehashte incode).</p>
+      <h2>Welkom bij v3.4.3</h2>
+      <p>Calculatie-import — onder Settings > Data Beheer staat een nieuwe knop om al je v2.4.1-calculaties (inclusief hoofdgroepen, onderdelen, regels, snapshot-stappen, todo's, staart en meetstaat) in één klap naar Supabase over te zetten. Daarna is alleen de security-pass nog over.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1446,6 +1446,8 @@
       <button class="btn-secondary btn" onclick="exportData()">⇩ Exporteer calculaties (JSON)</button>
       <button class="btn-secondary btn" onclick="document.getElementById('importLibFile').click()">⇧ Importeer bibliotheek uit v2.4.1</button>
       <input type="file" id="importLibFile" accept=".json" style="display:none" onchange="importLibFromV241(event)">
+      <button class="btn-secondary btn" onclick="document.getElementById('importCalcFile').click()">⇧ Importeer calculaties uit v2.4.1</button>
+      <input type="file" id="importCalcFile" accept=".json" style="display:none" onchange="importCalcsFromV241(event)">
       <p style="color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; font-style: italic;">De bibliotheek-import is bedoeld voor de eenmalige migratie van je v2.4.1 data (materialen, ondergronden, bewerkingen, staart-templates en verfsystemen). Calculaties komen later.</p>
     </div>
   </section>
@@ -1556,7 +1558,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.4.2 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.4.3 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -2259,7 +2261,7 @@ function _mapOdFromDB(row) {
     naam:      row.naam || '',
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
-    regels:    [] // wordt later gevuld vanuit localStorage in v3.4.2
+    regels:    [] // wordt later gevuld vanuit localStorage in v3.4.3
   };
 }
 function _mapOdToDB(od, hgId) {
@@ -2271,7 +2273,7 @@ function _mapOdToDB(od, hgId) {
   };
 }
 
-// localStorage body — niet meer in gebruik vanaf v3.4.2 (alles in DB)
+// localStorage body — niet meer in gebruik vanaf v3.4.3 (alles in DB)
 // Stubs achtergelaten voor backwards compat tijdens transitie.
 const CALC_BODY_PREFIX = 'verfcalc_v3_body_';
 function _bodyLS(calcId) { return { staart: [], meetstaat: [], todos: [] }; }
@@ -2761,7 +2763,7 @@ function saveData() {
   const a = _activeCalc();
   if (a) {
     a.gewijzigd = new Date().toISOString();
-    _saveBody(a.id);   // regels/staart/meetstaat/todos → localStorage (TIJDELIJK in v3.4.2)
+    _saveBody(a.id);   // regels/staart/meetstaat/todos → localStorage (TIJDELIJK in v3.4.3)
     _touchCalc(a.id);  // gewijzigd-tijdstempel naar DB (fire-and-forget)
   }
   // Settings → localStorage
@@ -4441,7 +4443,7 @@ async function delHg(id) {
   // FK CASCADE in DB pakt onderdelen + regels + stappen automatisch
   data.calc.hoofdgroepen = data.calc.hoofdgroepen.filter(x => x.id !== id);
   // Lokale meetstaat-rijen die naar verwijderde regels verwijzen worden niet opgeruimd
-  // (TIJDELIJK in v3.4.2; v3.4.2 lost dit op via DB cascade)
+  // (TIJDELIJK in v3.4.3; v3.4.3 lost dit op via DB cascade)
   _touchCalc(data.calc.id);
   renderCalcStructuur();
 }
@@ -4503,7 +4505,7 @@ async function delReg(hgId, odId, rId) {
   const ok = await _deleteRegelDB(rId);
   if (!ok) { _toast('Verwijderen mislukt'); return; }
   od.regels = od.regels.filter(r => r.id !== rId);
-  // Lokale meetstaat-rijen die naar deze regel verwijzen opruimen (TIJDELIJK in v3.4.2)
+  // Lokale meetstaat-rijen die naar deze regel verwijzen opruimen (TIJDELIJK in v3.4.3)
   if (data.calc && data.calc.meetstaat) {
     data.calc.meetstaat = data.calc.meetstaat.filter(ms => ms.calcRegelId !== rId);
     _saveBody(data.calc.id);
@@ -5292,6 +5294,157 @@ async function importLibFromV241(e) {
     renderAll();
   } catch (err) {
     alert('Fout tijdens import:\n\n' + (log.length ? log.join('\n') + '\n\n' : '') + err.message + '\n\nWat tot nu toe is geïmporteerd staat in Supabase. Je kunt eventueel de tabellen leegmaken (TRUNCATE) en opnieuw proberen.');
+  }
+}
+
+// ============================================================
+// EENMALIGE CALCULATIE-MIGRATIE UIT v2.4.1 JSON
+// ============================================================
+async function importCalcsFromV241(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';
+  let parsed;
+  try { parsed = JSON.parse(await file.text()); }
+  catch(err) { alert('JSON niet geldig: ' + err.message); return; }
+
+  let calcs = parsed.calculaties || [];
+  // Backwards compat: oudere v2.4.1 had één enkele 'calc' i.p.v. array
+  if (!calcs.length && parsed.calc) calcs = [parsed.calc];
+  if (!calcs.length) { alert('Geen calculaties gevonden in dit bestand.'); return; }
+
+  // Toon overzicht + bevestig
+  const totRegels = calcs.reduce((n, c) => n + (c.hoofdgroepen||[]).reduce((m, hg) =>
+    m + (hg.onderdelen||[]).reduce((k, od) => k + (od.regels||[]).length, 0), 0), 0);
+  const msg = 'Importeren?\n\n' +
+    `• ${calcs.length} calculaties\n` +
+    `• ${totRegels} calc-regels totaal\n\n` +
+    'Per calc worden ook hoofdgroepen, onderdelen, snapshot-stappen, todo\'s, staartkosten en meetstaat-regels gekopieerd. ' +
+    'Bestaande calcs worden NIET vervangen — duplicaten op naam moet je later eventueel handmatig opruimen.\n\nDoorgaan?';
+  if (!confirm(msg)) return;
+
+  // Lookup-tabellen voor namematching (v2.4.1 IDs zijn niet bruikbaar in cloud)
+  const ondByNaam = {};
+  data.ondergronden.forEach(o => { ondByNaam[(o.naam||'').toLowerCase()] = o.id; });
+
+  const log = [];
+  let calcCount = 0;
+
+  try {
+    for (const oc of calcs) {
+      // 1) calc-header
+      const cFresh = await _insertCalcDB({
+        naam: oc.naam || oc.project || 'Geïmporteerde calculatie',
+        klant: oc.klant || '',
+        status: oc.status && ['concept','gereed','verzonden','geaccepteerd','verloren'].includes(oc.status) ? oc.status : 'concept',
+        schilders: oc.schilders != null ? oc.schilders : 2,
+        uurDag: oc.uurDag != null ? oc.uurDag : 8,
+        reis: oc.reis || 0,
+        volleDagenOverride: oc.volleDagenOverride != null ? oc.volleDagenOverride : null,
+        notities: oc.notities || ''
+      });
+      if (!cFresh) { log.push(`✗ ${oc.naam || '(naamloos)'} — header faalde`); continue; }
+
+      const regelIdMap = {}; // oude r.id → nieuwe uuid (voor meetstaat-koppeling)
+
+      // 2) hoofdgroepen → onderdelen → regels → stappen
+      for (let hgi = 0; hgi < (oc.hoofdgroepen||[]).length; hgi++) {
+        const hg = oc.hoofdgroepen[hgi];
+        const newHg = await _insertHgDB({
+          naam: hg.naam || 'Hoofdgroep',
+          collapsed: !!hg.collapsed,
+          volgorde: hg.volgorde != null ? hg.volgorde : (hgi * 10)
+        }, cFresh.id);
+        if (!newHg) continue;
+
+        for (let odi = 0; odi < (hg.onderdelen||[]).length; odi++) {
+          const od = hg.onderdelen[odi];
+          const newOd = await _insertOdDB({
+            naam: od.naam || 'Onderdeel',
+            collapsed: !!od.collapsed,
+            volgorde: od.volgorde != null ? od.volgorde : (odi * 10)
+          }, newHg.id);
+          if (!newOd) continue;
+
+          for (let ri = 0; ri < (od.regels||[]).length; ri++) {
+            const r = od.regels[ri];
+            // Map ondergrond-naam naar nieuwe UUID; anderen blijven NULL (snapshot rules)
+            const ondId = ondByNaam[(r.systeemOndergrond||'').toLowerCase()] || null;
+            const stappen = (r.stappen || []).map((st, i) => ({
+              // IDs uit v2.4.1 (m_..., b_...) zijn niet bruikbaar in DB → NULL
+              bewerkingId:      null,
+              materiaalId:      null,
+              bewerkingNaam:    st.bewerkingNaam || '',
+              bewerkingEenheid: st.bewerkingEenheid || '',
+              minuten:          st.minuten || 0,
+              percentage:       st.percentage != null ? st.percentage : 100,
+              materiaalNaam:    st.materiaalNaam || null,
+              materiaalEenheid: st.materiaalEenheid || null,
+              materiaalPrijs:   st.materiaalPrijs || 0,
+              materiaalGroep:   st.materiaalGroep || null,
+              verbruik:         st.verbruik || 0,
+              volgorde:         i
+            }));
+            const newR = await _insertRegelDB({
+              naam:                r.naam || '',
+              systeemId:           null, // v2.4.1 ID niet bruikbaar
+              hoeveelheid:         r.hoeveelheid || 0,
+              toeslag:             r.toeslag || 0,
+              systeemNaam:         r.systeemNaam || '',
+              systeemEenheid:      r.systeemEenheid || 'm²',
+              systeemOndergrond:   r.systeemOndergrond || '',
+              systeemOndergrondId: ondId,
+              systeemLocatie:      r.systeemLocatie || 'beide',
+              volgorde:            r.volgorde != null ? r.volgorde : (ri * 10),
+              stappen
+            }, newOd.id);
+            if (newR) regelIdMap[r.id] = newR.id;
+          }
+        }
+      }
+
+      // 3) Todos
+      for (let i = 0; i < (oc.todos||[]).length; i++) {
+        const t = oc.todos[i];
+        await _insertTodoDB({ tekst: t.tekst || t.text || '', done: !!t.done }, cFresh.id, i);
+      }
+
+      // 4) Staart per calc
+      for (let i = 0; i < (oc.staart||[]).length; i++) {
+        const s = oc.staart[i];
+        await _insertStaartCalcDB({
+          naam: s.naam || '', type: s.type || 'vast', bedrag: s.bedrag || 0,
+          eenheid: s.eenheid || '', grondslag: s.grondslag || '',
+          hoeveelheid: s.hoeveelheid || 0
+        }, cFresh.id, i);
+      }
+
+      // 5) Meetstaat — koppeling naar nieuwe regel-id via map (skip wezen)
+      for (let i = 0; i < (oc.meetstaat||[]).length; i++) {
+        const ms = oc.meetstaat[i];
+        const newRegelId = regelIdMap[ms.calcRegelId];
+        if (!newRegelId) continue;
+        await _insertMeetstaatDB({
+          calcRegelId:  newRegelId,
+          omschrijving: ms.omschrijving || '',
+          hCm:          ms.hCm || 0,
+          bCm:          ms.bCm || 0,
+          aantal:       ms.aantal != null ? ms.aantal : 1,
+          opmerking:    ms.opmerking || ''
+        }, cFresh.id, i);
+      }
+
+      log.push(`✓ ${cFresh.naam}`);
+      calcCount++;
+    }
+
+    alert(`Migratie voltooid:\n\n${calcCount}/${calcs.length} calculaties geïmporteerd.\n\n${log.join('\n')}\n\nDe app gaat nu de calculaties opnieuw laden.`);
+    await loadData();
+    renderAll();
+  } catch (err) {
+    alert('Fout tijdens import:\n\n' + (log.length ? log.join('\n') + '\n\n' : '') + err.message + '\n\nReeds geïmporteerde calcs staan in Supabase.');
+    await loadData();
+    renderAll();
   }
 }
 
