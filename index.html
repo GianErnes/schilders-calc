@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.0.0 · Voorcalculatie</span>
+    <span class="subtitle">v3.1.3 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1287,8 +1287,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.0.0</h2>
-      <p>Fase 3a — Materialen worden nu geladen vanuit Supabase. De rest (bewerkingen, ondergronden, verfsystemen, calculaties, instellingen) volgt in de volgende fasen. Data is gedeeld via de cloud — geen lokale opslag meer.</p>
+      <h2>Welkom bij v3.1.3</h2>
+      <p>Fase 3b — Materialen worden nu opgeslagen in Supabase: toevoegen, wijzigen en verwijderen synchroniseren direct met de cloud. Inloggen kan met wachtwoord (snel) of via magic link (zonder wachtwoord). De rest (bewerkingen, ondergronden, verfsystemen, calculaties, instellingen) volgt in fase 3c en verder.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1549,15 +1549,20 @@
       <h1>Schilders Calculatie</h1>
     </div>
     <h2>Inloggen</h2>
-    <p class="sub">Je ontvangt een magic link in je inbox. Klik erop om in te loggen.</p>
+    <p class="sub">Log in met je wachtwoord, of vraag een magic link aan.</p>
     <label>E-mailadres</label>
-    <input type="email" id="authEmail" placeholder="jouw@email.nl" onkeydown="if(event.key==='Enter') sendMagicLink()">
-    <button class="btn" onclick="sendMagicLink()" id="authBtn" style="margin-top:0.75rem; width:100%;">Stuur magic link</button>
+    <input type="email" id="authEmail" placeholder="jouw@email.nl">
+    <label style="margin-top:0.75rem;">Wachtwoord</label>
+    <input type="password" id="authPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter') signInWithPassword()">
+    <button class="btn" onclick="signInWithPassword()" id="authBtn" style="margin-top:0.75rem; width:100%;">Inloggen</button>
+    <div style="text-align:center; margin-top:0.85rem; padding-top:0.85rem; border-top:1px solid var(--paper-deep);">
+      <a href="#" onclick="event.preventDefault(); sendMagicLink()" style="font-size:0.82rem; color:var(--muted); text-decoration:underline;">Geen wachtwoord? Stuur me een magic link</a>
+    </div>
     <div class="auth-msg" id="authMsg"></div>
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.0.0 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.1.3 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1591,6 +1596,20 @@ async function sendMagicLink() {
   btn.disabled = false;
   if (error) { _showAuthMsg('Fout: ' + error.message, 'err'); return; }
   _showAuthMsg('✓ Check je inbox voor de magic link!', 'ok');
+}
+
+async function signInWithPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if (!email) { _showAuthMsg('Vul een e-mailadres in.', 'err'); return; }
+  if (!password) { _showAuthMsg('Vul een wachtwoord in (of gebruik magic link).', 'err'); return; }
+  const btn = document.getElementById('authBtn');
+  btn.disabled = true;
+  _showAuthMsg('Bezig met inloggen...', 'info');
+  const { error } = await _sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false;
+  if (error) { _showAuthMsg('Fout: ' + error.message, 'err'); return; }
+  // onAuthStateChange handelt de rest af (UI + dataload)
 }
 
 // Timeout-wrapper: Supabase-call die langer dan 10s duurt → foutmelding
