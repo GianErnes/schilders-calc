@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.2.0 · Voorcalculatie</span>
+    <span class="subtitle">v3.3.0 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.2.0</h2>
-      <p>Build-fase auth is omgeschakeld naar incode-stijl (zoals voorraad-app). Geen Supabase Auth meer — geen trage token-refresh, geen rate limits, snelle calls. Voor de productie-versie komt er nog een beveiligings-pass terug.</p>
+      <h2>Welkom bij v3.3.0</h2>
+      <p>Fase 3c.1 — Ondergronden zijn nu ook gekoppeld aan Supabase. Toevoegen, wijzigen, verwijderen en de volgorde wisselen synchroniseren naar de cloud. Bewerkingen, verfsystemen en staartkosten-templates volgen in 3c.2 en verder.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1556,7 +1556,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.2.0 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.3.0 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1801,8 +1801,9 @@ const defaultData = {
 };
 
 let data = JSON.parse(JSON.stringify(defaultData));
-// Materialen leven in Supabase — geen defaults meer in memory
+// Materialen + ondergronden leven in Supabase — geen defaults meer in memory
 data.materialen = [];
+data.ondergronden = [];
 
 // ============================================================
 // CALCULATIES ARCHIEF — actieve calc abstractie
@@ -1852,9 +1853,8 @@ Object.defineProperty(data, 'calc', {
 // Mark gewijzigd on every save
 const _origSaveData = () => ls_set(JSON.stringify(_serializeData()));
 function _serializeData() {
-  // strip the virtual property by serializing fields explicitly
+  // materialen + ondergronden leven in Supabase — niet meer in localStorage
   return {
-    ondergronden: data.ondergronden,
     bewerkingen: data.bewerkingen,
     systemen: data.systemen,
     staartLib: data.staartLib,
@@ -1948,6 +1948,51 @@ async function _fetchMaterialenFromDB() {
 }
 
 // ============================================================
+// ONDERGRONDEN MAPPING & DB
+// ============================================================
+function _mapOndFromDB(row) {
+  return {
+    id:       row.id,
+    naam:     row.naam     || '',
+    locatie:  row.locatie  || 'beide',
+    volgorde: row.volgorde != null ? row.volgorde : 0
+  };
+}
+function _mapOndToDB(o) {
+  return {
+    naam:     o.naam     || '',
+    locatie:  o.locatie  || 'beide',
+    volgorde: o.volgorde != null ? o.volgorde : 0
+  };
+}
+async function _fetchOndergrondenFromDB() {
+  if (!_sb) return null;
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('ondergronden').select('*').order('volgorde').order('naam'), 'Ondergronden ophalen'
+  );
+  if (error) return null;
+  return (rows || []).map(_mapOndFromDB);
+}
+async function _insertOndDB(o) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('ondergronden').insert([_mapOndToDB(o)]).select(), 'Ondergrond opslaan'
+  );
+  if (error || !rows || !rows[0]) return null;
+  return _mapOndFromDB(rows[0]);
+}
+function _updateOndDB(o) {
+  _sbQuery(
+    _sb.from('ondergronden').update(_mapOndToDB(o)).eq('id', o.id), 'Ondergrond bijwerken'
+  ).then(({ error }) => { if (error && error.message !== 'timeout') _toast('Fout bij bijwerken: ' + error.message); });
+}
+async function _deleteOndDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('ondergronden').delete().eq('id', id), 'Ondergrond verwijderen'
+  );
+  return !error;
+}
+
+// ============================================================
 // LOAD DATA (async — materialen from Supabase, rest from localStorage)
 // ============================================================
 async function loadData() {
@@ -1957,7 +2002,7 @@ async function loadData() {
     try {
       const parsed = JSON.parse(saved);
       Object.keys(parsed).forEach(k => {
-        if (k !== 'calc' && k !== 'materialen') data[k] = parsed[k];
+        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden') data[k] = parsed[k];
       });
       // Migration: old format had `calc` as object
       if (parsed.calc && (!parsed.calculaties || !parsed.calculaties.length)) {
@@ -2028,6 +2073,12 @@ async function loadData() {
   if (matFromDB !== null) {
     data.materialen = matFromDB;
   }
+
+  // 3. Fetch ondergronden from Supabase
+  const ondFromDB = await _fetchOndergrondenFromDB();
+  if (ondFromDB !== null) {
+    data.ondergronden = ondFromDB;
+  }
 }
 
 function saveData() {
@@ -2089,32 +2140,57 @@ function renderOndergronden() {
   html += '</tbody></table></div>';
   c.innerHTML = html;
 }
-function moveOnd(id, dir) {
+async function moveOnd(id, dir) {
   const i = data.ondergronden.findIndex(o => o.id === id);
   if (i === -1) return;
   const j = i + dir;
   if (j < 0 || j >= data.ondergronden.length) return;
+  // Swap volgorde-waarden tussen beide records
+  const a = data.ondergronden[i];
+  const b = data.ondergronden[j];
+  const tmp = a.volgorde;
+  a.volgorde = b.volgorde;
+  b.volgorde = tmp;
+  // Lokaal swappen voor directe UI-update
   [data.ondergronden[i], data.ondergronden[j]] = [data.ondergronden[j], data.ondergronden[i]];
-  saveData(); renderOndergronden();
+  renderOndergronden();
+  // Persistent in DB
+  _updateOndDB(a);
+  _updateOndDB(b);
 }
 function updOnd(id, field, val) {
-  const o = data.ondergronden.find(x=>x.id===id);
+  const o = data.ondergronden.find(x => x.id === id);
   if (!o) return;
   o[field] = val;
-  saveData();
+  _updateOndDB(o);
   renderOndergronden();
   if (field === 'naam' || field === 'locatie') {
     renderBewerkingen();
     renderSystemen();
   }
 }
-function addOndergrond() { data.ondergronden.push({id: uid('o'), naam: 'Nieuw'}); saveData(); renderOndergronden(); renderBewerkingen(); }
-function delOnd(id) {
+async function addOndergrond() {
+  const btn = document.querySelector('button[onclick="addOndergrond()"]');
+  let oldText;
+  if (btn) { oldText = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Bezig...'; }
+  // Volgorde = max + 10 zodat hij achteraan komt
+  const maxV = data.ondergronden.reduce((m, o) => Math.max(m, o.volgorde || 0), 0);
+  const nieuw = { naam: 'Nieuw', locatie: 'beide', volgorde: maxV + 10 };
+  const saved = await _insertOndDB(nieuw);
+  if (btn) { btn.disabled = false; btn.textContent = oldText; }
+  if (!saved) return;
+  data.ondergronden.push(saved);
+  renderOndergronden();
+  renderBewerkingen();
+}
+async function delOnd(id) {
   const used = data.bewerkingen.some(b => b.ondergrondId === id) || data.systemen.some(s => s.ondergrondId === id);
   if (used) { alert('Deze ondergrond is in gebruik.'); return; }
   if (!confirm('Verwijderen?')) return;
+  const ok = await _deleteOndDB(id);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
   data.ondergronden = data.ondergronden.filter(o => o.id !== id);
-  saveData(); renderOndergronden();
+  renderOndergronden();
 }
 // ============================================================
 // MATERIALEN
