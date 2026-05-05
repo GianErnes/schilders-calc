@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.3.3 · Voorcalculatie</span>
+    <span class="subtitle">v3.3.4 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.3.3</h2>
-      <p>Fase 3c.4 — Verfsystemen + bewerkingsstappen zijn nu volledig in Supabase. Het wijzigen van een systeem doet een full-replace van de stappen (ouders + kinderen samen). Daarmee is de bibliotheek-fase compleet — calculaties volgen in fase 3d.</p>
+      <h2>Welkom bij v3.3.4</h2>
+      <p>Migratie-tool — onder Settings > Data Beheer staat een knop om je v2.4.1-bibliotheek (materialen, ondergronden, bewerkingen, templates, verfsystemen) in één keer naar Supabase te importeren. Calculaties volgen later in fase 3d.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1443,10 +1443,10 @@
     </div>
     <div class="settings-section">
       <h3>Data Beheer</h3>
-      <button class="btn-secondary btn" onclick="exportData()">⇩ Exporteer alles (JSON)</button>
-      <button class="btn-secondary btn" onclick="document.getElementById('importFile').click()">⇧ Importeer</button>
-      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-      <button class="btn-danger btn" onclick="resetData()" style="margin-left: 0.5rem;">⌫ Reset naar voorbeelddata</button>
+      <button class="btn-secondary btn" onclick="exportData()">⇩ Exporteer calculaties (JSON)</button>
+      <button class="btn-secondary btn" onclick="document.getElementById('importLibFile').click()">⇧ Importeer bibliotheek uit v2.4.1</button>
+      <input type="file" id="importLibFile" accept=".json" style="display:none" onchange="importLibFromV241(event)">
+      <p style="color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; font-style: italic;">De bibliotheek-import is bedoeld voor de eenmalige migratie van je v2.4.1 data (materialen, ondergronden, bewerkingen, staart-templates en verfsystemen). Calculaties komen later.</p>
     </div>
   </section>
 
@@ -1556,7 +1556,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.3.3 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.3.4 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -4453,6 +4453,167 @@ function resetData() {
   Object.keys(fresh).forEach(k => { data[k] = fresh[k]; });
   _ensureActiveCalc();
   saveData(); renderAll();
+}
+
+// ============================================================
+// EENMALIGE BIBLIOTHEEK-MIGRATIE UIT v2.4.1 JSON
+// ============================================================
+async function importLibFromV241(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';  // reset zodat dezelfde file opnieuw kan
+  let parsed;
+  try {
+    parsed = JSON.parse(await file.text());
+  } catch(err) {
+    alert('JSON niet geldig: ' + err.message);
+    return;
+  }
+  const counts = {
+    ondergronden: (parsed.ondergronden || []).length,
+    materialen:   (parsed.materialen   || []).length,
+    bewerkingen:  (parsed.bewerkingen  || []).length,
+    staartLib:    (parsed.staartLib    || []).length,
+    systemen:     (parsed.systemen     || []).length,
+    stappen:      (parsed.systemen     || []).reduce((n, s) => n + ((s.stappen || []).length), 0)
+  };
+  const totaal = counts.ondergronden + counts.materialen + counts.bewerkingen + counts.staartLib + counts.systemen + counts.stappen;
+  if (!totaal) { alert('Geen bibliotheek-data gevonden in dit bestand.'); return; }
+  const msg = 'Importeren?\n\n' +
+    `• ${counts.ondergronden} ondergronden\n` +
+    `• ${counts.materialen} materialen\n` +
+    `• ${counts.bewerkingen} bewerkingen\n` +
+    `• ${counts.staartLib} staart-templates\n` +
+    `• ${counts.systemen} verfsystemen (${counts.stappen} stappen totaal)\n\n` +
+    'Bestaande data in Supabase wordt aangevuld (geen vervangen). Doorgaan?';
+  if (!confirm(msg)) return;
+
+  const idMap = { ondergronden: {}, materialen: {}, bewerkingen: {}, systemen: {} };
+  const log = [];
+
+  try {
+    // 1. Ondergronden
+    if ((parsed.ondergronden || []).length) {
+      const rows = parsed.ondergronden.map((o, i) => {
+        const newId = crypto.randomUUID();
+        idMap.ondergronden[o.id] = newId;
+        return {
+          id: newId,
+          naam: o.naam || '',
+          locatie: o.locatie || '',
+          volgorde: o.volgorde != null ? o.volgorde : (i * 10)
+        };
+      });
+      const { error } = await _sbQuery(_sb.from('ondergronden').insert(rows), 'Ondergronden importeren');
+      if (error) throw new Error('Ondergronden: ' + error.message);
+      log.push(`✓ ${rows.length} ondergronden`);
+    }
+
+    // 2. Materialen
+    if ((parsed.materialen || []).length) {
+      const rows = parsed.materialen.map(m => {
+        const newId = crypto.randomUUID();
+        idMap.materialen[m.id] = newId;
+        return {
+          id: newId,
+          naam: m.naam || '',
+          merk: m.merk || '',
+          type: m.type || '',
+          groep: m.groep || '',
+          eenheid: m.eenheid || 'L',
+          prijs_per: m.prijsPer != null ? m.prijsPer : 0,
+          rendement: m.rendement != null ? m.rendement : 0
+        };
+      });
+      const { error } = await _sbQuery(_sb.from('materialen').insert(rows), 'Materialen importeren');
+      if (error) throw new Error('Materialen: ' + error.message);
+      log.push(`✓ ${rows.length} materialen`);
+    }
+
+    // 3. Bewerkingen (FK naar ondergronden + materialen)
+    if ((parsed.bewerkingen || []).length) {
+      const rows = parsed.bewerkingen.map((b, i) => {
+        const newId = crypto.randomUUID();
+        idMap.bewerkingen[b.id] = newId;
+        return {
+          id: newId,
+          naam: b.naam || '',
+          eenheid: b.eenheid || 'm²',
+          minuten: b.minuten || 0,
+          ondergrond_id: idMap.ondergronden[b.ondergrondId] || null,
+          materiaal_id: idMap.materialen[b.materiaalId] || null,
+          verbruik: b.verbruik || 0,
+          volgorde: b.volgorde != null ? b.volgorde : (i * 10)
+        };
+      });
+      const { error } = await _sbQuery(_sb.from('bewerkingen').insert(rows), 'Bewerkingen importeren');
+      if (error) throw new Error('Bewerkingen: ' + error.message);
+      log.push(`✓ ${rows.length} bewerkingen`);
+    }
+
+    // 4. Staart_lib (geen FK)
+    if ((parsed.staartLib || []).length) {
+      const rows = parsed.staartLib.map(s => ({
+        id: crypto.randomUUID(),
+        naam: s.naam || '',
+        type: s.type || 'vast',
+        bedrag: s.bedrag || 0,
+        eenheid: s.eenheid || '',
+        grondslag: s.grondslag || '',
+        hoeveelheid: s.hoeveelheid || 0
+      }));
+      const { error } = await _sbQuery(_sb.from('staart_lib').insert(rows), 'Staart-templates importeren');
+      if (error) throw new Error('Staart_lib: ' + error.message);
+      log.push(`✓ ${rows.length} staart-templates`);
+    }
+
+    // 5. Verfsystemen (FK naar ondergronden)
+    if ((parsed.systemen || []).length) {
+      const rows = parsed.systemen.map(s => {
+        const newId = crypto.randomUUID();
+        idMap.systemen[s.id] = newId;
+        return {
+          id: newId,
+          naam: s.naam || '',
+          ondergrond_id: idMap.ondergronden[s.ondergrondId] || null,
+          eenheid: s.eenheid || 'm²'
+        };
+      });
+      const { error } = await _sbQuery(_sb.from('verfsystemen').insert(rows), 'Verfsystemen importeren');
+      if (error) throw new Error('Verfsystemen: ' + error.message);
+      log.push(`✓ ${rows.length} verfsystemen`);
+    }
+
+    // 6. Verfsysteem-stappen (FK naar verfsystemen + bewerkingen)
+    const stapRows = [];
+    (parsed.systemen || []).forEach(sys => {
+      const newSysId = idMap.systemen[sys.id];
+      if (!newSysId) return;
+      (sys.stappen || []).forEach((st, i) => {
+        const bewId = idMap.bewerkingen[st.bewerkingId];
+        if (!bewId) return; // sla over als bewerking ontbreekt
+        stapRows.push({
+          id: crypto.randomUUID(),
+          verfsysteem_id: newSysId,
+          bewerking_id: bewId,
+          percentage: st.percentage != null ? st.percentage : 100,
+          volgorde: i
+        });
+      });
+    });
+    if (stapRows.length) {
+      const { error } = await _sbQuery(_sb.from('verfsysteem_stappen').insert(stapRows), 'Stappen importeren');
+      if (error) throw new Error('Stappen: ' + error.message);
+      log.push(`✓ ${stapRows.length} verfsysteem-stappen`);
+    }
+
+    alert('Migratie voltooid:\n\n' + log.join('\n') + '\n\nDe app gaat nu de bibliotheek opnieuw laden.');
+    // Herlaad alles vanuit Supabase
+    await loadData();
+    renderAll();
+  } catch (err) {
+    alert('Fout tijdens import:\n\n' + (log.length ? log.join('\n') + '\n\n' : '') + err.message + '\n\nWat tot nu toe is geïmporteerd staat in Supabase. Je kunt eventueel de tabellen leegmaken (TRUNCATE) en opnieuw proberen.');
+  }
 }
 
 // ============================================================
