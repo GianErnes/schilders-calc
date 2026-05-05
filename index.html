@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.3.1 · Voorcalculatie</span>
+    <span class="subtitle">v3.3.2 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.3.1</h2>
-      <p>Fase 3c.2 — Bewerkingen zijn nu ook gekoppeld aan Supabase. Toevoegen, wijzigen, dupliceren, verplaatsen en verwijderen synchroniseren naar de cloud. Verfsystemen + stappen en staartkosten-templates volgen hierna.</p>
+      <h2>Welkom bij v3.3.2</h2>
+      <p>Fase 3c.3 — Staartkosten-templates zijn nu ook gekoppeld aan Supabase. Toevoegen, wijzigen en verwijderen van templates synchroniseren naar de cloud. Verfsystemen + stappen volgen hierna.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1556,7 +1556,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.3.1 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.3.2 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1801,10 +1801,11 @@ const defaultData = {
 };
 
 let data = JSON.parse(JSON.stringify(defaultData));
-// Materialen + ondergronden + bewerkingen leven in Supabase — geen defaults meer in memory
+// Materialen + ondergronden + bewerkingen + staartLib leven in Supabase — geen defaults meer in memory
 data.materialen = [];
 data.ondergronden = [];
 data.bewerkingen = [];
+data.staartLib = [];
 
 // ============================================================
 // CALCULATIES ARCHIEF — actieve calc abstractie
@@ -1854,10 +1855,9 @@ Object.defineProperty(data, 'calc', {
 // Mark gewijzigd on every save
 const _origSaveData = () => ls_set(JSON.stringify(_serializeData()));
 function _serializeData() {
-  // materialen + ondergronden + bewerkingen leven in Supabase
+  // materialen + ondergronden + bewerkingen + staartLib leven in Supabase
   return {
     systemen: data.systemen,
-    staartLib: data.staartLib,
     calculaties: data.calculaties,
     activeCalcId: data.activeCalcId,
     settings: data.settings
@@ -2046,6 +2046,57 @@ async function _deleteBewDB(id) {
 }
 
 // ============================================================
+// STAART_LIB MAPPING & DB
+// ============================================================
+function _mapStaartFromDB(row) {
+  return {
+    id:          row.id,
+    naam:        row.naam      || '',
+    type:        row.type      || 'vast',
+    bedrag:      parseFloat(row.bedrag) || 0,
+    eenheid:     row.eenheid   || '',
+    grondslag:   row.grondslag || '',
+    hoeveelheid: parseFloat(row.hoeveelheid) || 0
+  };
+}
+function _mapStaartToDB(s) {
+  return {
+    naam:        s.naam      || '',
+    type:        s.type      || 'vast',
+    bedrag:      s.bedrag    || 0,
+    eenheid:     s.eenheid   || '',
+    grondslag:   s.grondslag || '',
+    hoeveelheid: s.hoeveelheid || 0
+  };
+}
+async function _fetchStaartLibFromDB() {
+  if (!_sb) return null;
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('staart_lib').select('*').order('naam'), 'Staart-templates ophalen'
+  );
+  if (error) return null;
+  return (rows || []).map(_mapStaartFromDB);
+}
+async function _insertStaartDB(s) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('staart_lib').insert([_mapStaartToDB(s)]).select(), 'Staart-template opslaan'
+  );
+  if (error || !rows || !rows[0]) return null;
+  return _mapStaartFromDB(rows[0]);
+}
+function _updateStaartDB(s) {
+  _sbQuery(
+    _sb.from('staart_lib').update(_mapStaartToDB(s)).eq('id', s.id), 'Staart-template bijwerken'
+  ).then(({ error }) => { if (error && error.message !== 'timeout') _toast('Fout bij bijwerken: ' + error.message); });
+}
+async function _deleteStaartDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('staart_lib').delete().eq('id', id), 'Staart-template verwijderen'
+  );
+  return !error;
+}
+
+// ============================================================
 // LOAD DATA (async — materialen from Supabase, rest from localStorage)
 // ============================================================
 async function loadData() {
@@ -2055,7 +2106,7 @@ async function loadData() {
     try {
       const parsed = JSON.parse(saved);
       Object.keys(parsed).forEach(k => {
-        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden' && k !== 'bewerkingen') data[k] = parsed[k];
+        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden' && k !== 'bewerkingen' && k !== 'staartLib') data[k] = parsed[k];
       });
       // Migration: old format had `calc` as object
       if (parsed.calc && (!parsed.calculaties || !parsed.calculaties.length)) {
@@ -2137,6 +2188,12 @@ async function loadData() {
   const bewFromDB = await _fetchBewerkingenFromDB();
   if (bewFromDB !== null) {
     data.bewerkingen = bewFromDB;
+  }
+
+  // 5. Fetch staart_lib from Supabase
+  const staartFromDB = await _fetchStaartLibFromDB();
+  if (staartFromDB !== null) {
+    data.staartLib = staartFromDB;
   }
 }
 
@@ -3962,7 +4019,7 @@ function updateStaartFields() {
   document.getElementById('staartGrondslagWrap').style.display = type === 'percent' ? '' : 'none';
   document.getElementById('staartHoevWrap').style.display = type === 'eenheid' ? '' : 'none';
 }
-function saveStaart() {
+async function saveStaart() {
   const payload = {
     naam: document.getElementById('staartNaam').value.trim(),
     type: document.getElementById('staartType').value,
@@ -3975,16 +4032,25 @@ function saveStaart() {
   if (staartCtx.mode === 'editCalc') {
     const p = data.calc.staart.find(x => x.id === staartCtx.id);
     if (p) Object.assign(p, payload);
+    saveData();
+    renderStaartList(); renderTotals();
   } else if (staartCtx.mode === 'newCalc') {
     data.calc.staart.push({ id: staartCtx.id, ...payload });
+    saveData();
+    renderStaartList(); renderTotals();
   } else if (staartCtx.mode === 'editLib') {
     const p = data.staartLib.find(x => x.id === staartCtx.id);
-    if (p) Object.assign(p, payload);
+    if (p) {
+      Object.assign(p, payload);
+      _updateStaartDB(p);
+    }
+    renderStaartLib(); renderStaartList();
   } else if (staartCtx.mode === 'newLib') {
-    data.staartLib.push({ id: staartCtx.id, ...payload });
+    const saved = await _insertStaartDB(payload);
+    if (!saved) { closeStaartModal(); return; }
+    data.staartLib.push(saved);
+    renderStaartLib(); renderStaartList();
   }
-  saveData();
-  renderStaartList(); renderStaartLib(); renderTotals();
   closeStaartModal();
 }
 function closeStaartModal() { document.getElementById('staartModal').classList.remove('active'); }
@@ -4014,7 +4080,13 @@ function renderStaartLib() {
   c.innerHTML = html;
 }
 function addStaartLib() { const np = { id: uid('sl'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0 }; openStaartModal(np, 'newLib'); }
-function delStaartLib(id) { if(!confirm('Verwijderen?')) return; data.staartLib = data.staartLib.filter(p=>p.id!==id); saveData(); renderStaartLib(); renderStaartList(); }
+async function delStaartLib(id) {
+  if (!confirm('Verwijderen?')) return;
+  const ok = await _deleteStaartDB(id);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  data.staartLib = data.staartLib.filter(p => p.id !== id);
+  renderStaartLib(); renderStaartList();
+}
 // ============================================================
 // TOTAALPANEEL CALCULATIE
 // ============================================================
