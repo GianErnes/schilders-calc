@@ -1261,7 +1261,7 @@
   <div class="brand">
     <div class="brand-mark"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.3.4 · Voorcalculatie</span>
+    <span class="subtitle">v3.4.0 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1286,8 +1286,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.3.4</h2>
-      <p>Migratie-tool — onder Settings > Data Beheer staat een knop om je v2.4.1-bibliotheek (materialen, ondergronden, bewerkingen, templates, verfsystemen) in één keer naar Supabase te importeren. Calculaties volgen later in fase 3d.</p>
+      <h2>Welkom bij v3.4.0</h2>
+      <p>Fase 3d.1 — Calculaties, hoofdgroepen en onderdelen leven nu in Supabase. Bij openen van een calc worden hoofdgroepen + onderdelen lazy uit de cloud geladen. Regels, staart, meetstaat en todo's blijven nog tijdelijk lokaal in localStorage tot v3.4.1 en v3.4.2.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1556,7 +1556,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.3.4 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.4.0 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1801,12 +1801,14 @@ const defaultData = {
 };
 
 let data = JSON.parse(JSON.stringify(defaultData));
-// Materialen + ondergronden + bewerkingen + staartLib + systemen leven in Supabase — geen defaults meer in memory
+// Materialen + ondergronden + bewerkingen + staartLib + systemen + calculaties leven in Supabase — geen defaults meer in memory
 data.materialen = [];
 data.ondergronden = [];
 data.bewerkingen = [];
 data.staartLib = [];
 data.systemen = [];
+data.calculaties = [];
+data.activeCalcId = null;
 
 // ============================================================
 // CALCULATIES ARCHIEF — actieve calc abstractie
@@ -1834,11 +1836,9 @@ function _newCalcObj(naam = 'Nieuwe calculatie') {
   };
 }
 function _ensureActiveCalc() {
-  // make sure there's at least one calc and an active id
-  if (!data.calculaties || !data.calculaties.length) {
-    data.calculaties = [_newCalcObj('Calculatie 1')];
-    data.activeCalcId = data.calculaties[0].id;
-  }
+  // Sync only: zorgt dat activeCalcId verwijst naar een bestaande calc.
+  // Aanmaken van een lege calc gebeurt in loadData() (DB INSERT).
+  if (!data.calculaties || !data.calculaties.length) return;
   if (!data.activeCalcId || !data.calculaties.find(c => c.id === data.activeCalcId)) {
     data.activeCalcId = data.calculaties[0].id;
   }
@@ -1856,10 +1856,8 @@ Object.defineProperty(data, 'calc', {
 // Mark gewijzigd on every save
 const _origSaveData = () => ls_set(JSON.stringify(_serializeData()));
 function _serializeData() {
-  // materialen + ondergronden + bewerkingen + staartLib + systemen leven in Supabase
+  // materialen + ondergronden + bewerkingen + staartLib + systemen + calculaties leven in Supabase
   return {
-    calculaties: data.calculaties,
-    activeCalcId: data.activeCalcId,
     settings: data.settings
   };
 }
@@ -2206,6 +2204,210 @@ async function _deleteVerfsysteemDB(id) {
 }
 
 // ============================================================
+// CALCULATIES + HOOFDGROEPEN + ONDERDELEN MAPPING & DB
+// ============================================================
+function _mapCalcHeaderFromDB(row) {
+  return {
+    id:                  row.id,
+    naam:                row.naam || '',
+    klant:               row.klant || '',
+    status:              row.status || 'concept',
+    schilders:           row.schilders != null ? row.schilders : 2,
+    uurDag:              parseFloat(row.uur_dag) || 8,
+    reis:                parseFloat(row.reis) || 0,
+    volleDagenOverride:  row.volle_dagen_override,
+    notities:            row.notities || '',
+    aangemaakt:          row.aangemaakt || new Date().toISOString(),
+    gewijzigd:           row.gewijzigd  || new Date().toISOString(),
+    // body wordt later toegevoegd door _loadCalcBody
+    hoofdgroepen: [], staart: [], meetstaat: [], todos: [],
+    __loaded: false
+  };
+}
+function _mapCalcHeaderToDB(c) {
+  return {
+    naam: c.naam || '',
+    klant: c.klant || '',
+    status: c.status || 'concept',
+    schilders: c.schilders != null ? c.schilders : 2,
+    uur_dag: c.uurDag != null ? c.uurDag : 8,
+    reis: c.reis != null ? c.reis : 0,
+    volle_dagen_override: c.volleDagenOverride != null ? c.volleDagenOverride : null,
+    notities: c.notities || ''
+  };
+}
+function _mapHgFromDB(row, ods) {
+  return {
+    id:        row.id,
+    naam:      row.naam || '',
+    collapsed: !!row.collapsed,
+    volgorde:  row.volgorde != null ? row.volgorde : 0,
+    onderdelen: (ods || []).map(_mapOdFromDB)
+  };
+}
+function _mapHgToDB(hg, calcId) {
+  return {
+    calculatie_id: calcId,
+    naam: hg.naam || '',
+    collapsed: !!hg.collapsed,
+    volgorde: hg.volgorde != null ? hg.volgorde : 0
+  };
+}
+function _mapOdFromDB(row) {
+  return {
+    id:        row.id,
+    naam:      row.naam || '',
+    collapsed: !!row.collapsed,
+    volgorde:  row.volgorde != null ? row.volgorde : 0,
+    regels:    [] // wordt later gevuld vanuit localStorage in v3.4.0
+  };
+}
+function _mapOdToDB(od, hgId) {
+  return {
+    hoofdgroep_id: hgId,
+    naam: od.naam || '',
+    collapsed: !!od.collapsed,
+    volgorde: od.volgorde != null ? od.volgorde : 0
+  };
+}
+
+// localStorage body — TIJDELIJK in v3.4.0 voor regels/staart/meetstaat/todos.
+// Wordt vervangen in v3.4.1 (regels) en v3.4.2 (rest).
+const CALC_BODY_PREFIX = 'verfcalc_v3_body_';
+function _bodyLS(calcId) {
+  try {
+    const raw = localStorage.getItem(CALC_BODY_PREFIX + calcId);
+    if (!raw) return { regelsByOd: {}, staart: [], meetstaat: [], todos: [] };
+    const p = JSON.parse(raw);
+    return {
+      regelsByOd: p.regelsByOd || {},
+      staart:     p.staart     || [],
+      meetstaat:  p.meetstaat  || [],
+      todos:      p.todos      || []
+    };
+  } catch { return { regelsByOd: {}, staart: [], meetstaat: [], todos: [] }; }
+}
+function _saveBody(calcId) {
+  const c = data.calculaties.find(x => x.id === calcId);
+  if (!c) return;
+  const regelsByOd = {};
+  (c.hoofdgroepen || []).forEach(hg => {
+    (hg.onderdelen || []).forEach(od => {
+      if (od.regels && od.regels.length) regelsByOd[od.id] = od.regels;
+    });
+  });
+  const body = {
+    regelsByOd,
+    staart:    c.staart    || [],
+    meetstaat: c.meetstaat || [],
+    todos:     c.todos     || []
+  };
+  try { localStorage.setItem(CALC_BODY_PREFIX + calcId, JSON.stringify(body)); } catch(e) {}
+}
+function _delBodyLS(calcId) {
+  try { localStorage.removeItem(CALC_BODY_PREFIX + calcId); } catch {}
+}
+
+async function _fetchCalcHeadersFromDB() {
+  if (!_sb) return null;
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('calculaties').select('*').order('gewijzigd', { ascending: false }), 'Calculaties ophalen'
+  );
+  if (error) return null;
+  return (rows || []).map(_mapCalcHeaderFromDB);
+}
+async function _loadCalcBody(c) {
+  if (c.__loaded) return true;
+  // Fetch hoofdgroepen + onderdelen via nested select
+  const { data: hgRows, error } = await _sbQuery(
+    _sb.from('hoofdgroepen').select('*, onderdelen(*)').eq('calculatie_id', c.id).order('volgorde'),
+    'Hoofdgroepen ophalen'
+  );
+  if (error) return false;
+  const hgs = (hgRows || []).map(row => {
+    const ods = (row.onderdelen || []).slice().sort((a, b) => (a.volgorde||0) - (b.volgorde||0));
+    return _mapHgFromDB(row, ods);
+  });
+  // Vul regels per od uit localStorage (tijdelijk in v3.4.0)
+  const body = _bodyLS(c.id);
+  hgs.forEach(hg => {
+    hg.onderdelen.forEach(od => {
+      od.regels = body.regelsByOd[od.id] || [];
+    });
+  });
+  c.hoofdgroepen = hgs;
+  c.staart    = body.staart;
+  c.meetstaat = body.meetstaat;
+  c.todos     = body.todos;
+  c.__loaded = true;
+  return true;
+}
+async function _insertCalcDB(c) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('calculaties').insert([_mapCalcHeaderToDB(c)]).select(), 'Calculatie opslaan'
+  );
+  if (error || !rows || !rows[0]) return null;
+  return _mapCalcHeaderFromDB(rows[0]);
+}
+function _updateCalcDB(c) {
+  _sbQuery(
+    _sb.from('calculaties').update(_mapCalcHeaderToDB(c)).eq('id', c.id), 'Calculatie bijwerken'
+  ).then(({ error }) => { if (error && error.message !== 'timeout') _toast('Fout: ' + error.message); });
+}
+function _touchCalc(calcId) {
+  // Update gewijzigd-timestamp — vuren-en-vergeten
+  _sbQuery(
+    _sb.from('calculaties').update({ gewijzigd: new Date().toISOString() }).eq('id', calcId),
+    'Tijdstempel bijwerken'
+  ).then(() => {});
+  const c = data.calculaties.find(x => x.id === calcId);
+  if (c) c.gewijzigd = new Date().toISOString();
+}
+async function _deleteCalcDB(id) {
+  // FK heeft ON DELETE CASCADE — alle subtabellen gaan mee
+  const { error } = await _sbQuery(
+    _sb.from('calculaties').delete().eq('id', id), 'Calculatie verwijderen'
+  );
+  return !error;
+}
+async function _insertHgDB(hg, calcId) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('hoofdgroepen').insert([_mapHgToDB(hg, calcId)]).select(), 'Hoofdgroep opslaan'
+  );
+  if (error || !rows || !rows[0]) return null;
+  return _mapHgFromDB(rows[0], []);
+}
+function _updateHgDB(hg, calcId) {
+  _sbQuery(
+    _sb.from('hoofdgroepen').update(_mapHgToDB(hg, calcId)).eq('id', hg.id), 'Hoofdgroep bijwerken'
+  ).then(() => {});
+}
+async function _deleteHgDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('hoofdgroepen').delete().eq('id', id), 'Hoofdgroep verwijderen'
+  );
+  return !error;
+}
+async function _insertOdDB(od, hgId) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('onderdelen').insert([_mapOdToDB(od, hgId)]).select(), 'Onderdeel opslaan'
+  );
+  if (error || !rows || !rows[0]) return null;
+  return _mapOdFromDB(rows[0]);
+}
+function _updateOdDB(od, hgId) {
+  _sbQuery(
+    _sb.from('onderdelen').update(_mapOdToDB(od, hgId)).eq('id', od.id), 'Onderdeel bijwerken'
+  ).then(() => {});
+}
+async function _deleteOdDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('onderdelen').delete().eq('id', id), 'Onderdeel verwijderen'
+  );
+  return !error;
+}
+
+// ============================================================
 // LOAD DATA (async — materialen from Supabase, rest from localStorage)
 // ============================================================
 async function loadData() {
@@ -2215,21 +2417,9 @@ async function loadData() {
     try {
       const parsed = JSON.parse(saved);
       Object.keys(parsed).forEach(k => {
-        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden' && k !== 'bewerkingen' && k !== 'staartLib' && k !== 'systemen') data[k] = parsed[k];
+        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden' && k !== 'bewerkingen' && k !== 'staartLib' && k !== 'systemen' && k !== 'calculaties' && k !== 'activeCalcId') data[k] = parsed[k];
       });
-      // Migration: old format had `calc` as object
-      if (parsed.calc && (!parsed.calculaties || !parsed.calculaties.length)) {
-        const old = parsed.calc;
-        const migrated = {
-          id: uid('c'), naam: old.project || 'Gemigreerde calculatie',
-          klant: old.klant || '', reis: old.reis || 0,
-          schilders: old.schilders || 2, uurDag: old.uurDag || 8,
-          status: 'concept', aangemaakt: new Date().toISOString(),
-          gewijzigd: new Date().toISOString(),
-          hoofdgroepen: old.hoofdgroepen || [], staart: old.staart || []
-        };
-        data.calculaties = [migrated]; data.activeCalcId = migrated.id;
-      }
+      // Calculaties leven nu in Supabase — oude migratie-paths overgeslagen.
       // Settings migrations
       if (data.settings && data.settings.groepOpslagen) {
         Object.keys(GROEP_MIGRATIE).forEach(oldKey => {
@@ -2256,25 +2446,6 @@ async function loadData() {
         });
       }
       if (data.systemen) data.systemen.forEach(s => { if (s.locatie !== undefined) delete s.locatie; });
-      // Calculaties migrations
-      if (data.calculaties && Array.isArray(data.calculaties)) {
-        data.calculaties.forEach(c => {
-          if (!c.meetstaat) c.meetstaat = [];
-          if (c.notities === undefined) c.notities = '';
-          if (!c.todos) c.todos = [];
-          if (c.hoofdgroepen) c.hoofdgroepen.forEach(hg => {
-            if (hg.onderdelen) hg.onderdelen.forEach(od => {
-              if (od.regels) od.regels.forEach(r => {
-                if (!r.stappen && r.systeemId) {
-                  const snap = _snapshotSystem(r.systeemId);
-                  if (snap) { r.systeemNaam = snap.systeemNaam; r.systeemEenheid = snap.systeemEenheid; r.systeemOndergrond = snap.systeemOndergrond; r.systeemOndergrondId = snap.systeemOndergrondId; r.systeemLocatie = snap.systeemLocatie; r.stappen = snap.stappen; }
-                  else { r.systeemNaam = '<verwijderd systeem>'; r.systeemEenheid = '—'; r.stappen = []; }
-                }
-              });
-            });
-          });
-        });
-      }
     } catch(e) { console.warn('localStorage load failed', e); }
   }
   _ensureActiveCalc();
@@ -2310,15 +2481,42 @@ async function loadData() {
   if (sysFromDB !== null) {
     data.systemen = sysFromDB;
   }
+
+  // 7. Fetch calculatie-headers from Supabase (lazy: bodies geladen op activeren)
+  const calcHeaders = await _fetchCalcHeadersFromDB();
+  if (calcHeaders !== null) {
+    data.calculaties = calcHeaders;
+  }
+  // Lege state: maak één lege calc in DB
+  if (!data.calculaties.length) {
+    const fresh = await _insertCalcDB({ naam: 'Calculatie 1' });
+    if (fresh) {
+      fresh.__loaded = true; // niets om te laden, was zojuist aangemaakt
+      data.calculaties = [fresh];
+    }
+  }
+  // Pak active calc-id uit localStorage als die er nog is, anders eerste
+  let savedActiveId = null;
+  try { savedActiveId = localStorage.getItem('verfcalc_v3_activeCalcId'); } catch(e) {}
+  if (savedActiveId && data.calculaties.find(c => c.id === savedActiveId)) {
+    data.activeCalcId = savedActiveId;
+  } else {
+    data.activeCalcId = data.calculaties[0]?.id || null;
+  }
+  // Lazy-load body van active calc (zodat data.calc.* meteen werkt)
+  const activeCalc = data.calculaties.find(c => c.id === data.activeCalcId);
+  if (activeCalc) await _loadCalcBody(activeCalc);
 }
 
 function saveData() {
   const a = _activeCalc();
-  if (a) a.gewijzigd = new Date().toISOString();
-  // Fase 3a: save everything EXCEPT materialen to localStorage
-  // materialen writes komen in fase 3b
-  const payload = _serializeData();
-  ls_set(JSON.stringify(payload));
+  if (a) {
+    a.gewijzigd = new Date().toISOString();
+    _saveBody(a.id);   // regels/staart/meetstaat/todos → localStorage (TIJDELIJK in v3.4.0)
+    _touchCalc(a.id);  // gewijzigd-tijdstempel naar DB (fire-and-forget)
+  }
+  // Settings → localStorage
+  try { ls_set(JSON.stringify(_serializeData())); } catch(e) {}
 }
 
 
@@ -3689,7 +3887,8 @@ function toggleNotities() {
 }
 function updNotities(value) {
   data.calc.notities = value;
-  saveData();
+  _updateCalcDB(data.calc);
+  _touchCalc(data.calc.id);
   // Geen re-render nodig — textarea behoudt focus
 }
 function addTodo() {
@@ -3925,21 +4124,87 @@ function addRegelStap(hgId, odId, rId) {
   r.stappen.push(snap);
   saveData(); renderCalcStructuur(); renderTotals();
 }
-function addHoofdgroep() {
+async function addHoofdgroep() {
+  if (!data.calc) return;
   const heeft = name => data.calc.hoofdgroepen.some(hg => hg.naam.toLowerCase() === name.toLowerCase());
   let naam = 'Nieuwe hoofdgroep';
   if (!heeft('Buiten')) naam = 'Buiten';
   else if (!heeft('Binnen')) naam = 'Binnen';
-  data.calc.hoofdgroepen.push({ id: uid('hg'), naam, collapsed: false, onderdelen: [] });
-  saveData(); renderCalcStructuur();
+  const maxV = data.calc.hoofdgroepen.reduce((m, hg) => Math.max(m, hg.volgorde || 0), 0);
+  const newHg = await _insertHgDB({ naam, collapsed: false, volgorde: maxV + 10 }, data.calc.id);
+  if (!newHg) return;
+  newHg.onderdelen = [];
+  data.calc.hoofdgroepen.push(newHg);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur();
 }
-function updHg(id, f, v) { const hg = data.calc.hoofdgroepen.find(x=>x.id===id); if(hg){hg[f]=v; saveData(); if(f==='naam') renderTotals(); else renderCalcStructuur();} }
-function delHg(id) { if(!confirm('Hoofdgroep verwijderen (incl. alles eronder)?')) return; data.calc.hoofdgroepen = data.calc.hoofdgroepen.filter(x=>x.id!==id); saveData(); renderCalcStructuur(); }
-function toggleHg(id) { const hg = data.calc.hoofdgroepen.find(x=>x.id===id); if(hg){hg.collapsed=!hg.collapsed; saveData(); renderCalcStructuur();} }
-function addOnderdeel(hgId) { const hg = data.calc.hoofdgroepen.find(x=>x.id===hgId); if(!hg) return; hg.onderdelen.push({id: uid('od'), naam: 'Nieuw onderdeel', collapsed: false, regels: []}); saveData(); renderCalcStructuur(); }
-function updOd(hgId, odId, f, v) { const od = _findOnderdeel(hgId, odId); if(od){od[f]=v; saveData(); if(f==='naam') renderTotals(); else renderCalcStructuur();} }
-function delOd(hgId, odId) { if(!confirm('Onderdeel verwijderen?')) return; const hg = data.calc.hoofdgroepen.find(x=>x.id===hgId); if(hg){hg.onderdelen = hg.onderdelen.filter(o=>o.id!==odId); saveData(); renderCalcStructuur();} }
-function toggleOd(hgId, odId) { const od = _findOnderdeel(hgId, odId); if(od){od.collapsed=!od.collapsed; saveData(); renderCalcStructuur();} }
+function updHg(id, f, v) {
+  const hg = data.calc.hoofdgroepen.find(x => x.id === id);
+  if (!hg) return;
+  hg[f] = v;
+  _updateHgDB(hg, data.calc.id);
+  _touchCalc(data.calc.id);
+  if (f === 'naam') renderTotals(); else renderCalcStructuur();
+}
+async function delHg(id) {
+  if (!confirm('Hoofdgroep verwijderen (incl. alles eronder)?')) return;
+  const ok = await _deleteHgDB(id);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  // Lokaal: orphan-regels uit body localStorage opruimen
+  const hg = data.calc.hoofdgroepen.find(x => x.id === id);
+  if (hg) {
+    (hg.onderdelen || []).forEach(od => {
+      // regels worden in v3.4.1 weggegooid via cascade; nu localStorage opruimen
+      // lokale state: regels-array verdwijnt mee met od
+    });
+  }
+  data.calc.hoofdgroepen = data.calc.hoofdgroepen.filter(x => x.id !== id);
+  _saveBody(data.calc.id);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur();
+}
+function toggleHg(id) {
+  const hg = data.calc.hoofdgroepen.find(x => x.id === id);
+  if (!hg) return;
+  hg.collapsed = !hg.collapsed;
+  _updateHgDB(hg, data.calc.id);
+  renderCalcStructuur();
+}
+async function addOnderdeel(hgId) {
+  const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
+  if (!hg) return;
+  const maxV = (hg.onderdelen || []).reduce((m, od) => Math.max(m, od.volgorde || 0), 0);
+  const newOd = await _insertOdDB({ naam: 'Nieuw onderdeel', collapsed: false, volgorde: maxV + 10 }, hgId);
+  if (!newOd) return;
+  hg.onderdelen.push(newOd);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur();
+}
+function updOd(hgId, odId, f, v) {
+  const od = _findOnderdeel(hgId, odId);
+  if (!od) return;
+  od[f] = v;
+  _updateOdDB(od, hgId);
+  _touchCalc(data.calc.id);
+  if (f === 'naam') renderTotals(); else renderCalcStructuur();
+}
+async function delOd(hgId, odId) {
+  if (!confirm('Onderdeel verwijderen?')) return;
+  const ok = await _deleteOdDB(odId);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
+  if (hg) hg.onderdelen = hg.onderdelen.filter(o => o.id !== odId);
+  _saveBody(data.calc.id);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur();
+}
+function toggleOd(hgId, odId) {
+  const od = _findOnderdeel(hgId, odId);
+  if (!od) return;
+  od.collapsed = !od.collapsed;
+  _updateOdDB(od, hgId);
+  renderCalcStructuur();
+}
 function updReg(hgId, odId, rId, f, v) { const od = _findOnderdeel(hgId, odId); if(!od) return; const r = od.regels.find(x=>x.id===rId); if(r){r[f]=v; saveData(); renderCalcStructuur();} }
 function delReg(hgId, odId, rId) { const od = _findOnderdeel(hgId, odId); if(!od) return; od.regels = od.regels.filter(r=>r.id!==rId); saveData(); renderCalcStructuur(); }
 
@@ -3999,69 +4264,125 @@ function openSystemFromAdd() {
   closeAddSysModal();
   openSystemModal();
 }
-function newCalc() {
+async function newCalc() {
   const naam = prompt('Naam voor de nieuwe calculatie:', 'Calculatie ' + (data.calculaties.length + 1));
   if (!naam) return;
-  const c = _newCalcObj(naam);
-  data.calculaties.push(c);
-  data.activeCalcId = c.id;
-  saveData(); renderCalcStructuur(); renderDashboard();
+  const fresh = await _insertCalcDB({ naam });
+  if (!fresh) return;
+  fresh.__loaded = true; // verse calc, niets te laden
+  data.calculaties.unshift(fresh); // voorop want gewijzigd-desc
+  data.activeCalcId = fresh.id;
+  try { localStorage.setItem('verfcalc_v3_activeCalcId', fresh.id); } catch(e) {}
+  renderCalcStructuur(); renderDashboard();
 }
-function openCalc(id) {
-  if (!data.calculaties.find(c => c.id === id)) return;
+async function openCalc(id) {
+  const c = data.calculaties.find(x => x.id === id);
+  if (!c) return;
   data.activeCalcId = id;
-  saveData(); renderCalcStructuur(); renderDashboard();
+  try { localStorage.setItem('verfcalc_v3_activeCalcId', id); } catch(e) {}
+  if (!c.__loaded) await _loadCalcBody(c);
+  renderCalcStructuur(); renderDashboard();
   // switch to calculatie tab
   document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
   document.querySelector('nav button[data-tab="calculatie"]').classList.add('active');
   document.getElementById('calculatie').classList.add('active');
 }
-function delCalc(id) {
+async function delCalc(id) {
   const c = data.calculaties.find(x => x.id === id);
   if (!c) return;
   if (!confirm('Calculatie "' + c.naam + '" verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
+  const ok = await _deleteCalcDB(id);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  _delBodyLS(id); // ook localStorage body weg
   data.calculaties = data.calculaties.filter(x => x.id !== id);
-  if (data.activeCalcId === id) data.activeCalcId = data.calculaties[0]?.id || null;
-  _ensureActiveCalc();
-  saveData(); renderCalcStructuur(); renderDashboard();
+  if (data.activeCalcId === id) {
+    data.activeCalcId = data.calculaties[0]?.id || null;
+    try { if (data.activeCalcId) localStorage.setItem('verfcalc_v3_activeCalcId', data.activeCalcId); } catch(e) {}
+  }
+  // Lege state? Maak een nieuwe.
+  if (!data.calculaties.length) {
+    const fresh = await _insertCalcDB({ naam: 'Calculatie 1' });
+    if (fresh) {
+      fresh.__loaded = true;
+      data.calculaties = [fresh];
+      data.activeCalcId = fresh.id;
+      try { localStorage.setItem('verfcalc_v3_activeCalcId', fresh.id); } catch(e) {}
+    }
+  } else {
+    // Lazy load active als die niet geladen is
+    const next = data.calculaties.find(x => x.id === data.activeCalcId);
+    if (next && !next.__loaded) await _loadCalcBody(next);
+  }
+  renderCalcStructuur(); renderDashboard();
 }
-function dupCalc(id) {
-  const c = data.calculaties.find(x => x.id === id);
-  if (!c) return;
-  const copy = JSON.parse(JSON.stringify(c));
-  copy.id = uid('c');
-  copy.naam = c.naam + ' (kopie)';
-  copy.status = 'concept';
-  copy.aangemaakt = new Date().toISOString();
-  copy.gewijzigd = new Date().toISOString();
-  // give new ids to nested entities to avoid collision
-  copy.hoofdgroepen.forEach(hg => {
-    hg.id = uid('hg');
-    hg.onderdelen.forEach(od => {
-      od.id = uid('od');
-      od.regels.forEach(r => { r.id = uid('r'); });
-    });
-  });
-  copy.staart.forEach(s => { s.id = uid('sk'); });
-  data.calculaties.push(copy);
-  saveData(); renderDashboard();
+async function dupCalc(id) {
+  const orig = data.calculaties.find(x => x.id === id);
+  if (!orig) return;
+  // Zorg dat origineel volledig geladen is
+  if (!orig.__loaded) await _loadCalcBody(orig);
+
+  // 1. Insert nieuwe calc-header
+  const headerCopy = {
+    naam: orig.naam + ' (kopie)',
+    klant: orig.klant, status: 'concept',
+    schilders: orig.schilders, uurDag: orig.uurDag, reis: orig.reis,
+    volleDagenOverride: orig.volleDagenOverride,
+    notities: orig.notities
+  };
+  const fresh = await _insertCalcDB(headerCopy);
+  if (!fresh) return;
+
+  // 2. Kopieer hoofdgroepen + onderdelen + bouw od-id-mapping (oud → nieuw)
+  const odIdMap = {};
+  for (const hg of (orig.hoofdgroepen || [])) {
+    const newHg = await _insertHgDB({ naam: hg.naam, collapsed: hg.collapsed, volgorde: hg.volgorde }, fresh.id);
+    if (!newHg) continue;
+    newHg.onderdelen = [];
+    for (const od of (hg.onderdelen || [])) {
+      const newOd = await _insertOdDB({ naam: od.naam, collapsed: od.collapsed, volgorde: od.volgorde }, newHg.id);
+      if (!newOd) continue;
+      odIdMap[od.id] = newOd.id;
+      // Kopieer regels via localStorage body (TIJDELIJK)
+      newOd.regels = (od.regels || []).map(r => {
+        const cr = JSON.parse(JSON.stringify(r));
+        cr.id = uid('r');
+        return cr;
+      });
+      newHg.onderdelen.push(newOd);
+    }
+    fresh.hoofdgroepen.push(newHg);
+  }
+
+  // 3. Kopieer staart, meetstaat, todos in lokale state (TIJDELIJK)
+  fresh.staart    = (orig.staart    || []).map(s => ({ ...s, id: uid('sk') }));
+  fresh.todos     = (orig.todos     || []).map(t => ({ ...t, id: uid('td') }));
+  // Meetstaat-regels koppelen aan nieuwe regel-ids — moeilijk zonder regel-id-mapping (regels staan nog in localStorage)
+  // Voor nu: leeg laten. Gebruiker kan aanvullen.
+  fresh.meetstaat = [];
+  fresh.__loaded = true;
+
+  data.calculaties.unshift(fresh);
+  _saveBody(fresh.id); // body opslaan
+  renderDashboard();
 }
-function setCalcStatus(id, status) {
+async function setCalcStatus(id, status) {
   const c = data.calculaties.find(x => x.id === id);
   if (!c) return;
   c.status = status;
-  saveData(); renderDashboard();
+  _updateCalcDB(c);
+  renderDashboard();
 }
 
-// header form binding
-document.addEventListener('input', e => {
+// header form binding — change-event (op blur) + DB-update voor cloud
+document.addEventListener('change', e => {
   const map = {calcProject:'naam', calcKlant:'klant', calcReis:'reis', calcSchilders:'schilders', calcUurDag:'uurDag'};
-  if (map[e.target.id]) {
+  if (map[e.target.id] && data.calc) {
     const k = map[e.target.id];
     data.calc[k] = ['reis','schilders','uurDag'].includes(k) ? (parseFloat(e.target.value)||0) : e.target.value;
-    saveData();
+    _updateCalcDB(data.calc);
     if (['reis','schilders','uurDag'].includes(k)) renderTotals();
+    renderDashboard();
   }
 });
 // ============================================================
@@ -4328,7 +4649,9 @@ function updVolleDagenOverride(v) {
   if (v === 'null') data.calc.volleDagenOverride = null;
   else if (v === 'true') data.calc.volleDagenOverride = true;
   else data.calc.volleDagenOverride = false;
-  saveData(); renderTotals();
+  _updateCalcDB(data.calc);
+  _touchCalc(data.calc.id);
+  renderTotals();
 }
 
 // ============================================================
