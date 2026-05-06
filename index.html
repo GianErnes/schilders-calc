@@ -1284,8 +1284,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.6.1</h2>
-      <p>Transparantie van opslagen — bij elke algemene opslag staat nu zowel in Settings als in de PDF (Calculatie-opbouw én Gebruikte instellingen) eenduidig vermeld waarover het percentage berekend wordt. Geen geheugenwerk meer; ook fijn voor klanten die vragen hoe een offerte tot stand komt.</p>
+      <h2>Welkom bij v3.6.2</h2>
+      <p>Settings naar Supabase — uurtarieven, opslagen en materiaalopslag per groep leven nu in de cloud, niet meer in de browser. Een wijziging op de iPad ziet je laptop direct, en browser-cache wissen reset niets meer. Eerste keer na deze update: controleer of je waarden kloppen (anders even opnieuw invoeren — dan staan ze definitief).</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1569,7 +1569,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.6.1';
+const APP_VERSION = 'v3.6.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2235,6 +2235,48 @@ async function _deleteVerfsysteemDB(id) {
 }
 
 // ============================================================
+// SETTINGS — gedeeld via Supabase, één rij in app_settings
+// ============================================================
+let _settingsRowId = null;
+let _settingsSaveTimer = null;
+
+async function _fetchSettingsFromDB() {
+  if (!_sb) return null;
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('app_settings').select('*').limit(1), 'Instellingen ophalen'
+  );
+  if (error) return null;
+  if (rows && rows.length) {
+    _settingsRowId = rows[0].id;
+    return rows[0].data || {};
+  }
+  // Geen rij — eerste opstart na SQL setup. Maak er één aan.
+  const { data: nieuw, error: insErr } = await _sbQuery(
+    _sb.from('app_settings').insert([{ data: {} }]).select(), 'Instellingen aanmaken'
+  );
+  if (insErr || !nieuw || !nieuw[0]) return null;
+  _settingsRowId = nieuw[0].id;
+  return {};
+}
+
+function _saveSettingsDB() {
+  if (!_settingsRowId || !_sb) return;
+  // Debounce: bij snel achter elkaar wijzigen wachten we 500ms
+  if (_settingsSaveTimer) clearTimeout(_settingsSaveTimer);
+  _settingsSaveTimer = setTimeout(() => {
+    _sbQuery(
+      _sb.from('app_settings').update({
+        data: data.settings,
+        updated_at: new Date().toISOString()
+      }).eq('id', _settingsRowId),
+      'Instellingen bijwerken'
+    ).then(({ error }) => {
+      if (error && error.message !== 'timeout') _toast('Instellingen-fout: ' + error.message);
+    });
+  }, 500);
+}
+
+// ============================================================
 // CALCULATIES + HOOFDGROEPEN + ONDERDELEN MAPPING & DB
 // ============================================================
 function _mapCalcHeaderFromDB(row) {
@@ -2776,7 +2818,20 @@ async function loadData() {
   } else {
     data.activeCalcId = data.calculaties[0]?.id || null;
   }
-  // Lazy-load body van active calc (zodat data.calc.* meteen werkt)
+  // 8. Fetch app settings from Supabase (gedeeld over apparaten)
+  const dbSettings = await _fetchSettingsFromDB();
+  if (dbSettings && Object.keys(dbSettings).length) {
+    data.settings = {
+      ...defaultData.settings,
+      ...dbSettings,
+      groepOpslagen: {
+        ...DEFAULT_GROEP_OPSLAGEN,
+        ...(dbSettings.groepOpslagen || {})
+      }
+    };
+  }
+
+  // 9. Lazy-load body van active calc (zodat data.calc.* meteen werkt)
   const activeCalc = data.calculaties.find(c => c.id === data.activeCalcId);
   if (activeCalc) await _loadCalcBody(activeCalc);
 }
@@ -5142,20 +5197,21 @@ function loadSettings() {
 }
 function updGroepOpslag(g, v, inputEl) {
   data.settings.groepOpslagen[g] = parseFloat(v) || 0;
-  saveData(); renderMaterialen(); renderSystemen(); renderTotals();
+  saveData(); _saveSettingsDB();
+  renderMaterialen(); renderSystemen(); renderTotals();
   if (inputEl) showSavedTick(inputEl);
 }
 function updSetting(field, inputEl) {
   const val = parseFloat(inputEl.value) || 0;
   data.settings[field] = val;
-  saveData();
+  saveData(); _saveSettingsDB();
   // Re-render everything that depends on settings
   renderMaterialen(); renderBewerkingen(); renderSystemen(); renderTotals(); renderDashboard();
   showSavedTick(inputEl);
 }
 function updSettingBool(field, inputEl) {
   data.settings[field] = inputEl.checked;
-  saveData();
+  saveData(); _saveSettingsDB();
   renderTotals(); renderDashboard();
   showSavedTick(inputEl);
 }
