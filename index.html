@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Schilders Calculatie · v3.0.0</title>
+<title>Schilders Calculatie</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -59,7 +59,7 @@
     flex-shrink: 0;
   }
   .brand-logo.large { height: 80px; width: 114px; }
-  .brand-logo.print { height: 50px; width: 71px; }
+  .brand-logo.print { height: 50px; width: 71px; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   h1 {
     font-weight: 700;
     font-size: 1.15rem;
@@ -1111,6 +1111,7 @@
     body > header, body > nav, body > main, body > footer, body > .modal-overlay { display: none !important; }
     body { background: #fff !important; padding: 0; margin: 0; }
     .print-only { display: block !important; }
+    .brand-logo, .brand-logo.print { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
 
     .print-only {
       font-family: 'Inter', sans-serif;
@@ -1258,12 +1259,12 @@
   <div class="brand">
     <div class="brand-logo"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.5.3 · Voorcalculatie</span>
+    <span class="subtitle" id="headerVersion">Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
     <div class="user-badge" id="userBadge" style="display:none;">
-      <button class="btn-secondary btn" onclick="lock()">🔒 Vergrendelen</button>
+      <button class="btn-secondary btn" onclick="logout()">🔒 Uitloggen</button>
     </div>
   </div>
 </header>
@@ -1283,8 +1284,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.5.3</h2>
-      <p>Bij elke bewerkingsregel binnen een calc-regel staat nu meteen achter de minuten een afgeleide uren-indicatie: zo zie je in één oogopslag dat "Repareren · 3 min" voor 80 m² neerkomt op 4,0 uur. Handig om bij de klant te kunnen tonen wat een normentijd in de praktijk betekent.</p>
+      <h2>Welkom bij v3.5.4</h2>
+      <p>Drie kleine fixes: het logo verschijnt nu ook in de geprinte versie van een calculatie, de vergrendelknop rechtsboven werkt weer (en heet voortaan Uitloggen, gekoppeld aan je Supabase-account), en alle versie-aanduidingen lopen nu vanuit één centrale plek mee — zo komt zo'n inconsistentie als "v3.0.0 op de print" niet meer voor.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1558,12 +1559,17 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.5.3 · Data via Supabase cloud</footer>
+<footer id="appFooter">Schilders Calculatie · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
 
 <script>
+// ============================================================
+// VERSIE — één plek voor alle UI-versie-displays
+// ============================================================
+const APP_VERSION = 'v3.5.4';
+
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
 // ============================================================
@@ -3379,7 +3385,7 @@ function printCalc() {
 
   // Footer
   html += `<div class="footer-block">
-    Schilders Calculatie · v2.4.1 · Geprint op ${datum}
+    Schilders Calculatie · ${APP_VERSION} · Geprint op ${datum}
   </div>`;
 
   document.getElementById('printArea').innerHTML = html;
@@ -5604,6 +5610,8 @@ function renderAll() {
 }
 
 document.getElementById('dateStamp').textContent = new Date().toLocaleDateString('nl-NL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+document.getElementById('headerVersion').textContent = APP_VERSION + ' · Voorcalculatie';
+document.getElementById('appFooter').textContent = 'Schilders Calculatie · ' + APP_VERSION + ' · Data via Supabase cloud';
 
 async function init() {
   // Maak Supabase client met Auth ingeschakeld
