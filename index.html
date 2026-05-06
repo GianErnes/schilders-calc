@@ -1258,7 +1258,7 @@
   <div class="brand">
     <div class="brand-logo"></div>
     <h1>Schilders Calculatie</h1>
-    <span class="subtitle">v3.5.2 · Voorcalculatie</span>
+    <span class="subtitle">v3.5.3 · Voorcalculatie</span>
   </div>
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
@@ -1283,8 +1283,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.5.2</h2>
-      <p>Huisstijl — het Ernes Schilders-logo verschijnt nu in de header, op het login-scherm en bovenaan elke geprinte calculatie. Mooi detail voor wanneer je een offerte met de klant erbij doorneemt.</p>
+      <h2>Welkom bij v3.5.3</h2>
+      <p>Bij elke bewerkingsregel binnen een calc-regel staat nu meteen achter de minuten een afgeleide uren-indicatie: zo zie je in één oogopslag dat "Repareren · 3 min" voor 80 m² neerkomt op 4,0 uur. Handig om bij de klant te kunnen tonen wat een normentijd in de praktijk betekent.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1558,7 +1558,7 @@
   </div>
 </div>
 
-<footer>Schilders Calculatie · v3.5.2 · Data via Supabase cloud</footer>
+<footer>Schilders Calculatie · v3.5.3 · Data via Supabase cloud</footer>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -2283,7 +2283,7 @@ function _mapOdFromDB(row) {
     naam:      row.naam || '',
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
-    regels:    [] // wordt later gevuld vanuit localStorage in v3.5.2
+    regels:    [] // wordt later gevuld vanuit localStorage in v3.5.3
   };
 }
 function _mapOdToDB(od, hgId) {
@@ -4303,6 +4303,7 @@ function renderRegel(hgId, odId, r) {
   // Build stappen-detail block (always visible)
   const stappenHtml = (r.stappen || []).map((st, i) => {
     const cs = calcSnapshotStep(st);
+    const stapUrenRegel = cs.uren * (r.hoeveelheid || 0); // uren voor deze stap binnen deze regel
     const matInfo = st.materiaalNaam
       ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid})</span>`
       : '<span style="color:var(--muted);">—</span>';
@@ -4313,7 +4314,7 @@ function renderRegel(hgId, odId, r) {
       <span class="regel-stap-num">${i+1}</span>
       <span class="regel-stap-naam">
         <strong>${st.bewerkingNaam}</strong>
-        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min</span>
+        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min<span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
       </span>
       <span class="regel-stap-mat">${matInfo}</span>
       <span class="regel-stap-pct">
@@ -4460,7 +4461,7 @@ async function delHg(id) {
   // FK CASCADE in DB pakt onderdelen + regels + stappen automatisch
   data.calc.hoofdgroepen = data.calc.hoofdgroepen.filter(x => x.id !== id);
   // Lokale meetstaat-rijen die naar verwijderde regels verwijzen worden niet opgeruimd
-  // (TIJDELIJK in v3.5.2; v3.5.2 lost dit op via DB cascade)
+  // (TIJDELIJK in v3.5.3; v3.5.3 lost dit op via DB cascade)
   _touchCalc(data.calc.id);
   renderCalcStructuur();
 }
