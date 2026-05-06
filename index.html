@@ -1284,8 +1284,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.5.5</h2>
-      <p>Bugfix in de print-versie: de kolom Verfsysteem in de regel-tabel toonde "verwijderd" voor regels uit geïmporteerde calculaties. De print gebruikt nu de bevroren snapshot-naam — dezelfde data waar de uren- en kostenberekeningen op draaien — in plaats van een live lookup naar de bibliotheek.</p>
+      <h2>Welkom bij v3.6.0</h2>
+      <p>Werkbon — naast de gebruikelijke calculatie-PDF zit er nu een tweede knop "📋 Werkbon printen" in de Calculatie-tab. Die genereert een afdruk zonder prijzen, materialen of uren — geordend per gevel/ruimte met regelnaam, verfsysteem, hoeveelheid en alleen de bewerkingsstappen + percentages. Bedoeld om mee te geven aan de schilders op locatie zodat ze direct zien wat de bedoeling is.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1319,6 +1319,7 @@
       <div class="panel-actions">
         <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span>
         <button class="btn-secondary btn" onclick="printCalc()">📄 Calculatie als PDF</button>
+        <button class="btn-secondary btn" onclick="printWerkbon()">📋 Werkbon printen</button>
         <button class="btn-secondary btn" onclick="newCalc()">+ Nieuwe</button>
       </div>
     </div>
@@ -1568,7 +1569,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.5.5';
+const APP_VERSION = 'v3.6.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3389,6 +3390,81 @@ function printCalc() {
 
   document.getElementById('printArea').innerHTML = html;
   // Trigger print
+  window.print();
+}
+
+// ============================================================
+// WERKBON — print versie voor de schilders op de werkvloer
+// (geen prijzen, geen materialen, geen uren — alleen wat ze moeten doen)
+// ============================================================
+function printWerkbon() {
+  const c = data.calc;
+  if (!c) return;
+  const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+
+  let html = '';
+
+  // Header — alleen klant + werkgegevens, geen "Voorcalculatie · Intern document"
+  html += `<div class="header-block">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <div class="brand-logo print"></div>
+      <div>
+        <h1>Werkbon</h1>
+        <div class="meta">${c.naam || ''}${c.klant ? ' · ' + c.klant : ''}</div>
+      </div>
+    </div>
+    <div style="text-align: right; font-size: 9pt;">
+      <div><strong>${datum}</strong></div>
+    </div>
+  </div>`;
+
+  // Loop hoofdgroepen → onderdelen → regels
+  c.hoofdgroepen.forEach(hg => {
+    if (!hg.onderdelen || !hg.onderdelen.length) return;
+    const heeftRegels = hg.onderdelen.some(od => od.regels && od.regels.length);
+    if (!heeftRegels) return;
+    html += `<h2>${hg.naam}</h2>`;
+    hg.onderdelen.forEach(od => {
+      if (!od.regels || !od.regels.length) return;
+      html += `<h3>${od.naam}</h3>`;
+      od.regels.forEach(r => {
+        // Sub-titel: regelnaam — verfsysteemnaam, met hoeveelheid eronder
+        const regelLabel = (r.naam && r.naam.trim()) ? r.naam : '—';
+        html += `<div style="margin-top:8pt; margin-bottom:3pt;">
+          <strong style="font-size:10.5pt;">${regelLabel}</strong>
+          <span style="color:#666;"> — ${r.systeemNaam || '<em>onbekend systeem</em>'}</span>
+        </div>`;
+        html += `<div style="font-size:10pt; color:#333; margin-bottom:4pt;">
+          <strong>${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</strong>${r.toeslag ? ` · ${r.toeslag}% staat-toeslag` : ''}
+        </div>`;
+        // Tabel met # | bewerking | %
+        if (!r.stappen || !r.stappen.length) {
+          html += `<div style="font-style:italic; color:#888;">Geen stappen.</div>`;
+        } else {
+          html += `<table style="margin-bottom:6pt;"><thead><tr>
+            <th style="width:25pt;">#</th>
+            <th>Bewerking</th>
+            <th class="right" style="width:50pt;">%</th>
+          </tr></thead><tbody>`;
+          r.stappen.forEach((st, i) => {
+            html += `<tr>
+              <td>${i+1}</td>
+              <td>${st.bewerkingNaam || '—'}</td>
+              <td class="num right">${fmt(st.percentage != null ? st.percentage : 100)}%</td>
+            </tr>`;
+          });
+          html += `</tbody></table>`;
+        }
+      });
+    });
+  });
+
+  // Footer
+  html += `<div class="footer-block">
+    Werkbon · ${c.naam || ''}${c.klant ? ' · ' + c.klant : ''} · ${APP_VERSION} · ${datum}
+  </div>`;
+
+  document.getElementById('printArea').innerHTML = html;
   window.print();
 }
 // ============================================================
