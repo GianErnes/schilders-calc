@@ -1284,8 +1284,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.5.4</h2>
-      <p>Drie kleine fixes: het logo verschijnt nu ook in de geprinte versie van een calculatie, de vergrendelknop rechtsboven werkt weer (en heet voortaan Uitloggen, gekoppeld aan je Supabase-account), en alle versie-aanduidingen lopen nu vanuit één centrale plek mee — zo komt zo'n inconsistentie als "v3.0.0 op de print" niet meer voor.</p>
+      <h2>Welkom bij v3.5.5</h2>
+      <p>Bugfix in de print-versie: de kolom Verfsysteem in de regel-tabel toonde "verwijderd" voor regels uit geïmporteerde calculaties. De print gebruikt nu de bevroren snapshot-naam — dezelfde data waar de uren- en kostenberekeningen op draaien — in plaats van een live lookup naar de bibliotheek.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1568,7 +1568,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.5.4';
+const APP_VERSION = 'v3.5.5';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3219,12 +3219,11 @@ function printCalc() {
             <th class="right">Verkoop</th>
           </tr></thead><tbody>`;
           od.regels.forEach(r => {
-            const s = data.systemen.find(x => x.id === r.systeemId);
             const rt = calcRegelTotalen(r);
             html += `<tr>
               <td>${r.naam||'—'}</td>
-              <td>${s ? s.naam : '<em>verwijderd</em>'}</td>
-              <td class="num right">${fmt(r.hoeveelheid||0)} ${s?s.eenheid:''}</td>
+              <td>${r.systeemNaam || '<em>onbekend</em>'}</td>
+              <td class="num right">${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</td>
               <td class="num right">${r.toeslag||0}%</td>
               <td class="num right">${fmt(rt.uren)} u</td>
               <td class="num right">${eur(rt.matVerkoop)}</td>
