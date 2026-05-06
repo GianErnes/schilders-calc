@@ -1284,8 +1284,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.6.2</h2>
-      <p>Settings naar Supabase — uurtarieven, opslagen en materiaalopslag per groep leven nu in de cloud, niet meer in de browser. Een wijziging op de iPad ziet je laptop direct, en browser-cache wissen reset niets meer. Eerste keer na deze update: controleer of je waarden kloppen (anders even opnieuw invoeren — dan staan ze definitief).</p>
+      <h2>Welkom bij v3.6.3</h2>
+      <p>Cleanup — de twee migratie-importknoppen voor v2.4.1 zijn uit Settings gehaald nu de cloud-data definitief is. Alleen de exportknop blijft staan voor periodieke back-ups.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1443,12 +1443,8 @@
     <div class="settings-section">
       <h3>Data Beheer</h3>
       <button class="btn-secondary btn" onclick="exportData()">⇩ Exporteer calculaties (JSON)</button>
-      <button class="btn-secondary btn" onclick="document.getElementById('importLibFile').click()">⇧ Importeer bibliotheek uit v2.4.1</button>
-      <input type="file" id="importLibFile" accept=".json" style="display:none" onchange="importLibFromV241(event)">
-      <button class="btn-secondary btn" onclick="document.getElementById('importCalcFile').click()">⇧ Importeer calculaties uit v2.4.1</button>
-      <input type="file" id="importCalcFile" accept=".json" style="display:none" onchange="importCalcsFromV241(event)">
       <button class="btn-danger btn" onclick="logout()" style="margin-left:0.5rem;">⎋ Uitloggen</button>
-      <p style="color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; font-style: italic;">De bibliotheek-import is bedoeld voor de eenmalige migratie van je v2.4.1 data (materialen, ondergronden, bewerkingen, staart-templates en verfsystemen). Calculaties komen later.</p>
+      <p style="color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; font-style: italic;">Exporteer een JSON-back-up van al je calculaties. De migratie-importers uit v2.4.1 zijn weggehaald nu de cloud-data definitief is.</p>
     </div>
   </section>
 
@@ -1569,7 +1565,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.6.2';
+const APP_VERSION = 'v3.6.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
