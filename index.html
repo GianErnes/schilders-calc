@@ -1284,8 +1284,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.6.0</h2>
-      <p>Werkbon — naast de gebruikelijke calculatie-PDF zit er nu een tweede knop "📋 Werkbon printen" in de Calculatie-tab. Die genereert een afdruk zonder prijzen, materialen of uren — geordend per gevel/ruimte met regelnaam, verfsysteem, hoeveelheid en alleen de bewerkingsstappen + percentages. Bedoeld om mee te geven aan de schilders op locatie zodat ze direct zien wat de bedoeling is.</p>
+      <h2>Welkom bij v3.6.1</h2>
+      <p>Transparantie van opslagen — bij elke algemene opslag staat nu zowel in Settings als in de PDF (Calculatie-opbouw én Gebruikte instellingen) eenduidig vermeld waarover het percentage berekend wordt. Geen geheugenwerk meer; ook fijn voor klanten die vragen hoe een offerte tot stand komt.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1416,11 +1416,11 @@
     <div class="settings-section">
       <h3>Algemene opslagen (%)</h3>
       <div class="form-grid">
-        <div><label>Klein materiaal</label><input type="number" id="setKleinMat" step="0.5" onchange="updSetting('kleinMat', this)"></div>
-        <div><label>Afval / Milieu</label><input type="number" id="setAfval" step="0.5" onchange="updSetting('afval', this)"></div>
-        <div><label>ARBO / Veiligheid</label><input type="number" id="setArbo" step="0.5" onchange="updSetting('arbo', this)"></div>
-        <div><label>Risico</label><input type="number" id="setWinst" step="0.5" onchange="updSetting('winst', this)"></div>
-        <div><label>BTW</label><input type="number" id="setBtw" step="1" onchange="updSetting('btw', this)"></div>
+        <div><label>Klein materiaal</label><input type="number" id="setKleinMat" step="0.5" onchange="updSetting('kleinMat', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">over materiaal-verkoopprijs</div></div>
+        <div><label>Afval / Milieu</label><input type="number" id="setAfval" step="0.5" onchange="updSetting('afval', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">over arbeid + materiaal-verkoopprijs</div></div>
+        <div><label>ARBO / Veiligheid</label><input type="number" id="setArbo" step="0.5" onchange="updSetting('arbo', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">over arbeid</div></div>
+        <div><label>Risico</label><input type="number" id="setWinst" step="0.5" onchange="updSetting('winst', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">over directe kosten (arbeid + materiaal + reis + staart + opslagen)</div></div>
+        <div><label>BTW</label><input type="number" id="setBtw" step="1" onchange="updSetting('btw', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">over excl. BTW totaal (directe + risico)</div></div>
       </div>
       <div style="margin-top: 1rem; padding: 0.85rem; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius);">
         <label style="display: flex; align-items: center; gap: 0.6rem; margin: 0; font-size: 0.85rem; cursor: pointer;">
@@ -1569,7 +1569,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.6.0';
+const APP_VERSION = 'v3.6.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3288,15 +3288,15 @@ function printCalc() {
       <tr><td>Totaal uren</td><td class="num right">${fmt(t.uren)} u</td></tr>
       ${arbeidRow}
       <tr><td>Materiaal verkoop</td><td class="num right">${eur(t.matVerkoop)}</td></tr>
-      <tr><td>&nbsp;&nbsp;+ Klein materiaal (${sett.kleinMat}%)</td><td class="num right">${eur(kleinMat)}</td></tr>
-      <tr><td>&nbsp;&nbsp;+ Afval / milieu (${sett.afval}%)</td><td class="num right">${eur(afval)}</td></tr>
-      <tr><td>&nbsp;&nbsp;+ ARBO (${sett.arbo}%)</td><td class="num right">${eur(arbo)}</td></tr>
+      <tr><td>&nbsp;&nbsp;+ Klein materiaal (${sett.kleinMat}% over materiaal)</td><td class="num right">${eur(kleinMat)}</td></tr>
+      <tr><td>&nbsp;&nbsp;+ Afval / milieu (${sett.afval}% over arbeid + materiaal)</td><td class="num right">${eur(afval)}</td></tr>
+      <tr><td>&nbsp;&nbsp;+ ARBO (${sett.arbo}% over arbeid)</td><td class="num right">${eur(arbo)}</td></tr>
       <tr><td>Reis (${fmt(reisUren)} u + ${fmt(dagenFactureerbaar*reisAfstand*2)} km)</td><td class="num right">${eur(reisTotaal)}</td></tr>
       <tr><td>Staartkosten</td><td class="num right">${eur(staartTotaal)}</td></tr>
       <tr class="totaal-row"><td><strong>Directe kosten</strong></td><td class="num right">${eur(directe)}</td></tr>
-      <tr><td>+ Risico (${sett.winst}%)</td><td class="num right">${eur(winstBedrag)}</td></tr>
+      <tr><td>+ Risico (${sett.winst}% over directe kosten)</td><td class="num right">${eur(winstBedrag)}</td></tr>
       <tr class="totaal-row"><td><strong>Excl. BTW</strong></td><td class="num right">${eur(exBtw)}</td></tr>
-      <tr><td>+ BTW (${sett.btw}%)</td><td class="num right">${eur(btwBedrag)}</td></tr>
+      <tr><td>+ BTW (${sett.btw}% over excl. BTW)</td><td class="num right">${eur(btwBedrag)}</td></tr>
       <tr class="grand-row"><td><strong>Totaal incl. BTW</strong></td><td class="num right"><strong>${eur(totaal)}</strong></td></tr>
     </tbody></table>
   </div>`;
@@ -3326,11 +3326,11 @@ function printCalc() {
     </tbody></table>
     <h3>Opslagen (%)</h3>
     <table><tbody>
-      <tr><td>Klein materiaal</td><td class="num right">${sett.kleinMat}%</td></tr>
-      <tr><td>Afval / Milieu</td><td class="num right">${sett.afval}%</td></tr>
-      <tr><td>ARBO / Veiligheid</td><td class="num right">${sett.arbo}%</td></tr>
-      <tr><td>Risico</td><td class="num right">${sett.winst}%</td></tr>
-      <tr><td>BTW</td><td class="num right">${sett.btw}%</td></tr>
+      <tr><td>Klein materiaal</td><td class="num right">${sett.kleinMat}%</td><td style="color:#666; font-size:9pt;">over materiaal-verkoopprijs</td></tr>
+      <tr><td>Afval / Milieu</td><td class="num right">${sett.afval}%</td><td style="color:#666; font-size:9pt;">over arbeid + materiaal-verkoopprijs</td></tr>
+      <tr><td>ARBO / Veiligheid</td><td class="num right">${sett.arbo}%</td><td style="color:#666; font-size:9pt;">over arbeid</td></tr>
+      <tr><td>Risico</td><td class="num right">${sett.winst}%</td><td style="color:#666; font-size:9pt;">over directe kosten</td></tr>
+      <tr><td>BTW</td><td class="num right">${sett.btw}%</td><td style="color:#666; font-size:9pt;">over excl. BTW totaal</td></tr>
     </tbody></table>
     <h3>Materiaalopslag per groep</h3>
     <table><tbody>`;
