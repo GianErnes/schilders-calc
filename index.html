@@ -1284,8 +1284,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.6.3</h2>
-      <p>Cleanup — de twee migratie-importknoppen voor v2.4.1 zijn uit Settings gehaald nu de cloud-data definitief is. Alleen de exportknop blijft staan voor periodieke back-ups.</p>
+      <h2>Welkom bij v3.6.4</h2>
+      <p>Verfsystemen — er is nu een notities-veld bij elk systeem in de bibliotheek waarin je kunt vastleggen waar de normen op gebaseerd zijn (bv. nacalculatie van een specifiek project, gemiddelde gevels in goede staat, of bij welk type werk dit systeem past). De notities verschijnen in de bibliotheek-tab als grijze tekst onder de naam, zodat je in één blik ziet welk systeem te kiezen — niet in de calculatie zelf, want daar voegen ze niets toe.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1467,6 +1467,10 @@
           </select>
         </div>
       </div>
+      <div style="margin-bottom: 1rem;">
+        <label>Notities <span style="color:var(--muted); font-weight:400; font-size:0.7rem;">— bron van de normen, bv. uit nacalculatie van een project, of bij welk type werk dit systeem hoort. Verschijnt niet in de calculatie.</span></label>
+        <textarea id="sysNotities" rows="2" placeholder="Bijvoorbeeld: gebaseerd op nacalculatie Göttgens 2026 — gemiddelde gevels in goede staat" style="width:100%; font-family: inherit; font-size: 0.85rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); resize: vertical;"></textarea>
+      </div>
       <div class="step-headers">
         <span>#</span><span>Bewerking</span><span style="text-align:right;">Min</span><span>Materiaal</span><span>Verbruik</span><span style="text-align:right;">%</span><span style="text-align:right;">€/eenh</span><span></span>
       </div>
@@ -1565,7 +1569,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.6.3';
+const APP_VERSION = 'v3.6.4';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -1666,6 +1670,7 @@ const ls_get = () => { try { return localStorage.getItem(STORAGE_KEY); } catch(e
 const ls_set = v => { try { localStorage.setItem(STORAGE_KEY, v); } catch(e) { _memStore = v; } };
 const uid = (p='x') => p + Date.now() + Math.random().toString(36).slice(2,6);
 const fmt = n => new Intl.NumberFormat('nl-NL', {minimumFractionDigits:2, maximumFractionDigits:2}).format(n||0);
+const _escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const fmt0 = n => new Intl.NumberFormat('nl-NL', {maximumFractionDigits:0}).format(n||0);
 const fmt1 = n => new Intl.NumberFormat('nl-NL', {minimumFractionDigits:1, maximumFractionDigits:1}).format(n||0);
 const fmt3 = n => new Intl.NumberFormat('nl-NL', {minimumFractionDigits:3, maximumFractionDigits:3}).format(n||0);
@@ -2130,6 +2135,7 @@ function _mapSysFromDB(row, stappen) {
     naam:         row.naam      || '',
     ondergrondId: row.ondergrond_id || '',
     eenheid:      row.eenheid   || 'm²',
+    notities:     row.notities  || '',
     stappen:      (stappen || []).map(_mapStapFromDB)
   };
 }
@@ -2137,7 +2143,8 @@ function _mapSysToDB(s) {
   return {
     naam:          s.naam      || '',
     ondergrond_id: s.ondergrondId || null,
-    eenheid:       s.eenheid   || 'm²'
+    eenheid:       s.eenheid   || 'm²',
+    notities:      s.notities  || ''
   };
 }
 function _mapStapFromDB(row) {
@@ -3736,6 +3743,7 @@ function renderSystemen() {
         <span class="ondergrond">${ond ? ond.naam : '?'} · ${s.eenheid}</span>
         <span class="locatie-tag ${loc}">${loc}</span>
       </div>
+      ${s.notities ? `<div style="margin: 0.4rem 0 0.6rem; padding: 0.4rem 0.6rem; background: var(--bg); border-left: 3px solid var(--accent); font-size: 0.75rem; color: var(--text); font-style: italic; white-space: pre-wrap;">${_escapeHtml(s.notities)}</div>` : ''}
       <ol>${stappenHtml}</ol>
       <div class="system-totals">
         <div class="syst-row"><span class="syst-label">Min</span> <span class="syst-val">${fmt(calc.minuten)} /${s.eenheid}</span> <span class="syst-sub">· ${fmt(calc.uren)} u</span></div>
@@ -3774,6 +3782,7 @@ function openSystemModal() {
   document.getElementById('sysOnder').innerHTML = data.ondergronden.map(o => `<option value="${o.id}">${o.naam}</option>`).join('');
   document.getElementById('sysOnder').value = data.ondergronden[0]?.id || '';
   document.getElementById('sysEenheid').value = 'm²';
+  document.getElementById('sysNotities').value = '';
   refreshModalBewSelect();
   renderModalSteps();
   document.getElementById('systemModal').classList.add('active');
@@ -3789,6 +3798,7 @@ function editSystem(id) {
   document.getElementById('sysOnder').innerHTML = data.ondergronden.map(o => `<option value="${o.id}">${o.naam}</option>`).join('');
   document.getElementById('sysOnder').value = s.ondergrondId;
   document.getElementById('sysEenheid').value = s.eenheid;
+  document.getElementById('sysNotities').value = s.notities || '';
   refreshModalBewSelect();
   renderModalSteps();
   document.getElementById('systemModal').classList.add('active');
@@ -3875,6 +3885,7 @@ function _systemFromModal() {
     naam: document.getElementById('sysNaam').value.trim(),
     ondergrondId: document.getElementById('sysOnder').value,
     eenheid: document.getElementById('sysEenheid').value,
+    notities: document.getElementById('sysNotities').value,
     stappen: modalSteps
   };
 }
