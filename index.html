@@ -1284,8 +1284,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.6.4</h2>
-      <p>Verfsystemen — er is nu een notities-veld bij elk systeem in de bibliotheek waarin je kunt vastleggen waar de normen op gebaseerd zijn (bv. nacalculatie van een specifiek project, gemiddelde gevels in goede staat, of bij welk type werk dit systeem past). De notities verschijnen in de bibliotheek-tab als grijze tekst onder de naam, zodat je in één blik ziet welk systeem te kiezen — niet in de calculatie zelf, want daar voegen ze niets toe.</p>
+      <h2>Welkom bij v3.6.5</h2>
+      <p>Bugfix bij verfsysteem-notities (v3.6.4): de notities werden wél in de database bewaard, maar verdwenen uit het in-memory beeld na opslaan, waardoor ze pas weer zichtbaar werden bij een page-refresh. Nu blijven ze direct staan in de bibliotheek-tegel zoals bedoeld.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1569,7 +1569,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.6.4';
+const APP_VERSION = 'v3.6.5';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2226,6 +2226,7 @@ async function _updateVerfsysteemDB(s) {
   // Build refreshed system from existing parent fields + fresh stappen
   return {
     id: s.id, naam: s.naam, ondergrondId: s.ondergrondId, eenheid: s.eenheid,
+    notities: s.notities || '',
     stappen: (stappenRes.data || []).map(_mapStapFromDB)
   };
 }
