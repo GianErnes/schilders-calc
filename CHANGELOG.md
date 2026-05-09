@@ -1,5 +1,11 @@
 # Schilders Calculatie — Changelog
 
+## v3.7.3 — Verfsysteem-modal transparanter
+- Verfsysteem-bewerkingen modal toont nu ook €/eenheid achter het verbruik: bv. `0,005 L · € 0,07/m²`. Consistent met de calc-stap-regel uit v3.7.2.
+- Kolom-totaal (€/eenh) gelabeld met `/m²` of `/m¹` voor duidelijkheid.
+- Stap-totaal nu op verkoopprijs-basis (`cs.matVerkoop` i.p.v. `cs.matInkoop`), consistent met v3.7.2 en met het uurloon.
+- Doel: tijdens het tunen van een verfsysteem direct zien wat materiaalkosten per stap zijn — zonder via een calculatie te hoeven gaan.
+
 ## v3.7.2 — Stap-regel transparanter
 - Materiaal-haakjes tonen nu ook verkoopprijs per eenheid: bv. `Verfreiniger (0,006 L · € 0,25/m²)`. Inkoop × verbruik × percentage × (1 + groepsopslag).
 - Stap-totaal rechts (`€ X,XX`) is voortaan gelabeld met `/m²` of `/m¹` zodat duidelijk is dat het per eenheid is, niet voor de hele regel.
