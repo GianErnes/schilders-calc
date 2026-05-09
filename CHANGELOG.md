@@ -1,5 +1,15 @@
 # Schilders Calculatie — Changelog
 
+## v3.7.1 — Status-render fix
+- Bug verholpen: status-wijziging in dashboard of vergrendel-banner werd pas na verversen zichtbaar.
+- Oorzaak: `setCalcStatus` riep een niet-bestaande `renderCalc()` aan; vervangen door `renderCalcStructuur()`.
+
+## v3.7.0 — Calculatie-vergrendeling
+<!-- nog in te vullen -->
+
+## v3.6.x
+<!-- nog in te vullen -->
+
 ## v3.5.1 (cleanup)
 - Dood code verwijderd (`_bodyLS`/`_saveBody`/`_delBodyLS` stubs, `_origSaveData`, oude incode-constanten).
 - Geen functionele wijziging.
