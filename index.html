@@ -132,6 +132,40 @@
     letter-spacing: -0.01em;
   }
   .panel-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+  .calc-lock-banner {
+    background: #fff7e6;
+    border: 1px solid #f5c64d;
+    border-left: 4px solid #d48806;
+    padding: 0.7rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    color: #874d00;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .calc-lock-banner strong { color: #5a3500; }
+  /* In een gelockte calc disable je alle inputs/selects/buttons binnen #calculatie,
+     met uitzondering van de status-selector zelf en de print-knoppen */
+  #calculatie.is-locked input,
+  #calculatie.is-locked select,
+  #calculatie.is-locked textarea,
+  #calculatie.is-locked button:not(.lock-allowed) {
+    pointer-events: none;
+    opacity: 0.55;
+    background: var(--bg) !important;
+    cursor: not-allowed;
+  }
+  #calculatie.is-locked input[type="number"],
+  #calculatie.is-locked input[type="text"] {
+    border-color: var(--border) !important;
+  }
+  #calculatie.is-locked .calc-lock-banner button {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+  }
 
   /* BUTTONS */
   .btn {
@@ -1284,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.6.5</h2>
-      <p>Bugfix bij verfsysteem-notities (v3.6.4): de notities werden wél in de database bewaard, maar verdwenen uit het in-memory beeld na opslaan, waardoor ze pas weer zichtbaar werden bij een page-refresh. Nu blijven ze direct staan in de bibliotheek-tegel zoals bedoeld.</p>
+      <h2>Welkom bij v3.7.0</h2>
+      <p>Calculatie-vergrendeling — zodra je een calculatie op status <em>Gereed</em>, <em>Verzonden</em>, <em>Geaccepteerd</em> of <em>Verloren</em> zet, wordt de hele calculatie bevroren: de UI is read-only én alle instellingen die op dat moment golden (uurtarieven, opslagen, materiaalopslag per groep, volle dagen, afrondingsdrempel) worden in een snapshot vastgepakt. Verhoog je later je uurtarief, dan blijft deze offerte gewoon op de oude waarden staan. Zet status terug op <em>Concept</em> om weer te kunnen wijzigen — dan komen de live tarieven terug. Bovenaan een vergrendelde calc zie je een duidelijke banner met een knop om weer te ontgrendelen.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1318,11 +1352,12 @@
       <h2>Calculatie</h2>
       <div class="panel-actions">
         <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span>
-        <button class="btn-secondary btn" onclick="printCalc()">📄 Calculatie als PDF</button>
-        <button class="btn-secondary btn" onclick="printWerkbon()">📋 Werkbon printen</button>
-        <button class="btn-secondary btn" onclick="newCalc()">+ Nieuwe</button>
+        <button class="btn-secondary btn lock-allowed" onclick="printCalc()">📄 Calculatie als PDF</button>
+        <button class="btn-secondary btn lock-allowed" onclick="printWerkbon()">📋 Werkbon printen</button>
+        <button class="btn-secondary btn lock-allowed" onclick="newCalc()">+ Nieuwe</button>
       </div>
     </div>
+    <div id="calcLockBanner"></div>
     <div class="form-grid">
       <div><label>Projectnaam</label><input type="text" id="calcProject" placeholder="bv. Kerkstraat 12"></div>
       <div><label>Klant</label><input type="text" id="calcKlant"></div>
@@ -1569,7 +1604,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.6.5';
+const APP_VERSION = 'v3.7.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2294,6 +2329,7 @@ function _mapCalcHeaderFromDB(row) {
     reis:                parseFloat(row.reis) || 0,
     volleDagenOverride:  row.volle_dagen_override,
     notities:            row.notities || '',
+    settingsSnapshot:    row.settings_snapshot || null,
     aangemaakt:          row.aangemaakt || new Date().toISOString(),
     gewijzigd:           row.gewijzigd  || new Date().toISOString(),
     // body wordt later toegevoegd door _loadCalcBody
@@ -2310,7 +2346,8 @@ function _mapCalcHeaderToDB(c) {
     uur_dag: c.uurDag != null ? c.uurDag : 8,
     reis: c.reis != null ? c.reis : 0,
     volle_dagen_override: c.volleDagenOverride != null ? c.volleDagenOverride : null,
-    notities: c.notities || ''
+    notities: c.notities || '',
+    settings_snapshot: c.settingsSnapshot || null
   };
 }
 function _mapHgFromDB(row, ods) {
@@ -3171,7 +3208,7 @@ async function dupBew(id) {
 function printCalc() {
   const c = data.calc;
   if (!c) return;
-  const sett = data.settings;
+  const sett = _activeSettings(c);
   const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
 
   const t = calcProjectTotalen();
@@ -3598,7 +3635,7 @@ function calcSnapshotStep(stap) {
   let matInkoop = 0, matVerkoop = 0;
   if (stap.materiaalNaam) {
     matInkoop = (stap.materiaalPrijs || 0) * (stap.verbruik || 0) * pct;
-    const opslag = data.settings.groepOpslagen[stap.materiaalGroep] || 0;
+    const opslag = (_S().groepOpslagen || {})[stap.materiaalGroep] || 0;
     matVerkoop = matInkoop * (1 + opslag/100);
   }
   return { uren, minuten, matInkoop, matVerkoop };
@@ -3653,8 +3690,8 @@ function calcRegelTotalen(r) {
     minuten += c.minuten; matInkoop += c.matInkoop; matVerkoop += c.matVerkoop;
   });
   const uren = minuten / 60;
-  const arbeid = uren * (data.settings.uurloon || 0);
-  const sett = data.settings;
+  const sett = _S();
+  const arbeid = uren * (sett.uurloon || 0);
   const kleinMat = matVerkoop * (sett.kleinMat||0)/100;
   const afval = (arbeid + matVerkoop) * (sett.afval||0)/100;
   const arbo = arbeid * (sett.arbo||0)/100;
@@ -3698,7 +3735,7 @@ function _useVolleDagen() {
   if (cOverride === true) return true;
   if (cOverride === false) return false;
   // null/undefined: use global setting
-  return data.settings.volleDagen !== false; // default true
+  return _S().volleDagen !== false; // default true
 }
 function _calcDaysFactureerbaar() {
   const d = _calcDays();
@@ -3707,7 +3744,7 @@ function _calcDaysFactureerbaar() {
   // Onder 1 hele dag werk: altijd 1 dag factureren (je gaat hoe dan ook minstens 1 dag op locatie)
   if (d < 1) return 1;
   // Drempel: vanaf 1 dag — alleen naar boven afronden als overschot ≥ drempel
-  const drempel = data.settings.afrondingsDrempel ?? 0.6;
+  const drempel = _S().afrondingsDrempel ?? 0.6;
   const heel = Math.floor(d);
   // Round overschot to 2 decimals to avoid floating-point comparison issues
   const overschot = Math.round((d - heel) * 100) / 100;
@@ -4394,6 +4431,7 @@ function renderCalcStructuur() {
   }
   renderStaartList();
   renderTotals();
+  _applyCalcLockUI();
 }
 function renderHoofdgroep(hg) {
   const t = calcHoofdgroepTotalen(hg);
@@ -4452,7 +4490,7 @@ function renderRegel(hgId, odId, r) {
       ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid})</span>`
       : '<span style="color:var(--muted);">—</span>';
     const matKost = cs.matInkoop;
-    const arbeidKost = cs.uren * (data.settings.uurloon || 0);
+    const arbeidKost = cs.uren * (_S().uurloon || 0);
     const totaal = matKost + arbeidKost;
     return `<div class="regel-stap">
       <span class="regel-stap-num">${i+1}</span>
@@ -4871,12 +4909,69 @@ async function dupCalc(id) {
   data.calculaties.unshift(fresh);
   renderDashboard();
 }
+// ============================================================
+// LOCK / SETTINGS-SNAPSHOT — gereed/verzonden/etc. bevriezen instellingen
+// ============================================================
+function _isCalcLocked(c) {
+  if (!c) return false;
+  return c.status && c.status !== 'concept';
+}
+// Gebruik snapshot waar aanwezig, anders live settings.
+function _activeSettings(c) {
+  if (c && c.settingsSnapshot) return c.settingsSnapshot;
+  return data.settings;
+}
+// Korte helper: settings van de actieve calc (snapshot indien gelockt)
+function _S() {
+  return _activeSettings(data.calc);
+}
+
+// Pas lock-state op de calc-tab toe (banner + read-only state)
+function _applyCalcLockUI() {
+  const panel = document.getElementById('calculatie');
+  const banner = document.getElementById('calcLockBanner');
+  if (!panel || !banner) return;
+  const c = data.calc;
+  const locked = _isCalcLocked(c);
+  panel.classList.toggle('is-locked', locked);
+  if (!locked) { banner.innerHTML = ''; return; }
+  const STATUS_LABELS = { gereed:'Gereed', verzonden:'Verzonden', geaccepteerd:'Geaccepteerd', verloren:'Verloren' };
+  const lbl = STATUS_LABELS[c.status] || c.status;
+  banner.innerHTML = `<div class="calc-lock-banner">
+    <span style="font-size:1.3rem;">🔒</span>
+    <div style="flex:1;">
+      <strong>Vergrendeld — status is ${lbl}.</strong>
+      Deze calculatie is bevroren met de instellingen die golden op moment van vergrendelen.
+      Wijzig je later je tarieven of opslagen, dan blijft deze offerte op de oude waarden staan.
+      Zet status op <em>Concept</em> om aan te passen.
+    </div>
+    <button class="btn-secondary btn" style="font-size:0.8rem;" onclick="setCalcStatus('${c.id}', 'concept')">Naar concept</button>
+  </div>`;
+}
+
 async function setCalcStatus(id, status) {
   const c = data.calculaties.find(x => x.id === id);
   if (!c) return;
+  const wasLocked = _isCalcLocked(c);
   c.status = status;
+  const isNowLocked = _isCalcLocked(c);
+
+  if (isNowLocked && !c.settingsSnapshot) {
+    // Bevries alle huidige settings — diep gekopieerd
+    c.settingsSnapshot = JSON.parse(JSON.stringify(data.settings));
+  } else if (!isNowLocked && wasLocked) {
+    // Terug naar concept: snapshot weg, weer met live tarieven
+    c.settingsSnapshot = null;
+  }
+
   _updateCalcDB(c);
   renderDashboard();
+  // Als deze calc actief is, hertekent UI met read-only state
+  if (data.calc && data.calc.id === id) {
+    data.calc.status = status;
+    data.calc.settingsSnapshot = c.settingsSnapshot;
+    renderCalc();
+  }
 }
 
 // header form binding — change-event (op blur) + DB-update voor cloud
@@ -5075,7 +5170,7 @@ function renderTotals() {
   // Eerst meetstaat-hoeveelheden syncen — dan kloppen alle berekeningen
   _syncMeetstaatHoeveelheden();
   const t = calcProjectTotalen();
-  const sett = data.settings;
+  const sett = _S();
   const arbeidWerkelijk = t.arbeid;
   const matVerkoop = t.matVerkoop;
   const reisAfstand = data.calc.reis || 0;
