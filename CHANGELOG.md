@@ -5,10 +5,22 @@
 - Oorzaak: `setCalcStatus` riep een niet-bestaande `renderCalc()` aan; vervangen door `renderCalcStructuur()`.
 
 ## v3.7.0 — Calculatie-vergrendeling
-<!-- nog in te vullen -->
+- Status-veld per calculatie: `concept` | `gereed` | `verzonden` | `geaccepteerd` | `verloren`.
+- Niet-concept = vergrendeld: velden read-only via `is-locked` CSS-klasse, banner bovenaan met "Naar concept"-knop.
+- Settings-snapshot bij vergrendelen: `data.settings` wordt diep gekopieerd naar `calc.settingsSnapshot` (kolom `settings_snapshot`). Rekenmodel pakt snapshot via `_activeSettings()` / `_S()`.
+- Terug naar concept gooit snapshot weg → calc rekent weer met live tarieven.
+- Status-dropdown met kleurcodes in dashboard-archief.
+- Print-knoppen blijven werken bij vergrendeling via `lock-allowed` klasse.
 
-## v3.6.x
-<!-- nog in te vullen -->
+## v3.6.x — Tussenversies (detailhistorie verloren)
+Tussen v3.5.1 en v3.7.0 zijn meerdere kleinere wijzigingen doorgevoerd waarvan de
+exacte versienummering niet meer reconstrueerbaar is. Op basis van code-inspectie
+bevat deze reeks in elk geval:
+- **Notities & taken paneel** — inklapbaar paneel boven calc-structuur, met samenvattings-balk (open taken / notitie-indicator). Collapse-state per calc onthouden in geheugen.
+- **Werkbon printen** — aparte print-functie naast offerte. Alleen werkgegevens (regels, hoeveelheden, bewerkingen, %), geen prijzen. Bedoeld voor de schilders op de werkvloer.
+- **Actieve calculatie persistent** — `activeCalcId` in localStorage zodat je na refresh of nieuwe sessie in dezelfde calc verder gaat.
+- **Dashboard-archief uitgebreid** — klant-naam zichtbaar onder calc-naam, "● actief"-markering op huidige calc, dupliceer-knop (`⎘`) per rij, totaal incl. BTW per calc.
+- Diverse kleinere UI-verfijningen (`btn-sm`, `btn-icon`, `empty-state`, `table-scroll` CSS-klassen).
 
 ## v3.5.1 (cleanup)
 - Dood code verwijderd (`_bodyLS`/`_saveBody`/`_delBodyLS` stubs, `_origSaveData`, oude incode-constanten).
