@@ -1318,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.7.0</h2>
-      <p>Calculatie-vergrendeling — zodra je een calculatie op status <em>Gereed</em>, <em>Verzonden</em>, <em>Geaccepteerd</em> of <em>Verloren</em> zet, wordt de hele calculatie bevroren: de UI is read-only én alle instellingen die op dat moment golden (uurtarieven, opslagen, materiaalopslag per groep, volle dagen, afrondingsdrempel) worden in een snapshot vastgepakt. Verhoog je later je uurtarief, dan blijft deze offerte gewoon op de oude waarden staan. Zet status terug op <em>Concept</em> om weer te kunnen wijzigen — dan komen de live tarieven terug. Bovenaan een vergrendelde calc zie je een duidelijke banner met een knop om weer te ontgrendelen.</p>
+      <h2>Welkom bij v3.7.1</h2>
+      <p>Bugfix: het wijzigen van de calculatie-status (vanuit het dashboard of de vergrendel-banner) werkte pas zichtbaar zodra je het scherm verversde. Oorzaak: een verkeerde functienaam waardoor de calc-tab niet automatisch hertekent. Nu past de vergrendeling direct aan zodra je een nieuwe status kiest — banner verschijnt, velden worden read-only, snapshot wordt bevroren — zonder refresh.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1604,7 +1604,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.7.0';
+const APP_VERSION = 'v3.7.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -4970,7 +4970,7 @@ async function setCalcStatus(id, status) {
   if (data.calc && data.calc.id === id) {
     data.calc.status = status;
     data.calc.settingsSnapshot = c.settingsSnapshot;
-    renderCalc();
+    renderCalcStructuur();
   }
 }
 
