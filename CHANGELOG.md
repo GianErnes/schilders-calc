@@ -1,5 +1,11 @@
 # Schilders Calculatie — Changelog
 
+## v3.7.2 — Stap-regel transparanter
+- Materiaal-haakjes tonen nu ook verkoopprijs per eenheid: bv. `Verfreiniger (0,006 L · € 0,25/m²)`. Inkoop × verbruik × percentage × (1 + groepsopslag).
+- Stap-totaal rechts (`€ X,XX`) is voortaan gelabeld met `/m²` of `/m¹` zodat duidelijk is dat het per eenheid is, niet voor de hele regel.
+- Stap-totaal nu op verkoopprijs-basis (`cs.matVerkoop` i.p.v. `cs.matInkoop`), consistent met het uurloon dat ook verkoop is. Voorheen was dit een mix van inkoop-materiaal + verkoop-arbeid, wiskundig inconsistent.
+- Doel: in één oogopslag afwijkingen in materiaalverbruik tussen verfsystemen kunnen zien voor diagnostiek.
+
 ## v3.7.1 — Status-render fix
 - Bug verholpen: status-wijziging in dashboard of vergrendel-banner werd pas na verversen zichtbaar.
 - Oorzaak: `setCalcStatus` riep een niet-bestaande `renderCalc()` aan; vervangen door `renderCalcStructuur()`.

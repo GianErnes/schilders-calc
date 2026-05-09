@@ -1318,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.7.1</h2>
-      <p>Bugfix: het wijzigen van de calculatie-status (vanuit het dashboard of de vergrendel-banner) werkte pas zichtbaar zodra je het scherm verversde. Oorzaak: een verkeerde functienaam waardoor de calc-tab niet automatisch hertekent. Nu past de vergrendeling direct aan zodra je een nieuwe status kiest — banner verschijnt, velden worden read-only, snapshot wordt bevroren — zonder refresh.</p>
+      <h2>Welkom bij v3.7.2</h2>
+      <p>Per bewerkingsstap zie je nu duidelijker wat het kost: in de materiaal-haakjes staat naast het verbruik ook de verkoopprijs van het materiaal per eenheid (bv. <code>Verfreiniger (0,006 L · € 0,25/m²)</code>), en het totaal aan de rechterkant is voortaan gelabeld met <code>/m²</code> of <code>/m¹</code> zodat duidelijk is dat het de prijs per eenheid is. Daarnaast: dat totaal is nu gebaseerd op verkoopprijs van het materiaal (incl. groepsopslag), consistent met het uurloon dat ook al verkoop is. Handig voor diagnostiek — afwijkingen in materiaalverbruik tussen verfsystemen zijn nu in één oogopslag te zien.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1604,7 +1604,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.7.1';
+const APP_VERSION = 'v3.7.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -4486,10 +4486,12 @@ function renderRegel(hgId, odId, r) {
   const stappenHtml = (r.stappen || []).map((st, i) => {
     const cs = calcSnapshotStep(st);
     const stapUrenRegel = cs.uren * (r.hoeveelheid || 0); // uren voor deze stap binnen deze regel
+    // v3.7.2: toon materiaal verkoopprijs per eenheid in haakjes (incl. groepsopslag)
     const matInfo = st.materiaalNaam
-      ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid})</span>`
+      ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid} · € ${fmt(cs.matVerkoop)}/${eenheid})</span>`
       : '<span style="color:var(--muted);">—</span>';
-    const matKost = cs.matInkoop;
+    // v3.7.2: stap-totaal nu op verkoopprijs-basis (consistent met uurloon dat ook verkoop is)
+    const matKost = cs.matVerkoop;
     const arbeidKost = cs.uren * (_S().uurloon || 0);
     const totaal = matKost + arbeidKost;
     return `<div class="regel-stap">
@@ -4503,7 +4505,7 @@ function renderRegel(hgId, odId, r) {
         <input type="number" step="5" min="0" max="500" value="${st.percentage ?? 100}" onchange="updRegelStap('${hgId}','${odId}','${r.id}',${i},'percentage',parseFloat(this.value))" title="Percentage">
         <span style="color:var(--muted); font-size:0.68rem;">%</span>
       </span>
-      <span class="regel-stap-totaal">€ ${fmt(totaal)}</span>
+      <span class="regel-stap-totaal">€ ${fmt(totaal)}<span style="color:var(--muted); font-size:0.68rem; font-weight:400;">/${eenheid}</span></span>
       <span class="regel-stap-acties">
         <button class="btn-icon" onclick="moveRegelStap('${hgId}','${odId}','${r.id}',${i},-1)" ${i===0?'disabled':''}>↑</button>
         <button class="btn-icon" onclick="moveRegelStap('${hgId}','${odId}','${r.id}',${i},1)" ${i===(r.stappen||[]).length-1?'disabled':''}>↓</button>
