@@ -1,5 +1,10 @@
 # Schilders Calculatie — Changelog
 
+## v3.7.4 — Arbeidskost per eenheid zichtbaar
+- Calc-stap-regel: na `X min` nu ook `· € X,XX/eenheid` voor arbeidskost, in dezelfde grijze monospace-strook.
+- Verfsysteem-modal: onder de MIN-cel een tweede regel met `€ X,XX/eenheid` voor arbeid (zelfde patroon als eenheid onder bewerkingsnaam).
+- Sluitstuk van transparantie-reeks (v3.7.2 / v3.7.3 / v3.7.4): elke regel is nu volledig narekenbaar — arbeid + materiaal = totaal.
+
 ## v3.7.3 — Verfsysteem-modal transparanter
 - Verfsysteem-bewerkingen modal toont nu ook €/eenheid achter het verbruik: bv. `0,005 L · € 0,07/m²`. Consistent met de calc-stap-regel uit v3.7.2.
 - Kolom-totaal (€/eenh) gelabeld met `/m²` of `/m¹` voor duidelijkheid.

@@ -1318,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.7.3</h2>
-      <p>Vervolg op v3.7.2: dezelfde transparantie nu ook in het verfsysteem-bewerkingen scherm. Per stap zie je achter het verbruik direct de verkoopprijs van het materiaal per eenheid (bv. <code>0,005 L · € 0,07/m²</code>), en het kolom-totaal is gelabeld met <code>/m²</code> of <code>/m¹</code>. Tijdens het tunen van een verfsysteem zie je dus meteen de impact op materiaalkosten — zonder eerst naar een calculatie te hoeven schakelen. Ook hier nu consistent op verkoopprijs-basis, gelijk aan de calc-regels.</p>
+      <h2>Welkom bij v3.7.4</h2>
+      <p>Sluitstuk van de transparantie-reeks: arbeidskost per eenheid is nu ook zichtbaar. In de calc-stap-regel staat naast de minuten direct de € arbeid per eenheid (bv. <code>2,00 min · € 2,75/m²</code>), in de verfsysteem-modal onder de minuten in kleine letters (<code>5,00</code> / <code>€ 6,25/m²</code>). Daarmee is elke regel volledig narekenbaar: arbeid + materiaal = totaal. Geen verborgen rekenkamer meer.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1604,7 +1604,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.7.3';
+const APP_VERSION = 'v3.7.4';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3876,7 +3876,7 @@ function renderModalSteps() {
       return `<div class="step-row">
         <span class="step-num">${i+1}</span>
         <span><div>${b.naam}</div><div style="font-size:0.65rem; color:var(--muted); font-family:'JetBrains Mono', monospace; margin-top:0.1rem;">${b.eenheid}</div></span>
-        <span class="step-info right">${fmt(cs.minuten)}</span>
+        <span class="step-info right"><div>${fmt(cs.minuten)}</div><div style="font-size:0.65rem; color:var(--muted); margin-top:0.1rem;">€ ${fmt(arbeidPart)}/${b.eenheid}</div></span>
         <span class="step-info">${m ? m.naam : '—'}</span>
         <span class="step-info">${m ? fmt3(verbruikScaled) + ' ' + m.eenheid + matEurPerEenheid : '—'}</span>
         <span><input type="number" step="5" min="0" max="500" value="${st.percentage ?? 100}" onchange="updStepPct(${i},this.value)"></span>
@@ -4501,7 +4501,7 @@ function renderRegel(hgId, odId, r) {
       <span class="regel-stap-num">${i+1}</span>
       <span class="regel-stap-naam">
         <strong>${st.bewerkingNaam}</strong>
-        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min<span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
+        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min · € ${fmt(arbeidKost)}/${eenheid}<span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
       </span>
       <span class="regel-stap-mat">${matInfo}</span>
       <span class="regel-stap-pct">
