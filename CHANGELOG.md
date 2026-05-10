@@ -1,21 +1,20 @@
 # Schilders Calculatie — Changelog
 
-## v3.7.4 — Arbeidskost per eenheid zichtbaar
-- Calc-stap-regel: na `X min` nu ook `· € X,XX/eenheid` voor arbeidskost, in dezelfde grijze monospace-strook.
-- Verfsysteem-modal: onder de MIN-cel een tweede regel met `€ X,XX/eenheid` voor arbeid (zelfde patroon als eenheid onder bewerkingsnaam).
-- Sluitstuk van transparantie-reeks (v3.7.2 / v3.7.3 / v3.7.4): elke regel is nu volledig narekenbaar — arbeid + materiaal = totaal.
-
-## v3.7.3 — Verfsysteem-modal transparanter
-- Verfsysteem-bewerkingen modal toont nu ook €/eenheid achter het verbruik: bv. `0,005 L · € 0,07/m²`. Consistent met de calc-stap-regel uit v3.7.2.
-- Kolom-totaal (€/eenh) gelabeld met `/m²` of `/m¹` voor duidelijkheid.
-- Stap-totaal nu op verkoopprijs-basis (`cs.matVerkoop` i.p.v. `cs.matInkoop`), consistent met v3.7.2 en met het uurloon.
-- Doel: tijdens het tunen van een verfsysteem direct zien wat materiaalkosten per stap zijn — zonder via een calculatie te hoeven gaan.
-
-## v3.7.2 — Stap-regel transparanter
-- Materiaal-haakjes tonen nu ook verkoopprijs per eenheid: bv. `Verfreiniger (0,006 L · € 0,25/m²)`. Inkoop × verbruik × percentage × (1 + groepsopslag).
-- Stap-totaal rechts (`€ X,XX`) is voortaan gelabeld met `/m²` of `/m¹` zodat duidelijk is dat het per eenheid is, niet voor de hele regel.
-- Stap-totaal nu op verkoopprijs-basis (`cs.matVerkoop` i.p.v. `cs.matInkoop`), consistent met het uurloon dat ook verkoop is. Voorheen was dit een mix van inkoop-materiaal + verkoop-arbeid, wiskundig inconsistent.
-- Doel: in één oogopslag afwijkingen in materiaalverbruik tussen verfsystemen kunnen zien voor diagnostiek.
+## v3.8.0 — Yoobi-export print
+- Nieuwe print-knop "Offerte (Yoobi)" naast Calculatie-print en Werkbon-print.
+- Staart-posten met vlag `verstop_in_eenheidsprijs = true` worden proportioneel
+  verwerkt in de eenheidsprijzen i.p.v. apart getoond. Bedoeld voor het
+  overzetten van calculaties naar de Yoobi-offertemodule zonder zichtbare
+  toeslagen waarover onderhandeld kan worden.
+- Reiskosten en alle "verstop = false"-staartposten blijven onderaan
+  zichtbaar (incl. risico-aandeel).
+- Eenheidsprijzen afgerond naar boven op 10 cent; afrondingsoverschot
+  komt automatisch in het eindtotaal terecht (paar tientjes max).
+- DB: kolom `verstop_in_eenheidsprijs boolean NOT NULL DEFAULT false` op
+  zowel `staart_lib` als `staart`. Templates erven hun standaard naar
+  nieuwe calc-posten.
+- UI: checkbox in staart-modal met uitleg, "↩ in prijs"-indicator in
+  staartkosten-lijsten.
 
 ## v3.7.1 — Status-render fix
 - Bug verholpen: status-wijziging in dashboard of vergrendel-banner werd pas na verversen zichtbaar.

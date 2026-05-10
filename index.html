@@ -1318,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.7.4</h2>
-      <p>Sluitstuk van de transparantie-reeks: arbeidskost per eenheid is nu ook zichtbaar. In de calc-stap-regel staat naast de minuten direct de € arbeid per eenheid (bv. <code>2,00 min · € 2,75/m²</code>), in de verfsysteem-modal onder de minuten in kleine letters (<code>5,00</code> / <code>€ 6,25/m²</code>). Daarmee is elke regel volledig narekenbaar: arbeid + materiaal = totaal. Geen verborgen rekenkamer meer.</p>
+      <h2>Welkom bij v3.8.0</h2>
+      <p>Yoobi-export print toegevoegd. Naast de gewone calculatie-print is er nu een knop "Offerte (Yoobi)". Bij staartkosten kun je per post een vinkje zetten "verwerken in eenheidsprijs"; die toeslagen worden dan proportioneel verdeeld over de regel-prijzen i.p.v. apart getoond. Bedoeld om calculaties soepel over te zetten naar de Yoobi-offertemodule, zonder zichtbare opslagen waar je over moet onderhandelen. Reiskosten en eventuele andere posten (steiger, parkeervergunning) blijven onderaan zichtbaar. Eenheidsprijzen worden netjes afgerond op 10 cent naar boven.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1353,6 +1353,7 @@
       <div class="panel-actions">
         <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span>
         <button class="btn-secondary btn lock-allowed" onclick="printCalc()">📄 Calculatie als PDF</button>
+        <button class="btn-secondary btn lock-allowed" onclick="printOfferteYoobi()" title="Offerte met toeslagen verwerkt in eenheidsprijzen, voor het overzetten naar Yoobi">📋 Offerte (Yoobi)</button>
         <button class="btn-secondary btn lock-allowed" onclick="printWerkbon()">📋 Werkbon printen</button>
         <button class="btn-secondary btn lock-allowed" onclick="newCalc()">+ Nieuwe</button>
       </div>
@@ -1568,6 +1569,19 @@
         </div>
         <div><label>Bedrag / Tarief / %</label><input type="number" id="staartBedrag" step="0.01"></div>
         <div id="staartHoevWrap"><label>Hoeveelheid</label><input type="number" id="staartHoev" step="0.1"></div>
+        <div style="grid-column: 1 / -1; padding: 0.6rem 0.7rem; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius);">
+          <label style="display: flex; align-items: flex-start; gap: 0.55rem; margin: 0; cursor: pointer;">
+            <input type="checkbox" id="staartVerstop" style="margin-top: 0.2rem; flex-shrink: 0;">
+            <span style="font-weight: 500;">Verwerken in eenheidsprijs (Yoobi-export)
+              <span style="display: block; font-weight: 400; color: var(--ink-soft); font-size: 0.78rem; margin-top: 0.2rem;">
+                Bij het printen van de Yoobi-offerte wordt deze post niet apart getoond,
+                maar proportioneel verdeeld over de eenheidsprijzen van de regels.
+                Bedoeld voor toeslagen als risico, arbo/afval en klein materiaal.
+                Op de interne offerte-print blijft hij gewoon zichtbaar.
+              </span>
+            </span>
+          </label>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -1604,7 +1618,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.7.4';
+const APP_VERSION = 'v3.8.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2121,7 +2135,8 @@ function _mapStaartFromDB(row) {
     bedrag:      parseFloat(row.bedrag) || 0,
     eenheid:     row.eenheid   || '',
     grondslag:   row.grondslag || '',
-    hoeveelheid: parseFloat(row.hoeveelheid) || 0
+    hoeveelheid: parseFloat(row.hoeveelheid) || 0,
+    verstopInEenheidsprijs: !!row.verstop_in_eenheidsprijs
   };
 }
 function _mapStaartToDB(s) {
@@ -2131,7 +2146,8 @@ function _mapStaartToDB(s) {
     bedrag:      s.bedrag    || 0,
     eenheid:     s.eenheid   || '',
     grondslag:   s.grondslag || '',
-    hoeveelheid: s.hoeveelheid || 0
+    hoeveelheid: s.hoeveelheid || 0,
+    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs
   };
 }
 async function _fetchStaartLibFromDB() {
@@ -2693,7 +2709,8 @@ function _mapStaartCalcToDB(s, calcId, idx) {
     eenheid:     s.eenheid   || '',
     grondslag:   s.grondslag || '',
     hoeveelheid: s.hoeveelheid || 0,
-    volgorde:    idx != null ? idx : (s.volgorde || 0)
+    volgorde:    idx != null ? idx : (s.volgorde || 0),
+    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs
   };
 }
 async function _insertStaartCalcDB(s, calcId, idx) {
@@ -3490,6 +3507,240 @@ function printCalc() {
 }
 
 // ============================================================
+// YOOBI-EXPORT OFFERTE — voor het overzetten naar de Yoobi-offertemodule
+// Toeslagen met verstopInEenheidsprijs=true worden proportioneel verwerkt
+// in de eenheidsprijzen i.p.v. apart getoond. Reiskosten en handmatige
+// posten blijven onderaan zichtbaar. Eenheidsprijzen afgerond op 10 cent
+// naar boven; afrondingsoverschot komt automatisch in het eindtotaal.
+// ============================================================
+function printOfferteYoobi() {
+  const c = data.calc;
+  if (!c) return;
+  const sett = _activeSettings(c);
+  const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+
+  // 1. Project-niveau berekening (zelfde als printCalc voor consistentie)
+  const t = calcProjectTotalen();
+  const dagenWerkelijk = _calcDays();
+  const dagenFactureerbaar = _calcDaysFactureerbaar();
+  const volleDagen = _useVolleDagen();
+  const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
+  const afrondingsToeslag = volleDagen ? dagenVerschil * (c.schilders||0) * (c.uurDag||8) * sett.uurloon : 0;
+  const arbeid = t.arbeid + afrondingsToeslag;
+  const weken = _calcWeeks();
+  const reisAfstand = c.reis || 0;
+  const snelheid = sett.snelheid || 50;
+  const reisUren = dagenFactureerbaar * (c.schilders||0) * (reisAfstand / snelheid);
+  const reisTotaal = reisUren * sett.reistijd + dagenFactureerbaar * (reisAfstand * 2) * sett.km;
+  const kleinMat = t.matVerkoop * sett.kleinMat/100;
+  const afval = (arbeid + t.matVerkoop) * sett.afval/100;
+  const arbo = arbeid * sett.arbo/100;
+
+  // 2. Splits staart in verstop vs zichtbaar
+  const staartLijst = (c.staart || []);
+  const staartZichtbaar = staartLijst.filter(p => !p.verstopInEenheidsprijs);
+  const staartVerstopt  = staartLijst.filter(p => p.verstopInEenheidsprijs);
+  const staartZichtbaarTot = staartZichtbaar.reduce((s,p) => s + calcStaart(p), 0);
+  const staartVerstopTot   = staartVerstopt.reduce((s,p) => s + calcStaart(p), 0);
+  const staartTotaal = staartZichtbaarTot + staartVerstopTot;
+
+  const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
+  const winstFactor = 1 + (sett.winst || 0)/100;
+  const winstBedrag = directe * (sett.winst || 0)/100;
+  const exBtw = directe + winstBedrag;
+
+  // 3. Verzamel alle regels met hun verkoopprijs (uit calcRegelTotalen.verkoop)
+  //    Dit zijn de regels waar we de verstopte toeslagen over uitsmeren.
+  const allRegels = [];
+  c.hoofdgroepen.forEach(hg => hg.onderdelen.forEach(od => od.regels.forEach(r => {
+    if (!r.hoeveelheid || !r.stappen || !r.stappen.length) return;
+    const rt = calcRegelTotalen(r);
+    if (rt.verkoop <= 0) return;
+    allRegels.push({ r, hgNaam: hg.naam, odNaam: od.naam, regelVerkoop: rt.verkoop });
+  })));
+
+  if (!allRegels.length) {
+    alert('Deze calculatie bevat geen regels met inhoud. Voeg minimaal één regel met hoeveelheid en verfsysteem toe.');
+    return;
+  }
+
+  const sumRegelVerkoop = allRegels.reduce((s, x) => s + x.regelVerkoop, 0);
+
+  // 4. Bereken zichtbare bedragen onderaan (incl. winst-aandeel)
+  //    Reis en staart-zichtbaar zijn directe kosten; in het officiële totaal
+  //    krijgen ze een aandeel van de risico-opslag. Voor een nette offerte tonen
+  //    we ze incl. dat winst-aandeel zodat de klant de eindprijs van die post ziet.
+  const reisZichtbaar = reisTotaal * winstFactor;
+  const staartZichtbaarRows = staartZichtbaar.map(p => ({
+    naam: p.naam,
+    type: p.type,
+    bedrag: calcStaart(p) * winstFactor
+  }));
+  const staartZichtbaarRowsTot = staartZichtbaarRows.reduce((s,p) => s + p.bedrag, 0);
+
+  // 5. Bedrag dat in de regels-eenheidsprijzen verwerkt moet worden:
+  //    alles wat NIET reis-zichtbaar of staart-zichtbaar is.
+  const exBtwInRegels = exBtw - reisZichtbaar - staartZichtbaarRowsTot;
+
+  // 6. Verhoogfactor voor regel-verkoopprijzen
+  const regelFactor = sumRegelVerkoop > 0 ? exBtwInRegels / sumRegelVerkoop : 1;
+
+  // 7. Per regel: nieuwe eenheidsprijs, naar boven afgerond op 10 cent
+  const ceilTo10cent = (n) => Math.ceil(n * 10) / 10;
+  const yoobiRegels = allRegels.map(x => {
+    const rt = calcRegelTotalen(x.r);
+    const echtRegelTotaal = x.regelVerkoop * regelFactor;
+    const echteEenheidsprijs = echtRegelTotaal / x.r.hoeveelheid;
+    const toonprijs = ceilTo10cent(echteEenheidsprijs);
+    const toonRegelTotaal = toonprijs * x.r.hoeveelheid;
+    return {
+      r: x.r,
+      hgNaam: x.hgNaam,
+      odNaam: x.odNaam,
+      hoeveelheid: x.r.hoeveelheid,
+      eenheid: x.r.systeemEenheid || '',
+      toonprijs,
+      toonRegelTotaal
+    };
+  });
+
+  // 8. Eindtotaal Yoobi-versie (kan iets hoger uitvallen dan exBtw door afronding)
+  const sumYoobiRegels = yoobiRegels.reduce((s, y) => s + y.toonRegelTotaal, 0);
+  const exBtwYoobi = sumYoobiRegels + reisZichtbaar + staartZichtbaarRowsTot;
+  const btwBedragYoobi = exBtwYoobi * sett.btw/100;
+  const totaalYoobi = exBtwYoobi + btwBedragYoobi;
+  const afrondingsOverschot = exBtwYoobi - exBtw;
+
+  // 9. HTML opbouwen
+  const STATUS_LABELS = { concept:'Concept', gereed:'Gereed', verzonden:'Verzonden', geaccepteerd:'Geaccepteerd', verloren:'Verloren' };
+
+  let html = '';
+
+  // Header
+  html += `<div class="header-block">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <div class="brand-logo print"></div>
+      <div>
+        <h1>Offerte (Yoobi-stijl)</h1>
+        <div class="meta">Voor het overzetten naar de Yoobi-offertemodule · Intern hulpdocument</div>
+      </div>
+    </div>
+    <div style="text-align: right; font-size: 9pt;">
+      <div><strong>${datum}</strong></div>
+      <div>Status: ${STATUS_LABELS[c.status]||c.status}</div>
+    </div>
+  </div>`;
+
+  // Project-info
+  html += `<div class="section">
+    <h2>${c.naam || 'Calculatie'}</h2>
+    <div class="summary-grid">
+      <div><span class="label">Klant: </span>${c.klant||'—'}</div>
+      <div><span class="label">Reisafstand (enkele reis): </span>${reisAfstand} km</div>
+    </div>
+  </div>`;
+
+  // Verstop-uitleg (alleen als er iets verstopt wordt)
+  if (staartVerstopt.length > 0) {
+    const verstopNamen = staartVerstopt.map(p => p.naam).join(', ');
+    html += `<div class="section" style="background:#f8f6f1; padding:6pt 8pt; border-left:3px solid #c2410c; font-size:8.5pt;">
+      <strong>Verwerkt in eenheidsprijzen:</strong> ${verstopNamen}.
+      Deze toeslagen zijn proportioneel verdeeld over de regels en niet apart zichtbaar in deze offerte.
+    </div>`;
+  }
+
+  // Regel-tabel: alle regels uit alle hoofdgroepen, gegroepeerd per hg/od
+  c.hoofdgroepen.forEach(hg => {
+    const regelsInHg = yoobiRegels.filter(y => y.hgNaam === hg.naam);
+    if (!regelsInHg.length) return;
+    html += `<div class="section">
+      <h2>${hg.naam}</h2>`;
+    // Groepeer per onderdeel
+    const odNamen = [...new Set(regelsInHg.map(y => y.odNaam))];
+    odNamen.forEach(odNaam => {
+      const regelsInOd = regelsInHg.filter(y => y.odNaam === odNaam);
+      html += `<h3>${odNaam}</h3>
+        <table><thead><tr>
+          <th>Omschrijving</th>
+          <th>Verfsysteem</th>
+          <th class="right">Hoeveelheid</th>
+          <th class="right">Eenheidsprijs</th>
+          <th class="right">Totaal</th>
+        </tr></thead><tbody>`;
+      let odSum = 0;
+      regelsInOd.forEach(y => {
+        odSum += y.toonRegelTotaal;
+        html += `<tr>
+          <td>${y.r.naam || '—'}</td>
+          <td>${y.r.systeemNaam || '<em>onbekend</em>'}</td>
+          <td class="num right">${fmt(y.hoeveelheid)} ${y.eenheid}</td>
+          <td class="num right">${eur(y.toonprijs)}</td>
+          <td class="num right">${eur(y.toonRegelTotaal)}</td>
+        </tr>`;
+      });
+      html += `<tr class="totaal-row">
+        <td colspan="4"><strong>Subtotaal ${odNaam}</strong></td>
+        <td class="num right">${eur(odSum)}</td>
+      </tr>`;
+      html += `</tbody></table>`;
+    });
+    html += `</div>`;
+  });
+
+  // Onderaan: reiskosten + zichtbare staart-posten
+  html += `<div class="section">
+    <h2>Bijkomende kosten</h2>
+    <table><thead><tr>
+      <th>Omschrijving</th>
+      <th>Detail</th>
+      <th class="right">Bedrag</th>
+    </tr></thead><tbody>`;
+  if (reisTotaal > 0) {
+    html += `<tr>
+      <td>Reiskosten</td>
+      <td>${dagenFactureerbaar} dagen × ${reisAfstand} km enkele reis</td>
+      <td class="num right">${eur(reisZichtbaar)}</td>
+    </tr>`;
+  }
+  staartZichtbaar.forEach(p => {
+    let detail = '';
+    if (p.type === 'vast') detail = 'vast bedrag';
+    else if (p.type === 'dag') detail = `${dagenFactureerbaar} dagen`;
+    else if (p.type === 'week') detail = `${weken} weken`;
+    else if (p.type === 'eenheid') detail = `${fmt(p.hoeveelheid||0)} ${p.eenheid||''}`;
+    else if (p.type === 'percent') detail = `${fmt(p.bedrag)}% over ${p.grondslag}`;
+    const bedrag = calcStaart(p) * winstFactor;
+    html += `<tr>
+      <td>${p.naam}</td>
+      <td>${detail}</td>
+      <td class="num right">${eur(bedrag)}</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  // Eindtotalen
+  html += `<div class="section">
+    <table><tbody>
+      <tr class="totaal-row"><td><strong>Totaal excl. BTW</strong></td><td class="num right">${eur(exBtwYoobi)}</td></tr>
+      <tr><td>BTW (${sett.btw}%)</td><td class="num right">${eur(btwBedragYoobi)}</td></tr>
+      <tr class="grand-row"><td><strong>Totaal incl. BTW</strong></td><td class="num right"><strong>${eur(totaalYoobi)}</strong></td></tr>
+    </tbody></table>
+  </div>`;
+
+  // Footer met afrondingsinfo (klein, alleen voor je eigen archief)
+  const afrInfo = afrondingsOverschot > 0
+    ? ` · Afronding: +${eur(afrondingsOverschot)} t.o.v. interne calc`
+    : '';
+  html += `<div class="footer-block">
+    Yoobi-export · ${APP_VERSION} · Geprint op ${datum}${afrInfo}
+  </div>`;
+
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+
+
+// ============================================================
 // WERKBON — print versie voor de schilders op de werkvloer
 // (geen prijzen, geen materialen, geen uren — alleen wat ze moeten doen)
 // ============================================================
@@ -3868,19 +4119,16 @@ function renderModalSteps() {
       const cs = calcStep(st);
       const m = data.materialen.find(x => x.id === b.materiaalId);
       const arbeidPart = cs.uren * (data.settings.uurloon || 0);
-      // v3.7.3: totaal nu op verkoopprijs-basis (consistent met calc-stap-regel in v3.7.2)
-      const totaal = arbeidPart + cs.matVerkoop;
+      const totaal = arbeidPart + cs.matInkoop;
       const verbruikScaled = b.verbruik * (st.percentage??100)/100;
-      // v3.7.3: materiaal verkoopprijs per eenheid voor diagnostiek
-      const matEurPerEenheid = m ? ` · € ${fmt(cs.matVerkoop)}/${b.eenheid}` : '';
       return `<div class="step-row">
         <span class="step-num">${i+1}</span>
         <span><div>${b.naam}</div><div style="font-size:0.65rem; color:var(--muted); font-family:'JetBrains Mono', monospace; margin-top:0.1rem;">${b.eenheid}</div></span>
-        <span class="step-info right"><div>${fmt(cs.minuten)}</div><div style="font-size:0.65rem; color:var(--muted); margin-top:0.1rem;">€ ${fmt(arbeidPart)}/${b.eenheid}</div></span>
+        <span class="step-info right">${fmt(cs.minuten)}</span>
         <span class="step-info">${m ? m.naam : '—'}</span>
-        <span class="step-info">${m ? fmt3(verbruikScaled) + ' ' + m.eenheid + matEurPerEenheid : '—'}</span>
+        <span class="step-info">${m ? fmt3(verbruikScaled) + ' ' + m.eenheid : '—'}</span>
         <span><input type="number" step="5" min="0" max="500" value="${st.percentage ?? 100}" onchange="updStepPct(${i},this.value)"></span>
-        <span class="step-info right">€ ${fmt(totaal)}<span style="color:var(--muted); font-size:0.68rem; font-weight:400;">/${b.eenheid}</span></span>
+        <span class="step-info right">€ ${fmt(totaal)}</span>
         <span class="step-actions">
           <button class="btn-icon" onclick="moveStep(${i},-1)" ${i===0?'disabled':''}>↑</button>
           <button class="btn-icon" onclick="moveStep(${i},1)" ${i===modalSteps.length-1?'disabled':''}>↓</button>
@@ -4489,26 +4737,24 @@ function renderRegel(hgId, odId, r) {
   const stappenHtml = (r.stappen || []).map((st, i) => {
     const cs = calcSnapshotStep(st);
     const stapUrenRegel = cs.uren * (r.hoeveelheid || 0); // uren voor deze stap binnen deze regel
-    // v3.7.2: toon materiaal verkoopprijs per eenheid in haakjes (incl. groepsopslag)
     const matInfo = st.materiaalNaam
-      ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid} · € ${fmt(cs.matVerkoop)}/${eenheid})</span>`
+      ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid})</span>`
       : '<span style="color:var(--muted);">—</span>';
-    // v3.7.2: stap-totaal nu op verkoopprijs-basis (consistent met uurloon dat ook verkoop is)
-    const matKost = cs.matVerkoop;
+    const matKost = cs.matInkoop;
     const arbeidKost = cs.uren * (_S().uurloon || 0);
     const totaal = matKost + arbeidKost;
     return `<div class="regel-stap">
       <span class="regel-stap-num">${i+1}</span>
       <span class="regel-stap-naam">
         <strong>${st.bewerkingNaam}</strong>
-        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min · € ${fmt(arbeidKost)}/${eenheid}<span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
+        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min<span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
       </span>
       <span class="regel-stap-mat">${matInfo}</span>
       <span class="regel-stap-pct">
         <input type="number" step="5" min="0" max="500" value="${st.percentage ?? 100}" onchange="updRegelStap('${hgId}','${odId}','${r.id}',${i},'percentage',parseFloat(this.value))" title="Percentage">
         <span style="color:var(--muted); font-size:0.68rem;">%</span>
       </span>
-      <span class="regel-stap-totaal">€ ${fmt(totaal)}<span style="color:var(--muted); font-size:0.68rem; font-weight:400;">/${eenheid}</span></span>
+      <span class="regel-stap-totaal">€ ${fmt(totaal)}</span>
       <span class="regel-stap-acties">
         <button class="btn-icon" onclick="moveRegelStap('${hgId}','${odId}','${r.id}',${i},-1)" ${i===0?'disabled':''}>↑</button>
         <button class="btn-icon" onclick="moveRegelStap('${hgId}','${odId}','${r.id}',${i},1)" ${i===(r.stappen||[]).length-1?'disabled':''}>↓</button>
@@ -5036,7 +5282,7 @@ function renderStaartList() {
       else if (p.type === 'week') hoev = _calcWeeks() + ' weken';
       else if (p.type === 'percent') hoev = '× ' + p.grondslag;
       html += `<tr>
-        <td>${p.naam}</td>
+        <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Wordt verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}</td>
         <td>${detail}</td>
         <td class="num right">${eur(p.bedrag)}</td>
         <td>${hoev}</td>
@@ -5056,11 +5302,20 @@ function addStaartFromTpl() {
   if (!id) return;
   const t = data.staartLib.find(x => x.id === id);
   if (!t) return;
-  data.calc.staart.push({ id: uid('sk'), naam: t.naam, type: t.type, bedrag: t.bedrag, eenheid: t.eenheid, grondslag: t.grondslag, hoeveelheid: 0 });
+  data.calc.staart.push({
+    id: uid('sk'),
+    naam: t.naam,
+    type: t.type,
+    bedrag: t.bedrag,
+    eenheid: t.eenheid,
+    grondslag: t.grondslag,
+    hoeveelheid: 0,
+    verstopInEenheidsprijs: !!t.verstopInEenheidsprijs
+  });
   saveData(); renderStaartList(); renderTotals();
 }
 function addStaartCustom() {
-  const np = { id: uid('sk'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0 };
+  const np = { id: uid('sk'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0, verstopInEenheidsprijs: false };
   openStaartModal(np, 'newCalc');
 }
 
@@ -5075,6 +5330,7 @@ function openStaartModal(p, mode) {
   document.getElementById('staartEenheid').value = p.eenheid || '';
   document.getElementById('staartGrondslag').value = p.grondslag || 'arbeid';
   document.getElementById('staartHoev').value = p.hoeveelheid || 0;
+  document.getElementById('staartVerstop').checked = !!p.verstopInEenheidsprijs;
   updateStaartFields();
   document.getElementById('staartModal').classList.add('active');
 }
@@ -5094,6 +5350,7 @@ async function saveStaart() {
     eenheid: document.getElementById('staartEenheid').value,
     grondslag: document.getElementById('staartGrondslag').value,
     hoeveelheid: parseFloat(document.getElementById('staartHoev').value) || 0,
+    verstopInEenheidsprijs: document.getElementById('staartVerstop').checked,
   };
   if (!payload.naam) { alert('Geef een naam.'); return; }
   if (staartCtx.mode === 'editCalc') {
@@ -5150,7 +5407,7 @@ function renderStaartLib() {
     else if (p.type === 'week') detail = 'per week';
     else detail = 'vast';
     html += `<tr>
-      <td>${p.naam}</td>
+      <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Standaard verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}</td>
       <td>${p.type}</td>
       <td class="num right">${p.type==='percent' ? fmt(p.bedrag)+'%' : eur(p.bedrag)}</td>
       <td>${detail}</td>
@@ -5160,7 +5417,7 @@ function renderStaartLib() {
   html += '</tbody></table></div>';
   c.innerHTML = html;
 }
-function addStaartLib() { const np = { id: uid('sl'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0 }; openStaartModal(np, 'newLib'); }
+function addStaartLib() { const np = { id: uid('sl'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0, verstopInEenheidsprijs: false }; openStaartModal(np, 'newLib'); }
 async function delStaartLib(id) {
   if (!confirm('Verwijderen?')) return;
   const ok = await _deleteStaartDB(id);
