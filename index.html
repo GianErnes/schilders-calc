@@ -1318,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.8.0</h2>
-      <p>Yoobi-export print toegevoegd. Naast de gewone calculatie-print is er nu een knop "Offerte (Yoobi)". Bij staartkosten kun je per post een vinkje zetten "verwerken in eenheidsprijs"; die toeslagen worden dan proportioneel verdeeld over de regel-prijzen i.p.v. apart getoond. Bedoeld om calculaties soepel over te zetten naar de Yoobi-offertemodule, zonder zichtbare opslagen waar je over moet onderhandelen. Reiskosten en eventuele andere posten (steiger, parkeervergunning) blijven onderaan zichtbaar. Eenheidsprijzen worden netjes afgerond op 10 cent naar boven.</p>
+      <h2>Welkom bij v3.8.1</h2>
+      <p>Per bewerkingsregel zie je nu de arbeidskosten in euro direct achter de minuten, en de materiaalkosten direct achter het verbruik. Beide percentages zijn verrekend. Zo zie je in één oogopslag of een stap arbeids-zwaar of materiaal-zwaar is, zonder dat je het uit het hoofd hoeft te rekenen.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1614,7 +1614,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.8.0';
+const APP_VERSION = 'v3.8.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -4733,17 +4733,17 @@ function renderRegel(hgId, odId, r) {
   const stappenHtml = (r.stappen || []).map((st, i) => {
     const cs = calcSnapshotStep(st);
     const stapUrenRegel = cs.uren * (r.hoeveelheid || 0); // uren voor deze stap binnen deze regel
-    const matInfo = st.materiaalNaam
-      ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid})</span>`
-      : '<span style="color:var(--muted);">—</span>';
     const matKost = cs.matInkoop;
     const arbeidKost = cs.uren * (_S().uurloon || 0);
     const totaal = matKost + arbeidKost;
+    const matInfo = st.materiaalNaam
+      ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid} · € ${fmt(matKost)})</span>`
+      : '<span style="color:var(--muted);">—</span>';
     return `<div class="regel-stap">
       <span class="regel-stap-num">${i+1}</span>
       <span class="regel-stap-naam">
         <strong>${st.bewerkingNaam}</strong>
-        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min<span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
+        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min <span title="Arbeidskosten per ${st.bewerkingEenheid}, percentage verrekend">(€ ${fmt(arbeidKost)})</span><span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
       </span>
       <span class="regel-stap-mat">${matInfo}</span>
       <span class="regel-stap-pct">
