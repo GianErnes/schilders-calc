@@ -3510,7 +3510,7 @@ function printCalc() {
 // YOOBI-EXPORT OFFERTE — voor het overzetten naar de Yoobi-offertemodule
 // Toeslagen met verstopInEenheidsprijs=true worden proportioneel verwerkt
 // in de eenheidsprijzen i.p.v. apart getoond. Reiskosten en handmatige
-// posten blijven onderaan zichtbaar. Eenheidsprijzen afgerond op 10 cent
+// posten blijven onderaan zichtbaar. Eenheidsprijzen afgerond op 1 cent
 // naar boven; afrondingsoverschot komt automatisch in het eindtotaal.
 // ============================================================
 function printOfferteYoobi() {
@@ -3585,13 +3585,13 @@ function printOfferteYoobi() {
   // 6. Verhoogfactor voor regel-verkoopprijzen
   const regelFactor = sumRegelVerkoop > 0 ? exBtwInRegels / sumRegelVerkoop : 1;
 
-  // 7. Per regel: nieuwe eenheidsprijs, naar boven afgerond op 10 cent
-  const ceilTo10cent = (n) => Math.ceil(n * 10) / 10;
+  // 7. Per regel: nieuwe eenheidsprijs, naar boven afgerond op 1 cent
+  const ceilToCent = (n) => Math.ceil(n * 100) / 100;
   const yoobiRegels = allRegels.map(x => {
     const rt = calcRegelTotalen(x.r);
     const echtRegelTotaal = x.regelVerkoop * regelFactor;
     const echteEenheidsprijs = echtRegelTotaal / x.r.hoeveelheid;
-    const toonprijs = ceilTo10cent(echteEenheidsprijs);
+    const toonprijs = ceilToCent(echteEenheidsprijs);
     const toonRegelTotaal = toonprijs * x.r.hoeveelheid;
     return {
       r: x.r,
