@@ -1318,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.8.1</h2>
-      <p>Per bewerkingsregel zie je nu de arbeidskosten in euro direct achter de minuten, en de materiaalkosten direct achter het verbruik. Beide percentages zijn verrekend. Zo zie je in één oogopslag of een stap arbeids-zwaar of materiaal-zwaar is, zonder dat je het uit het hoofd hoeft te rekenen.</p>
+      <h2>Welkom bij v3.8.2</h2>
+      <p>Dashboard toont nu het juiste totaal-incl-BTW voor álle calculaties, niet alleen de actieve. Het bedrag wordt gecached in de database en automatisch bijgewerkt bij elke wijziging in een concept-calc. Verzonden, geaccepteerde en andere vergrendelde calculaties houden hun bedrag <strong>vast</strong> — ook als uurloon, BTW of opslagen later wijzigen, blijft hun totaal precies wat het was bij vergrendeling. Calculaties die nog nooit zijn opgeslagen tonen een streepje (—).</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1614,7 +1614,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.8.1';
+const APP_VERSION = 'v3.8.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2342,6 +2342,7 @@ function _mapCalcHeaderFromDB(row) {
     volleDagenOverride:  row.volle_dagen_override,
     notities:            row.notities || '',
     settingsSnapshot:    row.settings_snapshot || null,
+    totaalInclBtw:       row.totaal_incl_btw != null ? parseFloat(row.totaal_incl_btw) : null,
     aangemaakt:          row.aangemaakt || new Date().toISOString(),
     gewijzigd:           row.gewijzigd  || new Date().toISOString(),
     // body wordt later toegevoegd door _loadCalcBody
@@ -2463,12 +2464,29 @@ function _updateCalcDB(c) {
 }
 function _touchCalc(calcId) {
   // Update gewijzigd-timestamp — vuren-en-vergeten
+  const c = data.calculaties.find(x => x.id === calcId);
+  const isConcept = !c || !c.status || c.status === 'concept';
+  // Bouw payload: altijd gewijzigd, en bij concept óók het nieuw-berekende totaal cachen.
+  // Vergrendelde calcs (verzonden/geaccepteerd/etc) krijgen nóóit een nieuwe totaal-waarde
+  // via deze route — die wordt enkel gezet bij vergrendelen (zie setCalcStatus).
+  const nu = new Date().toISOString();
+  const payload = { gewijzigd: nu };
+  if (c && isConcept && c.__loaded) {
+    // Calc moet geladen zijn om correct te kunnen berekenen
+    try {
+      const t = _calcTotalForArchive(c);
+      const tot = (t && isFinite(t.totaal)) ? Math.round(t.totaal * 100) / 100 : null;
+      c.totaalInclBtw = tot;
+      payload.totaal_incl_btw = tot;
+    } catch(e) {
+      // Berekening faalt om wat voor reden — laat oude waarde staan
+    }
+  }
   _sbQuery(
-    _sb.from('calculaties').update({ gewijzigd: new Date().toISOString() }).eq('id', calcId),
+    _sb.from('calculaties').update(payload).eq('id', calcId),
     'Tijdstempel bijwerken'
   ).then(() => {});
-  const c = data.calculaties.find(x => x.id === calcId);
-  if (c) c.gewijzigd = new Date().toISOString();
+  if (c) c.gewijzigd = nu;
 }
 async function _deleteCalcDB(id) {
   // FK heeft ON DELETE CASCADE — alle subtabellen gaan mee
@@ -5211,7 +5229,27 @@ async function setCalcStatus(id, status) {
     c.settingsSnapshot = null;
   }
 
+  // Bevries OOK het totaal-bedrag bij vergrendelen — alleen als calc geladen is.
+  // Niet-geladen calcs vergrendelen we zonder herberekening: hun gecachte
+  // totaalInclBtw blijft staan zoals 'ie was (al uit een vorige save).
+  if (isNowLocked && !wasLocked && c.__loaded) {
+    try {
+      const t = _calcTotalForArchive(c);
+      const tot = (t && isFinite(t.totaal)) ? Math.round(t.totaal * 100) / 100 : null;
+      c.totaalInclBtw = tot;
+      // Direct mee-saven zodat dashboard meteen klopt
+      _sbQuery(
+        _sb.from('calculaties').update({ totaal_incl_btw: tot }).eq('id', id),
+        'Totaal cachen'
+      ).then(() => {});
+    } catch(e) {}
+  }
+
   _updateCalcDB(c);
+  // Bij terug-naar-concept: laat _touchCalc nieuwe totaal berekenen + saven
+  if (!isNowLocked && wasLocked) {
+    _touchCalc(id);
+  }
   renderDashboard();
   // Als deze calc actief is, hertekent UI met read-only state
   if (data.calc && data.calc.id === id) {
@@ -5969,7 +6007,10 @@ async function importCalcsFromV241(e) {
 function _calcTotalForArchive(c) {
   // Compute total inclusive BTW for a calculation (without changing active)
   // Uses snapshot stappen on regel
-  const sett = data.settings;
+  // BELANGRIJK: vergrendelde calcs (status ≠ concept) rekenen met hun settingsSnapshot,
+  // zodat het bedrag NIET verandert als live tarieven (uurloon, BTW, opslagen) wijzigen.
+  const isVergrendeld = c.status && c.status !== 'concept';
+  const sett = (isVergrendeld && c.settingsSnapshot) ? c.settingsSnapshot : data.settings;
   let arbeid = 0, matInkoop = 0, matVerkoop = 0, uren = 0;
   c.hoofdgroepen.forEach(hg => hg.onderdelen.forEach(od => od.regels.forEach(r => {
     if (!r.hoeveelheid || !r.stappen || !r.stappen.length) return;
@@ -6057,7 +6098,17 @@ function renderCalculatiesArchief() {
   const sorted = [...data.calculaties].sort((a, b) => (b.gewijzigd || '').localeCompare(a.gewijzigd || ''));
   let html = '<div class="table-scroll"><table><thead><tr><th>Naam</th><th>Gewijzigd</th><th>Status</th><th class="right">Totaal incl. BTW</th><th></th></tr></thead><tbody>';
   sorted.forEach(cl => {
-    const t = _calcTotalForArchive(cl);
+    // Bedrag bepalen: live berekenen indien geladen (= meest actuele waarde),
+    // anders cache uit DB, anders gedachtestreepje voor calcs zonder bekend totaal.
+    let bedragHtml;
+    if (cl.__loaded) {
+      const t = _calcTotalForArchive(cl);
+      bedragHtml = (t && isFinite(t.totaal)) ? eur(t.totaal) : '—';
+    } else if (cl.totaalInclBtw != null) {
+      bedragHtml = eur(cl.totaalInclBtw);
+    } else {
+      bedragHtml = '<span style="color:var(--muted);" title="Open en sla op om te berekenen">—</span>';
+    }
     const datum = cl.gewijzigd ? new Date(cl.gewijzigd).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
     const statusOpts = Object.keys(STATUS_LABELS).map(s => `<option value="${s}" ${s === cl.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('');
     const isActive = cl.id === data.activeCalcId;
@@ -6065,7 +6116,7 @@ function renderCalculatiesArchief() {
       <td><strong style="cursor: pointer; color: var(--accent-deep);" onclick="openCalc('${cl.id}')">${cl.naam || '<em>(zonder naam)</em>'}</strong>${isActive ? ' <span class="mono" style="font-size:0.65rem; color:var(--accent); margin-left:0.4rem;">● actief</span>' : ''}<br><span style="color: var(--muted); font-size: 0.78rem;">${cl.klant || ''}</span></td>
       <td class="num">${datum}</td>
       <td><select onchange="setCalcStatus('${cl.id}', this.value)" style="background: ${STATUS_COLORS[cl.status]}; color: var(--paper); border: none; padding: 0.25rem 0.4rem; font-size: 0.7rem;">${statusOpts}</select></td>
-      <td class="num right" style="color: var(--accent-deep); font-weight: 600;">${eur(t.totaal)}</td>
+      <td class="num right" style="color: var(--accent-deep); font-weight: 600;">${bedragHtml}</td>
       <td class="right">
         <button class="btn-secondary btn btn-sm" onclick="openCalc('${cl.id}')">Openen</button>
         <button class="btn-secondary btn btn-sm" onclick="dupCalc('${cl.id}')" title="Dupliceren">⎘</button>
