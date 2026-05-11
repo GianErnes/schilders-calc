@@ -1354,7 +1354,7 @@
         <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span>
         <button class="btn-secondary btn lock-allowed" onclick="printCalc()">📄 Calculatie als PDF</button>
         <button class="btn-secondary btn lock-allowed" onclick="printOfferteYoobi()" title="Offerte met toeslagen verwerkt in eenheidsprijzen, voor het overzetten naar Yoobi">📋 Offerte (Yoobi)</button>
-        <button class="btn-secondary btn lock-allowed" onclick="printWerkbon()">📋 Werkbon printen</button>
+        <button class="btn-secondary btn lock-allowed" onclick="printWerkbon()">📋 Werkbon</button>
         <button class="btn-secondary btn lock-allowed" onclick="newCalc()">+ Nieuwe</button>
       </div>
     </div>
@@ -1614,7 +1614,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.8.2';
+const APP_VERSION = 'v3.9.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3756,8 +3756,96 @@ function printOfferteYoobi() {
 
 // ============================================================
 // WERKBON — print versie voor de schilders op de werkvloer
-// (geen prijzen, geen materialen, geen uren — alleen wat ze moeten doen)
+// (geen prijzen, geen uren — wel materiaalverbruik per onderdeel + totaal)
 // ============================================================
+
+// Aggregeert materiaalverbruik uit stap-snapshots over een set regels.
+// Retourneert array van { materiaalId, naam, eenheid, groep, verbruik }
+// gesorteerd op groep (volgens groepOpslagen-volgorde), dan alfabetisch.
+// Stappen zonder materiaal worden overgeslagen. Staat-toeslag wordt NIET
+// meegerekend — alleen basisverbruik (theoretisch minimum), zodat de
+// gebruiker zelf bepaalt hoe royaal hij bestelt.
+function _aggregeerMateriaalVerbruik(regels) {
+  const map = {}; // key: materiaalId → { naam, eenheid, groep, verbruik }
+  (regels || []).forEach(r => {
+    if (!r.stappen || !r.stappen.length) return;
+    const hoeveelheid = r.hoeveelheid || 0;
+    r.stappen.forEach(st => {
+      if (!st.materiaalId || !st.materiaalNaam) return;
+      const verbruik = hoeveelheid * (st.verbruik || 0) * ((st.percentage ?? 100) / 100);
+      if (verbruik <= 0) return;
+      const key = st.materiaalId;
+      if (!map[key]) {
+        map[key] = {
+          materiaalId: st.materiaalId,
+          naam: st.materiaalNaam,
+          eenheid: st.materiaalEenheid || '',
+          groep: st.materiaalGroep || 'Overig',
+          verbruik: 0
+        };
+      }
+      map[key].verbruik += verbruik;
+    });
+  });
+  // Sorteer: eerst op groep-volgorde (uit settings), dan alfabetisch op naam
+  const groepOrder = Object.keys((_S().groepOpslagen) || {});
+  const groepIdx = g => {
+    const i = groepOrder.indexOf(g);
+    return i === -1 ? 999 : i;
+  };
+  return Object.values(map).sort((a, b) => {
+    const ga = groepIdx(a.groep), gb = groepIdx(b.groep);
+    if (ga !== gb) return ga - gb;
+    if (a.groep !== b.groep) return a.groep.localeCompare(b.groep, 'nl');
+    return a.naam.localeCompare(b.naam, 'nl');
+  });
+}
+
+// Rendert materiaal-aggregatie als HTML-tabel. Compact voor per-onderdeel,
+// met groep-kopjes voor het project-totaal.
+function _renderMateriaalTabel(rows, opts) {
+  opts = opts || {};
+  if (!rows.length) return '';
+  if (opts.metGroepen) {
+    // Gegroepeerd per materiaalgroep — voor project-totaal
+    let html = `<table style="margin-top:4pt;"><thead><tr>
+      <th>Materiaal</th>
+      <th class="right" style="width:80pt;">Verbruik</th>
+      <th style="width:50pt;">Eenheid</th>
+    </tr></thead><tbody>`;
+    let huidigeGroep = null;
+    rows.forEach(r => {
+      if (r.groep !== huidigeGroep) {
+        huidigeGroep = r.groep;
+        html += `<tr><td colspan="3" style="background:#f5f5f5; font-weight:bold; padding-top:4pt;">${r.groep}</td></tr>`;
+      }
+      html += `<tr>
+        <td>${r.naam}</td>
+        <td class="num right">${fmt3(r.verbruik)}</td>
+        <td>${r.eenheid}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    return html;
+  } else {
+    // Plat, compact — voor per-onderdeel
+    let html = `<table style="margin-top:4pt; margin-bottom:8pt; font-size:9pt;"><thead><tr>
+      <th>Materiaal</th>
+      <th class="right" style="width:70pt;">Verbruik</th>
+      <th style="width:45pt;">Eenheid</th>
+    </tr></thead><tbody>`;
+    rows.forEach(r => {
+      html += `<tr>
+        <td>${r.naam}</td>
+        <td class="num right">${fmt3(r.verbruik)}</td>
+        <td>${r.eenheid}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    return html;
+  }
+}
+
 function printWerkbon() {
   const c = data.calc;
   if (!c) return;
@@ -3817,8 +3905,34 @@ function printWerkbon() {
           html += `</tbody></table>`;
         }
       });
+      // Materiaal-overzicht voor dit onderdeel (geaggregeerd over alle regels)
+      const matRowsOnderdeel = _aggregeerMateriaalVerbruik(od.regels);
+      if (matRowsOnderdeel.length) {
+        html += `<div style="margin-top:6pt; font-size:9pt; color:#555;">
+          <em>Materiaal voor ${od.naam}:</em>
+        </div>`;
+        html += _renderMateriaalTabel(matRowsOnderdeel, { metGroepen: false });
+      }
     });
   });
+
+  // Projecttotaal materiaal — boodschappenlijst (alle regels van alle onderdelen)
+  const alleRegels = [];
+  c.hoofdgroepen.forEach(hg => {
+    (hg.onderdelen || []).forEach(od => {
+      (od.regels || []).forEach(r => alleRegels.push(r));
+    });
+  });
+  const matRowsTotaal = _aggregeerMateriaalVerbruik(alleRegels);
+  if (matRowsTotaal.length) {
+    html += `<div style="margin-top:18pt; padding-top:10pt; border-top:1.5pt solid #333; page-break-inside:avoid;">
+      <h2 style="margin-top:0;">Materiaal totaal voor project</h2>
+      <div style="font-size:9pt; color:#666; margin-bottom:4pt;">
+        <em>Theoretisch basisverbruik — gebruik dit als ondergrens voor je bestelling.</em>
+      </div>`;
+    html += _renderMateriaalTabel(matRowsTotaal, { metGroepen: true });
+    html += `</div>`;
+  }
 
   // Footer
   html += `<div class="footer-block">
