@@ -1318,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.9.0</h2>
-      <p>De <strong>Werkbon</strong> toont nu het materiaalverbruik op twee niveaus: per onderdeel een compacte opsomming, en onderaan een totale boodschappenlijst voor het hele project — gegroepeerd per materiaalgroep (Verven, Hulpmiddelen, Kit, etc.). Verbruik wordt berekend als <em>theoretisch basisverbruik</em> (zonder staat-toeslag), zodat je zelf bepaalt hoe royaal je bestelt. De knop is bovendien hernoemd van "Werkbon printen" naar simpelweg <strong>📋 Werkbon</strong>.</p>
+      <h2>Welkom bij v3.9.1</h2>
+      <p>Verfijning van het materiaaloverzicht op de <strong>Werkbon</strong>: het mini-overzicht "Materiaal voor [...]" staat nu <strong>per onderdeel</strong> in plaats van per hoofdgroep. Zo zie je bij wit/zwart-projecten precies hoeveel lak en grondverf je per kleurzone nodig hebt — bijvoorbeeld witte deuren versus zwarte kozijnen. Het projecttotaal onderaan blijft de complete boodschappenlijst voor je bestelling.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1614,7 +1614,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.9.0';
+const APP_VERSION = 'v3.9.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3904,14 +3904,30 @@ function printWerkbon() {
           });
           html += `</tbody></table>`;
         }
+        // Materiaal-overzicht voor deze regel (kleurzone-niveau)
+        const matRowsRegel = _aggregeerMateriaalVerbruik([r]);
+        if (matRowsRegel.length) {
+          const regelLabelMat = (r.naam && r.naam.trim()) ? r.naam : r.systeemNaam || 'regel';
+          html += `<div style="margin-top:4pt; font-size:8.5pt; color:#777; padding-left:8pt; border-left:2pt solid #ddd;">
+            <em>Materiaal voor ${regelLabelMat}:</em>
+          </div>`;
+          html += `<div style="padding-left:8pt; border-left:2pt solid #ddd;">`;
+          html += _renderMateriaalTabel(matRowsRegel, { metGroepen: false });
+          html += `</div>`;
+        }
       });
       // Materiaal-overzicht voor dit onderdeel (geaggregeerd over alle regels)
       const matRowsOnderdeel = _aggregeerMateriaalVerbruik(od.regels);
       if (matRowsOnderdeel.length) {
-        html += `<div style="margin-top:6pt; font-size:9pt; color:#555;">
-          <em>Materiaal voor ${od.naam}:</em>
-        </div>`;
+        html += `<div style="margin-top:10pt; padding:6pt 8pt; background:#fafafa; border-left:3pt solid #888;">
+          <div style="font-size:9pt; color:#444; font-weight:bold; margin-bottom:2pt;">
+            Materiaal voor onderdeel ${od.naam}
+          </div>
+          <div style="font-size:8pt; color:#777; margin-bottom:2pt;">
+            <em>Som van alle regels binnen dit onderdeel.</em>
+          </div>`;
         html += _renderMateriaalTabel(matRowsOnderdeel, { metGroepen: false });
+        html += `</div>`;
       }
     });
   });
