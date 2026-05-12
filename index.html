@@ -1318,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.9.2</h2>
-      <p>Bugfix voor het on-the-job vullen van de verfsysteem-bibliotheek: als je vanuit een calc-regel een nieuw verfsysteem aanmaakt, wordt het na opslaan nu <strong>automatisch als regel ingevoegd</strong> in je calc. De modal sluit, de regel staat erin, je werkt direct verder. Geen tweede klik meer nodig om hetzelfde systeem opnieuw te selecteren. Klein verschil, groot effect bij het opbouwen van je bibliotheek.</p>
+      <h2>Welkom bij v3.9.3</h2>
+      <p>Voor het soepel vullen van je bibliotheek <em>on-the-job</em>: in het verfsysteem-formulier zit nu een knop <strong>"+ Nieuw"</strong> naast de bewerking-dropdown. Daarmee maak je ter plekke een nieuwe bewerking aan via een mini-modal, die automatisch wordt toegevoegd aan je bewerkingen-bibliotheek én direct als stap aan het verfsysteem waar je mee bezig bent. Eenheid en ondergrond worden voorgevuld op basis van het systeem — spaart typewerk. Geen tab-switches meer, geen onderbroken denkflow.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1513,6 +1513,7 @@
       <div id="sysSteps"></div>
       <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; align-items: end;">
         <div style="flex: 1;"><label>Bewerking toevoegen</label><select id="sysAddBew"></select></div>
+        <button class="btn-secondary btn" onclick="openNewBewModal()" title="Maak een nieuwe bewerking aan en voeg 'm direct toe">+ Nieuw</button>
         <button class="btn-secondary btn" onclick="addStepToSystem()">+ Toevoegen</button>
       </div>
       <div class="werkbank-totals" id="werkbankTotals"></div>
@@ -1521,6 +1522,55 @@
       <button class="btn-secondary btn" onclick="closeSystemModal()">Annuleren</button>
       <button class="btn-secondary btn" onclick="saveSystemAsNew()">Opslaan als nieuw</button>
       <button class="btn" onclick="saveSystem()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- NIEUWE BEWERKING MINI-MODAL (vanuit verfsysteem-formulier) -->
+<div class="modal-overlay" id="newBewModal" style="z-index: 200;">
+  <div class="modal" style="max-width: 560px;">
+    <div class="modal-head"><h3>Nieuwe Bewerking</h3><button class="close-x" onclick="closeNewBewModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="color: var(--muted); font-size: 0.85rem; margin-top: 0; margin-bottom: 1rem;">
+        <em>Deze bewerking wordt aangemaakt in je bewerkingen-bibliotheek én direct als stap toegevoegd aan dit verfsysteem.</em>
+      </p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <div style="grid-column: 1 / -1;">
+          <label>Naam *</label>
+          <input id="newBewNaam" type="text" placeholder="bv. Schuren machinaal geprofileerd">
+        </div>
+        <div>
+          <label>Eenheid</label>
+          <select id="newBewEenheid">
+            <option value="m²">m²</option>
+            <option value="m¹">m¹</option>
+            <option value="stuk">stuk</option>
+          </select>
+        </div>
+        <div>
+          <label>Minuten per eenheid</label>
+          <input id="newBewMinuten" type="number" step="0.1" value="3">
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <label>Ondergrond</label>
+          <select id="newBewOnder"></select>
+        </div>
+        <div>
+          <label>Materiaal</label>
+          <select id="newBewMat" onchange="_toggleNewBewVerbruik()"></select>
+        </div>
+        <div>
+          <label>Verbruik per eenheid</label>
+          <input id="newBewVerbruik" type="number" step="0.001" value="0" disabled title="Eerst materiaal kiezen">
+        </div>
+      </div>
+      <p id="newBewMatHint" style="color: var(--muted); font-size: 0.75rem; margin-top: 0.5rem; display:none;">
+        <em>Geen materiaal nodig? Laat 'm op "geen" staan. Materiaal niet in de lijst? Voeg 'm eerst toe in het tabblad <strong>Materialen</strong>.</em>
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="closeNewBewModal()">Annuleren</button>
+      <button class="btn" onclick="saveNewBewFromSystem()">Opslaan</button>
     </div>
   </div>
 </div>
@@ -1614,7 +1664,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.9.2';
+const APP_VERSION = 'v3.9.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5179,6 +5229,95 @@ function openSystemFromAdd() {
   openSystemModal();
   modalSysContext = ctx;
 }
+
+// ============================================================
+// NIEUWE BEWERKING vanuit het Verfsysteem-formulier (v3.9.3)
+// Maakt een bewerking aan in de bibliotheek én voegt 'm direct
+// als stap toe aan het systeem in wording. Eenheid + ondergrond
+// erven van het huidige systeem om typewerk te besparen.
+// ============================================================
+function openNewBewModal() {
+  // Eenheid + ondergrond van het huidige systeem als default
+  const sysEenheid = document.getElementById('sysEenheid')?.value || 'm²';
+  const sysOnderId = document.getElementById('sysOnder')?.value || (data.ondergronden[0]?.id || '');
+
+  document.getElementById('newBewNaam').value = '';
+  document.getElementById('newBewEenheid').value = sysEenheid;
+  document.getElementById('newBewMinuten').value = 3;
+
+  // Ondergrond-dropdown vullen
+  const onderSel = document.getElementById('newBewOnder');
+  onderSel.innerHTML = data.ondergronden.map(o => `<option value="${o.id}">${o.naam}</option>`).join('');
+  onderSel.value = sysOnderId;
+
+  // Materiaal-dropdown vullen
+  const matSel = document.getElementById('newBewMat');
+  matSel.innerHTML = '<option value="">— geen —</option>' +
+    data.materialen.map(m => `<option value="${m.id}">${m.naam} (${m.eenheid})</option>`).join('');
+  matSel.value = '';
+
+  document.getElementById('newBewVerbruik').value = 0;
+  document.getElementById('newBewVerbruik').disabled = true;
+  document.getElementById('newBewMatHint').style.display = data.materialen.length === 0 ? 'block' : 'block';
+
+  document.getElementById('newBewModal').classList.add('active');
+  // Focus op naam-veld
+  setTimeout(() => document.getElementById('newBewNaam').focus(), 50);
+}
+
+function closeNewBewModal() {
+  document.getElementById('newBewModal').classList.remove('active');
+}
+
+function _toggleNewBewVerbruik() {
+  const matId = document.getElementById('newBewMat').value;
+  const verbruikInput = document.getElementById('newBewVerbruik');
+  if (matId) {
+    verbruikInput.disabled = false;
+    if (!parseFloat(verbruikInput.value)) verbruikInput.value = '';
+    verbruikInput.focus();
+  } else {
+    verbruikInput.disabled = true;
+    verbruikInput.value = 0;
+  }
+}
+
+async function saveNewBewFromSystem() {
+  const naam = (document.getElementById('newBewNaam').value || '').trim();
+  if (!naam) { alert('Geef de bewerking een naam.'); return; }
+
+  const eenheid = document.getElementById('newBewEenheid').value;
+  const minuten = parseFloat(document.getElementById('newBewMinuten').value) || 0;
+  const ondergrondId = document.getElementById('newBewOnder').value || null;
+  const materiaalId = document.getElementById('newBewMat').value || null;
+  const verbruik = materiaalId ? (parseFloat(document.getElementById('newBewVerbruik').value) || 0) : 0;
+
+  const btn = document.querySelector('#newBewModal button.btn[onclick="saveNewBewFromSystem()"]');
+  let oldText;
+  if (btn) { oldText = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Bezig...'; }
+
+  const maxV = data.bewerkingen.reduce((m, b) => Math.max(m, b.volgorde || 0), 0);
+  const nieuw = {
+    naam, eenheid, minuten,
+    ondergrondId, materiaalId, verbruik,
+    volgorde: maxV + 10
+  };
+  const saved = await _insertBewDB(nieuw);
+  if (btn) { btn.disabled = false; btn.textContent = oldText; }
+  if (!saved) return;
+
+  data.bewerkingen.push(saved);
+
+  // Voeg direct toe als stap aan het systeem in wording
+  modalSteps.push({ bewerkingId: saved.id, percentage: 100 });
+
+  // Dropdown ververesen zodat de nieuwe bewerking ook daar verschijnt
+  refreshModalBewSelect();
+  renderModalSteps();
+
+  closeNewBewModal();
+}
+
 async function newCalc() {
   const naam = prompt('Naam voor de nieuwe calculatie:', 'Calculatie ' + (data.calculaties.length + 1));
   if (!naam) return;
