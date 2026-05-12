@@ -1318,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.9.1</h2>
-      <p>Verfijning van het materiaaloverzicht op de <strong>Werkbon</strong>: het mini-overzicht "Materiaal voor [...]" staat nu <strong>per onderdeel</strong> in plaats van per hoofdgroep. Zo zie je bij wit/zwart-projecten precies hoeveel lak en grondverf je per kleurzone nodig hebt — bijvoorbeeld witte deuren versus zwarte kozijnen. Het projecttotaal onderaan blijft de complete boodschappenlijst voor je bestelling.</p>
+      <h2>Welkom bij v3.9.2</h2>
+      <p>Bugfix voor het on-the-job vullen van de verfsysteem-bibliotheek: als je vanuit een calc-regel een nieuw verfsysteem aanmaakt, wordt het na opslaan nu <strong>automatisch als regel ingevoegd</strong> in je calc. De modal sluit, de regel staat erin, je werkt direct verder. Geen tweede klik meer nodig om hetzelfde systeem opnieuw te selecteren. Klein verschil, groot effect bij het opbouwen van je bibliotheek.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1614,7 +1614,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.9.1';
+const APP_VERSION = 'v3.9.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5170,9 +5170,14 @@ async function selectAddSys(sysId) {
   renderCalcStructuur();
 }
 function openSystemFromAdd() {
-  modalSysContext = addSysCtx ? { ...addSysCtx } : null;
+  // BELANGRIJK: openSystemModal() reset modalSysContext naar null,
+  // dus we moeten de context PAS NA het openen zetten, niet ervoor.
+  // Vóór v3.9.2 stonden deze regels omgedraaid, waardoor de auto-invoeg
+  // van de zojuist aangemaakte regel niet werkte.
+  const ctx = addSysCtx ? { ...addSysCtx } : null;
   closeAddSysModal();
   openSystemModal();
+  modalSysContext = ctx;
 }
 async function newCalc() {
   const naam = prompt('Naam voor de nieuwe calculatie:', 'Calculatie ' + (data.calculaties.length + 1));
