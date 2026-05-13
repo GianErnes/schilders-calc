@@ -1318,8 +1318,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.9.3</h2>
-      <p>Voor het soepel vullen van je bibliotheek <em>on-the-job</em>: in het verfsysteem-formulier zit nu een knop <strong>"+ Nieuw"</strong> naast de bewerking-dropdown. Daarmee maak je ter plekke een nieuwe bewerking aan via een mini-modal, die automatisch wordt toegevoegd aan je bewerkingen-bibliotheek én direct als stap aan het verfsysteem waar je mee bezig bent. Eenheid en ondergrond worden voorgevuld op basis van het systeem — spaart typewerk. Geen tab-switches meer, geen onderbroken denkflow.</p>
+      <h2>Welkom bij v3.9.4</h2>
+      <p>Twee nieuwe <strong>referentie-blokken</strong> bij de staartkosten, gebaseerd op het normenboek. <strong>Toeslag kleine objecten</strong> berekent op basis van het totaal arbeidsuren van je calculatie de richtwaarde uit de tabel (30% bij ≤10 uur, 25% bij ≤25 uur, etc.). <strong>Toeslag klimtijd</strong> geeft de richtwaarde op basis van het aantal woonlagen waar je werkt, met optionele 6% extra voor doorlopende balkons/galerijen. Beide zijn pure rekenhulp: jij vult zelf het uiteindelijke percentage in op de toeslag-post. Geen automatische berekening, geen verrassingen — alleen het normenboek dat met je meedenkt.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1372,6 +1372,7 @@
         <div id="calcStructuur"></div>
         <button class="btn" onclick="addHoofdgroep()" style="margin-top: 0.5rem;">+ Hoofdgroep toevoegen</button>
         <h3 style="margin-top: 2rem; margin-bottom: 0.75rem;">Staartkosten</h3>
+        <div id="normRefs" style="margin-bottom: 0.75rem;"></div>
         <div id="staartList"></div>
         <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
           <select id="staartTpl" style="flex: 1; min-width: 200px;"></select>
@@ -1664,7 +1665,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.9.3';
+const APP_VERSION = 'v3.9.4';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5570,6 +5571,118 @@ function _calcWeeks() {
 }
 function calcStaartTotaal() { return data.calc.staart.reduce((s, p) => s + calcStaart(p), 0); }
 
+// ============================================================
+// NORM-REFERENTIE-BLOKKEN (v3.9.4)
+// Twee leesbare blokken naast/onder staartkosten die richtwaarden
+// uit het normenboek tonen. Geen automatische toepassing — pure
+// rekenhulp. Jij bepaalt zelf wat je in de toeslag-post invult.
+// ============================================================
+
+// Tabel kleine objecten (uit normenboek): max-uren → toeslag%
+const NORM_KLEIN_OBJ = [
+  { max: 10,  pct: 30 },
+  { max: 25,  pct: 25 },
+  { max: 50,  pct: 20 },
+  { max: 100, pct: 15 },
+  { max: 150, pct: 10 },
+  { max: Infinity, pct: 0 }
+];
+
+// Tabel klimtijd: woonlaag → toeslag%
+const NORM_KLIMTIJD = {
+  1: 6,
+  2: 13,
+  3: 17.5,
+  4: 20,
+  5: 24
+};
+
+function _normPctKleineObj(uren) {
+  for (const r of NORM_KLEIN_OBJ) {
+    if (uren <= r.max) return r.pct;
+  }
+  return 0;
+}
+
+// State voor klimtijd-keuze (lokaal, niet opgeslagen in DB).
+// We bewaren 'm wel in localStorage zodat de keuze tussen pageloads behouden blijft.
+let _normKlimLaag = parseInt(localStorage.getItem('verfcalc_normKlimLaag') || '1', 10);
+let _normKlimGalerij = localStorage.getItem('verfcalc_normKlimGalerij') === '1';
+
+function _setNormKlimLaag(v) {
+  _normKlimLaag = parseInt(v, 10) || 1;
+  try { localStorage.setItem('verfcalc_normKlimLaag', String(_normKlimLaag)); } catch(e) {}
+  renderNormRefs();
+}
+function _setNormKlimGalerij(checked) {
+  _normKlimGalerij = !!checked;
+  try { localStorage.setItem('verfcalc_normKlimGalerij', _normKlimGalerij ? '1' : '0'); } catch(e) {}
+  renderNormRefs();
+}
+
+function renderNormRefs() {
+  const c = document.getElementById('normRefs');
+  if (!c) return;
+  if (!data.calc) { c.innerHTML = ''; return; }
+
+  // Totaal arbeidsuren van de calculatie
+  const t = calcProjectTotalen();
+  const uren = t.uren || 0;
+  const pctKlein = _normPctKleineObj(uren);
+
+  // Klimtijd
+  const basisKlim = NORM_KLIMTIJD[_normKlimLaag] || 0;
+  const pctKlim = basisKlim + (_normKlimGalerij ? 6 : 0);
+
+  // Helper voor de tabel-regels
+  const rijenKleinObj = NORM_KLEIN_OBJ.slice(0, -1).map(r => {
+    const actief = uren <= r.max && (pctKlein === r.pct);
+    return `<span style="${actief ? 'font-weight:600; color:var(--accent-deep);' : 'color:var(--muted);'}">≤ ${r.max} u: ${r.pct}%</span>`;
+  }).concat([`<span style="${uren > 150 ? 'font-weight:600; color:var(--accent-deep);' : 'color:var(--muted);'}">&gt; 150 u: 0%</span>`]).join(' · ');
+
+  const lagenButtons = [1,2,3,4,5].map(n => {
+    const sel = n === _normKlimLaag;
+    return `<button type="button" onclick="_setNormKlimLaag(${n})" style="padding: 0.2rem 0.55rem; font-size: 0.78rem; border: 1px solid ${sel ? 'var(--accent)' : 'var(--line)'}; background: ${sel ? 'var(--accent)' : 'var(--paper)'}; color: ${sel ? '#fff' : 'var(--ink)'}; border-radius: 4px; cursor: pointer;">${n}</button>`;
+  }).join(' ');
+
+  c.innerHTML = `
+    <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem 0.75rem; font-size: 0.82rem; margin-bottom: 0.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap: 0.5rem; flex-wrap: wrap;">
+        <strong>Toeslag kleine objecten</strong>
+        <span style="color: var(--muted); font-size: 0.74rem;"><em>richtwaarde uit normenboek</em></span>
+      </div>
+      <div style="margin-top: 0.35rem;">
+        Deze calculatie: <strong>${fmt(uren)} uur</strong> arbeid → richtwaarde <strong style="color:var(--accent-deep);">${pctKlein}%</strong> over arbeid
+      </div>
+      <div style="margin-top: 0.35rem; font-size: 0.74rem; line-height: 1.6;">
+        ${rijenKleinObj}
+      </div>
+    </div>
+
+    <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem 0.75rem; font-size: 0.82rem; margin-bottom: 0.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap: 0.5rem; flex-wrap: wrap;">
+        <strong>Toeslag klimtijd</strong>
+        <span style="color: var(--muted); font-size: 0.74rem;"><em>richtwaarde uit normenboek</em></span>
+      </div>
+      <div style="margin-top: 0.35rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <span>Hoogste woonlaag:</span>
+        <span style="display: inline-flex; gap: 0.25rem;">${lagenButtons}</span>
+      </div>
+      <label style="display:flex; align-items:center; gap:0.4rem; margin-top:0.35rem; cursor:pointer; font-size:0.78rem;">
+        <input type="checkbox" ${_normKlimGalerij ? 'checked' : ''} onchange="_setNormKlimGalerij(this.checked)">
+        Doorlopende balkons / galerij aan werkzijde (+6%)
+      </label>
+      <div style="margin-top: 0.35rem;">
+        Richtwaarde: <strong style="color:var(--accent-deep);">${fmt(pctKlim)}%</strong> over arbeid
+        ${_normKlimGalerij ? `<span style="color:var(--muted); font-size:0.74rem;"> (${basisKlim}% klimtijd + 6% galerij)</span>` : ''}
+      </div>
+      <div style="margin-top: 0.35rem; font-size: 0.74rem; color: var(--muted); line-height: 1.6;">
+        1 laag: 6% · 2 lagen: 13% · 3 lagen: 17,5% · 4 lagen: 20% · 5 lagen: 24%
+      </div>
+    </div>
+  `;
+}
+
 function renderStaartList() {
   const c = document.getElementById('staartList');
   if (!data.calc.staart.length) {
@@ -5828,6 +5941,7 @@ function renderTotals() {
     </div>
   `;
   renderStaartList();
+  renderNormRefs();
 }
 function updVolleDagenOverride(v) {
   if (v === 'null') data.calc.volleDagenOverride = null;
