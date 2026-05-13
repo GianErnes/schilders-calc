@@ -1273,7 +1273,10 @@
   .auth-card h2 { font-size: 1.2rem; margin-bottom: 0.3rem; }
   .auth-card .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
   .auth-card label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.4rem; }
-  .auth-card input[type="email"] { width: 100%; padding: 0.7rem; font-size: 1rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); box-sizing: border-box; font-family: inherit; }
+  .auth-card input[type="email"], .auth-card input[type="password"], .auth-card input[type="text"] { width: 100%; padding: 0.7rem; font-size: 1rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); box-sizing: border-box; font-family: inherit; }
+  .auth-link { display: inline-block; margin-top: 0.9rem; font-size: 0.82rem; color: var(--accent); text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; }
+  .auth-link:hover { color: var(--ink); }
+  .auth-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.35rem; }
   .auth-msg { padding: 0.7rem 0.9rem; border-radius: var(--radius); margin-top: 0.75rem; font-size: 0.88rem; display: none; }
   .auth-msg.ok { background: #e8f5e9; color: #2e7d32; display: block; }
   .auth-msg.err { background: #ffebee; color: #c62828; display: block; }
@@ -1298,6 +1301,7 @@
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
     <div class="user-badge" id="userBadge" style="display:none;">
+      <button class="btn-secondary btn" onclick="openChangePasswordModal()" title="Wijzig je wachtwoord">🔑 Wachtwoord</button>
       <button class="btn-secondary btn" onclick="logout()">🔒 Uitloggen</button>
     </div>
   </div>
@@ -1318,8 +1322,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.9.5</h2>
-      <p><strong>Onzichtbare onderhoudsbeurt</strong> aan de database. Niets verandert in de app — alle functies werken zoals altijd, je calculaties, materialen en verfsystemen blijven gewoon staan. Onder de motorkap is de beveiliging aangescherpt: rechten voor niet-ingelogde toegang zijn ingetrokken, een interne database-functie is veiliger gemaakt, en er staat nu een opruimbaar template klaar voor de Supabase-wijziging die in oktober ingaat. Als alles werkt zoals voorheen, is deze update geslaagd.</p>
+      <h2>Welkom bij v3.9.6</h2>
+      <p><strong>Wachtwoord beheren in de app.</strong> Twee nieuwe knoppen en een complete vergeten-flow. Rechtsboven naast Uitloggen vind je nu <strong>🔑 Wachtwoord</strong> — daarmee wijzig je je wachtwoord zonder het dashboard te hoeven openen. Op het inlog-scherm staat een <em>Wachtwoord vergeten?</em>-link die je via e-mail door de reset-flow loodst en een nieuw wachtwoord laat instellen. Onder de motorkap is ook de inlog-pagina opnieuw bekeken en is een kleine styling-fout op het wachtwoord-veld opgelost.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1653,10 +1657,73 @@
     <input type="password" id="authPassword" placeholder="••••••••••••••••" onkeydown="if(event.key==='Enter') login()" autocomplete="current-password">
     <button class="btn" onclick="login()" id="authBtn" style="margin-top:0.75rem; width:100%;">Inloggen</button>
     <div class="auth-msg" id="authMsg"></div>
+    <div style="text-align:center; margin-top: 0.5rem;">
+      <button class="auth-link" onclick="toggleForgotPanel(true)" id="forgotLink">Wachtwoord vergeten?</button>
+    </div>
+
+    <!-- Forgot-password inline paneel (verborgen tot link wordt geklikt) -->
+    <div id="forgotPanel" style="display:none; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--paper-deep);">
+      <h2 style="font-size: 1rem;">Wachtwoord opnieuw instellen</h2>
+      <p class="sub" style="font-size: 0.82rem;">Vul je e-mailadres in. Je ontvangt een mail met een link om een nieuw wachtwoord in te stellen.</p>
+      <label>E-mail</label>
+      <input type="email" id="forgotEmail" placeholder="naam@bedrijf.nl" autocomplete="username" onkeydown="if(event.key==='Enter') submitForgotPassword()">
+      <button class="btn" onclick="submitForgotPassword()" id="forgotBtn" style="margin-top:0.75rem; width:100%;">Verstuur resetlink</button>
+      <div class="auth-msg" id="forgotMsg"></div>
+      <div style="text-align:center; margin-top: 0.5rem;">
+        <button class="auth-link" onclick="toggleForgotPanel(false)">← Terug naar inloggen</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <footer id="appFooter">Schilders Calculatie · Data via Supabase cloud</footer>
+
+<!-- WACHTWOORD WIJZIGEN MODAL (ingelogd) -->
+<div class="modal-overlay" id="changePasswordModal">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-head"><h3>🔑 Wachtwoord wijzigen</h3><button class="close-x" onclick="closeChangePasswordModal()">✕</button></div>
+    <div class="modal-body">
+      <label>Huidig wachtwoord</label>
+      <input type="password" id="cpCurrent" placeholder="••••••••••••••••" autocomplete="current-password" style="width:100%; padding:0.7rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+
+      <label style="margin-top:0.75rem;">Nieuw wachtwoord</label>
+      <input type="password" id="cpNew1" placeholder="Minimaal 10 tekens, met letters en cijfers" autocomplete="new-password" style="width:100%; padding:0.7rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+      <div class="auth-hint">Eis: 10+ tekens, minstens 1 letter en 1 cijfer. Tip: een zin als <em>kwast-en-roller-99</em> is sterker dan korte complexe wachtwoorden.</div>
+
+      <label style="margin-top:0.75rem;">Nieuw wachtwoord (nogmaals)</label>
+      <input type="password" id="cpNew2" placeholder="Herhaal het nieuwe wachtwoord" autocomplete="new-password" onkeydown="if(event.key==='Enter') submitChangePassword()" style="width:100%; padding:0.7rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+
+      <div class="auth-msg" id="cpMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="closeChangePasswordModal()">Annuleren</button>
+      <button class="btn" onclick="submitChangePassword()" id="cpBtn">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECOVERY MODAL (vanuit reset-mail) -->
+<div class="modal-overlay" id="recoveryModal">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-head"><h3>🔑 Nieuw wachtwoord instellen</h3></div>
+    <div class="modal-body">
+      <p class="sub" style="font-size: 0.85rem; margin-bottom: 1rem;">Je bent hier via een resetlink uit je e-mail. Stel hieronder een nieuw wachtwoord in om door te gaan.</p>
+
+      <label>Nieuw wachtwoord</label>
+      <input type="password" id="recNew1" placeholder="Minimaal 10 tekens, met letters en cijfers" autocomplete="new-password" style="width:100%; padding:0.7rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+      <div class="auth-hint">Eis: 10+ tekens, minstens 1 letter en 1 cijfer.</div>
+
+      <label style="margin-top:0.75rem;">Nieuw wachtwoord (nogmaals)</label>
+      <input type="password" id="recNew2" placeholder="Herhaal het nieuwe wachtwoord" autocomplete="new-password" onkeydown="if(event.key==='Enter') submitRecoveryPassword()" style="width:100%; padding:0.7rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+
+      <div class="auth-msg" id="recMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="cancelRecovery()">Annuleren</button>
+      <button class="btn" onclick="submitRecoveryPassword()" id="recBtn">Wachtwoord instellen</button>
+    </div>
+  </div>
+</div>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1665,7 +1732,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.9.5';
+const APP_VERSION = 'v3.9.6';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -1735,6 +1802,197 @@ async function _showApp() {
   document.getElementById('userBadge').style.display = 'flex';
   await loadData();
   renderAll();
+}
+
+// ============================================================
+// WACHTWOORD-FUNCTIES (v3.9.6)
+// ============================================================
+
+// Centrale validatie: zelfde regels als Supabase server-side
+function _validatePasswordRule(pw) {
+  if (!pw || pw.length < 10) {
+    return { ok: false, msg: 'Wachtwoord moet minimaal 10 tekens lang zijn.' };
+  }
+  if (!/[A-Za-z]/.test(pw)) {
+    return { ok: false, msg: 'Wachtwoord moet minstens 1 letter bevatten.' };
+  }
+  if (!/[0-9]/.test(pw)) {
+    return { ok: false, msg: 'Wachtwoord moet minstens 1 cijfer bevatten.' };
+  }
+  return { ok: true, msg: '' };
+}
+
+// Hulp: msg-vakje tonen
+function _showMsg(elId, msg, kind) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.className = 'auth-msg';
+  if (msg) {
+    el.classList.add(kind || 'err');
+    el.textContent = msg;
+  } else {
+    el.textContent = '';
+  }
+}
+
+// ===== FLOW A: Wachtwoord wijzigen vanuit ingelogde sessie =====
+
+function openChangePasswordModal() {
+  document.getElementById('cpCurrent').value = '';
+  document.getElementById('cpNew1').value = '';
+  document.getElementById('cpNew2').value = '';
+  _showMsg('cpMsg', '', '');
+  document.getElementById('changePasswordModal').classList.add('active');
+  setTimeout(() => document.getElementById('cpCurrent').focus(), 50);
+}
+
+function closeChangePasswordModal() {
+  document.getElementById('changePasswordModal').classList.remove('active');
+}
+
+async function submitChangePassword() {
+  const cur  = document.getElementById('cpCurrent').value;
+  const nw1  = document.getElementById('cpNew1').value;
+  const nw2  = document.getElementById('cpNew2').value;
+  const btn  = document.getElementById('cpBtn');
+
+  // Client-side validatie
+  if (!cur) { _showMsg('cpMsg', 'Vul je huidige wachtwoord in.', 'err'); return; }
+  if (nw1 !== nw2) { _showMsg('cpMsg', 'De twee nieuwe wachtwoorden komen niet overeen.', 'err'); return; }
+  if (nw1 === cur) { _showMsg('cpMsg', 'Nieuw wachtwoord moet anders zijn dan het huidige.', 'err'); return; }
+  const v = _validatePasswordRule(nw1);
+  if (!v.ok) { _showMsg('cpMsg', v.msg, 'err'); return; }
+
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Bezig...';
+  _showMsg('cpMsg', '', '');
+
+  try {
+    // Re-auth: bevestig dat huidig wachtwoord klopt door opnieuw in te loggen
+    const { data: { user } } = await _sb.auth.getUser();
+    if (!user || !user.email) {
+      _showMsg('cpMsg', 'Sessie verlopen. Log opnieuw in.', 'err');
+      btn.disabled = false; btn.textContent = oldText;
+      return;
+    }
+    const { error: reAuthErr } = await _sb.auth.signInWithPassword({ email: user.email, password: cur });
+    if (reAuthErr) {
+      _showMsg('cpMsg', 'Huidig wachtwoord klopt niet.', 'err');
+      btn.disabled = false; btn.textContent = oldText;
+      return;
+    }
+    // Update naar nieuw wachtwoord
+    const { error: updErr } = await _sb.auth.updateUser({ password: nw1 });
+    if (updErr) {
+      _showMsg('cpMsg', 'Wijzigen mislukt: ' + updErr.message, 'err');
+      btn.disabled = false; btn.textContent = oldText;
+      return;
+    }
+    btn.disabled = false; btn.textContent = oldText;
+    closeChangePasswordModal();
+    _toast('Wachtwoord gewijzigd. Volgende keer inloggen met het nieuwe wachtwoord.', 'ok');
+  } catch(err) {
+    _showMsg('cpMsg', 'Onverwachte fout: ' + (err.message || err), 'err');
+    btn.disabled = false; btn.textContent = oldText;
+  }
+}
+
+// ===== FLOW B-1: Wachtwoord vergeten — link op login-scherm =====
+
+function toggleForgotPanel(show) {
+  document.getElementById('forgotPanel').style.display = show ? 'block' : 'none';
+  document.getElementById('forgotLink').style.display  = show ? 'none'  : 'inline-block';
+  if (show) {
+    // Vul automatisch het e-mailadres in dat al in het login-formulier staat
+    const loginEmail = document.getElementById('authEmail').value.trim();
+    if (loginEmail) document.getElementById('forgotEmail').value = loginEmail;
+    setTimeout(() => document.getElementById('forgotEmail').focus(), 50);
+  } else {
+    _showMsg('forgotMsg', '', '');
+  }
+}
+
+async function submitForgotPassword() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const btn   = document.getElementById('forgotBtn');
+  if (!email) { _showMsg('forgotMsg', 'Vul je e-mailadres in.', 'err'); return; }
+
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Versturen...';
+  _showMsg('forgotMsg', '', '');
+
+  try {
+    // Redirect-URL naar de huidige app-URL — Supabase voegt zelf #access_token toe
+    const redirectUrl = window.location.origin + window.location.pathname;
+    const { error } = await _sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
+    btn.disabled = false; btn.textContent = oldText;
+    if (error) {
+      _showMsg('forgotMsg', 'Versturen mislukt: ' + error.message, 'err');
+      return;
+    }
+    // Bewust generieke melding: lekt niet of het e-mailadres bestaat
+    _showMsg('forgotMsg', 'Als dit e-mailadres bekend is, ontvang je binnen enkele minuten een mail met instructies.', 'ok');
+  } catch(err) {
+    btn.disabled = false; btn.textContent = oldText;
+    _showMsg('forgotMsg', 'Onverwachte fout: ' + (err.message || err), 'err');
+  }
+}
+
+// ===== FLOW B-2: Recovery-modal (na klik op resetlink in mail) =====
+
+function openRecoveryModal() {
+  document.getElementById('recNew1').value = '';
+  document.getElementById('recNew2').value = '';
+  _showMsg('recMsg', '', '');
+  // Verberg de login-overlay onder de modal voor netter visueel resultaat
+  document.getElementById('authOverlay').classList.remove('active');
+  document.getElementById('recoveryModal').classList.add('active');
+  setTimeout(() => document.getElementById('recNew1').focus(), 50);
+}
+
+async function cancelRecovery() {
+  if (!confirm('Wachtwoord-reset annuleren? Je wordt teruggebracht naar het inlog-scherm.')) return;
+  try { await _sb.auth.signOut(); } catch(e) {}
+  document.getElementById('recoveryModal').classList.remove('active');
+  document.getElementById('authOverlay').classList.add('active');
+  // Schoonmaken: hash uit URL halen zodat een refresh niet opnieuw recovery triggert
+  if (window.location.hash) {
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+}
+
+async function submitRecoveryPassword() {
+  const nw1 = document.getElementById('recNew1').value;
+  const nw2 = document.getElementById('recNew2').value;
+  const btn = document.getElementById('recBtn');
+
+  if (nw1 !== nw2) { _showMsg('recMsg', 'De twee wachtwoorden komen niet overeen.', 'err'); return; }
+  const v = _validatePasswordRule(nw1);
+  if (!v.ok) { _showMsg('recMsg', v.msg, 'err'); return; }
+
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Bezig...';
+  _showMsg('recMsg', '', '');
+
+  try {
+    const { error } = await _sb.auth.updateUser({ password: nw1 });
+    if (error) {
+      _showMsg('recMsg', 'Instellen mislukt: ' + error.message, 'err');
+      btn.disabled = false; btn.textContent = oldText;
+      return;
+    }
+    btn.disabled = false; btn.textContent = oldText;
+    document.getElementById('recoveryModal').classList.remove('active');
+    // Hash uit URL halen
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+    _toast('Wachtwoord ingesteld. Je bent nu ingelogd met het nieuwe wachtwoord.', 'ok');
+    await _showApp();
+  } catch(err) {
+    _showMsg('recMsg', 'Onverwachte fout: ' + (err.message || err), 'err');
+    btn.disabled = false; btn.textContent = oldText;
+  }
 }
 
 // Timeout-wrapper: Supabase-call die langer dan 30s duurt → foutmelding
@@ -6546,11 +6804,31 @@ document.getElementById('appFooter').textContent = 'Schilders Calculatie · ' + 
 
 async function init() {
   // Maak Supabase client met Auth ingeschakeld
+  // detectSessionInUrl=true: leest het access_token uit de URL-hash bij terugkomst uit reset-mail
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
 
-  // Check of er al een sessie is
+  // Luister op auth-state events. Bij PASSWORD_RECOVERY (klik op resetlink uit mail)
+  // openen we de recovery-modal in plaats van de app te starten.
+  let _recoveryHandled = false;
+  _sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      _recoveryHandled = true;
+      openRecoveryModal();
+    }
+  });
+
+  // Geef het PASSWORD_RECOVERY-event even de tijd om binnen te komen (URL-parse is async)
+  // Dit voorkomt dat we de app starten terwijl de recovery-flow nog wordt herkend.
+  await new Promise(r => setTimeout(r, 50));
+
+  if (_recoveryHandled) {
+    // Recovery-modal is al geopend; doe verder niets met de gewone session-check
+    return;
+  }
+
+  // Check of er al een gewone sessie is
   if (await _isAuthenticated()) {
     await _showApp();
   } else {
