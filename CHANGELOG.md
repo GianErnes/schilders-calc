@@ -1,3 +1,21 @@
+## v3.9.6.4 — Hotfix #4 (laatste): foutmeldingen weer in net Nederlands
+- **Bug**: na v3.9.6.2/3 verschenen foutmeldingen bij wachtwoord wijzigen als generieke "Wijzigen mislukt: HTTP 400" in plaats van duidelijke Nederlandse meldingen als "Huidig wachtwoord klopt niet" of "Nieuw wachtwoord moet anders zijn dan het huidige".
+- **Diagnose via DevTools** (Network tab → Response): de server-response bleek deze structuur te hebben:
+  ```json
+  { "code": 400, "error_code": "current_password_invalid", "msg": "Current password required when setting new password." }
+  ```
+  Maar mijn vertaal-code in v3.9.6.2 las `body.code` en `body.message`. Resultaat: `code` was de HTTP status (400) i.p.v. de error-string, en `message` bestond niet. Mijn `if`-takken matchten nooit, fallback gaf altijd "HTTP 400".
+- **Fix**: drie veldnamen aangepast:
+  - `body.code` → `body.error_code || body.code` (gotrue gebruikt snake_case)
+  - `body.message` → `body.msg || body.message || ...` (idem)
+  - Extra error-code `current_password_invalid` toegevoegd (verschillend van `current_password_required` — eerste = klopt niet, tweede = ontbreekt; beide vertalen we naar "Huidig wachtwoord klopt niet")
+- **Lessen uit de saga (vier hotfixes voor één feature)**:
+  - Library-docs zijn niet altijd accuraat over wire-format (camelCase in docs, snake_case in werkelijkheid)
+  - Server-side response-velden zijn ook snake_case en wijken af van wat ik verwachtte
+  - DevTools Network-tab is onmisbaar bij elke auth-debug, niet pas als laatste redmiddel
+  - Toast-aanroepen direct na async calls kunnen door interne library-effects worden onderbroken; toast eerst, async daarna
+- **Geen nieuwe functionaliteit, alleen betere foutafhandeling**. Wachtwoord wijzigen werkt sinds v3.9.6.2; v3.9.6.3 fixte de toast; v3.9.6.4 fixt nu de foutmelding-tekst.
+
 ## v3.9.6.3 — Hotfix #3: bevestigings-toast verscheen niet na wachtwoord wijzigen
 - **Bug**: in v3.9.6.2 werkte het wachtwoord wijzigen functioneel correct (server-call slaagde, wachtwoord daadwerkelijk gewijzigd, nieuw wachtwoord bruikbaar bij login), maar de groene bevestigings-toast "Wachtwoord gewijzigd..." verscheen niet. De modal sloot gewoon zonder feedback, waardoor het voor de gebruiker leek alsof er niks gebeurde.
 - **Theorie/diagnose**: in `submitChangePassword` stond de volgorde van calls in v3.9.6.2 als volgt:

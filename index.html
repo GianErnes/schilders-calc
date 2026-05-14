@@ -1322,8 +1322,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.9.6.3</h2>
-      <p><strong>Derde hotfix in de wachtwoord-saga.</strong> In v3.9.6.2 werkte het wijzigen wel, maar de groene bevestigings-toast verscheen niet. Diagnose: de toast-aanroep stond ná een asynchrone <code>refreshSession()</code>-call die de UI-render kort kon onderbreken. <strong>Fix</strong>: volgorde omgedraaid — eerst de modal sluiten en de toast tonen, daarna pas op de achtergrond de sessie verversen (zonder <code>await</code>, met losse error-logging). Resultaat: instant zichtbare bevestiging, en de sessie-refresh blijft buiten beeld goed gaan. Tussen ons gezegd: hopelijk de laatste hotfix in deze reeks.</p>
+      <h2>Welkom bij v3.9.6.4</h2>
+      <p><strong>Vierde en laatste hotfix in de wachtwoord-saga.</strong> Foutmeldingen bij wachtwoord wijzigen verschijnen weer in net Nederlands in plaats van de generieke "HTTP 400"-melding. De oorzaak: gotrue (Supabase Auth) gebruikt <code>error_code</code> en <code>msg</code> als veldnamen in zijn JSON-response, maar mijn vorige fix las <code>code</code> en <code>message</code> — die bestaan niet in deze response-vorm. DevTools liet vandaag de letterlijke server-output zien, op basis daarvan zijn de juiste veldnamen ingebakken plus de extra error-code <code>current_password_invalid</code> (klopt niet, naast <code>current_password_required</code> = ontbreekt). Saga afgesloten 🎨.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1732,7 +1732,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.9.6.3';
+const APP_VERSION = 'v3.9.6.4';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -1894,19 +1894,23 @@ async function submitChangePassword() {
     });
 
     if (!resp.ok) {
-      // Foutmelding van server lezen
+      // Foutmelding van server lezen — gotrue gebruikt error_code + msg (snake_case),
+      // niet code + message zoals ik aanvankelijk dacht. Beide proberen voor robuustheid.
       let serverMsg = '';
       let serverCode = '';
       try {
         const body = await resp.json();
-        serverMsg = body.message || body.error_description || body.error || '';
-        serverCode = body.code || '';
+        serverMsg  = body.msg || body.message || body.error_description || body.error || '';
+        serverCode = body.error_code || body.code || '';
       } catch(_) { /* response was geen JSON */ }
 
-      // Vertaal naar nette NL-meldingen op basis van code (betrouwbaarder dan tekst-matchen)
+      // Vertaal naar nette NL-meldingen op basis van error_code (betrouwbaarder dan tekst).
+      // Codes uit gotrue v2: current_password_invalid (klopt niet),
+      // current_password_required (ontbreekt), same_password, weak_password.
       let msg;
-      if (serverCode === 'current_password_required' || serverCode === 'invalid_credentials') {
-        // current_password_required hier = huidig klopt niet of ontbreekt
+      if (serverCode === 'current_password_invalid' ||
+          serverCode === 'current_password_required' ||
+          serverCode === 'invalid_credentials') {
         msg = 'Huidig wachtwoord klopt niet.';
       } else if (serverCode === 'same_password') {
         msg = 'Nieuw wachtwoord moet anders zijn dan het huidige.';
