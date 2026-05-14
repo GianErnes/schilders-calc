@@ -1322,8 +1322,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.9.6.2</h2>
-      <p><strong>Tweede hotfix voor wachtwoord wijzigen.</strong> In v3.9.6.1 bleef de modal de melding "Huidig wachtwoord klopt niet" geven, ook bij een correct wachtwoord. Diagnose met DevTools toonde de oorzaak: de Supabase JavaScript-bibliotheek stuurde de parameter als <code>currentPassword</code> (camelCase) naar de server, terwijl de server <code>current_password</code> (snake_case) verwacht. De docs zeggen camelCase, maar in de praktijk komt het anders aan — een bug in de library. <strong>Fix</strong>: voor deze ene call wordt nu een directe HTTP-fetch gebruikt met de juiste snake_case parameter, in plaats van via de bibliotheek. De rest van de app blijft gewoon de bibliotheek gebruiken.</p>
+      <h2>Welkom bij v3.9.6.3</h2>
+      <p><strong>Derde hotfix in de wachtwoord-saga.</strong> In v3.9.6.2 werkte het wijzigen wel, maar de groene bevestigings-toast verscheen niet. Diagnose: de toast-aanroep stond ná een asynchrone <code>refreshSession()</code>-call die de UI-render kort kon onderbreken. <strong>Fix</strong>: volgorde omgedraaid — eerst de modal sluiten en de toast tonen, daarna pas op de achtergrond de sessie verversen (zonder <code>await</code>, met losse error-logging). Resultaat: instant zichtbare bevestiging, en de sessie-refresh blijft buiten beeld goed gaan. Tussen ons gezegd: hopelijk de laatste hotfix in deze reeks.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1732,7 +1732,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.9.6.2';
+const APP_VERSION = 'v3.9.6.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -1920,12 +1920,16 @@ async function submitChangePassword() {
       return;
     }
 
-    // Succes: refresh de lokale Supabase-sessie zodat nieuwe tokens worden opgeslagen
-    try { await _sb.auth.refreshSession(); } catch(e) { /* niet fataal */ }
-
+    // Succes: toast tonen vóór de async refreshSession-call, anders kan
+    // een interne library-error de toast onderbreken voordat hij verschijnt.
     btn.disabled = false; btn.textContent = oldText;
     closeChangePasswordModal();
+    console.log('[v3.9.6.3] Wachtwoord gewijzigd, toast tonen');
     _toast('Wachtwoord gewijzigd. Volgende keer inloggen met het nieuwe wachtwoord.', 'ok');
+
+    // Refresh de lokale Supabase-sessie op de achtergrond zodat tokens kloppen.
+    // Geen await: toast moet hoe dan ook zichtbaar zijn.
+    _sb.auth.refreshSession().catch(e => console.warn('[v3.9.6.3] refreshSession faalde (niet fataal):', e));
   } catch(err) {
     _showMsg('cpMsg', 'Onverwachte fout: ' + (err.message || err), 'err');
     btn.disabled = false; btn.textContent = oldText;
