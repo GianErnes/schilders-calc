@@ -1322,8 +1322,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.9.6.1</h2>
-      <p><strong>Hotfix voor wachtwoord wijzigen.</strong> In v3.9.6 botste de "Wijzig wachtwoord"-flow met de Supabase-instelling "Require current password when updating": de melding <em>Current password required when setting new password</em> verscheen ondanks dat het huidige wachtwoord was ingevuld. De oorzaak: de aanpak met twee aparte calls (eerst opnieuw inloggen, daarna wijzigen) werkt niet meer met deze server-side instelling — Supabase wil het huidige wachtwoord meegestuurd zien in dezelfde call. Nu dus één API-call met `currentPassword` als extra parameter. Werkt schoner, sneller, en met duidelijke Nederlandse foutmeldingen.</p>
+      <h2>Welkom bij v3.9.6.2</h2>
+      <p><strong>Tweede hotfix voor wachtwoord wijzigen.</strong> In v3.9.6.1 bleef de modal de melding "Huidig wachtwoord klopt niet" geven, ook bij een correct wachtwoord. Diagnose met DevTools toonde de oorzaak: de Supabase JavaScript-bibliotheek stuurde de parameter als <code>currentPassword</code> (camelCase) naar de server, terwijl de server <code>current_password</code> (snake_case) verwacht. De docs zeggen camelCase, maar in de praktijk komt het anders aan — een bug in de library. <strong>Fix</strong>: voor deze ene call wordt nu een directe HTTP-fetch gebruikt met de juiste snake_case parameter, in plaats van via de bibliotheek. De rest van de app blijft gewoon de bibliotheek gebruiken.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1732,7 +1732,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.9.6.1';
+const APP_VERSION = 'v3.9.6.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -1868,31 +1868,61 @@ async function submitChangePassword() {
   _showMsg('cpMsg', '', '');
 
   try {
-    // Eén call: Supabase neemt zelf currentPassword mee in de validatie.
-    // Vereist supabase-js v2.102.0+ (script-tag laadt @2, dus altijd actueel).
-    // Werkt samen met de "Require current password when updating"-instelling
-    // in Supabase Auth (aangezet in v3.9.5).
-    const { error: updErr } = await _sb.auth.updateUser({
-      password: nw1,
-      currentPassword: cur
+    // Directe fetch naar Supabase Auth API. Reden: supabase-js v2 stuurt
+    // de parameter als 'currentPassword' (camelCase), maar de server verwacht
+    // 'current_password' (snake_case). De library converteert niet correct.
+    // Dit was zichtbaar in DevTools Network tab: payload kwam aan als
+    // currentPassword, server antwoord "current_password_required".
+    // Vandaar deze raw HTTP-call met de juiste sleutelnaam.
+    const { data: { session } } = await _sb.auth.getSession();
+    if (!session) {
+      _showMsg('cpMsg', 'Sessie verlopen. Log opnieuw in.', 'err');
+      btn.disabled = false; btn.textContent = oldText;
+      return;
+    }
+    const resp = await fetch(SUPABASE_URL + '/auth/v1/user', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session.access_token,
+        'apikey': SUPABASE_KEY
+      },
+      body: JSON.stringify({
+        password: nw1,
+        current_password: cur   // snake_case zoals server verwacht
+      })
     });
-    if (updErr) {
-      // Foutmeldingen vertalen naar nette NL-tekst
-      let msg = updErr.message || '';
-      const low = msg.toLowerCase();
-      if (low.includes('current password') || low.includes('invalid login') || low.includes('incorrect')) {
+
+    if (!resp.ok) {
+      // Foutmelding van server lezen
+      let serverMsg = '';
+      let serverCode = '';
+      try {
+        const body = await resp.json();
+        serverMsg = body.message || body.error_description || body.error || '';
+        serverCode = body.code || '';
+      } catch(_) { /* response was geen JSON */ }
+
+      // Vertaal naar nette NL-meldingen op basis van code (betrouwbaarder dan tekst-matchen)
+      let msg;
+      if (serverCode === 'current_password_required' || serverCode === 'invalid_credentials') {
+        // current_password_required hier = huidig klopt niet of ontbreekt
         msg = 'Huidig wachtwoord klopt niet.';
-      } else if (low.includes('same') || low.includes('different')) {
+      } else if (serverCode === 'same_password') {
         msg = 'Nieuw wachtwoord moet anders zijn dan het huidige.';
-      } else if (low.includes('weak') || low.includes('short') || low.includes('characters')) {
+      } else if (serverCode === 'weak_password') {
         msg = 'Wachtwoord is te zwak. Eis: 10+ tekens, minstens 1 letter en 1 cijfer.';
       } else {
-        msg = 'Wijzigen mislukt: ' + msg;
+        msg = 'Wijzigen mislukt: ' + (serverMsg || ('HTTP ' + resp.status));
       }
       _showMsg('cpMsg', msg, 'err');
       btn.disabled = false; btn.textContent = oldText;
       return;
     }
+
+    // Succes: refresh de lokale Supabase-sessie zodat nieuwe tokens worden opgeslagen
+    try { await _sb.auth.refreshSession(); } catch(e) { /* niet fataal */ }
+
     btn.disabled = false; btn.textContent = oldText;
     closeChangePasswordModal();
     _toast('Wachtwoord gewijzigd. Volgende keer inloggen met het nieuwe wachtwoord.', 'ok');
