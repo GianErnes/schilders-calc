@@ -2842,6 +2842,7 @@ function _mapBeurtFromDB(row) {
     volgorde:  row.volgorde != null ? row.volgorde : 0,
     modus:     row.modus || 'algemeen',
     scaling:   row.scaling || {},
+    meeInGemiddelde: row.mee_in_gemiddelde !== false, // default true
     aangemaakt: row.aangemaakt || null,
     gewijzigd:  row.gewijzigd  || null
   };
@@ -2854,6 +2855,7 @@ function _mapBeurtToDB(b, planId) {
     volgorde:  b.volgorde != null ? b.volgorde : 0,
     modus:     b.modus || 'algemeen',
     scaling:   b.scaling || {},
+    mee_in_gemiddelde: b.meeInGemiddelde !== false, // default true
     gewijzigd: new Date().toISOString()
   };
 }
@@ -3963,6 +3965,15 @@ async function _ohpEnsureBronLoaded() {
   return !!calc.__loaded;
 }
 
+// BTW-factor van de bron-calc (uit snapshot indien aanwezig, anders live settings).
+function _ohpBtwFactor() {
+  const calc = _ohpBronCalc();
+  if (!calc) return 1;
+  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+  const btwPct = sett.btw != null ? sett.btw : 21;
+  return 1 + (btwPct / 100);
+}
+
 // Render de beurten-lijst.
 function _ohpRenderBeurtenLijst() {
   const c = document.getElementById('ohpBeurtenLijst');
@@ -3975,27 +3986,33 @@ function _ohpRenderBeurtenLijst() {
     return;
   }
   const eindJaar = (plan.prijspeil || 0) + (plan.looptijdJaren || 0);
+  const btwF = _ohpBtwFactor();
   let html = '<div class="table-scroll"><table><thead><tr>';
   html += '<th style="width: 80px;">Jaar</th>';
   html += '<th>Naam</th>';
   html += '<th style="width: 110px;">Modus</th>';
   html += '<th style="width: 140px;" class="right">Basis (excl. BTW)</th>';
-  html += '<th style="width: 140px;" class="right">Geïndexeerd</th>';
+  html += '<th style="width: 160px;" class="right">Geïndexeerd (incl. BTW)</th>';
+  html += '<th style="width: 100px; text-align: center;" title="Meerekenen in gemiddelde jaarbedrag?">Mee in gem.</th>';
   html += '<th style="width: 110px;"></th>';
   html += '</tr></thead><tbody>';
   beurten.forEach(b => {
     const basis = _ohpBeurtBasisBedrag(b);
     const fac = _ohpIndexFactor(b.jaartal, plan.prijspeil, plan.indexeringPct);
-    const geind = basis * fac;
+    const geindExBtw = basis * fac;
+    const geindIncBtw = geindExBtw * btwF;
     const modusLabel = ({ algemeen: 'algemeen', per_regel: 'per regel', per_stap: 'per stap' })[b.modus] || b.modus || '';
     const jaarBuitenLoop = (b.jaartal > eindJaar) || (b.jaartal < plan.prijspeil);
     const jaarStyle = jaarBuitenLoop ? ' style="width: 70px; border-color: #d97706;" title="Buiten looptijd"' : ' style="width: 70px;"';
-    html += `<tr>
+    const mee = (b.meeInGemiddelde !== false);
+    const rijStyle = mee ? '' : ' style="color: var(--muted); background: var(--bg-soft, #f5f5f5);"';
+    html += `<tr${rijStyle}>
       <td><input type="number" min="1900" max="2200" step="1" value="${b.jaartal}" onchange="_ohpUpdBeurtVeld('${b.id}','jaartal',this.value)"${jaarStyle}></td>
       <td><input type="text" value="${_escapeHtml(b.naam || '')}" placeholder="bv. Onderhoudsbeurt" onchange="_ohpUpdBeurtVeld('${b.id}','naam',this.value)"></td>
       <td><span style="font-size: 0.85rem; color: var(--muted);">${modusLabel}</span></td>
       <td class="right">${eur(basis)}</td>
-      <td class="right"><strong>${eur(geind)}</strong></td>
+      <td class="right"><strong>${eur(geindIncBtw)}</strong></td>
+      <td style="text-align: center;"><input type="checkbox" ${mee ? 'checked' : ''} onchange="_ohpUpdBeurtVeld('${b.id}','meeInGemiddelde',this.checked)"></td>
       <td class="right">
         <button class="btn btn-sm" onclick="_ohpOpenBeurtModal('${b.id}')">Bewerken</button>
         <button class="btn btn-danger btn-sm" onclick="_ohpDeleteBeurt('${b.id}')">×</button>
@@ -4017,43 +4034,60 @@ function _ohpRenderResultaat() {
   const idx = plan.indexeringPct || 0;
   const pp = plan.prijspeil;
   const eindJaar = pp + plan.looptijdJaren;
+  const btwF = _ohpBtwFactor();
 
-  // Geïndexeerd totaal: som van alle beurten binnen de looptijd
-  let totaalGeind = 0;
-  const perJaar = {}; // { jaartal: geindexeerd bedrag }
+  // Per jaar verzamelen: bedrag (incl. BTW) en of het meegerekend wordt in gemiddelde
+  let totaalGemiddelde = 0;   // som van meegerekende beurten (incl. BTW)
+  let totaalEenmalig  = 0;    // som van niet-meegerekende beurten (incl. BTW)
+  const perJaar = {}; // { jaartal: { bedrag, mee } }
   beurten.forEach(b => {
     if (b.jaartal < pp || b.jaartal > eindJaar) return;
     const basis = _ohpBeurtBasisBedrag(b);
     const fac = _ohpIndexFactor(b.jaartal, pp, idx);
-    const bedrag = basis * fac;
-    totaalGeind += bedrag;
-    perJaar[b.jaartal] = (perJaar[b.jaartal] || 0) + bedrag;
+    const bedrag = basis * fac * btwF;
+    const mee = (b.meeInGemiddelde !== false);
+    if (mee) totaalGemiddelde += bedrag;
+    else totaalEenmalig += bedrag;
+    if (!perJaar[b.jaartal]) perJaar[b.jaartal] = { bedragMee: 0, bedragBuiten: 0 };
+    if (mee) perJaar[b.jaartal].bedragMee += bedrag;
+    else perJaar[b.jaartal].bedragBuiten += bedrag;
   });
-  const gemPerJaar = plan.looptijdJaren > 0 ? (totaalGeind / plan.looptijdJaren) : 0;
+  const gemPerJaar = plan.looptijdJaren > 0 ? (totaalGemiddelde / plan.looptijdJaren) : 0;
 
-  // Verkoop-blok
   let html = '<div class="settings-section" style="margin-top: 1rem;">';
   html += '<h3 style="margin-top: 0;">Resultaat</h3>';
   html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">';
 
   // Linkerblok: totalen
   html += '<div>';
-  html += `<div style="margin-bottom: 0.6rem;"><span style="color: var(--muted); font-size: 0.85rem;">Totaal over ${plan.looptijdJaren} jaar (geïndexeerd, excl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(totaalGeind)}</strong></div>`;
-  html += `<div><span style="color: var(--muted); font-size: 0.85rem;">Gemiddeld per jaar (excl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(gemPerJaar)}</strong></div>`;
+  html += `<div style="margin-bottom: 0.6rem;"><span style="color: var(--muted); font-size: 0.85rem;">Totaal over ${plan.looptijdJaren} jaar in gemiddelde (incl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(totaalGemiddelde)}</strong></div>`;
+  html += `<div style="margin-bottom: 0.6rem;"><span style="color: var(--muted); font-size: 0.85rem;">Gemiddeld per jaar (incl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(gemPerJaar)}</strong></div>`;
+  if (totaalEenmalig > 0) {
+    html += `<div style="margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border);"><span style="color: var(--muted); font-size: 0.85rem;">Eenmalig, buiten gemiddelde (incl. BTW)</span><br><strong style="font-size: 1.1rem; color: var(--muted);">${eur(totaalEenmalig)}</strong></div>`;
+  }
   html += '</div>';
 
   // Rechterblok: jaartabel
   html += '<div>';
-  html += '<div style="color: var(--muted); font-size: 0.85rem; margin-bottom: 0.4rem;">Jaartabel</div>';
-  html += '<div style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px;">';
+  html += '<div style="color: var(--muted); font-size: 0.85rem; margin-bottom: 0.4rem;">Jaartabel (incl. BTW)</div>';
+  html += '<div style="max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px;">';
   html += '<table style="margin: 0; width: 100%;"><tbody>';
   for (let j = pp; j <= eindJaar; j++) {
-    const bedrag = perJaar[j] || 0;
-    const isBeurt = bedrag > 0;
-    html += `<tr${isBeurt ? ' style="background: var(--accent-soft, #e8f0fe);"' : ''}>`;
-    html += `<td style="padding: 0.25rem 0.5rem; width: 70px;">${j}</td>`;
-    html += `<td class="right" style="padding: 0.25rem 0.5rem;">${isBeurt ? '<strong>' + eur(bedrag) + '</strong>' : '<span style="color: var(--muted);">— </span>'}</td>`;
-    html += '</tr>';
+    const entry = perJaar[j];
+    const heeftMee = entry && entry.bedragMee > 0;
+    const heeftBuiten = entry && entry.bedragBuiten > 0;
+    if (!heeftMee && !heeftBuiten) {
+      html += `<tr><td style="padding: 0.25rem 0.5rem; width: 70px;">${j}</td><td class="right" style="padding: 0.25rem 0.5rem;"><span style="color: var(--muted);">—</span></td></tr>`;
+      continue;
+    }
+    // Rij voor meegerekende beurten in dit jaar
+    if (heeftMee) {
+      html += `<tr style="background: var(--accent-soft, #e8f0fe);"><td style="padding: 0.25rem 0.5rem; width: 70px;">${j}</td><td class="right" style="padding: 0.25rem 0.5rem;"><strong>${eur(entry.bedragMee)}</strong></td></tr>`;
+    }
+    // Rij voor niet-meegerekende beurten in dit jaar (grijs)
+    if (heeftBuiten) {
+      html += `<tr style="background: var(--bg-soft, #f5f5f5); color: var(--muted);"><td style="padding: 0.25rem 0.5rem; width: 70px;">${heeftMee ? '' : j}</td><td class="right" style="padding: 0.25rem 0.5rem;"><span style="font-style: italic;">${eur(entry.bedragBuiten)}</span> <span style="font-size: 0.75rem;">eenmalig</span></td></tr>`;
+    }
   }
   html += '</tbody></table></div></div>';
 
@@ -4073,7 +4107,8 @@ async function _ohpAddBeurt() {
     jaartal:  defaultJaar,
     volgorde: huidige.length,
     modus:    'algemeen',
-    scaling:  { pct: 100 }
+    scaling:  { pct: 100 },
+    meeInGemiddelde: true
   };
   const opgeslagen = await _addBeurt(plan.id, nieuw);
   if (!opgeslagen) { _toast('Beurt toevoegen mislukt'); return; }
@@ -4082,7 +4117,7 @@ async function _ohpAddBeurt() {
   _ohpRenderResultaat();
 }
 
-// Werk één veld van een beurt bij (jaartal of naam, vanuit de lijst-inputs).
+// Werk één veld van een beurt bij (jaartal, naam, of meeInGemiddelde, vanuit de lijst-inputs).
 async function _ohpUpdBeurtVeld(beurtId, veld, value) {
   const plan = _ohpState.plan;
   if (!plan) return;
@@ -4090,6 +4125,7 @@ async function _ohpUpdBeurtVeld(beurtId, veld, value) {
   if (!b) return;
   if (veld === 'jaartal') b.jaartal = parseInt(value) || b.jaartal;
   else if (veld === 'naam') b.naam = value || '';
+  else if (veld === 'meeInGemiddelde') b.meeInGemiddelde = !!value;
   const opgeslagen = await _updateBeurt(b);
   if (!opgeslagen) { _toast('Beurt bijwerken mislukt'); return; }
   // Lokale beurt-state syncen (gewijzigd-timestamp etc.)
