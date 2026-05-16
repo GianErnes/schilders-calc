@@ -1642,6 +1642,50 @@
   </div>
 </div>
 
+<!-- ONDERHOUDSPLAN BEURT BEWERK MODAL (v3.10.0) -->
+<div class="modal-overlay" id="ohpBeurtModal">
+  <div class="modal" style="max-width: 820px;">
+    <div class="modal-head">
+      <h3>Beurt bewerken</h3>
+      <button class="close-x" onclick="_ohpCloseBeurtModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="margin-bottom: 1rem;">
+        <div>
+          <label>Naam</label>
+          <input type="text" id="ohpMbNaam" placeholder="bv. Onderhoudsbeurt">
+        </div>
+        <div>
+          <label>Jaartal</label>
+          <input type="number" id="ohpMbJaar" min="1900" max="2200" step="1">
+        </div>
+      </div>
+      <div style="margin-bottom: 1rem;">
+        <label style="margin-bottom: 0.4rem;">Manier van schalen</label>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <label style="font-weight: normal;"><input type="radio" name="ohpMbModus" value="algemeen" onchange="_ohpMbZetModus('algemeen')"> Algemeen percentage</label>
+          <label style="font-weight: normal;"><input type="radio" name="ohpMbModus" value="per_regel" onchange="_ohpMbZetModus('per_regel')"> Per regel</label>
+          <label style="font-weight: normal;"><input type="radio" name="ohpMbModus" value="per_stap" onchange="_ohpMbZetModus('per_stap')"> Per stap</label>
+        </div>
+        <div id="ohpMbModusHint" style="font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;"></div>
+      </div>
+      <div id="ohpMbScalingBlok" style="border: 1px solid var(--border); border-radius: 4px; padding: 0.8rem; max-height: 50vh; overflow-y: auto;">
+        <em style="color: var(--muted);">Kies een modus om te beginnen.</em>
+      </div>
+      <div style="margin-top: 1rem; padding: 0.6rem 0.8rem; background: var(--bg-soft, #f5f5f5); border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <span style="color: var(--muted); font-size: 0.85rem;">Basisbedrag van deze beurt (excl. BTW)</span>
+        <strong id="ohpMbBasis" style="font-size: 1.15rem;">€ 0,00</strong>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" id="ohpMbKopieer" onclick="_ohpMbKopieerVorige()" title="Kopieer modus en percentages van de vorige beurt">Kopieer van vorige beurt</button>
+      <span style="flex: 1;"></span>
+      <button class="btn-secondary btn" onclick="_ohpCloseBeurtModal()">Annuleren</button>
+      <button class="btn" onclick="_ohpMbOpslaan()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD SYSTEM TO ONDERDEEL MODAL -->
 <div class="modal-overlay" id="addSysModal">
   <div class="modal" style="max-width: 640px;">
@@ -4213,9 +4257,158 @@ async function _ohpDeleteBeurt(beurtId) {
   _ohpRenderResultaat();
 }
 
-// Placeholder voor bewerk-modal — chunk E.
+// ----- Bewerk-modal voor één beurt (chunk E) -----
+// Werk-state voor de modal — wordt bij openen ingevuld en bij opslaan weggeschreven.
+let _ohpMb = {
+  beurtId: null,    // id van de beurt die bewerkt wordt
+  modus:   'algemeen',
+  scaling: {}
+};
+
+// Open de bewerk-modal voor een beurt.
 function _ohpOpenBeurtModal(beurtId) {
-  alert('Bewerken — komt in de volgende chunk (E). Voor nu kun je jaar en naam direct in de lijst aanpassen.');
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const b = (plan.beurten || []).find(x => x.id === beurtId);
+  if (!b) return;
+  // Kloon de scaling om bewerken in de modal niet meteen op de live state te effecten.
+  _ohpMb = {
+    beurtId: b.id,
+    modus:   b.modus || 'algemeen',
+    scaling: JSON.parse(JSON.stringify(b.scaling || {}))
+  };
+  // Vul kop-velden
+  document.getElementById('ohpMbNaam').value = b.naam || '';
+  document.getElementById('ohpMbJaar').value = b.jaartal;
+  // Zet modus-radio
+  document.querySelectorAll('input[name="ohpMbModus"]').forEach(r => {
+    r.checked = (r.value === _ohpMb.modus);
+  });
+  _ohpMbRenderModusBlok();
+  _ohpMbUpdateBasisBedrag();
+  _ohpMbUpdateKopieerKnop();
+  // Toon modal
+  document.getElementById('ohpBeurtModal').classList.add('active');
+}
+
+// Sluit de modal zonder op te slaan.
+function _ohpCloseBeurtModal() {
+  document.getElementById('ohpBeurtModal').classList.remove('active');
+  _ohpMb = { beurtId: null, modus: 'algemeen', scaling: {} };
+}
+
+// Zet de modus en herrender het scaling-blok.
+function _ohpMbZetModus(nieuweModus) {
+  if (nieuweModus === _ohpMb.modus) return;
+  // Switch zonder verlies: vraag bevestiging als er al data in de andere modus zit.
+  const heeftData = (() => {
+    const sc = _ohpMb.scaling || {};
+    if (_ohpMb.modus === 'algemeen' && sc.pct != null && sc.pct !== 100) return true;
+    if (_ohpMb.modus === 'per_regel' && sc.regels && Object.keys(sc.regels).length) return true;
+    if (_ohpMb.modus === 'per_stap'  && sc.stappen && Object.keys(sc.stappen).length) return true;
+    return false;
+  })();
+  if (heeftData) {
+    const ok = confirm('Je hebt al percentages ingevuld in de huidige modus. Bij wisselen gaan die verloren. Doorgaan?');
+    if (!ok) {
+      // Zet de radio terug op de oude modus
+      document.querySelectorAll('input[name="ohpMbModus"]').forEach(r => { r.checked = (r.value === _ohpMb.modus); });
+      return;
+    }
+  }
+  _ohpMb.modus = nieuweModus;
+  _ohpMb.scaling = (nieuweModus === 'algemeen') ? { pct: 100 }
+                 : (nieuweModus === 'per_regel') ? { regels: {} }
+                 : { stappen: {} };
+  _ohpMbRenderModusBlok();
+  _ohpMbUpdateBasisBedrag();
+}
+
+// Render het scaling-blok afhankelijk van de gekozen modus.
+function _ohpMbRenderModusBlok() {
+  const blok = document.getElementById('ohpMbScalingBlok');
+  const hint = document.getElementById('ohpMbModusHint');
+  if (!blok) return;
+  if (_ohpMb.modus === 'algemeen') {
+    if (hint) hint.textContent = 'Eén percentage op alles. Snelle keuze voor controlebeurten.';
+    const pct = (_ohpMb.scaling && _ohpMb.scaling.pct != null) ? _ohpMb.scaling.pct : 100;
+    blok.innerHTML = `
+      <label style="display: inline-block;">Percentage op alle regels en staart
+        <input type="number" id="ohpMbAlgPct" min="0" max="200" step="1" value="${pct}" style="width: 100px; margin-left: 0.5rem;">
+        <span style="margin-left: 0.3rem;">%</span>
+      </label>
+      <div style="margin-top: 0.5rem; color: var(--muted); font-size: 0.8rem;">
+        100% = volledige eerste behandeling. 25% = lichte onderhoudsbeurt. 15% = controlebeurt.
+      </div>`;
+    const inp = document.getElementById('ohpMbAlgPct');
+    if (inp) {
+      inp.addEventListener('input', () => {
+        const v = parseFloat(inp.value);
+        _ohpMb.scaling = { pct: isNaN(v) ? 0 : v };
+        _ohpMbUpdateBasisBedrag();
+      });
+    }
+  } else if (_ohpMb.modus === 'per_regel') {
+    if (hint) hint.textContent = 'Per regel een eigen percentage. Voor onderhoudsbeurten waar regels verschillend lichter worden (kozijnen 25%, deuren 100%).';
+    blok.innerHTML = '<em style="color: var(--muted);">Tabel per regel — komt in volgende stap (E3).</em>';
+  } else if (_ohpMb.modus === 'per_stap') {
+    if (hint) hint.textContent = 'Per stap een eigen percentage. Voor onderhoudsbeurten waar je afbranden uit zet en eindlaag op 100%.';
+    blok.innerHTML = '<em style="color: var(--muted);">Tabel per stap (uitklapbare regels) — komt in volgende stap (E4).</em>';
+  }
+}
+
+// Bereken het basisbedrag op basis van de modal-state (niet de opgeslagen beurt).
+function _ohpMbUpdateBasisBedrag() {
+  const el = document.getElementById('ohpMbBasis');
+  if (!el) return;
+  // Pseudo-beurt construeren voor de bestaande _ohpBeurtBasisBedrag-functie
+  const pseudo = {
+    modus:   _ohpMb.modus,
+    scaling: _ohpMb.scaling
+  };
+  const basis = _ohpBeurtBasisBedrag(pseudo);
+  el.textContent = eur(basis);
+}
+
+// Activeer of deactiveer de 'Kopieer van vorige beurt'-knop op basis van of er een eerdere beurt is.
+function _ohpMbUpdateKopieerKnop() {
+  const knop = document.getElementById('ohpMbKopieer');
+  if (!knop) return;
+  const plan = _ohpState.plan;
+  if (!plan) { knop.disabled = true; return; }
+  const huidigJaar = parseInt(document.getElementById('ohpMbJaar').value) || 0;
+  const vorige = (plan.beurten || [])
+    .filter(b => b.id !== _ohpMb.beurtId && b.jaartal < huidigJaar)
+    .sort((a, b) => b.jaartal - a.jaartal)[0];
+  knop.disabled = !vorige;
+  knop.title = vorige ? `Kopieer modus en percentages van: ${vorige.naam || '(zonder naam)'} (${vorige.jaartal})` : 'Geen eerdere beurt om uit te kopiëren';
+}
+
+// Kopieer van vorige beurt (placeholder — chunk E5).
+function _ohpMbKopieerVorige() {
+  alert('Kopieer van vorige beurt — komt in stap E5.');
+}
+
+// Opslaan van de modal-state naar de echte beurt.
+async function _ohpMbOpslaan() {
+  const plan = _ohpState.plan;
+  if (!plan || !_ohpMb.beurtId) return;
+  const b = (plan.beurten || []).find(x => x.id === _ohpMb.beurtId);
+  if (!b) return;
+  // Lees naam en jaar uit de modal-velden
+  const naam = document.getElementById('ohpMbNaam').value || '';
+  const jaar = parseInt(document.getElementById('ohpMbJaar').value) || b.jaartal;
+  // Pas toe
+  b.naam = naam;
+  b.jaartal = jaar;
+  b.modus = _ohpMb.modus;
+  b.scaling = _ohpMb.scaling;
+  const opgeslagen = await _updateBeurt(b);
+  if (!opgeslagen) { _toast('Beurt opslaan mislukt'); return; }
+  Object.assign(b, opgeslagen);
+  _ohpCloseBeurtModal();
+  _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
 }
 
 // Klap parameters in/uit. Doe dit alleen automatisch bij eerste keer renderen na laden.
