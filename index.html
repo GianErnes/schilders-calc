@@ -3997,7 +3997,8 @@ function _ohpBeurtBasisBedrag(beurt) {
     let som = 0, n = 0;
     (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => (r.stappen || []).forEach(st => {
       const v = stappen[st.id];
-      const f = (v == null ? 0 : v / 100);
+      // Default: stap die niet in scaling.stappen staat → 100% (volledig mee in beurt).
+      const f = (v == null) ? 1 : (v / 100);
       stapScaling.set(st.id, f);
       som += f; n++;
     }))));
@@ -4265,6 +4266,8 @@ let _ohpMb = {
   modus:   'algemeen',
   scaling: {}
 };
+// Welke regels in modus 'per_stap' staan uitgeklapt (lokaal in modal).
+let _ohpMbOpenRegels = new Set();
 
 // Open de bewerk-modal voor een beurt.
 function _ohpOpenBeurtModal(beurtId) {
@@ -4278,6 +4281,8 @@ function _ohpOpenBeurtModal(beurtId) {
     modus:   b.modus || 'algemeen',
     scaling: JSON.parse(JSON.stringify(b.scaling || {}))
   };
+  // Reset uitklap-state per stap (alleen relevant voor modus 'per_stap').
+  _ohpMbOpenRegels = new Set();
   // Vul kop-velden
   document.getElementById('ohpMbNaam').value = b.naam || '';
   document.getElementById('ohpMbJaar').value = b.jaartal;
@@ -4353,8 +4358,8 @@ function _ohpMbRenderModusBlok() {
     if (hint) hint.textContent = 'Per regel een eigen percentage. Standaard 100% — zet wat anders moet handmatig. Snelinvuller per hoofdgroep beschikbaar rechtsboven elke groep.';
     _ohpMbRenderPerRegel(blok);
   } else if (_ohpMb.modus === 'per_stap') {
-    if (hint) hint.textContent = 'Per stap een eigen percentage. Voor onderhoudsbeurten waar je afbranden uit zet en eindlaag op 100%.';
-    blok.innerHTML = '<em style="color: var(--muted);">Tabel per stap (uitklapbare regels) — komt in volgende stap (E4).</em>';
+    if (hint) hint.textContent = 'Per stap een eigen percentage. Klik op een regel om uit te klappen. Standaard 100% — afbranden of machinaal schuren kun je hier uitzetten voor onderhoudsbeurten.';
+    _ohpMbRenderPerStap(blok);
   }
 }
 
@@ -4428,6 +4433,127 @@ function _ohpMbRenderPerRegel(container) {
         _ohpMb.scaling.regels[r.id] = v;
       }));
       // Herrender deze modus zodat de cellen meegroeien
+      _ohpMbRenderModusBlok();
+      _ohpMbUpdateBasisBedrag();
+    });
+  });
+}
+
+// Render modus 'per stap': per regel uitklapbaar; per stap een percentage-veld.
+function _ohpMbStapSamenvatting(r) {
+  // Bepaal of alle stappen van deze regel 100, 0, of variabel zijn.
+  const stappenMap = (_ohpMb.scaling && _ohpMb.scaling.stappen) || {};
+  if (!r.stappen || !r.stappen.length) return { label: '\u2014', dim: true };
+  let alle100 = true, alle0 = true;
+  r.stappen.forEach(st => {
+    const v = stappenMap[st.id];
+    const pct = (v == null) ? 100 : v;
+    if (pct !== 100) alle100 = false;
+    if (pct !== 0) alle0 = false;
+  });
+  if (alle100) return { label: 'alles 100%', dim: false };
+  if (alle0)   return { label: 'uit',         dim: true };
+  return { label: 'variabel', dim: false };
+}
+
+function _ohpMbRenderPerStap(container) {
+  const calc = _ohpBronCalc();
+  if (!calc || !calc.__loaded) {
+    container.innerHTML = '<em style="color: var(--muted);">Bron-calculatie nog niet geladen.</em>';
+    return;
+  }
+  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+  const sc = _ohpMb.scaling || {};
+  const stappenMap = sc.stappen || {};
+
+  let html = '';
+  (calc.hoofdgroepen || []).forEach((hg, hgIdx) => {
+    html += `<div style="margin-bottom: 1rem; ${hgIdx > 0 ? 'border-top: 1px solid var(--border); padding-top: 0.8rem;' : ''}">`;
+    html += `<div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+      <strong style="font-size: 1rem;">${_escapeHtml(hg.naam || '(zonder naam)')}</strong>
+      <span style="font-size: 0.85rem; color: var(--muted);">
+        Zet alle stappen op
+        <input type="number" min="0" max="200" step="1" placeholder="%" data-hg="${hg.id}" class="ohp-mb-ps-snel" style="width: 60px; margin-left: 0.3rem;">
+        <span style="margin-left: 0.2rem;">%</span>
+      </span>
+    </div>`;
+
+    (hg.onderdelen || []).forEach(od => {
+      html += `<div style="margin-left: 0.6rem; margin-bottom: 0.5rem;">
+        <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 0.2rem;">${_escapeHtml(od.naam || '(zonder naam)')}</div>`;
+      (od.regels || []).forEach(r => {
+        const isOpen = _ohpMbOpenRegels.has(r.id);
+        const caret = isOpen ? '▾' : '▸';
+        const samen = _ohpMbStapSamenvatting(r);
+        const labelStyle = samen.dim ? 'color: var(--muted); font-style: italic;' : '';
+        html += `<div style="margin-left: 0.6rem; margin-bottom: 0.3rem; border-left: 2px solid ${isOpen ? 'var(--accent, #2563eb)' : 'transparent'}; padding-left: 0.5rem;">
+          <div class="ohp-mb-ps-kop" data-regelid="${r.id}" style="display: grid; grid-template-columns: 18px 1fr 100px; gap: 0.5rem; align-items: center; padding: 0.25rem 0; cursor: pointer; user-select: none;">
+            <span>${caret}</span>
+            <span style="font-size: 0.9rem;">${_escapeHtml(r.naam || '(zonder naam)')} <span style="color: var(--muted); font-size: 0.8rem;">${r.hoeveelheid || ''} ${r.eenheid || ''}</span></span>
+            <span class="right" style="font-size: 0.8rem; ${labelStyle}">${samen.label}</span>
+          </div>`;
+        if (isOpen) {
+          html += `<div style="margin-left: 1.5rem; padding: 0.3rem 0;">`;
+          (r.stappen || []).forEach(st => {
+            const v = stappenMap[st.id];
+            const pct = (v == null) ? 100 : v;
+            const dim = pct === 0 ? ' style="opacity: 0.5;"' : '';
+            const matLabel = st.materiaalNaam ? ` <span style="color: var(--muted); font-size: 0.75rem;">${_escapeHtml(st.materiaalNaam)}</span>` : '';
+            html += `<div${dim} style="display: grid; grid-template-columns: 1fr 90px; gap: 0.5rem; align-items: center; padding: 0.15rem 0;">
+              <span style="font-size: 0.85rem;">${_escapeHtml(st.bewerkingNaam || '(zonder naam)')}${matLabel}</span>
+              <span><input type="number" min="0" max="200" step="1" value="${pct}" data-stapid="${st.id}" class="ohp-mb-ps-cel" style="width: 70px;"> %</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+        html += `</div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+
+  // Bind events op regel-koppen (toggle uitklap)
+  container.querySelectorAll('.ohp-mb-ps-kop').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.regelid;
+      if (_ohpMbOpenRegels.has(id)) _ohpMbOpenRegels.delete(id);
+      else _ohpMbOpenRegels.add(id);
+      _ohpMbRenderModusBlok();
+    });
+  });
+  // Bind events op stap-cellen
+  container.querySelectorAll('.ohp-mb-ps-cel').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const id = inp.dataset.stapid;
+      const v = parseFloat(inp.value);
+      if (!_ohpMb.scaling.stappen) _ohpMb.scaling.stappen = {};
+      if (isNaN(v)) delete _ohpMb.scaling.stappen[id];
+      else _ohpMb.scaling.stappen[id] = v;
+      _ohpMbUpdateBasisBedrag();
+      // Update enkel het samenvattings-label van deze regel zonder volledige rerender —
+      // is dat de moeite waard? Voor nu: volledige rerender behoudt simpelheid.
+    });
+    // Bij blur: rerender om samenvatting-label bij te werken
+    inp.addEventListener('change', () => {
+      _ohpMbRenderModusBlok();
+      _ohpMbUpdateBasisBedrag();
+    });
+  });
+  // Bind events op snelinvullers per hoofdgroep
+  container.querySelectorAll('.ohp-mb-ps-snel').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const v = parseFloat(inp.value);
+      if (isNaN(v)) return;
+      const hgId = inp.dataset.hg;
+      const hg = (calc.hoofdgroepen || []).find(x => x.id === hgId);
+      if (!hg) return;
+      if (!_ohpMb.scaling.stappen) _ohpMb.scaling.stappen = {};
+      (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => (r.stappen || []).forEach(st => {
+        _ohpMb.scaling.stappen[st.id] = v;
+      })));
       _ohpMbRenderModusBlok();
       _ohpMbUpdateBasisBedrag();
     });
