@@ -1678,7 +1678,10 @@
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn-secondary btn" id="ohpMbKopieer" onclick="_ohpMbKopieerVorige()" title="Kopieer modus en percentages van de vorige beurt">Kopieer van vorige beurt</button>
+      <div id="ohpMbKopieerWrap" style="position: relative;">
+        <button class="btn-secondary btn" id="ohpMbKopieer" onclick="_ohpMbToggleKopieerMenu()" title="Kopieer modus en percentages uit een andere beurt">Kopieer uit andere beurt ▾</button>
+        <div id="ohpMbKopieerMenu" style="display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 0.4rem; background: white; border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 320px; max-width: 480px; max-height: 280px; overflow-y: auto; z-index: 300;"></div>
+      </div>
       <span style="flex: 1;"></span>
       <button class="btn-secondary btn" onclick="_ohpCloseBeurtModal()">Annuleren</button>
       <button class="btn" onclick="_ohpMbOpslaan()">Opslaan</button>
@@ -4573,23 +4576,112 @@ function _ohpMbUpdateBasisBedrag() {
   el.textContent = eur(basis);
 }
 
-// Activeer of deactiveer de 'Kopieer van vorige beurt'-knop op basis van of er een eerdere beurt is.
+// Activeer of deactiveer de 'Kopieer uit andere beurt'-knop. Disabled als er geen andere beurten zijn.
 function _ohpMbUpdateKopieerKnop() {
   const knop = document.getElementById('ohpMbKopieer');
   if (!knop) return;
   const plan = _ohpState.plan;
   if (!plan) { knop.disabled = true; return; }
-  const huidigJaar = parseInt(document.getElementById('ohpMbJaar').value) || 0;
-  const vorige = (plan.beurten || [])
-    .filter(b => b.id !== _ohpMb.beurtId && b.jaartal < huidigJaar)
-    .sort((a, b) => b.jaartal - a.jaartal)[0];
-  knop.disabled = !vorige;
-  knop.title = vorige ? `Kopieer modus en percentages van: ${vorige.naam || '(zonder naam)'} (${vorige.jaartal})` : 'Geen eerdere beurt om uit te kopiëren';
+  const andere = (plan.beurten || []).filter(b => b.id !== _ohpMb.beurtId);
+  knop.disabled = (andere.length === 0);
+  knop.title = (andere.length === 0)
+    ? 'Geen andere beurten om uit te kopiëren'
+    : `${andere.length} andere beurt(en) beschikbaar om uit te kopiëren`;
 }
 
-// Kopieer van vorige beurt (placeholder — chunk E5).
-function _ohpMbKopieerVorige() {
-  alert('Kopieer van vorige beurt — komt in stap E5.');
+// Toggle het kopieer-menu (dropdown onder de knop).
+function _ohpMbToggleKopieerMenu() {
+  const menu = document.getElementById('ohpMbKopieerMenu');
+  if (!menu) return;
+  if (menu.style.display === 'block') {
+    menu.style.display = 'none';
+    return;
+  }
+  _ohpMbRenderKopieerMenu();
+  menu.style.display = 'block';
+  // Sluit menu bij klik buiten
+  setTimeout(() => {
+    const closer = (e) => {
+      if (!menu.contains(e.target) && e.target.id !== 'ohpMbKopieer') {
+        menu.style.display = 'none';
+        document.removeEventListener('click', closer);
+      }
+    };
+    document.addEventListener('click', closer);
+  }, 0);
+}
+
+// Render de inhoud van het kopieer-menu: alle andere beurten van dit plan.
+function _ohpMbRenderKopieerMenu() {
+  const menu = document.getElementById('ohpMbKopieerMenu');
+  if (!menu) return;
+  const plan = _ohpState.plan;
+  if (!plan) { menu.innerHTML = ''; return; }
+  const andere = (plan.beurten || [])
+    .filter(b => b.id !== _ohpMb.beurtId)
+    .sort((a, b) => (a.jaartal || 0) - (b.jaartal || 0));
+  if (!andere.length) {
+    menu.innerHTML = '<div style="padding: 0.8rem; color: var(--muted); font-style: italic;">Geen andere beurten beschikbaar.</div>';
+    return;
+  }
+  let html = '<div style="padding: 0.4rem 0.6rem; color: var(--muted); font-size: 0.75rem; border-bottom: 1px solid var(--border);">Kies welke beurt je wil kopiëren:</div>';
+  andere.forEach(b => {
+    const sc = b.scaling || {};
+    let samen = '';
+    if (b.modus === 'algemeen') samen = `algemeen ${sc.pct != null ? sc.pct : 100}%`;
+    else if (b.modus === 'per_regel') {
+      const aantal = sc.regels ? Object.keys(sc.regels).length : 0;
+      samen = `per regel (${aantal} aangepast)`;
+    }
+    else if (b.modus === 'per_stap') {
+      const aantal = sc.stappen ? Object.keys(sc.stappen).length : 0;
+      samen = `per stap (${aantal} aangepast)`;
+    }
+    html += `<div class="ohp-mb-kop-rij" data-beurtid="${b.id}" style="padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); cursor: pointer;">
+      <div style="font-weight: 500;">${_escapeHtml(b.naam || '(zonder naam)')} <span style="color: var(--muted); font-weight: normal;">— ${b.jaartal}</span></div>
+      <div style="font-size: 0.8rem; color: var(--muted);">${_escapeHtml(samen)}</div>
+    </div>`;
+  });
+  menu.innerHTML = html;
+
+  // Bind klik op rijen
+  menu.querySelectorAll('.ohp-mb-kop-rij').forEach(row => {
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _ohpMbKopieerUitBeurt(row.dataset.beurtid);
+      menu.style.display = 'none';
+    });
+    row.addEventListener('mouseenter', () => { row.style.background = 'var(--bg-soft, #f5f5f5)'; });
+    row.addEventListener('mouseleave', () => { row.style.background = ''; });
+  });
+}
+
+// Kopieer de modus en scaling van een andere beurt naar de modal-state.
+function _ohpMbKopieerUitBeurt(bronBeurtId) {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const bron = (plan.beurten || []).find(x => x.id === bronBeurtId);
+  if (!bron) return;
+  // Bevestiging — als de huidige modal-state niet leeg is
+  const huidigHeeftData = (() => {
+    const sc = _ohpMb.scaling || {};
+    if (_ohpMb.modus === 'algemeen' && sc.pct != null && sc.pct !== 100) return true;
+    if (_ohpMb.modus === 'per_regel' && sc.regels && Object.keys(sc.regels).length) return true;
+    if (_ohpMb.modus === 'per_stap'  && sc.stappen && Object.keys(sc.stappen).length) return true;
+    return false;
+  })();
+  if (huidigHeeftData) {
+    const ok = confirm(`Huidige percentages worden overschreven met die van "${bron.naam || '(zonder naam)'}" (${bron.jaartal}). Doorgaan?`);
+    if (!ok) return;
+  }
+  _ohpMb.modus = bron.modus || 'algemeen';
+  _ohpMb.scaling = JSON.parse(JSON.stringify(bron.scaling || {}));
+  // Update modus-radio
+  document.querySelectorAll('input[name="ohpMbModus"]').forEach(r => {
+    r.checked = (r.value === _ohpMb.modus);
+  });
+  _ohpMbRenderModusBlok();
+  _ohpMbUpdateBasisBedrag();
 }
 
 // Opslaan van de modal-state naar de echte beurt.
