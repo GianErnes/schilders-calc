@@ -1470,6 +1470,9 @@
         <label>Indexering per jaar (%)
           <input type="number" id="ohpIndex" min="0" max="20" step="0.1" value="3.5">
         </label>
+        <label>BTW (%) <span id="ohpBtwHint" style="font-weight: normal; font-size: 0.75rem; color: var(--muted);"></span>
+          <input type="number" id="ohpBtw" min="0" max="50" step="0.1">
+        </label>
       </div>
     </div>
 
@@ -2817,6 +2820,7 @@ function _mapOhpFromDB(row) {
     prijspeil:     row.prijspeil,
     looptijdJaren: row.looptijd_jaren,
     indexeringPct: parseFloat(row.indexering_pct) || 0,
+    btwPctOverride: row.btw_pct_override != null ? parseFloat(row.btw_pct_override) : null,
     notities:      row.notities || '',
     aangemaakt:    row.aangemaakt || null,
     gewijzigd:     row.gewijzigd  || null,
@@ -2829,6 +2833,7 @@ function _mapOhpToDB(p) {
     prijspeil:      p.prijspeil,
     looptijd_jaren: p.looptijdJaren,
     indexering_pct: p.indexeringPct,
+    btw_pct_override: p.btwPctOverride != null ? p.btwPctOverride : null,
     notities:       p.notities || '',
     gewijzigd:      new Date().toISOString()
   };
@@ -2959,7 +2964,8 @@ async function _ohpSaveParams(params) {
     calculatieId:  _ohpState.calcId,
     prijspeil:     params.prijspeil,
     looptijdJaren: params.looptijdJaren,
-    indexeringPct: params.indexeringPct
+    indexeringPct: params.indexeringPct,
+    btwPctOverride: params.btwPctOverride
   };
   const saved = await _saveOhpParams(planObj);
   if (saved) _ohpState.plan = saved;
@@ -3606,21 +3612,38 @@ async function _ohpFlushSave() {
   if (!params.prijspeil || !params.looptijdJaren) return;
   const voorMaakAan = !_ohpState.plan;
   await _ohpSaveParams(params);
+  // Hint van BTW-veld bijwerken (laat input-waarde met rust).
+  _ohpUpdateBtwHint();
   // Als het plan net is aangemaakt, render de inhoud opnieuw zodat het beurten-blok verschijnt.
   if (voorMaakAan && _ohpState.plan) {
     _ohpRenderInhoud();
   } else {
-    // Bestaand plan: herrender beurtenlijst en resultaat (indexering/looptijd kan veranderd zijn).
+    // Bestaand plan: herrender beurtenlijst en resultaat (indexering/looptijd/btw kan veranderd zijn).
     _ohpRenderBeurtenLijst();
     _ohpRenderResultaat();
   }
 }
 
+// Werk alleen de BTW-hint bij (zonder het input-veld te overschrijven).
+function _ohpUpdateBtwHint() {
+  const elBtw     = document.getElementById('ohpBtw');
+  const elBtwHint = document.getElementById('ohpBtwHint');
+  if (!elBtw || !elBtwHint) return;
+  if (!_ohpState.calcId) { elBtwHint.textContent = ''; return; }
+  const bronBtw = _ohpBronCalcBtw();
+  const huidigPct = parseFloat(elBtw.value);
+  const isOverride = !isNaN(huidigPct) && Math.abs(huidigPct - bronBtw) > 0.001;
+  elBtwHint.textContent = isOverride ? `(bron: ${bronBtw}%)` : `(uit bron-calc)`;
+}
+
 function _ohpReadParamsFromUI() {
+  const btwVal = document.getElementById('ohpBtw').value;
+  const btwParsed = (btwVal === '' || btwVal == null) ? null : parseFloat(btwVal);
   return {
     prijspeil:     parseInt(document.getElementById('ohpPrijspeil').value) || null,
     looptijdJaren: parseInt(document.getElementById('ohpLooptijd').value)  || null,
-    indexeringPct: parseFloat(document.getElementById('ohpIndex').value)   || 0
+    indexeringPct: parseFloat(document.getElementById('ohpIndex').value)   || 0,
+    btwPctOverride: (btwParsed != null && !isNaN(btwParsed)) ? btwParsed : null
   };
 }
 
@@ -3698,20 +3721,36 @@ function _ohpRenderParams() {
   const elPrijspeil = document.getElementById('ohpPrijspeil');
   const elLooptijd  = document.getElementById('ohpLooptijd');
   const elIndex     = document.getElementById('ohpIndex');
+  const elBtw       = document.getElementById('ohpBtw');
+  const elBtwHint   = document.getElementById('ohpBtwHint');
+  const bronBtw     = _ohpBronCalcBtw();
   if (p) {
     elPrijspeil.value = p.prijspeil || '';
     elLooptijd.value  = p.looptijdJaren || '';
     elIndex.value     = (p.indexeringPct != null) ? p.indexeringPct : 3.5;
+    elBtw.value       = (p.btwPctOverride != null) ? p.btwPctOverride : bronBtw;
   } else {
     elPrijspeil.value = '';
     elLooptijd.value  = '';
     elIndex.value     = 3.5;
+    elBtw.value       = bronBtw;
+  }
+  // Hint: toon altijd wat de bron-calc als BTW heeft, zodat afwijking zichtbaar is.
+  if (elBtwHint) {
+    if (_ohpState.calcId) {
+      const huidigPct = parseFloat(elBtw.value);
+      const isOverride = !isNaN(huidigPct) && Math.abs(huidigPct - bronBtw) > 0.001;
+      elBtwHint.textContent = isOverride ? `(bron: ${bronBtw}%)` : `(uit bron-calc)`;
+    } else {
+      elBtwHint.textContent = '';
+    }
   }
   // Velden alleen bedienbaar als er een bron-calc gekozen is.
   const hasCalc = !!_ohpState.calcId;
   elPrijspeil.disabled = !hasCalc;
   elLooptijd.disabled  = !hasCalc;
   elIndex.disabled     = !hasCalc;
+  elBtw.disabled       = !hasCalc;
 }
 
 // Toont/verbergt het plan-blok (beurten + resultaat) op basis van state.
@@ -3965,13 +4004,24 @@ async function _ohpEnsureBronLoaded() {
   return !!calc.__loaded;
 }
 
-// BTW-factor van de bron-calc (uit snapshot indien aanwezig, anders live settings).
-function _ohpBtwFactor() {
+// BTW-percentage uit de bron-calc (snapshot indien aanwezig, anders live settings).
+function _ohpBronCalcBtw() {
   const calc = _ohpBronCalc();
-  if (!calc) return 1;
+  if (!calc) return 21;
   const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
-  const btwPct = sett.btw != null ? sett.btw : 21;
-  return 1 + (btwPct / 100);
+  return sett.btw != null ? parseFloat(sett.btw) : 21;
+}
+
+// BTW-factor van het plan: override als gezet, anders uit bron-calc.
+function _ohpBtwFactor() {
+  const plan = _ohpState.plan;
+  let pct;
+  if (plan && plan.btwPctOverride != null) {
+    pct = plan.btwPctOverride;
+  } else {
+    pct = _ohpBronCalcBtw();
+  }
+  return 1 + (pct / 100);
 }
 
 // Render de beurten-lijst.
@@ -4197,7 +4247,7 @@ function _ohpBindUIEvents() {
     });
     cb._ohpBound = true;
   });
-  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex'].forEach(id => {
+  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el._ohpBound) {
       el.addEventListener('input', _ohpScheduleSave);
