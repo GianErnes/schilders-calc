@@ -3743,10 +3743,13 @@ function _ohpIndexFactor(jaartal, prijspeil, indexPct) {
 }
 
 // ============================================================
-// REKENKERN — pure varianten van calcRegelTotalen / calcStaart
+// REKENKERN — spiegelt structuur van calc-tab letterlijk
 // ============================================================
-// Niet leunend op data.calc, maar met expliciete sett en calc-object.
-// Spiegelt de logica van calcRegelTotalen, calcSnapshotStep en calcStaart.
+// De calc-tab bouwt het excl-BTW-bedrag zo op:
+//   directe = arbeid + matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal
+//   exBtw   = directe × (1 + risico%)
+// Het onderhoudsplan moet dezelfde rekenwijze gebruiken, anders ontstaan
+// afwijkingen door risico op reis/staart en de afrondingstoeslag.
 
 function _ohpStapTotaal(stap, sett) {
   const pct = (stap.percentage ?? 100) / 100;
@@ -3761,15 +3764,15 @@ function _ohpStapTotaal(stap, sett) {
   return { uren, minuten, matInkoop, matVerkoop };
 }
 
-// Bereken regelverkoop met de gegeven stappen-overrides. stappenOverride is een Map<stapId, pctFactor>.
-// Als null: pakt de originele stap-percentages 1-op-1.
-function _ohpRegelTotaal(r, sett, stappenOverride) {
+// Bereken regel-totalen (rauwe arbeid en materiaal) — GEEN winst per regel.
+// Spiegelt het arbeids- en materiaal-deel van calcRegelTotalen, maar zonder
+// directe/winst-opslag (die wordt op project-niveau toegepast).
+function _ohpRegelRauw(r, sett, stappenOverride) {
   if (!r.hoeveelheid || !r.stappen || !r.stappen.length) {
-    return { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0, verkoop:0 };
+    return { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0 };
   }
   let minuten = 0, matInkoop = 0, matVerkoop = 0;
   r.stappen.forEach(st => {
-    // Apply override op stap-niveau (vermenigvuldig met de extra factor)
     let workStap = st;
     if (stappenOverride && stappenOverride.has(st.id)) {
       const extraFactor = stappenOverride.get(st.id); // 0..1
@@ -3780,37 +3783,27 @@ function _ohpRegelTotaal(r, sett, stappenOverride) {
   });
   const uren = minuten / 60;
   const arbeid = uren * (sett.uurloon || 0);
-  const kleinMat = matVerkoop * (sett.kleinMat||0)/100;
-  const afval = (arbeid + matVerkoop) * (sett.afval||0)/100;
-  const arbo = arbeid * (sett.arbo||0)/100;
-  const directe = arbeid + matVerkoop + kleinMat + afval + arbo;
-  const winstBedrag = directe * (sett.winst||0)/100;
-  const verkoop = directe + winstBedrag;
-  const tF = 1 + (r.toeslag||0)/100;
+  const tF = 1 + (r.toeslag || 0) / 100;
   return {
     uren:       uren * r.hoeveelheid * tF,
     minuten:    minuten * r.hoeveelheid * tF,
-    matInkoop:  matInkoop * r.hoeveelheid,
-    matVerkoop: matVerkoop * r.hoeveelheid,
-    arbeid:     arbeid * r.hoeveelheid * tF,
-    verkoop:    verkoop * r.hoeveelheid * tF
+    matInkoop:  matInkoop * r.hoeveelheid,        // toeslag-vrij volgens calcRegelTotalen
+    matVerkoop: matVerkoop * r.hoeveelheid,       // idem
+    arbeid:     arbeid * r.hoeveelheid * tF
   };
 }
 
-// Bereken de project-totalen met optionele scaling per regel en per stap.
-// regelScaling: Map<regelId, regelFactor 0..1> of null
-// stapScaling:  Map<stapId, stapFactor 0..1> of null
-// regelUit:     Set<regelId> die helemaal uit moeten (factor 0)
-function _ohpProjectTotalen(calc, sett, regelScaling, stapScaling, regelUit) {
-  const tot = { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0, verkoop:0 };
+// Project-totalen (rauw): som van alle regels met optionele scaling.
+// regelScaling: Map<regelId, factor 0..1> of null
+// stapScaling:  Map<stapId, factor 0..1> of null
+function _ohpProjectRauw(calc, sett, regelScaling, stapScaling) {
+  const tot = { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0 };
   (calc.hoofdgroepen || []).forEach(hg => {
     (hg.onderdelen || []).forEach(od => {
       (od.regels || []).forEach(r => {
-        if (regelUit && regelUit.has(r.id)) return;
         const rFactor = (regelScaling && regelScaling.has(r.id)) ? regelScaling.get(r.id) : 1;
         if (rFactor === 0) return;
-        const rTot = _ohpRegelTotaal(r, sett, stapScaling);
-        // Schaal het hele regel-totaal met rFactor (modus 'per_regel' of 'algemeen')
+        const rTot = _ohpRegelRauw(r, sett, stapScaling);
         Object.keys(tot).forEach(k => tot[k] += (rTot[k] || 0) * rFactor);
       });
     });
@@ -3819,55 +3812,53 @@ function _ohpProjectTotalen(calc, sett, regelScaling, stapScaling, regelUit) {
 }
 
 // Bereken één staart-post (vast/dag/week/eenheid/percent), met expliciete projectTotalen en calc.
-function _ohpStaartPost(p, calc, sett, projectTot) {
+// projectArbeid is de geschaalde arbeid; projectMatVerkoop de geschaalde mat-verkoop.
+function _ohpStaartPost(p, calc, sett, projectRauw, dagenFactureerbaar, weken) {
   if (p.type === 'vast')    return p.bedrag || 0;
   if (p.type === 'eenheid') return (p.bedrag || 0) * (p.hoeveelheid || 0);
-  if (p.type === 'dag' || p.type === 'week') {
-    const uren = projectTot.uren || 0;
-    const s = calc.schilders || 1;
-    const ud = calc.uurDag || 8;
-    const exact = uren > 0 ? (uren / s / ud) : 0;
-    const dagen = Math.round(exact * 100) / 100;
-    // Volle-dagen-afronding: snapshot-setting
-    const volleDagen = (calc.volleDagenOverride === true) ? true
-                     : (calc.volleDagenOverride === false) ? false
-                     : (sett.volleDagen !== false);
-    let dgFact = dagen;
-    if (volleDagen && dagen > 0) {
-      if (dagen < 1) dgFact = 1;
-      else {
-        const drempel = sett.afrondingsDrempel ?? 0.6;
-        const heel = Math.floor(dagen);
-        const overschot = Math.round((dagen - heel) * 100) / 100;
-        if (overschot === 0) dgFact = dagen;
-        else if (overschot >= drempel) dgFact = heel + 1;
-        else dgFact = heel;
-      }
-    }
-    if (p.type === 'dag') return (p.bedrag || 0) * dgFact;
-    // week: dagen / 5, naar boven
-    const weken = dgFact === 0 ? 0 : Math.ceil(dgFact / 5);
-    return (p.bedrag || 0) * weken;
-  }
+  if (p.type === 'dag')     return (p.bedrag || 0) * dagenFactureerbaar;
+  if (p.type === 'week')    return (p.bedrag || 0) * weken;
   if (p.type === 'percent') {
     let basis = 0;
-    if (p.grondslag === 'arbeid')           basis = projectTot.arbeid;
-    else if (p.grondslag === 'materiaal')   basis = projectTot.matVerkoop;
-    else if (p.grondslag === 'arbeid_materiaal') basis = projectTot.arbeid + projectTot.matVerkoop;
-    else if (p.grondslag === 'subtotaal')   basis = projectTot.verkoop;
+    // 'subtotaal' verwijst naar verkoop van regels; in onze rauwe vorm benaderen we dat
+    // met arbeid + matVerkoop. Dit is dezelfde benadering als de live calc-tab op dit moment doet.
+    if (p.grondslag === 'arbeid')                basis = projectRauw.arbeid;
+    else if (p.grondslag === 'materiaal')        basis = projectRauw.matVerkoop;
+    else if (p.grondslag === 'arbeid_materiaal') basis = projectRauw.arbeid + projectRauw.matVerkoop;
+    else if (p.grondslag === 'subtotaal')        basis = projectRauw.arbeid + projectRauw.matVerkoop;
     return basis * (p.bedrag || 0) / 100;
   }
   return 0;
 }
 
-// Bereken de hele staart, geschaald met een uniforme factor (algemeen-modus of gemiddelde).
-function _ohpStaartTotaal(calc, sett, projectTot, staartFactor) {
-  const f = (staartFactor != null) ? staartFactor : 1;
-  return (calc.staart || []).reduce((s, p) => s + _ohpStaartPost(p, calc, sett, projectTot) * f, 0);
+// Bereken dagen-factureerbaar en weken op basis van project-uren.
+function _ohpDagen(calc, sett, projectUren) {
+  const s = calc.schilders || 1;
+  const ud = calc.uurDag || 8;
+  if (!projectUren || projectUren <= 0) return { werkelijk: 0, factureerbaar: 0, weken: 0 };
+  const exact = projectUren / s / ud;
+  const werkelijk = Math.round(exact * 100) / 100;
+  const volleDagen = (calc.volleDagenOverride === true)  ? true
+                   : (calc.volleDagenOverride === false) ? false
+                   : (sett.volleDagen !== false);
+  let factureerbaar = werkelijk;
+  if (volleDagen && werkelijk > 0) {
+    if (werkelijk < 1) factureerbaar = 1;
+    else {
+      const drempel = sett.afrondingsDrempel ?? 0.6;
+      const heel = Math.floor(werkelijk);
+      const overschot = Math.round((werkelijk - heel) * 100) / 100;
+      if (overschot === 0) factureerbaar = werkelijk;
+      else if (overschot >= drempel) factureerbaar = heel + 1;
+      else factureerbaar = heel;
+    }
+  }
+  const weken = factureerbaar === 0 ? 0 : Math.ceil(factureerbaar / 5);
+  return { werkelijk, factureerbaar, weken, volleDagen };
 }
 
-// ----- Berekening van een hele beurt -----
-// Returnt het basisbedrag (verkoopprijs van de beurt, excl. BTW, op prijspeil).
+// Hoofdfunctie: bereken het basisbedrag (excl. BTW) van een beurt.
+// Spiegelt letterlijk de directe + risico-formule uit de calc-tab.
 function _ohpBeurtBasisBedrag(beurt) {
   const plan = _ohpState.plan;
   if (!plan) return 0;
@@ -3875,17 +3866,17 @@ function _ohpBeurtBasisBedrag(beurt) {
   if (!calc || !calc.__loaded) return 0;
   const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
 
-  let regelScaling = null;  // Map<regelId, 0..1>
-  let stapScaling  = null;  // Map<stapId, 0..1>
-  let staartFactor = 1;
+  // 1. Bouw scaling-maps op basis van modus.
+  let regelScaling = null;
+  let stapScaling  = null;
+  let extraFactor  = 1; // gemiddelde voor reis/afronding/staart bij per_regel/per_stap, of het pct bij algemeen
 
   const sc = beurt.scaling || {};
   if (beurt.modus === 'algemeen') {
     const pct = (sc.pct != null ? sc.pct : 100) / 100;
-    // Algemeen: één factor op alles — regels én staart
     regelScaling = new Map();
     (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => regelScaling.set(r.id, pct))));
-    staartFactor = pct;
+    extraFactor = pct;
   } else if (beurt.modus === 'per_regel') {
     regelScaling = new Map();
     const regels = sc.regels || {};
@@ -3896,8 +3887,7 @@ function _ohpBeurtBasisBedrag(beurt) {
       regelScaling.set(r.id, f);
       som += f; n++;
     })));
-    // Staart krijgt het gemiddelde regel-percentage als factor
-    staartFactor = (n > 0) ? (som / n) : 0;
+    extraFactor = (n > 0) ? (som / n) : 0;
   } else if (beurt.modus === 'per_stap') {
     stapScaling = new Map();
     const stappen = sc.stappen || {};
@@ -3908,15 +3898,54 @@ function _ohpBeurtBasisBedrag(beurt) {
       stapScaling.set(st.id, f);
       som += f; n++;
     }))));
-    // Staart krijgt het gemiddelde stap-percentage als factor
-    staartFactor = (n > 0) ? (som / n) : 0;
+    extraFactor = (n > 0) ? (som / n) : 0;
   } else {
     return 0;
   }
 
-  const projectTot = _ohpProjectTotalen(calc, sett, regelScaling, stapScaling, null);
-  const staartTot  = _ohpStaartTotaal(calc, sett, projectTot, staartFactor);
-  return (projectTot.verkoop || 0) + staartTot;
+  // 2. Project-totalen (rauw, geschaald).
+  const t = _ohpProjectRauw(calc, sett, regelScaling, stapScaling);
+
+  // 3. Dagen factureerbaar en weken op basis van project-uren.
+  const dg = _ohpDagen(calc, sett, t.uren);
+
+  // 4. Afrondingstoeslag (extra-arbeid bij volle dagen).
+  const dagenVerschil = Math.max(0, dg.factureerbaar - dg.werkelijk);
+  const afrondingsToeslag = dg.volleDagen ? dagenVerschil * (calc.schilders || 0) * (calc.uurDag || 8) * (sett.uurloon || 0) : 0;
+  const arbeid = t.arbeid + afrondingsToeslag;
+
+  // 5. Reiskosten op basis van factureerbare dagen (schalen mee met geschaald werk).
+  const reisAfstand = calc.reis || 0;
+  const snelheid = sett.snelheid || 50;
+  const reisUren = dg.factureerbaar * (calc.schilders || 0) * (reisAfstand / snelheid);
+  const reisKostenUren = reisUren * (sett.reistijd || 0);
+  const reisKm = dg.factureerbaar * (reisAfstand * 2) * (sett.km || 0);
+  const reisTotaal = reisKostenUren + reisKm;
+
+  // 6. Opslagen.
+  const kleinMat = t.matVerkoop * (sett.kleinMat || 0) / 100;
+  const afval = (arbeid + t.matVerkoop) * (sett.afval || 0) / 100;
+  const arbo = arbeid * (sett.arbo || 0) / 100;
+
+  // 7. Staart — elk staart-post berekenen op het geschaalde project, daarna nogmaals × extraFactor
+  //    (zodat een controlebeurt van 15% ook 15% staart krijgt, geen 100%).
+  //    Voor type 'dag'/'week' werkt de scaling al deels via dg (minder uren = minder dagen).
+  //    De extraFactor is voor 'vast' en 'eenheid' nog nodig.
+  let staartTotaal = 0;
+  (calc.staart || []).forEach(p => {
+    const post = _ohpStaartPost(p, calc, sett, t, dg.factureerbaar, dg.weken);
+    if (p.type === 'vast' || p.type === 'eenheid') {
+      staartTotaal += post * extraFactor;
+    } else {
+      staartTotaal += post;
+    }
+  });
+
+  // 8. Directe kosten en risico.
+  const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
+  const winstBedrag = directe * (sett.winst || 0) / 100;
+  const exBtw = directe + winstBedrag;
+  return exBtw;
 }
 
 // Helper: vind de bron-calculatie in data.calculaties.
@@ -3950,8 +3979,8 @@ function _ohpRenderBeurtenLijst() {
   html += '<th style="width: 80px;">Jaar</th>';
   html += '<th>Naam</th>';
   html += '<th style="width: 110px;">Modus</th>';
-  html += '<th style="width: 130px;" class="right">Basis</th>';
-  html += '<th style="width: 130px;" class="right">Geïndexeerd</th>';
+  html += '<th style="width: 140px;" class="right">Basis (excl. BTW)</th>';
+  html += '<th style="width: 140px;" class="right">Geïndexeerd</th>';
   html += '<th style="width: 110px;"></th>';
   html += '</tr></thead><tbody>';
   beurten.forEach(b => {
@@ -4009,8 +4038,8 @@ function _ohpRenderResultaat() {
 
   // Linkerblok: totalen
   html += '<div>';
-  html += `<div style="margin-bottom: 0.6rem;"><span style="color: var(--muted); font-size: 0.85rem;">Totaal over ${plan.looptijdJaren} jaar (geïndexeerd)</span><br><strong style="font-size: 1.3rem;">${eur(totaalGeind)}</strong></div>`;
-  html += `<div><span style="color: var(--muted); font-size: 0.85rem;">Gemiddeld per jaar</span><br><strong style="font-size: 1.3rem;">${eur(gemPerJaar)}</strong></div>`;
+  html += `<div style="margin-bottom: 0.6rem;"><span style="color: var(--muted); font-size: 0.85rem;">Totaal over ${plan.looptijdJaren} jaar (geïndexeerd, excl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(totaalGeind)}</strong></div>`;
+  html += `<div><span style="color: var(--muted); font-size: 0.85rem;">Gemiddeld per jaar (excl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(gemPerJaar)}</strong></div>`;
   html += '</div>';
 
   // Rechterblok: jaartabel
