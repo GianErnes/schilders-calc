@@ -1323,8 +1323,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.9.6.4</h2>
-      <p><strong>Vierde en laatste hotfix in de wachtwoord-saga.</strong> Foutmeldingen bij wachtwoord wijzigen verschijnen weer in net Nederlands in plaats van de generieke "HTTP 400"-melding. De oorzaak: gotrue (Supabase Auth) gebruikt <code>error_code</code> en <code>msg</code> als veldnamen in zijn JSON-response, maar mijn vorige fix las <code>code</code> en <code>message</code> — die bestaan niet in deze response-vorm. DevTools liet vandaag de letterlijke server-output zien, op basis daarvan zijn de juiste veldnamen ingebakken plus de extra error-code <code>current_password_invalid</code> (klopt niet, naast <code>current_password_required</code> = ontbreekt). Saga afgesloten 🎨.</p>
+      <h2>Welkom bij v3.10.0</h2>
+      <p><strong>Nieuwe tab: Onderhoudsplan.</strong> Stel een meerjaren-onderhoudsplan op op basis van een opgeslagen calculatie. Drie manieren om beurten te schalen (algemeen percentage, per regel, per stap), met snelinvullers per hoofdgroep en de mogelijkheid om scaling uit een andere beurt te kopiëren. Bedragen worden geïndexeerd vanaf het prijspeil van de calculatie en getoond inclusief BTW. Per beurt aan te vinken of die meerekent in het gemiddelde maandbedrag, voor wanneer de eerste behandeling separaat wordt afgerekend. Print-functie toont het plan als verkoopdocument met maandbedrag en jaartabel; project-specifieke afspraken komen uit het notities-veld. Onder de motorkap: één rekenkern die de structuur van de calculatie-tab letterlijk spiegelt, en aparte Supabase-tabellen voor plannen en beurten 🎨.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1441,7 +1441,7 @@
 
   <section class="panel" id="onderhoud">
     <div class="panel-head"><h2>Onderhoudsplan</h2></div>
-    <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Onderhoudsplan op basis van een opgeslagen calculatie. Werk-in-uitvoering — v3.10.0 wordt stapsgewijs opgebouwd.</em></p>
+    <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Onderhoudsplan op basis van een opgeslagen calculatie. Per beurt schalen op algemeen, per regel of per stap. Bedragen geïndexeerd vanaf prijspeil, incl. BTW.</em></p>
 
     <details class="settings-section" id="ohpParamsToggle" open style="padding: 0;">
       <summary style="cursor: pointer; padding: 1rem; list-style: none; user-select: none;">
@@ -1848,7 +1848,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.9.6.4';
+const APP_VERSION = 'v3.10.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
