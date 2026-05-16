@@ -1481,6 +1481,10 @@
           <input type="number" id="ohpBtw" min="0" max="50" step="0.1">
         </label>
       </div>
+      <div style="margin-top: 1rem;">
+        <label>Notities <span style="font-weight: normal; font-size: 0.75rem; color: var(--muted);">— verschijnt op de print onder de vaste uitleg, voor klant-specifieke afspraken</span></label>
+        <textarea id="ohpNotities" rows="3" placeholder="Bijvoorbeeld: 'Voor deze VvE is afgesproken dat de eerste behandeling separaat wordt afgerekend en niet in het maandelijkse onderhoudstarief wordt opgenomen.'" style="width: 100%; font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; resize: vertical;"></textarea>
+      </div>
       </div>
     </details>
 
@@ -1492,7 +1496,10 @@
         <div class="settings-section">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
             <h3 style="margin: 0;">Beurten</h3>
-            <button class="btn" onclick="_ohpAddBeurt()">+ Beurt toevoegen</button>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-secondary" onclick="_ohpPrint()" title="Print het onderhoudsplan voor de klant">🖨 Print onderhoudsplan</button>
+              <button class="btn" onclick="_ohpAddBeurt()">+ Beurt toevoegen</button>
+            </div>
           </div>
           <div id="ohpBeurtenLijst" style="margin-top: 0.8rem;"></div>
         </div>
@@ -3020,7 +3027,8 @@ async function _ohpSaveParams(params) {
     prijspeil:     params.prijspeil,
     looptijdJaren: params.looptijdJaren,
     indexeringPct: params.indexeringPct,
-    btwPctOverride: params.btwPctOverride
+    btwPctOverride: params.btwPctOverride,
+    notities:      params.notities || ''
   };
   const saved = await _saveOhpParams(planObj);
   if (saved) _ohpState.plan = saved;
@@ -3694,11 +3702,13 @@ function _ohpUpdateBtwHint() {
 function _ohpReadParamsFromUI() {
   const btwVal = document.getElementById('ohpBtw').value;
   const btwParsed = (btwVal === '' || btwVal == null) ? null : parseFloat(btwVal);
+  const notEl = document.getElementById('ohpNotities');
   return {
     prijspeil:     parseInt(document.getElementById('ohpPrijspeil').value) || null,
     looptijdJaren: parseInt(document.getElementById('ohpLooptijd').value)  || null,
     indexeringPct: parseFloat(document.getElementById('ohpIndex').value)   || 0,
-    btwPctOverride: (btwParsed != null && !isNaN(btwParsed)) ? btwParsed : null
+    btwPctOverride: (btwParsed != null && !isNaN(btwParsed)) ? btwParsed : null,
+    notities: notEl ? (notEl.value || '') : ''
   };
 }
 
@@ -3787,17 +3797,20 @@ function _ohpRenderParams() {
   const elIndex     = document.getElementById('ohpIndex');
   const elBtw       = document.getElementById('ohpBtw');
   const elBtwHint   = document.getElementById('ohpBtwHint');
+  const elNotities  = document.getElementById('ohpNotities');
   const bronBtw     = _ohpBronCalcBtw();
   if (p) {
     elPrijspeil.value = p.prijspeil || '';
     elLooptijd.value  = p.looptijdJaren || '';
     elIndex.value     = (p.indexeringPct != null) ? p.indexeringPct : 3.5;
     elBtw.value       = (p.btwPctOverride != null) ? p.btwPctOverride : bronBtw;
+    if (elNotities) elNotities.value = p.notities || '';
   } else {
     elPrijspeil.value = '';
     elLooptijd.value  = '';
     elIndex.value     = 3.5;
     elBtw.value       = bronBtw;
+    if (elNotities) elNotities.value = '';
   }
   // Hint: toon altijd wat de bron-calc als BTW heeft, zodat afwijking zichtbaar is.
   if (elBtwHint) {
@@ -3815,6 +3828,7 @@ function _ohpRenderParams() {
   elLooptijd.disabled  = !hasCalc;
   elIndex.disabled     = !hasCalc;
   elBtw.disabled       = !hasCalc;
+  if (elNotities) elNotities.disabled = !hasCalc;
 }
 
 // Toont/verbergt het plan-blok (beurten + resultaat) op basis van state.
@@ -4774,7 +4788,7 @@ function _ohpBindUIEvents() {
     });
     cb._ohpBound = true;
   });
-  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw'].forEach(id => {
+  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el._ohpBound) {
       el.addEventListener('input', _ohpScheduleSave);
@@ -4785,6 +4799,245 @@ function _ohpBindUIEvents() {
 }
 // Bind direct (DOM bestaat al wanneer dit script draait).
 _ohpBindUIEvents();
+
+// ============================================================
+// ONDERHOUDSPLAN — Print (chunk G)
+// ============================================================
+// Vaste uitlegtekst voor de klant. Drie alinea's met kopjes.
+// Placeholders [LOOPTIJD], [PRIJSPEIL] en [INDEXERING] worden ingevuld.
+function _ohpVasteUitleg(looptijd, prijspeil, indexering) {
+  return [
+    {
+      kop: 'WAT IS EEN ONDERHOUDSPLAN?',
+      tekst: 'Schilderwerk is bedoeld om hout, metaal en steenachtige ondergronden te beschermen tegen weer, wind en vocht. Hoe vaker en zorgvuldiger we onderhouden, hoe minder ingrijpend en hoe goedkoper het werk over de jaren wordt. Een goed-onderhouden gevel kost minder dan een gevel waar elke tien jaar grootschalig werk moet gebeuren omdat het rot zich heeft ingewerkt.'
+    },
+    {
+      kop: 'WAT KOST HET?',
+      tekst: `Dit onderhoudsplan beschrijft de aanbevolen schilderbeurten voor de komende ${looptijd} jaar. Per jaar staat aangegeven welk werk verwacht wordt en wat dat naar verwachting kost. Bedragen zijn gebaseerd op het prijspeil van ${prijspeil} en stijgen jaarlijks met ${indexering}% mee met de gemiddelde kostenstijging in de schildersbranche (loon, verf en materialen). Alle bedragen zijn inclusief BTW.`
+    },
+    {
+      kop: 'WAT BIEDT DIT PLAN U?',
+      tekst: 'Door te kiezen voor een meerjaren-onderhoudscontract bent u verzekerd van schilderwerk tegen de laagst mogelijke kosten voor uw pand. U weet vooraf wat het u kost gedurende de gehele looptijd, zonder verrassingen achteraf.\n\nEen bijkomend voordeel is dat wij het risico op ons nemen. Houtrot, gevolgschade door te lang uitstellen en het bijhouden van de juiste onderhoudsmomenten: daar hoeft u niet meer over na te denken. Wij plannen, beoordelen en voeren uit op het juiste moment. U ontvangt vóór elke beurt een definitieve afspraak over de uitvoering, zodat u altijd weet wat er gebeurt.'
+    }
+  ];
+}
+
+// Samenvattende beschrijving van een beurt's scaling (voor in de tabel).
+function _ohpBeurtBeschrijving(beurt) {
+  const sc = beurt.scaling || {};
+  if (beurt.modus === 'algemeen') {
+    const pct = (sc.pct != null) ? sc.pct : 100;
+    if (pct === 100) return 'Volledige behandeling';
+    if (pct === 0)   return 'Geen werk';
+    return `${pct}% van volledige behandeling`;
+  }
+  if (beurt.modus === 'per_regel') {
+    const aantal = sc.regels ? Object.keys(sc.regels).length : 0;
+    return `Selectief per regel (${aantal} regels aangepast)`;
+  }
+  if (beurt.modus === 'per_stap') {
+    const aantal = sc.stappen ? Object.keys(sc.stappen).length : 0;
+    return `Selectief per stap (${aantal} stappen aangepast)`;
+  }
+  return '';
+}
+
+// Hoofdfunctie: print het onderhoudsplan.
+function _ohpPrint() {
+  const plan = _ohpState.plan;
+  if (!plan || !plan.prijspeil || !plan.looptijdJaren) {
+    _toast('Plan eerst compleet invullen voor printen');
+    return;
+  }
+  const calc = _ohpBronCalc();
+  if (!calc) { _toast('Bron-calculatie niet gevonden'); return; }
+
+  const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+  const pp = plan.prijspeil;
+  const eindJaar = pp + plan.looptijdJaren;
+  const idx = plan.indexeringPct || 0;
+  const btwF = _ohpBtwFactor();
+  const btwPct = (plan.btwPctOverride != null) ? plan.btwPctOverride : _ohpBronCalcBtw();
+
+  const beurten = (plan.beurten || []).slice().sort((a, b) => (a.jaartal || 0) - (b.jaartal || 0));
+
+  // Totalen
+  let totaalGemiddelde = 0;
+  let totaalEenmalig  = 0;
+  const perJaar = {}; // { jaartal: { bedragMee, bedragBuiten } }
+  beurten.forEach(b => {
+    if (b.jaartal < pp || b.jaartal > eindJaar) return;
+    const basis = _ohpBeurtBasisBedrag(b);
+    const fac = _ohpIndexFactor(b.jaartal, pp, idx);
+    const bedrag = basis * fac * btwF;
+    const mee = (b.meeInGemiddelde !== false);
+    if (mee) totaalGemiddelde += bedrag;
+    else totaalEenmalig += bedrag;
+    if (!perJaar[b.jaartal]) perJaar[b.jaartal] = { bedragMee: 0, bedragBuiten: 0 };
+    if (mee) perJaar[b.jaartal].bedragMee += bedrag;
+    else perJaar[b.jaartal].bedragBuiten += bedrag;
+  });
+  const gemPerJaar = plan.looptijdJaren > 0 ? (totaalGemiddelde / plan.looptijdJaren) : 0;
+  const aantalBeurten = beurten.filter(b => b.jaartal >= pp && b.jaartal <= eindJaar).length;
+
+  let html = '';
+
+  // Header
+  html += `<div class="header-block">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <div class="brand-logo print"></div>
+      <div>
+        <h1>Onderhoudsplan</h1>
+        <div class="meta">Meerjaren-onderhoudscontract</div>
+      </div>
+    </div>
+    <div style="text-align: right; font-size: 9pt;">
+      <div><strong>${datum}</strong></div>
+      <div>Looptijd: ${plan.looptijdJaren} jaar (${pp}–${eindJaar})</div>
+    </div>
+  </div>`;
+
+  // Project / klant info
+  html += `<div class="section">
+    <h2>${_escapeHtml(calc.naam || 'Onderhoudsplan')}</h2>
+    <div class="summary-grid">
+      <div><span class="label">Klant: </span>${_escapeHtml(calc.klant || '—')}</div>
+      <div><span class="label">Prijspeil: </span>${pp}</div>
+      <div><span class="label">Indexering: </span>${idx}% per jaar</div>
+      <div><span class="label">BTW: </span>${btwPct}%</div>
+    </div>
+  </div>`;
+
+  // Vaste uitleg + eigen notities
+  const uitleg = _ohpVasteUitleg(plan.looptijdJaren, pp, idx);
+  html += `<div class="section">`;
+  uitleg.forEach(blok => {
+    html += `<h3 style="font-size: 10pt; margin-top: 0.8rem; margin-bottom: 0.3rem; letter-spacing: 0.05em;">${blok.kop}</h3>`;
+    // Splits op dubbele newline voor sub-alinea's
+    const alineas = blok.tekst.split('\n\n');
+    alineas.forEach(a => {
+      html += `<p style="margin: 0 0 0.5rem 0; font-size: 9.5pt; line-height: 1.5;">${_escapeHtml(a)}</p>`;
+    });
+  });
+  if (plan.notities && plan.notities.trim()) {
+    html += `<h3 style="font-size: 10pt; margin-top: 0.8rem; margin-bottom: 0.3rem; letter-spacing: 0.05em;">SPECIFIEKE AFSPRAKEN</h3>`;
+    // Notities tonen, met behoud van regeleinden
+    const notitieParas = plan.notities.split('\n').filter(s => s.trim());
+    notitieParas.forEach(p => {
+      html += `<p style="margin: 0 0 0.5rem 0; font-size: 9.5pt; line-height: 1.5;">${_escapeHtml(p)}</p>`;
+    });
+  }
+  html += `</div>`;
+
+  // Kerncijfers blok
+  html += `<div class="section">
+    <h3 style="margin-bottom: 0.6rem;">Uw onderhoud in cijfers</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px;">
+      <div>
+        <div style="font-size: 9pt; color: #666;">Gemiddeld per jaar (incl. BTW)</div>
+        <div style="font-size: 18pt; font-weight: 600; margin-top: 0.2rem;">${eur(gemPerJaar)}</div>
+      </div>
+      <div>
+        <div style="font-size: 9pt; color: #666;">Looptijd</div>
+        <div style="font-size: 18pt; font-weight: 600; margin-top: 0.2rem;">${plan.looptijdJaren} jaar</div>
+      </div>
+      <div>
+        <div style="font-size: 9pt; color: #666;">Aantal beurten</div>
+        <div style="font-size: 18pt; font-weight: 600; margin-top: 0.2rem;">${aantalBeurten}</div>
+      </div>
+    </div>`;
+  if (totaalEenmalig > 0) {
+    html += `<div style="margin-top: 0.5rem; font-size: 9.5pt; color: #444;">
+      <strong>${eur(totaalEenmalig)}</strong> eenmalig, buiten het maandelijkse onderhoudstarief (afzonderlijk afrekenen).
+    </div>`;
+  }
+  html += `</div>`;
+
+  // Beurten-tabel
+  html += `<div class="section">
+    <h3>Geplande beurten</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 60px;">Jaar</th>
+          <th>Beurt</th>
+          <th>Aanpak</th>
+          <th class="right" style="width: 130px;">Bedrag (incl. BTW)</th>
+          <th style="width: 90px;">In gemiddelde</th>
+        </tr>
+      </thead>
+      <tbody>`;
+  beurten.forEach(b => {
+    if (b.jaartal < pp || b.jaartal > eindJaar) return;
+    const basis = _ohpBeurtBasisBedrag(b);
+    const fac = _ohpIndexFactor(b.jaartal, pp, idx);
+    const bedrag = basis * fac * btwF;
+    const mee = (b.meeInGemiddelde !== false);
+    const rowStyle = mee ? '' : ' style="color: #777;"';
+    html += `<tr${rowStyle}>
+      <td>${b.jaartal}</td>
+      <td>${_escapeHtml(b.naam || '(zonder naam)')}</td>
+      <td style="font-size: 9pt;">${_escapeHtml(_ohpBeurtBeschrijving(b))}</td>
+      <td class="num right"><strong>${eur(bedrag)}</strong></td>
+      <td style="text-align: center;">${mee ? 'Ja' : '<em>Eenmalig</em>'}</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  // Jaartabel
+  html += `<div class="section">
+    <h3>Bedragen per jaar</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 80px;">Jaar</th>
+          <th class="right" style="width: 150px;">Bedrag (incl. BTW)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>`;
+  for (let j = pp; j <= eindJaar; j++) {
+    const entry = perJaar[j];
+    const heeftMee = entry && entry.bedragMee > 0;
+    const heeftBuiten = entry && entry.bedragBuiten > 0;
+    if (!heeftMee && !heeftBuiten) {
+      html += `<tr><td>${j}</td><td class="num right" style="color: #999;">—</td><td></td></tr>`;
+      continue;
+    }
+    if (heeftMee) {
+      html += `<tr><td>${j}</td><td class="num right"><strong>${eur(entry.bedragMee)}</strong></td><td></td></tr>`;
+    }
+    if (heeftBuiten) {
+      html += `<tr style="color: #777;"><td>${heeftMee ? '' : j}</td><td class="num right">${eur(entry.bedragBuiten)}</td><td style="font-style: italic; font-size: 9pt;">eenmalig</td></tr>`;
+    }
+  }
+  html += `</tbody></table></div>`;
+
+  // Afsluiting
+  html += `<div class="section" style="margin-top: 1.5rem;">
+    <p style="font-size: 9pt; color: #555;">
+      Alle bedragen zijn inclusief ${btwPct}% BTW, gebaseerd op het prijspeil van ${pp} en jaarlijks geïndexeerd met ${idx}%. Dit onderhoudsplan is opgesteld op ${datum}. Voor elke beurt ontvangt u tijdig een definitieve afspraak en bevestiging van het werk.
+    </p>
+    <div style="margin-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+      <div>
+        <div style="border-bottom: 1px solid #333; padding-bottom: 1.5rem;">&nbsp;</div>
+        <div style="font-size: 9pt; margin-top: 0.3rem;">Voor akkoord, opdrachtgever</div>
+      </div>
+      <div>
+        <div style="border-bottom: 1px solid #333; padding-bottom: 1.5rem;">&nbsp;</div>
+        <div style="font-size: 9pt; margin-top: 0.3rem;">Voor akkoord, Ernes Schilders Heerlen</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Footer
+  html += `<div class="footer-block">
+    Onderhoudsplan · ${APP_VERSION} · Geprint op ${datum}
+  </div>`;
+
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
 
 // ============================================================
 // MATERIALEN
