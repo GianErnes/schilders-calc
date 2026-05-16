@@ -1497,7 +1497,6 @@
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
             <h3 style="margin: 0;">Beurten</h3>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-              <label style="font-size: 0.85rem; color: var(--muted); cursor: pointer; user-select: none;"><input type="checkbox" id="ohpPrintUitleg" checked style="margin-right: 0.3rem; vertical-align: middle;">Uitlegtekst op print</label>
               <button class="btn btn-secondary" onclick="_ohpPrint()" title="Print het onderhoudsplan voor de klant">🖨 Print onderhoudsplan</button>
               <button class="btn" onclick="_ohpAddBeurt()">+ Beurt toevoegen</button>
             </div>
@@ -4853,8 +4852,6 @@ function _ohpPrint() {
   const calc = _ohpBronCalc();
   if (!calc) { _toast('Bron-calculatie niet gevonden'); return; }
 
-  const toonUitleg = !!(document.getElementById('ohpPrintUitleg') && document.getElementById('ohpPrintUitleg').checked);
-
   const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
   const pp = plan.prijspeil;
   const eindJaar = pp + plan.looptijdJaren;
@@ -4960,19 +4957,7 @@ function _ohpPrint() {
   }
   html += `</tbody></table></div>`;
 
-  // Vaste uitleg (optioneel) + eigen notities (altijd)
-  if (toonUitleg) {
-    const uitleg = _ohpVasteUitleg(plan.looptijdJaren, pp, idx);
-    html += `<div class="section">`;
-    uitleg.forEach(blok => {
-      html += `<h3 style="font-size: 10pt; margin-top: 0.8rem; margin-bottom: 0.3rem; letter-spacing: 0.05em;">${blok.kop}</h3>`;
-      const alineas = blok.tekst.split('\n\n');
-      alineas.forEach(a => {
-        html += `<p style="margin: 0 0 0.5rem 0; font-size: 9.5pt; line-height: 1.5;">${_escapeHtml(a)}</p>`;
-      });
-    });
-    html += `</div>`;
-  }
+  // Project-specifieke notities (vaste uitleg gaat in de Yoobi-offerte, niet hier).
   if (plan.notities && plan.notities.trim()) {
     html += `<div class="section">
       <h3 style="font-size: 10pt; margin-top: 0.8rem; margin-bottom: 0.3rem; letter-spacing: 0.05em;">SPECIFIEKE AFSPRAKEN</h3>`;
