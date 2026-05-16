@@ -3985,7 +3985,8 @@ function _ohpBeurtBasisBedrag(beurt) {
     let som = 0, n = 0;
     (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => {
       const v = regels[r.id];
-      const f = (v == null ? 0 : v / 100);
+      // Default: regel die niet in scaling.regels staat → 100% (volledig mee in beurt).
+      const f = (v == null) ? 1 : (v / 100);
       regelScaling.set(r.id, f);
       som += f; n++;
     })));
@@ -4349,12 +4350,88 @@ function _ohpMbRenderModusBlok() {
       });
     }
   } else if (_ohpMb.modus === 'per_regel') {
-    if (hint) hint.textContent = 'Per regel een eigen percentage. Voor onderhoudsbeurten waar regels verschillend lichter worden (kozijnen 25%, deuren 100%).';
-    blok.innerHTML = '<em style="color: var(--muted);">Tabel per regel — komt in volgende stap (E3).</em>';
+    if (hint) hint.textContent = 'Per regel een eigen percentage. Standaard 100% — zet wat anders moet handmatig. Snelinvuller per hoofdgroep beschikbaar rechtsboven elke groep.';
+    _ohpMbRenderPerRegel(blok);
   } else if (_ohpMb.modus === 'per_stap') {
     if (hint) hint.textContent = 'Per stap een eigen percentage. Voor onderhoudsbeurten waar je afbranden uit zet en eindlaag op 100%.';
     blok.innerHTML = '<em style="color: var(--muted);">Tabel per stap (uitklapbare regels) — komt in volgende stap (E4).</em>';
   }
+}
+
+// Render modus 'per regel': per hoofdgroep een snelinvuller, per regel een percentage-veld.
+function _ohpMbRenderPerRegel(container) {
+  const calc = _ohpBronCalc();
+  if (!calc || !calc.__loaded) {
+    container.innerHTML = '<em style="color: var(--muted);">Bron-calculatie nog niet geladen.</em>';
+    return;
+  }
+  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+  const sc = _ohpMb.scaling || {};
+  const regelsMap = sc.regels || {};
+
+  let html = '';
+  (calc.hoofdgroepen || []).forEach((hg, hgIdx) => {
+    html += `<div style="margin-bottom: 1rem; ${hgIdx > 0 ? 'border-top: 1px solid var(--border); padding-top: 0.8rem;' : ''}">`;
+    // Hoofdgroep-kop met snelinvuller
+    html += `<div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+      <strong style="font-size: 1rem;">${_escapeHtml(hg.naam || '(zonder naam)')}</strong>
+      <span style="font-size: 0.85rem; color: var(--muted);">
+        Zet alle regels op
+        <input type="number" min="0" max="200" step="1" placeholder="%" data-hg="${hg.id}" class="ohp-mb-pr-snel" style="width: 60px; margin-left: 0.3rem;">
+        <span style="margin-left: 0.2rem;">%</span>
+      </span>
+    </div>`;
+
+    (hg.onderdelen || []).forEach(od => {
+      html += `<div style="margin-left: 0.6rem; margin-bottom: 0.5rem;">
+        <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 0.2rem;">${_escapeHtml(od.naam || '(zonder naam)')}</div>`;
+      (od.regels || []).forEach(r => {
+        const rauw = _ohpRegelRauw(r, sett, null);
+        // Toon basisbedrag op regel-niveau bij 100% (uren×uurloon + matVerkoop, plus toeslag).
+        const regelBasis = rauw.arbeid + rauw.matVerkoop;
+        const huidigPct = regelsMap[r.id] != null ? regelsMap[r.id] : 100;
+        const dim = huidigPct === 0 ? ' style="opacity: 0.5;"' : '';
+        html += `<div${dim} style="display: grid; grid-template-columns: 1fr 90px 90px; gap: 0.5rem; align-items: center; padding: 0.2rem 0; margin-left: 0.6rem;">
+          <span style="font-size: 0.9rem;">${_escapeHtml(r.naam || '(zonder naam)')} <span style="color: var(--muted); font-size: 0.8rem;">${r.hoeveelheid || ''} ${r.eenheid || ''}</span></span>
+          <span class="right" style="font-size: 0.85rem; color: var(--muted);">${eur(regelBasis)}</span>
+          <span><input type="number" min="0" max="200" step="1" value="${huidigPct}" data-regelid="${r.id}" class="ohp-mb-pr-cel" style="width: 70px;"> %</span>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+
+  // Bind events op regel-cellen
+  container.querySelectorAll('.ohp-mb-pr-cel').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const id = inp.dataset.regelid;
+      const v = parseFloat(inp.value);
+      if (!_ohpMb.scaling.regels) _ohpMb.scaling.regels = {};
+      if (isNaN(v)) delete _ohpMb.scaling.regels[id];
+      else _ohpMb.scaling.regels[id] = v;
+      _ohpMbUpdateBasisBedrag();
+    });
+  });
+  // Bind events op snelinvullers per hoofdgroep
+  container.querySelectorAll('.ohp-mb-pr-snel').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const v = parseFloat(inp.value);
+      if (isNaN(v)) return;
+      const hgId = inp.dataset.hg;
+      const hg = (calc.hoofdgroepen || []).find(x => x.id === hgId);
+      if (!hg) return;
+      if (!_ohpMb.scaling.regels) _ohpMb.scaling.regels = {};
+      (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => {
+        _ohpMb.scaling.regels[r.id] = v;
+      }));
+      // Herrender deze modus zodat de cellen meegroeien
+      _ohpMbRenderModusBlok();
+      _ohpMbUpdateBasisBedrag();
+    });
+  });
 }
 
 // Bereken het basisbedrag op basis van de modal-state (niet de opgeslagen beurt).
