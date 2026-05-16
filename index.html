@@ -1315,6 +1315,7 @@
   <button data-tab="bewerkingen">Bewerkingen</button>
   <button data-tab="materialen">Materialen</button>
   <button data-tab="ondergronden">Ondergronden</button>
+  <button data-tab="onderhoud">Onderhoudsplan</button>
   <button data-tab="instellingen">Instellingen</button>
 </nav>
 
@@ -1438,7 +1439,58 @@
     <div id="ondergrondenLijst"></div>
   </section>
 
-  <section class="panel" id="instellingen">
+  <section class="panel" id="onderhoud">
+    <div class="panel-head"><h2>Onderhoudsplan</h2></div>
+    <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Onderhoudsplan op basis van een opgeslagen calculatie. Werk-in-uitvoering — v3.10.0 wordt stapsgewijs opgebouwd.</em></p>
+
+    <div class="settings-section">
+      <h3>Parameters</h3>
+      <div id="ohpBronWrap" style="margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+          <strong>Bron-calculatie</strong>
+          <div id="ohpBronStatus" style="font-size: 0.85rem; color: var(--muted);"></div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap; align-items: center;">
+          <input type="text" id="ohpBronZoek" placeholder="Zoek op naam of klant..." style="flex: 1; min-width: 200px;">
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="concept" checked> Concept</label>
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="gereed" checked> Gereed</label>
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="geaccepteerd" checked> Geaccepteerd</label>
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="verzonden"> Verzonden</label>
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="verloren"> Verloren</label>
+        </div>
+        <div id="ohpBronLijst" style="margin-top: 0.5rem; max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px;"></div>
+      </div>
+      <div class="form-grid">
+        <label>Prijspeil calculatie (jaar)
+          <input type="number" id="ohpPrijspeil" min="2000" max="2100" step="1" placeholder="bv. 2026">
+        </label>
+        <label>Looptijd (jaren)
+          <input type="number" id="ohpLooptijd" min="1" max="50" step="1" placeholder="bv. 15">
+        </label>
+        <label>Indexering per jaar (%)
+          <input type="number" id="ohpIndex" min="0" max="20" step="0.1" value="3.5">
+        </label>
+      </div>
+    </div>
+
+    <div id="ohpInhoud" style="margin-top: 1rem;">
+      <div id="ohpLeeg" style="color: var(--muted); font-style: italic;">
+        Kies een bron-calculatie om te beginnen.
+      </div>
+      <div id="ohpPlanBlok" style="display: none;">
+        <div class="settings-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <h3 style="margin: 0;">Beurten</h3>
+            <button class="btn" onclick="_ohpAddBeurt()">+ Beurt toevoegen</button>
+          </div>
+          <div id="ohpBeurtenLijst" style="margin-top: 0.8rem;"></div>
+        </div>
+        <div id="ohpResultaat" style="margin-top: 1rem; color: var(--muted); font-style: italic;">
+          Resultaat-blok volgt in chunk F (verkoop-modus + jaartabel).
+        </div>
+      </div>
+    </div>
+  </section>
     <div class="panel-head"><h2>Instellingen</h2></div>
     <div class="settings-section">
       <h3>Uurtarieven</h3>
@@ -2750,6 +2802,169 @@ function _mapOdToDB(od, hgId) {
   };
 }
 
+// ============================================================
+// ONDERHOUDSPLAN (v3.10.0) — data-laag
+// ============================================================
+// Tabellen: onderhoudsplannen (1-op-1 met calculatie) + onderhoudsplan_beurten.
+// Eén plan per calculatie in v1; scaling per beurt staat in jsonb 'scaling'.
+//   modus 'algemeen' : { pct: number }
+//   modus 'per_regel': { regels: { [regelId]: pct } }
+//   modus 'per_stap' : { stappen: { [stapId]: pct } }
+
+function _mapOhpFromDB(row) {
+  return {
+    id:            row.id,
+    calculatieId:  row.calculatie_id,
+    prijspeil:     row.prijspeil,
+    looptijdJaren: row.looptijd_jaren,
+    indexeringPct: parseFloat(row.indexering_pct) || 0,
+    notities:      row.notities || '',
+    aangemaakt:    row.aangemaakt || null,
+    gewijzigd:     row.gewijzigd  || null,
+    beurten:       []
+  };
+}
+function _mapOhpToDB(p) {
+  return {
+    calculatie_id:  p.calculatieId,
+    prijspeil:      p.prijspeil,
+    looptijd_jaren: p.looptijdJaren,
+    indexering_pct: p.indexeringPct,
+    notities:       p.notities || '',
+    gewijzigd:      new Date().toISOString()
+  };
+}
+function _mapBeurtFromDB(row) {
+  return {
+    id:        row.id,
+    planId:    row.plan_id,
+    naam:      row.naam || '',
+    jaartal:   row.jaartal,
+    volgorde:  row.volgorde != null ? row.volgorde : 0,
+    modus:     row.modus || 'algemeen',
+    scaling:   row.scaling || {},
+    aangemaakt: row.aangemaakt || null,
+    gewijzigd:  row.gewijzigd  || null
+  };
+}
+function _mapBeurtToDB(b, planId) {
+  return {
+    plan_id:   planId || b.planId,
+    naam:      b.naam || '',
+    jaartal:   b.jaartal,
+    volgorde:  b.volgorde != null ? b.volgorde : 0,
+    modus:     b.modus || 'algemeen',
+    scaling:   b.scaling || {},
+    gewijzigd: new Date().toISOString()
+  };
+}
+
+// Haal het plan op voor een calculatie. Geeft null als er geen plan is.
+async function _fetchOhpByCalc(calcId) {
+  if (!_sb || !calcId) return null;
+  const { data: planRow, error: e1 } = await _sbQuery(
+    _sb.from('onderhoudsplannen').select('*').eq('calculatie_id', calcId).maybeSingle(),
+    'Onderhoudsplan ophalen'
+  );
+  if (e1 || !planRow) return null;
+  const plan = _mapOhpFromDB(planRow);
+  const { data: beurten, error: e2 } = await _sbQuery(
+    _sb.from('onderhoudsplan_beurten').select('*').eq('plan_id', plan.id).order('jaartal').order('volgorde'),
+    'Beurten ophalen'
+  );
+  if (!e2 && beurten) plan.beurten = beurten.map(_mapBeurtFromDB);
+  return plan;
+}
+
+// Maak of werk een plan bij (upsert op calculatie_id). Retourneert het opgeslagen plan-object met id.
+async function _saveOhpParams(plan) {
+  if (!_sb || !plan || !plan.calculatieId) return null;
+  if (plan.id) {
+    const { data, error } = await _sbQuery(
+      _sb.from('onderhoudsplannen').update(_mapOhpToDB(plan)).eq('id', plan.id).select().single(),
+      'Onderhoudsplan bijwerken'
+    );
+    if (error || !data) return null;
+    return { ...plan, ..._mapOhpFromDB(data), beurten: plan.beurten || [] };
+  } else {
+    const { data, error } = await _sbQuery(
+      _sb.from('onderhoudsplannen').insert([_mapOhpToDB(plan)]).select().single(),
+      'Onderhoudsplan aanmaken'
+    );
+    if (error || !data) return null;
+    return { ...plan, ..._mapOhpFromDB(data), beurten: plan.beurten || [] };
+  }
+}
+
+// Verwijder een heel plan (cascade ruimt beurten op).
+async function _deleteOhp(planId) {
+  if (!_sb || !planId) return false;
+  const { error } = await _sbQuery(
+    _sb.from('onderhoudsplannen').delete().eq('id', planId), 'Onderhoudsplan verwijderen'
+  );
+  return !error;
+}
+
+// Voeg een beurt toe; retourneert de opgeslagen beurt met id.
+async function _addBeurt(planId, beurt) {
+  if (!_sb || !planId) return null;
+  const { data, error } = await _sbQuery(
+    _sb.from('onderhoudsplan_beurten').insert([_mapBeurtToDB(beurt, planId)]).select().single(),
+    'Beurt toevoegen'
+  );
+  if (error || !data) return null;
+  return _mapBeurtFromDB(data);
+}
+
+// Werk een beurt bij; retourneert de bijgewerkte beurt.
+async function _updateBeurt(beurt) {
+  if (!_sb || !beurt || !beurt.id) return null;
+  const { data, error } = await _sbQuery(
+    _sb.from('onderhoudsplan_beurten').update(_mapBeurtToDB(beurt)).eq('id', beurt.id).select().single(),
+    'Beurt bijwerken'
+  );
+  if (error || !data) return null;
+  return _mapBeurtFromDB(data);
+}
+
+// Verwijder een beurt.
+async function _deleteBeurt(beurtId) {
+  if (!_sb || !beurtId) return false;
+  const { error } = await _sbQuery(
+    _sb.from('onderhoudsplan_beurten').delete().eq('id', beurtId), 'Beurt verwijderen'
+  );
+  return !error;
+}
+
+// ----- In-memory state voor de Onderhoudsplan-tab -----
+// Bevat het huidig geladen plan of null. De UI leest hieruit, schrijft via _sb*-functies.
+let _ohpState = {
+  calcId: null,   // id van de bron-calculatie
+  plan:   null    // { id, calculatieId, prijspeil, looptijdJaren, indexeringPct, beurten:[...] } of null
+};
+
+// Laad plan voor een calculatie in geheugen. Geeft het plan terug (of null).
+async function _ohpLoad(calcId) {
+  _ohpState.calcId = calcId || null;
+  _ohpState.plan = calcId ? await _fetchOhpByCalc(calcId) : null;
+  return _ohpState.plan;
+}
+
+// Sla parameters op (maakt plan aan als het nog niet bestaat). Werkt _ohpState bij.
+async function _ohpSaveParams(params) {
+  if (!_ohpState.calcId) return null;
+  const planObj = {
+    ...(_ohpState.plan || {}),
+    calculatieId:  _ohpState.calcId,
+    prijspeil:     params.prijspeil,
+    looptijdJaren: params.looptijdJaren,
+    indexeringPct: params.indexeringPct
+  };
+  const saved = await _saveOhpParams(planObj);
+  if (saved) _ohpState.plan = saved;
+  return saved;
+}
+
 // Calculatie-body (regels/staart/meetstaat/todos) leeft volledig in Supabase vanaf v3.4.2.
 
 async function _fetchCalcHeadersFromDB() {
@@ -3286,6 +3501,7 @@ document.querySelectorAll('nav button').forEach(b => {
     if (b.dataset.tab === 'bewerkingen')   renderBewerkingen();
     if (b.dataset.tab === 'ondergronden')  renderOndergronden();
     if (b.dataset.tab === 'systemen')      renderSystemen();
+    if (b.dataset.tab === 'onderhoud')     renderOnderhoudsplan();
     if (b.dataset.tab === 'instellingen')  loadSettings();
   });
 });
@@ -3372,6 +3588,310 @@ async function delOnd(id) {
   data.ondergronden = data.ondergronden.filter(o => o.id !== id);
   renderOndergronden();
 }
+// ============================================================
+// ONDERHOUDSPLAN (v3.10.0) — UI
+// ============================================================
+// Debounce-helper: laatste call binnen 600ms wint. Voorkomt dat elke
+// keystroke een save triggert.
+let _ohpSaveTimer = null;
+function _ohpScheduleSave() {
+  clearTimeout(_ohpSaveTimer);
+  _ohpSaveTimer = setTimeout(_ohpFlushSave, 600);
+}
+async function _ohpFlushSave() {
+  if (!_ohpState.calcId) return;
+  const params = _ohpReadParamsFromUI();
+  // Sla pas op als de drie verplichte velden zinnig zijn ingevuld.
+  if (!params.prijspeil || !params.looptijdJaren) return;
+  const voorMaakAan = !_ohpState.plan;
+  await _ohpSaveParams(params);
+  // Als het plan net is aangemaakt, render de inhoud opnieuw zodat het beurten-blok verschijnt.
+  if (voorMaakAan && _ohpState.plan) {
+    _ohpRenderInhoud();
+  } else {
+    // Bestaand plan: herrender beurtenlijst (indexering kan veranderd zijn → geïndexeerde bedragen herberekenen).
+    _ohpRenderBeurtenLijst();
+  }
+}
+
+function _ohpReadParamsFromUI() {
+  return {
+    prijspeil:     parseInt(document.getElementById('ohpPrijspeil').value) || null,
+    looptijdJaren: parseInt(document.getElementById('ohpLooptijd').value)  || null,
+    indexeringPct: parseFloat(document.getElementById('ohpIndex').value)   || 0
+  };
+}
+
+// Bron-picker filter-state (sessie-lokaal, niet opgeslagen).
+let _ohpFilter = {
+  zoek: '',
+  status: { concept: true, gereed: true, geaccepteerd: true, verzonden: false, verloren: false }
+};
+
+// Toon huidige bron-calculatie in het label (regel boven het zoekveld).
+function _ohpRenderHuidigeBron() {
+  const el = document.getElementById('ohpBronStatus');
+  if (!el) return;
+  if (!_ohpState.calcId) { el.textContent = ''; return; }
+  const c = (data.calculaties || []).find(x => x.id === _ohpState.calcId);
+  if (!c) { el.textContent = ''; return; }
+  const naam = c.naam || '(zonder naam)';
+  const klant = c.klant ? ' · ' + c.klant : '';
+  el.innerHTML = `Huidig: <strong>${_escapeHtml(naam + klant)}</strong>`;
+}
+
+// Vult de bron-lijst op basis van zoek + status-filter.
+function _ohpRenderBronPicker() {
+  const c = document.getElementById('ohpBronLijst');
+  if (!c) return;
+  const zoek = (_ohpFilter.zoek || '').toLowerCase().trim();
+  const aanvaarde = Object.keys(_ohpFilter.status).filter(k => _ohpFilter.status[k]);
+  let calcs = (data.calculaties || []).filter(x => aanvaarde.includes(x.status || 'concept'));
+  if (zoek) {
+    calcs = calcs.filter(x => {
+      const haystack = ((x.naam || '') + ' ' + (x.klant || '')).toLowerCase();
+      return haystack.includes(zoek);
+    });
+  }
+  // Sorteer op gewijzigd aflopend
+  calcs.sort((a, b) => (b.gewijzigd || '').localeCompare(a.gewijzigd || ''));
+  // Limiteer tot 50 om de DOM klein te houden — bij zoeken zie je dan de match, anders de recentste
+  const limiet = 50;
+  const overschot = Math.max(0, calcs.length - limiet);
+  calcs = calcs.slice(0, limiet);
+
+  if (!calcs.length) {
+    c.innerHTML = '<div style="padding: 0.6rem; color: var(--muted); font-style: italic;">Geen calculaties gevonden.</div>';
+    return;
+  }
+  let html = '';
+  calcs.forEach(x => {
+    const naam = x.naam || '(zonder naam)';
+    const klant = x.klant ? ' · ' + x.klant : '';
+    const dat = x.gewijzigd ? new Date(x.gewijzigd).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' }) : '';
+    const actief = (x.id === _ohpState.calcId) ? ' style="background: var(--accent-soft, #e8f0fe);"' : '';
+    html += `<div class="ohp-bron-rij" data-calcid="${x.id}"${actief} style="padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); cursor: pointer;">
+      <div style="font-weight: 500;">${_escapeHtml(naam + klant)}</div>
+      <div style="font-size: 0.8rem; color: var(--muted);">${_escapeHtml(x.status || 'concept')} · ${dat}</div>
+    </div>`;
+  });
+  if (overschot > 0) {
+    html += `<div style="padding: 0.5rem 0.7rem; color: var(--muted); font-size: 0.8rem; font-style: italic;">+ nog ${overschot} \u2014 verfijn de zoekterm of statusfilter</div>`;
+  }
+  c.innerHTML = html;
+
+  // Klik-handlers binden
+  c.querySelectorAll('.ohp-bron-rij').forEach(row => {
+    row.addEventListener('click', () => _ohpSetBronCalc(row.dataset.calcid));
+    row.addEventListener('mouseenter', () => { row.style.background = 'var(--bg-soft, #f5f5f5)'; });
+    row.addEventListener('mouseleave', () => {
+      row.style.background = (row.dataset.calcid === _ohpState.calcId) ? 'var(--accent-soft, #e8f0fe)' : '';
+    });
+  });
+}
+
+// Vult de parameter-velden met de huidige plan-waarden (of defaults).
+function _ohpRenderParams() {
+  const p = _ohpState.plan;
+  const elPrijspeil = document.getElementById('ohpPrijspeil');
+  const elLooptijd  = document.getElementById('ohpLooptijd');
+  const elIndex     = document.getElementById('ohpIndex');
+  if (p) {
+    elPrijspeil.value = p.prijspeil || '';
+    elLooptijd.value  = p.looptijdJaren || '';
+    elIndex.value     = (p.indexeringPct != null) ? p.indexeringPct : 3.5;
+  } else {
+    elPrijspeil.value = '';
+    elLooptijd.value  = '';
+    elIndex.value     = 3.5;
+  }
+  // Velden alleen bedienbaar als er een bron-calc gekozen is.
+  const hasCalc = !!_ohpState.calcId;
+  elPrijspeil.disabled = !hasCalc;
+  elLooptijd.disabled  = !hasCalc;
+  elIndex.disabled     = !hasCalc;
+}
+
+// Toont/verbergt het plan-blok (beurten + resultaat) op basis van state.
+function _ohpRenderInhoud() {
+  const leeg = document.getElementById('ohpLeeg');
+  const blok = document.getElementById('ohpPlanBlok');
+  if (!leeg || !blok) return;
+  if (!_ohpState.calcId) {
+    leeg.style.display = '';
+    leeg.innerHTML = '<em>Kies een bron-calculatie om te beginnen.</em>';
+    blok.style.display = 'none';
+    return;
+  }
+  if (!_ohpState.plan) {
+    leeg.style.display = '';
+    leeg.innerHTML = '<em>Vul prijspeil en looptijd in. Het plan wordt aangemaakt zodra beide velden zijn ingevuld.</em>';
+    blok.style.display = 'none';
+    return;
+  }
+  leeg.style.display = 'none';
+  blok.style.display = '';
+  _ohpRenderBeurtenLijst();
+}
+
+// Indexering-factor: prijs op jaar X t.o.v. prijspeil-jaar.
+function _ohpIndexFactor(jaartal, prijspeil, indexPct) {
+  const jaren = (jaartal || 0) - (prijspeil || 0);
+  const f = Math.pow(1 + (indexPct || 0) / 100, jaren);
+  return f;
+}
+
+// Basisbedrag van een beurt — placeholder tot chunk F.
+// Straks: rekent op basis van b.modus + b.scaling × bron-calculatie.
+function _ohpBeurtBasisBedrag(beurt) {
+  // TODO chunk F: bereken obv scaling-modus en bron-calc-regels/stappen.
+  return 0;
+}
+
+// Render de beurten-lijst.
+function _ohpRenderBeurtenLijst() {
+  const c = document.getElementById('ohpBeurtenLijst');
+  if (!c) return;
+  const plan = _ohpState.plan;
+  if (!plan) { c.innerHTML = ''; return; }
+  const beurten = (plan.beurten || []).slice().sort((a, b) => (a.jaartal || 0) - (b.jaartal || 0));
+  if (!beurten.length) {
+    c.innerHTML = '<div style="color: var(--muted); font-style: italic; padding: 0.5rem 0;">Nog geen beurten. Klik op \u201C+ Beurt toevoegen\u201D om te beginnen.</div>';
+    return;
+  }
+  let html = '<div class="table-scroll"><table><thead><tr>';
+  html += '<th style="width: 80px;">Jaar</th>';
+  html += '<th>Naam</th>';
+  html += '<th style="width: 110px;">Modus</th>';
+  html += '<th style="width: 130px;" class="right">Basis</th>';
+  html += '<th style="width: 130px;" class="right">Geïndexeerd</th>';
+  html += '<th style="width: 110px;"></th>';
+  html += '</tr></thead><tbody>';
+  beurten.forEach(b => {
+    const basis = _ohpBeurtBasisBedrag(b);
+    const fac = _ohpIndexFactor(b.jaartal, plan.prijspeil, plan.indexeringPct);
+    const geind = basis * fac;
+    const modusLabel = ({ algemeen: 'algemeen', per_regel: 'per regel', per_stap: 'per stap' })[b.modus] || b.modus || '';
+    html += `<tr>
+      <td><input type="number" min="1900" max="2200" step="1" value="${b.jaartal}" onchange="_ohpUpdBeurtVeld('${b.id}','jaartal',this.value)" style="width: 70px;"></td>
+      <td><input type="text" value="${_escapeHtml(b.naam || '')}" placeholder="bv. Onderhoudsbeurt" onchange="_ohpUpdBeurtVeld('${b.id}','naam',this.value)"></td>
+      <td><span style="font-size: 0.85rem; color: var(--muted);">${modusLabel}</span></td>
+      <td class="right">${eur(basis)}</td>
+      <td class="right"><strong>${eur(geind)}</strong></td>
+      <td class="right">
+        <button class="btn btn-sm" onclick="_ohpOpenBeurtModal('${b.id}')">Bewerken</button>
+        <button class="btn btn-danger btn-sm" onclick="_ohpDeleteBeurt('${b.id}')">×</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+
+// Voeg een lege beurt toe. Default-jaar = laatste beurtjaar+1, of prijspeil.
+async function _ohpAddBeurt() {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const huidige = (plan.beurten || []);
+  const laatsteJaar = huidige.length ? Math.max(...huidige.map(b => b.jaartal || 0)) : 0;
+  const defaultJaar = laatsteJaar ? laatsteJaar + 1 : (plan.prijspeil || new Date().getFullYear());
+  const nieuw = {
+    naam:     '',
+    jaartal:  defaultJaar,
+    volgorde: huidige.length,
+    modus:    'algemeen',
+    scaling:  { pct: 100 }
+  };
+  const opgeslagen = await _addBeurt(plan.id, nieuw);
+  if (!opgeslagen) { _toast('Beurt toevoegen mislukt'); return; }
+  plan.beurten.push(opgeslagen);
+  _ohpRenderBeurtenLijst();
+}
+
+// Werk één veld van een beurt bij (jaartal of naam, vanuit de lijst-inputs).
+async function _ohpUpdBeurtVeld(beurtId, veld, value) {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const b = (plan.beurten || []).find(x => x.id === beurtId);
+  if (!b) return;
+  if (veld === 'jaartal') b.jaartal = parseInt(value) || b.jaartal;
+  else if (veld === 'naam') b.naam = value || '';
+  const opgeslagen = await _updateBeurt(b);
+  if (!opgeslagen) { _toast('Beurt bijwerken mislukt'); return; }
+  // Lokale beurt-state syncen (gewijzigd-timestamp etc.)
+  Object.assign(b, opgeslagen);
+  _ohpRenderBeurtenLijst();
+}
+
+// Verwijder een beurt na bevestiging.
+async function _ohpDeleteBeurt(beurtId) {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  if (!confirm('Beurt verwijderen?')) return;
+  const ok = await _deleteBeurt(beurtId);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  plan.beurten = (plan.beurten || []).filter(b => b.id !== beurtId);
+  _ohpRenderBeurtenLijst();
+}
+
+// Placeholder voor bewerk-modal — chunk E.
+function _ohpOpenBeurtModal(beurtId) {
+  alert('Bewerken — komt in de volgende chunk (E). Voor nu kun je jaar en naam direct in de lijst aanpassen.');
+}
+
+// Hoofd-renderfunctie: aangeroepen bij tab-switch.
+async function renderOnderhoudsplan() {
+  _ohpRenderBronPicker();
+  _ohpRenderHuidigeBron();
+  // Als er nog geen calc gekozen is, kies dan automatisch de actieve calculatie.
+  if (!_ohpState.calcId && data.activeCalcId) {
+    await _ohpSetBronCalc(data.activeCalcId);
+  } else {
+    _ohpRenderParams();
+    _ohpRenderInhoud();
+  }
+}
+
+// Bron-calculatie wisselen: laadt het plan voor die calc.
+async function _ohpSetBronCalc(calcId) {
+  if (calcId === _ohpState.calcId) return;
+  await _ohpLoad(calcId);
+  _ohpRenderBronPicker();
+  _ohpRenderHuidigeBron();
+  _ohpRenderParams();
+  _ohpRenderInhoud();
+}
+
+// Event-listeners op de UI-elementen. Worden één keer gebonden bij paginalaad.
+function _ohpBindUIEvents() {
+  const zoek = document.getElementById('ohpBronZoek');
+  if (zoek && !zoek._ohpBound) {
+    zoek.addEventListener('input', () => {
+      _ohpFilter.zoek = zoek.value || '';
+      _ohpRenderBronPicker();
+    });
+    zoek._ohpBound = true;
+  }
+  document.querySelectorAll('.ohpStatusFilter').forEach(cb => {
+    if (cb._ohpBound) return;
+    cb.addEventListener('change', () => {
+      _ohpFilter.status[cb.dataset.status] = cb.checked;
+      _ohpRenderBronPicker();
+    });
+    cb._ohpBound = true;
+  });
+  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el._ohpBound) {
+      el.addEventListener('input', _ohpScheduleSave);
+      el.addEventListener('change', _ohpFlushSave);
+      el._ohpBound = true;
+    }
+  });
+}
+// Bind direct (DOM bestaat al wanneer dit script draait).
+_ohpBindUIEvents();
+
 // ============================================================
 // MATERIALEN
 // ============================================================
