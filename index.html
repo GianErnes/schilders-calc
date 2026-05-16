@@ -1443,8 +1443,15 @@
     <div class="panel-head"><h2>Onderhoudsplan</h2></div>
     <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Onderhoudsplan op basis van een opgeslagen calculatie. Werk-in-uitvoering — v3.10.0 wordt stapsgewijs opgebouwd.</em></p>
 
-    <div class="settings-section">
-      <h3>Parameters</h3>
+    <details class="settings-section" id="ohpParamsToggle" open style="padding: 0;">
+      <summary style="cursor: pointer; padding: 1rem; list-style: none; user-select: none;">
+        <span style="display: inline-flex; align-items: center; gap: 0.5rem;">
+          <span id="ohpParamsCaret" style="display: inline-block; transition: transform 0.15s; font-size: 0.85rem;">▾</span>
+          <span style="font-weight: 600; font-size: 1.05rem;">Parameters</span>
+          <span id="ohpParamsBronLabel" style="color: var(--muted); font-size: 0.9rem;"></span>
+        </span>
+      </summary>
+      <div style="padding: 0 1rem 1rem 1rem;">
       <div id="ohpBronWrap" style="margin-bottom: 1rem;">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
           <strong>Bron-calculatie</strong>
@@ -1474,7 +1481,8 @@
           <input type="number" id="ohpBtw" min="0" max="50" step="0.1">
         </label>
       </div>
-    </div>
+      </div>
+    </details>
 
     <div id="ohpInhoud" style="margin-top: 1rem;">
       <div id="ohpLeeg" style="color: var(--muted); font-style: italic;">
@@ -3653,16 +3661,25 @@ let _ohpFilter = {
   status: { concept: true, gereed: true, geaccepteerd: true, verzonden: false, verloren: false }
 };
 
-// Toon huidige bron-calculatie in het label (regel boven het zoekveld).
+// Toon huidige bron-calculatie in het label (regel boven het zoekveld + in de details-summary).
 function _ohpRenderHuidigeBron() {
   const el = document.getElementById('ohpBronStatus');
-  if (!el) return;
-  if (!_ohpState.calcId) { el.textContent = ''; return; }
+  const labelEl = document.getElementById('ohpParamsBronLabel');
+  if (!_ohpState.calcId) {
+    if (el) el.textContent = '';
+    if (labelEl) labelEl.textContent = '';
+    return;
+  }
   const c = (data.calculaties || []).find(x => x.id === _ohpState.calcId);
-  if (!c) { el.textContent = ''; return; }
+  if (!c) {
+    if (el) el.textContent = '';
+    if (labelEl) labelEl.textContent = '';
+    return;
+  }
   const naam = c.naam || '(zonder naam)';
   const klant = c.klant ? ' · ' + c.klant : '';
-  el.innerHTML = `Huidig: <strong>${_escapeHtml(naam + klant)}</strong>`;
+  if (el) el.innerHTML = `Huidig: <strong>${_escapeHtml(naam + klant)}</strong>`;
+  if (labelEl) labelEl.innerHTML = `· Bron: <strong>${_escapeHtml(naam + klant)}</strong>`;
 }
 
 // Vult de bron-lijst op basis van zoek + status-filter.
@@ -4201,6 +4218,26 @@ function _ohpOpenBeurtModal(beurtId) {
   alert('Bewerken — komt in de volgende chunk (E). Voor nu kun je jaar en naam direct in de lijst aanpassen.');
 }
 
+// Klap parameters in/uit. Doe dit alleen automatisch bij eerste keer renderen na laden.
+function _ohpSetParamsCollapsed(collapsed) {
+  const d = document.getElementById('ohpParamsToggle');
+  const caret = document.getElementById('ohpParamsCaret');
+  if (!d) return;
+  d.open = !collapsed;
+  if (caret) caret.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+}
+
+// Bind caret-rotatie aan toggle (één keer).
+(function _ohpBindParamsCaret() {
+  const d = document.getElementById('ohpParamsToggle');
+  if (!d || d._ohpCaretBound) return;
+  d.addEventListener('toggle', () => {
+    const caret = document.getElementById('ohpParamsCaret');
+    if (caret) caret.style.transform = d.open ? 'rotate(0deg)' : 'rotate(-90deg)';
+  });
+  d._ohpCaretBound = true;
+})();
+
 // Hoofd-renderfunctie: aangeroepen bij tab-switch.
 async function renderOnderhoudsplan() {
   _ohpRenderBronPicker();
@@ -4214,6 +4251,8 @@ async function renderOnderhoudsplan() {
     _ohpRenderInhoud();
     _ohpRenderResultaat();
   }
+  // Klap parameters in als er een werkend plan is, anders open laten.
+  _ohpSetParamsCollapsed(!!(_ohpState.plan && _ohpState.plan.prijspeil && _ohpState.plan.looptijdJaren));
 }
 
 // Bron-calculatie wisselen: laadt het plan voor die calc.
