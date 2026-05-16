@@ -1496,7 +1496,8 @@
         <div class="settings-section">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
             <h3 style="margin: 0;">Beurten</h3>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+              <label style="font-size: 0.85rem; color: var(--muted); cursor: pointer; user-select: none;"><input type="checkbox" id="ohpPrintUitleg" checked style="margin-right: 0.3rem; vertical-align: middle;">Uitlegtekst op print</label>
               <button class="btn btn-secondary" onclick="_ohpPrint()" title="Print het onderhoudsplan voor de klant">🖨 Print onderhoudsplan</button>
               <button class="btn" onclick="_ohpAddBeurt()">+ Beurt toevoegen</button>
             </div>
@@ -4852,6 +4853,8 @@ function _ohpPrint() {
   const calc = _ohpBronCalc();
   if (!calc) { _toast('Bron-calculatie niet gevonden'); return; }
 
+  const toonUitleg = !!(document.getElementById('ohpPrintUitleg') && document.getElementById('ohpPrintUitleg').checked);
+
   const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
   const pp = plan.prijspeil;
   const eindJaar = pp + plan.looptijdJaren;
@@ -4877,8 +4880,8 @@ function _ohpPrint() {
     if (mee) perJaar[b.jaartal].bedragMee += bedrag;
     else perJaar[b.jaartal].bedragBuiten += bedrag;
   });
-  const gemPerJaar = plan.looptijdJaren > 0 ? (totaalGemiddelde / plan.looptijdJaren) : 0;
-  const aantalBeurten = beurten.filter(b => b.jaartal >= pp && b.jaartal <= eindJaar).length;
+  const gemPerJaar  = plan.looptijdJaren > 0 ? (totaalGemiddelde / plan.looptijdJaren) : 0;
+  const gemPerMaand = gemPerJaar / 12;
 
   let html = '';
 
@@ -4908,42 +4911,17 @@ function _ohpPrint() {
     </div>
   </div>`;
 
-  // Vaste uitleg + eigen notities
-  const uitleg = _ohpVasteUitleg(plan.looptijdJaren, pp, idx);
-  html += `<div class="section">`;
-  uitleg.forEach(blok => {
-    html += `<h3 style="font-size: 10pt; margin-top: 0.8rem; margin-bottom: 0.3rem; letter-spacing: 0.05em;">${blok.kop}</h3>`;
-    // Splits op dubbele newline voor sub-alinea's
-    const alineas = blok.tekst.split('\n\n');
-    alineas.forEach(a => {
-      html += `<p style="margin: 0 0 0.5rem 0; font-size: 9.5pt; line-height: 1.5;">${_escapeHtml(a)}</p>`;
-    });
-  });
-  if (plan.notities && plan.notities.trim()) {
-    html += `<h3 style="font-size: 10pt; margin-top: 0.8rem; margin-bottom: 0.3rem; letter-spacing: 0.05em;">SPECIFIEKE AFSPRAKEN</h3>`;
-    // Notities tonen, met behoud van regeleinden
-    const notitieParas = plan.notities.split('\n').filter(s => s.trim());
-    notitieParas.forEach(p => {
-      html += `<p style="margin: 0 0 0.5rem 0; font-size: 9.5pt; line-height: 1.5;">${_escapeHtml(p)}</p>`;
-    });
-  }
-  html += `</div>`;
-
-  // Kerncijfers blok
+  // Kerncijfers: maand prominent, looptijd ernaast
   html += `<div class="section">
     <h3 style="margin-bottom: 0.6rem;">Uw onderhoud in cijfers</h3>
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px;">
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px;">
       <div>
-        <div style="font-size: 9pt; color: #666;">Gemiddeld per jaar (incl. BTW)</div>
-        <div style="font-size: 18pt; font-weight: 600; margin-top: 0.2rem;">${eur(gemPerJaar)}</div>
+        <div style="font-size: 9pt; color: #666;">Gemiddeld per maand (incl. BTW)</div>
+        <div style="font-size: 22pt; font-weight: 600; margin-top: 0.2rem;">${eur(gemPerMaand)}</div>
       </div>
       <div>
         <div style="font-size: 9pt; color: #666;">Looptijd</div>
-        <div style="font-size: 18pt; font-weight: 600; margin-top: 0.2rem;">${plan.looptijdJaren} jaar</div>
-      </div>
-      <div>
-        <div style="font-size: 9pt; color: #666;">Aantal beurten</div>
-        <div style="font-size: 18pt; font-weight: 600; margin-top: 0.2rem;">${aantalBeurten}</div>
+        <div style="font-size: 22pt; font-weight: 600; margin-top: 0.2rem;">${plan.looptijdJaren} jaar</div>
       </div>
     </div>`;
   if (totaalEenmalig > 0) {
@@ -4953,37 +4931,6 @@ function _ohpPrint() {
   }
   html += `</div>`;
 
-  // Beurten-tabel
-  html += `<div class="section">
-    <h3>Geplande beurten</h3>
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 60px;">Jaar</th>
-          <th>Beurt</th>
-          <th>Aanpak</th>
-          <th class="right" style="width: 130px;">Bedrag (incl. BTW)</th>
-          <th style="width: 90px;">In gemiddelde</th>
-        </tr>
-      </thead>
-      <tbody>`;
-  beurten.forEach(b => {
-    if (b.jaartal < pp || b.jaartal > eindJaar) return;
-    const basis = _ohpBeurtBasisBedrag(b);
-    const fac = _ohpIndexFactor(b.jaartal, pp, idx);
-    const bedrag = basis * fac * btwF;
-    const mee = (b.meeInGemiddelde !== false);
-    const rowStyle = mee ? '' : ' style="color: #777;"';
-    html += `<tr${rowStyle}>
-      <td>${b.jaartal}</td>
-      <td>${_escapeHtml(b.naam || '(zonder naam)')}</td>
-      <td style="font-size: 9pt;">${_escapeHtml(_ohpBeurtBeschrijving(b))}</td>
-      <td class="num right"><strong>${eur(bedrag)}</strong></td>
-      <td style="text-align: center;">${mee ? 'Ja' : '<em>Eenmalig</em>'}</td>
-    </tr>`;
-  });
-  html += `</tbody></table></div>`;
-
   // Jaartabel
   html += `<div class="section">
     <h3>Bedragen per jaar</h3>
@@ -4991,7 +4938,7 @@ function _ohpPrint() {
       <thead>
         <tr>
           <th style="width: 80px;">Jaar</th>
-          <th class="right" style="width: 150px;">Bedrag (incl. BTW)</th>
+          <th class="right" style="width: 160px;">Bedrag (incl. BTW)</th>
           <th></th>
         </tr>
       </thead>
@@ -5013,21 +4960,34 @@ function _ohpPrint() {
   }
   html += `</tbody></table></div>`;
 
-  // Afsluiting
-  html += `<div class="section" style="margin-top: 1.5rem;">
+  // Vaste uitleg (optioneel) + eigen notities (altijd)
+  if (toonUitleg) {
+    const uitleg = _ohpVasteUitleg(plan.looptijdJaren, pp, idx);
+    html += `<div class="section">`;
+    uitleg.forEach(blok => {
+      html += `<h3 style="font-size: 10pt; margin-top: 0.8rem; margin-bottom: 0.3rem; letter-spacing: 0.05em;">${blok.kop}</h3>`;
+      const alineas = blok.tekst.split('\n\n');
+      alineas.forEach(a => {
+        html += `<p style="margin: 0 0 0.5rem 0; font-size: 9.5pt; line-height: 1.5;">${_escapeHtml(a)}</p>`;
+      });
+    });
+    html += `</div>`;
+  }
+  if (plan.notities && plan.notities.trim()) {
+    html += `<div class="section">
+      <h3 style="font-size: 10pt; margin-top: 0.8rem; margin-bottom: 0.3rem; letter-spacing: 0.05em;">SPECIFIEKE AFSPRAKEN</h3>`;
+    const notitieParas = plan.notities.split('\n').filter(s => s.trim());
+    notitieParas.forEach(p => {
+      html += `<p style="margin: 0 0 0.5rem 0; font-size: 9.5pt; line-height: 1.5;">${_escapeHtml(p)}</p>`;
+    });
+    html += `</div>`;
+  }
+
+  // Afsluitende disclaimer
+  html += `<div class="section" style="margin-top: 1rem;">
     <p style="font-size: 9pt; color: #555;">
-      Alle bedragen zijn inclusief ${btwPct}% BTW, gebaseerd op het prijspeil van ${pp} en jaarlijks geïndexeerd met ${idx}%. Dit onderhoudsplan is opgesteld op ${datum}. Voor elke beurt ontvangt u tijdig een definitieve afspraak en bevestiging van het werk.
+      Alle bedragen zijn inclusief ${btwPct}% BTW, gebaseerd op het prijspeil van ${pp} en jaarlijks geïndexeerd met ${idx}%. Dit onderhoudsplan is opgesteld op ${datum}.
     </p>
-    <div style="margin-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-      <div>
-        <div style="border-bottom: 1px solid #333; padding-bottom: 1.5rem;">&nbsp;</div>
-        <div style="font-size: 9pt; margin-top: 0.3rem;">Voor akkoord, opdrachtgever</div>
-      </div>
-      <div>
-        <div style="border-bottom: 1px solid #333; padding-bottom: 1.5rem;">&nbsp;</div>
-        <div style="font-size: 9pt; margin-top: 0.3rem;">Voor akkoord, Ernes Schilders Heerlen</div>
-      </div>
-    </div>
   </div>`;
 
   // Footer
