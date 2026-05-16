@@ -1485,9 +1485,7 @@
           </div>
           <div id="ohpBeurtenLijst" style="margin-top: 0.8rem;"></div>
         </div>
-        <div id="ohpResultaat" style="margin-top: 1rem; color: var(--muted); font-style: italic;">
-          Resultaat-blok volgt in chunk F (verkoop-modus + jaartabel).
-        </div>
+        <div id="ohpResultaat" style="margin-top: 1rem;"></div>
       </div>
     </div>
   </section>
@@ -3610,8 +3608,9 @@ async function _ohpFlushSave() {
   if (voorMaakAan && _ohpState.plan) {
     _ohpRenderInhoud();
   } else {
-    // Bestaand plan: herrender beurtenlijst (indexering kan veranderd zijn → geïndexeerde bedragen herberekenen).
+    // Bestaand plan: herrender beurtenlijst en resultaat (indexering/looptijd kan veranderd zijn).
     _ohpRenderBeurtenLijst();
+    _ohpRenderResultaat();
   }
 }
 
@@ -3733,6 +3732,7 @@ function _ohpRenderInhoud() {
   leeg.style.display = 'none';
   blok.style.display = '';
   _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
 }
 
 // Indexering-factor: prijs op jaar X t.o.v. prijspeil-jaar.
@@ -3742,11 +3742,196 @@ function _ohpIndexFactor(jaartal, prijspeil, indexPct) {
   return f;
 }
 
-// Basisbedrag van een beurt — placeholder tot chunk F.
-// Straks: rekent op basis van b.modus + b.scaling × bron-calculatie.
-function _ohpBeurtBasisBedrag(beurt) {
-  // TODO chunk F: bereken obv scaling-modus en bron-calc-regels/stappen.
+// ============================================================
+// REKENKERN — pure varianten van calcRegelTotalen / calcStaart
+// ============================================================
+// Niet leunend op data.calc, maar met expliciete sett en calc-object.
+// Spiegelt de logica van calcRegelTotalen, calcSnapshotStep en calcStaart.
+
+function _ohpStapTotaal(stap, sett) {
+  const pct = (stap.percentage ?? 100) / 100;
+  const minuten = (stap.minuten || 0) * pct;
+  const uren = minuten / 60;
+  let matInkoop = 0, matVerkoop = 0;
+  if (stap.materiaalNaam) {
+    matInkoop = (stap.materiaalPrijs || 0) * (stap.verbruik || 0) * pct;
+    const opslag = ((sett && sett.groepOpslagen) || {})[stap.materiaalGroep] || 0;
+    matVerkoop = matInkoop * (1 + opslag/100);
+  }
+  return { uren, minuten, matInkoop, matVerkoop };
+}
+
+// Bereken regelverkoop met de gegeven stappen-overrides. stappenOverride is een Map<stapId, pctFactor>.
+// Als null: pakt de originele stap-percentages 1-op-1.
+function _ohpRegelTotaal(r, sett, stappenOverride) {
+  if (!r.hoeveelheid || !r.stappen || !r.stappen.length) {
+    return { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0, verkoop:0 };
+  }
+  let minuten = 0, matInkoop = 0, matVerkoop = 0;
+  r.stappen.forEach(st => {
+    // Apply override op stap-niveau (vermenigvuldig met de extra factor)
+    let workStap = st;
+    if (stappenOverride && stappenOverride.has(st.id)) {
+      const extraFactor = stappenOverride.get(st.id); // 0..1
+      workStap = { ...st, percentage: (st.percentage ?? 100) * extraFactor };
+    }
+    const c = _ohpStapTotaal(workStap, sett);
+    minuten += c.minuten; matInkoop += c.matInkoop; matVerkoop += c.matVerkoop;
+  });
+  const uren = minuten / 60;
+  const arbeid = uren * (sett.uurloon || 0);
+  const kleinMat = matVerkoop * (sett.kleinMat||0)/100;
+  const afval = (arbeid + matVerkoop) * (sett.afval||0)/100;
+  const arbo = arbeid * (sett.arbo||0)/100;
+  const directe = arbeid + matVerkoop + kleinMat + afval + arbo;
+  const winstBedrag = directe * (sett.winst||0)/100;
+  const verkoop = directe + winstBedrag;
+  const tF = 1 + (r.toeslag||0)/100;
+  return {
+    uren:       uren * r.hoeveelheid * tF,
+    minuten:    minuten * r.hoeveelheid * tF,
+    matInkoop:  matInkoop * r.hoeveelheid,
+    matVerkoop: matVerkoop * r.hoeveelheid,
+    arbeid:     arbeid * r.hoeveelheid * tF,
+    verkoop:    verkoop * r.hoeveelheid * tF
+  };
+}
+
+// Bereken de project-totalen met optionele scaling per regel en per stap.
+// regelScaling: Map<regelId, regelFactor 0..1> of null
+// stapScaling:  Map<stapId, stapFactor 0..1> of null
+// regelUit:     Set<regelId> die helemaal uit moeten (factor 0)
+function _ohpProjectTotalen(calc, sett, regelScaling, stapScaling, regelUit) {
+  const tot = { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0, verkoop:0 };
+  (calc.hoofdgroepen || []).forEach(hg => {
+    (hg.onderdelen || []).forEach(od => {
+      (od.regels || []).forEach(r => {
+        if (regelUit && regelUit.has(r.id)) return;
+        const rFactor = (regelScaling && regelScaling.has(r.id)) ? regelScaling.get(r.id) : 1;
+        if (rFactor === 0) return;
+        const rTot = _ohpRegelTotaal(r, sett, stapScaling);
+        // Schaal het hele regel-totaal met rFactor (modus 'per_regel' of 'algemeen')
+        Object.keys(tot).forEach(k => tot[k] += (rTot[k] || 0) * rFactor);
+      });
+    });
+  });
+  return tot;
+}
+
+// Bereken één staart-post (vast/dag/week/eenheid/percent), met expliciete projectTotalen en calc.
+function _ohpStaartPost(p, calc, sett, projectTot) {
+  if (p.type === 'vast')    return p.bedrag || 0;
+  if (p.type === 'eenheid') return (p.bedrag || 0) * (p.hoeveelheid || 0);
+  if (p.type === 'dag' || p.type === 'week') {
+    const uren = projectTot.uren || 0;
+    const s = calc.schilders || 1;
+    const ud = calc.uurDag || 8;
+    const exact = uren > 0 ? (uren / s / ud) : 0;
+    const dagen = Math.round(exact * 100) / 100;
+    // Volle-dagen-afronding: snapshot-setting
+    const volleDagen = (calc.volleDagenOverride === true) ? true
+                     : (calc.volleDagenOverride === false) ? false
+                     : (sett.volleDagen !== false);
+    let dgFact = dagen;
+    if (volleDagen && dagen > 0) {
+      if (dagen < 1) dgFact = 1;
+      else {
+        const drempel = sett.afrondingsDrempel ?? 0.6;
+        const heel = Math.floor(dagen);
+        const overschot = Math.round((dagen - heel) * 100) / 100;
+        if (overschot === 0) dgFact = dagen;
+        else if (overschot >= drempel) dgFact = heel + 1;
+        else dgFact = heel;
+      }
+    }
+    if (p.type === 'dag') return (p.bedrag || 0) * dgFact;
+    // week: dagen / 5, naar boven
+    const weken = dgFact === 0 ? 0 : Math.ceil(dgFact / 5);
+    return (p.bedrag || 0) * weken;
+  }
+  if (p.type === 'percent') {
+    let basis = 0;
+    if (p.grondslag === 'arbeid')           basis = projectTot.arbeid;
+    else if (p.grondslag === 'materiaal')   basis = projectTot.matVerkoop;
+    else if (p.grondslag === 'arbeid_materiaal') basis = projectTot.arbeid + projectTot.matVerkoop;
+    else if (p.grondslag === 'subtotaal')   basis = projectTot.verkoop;
+    return basis * (p.bedrag || 0) / 100;
+  }
   return 0;
+}
+
+// Bereken de hele staart, geschaald met een uniforme factor (algemeen-modus of gemiddelde).
+function _ohpStaartTotaal(calc, sett, projectTot, staartFactor) {
+  const f = (staartFactor != null) ? staartFactor : 1;
+  return (calc.staart || []).reduce((s, p) => s + _ohpStaartPost(p, calc, sett, projectTot) * f, 0);
+}
+
+// ----- Berekening van een hele beurt -----
+// Returnt het basisbedrag (verkoopprijs van de beurt, excl. BTW, op prijspeil).
+function _ohpBeurtBasisBedrag(beurt) {
+  const plan = _ohpState.plan;
+  if (!plan) return 0;
+  const calc = _ohpBronCalc();
+  if (!calc || !calc.__loaded) return 0;
+  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+
+  let regelScaling = null;  // Map<regelId, 0..1>
+  let stapScaling  = null;  // Map<stapId, 0..1>
+  let staartFactor = 1;
+
+  const sc = beurt.scaling || {};
+  if (beurt.modus === 'algemeen') {
+    const pct = (sc.pct != null ? sc.pct : 100) / 100;
+    // Algemeen: één factor op alles — regels én staart
+    regelScaling = new Map();
+    (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => regelScaling.set(r.id, pct))));
+    staartFactor = pct;
+  } else if (beurt.modus === 'per_regel') {
+    regelScaling = new Map();
+    const regels = sc.regels || {};
+    let som = 0, n = 0;
+    (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => {
+      const v = regels[r.id];
+      const f = (v == null ? 0 : v / 100);
+      regelScaling.set(r.id, f);
+      som += f; n++;
+    })));
+    // Staart krijgt het gemiddelde regel-percentage als factor
+    staartFactor = (n > 0) ? (som / n) : 0;
+  } else if (beurt.modus === 'per_stap') {
+    stapScaling = new Map();
+    const stappen = sc.stappen || {};
+    let som = 0, n = 0;
+    (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => (r.stappen || []).forEach(st => {
+      const v = stappen[st.id];
+      const f = (v == null ? 0 : v / 100);
+      stapScaling.set(st.id, f);
+      som += f; n++;
+    }))));
+    // Staart krijgt het gemiddelde stap-percentage als factor
+    staartFactor = (n > 0) ? (som / n) : 0;
+  } else {
+    return 0;
+  }
+
+  const projectTot = _ohpProjectTotalen(calc, sett, regelScaling, stapScaling, null);
+  const staartTot  = _ohpStaartTotaal(calc, sett, projectTot, staartFactor);
+  return (projectTot.verkoop || 0) + staartTot;
+}
+
+// Helper: vind de bron-calculatie in data.calculaties.
+function _ohpBronCalc() {
+  if (!_ohpState.calcId) return null;
+  return (data.calculaties || []).find(c => c.id === _ohpState.calcId) || null;
+}
+
+// Zorg dat de bron-calc body geladen is (regels, staart) zodat we kunnen rekenen.
+async function _ohpEnsureBronLoaded() {
+  const calc = _ohpBronCalc();
+  if (!calc) return false;
+  if (calc.__loaded) return true;
+  await _loadCalcBody(calc);
+  return !!calc.__loaded;
 }
 
 // Render de beurten-lijst.
@@ -3760,6 +3945,7 @@ function _ohpRenderBeurtenLijst() {
     c.innerHTML = '<div style="color: var(--muted); font-style: italic; padding: 0.5rem 0;">Nog geen beurten. Klik op \u201C+ Beurt toevoegen\u201D om te beginnen.</div>';
     return;
   }
+  const eindJaar = (plan.prijspeil || 0) + (plan.looptijdJaren || 0);
   let html = '<div class="table-scroll"><table><thead><tr>';
   html += '<th style="width: 80px;">Jaar</th>';
   html += '<th>Naam</th>';
@@ -3773,8 +3959,10 @@ function _ohpRenderBeurtenLijst() {
     const fac = _ohpIndexFactor(b.jaartal, plan.prijspeil, plan.indexeringPct);
     const geind = basis * fac;
     const modusLabel = ({ algemeen: 'algemeen', per_regel: 'per regel', per_stap: 'per stap' })[b.modus] || b.modus || '';
+    const jaarBuitenLoop = (b.jaartal > eindJaar) || (b.jaartal < plan.prijspeil);
+    const jaarStyle = jaarBuitenLoop ? ' style="width: 70px; border-color: #d97706;" title="Buiten looptijd"' : ' style="width: 70px;"';
     html += `<tr>
-      <td><input type="number" min="1900" max="2200" step="1" value="${b.jaartal}" onchange="_ohpUpdBeurtVeld('${b.id}','jaartal',this.value)" style="width: 70px;"></td>
+      <td><input type="number" min="1900" max="2200" step="1" value="${b.jaartal}" onchange="_ohpUpdBeurtVeld('${b.id}','jaartal',this.value)"${jaarStyle}></td>
       <td><input type="text" value="${_escapeHtml(b.naam || '')}" placeholder="bv. Onderhoudsbeurt" onchange="_ohpUpdBeurtVeld('${b.id}','naam',this.value)"></td>
       <td><span style="font-size: 0.85rem; color: var(--muted);">${modusLabel}</span></td>
       <td class="right">${eur(basis)}</td>
@@ -3786,6 +3974,61 @@ function _ohpRenderBeurtenLijst() {
     </tr>`;
   });
   html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+
+// Render het resultaat-blok: totalen + jaartabel.
+function _ohpRenderResultaat() {
+  const c = document.getElementById('ohpResultaat');
+  if (!c) return;
+  const plan = _ohpState.plan;
+  if (!plan || !plan.prijspeil || !plan.looptijdJaren) { c.innerHTML = ''; return; }
+
+  const beurten = (plan.beurten || []).slice().sort((a, b) => (a.jaartal || 0) - (b.jaartal || 0));
+  const idx = plan.indexeringPct || 0;
+  const pp = plan.prijspeil;
+  const eindJaar = pp + plan.looptijdJaren;
+
+  // Geïndexeerd totaal: som van alle beurten binnen de looptijd
+  let totaalGeind = 0;
+  const perJaar = {}; // { jaartal: geindexeerd bedrag }
+  beurten.forEach(b => {
+    if (b.jaartal < pp || b.jaartal > eindJaar) return;
+    const basis = _ohpBeurtBasisBedrag(b);
+    const fac = _ohpIndexFactor(b.jaartal, pp, idx);
+    const bedrag = basis * fac;
+    totaalGeind += bedrag;
+    perJaar[b.jaartal] = (perJaar[b.jaartal] || 0) + bedrag;
+  });
+  const gemPerJaar = plan.looptijdJaren > 0 ? (totaalGeind / plan.looptijdJaren) : 0;
+
+  // Verkoop-blok
+  let html = '<div class="settings-section" style="margin-top: 1rem;">';
+  html += '<h3 style="margin-top: 0;">Resultaat</h3>';
+  html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">';
+
+  // Linkerblok: totalen
+  html += '<div>';
+  html += `<div style="margin-bottom: 0.6rem;"><span style="color: var(--muted); font-size: 0.85rem;">Totaal over ${plan.looptijdJaren} jaar (geïndexeerd)</span><br><strong style="font-size: 1.3rem;">${eur(totaalGeind)}</strong></div>`;
+  html += `<div><span style="color: var(--muted); font-size: 0.85rem;">Gemiddeld per jaar</span><br><strong style="font-size: 1.3rem;">${eur(gemPerJaar)}</strong></div>`;
+  html += '</div>';
+
+  // Rechterblok: jaartabel
+  html += '<div>';
+  html += '<div style="color: var(--muted); font-size: 0.85rem; margin-bottom: 0.4rem;">Jaartabel</div>';
+  html += '<div style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px;">';
+  html += '<table style="margin: 0; width: 100%;"><tbody>';
+  for (let j = pp; j <= eindJaar; j++) {
+    const bedrag = perJaar[j] || 0;
+    const isBeurt = bedrag > 0;
+    html += `<tr${isBeurt ? ' style="background: var(--accent-soft, #e8f0fe);"' : ''}>`;
+    html += `<td style="padding: 0.25rem 0.5rem; width: 70px;">${j}</td>`;
+    html += `<td class="right" style="padding: 0.25rem 0.5rem;">${isBeurt ? '<strong>' + eur(bedrag) + '</strong>' : '<span style="color: var(--muted);">— </span>'}</td>`;
+    html += '</tr>';
+  }
+  html += '</tbody></table></div></div>';
+
+  html += '</div></div>';
   c.innerHTML = html;
 }
 
@@ -3807,6 +4050,7 @@ async function _ohpAddBeurt() {
   if (!opgeslagen) { _toast('Beurt toevoegen mislukt'); return; }
   plan.beurten.push(opgeslagen);
   _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
 }
 
 // Werk één veld van een beurt bij (jaartal of naam, vanuit de lijst-inputs).
@@ -3822,6 +4066,7 @@ async function _ohpUpdBeurtVeld(beurtId, veld, value) {
   // Lokale beurt-state syncen (gewijzigd-timestamp etc.)
   Object.assign(b, opgeslagen);
   _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
 }
 
 // Verwijder een beurt na bevestiging.
@@ -3833,6 +4078,7 @@ async function _ohpDeleteBeurt(beurtId) {
   if (!ok) { _toast('Verwijderen mislukt'); return; }
   plan.beurten = (plan.beurten || []).filter(b => b.id !== beurtId);
   _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
 }
 
 // Placeholder voor bewerk-modal — chunk E.
@@ -3848,8 +4094,10 @@ async function renderOnderhoudsplan() {
   if (!_ohpState.calcId && data.activeCalcId) {
     await _ohpSetBronCalc(data.activeCalcId);
   } else {
+    if (_ohpState.calcId) await _ohpEnsureBronLoaded();
     _ohpRenderParams();
     _ohpRenderInhoud();
+    _ohpRenderResultaat();
   }
 }
 
@@ -3857,10 +4105,13 @@ async function renderOnderhoudsplan() {
 async function _ohpSetBronCalc(calcId) {
   if (calcId === _ohpState.calcId) return;
   await _ohpLoad(calcId);
+  // Body van de calc laden (regels + staart) zodat we kunnen rekenen.
+  await _ohpEnsureBronLoaded();
   _ohpRenderBronPicker();
   _ohpRenderHuidigeBron();
   _ohpRenderParams();
   _ohpRenderInhoud();
+  _ohpRenderResultaat();
 }
 
 // Event-listeners op de UI-elementen. Worden één keer gebonden bij paginalaad.
