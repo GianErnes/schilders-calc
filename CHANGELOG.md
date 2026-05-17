@@ -1,3 +1,8 @@
+## v3.10.2 — Scroll-naar-boven bij openen calculatie
+- **Schoonheidsfout opgelost**: bij klikken op "Openen" in het dashboard sprong de Calculatie-tab open op de scroll-positie van het dashboard, waardoor de paneel-header en projectnaam-velden boven de viewport-rand uitvielen. Eén regel `window.scrollTo({ top: 0, behavior: 'smooth' })` toegevoegd in `openCalc`, na de tab-switch.
+- **Bewust alleen in `openCalc`**, niet in de generieke nav-tab-handler: bij gewoon tussen tabbladen wisselen kan een gebruiker bewust ergens scrollen en willen terugkeren op die positie. Bij `openCalc` is de actie expliciet "ik open een ander item", dus "begin bovenaan" past daar.
+- **`'smooth'`** in plaats van een harde sprong: de korte animatie verbindt de klik visueel aan de scroll-beweging en voelt minder schokkerig.
+
 ## v3.10.1 — Opname-datum & offerte-deadline
 - **Twee nieuwe velden per calculatie**: `opname_datum` (handmatig) en `deadline_datum` (auto-berekend = opname + 14 dagen, vrij aan te passen). Beide nullable, `date`-type in Supabase. Bestaande calculaties blijven leeg (geen inhaalslag) en tonen `—` in het dashboard.
 - **Auto-vul-logica**: bij wijzigen van de opname-datum vult de deadline automatisch op opname + 14. Als de deadline daarna handmatig is overschreven (afwijkt van de auto-waarde) blijft die bij volgende opname-wijzigingen staan. Wis de deadline en wijzig opname → vult weer auto. Geen popup, geen bevestiging, het gedrag is intuïtief.

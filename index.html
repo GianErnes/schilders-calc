@@ -1323,7 +1323,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.10.1</h2>
+      <h2>Welkom bij v3.10.2</h2>
       <p><strong>Nieuwe tab: Onderhoudsplan.</strong> Stel een meerjaren-onderhoudsplan op op basis van een opgeslagen calculatie. Drie manieren om beurten te schalen (algemeen percentage, per regel, per stap), met snelinvullers per hoofdgroep en de mogelijkheid om scaling uit een andere beurt te kopiëren. Bedragen worden geïndexeerd vanaf het prijspeil van de calculatie en getoond inclusief BTW. Per beurt aan te vinken of die meerekent in het gemiddelde maandbedrag, voor wanneer de eerste behandeling separaat wordt afgerekend. Print-functie toont het plan als verkoopdocument met maandbedrag en jaartabel; project-specifieke afspraken komen uit het notities-veld. Onder de motorkap: één rekenkern die de structuur van de calculatie-tab letterlijk spiegelt, en aparte Supabase-tabellen voor plannen en beurten 🎨.</p>
       <p style="margin-top: 0.75rem;"><strong>v3.10.1 — Opname &amp; deadline.</strong> Per calculatie nu een opname-datum en deadline voor het uitbrengen van de offerte (default = opname + 14 dagen, vrij aan te passen). In het dashboard kleurt de deadline oranje binnen 3 dagen en rood bij overschrijding; bij verzonden offertes verschijnt een groen "op tijd"- of rood "+N dg"-label naast de datum om je prestatie t.o.v. de afspraak met de klant in beeld te houden.</p>
     </div>
@@ -1854,7 +1854,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.10.1';
+const APP_VERSION = 'v3.10.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -7263,6 +7263,7 @@ async function openCalc(id) {
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
   document.querySelector('nav button[data-tab="calculatie"]').classList.add('active');
   document.getElementById('calculatie').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 async function delCalc(id) {
   const c = data.calculaties.find(x => x.id === id);
