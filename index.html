@@ -1323,8 +1323,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.10.0</h2>
+      <h2>Welkom bij v3.10.1</h2>
       <p><strong>Nieuwe tab: Onderhoudsplan.</strong> Stel een meerjaren-onderhoudsplan op op basis van een opgeslagen calculatie. Drie manieren om beurten te schalen (algemeen percentage, per regel, per stap), met snelinvullers per hoofdgroep en de mogelijkheid om scaling uit een andere beurt te kopiëren. Bedragen worden geïndexeerd vanaf het prijspeil van de calculatie en getoond inclusief BTW. Per beurt aan te vinken of die meerekent in het gemiddelde maandbedrag, voor wanneer de eerste behandeling separaat wordt afgerekend. Print-functie toont het plan als verkoopdocument met maandbedrag en jaartabel; project-specifieke afspraken komen uit het notities-veld. Onder de motorkap: één rekenkern die de structuur van de calculatie-tab letterlijk spiegelt, en aparte Supabase-tabellen voor plannen en beurten 🎨.</p>
+      <p style="margin-top: 0.75rem;"><strong>v3.10.1 — Opname &amp; deadline.</strong> Per calculatie nu een opname-datum en deadline voor het uitbrengen van de offerte (default = opname + 14 dagen, vrij aan te passen). In het dashboard kleurt de deadline oranje binnen 3 dagen en rood bij overschrijding; bij verzonden offertes verschijnt een groen "op tijd"- of rood "+N dg"-label naast de datum om je prestatie t.o.v. de afspraak met de klant in beeld te houden.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1370,6 +1371,8 @@
       <div><label>Reisafstand (km enkele reis)</label><input type="number" id="calcReis" step="1" min="0"></div>
       <div><label>Aantal schilders</label><input type="number" id="calcSchilders" step="1" min="1"></div>
       <div><label>Uren per werkdag</label><input type="number" id="calcUurDag" step="0.5" min="1"></div>
+      <div><label>Opname-datum</label><input type="date" id="calcOpname"></div>
+      <div><label>Deadline offerte <span style="font-weight:normal; color:var(--muted); font-size:0.75rem;">(+14 dgn)</span></label><input type="date" id="calcDeadline"></div>
     </div>
     <div id="notitiesPaneel"></div>
     <div class="calc-layout">
@@ -1851,7 +1854,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.10.0';
+const APP_VERSION = 'v3.10.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2813,6 +2816,8 @@ function _mapCalcHeaderFromDB(row) {
     volleDagenOverride:  row.volle_dagen_override,
     notities:            row.notities || '',
     settingsSnapshot:    row.settings_snapshot || null,
+    opnameDatum:         row.opname_datum || null,
+    deadlineDatum:       row.deadline_datum || null,
     totaalInclBtw:       row.totaal_incl_btw != null ? parseFloat(row.totaal_incl_btw) : null,
     aangemaakt:          row.aangemaakt || new Date().toISOString(),
     gewijzigd:           row.gewijzigd  || new Date().toISOString(),
@@ -2831,7 +2836,9 @@ function _mapCalcHeaderToDB(c) {
     reis: c.reis != null ? c.reis : 0,
     volle_dagen_override: c.volleDagenOverride != null ? c.volleDagenOverride : null,
     notities: c.notities || '',
-    settings_snapshot: c.settingsSnapshot || null
+    settings_snapshot: c.settingsSnapshot || null,
+    opname_datum: c.opnameDatum || null,
+    deadline_datum: c.deadlineDatum || null
   };
 }
 function _mapHgFromDB(row, ods) {
@@ -6778,6 +6785,8 @@ function renderCalcStructuur() {
   document.getElementById('calcReis').value = data.calc.reis || 0;
   document.getElementById('calcSchilders').value = data.calc.schilders || 2;
   document.getElementById('calcUurDag').value = data.calc.uurDag || 8;
+  document.getElementById('calcOpname').value = data.calc.opnameDatum || '';
+  document.getElementById('calcDeadline').value = data.calc.deadlineDatum || '';
 
   renderNotitiesPaneel();
 
@@ -7448,15 +7457,47 @@ async function setCalcStatus(id, status) {
 
 // header form binding — change-event (op blur) + DB-update voor cloud
 document.addEventListener('change', e => {
-  const map = {calcProject:'naam', calcKlant:'klant', calcReis:'reis', calcSchilders:'schilders', calcUurDag:'uurDag'};
+  const map = {calcProject:'naam', calcKlant:'klant', calcReis:'reis', calcSchilders:'schilders', calcUurDag:'uurDag', calcOpname:'opnameDatum', calcDeadline:'deadlineDatum'};
   if (map[e.target.id] && data.calc) {
     const k = map[e.target.id];
-    data.calc[k] = ['reis','schilders','uurDag'].includes(k) ? (parseFloat(e.target.value)||0) : e.target.value;
+    const oldOpname = data.calc.opnameDatum || null;
+    const oldDeadline = data.calc.deadlineDatum || null;
+    if (['reis','schilders','uurDag'].includes(k)) {
+      data.calc[k] = parseFloat(e.target.value)||0;
+    } else if (['opnameDatum','deadlineDatum'].includes(k)) {
+      data.calc[k] = e.target.value || null;
+    } else {
+      data.calc[k] = e.target.value;
+    }
+    // Auto-vul deadline bij wijziging opname-datum:
+    //  - deadline leeg → vullen met opname + 14
+    //  - deadline = (oude opname + 14) → herberekenen naar nieuwe opname + 14 (was auto-waarde)
+    //  - deadline = iets anders → laten staan (handmatig overschreven)
+    if (k === 'opnameDatum' && data.calc.opnameDatum) {
+      const newAuto = _addDays(data.calc.opnameDatum, 14);
+      const oldAuto = oldOpname ? _addDays(oldOpname, 14) : null;
+      if (!oldDeadline || oldDeadline === oldAuto) {
+        data.calc.deadlineDatum = newAuto;
+        const dl = document.getElementById('calcDeadline');
+        if (dl) dl.value = newAuto;
+      }
+    }
     _updateCalcDB(data.calc);
     if (['reis','schilders','uurDag'].includes(k)) renderTotals();
     renderDashboard();
   }
 });
+// Helper: tel N dagen op bij een YYYY-MM-DD datum, retourneert YYYY-MM-DD
+function _addDays(yyyymmdd, n) {
+  if (!yyyymmdd) return null;
+  const [y, m, d] = yyyymmdd.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + n);
+  const yy = dt.getFullYear();
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}
 // ============================================================
 // STAARTKOSTEN
 // ============================================================
@@ -8396,7 +8437,18 @@ function renderCalculatiesArchief() {
   const STATUS_COLORS = { concept: 'var(--muted)', gereed: '#f59e0b', verzonden: 'var(--blue)', geaccepteerd: 'var(--green)', verloren: 'var(--accent-deep)' };
   // Sort by gewijzigd desc
   const sorted = [...data.calculaties].sort((a, b) => (b.gewijzigd || '').localeCompare(a.gewijzigd || ''));
-  let html = '<div class="table-scroll"><table><thead><tr><th>Naam</th><th>Gewijzigd</th><th>Status</th><th class="right">Totaal incl. BTW</th><th></th></tr></thead><tbody>';
+  let html = '<div class="table-scroll"><table><thead><tr><th>Naam</th><th>Opname</th><th>Deadline</th><th>Gewijzigd</th><th>Status</th><th class="right">Totaal incl. BTW</th><th></th></tr></thead><tbody>';
+  // Vandaag als YYYY-MM-DD voor kleur-vergelijkingen
+  const _today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  const _daysBetween = (a, b) => {
+    // a en b zijn YYYY-MM-DD strings. Retourneert b - a in dagen (integer).
+    const [ay, am, ad] = a.split('-').map(Number);
+    const [by, bm, bd] = b.split('-').map(Number);
+    const da = new Date(ay, am - 1, ad);
+    const db = new Date(by, bm - 1, bd);
+    return Math.round((db - da) / 86400000);
+  };
+  const _fmtDate = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
   sorted.forEach(cl => {
     // Bedrag bepalen: live berekenen indien geladen (= meest actuele waarde),
     // anders cache uit DB, anders gedachtestreepje voor calcs zonder bekend totaal.
@@ -8410,11 +8462,45 @@ function renderCalculatiesArchief() {
       bedragHtml = '<span style="color:var(--muted);" title="Open en sla op om te berekenen">—</span>';
     }
     const datum = cl.gewijzigd ? new Date(cl.gewijzigd).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+    // Opname + deadline cellen met kleur-logica
+    const opnameHtml = cl.opnameDatum ? `<span style="color:var(--muted);">${_fmtDate(cl.opnameDatum)}</span>` : '<span style="color:var(--muted);">—</span>';
+    let deadlineHtml = '<span style="color:var(--muted);">—</span>';
+    if (cl.deadlineDatum) {
+      const isConcept = !cl.status || cl.status === 'concept' || cl.status === 'gereed';
+      if (isConcept) {
+        const dagen = _daysBetween(_today, cl.deadlineDatum);
+        if (dagen < 0) {
+          // Deadline verstreken — rood
+          deadlineHtml = `<span style="color:var(--accent-deep); font-weight:600;" title="Deadline ${Math.abs(dagen)} dag${Math.abs(dagen)===1?'':'en'} verstreken">${_fmtDate(cl.deadlineDatum)}</span>`;
+        } else if (dagen <= 3) {
+          // Binnen 3 dagen — oranje
+          deadlineHtml = `<span style="color:#f59e0b; font-weight:600;" title="Deadline over ${dagen} dag${dagen===1?'':'en'}">${_fmtDate(cl.deadlineDatum)}</span>`;
+        } else {
+          deadlineHtml = `<span style="color:var(--muted);">${_fmtDate(cl.deadlineDatum)}</span>`;
+        }
+      } else {
+        // Verzonden/geaccepteerd/verloren: deadline is referentiewaarde, neutraal grijs
+        deadlineHtml = `<span style="color:var(--muted);">${_fmtDate(cl.deadlineDatum)}</span>`;
+      }
+    }
+    // Op tijd / te laat label bij Gewijzigd-kolom voor verzonden/geaccepteerd
+    let datumHtml = datum;
+    if (cl.deadlineDatum && cl.gewijzigd && (cl.status === 'verzonden' || cl.status === 'geaccepteerd')) {
+      const verzondenDag = cl.gewijzigd.slice(0, 10); // YYYY-MM-DD uit ISO timestamp
+      const diff = _daysBetween(cl.deadlineDatum, verzondenDag); // positief = te laat, 0 of negatief = op tijd
+      if (diff <= 0) {
+        datumHtml = `${datum} <span style="color:var(--green); font-size:0.7rem; font-weight:600; margin-left:0.3rem;" title="Verzonden op of vóór deadline">op tijd</span>`;
+      } else {
+        datumHtml = `${datum} <span style="color:var(--accent-deep); font-size:0.7rem; font-weight:600; margin-left:0.3rem;" title="Verzonden na deadline">+${diff} dg</span>`;
+      }
+    }
     const statusOpts = Object.keys(STATUS_LABELS).map(s => `<option value="${s}" ${s === cl.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('');
     const isActive = cl.id === data.activeCalcId;
     html += `<tr ${isActive ? 'style="background: rgba(194,65,12,0.06);"' : ''}>
       <td><strong style="cursor: pointer; color: var(--accent-deep);" onclick="openCalc('${cl.id}')">${cl.naam || '<em>(zonder naam)</em>'}</strong>${isActive ? ' <span class="mono" style="font-size:0.65rem; color:var(--accent); margin-left:0.4rem;">● actief</span>' : ''}<br><span style="color: var(--muted); font-size: 0.78rem;">${cl.klant || ''}</span></td>
-      <td class="num">${datum}</td>
+      <td class="num">${opnameHtml}</td>
+      <td class="num">${deadlineHtml}</td>
+      <td class="num">${datumHtml}</td>
       <td><select onchange="setCalcStatus('${cl.id}', this.value)" style="background: ${STATUS_COLORS[cl.status]}; color: var(--paper); border: none; padding: 0.25rem 0.4rem; font-size: 0.7rem;">${statusOpts}</select></td>
       <td class="num right" style="color: var(--accent-deep); font-weight: 600;">${bedragHtml}</td>
       <td class="right">
