@@ -1323,7 +1323,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.10.2</h2>
+      <h2>Welkom bij v3.10.3</h2>
       <p><strong>Nieuwe tab: Onderhoudsplan.</strong> Stel een meerjaren-onderhoudsplan op op basis van een opgeslagen calculatie. Drie manieren om beurten te schalen (algemeen percentage, per regel, per stap), met snelinvullers per hoofdgroep en de mogelijkheid om scaling uit een andere beurt te kopiëren. Bedragen worden geïndexeerd vanaf het prijspeil van de calculatie en getoond inclusief BTW. Per beurt aan te vinken of die meerekent in het gemiddelde maandbedrag, voor wanneer de eerste behandeling separaat wordt afgerekend. Print-functie toont het plan als verkoopdocument met maandbedrag en jaartabel; project-specifieke afspraken komen uit het notities-veld. Onder de motorkap: één rekenkern die de structuur van de calculatie-tab letterlijk spiegelt, en aparte Supabase-tabellen voor plannen en beurten 🎨.</p>
       <p style="margin-top: 0.75rem;"><strong>v3.10.1 — Opname &amp; deadline.</strong> Per calculatie nu een opname-datum en deadline voor het uitbrengen van de offerte (default = opname + 14 dagen, vrij aan te passen). In het dashboard kleurt de deadline oranje binnen 3 dagen en rood bij overschrijding; bij verzonden offertes verschijnt een groen "op tijd"- of rood "+N dg"-label naast de datum om je prestatie t.o.v. de afspraak met de klant in beeld te houden.</p>
     </div>
@@ -1854,7 +1854,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.10.2';
+const APP_VERSION = 'v3.10.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2372,7 +2372,7 @@ function _newCalcObj(naam = 'Nieuwe calculatie') {
     klant: '',
     reis: 0,
     schilders: 2,
-    uurDag: 8,
+    uurDag: 7.5,
     volleDagenOverride: null, // null = volg globale instelling, true/false = forceer
     status: 'concept',
     aangemaakt: new Date().toISOString(),
@@ -2811,7 +2811,7 @@ function _mapCalcHeaderFromDB(row) {
     klant:               row.klant || '',
     status:              row.status || 'concept',
     schilders:           row.schilders != null ? row.schilders : 2,
-    uurDag:              parseFloat(row.uur_dag) || 8,
+    uurDag:              parseFloat(row.uur_dag) || 7.5,
     reis:                parseFloat(row.reis) || 0,
     volleDagenOverride:  row.volle_dagen_override,
     notities:            row.notities || '',
@@ -2832,7 +2832,7 @@ function _mapCalcHeaderToDB(c) {
     klant: c.klant || '',
     status: c.status || 'concept',
     schilders: c.schilders != null ? c.schilders : 2,
-    uur_dag: c.uurDag != null ? c.uurDag : 8,
+    uur_dag: c.uurDag != null ? c.uurDag : 7.5,
     reis: c.reis != null ? c.reis : 0,
     volle_dagen_override: c.volleDagenOverride != null ? c.volleDagenOverride : null,
     notities: c.notities || '',
@@ -3963,7 +3963,7 @@ function _ohpStaartPost(p, calc, sett, projectRauw, dagenFactureerbaar, weken) {
 // Bereken dagen-factureerbaar en weken op basis van project-uren.
 function _ohpDagen(calc, sett, projectUren) {
   const s = calc.schilders || 1;
-  const ud = calc.uurDag || 8;
+  const ud = calc.uurDag || 7.5;
   if (!projectUren || projectUren <= 0) return { werkelijk: 0, factureerbaar: 0, weken: 0 };
   const exact = projectUren / s / ud;
   const werkelijk = Math.round(exact * 100) / 100;
@@ -4042,7 +4042,7 @@ function _ohpBeurtBasisBedrag(beurt) {
 
   // 4. Afrondingstoeslag (extra-arbeid bij volle dagen).
   const dagenVerschil = Math.max(0, dg.factureerbaar - dg.werkelijk);
-  const afrondingsToeslag = dg.volleDagen ? dagenVerschil * (calc.schilders || 0) * (calc.uurDag || 8) * (sett.uurloon || 0) : 0;
+  const afrondingsToeslag = dg.volleDagen ? dagenVerschil * (calc.schilders || 0) * (calc.uurDag || 7.5) * (sett.uurloon || 0) : 0;
   const arbeid = t.arbeid + afrondingsToeslag;
 
   // 5. Reiskosten op basis van factureerbare dagen (schalen mee met geschaald werk).
@@ -5217,7 +5217,7 @@ function printCalc() {
   const dagenFactureerbaar = _calcDaysFactureerbaar();
   const volleDagen = _useVolleDagen();
   const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
-  const afrondingsToeslag = volleDagen ? dagenVerschil * (c.schilders||0) * (c.uurDag||8) * sett.uurloon : 0;
+  const afrondingsToeslag = volleDagen ? dagenVerschil * (c.schilders||0) * (c.uurDag||7.5) * sett.uurloon : 0;
   const arbeidWerkelijk = t.arbeid;
   const arbeid = arbeidWerkelijk + afrondingsToeslag;
   const weken = _calcWeeks();
@@ -5263,7 +5263,7 @@ function printCalc() {
       <div><span class="label">Klant: </span>${c.klant||'—'}</div>
       <div><span class="label">Aangemaakt: </span>${c.aangemaakt ? new Date(c.aangemaakt).toLocaleDateString('nl-NL') : '—'}</div>
       <div><span class="label">Aantal schilders: </span>${c.schilders||0}</div>
-      <div><span class="label">Uren per werkdag: </span>${c.uurDag||8}</div>
+      <div><span class="label">Uren per werkdag: </span>${c.uurDag||7.5}</div>
       <div><span class="label">Reisafstand (enkele reis): </span>${reisAfstand} km</div>
       <div><span class="label">Werkdagen (werkelijk): </span>${fmt1(dagenWerkelijk)}</div>
       ${dagenFactureerbaar !== dagenWerkelijk ? `<div><span class="label">Werkdagen (factureerbaar): </span><strong>${dagenFactureerbaar}</strong></div>` : ''}
@@ -5404,7 +5404,7 @@ function printCalc() {
     <div class="summary-grid">
       <div><span class="label">Totaal uren: </span>${fmt(t.uren)}</div>
       <div><span class="label">Aantal schilders: </span>${c.schilders||0}</div>
-      <div><span class="label">Uren per werkdag: </span>${c.uurDag||8}</div>
+      <div><span class="label">Uren per werkdag: </span>${c.uurDag||7.5}</div>
       <div><span class="label">Werkdagen werkelijk: </span>${fmt1(dagenWerkelijk)}</div>
       <div><span class="label">Werkdagen factureerbaar: </span><strong>${dagenFactureerbaar}</strong></div>
       <div><span class="label">Volle dagen factureren: </span>${volleDagen ? 'Ja' : 'Nee'}</div>
@@ -5509,7 +5509,7 @@ function printOfferteYoobi() {
   const dagenFactureerbaar = _calcDaysFactureerbaar();
   const volleDagen = _useVolleDagen();
   const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
-  const afrondingsToeslag = volleDagen ? dagenVerschil * (c.schilders||0) * (c.uurDag||8) * sett.uurloon : 0;
+  const afrondingsToeslag = volleDagen ? dagenVerschil * (c.schilders||0) * (c.uurDag||7.5) * sett.uurloon : 0;
   const arbeid = t.arbeid + afrondingsToeslag;
   const weken = _calcWeeks();
   const reisAfstand = c.reis || 0;
@@ -6088,7 +6088,7 @@ function _calcDays() {
   const t = calcProjectTotalen();
   const u = t.uren;
   const s = data.calc.schilders || 1;
-  const ud = data.calc.uurDag || 8;
+  const ud = data.calc.uurDag || 7.5;
   if (u === 0) return 0;
   const exact = u / s / ud;
   // Internal precision: 2 decimals
@@ -6784,7 +6784,7 @@ function renderCalcStructuur() {
   document.getElementById('calcKlant').value = data.calc.klant || '';
   document.getElementById('calcReis').value = data.calc.reis || 0;
   document.getElementById('calcSchilders').value = data.calc.schilders || 2;
-  document.getElementById('calcUurDag').value = data.calc.uurDag || 8;
+  document.getElementById('calcUurDag').value = data.calc.uurDag || 7.5;
   document.getElementById('calcOpname').value = data.calc.opnameDatum || '';
   document.getElementById('calcDeadline').value = data.calc.deadlineDatum || '';
 
@@ -7816,7 +7816,7 @@ function renderTotals() {
   const volleDagen = _useVolleDagen();
   // Afrondingstoeslag arbeid: verschil tussen factureerbaar en werkelijk × schilders × uurDag × uurloon
   const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
-  const afrondingsToeslag = volleDagen ? dagenVerschil * (data.calc.schilders||0) * (data.calc.uurDag||8) * sett.uurloon : 0;
+  const afrondingsToeslag = volleDagen ? dagenVerschil * (data.calc.schilders||0) * (data.calc.uurDag||7.5) * sett.uurloon : 0;
   const arbeid = arbeidWerkelijk + afrondingsToeslag;
   const snelheid = sett.snelheid || 50;
   // Reisuren: alleen heenreis × schilders × factureerbare dagen
@@ -7867,7 +7867,7 @@ function renderTotals() {
     <div class="planning">
       <div style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.3rem;">Planning</div>
       <div class="big">${fmt1(dagenWerkelijk)} werkdagen</div>
-      <div style="font-size: 0.72rem; color: var(--ink-soft); margin-top: 0.2rem;">${data.calc.schilders||0} schilders × ${data.calc.uurDag||8} u/dag</div>
+      <div style="font-size: 0.72rem; color: var(--ink-soft); margin-top: 0.2rem;">${data.calc.schilders||0} schilders × ${data.calc.uurDag||7.5} u/dag</div>
       ${(() => {
         if (!volleDagen) return '';
         const heel = Math.floor(dagenWerkelijk);
@@ -8005,7 +8005,7 @@ function importData(e) {
           klant: old.klant || '',
           reis: old.reis || 0,
           schilders: old.schilders || 2,
-          uurDag: old.uurDag || 8,
+          uurDag: old.uurDag || 7.5,
           status: 'concept',
           aangemaakt: new Date().toISOString(),
           gewijzigd: new Date().toISOString(),
@@ -8233,7 +8233,7 @@ async function importCalcsFromV241(e) {
         klant: oc.klant || '',
         status: oc.status && ['concept','gereed','verzonden','geaccepteerd','verloren'].includes(oc.status) ? oc.status : 'concept',
         schilders: oc.schilders != null ? oc.schilders : 2,
-        uurDag: oc.uurDag != null ? oc.uurDag : 8,
+        uurDag: oc.uurDag != null ? oc.uurDag : 7.5,
         reis: oc.reis || 0,
         volleDagenOverride: oc.volleDagenOverride != null ? oc.volleDagenOverride : null,
         notities: oc.notities || ''
@@ -8375,7 +8375,7 @@ function _calcTotalForArchive(c) {
     uren += sysUren * r.hoeveelheid * tF;
   })));
   // Reis & dagen
-  const dagenWerkelijk = uren > 0 ? Math.round((uren / (c.schilders || 1) / (c.uurDag || 8)) * 100) / 100 : 0;
+  const dagenWerkelijk = uren > 0 ? Math.round((uren / (c.schilders || 1) / (c.uurDag || 7.5)) * 100) / 100 : 0;
   // Resolve volle dagen: per-calc override OR global setting
   let useVolle;
   if (c.volleDagenOverride === true) useVolle = true;
@@ -8395,7 +8395,7 @@ function _calcTotalForArchive(c) {
     else dagenFactureerbaar = heel;
   }
   const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
-  const afrondingsToeslag = useVolle ? dagenVerschil * (c.schilders||0) * (c.uurDag||8) * sett.uurloon : 0;
+  const afrondingsToeslag = useVolle ? dagenVerschil * (c.schilders||0) * (c.uurDag||7.5) * sett.uurloon : 0;
   arbeid += afrondingsToeslag;
   const snelheid = sett.snelheid || 50;
   const reisUren = dagenFactureerbaar * (c.schilders || 0) * ((c.reis || 0) / snelheid);

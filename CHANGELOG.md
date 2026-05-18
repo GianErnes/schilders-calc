@@ -1,3 +1,8 @@
+## v3.10.3 — Standaard werkdag-lengte 7,5 uur
+- **Fallback voor `uurDag` over de hele codebase van 8 naar 7,5 uur**, op alle 17 plekken waar deze waarde wordt gebruikt: de initiële calc-constructor, beide DB-mappers (`_mapCalcHeaderFromDB` / `_mapCalcHeaderToDB`), `loadCalc`-default, alle afrondingstoeslag-berekeningen (calculatie-tab, werkbon, archief-totaal, onderhoudsplan), dagen-helpers, dupliceer-flow, JSON-import-flow en de print-labels op de Calculatie- en Werkbon-prints.
+- **Effect**: nieuwe calculaties starten standaard op 7,5 u/dag. Bestaande calculaties met een expliciet ingevulde waarde blijven ongewijzigd — alleen calcs waar `uurDag` om welke reden ook leeg/null is, vallen nu terug op 7,5 in plaats van 8.
+- **Geen instellingen-veld toegevoegd** (zoals besproken): 7,5 u/dag is een vaste praktijknorm voor Ernes Schilders. Mocht dit ooit moeten variëren per scenario, dan kan later een echt instellingen-veld onder Uurtarieven worden toegevoegd dat deze hardcoded fallback overneemt.
+
 ## v3.10.2 — Scroll-naar-boven bij openen calculatie
 - **Schoonheidsfout opgelost**: bij klikken op "Openen" in het dashboard sprong de Calculatie-tab open op de scroll-positie van het dashboard, waardoor de paneel-header en projectnaam-velden boven de viewport-rand uitvielen. Eén regel `window.scrollTo({ top: 0, behavior: 'smooth' })` toegevoegd in `openCalc`, na de tab-switch.
 - **Bewust alleen in `openCalc`**, niet in de generieke nav-tab-handler: bij gewoon tussen tabbladen wisselen kan een gebruiker bewust ergens scrollen en willen terugkeren op die positie. Bij `openCalc` is de actie expliciet "ik open een ander item", dus "begin bovenaan" past daar.
