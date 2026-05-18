@@ -1323,7 +1323,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.10.3</h2>
+      <h2>Welkom bij v3.10.4</h2>
       <p><strong>Nieuwe tab: Onderhoudsplan.</strong> Stel een meerjaren-onderhoudsplan op op basis van een opgeslagen calculatie. Drie manieren om beurten te schalen (algemeen percentage, per regel, per stap), met snelinvullers per hoofdgroep en de mogelijkheid om scaling uit een andere beurt te kopiëren. Bedragen worden geïndexeerd vanaf het prijspeil van de calculatie en getoond inclusief BTW. Per beurt aan te vinken of die meerekent in het gemiddelde maandbedrag, voor wanneer de eerste behandeling separaat wordt afgerekend. Print-functie toont het plan als verkoopdocument met maandbedrag en jaartabel; project-specifieke afspraken komen uit het notities-veld. Onder de motorkap: één rekenkern die de structuur van de calculatie-tab letterlijk spiegelt, en aparte Supabase-tabellen voor plannen en beurten 🎨.</p>
       <p style="margin-top: 0.75rem;"><strong>v3.10.1 — Opname &amp; deadline.</strong> Per calculatie nu een opname-datum en deadline voor het uitbrengen van de offerte (default = opname + 14 dagen, vrij aan te passen). In het dashboard kleurt de deadline oranje binnen 3 dagen en rood bij overschrijding; bij verzonden offertes verschijnt een groen "op tijd"- of rood "+N dg"-label naast de datum om je prestatie t.o.v. de afspraak met de klant in beeld te houden.</p>
     </div>
@@ -1854,7 +1854,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.10.3';
+const APP_VERSION = 'v3.10.4';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -7257,6 +7257,9 @@ async function openCalc(id) {
   data.activeCalcId = id;
   try { localStorage.setItem('verfcalc_v3_activeCalcId', id); } catch(e) {}
   if (!c.__loaded) await _loadCalcBody(c);
+  // Cache het totaalbedrag in de DB zodat het dashboard ook na een nieuwe
+  // sessie/dag een correcte waarde toont, ook voor verzonden/geaccepteerde calcs.
+  _syncCalcTotalToDB(c);
   renderCalcStructuur(); renderDashboard();
   // switch to calculatie tab
   document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
@@ -7264,6 +7267,26 @@ async function openCalc(id) {
   document.querySelector('nav button[data-tab="calculatie"]').classList.add('active');
   document.getElementById('calculatie').classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Centrale helper: bereken het actuele totaal van een geladen calc en
+// schrijf het naar Supabase als het verschilt van de cache. Werkt voor
+// elke status (concept, gereed, verzonden, geaccepteerd, verloren).
+// Stille fail bij berekeningsfouten of DB-fouten — beïnvloedt UI niet.
+function _syncCalcTotalToDB(c) {
+  if (!c || !c.__loaded) return;
+  try {
+    const t = _calcTotalForArchive(c);
+    const tot = (t && isFinite(t.totaal)) ? Math.round(t.totaal * 100) / 100 : null;
+    // Alleen schrijven als waarde verandert om onnodige DB-writes te voorkomen
+    if (c.totaalInclBtw !== tot) {
+      c.totaalInclBtw = tot;
+      _sbQuery(
+        _sb.from('calculaties').update({ totaal_incl_btw: tot }).eq('id', c.id),
+        'Totaal cachen'
+      ).then(() => {});
+    }
+  } catch(e) {}
 }
 async function delCalc(id) {
   const c = data.calculaties.find(x => x.id === id);
@@ -7426,20 +7449,15 @@ async function setCalcStatus(id, status) {
     c.settingsSnapshot = null;
   }
 
-  // Bevries OOK het totaal-bedrag bij vergrendelen — alleen als calc geladen is.
-  // Niet-geladen calcs vergrendelen we zonder herberekening: hun gecachte
-  // totaalInclBtw blijft staan zoals 'ie was (al uit een vorige save).
-  if (isNowLocked && !wasLocked && c.__loaded) {
-    try {
-      const t = _calcTotalForArchive(c);
-      const tot = (t && isFinite(t.totaal)) ? Math.round(t.totaal * 100) / 100 : null;
-      c.totaalInclBtw = tot;
-      // Direct mee-saven zodat dashboard meteen klopt
-      _sbQuery(
-        _sb.from('calculaties').update({ totaal_incl_btw: tot }).eq('id', id),
-        'Totaal cachen'
-      ).then(() => {});
-    } catch(e) {}
+  // Bevries OOK het totaal-bedrag bij vergrendelen. Als de calc nog niet
+  // geladen is, eerst body inladen zodat we een actuele berekening kunnen
+  // maken; daarna cachen via centrale helper. Voorkomt verzonden/geaccepteerde
+  // calcs met een leeg dashboard-bedrag (de vorige bug).
+  if (isNowLocked && !wasLocked) {
+    if (!c.__loaded) {
+      try { await _loadCalcBody(c); } catch(e) {}
+    }
+    _syncCalcTotalToDB(c);
   }
 
   _updateCalcDB(c);
@@ -8453,14 +8471,18 @@ function renderCalculatiesArchief() {
   sorted.forEach(cl => {
     // Bedrag bepalen: live berekenen indien geladen (= meest actuele waarde),
     // anders cache uit DB, anders gedachtestreepje voor calcs zonder bekend totaal.
+    // 0 wordt visueel gelijk behandeld aan 'geen bedrag' (—): een lege calc
+    // toont rustig een streepje, niet '€ 0,00'.
     let bedragHtml;
+    const _dash = '<span style="color:var(--muted);" title="Open en sla op om te berekenen">—</span>';
     if (cl.__loaded) {
       const t = _calcTotalForArchive(cl);
-      bedragHtml = (t && isFinite(t.totaal)) ? eur(t.totaal) : '—';
-    } else if (cl.totaalInclBtw != null) {
+      const tot = (t && isFinite(t.totaal)) ? t.totaal : null;
+      bedragHtml = (tot != null && tot > 0) ? eur(tot) : _dash;
+    } else if (cl.totaalInclBtw != null && cl.totaalInclBtw > 0) {
       bedragHtml = eur(cl.totaalInclBtw);
     } else {
-      bedragHtml = '<span style="color:var(--muted);" title="Open en sla op om te berekenen">—</span>';
+      bedragHtml = _dash;
     }
     const datum = cl.gewijzigd ? new Date(cl.gewijzigd).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
     // Opname + deadline cellen met kleur-logica
