@@ -1,3 +1,8 @@
+## v3.11.1 — Welkomstblok inklapbaar
+- Welkomstboodschap op het dashboard is nu standaard ingeklapt en wordt op één regel getoond als `▸ Welkom bij v3.11.X`. Klikken op de titel klapt het blok open of dicht, met een meedraaiende caret als visuele feedback. Geen `localStorage`: bij elke sessie start het blok weer ingeklapt — als je de nieuwsbrief al gelezen hebt, hoef je hem niet weer dicht te klikken, maar hij verdringt ook niet langer permanent het werk eronder.
+- Implementatie via klasse `intro-collapsible` op de wrapper-div met `collapsed`-state, en een aparte `.intro-body`-div voor de paragrafen. CSS verbergt de body via `display: none` in collapsed-state en draait de caret 90° met `transform: rotate(90deg)` als-ie open is. Geen JavaScript-state nodig.
+- De welkomsttekst zelf is ongewijzigd t.o.v. v3.11.0.
+
 ## v3.11.0 — Aan/uit-vinkjes per onderdeel (onderhandel-modus)
 Nieuwe feature voor het keukentafel-gesprek na het uitbrengen van een offerte. Wanneer een klant kiest om bepaalde delen niet te laten uitvoeren — een gevel, een kamer, of zelfs specifieke kozijnen terwijl de deuren wél meedoen — kan de actuele offerteprijs nu live worden bijgesteld door simpelweg vinkjes uit te zetten. De oorspronkelijke offerte blijft daarnaast bewaard als bevroren referentie, zodat altijd zichtbaar is wat oorspronkelijk verstuurd is en wat het verschil is met de aangepaste uitvoering. Werkt op drie niveaus, in elke status (concept én vergrendeld), en is volledig terug te draaien.
 
