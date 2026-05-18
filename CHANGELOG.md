@@ -1,3 +1,60 @@
+## v3.11.0 — Aan/uit-vinkjes per onderdeel (onderhandel-modus)
+Nieuwe feature voor het keukentafel-gesprek na het uitbrengen van een offerte. Wanneer een klant kiest om bepaalde delen niet te laten uitvoeren — een gevel, een kamer, of zelfs specifieke kozijnen terwijl de deuren wél meedoen — kan de actuele offerteprijs nu live worden bijgesteld door simpelweg vinkjes uit te zetten. De oorspronkelijke offerte blijft daarnaast bewaard als bevroren referentie, zodat altijd zichtbaar is wat oorspronkelijk verstuurd is en wat het verschil is met de aangepaste uitvoering. Werkt op drie niveaus, in elke status (concept én vergrendeld), en is volledig terug te draaien.
+
+### DB-migratie
+Drie kolommen toegevoegd aan Supabase:
+- `hoofdgroepen.actief` — `boolean NOT NULL DEFAULT true`
+- `onderdelen.actief` — `boolean NOT NULL DEFAULT true`
+- `calc_regels.actief` — `boolean NOT NULL DEFAULT true`
+- `calculaties.totaal_offerte_origineel` — `numeric` (nullable, bevroren bedrag bij eerste vergrendeling)
+
+`NOT NULL` + `DEFAULT true` zorgt ervoor dat bestaande data automatisch als "actief" wordt gezien zonder migratie van bestaande rijen. Geen RLS-aanpassingen nodig, bestaande policies dekken automatisch de nieuwe kolommen.
+
+### Datamodel-laag
+- Helper `_isActief(item)` toegevoegd — defensieve check die `true` retourneert tenzij `actief === false` expliciet aanwezig is. Werkt ook met oude data zonder veld.
+- Mappers `_mapHgFromDB/ToDB`, `_mapOdFromDB/ToDB`, `_mapRegelFromDB/ToDB` aangevuld met `actief`.
+- `_mapCalcHeaderFromDB` aangevuld met `totaalOfferteOrigineel`. Bewust **niet** in `_mapCalcHeaderToDB` opgenomen om accidentele overschrijving via reguliere saves te voorkomen — wordt enkel via dedicated query gezet in `setCalcStatus`.
+
+### Rekenkern
+- `calcOnderdeelTotalen` filtert nu inactieve regels via `_isActief` (eerste filter-niveau).
+- `calcHoofdgroepTotalen` filtert inactieve onderdelen (tweede niveau).
+- `calcProjectTotalen` filtert inactieve hoofdgroepen (derde niveau).
+- Parallelle `calcOnderdeelTotalenOrigineel` / `calcHoofdgroepTotalenOrigineel` / `calcProjectTotalenOrigineel` sommeren *alles* zonder filter — voor het oorspronkelijk-bedrag op de PDF en in het scenario-blok.
+- `_calcTotalForArchive(c, includeInactief = false)` kreeg een tweede parameter. Default filtert hij; met `includeInactief = true` rekent hij alles mee — dezelfde berekenpath voor beide doelen, geen duplicatie.
+
+### UI — vinkjes
+Vinkjes (`<input type="checkbox" class="actief-toggle">`) toegevoegd op drie plaatsen:
+- In `renderHoofdgroep`, vóór de uitklap-caret.
+- In `renderOnderdeel`, vóór de uitklap-caret.
+- In `renderRegel`, vóór de verfsysteem-naam (vóór "Binnendeur hout - onderhoud" e.d.).
+
+De wrapper-divs (`.hoofdgroep`, `.onderdeel`, `.calc-regel-wrap`) krijgen voorwaardelijk de klasse `is-inactief`. CSS regelt visueel doorgestreepte tekst (opacity 0.45 + line-through) op de titel/stats, en lichte transparantie (0.55) op de body. Bestaande gridstructuur blijft intact — vinkjes vloeien netjes in de bestaande title-spans.
+
+### UI — lock-uitzondering
+Vinkjes blijven werken in vergrendelde calculaties via een CSS-uitzondering op `#calculatie.is-locked input.actief-toggle` (pointer-events: auto, opacity 1, cursor pointer). Andere inputs blijven netjes geblokkeerd. Dit maakt de onderhandelmodus mogelijk in een al verzonden of geaccepteerde offerte zonder de offerte structureel te moeten ontgrendelen.
+
+### Handlers
+- `toggleHgActief(hgId)` — invert `actief`, sla op via `_updateHgDB`, sync cache via `_syncCalcTotalToDB`, hertekenen op drie niveaus (calc-structuur, totalen, dashboard).
+- `toggleOdActief(hgId, odId)` — idem voor onderdeel.
+- `toggleRegelActief(hgId, odId, rId)` — idem voor regel.
+
+### Scenario-blok (calc-tab)
+Onder "Totaal incl." in de rechterkolom verschijnt een oranje kadertje wanneer er ergens iets uitgezet is. Drie regels: "Oorspronkelijk volledig" — "Aangepast (actuele offerte)" — "Verschil (vervalt)" in vet oranje met scheidingslijn. Verschijnt niet als alles aan staat (geen onnodige clutter). Berekent het origineel-bedrag via `_calcTotalForArchive(data.calc, true)` zodat alle reis-/staart-/btw-berekeningen kloppen op basis van het volledige werk.
+
+### Status-flow — bevriezen origineel
+In `setCalcStatus`, bij elke nieuwe vergrendeling (concept → verzonden/geaccepteerd/etc), wordt het volledige origineel-bedrag berekend met `_calcTotalForArchive(c, true)` en weggeschreven naar `totaal_offerte_origineel`. Bij hervergrendelen na een terug-naar-concept wordt het overschreven — de laatste uitgebrachte versie is de "echte" oorspronkelijke offerte. Bij terug-naar-concept blijft het bedrag gewoon staan (geschiedenis behouden).
+
+### PDF
+- Hoofdgroep-, onderdeel- en regel-rijen krijgen voorwaardelijke styling (opacity 0.5 + line-through) als ze inactief zijn. Een uitgezette parent zet erfelijk alle kinderen visueel uit, ongeacht hun eigen actief-status.
+- Subtotaal- en hoofdgroep-totaalregels van inactieve hg's zijn ook half-transparant.
+- Subtotalen tonen het *origineel*-bedrag (`calcHoofdgroepTotalenOrigineel`, `calcOnderdeelTotalenOrigineel`) — de PDF presenteert immers de volledige offerte met streepjes door wat vervalt.
+- Onderaan het totalenoverzicht verschijnt, als er iets uitgezet is, een driedelig blok in lichte oranjetint: "Oorspronkelijk volledig offertebedrag" — "Vervalt op verzoek" — "Aangepast offertebedrag". Voor de klant transparant en zonder dat 'ie zelf moet rekenen.
+
+### Bewuste keuzes (zie eerdere ontwerpsessie)
+- **Geen vinkje op stap-niveau** binnen een regel — stappen vormen samen een verfsysteem; losse stappen uitzetten breekt dat. Een regel = bundel, aan-of-uit als geheel.
+- **Origineel-bedrag overschrijven bij hervergrendelen** — pragmatischer dan "eerste verzending is heilig" en aansluit bij het normale werkproces (aanpassen → opnieuw uitbrengen).
+- **Yoobi-export en werkbon** nog níet aangepast — komt in een latere versie. Voor nu volstaan dashboard + calc-UI + PDF om aan tafel met de klant te werken.
+
 ## v3.10.4 — Dashboard-totalen consistent
 Twee samenhangende bugs in de "Totaal incl. BTW"-kolom van het dashboard opgelost. Concept-calcs toonden willekeurig `€ 0,00` of `—` voor hetzelfde inhoudelijke geval (leeg), en verzonden/geaccepteerde calcs verloren hun bedrag na een nieuwe sessie waardoor het dashboard de volgende dag weer streepjes liet zien.
 - **Oorzaak 1 — `€ 0,00` vs `—`**: het renderpad checkte `cl.totaalInclBtw != null`, waardoor een DB-waarde van exact `0` (van calcs die ooit zonder regels zijn opgeslagen) als `€ 0,00` werd getoond, terwijl `NULL` als `—` verscheen. Inhoudelijk identiek, visueel verschillend.

@@ -166,6 +166,14 @@
     opacity: 1 !important;
     cursor: pointer !important;
   }
+  /* v3.11.0: aan/uit-vinkjes blijven actief ook in vergrendelde status,
+     zodat onderhandel-scenario's in geaccepteerde offertes mogelijk blijven. */
+  #calculatie.is-locked input.actief-toggle {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    cursor: pointer !important;
+  }
 
   /* BUTTONS */
   .btn {
@@ -520,6 +528,51 @@
   .onderdeel-body { padding: 0.65rem; }
   .onderdeel.collapsed .onderdeel-body { display: none; }
   .onderdeel.collapsed .caret { transform: rotate(-90deg); }
+
+  /* v3.11.0 — Aan/uit-vinkjes per hoofdgroep en onderdeel */
+  .actief-toggle {
+    width: 1.1rem; height: 1.1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: var(--accent-deep);
+  }
+  .hoofdgroep.is-inactief > .hoofdgroep-head .title input,
+  .hoofdgroep.is-inactief > .hoofdgroep-head .stats,
+  .onderdeel.is-inactief > .onderdeel-head .title input,
+  .onderdeel.is-inactief > .onderdeel-head .stats {
+    opacity: 0.45;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  .hoofdgroep.is-inactief > .hoofdgroep-body,
+  .onderdeel.is-inactief > .onderdeel-body {
+    opacity: 0.55;
+  }
+  /* v3.11.0 — Regel-niveau aan/uit */
+  .calc-regel-wrap.is-inactief .calc-regel input[type="text"],
+  .calc-regel-wrap.is-inactief .calc-regel .systeem-naam,
+  .calc-regel-wrap.is-inactief .calc-regel .regel-stats {
+    opacity: 0.45;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  .calc-regel-wrap.is-inactief .regel-stappen {
+    opacity: 0.55;
+  }
+  /* Sober "verschil-bedragen"-blok onderaan calc-tab */
+  .calc-scenario-block {
+    margin-top: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    background: rgba(245, 158, 11, 0.07);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+  }
+  .calc-scenario-block .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.15rem 0;
+  }
+  .calc-scenario-block .row.diff { font-weight: 600; color: #b45309; padding-top: 0.3rem; border-top: 1px dashed rgba(245, 158, 11, 0.4); margin-top: 0.2rem; }
 
   .calc-regel {
     background: var(--paper);
@@ -1323,9 +1376,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.10.4</h2>
+      <h2>Welkom bij v3.11.0</h2>
+      <p><strong>Nieuwe feature: aan/uit-vinkjes per onderdeel.</strong> Bij elke hoofdgroep, onderdeel én regel staat nu een vinkje vóór de naam. Met één klik zet je een gevel, kamer, of zelfs één specifieke regel (zoals "kozijnen" terwijl "deuren" wél meedoen) uit voor de offerte. Het bedrag onderaan zakt direct mee, en er verschijnt een oranje kadertje dat toont wat oorspronkelijk in de offerte stond, wat je nu rekent, en het verschil. Werkt ook in vergrendelde calculaties (verzonden/geaccepteerd), zodat je tijdens een keukentafelgesprek live kunt schuiven zonder de offerte structureel te wijzigen. Op de PDF blijven uitgezette regels doorgestreept zichtbaar, met onderaan drie regels: oorspronkelijk bedrag, wat vervalt, en het aangepaste totaal — transparant voor de klant 🎨.</p>
       <p><strong>Nieuwe tab: Onderhoudsplan.</strong> Stel een meerjaren-onderhoudsplan op op basis van een opgeslagen calculatie. Drie manieren om beurten te schalen (algemeen percentage, per regel, per stap), met snelinvullers per hoofdgroep en de mogelijkheid om scaling uit een andere beurt te kopiëren. Bedragen worden geïndexeerd vanaf het prijspeil van de calculatie en getoond inclusief BTW. Per beurt aan te vinken of die meerekent in het gemiddelde maandbedrag, voor wanneer de eerste behandeling separaat wordt afgerekend. Print-functie toont het plan als verkoopdocument met maandbedrag en jaartabel; project-specifieke afspraken komen uit het notities-veld. Onder de motorkap: één rekenkern die de structuur van de calculatie-tab letterlijk spiegelt, en aparte Supabase-tabellen voor plannen en beurten 🎨.</p>
-      <p style="margin-top: 0.75rem;"><strong>v3.10.1 — Opname &amp; deadline.</strong> Per calculatie nu een opname-datum en deadline voor het uitbrengen van de offerte (default = opname + 14 dagen, vrij aan te passen). In het dashboard kleurt de deadline oranje binnen 3 dagen en rood bij overschrijding; bij verzonden offertes verschijnt een groen "op tijd"- of rood "+N dg"-label naast de datum om je prestatie t.o.v. de afspraak met de klant in beeld te houden.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1854,7 +1907,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.10.4';
+const APP_VERSION = 'v3.11.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2819,6 +2872,7 @@ function _mapCalcHeaderFromDB(row) {
     opnameDatum:         row.opname_datum || null,
     deadlineDatum:       row.deadline_datum || null,
     totaalInclBtw:       row.totaal_incl_btw != null ? parseFloat(row.totaal_incl_btw) : null,
+    totaalOfferteOrigineel: row.totaal_offerte_origineel != null ? parseFloat(row.totaal_offerte_origineel) : null,
     aangemaakt:          row.aangemaakt || new Date().toISOString(),
     gewijzigd:           row.gewijzigd  || new Date().toISOString(),
     // body wordt later toegevoegd door _loadCalcBody
@@ -2847,6 +2901,7 @@ function _mapHgFromDB(row, ods) {
     naam:      row.naam || '',
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
+    actief:    row.actief !== false, // defensief: null/undefined → true
     onderdelen: (ods || []).map(_mapOdFromDB)
   };
 }
@@ -2855,7 +2910,8 @@ function _mapHgToDB(hg, calcId) {
     calculatie_id: calcId,
     naam: hg.naam || '',
     collapsed: !!hg.collapsed,
-    volgorde: hg.volgorde != null ? hg.volgorde : 0
+    volgorde: hg.volgorde != null ? hg.volgorde : 0,
+    actief: hg.actief !== false
   };
 }
 function _mapOdFromDB(row) {
@@ -2864,6 +2920,7 @@ function _mapOdFromDB(row) {
     naam:      row.naam || '',
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
+    actief:    row.actief !== false, // defensief: null/undefined → true
     regels:    [] // wordt later gevuld vanuit localStorage in v3.5.3
   };
 }
@@ -2872,8 +2929,16 @@ function _mapOdToDB(od, hgId) {
     hoofdgroep_id: hgId,
     naam: od.naam || '',
     collapsed: !!od.collapsed,
-    volgorde: od.volgorde != null ? od.volgorde : 0
+    volgorde: od.volgorde != null ? od.volgorde : 0,
+    actief: od.actief !== false
   };
+}
+
+// Defensieve check: retourneert true tenzij `actief` expliciet op false staat.
+// Oudere data (vóór v3.11.0) en items zonder veld worden als 'actief' beschouwd.
+// Gebruik deze ALTIJD i.p.v. directe `item.actief`-vergelijking.
+function _isActief(item) {
+  return !item || item.actief !== false;
 }
 
 // ============================================================
@@ -3195,6 +3260,7 @@ function _mapRegelFromDB(row, stapRows) {
     systeemOndergrondId: row.systeem_ondergrond_id || null,
     systeemLocatie:      row.systeem_locatie || 'beide',
     volgorde:            row.volgorde != null ? row.volgorde : 0,
+    actief:              row.actief !== false, // v3.11.0: defensief, oude rijen → true
     stappen:             (stapRows || []).map(_mapStapFromDBSnapshot)
   };
 }
@@ -3210,7 +3276,8 @@ function _mapRegelToDB(r, odId) {
     systeem_ondergrond:     r.systeemOndergrond || '',
     systeem_ondergrond_id:  r.systeemOndergrondId || null,
     systeem_locatie:        r.systeemLocatie || 'beide',
-    volgorde:               r.volgorde != null ? r.volgorde : 0
+    volgorde:               r.volgorde != null ? r.volgorde : 0,
+    actief:                 r.actief !== false
   };
 }
 function _mapStapFromDBSnapshot(row) {
@@ -5295,15 +5362,19 @@ function printCalc() {
 
   // Hoofdgroepen → onderdelen → regels
   c.hoofdgroepen.forEach(hg => {
-    const hgT = calcHoofdgroepTotalen(hg);
+    const hgT = calcHoofdgroepTotalenOrigineel(hg); // toon altijd origineel-bedrag op PDF
+    const hgActief = _isActief(hg);
+    const hgStyle = hgActief ? '' : 'style="opacity:0.5; text-decoration:line-through;"';
     html += `<div class="section">
-      <h2>${hg.naam}</h2>`;
+      <h2 ${hgStyle}>${hg.naam}${hgActief ? '' : ' <span style="font-size:8pt; color:#888; font-weight:normal;">(vervalt)</span>'}</h2>`;
     if (!hg.onderdelen.length) {
       html += `<div class="meta"><em>Geen onderdelen</em></div>`;
     } else {
       hg.onderdelen.forEach(od => {
-        const odT = calcOnderdeelTotalen(od);
-        html += `<h3>${od.naam}</h3>`;
+        const odT = calcOnderdeelTotalenOrigineel(od);
+        const odActief = _isActief(od) && hgActief; // erfelijk: uitgezette hg trekt alles mee
+        const odStyle = odActief ? '' : 'style="opacity:0.5; text-decoration:line-through;"';
+        html += `<h3 ${odStyle}>${od.naam}${(!_isActief(od) && hgActief) ? ' <span style="font-size:8pt; color:#888; font-weight:normal;">(vervalt)</span>' : ''}</h3>`;
         if (!od.regels.length) {
           html += `<div class="meta" style="margin-left:8pt;"><em>Geen regels</em></div>`;
         } else {
@@ -5318,8 +5389,11 @@ function printCalc() {
           </tr></thead><tbody>`;
           od.regels.forEach(r => {
             const rt = calcRegelTotalen(r);
-            html += `<tr>
-              <td>${r.naam||'—'}</td>
+            const rActief = _isActief(r) && odActief; // erfelijk
+            const rStyle = rActief ? '' : 'style="opacity:0.5; text-decoration:line-through;"';
+            const vervaltLabel = (!_isActief(r) && odActief) ? ' <span style="font-size:7pt; color:#888;">(vervalt)</span>' : '';
+            html += `<tr ${rStyle}>
+              <td>${r.naam||'—'}${vervaltLabel}</td>
               <td>${r.systeemNaam || '<em>onbekend</em>'}</td>
               <td class="num right">${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</td>
               <td class="num right">${r.toeslag||0}%</td>
@@ -5328,7 +5402,7 @@ function printCalc() {
               <td class="num right">${eur(rt.verkoop)}</td>
             </tr>`;
           });
-          html += `<tr class="totaal-row">
+          html += `<tr class="totaal-row" ${odActief ? '' : 'style="opacity:0.5;"'}>
             <td colspan="4"><strong>Subtotaal ${od.naam}</strong></td>
             <td class="num right">${fmt(odT.uren)} u</td>
             <td class="num right">${eur(odT.matVerkoop)}</td>
@@ -5337,7 +5411,7 @@ function printCalc() {
           html += `</tbody></table>`;
         }
       });
-      html += `<table style="margin-top:6pt;"><tbody><tr class="totaal-row">
+      html += `<table style="margin-top:6pt;"><tbody><tr class="totaal-row" ${hgActief ? '' : 'style="opacity:0.5;"'}>
         <td><strong>Totaal ${hg.naam}</strong></td>
         <td class="num right">${fmt(hgT.uren)} uren</td>
         <td class="num right">${eur(hgT.matVerkoop)} materiaal</td>
@@ -5395,6 +5469,25 @@ function printCalc() {
       <tr class="totaal-row"><td><strong>Excl. BTW</strong></td><td class="num right">${eur(exBtw)}</td></tr>
       <tr><td>+ BTW (${sett.btw}% over excl. BTW)</td><td class="num right">${eur(btwBedrag)}</td></tr>
       <tr class="grand-row"><td><strong>Totaal incl. BTW</strong></td><td class="num right"><strong>${eur(totaal)}</strong></td></tr>
+      ${(() => {
+        // v3.11.0 — Oorspronkelijk vs aangepast op PDF
+        const hasInactive = c.hoofdgroepen.some(hg =>
+          !_isActief(hg) || hg.onderdelen.some(od =>
+            !_isActief(od) || od.regels.some(r => !_isActief(r))
+          )
+        );
+        if (!hasInactive) return '';
+        let origineel;
+        try {
+          const oT = _calcTotalForArchive(c, true);
+          origineel = (oT && isFinite(oT.totaal)) ? oT.totaal : null;
+        } catch(e) { origineel = null; }
+        if (origineel == null) return '';
+        const verschil = origineel - totaal;
+        return `<tr style="background:#fef6e7;"><td style="padding-top:6pt;"><strong>Oorspronkelijk volledig offertebedrag</strong></td><td class="num right" style="padding-top:6pt;">${eur(origineel)}</td></tr>
+          <tr style="background:#fef6e7; color:#b45309;"><td><strong>Vervalt op verzoek</strong></td><td class="num right"><strong>−${eur(verschil)}</strong></td></tr>
+          <tr style="background:#fef6e7;"><td><strong>Aangepast offertebedrag</strong></td><td class="num right"><strong>${eur(totaal)}</strong></td></tr>`;
+      })()}
     </tbody></table>
   </div>`;
 
@@ -6080,9 +6173,34 @@ function _sumTotals(items, fn) {
   items.forEach(it => { const c = fn(it); Object.keys(t).forEach(k => t[k] += c[k]||0); });
   return t;
 }
-function calcOnderdeelTotalen(od) { return _sumTotals(od.regels, calcRegelTotalen); }
-function calcHoofdgroepTotalen(hg) { return _sumTotals(hg.onderdelen, calcOnderdeelTotalen); }
-function calcProjectTotalen() { return _sumTotals(data.calc.hoofdgroepen, calcHoofdgroepTotalen); }
+function calcOnderdeelTotalen(od) {
+  // v3.11.0: filter inactieve regels uit het onderdeel-totaal
+  const actieveRegels = (od.regels || []).filter(_isActief);
+  return _sumTotals(actieveRegels, calcRegelTotalen);
+}
+function calcOnderdeelTotalenOrigineel(od) {
+  // Telt ALLE regels mee, ongeacht actief-status (voor oorspronkelijk bedrag)
+  return _sumTotals(od.regels || [], calcRegelTotalen);
+}
+function calcHoofdgroepTotalen(hg) {
+  // Filter inactieve onderdelen uit het actuele totaal (v3.11.0).
+  // Voor het oorspronkelijke offertebedrag wordt calcHoofdgroepTotalenOrigineel gebruikt.
+  const actieveOds = (hg.onderdelen || []).filter(_isActief);
+  return _sumTotals(actieveOds, calcOnderdeelTotalen);
+}
+function calcHoofdgroepTotalenOrigineel(hg) {
+  // Telt ALLE onderdelen + regels mee, ongeacht actief-status. Voor PDF/dashboard-historie.
+  return _sumTotals(hg.onderdelen || [], calcOnderdeelTotalenOrigineel);
+}
+function calcProjectTotalen() {
+  // Filter inactieve hoofdgroepen uit het actuele totaal.
+  const actieveHgs = (data.calc.hoofdgroepen || []).filter(_isActief);
+  return _sumTotals(actieveHgs, calcHoofdgroepTotalen);
+}
+function calcProjectTotalenOrigineel() {
+  // Telt ALLE hoofdgroepen+onderdelen mee, ongeacht actief-status.
+  return _sumTotals(data.calc.hoofdgroepen || [], calcHoofdgroepTotalenOrigineel);
+}
 function _calcDays() {
   // werkelijke dagen op basis van uren / schilders / uur per dag
   const t = calcProjectTotalen();
@@ -6802,15 +6920,22 @@ function renderCalcStructuur() {
 }
 function renderHoofdgroep(hg) {
   const t = calcHoofdgroepTotalen(hg);
+  const tOrig = calcHoofdgroepTotalenOrigineel(hg);
+  const actief = _isActief(hg);
   const onderdelenHtml = hg.onderdelen.length ? hg.onderdelen.map(od => renderOnderdeel(hg.id, od)).join('') :
     '<p style="color:var(--muted); font-style:italic; padding: 0.5rem;">Geen onderdelen.</p>';
-  return `<div class="hoofdgroep ${hg.collapsed?'collapsed':''}">
+  // Toon stats: bij inactief het origineel-bedrag tussen haakjes
+  const statsHtml = actief
+    ? `${fmt(t.uren)} u · ${eur(t.verkoop)}`
+    : `<span title="Uitgezet — telt niet mee in actuele offerte">${fmt(tOrig.uren)} u · ${eur(tOrig.verkoop)}</span>`;
+  return `<div class="hoofdgroep ${hg.collapsed?'collapsed':''} ${actief?'':'is-inactief'}">
     <div class="hoofdgroep-head">
       <span class="title">
+        <input type="checkbox" class="actief-toggle" ${actief?'checked':''} onchange="toggleHgActief('${hg.id}')" title="Aan/uit voor offerte">
         <span class="caret" onclick="toggleHg('${hg.id}')">▼</span>
         <input value="${hg.naam}" onchange="updHg('${hg.id}','naam',this.value)">
       </span>
-      <span class="stats">${fmt(t.uren)} u · ${eur(t.verkoop)}</span>
+      <span class="stats">${statsHtml}</span>
       <button class="btn btn-danger btn-sm" onclick="delHg('${hg.id}')">×</button>
     </div>
     <div class="hoofdgroep-body">
@@ -6821,11 +6946,13 @@ function renderHoofdgroep(hg) {
 }
 function renderOnderdeel(hgId, od) {
   const t = calcOnderdeelTotalen(od);
+  const actief = _isActief(od);
   const regelsHtml = od.regels.length ? od.regels.map(r => renderRegel(hgId, od.id, r)).join('') :
     '<p style="color:var(--muted); font-style:italic; padding: 0.4rem; font-size: 0.85rem;">Nog geen regels in dit onderdeel.</p>';
-  return `<div class="onderdeel ${od.collapsed?'collapsed':''}">
+  return `<div class="onderdeel ${od.collapsed?'collapsed':''} ${actief?'':'is-inactief'}">
     <div class="onderdeel-head">
       <span class="title">
+        <input type="checkbox" class="actief-toggle" ${actief?'checked':''} onchange="toggleOdActief('${hgId}','${od.id}')" title="Aan/uit voor offerte">
         <span class="caret" onclick="toggleOd('${hgId}','${od.id}')">▼</span>
         <input value="${od.naam}" onchange="updOd('${hgId}','${od.id}','naam',this.value)">
       </span>
@@ -6899,10 +7026,11 @@ function renderRegel(hgId, odId, r) {
     ? `<div class="ms-hoeveelheid-display" title="Hoeveelheid uit meetstaat — wijzig in Meetstaat-tab">${fmt(msSom)} <span style="color:var(--muted); font-size:0.7rem; font-weight:400;">${eenheid}</span></div><span class="ms-badge" onclick="goToMeetstaat('${r.id}')" title="Open in Meetstaat">📐 ${msAantal} meting${msAantal===1?'':'en'}</span>`
     : `<input type="number" step="0.1" value="${r.hoeveelheid||0}" onchange="updReg('${hgId}','${odId}','${r.id}','hoeveelheid',parseFloat(this.value))"> <span style="color:var(--muted); font-size:0.7rem;">${eenheid}</span>`;
 
-  return `<div class="calc-regel-wrap">
+  const actiefR = _isActief(r);
+  return `<div class="calc-regel-wrap ${actiefR?'':'is-inactief'}">
     <div class="calc-regel">
       <div><input value="${r.naam||''}" placeholder="Locatie/omschrijving" onchange="updReg('${hgId}','${odId}','${r.id}','naam',this.value)"></div>
-      <div class="systeem-naam"><strong>${sysNaam}</strong> <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span></div>
+      <div class="systeem-naam"><input type="checkbox" class="actief-toggle" ${actiefR?'checked':''} onchange="toggleRegelActief('${hgId}','${odId}','${r.id}')" title="Aan/uit voor offerte" style="margin-right:0.4rem; vertical-align:middle;"><strong>${sysNaam}</strong> <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span></div>
       <div>${hoeveelHtml}</div>
       <div><input type="number" step="5" value="${r.toeslag||0}" onchange="updReg('${hgId}','${odId}','${r.id}','toeslag',parseFloat(this.value))" title="Toeslag voor staat (matig=15, slecht=30)"> <span style="color:var(--muted); font-size:0.7rem;">% staat</span></div>
       <div class="regel-stats">
@@ -7055,6 +7183,44 @@ function toggleOd(hgId, odId) {
   od.collapsed = !od.collapsed;
   _updateOdDB(od, hgId);
   renderCalcStructuur();
+}
+
+// v3.11.0 — Aan/uit toggle hoofdgroep
+// Werkt in elke status (concept én vergrendeld). Synct dashboard-cache direct.
+function toggleHgActief(hgId) {
+  const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
+  if (!hg) return;
+  hg.actief = !_isActief(hg); // huidige state inverteren, defensief
+  _updateHgDB(hg, data.calc.id);
+  // Actuele bedrag mee in dashboard-cache; gebruik centrale helper.
+  _syncCalcTotalToDB(data.calc);
+  renderCalcStructuur();
+  renderTotals();
+  renderDashboard();
+}
+
+// v3.11.0 — Aan/uit toggle onderdeel
+function toggleOdActief(hgId, odId) {
+  const od = _findOnderdeel(hgId, odId);
+  if (!od) return;
+  od.actief = !_isActief(od);
+  _updateOdDB(od, hgId);
+  _syncCalcTotalToDB(data.calc);
+  renderCalcStructuur();
+  renderTotals();
+  renderDashboard();
+}
+
+// v3.11.0 — Aan/uit toggle regel (verfsysteem-bundel)
+function toggleRegelActief(hgId, odId, rId) {
+  const r = _findRegel(hgId, odId, rId);
+  if (!r) return;
+  r.actief = !_isActief(r);
+  _updateRegelDB(r, odId);
+  _syncCalcTotalToDB(data.calc);
+  renderCalcStructuur();
+  renderTotals();
+  renderDashboard();
 }
 function updReg(hgId, odId, rId, f, v) {
   const od = _findOnderdeel(hgId, odId);
@@ -7458,6 +7624,21 @@ async function setCalcStatus(id, status) {
       try { await _loadCalcBody(c); } catch(e) {}
     }
     _syncCalcTotalToDB(c);
+    // v3.11.0 — Bevries het oorspronkelijke offertebedrag bij elke nieuwe
+    // vergrendeling (concept → verzonden/geaccepteerd/etc). Bij hervergrendelen
+    // na terug-naar-concept wordt het overschreven: de laatste uitgebrachte
+    // versie is de "echte" oorspronkelijke offerte t.o.v. wat erna gebeurt.
+    if (c.__loaded) {
+      try {
+        const tOrig = _calcTotalForArchive(c, true); // alle items meegeteld
+        const totOrig = (tOrig && isFinite(tOrig.totaal)) ? Math.round(tOrig.totaal * 100) / 100 : null;
+        c.totaalOfferteOrigineel = totOrig;
+        _sbQuery(
+          _sb.from('calculaties').update({ totaal_offerte_origineel: totOrig }).eq('id', c.id),
+          'Origineel bedrag bevriezen'
+        ).then(() => {});
+      } catch(e) {}
+    }
   }
 
   _updateCalcDB(c);
@@ -7882,6 +8063,27 @@ function renderTotals() {
     <div class="line"><span>Excl. BTW</span><span>${eur(exBtw)}</span></div>
     <div class="line indent"><span>+ BTW</span><span>${eur(btwBedrag)}</span></div>
     <div class="grand"><span class="label">Totaal incl.</span><span class="value">${eur(totaal)}</span></div>
+    ${(() => {
+      // v3.11.0 — Scenario-blok: toon alleen als er iets uitgezet is
+      const hasInactive = (data.calc.hoofdgroepen || []).some(hg =>
+        !_isActief(hg) || (hg.onderdelen || []).some(od =>
+          !_isActief(od) || (od.regels || []).some(r => !_isActief(r))
+        )
+      );
+      if (!hasInactive) return '';
+      let origineel;
+      try {
+        const origT = _calcTotalForArchive(data.calc, true);
+        origineel = (origT && isFinite(origT.totaal)) ? origT.totaal : null;
+      } catch(e) { origineel = null; }
+      if (origineel == null) return '';
+      const verschil = origineel - totaal;
+      return `<div class="calc-scenario-block">
+        <div class="row"><span>Oorspronkelijk volledig</span><span>${eur(origineel)}</span></div>
+        <div class="row"><span>Aangepast (actuele offerte)</span><span><strong>${eur(totaal)}</strong></span></div>
+        <div class="row diff"><span>Verschil (vervalt)</span><span>−${eur(verschil)}</span></div>
+      </div>`;
+    })()}
     <div class="planning">
       <div style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.3rem;">Planning</div>
       <div class="big">${fmt1(dagenWerkelijk)} werkdagen</div>
@@ -8364,16 +8566,25 @@ async function importCalcsFromV241(e) {
 // ============================================================
 // CALCULATIES ARCHIEF — render in dashboard
 // ============================================================
-function _calcTotalForArchive(c) {
+function _calcTotalForArchive(c, includeInactief = false) {
   // Compute total inclusive BTW for a calculation (without changing active)
   // Uses snapshot stappen on regel
   // BELANGRIJK: vergrendelde calcs (status ≠ concept) rekenen met hun settingsSnapshot,
   // zodat het bedrag NIET verandert als live tarieven (uurloon, BTW, opslagen) wijzigen.
+  // v3.11.0: standaard worden inactieve hoofdgroepen/onderdelen overgeslagen.
+  // Met includeInactief=true wordt alles meegeteld — voor het oorspronkelijke
+  // offertebedrag dat onveranderd blijft op de PDF.
   const isVergrendeld = c.status && c.status !== 'concept';
   const sett = (isVergrendeld && c.settingsSnapshot) ? c.settingsSnapshot : data.settings;
   let arbeid = 0, matInkoop = 0, matVerkoop = 0, uren = 0;
-  c.hoofdgroepen.forEach(hg => hg.onderdelen.forEach(od => od.regels.forEach(r => {
+  c.hoofdgroepen.forEach(hg => {
+    // v3.11.0: skip inactieve hoofdgroepen + onderdelen + regels (tenzij includeInactief)
+    if (!includeInactief && !_isActief(hg)) return;
+    hg.onderdelen.forEach(od => {
+      if (!includeInactief && !_isActief(od)) return;
+      od.regels.forEach(r => {
     if (!r.hoeveelheid || !r.stappen || !r.stappen.length) return;
+    if (!includeInactief && !_isActief(r)) return;
     let sm = 0, smI = 0, smV = 0;
     r.stappen.forEach(st => {
       const pct = (st.percentage ?? 100) / 100;
@@ -8391,7 +8602,9 @@ function _calcTotalForArchive(c) {
     matInkoop += smI * r.hoeveelheid;
     matVerkoop += smV * r.hoeveelheid;
     uren += sysUren * r.hoeveelheid * tF;
-  })));
+      });
+    });
+  });
   // Reis & dagen
   const dagenWerkelijk = uren > 0 ? Math.round((uren / (c.schilders || 1) / (c.uurDag || 7.5)) * 100) / 100 : 0;
   // Resolve volle dagen: per-calc override OR global setting
