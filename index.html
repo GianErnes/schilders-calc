@@ -215,6 +215,18 @@
     cursor: pointer;
   }
   .btn-icon:hover { background: var(--paper-warm); color: var(--ink); border-color: var(--ink-soft); }
+  /* Iconknop voor dupliceren — blauw karakter, secundaire actie naast de rode delete */
+  .btn-icon-dup {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+    background: var(--paper);
+    color: var(--blue);
+    border: 1px solid var(--blue);
+    border-radius: var(--radius);
+    cursor: pointer;
+    line-height: 1;
+  }
+  .btn-icon-dup:hover { background: var(--blue); color: white; }
 
   /* TABLES */
   .table-scroll {
@@ -1345,8 +1357,8 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro">
-      <h2>Welkom bij v3.8.0</h2>
-      <p>Onderdeel dupliceren — bij elk onderdeel staat nu een ⎘-knop naast de naam. Daarmee kopieer je de hele kamer (alle regels met aangepaste verfsystemen en stappen) naar één of meer andere kamers in dezelfde hoofdgroep. Je kunt bestaande onderdelen aanvinken én tegelijk nieuwe onderdelen aanmaken door namen kommagescheiden in te typen (bv. "Slaapkamer 2, Slaapkamer 3, Badkamer"). Hoeveelheden komen leeg — die vul je per kamer zelf in. Meetstaat-rijen worden bewust niet meegekopieerd (zijn ruimte-specifiek).</p>
+      <h2>Welkom bij v3.8.1</h2>
+      <p>Kleine UX-fix: de ⎘-knop voor onderdeel-dupliceren was met grijs-op-grijs lastig te zien. Nu heeft 'ie een blauw karakter — duidelijk zichtbaar, en consistent met andere secundaire acties (blauw = info/secundair, rood = gevaar). De rest van v3.8.0 ongewijzigd: alle regels van een kamer in één klik naar andere kamers kopi\u00ebren, met optie om tegelijk nieuwe kamers aan te maken (komma-gescheiden namen).</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1631,7 +1643,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.8.0';
+const APP_VERSION = 'v3.8.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -4490,7 +4502,7 @@ function renderOnderdeel(hgId, od) {
         <input value="${od.naam}" onchange="updOd('${hgId}','${od.id}','naam',this.value)">
       </span>
       <span class="stats">${fmt(t.uren)} u · ${eur(t.verkoop)}</span>
-      <button class="btn-icon" onclick="openDupOnderdeelModal('${hgId}','${od.id}')" title="Dupliceer dit onderdeel naar andere kamers">⎘</button>
+      <button class="btn-icon-dup" onclick="openDupOnderdeelModal('${hgId}','${od.id}')" title="Dupliceer dit onderdeel naar andere kamers">⎘</button>
       <button class="btn btn-danger btn-sm" onclick="delOd('${hgId}','${od.id}')">×</button>
     </div>
     <div class="onderdeel-body">
