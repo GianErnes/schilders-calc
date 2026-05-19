@@ -1392,7 +1392,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.11.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.11.4</h2>
       <div class="intro-body">
         <p><strong>Nieuwe feature: aan/uit-vinkjes per onderdeel.</strong> Bij elke hoofdgroep, onderdeel én regel staat nu een vinkje vóór de naam. Met één klik zet je een gevel, kamer, of zelfs één specifieke regel (zoals "kozijnen" terwijl "deuren" wél meedoen) uit voor de offerte. Het bedrag onderaan zakt direct mee, en er verschijnt een oranje kadertje dat toont wat oorspronkelijk in de offerte stond, wat je nu rekent, en het verschil. Werkt ook in vergrendelde calculaties (verzonden/geaccepteerd), zodat je tijdens een keukentafelgesprek live kunt schuiven zonder de offerte structureel te wijzigen. Op de PDF blijven uitgezette regels doorgestreept zichtbaar, met onderaan drie regels: oorspronkelijk bedrag, wat vervalt, en het aangepaste totaal — transparant voor de klant 🎨.</p>
         <p><strong>Nieuwe tab: Onderhoudsplan.</strong> Stel een meerjaren-onderhoudsplan op op basis van een opgeslagen calculatie. Drie manieren om beurten te schalen (algemeen percentage, per regel, per stap), met snelinvullers per hoofdgroep en de mogelijkheid om scaling uit een andere beurt te kopiëren. Bedragen worden geïndexeerd vanaf het prijspeil van de calculatie en getoond inclusief BTW. Per beurt aan te vinken of die meerekent in het gemiddelde maandbedrag, voor wanneer de eerste behandeling separaat wordt afgerekend. Print-functie toont het plan als verkoopdocument met maandbedrag en jaartabel; project-specifieke afspraken komen uit het notities-veld. Onder de motorkap: één rekenkern die de structuur van de calculatie-tab letterlijk spiegelt, en aparte Supabase-tabellen voor plannen en beurten 🎨.</p>
@@ -1925,7 +1925,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.11.3';
+const APP_VERSION = 'v3.11.4';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -7889,13 +7889,15 @@ function renderStaartList() {
   sel.innerHTML = '<option value="">— kies template —</option>' + data.staartLib.map(s => `<option value="${s.id}">${s.naam}</option>`).join('');
 }
 
-function addStaartFromTpl() {
+async function addStaartFromTpl() {
   const id = document.getElementById('staartTpl').value;
   if (!id) return;
   const t = data.staartLib.find(x => x.id === id);
   if (!t) return;
-  data.calc.staart.push({
-    id: uid('sk'),
+  // v3.11.4 — Persist to DB. Vóór deze versie werd de staartpost alleen
+  // lokaal in data.calc.staart gepusht; bij herladen verdween 'ie omdat 'ie
+  // nooit in de Supabase `staart`-tabel was geschreven.
+  const payload = {
     naam: t.naam,
     type: t.type,
     bedrag: t.bedrag,
@@ -7903,7 +7905,11 @@ function addStaartFromTpl() {
     grondslag: t.grondslag,
     hoeveelheid: 0,
     verstopInEenheidsprijs: !!t.verstopInEenheidsprijs
-  });
+  };
+  const idx = (data.calc.staart || []).length;
+  const saved = await _insertStaartCalcDB(payload, data.calc.id, idx);
+  if (!data.calc.staart) data.calc.staart = [];
+  data.calc.staart.push(saved);
   saveData(); renderStaartList(); renderTotals();
 }
 function addStaartCustom() {
