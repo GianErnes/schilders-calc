@@ -575,7 +575,10 @@
   .calc-scenario-block .row.diff { font-weight: 600; color: #b45309; padding-top: 0.3rem; border-top: 1px dashed rgba(245, 158, 11, 0.4); margin-top: 0.2rem; }
 
   .calc-regel {
-    background: var(--paper);
+    /* v3.11.3 — Subtiele bandering: kop van een verfsysteem (de regel-rij zelf)
+       net iets donkerder dan de paper-warm achtergrond eronder. Het oog
+       herkent zo waar een nieuw verfsysteem begint. */
+    background: rgba(0, 0, 0, 0.035);
     border: 1px solid var(--paper-deep);
     border-radius: var(--radius);
     padding: 0.55rem 0.7rem;
@@ -624,14 +627,7 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--ink-soft);
-    /* v3.11.3 — Subtiele bandering: maak het kop-strookje van een verfsysteem
-       net iets donkerder zodat het oog herkent waar een nieuw blok begint.
-       Negatieve margins compenseren de padding van .regel-stappen zodat het
-       streekje strak van rand tot rand loopt. */
-    background: rgba(0, 0, 0, 0.04);
-    margin: -0.55rem -0.7rem 0.4rem -0.7rem;
-    padding: 0.4rem 0.7rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    margin-bottom: 0.4rem;
   }
   .regel-stap {
     display: grid;
