@@ -1,3 +1,9 @@
+## v3.11.5 — Verfsysteem-bandering nu écht zichtbaar
+De v3.11.3-poging om de regel-rij subtiel donkerder te maken landde op `.calc-regel`, maar die selector wordt overschreven door een specifiekere regel `.calc-regel-wrap .calc-regel { background: var(--paper); }` die de basis-styling herstelt nadat de wrapper-div was toegevoegd voor de v3.11.0 aan/uit-vinkjes feature. CSS-cascade-issue: de v3.11.3-styling stond er wel, maar verloor in de browser.
+- **Fix**: bandering verplaatst naar de winnende selector `.calc-regel-wrap .calc-regel` op regel 612. Nu schemert de 4%-zwart-overlay door, zoals oorspronkelijk bedoeld.
+- **Opgeruimd**: de dode v3.11.3-styling op `.calc-regel` is teruggedraaid naar `var(--paper)` om verwarring te voorkomen.
+- **Les voor toekomstige sessies**: bij CSS-wijzigingen op elementen die in een wrapper zijn gepakt (zoals na v3.11.0 met `.calc-regel-wrap`), altijd checken welke selector daadwerkelijk wint in de cascade. Een `grep -n "\.calc-regel"` voor je wijzigt scheelt deze hele false start.
+
 ## v3.11.4 — Bugfix: staartkosten uit template verdwenen
 Wanneer een staartkost (winterschilder, afdekvilt, en andere standaard-toeslagen) via de template-dropdown aan een calculatie werd toegevoegd, verdween deze in een volgende sessie weer. Concreet werd de post wel zichtbaar in de browser-tab maar nooit in Supabase opgeslagen. Bij herladen of in een nieuwe sessie viel de calc terug op de DB-staat en waren de templates-uit-dropdown weer weg.
 - **Oorzaak**: `addStaartFromTpl()` pushte de nieuwe post wel naar `data.calc.staart` in geheugen maar riep geen `_insertStaartCalcDB` aan. Een vergeten DB-write. De `saveData()`-call die volgde werkt alleen de gewijzigd-timestamp van de calculatie bij, niet de staart-tabel.
