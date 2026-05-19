@@ -1,5 +1,13 @@
 # Schilders Calculatie — Changelog
 
+## v3.8.2 — Pictogram-verbetering
+- Dupliceer-pictogram ⎘ → ⧉ overal in de app (visueel duidelijker: twee overlappende vierkantjes = kopie).
+- Doorgevoerd op: onderdeel-dupliceren, bewerking-dupliceren (bibliotheek), calculatie-dupliceren (dashboard).
+- Knop bij onderdeel-dupliceren licht vergroot (font-size 1.1rem) voor extra leesbaarheid.
+
+## v3.8.1 — UX-fix dupliceer-knop
+- ⎘-knop voor onderdeel-dupliceren had te weinig contrast (grijs op grijs); nu blauw karakter, consistent met andere secundaire acties in de app.
+
 ## v3.8.0 — Onderdeel dupliceren
 - Nieuwe ⎘-knop op elk onderdeel: dupliceert alle regels (incl. snapshot-stappen) naar één of meer andere onderdelen in dezelfde hoofdgroep.
 - Modal met dubbele input: vink bestaande onderdelen aan én/of typ nieuwe namen (kommagescheiden) — die worden direct aangemaakt en gevuld.
