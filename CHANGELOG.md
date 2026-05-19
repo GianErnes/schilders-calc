@@ -1,3 +1,6 @@
+## v3.11.6 — Bandering-contrast verdubbeld
+De 4%-zwart-overlay uit v3.11.5 was visueel te subtiel om in de praktijk te functioneren — Gian's oog kon de regel-rij nog steeds niet onderscheiden van de stappen-bewerkingen eronder. Tint verdubbeld naar `rgba(0, 0, 0, 0.08)` (8% zwart). Nog steeds geen schreeuwerige bandering, wel het oog-prikkelende contrast dat nodig is om verfsystemen visueel als blokken te zien.
+
 ## v3.11.5 — Verfsysteem-bandering nu écht zichtbaar
 De v3.11.3-poging om de regel-rij subtiel donkerder te maken landde op `.calc-regel`, maar die selector wordt overschreven door een specifiekere regel `.calc-regel-wrap .calc-regel { background: var(--paper); }` die de basis-styling herstelt nadat de wrapper-div was toegevoegd voor de v3.11.0 aan/uit-vinkjes feature. CSS-cascade-issue: de v3.11.3-styling stond er wel, maar verloor in de browser.
 - **Fix**: bandering verplaatst naar de winnende selector `.calc-regel-wrap .calc-regel` op regel 612. Nu schemert de 4%-zwart-overlay door, zoals oorspronkelijk bedoeld.
