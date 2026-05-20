@@ -1394,10 +1394,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.11.6</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.12.0</h2>
       <div class="intro-body">
-        <p><strong>Nieuwe feature: aan/uit-vinkjes per onderdeel.</strong> Bij elke hoofdgroep, onderdeel én regel staat nu een vinkje vóór de naam. Met één klik zet je een gevel, kamer, of zelfs één specifieke regel (zoals "kozijnen" terwijl "deuren" wél meedoen) uit voor de offerte. Het bedrag onderaan zakt direct mee, en er verschijnt een oranje kadertje dat toont wat oorspronkelijk in de offerte stond, wat je nu rekent, en het verschil. Werkt ook in vergrendelde calculaties (verzonden/geaccepteerd), zodat je tijdens een keukentafelgesprek live kunt schuiven zonder de offerte structureel te wijzigen. Op de PDF blijven uitgezette regels doorgestreept zichtbaar, met onderaan drie regels: oorspronkelijk bedrag, wat vervalt, en het aangepaste totaal — transparant voor de klant 🎨.</p>
-        <p><strong>Nieuwe tab: Onderhoudsplan.</strong> Stel een meerjaren-onderhoudsplan op op basis van een opgeslagen calculatie. Drie manieren om beurten te schalen (algemeen percentage, per regel, per stap), met snelinvullers per hoofdgroep en de mogelijkheid om scaling uit een andere beurt te kopiëren. Bedragen worden geïndexeerd vanaf het prijspeil van de calculatie en getoond inclusief BTW. Per beurt aan te vinken of die meerekent in het gemiddelde maandbedrag, voor wanneer de eerste behandeling separaat wordt afgerekend. Print-functie toont het plan als verkoopdocument met maandbedrag en jaartabel; project-specifieke afspraken komen uit het notities-veld. Onder de motorkap: één rekenkern die de structuur van de calculatie-tab letterlijk spiegelt, en aparte Supabase-tabellen voor plannen en beurten 🎨.</p>
+        <p><strong>Calculatie-lijst nu opgevouwen per status.</strong> Het dashboard toont calculaties niet langer als één lange rij, maar gegroepeerd per status — elke groep met een eigen klikbare kop (▸ open / ▾ dicht), een telling en een sectie-totaal incl. BTW. Standaard staan <em>Concept</em> en <em>Gereed</em> open, en <em>Verzonden</em>, <em>Geaccepteerd</em> en <em>Verloren</em> ingeklapt, zodat het werk-in-uitvoering bovenaan blijft en het archief uit de weg zit. Lege statussen worden helemaal weggelaten. Daarnaast zijn de datakolommen <em>Opname</em>, <em>Deadline</em>, <em>Gewijzigd</em> en <em>Totaal incl. BTW</em> sorteerbaar: één klik schakelt op- en aflopend. De keuze geldt voor alle secties tegelijk en wordt per sessie gereset naar Gewijzigd ↓. Lege waarden (geen opname-datum, geen bedrag) zakken altijd naar onderen, ongeacht richting — anders verdwijnen actieve calcs onder een rij streepjes 🎨.</p>
+        <p><strong>Aan/uit-vinkjes per onderdeel.</strong> Bij elke hoofdgroep, onderdeel én regel staat een vinkje vóór de naam. Met één klik zet je een gevel, kamer, of zelfs één specifieke regel (zoals "kozijnen" terwijl "deuren" wél meedoen) uit voor de offerte. Het bedrag onderaan zakt direct mee, en er verschijnt een oranje kadertje dat toont wat oorspronkelijk in de offerte stond, wat je nu rekent, en het verschil. Werkt ook in vergrendelde calculaties (verzonden/geaccepteerd), zodat je tijdens een keukentafelgesprek live kunt schuiven zonder de offerte structureel te wijzigen. Op de PDF blijven uitgezette regels doorgestreept zichtbaar, met onderaan drie regels: oorspronkelijk bedrag, wat vervalt, en het aangepaste totaal — transparant voor de klant.</p>
       </div>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
@@ -1927,7 +1927,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.11.6';
+const APP_VERSION = 'v3.12.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -8684,6 +8684,29 @@ function _calcTotalForArchive(c, includeInactief = false) {
   return { uren, totaal: exBtw * (1 + sett.btw / 100), exBtw };
 }
 
+// Dashboard-state voor groepering en sortering — alleen in geheugen, niet gepersisteerd.
+// Defaults bij elke sessie: Concept+Gereed open, rest dicht; sortering Gewijzigd ↓.
+// _dashCollapsed bevat de statussen die INGEKLAPT zijn (dus afwezigheid = open).
+const _dashCollapsed = new Set(['verzonden', 'geaccepteerd', 'verloren']);
+const _dashSort = { key: 'gewijzigd', dir: 'desc' }; // key: opname|deadline|gewijzigd|totaal, dir: asc|desc
+
+function toggleDashSection(status) {
+  if (_dashCollapsed.has(status)) _dashCollapsed.delete(status);
+  else _dashCollapsed.add(status);
+  renderCalculatiesArchief();
+}
+
+function setDashSort(key) {
+  // 2-klik cyclus: zelfde kolom → flip; andere kolom → start op ↓ (desc)
+  if (_dashSort.key === key) {
+    _dashSort.dir = (_dashSort.dir === 'asc') ? 'desc' : 'asc';
+  } else {
+    _dashSort.key = key;
+    _dashSort.dir = 'desc';
+  }
+  renderCalculatiesArchief();
+}
+
 function renderCalculatiesArchief() {
   const c = document.getElementById('calculatiesArchief');
   if (!c) return;
@@ -8693,13 +8716,11 @@ function renderCalculatiesArchief() {
   }
   const STATUS_LABELS = { concept: 'Concept', gereed: 'Gereed', verzonden: 'Verzonden', geaccepteerd: 'Geaccepteerd', verloren: 'Verloren' };
   const STATUS_COLORS = { concept: 'var(--muted)', gereed: '#f59e0b', verzonden: 'var(--blue)', geaccepteerd: 'var(--green)', verloren: 'var(--accent-deep)' };
-  // Sort by gewijzigd desc
-  const sorted = [...data.calculaties].sort((a, b) => (b.gewijzigd || '').localeCompare(a.gewijzigd || ''));
-  let html = '<div class="table-scroll"><table><thead><tr><th>Naam</th><th>Opname</th><th>Deadline</th><th>Gewijzigd</th><th>Status</th><th class="right">Totaal incl. BTW</th><th></th></tr></thead><tbody>';
-  // Vandaag als YYYY-MM-DD voor kleur-vergelijkingen
+  const STATUS_ORDER = ['concept', 'gereed', 'verzonden', 'geaccepteerd', 'verloren'];
+
+  // Helpers
   const _today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const _daysBetween = (a, b) => {
-    // a en b zijn YYYY-MM-DD strings. Retourneert b - a in dagen (integer).
     const [ay, am, ad] = a.split('-').map(Number);
     const [by, bm, bd] = b.split('-').map(Number);
     const da = new Date(ay, am - 1, ad);
@@ -8707,24 +8728,63 @@ function renderCalculatiesArchief() {
     return Math.round((db - da) / 86400000);
   };
   const _fmtDate = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-  sorted.forEach(cl => {
-    // Bedrag bepalen: live berekenen indien geladen (= meest actuele waarde),
-    // anders cache uit DB, anders gedachtestreepje voor calcs zonder bekend totaal.
-    // 0 wordt visueel gelijk behandeld aan 'geen bedrag' (—): een lege calc
-    // toont rustig een streepje, niet '€ 0,00'.
-    let bedragHtml;
-    const _dash = '<span style="color:var(--muted);" title="Open en sla op om te berekenen">—</span>';
+  // Bedrag berekenen — gebruikt voor zowel cel-rendering als sectie-totaal en sortering
+  const _calcBedrag = (cl) => {
     if (cl.__loaded) {
       const t = _calcTotalForArchive(cl);
-      const tot = (t && isFinite(t.totaal)) ? t.totaal : null;
-      bedragHtml = (tot != null && tot > 0) ? eur(tot) : _dash;
-    } else if (cl.totaalInclBtw != null && cl.totaalInclBtw > 0) {
-      bedragHtml = eur(cl.totaalInclBtw);
-    } else {
-      bedragHtml = _dash;
+      return (t && isFinite(t.totaal) && t.totaal > 0) ? t.totaal : null;
     }
+    if (cl.totaalInclBtw != null && cl.totaalInclBtw > 0) return cl.totaalInclBtw;
+    return null;
+  };
+  // Sorteerwaarde per kolom — null = "leeg, hoort onderaan"
+  const _sortVal = (cl, key) => {
+    if (key === 'opname') return cl.opnameDatum || null;
+    if (key === 'deadline') return cl.deadlineDatum || null;
+    if (key === 'gewijzigd') return cl.gewijzigd || null;
+    if (key === 'totaal') return _calcBedrag(cl);
+    return null;
+  };
+  // Comparator: lege waarden altijd onderaan, ongeacht richting
+  const _cmp = (a, b) => {
+    const va = _sortVal(a, _dashSort.key);
+    const vb = _sortVal(b, _dashSort.key);
+    const aEmpty = (va == null || va === '');
+    const bEmpty = (vb == null || vb === '');
+    if (aEmpty && bEmpty) return 0;
+    if (aEmpty) return 1;   // a leeg → a achteraan
+    if (bEmpty) return -1;  // b leeg → b achteraan
+    let res;
+    if (typeof va === 'number' && typeof vb === 'number') res = va - vb;
+    else res = String(va).localeCompare(String(vb));
+    return _dashSort.dir === 'asc' ? res : -res;
+  };
+
+  // Groepeer calcs per status
+  const grouped = {};
+  STATUS_ORDER.forEach(s => grouped[s] = []);
+  data.calculaties.forEach(cl => {
+    const s = STATUS_ORDER.includes(cl.status) ? cl.status : 'concept';
+    grouped[s].push(cl);
+  });
+  // Sorteer binnen elke groep
+  STATUS_ORDER.forEach(s => grouped[s].sort(_cmp));
+
+  // Sorteer-pijltje helper voor kolomkop
+  const _arrow = (key) => {
+    if (_dashSort.key !== key) return '<span style="color:var(--muted); opacity:0.4; margin-left:0.25rem;">↕</span>';
+    return `<span style="color:var(--accent-deep); margin-left:0.25rem;">${_dashSort.dir === 'asc' ? '↑' : '↓'}</span>`;
+  };
+  const _sortableTh = (key, label, extraClass = '') => {
+    return `<th class="${extraClass}" style="cursor:pointer; user-select:none;" onclick="setDashSort('${key}')" title="Sorteer op ${label}">${label}${_arrow(key)}</th>`;
+  };
+
+  // Bouw één rij
+  const _renderRow = (cl) => {
+    const _dash = '<span style="color:var(--muted);" title="Open en sla op om te berekenen">—</span>';
+    const bedrag = _calcBedrag(cl);
+    const bedragHtml = bedrag != null ? eur(bedrag) : _dash;
     const datum = cl.gewijzigd ? new Date(cl.gewijzigd).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-    // Opname + deadline cellen met kleur-logica
     const opnameHtml = cl.opnameDatum ? `<span style="color:var(--muted);">${_fmtDate(cl.opnameDatum)}</span>` : '<span style="color:var(--muted);">—</span>';
     let deadlineHtml = '<span style="color:var(--muted);">—</span>';
     if (cl.deadlineDatum) {
@@ -8732,24 +8792,20 @@ function renderCalculatiesArchief() {
       if (isConcept) {
         const dagen = _daysBetween(_today, cl.deadlineDatum);
         if (dagen < 0) {
-          // Deadline verstreken — rood
           deadlineHtml = `<span style="color:var(--accent-deep); font-weight:600;" title="Deadline ${Math.abs(dagen)} dag${Math.abs(dagen)===1?'':'en'} verstreken">${_fmtDate(cl.deadlineDatum)}</span>`;
         } else if (dagen <= 3) {
-          // Binnen 3 dagen — oranje
           deadlineHtml = `<span style="color:#f59e0b; font-weight:600;" title="Deadline over ${dagen} dag${dagen===1?'':'en'}">${_fmtDate(cl.deadlineDatum)}</span>`;
         } else {
           deadlineHtml = `<span style="color:var(--muted);">${_fmtDate(cl.deadlineDatum)}</span>`;
         }
       } else {
-        // Verzonden/geaccepteerd/verloren: deadline is referentiewaarde, neutraal grijs
         deadlineHtml = `<span style="color:var(--muted);">${_fmtDate(cl.deadlineDatum)}</span>`;
       }
     }
-    // Op tijd / te laat label bij Gewijzigd-kolom voor verzonden/geaccepteerd
     let datumHtml = datum;
     if (cl.deadlineDatum && cl.gewijzigd && (cl.status === 'verzonden' || cl.status === 'geaccepteerd')) {
-      const verzondenDag = cl.gewijzigd.slice(0, 10); // YYYY-MM-DD uit ISO timestamp
-      const diff = _daysBetween(cl.deadlineDatum, verzondenDag); // positief = te laat, 0 of negatief = op tijd
+      const verzondenDag = cl.gewijzigd.slice(0, 10);
+      const diff = _daysBetween(cl.deadlineDatum, verzondenDag);
       if (diff <= 0) {
         datumHtml = `${datum} <span style="color:var(--green); font-size:0.7rem; font-weight:600; margin-left:0.3rem;" title="Verzonden op of vóór deadline">op tijd</span>`;
       } else {
@@ -8758,7 +8814,7 @@ function renderCalculatiesArchief() {
     }
     const statusOpts = Object.keys(STATUS_LABELS).map(s => `<option value="${s}" ${s === cl.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('');
     const isActive = cl.id === data.activeCalcId;
-    html += `<tr ${isActive ? 'style="background: rgba(194,65,12,0.06);"' : ''}>
+    return `<tr ${isActive ? 'style="background: rgba(194,65,12,0.06);"' : ''}>
       <td><strong style="cursor: pointer; color: var(--accent-deep);" onclick="openCalc('${cl.id}')">${cl.naam || '<em>(zonder naam)</em>'}</strong>${isActive ? ' <span class="mono" style="font-size:0.65rem; color:var(--accent); margin-left:0.4rem;">● actief</span>' : ''}<br><span style="color: var(--muted); font-size: 0.78rem;">${cl.klant || ''}</span></td>
       <td class="num">${opnameHtml}</td>
       <td class="num">${deadlineHtml}</td>
@@ -8771,7 +8827,43 @@ function renderCalculatiesArchief() {
         <button class="btn btn-danger btn-sm" onclick="delCalc('${cl.id}')">×</button>
       </td>
     </tr>`;
+  };
+
+  // Tabel-kop met sorteerbare datakolommen
+  let html = '<div class="table-scroll"><table><thead><tr>';
+  html += '<th>Naam</th>';
+  html += _sortableTh('opname',   'Opname',          'num');
+  html += _sortableTh('deadline', 'Deadline',        'num');
+  html += _sortableTh('gewijzigd','Gewijzigd',       'num');
+  html += '<th>Status</th>';
+  html += _sortableTh('totaal',   'Totaal incl. BTW','right');
+  html += '<th></th>';
+  html += '</tr></thead><tbody>';
+
+  // Per status een sectiekop + (eventueel) rijen
+  STATUS_ORDER.forEach(s => {
+    const groep = grouped[s];
+    if (!groep.length) return; // lege secties overslaan
+    const collapsed = _dashCollapsed.has(s);
+    // Sectie-totaal incl. BTW (som van alle bekende bedragen in deze status)
+    const sectieTotaal = groep.reduce((sum, cl) => {
+      const b = _calcBedrag(cl);
+      return sum + (b != null ? b : 0);
+    }, 0);
+    const caret = collapsed ? '▸' : '▾';
+    const bolletje = `<span style="display:inline-block; width:0.55rem; height:0.55rem; border-radius:50%; background:${STATUS_COLORS[s]}; margin-right:0.5rem; vertical-align:middle;"></span>`;
+    // Sectiekop is een <tr> die de hele breedte (7 cellen) overspant
+    html += `<tr style="background: var(--paper-warm); cursor:pointer; user-select:none;" onclick="toggleDashSection('${s}')" title="Klik om in/uit te klappen">
+      <td colspan="6" style="padding:0.55rem 0.7rem; font-weight:600; font-size:0.82rem;">
+        <span style="display:inline-block; width:0.9rem; color:var(--muted);">${caret}</span>${bolletje}${STATUS_LABELS[s]} <span style="color:var(--muted); font-weight:400; margin-left:0.4rem;">(${groep.length})</span>
+      </td>
+      <td class="num right" style="padding:0.55rem 0.7rem; font-weight:600; font-size:0.82rem; color:var(--accent-deep);">${sectieTotaal > 0 ? eur(sectieTotaal) : ''}</td>
+    </tr>`;
+    if (!collapsed) {
+      groep.forEach(cl => { html += _renderRow(cl); });
+    }
   });
+
   html += '</tbody></table></div>';
   c.innerHTML = html;
 }

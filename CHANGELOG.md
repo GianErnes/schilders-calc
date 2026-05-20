@@ -1,3 +1,14 @@
+## v3.12.0 — Dashboard: groepering per status + sorteerbare kolommen
+De calculatie-lijst groeide onhandig: tientallen rijen door elkaar, met "Verloren" en oude "Geaccepteerd"-calcs die boven nieuwe Concepten konden eindigen zodra `gewijzigd` ergens werd geraakt. Nu wordt de lijst opgebroken in vijf secties — Concept, Gereed, Verzonden, Geaccepteerd, Verloren — elk met een klikbare kop (▸/▾), telling, status-bolletje in de kleurcode, en sectie-totaal incl. BTW.
+- **Default open**: Concept + Gereed. **Default dicht**: Verzonden, Geaccepteerd, Verloren. Lege secties worden niet getoond (geen "Verloren (0)"-spookjes).
+- **State**: alleen in geheugen — geen `localStorage`. Elke nieuwe sessie reset naar deze defaults. Bewust: als je de browser sluit en terugkomt, vind je het werk-in-uitvoering bovenin en het archief uit de weg.
+- **Sorteerbare datakolommen**: Opname, Deadline, Gewijzigd, Totaal incl. BTW. Klik op de kolomkop schakelt tussen ↑ en ↓ (2-klik cyclus, zoals afgesproken). Niet-actieve kolommen tonen een dof ↕-indicator. Naam en Status blijven niet-sorteerbaar — die zijn geen "data" in dezelfde zin (Naam is alfabetisch wat al via groeperen onlogisch wordt; Status is juist de groeperings-as).
+- **Sorteer-keuze geldt over alle secties tegelijk**, niet per sectie apart. Anders ontstaat een visueel inconsistent beeld waarbij Concept aflopend op datum staat en Verzonden oplopend op bedrag.
+- **Default sortering** per sessie: Gewijzigd ↓ (identiek aan v3.11.x-gedrag).
+- **Lege waarden zakken altijd naar onderaan**, ongeacht op- of aflopend. Calcs zonder opname-datum of zonder bedrag verdwijnen anders bovenaan een ↑-sortering en duwen je actieve werk weg. De richting bepaalt alleen de volgorde van de niet-lege waarden.
+- **Sectie-totaal incl. BTW** in de kop berekent zich op dezelfde manier als de bedrag-cel: live `_calcTotalForArchive` voor geladen calcs, anders de `totaalInclBtw`-cache uit DB. Calcs zonder bekend totaal tellen voor 0 mee en tonen — in hun bedrag-cel.
+- **Behouden**: actieve-calc highlight, deadline-kleuren (rood verstreken / oranje binnen 3 dgn), "op tijd / +X dg"-label op Gewijzigd voor verzonden/geaccepteerd, inline status-dropdown, actie-knoppen rechts.
+
 ## v3.11.6 — Bandering-contrast verdubbeld
 De 4%-zwart-overlay uit v3.11.5 was visueel te subtiel om in de praktijk te functioneren — Gian's oog kon de regel-rij nog steeds niet onderscheiden van de stappen-bewerkingen eronder. Tint verdubbeld naar `rgba(0, 0, 0, 0.08)` (8% zwart). Nog steeds geen schreeuwerige bandering, wel het oog-prikkelende contrast dat nodig is om verfsystemen visueel als blokken te zien.
 
