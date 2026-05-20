@@ -1,5 +1,14 @@
 # Schilders Calculatie — Changelog
 
+## v3.9.0 — Inline bewerking aanmaken + bugfix verfsysteem-naar-calc
+- Nieuwe **+** knop naast "Bewerking toevoegen" dropdown in verfsysteem-modal.
+- Quick-create mini-modal met velden: naam, eenheid, ondergrond, minuten, materiaal (optioneel), verbruik (optioneel).
+- Slimme defaults: ondergrond en eenheid worden voorgevuld vanuit het verfsysteem dat wordt gebouwd.
+- Na opslaan: bewerking direct in bibliotheek én automatisch geselecteerd in de verfsysteem-dropdown.
+- Verplichte velden: naam, eenheid, ondergrond, minuten (> 0).
+- Werkt overal waar de verfsysteem-modal opent: vanuit Verfsystemen-tab én vanuit "+ Verfsysteem toevoegen" in een calculatie.
+- **Bugfix**: een nieuw verfsysteem aangemaakt vanuit "+ Verfsysteem toevoegen" in een calculatie landde alleen in de bibliotheek, niet als calc-regel in de calculatie. Oorzaak: de calc-context werd door `openSystemModal()` direct na het zetten weer gewist. Context wordt nu expliciet meegegeven als parameter en blijft daardoor behouden tot het opslaan.
+
 ## v3.8.2 — Pictogram-verbetering
 - Dupliceer-pictogram ⎘ → ⧉ overal in de app (visueel duidelijker: twee overlappende vierkantjes = kopie).
 - Doorgevoerd op: onderdeel-dupliceren, bewerking-dupliceren (bibliotheek), calculatie-dupliceren (dashboard).
