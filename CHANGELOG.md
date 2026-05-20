@@ -1,3 +1,9 @@
+## v3.13.2 — Kopieer-icoon groter
+Het ⧉-symbool nam in de knop visueel weinig ruimte in vergeleken met de beschikbare ruimte van het kader. In gebruik bleek dat een gemiste kans — er is plaats om het icoon prominenter te maken zonder de knop op te blazen.
+- `font-size: 1.05rem` (was 0.72rem via `btn-sm`)
+- `line-height: 1` zodat de extra hoogte de knop-hoogte niet beïnvloedt en het symbool netjes verticaal gecentreerd blijft
+- Knop-afmetingen onveranderd (padding via `btn-sm` blijft)
+
 ## v3.13.1 — Kopieer-icoon zichtbaar gemaakt
 Het ⎘-symbool (U+2398 NEXT PAGE) op de onderdeel-kop bleek visueel te vervagen in zijn eigen wit-op-wit knopvak. Op een screenshot tijdens gebruik bleek de knop een leeg kader te lijken, wat de hele feature onvindbaar maakte voor iemand die niet wist dat 'ie er moest zijn.
 - **Symbool gewijzigd**: ⎘ → **⧉** (U+29C9, SQUARED TIMES). Twee overlappende vierkanten — de universele "kopieer/dupliceer"-conventie zoals in macOS, Windows en de meeste design-tools. Door bijna iedereen herkend als "kopie maken" zonder verdere uitleg.
