@@ -1,3 +1,20 @@
+## v3.13.0 — Regels kopiëren tussen onderdelen
+**Herstel van een feature die er ooit was en op 20 mei verloren ging bij de versie-merge.** Bij grotere objecten — Siltjens-achtige zorgcentra met 7 vergelijkbare kamers, appartementencomplexen — is het invoeren van alle calc-regels per kamer onwerkbaar. Workflow nu: maak één kamer compleet, klik op het nieuwe `⎘`-icoon in de onderdeel-kop (naast ×), en kies via een modal welke andere onderdelen in dezelfde hoofdgroep de regels moeten erven.
+- **Knop**: `⎘` in `.btn-secondary btn-sm` stijl op de `onderdeel-head`, links van de delete-`×`. Tooltip "Regels kopiëren naar andere onderdelen".
+- **Modal `#kopieerRegelsModal`**: lijst van alle andere onderdelen in dezelfde hoofdgroep, met checkbox per target. Per target wordt het aantal al bestaande regels getoond (of "(leeg)"). Standaard staan álle checkboxes uit — bewuste keuze door gebruiker. Knoppen "Selecteer alle" / "Deselecteer alle" voor snel werk.
+- **Scope**: alleen targets binnen dezelfde hoofdgroep. Wilde je tussen Binnen en Buiten kopiëren, dan zou de UI verwarrend worden (over scrollen heen, niet duidelijk welke set je bekijkt). Voor nu pragmatisch beperkt; uitbreidbaar in een later v3.14.x als er behoefte is.
+- **Gedrag**: TOEVOEGEN, niet vervangen. Bron-regels komen achter de bestaande regels van het target. Voor lege targets is er geen verschil; voor targets met eigen werk (bv. een Badkamer met 2 unieke regels) blijft alles staan en kan de gebruiker daarna eventueel overbodige nieuwe regels weghalen.
+- **Wat gaat mee**: snapshot-data (systeemNaam/Eenheid/Ondergrond/Locatie), hoeveelheid, toeslag, alle stappen met hun snapshot (bewerking-data, materiaal-data, percentages), en het `actief`-veld van de regel. Volgorde: doortellen vanaf de laatste regel in het target met stappen van 10.
+- **Wat NIET mee gaat**: meetstaat-koppelingen. Die zijn per regel-ID en horen per kamer uniek te zijn — een meting van 4 kozijnen in Kamer 1 mag niet stilletjes meegekopieerd worden naar Kamer 2.
+- **DB-patroon**: gebruikt `_insertRegelDB(payload, targetOdId)` exact zoals `dupCalc` dat doet — inclusief stappen-array in dezelfde call, geen aparte stap-inserts. Nieuwe regel-IDs komen uit Supabase, consistent client ↔ server.
+- **Edge cases**:
+  - Bron heeft 0 regels → toast "Geen regels om te kopiëren", modal opent niet.
+  - Hoofdgroep heeft maar één onderdeel (= de bron zelf) → toast "Geen andere onderdelen in deze hoofdgroep", modal opent niet.
+  - Geen targets aangevinkt bij klik op "Kopieer regels" → toast.
+  - Inserts deels mislukt → toast vermeldt dat expliciet, geslaagde inserts blijven staan (geen rollback).
+- **Lock-status**: knop is altijd zichtbaar, ook in vergrendelde calcs (verzonden/geaccepteerd) — consistent met `delOd` dat ook geen lock-check doet. Pragmatisch: in de praktijk komt deze use case vooral voor in concept-fase.
+- **Feedback**: toast met "X regels gekopieerd naar Y onderdelen" bij succes, ok-kleur. Bij gedeeltelijk falen err-kleur met "(sommige inserts mislukt)".
+
 ## v3.12.0 — Dashboard: groepering per status + sorteerbare kolommen
 De calculatie-lijst groeide onhandig: tientallen rijen door elkaar, met "Verloren" en oude "Geaccepteerd"-calcs die boven nieuwe Concepten konden eindigen zodra `gewijzigd` ergens werd geraakt. Nu wordt de lijst opgebroken in vijf secties — Concept, Gereed, Verzonden, Geaccepteerd, Verloren — elk met een klikbare kop (▸/▾), telling, status-bolletje in de kleurcode, en sectie-totaal incl. BTW.
 - **Default open**: Concept + Gereed. **Default dicht**: Verzonden, Geaccepteerd, Verloren. Lege secties worden niet getoond (geen "Verloren (0)"-spookjes).

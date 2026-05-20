@@ -1394,10 +1394,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.12.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.13.0</h2>
       <div class="intro-body">
-        <p><strong>Calculatie-lijst nu opgevouwen per status.</strong> Het dashboard toont calculaties niet langer als één lange rij, maar gegroepeerd per status — elke groep met een eigen klikbare kop (▸ open / ▾ dicht), een telling en een sectie-totaal incl. BTW. Standaard staan <em>Concept</em> en <em>Gereed</em> open, en <em>Verzonden</em>, <em>Geaccepteerd</em> en <em>Verloren</em> ingeklapt, zodat het werk-in-uitvoering bovenaan blijft en het archief uit de weg zit. Lege statussen worden helemaal weggelaten. Daarnaast zijn de datakolommen <em>Opname</em>, <em>Deadline</em>, <em>Gewijzigd</em> en <em>Totaal incl. BTW</em> sorteerbaar: één klik schakelt op- en aflopend. De keuze geldt voor alle secties tegelijk en wordt per sessie gereset naar Gewijzigd ↓. Lege waarden (geen opname-datum, geen bedrag) zakken altijd naar onderen, ongeacht richting — anders verdwijnen actieve calcs onder een rij streepjes 🎨.</p>
-        <p><strong>Aan/uit-vinkjes per onderdeel.</strong> Bij elke hoofdgroep, onderdeel én regel staat een vinkje vóór de naam. Met één klik zet je een gevel, kamer, of zelfs één specifieke regel (zoals "kozijnen" terwijl "deuren" wél meedoen) uit voor de offerte. Het bedrag onderaan zakt direct mee, en er verschijnt een oranje kadertje dat toont wat oorspronkelijk in de offerte stond, wat je nu rekent, en het verschil. Werkt ook in vergrendelde calculaties (verzonden/geaccepteerd), zodat je tijdens een keukentafelgesprek live kunt schuiven zonder de offerte structureel te wijzigen. Op de PDF blijven uitgezette regels doorgestreept zichtbaar, met onderaan drie regels: oorspronkelijk bedrag, wat vervalt, en het aangepaste totaal — transparant voor de klant.</p>
+        <p><strong>Regels kopiëren tussen onderdelen.</strong> Bij grotere objecten — een appartementencomplex, een woonzorgcentrum met 7 vergelijkbare kamers — was het iedere keer opnieuw alle regels per kamer invoeren. Nu: maak één kamer compleet, klik op het <span class="mono">⎘</span>-icoon naast de × in de onderdeel-kop, en kies welke andere onderdelen in dezelfde hoofdgroep de regels moeten erven. Alles gaat mee — verfsysteem-snapshots, alle stappen, hoeveelheden, percentages, aan/uit-status — behalve meetstaat-koppelingen (die zijn per regel-ID en blijven per kamer uniek). Regels worden toegevoegd achter eventueel al bestaande regels, dus targets met eigen werk verliezen niets. Per kamer kun je daarna nog hoeveelheden bijstellen of regels weghalen 🎨.</p>
+        <p><strong>Dashboard groepering en sorteerbare kolommen.</strong> De calculatie-lijst toont calculaties gegroepeerd per status met klikbare koppen (▸ open / ▾ dicht), telling en sectie-totaal incl. BTW. Standaard staan <em>Concept</em> en <em>Gereed</em> open, <em>Verzonden</em>, <em>Geaccepteerd</em> en <em>Verloren</em> ingeklapt. Datakolommen <em>Opname</em>, <em>Deadline</em>, <em>Gewijzigd</em> en <em>Totaal incl. BTW</em> zijn sorteerbaar via klik op de kop. Lege waarden zakken altijd onderaan. Sortering en inklap-state worden per sessie gereset naar de defaults.</p>
       </div>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
@@ -1792,6 +1792,29 @@
   </div>
 </div>
 
+<!-- KOPIEER REGELS MODAL — v3.13.0 -->
+<div class="modal-overlay" id="kopieerRegelsModal">
+  <div class="modal" style="max-width: 560px;">
+    <div class="modal-head">
+      <h3>Regels kopiëren</h3>
+      <button class="close-x" onclick="closeKopieerRegelsModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="kopieerRegelsIntro" style="margin: 0 0 0.85rem 0; font-size: 0.85rem;"></p>
+      <div style="display:flex; gap:0.5rem; margin-bottom:0.4rem;">
+        <button type="button" class="btn-secondary btn btn-sm" onclick="_toggleAllKopieerTargets(true)">Selecteer alle</button>
+        <button type="button" class="btn-secondary btn btn-sm" onclick="_toggleAllKopieerTargets(false)">Deselecteer alle</button>
+      </div>
+      <div id="kopieerRegelsTargets" style="max-height: 360px; overflow-y: auto; border: 1px solid var(--paper-deep); border-radius: var(--radius); padding: 0.5rem;"></div>
+      <p style="margin: 0.75rem 0 0 0; font-size: 0.75rem; color: var(--muted);">De regels worden <strong>toegevoegd</strong> aan het einde van elk gekozen onderdeel. Bestaande regels blijven staan.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="closeKopieerRegelsModal()">Annuleren</button>
+      <button class="btn" id="kopieerRegelsExecuteBtn" onclick="executeKopieerRegels()">Kopieer regels</button>
+    </div>
+  </div>
+</div>
+
 <!-- STAART POST MODAL -->
 <div class="modal-overlay" id="staartModal">
   <div class="modal" style="max-width: 640px;">
@@ -1927,7 +1950,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.12.0';
+const APP_VERSION = 'v3.13.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -6977,6 +7000,7 @@ function renderOnderdeel(hgId, od) {
         <input value="${od.naam}" onchange="updOd('${hgId}','${od.id}','naam',this.value)">
       </span>
       <span class="stats">${fmt(t.uren)} u · ${eur(t.verkoop)}</span>
+      <button class="btn-secondary btn btn-sm" onclick="openKopieerRegelsModal('${hgId}','${od.id}')" title="Regels kopiëren naar andere onderdelen" style="margin-right:0.25rem;">⎘</button>
       <button class="btn btn-danger btn-sm" onclick="delOd('${hgId}','${od.id}')">×</button>
     </div>
     <div class="onderdeel-body">
@@ -7197,6 +7221,138 @@ async function delOd(hgId, odId) {
   _touchCalc(data.calc.id);
   renderCalcStructuur();
 }
+
+// v3.13.0 — Regels kopiëren van het ene onderdeel naar één of meer andere onderdelen
+// in dezelfde hoofdgroep. Workflow voor o.a. Siltjens-achtige objecten waar je één
+// kamer volledig inricht en die als template wilt gebruiken voor de andere kamers.
+//
+// Gedrag:
+//   - Bron-regels worden TOEGEVOEGD aan het einde van elke target (bestaande regels blijven)
+//   - Alleen onderdelen in dezelfde hoofdgroep zijn target-kandidaat
+//   - Stappen-snapshot, hoeveelheid, percentages, aan/uit-status: alles gaat mee
+//   - Meetstaat-koppelingen gaan NIET mee (die zijn per regel-ID, blijven per kamer uniek)
+//   - Nieuwe regel-IDs via _insertRegelDB (consistent met dupCalc-patroon)
+let _kopieerRegelsCtx = { hgId: null, srcOdId: null };
+
+function openKopieerRegelsModal(hgId, srcOdId) {
+  const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
+  if (!hg) return;
+  const src = (hg.onderdelen || []).find(o => o.id === srcOdId);
+  if (!src) return;
+  const aantalRegels = (src.regels || []).length;
+  if (aantalRegels === 0) {
+    _toast('Geen regels om te kopiëren — voeg eerst regels toe aan dit onderdeel.');
+    return;
+  }
+  const targets = (hg.onderdelen || []).filter(o => o.id !== srcOdId);
+  if (targets.length === 0) {
+    _toast('Geen andere onderdelen in deze hoofdgroep om naartoe te kopiëren.');
+    return;
+  }
+  _kopieerRegelsCtx = { hgId, srcOdId };
+  // Intro-tekst
+  document.getElementById('kopieerRegelsIntro').innerHTML =
+    `Kopieer de <strong>${aantalRegels} regel${aantalRegels === 1 ? '' : 's'}</strong> uit <strong>${_escapeHtml(src.naam || '(zonder naam)')}</strong> naar andere onderdelen in <em>${_escapeHtml(hg.naam || '(zonder naam)')}</em>:`;
+  // Target-lijst — checkboxes, default geen aangevinkt (gebruiker kiest bewust)
+  const html = targets.map(o => {
+    const cnt = (o.regels || []).length;
+    const cntLabel = cnt === 0
+      ? `<span style="color:var(--muted); font-size:0.75rem;">(leeg)</span>`
+      : `<span style="color:var(--muted); font-size:0.75rem;">(${cnt} bestaande regel${cnt === 1 ? '' : 's'})</span>`;
+    return `<label style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.4rem; cursor:pointer; border-bottom:1px solid var(--paper-deep);">
+      <input type="checkbox" class="kopieer-target-cb" data-od-id="${o.id}" style="width:auto;">
+      <span style="flex:1;">${_escapeHtml(o.naam || '(zonder naam)')}</span>
+      ${cntLabel}
+    </label>`;
+  }).join('');
+  document.getElementById('kopieerRegelsTargets').innerHTML = html;
+  document.getElementById('kopieerRegelsModal').classList.add('active');
+}
+
+function closeKopieerRegelsModal() {
+  document.getElementById('kopieerRegelsModal').classList.remove('active');
+  _kopieerRegelsCtx = { hgId: null, srcOdId: null };
+}
+
+function _toggleAllKopieerTargets(checked) {
+  document.querySelectorAll('#kopieerRegelsTargets .kopieer-target-cb').forEach(cb => { cb.checked = checked; });
+}
+
+async function executeKopieerRegels() {
+  const { hgId, srcOdId } = _kopieerRegelsCtx;
+  if (!hgId || !srcOdId) return;
+  const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
+  if (!hg) return;
+  const src = (hg.onderdelen || []).find(o => o.id === srcOdId);
+  if (!src) return;
+  const targetIds = Array.from(document.querySelectorAll('#kopieerRegelsTargets .kopieer-target-cb'))
+    .filter(cb => cb.checked).map(cb => cb.dataset.odId);
+  if (targetIds.length === 0) {
+    _toast('Selecteer ten minste één onderdeel om naartoe te kopiëren.');
+    return;
+  }
+  // Knop-state tijdens bezig
+  const btn = document.getElementById('kopieerRegelsExecuteBtn');
+  const origLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Bezig...';
+
+  let totaalNieuw = 0;
+  let geslaagdeTargets = 0;
+  let mislukt = false;
+
+  for (const targetId of targetIds) {
+    const target = (hg.onderdelen || []).find(o => o.id === targetId);
+    if (!target) continue;
+    target.regels = target.regels || [];
+    // Volgorde: doortellen vanaf de laatste regel in het target
+    let nextVolgorde = target.regels.reduce((m, r) => Math.max(m, r.volgorde || 0), 0) + 10;
+    let targetGeslaagd = false;
+    for (const r of (src.regels || [])) {
+      // Snapshot-data + stappen meekopiëren — exact zoals dupCalc dat doet
+      const payload = {
+        naam: r.naam,
+        systeemId: r.systeemId,
+        hoeveelheid: r.hoeveelheid,
+        toeslag: r.toeslag,
+        systeemNaam: r.systeemNaam,
+        systeemEenheid: r.systeemEenheid,
+        systeemOndergrond: r.systeemOndergrond,
+        systeemOndergrondId: r.systeemOndergrondId,
+        systeemLocatie: r.systeemLocatie,
+        volgorde: nextVolgorde,
+        stappen: (r.stappen || []).map((st, i) => ({ ...st, volgorde: i }))
+      };
+      // actief-veld meenemen indien aanwezig op bron-regel
+      if (typeof r.actief === 'boolean') payload.actief = r.actief;
+      const newRegel = await _insertRegelDB(payload, target.id);
+      if (newRegel) {
+        target.regels.push(newRegel);
+        nextVolgorde += 10;
+        totaalNieuw++;
+        targetGeslaagd = true;
+      } else {
+        mislukt = true;
+      }
+    }
+    if (targetGeslaagd) geslaagdeTargets++;
+  }
+
+  btn.disabled = false;
+  btn.textContent = origLabel;
+
+  if (totaalNieuw === 0) {
+    _toast('Kopiëren mislukt — geen regels toegevoegd.');
+    return;
+  }
+  _touchCalc(data.calc.id);
+  closeKopieerRegelsModal();
+  renderCalcStructuur();
+  renderTotals();
+  const msg = `${totaalNieuw} regel${totaalNieuw === 1 ? '' : 's'} gekopieerd naar ${geslaagdeTargets} onderde${geslaagdeTargets === 1 ? 'el' : 'len'}` + (mislukt ? ' (sommige inserts mislukt)' : '');
+  _toast(msg, mislukt ? 'err' : 'ok');
+}
+
 function toggleOd(hgId, odId) {
   const od = _findOnderdeel(hgId, odId);
   if (!od) return;
