@@ -166,6 +166,14 @@
     opacity: 1 !important;
     cursor: pointer !important;
   }
+  /* v3.11.0: aan/uit-vinkjes blijven actief ook in vergrendelde status,
+     zodat onderhandel-scenario's in geaccepteerde offertes mogelijk blijven. */
+  #calculatie.is-locked input.actief-toggle {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    cursor: pointer !important;
+  }
 
   /* BUTTONS */
   .btn {
@@ -215,18 +223,6 @@
     cursor: pointer;
   }
   .btn-icon:hover { background: var(--paper-warm); color: var(--ink); border-color: var(--ink-soft); }
-  /* Iconknop voor dupliceren — blauw karakter, secundaire actie naast de rode delete */
-  .btn-icon-dup {
-    padding: 0.2rem 0.55rem;
-    font-size: 1.1rem;
-    background: var(--paper);
-    color: var(--blue);
-    border: 1px solid var(--blue);
-    border-radius: var(--radius);
-    cursor: pointer;
-    line-height: 1;
-  }
-  .btn-icon-dup:hover { background: var(--blue); color: white; }
 
   /* TABLES */
   .table-scroll {
@@ -533,6 +529,51 @@
   .onderdeel.collapsed .onderdeel-body { display: none; }
   .onderdeel.collapsed .caret { transform: rotate(-90deg); }
 
+  /* v3.11.0 — Aan/uit-vinkjes per hoofdgroep en onderdeel */
+  .actief-toggle {
+    width: 1.1rem; height: 1.1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: var(--accent-deep);
+  }
+  .hoofdgroep.is-inactief > .hoofdgroep-head .title input,
+  .hoofdgroep.is-inactief > .hoofdgroep-head .stats,
+  .onderdeel.is-inactief > .onderdeel-head .title input,
+  .onderdeel.is-inactief > .onderdeel-head .stats {
+    opacity: 0.45;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  .hoofdgroep.is-inactief > .hoofdgroep-body,
+  .onderdeel.is-inactief > .onderdeel-body {
+    opacity: 0.55;
+  }
+  /* v3.11.0 — Regel-niveau aan/uit */
+  .calc-regel-wrap.is-inactief .calc-regel input[type="text"],
+  .calc-regel-wrap.is-inactief .calc-regel .systeem-naam,
+  .calc-regel-wrap.is-inactief .calc-regel .regel-stats {
+    opacity: 0.45;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  .calc-regel-wrap.is-inactief .regel-stappen {
+    opacity: 0.55;
+  }
+  /* Sober "verschil-bedragen"-blok onderaan calc-tab */
+  .calc-scenario-block {
+    margin-top: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    background: rgba(245, 158, 11, 0.07);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+  }
+  .calc-scenario-block .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.15rem 0;
+  }
+  .calc-scenario-block .row.diff { font-weight: 600; color: #b45309; padding-top: 0.3rem; border-top: 1px dashed rgba(245, 158, 11, 0.4); margin-top: 0.2rem; }
+
   .calc-regel {
     background: var(--paper);
     border: 1px solid var(--paper-deep);
@@ -570,7 +611,12 @@
     border: none;
     border-radius: 0;
     border-bottom: 1px solid var(--paper-deep);
-    background: var(--paper);
+    /* v3.11.5 — Subtiele bandering op de regel-rij zelf. Vorige poging
+       (v3.11.3) landde op de niet-overgenomen .calc-regel-regel; deze
+       selector wint qua specificiteit en bepaalt wat de gebruiker echt ziet.
+       v3.11.6: percentage verdubbeld naar 8% (was 4%) — 4% was visueel
+       te subtiel om de regel-rij te onderscheiden van de stappen eronder. */
+    background: rgba(0, 0, 0, 0.08);
   }
   .regel-stappen {
     background: var(--paper-warm);
@@ -964,33 +1010,6 @@
   }
   .close-x:hover { background: var(--paper-warm); color: var(--ink); }
 
-  /* DUPLICEER ONDERDEEL — modal-specifieke styling */
-  .dup-section { margin-bottom: 1.1rem; }
-  .dup-section-titel {
-    font-size: 0.78rem; font-weight: 600; color: var(--ink-soft);
-    text-transform: uppercase; letter-spacing: 0.04em;
-    margin-bottom: 0.45rem;
-  }
-  .dup-row {
-    display: flex; align-items: center; gap: 0.6rem;
-    padding: 0.4rem 0.5rem; cursor: pointer; border-radius: var(--radius);
-  }
-  .dup-row:hover { background: var(--paper-warm); }
-  .dup-row input[type=checkbox] { cursor: pointer; }
-  .dup-row .dup-sub { color: var(--muted); font-size: 0.78rem; margin-left: auto; }
-  .dup-empty { color: var(--muted); font-style: italic; font-size: 0.85rem; padding: 0.3rem 0.5rem; }
-  .dup-hint { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
-  .dup-info {
-    background: var(--paper-warm);
-    padding: 0.7rem 0.85rem;
-    border-radius: var(--radius);
-    margin-top: 0.5rem;
-  }
-  .dup-mee { font-size: 0.82rem; padding: 0.15rem 0; display: flex; align-items: center; gap: 0.4rem; }
-  .dup-check { color: var(--green); font-weight: bold; }
-  .dup-cross { color: var(--muted); font-weight: bold; }
-  .dup-niet { color: var(--muted); }
-
   .werkbank-totals {
     background: var(--paper-warm);
     border: 1px solid var(--paper-deep);
@@ -1114,6 +1133,19 @@
     margin-bottom: 0.4rem;
     font-size: 0.85rem;
   }
+  /* v3.11.1 — Inklapbare welkomstboodschap */
+  .intro-collapsible.collapsed { padding-bottom: 0.6rem; }
+  .intro-collapsible.collapsed .intro-body { display: none; }
+  .intro-collapsible h2 { transition: margin 0.12s; }
+  .intro-collapsible.collapsed h2 { margin-bottom: 0; }
+  .intro-caret {
+    display: inline-block;
+    transition: transform 0.15s ease;
+    color: var(--muted);
+    font-size: 0.9em;
+    margin-right: 0.3rem;
+  }
+  .intro-collapsible:not(.collapsed) .intro-caret { transform: rotate(90deg); }
 
   /* SAVED TICK FEEDBACK */
   .saved-tick {
@@ -1312,7 +1344,10 @@
   .auth-card h2 { font-size: 1.2rem; margin-bottom: 0.3rem; }
   .auth-card .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
   .auth-card label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.4rem; }
-  .auth-card input[type="email"] { width: 100%; padding: 0.7rem; font-size: 1rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); box-sizing: border-box; font-family: inherit; }
+  .auth-card input[type="email"], .auth-card input[type="password"], .auth-card input[type="text"] { width: 100%; padding: 0.7rem; font-size: 1rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); box-sizing: border-box; font-family: inherit; }
+  .auth-link { display: inline-block; margin-top: 0.9rem; font-size: 0.82rem; color: var(--accent); text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; }
+  .auth-link:hover { color: var(--ink); }
+  .auth-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.35rem; }
   .auth-msg { padding: 0.7rem 0.9rem; border-radius: var(--radius); margin-top: 0.75rem; font-size: 0.88rem; display: none; }
   .auth-msg.ok { background: #e8f5e9; color: #2e7d32; display: block; }
   .auth-msg.err { background: #ffebee; color: #c62828; display: block; }
@@ -1337,6 +1372,7 @@
   <div style="display:flex; align-items:center; gap:1.5rem;">
     <div class="mono" style="color: var(--muted); font-size: 0.7rem;" id="dateStamp"></div>
     <div class="user-badge" id="userBadge" style="display:none;">
+      <button class="btn-secondary btn" onclick="openChangePasswordModal()" title="Wijzig je wachtwoord">🔑 Wachtwoord</button>
       <button class="btn-secondary btn" onclick="logout()">🔒 Uitloggen</button>
     </div>
   </div>
@@ -1350,15 +1386,19 @@
   <button data-tab="bewerkingen">Bewerkingen</button>
   <button data-tab="materialen">Materialen</button>
   <button data-tab="ondergronden">Ondergronden</button>
+  <button data-tab="onderhoud">Onderhoudsplan</button>
   <button data-tab="instellingen">Instellingen</button>
 </nav>
 
 <main>
 
   <section class="panel active" id="dashboard">
-    <div class="intro">
-      <h2>Welkom bij v3.8.2</h2>
-      <p>Beter zichtbaar dupliceren — het pictogram ⎘ was met het blote oog nauwelijks te onderscheiden. Vervangen door ⧉ (twee overlappende vierkantjes), dat direct visueel "kopie" suggereert. Doorgevoerd op alle drie de plekken in de app (onderdeel-dupliceren, bewerking-dupliceren in bibliotheek, calculatie-dupliceren in dashboard) voor consistentie. De knop bij onderdeel-dupliceren is bovendien iets vergroot voor extra leesbaarheid.</p>
+    <div class="intro intro-collapsible collapsed" id="introBlock">
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.11.6</h2>
+      <div class="intro-body">
+        <p><strong>Nieuwe feature: aan/uit-vinkjes per onderdeel.</strong> Bij elke hoofdgroep, onderdeel én regel staat nu een vinkje vóór de naam. Met één klik zet je een gevel, kamer, of zelfs één specifieke regel (zoals "kozijnen" terwijl "deuren" wél meedoen) uit voor de offerte. Het bedrag onderaan zakt direct mee, en er verschijnt een oranje kadertje dat toont wat oorspronkelijk in de offerte stond, wat je nu rekent, en het verschil. Werkt ook in vergrendelde calculaties (verzonden/geaccepteerd), zodat je tijdens een keukentafelgesprek live kunt schuiven zonder de offerte structureel te wijzigen. Op de PDF blijven uitgezette regels doorgestreept zichtbaar, met onderaan drie regels: oorspronkelijk bedrag, wat vervalt, en het aangepaste totaal — transparant voor de klant 🎨.</p>
+        <p><strong>Nieuwe tab: Onderhoudsplan.</strong> Stel een meerjaren-onderhoudsplan op op basis van een opgeslagen calculatie. Drie manieren om beurten te schalen (algemeen percentage, per regel, per stap), met snelinvullers per hoofdgroep en de mogelijkheid om scaling uit een andere beurt te kopiëren. Bedragen worden geïndexeerd vanaf het prijspeil van de calculatie en getoond inclusief BTW. Per beurt aan te vinken of die meerekent in het gemiddelde maandbedrag, voor wanneer de eerste behandeling separaat wordt afgerekend. Print-functie toont het plan als verkoopdocument met maandbedrag en jaartabel; project-specifieke afspraken komen uit het notities-veld. Onder de motorkap: één rekenkern die de structuur van de calculatie-tab letterlijk spiegelt, en aparte Supabase-tabellen voor plannen en beurten 🎨.</p>
+      </div>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Materialen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statMat">—</div></div>
@@ -1392,7 +1432,8 @@
       <div class="panel-actions">
         <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span>
         <button class="btn-secondary btn lock-allowed" onclick="printCalc()">📄 Calculatie als PDF</button>
-        <button class="btn-secondary btn lock-allowed" onclick="printWerkbon()">📋 Werkbon printen</button>
+        <button class="btn-secondary btn lock-allowed" onclick="printOfferteYoobi()" title="Offerte met toeslagen verwerkt in eenheidsprijzen, voor het overzetten naar Yoobi">📋 Offerte (Yoobi)</button>
+        <button class="btn-secondary btn lock-allowed" onclick="printWerkbon()">📋 Werkbon</button>
         <button class="btn-secondary btn lock-allowed" onclick="newCalc()">+ Nieuwe</button>
       </div>
     </div>
@@ -1403,6 +1444,8 @@
       <div><label>Reisafstand (km enkele reis)</label><input type="number" id="calcReis" step="1" min="0"></div>
       <div><label>Aantal schilders</label><input type="number" id="calcSchilders" step="1" min="1"></div>
       <div><label>Uren per werkdag</label><input type="number" id="calcUurDag" step="0.5" min="1"></div>
+      <div><label>Opname-datum</label><input type="date" id="calcOpname"></div>
+      <div><label>Deadline offerte <span style="font-weight:normal; color:var(--muted); font-size:0.75rem;">(+14 dgn)</span></label><input type="date" id="calcDeadline"></div>
     </div>
     <div id="notitiesPaneel"></div>
     <div class="calc-layout">
@@ -1410,6 +1453,7 @@
         <div id="calcStructuur"></div>
         <button class="btn" onclick="addHoofdgroep()" style="margin-top: 0.5rem;">+ Hoofdgroep toevoegen</button>
         <h3 style="margin-top: 2rem; margin-bottom: 0.75rem;">Staartkosten</h3>
+        <div id="normRefs" style="margin-bottom: 0.75rem;"></div>
         <div id="staartList"></div>
         <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
           <select id="staartTpl" style="flex: 1; min-width: 200px;"></select>
@@ -1471,6 +1515,77 @@
     <div id="ondergrondenLijst"></div>
   </section>
 
+  <section class="panel" id="onderhoud">
+    <div class="panel-head" style="display: flex; align-items: center; gap: 1rem;">
+      <h2 style="margin: 0;">Onderhoudsplan</h2>
+      <img src="onderhouds-garantie-plus.jpg" alt="Onderhouds garantie+ plan" style="max-height: 48px; width: auto;">
+    </div>
+    <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Onderhoudsplan op basis van een opgeslagen calculatie. Per beurt schalen op algemeen, per regel of per stap. Bedragen geïndexeerd vanaf prijspeil, incl. BTW.</em></p>
+
+    <details class="settings-section" id="ohpParamsToggle" open style="padding: 0;">
+      <summary style="cursor: pointer; padding: 1rem; list-style: none; user-select: none;">
+        <span style="display: inline-flex; align-items: center; gap: 0.5rem;">
+          <span id="ohpParamsCaret" style="display: inline-block; transition: transform 0.15s; font-size: 0.85rem;">▾</span>
+          <span style="font-weight: 600; font-size: 1.05rem;">Parameters</span>
+          <span id="ohpParamsBronLabel" style="color: var(--muted); font-size: 0.9rem;"></span>
+        </span>
+      </summary>
+      <div style="padding: 0 1rem 1rem 1rem;">
+      <div id="ohpBronWrap" style="margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+          <strong>Bron-calculatie</strong>
+          <div id="ohpBronStatus" style="font-size: 0.85rem; color: var(--muted);"></div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap; align-items: center;">
+          <input type="text" id="ohpBronZoek" placeholder="Zoek op naam of klant..." style="flex: 1; min-width: 200px;">
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="concept" checked> Concept</label>
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="gereed" checked> Gereed</label>
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="geaccepteerd" checked> Geaccepteerd</label>
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="verzonden"> Verzonden</label>
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="verloren"> Verloren</label>
+        </div>
+        <div id="ohpBronLijst" style="margin-top: 0.5rem; max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px;"></div>
+      </div>
+      <div class="form-grid">
+        <label>Prijspeil calculatie (jaar)
+          <input type="number" id="ohpPrijspeil" min="2000" max="2100" step="1" placeholder="bv. 2026">
+        </label>
+        <label>Looptijd (jaren)
+          <input type="number" id="ohpLooptijd" min="1" max="50" step="1" placeholder="bv. 15">
+        </label>
+        <label>Indexering per jaar (%)
+          <input type="number" id="ohpIndex" min="0" max="20" step="0.1" value="6.5">
+        </label>
+        <label>BTW (%) <span id="ohpBtwHint" style="font-weight: normal; font-size: 0.75rem; color: var(--muted);"></span>
+          <input type="number" id="ohpBtw" min="0" max="50" step="0.1">
+        </label>
+      </div>
+      <div style="margin-top: 1rem;">
+        <label>Notities <span style="font-weight: normal; font-size: 0.75rem; color: var(--muted);">— verschijnt op de print onder de vaste uitleg, voor klant-specifieke afspraken</span></label>
+        <textarea id="ohpNotities" rows="3" placeholder="Bijvoorbeeld: 'Voor deze VvE is afgesproken dat de eerste behandeling separaat wordt afgerekend en niet in het maandelijkse onderhoudstarief wordt opgenomen.'" style="width: 100%; font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; resize: vertical;"></textarea>
+      </div>
+      </div>
+    </details>
+
+    <div id="ohpInhoud" style="margin-top: 1rem;">
+      <div id="ohpLeeg" style="color: var(--muted); font-style: italic;">
+        Kies een bron-calculatie om te beginnen.
+      </div>
+      <div id="ohpPlanBlok" style="display: none;">
+        <div class="settings-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <h3 style="margin: 0;">Beurten</h3>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+              <button class="btn btn-secondary" onclick="_ohpPrint()" title="Print het onderhoudsplan voor de klant">🖨 Print onderhoudsplan</button>
+              <button class="btn" onclick="_ohpAddBeurt()">+ Beurt toevoegen</button>
+            </div>
+          </div>
+          <div id="ohpBeurtenLijst" style="margin-top: 0.8rem;"></div>
+        </div>
+        <div id="ohpResultaat" style="margin-top: 1rem;"></div>
+      </div>
+    </div>
+  </section>
   <section class="panel" id="instellingen">
     <div class="panel-head"><h2>Instellingen</h2></div>
     <div class="settings-section">
@@ -1551,6 +1666,7 @@
       <div id="sysSteps"></div>
       <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; align-items: end;">
         <div style="flex: 1;"><label>Bewerking toevoegen</label><select id="sysAddBew"></select></div>
+        <button class="btn-secondary btn" onclick="openNewBewModal()" title="Maak een nieuwe bewerking aan en voeg 'm direct toe">+ Nieuw</button>
         <button class="btn-secondary btn" onclick="addStepToSystem()">+ Toevoegen</button>
       </div>
       <div class="werkbank-totals" id="werkbankTotals"></div>
@@ -1559,6 +1675,102 @@
       <button class="btn-secondary btn" onclick="closeSystemModal()">Annuleren</button>
       <button class="btn-secondary btn" onclick="saveSystemAsNew()">Opslaan als nieuw</button>
       <button class="btn" onclick="saveSystem()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- NIEUWE BEWERKING MINI-MODAL (vanuit verfsysteem-formulier) -->
+<div class="modal-overlay" id="newBewModal" style="z-index: 200;">
+  <div class="modal" style="max-width: 560px;">
+    <div class="modal-head"><h3>Nieuwe Bewerking</h3><button class="close-x" onclick="closeNewBewModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="color: var(--muted); font-size: 0.85rem; margin-top: 0; margin-bottom: 1rem;">
+        <em>Deze bewerking wordt aangemaakt in je bewerkingen-bibliotheek én direct als stap toegevoegd aan dit verfsysteem.</em>
+      </p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <div style="grid-column: 1 / -1;">
+          <label>Naam *</label>
+          <input id="newBewNaam" type="text" placeholder="bv. Schuren machinaal geprofileerd">
+        </div>
+        <div>
+          <label>Eenheid</label>
+          <select id="newBewEenheid">
+            <option value="m²">m²</option>
+            <option value="m¹">m¹</option>
+            <option value="stuk">stuk</option>
+          </select>
+        </div>
+        <div>
+          <label>Minuten per eenheid</label>
+          <input id="newBewMinuten" type="number" step="0.1" value="3">
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <label>Ondergrond</label>
+          <select id="newBewOnder"></select>
+        </div>
+        <div>
+          <label>Materiaal</label>
+          <select id="newBewMat" onchange="_toggleNewBewVerbruik()"></select>
+        </div>
+        <div>
+          <label>Verbruik per eenheid</label>
+          <input id="newBewVerbruik" type="number" step="0.001" value="0" disabled title="Eerst materiaal kiezen">
+        </div>
+      </div>
+      <p id="newBewMatHint" style="color: var(--muted); font-size: 0.75rem; margin-top: 0.5rem; display:none;">
+        <em>Geen materiaal nodig? Laat 'm op "geen" staan. Materiaal niet in de lijst? Voeg 'm eerst toe in het tabblad <strong>Materialen</strong>.</em>
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="closeNewBewModal()">Annuleren</button>
+      <button class="btn" onclick="saveNewBewFromSystem()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ONDERHOUDSPLAN BEURT BEWERK MODAL (v3.10.0) -->
+<div class="modal-overlay" id="ohpBeurtModal">
+  <div class="modal" style="max-width: 820px;">
+    <div class="modal-head">
+      <h3>Beurt bewerken</h3>
+      <button class="close-x" onclick="_ohpCloseBeurtModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="margin-bottom: 1rem;">
+        <div>
+          <label>Naam</label>
+          <input type="text" id="ohpMbNaam" placeholder="bv. Onderhoudsbeurt">
+        </div>
+        <div>
+          <label>Jaartal</label>
+          <input type="number" id="ohpMbJaar" min="1900" max="2200" step="1">
+        </div>
+      </div>
+      <div style="margin-bottom: 1rem;">
+        <label style="margin-bottom: 0.4rem;">Manier van schalen</label>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <label style="font-weight: normal;"><input type="radio" name="ohpMbModus" value="algemeen" onchange="_ohpMbZetModus('algemeen')"> Algemeen percentage</label>
+          <label style="font-weight: normal;"><input type="radio" name="ohpMbModus" value="per_regel" onchange="_ohpMbZetModus('per_regel')"> Per regel</label>
+          <label style="font-weight: normal;"><input type="radio" name="ohpMbModus" value="per_stap" onchange="_ohpMbZetModus('per_stap')"> Per stap</label>
+        </div>
+        <div id="ohpMbModusHint" style="font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;"></div>
+      </div>
+      <div id="ohpMbScalingBlok" style="border: 1px solid var(--border); border-radius: 4px; padding: 0.8rem; max-height: 50vh; overflow-y: auto;">
+        <em style="color: var(--muted);">Kies een modus om te beginnen.</em>
+      </div>
+      <div style="margin-top: 1rem; padding: 0.6rem 0.8rem; background: var(--bg-soft, #f5f5f5); border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <span style="color: var(--muted); font-size: 0.85rem;">Basisbedrag van deze beurt (excl. BTW)</span>
+        <strong id="ohpMbBasis" style="font-size: 1.15rem;">€ 0,00</strong>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div id="ohpMbKopieerWrap" style="position: relative;">
+        <button class="btn-secondary btn" id="ohpMbKopieer" onclick="_ohpMbToggleKopieerMenu()" title="Kopieer modus en percentages uit een andere beurt">Kopieer uit andere beurt ▾</button>
+        <div id="ohpMbKopieerMenu" style="display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 0.4rem; background: white; border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 320px; max-width: 480px; max-height: 280px; overflow-y: auto; z-index: 300;"></div>
+      </div>
+      <span style="flex: 1;"></span>
+      <button class="btn-secondary btn" onclick="_ohpCloseBeurtModal()">Annuleren</button>
+      <button class="btn" onclick="_ohpMbOpslaan()">Opslaan</button>
     </div>
   </div>
 </div>
@@ -1607,6 +1819,15 @@
         </div>
         <div><label>Bedrag / Tarief / %</label><input type="number" id="staartBedrag" step="0.01"></div>
         <div id="staartHoevWrap"><label>Hoeveelheid</label><input type="number" id="staartHoev" step="0.1"></div>
+        <div style="grid-column: 1 / -1; padding: 0.7rem 0.8rem; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); display: flex; align-items: flex-start; gap: 0.6rem; cursor: pointer;" onclick="document.getElementById('staartVerstop').click()">
+          <input type="checkbox" id="staartVerstop" style="width: auto; margin: 0; flex-shrink: 0; margin-top: 0.15rem; cursor: pointer;" onclick="event.stopPropagation()">
+          <div style="flex: 1; font-size: 0.85rem; color: var(--ink); line-height: 1.4;">
+            <div style="font-weight: 600; margin-bottom: 0.2rem;">Verwerken in eenheidsprijs (Yoobi-export)</div>
+            <div style="font-weight: 400; color: var(--ink-soft); font-size: 0.78rem;">
+              Bij het printen van de Yoobi-offerte wordt deze post niet apart getoond, maar proportioneel verdeeld over de eenheidsprijzen van de regels. Bedoeld voor toeslagen als risico, arbo/afval en klein materiaal. Op de interne offerte-print blijft hij gewoon zichtbaar.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -1631,10 +1852,73 @@
     <input type="password" id="authPassword" placeholder="••••••••••••••••" onkeydown="if(event.key==='Enter') login()" autocomplete="current-password">
     <button class="btn" onclick="login()" id="authBtn" style="margin-top:0.75rem; width:100%;">Inloggen</button>
     <div class="auth-msg" id="authMsg"></div>
+    <div style="text-align:center; margin-top: 0.5rem;">
+      <button class="auth-link" onclick="toggleForgotPanel(true)" id="forgotLink">Wachtwoord vergeten?</button>
+    </div>
+
+    <!-- Forgot-password inline paneel (verborgen tot link wordt geklikt) -->
+    <div id="forgotPanel" style="display:none; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--paper-deep);">
+      <h2 style="font-size: 1rem;">Wachtwoord opnieuw instellen</h2>
+      <p class="sub" style="font-size: 0.82rem;">Vul je e-mailadres in. Je ontvangt een mail met een link om een nieuw wachtwoord in te stellen.</p>
+      <label>E-mail</label>
+      <input type="email" id="forgotEmail" placeholder="naam@bedrijf.nl" autocomplete="username" onkeydown="if(event.key==='Enter') submitForgotPassword()">
+      <button class="btn" onclick="submitForgotPassword()" id="forgotBtn" style="margin-top:0.75rem; width:100%;">Verstuur resetlink</button>
+      <div class="auth-msg" id="forgotMsg"></div>
+      <div style="text-align:center; margin-top: 0.5rem;">
+        <button class="auth-link" onclick="toggleForgotPanel(false)">← Terug naar inloggen</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <footer id="appFooter">Schilders Calculatie · Data via Supabase cloud</footer>
+
+<!-- WACHTWOORD WIJZIGEN MODAL (ingelogd) -->
+<div class="modal-overlay" id="changePasswordModal">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-head"><h3>🔑 Wachtwoord wijzigen</h3><button class="close-x" onclick="closeChangePasswordModal()">✕</button></div>
+    <div class="modal-body">
+      <label>Huidig wachtwoord</label>
+      <input type="password" id="cpCurrent" placeholder="••••••••••••••••" autocomplete="current-password" style="width:100%; padding:0.7rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+
+      <label style="margin-top:0.75rem;">Nieuw wachtwoord</label>
+      <input type="password" id="cpNew1" placeholder="Minimaal 10 tekens, met letters en cijfers" autocomplete="new-password" style="width:100%; padding:0.7rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+      <div class="auth-hint">Eis: 10+ tekens, minstens 1 letter en 1 cijfer. Tip: een zin als <em>kwast-en-roller-99</em> is sterker dan korte complexe wachtwoorden.</div>
+
+      <label style="margin-top:0.75rem;">Nieuw wachtwoord (nogmaals)</label>
+      <input type="password" id="cpNew2" placeholder="Herhaal het nieuwe wachtwoord" autocomplete="new-password" onkeydown="if(event.key==='Enter') submitChangePassword()" style="width:100%; padding:0.7rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+
+      <div class="auth-msg" id="cpMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="closeChangePasswordModal()">Annuleren</button>
+      <button class="btn" onclick="submitChangePassword()" id="cpBtn">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECOVERY MODAL (vanuit reset-mail) -->
+<div class="modal-overlay" id="recoveryModal">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-head"><h3>🔑 Nieuw wachtwoord instellen</h3></div>
+    <div class="modal-body">
+      <p class="sub" style="font-size: 0.85rem; margin-bottom: 1rem;">Je bent hier via een resetlink uit je e-mail. Stel hieronder een nieuw wachtwoord in om door te gaan.</p>
+
+      <label>Nieuw wachtwoord</label>
+      <input type="password" id="recNew1" placeholder="Minimaal 10 tekens, met letters en cijfers" autocomplete="new-password" style="width:100%; padding:0.7rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+      <div class="auth-hint">Eis: 10+ tekens, minstens 1 letter en 1 cijfer.</div>
+
+      <label style="margin-top:0.75rem;">Nieuw wachtwoord (nogmaals)</label>
+      <input type="password" id="recNew2" placeholder="Herhaal het nieuwe wachtwoord" autocomplete="new-password" onkeydown="if(event.key==='Enter') submitRecoveryPassword()" style="width:100%; padding:0.7rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+
+      <div class="auth-msg" id="recMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="cancelRecovery()">Annuleren</button>
+      <button class="btn" onclick="submitRecoveryPassword()" id="recBtn">Wachtwoord instellen</button>
+    </div>
+  </div>
+</div>
 
 <!-- PRINT AREA — only visible during print -->
 <div id="printArea" class="print-only"></div>
@@ -1643,7 +1927,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.8.2';
+const APP_VERSION = 'v3.11.6';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -1713,6 +1997,240 @@ async function _showApp() {
   document.getElementById('userBadge').style.display = 'flex';
   await loadData();
   renderAll();
+}
+
+// ============================================================
+// WACHTWOORD-FUNCTIES (v3.9.6)
+// ============================================================
+
+// Centrale validatie: zelfde regels als Supabase server-side
+function _validatePasswordRule(pw) {
+  if (!pw || pw.length < 10) {
+    return { ok: false, msg: 'Wachtwoord moet minimaal 10 tekens lang zijn.' };
+  }
+  if (!/[A-Za-z]/.test(pw)) {
+    return { ok: false, msg: 'Wachtwoord moet minstens 1 letter bevatten.' };
+  }
+  if (!/[0-9]/.test(pw)) {
+    return { ok: false, msg: 'Wachtwoord moet minstens 1 cijfer bevatten.' };
+  }
+  return { ok: true, msg: '' };
+}
+
+// Hulp: msg-vakje tonen
+function _showMsg(elId, msg, kind) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.className = 'auth-msg';
+  if (msg) {
+    el.classList.add(kind || 'err');
+    el.textContent = msg;
+  } else {
+    el.textContent = '';
+  }
+}
+
+// ===== FLOW A: Wachtwoord wijzigen vanuit ingelogde sessie =====
+
+function openChangePasswordModal() {
+  document.getElementById('cpCurrent').value = '';
+  document.getElementById('cpNew1').value = '';
+  document.getElementById('cpNew2').value = '';
+  _showMsg('cpMsg', '', '');
+  document.getElementById('changePasswordModal').classList.add('active');
+  setTimeout(() => document.getElementById('cpCurrent').focus(), 50);
+}
+
+function closeChangePasswordModal() {
+  document.getElementById('changePasswordModal').classList.remove('active');
+}
+
+async function submitChangePassword() {
+  const cur  = document.getElementById('cpCurrent').value;
+  const nw1  = document.getElementById('cpNew1').value;
+  const nw2  = document.getElementById('cpNew2').value;
+  const btn  = document.getElementById('cpBtn');
+
+  // Client-side validatie
+  if (!cur) { _showMsg('cpMsg', 'Vul je huidige wachtwoord in.', 'err'); return; }
+  if (nw1 !== nw2) { _showMsg('cpMsg', 'De twee nieuwe wachtwoorden komen niet overeen.', 'err'); return; }
+  if (nw1 === cur) { _showMsg('cpMsg', 'Nieuw wachtwoord moet anders zijn dan het huidige.', 'err'); return; }
+  const v = _validatePasswordRule(nw1);
+  if (!v.ok) { _showMsg('cpMsg', v.msg, 'err'); return; }
+
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Bezig...';
+  _showMsg('cpMsg', '', '');
+
+  try {
+    // Directe fetch naar Supabase Auth API. Reden: supabase-js v2 stuurt
+    // de parameter als 'currentPassword' (camelCase), maar de server verwacht
+    // 'current_password' (snake_case). De library converteert niet correct.
+    // Dit was zichtbaar in DevTools Network tab: payload kwam aan als
+    // currentPassword, server antwoord "current_password_required".
+    // Vandaar deze raw HTTP-call met de juiste sleutelnaam.
+    const { data: { session } } = await _sb.auth.getSession();
+    if (!session) {
+      _showMsg('cpMsg', 'Sessie verlopen. Log opnieuw in.', 'err');
+      btn.disabled = false; btn.textContent = oldText;
+      return;
+    }
+    const resp = await fetch(SUPABASE_URL + '/auth/v1/user', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session.access_token,
+        'apikey': SUPABASE_KEY
+      },
+      body: JSON.stringify({
+        password: nw1,
+        current_password: cur   // snake_case zoals server verwacht
+      })
+    });
+
+    if (!resp.ok) {
+      // Foutmelding van server lezen — gotrue gebruikt error_code + msg (snake_case),
+      // niet code + message zoals ik aanvankelijk dacht. Beide proberen voor robuustheid.
+      let serverMsg = '';
+      let serverCode = '';
+      try {
+        const body = await resp.json();
+        serverMsg  = body.msg || body.message || body.error_description || body.error || '';
+        serverCode = body.error_code || body.code || '';
+      } catch(_) { /* response was geen JSON */ }
+
+      // Vertaal naar nette NL-meldingen op basis van error_code (betrouwbaarder dan tekst).
+      // Codes uit gotrue v2: current_password_invalid (klopt niet),
+      // current_password_required (ontbreekt), same_password, weak_password.
+      let msg;
+      if (serverCode === 'current_password_invalid' ||
+          serverCode === 'current_password_required' ||
+          serverCode === 'invalid_credentials') {
+        msg = 'Huidig wachtwoord klopt niet.';
+      } else if (serverCode === 'same_password') {
+        msg = 'Nieuw wachtwoord moet anders zijn dan het huidige.';
+      } else if (serverCode === 'weak_password') {
+        msg = 'Wachtwoord is te zwak. Eis: 10+ tekens, minstens 1 letter en 1 cijfer.';
+      } else {
+        msg = 'Wijzigen mislukt: ' + (serverMsg || ('HTTP ' + resp.status));
+      }
+      _showMsg('cpMsg', msg, 'err');
+      btn.disabled = false; btn.textContent = oldText;
+      return;
+    }
+
+    // Succes: toast tonen vóór de async refreshSession-call, anders kan
+    // een interne library-error de toast onderbreken voordat hij verschijnt.
+    btn.disabled = false; btn.textContent = oldText;
+    closeChangePasswordModal();
+    console.log('[v3.9.6.3] Wachtwoord gewijzigd, toast tonen');
+    _toast('Wachtwoord gewijzigd. Volgende keer inloggen met het nieuwe wachtwoord.', 'ok');
+
+    // Refresh de lokale Supabase-sessie op de achtergrond zodat tokens kloppen.
+    // Geen await: toast moet hoe dan ook zichtbaar zijn.
+    _sb.auth.refreshSession().catch(e => console.warn('[v3.9.6.3] refreshSession faalde (niet fataal):', e));
+  } catch(err) {
+    _showMsg('cpMsg', 'Onverwachte fout: ' + (err.message || err), 'err');
+    btn.disabled = false; btn.textContent = oldText;
+  }
+}
+
+// ===== FLOW B-1: Wachtwoord vergeten — link op login-scherm =====
+
+function toggleForgotPanel(show) {
+  document.getElementById('forgotPanel').style.display = show ? 'block' : 'none';
+  document.getElementById('forgotLink').style.display  = show ? 'none'  : 'inline-block';
+  if (show) {
+    // Vul automatisch het e-mailadres in dat al in het login-formulier staat
+    const loginEmail = document.getElementById('authEmail').value.trim();
+    if (loginEmail) document.getElementById('forgotEmail').value = loginEmail;
+    setTimeout(() => document.getElementById('forgotEmail').focus(), 50);
+  } else {
+    _showMsg('forgotMsg', '', '');
+  }
+}
+
+async function submitForgotPassword() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const btn   = document.getElementById('forgotBtn');
+  if (!email) { _showMsg('forgotMsg', 'Vul je e-mailadres in.', 'err'); return; }
+
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Versturen...';
+  _showMsg('forgotMsg', '', '');
+
+  try {
+    // Redirect-URL naar de huidige app-URL — Supabase voegt zelf #access_token toe
+    const redirectUrl = window.location.origin + window.location.pathname;
+    const { error } = await _sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
+    btn.disabled = false; btn.textContent = oldText;
+    if (error) {
+      _showMsg('forgotMsg', 'Versturen mislukt: ' + error.message, 'err');
+      return;
+    }
+    // Bewust generieke melding: lekt niet of het e-mailadres bestaat
+    _showMsg('forgotMsg', 'Als dit e-mailadres bekend is, ontvang je binnen enkele minuten een mail met instructies.', 'ok');
+  } catch(err) {
+    btn.disabled = false; btn.textContent = oldText;
+    _showMsg('forgotMsg', 'Onverwachte fout: ' + (err.message || err), 'err');
+  }
+}
+
+// ===== FLOW B-2: Recovery-modal (na klik op resetlink in mail) =====
+
+function openRecoveryModal() {
+  document.getElementById('recNew1').value = '';
+  document.getElementById('recNew2').value = '';
+  _showMsg('recMsg', '', '');
+  // Verberg de login-overlay onder de modal voor netter visueel resultaat
+  document.getElementById('authOverlay').classList.remove('active');
+  document.getElementById('recoveryModal').classList.add('active');
+  setTimeout(() => document.getElementById('recNew1').focus(), 50);
+}
+
+async function cancelRecovery() {
+  if (!confirm('Wachtwoord-reset annuleren? Je wordt teruggebracht naar het inlog-scherm.')) return;
+  try { await _sb.auth.signOut(); } catch(e) {}
+  document.getElementById('recoveryModal').classList.remove('active');
+  document.getElementById('authOverlay').classList.add('active');
+  // Schoonmaken: hash uit URL halen zodat een refresh niet opnieuw recovery triggert
+  if (window.location.hash) {
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+}
+
+async function submitRecoveryPassword() {
+  const nw1 = document.getElementById('recNew1').value;
+  const nw2 = document.getElementById('recNew2').value;
+  const btn = document.getElementById('recBtn');
+
+  if (nw1 !== nw2) { _showMsg('recMsg', 'De twee wachtwoorden komen niet overeen.', 'err'); return; }
+  const v = _validatePasswordRule(nw1);
+  if (!v.ok) { _showMsg('recMsg', v.msg, 'err'); return; }
+
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Bezig...';
+  _showMsg('recMsg', '', '');
+
+  try {
+    const { error } = await _sb.auth.updateUser({ password: nw1 });
+    if (error) {
+      _showMsg('recMsg', 'Instellen mislukt: ' + error.message, 'err');
+      btn.disabled = false; btn.textContent = oldText;
+      return;
+    }
+    btn.disabled = false; btn.textContent = oldText;
+    document.getElementById('recoveryModal').classList.remove('active');
+    // Hash uit URL halen
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+    _toast('Wachtwoord ingesteld. Je bent nu ingelogd met het nieuwe wachtwoord.', 'ok');
+    await _showApp();
+  } catch(err) {
+    _showMsg('recMsg', 'Onverwachte fout: ' + (err.message || err), 'err');
+    btn.disabled = false; btn.textContent = oldText;
+  }
 }
 
 // Timeout-wrapper: Supabase-call die langer dan 30s duurt → foutmelding
@@ -1927,7 +2445,7 @@ function _newCalcObj(naam = 'Nieuwe calculatie') {
     klant: '',
     reis: 0,
     schilders: 2,
-    uurDag: 8,
+    uurDag: 7.5,
     volleDagenOverride: null, // null = volg globale instelling, true/false = forceer
     status: 'concept',
     aangemaakt: new Date().toISOString(),
@@ -2160,7 +2678,8 @@ function _mapStaartFromDB(row) {
     bedrag:      parseFloat(row.bedrag) || 0,
     eenheid:     row.eenheid   || '',
     grondslag:   row.grondslag || '',
-    hoeveelheid: parseFloat(row.hoeveelheid) || 0
+    hoeveelheid: parseFloat(row.hoeveelheid) || 0,
+    verstopInEenheidsprijs: !!row.verstop_in_eenheidsprijs
   };
 }
 function _mapStaartToDB(s) {
@@ -2170,7 +2689,8 @@ function _mapStaartToDB(s) {
     bedrag:      s.bedrag    || 0,
     eenheid:     s.eenheid   || '',
     grondslag:   s.grondslag || '',
-    hoeveelheid: s.hoeveelheid || 0
+    hoeveelheid: s.hoeveelheid || 0,
+    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs
   };
 }
 async function _fetchStaartLibFromDB() {
@@ -2364,11 +2884,15 @@ function _mapCalcHeaderFromDB(row) {
     klant:               row.klant || '',
     status:              row.status || 'concept',
     schilders:           row.schilders != null ? row.schilders : 2,
-    uurDag:              parseFloat(row.uur_dag) || 8,
+    uurDag:              parseFloat(row.uur_dag) || 7.5,
     reis:                parseFloat(row.reis) || 0,
     volleDagenOverride:  row.volle_dagen_override,
     notities:            row.notities || '',
     settingsSnapshot:    row.settings_snapshot || null,
+    opnameDatum:         row.opname_datum || null,
+    deadlineDatum:       row.deadline_datum || null,
+    totaalInclBtw:       row.totaal_incl_btw != null ? parseFloat(row.totaal_incl_btw) : null,
+    totaalOfferteOrigineel: row.totaal_offerte_origineel != null ? parseFloat(row.totaal_offerte_origineel) : null,
     aangemaakt:          row.aangemaakt || new Date().toISOString(),
     gewijzigd:           row.gewijzigd  || new Date().toISOString(),
     // body wordt later toegevoegd door _loadCalcBody
@@ -2382,11 +2906,13 @@ function _mapCalcHeaderToDB(c) {
     klant: c.klant || '',
     status: c.status || 'concept',
     schilders: c.schilders != null ? c.schilders : 2,
-    uur_dag: c.uurDag != null ? c.uurDag : 8,
+    uur_dag: c.uurDag != null ? c.uurDag : 7.5,
     reis: c.reis != null ? c.reis : 0,
     volle_dagen_override: c.volleDagenOverride != null ? c.volleDagenOverride : null,
     notities: c.notities || '',
-    settings_snapshot: c.settingsSnapshot || null
+    settings_snapshot: c.settingsSnapshot || null,
+    opname_datum: c.opnameDatum || null,
+    deadline_datum: c.deadlineDatum || null
   };
 }
 function _mapHgFromDB(row, ods) {
@@ -2395,6 +2921,7 @@ function _mapHgFromDB(row, ods) {
     naam:      row.naam || '',
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
+    actief:    row.actief !== false, // defensief: null/undefined → true
     onderdelen: (ods || []).map(_mapOdFromDB)
   };
 }
@@ -2403,7 +2930,8 @@ function _mapHgToDB(hg, calcId) {
     calculatie_id: calcId,
     naam: hg.naam || '',
     collapsed: !!hg.collapsed,
-    volgorde: hg.volgorde != null ? hg.volgorde : 0
+    volgorde: hg.volgorde != null ? hg.volgorde : 0,
+    actief: hg.actief !== false
   };
 }
 function _mapOdFromDB(row) {
@@ -2412,6 +2940,7 @@ function _mapOdFromDB(row) {
     naam:      row.naam || '',
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
+    actief:    row.actief !== false, // defensief: null/undefined → true
     regels:    [] // wordt later gevuld vanuit localStorage in v3.5.3
   };
 }
@@ -2420,8 +2949,185 @@ function _mapOdToDB(od, hgId) {
     hoofdgroep_id: hgId,
     naam: od.naam || '',
     collapsed: !!od.collapsed,
-    volgorde: od.volgorde != null ? od.volgorde : 0
+    volgorde: od.volgorde != null ? od.volgorde : 0,
+    actief: od.actief !== false
   };
+}
+
+// Defensieve check: retourneert true tenzij `actief` expliciet op false staat.
+// Oudere data (vóór v3.11.0) en items zonder veld worden als 'actief' beschouwd.
+// Gebruik deze ALTIJD i.p.v. directe `item.actief`-vergelijking.
+function _isActief(item) {
+  return !item || item.actief !== false;
+}
+
+// ============================================================
+// ONDERHOUDSPLAN (v3.10.0) — data-laag
+// ============================================================
+// Tabellen: onderhoudsplannen (1-op-1 met calculatie) + onderhoudsplan_beurten.
+// Eén plan per calculatie in v1; scaling per beurt staat in jsonb 'scaling'.
+//   modus 'algemeen' : { pct: number }
+//   modus 'per_regel': { regels: { [regelId]: pct } }
+//   modus 'per_stap' : { stappen: { [stapId]: pct } }
+
+function _mapOhpFromDB(row) {
+  return {
+    id:            row.id,
+    calculatieId:  row.calculatie_id,
+    prijspeil:     row.prijspeil,
+    looptijdJaren: row.looptijd_jaren,
+    indexeringPct: parseFloat(row.indexering_pct) || 0,
+    btwPctOverride: row.btw_pct_override != null ? parseFloat(row.btw_pct_override) : null,
+    notities:      row.notities || '',
+    aangemaakt:    row.aangemaakt || null,
+    gewijzigd:     row.gewijzigd  || null,
+    beurten:       []
+  };
+}
+function _mapOhpToDB(p) {
+  return {
+    calculatie_id:  p.calculatieId,
+    prijspeil:      p.prijspeil,
+    looptijd_jaren: p.looptijdJaren,
+    indexering_pct: p.indexeringPct,
+    btw_pct_override: p.btwPctOverride != null ? p.btwPctOverride : null,
+    notities:       p.notities || '',
+    gewijzigd:      new Date().toISOString()
+  };
+}
+function _mapBeurtFromDB(row) {
+  return {
+    id:        row.id,
+    planId:    row.plan_id,
+    naam:      row.naam || '',
+    jaartal:   row.jaartal,
+    volgorde:  row.volgorde != null ? row.volgorde : 0,
+    modus:     row.modus || 'algemeen',
+    scaling:   row.scaling || {},
+    meeInGemiddelde: row.mee_in_gemiddelde !== false, // default true
+    aangemaakt: row.aangemaakt || null,
+    gewijzigd:  row.gewijzigd  || null
+  };
+}
+function _mapBeurtToDB(b, planId) {
+  return {
+    plan_id:   planId || b.planId,
+    naam:      b.naam || '',
+    jaartal:   b.jaartal,
+    volgorde:  b.volgorde != null ? b.volgorde : 0,
+    modus:     b.modus || 'algemeen',
+    scaling:   b.scaling || {},
+    mee_in_gemiddelde: b.meeInGemiddelde !== false, // default true
+    gewijzigd: new Date().toISOString()
+  };
+}
+
+// Haal het plan op voor een calculatie. Geeft null als er geen plan is.
+async function _fetchOhpByCalc(calcId) {
+  if (!_sb || !calcId) return null;
+  const { data: planRow, error: e1 } = await _sbQuery(
+    _sb.from('onderhoudsplannen').select('*').eq('calculatie_id', calcId).maybeSingle(),
+    'Onderhoudsplan ophalen'
+  );
+  if (e1 || !planRow) return null;
+  const plan = _mapOhpFromDB(planRow);
+  const { data: beurten, error: e2 } = await _sbQuery(
+    _sb.from('onderhoudsplan_beurten').select('*').eq('plan_id', plan.id).order('jaartal').order('volgorde'),
+    'Beurten ophalen'
+  );
+  if (!e2 && beurten) plan.beurten = beurten.map(_mapBeurtFromDB);
+  return plan;
+}
+
+// Maak of werk een plan bij (upsert op calculatie_id). Retourneert het opgeslagen plan-object met id.
+async function _saveOhpParams(plan) {
+  if (!_sb || !plan || !plan.calculatieId) return null;
+  if (plan.id) {
+    const { data, error } = await _sbQuery(
+      _sb.from('onderhoudsplannen').update(_mapOhpToDB(plan)).eq('id', plan.id).select().single(),
+      'Onderhoudsplan bijwerken'
+    );
+    if (error || !data) return null;
+    return { ...plan, ..._mapOhpFromDB(data), beurten: plan.beurten || [] };
+  } else {
+    const { data, error } = await _sbQuery(
+      _sb.from('onderhoudsplannen').insert([_mapOhpToDB(plan)]).select().single(),
+      'Onderhoudsplan aanmaken'
+    );
+    if (error || !data) return null;
+    return { ...plan, ..._mapOhpFromDB(data), beurten: plan.beurten || [] };
+  }
+}
+
+// Verwijder een heel plan (cascade ruimt beurten op).
+async function _deleteOhp(planId) {
+  if (!_sb || !planId) return false;
+  const { error } = await _sbQuery(
+    _sb.from('onderhoudsplannen').delete().eq('id', planId), 'Onderhoudsplan verwijderen'
+  );
+  return !error;
+}
+
+// Voeg een beurt toe; retourneert de opgeslagen beurt met id.
+async function _addBeurt(planId, beurt) {
+  if (!_sb || !planId) return null;
+  const { data, error } = await _sbQuery(
+    _sb.from('onderhoudsplan_beurten').insert([_mapBeurtToDB(beurt, planId)]).select().single(),
+    'Beurt toevoegen'
+  );
+  if (error || !data) return null;
+  return _mapBeurtFromDB(data);
+}
+
+// Werk een beurt bij; retourneert de bijgewerkte beurt.
+async function _updateBeurt(beurt) {
+  if (!_sb || !beurt || !beurt.id) return null;
+  const { data, error } = await _sbQuery(
+    _sb.from('onderhoudsplan_beurten').update(_mapBeurtToDB(beurt)).eq('id', beurt.id).select().single(),
+    'Beurt bijwerken'
+  );
+  if (error || !data) return null;
+  return _mapBeurtFromDB(data);
+}
+
+// Verwijder een beurt.
+async function _deleteBeurt(beurtId) {
+  if (!_sb || !beurtId) return false;
+  const { error } = await _sbQuery(
+    _sb.from('onderhoudsplan_beurten').delete().eq('id', beurtId), 'Beurt verwijderen'
+  );
+  return !error;
+}
+
+// ----- In-memory state voor de Onderhoudsplan-tab -----
+// Bevat het huidig geladen plan of null. De UI leest hieruit, schrijft via _sb*-functies.
+let _ohpState = {
+  calcId: null,   // id van de bron-calculatie
+  plan:   null    // { id, calculatieId, prijspeil, looptijdJaren, indexeringPct, beurten:[...] } of null
+};
+
+// Laad plan voor een calculatie in geheugen. Geeft het plan terug (of null).
+async function _ohpLoad(calcId) {
+  _ohpState.calcId = calcId || null;
+  _ohpState.plan = calcId ? await _fetchOhpByCalc(calcId) : null;
+  return _ohpState.plan;
+}
+
+// Sla parameters op (maakt plan aan als het nog niet bestaat). Werkt _ohpState bij.
+async function _ohpSaveParams(params) {
+  if (!_ohpState.calcId) return null;
+  const planObj = {
+    ...(_ohpState.plan || {}),
+    calculatieId:  _ohpState.calcId,
+    prijspeil:     params.prijspeil,
+    looptijdJaren: params.looptijdJaren,
+    indexeringPct: params.indexeringPct,
+    btwPctOverride: params.btwPctOverride,
+    notities:      params.notities || ''
+  };
+  const saved = await _saveOhpParams(planObj);
+  if (saved) _ohpState.plan = saved;
+  return saved;
 }
 
 // Calculatie-body (regels/staart/meetstaat/todos) leeft volledig in Supabase vanaf v3.4.2.
@@ -2490,12 +3196,29 @@ function _updateCalcDB(c) {
 }
 function _touchCalc(calcId) {
   // Update gewijzigd-timestamp — vuren-en-vergeten
+  const c = data.calculaties.find(x => x.id === calcId);
+  const isConcept = !c || !c.status || c.status === 'concept';
+  // Bouw payload: altijd gewijzigd, en bij concept óók het nieuw-berekende totaal cachen.
+  // Vergrendelde calcs (verzonden/geaccepteerd/etc) krijgen nóóit een nieuwe totaal-waarde
+  // via deze route — die wordt enkel gezet bij vergrendelen (zie setCalcStatus).
+  const nu = new Date().toISOString();
+  const payload = { gewijzigd: nu };
+  if (c && isConcept && c.__loaded) {
+    // Calc moet geladen zijn om correct te kunnen berekenen
+    try {
+      const t = _calcTotalForArchive(c);
+      const tot = (t && isFinite(t.totaal)) ? Math.round(t.totaal * 100) / 100 : null;
+      c.totaalInclBtw = tot;
+      payload.totaal_incl_btw = tot;
+    } catch(e) {
+      // Berekening faalt om wat voor reden — laat oude waarde staan
+    }
+  }
   _sbQuery(
-    _sb.from('calculaties').update({ gewijzigd: new Date().toISOString() }).eq('id', calcId),
+    _sb.from('calculaties').update(payload).eq('id', calcId),
     'Tijdstempel bijwerken'
   ).then(() => {});
-  const c = data.calculaties.find(x => x.id === calcId);
-  if (c) c.gewijzigd = new Date().toISOString();
+  if (c) c.gewijzigd = nu;
 }
 async function _deleteCalcDB(id) {
   // FK heeft ON DELETE CASCADE — alle subtabellen gaan mee
@@ -2557,6 +3280,7 @@ function _mapRegelFromDB(row, stapRows) {
     systeemOndergrondId: row.systeem_ondergrond_id || null,
     systeemLocatie:      row.systeem_locatie || 'beide',
     volgorde:            row.volgorde != null ? row.volgorde : 0,
+    actief:              row.actief !== false, // v3.11.0: defensief, oude rijen → true
     stappen:             (stapRows || []).map(_mapStapFromDBSnapshot)
   };
 }
@@ -2572,7 +3296,8 @@ function _mapRegelToDB(r, odId) {
     systeem_ondergrond:     r.systeemOndergrond || '',
     systeem_ondergrond_id:  r.systeemOndergrondId || null,
     systeem_locatie:        r.systeemLocatie || 'beide',
-    volgorde:               r.volgorde != null ? r.volgorde : 0
+    volgorde:               r.volgorde != null ? r.volgorde : 0,
+    actief:                 r.actief !== false
   };
 }
 function _mapStapFromDBSnapshot(row) {
@@ -2732,7 +3457,8 @@ function _mapStaartCalcToDB(s, calcId, idx) {
     eenheid:     s.eenheid   || '',
     grondslag:   s.grondslag || '',
     hoeveelheid: s.hoeveelheid || 0,
-    volgorde:    idx != null ? idx : (s.volgorde || 0)
+    volgorde:    idx != null ? idx : (s.volgorde || 0),
+    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs
   };
 }
 async function _insertStaartCalcDB(s, calcId, idx) {
@@ -2942,6 +3668,7 @@ document.querySelectorAll('nav button').forEach(b => {
     if (b.dataset.tab === 'bewerkingen')   renderBewerkingen();
     if (b.dataset.tab === 'ondergronden')  renderOndergronden();
     if (b.dataset.tab === 'systemen')      renderSystemen();
+    if (b.dataset.tab === 'onderhoud')     renderOnderhoudsplan();
     if (b.dataset.tab === 'instellingen')  loadSettings();
   });
 });
@@ -3028,6 +3755,1328 @@ async function delOnd(id) {
   data.ondergronden = data.ondergronden.filter(o => o.id !== id);
   renderOndergronden();
 }
+// ============================================================
+// ONDERHOUDSPLAN (v3.10.0) — UI
+// ============================================================
+// Debounce-helper: laatste call binnen 600ms wint. Voorkomt dat elke
+// keystroke een save triggert.
+let _ohpSaveTimer = null;
+function _ohpScheduleSave() {
+  clearTimeout(_ohpSaveTimer);
+  _ohpSaveTimer = setTimeout(_ohpFlushSave, 600);
+}
+async function _ohpFlushSave() {
+  if (!_ohpState.calcId) return;
+  const params = _ohpReadParamsFromUI();
+  // Sla pas op als de drie verplichte velden zinnig zijn ingevuld.
+  if (!params.prijspeil || !params.looptijdJaren) return;
+  const voorMaakAan = !_ohpState.plan;
+  await _ohpSaveParams(params);
+  // Hint van BTW-veld bijwerken (laat input-waarde met rust).
+  _ohpUpdateBtwHint();
+  // Als het plan net is aangemaakt, render de inhoud opnieuw zodat het beurten-blok verschijnt.
+  if (voorMaakAan && _ohpState.plan) {
+    _ohpRenderInhoud();
+  } else {
+    // Bestaand plan: herrender beurtenlijst en resultaat (indexering/looptijd/btw kan veranderd zijn).
+    _ohpRenderBeurtenLijst();
+    _ohpRenderResultaat();
+  }
+}
+
+// Werk alleen de BTW-hint bij (zonder het input-veld te overschrijven).
+function _ohpUpdateBtwHint() {
+  const elBtw     = document.getElementById('ohpBtw');
+  const elBtwHint = document.getElementById('ohpBtwHint');
+  if (!elBtw || !elBtwHint) return;
+  if (!_ohpState.calcId) { elBtwHint.textContent = ''; return; }
+  const bronBtw = _ohpBronCalcBtw();
+  const huidigPct = parseFloat(elBtw.value);
+  const isOverride = !isNaN(huidigPct) && Math.abs(huidigPct - bronBtw) > 0.001;
+  elBtwHint.textContent = isOverride ? `(bron: ${bronBtw}%)` : `(uit bron-calc)`;
+}
+
+function _ohpReadParamsFromUI() {
+  const btwVal = document.getElementById('ohpBtw').value;
+  const btwParsed = (btwVal === '' || btwVal == null) ? null : parseFloat(btwVal);
+  const notEl = document.getElementById('ohpNotities');
+  return {
+    prijspeil:     parseInt(document.getElementById('ohpPrijspeil').value) || null,
+    looptijdJaren: parseInt(document.getElementById('ohpLooptijd').value)  || null,
+    indexeringPct: parseFloat(document.getElementById('ohpIndex').value)   || 0,
+    btwPctOverride: (btwParsed != null && !isNaN(btwParsed)) ? btwParsed : null,
+    notities: notEl ? (notEl.value || '') : ''
+  };
+}
+
+// Bron-picker filter-state (sessie-lokaal, niet opgeslagen).
+let _ohpFilter = {
+  zoek: '',
+  status: { concept: true, gereed: true, geaccepteerd: true, verzonden: false, verloren: false }
+};
+
+// Toon huidige bron-calculatie in het label (regel boven het zoekveld + in de details-summary).
+function _ohpRenderHuidigeBron() {
+  const el = document.getElementById('ohpBronStatus');
+  const labelEl = document.getElementById('ohpParamsBronLabel');
+  if (!_ohpState.calcId) {
+    if (el) el.textContent = '';
+    if (labelEl) labelEl.textContent = '';
+    return;
+  }
+  const c = (data.calculaties || []).find(x => x.id === _ohpState.calcId);
+  if (!c) {
+    if (el) el.textContent = '';
+    if (labelEl) labelEl.textContent = '';
+    return;
+  }
+  const naam = c.naam || '(zonder naam)';
+  const klant = c.klant ? ' · ' + c.klant : '';
+  if (el) el.innerHTML = `Huidig: <strong>${_escapeHtml(naam + klant)}</strong>`;
+  if (labelEl) labelEl.innerHTML = `· Bron: <strong>${_escapeHtml(naam + klant)}</strong>`;
+}
+
+// Vult de bron-lijst op basis van zoek + status-filter.
+function _ohpRenderBronPicker() {
+  const c = document.getElementById('ohpBronLijst');
+  if (!c) return;
+  const zoek = (_ohpFilter.zoek || '').toLowerCase().trim();
+  const aanvaarde = Object.keys(_ohpFilter.status).filter(k => _ohpFilter.status[k]);
+  let calcs = (data.calculaties || []).filter(x => aanvaarde.includes(x.status || 'concept'));
+  if (zoek) {
+    calcs = calcs.filter(x => {
+      const haystack = ((x.naam || '') + ' ' + (x.klant || '')).toLowerCase();
+      return haystack.includes(zoek);
+    });
+  }
+  // Sorteer op gewijzigd aflopend
+  calcs.sort((a, b) => (b.gewijzigd || '').localeCompare(a.gewijzigd || ''));
+  // Limiteer tot 50 om de DOM klein te houden — bij zoeken zie je dan de match, anders de recentste
+  const limiet = 50;
+  const overschot = Math.max(0, calcs.length - limiet);
+  calcs = calcs.slice(0, limiet);
+
+  if (!calcs.length) {
+    c.innerHTML = '<div style="padding: 0.6rem; color: var(--muted); font-style: italic;">Geen calculaties gevonden.</div>';
+    return;
+  }
+  let html = '';
+  calcs.forEach(x => {
+    const naam = x.naam || '(zonder naam)';
+    const klant = x.klant ? ' · ' + x.klant : '';
+    const dat = x.gewijzigd ? new Date(x.gewijzigd).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' }) : '';
+    const actief = (x.id === _ohpState.calcId) ? ' style="background: var(--accent-soft, #e8f0fe);"' : '';
+    html += `<div class="ohp-bron-rij" data-calcid="${x.id}"${actief} style="padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); cursor: pointer;">
+      <div style="font-weight: 500;">${_escapeHtml(naam + klant)}</div>
+      <div style="font-size: 0.8rem; color: var(--muted);">${_escapeHtml(x.status || 'concept')} · ${dat}</div>
+    </div>`;
+  });
+  if (overschot > 0) {
+    html += `<div style="padding: 0.5rem 0.7rem; color: var(--muted); font-size: 0.8rem; font-style: italic;">+ nog ${overschot} \u2014 verfijn de zoekterm of statusfilter</div>`;
+  }
+  c.innerHTML = html;
+
+  // Klik-handlers binden
+  c.querySelectorAll('.ohp-bron-rij').forEach(row => {
+    row.addEventListener('click', () => _ohpSetBronCalc(row.dataset.calcid));
+    row.addEventListener('mouseenter', () => { row.style.background = 'var(--bg-soft, #f5f5f5)'; });
+    row.addEventListener('mouseleave', () => {
+      row.style.background = (row.dataset.calcid === _ohpState.calcId) ? 'var(--accent-soft, #e8f0fe)' : '';
+    });
+  });
+}
+
+// Vult de parameter-velden met de huidige plan-waarden (of defaults).
+function _ohpRenderParams() {
+  const p = _ohpState.plan;
+  const elPrijspeil = document.getElementById('ohpPrijspeil');
+  const elLooptijd  = document.getElementById('ohpLooptijd');
+  const elIndex     = document.getElementById('ohpIndex');
+  const elBtw       = document.getElementById('ohpBtw');
+  const elBtwHint   = document.getElementById('ohpBtwHint');
+  const elNotities  = document.getElementById('ohpNotities');
+  const bronBtw     = _ohpBronCalcBtw();
+  if (p) {
+    elPrijspeil.value = p.prijspeil || '';
+    elLooptijd.value  = p.looptijdJaren || '';
+    elIndex.value     = (p.indexeringPct != null) ? p.indexeringPct : 6.5;
+    elBtw.value       = (p.btwPctOverride != null) ? p.btwPctOverride : bronBtw;
+    if (elNotities) elNotities.value = p.notities || '';
+  } else {
+    elPrijspeil.value = '';
+    elLooptijd.value  = '';
+    elIndex.value     = 6.5;
+    elBtw.value       = bronBtw;
+    if (elNotities) elNotities.value = '';
+  }
+  // Hint: toon altijd wat de bron-calc als BTW heeft, zodat afwijking zichtbaar is.
+  if (elBtwHint) {
+    if (_ohpState.calcId) {
+      const huidigPct = parseFloat(elBtw.value);
+      const isOverride = !isNaN(huidigPct) && Math.abs(huidigPct - bronBtw) > 0.001;
+      elBtwHint.textContent = isOverride ? `(bron: ${bronBtw}%)` : `(uit bron-calc)`;
+    } else {
+      elBtwHint.textContent = '';
+    }
+  }
+  // Velden alleen bedienbaar als er een bron-calc gekozen is.
+  const hasCalc = !!_ohpState.calcId;
+  elPrijspeil.disabled = !hasCalc;
+  elLooptijd.disabled  = !hasCalc;
+  elIndex.disabled     = !hasCalc;
+  elBtw.disabled       = !hasCalc;
+  if (elNotities) elNotities.disabled = !hasCalc;
+}
+
+// Toont/verbergt het plan-blok (beurten + resultaat) op basis van state.
+function _ohpRenderInhoud() {
+  const leeg = document.getElementById('ohpLeeg');
+  const blok = document.getElementById('ohpPlanBlok');
+  if (!leeg || !blok) return;
+  if (!_ohpState.calcId) {
+    leeg.style.display = '';
+    leeg.innerHTML = '<em>Kies een bron-calculatie om te beginnen.</em>';
+    blok.style.display = 'none';
+    return;
+  }
+  if (!_ohpState.plan) {
+    leeg.style.display = '';
+    leeg.innerHTML = '<em>Vul prijspeil en looptijd in. Het plan wordt aangemaakt zodra beide velden zijn ingevuld.</em>';
+    blok.style.display = 'none';
+    return;
+  }
+  leeg.style.display = 'none';
+  blok.style.display = '';
+  _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
+}
+
+// Indexering-factor: prijs op jaar X t.o.v. prijspeil-jaar.
+function _ohpIndexFactor(jaartal, prijspeil, indexPct) {
+  const jaren = (jaartal || 0) - (prijspeil || 0);
+  const f = Math.pow(1 + (indexPct || 0) / 100, jaren);
+  return f;
+}
+
+// ============================================================
+// REKENKERN — spiegelt structuur van calc-tab letterlijk
+// ============================================================
+// De calc-tab bouwt het excl-BTW-bedrag zo op:
+//   directe = arbeid + matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal
+//   exBtw   = directe × (1 + risico%)
+// Het onderhoudsplan moet dezelfde rekenwijze gebruiken, anders ontstaan
+// afwijkingen door risico op reis/staart en de afrondingstoeslag.
+
+function _ohpStapTotaal(stap, sett) {
+  const pct = (stap.percentage ?? 100) / 100;
+  const minuten = (stap.minuten || 0) * pct;
+  const uren = minuten / 60;
+  let matInkoop = 0, matVerkoop = 0;
+  if (stap.materiaalNaam) {
+    matInkoop = (stap.materiaalPrijs || 0) * (stap.verbruik || 0) * pct;
+    const opslag = ((sett && sett.groepOpslagen) || {})[stap.materiaalGroep] || 0;
+    matVerkoop = matInkoop * (1 + opslag/100);
+  }
+  return { uren, minuten, matInkoop, matVerkoop };
+}
+
+// Bereken regel-totalen (rauwe arbeid en materiaal) — GEEN winst per regel.
+// Spiegelt het arbeids- en materiaal-deel van calcRegelTotalen, maar zonder
+// directe/winst-opslag (die wordt op project-niveau toegepast).
+function _ohpRegelRauw(r, sett, stappenOverride) {
+  if (!r.hoeveelheid || !r.stappen || !r.stappen.length) {
+    return { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0 };
+  }
+  let minuten = 0, matInkoop = 0, matVerkoop = 0;
+  r.stappen.forEach(st => {
+    let workStap = st;
+    if (stappenOverride && stappenOverride.has(st.id)) {
+      const extraFactor = stappenOverride.get(st.id); // 0..1
+      workStap = { ...st, percentage: (st.percentage ?? 100) * extraFactor };
+    }
+    const c = _ohpStapTotaal(workStap, sett);
+    minuten += c.minuten; matInkoop += c.matInkoop; matVerkoop += c.matVerkoop;
+  });
+  const uren = minuten / 60;
+  const arbeid = uren * (sett.uurloon || 0);
+  const tF = 1 + (r.toeslag || 0) / 100;
+  return {
+    uren:       uren * r.hoeveelheid * tF,
+    minuten:    minuten * r.hoeveelheid * tF,
+    matInkoop:  matInkoop * r.hoeveelheid,        // toeslag-vrij volgens calcRegelTotalen
+    matVerkoop: matVerkoop * r.hoeveelheid,       // idem
+    arbeid:     arbeid * r.hoeveelheid * tF
+  };
+}
+
+// Project-totalen (rauw): som van alle regels met optionele scaling.
+// regelScaling: Map<regelId, factor 0..1> of null
+// stapScaling:  Map<stapId, factor 0..1> of null
+function _ohpProjectRauw(calc, sett, regelScaling, stapScaling) {
+  const tot = { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0 };
+  (calc.hoofdgroepen || []).forEach(hg => {
+    (hg.onderdelen || []).forEach(od => {
+      (od.regels || []).forEach(r => {
+        const rFactor = (regelScaling && regelScaling.has(r.id)) ? regelScaling.get(r.id) : 1;
+        if (rFactor === 0) return;
+        const rTot = _ohpRegelRauw(r, sett, stapScaling);
+        Object.keys(tot).forEach(k => tot[k] += (rTot[k] || 0) * rFactor);
+      });
+    });
+  });
+  return tot;
+}
+
+// Bereken één staart-post (vast/dag/week/eenheid/percent), met expliciete projectTotalen en calc.
+// projectArbeid is de geschaalde arbeid; projectMatVerkoop de geschaalde mat-verkoop.
+function _ohpStaartPost(p, calc, sett, projectRauw, dagenFactureerbaar, weken) {
+  if (p.type === 'vast')    return p.bedrag || 0;
+  if (p.type === 'eenheid') return (p.bedrag || 0) * (p.hoeveelheid || 0);
+  if (p.type === 'dag')     return (p.bedrag || 0) * dagenFactureerbaar;
+  if (p.type === 'week')    return (p.bedrag || 0) * weken;
+  if (p.type === 'percent') {
+    let basis = 0;
+    // 'subtotaal' verwijst naar verkoop van regels; in onze rauwe vorm benaderen we dat
+    // met arbeid + matVerkoop. Dit is dezelfde benadering als de live calc-tab op dit moment doet.
+    if (p.grondslag === 'arbeid')                basis = projectRauw.arbeid;
+    else if (p.grondslag === 'materiaal')        basis = projectRauw.matVerkoop;
+    else if (p.grondslag === 'arbeid_materiaal') basis = projectRauw.arbeid + projectRauw.matVerkoop;
+    else if (p.grondslag === 'subtotaal')        basis = projectRauw.arbeid + projectRauw.matVerkoop;
+    return basis * (p.bedrag || 0) / 100;
+  }
+  return 0;
+}
+
+// Bereken dagen-factureerbaar en weken op basis van project-uren.
+function _ohpDagen(calc, sett, projectUren) {
+  const s = calc.schilders || 1;
+  const ud = calc.uurDag || 7.5;
+  if (!projectUren || projectUren <= 0) return { werkelijk: 0, factureerbaar: 0, weken: 0 };
+  const exact = projectUren / s / ud;
+  const werkelijk = Math.round(exact * 100) / 100;
+  const volleDagen = (calc.volleDagenOverride === true)  ? true
+                   : (calc.volleDagenOverride === false) ? false
+                   : (sett.volleDagen !== false);
+  let factureerbaar = werkelijk;
+  if (volleDagen && werkelijk > 0) {
+    if (werkelijk < 1) factureerbaar = 1;
+    else {
+      const drempel = sett.afrondingsDrempel ?? 0.6;
+      const heel = Math.floor(werkelijk);
+      const overschot = Math.round((werkelijk - heel) * 100) / 100;
+      if (overschot === 0) factureerbaar = werkelijk;
+      else if (overschot >= drempel) factureerbaar = heel + 1;
+      else factureerbaar = heel;
+    }
+  }
+  const weken = factureerbaar === 0 ? 0 : Math.ceil(factureerbaar / 5);
+  return { werkelijk, factureerbaar, weken, volleDagen };
+}
+
+// Hoofdfunctie: bereken het basisbedrag (excl. BTW) van een beurt.
+// Spiegelt letterlijk de directe + risico-formule uit de calc-tab.
+function _ohpBeurtBasisBedrag(beurt) {
+  const plan = _ohpState.plan;
+  if (!plan) return 0;
+  const calc = _ohpBronCalc();
+  if (!calc || !calc.__loaded) return 0;
+  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+
+  // 1. Bouw scaling-maps op basis van modus.
+  let regelScaling = null;
+  let stapScaling  = null;
+  let extraFactor  = 1; // gemiddelde voor reis/afronding/staart bij per_regel/per_stap, of het pct bij algemeen
+
+  const sc = beurt.scaling || {};
+  if (beurt.modus === 'algemeen') {
+    const pct = (sc.pct != null ? sc.pct : 100) / 100;
+    regelScaling = new Map();
+    (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => regelScaling.set(r.id, pct))));
+    extraFactor = pct;
+  } else if (beurt.modus === 'per_regel') {
+    regelScaling = new Map();
+    const regels = sc.regels || {};
+    let som = 0, n = 0;
+    (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => {
+      const v = regels[r.id];
+      // Default: regel die niet in scaling.regels staat → 100% (volledig mee in beurt).
+      const f = (v == null) ? 1 : (v / 100);
+      regelScaling.set(r.id, f);
+      som += f; n++;
+    })));
+    extraFactor = (n > 0) ? (som / n) : 0;
+  } else if (beurt.modus === 'per_stap') {
+    stapScaling = new Map();
+    const stappen = sc.stappen || {};
+    let som = 0, n = 0;
+    (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => (r.stappen || []).forEach(st => {
+      const v = stappen[st.id];
+      // Default: stap die niet in scaling.stappen staat → 100% (volledig mee in beurt).
+      const f = (v == null) ? 1 : (v / 100);
+      stapScaling.set(st.id, f);
+      som += f; n++;
+    }))));
+    extraFactor = (n > 0) ? (som / n) : 0;
+  } else {
+    return 0;
+  }
+
+  // 2. Project-totalen (rauw, geschaald).
+  const t = _ohpProjectRauw(calc, sett, regelScaling, stapScaling);
+
+  // 3. Dagen factureerbaar en weken op basis van project-uren.
+  const dg = _ohpDagen(calc, sett, t.uren);
+
+  // 4. Afrondingstoeslag (extra-arbeid bij volle dagen).
+  const dagenVerschil = Math.max(0, dg.factureerbaar - dg.werkelijk);
+  const afrondingsToeslag = dg.volleDagen ? dagenVerschil * (calc.schilders || 0) * (calc.uurDag || 7.5) * (sett.uurloon || 0) : 0;
+  const arbeid = t.arbeid + afrondingsToeslag;
+
+  // 5. Reiskosten op basis van factureerbare dagen (schalen mee met geschaald werk).
+  const reisAfstand = calc.reis || 0;
+  const snelheid = sett.snelheid || 50;
+  const reisUren = dg.factureerbaar * (calc.schilders || 0) * (reisAfstand / snelheid);
+  const reisKostenUren = reisUren * (sett.reistijd || 0);
+  const reisKm = dg.factureerbaar * (reisAfstand * 2) * (sett.km || 0);
+  const reisTotaal = reisKostenUren + reisKm;
+
+  // 6. Opslagen.
+  const kleinMat = t.matVerkoop * (sett.kleinMat || 0) / 100;
+  const afval = (arbeid + t.matVerkoop) * (sett.afval || 0) / 100;
+  const arbo = arbeid * (sett.arbo || 0) / 100;
+
+  // 7. Staart — elk staart-post berekenen op het geschaalde project, daarna nogmaals × extraFactor
+  //    (zodat een controlebeurt van 15% ook 15% staart krijgt, geen 100%).
+  //    Voor type 'dag'/'week' werkt de scaling al deels via dg (minder uren = minder dagen).
+  //    De extraFactor is voor 'vast' en 'eenheid' nog nodig.
+  let staartTotaal = 0;
+  (calc.staart || []).forEach(p => {
+    const post = _ohpStaartPost(p, calc, sett, t, dg.factureerbaar, dg.weken);
+    if (p.type === 'vast' || p.type === 'eenheid') {
+      staartTotaal += post * extraFactor;
+    } else {
+      staartTotaal += post;
+    }
+  });
+
+  // 8. Directe kosten en risico.
+  const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
+  const winstBedrag = directe * (sett.winst || 0) / 100;
+  const exBtw = directe + winstBedrag;
+  return exBtw;
+}
+
+// Helper: vind de bron-calculatie in data.calculaties.
+function _ohpBronCalc() {
+  if (!_ohpState.calcId) return null;
+  return (data.calculaties || []).find(c => c.id === _ohpState.calcId) || null;
+}
+
+// Zorg dat de bron-calc body geladen is (regels, staart) zodat we kunnen rekenen.
+async function _ohpEnsureBronLoaded() {
+  const calc = _ohpBronCalc();
+  if (!calc) return false;
+  if (calc.__loaded) return true;
+  await _loadCalcBody(calc);
+  return !!calc.__loaded;
+}
+
+// BTW-percentage uit de bron-calc (snapshot indien aanwezig, anders live settings).
+function _ohpBronCalcBtw() {
+  const calc = _ohpBronCalc();
+  if (!calc) return 21;
+  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+  return sett.btw != null ? parseFloat(sett.btw) : 21;
+}
+
+// BTW-factor van het plan: override als gezet, anders uit bron-calc.
+function _ohpBtwFactor() {
+  const plan = _ohpState.plan;
+  let pct;
+  if (plan && plan.btwPctOverride != null) {
+    pct = plan.btwPctOverride;
+  } else {
+    pct = _ohpBronCalcBtw();
+  }
+  return 1 + (pct / 100);
+}
+
+// Render de beurten-lijst.
+function _ohpRenderBeurtenLijst() {
+  const c = document.getElementById('ohpBeurtenLijst');
+  if (!c) return;
+  const plan = _ohpState.plan;
+  if (!plan) { c.innerHTML = ''; return; }
+  const beurten = (plan.beurten || []).slice().sort((a, b) => (a.jaartal || 0) - (b.jaartal || 0));
+  if (!beurten.length) {
+    c.innerHTML = '<div style="color: var(--muted); font-style: italic; padding: 0.5rem 0;">Nog geen beurten. Klik op \u201C+ Beurt toevoegen\u201D om te beginnen.</div>';
+    return;
+  }
+  const eindJaar = (plan.prijspeil || 0) + (plan.looptijdJaren || 0);
+  const btwF = _ohpBtwFactor();
+  let html = '<div class="table-scroll"><table><thead><tr>';
+  html += '<th style="width: 80px;">Jaar</th>';
+  html += '<th>Naam</th>';
+  html += '<th style="width: 110px;">Modus</th>';
+  html += '<th style="width: 140px;" class="right">Basis (excl. BTW)</th>';
+  html += '<th style="width: 160px;" class="right">Geïndexeerd (incl. BTW)</th>';
+  html += '<th style="width: 100px; text-align: center;" title="Meerekenen in gemiddelde jaarbedrag?">Mee in gem.</th>';
+  html += '<th style="width: 110px;"></th>';
+  html += '</tr></thead><tbody>';
+  beurten.forEach(b => {
+    const basis = _ohpBeurtBasisBedrag(b);
+    const fac = _ohpIndexFactor(b.jaartal, plan.prijspeil, plan.indexeringPct);
+    const geindExBtw = basis * fac;
+    const geindIncBtw = geindExBtw * btwF;
+    const modusLabel = ({ algemeen: 'algemeen', per_regel: 'per regel', per_stap: 'per stap' })[b.modus] || b.modus || '';
+    const jaarBuitenLoop = (b.jaartal > eindJaar) || (b.jaartal < plan.prijspeil);
+    const jaarStyle = jaarBuitenLoop ? ' style="width: 70px; border-color: #d97706;" title="Buiten looptijd"' : ' style="width: 70px;"';
+    const mee = (b.meeInGemiddelde !== false);
+    const rijStyle = mee ? '' : ' style="color: var(--muted); background: var(--bg-soft, #f5f5f5);"';
+    html += `<tr${rijStyle}>
+      <td><input type="number" min="1900" max="2200" step="1" value="${b.jaartal}" onchange="_ohpUpdBeurtVeld('${b.id}','jaartal',this.value)"${jaarStyle}></td>
+      <td><input type="text" value="${_escapeHtml(b.naam || '')}" placeholder="bv. Onderhoudsbeurt" onchange="_ohpUpdBeurtVeld('${b.id}','naam',this.value)"></td>
+      <td><span style="font-size: 0.85rem; color: var(--muted);">${modusLabel}</span></td>
+      <td class="right">${eur(basis)}</td>
+      <td class="right"><strong>${eur(geindIncBtw)}</strong></td>
+      <td style="text-align: center;"><input type="checkbox" ${mee ? 'checked' : ''} onchange="_ohpUpdBeurtVeld('${b.id}','meeInGemiddelde',this.checked)"></td>
+      <td class="right">
+        <button class="btn btn-sm" onclick="_ohpOpenBeurtModal('${b.id}')">Bewerken</button>
+        <button class="btn btn-danger btn-sm" onclick="_ohpDeleteBeurt('${b.id}')">×</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+
+// Render het resultaat-blok: totalen + jaartabel.
+function _ohpRenderResultaat() {
+  const c = document.getElementById('ohpResultaat');
+  if (!c) return;
+  const plan = _ohpState.plan;
+  if (!plan || !plan.prijspeil || !plan.looptijdJaren) { c.innerHTML = ''; return; }
+
+  const beurten = (plan.beurten || []).slice().sort((a, b) => (a.jaartal || 0) - (b.jaartal || 0));
+  const idx = plan.indexeringPct || 0;
+  const pp = plan.prijspeil;
+  const eindJaar = pp + plan.looptijdJaren;
+  const btwF = _ohpBtwFactor();
+
+  // Per jaar verzamelen: bedrag (incl. BTW) en of het meegerekend wordt in gemiddelde
+  let totaalGemiddelde = 0;   // som van meegerekende beurten (incl. BTW)
+  let totaalEenmalig  = 0;    // som van niet-meegerekende beurten (incl. BTW)
+  const perJaar = {}; // { jaartal: { bedrag, mee } }
+  beurten.forEach(b => {
+    if (b.jaartal < pp || b.jaartal > eindJaar) return;
+    const basis = _ohpBeurtBasisBedrag(b);
+    const fac = _ohpIndexFactor(b.jaartal, pp, idx);
+    const bedrag = basis * fac * btwF;
+    const mee = (b.meeInGemiddelde !== false);
+    if (mee) totaalGemiddelde += bedrag;
+    else totaalEenmalig += bedrag;
+    if (!perJaar[b.jaartal]) perJaar[b.jaartal] = { bedragMee: 0, bedragBuiten: 0 };
+    if (mee) perJaar[b.jaartal].bedragMee += bedrag;
+    else perJaar[b.jaartal].bedragBuiten += bedrag;
+  });
+  const gemPerJaar = plan.looptijdJaren > 0 ? (totaalGemiddelde / plan.looptijdJaren) : 0;
+
+  let html = '<div class="settings-section" style="margin-top: 1rem;">';
+  html += '<h3 style="margin-top: 0;">Resultaat</h3>';
+  html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">';
+
+  // Linkerblok: totalen
+  html += '<div>';
+  html += `<div style="margin-bottom: 0.6rem;"><span style="color: var(--muted); font-size: 0.85rem;">Totaal over ${plan.looptijdJaren} jaar in gemiddelde (incl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(totaalGemiddelde)}</strong></div>`;
+  html += `<div style="margin-bottom: 0.6rem;"><span style="color: var(--muted); font-size: 0.85rem;">Gemiddeld per jaar (incl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(gemPerJaar)}</strong></div>`;
+  if (totaalEenmalig > 0) {
+    html += `<div style="margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border);"><span style="color: var(--muted); font-size: 0.85rem;">Eenmalig, buiten gemiddelde (incl. BTW)</span><br><strong style="font-size: 1.1rem; color: var(--muted);">${eur(totaalEenmalig)}</strong></div>`;
+  }
+  html += '</div>';
+
+  // Rechterblok: jaartabel
+  html += '<div>';
+  html += '<div style="color: var(--muted); font-size: 0.85rem; margin-bottom: 0.4rem;">Jaartabel (incl. BTW)</div>';
+  html += '<div style="max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px;">';
+  html += '<table style="margin: 0; width: 100%;"><tbody>';
+  for (let j = pp; j <= eindJaar; j++) {
+    const entry = perJaar[j];
+    const heeftMee = entry && entry.bedragMee > 0;
+    const heeftBuiten = entry && entry.bedragBuiten > 0;
+    if (!heeftMee && !heeftBuiten) {
+      html += `<tr><td style="padding: 0.25rem 0.5rem; width: 70px;">${j}</td><td class="right" style="padding: 0.25rem 0.5rem;"><span style="color: var(--muted);">—</span></td></tr>`;
+      continue;
+    }
+    // Rij voor meegerekende beurten in dit jaar
+    if (heeftMee) {
+      html += `<tr style="background: var(--accent-soft, #e8f0fe);"><td style="padding: 0.25rem 0.5rem; width: 70px;">${j}</td><td class="right" style="padding: 0.25rem 0.5rem;"><strong>${eur(entry.bedragMee)}</strong></td></tr>`;
+    }
+    // Rij voor niet-meegerekende beurten in dit jaar (grijs)
+    if (heeftBuiten) {
+      html += `<tr style="background: var(--bg-soft, #f5f5f5); color: var(--muted);"><td style="padding: 0.25rem 0.5rem; width: 70px;">${heeftMee ? '' : j}</td><td class="right" style="padding: 0.25rem 0.5rem;"><span style="font-style: italic;">${eur(entry.bedragBuiten)}</span> <span style="font-size: 0.75rem;">eenmalig</span></td></tr>`;
+    }
+  }
+  html += '</tbody></table></div></div>';
+
+  html += '</div></div>';
+  c.innerHTML = html;
+}
+
+// Voeg een lege beurt toe. Default-jaar = laatste beurtjaar+1, of prijspeil.
+async function _ohpAddBeurt() {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const huidige = (plan.beurten || []);
+  const laatsteJaar = huidige.length ? Math.max(...huidige.map(b => b.jaartal || 0)) : 0;
+  const defaultJaar = laatsteJaar ? laatsteJaar + 1 : (plan.prijspeil || new Date().getFullYear());
+  const nieuw = {
+    naam:     '',
+    jaartal:  defaultJaar,
+    volgorde: huidige.length,
+    modus:    'algemeen',
+    scaling:  { pct: 100 },
+    meeInGemiddelde: true
+  };
+  const opgeslagen = await _addBeurt(plan.id, nieuw);
+  if (!opgeslagen) { _toast('Beurt toevoegen mislukt'); return; }
+  plan.beurten.push(opgeslagen);
+  _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
+}
+
+// Werk één veld van een beurt bij (jaartal, naam, of meeInGemiddelde, vanuit de lijst-inputs).
+async function _ohpUpdBeurtVeld(beurtId, veld, value) {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const b = (plan.beurten || []).find(x => x.id === beurtId);
+  if (!b) return;
+  if (veld === 'jaartal') b.jaartal = parseInt(value) || b.jaartal;
+  else if (veld === 'naam') b.naam = value || '';
+  else if (veld === 'meeInGemiddelde') b.meeInGemiddelde = !!value;
+  const opgeslagen = await _updateBeurt(b);
+  if (!opgeslagen) { _toast('Beurt bijwerken mislukt'); return; }
+  // Lokale beurt-state syncen (gewijzigd-timestamp etc.)
+  Object.assign(b, opgeslagen);
+  _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
+}
+
+// Verwijder een beurt na bevestiging.
+async function _ohpDeleteBeurt(beurtId) {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  if (!confirm('Beurt verwijderen?')) return;
+  const ok = await _deleteBeurt(beurtId);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  plan.beurten = (plan.beurten || []).filter(b => b.id !== beurtId);
+  _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
+}
+
+// ----- Bewerk-modal voor één beurt (chunk E) -----
+// Werk-state voor de modal — wordt bij openen ingevuld en bij opslaan weggeschreven.
+let _ohpMb = {
+  beurtId: null,    // id van de beurt die bewerkt wordt
+  modus:   'algemeen',
+  scaling: {}
+};
+// Welke regels in modus 'per_stap' staan uitgeklapt (lokaal in modal).
+let _ohpMbOpenRegels = new Set();
+
+// Open de bewerk-modal voor een beurt.
+function _ohpOpenBeurtModal(beurtId) {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const b = (plan.beurten || []).find(x => x.id === beurtId);
+  if (!b) return;
+  // Kloon de scaling om bewerken in de modal niet meteen op de live state te effecten.
+  _ohpMb = {
+    beurtId: b.id,
+    modus:   b.modus || 'algemeen',
+    scaling: JSON.parse(JSON.stringify(b.scaling || {}))
+  };
+  // Reset uitklap-state per stap (alleen relevant voor modus 'per_stap').
+  _ohpMbOpenRegels = new Set();
+  // Vul kop-velden
+  document.getElementById('ohpMbNaam').value = b.naam || '';
+  document.getElementById('ohpMbJaar').value = b.jaartal;
+  // Zet modus-radio
+  document.querySelectorAll('input[name="ohpMbModus"]').forEach(r => {
+    r.checked = (r.value === _ohpMb.modus);
+  });
+  _ohpMbRenderModusBlok();
+  _ohpMbUpdateBasisBedrag();
+  _ohpMbUpdateKopieerKnop();
+  // Toon modal
+  document.getElementById('ohpBeurtModal').classList.add('active');
+}
+
+// Sluit de modal zonder op te slaan.
+function _ohpCloseBeurtModal() {
+  document.getElementById('ohpBeurtModal').classList.remove('active');
+  _ohpMb = { beurtId: null, modus: 'algemeen', scaling: {} };
+}
+
+// Zet de modus en herrender het scaling-blok.
+function _ohpMbZetModus(nieuweModus) {
+  if (nieuweModus === _ohpMb.modus) return;
+  // Switch zonder verlies: vraag bevestiging als er al data in de andere modus zit.
+  const heeftData = (() => {
+    const sc = _ohpMb.scaling || {};
+    if (_ohpMb.modus === 'algemeen' && sc.pct != null && sc.pct !== 100) return true;
+    if (_ohpMb.modus === 'per_regel' && sc.regels && Object.keys(sc.regels).length) return true;
+    if (_ohpMb.modus === 'per_stap'  && sc.stappen && Object.keys(sc.stappen).length) return true;
+    return false;
+  })();
+  if (heeftData) {
+    const ok = confirm('Je hebt al percentages ingevuld in de huidige modus. Bij wisselen gaan die verloren. Doorgaan?');
+    if (!ok) {
+      // Zet de radio terug op de oude modus
+      document.querySelectorAll('input[name="ohpMbModus"]').forEach(r => { r.checked = (r.value === _ohpMb.modus); });
+      return;
+    }
+  }
+  _ohpMb.modus = nieuweModus;
+  _ohpMb.scaling = (nieuweModus === 'algemeen') ? { pct: 100 }
+                 : (nieuweModus === 'per_regel') ? { regels: {} }
+                 : { stappen: {} };
+  _ohpMbRenderModusBlok();
+  _ohpMbUpdateBasisBedrag();
+}
+
+// Render het scaling-blok afhankelijk van de gekozen modus.
+function _ohpMbRenderModusBlok() {
+  const blok = document.getElementById('ohpMbScalingBlok');
+  const hint = document.getElementById('ohpMbModusHint');
+  if (!blok) return;
+  if (_ohpMb.modus === 'algemeen') {
+    if (hint) hint.textContent = 'Eén percentage op alles. Snelle keuze voor controlebeurten.';
+    const pct = (_ohpMb.scaling && _ohpMb.scaling.pct != null) ? _ohpMb.scaling.pct : 100;
+    blok.innerHTML = `
+      <label style="display: inline-block;">Percentage op alle regels en staart
+        <input type="number" id="ohpMbAlgPct" min="0" max="200" step="1" value="${pct}" style="width: 100px; margin-left: 0.5rem;">
+        <span style="margin-left: 0.3rem;">%</span>
+      </label>
+      <div style="margin-top: 0.5rem; color: var(--muted); font-size: 0.8rem;">
+        100% = volledige eerste behandeling. 25% = lichte onderhoudsbeurt. 15% = controlebeurt.
+      </div>`;
+    const inp = document.getElementById('ohpMbAlgPct');
+    if (inp) {
+      inp.addEventListener('input', () => {
+        const v = parseFloat(inp.value);
+        _ohpMb.scaling = { pct: isNaN(v) ? 0 : v };
+        _ohpMbUpdateBasisBedrag();
+      });
+    }
+  } else if (_ohpMb.modus === 'per_regel') {
+    if (hint) hint.textContent = 'Per regel een eigen percentage. Standaard 100% — zet wat anders moet handmatig. Snelinvuller per hoofdgroep beschikbaar rechtsboven elke groep.';
+    _ohpMbRenderPerRegel(blok);
+  } else if (_ohpMb.modus === 'per_stap') {
+    if (hint) hint.textContent = 'Per stap een eigen percentage. Klik op een regel om uit te klappen. Standaard 100% — afbranden of machinaal schuren kun je hier uitzetten voor onderhoudsbeurten.';
+    _ohpMbRenderPerStap(blok);
+  }
+}
+
+// Render modus 'per regel': per hoofdgroep een snelinvuller, per regel een percentage-veld.
+function _ohpMbRenderPerRegel(container) {
+  const calc = _ohpBronCalc();
+  if (!calc || !calc.__loaded) {
+    container.innerHTML = '<em style="color: var(--muted);">Bron-calculatie nog niet geladen.</em>';
+    return;
+  }
+  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+  const sc = _ohpMb.scaling || {};
+  const regelsMap = sc.regels || {};
+
+  let html = '';
+  (calc.hoofdgroepen || []).forEach((hg, hgIdx) => {
+    html += `<div style="margin-bottom: 1rem; ${hgIdx > 0 ? 'border-top: 1px solid var(--border); padding-top: 0.8rem;' : ''}">`;
+    // Hoofdgroep-kop met snelinvuller
+    html += `<div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+      <strong style="font-size: 1rem;">${_escapeHtml(hg.naam || '(zonder naam)')}</strong>
+      <span style="font-size: 0.85rem; color: var(--muted);">
+        Zet alle regels op
+        <input type="number" min="0" max="200" step="1" placeholder="%" data-hg="${hg.id}" class="ohp-mb-pr-snel" style="width: 60px; margin-left: 0.3rem;">
+        <span style="margin-left: 0.2rem;">%</span>
+      </span>
+    </div>`;
+
+    (hg.onderdelen || []).forEach(od => {
+      html += `<div style="margin-left: 0.6rem; margin-bottom: 0.5rem;">
+        <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 0.2rem;">${_escapeHtml(od.naam || '(zonder naam)')}</div>`;
+      (od.regels || []).forEach(r => {
+        const rauw = _ohpRegelRauw(r, sett, null);
+        // Toon basisbedrag op regel-niveau bij 100% (uren×uurloon + matVerkoop, plus toeslag).
+        const regelBasis = rauw.arbeid + rauw.matVerkoop;
+        const huidigPct = regelsMap[r.id] != null ? regelsMap[r.id] : 100;
+        const dim = huidigPct === 0 ? ' style="opacity: 0.5;"' : '';
+        html += `<div${dim} style="display: grid; grid-template-columns: 1fr 90px 90px; gap: 0.5rem; align-items: center; padding: 0.2rem 0; margin-left: 0.6rem;">
+          <span style="font-size: 0.9rem;">${_escapeHtml(r.naam || '(zonder naam)')} <span style="color: var(--muted); font-size: 0.8rem;">${r.hoeveelheid || ''} ${r.eenheid || ''}</span></span>
+          <span class="right" style="font-size: 0.85rem; color: var(--muted);">${eur(regelBasis)}</span>
+          <span><input type="number" min="0" max="200" step="1" value="${huidigPct}" data-regelid="${r.id}" class="ohp-mb-pr-cel" style="width: 70px;"> %</span>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+
+  // Bind events op regel-cellen
+  container.querySelectorAll('.ohp-mb-pr-cel').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const id = inp.dataset.regelid;
+      const v = parseFloat(inp.value);
+      if (!_ohpMb.scaling.regels) _ohpMb.scaling.regels = {};
+      if (isNaN(v)) delete _ohpMb.scaling.regels[id];
+      else _ohpMb.scaling.regels[id] = v;
+      _ohpMbUpdateBasisBedrag();
+    });
+  });
+  // Bind events op snelinvullers per hoofdgroep
+  container.querySelectorAll('.ohp-mb-pr-snel').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const v = parseFloat(inp.value);
+      if (isNaN(v)) return;
+      const hgId = inp.dataset.hg;
+      const hg = (calc.hoofdgroepen || []).find(x => x.id === hgId);
+      if (!hg) return;
+      if (!_ohpMb.scaling.regels) _ohpMb.scaling.regels = {};
+      (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => {
+        _ohpMb.scaling.regels[r.id] = v;
+      }));
+      // Herrender deze modus zodat de cellen meegroeien
+      _ohpMbRenderModusBlok();
+      _ohpMbUpdateBasisBedrag();
+    });
+  });
+}
+
+// Render modus 'per stap': per regel uitklapbaar; per stap een percentage-veld.
+function _ohpMbStapSamenvatting(r) {
+  // Bepaal of alle stappen van deze regel 100, 0, of variabel zijn.
+  const stappenMap = (_ohpMb.scaling && _ohpMb.scaling.stappen) || {};
+  if (!r.stappen || !r.stappen.length) return { label: '\u2014', dim: true };
+  let alle100 = true, alle0 = true;
+  r.stappen.forEach(st => {
+    const v = stappenMap[st.id];
+    const pct = (v == null) ? 100 : v;
+    if (pct !== 100) alle100 = false;
+    if (pct !== 0) alle0 = false;
+  });
+  if (alle100) return { label: 'alles 100%', dim: false };
+  if (alle0)   return { label: 'uit',         dim: true };
+  return { label: 'variabel', dim: false };
+}
+
+function _ohpMbRenderPerStap(container) {
+  const calc = _ohpBronCalc();
+  if (!calc || !calc.__loaded) {
+    container.innerHTML = '<em style="color: var(--muted);">Bron-calculatie nog niet geladen.</em>';
+    return;
+  }
+  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+  const sc = _ohpMb.scaling || {};
+  const stappenMap = sc.stappen || {};
+
+  let html = '';
+  (calc.hoofdgroepen || []).forEach((hg, hgIdx) => {
+    html += `<div style="margin-bottom: 1rem; ${hgIdx > 0 ? 'border-top: 1px solid var(--border); padding-top: 0.8rem;' : ''}">`;
+    html += `<div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+      <strong style="font-size: 1rem;">${_escapeHtml(hg.naam || '(zonder naam)')}</strong>
+      <span style="font-size: 0.85rem; color: var(--muted);">
+        Zet alle stappen op
+        <input type="number" min="0" max="200" step="1" placeholder="%" data-hg="${hg.id}" class="ohp-mb-ps-snel" style="width: 60px; margin-left: 0.3rem;">
+        <span style="margin-left: 0.2rem;">%</span>
+      </span>
+    </div>`;
+
+    (hg.onderdelen || []).forEach(od => {
+      html += `<div style="margin-left: 0.6rem; margin-bottom: 0.5rem;">
+        <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 0.2rem;">${_escapeHtml(od.naam || '(zonder naam)')}</div>`;
+      (od.regels || []).forEach(r => {
+        const isOpen = _ohpMbOpenRegels.has(r.id);
+        const caret = isOpen ? '▾' : '▸';
+        const samen = _ohpMbStapSamenvatting(r);
+        const labelStyle = samen.dim ? 'color: var(--muted); font-style: italic;' : '';
+        html += `<div style="margin-left: 0.6rem; margin-bottom: 0.3rem; border-left: 2px solid ${isOpen ? 'var(--accent, #2563eb)' : 'transparent'}; padding-left: 0.5rem;">
+          <div class="ohp-mb-ps-kop" data-regelid="${r.id}" style="display: grid; grid-template-columns: 18px 1fr 100px; gap: 0.5rem; align-items: center; padding: 0.25rem 0; cursor: pointer; user-select: none;">
+            <span>${caret}</span>
+            <span style="font-size: 0.9rem;">${_escapeHtml(r.naam || '(zonder naam)')} <span style="color: var(--muted); font-size: 0.8rem;">${r.hoeveelheid || ''} ${r.eenheid || ''}</span></span>
+            <span class="right" style="font-size: 0.8rem; ${labelStyle}">${samen.label}</span>
+          </div>`;
+        if (isOpen) {
+          html += `<div style="margin-left: 1.5rem; padding: 0.3rem 0;">`;
+          (r.stappen || []).forEach(st => {
+            const v = stappenMap[st.id];
+            const pct = (v == null) ? 100 : v;
+            const dim = pct === 0 ? ' style="opacity: 0.5;"' : '';
+            const matLabel = st.materiaalNaam ? ` <span style="color: var(--muted); font-size: 0.75rem;">${_escapeHtml(st.materiaalNaam)}</span>` : '';
+            html += `<div${dim} style="display: grid; grid-template-columns: 1fr 90px; gap: 0.5rem; align-items: center; padding: 0.15rem 0;">
+              <span style="font-size: 0.85rem;">${_escapeHtml(st.bewerkingNaam || '(zonder naam)')}${matLabel}</span>
+              <span><input type="number" min="0" max="200" step="1" value="${pct}" data-stapid="${st.id}" class="ohp-mb-ps-cel" style="width: 70px;"> %</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+        html += `</div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+
+  // Bind events op regel-koppen (toggle uitklap)
+  container.querySelectorAll('.ohp-mb-ps-kop').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.regelid;
+      if (_ohpMbOpenRegels.has(id)) _ohpMbOpenRegels.delete(id);
+      else _ohpMbOpenRegels.add(id);
+      _ohpMbRenderModusBlok();
+    });
+  });
+  // Bind events op stap-cellen
+  container.querySelectorAll('.ohp-mb-ps-cel').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const id = inp.dataset.stapid;
+      const v = parseFloat(inp.value);
+      if (!_ohpMb.scaling.stappen) _ohpMb.scaling.stappen = {};
+      if (isNaN(v)) delete _ohpMb.scaling.stappen[id];
+      else _ohpMb.scaling.stappen[id] = v;
+      _ohpMbUpdateBasisBedrag();
+      // Update enkel het samenvattings-label van deze regel zonder volledige rerender —
+      // is dat de moeite waard? Voor nu: volledige rerender behoudt simpelheid.
+    });
+    // Bij blur: rerender om samenvatting-label bij te werken
+    inp.addEventListener('change', () => {
+      _ohpMbRenderModusBlok();
+      _ohpMbUpdateBasisBedrag();
+    });
+  });
+  // Bind events op snelinvullers per hoofdgroep
+  container.querySelectorAll('.ohp-mb-ps-snel').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const v = parseFloat(inp.value);
+      if (isNaN(v)) return;
+      const hgId = inp.dataset.hg;
+      const hg = (calc.hoofdgroepen || []).find(x => x.id === hgId);
+      if (!hg) return;
+      if (!_ohpMb.scaling.stappen) _ohpMb.scaling.stappen = {};
+      (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => (r.stappen || []).forEach(st => {
+        _ohpMb.scaling.stappen[st.id] = v;
+      })));
+      _ohpMbRenderModusBlok();
+      _ohpMbUpdateBasisBedrag();
+    });
+  });
+}
+
+// Bereken het basisbedrag op basis van de modal-state (niet de opgeslagen beurt).
+function _ohpMbUpdateBasisBedrag() {
+  const el = document.getElementById('ohpMbBasis');
+  if (!el) return;
+  // Pseudo-beurt construeren voor de bestaande _ohpBeurtBasisBedrag-functie
+  const pseudo = {
+    modus:   _ohpMb.modus,
+    scaling: _ohpMb.scaling
+  };
+  const basis = _ohpBeurtBasisBedrag(pseudo);
+  el.textContent = eur(basis);
+}
+
+// Activeer of deactiveer de 'Kopieer uit andere beurt'-knop. Disabled als er geen andere beurten zijn.
+function _ohpMbUpdateKopieerKnop() {
+  const knop = document.getElementById('ohpMbKopieer');
+  if (!knop) return;
+  const plan = _ohpState.plan;
+  if (!plan) { knop.disabled = true; return; }
+  const andere = (plan.beurten || []).filter(b => b.id !== _ohpMb.beurtId);
+  knop.disabled = (andere.length === 0);
+  knop.title = (andere.length === 0)
+    ? 'Geen andere beurten om uit te kopiëren'
+    : `${andere.length} andere beurt(en) beschikbaar om uit te kopiëren`;
+}
+
+// Toggle het kopieer-menu (dropdown onder de knop).
+function _ohpMbToggleKopieerMenu() {
+  const menu = document.getElementById('ohpMbKopieerMenu');
+  if (!menu) return;
+  if (menu.style.display === 'block') {
+    menu.style.display = 'none';
+    return;
+  }
+  _ohpMbRenderKopieerMenu();
+  menu.style.display = 'block';
+  // Sluit menu bij klik buiten
+  setTimeout(() => {
+    const closer = (e) => {
+      if (!menu.contains(e.target) && e.target.id !== 'ohpMbKopieer') {
+        menu.style.display = 'none';
+        document.removeEventListener('click', closer);
+      }
+    };
+    document.addEventListener('click', closer);
+  }, 0);
+}
+
+// Render de inhoud van het kopieer-menu: alle andere beurten van dit plan.
+function _ohpMbRenderKopieerMenu() {
+  const menu = document.getElementById('ohpMbKopieerMenu');
+  if (!menu) return;
+  const plan = _ohpState.plan;
+  if (!plan) { menu.innerHTML = ''; return; }
+  const andere = (plan.beurten || [])
+    .filter(b => b.id !== _ohpMb.beurtId)
+    .sort((a, b) => (a.jaartal || 0) - (b.jaartal || 0));
+  if (!andere.length) {
+    menu.innerHTML = '<div style="padding: 0.8rem; color: var(--muted); font-style: italic;">Geen andere beurten beschikbaar.</div>';
+    return;
+  }
+  let html = '<div style="padding: 0.4rem 0.6rem; color: var(--muted); font-size: 0.75rem; border-bottom: 1px solid var(--border);">Kies welke beurt je wil kopiëren:</div>';
+  andere.forEach(b => {
+    const sc = b.scaling || {};
+    let samen = '';
+    if (b.modus === 'algemeen') samen = `algemeen ${sc.pct != null ? sc.pct : 100}%`;
+    else if (b.modus === 'per_regel') {
+      const aantal = sc.regels ? Object.keys(sc.regels).length : 0;
+      samen = `per regel (${aantal} aangepast)`;
+    }
+    else if (b.modus === 'per_stap') {
+      const aantal = sc.stappen ? Object.keys(sc.stappen).length : 0;
+      samen = `per stap (${aantal} aangepast)`;
+    }
+    html += `<div class="ohp-mb-kop-rij" data-beurtid="${b.id}" style="padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); cursor: pointer;">
+      <div style="font-weight: 500;">${_escapeHtml(b.naam || '(zonder naam)')} <span style="color: var(--muted); font-weight: normal;">— ${b.jaartal}</span></div>
+      <div style="font-size: 0.8rem; color: var(--muted);">${_escapeHtml(samen)}</div>
+    </div>`;
+  });
+  menu.innerHTML = html;
+
+  // Bind klik op rijen
+  menu.querySelectorAll('.ohp-mb-kop-rij').forEach(row => {
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _ohpMbKopieerUitBeurt(row.dataset.beurtid);
+      menu.style.display = 'none';
+    });
+    row.addEventListener('mouseenter', () => { row.style.background = 'var(--bg-soft, #f5f5f5)'; });
+    row.addEventListener('mouseleave', () => { row.style.background = ''; });
+  });
+}
+
+// Kopieer de modus en scaling van een andere beurt naar de modal-state.
+function _ohpMbKopieerUitBeurt(bronBeurtId) {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const bron = (plan.beurten || []).find(x => x.id === bronBeurtId);
+  if (!bron) return;
+  // Bevestiging — als de huidige modal-state niet leeg is
+  const huidigHeeftData = (() => {
+    const sc = _ohpMb.scaling || {};
+    if (_ohpMb.modus === 'algemeen' && sc.pct != null && sc.pct !== 100) return true;
+    if (_ohpMb.modus === 'per_regel' && sc.regels && Object.keys(sc.regels).length) return true;
+    if (_ohpMb.modus === 'per_stap'  && sc.stappen && Object.keys(sc.stappen).length) return true;
+    return false;
+  })();
+  if (huidigHeeftData) {
+    const ok = confirm(`Huidige percentages worden overschreven met die van "${bron.naam || '(zonder naam)'}" (${bron.jaartal}). Doorgaan?`);
+    if (!ok) return;
+  }
+  _ohpMb.modus = bron.modus || 'algemeen';
+  _ohpMb.scaling = JSON.parse(JSON.stringify(bron.scaling || {}));
+  // Update modus-radio
+  document.querySelectorAll('input[name="ohpMbModus"]').forEach(r => {
+    r.checked = (r.value === _ohpMb.modus);
+  });
+  _ohpMbRenderModusBlok();
+  _ohpMbUpdateBasisBedrag();
+}
+
+// Opslaan van de modal-state naar de echte beurt.
+async function _ohpMbOpslaan() {
+  const plan = _ohpState.plan;
+  if (!plan || !_ohpMb.beurtId) return;
+  const b = (plan.beurten || []).find(x => x.id === _ohpMb.beurtId);
+  if (!b) return;
+  // Lees naam en jaar uit de modal-velden
+  const naam = document.getElementById('ohpMbNaam').value || '';
+  const jaar = parseInt(document.getElementById('ohpMbJaar').value) || b.jaartal;
+  // Pas toe
+  b.naam = naam;
+  b.jaartal = jaar;
+  b.modus = _ohpMb.modus;
+  b.scaling = _ohpMb.scaling;
+  const opgeslagen = await _updateBeurt(b);
+  if (!opgeslagen) { _toast('Beurt opslaan mislukt'); return; }
+  Object.assign(b, opgeslagen);
+  _ohpCloseBeurtModal();
+  _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
+}
+
+// Klap parameters in/uit. Doe dit alleen automatisch bij eerste keer renderen na laden.
+function _ohpSetParamsCollapsed(collapsed) {
+  const d = document.getElementById('ohpParamsToggle');
+  const caret = document.getElementById('ohpParamsCaret');
+  if (!d) return;
+  d.open = !collapsed;
+  if (caret) caret.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+}
+
+// Bind caret-rotatie aan toggle (één keer).
+(function _ohpBindParamsCaret() {
+  const d = document.getElementById('ohpParamsToggle');
+  if (!d || d._ohpCaretBound) return;
+  d.addEventListener('toggle', () => {
+    const caret = document.getElementById('ohpParamsCaret');
+    if (caret) caret.style.transform = d.open ? 'rotate(0deg)' : 'rotate(-90deg)';
+  });
+  d._ohpCaretBound = true;
+})();
+
+// Hoofd-renderfunctie: aangeroepen bij tab-switch.
+async function renderOnderhoudsplan() {
+  _ohpRenderBronPicker();
+  _ohpRenderHuidigeBron();
+  // Als er nog geen calc gekozen is, kies dan automatisch de actieve calculatie.
+  if (!_ohpState.calcId && data.activeCalcId) {
+    await _ohpSetBronCalc(data.activeCalcId);
+  } else {
+    if (_ohpState.calcId) await _ohpEnsureBronLoaded();
+    _ohpRenderParams();
+    _ohpRenderInhoud();
+    _ohpRenderResultaat();
+  }
+  // Klap parameters in als er een werkend plan is, anders open laten.
+  _ohpSetParamsCollapsed(!!(_ohpState.plan && _ohpState.plan.prijspeil && _ohpState.plan.looptijdJaren));
+}
+
+// Bron-calculatie wisselen: laadt het plan voor die calc.
+async function _ohpSetBronCalc(calcId) {
+  if (calcId === _ohpState.calcId) return;
+  await _ohpLoad(calcId);
+  // Body van de calc laden (regels + staart) zodat we kunnen rekenen.
+  await _ohpEnsureBronLoaded();
+  _ohpRenderBronPicker();
+  _ohpRenderHuidigeBron();
+  _ohpRenderParams();
+  _ohpRenderInhoud();
+  _ohpRenderResultaat();
+}
+
+// Event-listeners op de UI-elementen. Worden één keer gebonden bij paginalaad.
+function _ohpBindUIEvents() {
+  const zoek = document.getElementById('ohpBronZoek');
+  if (zoek && !zoek._ohpBound) {
+    zoek.addEventListener('input', () => {
+      _ohpFilter.zoek = zoek.value || '';
+      _ohpRenderBronPicker();
+    });
+    zoek._ohpBound = true;
+  }
+  document.querySelectorAll('.ohpStatusFilter').forEach(cb => {
+    if (cb._ohpBound) return;
+    cb.addEventListener('change', () => {
+      _ohpFilter.status[cb.dataset.status] = cb.checked;
+      _ohpRenderBronPicker();
+    });
+    cb._ohpBound = true;
+  });
+  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el._ohpBound) {
+      el.addEventListener('input', _ohpScheduleSave);
+      el.addEventListener('change', _ohpFlushSave);
+      el._ohpBound = true;
+    }
+  });
+}
+// Bind direct (DOM bestaat al wanneer dit script draait).
+_ohpBindUIEvents();
+
+// ============================================================
+// ONDERHOUDSPLAN — Print (chunk G)
+// ============================================================
+// Vaste uitlegtekst voor de klant. Drie alinea's met kopjes.
+// Placeholders [LOOPTIJD], [PRIJSPEIL] en [INDEXERING] worden ingevuld.
+function _ohpVasteUitleg(looptijd, prijspeil, indexering) {
+  return [
+    {
+      kop: 'WAT IS EEN ONDERHOUDSPLAN?',
+      tekst: 'Schilderwerk is bedoeld om hout, metaal en steenachtige ondergronden te beschermen tegen weer, wind en vocht. Hoe vaker en zorgvuldiger we onderhouden, hoe minder ingrijpend en hoe goedkoper het werk over de jaren wordt. Een goed-onderhouden gevel kost minder dan een gevel waar elke tien jaar grootschalig werk moet gebeuren omdat het rot zich heeft ingewerkt.'
+    },
+    {
+      kop: 'WAT KOST HET?',
+      tekst: `Dit onderhoudsplan beschrijft de aanbevolen schilderbeurten voor de komende ${looptijd} jaar. Per jaar staat aangegeven welk werk verwacht wordt en wat dat naar verwachting kost. Bedragen zijn gebaseerd op het prijspeil van ${prijspeil} en stijgen jaarlijks met ${indexering}% mee met de gemiddelde kostenstijging in de schildersbranche (loon, verf en materialen). Alle bedragen zijn inclusief BTW.`
+    },
+    {
+      kop: 'WAT BIEDT DIT PLAN U?',
+      tekst: 'Door te kiezen voor een meerjaren-onderhoudscontract bent u verzekerd van schilderwerk tegen de laagst mogelijke kosten voor uw pand. U weet vooraf wat het u kost gedurende de gehele looptijd, zonder verrassingen achteraf.\n\nEen bijkomend voordeel is dat wij het risico op ons nemen. Houtrot, gevolgschade door te lang uitstellen en het bijhouden van de juiste onderhoudsmomenten: daar hoeft u niet meer over na te denken. Wij plannen, beoordelen en voeren uit op het juiste moment. U ontvangt vóór elke beurt een definitieve afspraak over de uitvoering, zodat u altijd weet wat er gebeurt.'
+    }
+  ];
+}
+
+// Samenvattende beschrijving van een beurt's scaling (voor in de tabel).
+function _ohpBeurtBeschrijving(beurt) {
+  const sc = beurt.scaling || {};
+  if (beurt.modus === 'algemeen') {
+    const pct = (sc.pct != null) ? sc.pct : 100;
+    if (pct === 100) return 'Volledige behandeling';
+    if (pct === 0)   return 'Geen werk';
+    return `${pct}% van volledige behandeling`;
+  }
+  if (beurt.modus === 'per_regel') {
+    const aantal = sc.regels ? Object.keys(sc.regels).length : 0;
+    return `Selectief per regel (${aantal} regels aangepast)`;
+  }
+  if (beurt.modus === 'per_stap') {
+    const aantal = sc.stappen ? Object.keys(sc.stappen).length : 0;
+    return `Selectief per stap (${aantal} stappen aangepast)`;
+  }
+  return '';
+}
+
+// Hoofdfunctie: print het onderhoudsplan.
+function _ohpPrint() {
+  const plan = _ohpState.plan;
+  if (!plan || !plan.prijspeil || !plan.looptijdJaren) {
+    _toast('Plan eerst compleet invullen voor printen');
+    return;
+  }
+  const calc = _ohpBronCalc();
+  if (!calc) { _toast('Bron-calculatie niet gevonden'); return; }
+
+  const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+  const pp = plan.prijspeil;
+  const eindJaar = pp + plan.looptijdJaren;
+  const idx = plan.indexeringPct || 0;
+  const btwF = _ohpBtwFactor();
+  const btwPct = (plan.btwPctOverride != null) ? plan.btwPctOverride : _ohpBronCalcBtw();
+
+  const beurten = (plan.beurten || []).slice().sort((a, b) => (a.jaartal || 0) - (b.jaartal || 0));
+
+  // Totalen
+  let totaalGemiddelde = 0;
+  let totaalEenmalig  = 0;
+  const perJaar = {}; // { jaartal: { bedragMee, bedragBuiten } }
+  beurten.forEach(b => {
+    if (b.jaartal < pp || b.jaartal > eindJaar) return;
+    const basis = _ohpBeurtBasisBedrag(b);
+    const fac = _ohpIndexFactor(b.jaartal, pp, idx);
+    const bedrag = basis * fac * btwF;
+    const mee = (b.meeInGemiddelde !== false);
+    if (mee) totaalGemiddelde += bedrag;
+    else totaalEenmalig += bedrag;
+    if (!perJaar[b.jaartal]) perJaar[b.jaartal] = { bedragMee: 0, bedragBuiten: 0 };
+    if (mee) perJaar[b.jaartal].bedragMee += bedrag;
+    else perJaar[b.jaartal].bedragBuiten += bedrag;
+  });
+  const gemPerJaar  = plan.looptijdJaren > 0 ? (totaalGemiddelde / plan.looptijdJaren) : 0;
+  const gemPerMaand = gemPerJaar / 12;
+
+  let html = '';
+
+  // Header
+  html += `<div class="header-block">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <img src="onderhouds-garantie-plus.jpg" alt="Onderhouds garantie+ plan" style="max-height: 70px; width: auto; display: block;">
+    </div>
+    <div style="text-align: right; font-size: 9pt;">
+      <div><strong>${datum}</strong></div>
+      <div>Looptijd: ${plan.looptijdJaren} jaar (${pp}–${eindJaar})</div>
+    </div>
+  </div>`;
+
+  // Project / klant info
+  html += `<div class="section">
+    <h2>${_escapeHtml(calc.naam || 'Onderhoudsplan')}</h2>
+    <div class="summary-grid">
+      <div><span class="label">Klant: </span>${_escapeHtml(calc.klant || '—')}</div>
+      <div><span class="label">Prijspeil: </span>${pp}</div>
+      <div><span class="label">Indexering: </span>${idx}% per jaar</div>
+      <div><span class="label">BTW: </span>${btwPct}%</div>
+    </div>
+  </div>`;
+
+  // Kerncijfers: maand prominent, looptijd ernaast
+  html += `<div class="section">
+    <h3 style="margin-bottom: 0.6rem;">Uw onderhoud in cijfers</h3>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px;">
+      <div>
+        <div style="font-size: 9pt; color: #666;">Gemiddeld per maand (incl. BTW)</div>
+        <div style="font-size: 22pt; font-weight: 600; margin-top: 0.2rem;">${eur(gemPerMaand)}</div>
+      </div>
+      <div>
+        <div style="font-size: 9pt; color: #666;">Looptijd</div>
+        <div style="font-size: 22pt; font-weight: 600; margin-top: 0.2rem;">${plan.looptijdJaren} jaar</div>
+      </div>
+    </div>`;
+  if (totaalEenmalig > 0) {
+    html += `<div style="margin-top: 0.5rem; font-size: 9.5pt; color: #444;">
+      <strong>${eur(totaalEenmalig)}</strong> eenmalig, buiten het maandelijkse onderhoudstarief (afzonderlijk afrekenen).
+    </div>`;
+  }
+  html += `</div>`;
+
+  // Jaartabel
+  html += `<div class="section">
+    <h3>Bedragen per jaar</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 80px;">Jaar</th>
+          <th class="right" style="width: 160px;">Bedrag (incl. BTW)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>`;
+  for (let j = pp; j <= eindJaar; j++) {
+    const entry = perJaar[j];
+    const heeftMee = entry && entry.bedragMee > 0;
+    const heeftBuiten = entry && entry.bedragBuiten > 0;
+    if (!heeftMee && !heeftBuiten) {
+      html += `<tr><td>${j}</td><td class="num right" style="color: #999;">—</td><td></td></tr>`;
+      continue;
+    }
+    if (heeftMee) {
+      html += `<tr><td>${j}</td><td class="num right"><strong>${eur(entry.bedragMee)}</strong></td><td></td></tr>`;
+    }
+    if (heeftBuiten) {
+      html += `<tr style="color: #777;"><td>${heeftMee ? '' : j}</td><td class="num right">${eur(entry.bedragBuiten)}</td><td style="font-style: italic; font-size: 9pt;">eenmalig</td></tr>`;
+    }
+  }
+  html += `</tbody></table></div>`;
+
+  // Project-specifieke notities (vaste uitleg gaat in de Yoobi-offerte, niet hier).
+  if (plan.notities && plan.notities.trim()) {
+    html += `<div class="section">
+      <h3 style="font-size: 10pt; margin-top: 0.8rem; margin-bottom: 0.3rem; letter-spacing: 0.05em;">SPECIFIEKE AFSPRAKEN</h3>`;
+    const notitieParas = plan.notities.split('\n').filter(s => s.trim());
+    notitieParas.forEach(p => {
+      html += `<p style="margin: 0 0 0.5rem 0; font-size: 9.5pt; line-height: 1.5;">${_escapeHtml(p)}</p>`;
+    });
+    html += `</div>`;
+  }
+
+  // Afsluitende disclaimer
+  html += `<div class="section" style="margin-top: 1rem;">
+    <p style="font-size: 9pt; color: #555;">
+      Alle bedragen zijn inclusief ${btwPct}% BTW, gebaseerd op het prijspeil van ${pp} en jaarlijks geïndexeerd met ${idx}%. Dit onderhoudsplan is opgesteld op ${datum}.
+    </p>
+  </div>`;
+
+  // Footer
+  html += `<div class="footer-block">
+    Onderhoudsplan · ${APP_VERSION} · Geprint op ${datum}
+  </div>`;
+
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+
 // ============================================================
 // MATERIALEN
 // ============================================================
@@ -3149,7 +5198,7 @@ function renderBewerkingen() {
         <td class="num right" style="color:var(--accent-deep); font-weight:600;">€ ${fmt(totaal)}</td>
         <td>
           <select onchange="updBew('${b.id}','ondergrondId',this.value)" title="Verplaats naar andere ondergrond" style="margin-bottom:0.2rem; font-size:0.7rem; padding:0.2rem;">${ondOpts}</select>
-          <button class="btn-icon" onclick="dupBew('${b.id}')" title="Dupliceren">⧉</button>
+          <button class="btn-icon" onclick="dupBew('${b.id}')" title="Dupliceren">⎘</button>
           <button class="btn btn-danger btn-sm" onclick="delBew('${b.id}')">×</button>
         </td>
       </tr>`;
@@ -3255,7 +5304,7 @@ function printCalc() {
   const dagenFactureerbaar = _calcDaysFactureerbaar();
   const volleDagen = _useVolleDagen();
   const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
-  const afrondingsToeslag = volleDagen ? dagenVerschil * (c.schilders||0) * (c.uurDag||8) * sett.uurloon : 0;
+  const afrondingsToeslag = volleDagen ? dagenVerschil * (c.schilders||0) * (c.uurDag||7.5) * sett.uurloon : 0;
   const arbeidWerkelijk = t.arbeid;
   const arbeid = arbeidWerkelijk + afrondingsToeslag;
   const weken = _calcWeeks();
@@ -3301,7 +5350,7 @@ function printCalc() {
       <div><span class="label">Klant: </span>${c.klant||'—'}</div>
       <div><span class="label">Aangemaakt: </span>${c.aangemaakt ? new Date(c.aangemaakt).toLocaleDateString('nl-NL') : '—'}</div>
       <div><span class="label">Aantal schilders: </span>${c.schilders||0}</div>
-      <div><span class="label">Uren per werkdag: </span>${c.uurDag||8}</div>
+      <div><span class="label">Uren per werkdag: </span>${c.uurDag||7.5}</div>
       <div><span class="label">Reisafstand (enkele reis): </span>${reisAfstand} km</div>
       <div><span class="label">Werkdagen (werkelijk): </span>${fmt1(dagenWerkelijk)}</div>
       ${dagenFactureerbaar !== dagenWerkelijk ? `<div><span class="label">Werkdagen (factureerbaar): </span><strong>${dagenFactureerbaar}</strong></div>` : ''}
@@ -3333,15 +5382,19 @@ function printCalc() {
 
   // Hoofdgroepen → onderdelen → regels
   c.hoofdgroepen.forEach(hg => {
-    const hgT = calcHoofdgroepTotalen(hg);
+    const hgT = calcHoofdgroepTotalenOrigineel(hg); // toon altijd origineel-bedrag op PDF
+    const hgActief = _isActief(hg);
+    const hgStyle = hgActief ? '' : 'style="opacity:0.5; text-decoration:line-through;"';
     html += `<div class="section">
-      <h2>${hg.naam}</h2>`;
+      <h2 ${hgStyle}>${hg.naam}${hgActief ? '' : ' <span style="font-size:8pt; color:#888; font-weight:normal;">(vervalt)</span>'}</h2>`;
     if (!hg.onderdelen.length) {
       html += `<div class="meta"><em>Geen onderdelen</em></div>`;
     } else {
       hg.onderdelen.forEach(od => {
-        const odT = calcOnderdeelTotalen(od);
-        html += `<h3>${od.naam}</h3>`;
+        const odT = calcOnderdeelTotalenOrigineel(od);
+        const odActief = _isActief(od) && hgActief; // erfelijk: uitgezette hg trekt alles mee
+        const odStyle = odActief ? '' : 'style="opacity:0.5; text-decoration:line-through;"';
+        html += `<h3 ${odStyle}>${od.naam}${(!_isActief(od) && hgActief) ? ' <span style="font-size:8pt; color:#888; font-weight:normal;">(vervalt)</span>' : ''}</h3>`;
         if (!od.regels.length) {
           html += `<div class="meta" style="margin-left:8pt;"><em>Geen regels</em></div>`;
         } else {
@@ -3356,8 +5409,11 @@ function printCalc() {
           </tr></thead><tbody>`;
           od.regels.forEach(r => {
             const rt = calcRegelTotalen(r);
-            html += `<tr>
-              <td>${r.naam||'—'}</td>
+            const rActief = _isActief(r) && odActief; // erfelijk
+            const rStyle = rActief ? '' : 'style="opacity:0.5; text-decoration:line-through;"';
+            const vervaltLabel = (!_isActief(r) && odActief) ? ' <span style="font-size:7pt; color:#888;">(vervalt)</span>' : '';
+            html += `<tr ${rStyle}>
+              <td>${r.naam||'—'}${vervaltLabel}</td>
               <td>${r.systeemNaam || '<em>onbekend</em>'}</td>
               <td class="num right">${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</td>
               <td class="num right">${r.toeslag||0}%</td>
@@ -3366,7 +5422,7 @@ function printCalc() {
               <td class="num right">${eur(rt.verkoop)}</td>
             </tr>`;
           });
-          html += `<tr class="totaal-row">
+          html += `<tr class="totaal-row" ${odActief ? '' : 'style="opacity:0.5;"'}>
             <td colspan="4"><strong>Subtotaal ${od.naam}</strong></td>
             <td class="num right">${fmt(odT.uren)} u</td>
             <td class="num right">${eur(odT.matVerkoop)}</td>
@@ -3375,7 +5431,7 @@ function printCalc() {
           html += `</tbody></table>`;
         }
       });
-      html += `<table style="margin-top:6pt;"><tbody><tr class="totaal-row">
+      html += `<table style="margin-top:6pt;"><tbody><tr class="totaal-row" ${hgActief ? '' : 'style="opacity:0.5;"'}>
         <td><strong>Totaal ${hg.naam}</strong></td>
         <td class="num right">${fmt(hgT.uren)} uren</td>
         <td class="num right">${eur(hgT.matVerkoop)} materiaal</td>
@@ -3433,6 +5489,25 @@ function printCalc() {
       <tr class="totaal-row"><td><strong>Excl. BTW</strong></td><td class="num right">${eur(exBtw)}</td></tr>
       <tr><td>+ BTW (${sett.btw}% over excl. BTW)</td><td class="num right">${eur(btwBedrag)}</td></tr>
       <tr class="grand-row"><td><strong>Totaal incl. BTW</strong></td><td class="num right"><strong>${eur(totaal)}</strong></td></tr>
+      ${(() => {
+        // v3.11.0 — Oorspronkelijk vs aangepast op PDF
+        const hasInactive = c.hoofdgroepen.some(hg =>
+          !_isActief(hg) || hg.onderdelen.some(od =>
+            !_isActief(od) || od.regels.some(r => !_isActief(r))
+          )
+        );
+        if (!hasInactive) return '';
+        let origineel;
+        try {
+          const oT = _calcTotalForArchive(c, true);
+          origineel = (oT && isFinite(oT.totaal)) ? oT.totaal : null;
+        } catch(e) { origineel = null; }
+        if (origineel == null) return '';
+        const verschil = origineel - totaal;
+        return `<tr style="background:#fef6e7;"><td style="padding-top:6pt;"><strong>Oorspronkelijk volledig offertebedrag</strong></td><td class="num right" style="padding-top:6pt;">${eur(origineel)}</td></tr>
+          <tr style="background:#fef6e7; color:#b45309;"><td><strong>Vervalt op verzoek</strong></td><td class="num right"><strong>−${eur(verschil)}</strong></td></tr>
+          <tr style="background:#fef6e7;"><td><strong>Aangepast offertebedrag</strong></td><td class="num right"><strong>${eur(totaal)}</strong></td></tr>`;
+      })()}
     </tbody></table>
   </div>`;
 
@@ -3442,7 +5517,7 @@ function printCalc() {
     <div class="summary-grid">
       <div><span class="label">Totaal uren: </span>${fmt(t.uren)}</div>
       <div><span class="label">Aantal schilders: </span>${c.schilders||0}</div>
-      <div><span class="label">Uren per werkdag: </span>${c.uurDag||8}</div>
+      <div><span class="label">Uren per werkdag: </span>${c.uurDag||7.5}</div>
       <div><span class="label">Werkdagen werkelijk: </span>${fmt1(dagenWerkelijk)}</div>
       <div><span class="label">Werkdagen factureerbaar: </span><strong>${dagenFactureerbaar}</strong></div>
       <div><span class="label">Volle dagen factureren: </span>${volleDagen ? 'Ja' : 'Nee'}</div>
@@ -3529,9 +5604,331 @@ function printCalc() {
 }
 
 // ============================================================
-// WERKBON — print versie voor de schilders op de werkvloer
-// (geen prijzen, geen materialen, geen uren — alleen wat ze moeten doen)
+// YOOBI-EXPORT OFFERTE — voor het overzetten naar de Yoobi-offertemodule
+// Toeslagen met verstopInEenheidsprijs=true worden proportioneel verwerkt
+// in de eenheidsprijzen i.p.v. apart getoond. Reiskosten en handmatige
+// posten blijven onderaan zichtbaar. Eenheidsprijzen afgerond op 1 cent
+// naar boven; afrondingsoverschot komt automatisch in het eindtotaal.
 // ============================================================
+function printOfferteYoobi() {
+  const c = data.calc;
+  if (!c) return;
+  const sett = _activeSettings(c);
+  const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+
+  // 1. Project-niveau berekening (zelfde als printCalc voor consistentie)
+  const t = calcProjectTotalen();
+  const dagenWerkelijk = _calcDays();
+  const dagenFactureerbaar = _calcDaysFactureerbaar();
+  const volleDagen = _useVolleDagen();
+  const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
+  const afrondingsToeslag = volleDagen ? dagenVerschil * (c.schilders||0) * (c.uurDag||7.5) * sett.uurloon : 0;
+  const arbeid = t.arbeid + afrondingsToeslag;
+  const weken = _calcWeeks();
+  const reisAfstand = c.reis || 0;
+  const snelheid = sett.snelheid || 50;
+  const reisUren = dagenFactureerbaar * (c.schilders||0) * (reisAfstand / snelheid);
+  const reisTotaal = reisUren * sett.reistijd + dagenFactureerbaar * (reisAfstand * 2) * sett.km;
+  const kleinMat = t.matVerkoop * sett.kleinMat/100;
+  const afval = (arbeid + t.matVerkoop) * sett.afval/100;
+  const arbo = arbeid * sett.arbo/100;
+
+  // 2. Splits staart in verstop vs zichtbaar
+  const staartLijst = (c.staart || []);
+  const staartZichtbaar = staartLijst.filter(p => !p.verstopInEenheidsprijs);
+  const staartVerstopt  = staartLijst.filter(p => p.verstopInEenheidsprijs);
+  const staartZichtbaarTot = staartZichtbaar.reduce((s,p) => s + calcStaart(p), 0);
+  const staartVerstopTot   = staartVerstopt.reduce((s,p) => s + calcStaart(p), 0);
+  const staartTotaal = staartZichtbaarTot + staartVerstopTot;
+
+  const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
+  const winstFactor = 1 + (sett.winst || 0)/100;
+  const winstBedrag = directe * (sett.winst || 0)/100;
+  const exBtw = directe + winstBedrag;
+
+  // 3. Verzamel alle regels met hun verkoopprijs (uit calcRegelTotalen.verkoop)
+  //    Dit zijn de regels waar we de verstopte toeslagen over uitsmeren.
+  const allRegels = [];
+  c.hoofdgroepen.forEach(hg => hg.onderdelen.forEach(od => od.regels.forEach(r => {
+    if (!r.hoeveelheid || !r.stappen || !r.stappen.length) return;
+    const rt = calcRegelTotalen(r);
+    if (rt.verkoop <= 0) return;
+    allRegels.push({ r, hgNaam: hg.naam, odNaam: od.naam, regelVerkoop: rt.verkoop });
+  })));
+
+  if (!allRegels.length) {
+    alert('Deze calculatie bevat geen regels met inhoud. Voeg minimaal één regel met hoeveelheid en verfsysteem toe.');
+    return;
+  }
+
+  const sumRegelVerkoop = allRegels.reduce((s, x) => s + x.regelVerkoop, 0);
+
+  // 4. Bereken zichtbare bedragen onderaan (incl. winst-aandeel)
+  //    Reis en staart-zichtbaar zijn directe kosten; in het officiële totaal
+  //    krijgen ze een aandeel van de risico-opslag. Voor een nette offerte tonen
+  //    we ze incl. dat winst-aandeel zodat de klant de eindprijs van die post ziet.
+  const reisZichtbaar = reisTotaal * winstFactor;
+  const staartZichtbaarRows = staartZichtbaar.map(p => ({
+    naam: p.naam,
+    type: p.type,
+    bedrag: calcStaart(p) * winstFactor
+  }));
+  const staartZichtbaarRowsTot = staartZichtbaarRows.reduce((s,p) => s + p.bedrag, 0);
+
+  // 5. Bedrag dat in de regels-eenheidsprijzen verwerkt moet worden:
+  //    alles wat NIET reis-zichtbaar of staart-zichtbaar is.
+  const exBtwInRegels = exBtw - reisZichtbaar - staartZichtbaarRowsTot;
+
+  // 6. Verhoogfactor voor regel-verkoopprijzen
+  const regelFactor = sumRegelVerkoop > 0 ? exBtwInRegels / sumRegelVerkoop : 1;
+
+  // 7. Per regel: nieuwe eenheidsprijs, naar boven afgerond op 1 cent
+  const ceilToCent = (n) => Math.ceil(n * 100) / 100;
+  const yoobiRegels = allRegels.map(x => {
+    const rt = calcRegelTotalen(x.r);
+    const echtRegelTotaal = x.regelVerkoop * regelFactor;
+    const echteEenheidsprijs = echtRegelTotaal / x.r.hoeveelheid;
+    const toonprijs = ceilToCent(echteEenheidsprijs);
+    const toonRegelTotaal = toonprijs * x.r.hoeveelheid;
+    return {
+      r: x.r,
+      hgNaam: x.hgNaam,
+      odNaam: x.odNaam,
+      hoeveelheid: x.r.hoeveelheid,
+      eenheid: x.r.systeemEenheid || '',
+      toonprijs,
+      toonRegelTotaal
+    };
+  });
+
+  // 8. Eindtotaal Yoobi-versie (kan iets hoger uitvallen dan exBtw door afronding)
+  const sumYoobiRegels = yoobiRegels.reduce((s, y) => s + y.toonRegelTotaal, 0);
+  const exBtwYoobi = sumYoobiRegels + reisZichtbaar + staartZichtbaarRowsTot;
+  const btwBedragYoobi = exBtwYoobi * sett.btw/100;
+  const totaalYoobi = exBtwYoobi + btwBedragYoobi;
+  const afrondingsOverschot = exBtwYoobi - exBtw;
+
+  // 9. HTML opbouwen
+  const STATUS_LABELS = { concept:'Concept', gereed:'Gereed', verzonden:'Verzonden', geaccepteerd:'Geaccepteerd', verloren:'Verloren' };
+
+  let html = '';
+
+  // Header
+  html += `<div class="header-block">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <div class="brand-logo print"></div>
+      <div>
+        <h1>Offerte (Yoobi-stijl)</h1>
+        <div class="meta">Voor het overzetten naar de Yoobi-offertemodule · Intern hulpdocument</div>
+      </div>
+    </div>
+    <div style="text-align: right; font-size: 9pt;">
+      <div><strong>${datum}</strong></div>
+      <div>Status: ${STATUS_LABELS[c.status]||c.status}</div>
+    </div>
+  </div>`;
+
+  // Project-info
+  html += `<div class="section">
+    <h2>${c.naam || 'Calculatie'}</h2>
+    <div class="summary-grid">
+      <div><span class="label">Klant: </span>${c.klant||'—'}</div>
+      <div><span class="label">Reisafstand (enkele reis): </span>${reisAfstand} km</div>
+    </div>
+  </div>`;
+
+  // Verstop-uitleg (alleen als er iets verstopt wordt)
+  if (staartVerstopt.length > 0) {
+    const verstopNamen = staartVerstopt.map(p => p.naam).join(', ');
+    html += `<div class="section" style="background:#f8f6f1; padding:6pt 8pt; border-left:3px solid #c2410c; font-size:8.5pt;">
+      <strong>Verwerkt in eenheidsprijzen:</strong> ${verstopNamen}.
+      Deze toeslagen zijn proportioneel verdeeld over de regels en niet apart zichtbaar in deze offerte.
+    </div>`;
+  }
+
+  // Regel-tabel: alle regels uit alle hoofdgroepen, gegroepeerd per hg/od
+  c.hoofdgroepen.forEach(hg => {
+    const regelsInHg = yoobiRegels.filter(y => y.hgNaam === hg.naam);
+    if (!regelsInHg.length) return;
+    html += `<div class="section">
+      <h2>${hg.naam}</h2>`;
+    // Groepeer per onderdeel
+    const odNamen = [...new Set(regelsInHg.map(y => y.odNaam))];
+    odNamen.forEach(odNaam => {
+      const regelsInOd = regelsInHg.filter(y => y.odNaam === odNaam);
+      html += `<h3>${odNaam}</h3>
+        <table><thead><tr>
+          <th>Omschrijving</th>
+          <th>Verfsysteem</th>
+          <th class="right">Hoeveelheid</th>
+          <th class="right">Eenheidsprijs</th>
+          <th class="right">Totaal</th>
+        </tr></thead><tbody>`;
+      let odSum = 0;
+      regelsInOd.forEach(y => {
+        odSum += y.toonRegelTotaal;
+        html += `<tr>
+          <td>${y.r.naam || '—'}</td>
+          <td>${y.r.systeemNaam || '<em>onbekend</em>'}</td>
+          <td class="num right">${fmt(y.hoeveelheid)} ${y.eenheid}</td>
+          <td class="num right">${eur(y.toonprijs)}</td>
+          <td class="num right">${eur(y.toonRegelTotaal)}</td>
+        </tr>`;
+      });
+      html += `<tr class="totaal-row">
+        <td colspan="4"><strong>Subtotaal ${odNaam}</strong></td>
+        <td class="num right">${eur(odSum)}</td>
+      </tr>`;
+      html += `</tbody></table>`;
+    });
+    html += `</div>`;
+  });
+
+  // Onderaan: reiskosten + zichtbare staart-posten
+  html += `<div class="section">
+    <h2>Bijkomende kosten</h2>
+    <table><thead><tr>
+      <th>Omschrijving</th>
+      <th>Detail</th>
+      <th class="right">Bedrag</th>
+    </tr></thead><tbody>`;
+  if (reisTotaal > 0) {
+    html += `<tr>
+      <td>Reiskosten</td>
+      <td>${dagenFactureerbaar} dagen × ${reisAfstand} km enkele reis</td>
+      <td class="num right">${eur(reisZichtbaar)}</td>
+    </tr>`;
+  }
+  staartZichtbaar.forEach(p => {
+    let detail = '';
+    if (p.type === 'vast') detail = 'vast bedrag';
+    else if (p.type === 'dag') detail = `${dagenFactureerbaar} dagen`;
+    else if (p.type === 'week') detail = `${weken} weken`;
+    else if (p.type === 'eenheid') detail = `${fmt(p.hoeveelheid||0)} ${p.eenheid||''}`;
+    else if (p.type === 'percent') detail = `${fmt(p.bedrag)}% over ${p.grondslag}`;
+    const bedrag = calcStaart(p) * winstFactor;
+    html += `<tr>
+      <td>${p.naam}</td>
+      <td>${detail}</td>
+      <td class="num right">${eur(bedrag)}</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  // Eindtotalen
+  html += `<div class="section">
+    <table><tbody>
+      <tr class="totaal-row"><td><strong>Totaal excl. BTW</strong></td><td class="num right">${eur(exBtwYoobi)}</td></tr>
+      <tr><td>BTW (${sett.btw}%)</td><td class="num right">${eur(btwBedragYoobi)}</td></tr>
+      <tr class="grand-row"><td><strong>Totaal incl. BTW</strong></td><td class="num right"><strong>${eur(totaalYoobi)}</strong></td></tr>
+    </tbody></table>
+  </div>`;
+
+  // Footer met afrondingsinfo (klein, alleen voor je eigen archief)
+  const afrInfo = afrondingsOverschot > 0
+    ? ` · Afronding: +${eur(afrondingsOverschot)} t.o.v. interne calc`
+    : '';
+  html += `<div class="footer-block">
+    Yoobi-export · ${APP_VERSION} · Geprint op ${datum}${afrInfo}
+  </div>`;
+
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+
+
+// ============================================================
+// WERKBON — print versie voor de schilders op de werkvloer
+// (geen prijzen, geen uren — wel materiaalverbruik per onderdeel + totaal)
+// ============================================================
+
+// Aggregeert materiaalverbruik uit stap-snapshots over een set regels.
+// Retourneert array van { materiaalId, naam, eenheid, groep, verbruik }
+// gesorteerd op groep (volgens groepOpslagen-volgorde), dan alfabetisch.
+// Stappen zonder materiaal worden overgeslagen. Staat-toeslag wordt NIET
+// meegerekend — alleen basisverbruik (theoretisch minimum), zodat de
+// gebruiker zelf bepaalt hoe royaal hij bestelt.
+function _aggregeerMateriaalVerbruik(regels) {
+  const map = {}; // key: materiaalId → { naam, eenheid, groep, verbruik }
+  (regels || []).forEach(r => {
+    if (!r.stappen || !r.stappen.length) return;
+    const hoeveelheid = r.hoeveelheid || 0;
+    r.stappen.forEach(st => {
+      if (!st.materiaalId || !st.materiaalNaam) return;
+      const verbruik = hoeveelheid * (st.verbruik || 0) * ((st.percentage ?? 100) / 100);
+      if (verbruik <= 0) return;
+      const key = st.materiaalId;
+      if (!map[key]) {
+        map[key] = {
+          materiaalId: st.materiaalId,
+          naam: st.materiaalNaam,
+          eenheid: st.materiaalEenheid || '',
+          groep: st.materiaalGroep || 'Overig',
+          verbruik: 0
+        };
+      }
+      map[key].verbruik += verbruik;
+    });
+  });
+  // Sorteer: eerst op groep-volgorde (uit settings), dan alfabetisch op naam
+  const groepOrder = Object.keys((_S().groepOpslagen) || {});
+  const groepIdx = g => {
+    const i = groepOrder.indexOf(g);
+    return i === -1 ? 999 : i;
+  };
+  return Object.values(map).sort((a, b) => {
+    const ga = groepIdx(a.groep), gb = groepIdx(b.groep);
+    if (ga !== gb) return ga - gb;
+    if (a.groep !== b.groep) return a.groep.localeCompare(b.groep, 'nl');
+    return a.naam.localeCompare(b.naam, 'nl');
+  });
+}
+
+// Rendert materiaal-aggregatie als HTML-tabel. Compact voor per-onderdeel,
+// met groep-kopjes voor het project-totaal.
+function _renderMateriaalTabel(rows, opts) {
+  opts = opts || {};
+  if (!rows.length) return '';
+  if (opts.metGroepen) {
+    // Gegroepeerd per materiaalgroep — voor project-totaal
+    let html = `<table style="margin-top:4pt;"><thead><tr>
+      <th>Materiaal</th>
+      <th class="right" style="width:80pt;">Verbruik</th>
+      <th style="width:50pt;">Eenheid</th>
+    </tr></thead><tbody>`;
+    let huidigeGroep = null;
+    rows.forEach(r => {
+      if (r.groep !== huidigeGroep) {
+        huidigeGroep = r.groep;
+        html += `<tr><td colspan="3" style="background:#f5f5f5; font-weight:bold; padding-top:4pt;">${r.groep}</td></tr>`;
+      }
+      html += `<tr>
+        <td>${r.naam}</td>
+        <td class="num right">${fmt3(r.verbruik)}</td>
+        <td>${r.eenheid}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    return html;
+  } else {
+    // Plat, compact — voor per-onderdeel
+    let html = `<table style="margin-top:4pt; margin-bottom:8pt; font-size:9pt;"><thead><tr>
+      <th>Materiaal</th>
+      <th class="right" style="width:70pt;">Verbruik</th>
+      <th style="width:45pt;">Eenheid</th>
+    </tr></thead><tbody>`;
+    rows.forEach(r => {
+      html += `<tr>
+        <td>${r.naam}</td>
+        <td class="num right">${fmt3(r.verbruik)}</td>
+        <td>${r.eenheid}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    return html;
+  }
+}
+
 function printWerkbon() {
   const c = data.calc;
   if (!c) return;
@@ -3590,9 +5987,51 @@ function printWerkbon() {
           });
           html += `</tbody></table>`;
         }
+        // Materiaal-overzicht voor deze regel (kleurzone-niveau)
+        const matRowsRegel = _aggregeerMateriaalVerbruik([r]);
+        if (matRowsRegel.length) {
+          const regelLabelMat = (r.naam && r.naam.trim()) ? r.naam : r.systeemNaam || 'regel';
+          html += `<div style="margin-top:4pt; font-size:8.5pt; color:#777; padding-left:8pt; border-left:2pt solid #ddd;">
+            <em>Materiaal voor ${regelLabelMat}:</em>
+          </div>`;
+          html += `<div style="padding-left:8pt; border-left:2pt solid #ddd;">`;
+          html += _renderMateriaalTabel(matRowsRegel, { metGroepen: false });
+          html += `</div>`;
+        }
       });
+      // Materiaal-overzicht voor dit onderdeel (geaggregeerd over alle regels)
+      const matRowsOnderdeel = _aggregeerMateriaalVerbruik(od.regels);
+      if (matRowsOnderdeel.length) {
+        html += `<div style="margin-top:10pt; padding:6pt 8pt; background:#fafafa; border-left:3pt solid #888;">
+          <div style="font-size:9pt; color:#444; font-weight:bold; margin-bottom:2pt;">
+            Materiaal voor onderdeel ${od.naam}
+          </div>
+          <div style="font-size:8pt; color:#777; margin-bottom:2pt;">
+            <em>Som van alle regels binnen dit onderdeel.</em>
+          </div>`;
+        html += _renderMateriaalTabel(matRowsOnderdeel, { metGroepen: false });
+        html += `</div>`;
+      }
     });
   });
+
+  // Projecttotaal materiaal — boodschappenlijst (alle regels van alle onderdelen)
+  const alleRegels = [];
+  c.hoofdgroepen.forEach(hg => {
+    (hg.onderdelen || []).forEach(od => {
+      (od.regels || []).forEach(r => alleRegels.push(r));
+    });
+  });
+  const matRowsTotaal = _aggregeerMateriaalVerbruik(alleRegels);
+  if (matRowsTotaal.length) {
+    html += `<div style="margin-top:18pt; padding-top:10pt; border-top:1.5pt solid #333; page-break-inside:avoid;">
+      <h2 style="margin-top:0;">Materiaal totaal voor project</h2>
+      <div style="font-size:9pt; color:#666; margin-bottom:4pt;">
+        <em>Theoretisch basisverbruik — gebruik dit als ondergrens voor je bestelling.</em>
+      </div>`;
+    html += _renderMateriaalTabel(matRowsTotaal, { metGroepen: true });
+    html += `</div>`;
+  }
 
   // Footer
   html += `<div class="footer-block">
@@ -3754,15 +6193,40 @@ function _sumTotals(items, fn) {
   items.forEach(it => { const c = fn(it); Object.keys(t).forEach(k => t[k] += c[k]||0); });
   return t;
 }
-function calcOnderdeelTotalen(od) { return _sumTotals(od.regels, calcRegelTotalen); }
-function calcHoofdgroepTotalen(hg) { return _sumTotals(hg.onderdelen, calcOnderdeelTotalen); }
-function calcProjectTotalen() { return _sumTotals(data.calc.hoofdgroepen, calcHoofdgroepTotalen); }
+function calcOnderdeelTotalen(od) {
+  // v3.11.0: filter inactieve regels uit het onderdeel-totaal
+  const actieveRegels = (od.regels || []).filter(_isActief);
+  return _sumTotals(actieveRegels, calcRegelTotalen);
+}
+function calcOnderdeelTotalenOrigineel(od) {
+  // Telt ALLE regels mee, ongeacht actief-status (voor oorspronkelijk bedrag)
+  return _sumTotals(od.regels || [], calcRegelTotalen);
+}
+function calcHoofdgroepTotalen(hg) {
+  // Filter inactieve onderdelen uit het actuele totaal (v3.11.0).
+  // Voor het oorspronkelijke offertebedrag wordt calcHoofdgroepTotalenOrigineel gebruikt.
+  const actieveOds = (hg.onderdelen || []).filter(_isActief);
+  return _sumTotals(actieveOds, calcOnderdeelTotalen);
+}
+function calcHoofdgroepTotalenOrigineel(hg) {
+  // Telt ALLE onderdelen + regels mee, ongeacht actief-status. Voor PDF/dashboard-historie.
+  return _sumTotals(hg.onderdelen || [], calcOnderdeelTotalenOrigineel);
+}
+function calcProjectTotalen() {
+  // Filter inactieve hoofdgroepen uit het actuele totaal.
+  const actieveHgs = (data.calc.hoofdgroepen || []).filter(_isActief);
+  return _sumTotals(actieveHgs, calcHoofdgroepTotalen);
+}
+function calcProjectTotalenOrigineel() {
+  // Telt ALLE hoofdgroepen+onderdelen mee, ongeacht actief-status.
+  return _sumTotals(data.calc.hoofdgroepen || [], calcHoofdgroepTotalenOrigineel);
+}
 function _calcDays() {
   // werkelijke dagen op basis van uren / schilders / uur per dag
   const t = calcProjectTotalen();
   const u = t.uren;
   const s = data.calc.schilders || 1;
-  const ud = data.calc.uurDag || 8;
+  const ud = data.calc.uurDag || 7.5;
   if (u === 0) return 0;
   const exact = u / s / ud;
   // Internal precision: 2 decimals
@@ -4458,7 +6922,9 @@ function renderCalcStructuur() {
   document.getElementById('calcKlant').value = data.calc.klant || '';
   document.getElementById('calcReis').value = data.calc.reis || 0;
   document.getElementById('calcSchilders').value = data.calc.schilders || 2;
-  document.getElementById('calcUurDag').value = data.calc.uurDag || 8;
+  document.getElementById('calcUurDag').value = data.calc.uurDag || 7.5;
+  document.getElementById('calcOpname').value = data.calc.opnameDatum || '';
+  document.getElementById('calcDeadline').value = data.calc.deadlineDatum || '';
 
   renderNotitiesPaneel();
 
@@ -4474,15 +6940,22 @@ function renderCalcStructuur() {
 }
 function renderHoofdgroep(hg) {
   const t = calcHoofdgroepTotalen(hg);
+  const tOrig = calcHoofdgroepTotalenOrigineel(hg);
+  const actief = _isActief(hg);
   const onderdelenHtml = hg.onderdelen.length ? hg.onderdelen.map(od => renderOnderdeel(hg.id, od)).join('') :
     '<p style="color:var(--muted); font-style:italic; padding: 0.5rem;">Geen onderdelen.</p>';
-  return `<div class="hoofdgroep ${hg.collapsed?'collapsed':''}">
+  // Toon stats: bij inactief het origineel-bedrag tussen haakjes
+  const statsHtml = actief
+    ? `${fmt(t.uren)} u · ${eur(t.verkoop)}`
+    : `<span title="Uitgezet — telt niet mee in actuele offerte">${fmt(tOrig.uren)} u · ${eur(tOrig.verkoop)}</span>`;
+  return `<div class="hoofdgroep ${hg.collapsed?'collapsed':''} ${actief?'':'is-inactief'}">
     <div class="hoofdgroep-head">
       <span class="title">
+        <input type="checkbox" class="actief-toggle" ${actief?'checked':''} onchange="toggleHgActief('${hg.id}')" title="Aan/uit voor offerte">
         <span class="caret" onclick="toggleHg('${hg.id}')">▼</span>
         <input value="${hg.naam}" onchange="updHg('${hg.id}','naam',this.value)">
       </span>
-      <span class="stats">${fmt(t.uren)} u · ${eur(t.verkoop)}</span>
+      <span class="stats">${statsHtml}</span>
       <button class="btn btn-danger btn-sm" onclick="delHg('${hg.id}')">×</button>
     </div>
     <div class="hoofdgroep-body">
@@ -4493,16 +6966,17 @@ function renderHoofdgroep(hg) {
 }
 function renderOnderdeel(hgId, od) {
   const t = calcOnderdeelTotalen(od);
+  const actief = _isActief(od);
   const regelsHtml = od.regels.length ? od.regels.map(r => renderRegel(hgId, od.id, r)).join('') :
     '<p style="color:var(--muted); font-style:italic; padding: 0.4rem; font-size: 0.85rem;">Nog geen regels in dit onderdeel.</p>';
-  return `<div class="onderdeel ${od.collapsed?'collapsed':''}">
+  return `<div class="onderdeel ${od.collapsed?'collapsed':''} ${actief?'':'is-inactief'}">
     <div class="onderdeel-head">
       <span class="title">
+        <input type="checkbox" class="actief-toggle" ${actief?'checked':''} onchange="toggleOdActief('${hgId}','${od.id}')" title="Aan/uit voor offerte">
         <span class="caret" onclick="toggleOd('${hgId}','${od.id}')">▼</span>
         <input value="${od.naam}" onchange="updOd('${hgId}','${od.id}','naam',this.value)">
       </span>
       <span class="stats">${fmt(t.uren)} u · ${eur(t.verkoop)}</span>
-      <button class="btn-icon-dup" onclick="openDupOnderdeelModal('${hgId}','${od.id}')" title="Dupliceer dit onderdeel naar andere kamers">⧉</button>
       <button class="btn btn-danger btn-sm" onclick="delOd('${hgId}','${od.id}')">×</button>
     </div>
     <div class="onderdeel-body">
@@ -4526,17 +7000,17 @@ function renderRegel(hgId, odId, r) {
   const stappenHtml = (r.stappen || []).map((st, i) => {
     const cs = calcSnapshotStep(st);
     const stapUrenRegel = cs.uren * (r.hoeveelheid || 0); // uren voor deze stap binnen deze regel
-    const matInfo = st.materiaalNaam
-      ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid})</span>`
-      : '<span style="color:var(--muted);">—</span>';
     const matKost = cs.matInkoop;
     const arbeidKost = cs.uren * (_S().uurloon || 0);
     const totaal = matKost + arbeidKost;
+    const matInfo = st.materiaalNaam
+      ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid} · € ${fmt(matKost)})</span>`
+      : '<span style="color:var(--muted);">—</span>';
     return `<div class="regel-stap">
       <span class="regel-stap-num">${i+1}</span>
       <span class="regel-stap-naam">
         <strong>${st.bewerkingNaam}</strong>
-        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min<span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
+        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(st.minuten)} min <span title="Arbeidskosten per ${st.bewerkingEenheid}, percentage verrekend">(€ ${fmt(arbeidKost)})</span><span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
       </span>
       <span class="regel-stap-mat">${matInfo}</span>
       <span class="regel-stap-pct">
@@ -4572,10 +7046,11 @@ function renderRegel(hgId, odId, r) {
     ? `<div class="ms-hoeveelheid-display" title="Hoeveelheid uit meetstaat — wijzig in Meetstaat-tab">${fmt(msSom)} <span style="color:var(--muted); font-size:0.7rem; font-weight:400;">${eenheid}</span></div><span class="ms-badge" onclick="goToMeetstaat('${r.id}')" title="Open in Meetstaat">📐 ${msAantal} meting${msAantal===1?'':'en'}</span>`
     : `<input type="number" step="0.1" value="${r.hoeveelheid||0}" onchange="updReg('${hgId}','${odId}','${r.id}','hoeveelheid',parseFloat(this.value))"> <span style="color:var(--muted); font-size:0.7rem;">${eenheid}</span>`;
 
-  return `<div class="calc-regel-wrap">
+  const actiefR = _isActief(r);
+  return `<div class="calc-regel-wrap ${actiefR?'':'is-inactief'}">
     <div class="calc-regel">
       <div><input value="${r.naam||''}" placeholder="Locatie/omschrijving" onchange="updReg('${hgId}','${odId}','${r.id}','naam',this.value)"></div>
-      <div class="systeem-naam"><strong>${sysNaam}</strong> <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span></div>
+      <div class="systeem-naam"><input type="checkbox" class="actief-toggle" ${actiefR?'checked':''} onchange="toggleRegelActief('${hgId}','${odId}','${r.id}')" title="Aan/uit voor offerte" style="margin-right:0.4rem; vertical-align:middle;"><strong>${sysNaam}</strong> <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span></div>
       <div>${hoeveelHtml}</div>
       <div><input type="number" step="5" value="${r.toeslag||0}" onchange="updReg('${hgId}','${odId}','${r.id}','toeslag',parseFloat(this.value))" title="Toeslag voor staat (matig=15, slecht=30)"> <span style="color:var(--muted); font-size:0.7rem;">% staat</span></div>
       <div class="regel-stats">
@@ -4729,6 +7204,44 @@ function toggleOd(hgId, odId) {
   _updateOdDB(od, hgId);
   renderCalcStructuur();
 }
+
+// v3.11.0 — Aan/uit toggle hoofdgroep
+// Werkt in elke status (concept én vergrendeld). Synct dashboard-cache direct.
+function toggleHgActief(hgId) {
+  const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
+  if (!hg) return;
+  hg.actief = !_isActief(hg); // huidige state inverteren, defensief
+  _updateHgDB(hg, data.calc.id);
+  // Actuele bedrag mee in dashboard-cache; gebruik centrale helper.
+  _syncCalcTotalToDB(data.calc);
+  renderCalcStructuur();
+  renderTotals();
+  renderDashboard();
+}
+
+// v3.11.0 — Aan/uit toggle onderdeel
+function toggleOdActief(hgId, odId) {
+  const od = _findOnderdeel(hgId, odId);
+  if (!od) return;
+  od.actief = !_isActief(od);
+  _updateOdDB(od, hgId);
+  _syncCalcTotalToDB(data.calc);
+  renderCalcStructuur();
+  renderTotals();
+  renderDashboard();
+}
+
+// v3.11.0 — Aan/uit toggle regel (verfsysteem-bundel)
+function toggleRegelActief(hgId, odId, rId) {
+  const r = _findRegel(hgId, odId, rId);
+  if (!r) return;
+  r.actief = !_isActief(r);
+  _updateRegelDB(r, odId);
+  _syncCalcTotalToDB(data.calc);
+  renderCalcStructuur();
+  renderTotals();
+  renderDashboard();
+}
 function updReg(hgId, odId, rId, f, v) {
   const od = _findOnderdeel(hgId, odId);
   if (!od) return;
@@ -4815,10 +7328,104 @@ async function selectAddSys(sysId) {
   renderCalcStructuur();
 }
 function openSystemFromAdd() {
-  modalSysContext = addSysCtx ? { ...addSysCtx } : null;
+  // BELANGRIJK: openSystemModal() reset modalSysContext naar null,
+  // dus we moeten de context PAS NA het openen zetten, niet ervoor.
+  // Vóór v3.9.2 stonden deze regels omgedraaid, waardoor de auto-invoeg
+  // van de zojuist aangemaakte regel niet werkte.
+  const ctx = addSysCtx ? { ...addSysCtx } : null;
   closeAddSysModal();
   openSystemModal();
+  modalSysContext = ctx;
 }
+
+// ============================================================
+// NIEUWE BEWERKING vanuit het Verfsysteem-formulier (v3.9.3)
+// Maakt een bewerking aan in de bibliotheek én voegt 'm direct
+// als stap toe aan het systeem in wording. Eenheid + ondergrond
+// erven van het huidige systeem om typewerk te besparen.
+// ============================================================
+function openNewBewModal() {
+  // Eenheid + ondergrond van het huidige systeem als default
+  const sysEenheid = document.getElementById('sysEenheid')?.value || 'm²';
+  const sysOnderId = document.getElementById('sysOnder')?.value || (data.ondergronden[0]?.id || '');
+
+  document.getElementById('newBewNaam').value = '';
+  document.getElementById('newBewEenheid').value = sysEenheid;
+  document.getElementById('newBewMinuten').value = 3;
+
+  // Ondergrond-dropdown vullen
+  const onderSel = document.getElementById('newBewOnder');
+  onderSel.innerHTML = data.ondergronden.map(o => `<option value="${o.id}">${o.naam}</option>`).join('');
+  onderSel.value = sysOnderId;
+
+  // Materiaal-dropdown vullen
+  const matSel = document.getElementById('newBewMat');
+  matSel.innerHTML = '<option value="">— geen —</option>' +
+    data.materialen.map(m => `<option value="${m.id}">${m.naam} (${m.eenheid})</option>`).join('');
+  matSel.value = '';
+
+  document.getElementById('newBewVerbruik').value = 0;
+  document.getElementById('newBewVerbruik').disabled = true;
+  document.getElementById('newBewMatHint').style.display = data.materialen.length === 0 ? 'block' : 'block';
+
+  document.getElementById('newBewModal').classList.add('active');
+  // Focus op naam-veld
+  setTimeout(() => document.getElementById('newBewNaam').focus(), 50);
+}
+
+function closeNewBewModal() {
+  document.getElementById('newBewModal').classList.remove('active');
+}
+
+function _toggleNewBewVerbruik() {
+  const matId = document.getElementById('newBewMat').value;
+  const verbruikInput = document.getElementById('newBewVerbruik');
+  if (matId) {
+    verbruikInput.disabled = false;
+    if (!parseFloat(verbruikInput.value)) verbruikInput.value = '';
+    verbruikInput.focus();
+  } else {
+    verbruikInput.disabled = true;
+    verbruikInput.value = 0;
+  }
+}
+
+async function saveNewBewFromSystem() {
+  const naam = (document.getElementById('newBewNaam').value || '').trim();
+  if (!naam) { alert('Geef de bewerking een naam.'); return; }
+
+  const eenheid = document.getElementById('newBewEenheid').value;
+  const minuten = parseFloat(document.getElementById('newBewMinuten').value) || 0;
+  const ondergrondId = document.getElementById('newBewOnder').value || null;
+  const materiaalId = document.getElementById('newBewMat').value || null;
+  const verbruik = materiaalId ? (parseFloat(document.getElementById('newBewVerbruik').value) || 0) : 0;
+
+  const btn = document.querySelector('#newBewModal button.btn[onclick="saveNewBewFromSystem()"]');
+  let oldText;
+  if (btn) { oldText = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Bezig...'; }
+
+  const maxV = data.bewerkingen.reduce((m, b) => Math.max(m, b.volgorde || 0), 0);
+  const nieuw = {
+    naam, eenheid, minuten,
+    ondergrondId, materiaalId, verbruik,
+    volgorde: maxV + 10
+  };
+  const saved = await _insertBewDB(nieuw);
+  if (btn) { btn.disabled = false; btn.textContent = oldText; }
+  if (!saved) return;
+
+  data.bewerkingen.push(saved);
+
+  // Voeg direct toe als stap aan het systeem in wording
+  modalSteps.push({ bewerkingId: saved.id, percentage: 100 });
+
+  // Dropdown ververesen zodat de nieuwe bewerking ook daar verschijnt
+  refreshModalBewSelect();
+  renderModalSteps();
+
+  closeNewBewModal();
+}
+
 async function newCalc() {
   const naam = prompt('Naam voor de nieuwe calculatie:', 'Calculatie ' + (data.calculaties.length + 1));
   if (!naam) return;
@@ -4836,12 +7443,36 @@ async function openCalc(id) {
   data.activeCalcId = id;
   try { localStorage.setItem('verfcalc_v3_activeCalcId', id); } catch(e) {}
   if (!c.__loaded) await _loadCalcBody(c);
+  // Cache het totaalbedrag in de DB zodat het dashboard ook na een nieuwe
+  // sessie/dag een correcte waarde toont, ook voor verzonden/geaccepteerde calcs.
+  _syncCalcTotalToDB(c);
   renderCalcStructuur(); renderDashboard();
   // switch to calculatie tab
   document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
   document.querySelector('nav button[data-tab="calculatie"]').classList.add('active');
   document.getElementById('calculatie').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Centrale helper: bereken het actuele totaal van een geladen calc en
+// schrijf het naar Supabase als het verschilt van de cache. Werkt voor
+// elke status (concept, gereed, verzonden, geaccepteerd, verloren).
+// Stille fail bij berekeningsfouten of DB-fouten — beïnvloedt UI niet.
+function _syncCalcTotalToDB(c) {
+  if (!c || !c.__loaded) return;
+  try {
+    const t = _calcTotalForArchive(c);
+    const tot = (t && isFinite(t.totaal)) ? Math.round(t.totaal * 100) / 100 : null;
+    // Alleen schrijven als waarde verandert om onnodige DB-writes te voorkomen
+    if (c.totaalInclBtw !== tot) {
+      c.totaalInclBtw = tot;
+      _sbQuery(
+        _sb.from('calculaties').update({ totaal_incl_btw: tot }).eq('id', c.id),
+        'Totaal cachen'
+      ).then(() => {});
+    }
+  } catch(e) {}
 }
 async function delCalc(id) {
   const c = data.calculaties.find(x => x.id === id);
@@ -4949,168 +7580,6 @@ async function dupCalc(id) {
   data.calculaties.unshift(fresh);
   renderDashboard();
 }
-
-// ============================================================
-// DUPLICEER ONDERDEEL — kopieer regels naar één of meer doelen
-// Hoeveelheden worden bewust op 0 gezet (m² per kamer verschilt)
-// Meetstaat-rijen worden NIET meegekopieerd (ruimte-specifiek)
-// ============================================================
-async function dupOnderdeel(srcHgId, srcOdId, targetOdIds, newNames) {
-  // srcHgId/srcOdId = bron
-  // targetOdIds = array van bestaande onderdeel-ids om naar te kopiëren
-  // newNames = array van strings voor nieuwe onderdelen (zelfde hoofdgroep)
-  if (!data.calc) return;
-  const hg = data.calc.hoofdgroepen.find(h => h.id === srcHgId);
-  if (!hg) return;
-  const srcOd = hg.onderdelen.find(o => o.id === srcOdId);
-  if (!srcOd) return;
-  const bronRegels = srcOd.regels || [];
-
-  // 1. Voor elke nieuwe naam: maak een leeg onderdeel aan
-  const allTargets = [];
-  for (const tid of (targetOdIds || [])) {
-    const t = hg.onderdelen.find(o => o.id === tid);
-    if (t && t.id !== srcOdId) allTargets.push(t);
-  }
-  let maxVolgorde = Math.max(0, ...hg.onderdelen.map(o => o.volgorde || 0));
-  for (const naam of (newNames || [])) {
-    const cleanName = (naam || '').trim();
-    if (!cleanName) continue;
-    maxVolgorde++;
-    const newOd = await _insertOdDB({ naam: cleanName, collapsed: false, volgorde: maxVolgorde }, hg.id);
-    if (newOd) {
-      newOd.regels = [];
-      hg.onderdelen.push(newOd);
-      allTargets.push(newOd);
-    }
-  }
-
-  // 2. Voor elk doel: kopieer alle regels (hoeveelheid → 0)
-  for (const tgt of allTargets) {
-    let regelVolgorde = Math.max(0, ...((tgt.regels || []).map(r => r.volgorde || 0)));
-    for (const r of bronRegels) {
-      regelVolgorde++;
-      const newRegel = await _insertRegelDB({
-        naam: r.naam || '',
-        systeemId: r.systeemId,
-        hoeveelheid: 0,
-        toeslag: r.toeslag,
-        systeemNaam: r.systeemNaam,
-        systeemEenheid: r.systeemEenheid,
-        systeemOndergrond: r.systeemOndergrond,
-        systeemOndergrondId: r.systeemOndergrondId,
-        systeemLocatie: r.systeemLocatie,
-        volgorde: regelVolgorde,
-        stappen: (r.stappen || []).map((st, i) => ({ ...st, volgorde: i }))
-      }, tgt.id);
-      if (newRegel) {
-        if (!tgt.regels) tgt.regels = [];
-        tgt.regels.push(newRegel);
-      }
-    }
-  }
-
-  _touchCalc(data.calc.id);
-  renderCalcStructuur();
-  _toast(`Onderdeel gedupliceerd naar ${allTargets.length} ${allTargets.length === 1 ? 'doel' : 'doelen'}`, 'ok');
-}
-
-// Open modal om doelen te kiezen voor dupliceer-onderdeel
-function openDupOnderdeelModal(hgId, odId) {
-  if (!data.calc || _isCalcLocked(data.calc)) return;
-  const hg = data.calc.hoofdgroepen.find(h => h.id === hgId);
-  if (!hg) return;
-  const srcOd = hg.onderdelen.find(o => o.id === odId);
-  if (!srcOd) return;
-  const bronRegels = srcOd.regels || [];
-
-  if (!bronRegels.length) {
-    _toast('Dit onderdeel heeft geen regels om te dupliceren');
-    return;
-  }
-
-  const andereOd = hg.onderdelen.filter(o => o.id !== odId);
-  const bestaandeChecks = andereOd.length
-    ? andereOd.map(o => `
-        <label class="dup-row">
-          <input type="checkbox" data-target-id="${o.id}">
-          <span>${o.naam || '(naamloos)'}</span>
-          <span class="dup-sub">${(o.regels || []).length} regels</span>
-        </label>`).join('')
-    : '<p class="dup-empty">Geen andere onderdelen in deze hoofdgroep.</p>';
-
-  const modalHtml = `
-    <div class="modal-overlay active" onclick="closeDupOnderdeelModal(event)">
-      <div class="modal" onclick="event.stopPropagation()" style="max-width:520px;">
-        <div class="modal-head">
-          <h3>Dupliceer "${srcOd.naam || '(naamloos)'}"</h3>
-          <button class="close-x" onclick="closeDupOnderdeelModal()">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="dup-section">
-            <div class="dup-section-titel">Naar bestaande onderdelen in "${hg.naam}":</div>
-            ${bestaandeChecks}
-          </div>
-          <div class="dup-section">
-            <div class="dup-section-titel">Of: maak nieuwe onderdelen aan</div>
-            <input type="text" id="dupNewNames" placeholder="bv. Slaapkamer 2, Slaapkamer 3, Badkamer" oninput="_updateDupCount()" style="width:100%;">
-            <div class="dup-hint">Namen gescheiden door komma's</div>
-          </div>
-          <div class="dup-section dup-info">
-            <div class="dup-mee"><span class="dup-check">✓</span> ${bronRegels.length} ${bronRegels.length === 1 ? 'regel' : 'regels'} met verfsystemen en stappen</div>
-            <div class="dup-mee"><span class="dup-check">✓</span> Omschrijvingen per regel</div>
-            <div class="dup-mee dup-niet"><span class="dup-cross">✗</span> Hoeveelheden (m²) — komen leeg</div>
-            <div class="dup-mee dup-niet"><span class="dup-cross">✗</span> Meetstaat-rijen — niet meegekopieerd</div>
-          </div>
-        </div>
-        <div class="modal-foot">
-          <button class="btn-secondary btn" onclick="closeDupOnderdeelModal()">Annuleer</button>
-          <button class="btn" id="dupOnderdeelBtn" onclick="confirmDupOnderdeel('${hgId}','${odId}')" disabled>Dupliceer 0×</button>
-        </div>
-      </div>
-    </div>`;
-  const wrap = document.createElement('div');
-  wrap.id = 'dupOnderdeelModalWrap';
-  wrap.innerHTML = modalHtml;
-  document.body.appendChild(wrap);
-  // Live count updaten bij vinkjes
-  wrap.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', _updateDupCount));
-  setTimeout(() => { const t = document.getElementById('dupNewNames'); if (t) t.focus(); }, 30);
-}
-
-function _updateDupCount() {
-  const wrap = document.getElementById('dupOnderdeelModalWrap');
-  if (!wrap) return;
-  const checked = wrap.querySelectorAll('input[type=checkbox]:checked').length;
-  const nieuw = (document.getElementById('dupNewNames').value || '')
-    .split(',').map(s => s.trim()).filter(Boolean).length;
-  const total = checked + nieuw;
-  const btn = document.getElementById('dupOnderdeelBtn');
-  if (btn) {
-    btn.textContent = `Dupliceer ${total}×`;
-    btn.disabled = total === 0;
-  }
-}
-
-function closeDupOnderdeelModal(e) {
-  if (e && e.target && !e.target.classList.contains('modal-overlay')) return;
-  const wrap = document.getElementById('dupOnderdeelModalWrap');
-  if (wrap) wrap.remove();
-}
-
-async function confirmDupOnderdeel(hgId, odId) {
-  const wrap = document.getElementById('dupOnderdeelModalWrap');
-  if (!wrap) return;
-  const targetIds = [...wrap.querySelectorAll('input[type=checkbox]:checked')]
-    .map(cb => cb.getAttribute('data-target-id'));
-  const newNames = (document.getElementById('dupNewNames').value || '')
-    .split(',').map(s => s.trim()).filter(Boolean);
-  if (!targetIds.length && !newNames.length) return;
-  // Sluit modal eerst, voorkomt dubbel-klikken
-  closeDupOnderdeelModal();
-  await dupOnderdeel(hgId, odId, targetIds, newNames);
-}
-
 // ============================================================
 // LOCK / SETTINGS-SNAPSHOT — gereed/verzonden/etc. bevriezen instellingen
 // ============================================================
@@ -5166,7 +7635,37 @@ async function setCalcStatus(id, status) {
     c.settingsSnapshot = null;
   }
 
+  // Bevries OOK het totaal-bedrag bij vergrendelen. Als de calc nog niet
+  // geladen is, eerst body inladen zodat we een actuele berekening kunnen
+  // maken; daarna cachen via centrale helper. Voorkomt verzonden/geaccepteerde
+  // calcs met een leeg dashboard-bedrag (de vorige bug).
+  if (isNowLocked && !wasLocked) {
+    if (!c.__loaded) {
+      try { await _loadCalcBody(c); } catch(e) {}
+    }
+    _syncCalcTotalToDB(c);
+    // v3.11.0 — Bevries het oorspronkelijke offertebedrag bij elke nieuwe
+    // vergrendeling (concept → verzonden/geaccepteerd/etc). Bij hervergrendelen
+    // na terug-naar-concept wordt het overschreven: de laatste uitgebrachte
+    // versie is de "echte" oorspronkelijke offerte t.o.v. wat erna gebeurt.
+    if (c.__loaded) {
+      try {
+        const tOrig = _calcTotalForArchive(c, true); // alle items meegeteld
+        const totOrig = (tOrig && isFinite(tOrig.totaal)) ? Math.round(tOrig.totaal * 100) / 100 : null;
+        c.totaalOfferteOrigineel = totOrig;
+        _sbQuery(
+          _sb.from('calculaties').update({ totaal_offerte_origineel: totOrig }).eq('id', c.id),
+          'Origineel bedrag bevriezen'
+        ).then(() => {});
+      } catch(e) {}
+    }
+  }
+
   _updateCalcDB(c);
+  // Bij terug-naar-concept: laat _touchCalc nieuwe totaal berekenen + saven
+  if (!isNowLocked && wasLocked) {
+    _touchCalc(id);
+  }
   renderDashboard();
   // Als deze calc actief is, hertekent UI met read-only state
   if (data.calc && data.calc.id === id) {
@@ -5178,15 +7677,47 @@ async function setCalcStatus(id, status) {
 
 // header form binding — change-event (op blur) + DB-update voor cloud
 document.addEventListener('change', e => {
-  const map = {calcProject:'naam', calcKlant:'klant', calcReis:'reis', calcSchilders:'schilders', calcUurDag:'uurDag'};
+  const map = {calcProject:'naam', calcKlant:'klant', calcReis:'reis', calcSchilders:'schilders', calcUurDag:'uurDag', calcOpname:'opnameDatum', calcDeadline:'deadlineDatum'};
   if (map[e.target.id] && data.calc) {
     const k = map[e.target.id];
-    data.calc[k] = ['reis','schilders','uurDag'].includes(k) ? (parseFloat(e.target.value)||0) : e.target.value;
+    const oldOpname = data.calc.opnameDatum || null;
+    const oldDeadline = data.calc.deadlineDatum || null;
+    if (['reis','schilders','uurDag'].includes(k)) {
+      data.calc[k] = parseFloat(e.target.value)||0;
+    } else if (['opnameDatum','deadlineDatum'].includes(k)) {
+      data.calc[k] = e.target.value || null;
+    } else {
+      data.calc[k] = e.target.value;
+    }
+    // Auto-vul deadline bij wijziging opname-datum:
+    //  - deadline leeg → vullen met opname + 14
+    //  - deadline = (oude opname + 14) → herberekenen naar nieuwe opname + 14 (was auto-waarde)
+    //  - deadline = iets anders → laten staan (handmatig overschreven)
+    if (k === 'opnameDatum' && data.calc.opnameDatum) {
+      const newAuto = _addDays(data.calc.opnameDatum, 14);
+      const oldAuto = oldOpname ? _addDays(oldOpname, 14) : null;
+      if (!oldDeadline || oldDeadline === oldAuto) {
+        data.calc.deadlineDatum = newAuto;
+        const dl = document.getElementById('calcDeadline');
+        if (dl) dl.value = newAuto;
+      }
+    }
     _updateCalcDB(data.calc);
     if (['reis','schilders','uurDag'].includes(k)) renderTotals();
     renderDashboard();
   }
 });
+// Helper: tel N dagen op bij een YYYY-MM-DD datum, retourneert YYYY-MM-DD
+function _addDays(yyyymmdd, n) {
+  if (!yyyymmdd) return null;
+  const [y, m, d] = yyyymmdd.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + n);
+  const yy = dt.getFullYear();
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}
 // ============================================================
 // STAARTKOSTEN
 // ============================================================
@@ -5213,6 +7744,118 @@ function _calcWeeks() {
 }
 function calcStaartTotaal() { return data.calc.staart.reduce((s, p) => s + calcStaart(p), 0); }
 
+// ============================================================
+// NORM-REFERENTIE-BLOKKEN (v3.9.4)
+// Twee leesbare blokken naast/onder staartkosten die richtwaarden
+// uit het normenboek tonen. Geen automatische toepassing — pure
+// rekenhulp. Jij bepaalt zelf wat je in de toeslag-post invult.
+// ============================================================
+
+// Tabel kleine objecten (uit normenboek): max-uren → toeslag%
+const NORM_KLEIN_OBJ = [
+  { max: 10,  pct: 30 },
+  { max: 25,  pct: 25 },
+  { max: 50,  pct: 20 },
+  { max: 100, pct: 15 },
+  { max: 150, pct: 10 },
+  { max: Infinity, pct: 0 }
+];
+
+// Tabel klimtijd: woonlaag → toeslag%
+const NORM_KLIMTIJD = {
+  1: 6,
+  2: 13,
+  3: 17.5,
+  4: 20,
+  5: 24
+};
+
+function _normPctKleineObj(uren) {
+  for (const r of NORM_KLEIN_OBJ) {
+    if (uren <= r.max) return r.pct;
+  }
+  return 0;
+}
+
+// State voor klimtijd-keuze (lokaal, niet opgeslagen in DB).
+// We bewaren 'm wel in localStorage zodat de keuze tussen pageloads behouden blijft.
+let _normKlimLaag = parseInt(localStorage.getItem('verfcalc_normKlimLaag') || '1', 10);
+let _normKlimGalerij = localStorage.getItem('verfcalc_normKlimGalerij') === '1';
+
+function _setNormKlimLaag(v) {
+  _normKlimLaag = parseInt(v, 10) || 1;
+  try { localStorage.setItem('verfcalc_normKlimLaag', String(_normKlimLaag)); } catch(e) {}
+  renderNormRefs();
+}
+function _setNormKlimGalerij(checked) {
+  _normKlimGalerij = !!checked;
+  try { localStorage.setItem('verfcalc_normKlimGalerij', _normKlimGalerij ? '1' : '0'); } catch(e) {}
+  renderNormRefs();
+}
+
+function renderNormRefs() {
+  const c = document.getElementById('normRefs');
+  if (!c) return;
+  if (!data.calc) { c.innerHTML = ''; return; }
+
+  // Totaal arbeidsuren van de calculatie
+  const t = calcProjectTotalen();
+  const uren = t.uren || 0;
+  const pctKlein = _normPctKleineObj(uren);
+
+  // Klimtijd
+  const basisKlim = NORM_KLIMTIJD[_normKlimLaag] || 0;
+  const pctKlim = basisKlim + (_normKlimGalerij ? 6 : 0);
+
+  // Helper voor de tabel-regels
+  const rijenKleinObj = NORM_KLEIN_OBJ.slice(0, -1).map(r => {
+    const actief = uren <= r.max && (pctKlein === r.pct);
+    return `<span style="${actief ? 'font-weight:600; color:var(--accent-deep);' : 'color:var(--muted);'}">≤ ${r.max} u: ${r.pct}%</span>`;
+  }).concat([`<span style="${uren > 150 ? 'font-weight:600; color:var(--accent-deep);' : 'color:var(--muted);'}">&gt; 150 u: 0%</span>`]).join(' · ');
+
+  const lagenButtons = [1,2,3,4,5].map(n => {
+    const sel = n === _normKlimLaag;
+    return `<button type="button" onclick="_setNormKlimLaag(${n})" style="padding: 0.2rem 0.55rem; font-size: 0.78rem; border: 1px solid ${sel ? 'var(--accent)' : 'var(--line)'}; background: ${sel ? 'var(--accent)' : 'var(--paper)'}; color: ${sel ? '#fff' : 'var(--ink)'}; border-radius: 4px; cursor: pointer;">${n}</button>`;
+  }).join(' ');
+
+  c.innerHTML = `
+    <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem 0.75rem; font-size: 0.82rem; margin-bottom: 0.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap: 0.5rem; flex-wrap: wrap;">
+        <strong>Toeslag kleine objecten</strong>
+        <span style="color: var(--muted); font-size: 0.74rem;"><em>richtwaarde uit normenboek</em></span>
+      </div>
+      <div style="margin-top: 0.35rem;">
+        Deze calculatie: <strong>${fmt(uren)} uur</strong> arbeid → richtwaarde <strong style="color:var(--accent-deep);">${pctKlein}%</strong> over arbeid
+      </div>
+      <div style="margin-top: 0.35rem; font-size: 0.74rem; line-height: 1.6;">
+        ${rijenKleinObj}
+      </div>
+    </div>
+
+    <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem 0.75rem; font-size: 0.82rem; margin-bottom: 0.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap: 0.5rem; flex-wrap: wrap;">
+        <strong>Toeslag klimtijd</strong>
+        <span style="color: var(--muted); font-size: 0.74rem;"><em>richtwaarde uit normenboek</em></span>
+      </div>
+      <div style="margin-top: 0.35rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <span>Hoogste woonlaag:</span>
+        <span style="display: inline-flex; gap: 0.25rem;">${lagenButtons}</span>
+      </div>
+      <label style="display:flex; align-items:center; gap:0.4rem; margin-top:0.35rem; cursor:pointer; font-size:0.78rem;">
+        <input type="checkbox" ${_normKlimGalerij ? 'checked' : ''} onchange="_setNormKlimGalerij(this.checked)">
+        Doorlopende balkons / galerij aan werkzijde (+6%)
+      </label>
+      <div style="margin-top: 0.35rem;">
+        Richtwaarde: <strong style="color:var(--accent-deep);">${fmt(pctKlim)}%</strong> over arbeid
+        ${_normKlimGalerij ? `<span style="color:var(--muted); font-size:0.74rem;"> (${basisKlim}% klimtijd + 6% galerij)</span>` : ''}
+      </div>
+      <div style="margin-top: 0.35rem; font-size: 0.74rem; color: var(--muted); line-height: 1.6;">
+        1 laag: 6% · 2 lagen: 13% · 3 lagen: 17,5% · 4 lagen: 20% · 5 lagen: 24%
+      </div>
+    </div>
+  `;
+}
+
 function renderStaartList() {
   const c = document.getElementById('staartList');
   if (!data.calc.staart.length) {
@@ -5233,7 +7876,7 @@ function renderStaartList() {
       else if (p.type === 'week') hoev = _calcWeeks() + ' weken';
       else if (p.type === 'percent') hoev = '× ' + p.grondslag;
       html += `<tr>
-        <td>${p.naam}</td>
+        <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Wordt verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}</td>
         <td>${detail}</td>
         <td class="num right">${eur(p.bedrag)}</td>
         <td>${hoev}</td>
@@ -5248,16 +7891,31 @@ function renderStaartList() {
   sel.innerHTML = '<option value="">— kies template —</option>' + data.staartLib.map(s => `<option value="${s.id}">${s.naam}</option>`).join('');
 }
 
-function addStaartFromTpl() {
+async function addStaartFromTpl() {
   const id = document.getElementById('staartTpl').value;
   if (!id) return;
   const t = data.staartLib.find(x => x.id === id);
   if (!t) return;
-  data.calc.staart.push({ id: uid('sk'), naam: t.naam, type: t.type, bedrag: t.bedrag, eenheid: t.eenheid, grondslag: t.grondslag, hoeveelheid: 0 });
+  // v3.11.4 — Persist to DB. Vóór deze versie werd de staartpost alleen
+  // lokaal in data.calc.staart gepusht; bij herladen verdween 'ie omdat 'ie
+  // nooit in de Supabase `staart`-tabel was geschreven.
+  const payload = {
+    naam: t.naam,
+    type: t.type,
+    bedrag: t.bedrag,
+    eenheid: t.eenheid,
+    grondslag: t.grondslag,
+    hoeveelheid: 0,
+    verstopInEenheidsprijs: !!t.verstopInEenheidsprijs
+  };
+  const idx = (data.calc.staart || []).length;
+  const saved = await _insertStaartCalcDB(payload, data.calc.id, idx);
+  if (!data.calc.staart) data.calc.staart = [];
+  data.calc.staart.push(saved);
   saveData(); renderStaartList(); renderTotals();
 }
 function addStaartCustom() {
-  const np = { id: uid('sk'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0 };
+  const np = { id: uid('sk'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0, verstopInEenheidsprijs: false };
   openStaartModal(np, 'newCalc');
 }
 
@@ -5272,6 +7930,7 @@ function openStaartModal(p, mode) {
   document.getElementById('staartEenheid').value = p.eenheid || '';
   document.getElementById('staartGrondslag').value = p.grondslag || 'arbeid';
   document.getElementById('staartHoev').value = p.hoeveelheid || 0;
+  document.getElementById('staartVerstop').checked = !!p.verstopInEenheidsprijs;
   updateStaartFields();
   document.getElementById('staartModal').classList.add('active');
 }
@@ -5291,6 +7950,7 @@ async function saveStaart() {
     eenheid: document.getElementById('staartEenheid').value,
     grondslag: document.getElementById('staartGrondslag').value,
     hoeveelheid: parseFloat(document.getElementById('staartHoev').value) || 0,
+    verstopInEenheidsprijs: document.getElementById('staartVerstop').checked,
   };
   if (!payload.naam) { alert('Geef een naam.'); return; }
   if (staartCtx.mode === 'editCalc') {
@@ -5347,7 +8007,7 @@ function renderStaartLib() {
     else if (p.type === 'week') detail = 'per week';
     else detail = 'vast';
     html += `<tr>
-      <td>${p.naam}</td>
+      <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Standaard verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}</td>
       <td>${p.type}</td>
       <td class="num right">${p.type==='percent' ? fmt(p.bedrag)+'%' : eur(p.bedrag)}</td>
       <td>${detail}</td>
@@ -5357,7 +8017,7 @@ function renderStaartLib() {
   html += '</tbody></table></div>';
   c.innerHTML = html;
 }
-function addStaartLib() { const np = { id: uid('sl'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0 }; openStaartModal(np, 'newLib'); }
+function addStaartLib() { const np = { id: uid('sl'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0, verstopInEenheidsprijs: false }; openStaartModal(np, 'newLib'); }
 async function delStaartLib(id) {
   if (!confirm('Verwijderen?')) return;
   const ok = await _deleteStaartDB(id);
@@ -5381,7 +8041,7 @@ function renderTotals() {
   const volleDagen = _useVolleDagen();
   // Afrondingstoeslag arbeid: verschil tussen factureerbaar en werkelijk × schilders × uurDag × uurloon
   const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
-  const afrondingsToeslag = volleDagen ? dagenVerschil * (data.calc.schilders||0) * (data.calc.uurDag||8) * sett.uurloon : 0;
+  const afrondingsToeslag = volleDagen ? dagenVerschil * (data.calc.schilders||0) * (data.calc.uurDag||7.5) * sett.uurloon : 0;
   const arbeid = arbeidWerkelijk + afrondingsToeslag;
   const snelheid = sett.snelheid || 50;
   // Reisuren: alleen heenreis × schilders × factureerbare dagen
@@ -5429,10 +8089,31 @@ function renderTotals() {
     <div class="line"><span>Excl. BTW</span><span>${eur(exBtw)}</span></div>
     <div class="line indent"><span>+ BTW</span><span>${eur(btwBedrag)}</span></div>
     <div class="grand"><span class="label">Totaal incl.</span><span class="value">${eur(totaal)}</span></div>
+    ${(() => {
+      // v3.11.0 — Scenario-blok: toon alleen als er iets uitgezet is
+      const hasInactive = (data.calc.hoofdgroepen || []).some(hg =>
+        !_isActief(hg) || (hg.onderdelen || []).some(od =>
+          !_isActief(od) || (od.regels || []).some(r => !_isActief(r))
+        )
+      );
+      if (!hasInactive) return '';
+      let origineel;
+      try {
+        const origT = _calcTotalForArchive(data.calc, true);
+        origineel = (origT && isFinite(origT.totaal)) ? origT.totaal : null;
+      } catch(e) { origineel = null; }
+      if (origineel == null) return '';
+      const verschil = origineel - totaal;
+      return `<div class="calc-scenario-block">
+        <div class="row"><span>Oorspronkelijk volledig</span><span>${eur(origineel)}</span></div>
+        <div class="row"><span>Aangepast (actuele offerte)</span><span><strong>${eur(totaal)}</strong></span></div>
+        <div class="row diff"><span>Verschil (vervalt)</span><span>−${eur(verschil)}</span></div>
+      </div>`;
+    })()}
     <div class="planning">
       <div style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.3rem;">Planning</div>
       <div class="big">${fmt1(dagenWerkelijk)} werkdagen</div>
-      <div style="font-size: 0.72rem; color: var(--ink-soft); margin-top: 0.2rem;">${data.calc.schilders||0} schilders × ${data.calc.uurDag||8} u/dag</div>
+      <div style="font-size: 0.72rem; color: var(--ink-soft); margin-top: 0.2rem;">${data.calc.schilders||0} schilders × ${data.calc.uurDag||7.5} u/dag</div>
       ${(() => {
         if (!volleDagen) return '';
         const heel = Math.floor(dagenWerkelijk);
@@ -5460,6 +8141,7 @@ function renderTotals() {
     </div>
   `;
   renderStaartList();
+  renderNormRefs();
 }
 function updVolleDagenOverride(v) {
   if (v === 'null') data.calc.volleDagenOverride = null;
@@ -5569,7 +8251,7 @@ function importData(e) {
           klant: old.klant || '',
           reis: old.reis || 0,
           schilders: old.schilders || 2,
-          uurDag: old.uurDag || 8,
+          uurDag: old.uurDag || 7.5,
           status: 'concept',
           aangemaakt: new Date().toISOString(),
           gewijzigd: new Date().toISOString(),
@@ -5797,7 +8479,7 @@ async function importCalcsFromV241(e) {
         klant: oc.klant || '',
         status: oc.status && ['concept','gereed','verzonden','geaccepteerd','verloren'].includes(oc.status) ? oc.status : 'concept',
         schilders: oc.schilders != null ? oc.schilders : 2,
-        uurDag: oc.uurDag != null ? oc.uurDag : 8,
+        uurDag: oc.uurDag != null ? oc.uurDag : 7.5,
         reis: oc.reis || 0,
         volleDagenOverride: oc.volleDagenOverride != null ? oc.volleDagenOverride : null,
         notities: oc.notities || ''
@@ -5910,13 +8592,25 @@ async function importCalcsFromV241(e) {
 // ============================================================
 // CALCULATIES ARCHIEF — render in dashboard
 // ============================================================
-function _calcTotalForArchive(c) {
+function _calcTotalForArchive(c, includeInactief = false) {
   // Compute total inclusive BTW for a calculation (without changing active)
   // Uses snapshot stappen on regel
-  const sett = data.settings;
+  // BELANGRIJK: vergrendelde calcs (status ≠ concept) rekenen met hun settingsSnapshot,
+  // zodat het bedrag NIET verandert als live tarieven (uurloon, BTW, opslagen) wijzigen.
+  // v3.11.0: standaard worden inactieve hoofdgroepen/onderdelen overgeslagen.
+  // Met includeInactief=true wordt alles meegeteld — voor het oorspronkelijke
+  // offertebedrag dat onveranderd blijft op de PDF.
+  const isVergrendeld = c.status && c.status !== 'concept';
+  const sett = (isVergrendeld && c.settingsSnapshot) ? c.settingsSnapshot : data.settings;
   let arbeid = 0, matInkoop = 0, matVerkoop = 0, uren = 0;
-  c.hoofdgroepen.forEach(hg => hg.onderdelen.forEach(od => od.regels.forEach(r => {
+  c.hoofdgroepen.forEach(hg => {
+    // v3.11.0: skip inactieve hoofdgroepen + onderdelen + regels (tenzij includeInactief)
+    if (!includeInactief && !_isActief(hg)) return;
+    hg.onderdelen.forEach(od => {
+      if (!includeInactief && !_isActief(od)) return;
+      od.regels.forEach(r => {
     if (!r.hoeveelheid || !r.stappen || !r.stappen.length) return;
+    if (!includeInactief && !_isActief(r)) return;
     let sm = 0, smI = 0, smV = 0;
     r.stappen.forEach(st => {
       const pct = (st.percentage ?? 100) / 100;
@@ -5934,9 +8628,11 @@ function _calcTotalForArchive(c) {
     matInkoop += smI * r.hoeveelheid;
     matVerkoop += smV * r.hoeveelheid;
     uren += sysUren * r.hoeveelheid * tF;
-  })));
+      });
+    });
+  });
   // Reis & dagen
-  const dagenWerkelijk = uren > 0 ? Math.round((uren / (c.schilders || 1) / (c.uurDag || 8)) * 100) / 100 : 0;
+  const dagenWerkelijk = uren > 0 ? Math.round((uren / (c.schilders || 1) / (c.uurDag || 7.5)) * 100) / 100 : 0;
   // Resolve volle dagen: per-calc override OR global setting
   let useVolle;
   if (c.volleDagenOverride === true) useVolle = true;
@@ -5956,7 +8652,7 @@ function _calcTotalForArchive(c) {
     else dagenFactureerbaar = heel;
   }
   const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
-  const afrondingsToeslag = useVolle ? dagenVerschil * (c.schilders||0) * (c.uurDag||8) * sett.uurloon : 0;
+  const afrondingsToeslag = useVolle ? dagenVerschil * (c.schilders||0) * (c.uurDag||7.5) * sett.uurloon : 0;
   arbeid += afrondingsToeslag;
   const snelheid = sett.snelheid || 50;
   const reisUren = dagenFactureerbaar * (c.schilders || 0) * ((c.reis || 0) / snelheid);
@@ -5999,20 +8695,79 @@ function renderCalculatiesArchief() {
   const STATUS_COLORS = { concept: 'var(--muted)', gereed: '#f59e0b', verzonden: 'var(--blue)', geaccepteerd: 'var(--green)', verloren: 'var(--accent-deep)' };
   // Sort by gewijzigd desc
   const sorted = [...data.calculaties].sort((a, b) => (b.gewijzigd || '').localeCompare(a.gewijzigd || ''));
-  let html = '<div class="table-scroll"><table><thead><tr><th>Naam</th><th>Gewijzigd</th><th>Status</th><th class="right">Totaal incl. BTW</th><th></th></tr></thead><tbody>';
+  let html = '<div class="table-scroll"><table><thead><tr><th>Naam</th><th>Opname</th><th>Deadline</th><th>Gewijzigd</th><th>Status</th><th class="right">Totaal incl. BTW</th><th></th></tr></thead><tbody>';
+  // Vandaag als YYYY-MM-DD voor kleur-vergelijkingen
+  const _today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  const _daysBetween = (a, b) => {
+    // a en b zijn YYYY-MM-DD strings. Retourneert b - a in dagen (integer).
+    const [ay, am, ad] = a.split('-').map(Number);
+    const [by, bm, bd] = b.split('-').map(Number);
+    const da = new Date(ay, am - 1, ad);
+    const db = new Date(by, bm - 1, bd);
+    return Math.round((db - da) / 86400000);
+  };
+  const _fmtDate = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
   sorted.forEach(cl => {
-    const t = _calcTotalForArchive(cl);
+    // Bedrag bepalen: live berekenen indien geladen (= meest actuele waarde),
+    // anders cache uit DB, anders gedachtestreepje voor calcs zonder bekend totaal.
+    // 0 wordt visueel gelijk behandeld aan 'geen bedrag' (—): een lege calc
+    // toont rustig een streepje, niet '€ 0,00'.
+    let bedragHtml;
+    const _dash = '<span style="color:var(--muted);" title="Open en sla op om te berekenen">—</span>';
+    if (cl.__loaded) {
+      const t = _calcTotalForArchive(cl);
+      const tot = (t && isFinite(t.totaal)) ? t.totaal : null;
+      bedragHtml = (tot != null && tot > 0) ? eur(tot) : _dash;
+    } else if (cl.totaalInclBtw != null && cl.totaalInclBtw > 0) {
+      bedragHtml = eur(cl.totaalInclBtw);
+    } else {
+      bedragHtml = _dash;
+    }
     const datum = cl.gewijzigd ? new Date(cl.gewijzigd).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+    // Opname + deadline cellen met kleur-logica
+    const opnameHtml = cl.opnameDatum ? `<span style="color:var(--muted);">${_fmtDate(cl.opnameDatum)}</span>` : '<span style="color:var(--muted);">—</span>';
+    let deadlineHtml = '<span style="color:var(--muted);">—</span>';
+    if (cl.deadlineDatum) {
+      const isConcept = !cl.status || cl.status === 'concept' || cl.status === 'gereed';
+      if (isConcept) {
+        const dagen = _daysBetween(_today, cl.deadlineDatum);
+        if (dagen < 0) {
+          // Deadline verstreken — rood
+          deadlineHtml = `<span style="color:var(--accent-deep); font-weight:600;" title="Deadline ${Math.abs(dagen)} dag${Math.abs(dagen)===1?'':'en'} verstreken">${_fmtDate(cl.deadlineDatum)}</span>`;
+        } else if (dagen <= 3) {
+          // Binnen 3 dagen — oranje
+          deadlineHtml = `<span style="color:#f59e0b; font-weight:600;" title="Deadline over ${dagen} dag${dagen===1?'':'en'}">${_fmtDate(cl.deadlineDatum)}</span>`;
+        } else {
+          deadlineHtml = `<span style="color:var(--muted);">${_fmtDate(cl.deadlineDatum)}</span>`;
+        }
+      } else {
+        // Verzonden/geaccepteerd/verloren: deadline is referentiewaarde, neutraal grijs
+        deadlineHtml = `<span style="color:var(--muted);">${_fmtDate(cl.deadlineDatum)}</span>`;
+      }
+    }
+    // Op tijd / te laat label bij Gewijzigd-kolom voor verzonden/geaccepteerd
+    let datumHtml = datum;
+    if (cl.deadlineDatum && cl.gewijzigd && (cl.status === 'verzonden' || cl.status === 'geaccepteerd')) {
+      const verzondenDag = cl.gewijzigd.slice(0, 10); // YYYY-MM-DD uit ISO timestamp
+      const diff = _daysBetween(cl.deadlineDatum, verzondenDag); // positief = te laat, 0 of negatief = op tijd
+      if (diff <= 0) {
+        datumHtml = `${datum} <span style="color:var(--green); font-size:0.7rem; font-weight:600; margin-left:0.3rem;" title="Verzonden op of vóór deadline">op tijd</span>`;
+      } else {
+        datumHtml = `${datum} <span style="color:var(--accent-deep); font-size:0.7rem; font-weight:600; margin-left:0.3rem;" title="Verzonden na deadline">+${diff} dg</span>`;
+      }
+    }
     const statusOpts = Object.keys(STATUS_LABELS).map(s => `<option value="${s}" ${s === cl.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('');
     const isActive = cl.id === data.activeCalcId;
     html += `<tr ${isActive ? 'style="background: rgba(194,65,12,0.06);"' : ''}>
       <td><strong style="cursor: pointer; color: var(--accent-deep);" onclick="openCalc('${cl.id}')">${cl.naam || '<em>(zonder naam)</em>'}</strong>${isActive ? ' <span class="mono" style="font-size:0.65rem; color:var(--accent); margin-left:0.4rem;">● actief</span>' : ''}<br><span style="color: var(--muted); font-size: 0.78rem;">${cl.klant || ''}</span></td>
-      <td class="num">${datum}</td>
+      <td class="num">${opnameHtml}</td>
+      <td class="num">${deadlineHtml}</td>
+      <td class="num">${datumHtml}</td>
       <td><select onchange="setCalcStatus('${cl.id}', this.value)" style="background: ${STATUS_COLORS[cl.status]}; color: var(--paper); border: none; padding: 0.25rem 0.4rem; font-size: 0.7rem;">${statusOpts}</select></td>
-      <td class="num right" style="color: var(--accent-deep); font-weight: 600;">${eur(t.totaal)}</td>
+      <td class="num right" style="color: var(--accent-deep); font-weight: 600;">${bedragHtml}</td>
       <td class="right">
         <button class="btn-secondary btn btn-sm" onclick="openCalc('${cl.id}')">Openen</button>
-        <button class="btn-secondary btn btn-sm" onclick="dupCalc('${cl.id}')" title="Dupliceren">⧉</button>
+        <button class="btn-secondary btn btn-sm" onclick="dupCalc('${cl.id}')" title="Dupliceren">⎘</button>
         <button class="btn btn-danger btn-sm" onclick="delCalc('${cl.id}')">×</button>
       </td>
     </tr>`;
@@ -6051,11 +8806,31 @@ document.getElementById('appFooter').textContent = 'Schilders Calculatie · ' + 
 
 async function init() {
   // Maak Supabase client met Auth ingeschakeld
+  // detectSessionInUrl=true: leest het access_token uit de URL-hash bij terugkomst uit reset-mail
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
 
-  // Check of er al een sessie is
+  // Luister op auth-state events. Bij PASSWORD_RECOVERY (klik op resetlink uit mail)
+  // openen we de recovery-modal in plaats van de app te starten.
+  let _recoveryHandled = false;
+  _sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      _recoveryHandled = true;
+      openRecoveryModal();
+    }
+  });
+
+  // Geef het PASSWORD_RECOVERY-event even de tijd om binnen te komen (URL-parse is async)
+  // Dit voorkomt dat we de app starten terwijl de recovery-flow nog wordt herkend.
+  await new Promise(r => setTimeout(r, 50));
+
+  if (_recoveryHandled) {
+    // Recovery-modal is al geopend; doe verder niets met de gewone session-check
+    return;
+  }
+
+  // Check of er al een gewone sessie is
   if (await _isAuthenticated()) {
     await _showApp();
   } else {
