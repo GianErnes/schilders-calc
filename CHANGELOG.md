@@ -1,3 +1,9 @@
+## v3.13.1 — Kopieer-icoon zichtbaar gemaakt
+Het ⎘-symbool (U+2398 NEXT PAGE) op de onderdeel-kop bleek visueel te vervagen in zijn eigen wit-op-wit knopvak. Op een screenshot tijdens gebruik bleek de knop een leeg kader te lijken, wat de hele feature onvindbaar maakte voor iemand die niet wist dat 'ie er moest zijn.
+- **Symbool gewijzigd**: ⎘ → **⧉** (U+29C9, SQUARED TIMES). Twee overlappende vierkanten — de universele "kopieer/dupliceer"-conventie zoals in macOS, Windows en de meeste design-tools. Door bijna iedereen herkend als "kopie maken" zonder verdere uitleg.
+- **Kleur**: het symbool krijgt `color: var(--blue)` met `font-weight: 700`, zodat het fel afsteekt tegen de witte knop-achtergrond. Knop-styling zelf blijft `.btn-secondary btn-sm` om visueel ondergeschikt te blijven aan de × verwijder-knop (rood/danger blijft de visueel zwaarste actie).
+- **Niet veranderd**: positie (links van ×), tooltip, klikgedrag, modal.
+
 ## v3.13.0 — Regels kopiëren tussen onderdelen
 **Herstel van een feature die er ooit was en op 20 mei verloren ging bij de versie-merge.** Bij grotere objecten — Siltjens-achtige zorgcentra met 7 vergelijkbare kamers, appartementencomplexen — is het invoeren van alle calc-regels per kamer onwerkbaar. Workflow nu: maak één kamer compleet, klik op het nieuwe `⎘`-icoon in de onderdeel-kop (naast ×), en kies via een modal welke andere onderdelen in dezelfde hoofdgroep de regels moeten erven.
 - **Knop**: `⎘` in `.btn-secondary btn-sm` stijl op de `onderdeel-head`, links van de delete-`×`. Tooltip "Regels kopiëren naar andere onderdelen".

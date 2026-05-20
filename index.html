@@ -1394,7 +1394,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.13.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.13.1</h2>
       <div class="intro-body">
         <p><strong>Regels kopiëren tussen onderdelen.</strong> Bij grotere objecten — een appartementencomplex, een woonzorgcentrum met 7 vergelijkbare kamers — was het iedere keer opnieuw alle regels per kamer invoeren. Nu: maak één kamer compleet, klik op het <span class="mono">⎘</span>-icoon naast de × in de onderdeel-kop, en kies welke andere onderdelen in dezelfde hoofdgroep de regels moeten erven. Alles gaat mee — verfsysteem-snapshots, alle stappen, hoeveelheden, percentages, aan/uit-status — behalve meetstaat-koppelingen (die zijn per regel-ID en blijven per kamer uniek). Regels worden toegevoegd achter eventueel al bestaande regels, dus targets met eigen werk verliezen niets. Per kamer kun je daarna nog hoeveelheden bijstellen of regels weghalen 🎨.</p>
         <p><strong>Dashboard groepering en sorteerbare kolommen.</strong> De calculatie-lijst toont calculaties gegroepeerd per status met klikbare koppen (▸ open / ▾ dicht), telling en sectie-totaal incl. BTW. Standaard staan <em>Concept</em> en <em>Gereed</em> open, <em>Verzonden</em>, <em>Geaccepteerd</em> en <em>Verloren</em> ingeklapt. Datakolommen <em>Opname</em>, <em>Deadline</em>, <em>Gewijzigd</em> en <em>Totaal incl. BTW</em> zijn sorteerbaar via klik op de kop. Lege waarden zakken altijd onderaan. Sortering en inklap-state worden per sessie gereset naar de defaults.</p>
@@ -1950,7 +1950,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.13.0';
+const APP_VERSION = 'v3.13.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -7000,7 +7000,7 @@ function renderOnderdeel(hgId, od) {
         <input value="${od.naam}" onchange="updOd('${hgId}','${od.id}','naam',this.value)">
       </span>
       <span class="stats">${fmt(t.uren)} u · ${eur(t.verkoop)}</span>
-      <button class="btn-secondary btn btn-sm" onclick="openKopieerRegelsModal('${hgId}','${od.id}')" title="Regels kopiëren naar andere onderdelen" style="margin-right:0.25rem;">⎘</button>
+      <button class="btn-secondary btn btn-sm" onclick="openKopieerRegelsModal('${hgId}','${od.id}')" title="Regels kopiëren naar andere onderdelen" style="margin-right:0.25rem; color: var(--blue); font-weight: 700;">⧉</button>
       <button class="btn btn-danger btn-sm" onclick="delOd('${hgId}','${od.id}')">×</button>
     </div>
     <div class="onderdeel-body">
