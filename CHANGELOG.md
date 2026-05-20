@@ -1,3 +1,10 @@
+## v3.13.3 — Materiaal-eenheid 'm' (meter) toegevoegd
+De materiaal-eenheid dropdown bood alleen `L`, `kg` en `stuk` — geen `m`. Voor renovlies (Conpart GroundVlies 4090, Erfurt, etc.) klopt geen van die drie: vlies komt op rollen en wordt per lopende meter ingekocht. Verbruik-relatie is daarbij `meter rol per m² muur` (ongeveer 1,2 m per m² afhankelijk van rolbreedte en snijverlies).
+- **Wijziging**: `['L','kg','stuk']` → `['L','kg','m','stuk']` in `renderMaterialen()` (regel ±5119). Logische volgorde: vloeibaar / gewicht / lengte / aantal.
+- **Info-tekst** boven de materialen-tab bijgewerkt van "L/kg/stuk per eenheid" naar "L/kg/m/stuk per eenheid".
+- **Geen DB-migratie nodig**: de `eenheid`-kolom op `materialen` is een vrije string. Bestaande materialen met 'L'/'kg'/'stuk' blijven werken. Materialen die ten onrechte als 'L' waren ingesteld (zoals waarschijnlijk de huidige Conpart GroundVlies bij Gian) kunnen via de dropdown handmatig naar 'm' worden gezet.
+- **Automatische weergave in calculaties**: het verbruik-label in bewerkingen wordt opgebouwd als `{materiaalEenheid}/{bewerkingEenheid}`. Een renovlies-materiaal op 'm' bij een bewerking op 'm²' toont voortaan dus `m/m²` (i.p.v. de onjuiste `L/m²`).
+
 ## v3.13.2 — Kopieer-icoon groter
 Het ⧉-symbool nam in de knop visueel weinig ruimte in vergeleken met de beschikbare ruimte van het kader. In gebruik bleek dat een gemiste kans — er is plaats om het icoon prominenter te maken zonder de knop op te blazen.
 - `font-size: 1.05rem` (was 0.72rem via `btn-sm`)
