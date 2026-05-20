@@ -1,3 +1,9 @@
+## v3.13.4 — Duplicaat-uitlog-knop verwijderd uit Instellingen
+Er stond nog een tweede `logout()`-knop onderaan in het **Data Beheer**-blok in Instellingen — een restant uit een eerdere versie, vóór de uitlog-knop in de header werd toegevoegd. Semantisch onlogisch (uitloggen ≠ data-beheer) en visueel verstopt — je moest scrollen om 'm te zien, terwijl er al een nette knop rechtsboven in de header staat.
+- Knop `⎋ Uitloggen` weggehaald uit de "Data Beheer"-sectie van Instellingen.
+- Header-knop `🔒 Uitloggen` blijft op zijn logische plek naast `🔑 Wachtwoord`.
+- `logout()`-functie zelf blijft in de code, wordt nog gebruikt door de header-knop en door de auto-signOut bij wachtwoord-recovery.
+
 ## v3.13.3 — Materiaal-eenheid 'm' (meter) toegevoegd
 De materiaal-eenheid dropdown bood alleen `L`, `kg` en `stuk` — geen `m`. Voor renovlies (Conpart GroundVlies 4090, Erfurt, etc.) klopt geen van die drie: vlies komt op rollen en wordt per lopende meter ingekocht. Verbruik-relatie is daarbij `meter rol per m² muur` (ongeveer 1,2 m per m² afhankelijk van rolbreedte en snijverlies).
 - **Wijziging**: `['L','kg','stuk']` → `['L','kg','m','stuk']` in `renderMaterialen()` (regel ±5119). Logische volgorde: vloeibaar / gewicht / lengte / aantal.
