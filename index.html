@@ -1394,10 +1394,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.14.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.15.0</h2>
       <div class="intro-body">
-        <p><strong>Rayon-drempel voor reiskosten.</strong> Nieuwe instelling onder Instellingen → Uurtarieven: <em>Rayon-grens (km enkele reis)</em>, default 15 km. Binnen deze afstand: alleen de km-vergoeding wordt meegerekend, géén reisuren-arbeid voor de schilders. Daarbuiten: volledige reiskosten zoals voorheen (reisuren × reistijd-tarief + km × km-tarief). Concurrentie-strategie voor het reguliere werkgebied — binnen je natuurlijke rayon kun je scherpere prijzen rekenen dan lokale concurrenten zonder reiskosten-handicap. Bij het reisafstand-veld in elke calc verschijnt een groene of oranje pill die direct toont of de klus binnen of buiten rayon valt; op de offerte staat het transparant verantwoord ("Reis (X km, binnen rayon)" of "Reis (X u + X km)"). De rayon-grens zelf staat ook in het settings-overzicht onder de offerte 🎨.</p>
-        <p><strong>Recente fixes uit v3.13-serie.</strong> Stap-weergave in calc-regels: materiaal toont nu verkoopprijs (was inkoop) en minuten schaalt mee met het percentage-veld — alle vier waarden in een stap-regel rekenen consistent. Regels-kopiëren-icoon ⧉ in blauw met betere zichtbaarheid. Materiaal-eenheid 'm' (meter) toegevoegd voor renovlies en andere rol-materialen. Duplicaat-uitlog-knop in Instellingen weggehaald.</p>
+        <p><strong>Meetstaat als PDF</strong> — nieuwe knop <span class="mono">📐 Meetstaat als PDF</span> in de calc-tab naast de andere print-knoppen. Maakt een professionele bijlage voor bij de offerte: project-info kop, alle meetregels in tabel-vorm (calc-regel · omschrijving · h · b · aantal · totaal · opmerking) en een samenvatting per calc-regel met totalen. Laat aan de klant zien dat er werkelijk gemeten en gerekend is — niet zomaar een prijs uit de mouw. Lege meetregels (alle velden 0) worden lichter weergegeven zodat duidelijk is welke regels meetellen 🎨.</p>
+        <p><strong>Rayon-drempel voor reiskosten.</strong> Instelling onder Instellingen → Uurtarieven: <em>Rayon-grens (km enkele reis)</em>, default 15 km. Binnen deze afstand: alleen km-vergoeding, géén reisuren-arbeid (concurrentie-strategie). Daarbuiten: volledige reiskosten. Bij elke calc verschijnt onder het reisafstand-veld een groene of oranje pill die direct toont waar de klus staat. Offerte vermeldt transparant <em>"Reis (X km, binnen rayon)"</em> of <em>"Reis (X u + X km)"</em>.</p>
       </div>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
@@ -1432,6 +1432,7 @@
       <div class="panel-actions">
         <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span>
         <button class="btn-secondary btn lock-allowed" onclick="printCalc()">📄 Calculatie als PDF</button>
+        <button class="btn-secondary btn lock-allowed" onclick="printMeetstaat()" title="Meetstaat afdrukken als bijlage bij de offerte">📐 Meetstaat als PDF</button>
         <button class="btn-secondary btn lock-allowed" onclick="printOfferteYoobi()" title="Offerte met toeslagen verwerkt in eenheidsprijzen, voor het overzetten naar Yoobi">📋 Offerte (Yoobi)</button>
         <button class="btn-secondary btn lock-allowed" onclick="printWerkbon()">📋 Werkbon</button>
         <button class="btn-secondary btn lock-allowed" onclick="newCalc()">+ Nieuwe</button>
@@ -1950,7 +1951,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.14.2';
+const APP_VERSION = 'v3.15.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5641,6 +5642,147 @@ function printCalc() {
 // posten blijven onderaan zichtbaar. Eenheidsprijzen afgerond op 1 cent
 // naar boven; afrondingsoverschot komt automatisch in het eindtotaal.
 // ============================================================
+// v3.15.0 — Meetstaat als PDF
+// Output is bedoeld als bijlage bij de offerte: toont aan de klant dat er
+// serieus is gemeten en gerekend. Toont per meet-rij de afmetingen, het
+// totaal, en per calc-regel een samenvatting van alle metingen.
+function printMeetstaat() {
+  const c = data.calc;
+  if (!c) return;
+  const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+
+  const allRegels = _allCalcRegels();
+  const regelById = {};
+  allRegels.forEach(ctx => { regelById[ctx.regel.id] = ctx; });
+
+  const meetstaat = c.meetstaat || [];
+
+  let html = '';
+
+  // Header
+  html += `<div class="header-block">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <div class="brand-logo print"></div>
+      <div>
+        <h1>Meetstaat</h1>
+        <div class="meta">Bijlage bij offerte · Detailmeting per calc-regel</div>
+      </div>
+    </div>
+    <div style="text-align: right; font-size: 9pt;">
+      <div><strong>${datum}</strong></div>
+    </div>
+  </div>`;
+
+  // Project info
+  html += `<div class="section">
+    <h2>${c.naam || 'Calculatie'}</h2>
+    <div class="summary-grid">
+      <div><span class="label">Klant: </span>${c.klant||'—'}</div>
+      <div><span class="label">Opname-datum: </span>${c.opnameDatum ? new Date(c.opnameDatum + 'T00:00:00').toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' }) : '—'}</div>
+      <div><span class="label">Aantal meetregels: </span>${meetstaat.length}</div>
+      <div><span class="label">Aantal calc-regels in meting: </span>${Object.keys(meetstaat.reduce((a,m) => { if (m.calcRegelId) a[m.calcRegelId]=1; return a; }, {})).length}</div>
+    </div>
+  </div>`;
+
+  // Empty state
+  if (!meetstaat.length) {
+    html += `<div class="section" style="text-align:center; padding: 2rem; color:#888;">
+      <em>Geen meetstaat-regels in deze calculatie. Voeg meetregels toe in de Meetstaat-tab.</em>
+    </div>`;
+    html += `<div class="footer-block">Schilders Calculatie · ${APP_VERSION} · Geprint op ${datum}</div>`;
+    document.getElementById('printArea').innerHTML = html;
+    window.print();
+    return;
+  }
+
+  // Meetstaat-tabel
+  html += `<div class="section">
+    <h2>Meetregels</h2>
+    <table style="width:100%; border-collapse:collapse; font-size:9pt;">
+      <thead>
+        <tr style="background:#f0ede4; border-bottom:1.5px solid #999;">
+          <th style="padding:0.4rem; text-align:left; width:32px;">#</th>
+          <th style="padding:0.4rem; text-align:left;">Calc-regel</th>
+          <th style="padding:0.4rem; text-align:left;">Omschrijving</th>
+          <th style="padding:0.4rem; text-align:right; width:60px;">h (cm)</th>
+          <th style="padding:0.4rem; text-align:right; width:60px;">b (cm)</th>
+          <th style="padding:0.4rem; text-align:right; width:50px;">aantal</th>
+          <th style="padding:0.4rem; text-align:right; width:80px;">totaal</th>
+          <th style="padding:0.4rem; text-align:left;">opmerking</th>
+        </tr>
+      </thead>
+      <tbody>`;
+  meetstaat.forEach((ms, idx) => {
+    const ctx = regelById[ms.calcRegelId];
+    const regelLabel = ctx ? _calcRegelLabel(ctx.regel, ctx) : '<em style="color:#aaa;">— regel ontbreekt —</em>';
+    const t = _meetstaatRijTotaal(ms);
+    const omschrijving = (ms.omschrijving || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '<span style="color:#bbb;">—</span>';
+    const opmerking = (ms.opmerking || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '<span style="color:#bbb;">—</span>';
+    const hCm = ms.hCm || 0;
+    const bCm = ms.bCm || 0;
+    const aantal = ms.aantal || 0;
+    // Lege rijen (hCm=0 en bCm=0 en aantal=0) iets afzwakken, zodat klant ziet dat ze niet meetellen
+    const isLeeg = (hCm === 0 && bCm === 0 && aantal === 0);
+    const rowStyle = isLeeg ? 'opacity:0.4;' : '';
+    html += `<tr style="border-bottom:1px solid #e5e0d0; ${rowStyle}">
+      <td style="padding:0.35rem; color:#888; font-family:'JetBrains Mono', monospace;">${idx+1}</td>
+      <td style="padding:0.35rem;">${regelLabel}</td>
+      <td style="padding:0.35rem;">${omschrijving}</td>
+      <td style="padding:0.35rem; text-align:right; font-family:'JetBrains Mono', monospace;">${hCm > 0 ? hCm : '<span style="color:#bbb;">—</span>'}</td>
+      <td style="padding:0.35rem; text-align:right; font-family:'JetBrains Mono', monospace;">${bCm > 0 ? bCm : '<span style="color:#bbb;">—</span>'}</td>
+      <td style="padding:0.35rem; text-align:right; font-family:'JetBrains Mono', monospace;">${aantal > 0 ? aantal : '<span style="color:#bbb;">—</span>'}</td>
+      <td style="padding:0.35rem; text-align:right; font-family:'JetBrains Mono', monospace; font-weight:600;">${t.totaal > 0 ? fmt(t.totaal) + ' ' + t.eenheid : '<span style="color:#bbb;">—</span>'}</td>
+      <td style="padding:0.35rem; font-style:italic; color:#666;">${opmerking}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>
+  </div>`;
+
+  // Samenvatting per calc-regel
+  const byRegel = {};
+  meetstaat.forEach(ms => {
+    if (!ms.calcRegelId) return;
+    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0 };
+    const t = _meetstaatRijTotaal(ms);
+    byRegel[ms.calcRegelId].count++;
+    byRegel[ms.calcRegelId].totaal += t.totaal;
+  });
+  if (Object.keys(byRegel).length > 0) {
+    html += `<div class="section">
+      <h2>Samenvatting per calc-regel</h2>
+      <table style="width:100%; border-collapse:collapse; font-size:9pt;">
+        <thead>
+          <tr style="background:#f0ede4; border-bottom:1.5px solid #999;">
+            <th style="padding:0.4rem; text-align:left;">Calc-regel</th>
+            <th style="padding:0.4rem; text-align:right; width:120px;">Aantal metingen</th>
+            <th style="padding:0.4rem; text-align:right; width:120px;">Totaal</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    Object.keys(byRegel).forEach(rid => {
+      const ctx = regelById[rid];
+      if (!ctx) return;
+      const r = ctx.regel;
+      const eenheid = r.systeemEenheid || '';
+      html += `<tr style="border-bottom:1px solid #e5e0d0;">
+        <td style="padding:0.4rem;">${_calcRegelLabel(r, ctx)}</td>
+        <td style="padding:0.4rem; text-align:right; font-family:'JetBrains Mono', monospace;">${byRegel[rid].count}</td>
+        <td style="padding:0.4rem; text-align:right; font-family:'JetBrains Mono', monospace; font-weight:600;">${fmt(byRegel[rid].totaal)} ${eenheid}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>
+    </div>`;
+  }
+
+  // Footer
+  html += `<div class="footer-block">
+    Meetstaat · ${c.naam || ''}${c.klant ? ' · ' + c.klant : ''} · ${APP_VERSION} · Geprint op ${datum}
+  </div>`;
+
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+
 function printOfferteYoobi() {
   const c = data.calc;
   if (!c) return;

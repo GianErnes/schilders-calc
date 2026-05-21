@@ -1,3 +1,28 @@
+## v3.15.0 — Meetstaat als PDF
+Gian wil de meetstaat kunnen meesturen met de offerte: een professionele bijlage die laat zien aan de klant dat er serieus is gemeten en gerekend, niet zomaar een prijs uit de mouw. Tot nu was de meetstaat alleen in-app zichtbaar — geen knop, geen print, geen exporteerbare versie.
+
+**Nieuwe knop in calc-tab:** `📐 Meetstaat als PDF` naast de bestaande print-knoppen (Calculatie als PDF, Offerte Yoobi, Werkbon). Consistent geplaatst, zelfde stijl (`btn-secondary lock-allowed`).
+
+**Functie `printMeetstaat()`** — patroon volgt `printCalc`:
+- Vult `#printArea` met opgemaakte HTML
+- Roept `window.print()` — gebruikt bestaande print-CSS in de pagina (header-block, section, footer-block, brand-logo print)
+- Geen aparte window.open — zelfde stijl-conventies als de rest
+
+**Layout van de PDF:**
+1. **Kop** met logo, "Meetstaat" titel en datum
+2. **Project-info** sectie: projectnaam, klant, opname-datum, aantal meetregels, aantal calc-regels in meting
+3. **Meetregels-tabel**: # · calc-regel · omschrijving · h (cm) · b (cm) · aantal · totaal · opmerking
+4. **Samenvatting per calc-regel**: aantal metingen en totaal per regel (geaggregeerd, met juiste eenheid)
+5. **Footer**: app-versie + project-naam + klant + print-datum
+
+**Edge cases:**
+- Geen meetregels: toont leeg-state-bericht "Geen meetstaat-regels — voeg meetregels toe in de Meetstaat-tab"
+- Calc-regel ontbreekt (referentie naar verwijderde regel): toont `— regel ontbreekt —` italic grijs
+- **Lege meetrijen** (h=0 én b=0 én aantal=0): worden gerenderd met `opacity:0.4` zodat klant ziet welke regels niet meetellen — transparant in plaats van weglaten
+- HTML-escape op alle vrije velden (omschrijving, opmerking) tegen XSS
+
+**Waarom MINOR bump (v3.15.0):** nieuwe afgeronde feature met eigen knop, eigen functie, eigen output-document. Geen breaking change in bestaande data of API, geen DB-migratie nodig (gebruikt bestaande `calc.meetstaat` array). Past niet als PATCH-tweak op v3.14.x.
+
 ## v3.14.2 — Rayon-pill: kortere tekst, past nu op één regel
 De v3.14.1 indicator-pill paste verticaal goed onder het reisafstand-veld, maar de tekst zelf brak nog over twee regels in de form-grid breedte: "● binnen rayon (≤ 15 km) — geen" / "reisuren". De drempelvermelding "(≤ 15 km)" was bovendien dubbele informatie — die staat ook in Instellingen.
 - **Tekst-wijziging**:
