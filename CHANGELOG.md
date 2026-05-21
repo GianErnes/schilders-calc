@@ -1,3 +1,26 @@
+## v3.15.3 — Meetstaat-tab: project-totaal per regel-type
+Bij grotere projecten zoals Zieltjens (75 meetregels over 7 kamers) wordt de bestaande "Totalen per calc-regel"-samenvatting al snel een lange lijst. Voor materiaal-bestelling en voortgang-bewaking heb je dan eigenlijk een niveau hoger nodig: hoeveel m² plafond zit er in het hele project (over alle kamers samen)? Hoeveel m¹ kozijn? Hoeveel m² wand?
+
+**Nieuwe sub-samenvatting** in de Meetstaat-tab, direct onder "Totalen per calc-regel":
+
+> **Project-totaal per regel-type**
+> Geaggregeerd over alle onderdelen — handig voor materiaal-bestelling en voortgang-bewaking.
+>
+> **Plafond** · Steenachtig binnen (6 regels in 6 onderdelen, 9 metingen)     119,77 m²
+> **Binnenwanden** · Steenachtig binnen (5 regels in 5 onderdelen, 20 metingen)     175,43 m²
+> **Binnendeurkozijnen** · Houtwerk binnen (2 regels in 2 onderdelen, 10 metingen)     56,12 m¹
+> *etc.*
+
+**Groepering**: regelnaam (case-insensitive, getrimd) + verfsysteem-ID. Zelfde naam + zelfde systeem mag samen, anders niet. Voorkomt dat bv. "Plafond" met systeem "Steenachtig binnen" en "Plafond" met systeem "Buiten houtwerk" per ongeluk worden samengevoegd.
+
+**Zichtbaarheid**: alleen tonen wanneer minstens één groep ≥ 2 unieke calc-regels combineert. Voor projecten waar elk regel-type maar één keer voorkomt (kleine klussen) is deze sectie redundant met de bovenstaande — dan wordt 'ie automatisch weggelaten.
+
+**Sortering**: groepen met meeste calc-regels bovenaan (= meest interessant om te aggregeren).
+
+**Telling**: aantal unieke calc-regels, aantal unieke onderdelen, totaal aantal metingen — drie cijfers die samen vertellen waar de aggregatie vandaan komt.
+
+**Niet in PDF**: alleen in de in-app Meetstaat-tab, op verzoek van gebruiker. De PDF blijft de detailweergave en de per-calc-regel samenvatting.
+
 ## v3.15.2 — Meetstaat PDF: witruimte weg, tabellen mogen pagina-breken
 De v3.15.0 PDF gebruikte de bestaande `.section` print-CSS class, die `page-break-inside: avoid` toepast om kleine secties bij elkaar te houden. Voor de meetregels-tabel met 75 rijen (Zieltjens-calc) was dat catastrofaal: de browser probeerde steeds de hele tabel op één pagina te houden, gaf op, duwde de hele sectie naar de volgende pagina, waar 'ie ook niet paste, en herhaalde. Resultaat: 9 pagina's met enkele kop, tabel-header-alleen, en lege pagina's tussendoor.
 - **Nieuwe CSS-class** `.section-flow` voor lange secties met tabellen die wél mogen breken:
