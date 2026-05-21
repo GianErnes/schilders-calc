@@ -1,3 +1,10 @@
+## v3.13.5 — Stap-regel: minuten ook geschaald met percentage
+In een calc-regel werd op stap-niveau bij een afwijkend percentage (bv. 50%) maar drie van de vier getallen meegeschaald: prijs per eenheid (€), totale uren in de regel (→ uur) en stap-totaal (€ rechts). Het vierde getal — `minuten per eenheid` — bleef hardnekkig op de bibliotheek-norm staan. Bijvoorbeeld: een stap "Repareren stucwerk" met norm 6 min/m² toonde bij 50% nog steeds `6,00 min` terwijl `(€ 3,75)` ernaast al de geschaalde waarde was (= 3 min × €1,25/min bij uurloon €75). Eén getal bleef hangen op een ander referentiekader dan de rest.
+- **Wijziging**: `${fmt(st.minuten)} min` → `${fmt(cs.minuten)} min` in de stap-regel rendering (renderRegel, regel ±7036). Door `cs.minuten` te gebruiken (= `st.minuten × percentage/100`, geleverd door `calcSnapshotStep`) i.p.v. de rauwe norm-waarde, scaled de minuten-weergave automatisch mee met het percentage-veld.
+- **Geen impact op berekeningen**: alle reken-output (uren, prijzen, totalen) gebruikt al `cs.uren`/`cs.minuten`, die het percentage al verwerken. Dit is puur een weergave-fix.
+- **Bibliotheek-norm**: voor wie de ongeschalde 6,00 min wil zien, blijft die zichtbaar in de bewerkingen-tab. In de calc-regel staat voortaan alleen wat er daadwerkelijk in déze regel wordt gerekend.
+- **Effect bij 100%**: geen — daar is `cs.minuten === st.minuten`. De wijziging is alleen merkbaar bij regels die op een ander percentage dan 100% staan.
+
 ## v3.13.4 — Duplicaat-uitlog-knop verwijderd uit Instellingen
 Er stond nog een tweede `logout()`-knop onderaan in het **Data Beheer**-blok in Instellingen — een restant uit een eerdere versie, vóór de uitlog-knop in de header werd toegevoegd. Semantisch onlogisch (uitloggen ≠ data-beheer) en visueel verstopt — je moest scrollen om 'm te zien, terwijl er al een nette knop rechtsboven in de header staat.
 - Knop `⎋ Uitloggen` weggehaald uit de "Data Beheer"-sectie van Instellingen.
