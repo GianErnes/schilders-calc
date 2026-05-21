@@ -1,3 +1,9 @@
+## v3.14.1 — Rayon-indicator: positie onder input-veld
+De v3.14.0 indicator was geplaatst als `<span>` rechts naast het "Reisafstand (km enkele reis)" label. In de praktijk bleek dat de tekst "● binnen rayon (≤ 15 km) — geen reisuren" te lang om naast het label te passen: in normale form-grid kolommen werd hij gebroken over twee regels, met het bolletje rechts boven de uitleg-tekst. Rommelige aanblik die de hele label-rij ontregelt.
+- **Verplaatsing**: indicator-element is nu een `<div>` ONDER het input-veld, in dezelfde form-cell. Krijgt eigen regel, zonder de label-rij te ontregelen.
+- **Pill-styling**: ongewijzigd (groen voor binnen rayon, oranje voor buiten). Block-element van de div container zorgt voor natuurlijke left-alignment onder het invoerveld.
+- **Patroon consistent** met andere secundaire-info-velden in de UI (Risico, Rayon-grens in instellingen) die ook hun uitleg onder het invoerveld tonen.
+
 ## v3.14.0 — Rayon-drempel voor reiskosten
 Concurrentie-strategie: binnen het natuurlijke werkgebied wil Gian competitief blijven met lokale schilders die geen reiskosten hoeven door te rekenen, maar buiten dat gebied wel de volledige reistijd doorberekenen. Nieuwe instelling + bijbehorende rekenlogica + visuele indicator + transparante offerteweergave.
 
