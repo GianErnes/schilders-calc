@@ -1,3 +1,44 @@
+## v3.14.0 — Rayon-drempel voor reiskosten
+Concurrentie-strategie: binnen het natuurlijke werkgebied wil Gian competitief blijven met lokale schilders die geen reiskosten hoeven door te rekenen, maar buiten dat gebied wel de volledige reistijd doorberekenen. Nieuwe instelling + bijbehorende rekenlogica + visuele indicator + transparante offerteweergave.
+
+**Nieuwe instelling: `rayonDrempel`**
+- UI: Instellingen → Uurtarieven → "Rayon-grens (km enkele reis)" met uitleg "Binnen deze afstand: alleen km-vergoeding, geen reisuren-arbeid"
+- Default: 15 (passend bij Gian's werkgebied vanuit Koperslager 2 Heerlen — dekt heel Parkstad, Heuvelland tot Cadier en Keer, en Aachen-regio)
+- Backward-compat: bestaande settings krijgen automatisch `rayonDrempel: 15` bij eerstvolgende load
+- Opslag: standaard via `updSetting` → `_saveSettingsDB` → Supabase `settings.snapshot_json`
+
+**Rekenlogica aangepast op vier plekken**
+Reiskosten waren tot nu: `reisTotaal = (reisUren × reistijdTarief) + (km × kmTarief)`. Nieuwe regel:
+```js
+const binnenRayon = reisAfstand <= rayonDrempel;
+const reisKostenUren = binnenRayon ? 0 : reisUren * sett.reistijd;
+const reisTotaal = reisKostenUren + reisKm;
+```
+Binnen rayon: alleen km-vergoeding. Buiten rayon: ongewijzigd t.o.v. v3.13.x.
+
+Vier berekenings-plekken (allemaal identieke logica):
+- `_calcTotaal` (regel ±4163) — primaire calc-totaal-functie, gebruikt overal
+- Tweede berekening voor print/PDF (regel ±5338)
+- Derde berekening voor Yoobi-export (regel ±5653)
+- Vierde berekening voor werkbon (regel ±8214)
+
+**Visuele indicator naast calcReis-input**
+Naast het reisafstand-veld een pill die direct toont waar de calc staat:
+- ≤ 0 km: leeg
+- ≤ rayonDrempel: groen "● binnen rayon (≤ 15 km) — geen reisuren"
+- > rayonDrempel: oranje "● buiten rayon (> 15 km) — volledige reiskosten"
+
+Triggers via `_renderRayonIndicator()`:
+- `onchange` op `#calcReis` input
+- In `updSetting` als `field === 'rayonDrempel'`
+- Aan einde van `openCalc` (init bij laden van calc)
+
+**Print/PDF aangepast**
+- Calc-opbouw reis-regel: bij binnen rayon "Reis (X km, binnen rayon)" i.p.v. "Reis (X u + X km)"
+- Settings-overzicht onderaan offerte: extra regel "Rayon-grens (geen reisuren-arbeid binnen): 15 km" voor transparantie naar de klant — laat zien dat het bedrag eerlijk is gebaseerd op afstand, geen verborgen toeslag of korting.
+
+**Sessie-aantekening** Implementatie verspreid over vijf logische stappen met tussentijdse `cp` naar `/mnt/user-data/outputs/` als bescherming tegen herhaling van de mount-uitval die in v3.13.6 optrad. Geen uitval voorgekomen tijdens de bouw zelf, maar de CHANGELOG-mount viel uit op het moment van CHANGELOG-update — wat zonder de discipline het hele CHANGELOG-werk verloren had laten gaan. Discipline werkt.
+
 ## v3.13.6 — Stap-weergave: materiaal nu op verkoopprijs (consistent met arbeid)
 In de stap-weergave binnen een calc-regel werd het materiaal-bedrag (zowel het label achter de materiaalnaam als de bijdrage in het stap-totaal rechts) gebaseerd op de **inkoopprijs**, terwijl de arbeidskosten al op **verkooptarief** stonden (uurloon × uren). Een verborgen inconsistentie: je zag bij Sigmatex `(0,160 L · € 1,33)` en een stap-totaal van € 13,83 per m², terwijl het werkelijke verkoopwaarde (incl. groeps-opslag) hoger ligt. Het **eindtotaal** van de calculatie was wel altijd correct (`_calcTotaal` gebruikt al `matVerkoop` op regel 4185) — het probleem zat puur in de tussen-weergave die de gebruiker gebruikt om regels en stappen te beoordelen.
 - **Wijziging**: `const matKost = cs.matInkoop;` → `const matKost = cs.matVerkoop;` in de stap-rendering (renderRegel, regel ±7026).
