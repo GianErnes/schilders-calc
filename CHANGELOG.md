@@ -1,3 +1,11 @@
+## v3.14.2 — Rayon-pill: kortere tekst, past nu op één regel
+De v3.14.1 indicator-pill paste verticaal goed onder het reisafstand-veld, maar de tekst zelf brak nog over twee regels in de form-grid breedte: "● binnen rayon (≤ 15 km) — geen" / "reisuren". De drempelvermelding "(≤ 15 km)" was bovendien dubbele informatie — die staat ook in Instellingen.
+- **Tekst-wijziging**:
+  - Binnen rayon: "● binnen rayon (≤ 15 km) — geen reisuren" → **"● binnen rayon — geen reisuren"**
+  - Buiten rayon: "● buiten rayon (> 15 km) — volledige reiskosten" → **"● buiten rayon — incl. reisuren"**
+- **Drempel in tooltip**: `title`-attribuut op de pill toont de volledige info bij hover ("Reisafstand ≤ 15 km — geen reisuren-arbeid"). Voor wie meer wil weten zonder UI-overload voor wie het niet hoeft te weten.
+- **Symmetrie**: beide pills nu vergelijkbaar in lengte en structuur ("● [status] — [gevolg]"), consistent leesbaar.
+
 ## v3.14.1 — Rayon-indicator: positie onder input-veld
 De v3.14.0 indicator was geplaatst als `<span>` rechts naast het "Reisafstand (km enkele reis)" label. In de praktijk bleek dat de tekst "● binnen rayon (≤ 15 km) — geen reisuren" te lang om naast het label te passen: in normale form-grid kolommen werd hij gebroken over twee regels, met het bolletje rechts boven de uitleg-tekst. Rommelige aanblik die de hele label-rij ontregelt.
 - **Verplaatsing**: indicator-element is nu een `<div>` ONDER het input-veld, in dezelfde form-cell. Krijgt eigen regel, zonder de label-rij te ontregelen.

@@ -1394,7 +1394,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.14.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.14.2</h2>
       <div class="intro-body">
         <p><strong>Rayon-drempel voor reiskosten.</strong> Nieuwe instelling onder Instellingen → Uurtarieven: <em>Rayon-grens (km enkele reis)</em>, default 15 km. Binnen deze afstand: alleen de km-vergoeding wordt meegerekend, géén reisuren-arbeid voor de schilders. Daarbuiten: volledige reiskosten zoals voorheen (reisuren × reistijd-tarief + km × km-tarief). Concurrentie-strategie voor het reguliere werkgebied — binnen je natuurlijke rayon kun je scherpere prijzen rekenen dan lokale concurrenten zonder reiskosten-handicap. Bij het reisafstand-veld in elke calc verschijnt een groene of oranje pill die direct toont of de klus binnen of buiten rayon valt; op de offerte staat het transparant verantwoord ("Reis (X km, binnen rayon)" of "Reis (X u + X km)"). De rayon-grens zelf staat ook in het settings-overzicht onder de offerte 🎨.</p>
         <p><strong>Recente fixes uit v3.13-serie.</strong> Stap-weergave in calc-regels: materiaal toont nu verkoopprijs (was inkoop) en minuten schaalt mee met het percentage-veld — alle vier waarden in een stap-regel rekenen consistent. Regels-kopiëren-icoon ⧉ in blauw met betere zichtbaarheid. Materiaal-eenheid 'm' (meter) toegevoegd voor renovlies en andere rol-materialen. Duplicaat-uitlog-knop in Instellingen weggehaald.</p>
@@ -1950,7 +1950,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.14.1';
+const APP_VERSION = 'v3.14.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -8383,9 +8383,9 @@ function _renderRayonIndicator() {
     return;
   }
   if (afstand <= drempel) {
-    el.innerHTML = `<span style="color: var(--green); background: rgba(99,153,34,0.10); padding: 0.15rem 0.45rem; border-radius: 0.6rem;">● binnen rayon (≤ ${drempel} km) — geen reisuren</span>`;
+    el.innerHTML = `<span style="color: var(--green); background: rgba(99,153,34,0.10); padding: 0.15rem 0.45rem; border-radius: 0.6rem;" title="Reisafstand ≤ ${drempel} km — geen reisuren-arbeid">● binnen rayon — geen reisuren</span>`;
   } else {
-    el.innerHTML = `<span style="color: var(--accent-deep); background: rgba(194,65,12,0.08); padding: 0.15rem 0.45rem; border-radius: 0.6rem;">● buiten rayon (> ${drempel} km) — volledige reiskosten</span>`;
+    el.innerHTML = `<span style="color: var(--accent-deep); background: rgba(194,65,12,0.08); padding: 0.15rem 0.45rem; border-radius: 0.6rem;" title="Reisafstand > ${drempel} km — volledige reiskosten">● buiten rayon — incl. reisuren</span>`;
   }
 }
 function updSettingBool(field, inputEl) {
