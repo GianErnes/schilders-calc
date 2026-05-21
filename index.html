@@ -1394,7 +1394,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.15.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.15.1</h2>
       <div class="intro-body">
         <p><strong>Meetstaat als PDF</strong> — nieuwe knop <span class="mono">📐 Meetstaat als PDF</span> in de calc-tab naast de andere print-knoppen. Maakt een professionele bijlage voor bij de offerte: project-info kop, alle meetregels in tabel-vorm (calc-regel · omschrijving · h · b · aantal · totaal · opmerking) en een samenvatting per calc-regel met totalen. Laat aan de klant zien dat er werkelijk gemeten en gerekend is — niet zomaar een prijs uit de mouw. Lege meetregels (alle velden 0) worden lichter weergegeven zodat duidelijk is welke regels meetellen 🎨.</p>
         <p><strong>Rayon-drempel voor reiskosten.</strong> Instelling onder Instellingen → Uurtarieven: <em>Rayon-grens (km enkele reis)</em>, default 15 km. Binnen deze afstand: alleen km-vergoeding, géén reisuren-arbeid (concurrentie-strategie). Daarbuiten: volledige reiskosten. Bij elke calc verschijnt onder het reisafstand-veld een groene of oranje pill die direct toont waar de klus staat. Offerte vermeldt transparant <em>"Reis (X km, binnen rayon)"</em> of <em>"Reis (X u + X km)"</em>.</p>
@@ -1951,7 +1951,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.15.0';
+const APP_VERSION = 'v3.15.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -8395,7 +8395,7 @@ function renderTotals() {
     <div class="line indent"><span>+ klein mat.</span><span>${eur(kleinMat)}</span></div>
     <div class="line indent"><span>+ afval</span><span>${eur(afval)}</span></div>
     <div class="line indent"><span>+ ARBO</span><span>${eur(arbo)}</span></div>
-    <div class="line"><span>Reis (${fmt(reisUren)} u + km)</span><span>${eur(reisTotaal)}</span></div>
+    <div class="line"><span>Reis ${binnenRayon ? `(${fmt(dagenFactureerbaar*reisAfstand*2)} km, binnen rayon)` : `(${fmt(reisUren)} u + km)`}</span><span>${eur(reisTotaal)}</span></div>
     <div class="line"><span>Staartkosten</span><span>${eur(staartTotaal)}</span></div>
     <div class="line divider"><span>Directe kosten</span><span>${eur(directe)}</span></div>
     <div class="line indent"><span>+ risico</span><span>${eur(winstBedrag)}</span></div>

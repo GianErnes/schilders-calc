@@ -1,3 +1,14 @@
+## v3.15.1 — In-app calc-paneel: reis-weergave consistent met rayon-status
+Bij de v3.14.0 implementatie van de rayon-drempel waren vier berekenings-plekken aangepast én de PDF-tekst (regel 5516). Maar de **in-app calc-samenvatting** (rechter paneel "CALCULATIE" in de calc-tab) toonde nog steeds altijd `"Reis (X u + km)"`, ongeacht of de calc binnen of buiten rayon viel. Het **bedrag** was correct (alleen km bij binnen rayon), maar de **tekst** suggereerde dat er reisuren in het bedrag zaten — verwarrend, en juist het soort visuele inconsistentie waar je vanaf wilt.
+
+Concreet voorbeeld dat Gian spotte op de Zieltjens-calc: 5,7 km (binnen rayon), groene pill toont correct "geen reisuren", maar het in-app paneel toonde "Reis (1,67 u + km) · € 20,43". Klopt vanuit "€ 20,43 is alleen km", maar "1,67 u" hoort daar niet bij genoemd te worden.
+- **Wijziging**: regel 8398 in `renderTotals()`. Tekst is nu conditioneel:
+  - Binnen rayon: `"Reis (X km, binnen rayon)"`
+  - Buiten rayon: `"Reis (X u + km)"` (zoals voorheen)
+- **Consistent met PDF-versie** uit v3.14.0 (regel 5516) — beide weergaves gebruiken nu hetzelfde patroon.
+
+**Achtergrond op deze gemiste plek:** v3.14.0 deed 4 berekenings-plekken correct én de PDF-display, maar de in-app totaal-display was de vijfde plek waar reisuren werden getoond. Lesson voor volgende keer: bij display-veranderingen niet alleen op berekenings-plekken zoeken (`reisUren`, `reisKostenUren`), maar ook expliciet zoeken op weergave-strings (`"Reis ("`, `"u + km"`). Toegevoegd aan persoonlijke check-list voor multi-plek-features.
+
 ## v3.15.0 — Meetstaat als PDF
 Gian wil de meetstaat kunnen meesturen met de offerte: een professionele bijlage die laat zien aan de klant dat er serieus is gemeten en gerekend, niet zomaar een prijs uit de mouw. Tot nu was de meetstaat alleen in-app zichtbaar — geen knop, geen print, geen exporteerbare versie.
 
