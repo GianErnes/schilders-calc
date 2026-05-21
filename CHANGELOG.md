@@ -1,3 +1,18 @@
+## v3.15.2 — Meetstaat PDF: witruimte weg, tabellen mogen pagina-breken
+De v3.15.0 PDF gebruikte de bestaande `.section` print-CSS class, die `page-break-inside: avoid` toepast om kleine secties bij elkaar te houden. Voor de meetregels-tabel met 75 rijen (Zieltjens-calc) was dat catastrofaal: de browser probeerde steeds de hele tabel op één pagina te houden, gaf op, duwde de hele sectie naar de volgende pagina, waar 'ie ook niet paste, en herhaalde. Resultaat: 9 pagina's met enkele kop, tabel-header-alleen, en lege pagina's tussendoor.
+- **Nieuwe CSS-class** `.section-flow` voor lange secties met tabellen die wél mogen breken:
+  ```css
+  .print-only .section-flow { page-break-inside: auto; }
+  .print-only .section-flow h2 { page-break-after: avoid; }     /* h2 niet alleen onderaan */
+  .print-only .section-flow table { page-break-inside: auto; }  /* tabel mag breken */
+  .print-only .section-flow thead { display: table-header-group; } /* header herhalen */
+  .print-only .section-flow tr { page-break-inside: avoid; }    /* één rij blijft samen */
+  ```
+- **Toegepast** op zowel de Meetregels-sectie als de Samenvatting-sectie in `printMeetstaat`.
+- **Effect**: 9 pagina's gaat terug naar ongeveer 3-4 pagina's (afhankelijk van aantal meetregels), zonder witruimte, met **tabelkop automatisch herhaald** bovenaan elke nieuwe pagina, en geen rijen die halverwege over een pagina-grens breken.
+- **Niet aangepast**: andere prints (printCalc, printOfferte, printWerkbon) blijven `.section` gebruiken — die zijn klein genoeg om binnen één pagina te passen, daar werkt `page-break-inside: avoid` juist gunstig.
+- **Bonus**: de nieuwe class is hergebruikbaar als ooit een andere lange tabel in een print-output komt — even `section-flow` toevoegen aan de class.
+
 ## v3.15.1 — In-app calc-paneel: reis-weergave consistent met rayon-status
 Bij de v3.14.0 implementatie van de rayon-drempel waren vier berekenings-plekken aangepast én de PDF-tekst (regel 5516). Maar de **in-app calc-samenvatting** (rechter paneel "CALCULATIE" in de calc-tab) toonde nog steeds altijd `"Reis (X u + km)"`, ongeacht of de calc binnen of buiten rayon viel. Het **bedrag** was correct (alleen km bij binnen rayon), maar de **tekst** suggereerde dat er reisuren in het bedrag zaten — verwarrend, en juist het soort visuele inconsistentie waar je vanaf wilt.
 
