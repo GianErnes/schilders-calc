@@ -1,3 +1,23 @@
+## v3.16.1 — Staartpost-uren transparant in calc-paneel
+Bij de v3.16.0 implementatie werkten de werkdagen-berekening en de afrondingstoeslag correct: Deumens-voorgevel ging van 4,1 → 4,7 werkdagen, met kleinere afrondingstoeslag (€292,50). Maar Gian's observatie was terecht: "nergens staat wat er bij komt qua uren uit toeslag kleinschaligheid, alleen werkdagen verandert" — de berekening was niet transparant. Het CALCULATIE-paneel toonde "Totaal uren 61,78 u" en daarna "4,7 werkdagen", zonder uitleg waar het verschil vandaan kwam.
+
+**Wijziging**: per staartpost met `teltInWerkdagen=true` wordt nu een sub-regel getoond onder "Totaal uren" in het CALCULATIE-paneel:
+```
+Totaal uren                          61,78 u
+  + Kleinschaligheidstoeslag          9,3 u    ← nieuw
+Arbeid                            €4.633,81
+  + afronding (0,3 dag)             €292,50
+...
+```
+
+Consistent patroon met de bestaande "+ afronding (X dag)" sub-regel onder Arbeid: een "+ uitleg" indent-regel die laat zien waar het opbouw-getal vandaan komt. Bij meerdere staartposten met de flag aan zou je meerdere sub-regels zien (één per post).
+
+**Berekening per post**: `bedrag / uurloon`. Voor type `vast` is dat het vast bedrag direct, voor type `percent` het percentage × grondslag-basis. Types `dag`/`week`/`eenheid` worden hier ook niet getoond (consistent met de exclusie in `_extraUrenUitStaart`).
+
+**Alleen tonen wanneer relevant**: regel wordt overgeslagen als er geen staartposten met de flag zijn óf als het berekende uren-getal ≤ 0. Voor calcs zonder gebruik van deze feature is er geen visueel verschil.
+
+**Geen impact op PDF/Yoobi/werkbon**: deze transparantie-regel staat alleen in het in-app calc-paneel. De externe outputs blijven het werkdagen-getal tonen zoals voorheen — voor de klant is "4,7 werkdagen" voldoende, de opbouw is voor interne controle.
+
 ## v3.16.0 — Staartpost telt mee in werkdagen — geen dubbeltelling meer
 Gian's observatie tijdens Deumens-calc: 3,8 werkdagen wordt berekend uit pure calc-regel uren (klopt). Maar bij gebruik van zowel kleinschaligheidstoeslag (% over arbeid) als afrondingstoeslag (volle dagen factureren) zit er een dubbeltelling — beide mechanismen dekken hetzelfde fenomeen "kleine klus moet relatief duurder zijn", maar werken nu boven op elkaar.
 

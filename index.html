@@ -1402,7 +1402,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.16.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.16.1</h2>
       <div class="intro-body">
         <p><strong>Staartpost telt mee in werkdagen — geen dubbeltelling meer.</strong> In het bewerk-formulier van elke staartpost staat nu een tweede checkbox: <em>"Telt mee in werkdagen-berekening"</em>. Zet 'm aan op bv. je kleinschaligheidstoeslag (% over arbeid). De app rekent het toeslag-bedrag terug naar uren (bedrag ÷ uurloon) en telt die op bij de werkdagen-berekening. Resultaat: werkdagen-getoond wordt realistischer, en de afrondingstoeslag (volle dagen factureren) wordt automatisch herberekend op het hogere dagen-aantal. Daarmee verdwijnt de dubbeltelling tussen "kleinschaligheid" en "ronde af naar volle dagen" — beide mechanismen werken samen i.p.v. boven op elkaar. Werkt voor staartposten van type <em>vast</em> en <em>percent</em>; <em>dag/week/eenheid</em> worden stilletjes genegeerd om circulariteit te voorkomen 🎨.</p>
         <p><strong>DB-migratie vereist</strong> vóór deze versie werkt: in Supabase SQL editor de kolom <span class="mono">telt_in_werkdagen BOOLEAN DEFAULT FALSE</span> toevoegen aan zowel tabel <span class="mono">staart</span> als <span class="mono">staart_lib</span>. Zie de CHANGELOG voor de exacte SQL.</p>
@@ -1969,7 +1969,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.16.0';
+const APP_VERSION = 'v3.16.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -8477,6 +8477,17 @@ function renderTotals() {
   const afval = (arbeid + matVerkoop) * sett.afval/100;
   const arbo = arbeid * sett.arbo/100;
   const staartTotaal = calcStaartTotaal();
+  // v3.16.1 — Voor transparantie: per staartpost met teltInWerkdagen tonen
+  // hoeveel uren het oplevert (= bedrag / uurloon). Verklaart het verschil tussen
+  // "Totaal uren" (calc-regels) en de werkdagen-getoond.
+  const staartUrenRows = (data.calc.staart || [])
+    .filter(p => p.teltInWerkdagen && (p.type === 'vast' || p.type === 'percent'))
+    .map(p => {
+      const bedrag = calcStaart(p);
+      const uren = (sett.uurloon > 0) ? (bedrag / sett.uurloon) : 0;
+      return { naam: p.naam, uren };
+    })
+    .filter(r => r.uren > 0);
   const directe = arbeid + matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
   const subtotaal = directe;
   const winstBedrag = subtotaal * sett.winst/100;
@@ -8500,6 +8511,9 @@ function renderTotals() {
     : `<div class="line"><span>Arbeid</span><span>${eur(arbeid)}</span></div>`;
   body.innerHTML = `
     <div class="line"><span>Totaal uren</span><span>${fmt(t.uren)} u</span></div>
+    ${staartUrenRows.map(r => 
+      `<div class="line indent"><span>+ ${r.naam}</span><span>${fmt(r.uren)} u</span></div>`
+    ).join('')}
     ${arbeidLine}
     <div class="line"><span>Materiaal verkoop</span><span>${eur(matVerkoop)}</span></div>
     <div class="line indent"><span>+ klein mat.</span><span>${eur(kleinMat)}</span></div>
