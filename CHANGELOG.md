@@ -1,3 +1,64 @@
+## v3.17.0 — 💾 Archiveren: 1 knop, meerdere PDFs in sequentie
+Gian's workflow bij het afronden van een calc: alle relevante PDFs opslaan in dezelfde projectmap als extra veiligheidslaag. Voorheen vijf losse knoppen op vijf plekken (vier in de calc-tab + de Onderhoudsplan-print-knop in de OHP-tab). Nu één knop in de calc-tab die naar een modal leidt, waar je vinkjes zet voor welke PDFs je wilt, en daarna sequentieel doorloopt.
+
+### Wijzigingen
+
+**1. UI: vier print-knoppen vervangen door één Archiveer-knop**
+- Weg: 📄 Calculatie als PDF, 📐 Meetstaat als PDF, 📋 Offerte (Yoobi), 📋 Werkbon
+- Erbij: **💾 Archiveren** met titel-tooltip "Genereer 1 of meerdere PDFs voor in de projectmap"
+- De Onderhoudsplan-print-knop in de OHP-tab blijft staan (heeft zijn eigen context daar), maar onderhoudsplan kun je nu OOK vanuit de archiveer-modal in de calc-tab printen
+
+**2. Modal `#archiveerModal`**
+Modal met 5 checkboxes, één per PDF-type. Conditioneel gedrag:
+- **Calculatie**, **Offerte (Yoobi)**, **Werkbon**: altijd beschikbaar, default aangevinkt
+- **Meetstaat**: aangevinkt + beschikbaar als `data.calc.meetstaat.length > 0`, anders disabled met toelichting "geen meetregels in deze calc"
+- **Onderhoudsplan**: aangevinkt + beschikbaar als er een compleet plan (prijspeil + looptijdJaren ingesteld) is voor deze calc; gedetecteerd via `_ohpLoad(calcId)` bij openen modal. Anders disabled met toelichting "geen (compleet) onderhoudsplan voor deze calc"
+- "Genereer"-knop start de sequentie; "Annuleren" sluit modal
+
+**3. State: `_archiveerCtx`**
+```js
+{
+  running: false,
+  cancelled: false,
+  queue: [],     // { type, label } per gekozen PDF
+  current: 0,
+  total: 0
+}
+```
+
+**4. Sequence-mechanisme via afterprint-event chaining**
+`_archiveerVolgende()` doet één PDF tegelijk:
+- Check cancelled → stop
+- Check queue leeg → klaar (toast "✓ N PDFs aangeboden voor opslag")
+- Register `afterprint` handler die `_archiveerVolgende()` opnieuw aanroept na een korte adempauze (600ms)
+- Roep de juiste print-functie aan (`printCalc`, `printMeetstaat`, etc.)
+- Browser-print-dialoog opent → gebruiker klikt Opslaan/Annuleren → afterprint-event vuurt → volgende dialoog opent automatisch
+
+Belangrijke kanttekening: browsers maken geen verschil tussen "Opslaan" en "Annuleren" in het afterprint-event. Sequentie loopt door tenzij de gebruiker op de Stop-knop drukt in de status-bar.
+
+**5. Status-bar bovenin de pagina**
+Fixed-positioned `#archiveerStatusBar` boven aan de viewport, oranje-bruine accentkleur, met tekst "Bezig met PDF X van Y: {Label}" en een witte **Stop sequentie**-knop. Verschijnt zodra de sequentie start, verdwijnt bij klaar of stop. Onzichtbaar in print-CSS (`@media print { display: none !important }`) zodat 'ie niet in de PDFs verschijnt.
+
+**6. Browser-map-onthouden**
+Chrome/Edge/Firefox onthouden de gekozen map in de eerste print-dialoog en stellen die als default in voor de volgende dialogen in dezelfde sessie. Hierdoor kost het hele archiveren van een complete calc nog maar 5× "Opslaan" (in dezelfde map) i.p.v. 5× "Opslaan + map kiezen".
+
+### Niet meegenomen
+
+- **Echte 1-klik-PDF-generatie** zonder dialogen (via jsPDF). Vereist herontwerp van alle print-functies in een andere bibliotheek, en de PDF-output zou er anders uitzien dan de huidige browser-print-output (die we de afgelopen versies juist hebben gepoleerd). Voor de minimaal extra moeite (5 klikken vs 1 klik) was Gian's keuze om bij de browser-print-route te blijven.
+- **Auto-detectie van annuleren** in de browser-print-dialoog. Browsers onderscheiden niet tussen Opslaan en Annuleren in de event-output, dus de sequentie loopt door tot ze allemaal geprobeerd zijn of tot je expliciet stopt.
+
+## v3.16.2 — Logische bestandsnamen bij print-naar-PDF
+Bij "Opslaan als PDF" in de browser-print-dialoog gebruikte elke print-knop dezelfde default-bestandsnaam ("index" of equivalent). Bij meerdere offertes per dag werd het hierdoor lastig om files terug te vinden — `index (3).pdf`, `index (4).pdf` etc.
+- **Nieuwe helper `_setPrintTitle(suffix)`**: past tijdelijk `document.title` aan vlak vóór `window.print()`. Browsers gebruiken `document.title` als default-bestandsnaam in de print-dialoog. Na de print-dialoog wordt de oude titel hersteld via het `afterprint`-event (met setTimeout-fallback van 10s voor browsers zonder afterprint-support).
+- **Sanitatie**: verboden filename-tekens (`< > : " / \ | ? *`) worden vervangen door `-`. Dat is met name belangrijk omdat veel projectnamen het `|`-teken bevatten (bv. "Deumens | Voorgevel") wat op Windows verboden is in bestandsnamen.
+- **Toegepast op 4 print-knoppen** in de calc-tab:
+  - `printCalc()` → `{Project}-calculatie`
+  - `printMeetstaat()` (beide aftakkingen: normaal en empty-state) → `{Project}-meetstaat`
+  - `printOfferteYoobi()` → `{Project}-offerte`
+  - `printWerkbon()` → `{Project}-werkbon`
+- **Voorbeeld**: "Deumens | Voorgevel" → `Deumens - Voorgevel-calculatie.pdf`. Browser voegt zelf `.pdf` toe.
+- **Onderhoudsplan-print** (`_ohpPrint()`) is bewust NIET meegenomen — buiten de scope van Gian's vraag. Indien gewenst in vervolgsessie toevoegen.
+
 ## v3.16.1 — Staartpost-uren transparant in calc-paneel
 Bij de v3.16.0 implementatie werkten de werkdagen-berekening en de afrondingstoeslag correct: Deumens-voorgevel ging van 4,1 → 4,7 werkdagen, met kleinere afrondingstoeslag (€292,50). Maar Gian's observatie was terecht: "nergens staat wat er bij komt qua uren uit toeslag kleinschaligheid, alleen werkdagen verandert" — de berekening was niet transparant. Het CALCULATIE-paneel toonde "Totaal uren 61,78 u" en daarna "4,7 werkdagen", zonder uitleg waar het verschil vandaan kwam.
 
