@@ -1,3 +1,10 @@
+## v3.17.1 — Archiveer-modal: class-naam fix
+De v3.17.0 archiveer-knop deed niets bij klikken — `openArchiveerModal()` voegde `classList.add('open')` toe aan het modal-element, maar alle andere modals in de app gebruiken `classList.add('active')`. De CSS heeft geen `.modal-overlay.open { display: flex }` regel, dus de modal bleef onzichtbaar.
+
+**Wijziging**: in `openArchiveerModal()` en `closeArchiveerModal()` de class-naam veranderd van `'open'` naar `'active'`. Klein typefout in de eerste implementatie, makkelijk te missen bij JS-parse-check (de syntax was prima, de string-waarde matchte alleen niet met bestaande conventie).
+
+**Les voor mezelf**: bij toevoegen van nieuwe modals altijd eerst kijken hoe bestaande modals worden geopend (`grep -n "classList\.add" index.html`) i.p.v. te gokken op een class-naam. JS-parse-check vangt dit type fout niet — alleen een functionele test.
+
 ## v3.17.0 — 💾 Archiveren: 1 knop, meerdere PDFs in sequentie
 Gian's workflow bij het afronden van een calc: alle relevante PDFs opslaan in dezelfde projectmap als extra veiligheidslaag. Voorheen vijf losse knoppen op vijf plekken (vier in de calc-tab + de Onderhoudsplan-print-knop in de OHP-tab). Nu één knop in de calc-tab die naar een modal leidt, waar je vinkjes zet voor welke PDFs je wilt, en daarna sequentieel doorloopt.
 

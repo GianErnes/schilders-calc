@@ -1436,7 +1436,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.17.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.17.1</h2>
       <div class="intro-body">
         <p><strong>💾 Archiveren — 1 knop, alle PDFs in sequentie.</strong> De vier losse print-knoppen (Calculatie, Meetstaat, Offerte, Werkbon) zijn samen met de Onderhoudsplan-print-functie nu gebundeld onder één knop "💾 Archiveren" in de calc-tab. Klik → modal met vinkjes voor elk type PDF. Standaard staat alles aan wat beschikbaar is (Meetstaat alleen als er meetregels zijn, Onderhoudsplan alleen als er een compleet plan is). Klik op "Genereer" → browser-print-dialogen openen sequentieel, je kiest per dialoog de map en klikt Opslaan, volgende komt automatisch. Status-bar bovenin de pagina toont voortgang ("Bezig met PDF 2 van 4: Meetstaat") met een Stop-knop. Door het volgordelijk werken onthoudt de browser meestal de gekozen map voor de hele bundel — even afronden van een calculatie betekent nu een handgreep i.p.v. vijf knoppen op vijf plekken klikken 🎨.</p>
         <p><strong>Sessietips voor v3.16-serie.</strong> Staartposten kunnen meetellen in werkdagen-berekening (checkbox "Telt mee in werkdagen") — handig voor kleinschaligheidstoeslag. Werkdagen-getal in PLANNING-blok wordt opgehoogd met de teruggerekende uren, afrondingstoeslag rekent automatisch op het hogere dagen-aantal. Voor transparantie staat onder "Totaal uren" een sub-regel per staartpost met de bijgedragen uren. Bestandsnamen bij print-naar-PDF zijn nu logisch: <em>Projectnaam-calculatie</em>, <em>Projectnaam-meetstaat</em> etc. — gemakkelijker terug te vinden in de projectmap.</p>
@@ -2024,7 +2024,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.17.0';
+const APP_VERSION = 'v3.17.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5455,11 +5455,11 @@ async function openArchiveerModal() {
   }).join('');
 
   document.getElementById('archiveerCheckboxes').innerHTML = cbHtml;
-  document.getElementById('archiveerModal').classList.add('open');
+  document.getElementById('archiveerModal').classList.add('active');
 }
 
 function closeArchiveerModal() {
-  document.getElementById('archiveerModal').classList.remove('open');
+  document.getElementById('archiveerModal').classList.remove('active');
 }
 
 function startArchiveerSequentie() {
