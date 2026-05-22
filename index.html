@@ -1402,7 +1402,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.16.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.16.2</h2>
       <div class="intro-body">
         <p><strong>Staartpost telt mee in werkdagen — geen dubbeltelling meer.</strong> In het bewerk-formulier van elke staartpost staat nu een tweede checkbox: <em>"Telt mee in werkdagen-berekening"</em>. Zet 'm aan op bv. je kleinschaligheidstoeslag (% over arbeid). De app rekent het toeslag-bedrag terug naar uren (bedrag ÷ uurloon) en telt die op bij de werkdagen-berekening. Resultaat: werkdagen-getoond wordt realistischer, en de afrondingstoeslag (volle dagen factureren) wordt automatisch herberekend op het hogere dagen-aantal. Daarmee verdwijnt de dubbeltelling tussen "kleinschaligheid" en "ronde af naar volle dagen" — beide mechanismen werken samen i.p.v. boven op elkaar. Werkt voor staartposten van type <em>vast</em> en <em>percent</em>; <em>dag/week/eenheid</em> worden stilletjes genegeerd om circulariteit te voorkomen 🎨.</p>
         <p><strong>DB-migratie vereist</strong> vóór deze versie werkt: in Supabase SQL editor de kolom <span class="mono">telt_in_werkdagen BOOLEAN DEFAULT FALSE</span> toevoegen aan zowel tabel <span class="mono">staart</span> als <span class="mono">staart_lib</span>. Zie de CHANGELOG voor de exacte SQL.</p>
@@ -1969,7 +1969,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.16.1';
+const APP_VERSION = 'v3.16.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5345,6 +5345,31 @@ async function dupBew(id) {
 // ============================================================
 // PDF EXPORT — print-friendly view of active calculation
 // ============================================================
+// v3.16.2 — Tijdelijk document.title aanpassen vlak vóór window.print() zodat de
+// browser-print-dialoog ("Save as PDF") een logische bestandsnaam voorstelt op
+// basis van de project-naam. Bv. "Deumens | Voorgevel-calculatie".
+// Sanitatie: vervang verboden filename-tekens (<>:"/\|?*) door '-' zodat het
+// werkt op Windows/macOS/Linux. Na de print-dialoog wordt de oude titel hersteld
+// via het afterprint-event (met setTimeout-fallback voor browsers zonder support).
+function _setPrintTitle(suffix) {
+  const c = data.calc;
+  const projectNaam = (c && c.naam) ? c.naam.trim() : 'Schilders';
+  // Sanitatie voor bestandsnaam
+  const veilig = projectNaam
+    .replace(/[<>:"/\\|?*]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const oudeTitel = document.title;
+  document.title = `${veilig}-${suffix}`;
+  const restore = () => {
+    document.title = oudeTitel;
+    window.removeEventListener('afterprint', restore);
+  };
+  window.addEventListener('afterprint', restore);
+  // Fallback: na 10 seconden hoe dan ook herstellen
+  setTimeout(restore, 10000);
+}
+
 function printCalc() {
   const c = data.calc;
   if (!c) return;
@@ -5655,6 +5680,7 @@ function printCalc() {
 
   document.getElementById('printArea').innerHTML = html;
   // Trigger print
+  _setPrintTitle('calculatie');
   window.print();
 }
 
@@ -5714,6 +5740,7 @@ function printMeetstaat() {
     </div>`;
     html += `<div class="footer-block">Schilders Calculatie · ${APP_VERSION} · Geprint op ${datum}</div>`;
     document.getElementById('printArea').innerHTML = html;
+    _setPrintTitle('meetstaat');
     window.print();
     return;
   }
@@ -5803,6 +5830,7 @@ function printMeetstaat() {
   </div>`;
 
   document.getElementById('printArea').innerHTML = html;
+  _setPrintTitle('meetstaat');
   window.print();
 }
 
@@ -6033,6 +6061,7 @@ function printOfferteYoobi() {
   </div>`;
 
   document.getElementById('printArea').innerHTML = html;
+  _setPrintTitle('offerte');
   window.print();
 }
 
@@ -6239,6 +6268,7 @@ function printWerkbon() {
   </div>`;
 
   document.getElementById('printArea').innerHTML = html;
+  _setPrintTitle('werkbon');
   window.print();
 }
 // ============================================================
