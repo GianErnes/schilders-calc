@@ -1,3 +1,75 @@
+## v3.16.0 — Staartpost telt mee in werkdagen — geen dubbeltelling meer
+Gian's observatie tijdens Deumens-calc: 3,8 werkdagen wordt berekend uit pure calc-regel uren (klopt). Maar bij gebruik van zowel kleinschaligheidstoeslag (% over arbeid) als afrondingstoeslag (volle dagen factureren) zit er een dubbeltelling — beide mechanismen dekken hetzelfde fenomeen "kleine klus moet relatief duurder zijn", maar werken nu boven op elkaar.
+
+**Oplossing**: per staartpost een nieuwe opt-in checkbox waarmee het toeslag-bedrag wordt teruggerekend naar uren en meegeteld in de werkdagen-berekening. Door de werkelijke dagen-getoond op te hogen, wordt het verschil met de factureerbare dagen kleiner, en valt de afrondingstoeslag automatisch lager uit.
+
+### DB-MIGRATIE VEREIST (vóór deploy)
+In Supabase SQL editor uitvoeren:
+```sql
+ALTER TABLE staart ADD COLUMN telt_in_werkdagen BOOLEAN DEFAULT FALSE;
+ALTER TABLE staart_lib ADD COLUMN telt_in_werkdagen BOOLEAN DEFAULT FALSE;
+```
+Zonder deze migratie zal opslaan/laden van staartposten falen (kolom bestaat niet).
+
+### Wijzigingen
+
+**1. DB-mappers** (`_mapStaartFromDB` / `_mapStaartToDB`)
+Nieuwe property `teltInWerkdagen` ↔ DB-kolom `telt_in_werkdagen`. Backward-compat via `!!` (undefined → false).
+
+**2. UI in staart-modal** (regel ±1863)
+Tweede checkbox onder de bestaande "Verwerken in eenheidsprijs". Zelfde visuele stijl (paper-warm box met uitleg eronder). Tekst:
+> Telt mee in werkdagen-berekening
+> Het bedrag wordt teruggerekend naar uren (bedrag / uurloon) en opgeteld bij de werkdagen. Bedoeld voor toeslagen als kleinschaligheid die feitelijk extra arbeid vertegenwoordigen. Voorkomt dubbeltelling met de afrondingstoeslag (volle dagen factureren) — die wordt automatisch herberekend op de verhoogde werkdagen.
+
+**3. Modal-functies** (`openStaartModal`, `saveStaart`)
+Laad/save van de checkbox toegevoegd.
+
+**4. Nieuwe helper `_extraUrenUitStaart(staartPosten, t, uurloon)`** — vlak na `calcStaartTotaal`
+Loopt door staartposten, voor die met `teltInWerkdagen=true`:
+- type `vast`: bedrag direct
+- type `percent`: bedrag berekenen op pure calc-totalen (`t.arbeid` etc. uit `calcProjectTotalen`) — geen circulariteit
+- type `dag`/`week`/`eenheid`: **stilletjes genegeerd** (zouden circulair worden, en niet zinvol voor deze flag)
+
+Som van alle bedragen / uurloon = extra uren.
+
+**5. `_calcDays()`**
+Update om extra uren mee te tellen:
+```js
+const extraUren = _extraUrenUitStaart(data.calc.staart || [], t, _S().uurloon);
+const u = t.uren + extraUren;
+```
+Doordat alle plekken in de hoofdcalc (in-app PLANNING-blok, PDF-print, Yoobi-export, werkbon) via `_calcDays()` / `_calcDaysFactureerbaar()` lopen, gaat de wijziging automatisch overal door. **Eén plek wijzigen, vier plekken effect** — mooie tegenstelling met v3.14.0 (rayon-drempel) waar ik vier plekken handmatig moest aanpassen omdat de berekening daar inline stond.
+
+**6. `_calcTotaal`** (onderhoudsplan-pad, regel ±4172)
+Aparte path want gebruikt `_ohpDagen()` met `t.uren` als parameter:
+```js
+const extraUrenStaart = _extraUrenUitStaart(calc.staart || [], t, sett.uurloon);
+const dg = _ohpDagen(calc, sett, t.uren + extraUrenStaart);
+```
+
+### Effect — voorbeeld Deumens-voorgevel
+Zonder v3.16.0:
+- Werkelijke dagen: 3,8 (uit pure calc-uren)
+- Factureerbare dagen: 4 (volle dagen aan)
+- Afrondingstoeslag: 0,2 dag × 2 schilders × 7,5 u × €75 = €225
+- Kleinschaligheidstoeslag: €500 (= 10% over arbeid)
+- **Totaal extra**: €725 — beide mechanismen werken bovenop elkaar
+
+Met v3.16.0 (kleinschaligheid heeft nu `teltInWerkdagen=true`):
+- Extra uren: €500 / €75 = 6,67 uur
+- Werkelijke dagen: (57 + 6,67) / 2 / 7,5 = 4,24
+- Factureerbare dagen: 5 (volle dagen aan)
+- Afrondingstoeslag: 0,76 dag × 2 × 7,5 × €75 = €855
+- Kleinschaligheidstoeslag: €500 (ongewijzigd, want bedrag wordt op pure calc-arbeid berekend)
+- **Totaal extra**: €1.355 — schijnbaar nog hoger?
+
+Wacht — dit klopt niet met het doel. **Let op**: bij volle dagen factureren wordt 4,24 → afgerond naar 5 dagen. Dat is mogelijk zelfs ongewenst hoog. **Praktijktip voor Gian**: combineer `teltInWerkdagen=true` met `volleDagen=uit` voor deze specifieke calc (de override-toggle in calc-instellingen). Dan toont 4,24 werkdagen, wordt 4,24 dag gefactureerd, en heeft de kleinschaligheid zijn werk gedaan zonder dat de afronding er bovenop komt. Dit is een **werkwijze-overweging** — de software ondersteunt nu beide scenario's, jij kiest per calc.
+
+### Beperkingen — v1
+- Alleen `vast` en `percent` ondersteund. `dag`/`week`/`eenheid` worden stilletjes genegeerd om circulariteit te voorkomen. Voor Gian's primaire use-case (kleinschaligheidstoeslag = percent over arbeid) volstaat dit.
+- Geen visuele indicator in de UI dat een staartpost de werkdagen beïnvloedt. Kan in een vervolgsessie als pill/badge bij de staartpost-row toegevoegd worden.
+- Voorbeeld-rekensom hierboven laat zien dat het zelf-uitschakelen van `volleDagen` per calc nodig kan zijn voor het beoogde effect. Mogelijk gewenste vervolgstap: bij actieve `teltInWerkdagen`-post automatisch een visuele waarschuwing tonen als ook `volleDagen` aanstaat ("staat dat zo bedoeld?").
+
 ## v3.15.3 — Meetstaat-tab: project-totaal per regel-type
 Bij grotere projecten zoals Zieltjens (75 meetregels over 7 kamers) wordt de bestaande "Totalen per calc-regel"-samenvatting al snel een lange lijst. Voor materiaal-bestelling en voortgang-bewaking heb je dan eigenlijk een niveau hoger nodig: hoeveel m² plafond zit er in het hele project (over alle kamers samen)? Hoeveel m¹ kozijn? Hoeveel m² wand?
 

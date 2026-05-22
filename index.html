@@ -1402,10 +1402,11 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.15.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.16.0</h2>
       <div class="intro-body">
-        <p><strong>Meetstaat als PDF</strong> — nieuwe knop <span class="mono">📐 Meetstaat als PDF</span> in de calc-tab naast de andere print-knoppen. Maakt een professionele bijlage voor bij de offerte: project-info kop, alle meetregels in tabel-vorm (calc-regel · omschrijving · h · b · aantal · totaal · opmerking) en een samenvatting per calc-regel met totalen. Laat aan de klant zien dat er werkelijk gemeten en gerekend is — niet zomaar een prijs uit de mouw. Lege meetregels (alle velden 0) worden lichter weergegeven zodat duidelijk is welke regels meetellen 🎨.</p>
-        <p><strong>Rayon-drempel voor reiskosten.</strong> Instelling onder Instellingen → Uurtarieven: <em>Rayon-grens (km enkele reis)</em>, default 15 km. Binnen deze afstand: alleen km-vergoeding, géén reisuren-arbeid (concurrentie-strategie). Daarbuiten: volledige reiskosten. Bij elke calc verschijnt onder het reisafstand-veld een groene of oranje pill die direct toont waar de klus staat. Offerte vermeldt transparant <em>"Reis (X km, binnen rayon)"</em> of <em>"Reis (X u + X km)"</em>.</p>
+        <p><strong>Staartpost telt mee in werkdagen — geen dubbeltelling meer.</strong> In het bewerk-formulier van elke staartpost staat nu een tweede checkbox: <em>"Telt mee in werkdagen-berekening"</em>. Zet 'm aan op bv. je kleinschaligheidstoeslag (% over arbeid). De app rekent het toeslag-bedrag terug naar uren (bedrag ÷ uurloon) en telt die op bij de werkdagen-berekening. Resultaat: werkdagen-getoond wordt realistischer, en de afrondingstoeslag (volle dagen factureren) wordt automatisch herberekend op het hogere dagen-aantal. Daarmee verdwijnt de dubbeltelling tussen "kleinschaligheid" en "ronde af naar volle dagen" — beide mechanismen werken samen i.p.v. boven op elkaar. Werkt voor staartposten van type <em>vast</em> en <em>percent</em>; <em>dag/week/eenheid</em> worden stilletjes genegeerd om circulariteit te voorkomen 🎨.</p>
+        <p><strong>DB-migratie vereist</strong> vóór deze versie werkt: in Supabase SQL editor de kolom <span class="mono">telt_in_werkdagen BOOLEAN DEFAULT FALSE</span> toevoegen aan zowel tabel <span class="mono">staart</span> als <span class="mono">staart_lib</span>. Zie de CHANGELOG voor de exacte SQL.</p>
+        <p><strong>Recente uitbreidingen uit v3.15-serie.</strong> Meetstaat als PDF-bijlage met automatisch herhaalde tabel-koppen en geen lege pagina's meer. In-app reis-weergave consistent met de PDF (binnen/buiten rayon). Meetstaat-tab heeft nu een sub-samenvatting "project-totaal per regel-type" — bv. alle plafonds samen, alle wanden samen — handig voor materiaal-bestelling en voortgang-bewaking.</p>
       </div>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
@@ -1860,6 +1861,15 @@
             </div>
           </div>
         </div>
+        <div style="grid-column: 1 / -1; padding: 0.7rem 0.8rem; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); display: flex; align-items: flex-start; gap: 0.6rem; cursor: pointer;" onclick="document.getElementById('staartTeltInWerkdagen').click()">
+          <input type="checkbox" id="staartTeltInWerkdagen" style="width: auto; margin: 0; flex-shrink: 0; margin-top: 0.15rem; cursor: pointer;" onclick="event.stopPropagation()">
+          <div style="flex: 1; font-size: 0.85rem; color: var(--ink); line-height: 1.4;">
+            <div style="font-weight: 600; margin-bottom: 0.2rem;">Telt mee in werkdagen-berekening</div>
+            <div style="font-weight: 400; color: var(--ink-soft); font-size: 0.78rem;">
+              Het bedrag wordt teruggerekend naar uren (bedrag / uurloon) en opgeteld bij de werkdagen. Bedoeld voor toeslagen als kleinschaligheid die feitelijk extra arbeid vertegenwoordigen. Voorkomt dubbeltelling met de afrondingstoeslag (volle dagen factureren) — die wordt automatisch herberekend op de verhoogde werkdagen.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -1959,7 +1969,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.15.3';
+const APP_VERSION = 'v3.16.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2711,7 +2721,8 @@ function _mapStaartFromDB(row) {
     eenheid:     row.eenheid   || '',
     grondslag:   row.grondslag || '',
     hoeveelheid: parseFloat(row.hoeveelheid) || 0,
-    verstopInEenheidsprijs: !!row.verstop_in_eenheidsprijs
+    verstopInEenheidsprijs: !!row.verstop_in_eenheidsprijs,
+    teltInWerkdagen: !!row.telt_in_werkdagen
   };
 }
 function _mapStaartToDB(s) {
@@ -2722,7 +2733,8 @@ function _mapStaartToDB(s) {
     eenheid:     s.eenheid   || '',
     grondslag:   s.grondslag || '',
     hoeveelheid: s.hoeveelheid || 0,
-    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs
+    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs,
+    telt_in_werkdagen: !!s.teltInWerkdagen
   };
 }
 async function _fetchStaartLibFromDB() {
@@ -4158,7 +4170,10 @@ function _ohpBeurtBasisBedrag(beurt) {
   const t = _ohpProjectRauw(calc, sett, regelScaling, stapScaling);
 
   // 3. Dagen factureerbaar en weken op basis van project-uren.
-  const dg = _ohpDagen(calc, sett, t.uren);
+  // v3.16.0: voeg extra uren toe uit staartposten met teltInWerkdagen=true
+  // (kleinschaligheidstoeslag etc.) zodat afrondingstoeslag geen dubbeltelling wordt.
+  const extraUrenStaart = _extraUrenUitStaart(calc.staart || [], t, (sett.uurloon || 0));
+  const dg = _ohpDagen(calc, sett, t.uren + extraUrenStaart);
 
   // 4. Afrondingstoeslag (extra-arbeid bij volle dagen).
   const dagenVerschil = Math.max(0, dg.factureerbaar - dg.werkelijk);
@@ -6408,8 +6423,12 @@ function calcProjectTotalenOrigineel() {
 }
 function _calcDays() {
   // werkelijke dagen op basis van uren / schilders / uur per dag
+  // v3.16.0: telt ook uren mee uit staartposten met teltInWerkdagen=true
+  // (typisch: kleinschaligheidstoeslag). Zo wordt het werkelijke dagen-getal
+  // hoger en valt de afrondingstoeslag automatisch lager uit (geen dubbeltelling).
   const t = calcProjectTotalen();
-  const u = t.uren;
+  const extraUren = _extraUrenUitStaart(data.calc.staart || [], t, (_S().uurloon || 0));
+  const u = t.uren + extraUren;
   const s = data.calc.schilders || 1;
   const ud = data.calc.uurDag || 7.5;
   if (u === 0) return 0;
@@ -8110,6 +8129,40 @@ function _calcWeeks() {
 }
 function calcStaartTotaal() { return data.calc.staart.reduce((s, p) => s + calcStaart(p), 0); }
 
+// v3.16.0 — Reken het bedrag van staartposten met teltInWerkdagen=true terug naar
+// uren (bedrag / uurloon) zodat die uren meetellen in de werkdagen-berekening.
+// Voorkomt dubbeltelling met de afrondingstoeslag: door werkelijke dagen op te
+// hogen wordt het verschil met factureerbare dagen kleiner en valt de afrondings-
+// toeslag automatisch lager uit.
+//
+// Ondersteund: 'vast' en 'percent'. Voor 'dag'/'week'/'eenheid' wordt de flag
+// stilletjes genegeerd omdat die types zelf van de dagen-berekening afhangen
+// (circulariteit-risico). Voor de Gian's primaire use-case (kleinschaligheids-
+// toeslag = percent over arbeid) volstaat deze beperking.
+//
+// Parameters worden meegegeven i.p.v. globaal opgehaald zodat de helper ook
+// voor het onderhoudsplan-pad bruikbaar is (waar t uit _ohpProjectRauw komt).
+function _extraUrenUitStaart(staartPosten, t, uurloon) {
+  if (!staartPosten || !staartPosten.length) return 0;
+  if (!uurloon || uurloon <= 0) return 0;
+  let som = 0;
+  staartPosten.forEach(p => {
+    if (!p.teltInWerkdagen) return;
+    if (p.type === 'vast') {
+      som += p.bedrag || 0;
+    } else if (p.type === 'percent') {
+      let basis = 0;
+      if (p.grondslag === 'arbeid') basis = t.arbeid || 0;
+      else if (p.grondslag === 'materiaal') basis = t.matVerkoop || 0;
+      else if (p.grondslag === 'arbeid_materiaal') basis = (t.arbeid || 0) + (t.matVerkoop || 0);
+      else if (p.grondslag === 'subtotaal') basis = t.verkoop || 0;
+      som += basis * (p.bedrag || 0) / 100;
+    }
+    // dag/week/eenheid: skip (zou circulair worden, en niet zinvol voor deze flag)
+  });
+  return som / uurloon;
+}
+
 // ============================================================
 // NORM-REFERENTIE-BLOKKEN (v3.9.4)
 // Twee leesbare blokken naast/onder staartkosten die richtwaarden
@@ -8297,6 +8350,7 @@ function openStaartModal(p, mode) {
   document.getElementById('staartGrondslag').value = p.grondslag || 'arbeid';
   document.getElementById('staartHoev').value = p.hoeveelheid || 0;
   document.getElementById('staartVerstop').checked = !!p.verstopInEenheidsprijs;
+  document.getElementById('staartTeltInWerkdagen').checked = !!p.teltInWerkdagen;
   updateStaartFields();
   document.getElementById('staartModal').classList.add('active');
 }
@@ -8317,6 +8371,7 @@ async function saveStaart() {
     grondslag: document.getElementById('staartGrondslag').value,
     hoeveelheid: parseFloat(document.getElementById('staartHoev').value) || 0,
     verstopInEenheidsprijs: document.getElementById('staartVerstop').checked,
+    teltInWerkdagen: document.getElementById('staartTeltInWerkdagen').checked,
   };
   if (!payload.naam) { alert('Geef een naam.'); return; }
   if (staartCtx.mode === 'editCalc') {
