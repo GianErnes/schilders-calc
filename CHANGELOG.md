@@ -1,3 +1,18 @@
+## v3.17.2 — Nieuw materiaal verschijnt bovenaan (newest first), niet alfabetisch midden in lijst
+De materialen-tab sorteert alfabetisch op groep dan op naam. Klik op "+ Nieuw Materiaal" maakt een rij met naam "Nieuw materiaal" en groep "Hulpmiddelen" — die landt door de N-letter midden in de Hulpmiddelen-groep, tussen Delta schuurpapier en Schuurpapier korrel 120. Gevolg: je moet scrollen om 'm te vinden en in te vullen.
+- **Nieuwe module-level array** `_materialenVersToegevoegd` (lege bij pageload). Houdt ID's bij van materialen die deze sessie via de toevoeg-knop zijn aangemaakt.
+- **`addMaterial`** voegt na succesvolle DB-insert de saved-ID toe aan deze array.
+- **`renderMaterialen`** sorteert nu in twee stappen: eerst de vers-toegevoegde items in **omgekeerde insertion-order** (newest first) bovenaan, daarna de rest alfabetisch zoals voorheen.
+- **`delMat`** filtert de ID ook uit de tracker (anders blijft 'ie als ghost-referentie hangen voor een verwijderd materiaal).
+- **Tab-switch handler**: bij navigatie naar de Materialen-tab wordt de tracker geleegd vóór het renderen, zodat de lijst weer compleet alfabetisch is.
+
+**Wanneer komt 'ie alfabetisch op zijn plek?**
+- Bij switch naar een andere tab en weer terug naar Materialen
+- Bij pagina-refresh (F5 / Cmd-R) — tracker is sowieso weg
+- **Niet** bij in-place wijzigingen (naam, merk, groep, eenheid, prijs) — de gebruiker is dan nog actief bezig met die specifieke regel, je wilt 'm niet opeens onder de cursor wegtrekken
+
+**Bewust niet gedaan**: optie "springt naar alfabetisch zodra naam wordt gewijzigd" (was 3e keuze in user-input). Te verstorend tijdens invullen — je typt, klikt buiten het veld, en opeens is de rij weg.
+
 ## v3.17.1 — Archiveer-modal: class-naam fix
 De v3.17.0 archiveer-knop deed niets bij klikken — `openArchiveerModal()` voegde `classList.add('open')` toe aan het modal-element, maar alle andere modals in de app gebruiken `classList.add('active')`. De CSS heeft geen `.modal-overlay.open { display: flex }` regel, dus de modal bleef onzichtbaar.
 
