@@ -1,3 +1,30 @@
+## v3.18.2 — Afronding-drempel werkt symmetrisch ook onder 1 dag
+Gian meldde: bij een calculatie van 0,3 werkdagen werd toch "afronding +0,68 dag €765" bijgeteld, terwijl de drempel op 0,55 stond. Z'n verbazing klopte met de UI-tekst van de drempel ("Pas afronden naar boven als overschot ≥ deze waarde") maar niet met het gedrag van de code. Dat was een gat tussen belofte en uitvoering.
+
+### Achtergrond — wat de code écht deed
+Op drie plekken stond een expliciete "minimum 1 dag"-regel die de drempel-instelling overrulede zodra werkelijk < 1 dag was:
+- regel **4259** in `_ohpDagen` (onderhoudsplan): `if (werkelijk < 1) factureerbaar = 1;`
+- regel **6856** in `_calcDaysFactureerbaar` (calc-tab dashboard helper): `if (d < 1) return 1;`  // commentaar: "klusje: altijd minstens 1 dag"
+- regel **9509** in een tweede calc-flow: `else if (dagenWerkelijk < 1) dagenFactureerbaar = 1;`  // commentaar: "klein klusje: altijd minstens 1 dag"
+
+Drie plekken, drie identieke comments. Dat was geen bug — het was een vroegere bewuste keuze die nooit in de UI is opgeschreven. Bij doorvragen bleek de bedoelde bedrijfsregel anders: de drempel hoort de enige plaats te zijn die over afronding gaat, ook onder 1 dag.
+
+### Wijzigingen
+
+**1. Alle drie de plekken: minimum-1-dag-regel verwijderd.** Bij `werkelijk < 1` valt de berekening nu in de algemene drempel-tak: `floor(0,3) = 0`, `overschot = 0,3`, `0,3 < 0,55` → `factureerbaar = 0`. Géén afrondingstoeslag.
+
+**2. UI-tekst van de drempel ongewijzigd.** *"Pas afronden naar boven als overschot ≥ deze waarde. Default 0,6 = 'vanaf halve dag werk over → hele dag factureren'."* — matcht nu 1-op-1 met het gedrag.
+
+**3. Reis & dag/week-staart volgen `dagenFactureerbaar` strikt.** Bij `factureerbaar = 0` worden ook reis en daggebaseerde staart €0. Dat is filosofisch zuiver (factureer alleen waar je de klant op aanspreekt), maar betekent dat je bij mini-klusjes met fysieke reisafstand zelf reiskosten in de staart moet plakken als de klant moet bijdragen. Bewuste keuze van Gian (optie Z in het filosofeer-gesprek) boven een automatische fallback-magie die meer verrassingen geeft dan oplost.
+
+### Gedragswijzigingen voor bestaande calculaties
+Calculaties met `werkelijk < 1` én `werkelijk < drempel` (typisch: heel kleine klusjes onder 0,55 dag bij default drempel) krijgen vanaf nu een lagere factureerbare basis — geen afrondingstoeslag meer. Reiskosten worden €0 als de klus binnen 1 dag valt. Dit kan verbazend zijn bij heropenen van oude calculaties van mini-klusjes; bewust herzien is dan op zijn plaats.
+
+Calculaties met `werkelijk ≥ 1` zijn ongewijzigd.
+
+### Versie-bump checkpoint
+4 verplichte plekken bijgewerkt (APP_VERSION, welkomstblok-titel, CHANGELOG, RELEASE_HIGHLIGHTS-top). Optionele 5e: welkomstblok-inhoud — nieuwe paragraaf bovenaan toegevoegd met uitleg van het nieuwe gedrag.
+
 ## v3.18.1 — Datums per versie in de Versie-geschiedenis
 In v3.18.0 stond datums per versie nog onder "Niet meegenomen" met als argument: chronologische volgorde maakt al duidelijk wat recent is. Eén dag later toch teruggekomen op dat besluit — bij 49 entries op één lange lijst wordt "lang geleden vs kort geleden" toch grover dan handig. Een datum naast elke versie maakt de tijdlijn instant leesbaar: in welke week/maand viel iets, hoeveel iteratie zat ertussen.
 
