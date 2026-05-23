@@ -1,3 +1,16 @@
+## v3.17.4 — Welkomsttekst gecorrigeerd: liep drie versies achter
+Gian spotte tijdens deploy: na de update naar v3.17.3 stond het welkomstblok inhoudelijk nog op v3.17.0 (Archiveren-feature). Alleen de versie-titel ("Welkom bij v3.17.X") was bij elke versie meegerold; de paragrafen zelf waren sinds v3.17.0 niet bijgewerkt. Dus geen melding van:
+- v3.17.1 archiveer-modal class-naam fix
+- v3.17.2 nieuw materiaal verschijnt bovenaan
+- v3.17.3 klikbare sortering op Naam/Merk/Groep in Materialen-tab
+
+**Wijziging**: welkomstblok herschreven met drie paragrafen, nieuwste features bovenaan (consistent met "newest first"-patroon):
+1. v3.17.2 + v3.17.3 — Materialen-tab uitbreidingen (vers-bovenaan + klikbare sortering)
+2. v3.17.0 — Archiveren in 1 knop + logische bestandsnamen
+3. v3.16-serie — samenvatting (staartposten in werkdagen, transparante uren-subregel)
+
+**Les voor mezelf**: bij elke versie-bump altijd controleren of zowel APP_VERSION als CHANGELOG **én welkomsttekst** zijn bijgewerkt. Niet alleen de versie-titel verhogen — de inhoud moet ook actueel zijn. Toevoegen aan persoonlijke check-list.
+
 ## v3.17.3 — Materialen-tab: klikbare sortering op Naam, Merk en Groep
 De materialen-lijst stond standaard alfabetisch op groep dan naam — prima default, maar bij doorbladeren naar één specifiek materiaal of merk wil je soms anders kunnen sorteren. Patroon volgt het bestaande dashboard-sorterings-patroon voor consistentie.
 
