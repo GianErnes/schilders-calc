@@ -1436,7 +1436,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.17.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.17.3</h2>
       <div class="intro-body">
         <p><strong>💾 Archiveren — 1 knop, alle PDFs in sequentie.</strong> De vier losse print-knoppen (Calculatie, Meetstaat, Offerte, Werkbon) zijn samen met de Onderhoudsplan-print-functie nu gebundeld onder één knop "💾 Archiveren" in de calc-tab. Klik → modal met vinkjes voor elk type PDF. Standaard staat alles aan wat beschikbaar is (Meetstaat alleen als er meetregels zijn, Onderhoudsplan alleen als er een compleet plan is). Klik op "Genereer" → browser-print-dialogen openen sequentieel, je kiest per dialoog de map en klikt Opslaan, volgende komt automatisch. Status-bar bovenin de pagina toont voortgang ("Bezig met PDF 2 van 4: Meetstaat") met een Stop-knop. Door het volgordelijk werken onthoudt de browser meestal de gekozen map voor de hele bundel — even afronden van een calculatie betekent nu een handgreep i.p.v. vijf knoppen op vijf plekken klikken 🎨.</p>
         <p><strong>Sessietips voor v3.16-serie.</strong> Staartposten kunnen meetellen in werkdagen-berekening (checkbox "Telt mee in werkdagen") — handig voor kleinschaligheidstoeslag. Werkdagen-getal in PLANNING-blok wordt opgehoogd met de teruggerekende uren, afrondingstoeslag rekent automatisch op het hogere dagen-aantal. Voor transparantie staat onder "Totaal uren" een sub-regel per staartpost met de bijgedragen uren. Bestandsnamen bij print-naar-PDF zijn nu logisch: <em>Projectnaam-calculatie</em>, <em>Projectnaam-meetstaat</em> etc. — gemakkelijker terug te vinden in de projectmap.</p>
@@ -2024,7 +2024,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.17.2';
+const APP_VERSION = 'v3.17.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3764,7 +3764,7 @@ document.querySelectorAll('nav button').forEach(b => {
     document.getElementById(b.dataset.tab).classList.add('active');
     if (b.dataset.tab === 'dashboard')     renderDashboard();
     if (b.dataset.tab === 'meetstaat')     renderMeetstaat();
-    if (b.dataset.tab === 'materialen')    { _materialenVersToegevoegd = []; renderMaterialen(); }
+    if (b.dataset.tab === 'materialen')    { _materialenVersToegevoegd = []; _matSort = { key: null, dir: null }; renderMaterialen(); }
     if (b.dataset.tab === 'bewerkingen')   renderBewerkingen();
     if (b.dataset.tab === 'ondergronden')  renderOndergronden();
     if (b.dataset.tab === 'systemen')      renderSystemen();
@@ -5193,27 +5193,68 @@ function _ohpPrint() {
 // naar Materialen of pagina-refresh wordt de lijst opnieuw alfabetisch.
 let _materialenVersToegevoegd = [];
 
+// v3.17.3 — Klikbare kolomkoppen voor sortering op tekst-kolommen.
+// key = null betekent default-sortering (groep dan naam alfabetisch).
+// 2-klik cyclus: 1e klik = asc, 2e klik op zelfde kolom = desc.
+// Vers-items (v3.17.2) blijven bovenaan ongeacht actieve kolom-sortering.
+let _matSort = { key: null, dir: null };
+
+function setMatSort(key) {
+  if (_matSort.key === key) {
+    _matSort.dir = (_matSort.dir === 'asc') ? 'desc' : 'asc';
+  } else {
+    _matSort.key = key;
+    _matSort.dir = 'asc';
+  }
+  renderMaterialen();
+}
+
 function renderMaterialen() {
   const c = document.getElementById('materialenLijst');
   if (!data.materialen.length) { c.innerHTML = '<div class="empty-state">Geen materialen.</div>'; return; }
 
   // v3.17.2 — Vers toegevoegde items (in omgekeerde insertion-order = newest first) bovenaan,
-  // rest alfabetisch op groep dan naam.
+  // rest volgens actieve sortering (kolom of default).
   const versSet = new Set(_materialenVersToegevoegd);
   const versItems = [..._materialenVersToegevoegd].reverse()
     .map(id => data.materialen.find(m => m.id === id))
     .filter(m => m);
-  const restItems = data.materialen
-    .filter(m => !versSet.has(m.id))
-    .sort((a,b) => {
-      const ga = (a.groep||'').toLowerCase();
-      const gb = (b.groep||'').toLowerCase();
-      if (ga !== gb) return ga.localeCompare(gb);
-      return (a.naam||'').toLowerCase().localeCompare((b.naam||'').toLowerCase());
+
+  // v3.17.3 — Rest sorteren: actieve kolom-sortering of default (groep dan naam)
+  const restItems = data.materialen.filter(m => !versSet.has(m.id));
+  if (_matSort.key) {
+    const k = _matSort.key;
+    restItems.sort((a, b) => {
+      const va = (a[k] || '').toString().toLowerCase();
+      const vb = (b[k] || '').toString().toLowerCase();
+      const res = va.localeCompare(vb);
+      return _matSort.dir === 'asc' ? res : -res;
     });
+  } else {
+    // Default: groep alfabetisch, dan naam alfabetisch
+    restItems.sort((a, b) => {
+      const ga = (a.groep || '').toLowerCase();
+      const gb = (b.groep || '').toLowerCase();
+      if (ga !== gb) return ga.localeCompare(gb);
+      return (a.naam || '').toLowerCase().localeCompare((b.naam || '').toLowerCase());
+    });
+  }
   const sorted = [...versItems, ...restItems];
 
-  let html = '<div class="table-scroll"><table><thead><tr><th>Naam</th><th>Merk</th><th>Groep</th><th>Eenh.</th><th class="right">€ Inkoop</th><th class="right">€ Verkoop</th><th></th></tr></thead><tbody>';
+  // v3.17.3 — Sort-indicator helper
+  const arrow = (key) => {
+    if (_matSort.key !== key) return '<span style="color:var(--muted); opacity:0.4; margin-left:0.25rem;">↕</span>';
+    return `<span style="color:var(--accent-deep); margin-left:0.25rem;">${_matSort.dir === 'asc' ? '↑' : '↓'}</span>`;
+  };
+  const sortableTh = (key, label) =>
+    `<th style="cursor:pointer; user-select:none;" onclick="setMatSort('${key}')">${label}${arrow(key)}</th>`;
+
+  let html = '<div class="table-scroll"><table><thead><tr>'
+    + sortableTh('naam', 'Naam')
+    + sortableTh('merk', 'Merk')
+    + sortableTh('groep', 'Groep')
+    + '<th>Eenh.</th><th class="right">€ Inkoop</th><th class="right">€ Verkoop</th><th></th>'
+    + '</tr></thead><tbody>';
   sorted.forEach(m => {
     const groepOpts = MATERIAAL_GROEPEN.map(g => `<option ${g===m.groep?'selected':''}>${g}</option>`).join('');
     const eenheidOpts = ['L','kg','m','stuk'].map(e => `<option ${e===m.eenheid?'selected':''}>${e}</option>`).join('');

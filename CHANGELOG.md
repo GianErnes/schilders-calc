@@ -1,3 +1,17 @@
+## v3.17.3 — Materialen-tab: klikbare sortering op Naam, Merk en Groep
+De materialen-lijst stond standaard alfabetisch op groep dan naam — prima default, maar bij doorbladeren naar één specifiek materiaal of merk wil je soms anders kunnen sorteren. Patroon volgt het bestaande dashboard-sorterings-patroon voor consistentie.
+
+**Wijzigingen**
+- **Nieuwe state** `_matSort = { key, dir }` — `key` null = default-sortering (groep dan naam), of een van `'naam'|'merk'|'groep'`. `dir` is `'asc'|'desc'`.
+- **Nieuwe functie `setMatSort(key)`** — 2-klik cyclus: 1e klik op een kolom → asc, 2e klik op zelfde kolom → desc, klik op andere kolom → switch + start asc. Tekst-asc (A→Z) is de natuurlijke startrichting, anders dan dashboard waar datum-desc (nieuwste eerst) start.
+- **Klikbare kolomkoppen** alleen voor Naam, Merk en Groep (tekst-kolommen). Eenh., € Inkoop en € Verkoop blijven niet-sorteerbaar zoals afgesproken — minder relevant in deze tab.
+- **Sort-indicator**: kleurloos ↕ (opacity 0.4) op inactieve kolommen, gekleurd ↑ of ↓ op de actieve. Identiek aan dashboard-indicator.
+- **`renderMaterialen` sortering uitgebreid**: als `_matSort.key` actief → sorteer op die kolom. Anders default (groep dan naam, zoals voorheen). Beide gebruiken localeCompare voor correcte alfabetische volgorde inclusief diakritische tekens en hoofdletter-ongevoeligheid.
+
+**Vers-items v3.17.2 blijven bovenaan ongeacht actieve sortering**, zoals expliciet door Gian gekozen. Een net toegevoegd materiaal blijft dus duidelijk vindbaar, ook als je tussendoor op Merk sorteert om een ander item te zoeken.
+
+**Tab-switch reset uitgebreid**: bij navigeren naar Materialen-tab vanuit een andere tab worden zowel `_materialenVersToegevoegd` als `_matSort` geleegd. Resultaat: schone lijst in default-sortering, geen verrassende state-carryover.
+
 ## v3.17.2 — Nieuw materiaal verschijnt bovenaan (newest first), niet alfabetisch midden in lijst
 De materialen-tab sorteert alfabetisch op groep dan op naam. Klik op "+ Nieuw Materiaal" maakt een rij met naam "Nieuw materiaal" en groep "Hulpmiddelen" — die landt door de N-letter midden in de Hulpmiddelen-groep, tussen Delta schuurpapier en Schuurpapier korrel 120. Gevolg: je moet scrollen om 'm te vinden en in te vullen.
 - **Nieuwe module-level array** `_materialenVersToegevoegd` (lege bij pageload). Houdt ID's bij van materialen die deze sessie via de toevoeg-knop zijn aangemaakt.
