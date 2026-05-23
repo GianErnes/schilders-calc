@@ -1,3 +1,33 @@
+## v3.18.0 — 📜 Versie-geschiedenis: tijdlijn-sectie onder welkomstblok
+Gian had behoefte aan iets nostalgisch — een leesbare tijdlijn van hoe de app gegroeid is, niet als ontwikkelaars-logboek maar als verhaal. CHANGELOG.md is technisch en lang (DB-mappers, "Les voor mezelf"-secties, bugfixes-details); voor de "groei-van-de-app"-ervaring werkt curated highlights beter.
+
+### Wijzigingen
+
+**1. Nieuwe `RELEASE_HIGHLIGHTS` array** (regel ~2395) — alle 49 versies sinds v3.8, ieder met versienummer + 1-regel highlight in informeel Nederlands. Newest first. Bij elke nieuwe versie wordt 1 regel BOVENAAN toegevoegd in dezelfde sessie als de CHANGELOG-update. Werkt als parallel-bron naast CHANGELOG.md (technisch detail) vs. RELEASE_HIGHLIGHTS (publieksvriendelijk).
+
+**2. Nieuwe collapsable HTML-sectie** "📜 Versie-geschiedenis" direct onder het welkomstblok in de Dashboard-tab. Hergebruikt de bestaande `intro intro-collapsible collapsed` styling-class voor visuele consistentie. Default ingeklapt — wie wil terugkijken, klikt uit. Een korte instructie-zin bovenin: "Hoe de app gegroeid is, 1 zin per versie — newest first."
+
+**3. `renderVersieGeschiedenis()` functie** — rendert de array als verticale lijst. De huidige versie is geaccentueerd met een `--paper-warm` achtergrond en een dikkere `--accent-deep` linker-rand; oudere versies krijgen een dunnere `--paper-deep` rand. Versie-tekst in mono-font, highlight-tekst in normale UI-font, twee kolommen via flexbox.
+
+**4. Aanroep vanuit `renderDashboard()`** — render-call toegevoegd na `renderCalculatiesArchief()` zodat de geschiedenis-lijst altijd actueel is na laden van het dashboard.
+
+### Niet meegenomen
+
+- **Datums per versie**: gedacht aan, niet gedaan. Per versie de exacte release-datum bijhouden voegt onderhoud toe en de chronologische volgorde (newest first) maakt al duidelijk wat recent is. Voor "lang geleden vs kort geleden" volstaat de positie in de lijst.
+- **Scroll-naar-onderaan-knop voor "lees vanaf het begin"**: optie 3 in user-input was dit, Gian koos optie 1 (gewoon newest first, scroll voor oudere).
+- **Filter op major versies** (alleen v3.X.0 tonen): zou kunnen, maar dan verlies je de geschiedenis van bugfixes en kleine UX-tweaks die juist het verhaal van "constante optimalisatie" vertellen — passend bij Gian's werkstijl.
+- **Live-fetch van CHANGELOG.md**: technisch mogelijk maar de markdown is te technisch en te lang voor casual lezen; curated highlights blijven beter.
+
+### Onderhoudsproces voor nieuwe versies
+
+Bij elke versie-bump vanaf nu: 
+1. APP_VERSION verhogen (al bestaand)
+2. CHANGELOG.md entry bovenaan (al bestaand)
+3. Welkomstblok-titel updaten (al bestaand sinds v3.17.4)
+4. **NIEUW**: `RELEASE_HIGHLIGHTS` array — 1 regel toevoegen BOVENAAN
+
+Toegevoegd aan persoonlijke checklist: versie-bump = 4 plekken, niet 3.
+
 ## v3.17.5 — Twee bugs in werkdagen-flag + afronding-display
 Gian zag op een Keim-calc twee anomalieën: afrondingsregel toonde "0,2 dag" terwijl het werkelijke verschil 0,15 dag was, en de v3.16.1 uren-subregel onder "Totaal uren" verscheen niet ondanks dat hij de "Telt mee in werkdagen"-flag had aangezet in de bibliotheek.
 

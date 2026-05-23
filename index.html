@@ -1436,11 +1436,18 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.17.5</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.0</h2>
       <div class="intro-body">
-        <p><strong>Materialen-tab: klikbare sortering en vers-toegevoegd bovenaan.</strong> Klik op de koppen <em>Naam</em>, <em>Merk</em> of <em>Groep</em> om die kolom alfabetisch te sorteren (eerste klik A→Z, tweede klik Z→A); de actieve kolom toont een ↑ of ↓ icoon. Default blijft groep-dan-naam alfabetisch zoals voorheen. Bij klik op "+ Nieuw Materiaal" verschijnt het nieuwe materiaal direct bovenaan (newest first) i.p.v. ergens midden in de lijst op de N van "Nieuw materiaal" — handig om meteen in te vullen. Bij switch naar een andere tab en terug: lijst reset naar default-volgorde 🎨.</p>
-        <p><strong>💾 Archiveren — 1 knop, alle PDFs in sequentie.</strong> De vier losse print-knoppen (Calculatie, Meetstaat, Offerte, Werkbon) zijn samen met de Onderhoudsplan-print-functie nu gebundeld onder één knop "💾 Archiveren" in de calc-tab. Klik → modal met vinkjes voor elk type PDF (alleen wat beschikbaar is). Klik op "Genereer" → browser-print-dialogen openen sequentieel, je kiest per dialoog de map en klikt Opslaan, volgende komt automatisch. Status-bar bovenin de pagina toont voortgang met een Stop-knop. Bestandsnamen zijn nu logisch: <em>Projectnaam-calculatie</em>, <em>Projectnaam-meetstaat</em> etc.</p>
-        <p><strong>Sessietips voor v3.16-serie.</strong> Staartposten kunnen meetellen in werkdagen-berekening (checkbox "Telt mee in werkdagen") — handig voor kleinschaligheidstoeslag. Werkdagen-getal in PLANNING-blok wordt opgehoogd met de teruggerekende uren, afrondingstoeslag rekent automatisch op het hogere dagen-aantal. Voor transparantie staat onder "Totaal uren" een sub-regel per staartpost met de bijgedragen uren.</p>
+        <p><strong>📜 Versie-geschiedenis: tijdlijn van de app.</strong> Nieuwe sectie onder dit welkomstblok (ingeklapt, klik om uit te klappen). Toont alle 49 versies sinds v3.8 met 1 zin per versie — newest first. Een leesbare "groei-van-de-app" tijdlijn: van het allereerste materiaalverbruik-op-werkbon via onderhoudsplan, rayon-drempel, meetstaat-PDF, archiveren en kleinschaligheidstoeslag tot de Materialen-tab-uitbreidingen van vandaag. De huidige versie is geaccentueerd met een gekleurd kader en deep-accent rand. Bij elke nieuwe versie wordt 1 regel BOVENAAN toegevoegd 🎨.</p>
+        <p><strong>Materialen-tab uitbreidingen (v3.17.2 + v3.17.3).</strong> Klik op de koppen <em>Naam</em>, <em>Merk</em> of <em>Groep</em> om die kolom alfabetisch te sorteren. Nieuw toegevoegd materiaal verschijnt direct bovenaan i.p.v. ergens midden in de lijst.</p>
+        <p><strong>💾 Archiveren (v3.17.0).</strong> Eén knop "Archiveren" in de calc-tab → modal met vinkjes voor Calculatie, Meetstaat, Offerte, Werkbon en Onderhoudsplan. Sequentieel printen naar PDF, status-bar bovenin toont voortgang met Stop-knop.</p>
+      </div>
+    </div>
+    <div class="intro intro-collapsible collapsed" id="historyBlock" style="margin-top: 0.5rem;">
+      <h2 onclick="document.getElementById('historyBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> 📜 Versie-geschiedenis</h2>
+      <div class="intro-body">
+        <p style="margin-top:0; color:var(--muted); font-size:0.82rem; font-style:italic;">Hoe de app gegroeid is, 1 zin per versie — newest first. Een tijdlijn van features, bugfixes en kleine UX-verbeteringen sinds v3.8.</p>
+        <div id="versieHistoryList"></div>
       </div>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
@@ -2025,7 +2032,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.17.5';
+const APP_VERSION = 'v3.18.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2383,6 +2390,79 @@ const MATERIAAL_GROEPEN = [
   'Vernis/transparante verf',
   'Voorstrijk, lijmen en kitten'
 ];
+
+// v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
+// Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
+const RELEASE_HIGHLIGHTS = [
+  { v: '3.18.0', h: '📜 Versie-geschiedenis: een ingeklapt tijdlijn van alle features sinds v3.8' },
+  { v: '3.17.5', h: 'Twee bugs in werkdagen-flag opgespoord: DB-mapper vergat de vlag te schrijven én afronding-display rondde 0,15 verkeerd af naar 0,2' },
+  { v: '3.17.4', h: 'Welkomsttekst gecorrigeerd: liep drie versies achter omdat alleen de versie-titel verhoogd werd, niet de inhoud' },
+  { v: '3.17.3', h: 'Materialen-tab: klikbare sortering op Naam, Merk en Groep met ↑/↓ indicator' },
+  { v: '3.17.2', h: 'Nieuw materiaal verschijnt direct bovenaan (newest first) i.p.v. alfabetisch midden in de lijst' },
+  { v: '3.17.1', h: 'Archiveer-modal class-naam fix: knop deed niets omdat ik \'open\' i.p.v. \'active\' gebruikte' },
+  { v: '3.17.0', h: '💾 Archiveren: 1 knop, alle PDFs in sequentie (Calculatie + Meetstaat + Offerte + Werkbon + Onderhoudsplan)' },
+  { v: '3.16.2', h: 'Logische bestandsnamen bij print-naar-PDF: "Projectnaam-calculatie", "Projectnaam-meetstaat" etc.' },
+  { v: '3.16.1', h: 'Staartpost-uren transparant in calc-paneel: subregel onder "Totaal uren" met bijgedragen uren per staartpost' },
+  { v: '3.16.0', h: 'Staartpost telt mee in werkdagen-berekening — geen dubbeltelling meer tussen kleinschaligheidstoeslag en afronding' },
+  { v: '3.15.3', h: 'Meetstaat-tab: project-totaal per regel-type (alle plafonds samen, alle wanden samen) voor materiaal-bestelling' },
+  { v: '3.15.2', h: 'Meetstaat-PDF: witruimte weg, tabellen mogen pagina-breken met automatisch herhaalde tabel-koppen' },
+  { v: '3.15.1', h: 'In-app calc-paneel: reis-weergave consistent met rayon-status (binnen/buiten 15 km)' },
+  { v: '3.15.0', h: 'Meetstaat als PDF-bijlage voor bij de offerte' },
+  { v: '3.14.2', h: 'Rayon-pill: kortere tekst, past nu op één regel ("● binnen rayon — geen reisuren")' },
+  { v: '3.14.1', h: 'Rayon-indicator: positie onder input-veld i.p.v. ernaast voor betere uitlijning' },
+  { v: '3.14.0', h: 'Rayon-drempel voor reiskosten: binnen 15 km alleen km-vergoeding, geen reisuren-arbeid' },
+  { v: '3.13.6', h: 'Stap-weergave: materiaal nu op verkoopprijs (consistent met arbeid)' },
+  { v: '3.13.5', h: 'Stap-regel: minuten ook geschaald met percentage' },
+  { v: '3.13.4', h: 'Duplicaat-uitlog-knop verwijderd uit Instellingen' },
+  { v: '3.13.3', h: 'Materiaal-eenheid \'m\' (meter) toegevoegd voor renovlies' },
+  { v: '3.13.2', h: 'Kopieer-icoon groter en duidelijker' },
+  { v: '3.13.1', h: 'Kopieer-icoon zichtbaar gemaakt in onderdeel-rijen' },
+  { v: '3.13.0', h: 'Regels kopiëren tussen onderdelen: modal met checkboxes voor target-onderdelen' },
+  { v: '3.12.0', h: 'Dashboard: groepering per status (Concept/Gereed/Verzonden/Geaccepteerd/Verloren) + sorteerbare kolommen' },
+  { v: '3.11.6', h: 'Bandering-contrast verdubbeld voor zichtbaarheid bij verfsystemen' },
+  { v: '3.11.5', h: 'Verfsysteem-bandering nu écht zichtbaar in de calc-tab' },
+  { v: '3.11.4', h: 'Bugfix: staartkosten uit template verdwenen bij herladen (waren nooit in DB geschreven)' },
+  { v: '3.11.3', h: 'Verfsysteem-rij subtiel gemarkeerd binnen onderdeel' },
+  { v: '3.11.2', h: 'Default indexering onderhoudsplan aangepast van 3,5% naar 6,5%' },
+  { v: '3.11.1', h: 'Welkomstblok inklapbaar voor minder afleiding na eerste lezing' },
+  { v: '3.11.0', h: 'Aan/uit-vinkjes per onderdeel — onderhandel-modus tijdens calc-bespreking met klant' },
+  { v: '3.10.4', h: 'Dashboard-totalen consistent met calculatie-totalen' },
+  { v: '3.10.3', h: 'Standaard werkdag-lengte van 8 naar 7,5 uur (realistischer)' },
+  { v: '3.10.2', h: 'Scroll-naar-boven bij openen van een calculatie' },
+  { v: '3.10.1', h: 'Opname-datum & offerte-deadline per calc voor planning-overzicht' },
+  { v: '3.10.0', h: 'Onderhoudsplan: meerjarige cycli met indexering en BTW-berekening voor periodiek onderhoud' },
+  { v: '3.9.6.4', h: 'Hotfix: foutmeldingen weer in net Nederlands na supabase-js downgrade' },
+  { v: '3.9.6.3', h: 'Hotfix: bevestigings-toast verscheen niet na wachtwoord wijzigen' },
+  { v: '3.9.6.2', h: 'Hotfix: supabase-js camelCase/snake_case bug omzeild met directe fetch' },
+  { v: '3.9.6.1', h: 'Hotfix: wachtwoord wijzigen werkte niet met "Secure password change"' },
+  { v: '3.9.6', h: 'Wachtwoord beheren in de app: wijzigen en vergeten-flow' },
+  { v: '3.9.5', h: 'Database-hardening na security-audit Supabase: RLS-policies aangescherpt' },
+  { v: '3.9.4', h: 'Referentie-blokken normenboek bij staartkosten (kleine objecten + klimtijd)' },
+  { v: '3.9.3', h: 'Nieuwe bewerking ter plekke aanmaken in verfsysteem-formulier' },
+  { v: '3.9.2', h: 'Bugfix: nieuw verfsysteem vanuit calc-regel wordt nu auto-ingevoegd' },
+  { v: '3.9.1', h: 'Materiaalverbruik per regel op kleurzone-niveau' },
+  { v: '3.9.0', h: 'Materiaalverbruik op Werkbon: boodschappenlijst voor bestellen bij de groothandel' },
+  { v: '3.8.2', h: 'Dashboard-totalen gecached + vergrendeling-fix bij geopende calc' }
+];
+
+function renderVersieGeschiedenis() {
+  const c = document.getElementById('versieHistoryList');
+  if (!c) return;
+  const html = RELEASE_HIGHLIGHTS.map(r => {
+    const isCurrent = ('v' + r.v) === APP_VERSION;
+    const bgStyle = isCurrent
+      ? 'background: var(--paper-warm); border-left: 3px solid var(--accent-deep);'
+      : 'border-left: 2px solid var(--paper-deep);';
+    const versieStyle = isCurrent
+      ? 'color: var(--accent-deep); font-weight: 700;'
+      : 'color: var(--muted); font-weight: 600;';
+    return `<div style="display: flex; gap: 0.75rem; padding: 0.45rem 0.6rem; margin-bottom: 0.2rem; ${bgStyle} border-radius: 0 0.3rem 0.3rem 0;">
+      <span class="mono" style="${versieStyle} font-size: 0.78rem; flex-shrink: 0; min-width: 4.5rem;">v${r.v}</span>
+      <span style="font-size: 0.86rem; line-height: 1.45;">${r.h}</span>
+    </div>`;
+  }).join('');
+  c.innerHTML = html;
+}
 
 // Visual clustering for the settings UI
 const GROEP_CLUSTERS = [
@@ -9643,6 +9723,7 @@ function renderDashboard() {
   document.getElementById('statOnd').textContent = data.ondergronden.length;
   document.getElementById('statTar').textContent = '€' + fmt0(data.settings.uurloon);
   renderCalculatiesArchief();
+  renderVersieGeschiedenis();  // v3.18.0
 }
 // ============================================================
 // INIT
