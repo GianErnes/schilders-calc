@@ -1,3 +1,32 @@
+## v3.17.5 — Twee bugs in werkdagen-flag + afronding-display
+Gian zag op een Keim-calc twee anomalieën: afrondingsregel toonde "0,2 dag" terwijl het werkelijke verschil 0,15 dag was, en de v3.16.1 uren-subregel onder "Totaal uren" verscheen niet ondanks dat hij de "Telt mee in werkdagen"-flag had aangezet in de bibliotheek.
+
+### Bug 1 — afronding-display floating-point artefact
+**Probleem**: `(1 - 0.85).toFixed(1)` geeft "0.2" door floating-point representatie (`1 - 0.85 = 0.15000000000000002`). Het **bedrag** is correct (gebaseerd op de exacte 0,15 dag), alleen de **display** rondt verkeerd naar 0,2.
+
+**Fix**: in `renderTotals` regel afronding-display gebruikt nu `fmt(dagenVerschil)` (2 decimalen) i.p.v. `fmt1(dagenVerschil)` (1 decimaal). Resultaat: "0,15 dag" — exact wat het is, geen verwarring. Voor grotere afrondingen (bv. 0,76 dag) toont 'ie nu "0,76 dag" i.p.v. "0,8 dag" wat ook eerlijker is.
+
+### Bug 2 — teltInWerkdagen-flag werd nooit naar DB geschreven
+**Probleem**: bij v3.16.0 had ik wel `_mapStaartToDB` (voor `staart_lib` tabel) en de `saveStaart`-payload bijgewerkt, maar **`_mapStaartCalcToDB` (voor de `staart` tabel — staartposten per calc) was vergeten**. Daardoor:
+- Bij elke save van een staartpost in een calc: `telt_in_werkdagen` werd niet meegestuurd naar Supabase → bleef default FALSE in DB
+- Bij reload van de calc: `_mapStaartFromDB` las de DB-waarde correct, maar die was FALSE
+- Resultaat: gebruiker zet checkbox aan in de UI → werkt in-memory tijdens deze sessie → bij navigeren naar andere calc en terug verdwijnt de flag
+
+Daarnaast had **`addStaartFromTpl`** (import uit bibliotheek) `teltInWerkdagen` niet in de payload. Dus zelfs als de template-instelling in `staart_lib` correct was opgeslagen (wat ook bij v3.16.0 was gebroken — maar via `_mapStaartToDB` wél gefixt), werd de flag bij het importeren naar een calc niet overgenomen.
+
+**Fixes**:
+1. **`_mapStaartCalcToDB`** (regel 3551): `telt_in_werkdagen: !!s.teltInWerkdagen` toegevoegd
+2. **`addStaartFromTpl`** (regel 8629): `teltInWerkdagen: !!t.teltInWerkdagen` overgenomen uit template
+3. **`addStaartCustom`** (regel 8645): expliciete `teltInWerkdagen: false` default
+4. **`addStaartLib`** (regel 8749): expliciete `teltInWerkdagen: false` default
+5. **`_insertStaartCalcDB` (via dupCalc)**: gebruikt nu de gefixte mapper, dus bij calc-duplicatie wordt de flag ook correct overgenomen — extra bonus
+
+### Effect op bestaande staartposten in DB
+Bestaande staartposten in de `staart` tabel hebben `telt_in_werkdagen = FALSE` (default uit DB-migratie). Bij eerstvolgende save van een staartpost (bv. naam wijzigen) wordt de in-memory waarde nu correct meegeschreven. Dus de **eerstvolgende keer** dat Gian zijn kleinschaligheidstoeslag opslaat (vink aan, klik Opslaan), wordt 'ie blijvend in DB opgeslagen — niet meer "verdwijnen na reload".
+
+### Les voor mezelf
+v3.16.0 had **TWEE** mappers die bijgewerkt moesten worden, niet één: `_mapStaartToDB` (voor `staart_lib`) **én** `_mapStaartCalcToDB` (voor `staart`). Ik heb alleen de eerste gefixt. Toevoegen aan persoonlijke checklist: bij elke nieuwe DB-kolom in een gerelateerde dubbel-tabel-structuur (templates + per-calc instances) ALTIJD beide mappers checken via `grep "verstopInEenheidsprijs:"` of vergelijkbaar — zoek alle plekken waar de andere boolean wordt gemapt.
+
 ## v3.17.4 — Welkomsttekst gecorrigeerd: liep drie versies achter
 Gian spotte tijdens deploy: na de update naar v3.17.3 stond het welkomstblok inhoudelijk nog op v3.17.0 (Archiveren-feature). Alleen de versie-titel ("Welkom bij v3.17.X") was bij elke versie meegerold; de paragrafen zelf waren sinds v3.17.0 niet bijgewerkt. Dus geen melding van:
 - v3.17.1 archiveer-modal class-naam fix

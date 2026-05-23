@@ -1436,7 +1436,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.17.4</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.17.5</h2>
       <div class="intro-body">
         <p><strong>Materialen-tab: klikbare sortering en vers-toegevoegd bovenaan.</strong> Klik op de koppen <em>Naam</em>, <em>Merk</em> of <em>Groep</em> om die kolom alfabetisch te sorteren (eerste klik A→Z, tweede klik Z→A); de actieve kolom toont een ↑ of ↓ icoon. Default blijft groep-dan-naam alfabetisch zoals voorheen. Bij klik op "+ Nieuw Materiaal" verschijnt het nieuwe materiaal direct bovenaan (newest first) i.p.v. ergens midden in de lijst op de N van "Nieuw materiaal" — handig om meteen in te vullen. Bij switch naar een andere tab en terug: lijst reset naar default-volgorde 🎨.</p>
         <p><strong>💾 Archiveren — 1 knop, alle PDFs in sequentie.</strong> De vier losse print-knoppen (Calculatie, Meetstaat, Offerte, Werkbon) zijn samen met de Onderhoudsplan-print-functie nu gebundeld onder één knop "💾 Archiveren" in de calc-tab. Klik → modal met vinkjes voor elk type PDF (alleen wat beschikbaar is). Klik op "Genereer" → browser-print-dialogen openen sequentieel, je kiest per dialoog de map en klikt Opslaan, volgende komt automatisch. Status-bar bovenin de pagina toont voortgang met een Stop-knop. Bestandsnamen zijn nu logisch: <em>Projectnaam-calculatie</em>, <em>Projectnaam-meetstaat</em> etc.</p>
@@ -2025,7 +2025,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.17.4';
+const APP_VERSION = 'v3.17.5';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3558,7 +3558,8 @@ function _mapStaartCalcToDB(s, calcId, idx) {
     grondslag:   s.grondslag || '',
     hoeveelheid: s.hoeveelheid || 0,
     volgorde:    idx != null ? idx : (s.volgorde || 0),
-    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs
+    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs,
+    telt_in_werkdagen: !!s.teltInWerkdagen
   };
 }
 async function _insertStaartCalcDB(s, calcId, idx) {
@@ -8633,7 +8634,8 @@ async function addStaartFromTpl() {
     eenheid: t.eenheid,
     grondslag: t.grondslag,
     hoeveelheid: 0,
-    verstopInEenheidsprijs: !!t.verstopInEenheidsprijs
+    verstopInEenheidsprijs: !!t.verstopInEenheidsprijs,
+    teltInWerkdagen: !!t.teltInWerkdagen
   };
   const idx = (data.calc.staart || []).length;
   const saved = await _insertStaartCalcDB(payload, data.calc.id, idx);
@@ -8642,7 +8644,7 @@ async function addStaartFromTpl() {
   saveData(); renderStaartList(); renderTotals();
 }
 function addStaartCustom() {
-  const np = { id: uid('sk'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0, verstopInEenheidsprijs: false };
+  const np = { id: uid('sk'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0, verstopInEenheidsprijs: false, teltInWerkdagen: false };
   openStaartModal(np, 'newCalc');
 }
 
@@ -8746,7 +8748,7 @@ function renderStaartLib() {
   html += '</tbody></table></div>';
   c.innerHTML = html;
 }
-function addStaartLib() { const np = { id: uid('sl'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0, verstopInEenheidsprijs: false }; openStaartModal(np, 'newLib'); }
+function addStaartLib() { const np = { id: uid('sl'), naam: '', type: 'vast', bedrag: 0, eenheid: '', grondslag: 'arbeid', hoeveelheid: 0, verstopInEenheidsprijs: false, teltInWerkdagen: false }; openStaartModal(np, 'newLib'); }
 async function delStaartLib(id) {
   if (!confirm('Verwijderen?')) return;
   const ok = await _deleteStaartDB(id);
@@ -8815,7 +8817,7 @@ function renderTotals() {
     : (cOverride ? 'aan (override)' : 'uit (override)');
   const arbeidLine = afrondingsToeslag > 0
     ? `<div class="line"><span>Arbeid</span><span>${eur(arbeidWerkelijk)}</span></div>
-       <div class="line indent"><span>+ afronding (${fmt1(dagenVerschil)} dag)</span><span>${eur(afrondingsToeslag)}</span></div>`
+       <div class="line indent"><span>+ afronding (${fmt(dagenVerschil)} dag)</span><span>${eur(afrondingsToeslag)}</span></div>`
     : `<div class="line"><span>Arbeid</span><span>${eur(arbeid)}</span></div>`;
   body.innerHTML = `
     <div class="line"><span>Totaal uren</span><span>${fmt(t.uren)} u</span></div>
