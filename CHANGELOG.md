@@ -1,3 +1,23 @@
+## v3.18.1 — Datums per versie in de Versie-geschiedenis
+In v3.18.0 stond datums per versie nog onder "Niet meegenomen" met als argument: chronologische volgorde maakt al duidelijk wat recent is. Eén dag later toch teruggekomen op dat besluit — bij 49 entries op één lange lijst wordt "lang geleden vs kort geleden" toch grover dan handig. Een datum naast elke versie maakt de tijdlijn instant leesbaar: in welke week/maand viel iets, hoeveel iteratie zat ertussen.
+
+### Wijzigingen
+
+**1. Datum-veld in `RELEASE_HIGHLIGHTS`** (regel ~2396) — elke van de 49 entries krijgt een `d: 'YYYY-MM-DD'` veld. ISO-formaat als opslagvorm zodat sorteren/formatteren altijd consistent blijft.
+
+**2. Datum-bronnen, 3 niveaus van zekerheid:**
+- **Getagde commits (24×)**: versie staat in commit-message van GitHub (`V3.18.0 Logboek`, `v3.16.1 — Staartpost-uren`, etc.). Dag-precieze datum uit commit-timestamp. Inclusief typo-correctie (`V.17.4` → v3.17.4, `V.13.3` → v3.13.3, `Versie 3.12.0 Kopieren tussen onderdelen` → v3.13.0 via feature-match).
+- **Inferentie uit timing-gat (2×)**: v3.17.5 en v3.17.1 staan niet in een tag, maar er is steeds één untagged upload tussen twee aangrenzende tagged versies — eenduidig toewijsbaar.
+- **Cluster-heuristiek voor v3.11.5 en ouder (23×)**: voor de oude batch staan in GitHub alleen anonieme "Add files via upload"-commits. Heuristiek: 74 untagged uploads geclusterd op 30-minuten-vensters → 30 unieke "release-momenten" → eerste 23 toegewezen aan ontbrekende versies in chronologische volgorde, laatste upload van elk cluster als release-tijdstip. De resterende 7 clusters vallen vóór v3.8.2 (= pre-changelog ontwikkeling, klopt).
+
+**3. Render-helper `_formatDatumNL(iso)`** — voor de helper geplaatste vóór `renderVersieGeschiedenis()`. Mapt YYYY-MM-DD naar Nederlandse spelling ("23 mei 2026") via maand-array. Geen toekomstig typo-risico bij nieuwe releases — alleen ISO invoeren, render-functie doet de rest.
+
+**4. `renderVersieGeschiedenis()` aangepast** — datum-pill ingevoegd tussen versie-pill en highlight-tekst. Styling: italic, kleine font (0.72rem), `--muted` kleur, `min-width: 6.5rem` voor uitlijning. Layout switch van `align-items` default naar `align-items: baseline` zodat versie / datum / highlight op één lijn rusten.
+
+### Onderhoudsnoot
+
+Datums voor v3.11.5 en ouder zijn **gegokt op basis van timing**, niet uit commit-message. Als ik bij terugkijken merk dat een datum mis is, gewoon corrigeren in de array — verandert niets aan de render-flow.
+
 ## v3.18.0 — 📜 Versie-geschiedenis: tijdlijn-sectie onder welkomstblok
 Gian had behoefte aan iets nostalgisch — een leesbare tijdlijn van hoe de app gegroeid is, niet als ontwikkelaars-logboek maar als verhaal. CHANGELOG.md is technisch en lang (DB-mappers, "Les voor mezelf"-secties, bugfixes-details); voor de "groei-van-de-app"-ervaring werkt curated highlights beter.
 
