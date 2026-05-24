@@ -1,3 +1,43 @@
+## v3.18.4 — Bewerkingen krijgen herkomst-stempel (Normenboek-integratie Chunk 1/4)
+Eerste, onzichtbare stap richting volledige normenboek-integratie. Filosoferen-fase afgerond met de conclusie dat de bestaande `bewerkingen` / `ondergronden` / `verfsystemen` / `verfsysteem_stappen` tabellen 1-op-1 mappen op de structuur van het normenboek (Onderdeel × Bewerking × tarieftijd + materiaalverbruik). Er hoeft architecturaal niets veranderd. Enige toevoeging: een herkomst-stempel om straks visueel te scheiden welke bewerkingen uit Gian's eigen ervaring komen en welke uit het normenboek geïmporteerd zijn.
+
+### Wijzigingen in deze chunk
+
+**DB-migratie (handmatig uit te voeren in Supabase SQL-editor):**
+```sql
+ALTER TABLE bewerkingen ADD COLUMN bron text DEFAULT 'eigen';
+UPDATE bewerkingen SET bron = 'eigen' WHERE bron IS NULL;
+```
+
+De `DEFAULT 'eigen'` zorgt dat alle bestaande ~48 bewerkingen automatisch als `eigen` gemarkeerd worden — die zijn allemaal door Gian zelf ingevoerd, dus dat klopt.
+
+**Mapper-functies (`_mapBewFromDB` / `_mapBewToDB`):** veld `bron` toegevoegd, met fallback `'eigen'`. Code is **forward-compatible**: werkt voor én na de DB-migratie omdat de fallback altijd terugvalt op `'eigen'`.
+
+**`updBew()` — auto-promotie:** zodra `field === 'minuten'` of `field === 'verbruik'` wijzigt op een bewerking met `bron === 'normenboek'`, wordt automatisch `bron = 'eigen'`. Naam, eenheid, ondergrond en materiaal-koppeling wijzigen veranderen de cijfers zelf niet — daarvoor géén promotie.
+
+**`addBewerking()`:** nieuwe bewerkingen via deze knop krijgen expliciet `bron: 'eigen'` (was al de DB-default, maar nu ook expliciet in de JS).
+
+### Wat (nog) niet zichtbaar is
+
+Geen visuele cue in de UI — dat is Chunk 2. Geen import-flow — dat is Chunk 3. Geen test op echte normenboek-data — dat is Chunk 4. Onder de motorkap is alles klaar om die chunks straks te dragen.
+
+### Chunk-roadmap (verfijning na filosoferen)
+
+| # | Inhoud | Status |
+|---|---|---|
+| 1 | DB-veld `bron` + mapper + auto-promotie | **deze versie** |
+| 2 | UI-cue (kleur/badge) op normenboek-rijen + materiaal-dropdown gefilterd op verwachte groep | volgende sessie |
+| 3 | Import-flow met auto-aanmaak van ontbrekende ondergronden | volgende sessie |
+| 4 | Test-import van I-1 + I-2 normbladen (afbranden + afbijten gevelkozijn hout, hoogste norm) | na 3 |
+
+### Architectuur-keuzes (besloten in filosofeer-fase)
+
+- **Bron-marker alleen op `bewerkingen`-niveau**, niet op verfsystemen of stappen. Een verfsysteem-receptuur is altijd Gian's eigen compositie, ook al gebruikt hij normenboek-bewerkingen erin.
+- **Geen Type A-G dimensie** uit het normenboek — Gian gebruikt altijd de hoogste norm.
+- **Geen Systeem I-V dimensie** in de data — Gian rekent standaard op 100%, en `verfsysteem_stappen.percentage` regelt de aanpassing per project-keten.
+- **Materiaal-koppeling bij import**: `materiaal_id = null` (Gian kiest zelf het merk). In Chunk 2 wordt de materiaal-dropdown gefilterd op de verwachte groep (statische mapping in code: gronden → Grondverf watergedragen, aflakken → Dekverf watergedragen, etc.).
+- **Beits/vernis-groep nog leeg** in Gian's materialen-tabel — wordt later aangevuld.
+
 ## v3.18.3 — Reis-label in calc-paneel beschrijft zichzelf
 Op het calc-paneel stond bij de reisregel "Reis (20,40 km, binnen rayon) — € 7,14". Het bedrag klopte (2 factureerbare dagen × 5,1 km enkele reis × 2 heen+terug × €0,35/km = €7,14), maar die 20,40 km was een raadsel: je vult 5,1 km in en ziet 20,40 km terug — pas als je weet dat het ×dagen ×2 is, snap je het. Andere regels in het paneel tonen wél hun samenstelling ("klein mat. 10% over materiaal", "afval 0,5% over arbeid+materiaal"). De reis-regel hoort dat ook te doen.
 

@@ -1436,8 +1436,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.4</h2>
       <div class="intro-body">
+        <p><strong>📖 Bewerkingen krijgen een herkomst-stempel (v3.18.4, Chunk 1 van 4).</strong> Eerste stap richting volledige normenboek-integratie: elke bewerking weet voortaan of hij <em>eigen</em> (door jou ingevoerd, nacalculatie-gevalideerd) of <em>normenboek</em> (geïmporteerd, nog onbevestigd) is. Onder de motorkap nu: het veld bestaat en wordt opgeslagen, en zodra je minuten of verbruik op een normenboek-bewerking wijzigt promoveert hij automatisch naar <em>eigen</em>. Zichtbare kleur-cue en import-flow volgen in Chunk 2 en 3 🎨.</p>
         <p><strong>🚐 Reis-label in calc-paneel leest zichzelf voor (v3.18.3).</strong> Voorheen stond er "Reis (20,40 km, binnen rayon)" — dat 20,40-getal was raadselachtig (je vult 5,1 km enkele reis in, waarom zie je 20,40?). Nu staat de samenstelling in het label zelf: <em>Reis (2 dgn × heen+terug, binnen rayon)</em>. Buiten rayon: <em>Reis (2 dgn × heen+terug + reisuren)</em>. Geen getallenwirwar, wel duidelijk waar het bedrag vandaan komt. Print en klant-offerte ongewijzigd 🧾.</p>
         <p><strong>🧮 Afronding-drempel werkt nu symmetrisch (v3.18.2).</strong> Voorheen werd bij een klusje onder 1 dag áltijd naar 1 dag afgerond — los van de drempel. Nu werkt de drempel ook onder 1 dag: bij 0,3 dag werk + drempel 0,55 → 0 hele dagen factureerbaar, géén afrondingstoeslag. Reis & dag/week-staart volgen mee (€0 op factureerbaar=0). Bij mini-klusjes: zelf reiskosten in de staart zetten als de klant moet bijdragen aan de rit 🚐.</p>
         <p><strong>📜 Versie-geschiedenis: tijdlijn van de app.</strong> Nieuwe sectie onder dit welkomstblok (ingeklapt, klik om uit te klappen). Toont alle 49 versies sinds v3.8 met 1 zin per versie — newest first. Een leesbare "groei-van-de-app" tijdlijn: van het allereerste materiaalverbruik-op-werkbon via onderhoudsplan, rayon-drempel, meetstaat-PDF, archiveren en kleinschaligheidstoeslag tot de Materialen-tab-uitbreidingen van vandaag. De huidige versie is geaccentueerd met een gekleurd kader en deep-accent rand. Bij elke nieuwe versie wordt 1 regel BOVENAAN toegevoegd 🎨.</p>
@@ -2034,7 +2035,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.18.3';
+const APP_VERSION = 'v3.18.4';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2396,6 +2397,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.18.4', d: '2026-05-24', h: 'Bewerkingen krijgen herkomst-stempel (eigen vs normenboek) — Chunk 1 van normenboek-integratie. DB-veld + auto-promotie bij wijziging van minuten/verbruik' },
   { v: '3.18.3', d: '2026-05-24', h: 'Reis-label in calc-paneel beschrijft zichzelf: "Reis (2 dgn × heen+terug, binnen rayon)" i.p.v. raadselachtige "20,40 km"' },
   { v: '3.18.2', d: '2026-05-23', h: 'Afronding-drempel werkt nu symmetrisch ook onder 1 dag: bij 0,3 dag werk + drempel 0,55 → 0 hele dagen factureerbaar, géén afrondingstoeslag. Bug: de minimum-1-dag-regel matchte niet met de UI-tekst van de drempel' },
   { v: '3.18.1', d: '2026-05-23', h: 'Datums per versie in de geschiedenis: 26× uit GitHub commit-tags, 23× gegokt via cluster-heuristiek op untagged uploads (van mei 9 t/m 19)' },
@@ -2824,7 +2826,8 @@ function _mapBewFromDB(row) {
     ondergrondId: row.ondergrond_id || '',
     materiaalId:  row.materiaal_id || '',
     verbruik:     parseFloat(row.verbruik) || 0,
-    volgorde:     row.volgorde != null ? row.volgorde : 0
+    volgorde:     row.volgorde != null ? row.volgorde : 0,
+    bron:         row.bron        || 'eigen'
   };
 }
 function _mapBewToDB(b) {
@@ -2835,7 +2838,8 @@ function _mapBewToDB(b) {
     ondergrond_id:  b.ondergrondId || null,
     materiaal_id:   b.materiaalId  || null,  // null als geen materiaal
     verbruik:       b.verbruik  || 0,
-    volgorde:       b.volgorde != null ? b.volgorde : 0
+    volgorde:       b.volgorde != null ? b.volgorde : 0,
+    bron:           b.bron      || 'eigen'
   };
 }
 async function _fetchBewerkingenFromDB() {
@@ -5513,6 +5517,14 @@ function updBew(id, field, val) {
   const b = data.bewerkingen.find(x => x.id === id);
   if (!b) return;
   b[field] = val;
+  // v3.18.4 — Auto-promotie naar 'eigen' bij wijziging van kerncijfers.
+  // Zodra een normenboek-bewerking aangepast wordt op minuten of verbruik,
+  // is het feitelijk Gian's eigen cijfer geworden ("tot mijn nacalculatie
+  // het tegendeel bewijst"). Naam, eenheid, ondergrond, materiaal blijven
+  // promotie-vrij — die wijzigen verandert de cijfers zelf niet.
+  if ((field === 'minuten' || field === 'verbruik') && b.bron === 'normenboek') {
+    b.bron = 'eigen';
+  }
   _updateBewDB(b);
   renderBewerkingen(); renderSystemen(); renderTotals();
 }
@@ -5525,7 +5537,8 @@ async function addBewerking() {
     naam: 'Nieuwe bewerking', eenheid: 'm²', minuten: 3,
     ondergrondId: data.ondergronden[0]?.id || null,
     materiaalId: null, verbruik: 0,
-    volgorde: maxV + 10
+    volgorde: maxV + 10,
+    bron: 'eigen'
   };
   const saved = await _insertBewDB(nieuw);
   if (btn) { btn.disabled = false; btn.textContent = oldText; }
