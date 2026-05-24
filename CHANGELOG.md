@@ -1,3 +1,80 @@
+## v3.18.6 — CSV-import voor bewerkingen (Normenboek-integratie Chunk 3/4)
+Chunk 1 zette de datalaag (`bron` veld + auto-promotie), Chunk 2 maakte normenboek-rijen visueel herkenbaar + de materiaal-dropdown slim. Deze chunk levert de pijp om écht data in bulk binnen te krijgen: een CSV-import-flow met preview, validatie en duplicaat-detectie.
+
+### Wijzigingen in deze chunk
+
+**Nieuwe UI:**
+- Knop **"📥 Importeer CSV"** in de panel-head van de Bewerkingen-tab, naast "+ Nieuwe Bewerking".
+- Nieuwe modal `#importBewModal` met twee staten: stap 1 (upload + uitleg + CSV-voorbeeld), stap 2 (preview met counts/lijsten + commit-knop).
+
+**Verwacht CSV-formaat:**
+
+```
+ondergrond;bewerking;eenheid;minuten;verbruik
+Gevelkozijn hout buiten;Afbranden;m²;15;0
+Gevelkozijn hout buiten;Afbijten;m²;25;0,10
+Hout binnen;Schuren machinaal;m²;8;0
+```
+
+- Header-regel verplicht. Volgorde van kolommen vrij — de parser zoekt op naam (case-insensitive). Ontbrekende kolom → hele import geweigerd.
+- Scheidingsteken `;` of `,` wordt automatisch gedetecteerd uit de header-regel (NL-Excel exporteert `;` standaard omdat `,` decimaal is).
+- Decimaal `,` of `.` wordt per cel gedetecteerd. Bij beide aanwezig: punt wint, komma's worden als duizendtal-separator behandeld.
+- BOM (`\uFEFF`) aan het begin van de file wordt automatisch verwijderd — voorkomt issues bij Excel-export als UTF-8.
+- Bestand wordt gelezen als UTF-8.
+
+**Validatie — strikt (één fout = hele import geweigerd, Gian-keuze):**
+- Eenheid moet exact `m²`, `m¹` of `stuk` zijn.
+- Minuten en verbruik moeten numeriek en ≥ 0 zijn.
+- Ondergrond en bewerking mogen niet leeg zijn.
+- Bij fouten: preview toont rode foutmelding met regelnummer + reden, geen importeer-knop. Gebruiker corrigeert CSV en probeert opnieuw.
+- Lege regels worden stil overgeslagen, geen error.
+
+**Duplicaat-detectie binnen de batch:**
+- Twee rijen met dezelfde combinatie `ondergrond + bewerking` (case-insensitive) → tweede wordt geskipt.
+- Skipped rijen worden in de preview opgesomd met regelnummer en namen.
+- **Niet** gecontroleerd tegen bestaande DB-bewerkingen, omdat per Gian-keuze altijd een nieuwe ondergrond wordt aangemaakt — een nieuwe ondergrond kan per definitie geen bestaande duplicaten hebben.
+
+**Bulk-insert in twee Supabase-calls:**
+1. **Ondergronden:** unieke ondergrond-namen uit CSV → array met `crypto.randomUUID()` per stuk + `locatie: 'beide'` (default) + oplopende `volgorde` na de bestaande max. Eén `insert()` call.
+2. **Bewerkingen:** per geldige CSV-rij een record met FK naar de net-aangemaakte ondergrond-UUID, `materiaal_id = null`, `bron = 'normenboek'`, `volgorde` oplopend per ondergrond (beginnend op 0).
+
+**Foutherstel halverwege:** als stap 1 lukt maar stap 2 faalt, wordt na de fout-toast de lokale data herladen uit de DB (`_fetchOndergrondenFromDB` + `_fetchBewerkingenFromDB`) zodat de UI in elk geval een consistent beeld toont. Eventuele "wees-ondergronden" zonder bewerkingen zijn dan zichtbaar en kan Gian handmatig verwijderen.
+
+**Na succesvolle import:**
+- Toast: "X bewerkingen geïmporteerd uit Y ondergronden".
+- Lokale `data.ondergronden` + `data.bewerkingen` aangevuld via `_mapOndFromDB` / `_mapBewFromDB`.
+- `renderBewerkingen()` opnieuw — nieuwe rijen verschijnen met **blauwe linker-rand** (Chunk 2) en, waar van toepassing, een hamburger-knop voor de gefilterde materiaal-dropdown.
+
+### Architectuur-keuzes (besloten in filosofeer-fase)
+
+- **Geen voorbeeld-template download** in de modal — Gian heeft het niet nodig.
+- **Geen suffix `(normenboek)` op aangemaakte ondergronden** — consistent met Chunk 1 besluit dat bron-marker alleen op bewerking-niveau zit, en met Gian-besluit "altijd nieuwe aanmaken, ik ruim later op". Geen extra DB-migratie voor een ondergrond-bron-veld.
+- **Strikte validatie** — geen "import wat kan, skip de rest"-modus. Eén stukke rij betekent dat de gebruiker zijn CSV moet corrigeren en opnieuw moet proberen. Dat dwingt schone data af.
+- **Materiaal blijft leeg bij import** — gekoppeld blijft de architectuur-keuze uit Chunk 1. De slimme dropdown van Chunk 2 helpt Gian later het juiste materiaal te kiezen.
+
+### Wat (nog) niet inzit
+
+- Geen progress-bar (bulk-insert is sub-seconde voor ~70 rijen).
+- Geen rollback / undo na succesvolle import (handmatig per rij verwijderen blijft mogelijk).
+- Geen in-modal correctie van CSV-fouten — gebruiker corrigeert het bronbestand.
+- Geen export-naar-CSV — alleen import in deze chunk.
+
+### Backlog (carry-over)
+
+- Beter foutmeldingen in `_sbQuery` calls (toast met echte Supabase-error i.p.v. generieke "Verwijderen/Opslaan mislukt") — al lang open.
+- v3.18.2 gedragswijziging (afronding-drempel symmetrisch) kan oude calculaties van mini-klusjes (<0,55 dag) anders laten uitkomen bij heropenen.
+
+### Chunk-roadmap
+
+| # | Inhoud | Status |
+|---|---|---|
+| 1 | DB-veld `bron` + mapper + auto-promotie | ✅ v3.18.4 |
+| 2 | UI-cue (blauwe linker-rand) + materiaal-dropdown gefilterd op groep | ✅ v3.18.5 |
+| 3 | CSV-import-flow met preview, validatie, duplicaat-detectie, bulk-insert | ✅ v3.18.6 |
+| 4 | Test-import van I-1 + I-2 normbladen (afbranden + afbijten gevelkozijn hout, hoogste norm) | volgende sessie |
+
+---
+
 ## v3.18.5 — Visuele cue + slimme materiaal-dropdown (Normenboek-integratie Chunk 2/4)
 Chunk 1 zette de datalaag op (`bron` veld + auto-promotie). Deze chunk maakt die zichtbaar in de UI én voegt een eerste stuk slimheid toe aan de materiaal-koppeling. Zodra straks de import-flow draait (Chunk 3) zie je in één oogopslag welke bewerkingen vers uit het normenboek komen, en bij het invullen van het materiaal hoef je niet door de hele lijst te scrollen.
 

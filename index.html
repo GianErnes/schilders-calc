@@ -1468,8 +1468,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.5</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.6</h2>
       <div class="intro-body">
+        <p><strong>📥 CSV-import voor bewerkingen (v3.18.6, Chunk 3 van 4).</strong> Nieuwe knop "Importeer CSV" in de Bewerkingen-tab opent een upload-modal. Je voert een CSV in met kolommen <code>ondergrond;bewerking;eenheid;minuten;verbruik</code> en de app maakt voor elke unieke ondergrond-naam een nieuwe ondergrond aan (geen suffix — je ruimt later op) en importeert de bewerkingen met markering <em>normenboek</em> (blauwe linker-rand, Chunk 2). Robuust voor NL-Excel: komma OF punt als decimaal, puntkomma OF komma als scheidingsteken — wordt automatisch herkend. Strikt: bij één ongeldige rij wordt de hele import geweigerd met regelnummer + reden. Duplicaten binnen één import (zelfde ondergrond + bewerking) worden geskipt en in de preview opgesomd. Materiaal blijft leeg bij import — de slimme dropdown van Chunk 2 helpt je later het juiste materiaal kiezen 🎨.</p>
         <p><strong>🎨 Normenboek-rijen krijgen een blauwe streep + slimme materiaal-dropdown (v3.18.5, Chunk 2 van 4).</strong> Importeer je straks ~70 bewerkingen uit het normenboek, dan zie je ze in één oogopslag: in de Bewerkingen-tab krijgen normenboek-rijen een subtiele blauwe linker-rand. Eigen rijen blijven neutraal. Daarnaast is de materiaal-dropdown nu slim: bij een bewerking als "gronden" zie je standaard alleen materialen uit de groep <em>Grondverf watergedragen</em> — scheelt scrollen. Klein <strong>☰</strong>-knopje naast de dropdown toggle't tussen "alleen verwachte groep" en "alle materialen". Bij het wijzigen van minuten of verbruik op een normenboek-rij wordt de bewerking automatisch <em>eigen</em> (Chunk 1) en verdwijnt de blauwe streep vanzelf 📖.</p>
         <p><strong>📖 Bewerkingen krijgen een herkomst-stempel (v3.18.4, Chunk 1 van 4).</strong> Eerste stap richting volledige normenboek-integratie: elke bewerking weet voortaan of hij <em>eigen</em> (door jou ingevoerd, nacalculatie-gevalideerd) of <em>normenboek</em> (geïmporteerd, nog onbevestigd) is. Onder de motorkap nu: het veld bestaat en wordt opgeslagen, en zodra je minuten of verbruik op een normenboek-bewerking wijzigt promoveert hij automatisch naar <em>eigen</em>. Zichtbare kleur-cue en import-flow volgen in Chunk 2 en 3 🎨.</p>
         <p><strong>🚐 Reis-label in calc-paneel leest zichzelf voor (v3.18.3).</strong> Voorheen stond er "Reis (20,40 km, binnen rayon)" — dat 20,40-getal was raadselachtig (je vult 5,1 km enkele reis in, waarom zie je 20,40?). Nu staat de samenstelling in het label zelf: <em>Reis (2 dgn × heen+terug, binnen rayon)</em>. Buiten rayon: <em>Reis (2 dgn × heen+terug + reisuren)</em>. Geen getallenwirwar, wel duidelijk waar het bedrag vandaan komt. Print en klant-offerte ongewijzigd 🧾.</p>
@@ -1582,7 +1583,13 @@
   </section>
 
   <section class="panel" id="bewerkingen">
-    <div class="panel-head"><h2>Bewerkingen</h2><button class="btn" onclick="addBewerking()">+ Nieuwe Bewerking</button></div>
+    <div class="panel-head">
+      <h2>Bewerkingen</h2>
+      <div style="display:flex; gap:0.5rem;">
+        <button class="btn btn-secondary" onclick="openImportBewModal()" title="Importeer bewerkingen uit een CSV-bestand (bv. uit het normenboek)">📥 Importeer CSV</button>
+        <button class="btn" onclick="addBewerking()">+ Nieuwe Bewerking</button>
+      </div>
+    </div>
     <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Tijd in <strong>minuten per eenheid</strong>. Materiaalverbruik in <strong>L/kg/m/stuk per eenheid</strong> (afhankelijk van materiaal).</em></p>
     <div id="bewerkingenLijst"></div>
   </section>
@@ -1808,6 +1815,41 @@
     <div class="modal-foot">
       <button class="btn-secondary btn" onclick="closeNewBewModal()">Annuleren</button>
       <button class="btn" onclick="saveNewBewFromSystem()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- BEWERKINGEN CSV IMPORT MODAL (v3.18.6) -->
+<div class="modal-overlay" id="importBewModal" style="z-index: 200;">
+  <div class="modal" style="max-width: 720px;">
+    <div class="modal-head"><h3>Bewerkingen importeren uit CSV</h3><button class="close-x" onclick="closeImportBewModal()">✕</button></div>
+    <div class="modal-body">
+
+      <!-- Stap 1: upload -->
+      <div id="importBewStep1">
+        <p style="color: var(--muted); font-size: 0.85rem; margin-top: 0;">
+          <em>Importeer bewerkingen uit een CSV-bestand. Voor elke unieke ondergrond-naam wordt een nieuwe ondergrond aangemaakt. Geïmporteerde bewerkingen worden gemarkeerd als <strong>normenboek</strong> (blauwe linker-rand) tot je ze aanraakt.</em>
+        </p>
+        <div style="background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); padding: 0.7rem 0.9rem; margin-bottom: 1rem; font-family: ui-monospace, monospace; font-size: 0.78rem; line-height: 1.5; white-space: pre; overflow-x: auto;">ondergrond;bewerking;eenheid;minuten;verbruik
+Gevelkozijn hout buiten;Afbranden;m²;15;0
+Gevelkozijn hout buiten;Afbijten;m²;25;0,10
+Hout binnen;Schuren machinaal;m²;8;0
+Hout binnen;Gronden;m²;6;0,10</div>
+        <p style="color: var(--muted); font-size: 0.75rem; margin-bottom: 1rem;">
+          <em>Header-regel is verplicht. Scheidingsteken <strong>;</strong> of <strong>,</strong> mag (wordt automatisch herkend). Decimaal <strong>komma</strong> of <strong>punt</strong>. Eenheid moet <strong>m²</strong>, <strong>m¹</strong> of <strong>stuk</strong> zijn. UTF-8 opslaan voor speciale tekens. Eén ongeldige rij = hele import geweigerd.</em>
+        </p>
+        <label style="display:block; font-size: 0.85rem; margin-bottom: 0.4rem; font-weight: 500;">CSV-bestand</label>
+        <input id="importBewFile" type="file" accept=".csv,text/csv" onchange="_previewImportBew()" style="display:block; width:100%; padding: 0.4rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.85rem;">
+      </div>
+
+      <!-- Stap 2: preview -->
+      <div id="importBewStep2" style="display:none;">
+        <div id="importBewPreview"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="closeImportBewModal()">Annuleren</button>
+      <button class="btn" id="importBewDoBtn" onclick="_doImportBew()" style="display:none;">Importeren</button>
     </div>
   </div>
 </div>
@@ -2068,7 +2110,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.18.5';
+const APP_VERSION = 'v3.18.6';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5664,6 +5706,298 @@ async function dupBew(id) {
   data.bewerkingen.splice(i + 1, 0, saved);
   renderBewerkingen();
 }
+
+// ============================================================
+// CSV IMPORT — Bewerkingen (v3.18.6, Normenboek-integratie Chunk 3/4)
+// ============================================================
+// Importeer bewerkingen uit een CSV-bestand. Per unieke ondergrond-naam wordt
+// een nieuwe ondergrond aangemaakt (Gian-keuze: altijd nieuw, hij ruimt later
+// op). Bewerkingen krijgen bron='normenboek', materiaal_id=null en oplopende
+// volgorde per ondergrond. Strikte validatie: één stukke rij = hele import
+// geweigerd. Duplicaten binnen de batch worden geskipt.
+
+// State: bewaart het geparseerde + gevalideerde resultaat tussen Stap 1 en 2.
+let _importBewState = null; // { ondergronden: [naam,...], bewerkingen: [{ondNaam, naam, eenheid, minuten, verbruik}], skipped: [...] }
+
+function openImportBewModal() {
+  // Reset state + UI
+  _importBewState = null;
+  document.getElementById('importBewFile').value = '';
+  document.getElementById('importBewStep1').style.display = '';
+  document.getElementById('importBewStep2').style.display = 'none';
+  document.getElementById('importBewPreview').innerHTML = '';
+  document.getElementById('importBewDoBtn').style.display = 'none';
+  document.getElementById('importBewModal').classList.add('active');
+}
+function closeImportBewModal() {
+  document.getElementById('importBewModal').classList.remove('active');
+  _importBewState = null;
+}
+
+// Parse één CSV-cel: trim, strip omringende quotes
+function _csvCell(raw) {
+  let s = (raw == null ? '' : String(raw)).trim();
+  if (s.length >= 2 && s.startsWith('"') && s.endsWith('"')) {
+    s = s.slice(1, -1).replace(/""/g, '"');
+  }
+  return s;
+}
+// Detecteer delimiter uit header-regel: kies de met meeste velden tussen ; en ,
+function _csvDetectDelimiter(headerLine) {
+  const nSemi = (headerLine.match(/;/g) || []).length;
+  const nComma = (headerLine.match(/,/g) || []).length;
+  return nSemi >= nComma ? ';' : ',';
+}
+// Parse decimaal: accepteer komma OF punt. Bij beide: punt wint (US-format).
+// Lege string → 0. Niet-numeriek → NaN.
+function _csvNumber(s) {
+  if (s === '' || s == null) return 0;
+  let v = String(s).trim();
+  if (v === '') return 0;
+  // Als beide aanwezig: punt is thousands-sep, komma is decimaal (NL bank-format)
+  // OF: punt is decimaal, komma is thousands. We kunnen niet weten. Conventie:
+  // als precies één komma EN geen punt → komma = decimaal. Anders: punt = decimaal,
+  // komma's weghalen.
+  if (v.includes(',') && !v.includes('.')) {
+    v = v.replace(',', '.');
+  } else if (v.includes('.') && v.includes(',')) {
+    v = v.replace(/,/g, '');
+  }
+  const n = parseFloat(v);
+  return isNaN(n) ? NaN : n;
+}
+
+// Parse CSV-tekst → { rows: [{ondergrond, bewerking, eenheid, minuten, verbruik}],
+//                     errors: ['Regel N: …'] }
+// Geen rows als errors aanwezig.
+function _parseCSVBew(text) {
+  const errors = [];
+  const rows = [];
+
+  // BOM verwijderen
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+  // Splits regels — accepteert \r\n, \n
+  const lines = text.split(/\r?\n/);
+  if (!lines.length) { errors.push('CSV is leeg.'); return { rows, errors }; }
+
+  // Skip leading lege regels
+  let headerIdx = 0;
+  while (headerIdx < lines.length && lines[headerIdx].trim() === '') headerIdx++;
+  if (headerIdx >= lines.length) { errors.push('CSV is leeg.'); return { rows, errors }; }
+
+  const delim = _csvDetectDelimiter(lines[headerIdx]);
+  const header = lines[headerIdx].split(delim).map(s => _csvCell(s).toLowerCase());
+  const required = ['ondergrond', 'bewerking', 'eenheid', 'minuten', 'verbruik'];
+  const missing = required.filter(h => !header.includes(h));
+  if (missing.length) {
+    errors.push('Ontbrekende kolom(en) in header: ' + missing.join(', ') + '. Verwachte headers: ' + required.join(', ') + '.');
+    return { rows, errors };
+  }
+  const idx = {};
+  required.forEach(h => idx[h] = header.indexOf(h));
+
+  const allowedEenheid = ['m²', 'm¹', 'stuk'];
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trim() === '') continue; // lege regel = skip
+    const cells = line.split(delim);
+    const ond  = _csvCell(cells[idx.ondergrond]);
+    const bew  = _csvCell(cells[idx.bewerking]);
+    const eenh = _csvCell(cells[idx.eenheid]);
+    const minR = _csvCell(cells[idx.minuten]);
+    const verR = _csvCell(cells[idx.verbruik]);
+
+    const regelNr = i + 1;
+    if (!ond)  { errors.push(`Regel ${regelNr}: ondergrond is leeg.`); continue; }
+    if (!bew)  { errors.push(`Regel ${regelNr}: bewerking is leeg.`); continue; }
+    if (!allowedEenheid.includes(eenh)) {
+      errors.push(`Regel ${regelNr}: eenheid "${eenh}" niet herkend (verwacht: m², m¹ of stuk).`);
+      continue;
+    }
+    const minN = _csvNumber(minR);
+    const verN = _csvNumber(verR);
+    if (isNaN(minN) || minN < 0) { errors.push(`Regel ${regelNr}: minuten "${minR}" niet geldig.`); continue; }
+    if (isNaN(verN) || verN < 0) { errors.push(`Regel ${regelNr}: verbruik "${verR}" niet geldig.`); continue; }
+
+    rows.push({ ondergrond: ond, bewerking: bew, eenheid: eenh, minuten: minN, verbruik: verN, regelNr });
+  }
+  return { rows, errors };
+}
+
+// Lees uploaded file, parse, valideer, bouw preview
+function _previewImportBew() {
+  const fileInput = document.getElementById('importBewFile');
+  const f = fileInput.files && fileInput.files[0];
+  if (!f) return;
+
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const text = String(ev.target.result || '');
+    const { rows, errors } = _parseCSVBew(text);
+    _renderImportBewPreview(rows, errors);
+  };
+  reader.onerror = function() {
+    _renderImportBewPreview([], ['Bestand kon niet gelezen worden.']);
+  };
+  reader.readAsText(f, 'utf-8');
+}
+
+function _renderImportBewPreview(rows, errors) {
+  const previewEl = document.getElementById('importBewPreview');
+  document.getElementById('importBewStep1').style.display = 'none';
+  document.getElementById('importBewStep2').style.display = '';
+
+  // Bij fouten: toon ze, geen importeer-knop
+  if (errors.length) {
+    document.getElementById('importBewDoBtn').style.display = 'none';
+    let html = `<div style="background:#ffebee; border:1px solid #ffcdd2; border-radius:var(--radius); padding:0.8rem; color:#c62828;">
+      <strong>⚠ Import geweigerd — ${errors.length} fout${errors.length===1?'':'en'} gevonden:</strong>
+      <ul style="margin: 0.5rem 0 0 1.2rem; padding: 0;">`;
+    errors.slice(0, 30).forEach(e => { html += `<li style="font-size:0.85rem;">${_escapeHtml(e)}</li>`; });
+    if (errors.length > 30) html += `<li style="font-size:0.85rem;"><em>… en ${errors.length - 30} meer</em></li>`;
+    html += `</ul></div>
+      <p style="font-size:0.8rem; color:var(--muted); margin-top:0.8rem;"><em>Corrigeer het CSV-bestand en probeer opnieuw.</em></p>`;
+    previewEl.innerHTML = html;
+    return;
+  }
+
+  // Duplicaat-detectie binnen batch: zelfde (ondergrond, bewerking) → tweede skip
+  const seen = new Set();
+  const toImport = [];
+  const skipped = [];
+  rows.forEach(r => {
+    const key = r.ondergrond.toLowerCase() + '||' + r.bewerking.toLowerCase();
+    if (seen.has(key)) {
+      skipped.push(r);
+    } else {
+      seen.add(key);
+      toImport.push(r);
+    }
+  });
+
+  // Unieke ondergronden bepalen (in volgorde van eerste verschijning)
+  const ondNamen = [];
+  const ondSeen = new Set();
+  toImport.forEach(r => {
+    if (!ondSeen.has(r.ondergrond)) { ondSeen.add(r.ondergrond); ondNamen.push(r.ondergrond); }
+  });
+
+  // State bewaren voor _doImportBew
+  _importBewState = { ondNamen, toImport, skipped };
+
+  // Geen geldige rijen → niets te importeren
+  if (toImport.length === 0) {
+    document.getElementById('importBewDoBtn').style.display = 'none';
+    previewEl.innerHTML = `<div style="background:#fff3e0; border:1px solid #ffccbc; border-radius:var(--radius); padding:0.8rem; color:var(--accent-deep);">
+      <strong>Niks te importeren.</strong> CSV bevat geen geldige rijen.
+    </div>`;
+    return;
+  }
+
+  let html = `<div style="background:#e8f5e9; border:1px solid #c8e6c9; border-radius:var(--radius); padding:0.8rem; margin-bottom: 0.8rem;">
+    <div style="font-weight:600; margin-bottom: 0.4rem; color:#2e7d32;">✓ Klaar om te importeren</div>
+    <ul style="margin: 0 0 0 1.2rem; padding: 0; font-size:0.88rem;">
+      <li><strong>${ondNamen.length}</strong> nieuwe ondergrond${ondNamen.length===1?'':'en'} worden aangemaakt</li>
+      <li><strong>${toImport.length}</strong> nieuwe bewerking${toImport.length===1?'':'en'} worden geïmporteerd (markering: <em>normenboek</em>)</li>
+    </ul>
+  </div>`;
+
+  // Toon de ondergronden
+  html += `<details style="margin-bottom: 0.6rem;"><summary style="cursor:pointer; font-size:0.85rem; color:var(--ink);"><strong>Nieuwe ondergronden (${ondNamen.length})</strong></summary>
+    <ul style="margin: 0.4rem 0 0 1.2rem; padding:0; font-size:0.82rem; color:var(--ink-soft);">`;
+  ondNamen.forEach(n => { html += `<li>${_escapeHtml(n)}</li>`; });
+  html += `</ul></details>`;
+
+  // Toon skipped duplicaten als die er zijn
+  if (skipped.length) {
+    html += `<div style="background:#fff8e1; border:1px solid #ffe082; border-radius:var(--radius); padding:0.7rem; margin-top:0.6rem;">
+      <details><summary style="cursor:pointer; font-size:0.85rem; color:#f57f17;"><strong>⚠ ${skipped.length} duplicaat${skipped.length===1?'':'en'} overgeslagen</strong></summary>
+        <ul style="margin: 0.4rem 0 0 1.2rem; padding:0; font-size:0.8rem;">`;
+    skipped.slice(0, 20).forEach(r => { html += `<li>Regel ${r.regelNr}: "${_escapeHtml(r.bewerking)}" onder "${_escapeHtml(r.ondergrond)}"</li>`; });
+    if (skipped.length > 20) html += `<li><em>… en ${skipped.length - 20} meer</em></li>`;
+    html += `</ul></details></div>`;
+  }
+
+  previewEl.innerHTML = html;
+  const btn = document.getElementById('importBewDoBtn');
+  btn.style.display = '';
+  btn.textContent = `Importeer ${toImport.length} bewerking${toImport.length===1?'':'en'}`;
+}
+
+// Mini HTML-escape voor user-supplied strings in preview (gebruikt globale _escapeHtml)
+// Voer de daadwerkelijke import uit: bulk-insert ondergronden, dan bewerkingen
+async function _doImportBew() {
+  if (!_importBewState) return;
+  const { ondNamen, toImport } = _importBewState;
+  const btn = document.getElementById('importBewDoBtn');
+  const oldTxt = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Bezig...';
+
+  try {
+    // Stap 1: bulk-insert ondergronden (UUIDs client-side)
+    const maxOndV = data.ondergronden.reduce((m, o) => Math.max(m, o.volgorde || 0), 0);
+    const ondRows = ondNamen.map((naam, i) => ({
+      id: crypto.randomUUID(),
+      naam: naam,
+      locatie: 'beide',
+      volgorde: maxOndV + (i + 1) * 10
+    }));
+    const ondNaamToId = {};
+    ondRows.forEach(r => { ondNaamToId[r.naam] = r.id; });
+
+    const { data: ondInserted, error: ondErr } = await _sbQuery(
+      _sb.from('ondergronden').insert(ondRows).select(),
+      'Ondergronden importeren'
+    );
+    if (ondErr) throw new Error('Ondergronden: ' + (ondErr.message || ondErr));
+
+    // Stap 2: bulk-insert bewerkingen, FK naar net-aangemaakte ondergronden
+    // Volgorde per ondergrond, beginnend op 0
+    const volgordeMap = {}; // ondNaam → teller
+    const bewRows = toImport.map(r => {
+      if (volgordeMap[r.ondergrond] == null) volgordeMap[r.ondergrond] = 0;
+      const vol = volgordeMap[r.ondergrond]++;
+      return {
+        id: crypto.randomUUID(),
+        naam: r.bewerking,
+        eenheid: r.eenheid,
+        minuten: r.minuten,
+        ondergrond_id: ondNaamToId[r.ondergrond],
+        materiaal_id: null,
+        verbruik: r.verbruik,
+        volgorde: vol,
+        bron: 'normenboek'
+      };
+    });
+    const { data: bewInserted, error: bewErr } = await _sbQuery(
+      _sb.from('bewerkingen').insert(bewRows).select(),
+      'Bewerkingen importeren'
+    );
+    if (bewErr) throw new Error('Bewerkingen: ' + (bewErr.message || bewErr));
+
+    // Lokale data bijwerken (mappen naar JS-shape)
+    (ondInserted || ondRows).forEach(r => data.ondergronden.push(_mapOndFromDB(r)));
+    (bewInserted || bewRows).forEach(r => data.bewerkingen.push(_mapBewFromDB(r)));
+
+    _toast(`${toImport.length} bewerking${toImport.length===1?'':'en'} geïmporteerd uit ${ondNamen.length} ondergrond${ondNamen.length===1?'':'en'}`, 'ok');
+    closeImportBewModal();
+    renderBewerkingen();
+  } catch (err) {
+    console.error('Import-fout:', err);
+    _toast('Import mislukt: ' + (err.message || err));
+    btn.disabled = false;
+    btn.textContent = oldTxt;
+    // Herlaad data om consistentie te bewaren (mogelijk zijn ondergronden wel ingevoegd maar bewerkingen niet)
+    try {
+      data.ondergronden = await _fetchOndergrondenFromDB();
+      data.bewerkingen  = await _fetchBewerkingenFromDB();
+      renderBewerkingen();
+    } catch (e) { /* stilte */ }
+  }
+}
+
 // ============================================================
 // PDF EXPORT — print-friendly view of active calculation
 // ============================================================
