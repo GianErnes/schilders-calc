@@ -1,3 +1,64 @@
+## v3.18.5 — Visuele cue + slimme materiaal-dropdown (Normenboek-integratie Chunk 2/4)
+Chunk 1 zette de datalaag op (`bron` veld + auto-promotie). Deze chunk maakt die zichtbaar in de UI én voegt een eerste stuk slimheid toe aan de materiaal-koppeling. Zodra straks de import-flow draait (Chunk 3) zie je in één oogopslag welke bewerkingen vers uit het normenboek komen, en bij het invullen van het materiaal hoef je niet door de hele lijst te scrollen.
+
+### Wijzigingen in deze chunk
+
+**Visuele cue op normenboek-bewerkingen:**
+- Elke `<tr>` in `#bewerkingenLijst` krijgt nu een `data-bron="eigen|normenboek"` attribuut.
+- CSS-regel: rijen met `data-bron="normenboek"` krijgen een **4px blauwe linker-rand** (via `box-shadow: inset 4px 0 0 var(--blue)` op de eerste cel — verschuift de inhoud niet).
+- Eigen rijen blijven volledig neutraal — stil tot je iets importeert.
+- Auto-promotie uit Chunk 1 (`updBew` bij wijziging van `minuten` of `verbruik`) maakt dat de blauwe rand vanzelf verdwijnt zodra je een normenboek-rij aanraakt en de cijfers aanpast.
+
+**Statische mapping bewerking → materiaal-groep:**
+
+```js
+const NORM_MATERIAAL_GROEP = {
+  'afbranden':      null,                          // geen materiaal verwacht
+  'afbijten':       'Hulpmiddelen',
+  'wassen ammonia': 'Hulpmiddelen',
+  'schuren':        'Hulpmiddelen',
+  'gronden':        'Grondverf watergedragen',
+  'overlakken':     'Dekverf watergedragen',
+  'aflakken':       'Dekverf watergedragen',
+  'plamuren':       'Non paint',
+  'stoppen':        'Non paint',
+  'beitsen':        'Vernis/transparante verf',
+  'vernissen':      'Vernis/transparante verf'
+};
+```
+
+Helper-functie `_resolveExpectedGroup(naam)` matcht **substring, case-insensitive**. Bij conflict tussen twee keys (kan in praktijk niet) retourneert het `null`, dus dan geen filter.
+
+**Slimme materiaal-dropdown met override:**
+- Bij een bewerkingsnaam waarvan de groep bekend is, toont de materiaal-`<select>` standaard **alleen** materialen uit die groep.
+- **Veiligheidsklep:** als het reeds gekoppelde materiaal buiten de filter valt, wordt het bovenaan toegevoegd zodat de selectie niet stilletjes "leeg" lijkt.
+- Naast de dropdown verschijnt een klein **☰**-knopje (`.mat-filter-btn`). Klik toggle't het filter aan/uit voor die ene rij. Aan (default): blauw-getint. Uit: neutraal. Title-attribuut legt uit wat de huidige stand doet.
+- Het knopje verschijnt **alleen wanneer een mapping bekend is** — bewerkingen zonder verwachte groep ("ontvetten", "isolerend voorstrijken", etc.) krijgen geen knop en zien de volledige materiaal-lijst zoals voorheen.
+- Toggle-state (`_matFilterOff` Set) is **in-memory per pageview**. Een refresh reset alles naar default (filter aan) — bewust gekozen om verborgen UI-state niet tussen sessies te slepen.
+
+**Beits/vernis is meegenomen:** in de oorspronkelijke memo stond dat groep nog "niet ingericht" was, maar `MATERIAAL_GROEPEN` heeft wel `'Vernis/transparante verf'`. De mapping wijst daar nu naar — als de groep leeg is werkt de filter nog steeds (lege lijst → klik op ☰ en je hebt alles), als hij later wordt gevuld werkt het direct.
+
+### Wat (nog) niet zichtbaar is
+
+Nog steeds geen import-flow — dat blijft Chunk 3. Geen UI om handmatig `bron` te kunnen wijzigen (niet nodig — auto-promotie regelt dit). De cue is alleen zichtbaar in de Bewerkingen-tab; verfsystemen en stappen tonen geen bron-indicator (architectuur-keuze uit Chunk 1: receptuur is altijd eigen compositie).
+
+### Backlog (carry-over uit v3.18.4)
+
+- Beter foutmeldingen in `_sbQuery` calls (toast met echte Supabase-error i.p.v. generieke "Verwijderen/Opslaan mislukt") — al lang open.
+- v3.18.2 gedragswijziging (afronding-drempel symmetrisch) kan oude calculaties van mini-klusjes (<0,55 dag) anders laten uitkomen bij heropenen.
+- Normenboek (~150 boekpagina's) nog te scannen door Gian — relevant voor Chunk 3/4.
+
+### Chunk-roadmap
+
+| # | Inhoud | Status |
+|---|---|---|
+| 1 | DB-veld `bron` + mapper + auto-promotie | ✅ v3.18.4 |
+| 2 | UI-cue (blauwe linker-rand) + materiaal-dropdown gefilterd op groep | ✅ v3.18.5 |
+| 3 | Import-flow met auto-aanmaak van ontbrekende ondergronden + bulk-insert | volgende |
+| 4 | Test-import van I-1 + I-2 normbladen (afbranden + afbijten gevelkozijn hout) | na 3 |
+
+---
+
 ## v3.18.4 — Bewerkingen krijgen herkomst-stempel (Normenboek-integratie Chunk 1/4)
 Eerste, onzichtbare stap richting volledige normenboek-integratie. Filosoferen-fase afgerond met de conclusie dat de bestaande `bewerkingen` / `ondergronden` / `verfsystemen` / `verfsysteem_stappen` tabellen 1-op-1 mappen op de structuur van het normenboek (Onderdeel × Bewerking × tarieftijd + materiaalverbruik). Er hoeft architecturaal niets veranderd. Enige toevoeging: een herkomst-stempel om straks visueel te scheiden welke bewerkingen uit Gian's eigen ervaring komen en welke uit het normenboek geïmporteerd zijn.
 

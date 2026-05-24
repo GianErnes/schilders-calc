@@ -1208,6 +1208,38 @@
     border-radius: var(--radius);
   }
 
+  /* v3.18.5 — Normenboek-cue: subtiele blauwe linker-rand op bewerkingen
+     met bron === 'normenboek'. Box-shadow ipv border-left zodat de tekst
+     niet opschuift. Verdwijnt automatisch na auto-promotie (Chunk 1). */
+  #bewerkingenLijst tr[data-bron="normenboek"] > td:first-child {
+    box-shadow: inset 4px 0 0 var(--blue);
+  }
+
+  /* v3.18.5 — Materiaal-dropdown filter-knopje (☰) naast de select.
+     Aan (default): blauw-getint, lichte achtergrond.
+     Uit: neutraal, transparant. Verschijnt alleen wanneer een mapping
+     bekend is — bewerkingen zonder verwachte groep krijgen geen knop. */
+  .mat-filter-btn {
+    display: inline-block;
+    margin-left: 0.25rem;
+    padding: 0.1rem 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1;
+    border: 1px solid var(--blue);
+    background: #e3f2fd;
+    color: var(--blue-deep);
+    border-radius: 3px;
+    cursor: pointer;
+    vertical-align: middle;
+  }
+  .mat-filter-btn:hover { background: #bbdefb; }
+  .mat-filter-btn.off {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--muted);
+  }
+  .mat-filter-btn.off:hover { background: var(--paper-warm); }
+
   /* v3.17.0 — Status-bar tijdens archiveer-sequentie (Genereer alle PDFs) */
   #archiveerStatusBar {
     position: fixed;
@@ -1436,8 +1468,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.4</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.5</h2>
       <div class="intro-body">
+        <p><strong>🎨 Normenboek-rijen krijgen een blauwe streep + slimme materiaal-dropdown (v3.18.5, Chunk 2 van 4).</strong> Importeer je straks ~70 bewerkingen uit het normenboek, dan zie je ze in één oogopslag: in de Bewerkingen-tab krijgen normenboek-rijen een subtiele blauwe linker-rand. Eigen rijen blijven neutraal. Daarnaast is de materiaal-dropdown nu slim: bij een bewerking als "gronden" zie je standaard alleen materialen uit de groep <em>Grondverf watergedragen</em> — scheelt scrollen. Klein <strong>☰</strong>-knopje naast de dropdown toggle't tussen "alleen verwachte groep" en "alle materialen". Bij het wijzigen van minuten of verbruik op een normenboek-rij wordt de bewerking automatisch <em>eigen</em> (Chunk 1) en verdwijnt de blauwe streep vanzelf 📖.</p>
         <p><strong>📖 Bewerkingen krijgen een herkomst-stempel (v3.18.4, Chunk 1 van 4).</strong> Eerste stap richting volledige normenboek-integratie: elke bewerking weet voortaan of hij <em>eigen</em> (door jou ingevoerd, nacalculatie-gevalideerd) of <em>normenboek</em> (geïmporteerd, nog onbevestigd) is. Onder de motorkap nu: het veld bestaat en wordt opgeslagen, en zodra je minuten of verbruik op een normenboek-bewerking wijzigt promoveert hij automatisch naar <em>eigen</em>. Zichtbare kleur-cue en import-flow volgen in Chunk 2 en 3 🎨.</p>
         <p><strong>🚐 Reis-label in calc-paneel leest zichzelf voor (v3.18.3).</strong> Voorheen stond er "Reis (20,40 km, binnen rayon)" — dat 20,40-getal was raadselachtig (je vult 5,1 km enkele reis in, waarom zie je 20,40?). Nu staat de samenstelling in het label zelf: <em>Reis (2 dgn × heen+terug, binnen rayon)</em>. Buiten rayon: <em>Reis (2 dgn × heen+terug + reisuren)</em>. Geen getallenwirwar, wel duidelijk waar het bedrag vandaan komt. Print en klant-offerte ongewijzigd 🧾.</p>
         <p><strong>🧮 Afronding-drempel werkt nu symmetrisch (v3.18.2).</strong> Voorheen werd bij een klusje onder 1 dag áltijd naar 1 dag afgerond — los van de drempel. Nu werkt de drempel ook onder 1 dag: bij 0,3 dag werk + drempel 0,55 → 0 hele dagen factureerbaar, géén afrondingstoeslag. Reis & dag/week-staart volgen mee (€0 op factureerbaar=0). Bij mini-klusjes: zelf reiskosten in de staart zetten als de klant moet bijdragen aan de rit 🚐.</p>
@@ -2035,7 +2068,7 @@
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.18.4';
+const APP_VERSION = 'v3.18.5';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5414,6 +5447,44 @@ async function delMat(id) {
 // ============================================================
 // BEWERKINGEN
 // ============================================================
+
+// v3.18.5 — Statische mapping van normenboek-bewerkingen naar
+// verwachte materiaal-groep. Substring-match (case-insensitive) op
+// de bewerkingsnaam. Bij conflict tussen twee keys → null (geen filter).
+const NORM_MATERIAAL_GROEP = {
+  'afbranden':      null,
+  'afbijten':       'Hulpmiddelen',
+  'wassen ammonia': 'Hulpmiddelen',
+  'schuren':        'Hulpmiddelen',
+  'gronden':        'Grondverf watergedragen',
+  'overlakken':     'Dekverf watergedragen',
+  'aflakken':       'Dekverf watergedragen',
+  'plamuren':       'Non paint',
+  'stoppen':        'Non paint',
+  'beitsen':        'Vernis/transparante verf',
+  'vernissen':      'Vernis/transparante verf'
+};
+function _resolveExpectedGroup(naam) {
+  if (!naam) return null;
+  const lc = String(naam).toLowerCase();
+  let found = null;
+  for (const [key, groep] of Object.entries(NORM_MATERIAAL_GROEP)) {
+    if (lc.includes(key)) {
+      if (found !== null && found !== groep) return null; // ambigu
+      found = groep;
+    }
+  }
+  return found; // null = geen mapping of expliciet null in tabel
+}
+// Filter-toggle state: bewerking-IDs waarvoor filter handmatig UIT staat.
+// Niet persistent — page refresh reset alles naar filter AAN (default).
+const _matFilterOff = new Set();
+function toggleMatFilter(bewId) {
+  if (_matFilterOff.has(bewId)) _matFilterOff.delete(bewId);
+  else _matFilterOff.add(bewId);
+  renderBewerkingen();
+}
+
 function renderBewerkingen() {
   const c = document.getElementById('bewerkingenLijst');
   if (!data.bewerkingen.length) { c.innerHTML = '<div class="empty-state">Geen bewerkingen.</div>'; return; }
@@ -5450,14 +5521,35 @@ function renderBewerkingen() {
         <tbody>`;
     list.forEach((b, i) => {
       const eenheidOpts = ['m²','m¹','stuk'].map(e => `<option ${e===b.eenheid?'selected':''}>${e}</option>`).join('');
-      const matOpts = '<option value="">— geen —</option>' + data.materialen.map(m => `<option value="${m.id}" ${m.id===b.materiaalId?'selected':''}>${m.naam}</option>`).join('');
+
+      // v3.18.5 — Materiaal-dropdown opbouwen met optionele groep-filter
+      const expGroep = _resolveExpectedGroup(b.naam);
+      const filterAan = !!expGroep && !_matFilterOff.has(b.id);
+      let matList;
+      if (filterAan) {
+        matList = data.materialen.filter(m => m.groep === expGroep);
+        // Defensief: huidige gekoppelde materiaal moet zichtbaar blijven
+        // ook als het buiten de filter valt (anders 'verdwijnt' de selectie visueel)
+        if (b.materiaalId && !matList.find(m => m.id === b.materiaalId)) {
+          const huidig = data.materialen.find(m => m.id === b.materiaalId);
+          if (huidig) matList = [huidig, ...matList];
+        }
+      } else {
+        matList = data.materialen;
+      }
+      const matOpts = '<option value="">— geen —</option>' +
+        matList.map(m => `<option value="${m.id}" ${m.id===b.materiaalId?'selected':''}>${m.naam}</option>`).join('');
+      const filterBtnHtml = expGroep
+        ? `<button class="mat-filter-btn${filterAan ? '' : ' off'}" onclick="toggleMatFilter('${b.id}')" title="${filterAan ? 'Filter op groep: ' + expGroep + ' — klik voor alle materialen' : 'Toon alleen materialen uit groep: ' + expGroep}">☰</button>`
+        : '';
+
       const ondOpts = data.ondergronden.map(oo => `<option value="${oo.id}" ${oo.id===b.ondergrondId?'selected':''}>${oo.naam}</option>`).join('');
       const mat = data.materialen.find(x => x.id === b.materiaalId);
       const matEenheid = mat ? mat.eenheid : '—';
       const matKosten = mat ? mat.prijsPer * (b.verbruik || 0) : 0;
       const arbeidEur = (b.minuten / 60) * uurloon;
       const totaal = arbeidEur + matKosten;
-      html += `<tr>
+      html += `<tr data-bron="${b.bron || 'eigen'}">
         <td>
           <button class="btn-icon" onclick="moveBewInOnd('${b.id}',-1)" ${i===0?'disabled':''}>↑</button>
           <button class="btn-icon" onclick="moveBewInOnd('${b.id}',1)" ${i===list.length-1?'disabled':''}>↓</button>
@@ -5465,7 +5557,7 @@ function renderBewerkingen() {
         <td><input value="${b.naam}" onchange="updBew('${b.id}','naam',this.value)"></td>
         <td><select onchange="updBew('${b.id}','eenheid',this.value)">${eenheidOpts}</select></td>
         <td class="num right"><input type="number" step="0.1" value="${b.minuten}" onchange="updBew('${b.id}','minuten',parseFloat(this.value))"></td>
-        <td><select onchange="updBew('${b.id}','materiaalId',this.value)">${matOpts}</select></td>
+        <td><select onchange="updBew('${b.id}','materiaalId',this.value)">${matOpts}</select>${filterBtnHtml}</td>
         <td class="num right"><input type="number" step="0.001" value="${b.verbruik||0}" onchange="updBew('${b.id}','verbruik',parseFloat(this.value))" title="Verbruik in ${matEenheid} per ${b.eenheid}"> <span style="color:var(--muted); font-size:0.7rem;">${matEenheid}/${b.eenheid}</span></td>
         <td class="num right" style="color:var(--ink-soft);">€ ${fmt(matKosten)}</td>
         <td class="num right" style="color:var(--accent-deep); font-weight:600;">€ ${fmt(totaal)}</td>
