@@ -1,3 +1,29 @@
+## v3.18.3 — Reis-label in calc-paneel beschrijft zichzelf
+Op het calc-paneel stond bij de reisregel "Reis (20,40 km, binnen rayon) — € 7,14". Het bedrag klopte (2 factureerbare dagen × 5,1 km enkele reis × 2 heen+terug × €0,35/km = €7,14), maar die 20,40 km was een raadsel: je vult 5,1 km in en ziet 20,40 km terug — pas als je weet dat het ×dagen ×2 is, snap je het. Andere regels in het paneel tonen wél hun samenstelling ("klein mat. 10% over materiaal", "afval 0,5% over arbeid+materiaal"). De reis-regel hoort dat ook te doen.
+
+### Wijziging
+Eén regel in `renderTotals()` (regel 8928). Het label toont nu de samenstelling i.p.v. een berekend totaal-km-getal:
+
+| Situatie | Voorheen | Nu |
+|---|---|---|
+| Binnen rayon | `Reis (20,40 km, binnen rayon)` | `Reis (2 dgn × heen+terug, binnen rayon)` |
+| Buiten rayon | `Reis (0,8 u + km)` ← km-getal ontbrak sowieso | `Reis (2 dgn × heen+terug + reisuren)` |
+| 0 factureerbare dagen | `Reis (0 km, binnen rayon) — €0,00` | `Reis — €0,00` |
+
+Smaak C uit het filosofeer-gesprek: focus op de logica, geen getallenwirwar. Wie het exacte km-getal wil zien kan dat altijd narekenen vanuit de input (5,1 km enkele reis) en de planning (factureerbare dagen).
+
+### Wat niet wijzigt
+- De berekening zelf: 100% identiek aan v3.18.2.
+- De interne calc-print (regel 5940): blijft `Reis (X u + Y km)` — daar zijn de getallen op hun plaats in een formele document-context.
+- De klant-offerte (regel 6402): blijft `${dagenFactureerbaar} dagen × ${reisAfstand} km enkele reis` — was al zelf-beschrijvend.
+- Onderhoudsplan-rekenflow (regel 4338-ev): aparte tab, niet aangeraakt.
+
+### Scope-keuze
+Bewust beperkt tot het in-app calc-paneel. De PDF-print is een formeel document met een eigen toon (getallen en breakdown horen daar). Het calc-paneel is werkvloer-tool — daar telt leesbaarheid zwaarder.
+
+### Versie-bump checkpoint
+4 verplichte plekken bijgewerkt: APP_VERSION (regel 2036), welkomstblok-titel (regel 1439), CHANGELOG (deze), RELEASE_HIGHLIGHTS-top (regel 2398). Optionele 5e: nieuwe paragraaf bovenaan in welkomstblok-inhoud — toegevoegd.
+
 ## v3.18.2 — Afronding-drempel werkt symmetrisch ook onder 1 dag
 Gian meldde: bij een calculatie van 0,3 werkdagen werd toch "afronding +0,68 dag €765" bijgeteld, terwijl de drempel op 0,55 stond. Z'n verbazing klopte met de UI-tekst van de drempel ("Pas afronden naar boven als overschot ≥ deze waarde") maar niet met het gedrag van de code. Dat was een gat tussen belofte en uitvoering.
 
