@@ -1191,22 +1191,41 @@
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 0.7rem;
   }
-  /* BEWERKINGEN GROEPEN per ondergrond */
+  /* BEWERKINGEN GROEPEN per ondergrond — v3.18.7 inklap-clusters */
   .bew-cluster {
-    margin-bottom: 1.4rem;
+    margin-bottom: 0.5rem;
   }
   .bew-cluster:last-child { margin-bottom: 0; }
   .bew-cluster-titel {
     font-size: 0.92rem;
     font-weight: 600;
     color: var(--ink);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
     padding: 0.4rem 0.7rem;
     background: var(--paper-warm);
     border: 1px solid var(--paper-deep);
     border-left: 3px solid var(--accent);
     border-radius: var(--radius);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.12s;
   }
+  .bew-cluster-titel:hover { background: var(--paper-deep); }
+  .bew-cluster.open .bew-cluster-titel { margin-bottom: 0.5rem; }
+  .bew-cluster-caret {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    transition: transform 0.15s;
+    width: 0.8em;
+    flex-shrink: 0;
+  }
+  .bew-cluster.open .bew-cluster-caret { transform: rotate(90deg); }
+  .bew-cluster.orphans .bew-cluster-titel { cursor: default; }
+  .bew-cluster.orphans .bew-cluster-titel:hover { background: var(--paper-warm); }
 
   /* v3.18.5 — Normenboek-cue: subtiele blauwe linker-rand op bewerkingen
      met bron === 'normenboek'. Box-shadow ipv border-left zodat de tekst
@@ -1468,8 +1487,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.6</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.7</h2>
       <div class="intro-body">
+        <p><strong>📂 Inklap-clusters in de Bewerkingen-tab (v3.18.7).</strong> Bij 14 ondergronden en 115+ bewerkingen werd het scrollen vermoeiend. Vanaf nu start de Bewerkingen-tab met alle clusters dicht — je ziet 14 nette balken onder elkaar in plaats van een lange muur van tabellen. Klik op een cluster-titel om hem uit te klappen, klik nog eens om weer dicht te vouwen. Pijltje ▸ wordt ▾ als je open klapt. Slimme automatieken: een nieuwe bewerking, een dupliceer-actie, een verplaatsing via de dropdown en een CSV-import openen automatisch de betroffen cluster(s) — zodat je direct ziet waar je werk landt. Na F5 is alles weer dicht (simpel en voorspelbaar) 🔽.</p>
         <p><strong>📥 CSV-import voor bewerkingen (v3.18.6, Chunk 3 van 4).</strong> Nieuwe knop "Importeer CSV" in de Bewerkingen-tab opent een upload-modal. Je voert een CSV in met kolommen <code>ondergrond;bewerking;eenheid;minuten;verbruik</code> en de app maakt voor elke unieke ondergrond-naam een nieuwe ondergrond aan (geen suffix — je ruimt later op) en importeert de bewerkingen met markering <em>normenboek</em> (blauwe linker-rand, Chunk 2). Robuust voor NL-Excel: komma OF punt als decimaal, puntkomma OF komma als scheidingsteken — wordt automatisch herkend. Strikt: bij één ongeldige rij wordt de hele import geweigerd met regelnummer + reden. Duplicaten binnen één import (zelfde ondergrond + bewerking) worden geskipt en in de preview opgesomd. Materiaal blijft leeg bij import — de slimme dropdown van Chunk 2 helpt je later het juiste materiaal kiezen 🎨.</p>
         <p><strong>🎨 Normenboek-rijen krijgen een blauwe streep + slimme materiaal-dropdown (v3.18.5, Chunk 2 van 4).</strong> Importeer je straks ~70 bewerkingen uit het normenboek, dan zie je ze in één oogopslag: in de Bewerkingen-tab krijgen normenboek-rijen een subtiele blauwe linker-rand. Eigen rijen blijven neutraal. Daarnaast is de materiaal-dropdown nu slim: bij een bewerking als "gronden" zie je standaard alleen materialen uit de groep <em>Grondverf watergedragen</em> — scheelt scrollen. Klein <strong>☰</strong>-knopje naast de dropdown toggle't tussen "alleen verwachte groep" en "alle materialen". Bij het wijzigen van minuten of verbruik op een normenboek-rij wordt de bewerking automatisch <em>eigen</em> (Chunk 1) en verdwijnt de blauwe streep vanzelf 📖.</p>
         <p><strong>📖 Bewerkingen krijgen een herkomst-stempel (v3.18.4, Chunk 1 van 4).</strong> Eerste stap richting volledige normenboek-integratie: elke bewerking weet voortaan of hij <em>eigen</em> (door jou ingevoerd, nacalculatie-gevalideerd) of <em>normenboek</em> (geïmporteerd, nog onbevestigd) is. Onder de motorkap nu: het veld bestaat en wordt opgeslagen, en zodra je minuten of verbruik op een normenboek-bewerking wijzigt promoveert hij automatisch naar <em>eigen</em>. Zichtbare kleur-cue en import-flow volgen in Chunk 2 en 3 🎨.</p>
@@ -2110,7 +2130,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.18.6';
+const APP_VERSION = 'v3.18.7';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5527,6 +5547,17 @@ function toggleMatFilter(bewId) {
   renderBewerkingen();
 }
 
+// v3.18.7 — Inklap-clusters Bewerkingen-tab. Set bevat ondergrond-IDs
+// die OPEN zijn. Default leeg = alle clusters dicht na page-load / F5.
+// Auto-open bij: nieuwe bewerking, dupliceren, verplaatsen via dropdown,
+// CSV-import. Orphans-cluster wordt altijd open getoond (zonder toggle).
+const _bewOpenOnd = new Set();
+function _toggleBewCluster(ondId) {
+  if (_bewOpenOnd.has(ondId)) _bewOpenOnd.delete(ondId);
+  else _bewOpenOnd.add(ondId);
+  renderBewerkingen();
+}
+
 function renderBewerkingen() {
   const c = document.getElementById('bewerkingenLijst');
   if (!data.bewerkingen.length) { c.innerHTML = '<div class="empty-state">Geen bewerkingen.</div>'; return; }
@@ -5546,9 +5577,18 @@ function renderBewerkingen() {
   data.ondergronden.forEach(o => {
     const list = grouped.get(o.id) || [];
     if (list.length === 0) return; // skip empty ondergronden
-    html += `<div class="bew-cluster">
-      <div class="bew-cluster-titel">${o.naam} <span style="color:var(--muted); font-weight:400; font-size:0.78em;">— ${list.length} ${list.length===1?'bewerking':'bewerkingen'}</span></div>
-      <div class="table-scroll"><table>
+    const isOpen = _bewOpenOnd.has(o.id);
+    html += `<div class="bew-cluster${isOpen ? ' open' : ''}">
+      <div class="bew-cluster-titel" onclick="_toggleBewCluster('${o.id}')">
+        <span class="bew-cluster-caret">▸</span>
+        <span>${o.naam}</span>
+        <span style="color:var(--muted); font-weight:400; font-size:0.78em;">— ${list.length} ${list.length===1?'bewerking':'bewerkingen'}</span>
+      </div>`;
+    if (!isOpen) {
+      html += `</div>`;
+      return;
+    }
+    html += `<div class="table-scroll"><table>
         <thead><tr>
           <th style="width:80px;">Volgorde</th>
           <th>Naam</th>
@@ -5616,7 +5656,7 @@ function renderBewerkingen() {
   // Bewerkingen with unknown ondergrond (shouldn't happen, but vangnet)
   const orphans = [...grouped.entries()].filter(([id]) => !data.ondergronden.find(o => o.id === id)).flatMap(([,list]) => list);
   if (orphans.length) {
-    html += `<div class="bew-cluster"><div class="bew-cluster-titel" style="color:var(--accent-deep);">⚠ Zonder ondergrond</div><p style="color:var(--muted); font-size:0.8rem;">${orphans.length} bewerkingen hebben geen geldige ondergrond.</p></div>`;
+    html += `<div class="bew-cluster open orphans"><div class="bew-cluster-titel" style="color:var(--accent-deep);">⚠ Zonder ondergrond</div><p style="color:var(--muted); font-size:0.8rem;">${orphans.length} bewerkingen hebben geen geldige ondergrond.</p></div>`;
   }
 
   html += '<p style="color: var(--muted); font-size: 0.72rem; margin-top: 0.75rem;"><em>€ mat. = inkoopprijs × verbruik &nbsp;·&nbsp; € totaal = (min ÷ 60 × uurloon) + materiaal</em></p>';
@@ -5659,6 +5699,9 @@ function updBew(id, field, val) {
   if ((field === 'minuten' || field === 'verbruik') && b.bron === 'normenboek') {
     b.bron = 'eigen';
   }
+  // v3.18.7 — bij verplaatsen naar andere ondergrond: doel-cluster auto-open
+  // zodat je direct ziet waar de bewerking heen is gegaan.
+  if (field === 'ondergrondId' && val) _bewOpenOnd.add(val);
   _updateBewDB(b);
   renderBewerkingen(); renderSystemen(); renderTotals();
 }
@@ -5678,6 +5721,8 @@ async function addBewerking() {
   if (btn) { btn.disabled = false; btn.textContent = oldText; }
   if (!saved) return;
   data.bewerkingen.push(saved);
+  // v3.18.7 — cluster van nieuwe bewerking auto-open
+  if (saved.ondergrondId) _bewOpenOnd.add(saved.ondergrondId);
   renderBewerkingen();
 }
 async function delBew(id) {
@@ -5704,6 +5749,8 @@ async function dupBew(id) {
   // Plaats direct na het origineel in de array
   const i = data.bewerkingen.indexOf(orig);
   data.bewerkingen.splice(i + 1, 0, saved);
+  // v3.18.7 — cluster van duplicaat auto-open
+  if (saved.ondergrondId) _bewOpenOnd.add(saved.ondergrondId);
   renderBewerkingen();
 }
 
@@ -5980,6 +6027,10 @@ async function _doImportBew() {
     // Lokale data bijwerken (mappen naar JS-shape)
     (ondInserted || ondRows).forEach(r => data.ondergronden.push(_mapOndFromDB(r)));
     (bewInserted || bewRows).forEach(r => data.bewerkingen.push(_mapBewFromDB(r)));
+
+    // v3.18.7 — alle clusters die nieuwe bewerkingen kregen auto-open
+    // zodat de gebruiker direct ziet wat er is binnengekomen
+    Object.values(ondNaamToId).forEach(id => _bewOpenOnd.add(id));
 
     _toast(`${toImport.length} bewerking${toImport.length===1?'':'en'} geïmporteerd uit ${ondNamen.length} ondergrond${ondNamen.length===1?'':'en'}`, 'ok');
     closeImportBewModal();

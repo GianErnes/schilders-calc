@@ -1,3 +1,35 @@
+## v3.18.7 — Inklap-clusters in Bewerkingen-tab
+Met 14 ondergronden en 115+ bewerkingen werd de Bewerkingen-tab een lange verticale muur. Deze release groepeert de tab nu visueel: alle clusters starten dicht, je klapt open wat je nodig hebt.
+
+### Wijzigingen
+
+**UI:**
+- De Bewerkingen-tab toont na page-load / F5 alle 14+ ondergronden als compacte, klikbare balken onder elkaar — geen tabellen tot je een cluster opent.
+- Klik op een cluster-titel om uit te klappen → de tabel met bewerkingen verschijnt eronder. Pijltje ▸ wordt ▾.
+- Klik nog eens op de titel om weer dicht te klappen. Hele balk is klikbaar (grote hitbox), niet alleen het pijltje.
+- Hover-effect op de cluster-titel (lichte achtergrondkleur-shift) maakt zichtbaar dat hij klikbaar is.
+- Cluster-spacing kleiner gemaakt (1,4rem → 0,5rem) zodat de dichte balken dicht op elkaar staan en je in één schermhoogte alle 14+ ondergronden ziet.
+
+**Slimme auto-opens:**
+- "+ Nieuwe Bewerking" → cluster van de eerste ondergrond wordt automatisch geopend zodat de nieuwe rij direct zichtbaar is.
+- Bewerking dupliceren (⎘) → cluster van de gedupliceerde bewerking blijft / wordt open.
+- Bewerking verplaatsen via de ondergrond-dropdown rechts in de rij → doel-cluster opent automatisch zodat je ziet waar 'ie geland is.
+- CSV-import → alle nieuwe / aangevulde clusters openen automatisch in één keer na succesvolle import, zodat je direct controleert wat er binnen is gekomen.
+
+**Edge cases:**
+- Orphans-cluster ("⚠ Zonder ondergrond" — vangnet voor bewerkingen zonder geldige ondergrond-FK) wordt altijd open getoond, is niet klikbaar, en heeft geen toggle-pijltje.
+- State leeft in geheugen (Set met ondergrond-IDs). Geen localStorage — bewust simpel: na F5 is alles weer dicht. Voorspelbaar gedrag.
+
+### Niet aangepast
+- Materialen-tab en Ondergronden-tab houden hun huidige (uitgeklapte) lijst-rendering. Bewust scope-keuze: eerst Bewerkingen, dan kijken hoe het bevalt.
+- Geen "Alles uit/inklappen" knop in de panel-head. Bewust minimaal gehouden — als blijkt dat we 'm missen kan hij later in 5 minuten erbij.
+- Het bestaande blauwe normenboek-streepje (v3.18.5), de slimme materiaal-dropdown (v3.18.5) en auto-promotie bij wijziging van minuten/verbruik (v3.18.4) werken ongewijzigd binnen de uitgeklapte tabellen.
+
+### Versie
+APP_VERSION: `v3.18.6` → `v3.18.7`. Welkomstblok-tekst bijgewerkt; versie-geschiedenis krijgt later een 1-regel entry.
+
+---
+
 ## v3.18.6 — CSV-import voor bewerkingen (Normenboek-integratie Chunk 3/4)
 Chunk 1 zette de datalaag (`bron` veld + auto-promotie), Chunk 2 maakte normenboek-rijen visueel herkenbaar + de materiaal-dropdown slim. Deze chunk levert de pijp om écht data in bulk binnen te krijgen: een CSV-import-flow met preview, validatie en duplicaat-detectie.
 
