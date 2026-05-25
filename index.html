@@ -1578,8 +1578,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.19.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.19.2</h2>
       <div class="intro-body">
+        <p><strong>👀 Scheidingslijntjes Meetstaat-samenvattingen donkerder (v3.19.2).</strong> In de Meetstaat-tab bij "Totalen per calc-regel" en "Project-totaal per regel-type" werden de stippellijntjes tussen rijen met elke calculatie-groei steeds moeilijker te volgen — bij het opzoeken van een totaal raak je het spoor kwijt naar het bijbehorende getal rechts. Vandaag de lijn-grijsheid verdubbeld: kleur is nu een 50/50 mix tussen het bestaande <code>var(--paper-deep)</code> en de tekst-muted-grijs. Subtiel maar zichtbaar genoeg om je oog over de regel te leiden. Toegepast op alle 3 de plekken waar dit dashed-streepje voorkomt 👁️.</p>
         <p><strong>📜 Versie-geschiedenis uitgebreid met de oerjaren (v3.19.1).</strong> Op het dashboard zie je nu de complete tijdlijn van de app — niet alleen vanaf v3.8 maar helemaal tot v2.3.1. Vandaag 15 entries toegevoegd: 5 recente (v3.18.5 t/m v3.19.0, het normenboek-traject en de UI-herzieningen van afgelopen dagen), 8 historische uit de V2.3.x / V2.4.x / V3.7.0 bestanden die je nog had liggen (meetstaat-verfijningen, verfsysteem-styling, calc-vergrendeling), en 2 tussen-stadia die ik gemarkeerd heb om het gat tussen v2.4.1 en v3.7.0 te overbruggen: Supabase-migratie (v3.0.0) en multi-user auth (v3.5.0). Voor de historische entries was geen exacte datum meer terug te vinden — die staan dus als "begin mei 2026". De render is daarop aangepast: niet-ISO datums worden letterlijk doorgelaten, voor wanneer iets bekend is maar niet op de dag nauwkeurig 📅.</p>
         <p><strong>📋 Verfsystemen-tab herzien naar master-detail layout (v3.19.0).</strong> Bij groeiend aantal systemen werd de grid-van-kaarten lang, hoog en onoverzichtelijk. Vanaf nu zie je links een smalle lijst met alle systemen (alleen naam + verkoopprijs) en rechts een detail-venster dat het geselecteerde systeem volledig toont — inclusief bewerkingen-lijst en totalen. Klik op een regel links → detail rechts wisselt. Niets geselecteerd na F5: je ziet een rustige empty state ("Klik een systeem links om te bekijken"). Boven de lijst zit een zoekbalk (matcht op systeem-naam én op ondergrond-naam) en een sortering-dropdown met als default <em>Op ondergrond (gegroepeerd)</em> — dan zie je in de lijst kleine sub-headers tussen de groepen, zodat alle systemen voor "Binnendeur hout" of "Gevelkozijn hout" netjes bij elkaar staan. Andere sort-opties: naam ↑↓, prijs ↑↓. De bestaande Locatie-filter (binnen/buiten/beide) blijft in de panel-head en werkt samen met de andere filters. Nieuw systeem opslaan of een bestaand systeem bewerken → het systeem wordt direct geselecteerd in de lijst, zodat je je werk meteen ziet 🎯.</p>
         <p><strong>↕ Cluster-volgorde wijzigen vanuit de Bewerkingen-tab (v3.18.8).</strong> Bij elke cluster-titel staan nu kleine ↑/↓ knoppen rechts naast de teller. Klik om de hele cluster één plek omhoog of omlaag te schuiven — precies hetzelfde patroon als in de Ondergronden-tab. De volgorde wordt direct opgeslagen in Supabase, dus beide tabs blijven synchroon. Slim detail: als er ondergronden zonder bewerkingen tussen zitten worden die overgeslagen — de ↓-knop springt direct naar de volgende zichtbare cluster, niet naar een onzichtbare lege tussenstop. Klikken op ↑/↓ opent of sluit de cluster niet (geen ongewenste klap-acties) ↕.</p>
@@ -2239,7 +2240,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.19.1';
+const APP_VERSION = 'v3.19.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2601,6 +2602,8 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.19.2', d: '2026-05-25', h: 'Meetstaat-samenvattingen: stippellijntjes tussen rijen donkerder gemaakt (50/50 mix paper-deep + muted) — beter te volgen bij grotere calculaties' },
+  { v: '3.19.1', d: '2026-05-25', h: 'Versie-geschiedenis uitgebreid met de oerjaren — 15 entries toegevoegd (5 recent, 8 historisch V2.3-V3.7, 2 tussen-stadia voor Supabase + multi-user)' },
   { v: '3.19.0', d: '2026-05-25', h: 'Verfsystemen-tab herzien naar master-detail layout: smalle lijst links (gegroepeerd op ondergrond, zoek + sort), detail rechts' },
   { v: '3.18.8', d: '2026-05-25', h: 'Bewerkingen-tab: ↑/↓ knoppen op cluster-titels om cluster-volgorde direct vanuit deze tab te wijzigen' },
   { v: '3.18.7', d: '2026-05-25', h: 'Bewerkingen-tab: inklap-clusters per ondergrond — alles dicht na F5, klik om uit te klappen' },
@@ -7983,7 +7986,7 @@ function renderMeetstaat() {
       if (!ctx) return;
       const r = ctx.regel;
       const eenheid = r.systeemEenheid || '';
-      html += `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px dashed var(--paper-deep); font-size:0.85rem;">
+      html += `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px dashed color-mix(in srgb, var(--paper-deep), var(--muted)); font-size:0.85rem;">
         <span>${_calcRegelLabel(r, ctx)} <span style="color:var(--muted);">(${byRegel[rid].count} regel${byRegel[rid].count===1?'':'s'})</span></span>
         <span class="mono" style="font-weight:600;">${fmt(byRegel[rid].totaal)} ${eenheid}</span>
       </div>`;
@@ -8030,7 +8033,7 @@ function renderMeetstaat() {
     meaningfulGroups.forEach(k => {
       const g = byType[k];
       const systeemHint = g.systeemNaam ? ` <span style="color:var(--muted); font-weight:400;">· ${g.systeemNaam}</span>` : '';
-      html += `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px dashed var(--paper-deep); font-size:0.85rem;">
+      html += `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px dashed color-mix(in srgb, var(--paper-deep), var(--muted)); font-size:0.85rem;">
         <span><strong>${g.naam}</strong>${systeemHint} <span style="color:var(--muted);">(${g.regels.size} regels in ${g.onderdelen.size} onderde${g.onderdelen.size===1?'el':'len'}, ${g.count} meting${g.count===1?'':'en'})</span></span>
         <span class="mono" style="font-weight:600;">${fmt(g.totaal)} ${g.eenheid}</span>
       </div>`;
@@ -8112,7 +8115,7 @@ function _updateMeetstaatSamenvatting() {
       if (!ctx) return;
       const r = ctx.regel;
       const eenheid = r.systeemEenheid || '';
-      html += `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px dashed var(--paper-deep); font-size:0.85rem;">
+      html += `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px dashed color-mix(in srgb, var(--paper-deep), var(--muted)); font-size:0.85rem;">
         <span>${_calcRegelLabel(r, ctx)} <span style="color:var(--muted);">(${byRegel[rid].count} regel${byRegel[rid].count===1?'':'s'})</span></span>
         <span class="mono" style="font-weight:600;">${fmt(byRegel[rid].totaal)} ${eenheid}</span>
       </div>`;

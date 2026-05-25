@@ -1,3 +1,28 @@
+## v3.19.2 — Scheidingslijntjes Meetstaat-samenvattingen donkerder
+Kleine maar gerichte UX-tweak op basis van gebruikersfeedback: bij grotere calculaties met veel meetregels werd het volgen van een rij in de "Totalen per calc-regel" en "Project-totaal per regel-type" lijstjes moeilijk omdat de stippellijntjes te licht waren om je oog over de regel te leiden.
+
+### Wijzigingen
+
+- In drie identieke render-plekken (regel 7986, 8033 en 8115 in `index.html`) is de inline `border-bottom: 1px dashed var(--paper-deep);` vervangen door `border-bottom: 1px dashed color-mix(in srgb, var(--paper-deep), var(--muted));` — een 50/50 mix tussen de bestaande lichte tint en de muted-tekstkleur.
+- Effectief: de dashed-streep is ongeveer twee keer zo grijs als voorheen. Subtiel genoeg om visueel rustig te blijven, donker genoeg om het oog van de regel-naam links naar het getal rechts te begeleiden.
+- Drie plekken meegenomen omdat ze allemaal hetzelfde leesprobleem hebben:
+  - "Totalen per calc-regel" — hoofd-render (regel 7986)
+  - "Project-totaal per regel-type" — geaggregeerde regel-types over alle onderdelen (regel 8033)
+  - "Totalen per calc-regel" — secundair render-pad (regel 8115, bij verversen na meetstaat-mutatie)
+
+### Browser-compatibiliteit
+`color-mix(in srgb, ...)` is sinds 2023 ondersteund in alle moderne browsers (Chrome 111+, Safari 16.2+, Firefox 113+). Voor deze app (Chrome op desktop in Limburg in 2026) geen risico.
+
+### Niet aangepast
+- Lijn-dikte blijft 1px (niet verdikt naar 2px — Gian vroeg om grijsheid, niet pixel-dichtheid).
+- Lijn-stijl blijft `dashed` (niet `solid` of `dotted`).
+- Andere scheidingslijntjes elders in de app onaangetast — alleen de drie locaties in de Meetstaat-samenvatting.
+
+### Versie
+APP_VERSION: `v3.19.1` → `v3.19.2`. Patch-bump.
+
+---
+
 ## v3.19.1 — Versie-geschiedenis uitgebreid (oerjaren + recente sessie)
 Data-update voor de versie-tijdlijn op het dashboard: 15 nieuwe entries die het verhaal van de app completer maken. Geen feature-code, geen UI-shifts — alleen `RELEASE_HIGHLIGHTS` aangevuld en de datum-render iets toleranter gemaakt.
 
