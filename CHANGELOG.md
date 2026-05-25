@@ -1,3 +1,55 @@
+## v3.19.0 — Verfsystemen-tab herzien naar master-detail layout
+De Verfsystemen-tab is van een grid-van-kaarten omgebouwd naar een master-detail layout met lijst links en detail rechts. Voorbereiding op groei (uitbreiding van het aantal verfsystemen in de komende periode).
+
+### Wijzigingen
+
+**Layout:**
+- De `.systems-grid` (3-koloms responsive grid van system-cards) is vervangen door `.sys-master-detail` — een grid met vaste 280px linker-kolom (lijst) en flexibele rechter-kolom (detail).
+- Lijst-paneel: `.sys-list` met `.sys-list-tools` bovenaan (zoekbalk + sort-dropdown) en `.sys-list-body` daaronder (scrollbaar tot 70vh).
+- Detail-paneel: hergebruikt de bestaande `.system-card` styling 1:1 — uiterlijk van een geselecteerd systeem is identiek aan vroeger.
+- Geselecteerde lijst-regel krijgt een 3px linker-accent in `var(--accent)` plus een lichte `var(--paper-warm)` achtergrond (zelfde accent als bv. notitie-blokken).
+
+**Lijst-regels:**
+- Elke regel toont alleen `naam` + meta-regel `€ verkoopprijs /eenheid`. Geen stappen-teller, geen badges — kort en scanbaar.
+- Klik = `_selectSystem(id)` → detail-paneel wisselt direct.
+
+**Zoeken & sorteren:**
+- Zoekbalk (oninput, real-time) filtert op zowel systeem-naam als ondergrond-naam (case-insensitive substring match). Typ "binnendeur" → alle binnendeur-systemen onafhankelijk van of het in de systeem-naam of ondergrond-naam zit.
+- Sortering-dropdown met 5 opties:
+  - **Op ondergrond (gegroepeerd)** — default. Systemen worden per ondergrond gegroepeerd met een sticky sub-header per groep (`.sys-list-group-header` — small, uppercase, muted color). Binnen elke groep alfabetisch op systeem-naam. Groepen zelf alfabetisch op ondergrond-naam.
+  - Naam ↑ / ↓ — platte alfabetische sort.
+  - Prijs ↑ / ↓ — platte sort op verkoopprijs (excl. BTW).
+- Sticky group-headers gebruiken `position: sticky; top: 0; z-index: 1;` — bij scrollen blijft de header van de huidige groep aan de bovenkant van het lijst-paneel zichtbaar.
+
+**Bestaande Locatie-filter:**
+- De `<select id="filterLocatie">` in de panel-head blijft staan en werkt door tegen alle drie de filter-stappen heen (locatie → zoek → sort/groepering).
+
+**Default state na page-load / F5:**
+- `_selSystemId = null` → detail-paneel toont empty state: "Klik een systeem links om te bekijken" (of bij volledig lege tab: "Nog geen systemen. Klik op '+ Nieuw Systeem'…").
+- Selectie wordt bewust niet in localStorage gepersisteerd — voorspelbaar startgedrag.
+
+**Auto-select:**
+- Nieuw systeem aanmaken via "+ Nieuw Systeem" modal → `_selSystemId` springt direct naar het nieuwe systeem zodra modal sluit, zodat je je werk meteen ziet.
+- Bestaand systeem opslaan via "Bewerken" modal → idem, blijft / wordt geselecteerd.
+- "Opslaan als nieuw" duplicate → het duplicaat wordt geselecteerd.
+- Geselecteerd systeem verwijderen → `_selSystemId` reset naar `null`, detail-paneel valt terug op empty state.
+
+### State variabelen
+- `let _selSystemId = null;`
+- `let _sysZoek = '';`
+- `let _sysSortMode = 'ondergrond';`
+
+### Niet aangepast
+- Het "+ Nieuw Systeem" werkbank-modal (de uitgebreide editor met percentages, dragbare stappen, etc.) blijft ongewijzigd.
+- `calcSystem()` en `_systeemLocatie()` worden hergebruikt zonder wijziging.
+- De Calculatie-tab leest nog steeds dezelfde `data.systemen` array en `_snapshotSystem`-output — geen impact op calc-regels.
+- De bestaande CSS-class `.systems-grid` is in de stylesheet blijven staan (mocht 'ie ergens anders alsnog opduiken) — maar wordt in de Verfsystemen-tab niet meer gebruikt.
+
+### Versie
+APP_VERSION: `v3.18.8` → `v3.19.0`. Minor bump want layout-paradigm shift, niet alleen styling-tweak.
+
+---
+
 ## v3.18.8 — Cluster-volgorde wijzigen vanuit Bewerkingen-tab
 Bij de cluster-titels staan nu ↑/↓ knoppen waarmee je de volgorde van de clusters direct vanuit de Bewerkingen-tab kunt aanpassen — zelfde patroon als in de Ondergronden-tab, beide tabs blijven synchroon.
 

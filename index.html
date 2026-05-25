@@ -322,6 +322,90 @@
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1rem;
   }
+  /* v3.19.0 — Verfsystemen master-detail layout */
+  .sys-master-detail {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+  .sys-list {
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .sys-list-tools {
+    padding: 0.6rem 0.7rem;
+    border-bottom: 1px solid var(--paper-deep);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    background: var(--paper-warm);
+  }
+  .sys-list-tools input,
+  .sys-list-tools select {
+    width: 100%;
+    font-size: 0.78rem;
+  }
+  .sys-list-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .sys-list-group-header {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    padding: 0.55rem 0.8rem 0.3rem;
+    background: var(--paper-warm);
+    border-bottom: 1px solid var(--paper-deep);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .sys-list-row {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid var(--paper-deep);
+    cursor: pointer;
+    transition: background 0.12s;
+    border-left: 3px solid transparent;
+  }
+  .sys-list-row:hover { background: var(--paper-warm); }
+  .sys-list-row.selected {
+    background: var(--paper-warm);
+    border-left-color: var(--accent);
+  }
+  .sys-list-row .sys-row-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.15rem;
+  }
+  .sys-list-row .sys-row-meta {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .sys-list-empty {
+    padding: 1.2rem 0.8rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-style: italic;
+  }
+  .sys-detail-empty {
+    background: var(--paper);
+    border: 1px dashed var(--paper-deep);
+    border-radius: var(--radius-lg);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
   .system-card {
     background: var(--paper);
     border: 1px solid var(--paper-deep);
@@ -1494,8 +1578,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.8</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.19.0</h2>
       <div class="intro-body">
+        <p><strong>📋 Verfsystemen-tab herzien naar master-detail layout (v3.19.0).</strong> Bij groeiend aantal systemen werd de grid-van-kaarten lang, hoog en onoverzichtelijk. Vanaf nu zie je links een smalle lijst met alle systemen (alleen naam + verkoopprijs) en rechts een detail-venster dat het geselecteerde systeem volledig toont — inclusief bewerkingen-lijst en totalen. Klik op een regel links → detail rechts wisselt. Niets geselecteerd na F5: je ziet een rustige empty state ("Klik een systeem links om te bekijken"). Boven de lijst zit een zoekbalk (matcht op systeem-naam én op ondergrond-naam) en een sortering-dropdown met als default <em>Op ondergrond (gegroepeerd)</em> — dan zie je in de lijst kleine sub-headers tussen de groepen, zodat alle systemen voor "Binnendeur hout" of "Gevelkozijn hout" netjes bij elkaar staan. Andere sort-opties: naam ↑↓, prijs ↑↓. De bestaande Locatie-filter (binnen/buiten/beide) blijft in de panel-head en werkt samen met de andere filters. Nieuw systeem opslaan of een bestaand systeem bewerken → het systeem wordt direct geselecteerd in de lijst, zodat je je werk meteen ziet 🎯.</p>
         <p><strong>↕ Cluster-volgorde wijzigen vanuit de Bewerkingen-tab (v3.18.8).</strong> Bij elke cluster-titel staan nu kleine ↑/↓ knoppen rechts naast de teller. Klik om de hele cluster één plek omhoog of omlaag te schuiven — precies hetzelfde patroon als in de Ondergronden-tab. De volgorde wordt direct opgeslagen in Supabase, dus beide tabs blijven synchroon. Slim detail: als er ondergronden zonder bewerkingen tussen zitten worden die overgeslagen — de ↓-knop springt direct naar de volgende zichtbare cluster, niet naar een onzichtbare lege tussenstop. Klikken op ↑/↓ opent of sluit de cluster niet (geen ongewenste klap-acties) ↕.</p>
         <p><strong>📂 Inklap-clusters in de Bewerkingen-tab (v3.18.7).</strong> Bij 14 ondergronden en 115+ bewerkingen werd het scrollen vermoeiend. Vanaf nu start de Bewerkingen-tab met alle clusters dicht — je ziet 14 nette balken onder elkaar in plaats van een lange muur van tabellen. Klik op een cluster-titel om hem uit te klappen, klik nog eens om weer dicht te vouwen. Pijltje ▸ wordt ▾ als je open klapt. Slimme automatieken: een nieuwe bewerking, een dupliceer-actie, een verplaatsing via de dropdown en een CSV-import openen automatisch de betroffen cluster(s) — zodat je direct ziet waar je werk landt. Na F5 is alles weer dicht (simpel en voorspelbaar) 🔽.</p>
         <p><strong>📥 CSV-import voor bewerkingen (v3.18.6, Chunk 3 van 4).</strong> Nieuwe knop "Importeer CSV" in de Bewerkingen-tab opent een upload-modal. Je voert een CSV in met kolommen <code>ondergrond;bewerking;eenheid;minuten;verbruik</code> en de app maakt voor elke unieke ondergrond-naam een nieuwe ondergrond aan (geen suffix — je ruimt later op) en importeert de bewerkingen met markering <em>normenboek</em> (blauwe linker-rand, Chunk 2). Robuust voor NL-Excel: komma OF punt als decimaal, puntkomma OF komma als scheidingsteken — wordt automatisch herkend. Strikt: bij één ongeldige rij wordt de hele import geweigerd met regelnummer + reden. Duplicaten binnen één import (zelfde ondergrond + bewerking) worden geskipt en in de preview opgesomd. Materiaal blijft leeg bij import — de slimme dropdown van Chunk 2 helpt je later het juiste materiaal kiezen 🎨.</p>
@@ -1607,7 +1692,22 @@
         <button class="btn" onclick="openSystemModal()">+ Nieuw Systeem</button>
       </div>
     </div>
-    <div class="systems-grid" id="systemenLijst"></div>
+    <div class="sys-master-detail">
+      <div class="sys-list">
+        <div class="sys-list-tools">
+          <input type="text" id="sysZoek" placeholder="Zoeken op naam of ondergrond..." oninput="_setSysZoek(this.value)">
+          <select id="sysSort" onchange="_setSysSort(this.value)">
+            <option value="ondergrond">Op ondergrond (gegroepeerd)</option>
+            <option value="naam-asc">Naam ↑</option>
+            <option value="naam-desc">Naam ↓</option>
+            <option value="prijs-asc">Prijs ↑</option>
+            <option value="prijs-desc">Prijs ↓</option>
+          </select>
+        </div>
+        <div class="sys-list-body" id="systemenLijst"></div>
+      </div>
+      <div id="systeemDetail"></div>
+    </div>
   </section>
 
   <section class="panel" id="bewerkingen">
@@ -2138,7 +2238,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.18.8';
+const APP_VERSION = 'v3.19.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -7405,53 +7505,149 @@ function _calcDaysFactureerbaar() {
 // ============================================================
 // SYSTEMEN — kaartjes-overzicht
 // ============================================================
+// v3.19.0 — Verfsystemen master-detail layout.
+// _selSystemId: id van geselecteerd systeem (null = niets geselecteerd → empty state in detail)
+// _sysZoek: zoekstring (matcht op systeem-naam EN ondergrond-naam, case-insensitive)
+// _sysSortMode: 'ondergrond' (gegroepeerd, default), 'naam-asc/desc', 'prijs-asc/desc'
+let _selSystemId = null;
+let _sysZoek = '';
+let _sysSortMode = 'ondergrond';
+
+function _selectSystem(id) {
+  _selSystemId = id;
+  renderSystemen();
+}
+function _setSysZoek(val) {
+  _sysZoek = val.toLowerCase().trim();
+  // Heronder geselecteerd systeem als 't door zoek uit beeld valt? Nee — laat staan,
+  // detail blijft tonen. Anders krijg je flikkering tijdens typen.
+  renderSystemen();
+}
+function _setSysSort(mode) {
+  _sysSortMode = mode;
+  renderSystemen();
+}
+
 function renderSystemen() {
-  const c = document.getElementById('systemenLijst');
+  const cList = document.getElementById('systemenLijst');
+  const cDetail = document.getElementById('systeemDetail');
+  if (!cList || !cDetail) return;
   const filter = document.getElementById('filterLocatie')?.value || '';
-  let lijst = data.systemen;
+
+  // Stap 1: lijst filteren op locatie + zoek
+  let lijst = data.systemen.slice();
   if (filter) lijst = lijst.filter(s => {
     const loc = _systeemLocatie(s);
     return loc === filter || loc === 'beide';
   });
-  if (!lijst.length) { c.innerHTML = '<div class="empty-state">Geen systemen.</div>'; return; }
-  let html = '';
-  lijst.forEach(s => {
-    const stappenHtml = s.stappen.map(st => {
-      const b = data.bewerkingen.find(x => x.id === st.bewerkingId);
-      if (!b) return `<li><em style="color:var(--accent-deep)">verwijderde bewerking</em></li>`;
-      const pct = st.percentage ?? 100;
-      return `<li>${b.naam} <span class="mono" style="color:var(--muted); font-size:0.72rem;">${pct}% · ${fmt(b.minuten*pct/100)} min</span></li>`;
-    }).join('');
-    const calc = calcSystem(s);
-    const ond = data.ondergronden.find(o => o.id === s.ondergrondId);
-    const loc = _systeemLocatie(s);
-    html += `<div class="system-card">
-      <h3>${s.naam}</h3>
-      <div class="badges">
-        <span class="ondergrond">${ond ? ond.naam : '?'} · ${s.eenheid}</span>
-        <span class="locatie-tag ${loc}">${loc}</span>
-      </div>
-      ${s.notities ? `<div style="margin: 0.4rem 0 0.6rem; padding: 0.4rem 0.6rem; background: var(--bg); border-left: 3px solid var(--accent); font-size: 0.75rem; color: var(--text); font-style: italic; white-space: pre-wrap;">${_escapeHtml(s.notities)}</div>` : ''}
-      <ol>${stappenHtml}</ol>
-      <div class="system-totals">
-        <div class="syst-row"><span class="syst-label">Min</span> <span class="syst-val">${fmt(calc.minuten)} /${s.eenheid}</span> <span class="syst-sub">· ${fmt(calc.uren)} u</span></div>
-        <div class="syst-row"><span class="syst-label">Mat. inkoop</span> <span class="syst-val">€ ${fmt(calc.matInkoop)} /${s.eenheid}</span></div>
-        <div class="syst-row"><span class="syst-label">Kostprijs</span> <span class="syst-val">€ ${fmt(calc.kostprijs)} /${s.eenheid}</span></div>
-        <div class="syst-row syst-final"><span class="syst-label">Verkoop excl. BTW</span> <span class="syst-val">€ ${fmt(calc.verkoop)} /${s.eenheid}</span></div>
-      </div>
-      <div class="actions">
-        <button class="btn-secondary btn btn-sm" onclick="editSystem('${s.id}')">Bewerken</button>
-        <button class="btn btn-danger btn-sm" onclick="delSystem('${s.id}')">Verwijderen</button>
-      </div>
-    </div>`;
-  });
-  c.innerHTML = html;
+  if (_sysZoek) {
+    lijst = lijst.filter(s => {
+      const ond = data.ondergronden.find(o => o.id === s.ondergrondId);
+      const hayName = (s.naam || '').toLowerCase();
+      const hayOnd = (ond?.naam || '').toLowerCase();
+      return hayName.includes(_sysZoek) || hayOnd.includes(_sysZoek);
+    });
+  }
+
+  // Stap 2: lijst-paneel renderen (gegroepeerd of plat)
+  if (!lijst.length) {
+    cList.innerHTML = `<div class="sys-list-empty">${data.systemen.length ? 'Geen resultaten' : 'Geen systemen'}</div>`;
+  } else if (_sysSortMode === 'ondergrond') {
+    // Gegroepeerd: pak voor elk systeem de ondergrond-naam, sorteer groepen alfabetisch,
+    // binnen elke groep alfabetisch op systeem-naam.
+    const groups = new Map();
+    lijst.forEach(s => {
+      const ond = data.ondergronden.find(o => o.id === s.ondergrondId);
+      const key = ond ? ond.naam : '⚠ Zonder ondergrond';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(s);
+    });
+    const sortedKeys = [...groups.keys()].sort((a, b) => a.localeCompare(b, 'nl'));
+    let html = '';
+    sortedKeys.forEach(key => {
+      const items = groups.get(key).sort((a, b) => (a.naam || '').localeCompare(b.naam || '', 'nl'));
+      html += `<div class="sys-list-group-header">${key}</div>`;
+      items.forEach(s => { html += _renderSysRow(s); });
+    });
+    cList.innerHTML = html;
+  } else {
+    // Platte sortering
+    const [key, dir] = _sysSortMode.split('-');
+    lijst.sort((a, b) => {
+      let av, bv;
+      if (key === 'naam') {
+        av = (a.naam || '').toLowerCase();
+        bv = (b.naam || '').toLowerCase();
+        const res = av.localeCompare(bv, 'nl');
+        return dir === 'asc' ? res : -res;
+      }
+      if (key === 'prijs') {
+        av = calcSystem(a).verkoop || 0;
+        bv = calcSystem(b).verkoop || 0;
+        return dir === 'asc' ? av - bv : bv - av;
+      }
+      return 0;
+    });
+    cList.innerHTML = lijst.map(s => _renderSysRow(s)).join('');
+  }
+
+  // Stap 3: detail-paneel renderen
+  const sel = _selSystemId ? data.systemen.find(s => s.id === _selSystemId) : null;
+  if (!sel) {
+    cDetail.innerHTML = `<div class="sys-detail-empty">${data.systemen.length ? 'Klik een systeem links om te bekijken' : 'Nog geen systemen. Klik op "+ Nieuw Systeem" om er een aan te maken.'}</div>`;
+  } else {
+    cDetail.innerHTML = _renderSysDetailCard(sel);
+  }
+}
+
+// Helper: rendert één lijst-regel (Naam + verkoopprijs)
+function _renderSysRow(s) {
+  const calc = calcSystem(s);
+  const isSel = s.id === _selSystemId ? ' selected' : '';
+  return `<div class="sys-list-row${isSel}" onclick="_selectSystem('${s.id}')">
+    <div class="sys-row-name">${s.naam}</div>
+    <div class="sys-row-meta">€ ${fmt(calc.verkoop)} /${s.eenheid}</div>
+  </div>`;
+}
+
+// Helper: rendert de detail-kaart (volledige system-card content)
+function _renderSysDetailCard(s) {
+  const stappenHtml = s.stappen.map(st => {
+    const b = data.bewerkingen.find(x => x.id === st.bewerkingId);
+    if (!b) return `<li><em style="color:var(--accent-deep)">verwijderde bewerking</em></li>`;
+    const pct = st.percentage ?? 100;
+    return `<li>${b.naam} <span class="mono" style="color:var(--muted); font-size:0.72rem;">${pct}% · ${fmt(b.minuten*pct/100)} min</span></li>`;
+  }).join('');
+  const calc = calcSystem(s);
+  const ond = data.ondergronden.find(o => o.id === s.ondergrondId);
+  const loc = _systeemLocatie(s);
+  return `<div class="system-card">
+    <h3>${s.naam}</h3>
+    <div class="badges">
+      <span class="ondergrond">${ond ? ond.naam : '?'} · ${s.eenheid}</span>
+      <span class="locatie-tag ${loc}">${loc}</span>
+    </div>
+    ${s.notities ? `<div style="margin: 0.4rem 0 0.6rem; padding: 0.4rem 0.6rem; background: var(--bg); border-left: 3px solid var(--accent); font-size: 0.75rem; color: var(--text); font-style: italic; white-space: pre-wrap;">${_escapeHtml(s.notities)}</div>` : ''}
+    <ol>${stappenHtml}</ol>
+    <div class="system-totals">
+      <div class="syst-row"><span class="syst-label">Min</span> <span class="syst-val">${fmt(calc.minuten)} /${s.eenheid}</span> <span class="syst-sub">· ${fmt(calc.uren)} u</span></div>
+      <div class="syst-row"><span class="syst-label">Mat. inkoop</span> <span class="syst-val">€ ${fmt(calc.matInkoop)} /${s.eenheid}</span></div>
+      <div class="syst-row"><span class="syst-label">Kostprijs</span> <span class="syst-val">€ ${fmt(calc.kostprijs)} /${s.eenheid}</span></div>
+      <div class="syst-row syst-final"><span class="syst-label">Verkoop excl. BTW</span> <span class="syst-val">€ ${fmt(calc.verkoop)} /${s.eenheid}</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn-secondary btn btn-sm" onclick="editSystem('${s.id}')">Bewerken</button>
+      <button class="btn btn-danger btn-sm" onclick="delSystem('${s.id}')">Verwijderen</button>
+    </div>
+  </div>`;
 }
 async function delSystem(id) {
   if (!confirm('Verwijderen?')) return;
   const ok = await _deleteVerfsysteemDB(id);
   if (!ok) { _toast('Verwijderen mislukt'); return; }
   data.systemen = data.systemen.filter(s => s.id !== id);
+  // v3.19.0 — reset selectie als verwijderde systeem geselecteerd was
+  if (_selSystemId === id) _selSystemId = null;
   renderSystemen(); renderCalcStructuur(); renderTotals();
 }
 // ============================================================
@@ -7624,6 +7820,8 @@ async function saveSystem() {
     }
   }
   renderSystemen(); renderCalcStructuur(); renderTotals(); closeSystemModal();
+  // v3.19.0 — na opslaan: het zojuist bewaarde systeem direct selecteren in master-detail
+  if (savedId) { _selSystemId = savedId; renderSystemen(); }
 }
 async function saveSystemAsNew() {
   const s = _systemFromModal();
@@ -7635,6 +7833,8 @@ async function saveSystemAsNew() {
   if (btn) { btn.disabled = false; btn.textContent = oldText; }
   if (!savedSystem) return;
   data.systemen.push(savedSystem);
+  // v3.19.0 — auto-select het zojuist als-nieuw opgeslagen systeem
+  _selSystemId = savedSystem.id;
   renderSystemen();
   alert('Opgeslagen als nieuw systeem: "' + s.naam + '"');
   closeSystemModal();
