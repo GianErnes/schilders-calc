@@ -1578,8 +1578,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.19.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.19.1</h2>
       <div class="intro-body">
+        <p><strong>📜 Versie-geschiedenis uitgebreid met de oerjaren (v3.19.1).</strong> Op het dashboard zie je nu de complete tijdlijn van de app — niet alleen vanaf v3.8 maar helemaal tot v2.3.1. Vandaag 15 entries toegevoegd: 5 recente (v3.18.5 t/m v3.19.0, het normenboek-traject en de UI-herzieningen van afgelopen dagen), 8 historische uit de V2.3.x / V2.4.x / V3.7.0 bestanden die je nog had liggen (meetstaat-verfijningen, verfsysteem-styling, calc-vergrendeling), en 2 tussen-stadia die ik gemarkeerd heb om het gat tussen v2.4.1 en v3.7.0 te overbruggen: Supabase-migratie (v3.0.0) en multi-user auth (v3.5.0). Voor de historische entries was geen exacte datum meer terug te vinden — die staan dus als "begin mei 2026". De render is daarop aangepast: niet-ISO datums worden letterlijk doorgelaten, voor wanneer iets bekend is maar niet op de dag nauwkeurig 📅.</p>
         <p><strong>📋 Verfsystemen-tab herzien naar master-detail layout (v3.19.0).</strong> Bij groeiend aantal systemen werd de grid-van-kaarten lang, hoog en onoverzichtelijk. Vanaf nu zie je links een smalle lijst met alle systemen (alleen naam + verkoopprijs) en rechts een detail-venster dat het geselecteerde systeem volledig toont — inclusief bewerkingen-lijst en totalen. Klik op een regel links → detail rechts wisselt. Niets geselecteerd na F5: je ziet een rustige empty state ("Klik een systeem links om te bekijken"). Boven de lijst zit een zoekbalk (matcht op systeem-naam én op ondergrond-naam) en een sortering-dropdown met als default <em>Op ondergrond (gegroepeerd)</em> — dan zie je in de lijst kleine sub-headers tussen de groepen, zodat alle systemen voor "Binnendeur hout" of "Gevelkozijn hout" netjes bij elkaar staan. Andere sort-opties: naam ↑↓, prijs ↑↓. De bestaande Locatie-filter (binnen/buiten/beide) blijft in de panel-head en werkt samen met de andere filters. Nieuw systeem opslaan of een bestaand systeem bewerken → het systeem wordt direct geselecteerd in de lijst, zodat je je werk meteen ziet 🎯.</p>
         <p><strong>↕ Cluster-volgorde wijzigen vanuit de Bewerkingen-tab (v3.18.8).</strong> Bij elke cluster-titel staan nu kleine ↑/↓ knoppen rechts naast de teller. Klik om de hele cluster één plek omhoog of omlaag te schuiven — precies hetzelfde patroon als in de Ondergronden-tab. De volgorde wordt direct opgeslagen in Supabase, dus beide tabs blijven synchroon. Slim detail: als er ondergronden zonder bewerkingen tussen zitten worden die overgeslagen — de ↓-knop springt direct naar de volgende zichtbare cluster, niet naar een onzichtbare lege tussenstop. Klikken op ↑/↓ opent of sluit de cluster niet (geen ongewenste klap-acties) ↕.</p>
         <p><strong>📂 Inklap-clusters in de Bewerkingen-tab (v3.18.7).</strong> Bij 14 ondergronden en 115+ bewerkingen werd het scrollen vermoeiend. Vanaf nu start de Bewerkingen-tab met alle clusters dicht — je ziet 14 nette balken onder elkaar in plaats van een lange muur van tabellen. Klik op een cluster-titel om hem uit te klappen, klik nog eens om weer dicht te vouwen. Pijltje ▸ wordt ▾ als je open klapt. Slimme automatieken: een nieuwe bewerking, een dupliceer-actie, een verplaatsing via de dropdown en een CSV-import openen automatisch de betroffen cluster(s) — zodat je direct ziet waar je werk landt. Na F5 is alles weer dicht (simpel en voorspelbaar) 🔽.</p>
@@ -2238,7 +2239,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.19.0';
+const APP_VERSION = 'v3.19.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2600,6 +2601,11 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.19.0', d: '2026-05-25', h: 'Verfsystemen-tab herzien naar master-detail layout: smalle lijst links (gegroepeerd op ondergrond, zoek + sort), detail rechts' },
+  { v: '3.18.8', d: '2026-05-25', h: 'Bewerkingen-tab: ↑/↓ knoppen op cluster-titels om cluster-volgorde direct vanuit deze tab te wijzigen' },
+  { v: '3.18.7', d: '2026-05-25', h: 'Bewerkingen-tab: inklap-clusters per ondergrond — alles dicht na F5, klik om uit te klappen' },
+  { v: '3.18.6', d: '2026-05-24', h: 'CSV-import voor bewerkingen: één upload maakt ondergronden + bewerkingen tegelijk — Chunk 3 van normenboek-integratie' },
+  { v: '3.18.5', d: '2026-05-24', h: 'Bewerkingen-tab: blauwe normenboek-streep + slimme materiaal-dropdown filter — Chunk 2 van normenboek-integratie' },
   { v: '3.18.4', d: '2026-05-24', h: 'Bewerkingen krijgen herkomst-stempel (eigen vs normenboek) — Chunk 1 van normenboek-integratie. DB-veld + auto-promotie bij wijziging van minuten/verbruik' },
   { v: '3.18.3', d: '2026-05-24', h: 'Reis-label in calc-paneel beschrijft zichzelf: "Reis (2 dgn × heen+terug, binnen rayon)" i.p.v. raadselachtige "20,40 km"' },
   { v: '3.18.2', d: '2026-05-23', h: 'Afronding-drempel werkt nu symmetrisch ook onder 1 dag: bij 0,3 dag werk + drempel 0,55 → 0 hele dagen factureerbaar, géén afrondingstoeslag. Bug: de minimum-1-dag-regel matchte niet met de UI-tekst van de drempel' },
@@ -2653,15 +2659,27 @@ const RELEASE_HIGHLIGHTS = [
   { v: '3.9.1', d: '2026-05-10', h: 'Materiaalverbruik per regel op kleurzone-niveau' },
   { v: '3.9.0', d: '2026-05-10', h: 'Materiaalverbruik op Werkbon: boodschappenlijst voor bestellen bij de groothandel' },
   { v: '3.8.2', d: '2026-05-09', h: 'Dashboard-totalen gecached + vergrendeling-fix bij geopende calc' },
+  { v: '3.7.0', d: 'begin mei 2026', h: 'Calc-vergrendeling: bij status Gereed/Verzonden/Geaccepteerd/Verloren wordt de calc bevroren — UI read-only + alle instellingen (tarieven, opslagen, drempel) als snapshot vastgepakt. Ontgrendelen via status terug naar Concept' },
+  { v: '3.5.0', d: 'begin mei 2026', h: 'Multi-user authenticatie toegevoegd: e-mail + wachtwoord via Supabase Auth, multi-user open model — inlog-paneel verschijnt vóór de app' },
+  { v: '3.0.0', d: 'begin mei 2026', h: 'Supabase-migratie: backend van localStorage naar Supabase Postgres met RLS-policies. Voorbereiding op multi-user en GitHub Pages-hosting' },
+  { v: '2.4.1', d: 'begin mei 2026', h: 'Notities-paneel: klik werkte niet bij lege calc + open/dicht-keuze nu per calculatie onthouden i.p.v. globaal' },
+  { v: '2.3.6', d: 'begin mei 2026', h: 'Bugfix meetstaat: regel-totalen bleven €0,00 staan tot refresh — sync gebeurde tijdens render i.p.v. ervoor' },
+  { v: '2.3.5', d: 'begin mei 2026', h: 'Tabellen compacter: kleinere cell-padding bij Bewerkingen, Materialen en calculaties-archief — meer rijen per scherm' },
+  { v: '2.3.4', d: 'begin mei 2026', h: 'Verfsysteem-tegels visueel opgeschoond: emoji-symbolen (🕐 💰 ∑) vervangen door strakke labels MIN / MAT. INKOOP / KOSTPRIJS / VERKOOP EXCL. BTW' },
+  { v: '2.3.3', d: 'begin mei 2026', h: 'Calc-regel hoeveelheid-veld toont meetstaat-totaal weer correct (NL-komma-notatie) met klikbare 📐-badge naar Meetstaat' },
+  { v: '2.3.2', d: 'begin mei 2026', h: 'Meetstaat m¹: lengte werkt symmetrisch — of je h invult (dorpel) of b (tussenstijl), zelfde resultaat' },
+  { v: '2.3.1', d: 'begin mei 2026', h: 'Meetstaat: spinner-pijltjes weg uit cijfer-velden + tabel niet meer renderen tijdens typen — Enter-toets glijdt vloeiend door h/b/aantal/omschrijving/opmerking' },
 ];
 
 function _formatDatumNL(iso) {
   if (!iso) return '';
   const parts = iso.split('-');
-  if (parts.length !== 3) return '';
+  // v3.19.1 — niet-ISO datums (vrije tekst zoals "begin mei 2026") letterlijk doorlaten,
+  // voor historische entries waarvoor geen exacte datum bekend is.
+  if (parts.length !== 3) return iso;
   const maanden = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
   const mIdx = parseInt(parts[1], 10) - 1;
-  if (mIdx < 0 || mIdx > 11) return '';
+  if (mIdx < 0 || mIdx > 11) return iso;
   return `${parseInt(parts[2], 10)} ${maanden[mIdx]} ${parts[0]}`;
 }
 
@@ -2678,7 +2696,7 @@ function renderVersieGeschiedenis() {
       : 'color: var(--muted); font-weight: 600;';
     const datumStr = _formatDatumNL(r.d);
     const datumHtml = datumStr
-      ? `<span style="color: var(--muted); font-size: 0.72rem; flex-shrink: 0; min-width: 6.5rem; font-style: italic;">${datumStr}</span>`
+      ? `<span style="color: var(--muted); font-size: 0.72rem; flex-shrink: 0; min-width: 8.5rem; font-style: italic; white-space: nowrap;">${datumStr}</span>`
       : '';
     return `<div style="display: flex; gap: 0.6rem; padding: 0.45rem 0.6rem; margin-bottom: 0.2rem; ${bgStyle} border-radius: 0 0.3rem 0.3rem 0; align-items: baseline;">
       <span class="mono" style="${versieStyle} font-size: 0.78rem; flex-shrink: 0; min-width: 4.5rem;">v${r.v}</span>

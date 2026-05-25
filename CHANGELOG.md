@@ -1,3 +1,51 @@
+## v3.19.1 — Versie-geschiedenis uitgebreid (oerjaren + recente sessie)
+Data-update voor de versie-tijdlijn op het dashboard: 15 nieuwe entries die het verhaal van de app completer maken. Geen feature-code, geen UI-shifts — alleen `RELEASE_HIGHLIGHTS` aangevuld en de datum-render iets toleranter gemaakt.
+
+### Wijzigingen
+
+**`RELEASE_HIGHLIGHTS` array uitgebreid:**
+
+**Bovenaan** (5 nieuwe recente entries — newest first):
+- `v3.19.0` (25 mei): Verfsystemen-tab master-detail layout
+- `v3.18.8` (25 mei): Cluster-volgorde ↑/↓ vanuit Bewerkingen-tab
+- `v3.18.7` (25 mei): Inklap-clusters Bewerkingen-tab
+- `v3.18.6` (24 mei): CSV-import voor bewerkingen — Chunk 3 normenboek
+- `v3.18.5` (24 mei): Blauwe normenboek-streep + slimme materiaal-dropdown — Chunk 2 normenboek
+
+**Onderaan** (10 historische entries — toegevoegd na de bestaande `v3.8.2`):
+- `v3.7.0`: Calc-vergrendeling bij statussen Gereed/Verzonden/Geaccepteerd/Verloren met snapshot van instellingen
+- `v3.5.0`: Multi-user authenticatie via Supabase Auth (tussen-stadium, gemarkeerd)
+- `v3.0.0`: Supabase-migratie (van localStorage naar Postgres + RLS, tussen-stadium, gemarkeerd)
+- `v2.4.1`: Notities-paneel bugfix + per-calc onthouden van open/dicht
+- `v2.3.6`: Meetstaat regel-totalen sync-volgorde bugfix
+- `v2.3.5`: Tabellen compacter (kleinere cell-padding)
+- `v2.3.4`: Verfsysteem-tegels visueel opgeschoond (emoji → strakke labels)
+- `v2.3.3`: Calc-regel hoeveelheid-veld + meetstaat-totaal weer correct met 📐-badge
+- `v2.3.2`: Meetstaat m¹ symmetrische lengte (h of b)
+- `v2.3.1`: Meetstaat spinner-pijltjes weg + niet meer renderen tijdens typen (Enter-flow)
+
+**Datum-strategie:**
+- 5 recente entries: exacte ISO-datums (`2026-05-24` / `2026-05-25`).
+- 10 historische entries: vrije tekst `'begin mei 2026'` — geen exacte datums beschikbaar in git log of geheugen.
+- `_formatDatumNL()` aangepast om niet-ISO strings letterlijk door te laten i.p.v. lege string te returnen. Bestaande entries (alle 53 daarvoor) blijven exact zo renderen als voor deze release.
+
+**CSS-aanpassing:**
+- Datum-span in `renderVersieGeschiedenis()`: `min-width` van 6.5rem → 8.5rem en `white-space: nowrap` toegevoegd, zodat "begin mei 2026" (14 karakters) niet wrapt of zichzelf afkort.
+
+**Tussen-stadia v3.0.0 en v3.5.0:**
+- We hebben geen feitelijke `index.html`-bestanden voor deze versies, maar uit de v2.4.1 (0 Supabase-refs) → v3.7.0 (32 Supabase-refs, `<h2>Inloggen</h2>`-panel) sprong is duidelijk dat de Supabase-migratie en de multi-user auth ergens daartussen hebben plaatsgevonden.
+- De versienummers v3.0.0 en v3.5.0 zijn pragmatisch gekozen om het gat zichtbaar te overbruggen — de werkelijke nummers kunnen anders zijn geweest. Datums staan ook op "begin mei 2026" tot beter bekend is.
+
+### Niet aangepast
+- De render-functie van de versie-tijdlijn (`renderVersieGeschiedenis`) zelf blijft ongewijzigd qua structuur.
+- Bestaande 53 entries onaangetast, geen herschrijving van highlights.
+- Geen schema-wijzigingen aan Supabase, geen wijzigingen aan andere tabs.
+
+### Versie
+APP_VERSION: `v3.19.0` → `v3.19.1`. Patch-bump want puur data + 1 kleine render-tolerantie, geen nieuwe features.
+
+---
+
 ## v3.19.0 — Verfsystemen-tab herzien naar master-detail layout
 De Verfsystemen-tab is van een grid-van-kaarten omgebouwd naar een master-detail layout met lijst links en detail rechts. Voorbereiding op groei (uitbreiding van het aantal verfsystemen in de komende periode).
 
