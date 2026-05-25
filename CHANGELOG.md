@@ -1,3 +1,32 @@
+## v3.18.8 — Cluster-volgorde wijzigen vanuit Bewerkingen-tab
+Bij de cluster-titels staan nu ↑/↓ knoppen waarmee je de volgorde van de clusters direct vanuit de Bewerkingen-tab kunt aanpassen — zelfde patroon als in de Ondergronden-tab, beide tabs blijven synchroon.
+
+### Wijzigingen
+
+**UI:**
+- Elke cluster-titel-balk heeft rechts uitgelijnd twee kleine `↑` en `↓` knoppen, naast de "— N bewerkingen" teller.
+- Klik op `↑` schuift de cluster één plek omhoog in de zichtbare lijst, klik op `↓` één plek omlaag.
+- Aan beide uiteinden wordt de respectievelijke knop disabled getoond (eerste cluster heeft geen `↑`, laatste cluster heeft geen `↓`).
+- Klikken op `↑` of `↓` opent of sluit de cluster niet — `event.stopPropagation()` zorgt dat de toggle-actie van v3.18.7 niet meeloopt.
+
+**Gedrag:**
+- Onder water: de `volgorde`-velden van de twee betroffen ondergronden worden in `data.ondergronden` geswapt, de array wordt op `volgorde` opnieuw gesorteerd, en beide records gaan persistent in Supabase via `_updateOndDB`.
+- Zowel de Bewerkingen-tab als de Ondergronden-tab worden direct opnieuw gerenderd — geen handmatige tabwissel nodig om te zien dat de Ondergronden-tab gelijktijdig is bijgewerkt.
+
+**Skip-logica voor lege ondergronden:**
+- Sommige ondergronden hebben (nog) geen bewerkingen — die worden niet als cluster in de Bewerkingen-tab getoond.
+- Als ik de ruwe array-volgorde zou gebruiken zou ↓ vanaf een cluster kunnen "lijken stil te staan" wanneer de directe array-buur een lege ondergrond is (in werkelijkheid wel verschoven, maar onzichtbaar).
+- Daarom werkt `moveBewCluster` op de **zichtbare lijst** — de ↓-knop springt direct naar de volgende cluster die wél bewerkingen heeft. Het volgorde-veld in Supabase blijft niettemin correct.
+
+### Niet aangepast
+- Volgorde-knoppen voor bewerkingen *binnen* een cluster (eveneens `↑/↓`, via `moveBewInOnd`) waren al aanwezig — die blijven precies zoals ze waren.
+- De Ondergronden-tab gebruikt nog steeds zijn eigen `moveOnd` — die stapt 1 plek in de ruwe array (inclusief lege ondergronden). Dat is daar het gewenste gedrag. De twee functies leven naast elkaar.
+
+### Versie
+APP_VERSION: `v3.18.7` → `v3.18.8`. Welkomstblok-tekst bijgewerkt.
+
+---
+
 ## v3.18.7 — Inklap-clusters in Bewerkingen-tab
 Met 14 ondergronden en 115+ bewerkingen werd de Bewerkingen-tab een lange verticale muur. Deze release groepeert de tab nu visueel: alle clusters starten dicht, je klapt open wat je nodig hebt.
 

@@ -1226,6 +1226,13 @@
   .bew-cluster.open .bew-cluster-caret { transform: rotate(90deg); }
   .bew-cluster.orphans .bew-cluster-titel { cursor: default; }
   .bew-cluster.orphans .bew-cluster-titel:hover { background: var(--paper-warm); }
+  /* v3.18.8 — ↑/↓ knoppen rechts in cluster-titel voor cluster-volgorde */
+  .bew-cluster-acties {
+    margin-left: auto;
+    display: inline-flex;
+    gap: 0.2rem;
+    flex-shrink: 0;
+  }
 
   /* v3.18.5 — Normenboek-cue: subtiele blauwe linker-rand op bewerkingen
      met bron === 'normenboek'. Box-shadow ipv border-left zodat de tekst
@@ -1487,8 +1494,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.7</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.18.8</h2>
       <div class="intro-body">
+        <p><strong>↕ Cluster-volgorde wijzigen vanuit de Bewerkingen-tab (v3.18.8).</strong> Bij elke cluster-titel staan nu kleine ↑/↓ knoppen rechts naast de teller. Klik om de hele cluster één plek omhoog of omlaag te schuiven — precies hetzelfde patroon als in de Ondergronden-tab. De volgorde wordt direct opgeslagen in Supabase, dus beide tabs blijven synchroon. Slim detail: als er ondergronden zonder bewerkingen tussen zitten worden die overgeslagen — de ↓-knop springt direct naar de volgende zichtbare cluster, niet naar een onzichtbare lege tussenstop. Klikken op ↑/↓ opent of sluit de cluster niet (geen ongewenste klap-acties) ↕.</p>
         <p><strong>📂 Inklap-clusters in de Bewerkingen-tab (v3.18.7).</strong> Bij 14 ondergronden en 115+ bewerkingen werd het scrollen vermoeiend. Vanaf nu start de Bewerkingen-tab met alle clusters dicht — je ziet 14 nette balken onder elkaar in plaats van een lange muur van tabellen. Klik op een cluster-titel om hem uit te klappen, klik nog eens om weer dicht te vouwen. Pijltje ▸ wordt ▾ als je open klapt. Slimme automatieken: een nieuwe bewerking, een dupliceer-actie, een verplaatsing via de dropdown en een CSV-import openen automatisch de betroffen cluster(s) — zodat je direct ziet waar je werk landt. Na F5 is alles weer dicht (simpel en voorspelbaar) 🔽.</p>
         <p><strong>📥 CSV-import voor bewerkingen (v3.18.6, Chunk 3 van 4).</strong> Nieuwe knop "Importeer CSV" in de Bewerkingen-tab opent een upload-modal. Je voert een CSV in met kolommen <code>ondergrond;bewerking;eenheid;minuten;verbruik</code> en de app maakt voor elke unieke ondergrond-naam een nieuwe ondergrond aan (geen suffix — je ruimt later op) en importeert de bewerkingen met markering <em>normenboek</em> (blauwe linker-rand, Chunk 2). Robuust voor NL-Excel: komma OF punt als decimaal, puntkomma OF komma als scheidingsteken — wordt automatisch herkend. Strikt: bij één ongeldige rij wordt de hele import geweigerd met regelnummer + reden. Duplicaten binnen één import (zelfde ondergrond + bewerking) worden geskipt en in de preview opgesomd. Materiaal blijft leeg bij import — de slimme dropdown van Chunk 2 helpt je later het juiste materiaal kiezen 🎨.</p>
         <p><strong>🎨 Normenboek-rijen krijgen een blauwe streep + slimme materiaal-dropdown (v3.18.5, Chunk 2 van 4).</strong> Importeer je straks ~70 bewerkingen uit het normenboek, dan zie je ze in één oogopslag: in de Bewerkingen-tab krijgen normenboek-rijen een subtiele blauwe linker-rand. Eigen rijen blijven neutraal. Daarnaast is de materiaal-dropdown nu slim: bij een bewerking als "gronden" zie je standaard alleen materialen uit de groep <em>Grondverf watergedragen</em> — scheelt scrollen. Klein <strong>☰</strong>-knopje naast de dropdown toggle't tussen "alleen verwachte groep" en "alle materialen". Bij het wijzigen van minuten of verbruik op een normenboek-rij wordt de bewerking automatisch <em>eigen</em> (Chunk 1) en verdwijnt de blauwe streep vanzelf 📖.</p>
@@ -2130,7 +2138,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.18.7';
+const APP_VERSION = 'v3.18.8';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5558,6 +5566,36 @@ function _toggleBewCluster(ondId) {
   renderBewerkingen();
 }
 
+// v3.18.8 — Cluster-volgorde wijzigen vanuit Bewerkingen-tab. Werkt op de
+// zichtbare cluster-lijst (alleen ondergronden met >=1 bewerking) zodat
+// lege ondergronden niet "stiekem" tussen de Bewerkingen-clusters mee-
+// schuiven. Volgorde-velden worden geswapt en gepersisteerd in DB; beide
+// tabs blijven synchroon.
+async function moveBewCluster(id, dir) {
+  const visibleIds = data.ondergronden
+    .filter(o => data.bewerkingen.some(b => b.ondergrondId === o.id))
+    .map(o => o.id);
+  const vi = visibleIds.indexOf(id);
+  if (vi === -1) return;
+  const vj = vi + dir;
+  if (vj < 0 || vj >= visibleIds.length) return;
+  const targetId = visibleIds[vj];
+  const a = data.ondergronden.find(o => o.id === id);
+  const b = data.ondergronden.find(o => o.id === targetId);
+  if (!a || !b) return;
+  const tmp = a.volgorde;
+  a.volgorde = b.volgorde;
+  b.volgorde = tmp;
+  // Re-sort lokale array op volgorde-veld (i.t.t. moveOnd dat array-swap
+  // doet — bij ons kunnen a en b non-adjacent zijn als er lege onder-
+  // gronden tussenin staan).
+  data.ondergronden.sort((x, y) => (x.volgorde || 0) - (y.volgorde || 0));
+  renderBewerkingen();
+  renderOndergronden();
+  _updateOndDB(a);
+  _updateOndDB(b);
+}
+
 function renderBewerkingen() {
   const c = document.getElementById('bewerkingenLijst');
   if (!data.bewerkingen.length) { c.innerHTML = '<div class="empty-state">Geen bewerkingen.</div>'; return; }
@@ -5573,16 +5611,24 @@ function renderBewerkingen() {
   });
 
   let html = '';
-  // Render each ondergrond in the order of data.ondergronden
-  data.ondergronden.forEach(o => {
-    const list = grouped.get(o.id) || [];
-    if (list.length === 0) return; // skip empty ondergronden
+  // v3.18.8 — Pre-compute zichtbare cluster-lijst (alleen ondergronden met
+  // >=1 bewerking). Index daarin bepaalt of ↑/↓ disabled is.
+  const visibleOnds = data.ondergronden.filter(o => (grouped.get(o.id) || []).length > 0);
+  const lastVisIdx = visibleOnds.length - 1;
+  visibleOnds.forEach((o, visIdx) => {
+    const list = grouped.get(o.id);
     const isOpen = _bewOpenOnd.has(o.id);
+    const upDis = visIdx === 0 ? 'disabled' : '';
+    const downDis = visIdx === lastVisIdx ? 'disabled' : '';
     html += `<div class="bew-cluster${isOpen ? ' open' : ''}">
       <div class="bew-cluster-titel" onclick="_toggleBewCluster('${o.id}')">
         <span class="bew-cluster-caret">▸</span>
         <span>${o.naam}</span>
         <span style="color:var(--muted); font-weight:400; font-size:0.78em;">— ${list.length} ${list.length===1?'bewerking':'bewerkingen'}</span>
+        <span class="bew-cluster-acties" onclick="event.stopPropagation()">
+          <button class="btn-icon" onclick="moveBewCluster('${o.id}',-1)" ${upDis} title="Cluster omhoog">↑</button>
+          <button class="btn-icon" onclick="moveBewCluster('${o.id}',1)" ${downDis} title="Cluster omlaag">↓</button>
+        </span>
       </div>`;
     if (!isOpen) {
       html += `</div>`;
