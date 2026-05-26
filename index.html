@@ -744,6 +744,32 @@
     font-size: 0.75rem;
     width: 50px;
   }
+  /* v3.20.0 — Materiaal + verbruik per calc-regel-stap muteerbaar */
+  .regel-stap-mat {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    min-width: 0;
+  }
+  .regel-stap-mat select {
+    flex: 1;
+    padding: 0.2rem 0.35rem;
+    font-size: 0.72rem;
+    min-width: 0;
+  }
+  .regel-stap-mat input[type="number"] {
+    width: 60px;
+    padding: 0.2rem 0.35rem;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+  }
+  .regel-stap-mat .mat-eenheid {
+    color: var(--muted);
+    font-size: 0.65rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .regel-stap-mat .mat-filter-btn { flex-shrink: 0; }
   .regel-stap-totaal {
     text-align: right;
     font-family: 'JetBrains Mono', monospace;
@@ -1578,8 +1604,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.19.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.20.0</h2>
       <div class="intro-body">
+        <p><strong>🎨 Materiaal + verbruik per calc-regel-stap aanpasbaar (v3.20.0).</strong> Tot vandaag was de materiaal-keuze van een bewerking-stap in een calculatie read-only — om af te wijken van de bibliotheek moest je óf een aparte bewerking aanmaken óf een aparte verfsysteem-variant. Vanaf nu: bij elke stap in elke calc-regel staat een materiaal-dropdown (met dezelfde slimme groep-filter als in de Bewerkingen-tab — gronden filtert grondverf, aflakken filtert dekverf, etc.) plus een verbruik-input direct ernaast. Wissel een ander merk of type voor dit specifieke project — bibliotheek blijft onaangetast, alleen deze calc-regel-stap krijgt de nieuwe waardes. Architecturaal verrassend simpel mogelijk omdat het snapshot-patroon in <code>calc_regel_stappen</code> al jaren elke stap zijn eigen materiaal-velden geeft; we hebben alleen de UI er omheen gebouwd. Geen visuele "aangepast"-badge, geen reset-knop — silent override, jouw calc, jouw beslissing 🎯.</p>
         <p><strong>👀 Scheidingslijntjes Meetstaat-samenvattingen donkerder (v3.19.2).</strong> In de Meetstaat-tab bij "Totalen per calc-regel" en "Project-totaal per regel-type" werden de stippellijntjes tussen rijen met elke calculatie-groei steeds moeilijker te volgen — bij het opzoeken van een totaal raak je het spoor kwijt naar het bijbehorende getal rechts. Vandaag de lijn-grijsheid verdubbeld: kleur is nu een 50/50 mix tussen het bestaande <code>var(--paper-deep)</code> en de tekst-muted-grijs. Subtiel maar zichtbaar genoeg om je oog over de regel te leiden. Toegepast op alle 3 de plekken waar dit dashed-streepje voorkomt 👁️.</p>
         <p><strong>📜 Versie-geschiedenis uitgebreid met de oerjaren (v3.19.1).</strong> Op het dashboard zie je nu de complete tijdlijn van de app — niet alleen vanaf v3.8 maar helemaal tot v2.3.1. Vandaag 15 entries toegevoegd: 5 recente (v3.18.5 t/m v3.19.0, het normenboek-traject en de UI-herzieningen van afgelopen dagen), 8 historische uit de V2.3.x / V2.4.x / V3.7.0 bestanden die je nog had liggen (meetstaat-verfijningen, verfsysteem-styling, calc-vergrendeling), en 2 tussen-stadia die ik gemarkeerd heb om het gat tussen v2.4.1 en v3.7.0 te overbruggen: Supabase-migratie (v3.0.0) en multi-user auth (v3.5.0). Voor de historische entries was geen exacte datum meer terug te vinden — die staan dus als "begin mei 2026". De render is daarop aangepast: niet-ISO datums worden letterlijk doorgelaten, voor wanneer iets bekend is maar niet op de dag nauwkeurig 📅.</p>
         <p><strong>📋 Verfsystemen-tab herzien naar master-detail layout (v3.19.0).</strong> Bij groeiend aantal systemen werd de grid-van-kaarten lang, hoog en onoverzichtelijk. Vanaf nu zie je links een smalle lijst met alle systemen (alleen naam + verkoopprijs) en rechts een detail-venster dat het geselecteerde systeem volledig toont — inclusief bewerkingen-lijst en totalen. Klik op een regel links → detail rechts wisselt. Niets geselecteerd na F5: je ziet een rustige empty state ("Klik een systeem links om te bekijken"). Boven de lijst zit een zoekbalk (matcht op systeem-naam én op ondergrond-naam) en een sortering-dropdown met als default <em>Op ondergrond (gegroepeerd)</em> — dan zie je in de lijst kleine sub-headers tussen de groepen, zodat alle systemen voor "Binnendeur hout" of "Gevelkozijn hout" netjes bij elkaar staan. Andere sort-opties: naam ↑↓, prijs ↑↓. De bestaande Locatie-filter (binnen/buiten/beide) blijft in de panel-head en werkt samen met de andere filters. Nieuw systeem opslaan of een bestaand systeem bewerken → het systeem wordt direct geselecteerd in de lijst, zodat je je werk meteen ziet 🎯.</p>
@@ -2240,7 +2267,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.19.2';
+const APP_VERSION = 'v3.20.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2602,6 +2629,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.20.0', d: '2026-05-25', h: 'Materiaal + verbruik per calc-regel-stap aanpasbaar — slim groep-filter + bibliotheek blijft onaangetast (snapshot-architectuur)' },
   { v: '3.19.2', d: '2026-05-25', h: 'Meetstaat-samenvattingen: stippellijntjes tussen rijen donkerder gemaakt (50/50 mix paper-deep + muted) — beter te volgen bij grotere calculaties' },
   { v: '3.19.1', d: '2026-05-25', h: 'Versie-geschiedenis uitgebreid met de oerjaren — 15 entries toegevoegd (5 recent, 8 historisch V2.3-V3.7, 2 tussen-stadia voor Supabase + multi-user)' },
   { v: '3.19.0', d: '2026-05-25', h: 'Verfsystemen-tab herzien naar master-detail layout: smalle lijst links (gegroepeerd op ondergrond, zoek + sort), detail rechts' },
@@ -5676,6 +5704,16 @@ function toggleMatFilter(bewId) {
   renderBewerkingen();
 }
 
+// v3.20.0 — Per calc-regel-stap aparte filter-toggle voor materiaal-dropdown.
+// Sleutel = stap.id (uniek per regel-stap, niet conflicterend met bewerking-IDs).
+// Hetzelfde patroon als _matFilterOff maar gescoopt op calc-context met eigen render-trigger.
+const _matFilterOffRegelStap = new Set();
+function toggleMatFilterRegelStap(stapId) {
+  if (_matFilterOffRegelStap.has(stapId)) _matFilterOffRegelStap.delete(stapId);
+  else _matFilterOffRegelStap.add(stapId);
+  renderCalcStructuur();
+}
+
 // v3.18.7 — Inklap-clusters Bewerkingen-tab. Set bevat ondergrond-IDs
 // die OPEN zijn. Default leeg = alle clusters dicht na page-load / F5.
 // Auto-open bij: nieuwe bewerking, dupliceren, verplaatsen via dropdown,
@@ -8420,16 +8458,39 @@ function renderRegel(hgId, odId, r) {
     const matKost = cs.matVerkoop;
     const arbeidKost = cs.uren * (_S().uurloon || 0);
     const totaal = matKost + arbeidKost;
-    const matInfo = st.materiaalNaam
-      ? `${st.materiaalNaam} <span style="color:var(--muted); font-size:0.68rem;">(${fmt3(st.verbruik * (st.percentage??100)/100)} ${st.materiaalEenheid} · € ${fmt(matKost)})</span>`
-      : '<span style="color:var(--muted);">—</span>';
+    // v3.20.0 — Materiaal-dropdown met slim groep-filter (hergebruik van v3.18.5 patroon)
+    const stapKey = st.id || `${r.id}_${i}`;
+    const expGroep = _resolveExpectedGroup(st.bewerkingNaam);
+    const filterAan = !!expGroep && !_matFilterOffRegelStap.has(stapKey);
+    let matList;
+    if (filterAan) {
+      matList = data.materialen.filter(m => m.groep === expGroep);
+      // Defensief: huidige materiaal van deze stap moet zichtbaar blijven
+      // ook als het buiten de filter valt (anders verdwijnt de selectie)
+      if (st.materiaalId && !matList.find(m => m.id === st.materiaalId)) {
+        const huidig = data.materialen.find(m => m.id === st.materiaalId);
+        if (huidig) matList = [huidig, ...matList];
+      }
+    } else {
+      matList = data.materialen;
+    }
+    const matOpts = '<option value="">— geen —</option>' +
+      matList.map(m => `<option value="${m.id}" ${m.id===st.materiaalId?'selected':''}>${m.naam}</option>`).join('');
+    const filterBtnHtml = expGroep
+      ? `<button class="mat-filter-btn${filterAan ? '' : ' off'}" onclick="toggleMatFilterRegelStap('${stapKey}')" title="${filterAan ? 'Filter op groep: ' + expGroep + ' — klik voor alle materialen' : 'Toon alleen materialen uit groep: ' + expGroep}">☰</button>`
+      : '';
     return `<div class="regel-stap">
       <span class="regel-stap-num">${i+1}</span>
       <span class="regel-stap-naam">
         <strong>${st.bewerkingNaam}</strong>
         <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(cs.minuten)} min <span title="Arbeidskosten per ${st.bewerkingEenheid}, percentage verrekend">(€ ${fmt(arbeidKost)})</span><span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
       </span>
-      <span class="regel-stap-mat">${matInfo}</span>
+      <span class="regel-stap-mat">
+        <select onchange="updRegelStapMateriaal('${hgId}','${odId}','${r.id}',${i},this.value)">${matOpts}</select>
+        <input type="number" step="0.001" value="${st.verbruik||0}" onchange="updRegelStap('${hgId}','${odId}','${r.id}',${i},'verbruik',parseFloat(this.value))" title="Verbruik in ${st.materiaalEenheid || '—'} per ${st.bewerkingEenheid}" ${!st.materiaalId ? 'disabled' : ''}>
+        <span class="mat-eenheid">${st.materiaalEenheid ? st.materiaalEenheid + '/' + st.bewerkingEenheid : ''}</span>
+        ${filterBtnHtml}
+      </span>
       <span class="regel-stap-pct">
         <input type="number" step="5" min="0" max="500" value="${st.percentage ?? 100}" onchange="updRegelStap('${hgId}','${odId}','${r.id}',${i},'percentage',parseFloat(this.value))" title="Percentage">
         <span style="color:var(--muted); font-size:0.68rem;">%</span>
@@ -8501,6 +8562,33 @@ function updRegelStap(hgId, odId, rId, idx, field, val) {
   const r = _findRegel(hgId, odId, rId); if (!r || !r.stappen[idx]) return;
   r.stappen[idx][field] = val;
   if (r.stappen[idx].id) _updateStapSnapshotDB(r.stappen[idx]);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur(); renderTotals();
+}
+// v3.20.0 — Materiaal van een specifieke calc-regel-stap omwisselen.
+// Pakt naam/eenheid/prijs/groep van het nieuwe materiaal en schrijft alle 5
+// snapshot-velden in één DB-write weg (i.t.t. updRegelStap dat per-veld update).
+// Verbruik blijft staan — die wordt handmatig aangepast als 't andere materiaal
+// een andere dekkracht heeft. Bibliotheek-bewerking blijft onaangetast.
+function updRegelStapMateriaal(hgId, odId, rId, idx, materiaalId) {
+  const r = _findRegel(hgId, odId, rId); if (!r || !r.stappen[idx]) return;
+  const stap = r.stappen[idx];
+  if (!materiaalId) {
+    stap.materiaalId = null;
+    stap.materiaalNaam = null;
+    stap.materiaalEenheid = null;
+    stap.materiaalPrijs = 0;
+    stap.materiaalGroep = null;
+  } else {
+    const m = data.materialen.find(x => x.id === materiaalId);
+    if (!m) return;
+    stap.materiaalId = m.id;
+    stap.materiaalNaam = m.naam;
+    stap.materiaalEenheid = m.eenheid;
+    stap.materiaalPrijs = m.prijsPer || 0;
+    stap.materiaalGroep = m.groep;
+  }
+  if (stap.id) _updateStapSnapshotDB(stap);
   _touchCalc(data.calc.id);
   renderCalcStructuur(); renderTotals();
 }

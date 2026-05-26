@@ -1,3 +1,40 @@
+## v3.20.0 — Materiaal + verbruik per calc-regel-stap aanpasbaar
+Antwoord op een al lang sluimerende UX-vraag: kun je in een specifieke calc-regel afwijken van de bibliotheek-materiaal zonder een nieuwe bewerking of een nieuw verfsysteem aan te maken? Vanaf vandaag: ja, direct in de calculatie zelf.
+
+### Wijzigingen
+
+**UI in calc-regel-stappen:**
+- De voorheen read-only materiaal-tekst (`<span class="regel-stap-mat">${matInfo}</span>` met materiaal-naam + verbruik + matKost als gehavende tekst) is vervangen door drie inline elementen binnen dezelfde grid-kolom:
+  1. **Materiaal-dropdown** (`<select>`) met slim groep-filter — toont per default alleen materialen uit de groep die past bij de bewerking-naam (gronden → grondverf, aflakken → dekverf, etc., via de bestaande `_resolveExpectedGroup` mapping van v3.18.5). Inclusief defensief: als het huidige materiaal buiten de filter valt blijft het zichtbaar in de dropdown zodat de selectie niet "verdwijnt".
+  2. **Verbruik-input** (`<input type="number" step="0.001">`) — direct naast de dropdown, smal (60px), `disabled` als er geen materiaal gekoppeld is.
+  3. **Eenheid-label** (mat-eenheid/bewerking-eenheid, bv. "L/m²") — read-only, alleen ter referentie.
+  4. **Filter-knop** (`☰`) — toggle om het groep-filter handmatig uit te zetten en de hele materialen-lijst te tonen. Per-stap state, niet persistent (resetten bij F5).
+- De totaal-€-kolom rechts toont nog steeds het stap-totaal (mat + arbeid). De extra `(0.012 L · € 0.85)` preview-info die voorheen onder de materiaal-naam stond is weggevallen — dubbele informatie nu de gebruiker zelf verbruik en materiaal direct ziet en muteert.
+
+**Functies:**
+- Nieuwe `updRegelStapMateriaal(hgId, odId, rId, idx, materiaalId)`: pakt naam/eenheid/prijs/groep van het nieuwe materiaal en schrijft alle 5 snapshot-velden in één DB-write weg via `_updateStapSnapshotDB`. Verbruik blijft staan — dat wordt apart aangepast via de bestaande generieke `updRegelStap(hgId, odId, rId, idx, 'verbruik', val)`.
+- Nieuwe `toggleMatFilterRegelStap(stapKey)` met eigen Set `_matFilterOffRegelStap` — naast de bestaande `_matFilterOff` van v3.18.5. Twee aparte sets omdat de toggle in de Bewerkingen-tab `renderBewerkingen()` aanroept en de calc-versie `renderCalcStructuur()`.
+
+**Architectuur — waarom dit zonder backend-wijzigingen kon:**
+- De `calc_regel_stappen` tabel in Supabase heeft sinds v3.0 elke stap als aparte rij met **alle materiaal-velden als eigen kolommen** (`materiaal_id`, `materiaal_naam`, `materiaal_eenheid`, `materiaal_prijs`, `materiaal_groep`, `verbruik`). Het rekenmodel `calcSnapshotStep` (regel 7373) leest direct uit deze snapshot-velden, niet uit `data.materialen`. Dit is het zogenaamde **snapshot-patroon** — calculaties zijn historische foto's, niet live-views.
+- Wat we vandaag hebben gebouwd is dus puur UI: de DB-shape stond al toe wat we nu doen, de update-functie `_updateStapSnapshotDB` schreef alle materiaal-velden al weg. Er was alleen geen control om het te triggeren.
+
+**UX-keuzes vooraf bevestigd:**
+- Materiaal + verbruik aanpasbaar (geen prijs-override — daarvoor moet je naar de Materialen-tab).
+- Geen visuele "aangepast"-badge — silent override, jouw calc, jouw beslissing.
+- Geen "reset naar bibliotheek-default" knop — eens aangepast blijft aangepast tot je 't handmatig terug zet.
+
+### Niet aangepast
+- De **bibliotheek** (`data.bewerkingen`, `data.materialen`, `data.systemen`) blijft onaangetast bij elke materiaal-wissel in een calc-regel. Wijzigingen blijven gescoopt op die ene calc-regel-stap.
+- De grid-template van `.regel-stap` (`22px 2fr 1.6fr 0.6fr 0.7fr 90px`) blijft hetzelfde — de drie nieuwe elementen passen in de bestaande 1.6fr-materiaal-kolom als inline-flex.
+- Print, Werkbon en Yoobi-export gebruiken al de snapshot-data van `calc_regel_stappen` — aangepaste materialen komen automatisch correct mee in alle exports.
+- De backwards-compatibiliteit van bestaande calculaties: alle calculaties van vóór v3.20.0 blijven exact zo werken — hun stappen hadden al gewoon `materiaal_id` etc. ingevuld via de snapshot.
+
+### Versie
+APP_VERSION: `v3.19.2` → `v3.20.0`. Minor bump want nieuwe functionele feature (per-stap materiaal-override), niet alleen styling.
+
+---
+
 ## v3.19.2 — Scheidingslijntjes Meetstaat-samenvattingen donkerder
 Kleine maar gerichte UX-tweak op basis van gebruikersfeedback: bij grotere calculaties met veel meetregels werd het volgen van een rij in de "Totalen per calc-regel" en "Project-totaal per regel-type" lijstjes moeilijk omdat de stippellijntjes te licht waren om je oog over de regel te leiden.
 
