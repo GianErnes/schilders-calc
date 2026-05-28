@@ -1604,8 +1604,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.20.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.21.0</h2>
       <div class="intro-body">
+        <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
         <p><strong>🎨 Materiaal + verbruik per calc-regel-stap aanpasbaar (v3.20.0).</strong> Tot vandaag was de materiaal-keuze van een bewerking-stap in een calculatie read-only — om af te wijken van de bibliotheek moest je óf een aparte bewerking aanmaken óf een aparte verfsysteem-variant. Vanaf nu: bij elke stap in elke calc-regel staat een materiaal-dropdown (met dezelfde slimme groep-filter als in de Bewerkingen-tab — gronden filtert grondverf, aflakken filtert dekverf, etc.) plus een verbruik-input direct ernaast. Wissel een ander merk of type voor dit specifieke project — bibliotheek blijft onaangetast, alleen deze calc-regel-stap krijgt de nieuwe waardes. Architecturaal verrassend simpel mogelijk omdat het snapshot-patroon in <code>calc_regel_stappen</code> al jaren elke stap zijn eigen materiaal-velden geeft; we hebben alleen de UI er omheen gebouwd. Geen visuele "aangepast"-badge, geen reset-knop — silent override, jouw calc, jouw beslissing 🎯.</p>
         <p><strong>👀 Scheidingslijntjes Meetstaat-samenvattingen donkerder (v3.19.2).</strong> In de Meetstaat-tab bij "Totalen per calc-regel" en "Project-totaal per regel-type" werden de stippellijntjes tussen rijen met elke calculatie-groei steeds moeilijker te volgen — bij het opzoeken van een totaal raak je het spoor kwijt naar het bijbehorende getal rechts. Vandaag de lijn-grijsheid verdubbeld: kleur is nu een 50/50 mix tussen het bestaande <code>var(--paper-deep)</code> en de tekst-muted-grijs. Subtiel maar zichtbaar genoeg om je oog over de regel te leiden. Toegepast op alle 3 de plekken waar dit dashed-streepje voorkomt 👁️.</p>
         <p><strong>📜 Versie-geschiedenis uitgebreid met de oerjaren (v3.19.1).</strong> Op het dashboard zie je nu de complete tijdlijn van de app — niet alleen vanaf v3.8 maar helemaal tot v2.3.1. Vandaag 15 entries toegevoegd: 5 recente (v3.18.5 t/m v3.19.0, het normenboek-traject en de UI-herzieningen van afgelopen dagen), 8 historische uit de V2.3.x / V2.4.x / V3.7.0 bestanden die je nog had liggen (meetstaat-verfijningen, verfsysteem-styling, calc-vergrendeling), en 2 tussen-stadia die ik gemarkeerd heb om het gat tussen v2.4.1 en v3.7.0 te overbruggen: Supabase-migratie (v3.0.0) en multi-user auth (v3.5.0). Voor de historische entries was geen exacte datum meer terug te vinden — die staan dus als "begin mei 2026". De render is daarop aangepast: niet-ISO datums worden letterlijk doorgelaten, voor wanneer iets bekend is maar niet op de dag nauwkeurig 📅.</p>
@@ -2045,6 +2046,11 @@ Hout binnen;Gronden;m²;6;0,10</div>
         <span style="color: var(--muted); font-size: 0.85rem;">Basisbedrag van deze beurt (excl. BTW)</span>
         <strong id="ohpMbBasis" style="font-size: 1.15rem;">€ 0,00</strong>
       </div>
+      <div style="margin-top: 1rem;">
+        <label style="margin-bottom: 0.4rem;">Voor de offerte-bijlage — wat troffen we aan / wat gaan we doen</label>
+        <textarea id="ohpMbOfferteTekst" rows="4" placeholder="bv. De daklijst aan de linkerzijde (zuidkant) vertoont scheurtjes in de verflaag. Wij verwijderen de scheurende laag en schilderen opnieuw met een grondlaag plus twee afwerklagen..." style="width: 100%; resize: vertical; font-family: inherit; font-size: 0.9rem; line-height: 1.45;"></textarea>
+        <div style="font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;">Deze tekst verschijnt onder het jaar in de offerte-bijlage. Leeg laten kan ook — dan toont de bijlage alleen het jaar en het beurttype.</div>
+      </div>
     </div>
     <div class="modal-foot">
       <div id="ohpMbKopieerWrap" style="position: relative;">
@@ -2267,7 +2273,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.20.0';
+const APP_VERSION = 'v3.21.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3461,6 +3467,7 @@ function _mapBeurtFromDB(row) {
     modus:     row.modus || 'algemeen',
     scaling:   row.scaling || {},
     meeInGemiddelde: row.mee_in_gemiddelde !== false, // default true
+    offerteTekst: row.offerte_tekst || '', // v3.21.0 — vrije tekst per beurt voor de offerte-bijlage
     aangemaakt: row.aangemaakt || null,
     gewijzigd:  row.gewijzigd  || null
   };
@@ -3474,6 +3481,7 @@ function _mapBeurtToDB(b, planId) {
     modus:     b.modus || 'algemeen',
     scaling:   b.scaling || {},
     mee_in_gemiddelde: b.meeInGemiddelde !== false, // default true
+    offerte_tekst: b.offerteTekst || '', // v3.21.0
     gewijzigd: new Date().toISOString()
   };
 }
@@ -4864,6 +4872,7 @@ function _ohpOpenBeurtModal(beurtId) {
   // Vul kop-velden
   document.getElementById('ohpMbNaam').value = b.naam || '';
   document.getElementById('ohpMbJaar').value = b.jaartal;
+  document.getElementById('ohpMbOfferteTekst').value = b.offerteTekst || '';
   // Zet modus-radio
   document.querySelectorAll('input[name="ohpMbModus"]').forEach(r => {
     r.checked = (r.value === _ohpMb.modus);
@@ -5268,9 +5277,11 @@ async function _ohpMbOpslaan() {
   // Lees naam en jaar uit de modal-velden
   const naam = document.getElementById('ohpMbNaam').value || '';
   const jaar = parseInt(document.getElementById('ohpMbJaar').value) || b.jaartal;
+  const offerteTekst = document.getElementById('ohpMbOfferteTekst').value || '';
   // Pas toe
   b.naam = naam;
   b.jaartal = jaar;
+  b.offerteTekst = offerteTekst;
   b.modus = _ohpMb.modus;
   b.scaling = _ohpMb.scaling;
   const opgeslagen = await _updateBeurt(b);

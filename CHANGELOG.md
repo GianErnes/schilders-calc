@@ -1,4 +1,29 @@
-## v3.20.0 — Materiaal + verbruik per calc-regel-stap aanpasbaar
+## v3.21.0 — Offerte-tekst per beurt (chunk 1 van offerte-bijlage)
+Eerste bouwsteen voor een automatisch gegenereerde, vormgegeven PDF-bijlage bij de Onderhouds garantie+ plan-offerte. Deze chunk legt de datalaag: een vrij tekstveld per beurt waarin Gian per inspectie noteert wat hij aantrof en wat er gebeurt. De generator zelf (de mooie bijlage-PDF) volgt in chunk 2.
+
+### Vereiste Supabase-migratie (eenmalig, vóór gebruik)
+```sql
+ALTER TABLE onderhoudsplan_beurten
+  ADD COLUMN IF NOT EXISTS offerte_tekst TEXT DEFAULT '';
+```
+
+### Wijzigingen
+**Datamodel:**
+- `_mapBeurtFromDB`: leest nieuwe kolom `offerte_tekst` → JS-veld `offerteTekst` (default leeg).
+- `_mapBeurtToDB`: schrijft `offerteTekst` → `offerte_tekst` weg.
+
+**UI — bewerk-modal van een beurt:**
+- Nieuw `<textarea id="ohpMbOfferteTekst">` onderaan de modal-body, onder het basisbedrag-blok, met label "Voor de offerte-bijlage — wat troffen we aan / wat gaan we doen" en een voorbeeld-placeholder.
+- `_ohpOpenBeurtModal` vult het veld met `b.offerteTekst`.
+- `_ohpMbOpslaan` leest het veld en slaat het mee op via de bestaande `_updateBeurt`.
+
+**Architectuur:**
+- Geen nieuwe tabel, geen nieuwe query-functie — hergebruik van de bestaande beurt-update-flow. De enige backend-wijziging is één kolom.
+- Tekst is optioneel: leeg laten is prima, dan toont de bijlage straks alleen jaar + beurttype.
+
+---
+
+
 Antwoord op een al lang sluimerende UX-vraag: kun je in een specifieke calc-regel afwijken van de bibliotheek-materiaal zonder een nieuwe bewerking of een nieuw verfsysteem aan te maken? Vanaf vandaag: ja, direct in de calculatie zelf.
 
 ### Wijzigingen
