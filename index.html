@@ -1604,9 +1604,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.22.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.22.1</h2>
       <div class="intro-body">
-        <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.0).</strong> Chunk 2 is er: de knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert nu een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar om als bijlage bij de Yoobi-offerte te versturen. Met een dynamische tijdlijn die zich aanpast aan het aantal jaren, de "voor uw huis"-teksten per beurt (chunk 1), het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; het lettertype Libre Franklin komt van Google Fonts 🎨.</p>
+        <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.1).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
         <p><strong>🎨 Materiaal + verbruik per calc-regel-stap aanpasbaar (v3.20.0).</strong> Tot vandaag was de materiaal-keuze van een bewerking-stap in een calculatie read-only — om af te wijken van de bibliotheek moest je óf een aparte bewerking aanmaken óf een aparte verfsysteem-variant. Vanaf nu: bij elke stap in elke calc-regel staat een materiaal-dropdown (met dezelfde slimme groep-filter als in de Bewerkingen-tab — gronden filtert grondverf, aflakken filtert dekverf, etc.) plus een verbruik-input direct ernaast. Wissel een ander merk of type voor dit specifieke project — bibliotheek blijft onaangetast, alleen deze calc-regel-stap krijgt de nieuwe waardes. Architecturaal verrassend simpel mogelijk omdat het snapshot-patroon in <code>calc_regel_stappen</code> al jaren elke stap zijn eigen materiaal-velden geeft; we hebben alleen de UI er omheen gebouwd. Geen visuele "aangepast"-badge, geen reset-knop — silent override, jouw calc, jouw beslissing 🎯.</p>
         <p><strong>👀 Scheidingslijntjes Meetstaat-samenvattingen donkerder (v3.19.2).</strong> In de Meetstaat-tab bij "Totalen per calc-regel" en "Project-totaal per regel-type" werden de stippellijntjes tussen rijen met elke calculatie-groei steeds moeilijker te volgen — bij het opzoeken van een totaal raak je het spoor kwijt naar het bijbehorende getal rechts. Vandaag de lijn-grijsheid verdubbeld: kleur is nu een 50/50 mix tussen het bestaande <code>var(--paper-deep)</code> en de tekst-muted-grijs. Subtiel maar zichtbaar genoeg om je oog over de regel te leiden. Toegepast op alle 3 de plekken waar dit dashed-streepje voorkomt 👁️.</p>
@@ -2275,7 +2275,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.22.0';
+const APP_VERSION = 'v3.22.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5612,6 +5612,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
   const posVoor = (i) => (N === 1) ? 50 : (marge + i * span);
 
   let tlNodes = '';
+  let werkIdx = 0;
   jaren.forEach((j, i) => {
     const left = posVoor(i).toFixed(2);
     const entry = perJaar[j];
@@ -5621,15 +5622,16 @@ function _ohpBuildOfferteHTML(plan, calc) {
       const totBedrag = (entry.bedragMee + entry.bedragBuiten);
       const eersteBeurt = entry.beurten[0].b;
       const typeLabel = _ohpTypeLabel(eersteBeurt.naam);
+      const lvl = (werkIdx % 2 === 0) ? 'hi' : 'lo';
+      werkIdx++;
       tlNodes += `
-        <div class="tl-card" style="left:${left}%;"><div class="amt">${eur(totBedrag)}</div><div class="type">${_escapeHtml(typeLabel)}</div><div class="stem"></div></div>
+        <div class="tl-card ${lvl}" style="left:${left}%;"><div class="amt">${eur(totBedrag)}</div><div class="type">${_escapeHtml(typeLabel)}</div><div class="stem"></div></div>
         <div class="tl-node" style="left:${left}%;"><div class="tl-dot"></div></div>
         <div class="tl-year" style="left:${left}%;">${j}</div>`;
     } else {
       tlNodes += `
         <div class="tl-node" style="left:${left}%;"><div class="tl-dot empty"></div></div>
-        <div class="tl-year dim" style="left:${left}%;">${j}</div>
-        <div class="tl-sub" style="left:${left}%;">geen<br>werkzaamheden</div>`;
+        <div class="tl-year dim" style="left:${left}%;">${j}</div>`;
     }
   });
 
@@ -5714,25 +5716,28 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .def .dh{font-size:11.5pt;font-weight:700;margin-bottom:5px;}
 .ob .def .dh .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--brush);margin-right:6px;vertical-align:middle;}
 .ob .def p{font-size:9.3pt;line-height:1.45;color:#4a443b;margin:0;}
-.ob .timeline-wrap{margin:14px 0 18px;}
-.ob .timeline{position:relative;height:184px;}
-.ob .tl-axis{position:absolute;left:2%;right:2%;top:112px;height:3px;background:linear-gradient(90deg,var(--line) 0%,var(--brush) 10%,var(--brush) 90%,var(--line) 100%);border-radius:2px;}
-.ob .tl-node{position:absolute;top:112px;transform:translate(-50%,-50%);}
+.ob .timeline-wrap{margin:10px 0 12px;}
+.ob .timeline{position:relative;height:200px;}
+.ob .tl-axis{position:absolute;left:2%;right:2%;top:155px;height:3px;background:linear-gradient(90deg,var(--line) 0%,var(--brush) 10%,var(--brush) 90%,var(--line) 100%);border-radius:2px;}
+.ob .tl-node{position:absolute;top:155px;transform:translate(-50%,-50%);}
 .ob .tl-dot{width:18px;height:18px;border-radius:50%;background:var(--brush);border:3px solid #fff;box-shadow:0 0 0 2px var(--brush);}
 .ob .tl-dot.empty{width:11px;height:11px;background:#fff;border:2px solid var(--line);box-shadow:0 0 0 1px var(--line);}
-.ob .tl-year{position:absolute;top:130px;transform:translateX(-50%);font-weight:700;font-size:12pt;}
-.ob .tl-year.dim{color:var(--muted);font-weight:600;font-size:10.5pt;}
-.ob .tl-card{position:absolute;bottom:90px;transform:translateX(-50%);width:120px;text-align:center;}
-.ob .tl-card .amt{font-weight:900;font-size:14pt;color:var(--ink);}
-.ob .tl-card .type{font-size:7.4pt;font-weight:600;letter-spacing:0.7px;text-transform:uppercase;color:var(--brush);margin-top:1px;}
-.ob .tl-card .stem{width:1.5px;height:16px;background:var(--brush);margin:5px auto 0;}
-.ob .tl-sub{position:absolute;top:150px;transform:translateX(-50%);font-size:7.2pt;color:var(--muted);width:90px;text-align:center;line-height:1.3;}
+.ob .tl-year{position:absolute;top:164px;transform:translateX(-50%);font-weight:700;font-size:11pt;}
+.ob .tl-year.dim{color:var(--muted);font-weight:600;font-size:9.5pt;}
+.ob .tl-card{position:absolute;transform:translateX(-50%);width:112px;text-align:center;}
+.ob .tl-card.hi{top:8px;}
+.ob .tl-card.lo{top:64px;}
+.ob .tl-card .amt{font-weight:900;font-size:12.5pt;color:var(--ink);line-height:1.05;}
+.ob .tl-card .type{font-size:6.8pt;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--brush);margin-top:2px;line-height:1.15;}
+.ob .tl-card .stem{width:1.5px;background:var(--brush);margin:4px auto 0;}
+.ob .tl-card.hi .stem{height:108px;}
+.ob .tl-card.lo .stem{height:52px;}
 .ob table.ptable{width:100%;border-collapse:collapse;margin:0;font-size:10pt;}
 .ob table.ptable th{text-align:left;font-weight:600;font-size:7.5pt;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);padding:0 10px 7px;border:none;border-bottom:1.5px solid var(--ink);background:none;}
-.ob table.ptable td{padding:7px 10px;border:none;border-bottom:1px solid var(--line);}
+.ob table.ptable td{padding:4.5px 10px;border:none;border-bottom:1px solid var(--line);}
 .ob table.ptable td.amt{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;}
 .ob table.ptable tr.empty td{color:var(--muted);}
-.ob table.ptable tr.total td{border-bottom:none;border-top:2px solid var(--ink);font-weight:700;padding-top:9px;font-size:10.5pt;}
+.ob table.ptable tr.total td{border-bottom:none;border-top:2px solid var(--ink);font-weight:700;padding-top:8px;font-size:10.5pt;}
 .ob table.ptable tr.total td.amt{font-size:12pt;}
 .ob .strip{display:flex;gap:20px;margin-top:16px;}
 .ob .strip .box{flex:1;background:#fff;border:1px solid var(--line);border-radius:4px;padding:13px 16px;box-shadow:var(--shadow);}
@@ -5810,10 +5815,6 @@ function _ohpBuildOfferteHTML(plan, calc) {
         ${tabelRijen}
         <tr class="total"><td colspan="2">Totale investering ${pp}–${eindJaar} &middot; incl. btw</td><td class="amt">${heroTotaal}</td></tr>
       </tbody></table>
-      <div class="strip">
-        <div class="box"><div class="bh">Prijszekerheid</div><p>De bedragen staan vast tot einde plan. Wij hebben hierin al rekening gehouden met prijsstijgingen, klimaatrisico&rsquo;s en de staat van de ondergrond. Alleen wettelijke btw-aanpassingen worden verrekend.</p></div>
-        <div class="box"><div class="bh">Wat valt buiten dit plan</div><p>Extra werk voeren wij alleen uit na overleg en schriftelijk akkoord. Zo voorkomen we verrassingen achteraf.</p></div>
-      </div>
     </div>
 
     <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 2/3</div></div>
@@ -5832,6 +5833,10 @@ function _ohpBuildOfferteHTML(plan, calc) {
         <div class="item"><div class="zh"><span class="dot"></span>Wat valt buiten de garantie</div><p>Scheuren in hout en bouwscheuren in muren — dat zijn problemen vanuit de ondergrond, niet vanuit het schilderwerk.</p></div>
         <div class="item"><div class="zh"><span class="dot"></span>Vakwerk Plusgarantie-bedrijf</div><p>Wij voeren het kwaliteitskeurmerk Vakwerk Plusgarantie van OnderhoudNL. Bij een eventueel geschil bemiddelt een onafhankelijke geschillencommissie; Stichting AF garandeert de nakoming van de uitspraak.</p></div>
         <div class="item"><div class="zh"><span class="dot"></span>Altijd opzegbaar</div><p>Wilt u op enig moment stoppen met het plan, dan kan dat — om welke reden dan ook.</p></div>
+      </div>
+      <div class="strip" style="margin-top:18px;">
+        <div class="box"><div class="bh">Prijszekerheid</div><p>De bedragen staan vast tot einde plan. Wij hebben hierin al rekening gehouden met prijsstijgingen, klimaatrisico&rsquo;s en de staat van de ondergrond. Alleen wettelijke btw-aanpassingen worden verrekend.</p></div>
+        <div class="box"><div class="bh">Wat valt buiten dit plan</div><p>Extra werk voeren wij alleen uit na overleg en schriftelijk akkoord. Zo voorkomen we verrassingen achteraf.</p></div>
       </div>
       <div class="quotes">
         <div class="quote"><div class="qm">&ldquo;</div><p>Heel fijn bedrijf met zeer kundige, vriendelijke en stipte mensen. Alles wordt heel netjes afgedekt, afgewerkt en opgeruimd. Resultaat is echt heel goed.</p><div class="who">— klant Ernes Schilders</div></div>

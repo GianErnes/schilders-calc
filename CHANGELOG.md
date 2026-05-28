@@ -1,4 +1,22 @@
-## v3.22.0 — Offerte-bijlage generator (chunk 2 van offerte-bijlage)
+## v3.22.1 — Offerte-bijlage: robuuste layout voor lange plannen
+Fix na de eerste praktijktest met een 10-jaarsplan (2025–2035). Bij veel jaartallen liep de layout vast op twee punten; beide opgelost.
+
+### Wijzigingen
+**Tijdlijn — geen overlap meer bij veel jaren:**
+- De bedrag-kaartjes staan nu **afwisselend boven en onder** de tijdlijn (klassen `.tl-card.hi` / `.tl-card.lo`), via een `werkIdx`-teller in de generatie-loop. Naburige werkjaren botsen daardoor nooit meer, ongeacht looptijd of onderlinge afstand.
+- De "geen werkzaamheden"-sublabels (`.tl-sub`) zijn van de tijdlijn verwijderd — die overlapten bij dicht opeenstaande jaren ("werkzaamhedenwerkzaamheden"). De info staat al volledig in de jaartabel eronder.
+- Tijdlijn-hoogte 184px → 200px; as naar het midden; jaartallen consistent onder de as; verbindings-stems per niveau (hi 108px / lo 52px).
+
+**Pagina-indeling — niets valt meer af:**
+- De Prijszekerheid / Wat-valt-buiten-blokken zijn van pagina 2 naar pagina 3 verplaatst (onder §5 Uw zekerheid, waar ze thematisch ook passen). Bij 11 tabelrijen vielen ze voorheen buiten pagina 2.
+- Tabelrijen compacter (`padding` 7px → 4.5px) en tijdlijn-marges kleiner, zodat tijdlijn + volledige jaartabel + totaalregel samen op pagina 2 passen tot ~15 jaar looptijd.
+
+### Resultaat
+Een 10-jaarsplan rendert nu correct op 3 pagina's: p1 plan + voor-uw-huis, p2 beurt-uitleg + tijdlijn + volledige tabel, p3 zekerheid + prijszekerheid + quotes.
+
+---
+
+
 De tweede en grote chunk: een nieuwe knop "📄 Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's in de Ernes-huisstijl, bedoeld als bijlage bij de Yoobi-offerte. Geen NAW op de bijlage (privacy blijft bij Yoobi); de koppeling loopt via de offerte waaraan de bijlage hangt.
 
 ### Vereiste bestanden in de repo (naast index.html)
