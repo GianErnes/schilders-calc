@@ -1,4 +1,20 @@
-## v3.22.2 — Offerte-bijlage: kleuren en lettertype kloppen nu bij printen
+## v3.22.3 — Offerte-bijlage: logo's ingebed + taalpuntjes
+Twee verbeteringen na de praktijktest.
+
+### Logo's nu ingebed (base64) — vallen nooit meer weg
+- Beide logo's (`ernes-logo.png` en het Onderhouds garantie+ plan-logo) staan nu als base64 data-URI rechtstreeks in de code, in plaats van als relatief bestandspad.
+- Aanleiding: het Ernes-logo verdween uit de geprinte bijlage omdat het bestand niet in de repo stond. Met inbedden is de bijlage volledig self-contained qua afbeeldingen — er hoeven **geen losse logo-bestanden meer naast index.html** te staan voor de offerte-bijlage.
+- Logo's vooraf geoptimaliseerd (320px breed) zodat de base64 compact blijft; index.html groeit hierdoor ~50kb.
+
+### Taalcorrecties in de vaste teksten
+- **Gedachtestreepjes verwijderd** uit de lopende vaste teksten (§1 en §5): vervangen door punten of komma's waar dat natuurlijker leest. Voorbeeld: "wanneer wat moet — dat doen wij" → "wanneer wat moet. Dat doen wij."
+- **Komma vóór "en" weggehaald** in opsommingen (geen Engelse stijl meer): "voeren het op tijd uit, en garanderen" → "…uit en garanderen"; "aangebracht, en bescherming" → "aangebracht en de bescherming".
+- Bewust ongemoeid gelaten: het jaartal-bereik in de kop ("2025 — 2035") en de bronvermelding bij de citaten ("— klant Ernes Schilders") — dat zijn functionele streepjes, geen gedachtestreepjes.
+- De "voor uw huis"-teksten per beurt blijven vrije invoer; eventuele streepjes daarin typt en bepaalt Gian zelf.
+
+---
+
+
 Fix na praktijktest: de uit de app geprinte PDF miste de visuele elementen die de proef zo mooi maakten (zwarte hero-balk, oranje gevulde tijdlijn-dots, stems, callout-achtergrond) en gebruikte een verkeerd lettertype. Oorzaak lag in het printgedrag van de browser, niet in de opmaak zelf.
 
 ### Wijzigingen
