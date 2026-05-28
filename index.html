@@ -1604,9 +1604,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.22.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.22.2</h2>
       <div class="intro-body">
-        <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.1).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
+        <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.2).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
         <p><strong>🎨 Materiaal + verbruik per calc-regel-stap aanpasbaar (v3.20.0).</strong> Tot vandaag was de materiaal-keuze van een bewerking-stap in een calculatie read-only — om af te wijken van de bibliotheek moest je óf een aparte bewerking aanmaken óf een aparte verfsysteem-variant. Vanaf nu: bij elke stap in elke calc-regel staat een materiaal-dropdown (met dezelfde slimme groep-filter als in de Bewerkingen-tab — gronden filtert grondverf, aflakken filtert dekverf, etc.) plus een verbruik-input direct ernaast. Wissel een ander merk of type voor dit specifieke project — bibliotheek blijft onaangetast, alleen deze calc-regel-stap krijgt de nieuwe waardes. Architecturaal verrassend simpel mogelijk omdat het snapshot-patroon in <code>calc_regel_stappen</code> al jaren elke stap zijn eigen materiaal-velden geeft; we hebben alleen de UI er omheen gebouwd. Geen visuele "aangepast"-badge, geen reset-knop — silent override, jouw calc, jouw beslissing 🎯.</p>
         <p><strong>👀 Scheidingslijntjes Meetstaat-samenvattingen donkerder (v3.19.2).</strong> In de Meetstaat-tab bij "Totalen per calc-regel" en "Project-totaal per regel-type" werden de stippellijntjes tussen rijen met elke calculatie-groei steeds moeilijker te volgen — bij het opzoeken van een totaal raak je het spoor kwijt naar het bijbehorende getal rechts. Vandaag de lijn-grijsheid verdubbeld: kleur is nu een 50/50 mix tussen het bestaande <code>var(--paper-deep)</code> en de tekst-muted-grijs. Subtiel maar zichtbaar genoeg om je oog over de regel te leiden. Toegepast op alle 3 de plekken waar dit dashed-streepje voorkomt 👁️.</p>
@@ -2275,7 +2275,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.22.1';
+const APP_VERSION = 'v3.22.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5679,6 +5679,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
 @page{size:A4;margin:0;}
 .print-only{padding:0 !important;font-family:'Libre Franklin',sans-serif !important;max-width:none !important;}
 .ob,.ob *{font-family:'Libre Franklin',sans-serif;box-sizing:border-box;}
+.ob,.ob *,.ob *::before,.ob *::after{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
 .ob{--ink:#231f20;--paper:#ffffff;--brush:#f1491c;--brush-deep:#c93914;--muted:#8c8479;--line:#e7e2d9;--soft:#fbeee9;--shadow:0 1px 3px rgba(35,31,32,.06);color:var(--ink);font-size:10.5pt;line-height:1.55;}
 .ob .page{width:210mm;height:296mm;padding:13mm 19mm 14mm;position:relative;background:#fff;overflow:hidden;page-break-after:always;}
 .ob .page:last-child{page-break-after:auto;}
@@ -5862,7 +5863,17 @@ function _ohpPrintOfferte() {
   const beurten = (plan.beurten || []).filter(b => b.jaartal >= pp && b.jaartal <= eind);
   if (!beurten.length) { _toast('Voeg eerst minstens \u00e9\u00e9n beurt toe'); return; }
   document.getElementById('printArea').innerHTML = _ohpBuildOfferteHTML(plan, calc);
-  window.print();
+  // Wacht tot Libre Franklin geladen is — anders print de browser met een fallback-font.
+  if (document.fonts && document.fonts.load) {
+    Promise.all([
+      document.fonts.load('400 16px "Libre Franklin"'),
+      document.fonts.load('600 16px "Libre Franklin"'),
+      document.fonts.load('700 16px "Libre Franklin"'),
+      document.fonts.load('900 16px "Libre Franklin"')
+    ]).then(() => window.print()).catch(() => window.print());
+  } else {
+    window.print();
+  }
 }
 
 // ============================================================

@@ -1,4 +1,21 @@
-## v3.22.1 — Offerte-bijlage: robuuste layout voor lange plannen
+## v3.22.2 — Offerte-bijlage: kleuren en lettertype kloppen nu bij printen
+Fix na praktijktest: de uit de app geprinte PDF miste de visuele elementen die de proef zo mooi maakten (zwarte hero-balk, oranje gevulde tijdlijn-dots, stems, callout-achtergrond) en gebruikte een verkeerd lettertype. Oorzaak lag in het printgedrag van de browser, niet in de opmaak zelf.
+
+### Wijzigingen
+**Achtergrondkleuren printen nu mee:**
+- Toegevoegd aan de gescopte bijlage-CSS: `.ob, .ob *, .ob *::before, .ob *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }`.
+- Chrome print standaard géén achtergrondkleuren bij `window.print()` (afhankelijk van de "Achtergrondafbeeldingen"-checkbox). Deze regel forceert ze, zodat de hero-balk, oranje dots, stems en callouts altijd verschijnen — ongeacht de printinstelling van de gebruiker.
+
+**Lettertype geladen vóór printen:**
+- `_ohpPrintOfferte()` wacht nu met `document.fonts.load(...)` op de vier Libre Franklin-gewichten (400/600/700/900) voordat `window.print()` wordt aangeroepen.
+- De app gebruikt zelf Inter; Libre Franklin werd pas opgehaald zodra de bijlage het nodig had. Zonder deze wachtstap printte de browser met een fallback-font omdat het lettertype nog niet binnen was.
+
+### Resultaat
+De uit de app geprinte PDF is nu visueel identiek aan de ontwerp-proef: juiste huisstijl-kleuren, juiste lettertype, dynamische tijdlijn met gevulde knopen en verbindings-stems.
+
+---
+
+
 Fix na de eerste praktijktest met een 10-jaarsplan (2025–2035). Bij veel jaartallen liep de layout vast op twee punten; beide opgelost.
 
 ### Wijzigingen
