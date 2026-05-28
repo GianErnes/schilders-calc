@@ -1,4 +1,34 @@
-## v3.21.0 — Offerte-tekst per beurt (chunk 1 van offerte-bijlage)
+## v3.22.0 — Offerte-bijlage generator (chunk 2 van offerte-bijlage)
+De tweede en grote chunk: een nieuwe knop "📄 Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's in de Ernes-huisstijl, bedoeld als bijlage bij de Yoobi-offerte. Geen NAW op de bijlage (privacy blijft bij Yoobi); de koppeling loopt via de offerte waaraan de bijlage hangt.
+
+### Vereiste bestanden in de repo (naast index.html)
+- `ernes-logo.png` — getrimd Ernes Schilders-logo (wordt apart meegeleverd)
+- `onderhouds-garantie-plus.jpg` — bestond al (gebruikt door de oude print)
+
+Het lettertype **Libre Franklin** wordt via Google Fonts geladen (toegevoegd aan de bestaande font-link).
+
+### Wat de bijlage toont
+- **Pagina 1:** masthead (Ernes-logo + Onderhouds garantie+ plan-logo), §1 "wat het plan inhoudt" met hero (gemiddeld per maand + totaal), 6 voordelen-bullets, §2 "voor uw huis specifiek" met een jaar-blok per beurt gevuld uit `offerteTekst`.
+- **Pagina 2:** §3 uitleg controle-/herschilderbeurt, §4 **dynamische tijdlijn** (gelijkmatig verdeeld over het werkelijke aantal jaren; werkjaren met bedrag + type-label, lege jaren grijs) + jaartabel met totaalregel + prijszekerheid/buiten-plan blokken.
+- **Pagina 3:** §5 zekerheid (garantie wel/niet, Vakwerk Plusgarantie, opzegbaar) + 2 klantquotes.
+
+### Nieuwe functies
+- `_ohpTypeLabel(naam)`: leidt een kort type-label af ("Controlebeurt"/"Herschilderbeurt"/…) uit de beurt-naam voor tijdlijn-card en jaarblok-kop.
+- `_ohpBuildOfferteHTML(plan, calc)`: bouwt de complete bijlage-HTML met ingebedde, gescopte `<style>` (alle CSS onder `.ob` zodat het niet botst met de bestaande print-styling). Hergebruikt de bestaande rekenhelpers (`_ohpBeurtBasisBedrag`, `_ohpIndexFactor`, `_ohpBtwFactor`, `eur`).
+- `_ohpPrintOfferte()`: validatie + `printArea` vullen + `window.print()`. Zelfde Chromium-printengine als de ontwerp-proef, dus identieke output.
+
+### Slimme details
+- **"Let op:"-conventie**: begint een alinea in een beurt-tekst met "Let op:", dan wordt die automatisch als oranje aandachtsblok (callout) gerenderd.
+- **Maandbedrag** volgt de plan-looptijd: `totaalGemiddelde / looptijdJaren / 12`. Bij Penders (looptijd 5) → € 195/maand; pas de looptijd aan om dit te sturen.
+- Vaste pagina-hoogte (296mm, `overflow:hidden`) + `page-break-after` houdt het exact op 3 pagina's.
+
+### Architectuur
+- Geen backend-wijziging in deze chunk (kolom `offerte_tekst` kwam in v3.21.0).
+- De bijlage hergebruikt het bestaande `printArea` + `@media print`-mechanisme; de gescopte `<style>` in de innerHTML overschrijft waar nodig de generieke print-CSS.
+
+---
+
+
 Eerste bouwsteen voor een automatisch gegenereerde, vormgegeven PDF-bijlage bij de Onderhouds garantie+ plan-offerte. Deze chunk legt de datalaag: een vrij tekstveld per beurt waarin Gian per inspectie noteert wat hij aantrof en wat er gebeurt. De generator zelf (de mooie bijlage-PDF) volgt in chunk 2.
 
 ### Vereiste Supabase-migratie (eenmalig, vóór gebruik)
