@@ -1,3 +1,25 @@
+## v3.23.0 — VvE-variant offerte-bijlage · chunk A (datalaag + schakelaar)
+Eerste stap richting een VvE-versie van de offerte-bijlage. Eén generator, twee varianten via een schakelaar; in deze chunk alleen de datalaag en de UI. De bijlage zelf verandert nog niet — dat komt in chunk B (teksten) en C (jaartabel + scope-sectie).
+
+### ⚠️ Eerst in Supabase draaien (vóór testen)
+De opslag verwacht twee nieuwe kolommen op `onderhoudsplannen`. Draai deze migratie eerst, anders mislukt het opslaan van plannen:
+```sql
+alter table onderhoudsplannen
+  add column ontvanger_type text not null default 'particulier',
+  add column scope_omschrijving text;
+```
+
+### Wijzigingen
+- **Schakelaar "Type ontvanger" (Particulier / VvE / beheerder)** toegevoegd aan het parameters-blok van de Onderhoudsplan-tab. Default `particulier` — bestaande plannen blijven dus ongewijzigd.
+- **Scope-veld** ("wat valt onder dit plan") als textarea, dat alleen verschijnt zodra VvE is gekozen. Bedoeld voor de afbakening van onderdelen (gevels, kozijnen, galerijhekken, bergingen) die in chunk C als aparte sectie op de bijlage komt.
+- **Datalaag:** `ontvangerType` en `scopeOmschrijving` toegevoegd aan het plan-object en aan de Supabase-mapping (`ontvanger_type`, `scope_omschrijving`). Lezen, opslaan (debounced) en herladen werken net als de overige parameters.
+- Velden zijn alleen bedienbaar als er een bron-calculatie gekozen is, conform de rest van het parameters-blok.
+
+### Nog niet zichtbaar
+De offerte-bijlage (`_ohpBuildOfferteHTML`) gebruikt deze velden nog niet — print je nu een bijlage, dan is die identiek aan v3.22.3, ongeacht het gekozen type. Dat is bewust: eerst de datalaag stabiel, dan de presentatie.
+
+---
+
 ## v3.22.3 — Offerte-bijlage: logo's ingebed + taalpuntjes
 Twee verbeteringen na de praktijktest.
 

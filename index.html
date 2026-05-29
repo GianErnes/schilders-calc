@@ -1604,7 +1604,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.22.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.23.0</h2>
       <div class="intro-body">
         <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.3).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
@@ -1809,6 +1809,16 @@
         <label>BTW (%) <span id="ohpBtwHint" style="font-weight: normal; font-size: 0.75rem; color: var(--muted);"></span>
           <input type="number" id="ohpBtw" min="0" max="50" step="0.1">
         </label>
+        <label>Type ontvanger <span style="font-weight: normal; font-size: 0.75rem; color: var(--muted);">— bepaalt de teksten op de offerte-bijlage</span>
+          <select id="ohpOntvangerType">
+            <option value="particulier">Particulier</option>
+            <option value="vve">VvE / beheerder</option>
+          </select>
+        </label>
+      </div>
+      <div id="ohpScopeWrap" style="margin-top: 1rem; display: none;">
+        <label>Scope — wat valt onder dit plan <span style="font-weight: normal; font-size: 0.75rem; color: var(--muted);">— alleen VvE; verschijnt als aparte sectie op de bijlage</span></label>
+        <textarea id="ohpScope" rows="3" placeholder="Bijv. 'Alle houten kozijnen, draaiende delen en boeidelen aan voor- en achtergevel; houten galerijhekken; bergingsdeuren begane grond. Metselwerk, dakbedekking en kunststof onderdelen vallen buiten dit plan.'" style="width: 100%; font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; resize: vertical;"></textarea>
       </div>
       <div style="margin-top: 1rem;">
         <label>Notities <span style="font-weight: normal; font-size: 0.75rem; color: var(--muted);">— verschijnt op de print onder de vaste uitleg, voor klant-specifieke afspraken</span></label>
@@ -2275,7 +2285,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.22.3';
+const APP_VERSION = 'v3.23.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3443,6 +3453,8 @@ function _mapOhpFromDB(row) {
     indexeringPct: parseFloat(row.indexering_pct) || 0,
     btwPctOverride: row.btw_pct_override != null ? parseFloat(row.btw_pct_override) : null,
     notities:      row.notities || '',
+    ontvangerType: row.ontvanger_type || 'particulier', // v3.23.0 — 'particulier' | 'vve'
+    scopeOmschrijving: row.scope_omschrijving || '',      // v3.23.0 — VvE: wat valt onder het plan
     aangemaakt:    row.aangemaakt || null,
     gewijzigd:     row.gewijzigd  || null,
     beurten:       []
@@ -3456,6 +3468,8 @@ function _mapOhpToDB(p) {
     indexering_pct: p.indexeringPct,
     btw_pct_override: p.btwPctOverride != null ? p.btwPctOverride : null,
     notities:       p.notities || '',
+    ontvanger_type: p.ontvangerType || 'particulier', // v3.23.0
+    scope_omschrijving: p.scopeOmschrijving || '',      // v3.23.0
     gewijzigd:      new Date().toISOString()
   };
 }
@@ -3589,7 +3603,9 @@ async function _ohpSaveParams(params) {
     looptijdJaren: params.looptijdJaren,
     indexeringPct: params.indexeringPct,
     btwPctOverride: params.btwPctOverride,
-    notities:      params.notities || ''
+    notities:      params.notities || '',
+    ontvangerType: params.ontvangerType || 'particulier',
+    scopeOmschrijving: params.scopeOmschrijving || ''
   };
   const saved = await _saveOhpParams(planObj);
   if (saved) _ohpState.plan = saved;
@@ -4268,12 +4284,16 @@ function _ohpReadParamsFromUI() {
   const btwVal = document.getElementById('ohpBtw').value;
   const btwParsed = (btwVal === '' || btwVal == null) ? null : parseFloat(btwVal);
   const notEl = document.getElementById('ohpNotities');
+  const typeEl = document.getElementById('ohpOntvangerType');
+  const scopeEl = document.getElementById('ohpScope');
   return {
     prijspeil:     parseInt(document.getElementById('ohpPrijspeil').value) || null,
     looptijdJaren: parseInt(document.getElementById('ohpLooptijd').value)  || null,
     indexeringPct: parseFloat(document.getElementById('ohpIndex').value)   || 0,
     btwPctOverride: (btwParsed != null && !isNaN(btwParsed)) ? btwParsed : null,
-    notities: notEl ? (notEl.value || '') : ''
+    notities: notEl ? (notEl.value || '') : '',
+    ontvangerType: typeEl ? (typeEl.value || 'particulier') : 'particulier',
+    scopeOmschrijving: scopeEl ? (scopeEl.value || '') : ''
   };
 }
 
@@ -4363,6 +4383,8 @@ function _ohpRenderParams() {
   const elBtw       = document.getElementById('ohpBtw');
   const elBtwHint   = document.getElementById('ohpBtwHint');
   const elNotities  = document.getElementById('ohpNotities');
+  const elType      = document.getElementById('ohpOntvangerType');
+  const elScope     = document.getElementById('ohpScope');
   const bronBtw     = _ohpBronCalcBtw();
   if (p) {
     elPrijspeil.value = p.prijspeil || '';
@@ -4370,12 +4392,16 @@ function _ohpRenderParams() {
     elIndex.value     = (p.indexeringPct != null) ? p.indexeringPct : 6.5;
     elBtw.value       = (p.btwPctOverride != null) ? p.btwPctOverride : bronBtw;
     if (elNotities) elNotities.value = p.notities || '';
+    if (elType) elType.value = p.ontvangerType || 'particulier';
+    if (elScope) elScope.value = p.scopeOmschrijving || '';
   } else {
     elPrijspeil.value = '';
     elLooptijd.value  = '';
     elIndex.value     = 6.5;
     elBtw.value       = bronBtw;
     if (elNotities) elNotities.value = '';
+    if (elType) elType.value = 'particulier';
+    if (elScope) elScope.value = '';
   }
   // Hint: toon altijd wat de bron-calc als BTW heeft, zodat afwijking zichtbaar is.
   if (elBtwHint) {
@@ -4394,6 +4420,17 @@ function _ohpRenderParams() {
   elIndex.disabled     = !hasCalc;
   elBtw.disabled       = !hasCalc;
   if (elNotities) elNotities.disabled = !hasCalc;
+  if (elType) elType.disabled = !hasCalc;
+  if (elScope) elScope.disabled = !hasCalc;
+  _ohpToggleScopeVisibility();
+}
+
+// v3.23.0 — Scope-veld alleen tonen bij VvE-ontvanger.
+function _ohpToggleScopeVisibility() {
+  const elType  = document.getElementById('ohpOntvangerType');
+  const elWrap  = document.getElementById('ohpScopeWrap');
+  if (!elType || !elWrap) return;
+  elWrap.style.display = (elType.value === 'vve') ? '' : 'none';
 }
 
 // Toont/verbergt het plan-blok (beurten + resultaat) op basis van state.
@@ -5362,7 +5399,7 @@ function _ohpBindUIEvents() {
     });
     cb._ohpBound = true;
   });
-  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities'].forEach(id => {
+  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el._ohpBound) {
       el.addEventListener('input', _ohpScheduleSave);
@@ -5370,6 +5407,12 @@ function _ohpBindUIEvents() {
       el._ohpBound = true;
     }
   });
+  // v3.23.0 — Type-wissel toont/verbergt het scope-veld direct (los van de save-debounce).
+  const elType = document.getElementById('ohpOntvangerType');
+  if (elType && !elType._ohpToggleBound) {
+    elType.addEventListener('change', _ohpToggleScopeVisibility);
+    elType._ohpToggleBound = true;
+  }
 }
 // Bind direct (DOM bestaat al wanneer dit script draait).
 _ohpBindUIEvents();
