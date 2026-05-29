@@ -316,6 +316,12 @@
   td input, td select { padding: 0.3rem 0.45rem; font-size: 0.82rem; }
   input[type="number"] { font-variant-numeric: tabular-nums; }
 
+  /* v3.23.1 — Onderhoudsplan parameters: velden onderaan uitlijnen, zodat een
+     label dat over twee regels loopt (bv. "Type ontvanger") de rij niet scheeftrekt. */
+  #ohpParamGrid label { display: flex; flex-direction: column; }
+  #ohpParamGrid label > input,
+  #ohpParamGrid label > select { margin-top: auto; }
+
   /* SYSTEMS GRID */
   .systems-grid {
     display: grid;
@@ -1604,7 +1610,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.23.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.23.2</h2>
       <div class="intro-body">
         <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.3).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
@@ -1796,7 +1802,7 @@
         </div>
         <div id="ohpBronLijst" style="margin-top: 0.5rem; max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px;"></div>
       </div>
-      <div class="form-grid">
+      <div class="form-grid" id="ohpParamGrid">
         <label>Prijspeil calculatie (jaar)
           <input type="number" id="ohpPrijspeil" min="2000" max="2100" step="1" placeholder="bv. 2026">
         </label>
@@ -2285,7 +2291,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.23.1';
+const APP_VERSION = 'v3.23.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)

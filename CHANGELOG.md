@@ -1,3 +1,11 @@
+## v3.23.2 — Uitlijning parameters-blok
+Kleine UI-fix na de praktijktest van chunk A/B.
+
+- Het label "Type ontvanger" loopt door zijn hinttekst over twee regels. In het parameters-grid duwde dat het dropdown-veld lager dan de andere vier velden (Prijspeil, Looptijd, Indexering, BTW), waardoor de rij scheef oogde.
+- Opgelost door de invoervelden in dit grid (`#ohpParamGrid`) onderaan uit te lijnen: labels van verschillende hoogte trekken de velden niet meer scheef. Scoped op alleen het onderhoudsplan-parameters-grid, de overige form-grids in de app blijven ongewijzigd.
+
+---
+
 ## v3.23.1 — VvE-variant offerte-bijlage · chunk B (teksten)
 De generator splitst nu op `ontvangerType`. Bij Particulier blijft de bijlage exact zoals in v3.22.3; bij VvE wisselen de teksten. Eén codebase, twee varianten.
 
