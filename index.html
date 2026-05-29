@@ -1610,7 +1610,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.23.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.23.3</h2>
       <div class="intro-body">
         <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.3).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
@@ -2291,7 +2291,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.23.2';
+const APP_VERSION = 'v3.23.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5633,17 +5633,19 @@ function _ohpBuildOfferteHTML(plan, calc) {
 
   // Cijfers per jaar
   const perJaar = {}; // jaar -> { bedragMee, bedragBuiten, beurten:[] }
-  let totaalGemiddelde = 0, totaalEenmalig = 0, totaalAlles = 0;
+  let totaalGemiddelde = 0, totaalEenmalig = 0, totaalAlles = 0, totaalExcl = 0;
   beurten.forEach(b => {
     const basis = _ohpBeurtBasisBedrag(b);
     const fac = _ohpIndexFactor(b.jaartal, pp, idx);
-    const bedrag = basis * fac * btwF;
+    const bedragExcl = basis * fac;          // v3.23.2 chunk C — excl. btw
+    const bedrag = bedragExcl * btwF;        // incl. btw
     const mee = (b.meeInGemiddelde !== false);
     if (mee) totaalGemiddelde += bedrag; else totaalEenmalig += bedrag;
     totaalAlles += bedrag;
+    totaalExcl += bedragExcl;
     if (!perJaar[b.jaartal]) perJaar[b.jaartal] = { bedragMee: 0, bedragBuiten: 0, beurten: [] };
     if (mee) perJaar[b.jaartal].bedragMee += bedrag; else perJaar[b.jaartal].bedragBuiten += bedrag;
-    perJaar[b.jaartal].beurten.push({ b, bedrag, mee });
+    perJaar[b.jaartal].beurten.push({ b, bedrag, bedragExcl, mee });
   });
   const gemPerJaar = plan.looptijdJaren > 0 ? (totaalGemiddelde / plan.looptijdJaren) : 0;
   const gemPerMaand = gemPerJaar / 12;
@@ -5715,12 +5717,16 @@ function _ohpBuildOfferteHTML(plan, calc) {
   jaren.forEach(j => {
     const entry = perJaar[j];
     if (!entry || (entry.bedragMee <= 0 && entry.bedragBuiten <= 0)) {
-      tabelRijen += `<tr class="empty"><td>${j}</td><td>Geen werkzaamheden</td><td class="amt">–</td></tr>`;
+      tabelRijen += isVve
+        ? `<tr class="empty"><td>${j}</td><td>Geen werkzaamheden</td><td class="amt">–</td><td class="amt">–</td></tr>`
+        : `<tr class="empty"><td>${j}</td><td>Geen werkzaamheden</td><td class="amt">–</td></tr>`;
       return;
     }
     entry.beurten.forEach((eb, k) => {
       const naam = eb.b.naam || _ohpTypeLabel(eb.b.naam);
-      tabelRijen += `<tr><td>${k === 0 ? j : ''}</td><td>${_escapeHtml(naam)}</td><td class="amt">${eur(eb.bedrag)}</td></tr>`;
+      tabelRijen += isVve
+        ? `<tr><td>${k === 0 ? j : ''}</td><td>${_escapeHtml(naam)}</td><td class="amt">${eur(eb.bedragExcl)}</td><td class="amt">${eur(eb.bedrag)}</td></tr>`
+        : `<tr><td>${k === 0 ? j : ''}</td><td>${_escapeHtml(naam)}</td><td class="amt">${eur(eb.bedrag)}</td></tr>`;
     });
   });
 
@@ -5764,6 +5770,14 @@ function _ohpBuildOfferteHTML(plan, calc) {
   ).join('\n        ');
 
   const sec02Title = isVve ? 'Voor uw complex specifiek' : 'Voor uw huis specifiek';
+
+  // Scope-inhoud: alleen VvE én alleen als er tekst is ingevuld. De sectie-wrapper
+  // (met nextSec()) staat in de template zodat het sectienummer in de juiste volgorde valt.
+  const _scopeTxt = (plan.scopeOmschrijving || '').trim();
+  const scopeBody = (isVve && _scopeTxt)
+    ? _scopeTxt.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
+        .map(p => `<p class="lead">${_escapeHtml(p).replace(/\n/g, '<br>')}</p>`).join('')
+    : '';
 
   // MJOP/ALV-notitie: alleen bij VvE, onder de jaartabel.
   const mjopNote = isVve
@@ -5895,6 +5909,11 @@ function _ohpBuildOfferteHTML(plan, calc) {
       <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
     </div>
 
+    ${scopeBody ? `<div class="sec">
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat valt onder dit plan</span></div>
+      ${scopeBody}
+    </div>` : ''}
+
     <div class="sec">
       <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Welke beurten zitten in het plan</span></div>
       <div class="defs">
@@ -5909,10 +5928,13 @@ function _ohpBuildOfferteHTML(plan, calc) {
         <div class="tl-axis"></div>
         ${tlNodes}
       </div></div>
-      <table class="ptable"><thead><tr><th style="width:13%;">Jaar</th><th>Onderhoudsbeurt</th><th style="width:18%;text-align:right;">Bedrag</th></tr></thead><tbody>
+      ${isVve ? `<table class="ptable"><thead><tr><th style="width:12%;">Jaar</th><th>Onderhoudsbeurt</th><th style="width:19%;text-align:right;">Excl. btw</th><th style="width:19%;text-align:right;">Incl. btw</th></tr></thead><tbody>
+        ${tabelRijen}
+        <tr class="total"><td colspan="2">Totale investering ${pp}–${eindJaar}</td><td class="amt">${eur(totaalExcl)}</td><td class="amt">${heroTotaal}</td></tr>
+      </tbody></table>` : `<table class="ptable"><thead><tr><th style="width:13%;">Jaar</th><th>Onderhoudsbeurt</th><th style="width:18%;text-align:right;">Bedrag</th></tr></thead><tbody>
         ${tabelRijen}
         <tr class="total"><td colspan="2">Totale investering ${pp}–${eindJaar} &middot; incl. btw</td><td class="amt">${heroTotaal}</td></tr>
-      </tbody></table>
+      </tbody></table>`}
       ${mjopNote}
     </div>
 

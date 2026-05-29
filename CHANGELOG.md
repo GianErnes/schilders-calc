@@ -1,3 +1,24 @@
+## v3.23.3 — VvE-variant offerte-bijlage · chunk C (jaartabel + scope-sectie)
+Laatste chunk van de VvE-variant. Hiermee is de schakelaar volledig: Particulier en VvE leveren nu elk een complete, passende bijlage.
+
+### Jaartabel met dubbele BTW-kolom (VvE)
+- Bij VvE toont de planningstabel twee bedragkolommen: **Excl. btw** en **Incl. btw**, met een totaalregel onder beide. De beheerder kan zo de excl.-bedragen rechtstreeks in de MJOP zetten en de incl.-bedragen voor de reservering gebruiken.
+- Bij Particulier blijft de tabel ongewijzigd (één kolom, incl. btw).
+- Rekenkern: per beurt wordt nu zowel het excl.- (`basis × indexfactor`) als het incl.-bedrag bijgehouden; de excl.-totaaltelling loopt mee in de lus, dus geen afrondingsdrift t.o.v. de incl.-som.
+
+### Scope-sectie (VvE)
+- Het scope-tekstveld uit chunk A verschijnt nu als eigen sectie **"Wat valt onder dit plan"** op pagina 2, vóór de beurt-uitleg. Bedoeld voor de afbakening: welke gevels, kozijnen, houten delen, galerijhekken en bergingen wel/niet onder het plan vallen.
+- De sectie verschijnt alleen als het veld is ingevuld. Is het leeg, dan wordt de sectie overgeslagen en schuift de nummering vanzelf terug (VvE zonder scope = 01–05, met scope = 01–06).
+- Lege regels in het tekstveld worden alinea's; enkele regelovergangen blijven behouden.
+
+### Getest
+Generator-rooktest met gestubde helpers bevestigt de sectienummering in alle drie de gevallen (Particulier, VvE+scope, VvE zonder scope) en de juiste tabelkolommen, hero-getallen en MJOP-notitie per variant.
+
+### Aandachtspunt layout
+Pagina 2 draagt bij VvE nu scope + beurt-uitleg + planning. De pagina's hebben een vaste A4-hoogte (overschot wordt afgekapt). Houd de scope-tekst daarom beknopt — een paar regels — zeker bij een lange looptijd met veel tabelrijen.
+
+---
+
 ## v3.23.2 — Uitlijning parameters-blok
 Kleine UI-fix na de praktijktest van chunk A/B.
 
