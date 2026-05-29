@@ -1,3 +1,23 @@
+## v3.23.1 — VvE-variant offerte-bijlage · chunk B (teksten)
+De generator splitst nu op `ontvangerType`. Bij Particulier blijft de bijlage exact zoals in v3.22.3; bij VvE wisselen de teksten. Eén codebase, twee varianten.
+
+### Wat wisselt bij VvE
+- **§01 lead:** gericht op het complex en het ontzorgen van het bestuur in plaats van de individuele woningeigenaar.
+- **Hero-getal:** toont **gemiddeld per jaar te reserveren** (sluit aan op het reservefonds) in plaats van een maandbedrag. De totale investering rechts blijft gelijk.
+- **Benefits:** VvE-set — vaste bedragen als MJOP-basis, aansluiting op de reservefonds-begroting, één aanspreekpunt voor bestuur/beheerder, 100% garantie, Vakwerk Plusgarantie met geschillenregeling, bestuur ontzorgd.
+- **§02-kop:** "Voor uw complex specifiek" in plaats van "Voor uw huis specifiek".
+- **MJOP/ALV-notitie:** callout onder de jaartabel — de bedragen kunnen rechtstreeks in de MJOP en ter besluitvorming naar de ALV; cijfers per onderdeel op verzoek.
+- **Quotes:** beheerder/bestuur-gericht. **Let op:** dit is voorlopige voorbeeldtekst — vervang door een echte VvE-referentie zodra je die hebt.
+
+### Techniek
+- **Dynamische sectienummering** via een `nextSec()`-teller in plaats van vaste 01–05. Daardoor schuift de nummering vanzelf op zodra in chunk C de scope-sectie erbij komt (alleen VvE).
+- Alle variant-teksten staan gebundeld bovenaan `_ohpBuildOfferteHTML` (`leadHtml`, `heroInner`, `benefitsHtml`, `sec02Title`, `mjopNote`, `quotesHtml`), zodat de template-body overzichtelijk blijft.
+
+### Nog niet in deze chunk
+De jaartabel toont nog alleen incl. btw (één kolom), en de scope-sectie ontbreekt nog. Dat is chunk C.
+
+---
+
 ## v3.23.0 — VvE-variant offerte-bijlage · chunk A (datalaag + schakelaar)
 Eerste stap richting een VvE-versie van de offerte-bijlage. Eén generator, twee varianten via een schakelaar; in deze chunk alleen de datalaag en de UI. De bijlage zelf verandert nog niet — dat komt in chunk B (teksten) en C (jaartabel + scope-sectie).
 

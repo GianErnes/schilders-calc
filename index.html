@@ -1604,7 +1604,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.23.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.23.1</h2>
       <div class="intro-body">
         <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.3).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
@@ -2285,7 +2285,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.23.0';
+const APP_VERSION = 'v3.23.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5643,7 +5643,9 @@ function _ohpBuildOfferteHTML(plan, calc) {
   const gemPerMaand = gemPerJaar / 12;
 
   // --- §1 hero ---
+  const isVve = (plan.ontvangerType === 'vve'); // v3.23.0 chunk B
   const heroMaand = eur(gemPerMaand);
+  const heroJaar = eur(gemPerJaar);
   const heroTotaal = eur(totaalAlles);
 
   // --- Tijdlijn: alle jaren pp..eindJaar ---
@@ -5715,6 +5717,59 @@ function _ohpBuildOfferteHTML(plan, calc) {
       tabelRijen += `<tr><td>${k === 0 ? j : ''}</td><td>${_escapeHtml(naam)}</td><td class="amt">${eur(eb.bedrag)}</td></tr>`;
     });
   });
+
+  // --- v3.23.0 chunk B: varianten Particulier / VvE ---
+  // Dynamische sectienummering: elke nextSec() geeft het volgende nummer (01, 02, ...).
+  // Zo schuift alles automatisch op als er in VvE-modus een extra sectie bijkomt (chunk C).
+  let _secN = 0;
+  const nextSec = () => String(++_secN).padStart(2, '0');
+
+  const leadHtml = isVve
+    ? `<p class="lead">Wij plannen het schilderonderhoud aan uw complex voor de komende jaren, voeren het op tijd uit en garanderen het resultaat. Het bestuur hoeft de planning niet zelf te bewaken. Dat doen wij.</p>
+      <p class="lead">Door tijdig onderhoud voorkomt u groot herstel later. Dat houdt het complex in goede staat en is op lange termijn voordeliger voor de vereniging.</p>`
+    : `<p class="lead">Wij plannen het schilderonderhoud aan uw woning voor de komende jaren, voeren het op tijd uit en garanderen het resultaat. U hoeft niet meer zelf bij te houden wanneer wat moet. Dat doen wij.</p>
+      <p class="lead">Door tijdig onderhoud voorkomen we groot herstel later. Dat houdt uw woning mooier én is op lange termijn voordeliger.</p>`;
+
+  const heroInner = isVve
+    ? `<div><div class="big">${heroJaar}<span> / jaar</span></div><div class="sub">gemiddeld per jaar te reserveren, inclusief btw</div></div>
+        <div class="right"><b>${heroTotaal}</b>totale investering<br>${pp} – ${eindJaar} &middot; ${plan.looptijdJaren} jaar</div>`
+    : `<div><div class="big">${heroMaand}<span> / maand</span></div><div class="sub">gemiddeld over de looptijd, inclusief btw</div></div>
+        <div class="right"><b>${heroTotaal}</b>totale investering<br>${pp} – ${eindJaar} &middot; ${plan.looptijdJaren} jaar</div>`;
+
+  const _benefits = isVve
+    ? [
+        ['Vaste bedragen', 'tot einde plan — betrouwbare basis voor uw MJOP'],
+        ['Reservefonds', 'de bedragen sluiten direct aan op uw begroting'],
+        ['Eén vast aanspreekpunt', 'voor bestuur en beheerder'],
+        ['100% garantie', 'op het uitgevoerde werk'],
+        ['Vakwerk Plusgarantie-bedrijf', '(OnderhoudNL), met onafhankelijke geschillenregeling'],
+        ['Bestuur ontzorgd', 'wij bewaken de planning en melden tijdig']
+      ]
+    : [
+        ['100% garantie', 'zolang het plan loopt'],
+        ['Vaste bedragen', 'tot einde plan'],
+        ['Opzegbaar', 'op elk moment, om welke reden dan ook'],
+        ['Altijd dezelfde vertrouwde schilders', 'aan huis'],
+        ['Voorwaarden', 'goedgekeurd door Vereniging Eigen Huis &amp; Consumentenbond'],
+        ['Vakwerk Plusgarantie-bedrijf', '']
+      ];
+  const benefitsHtml = _benefits.map(([b, rest]) =>
+    `<div class="benefit"><span class="tick">&#10003;</span><p><b>${b}</b>${rest ? ' ' + rest : ''}</p></div>`
+  ).join('\n        ');
+
+  const sec02Title = isVve ? 'Voor uw complex specifiek' : 'Voor uw huis specifiek';
+
+  // MJOP/ALV-notitie: alleen bij VvE, onder de jaartabel.
+  const mjopNote = isVve
+    ? `<div class="callout" style="margin-top:12px;"><b>Voor uw administratie:</b> deze bedragen kunt u rechtstreeks opnemen in uw MJOP en ter besluitvorming voorleggen aan de ALV. Op verzoek leveren wij de cijfers ook als overzicht per onderdeel.</div>`
+    : '';
+
+  // Quotes — VvE-variant is voorlopige voorbeeldtekst; vervang door een echte referentie.
+  const quotesHtml = isVve
+    ? `<div class="quote"><div class="qm">&ldquo;</div><p>Ernes denkt mee met onze meerjarenplanning. De bedragen staan vast, dus we weten precies wat we moeten reserveren. Het bestuur is volledig ontzorgd.</p><div class="who">— beheerder VvE-complex (klant Ernes Schilders)</div></div>
+        <div class="quote"><div class="qm">&ldquo;</div><p>Afspraken worden stipt nagekomen en de communicatie met het bestuur is helder. Past naadloos in onze MJOP en de uitvoering verloopt zonder verrassingen.</p><div class="who">— bestuurslid VvE (klant Ernes Schilders)</div></div>`
+    : `<div class="quote"><div class="qm">&ldquo;</div><p>Heel fijn bedrijf met zeer kundige, vriendelijke en stipte mensen. Alles wordt heel netjes afgedekt, afgewerkt en opgeruimd. Resultaat is echt heel goed.</p><div class="who">— klant Ernes Schilders</div></div>
+        <div class="quote"><div class="qm">&ldquo;</div><p>Professioneel kwaliteitsvakwerk, afspraken worden stipt nagekomen, garantie wordt daadwerkelijk geleverd. Van harte aanbevolen.</p><div class="who">— klant Ernes Schilders</div></div>`;
 
   // --- Volledige HTML met scoped style ---
   return `
@@ -5810,25 +5865,18 @@ function _ohpBuildOfferteHTML(plan, calc) {
     </div>
 
     <div class="sec">
-      <div class="sec-label"><span class="num">01</span><span class="h">Wat het plan inhoudt</span></div>
-      <p class="lead">Wij plannen het schilderonderhoud aan uw woning voor de komende jaren, voeren het op tijd uit en garanderen het resultaat. U hoeft niet meer zelf bij te houden wanneer wat moet. Dat doen wij.</p>
-      <p class="lead">Door tijdig onderhoud voorkomen we groot herstel later. Dat houdt uw woning mooier én is op lange termijn voordeliger.</p>
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat het plan inhoudt</span></div>
+      ${leadHtml}
       <div class="hero">
-        <div><div class="big">${heroMaand}<span> / maand</span></div><div class="sub">gemiddeld over de looptijd, inclusief btw</div></div>
-        <div class="right"><b>${heroTotaal}</b>totale investering<br>${pp} – ${eindJaar} &middot; ${plan.looptijdJaren} jaar</div>
+        ${heroInner}
       </div>
       <div class="benefits">
-        <div class="benefit"><span class="tick">&#10003;</span><p><b>100% garantie</b> zolang het plan loopt</p></div>
-        <div class="benefit"><span class="tick">&#10003;</span><p><b>Vaste bedragen</b> tot einde plan</p></div>
-        <div class="benefit"><span class="tick">&#10003;</span><p><b>Opzegbaar</b> op elk moment, om welke reden dan ook</p></div>
-        <div class="benefit"><span class="tick">&#10003;</span><p><b>Altijd dezelfde vertrouwde schilders</b> aan huis</p></div>
-        <div class="benefit"><span class="tick">&#10003;</span><p><b>Voorwaarden</b> goedgekeurd door Vereniging Eigen Huis &amp; Consumentenbond</p></div>
-        <div class="benefit"><span class="tick">&#10003;</span><p><b>Vakwerk Plusgarantie-bedrijf</b></p></div>
+        ${benefitsHtml}
       </div>
     </div>
 
     <div class="sec">
-      <div class="sec-label"><span class="num">02</span><span class="h">Voor uw huis specifiek</span></div>
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">${sec02Title}</span></div>
       ${jaarBlokken || '<p class="lead" style="font-style:italic;color:var(--muted);">Nog geen beurt-omschrijvingen ingevuld.</p>'}
     </div>
 
@@ -5842,7 +5890,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
     </div>
 
     <div class="sec">
-      <div class="sec-label"><span class="num">03</span><span class="h">Welke beurten zitten in het plan</span></div>
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Welke beurten zitten in het plan</span></div>
       <div class="defs">
         <div class="def"><div class="dh"><span class="dot"></span>Controlebeurt</div><p>Een tussentijdse inspectie waarbij we beschadigingen en zwakke plekken in de verflaag plaatselijk bijwerken. Zo verlengen we de levensduur van de afwerking en voorkomen we dat kleine gebreken grote problemen worden.</p></div>
         <div class="def"><div class="dh"><span class="dot"></span>Herschilderbeurt</div><p>Een volledige onderhoudsbeurt waarbij we losse verf verwijderen, slechte plekken bijwerken en het geheel opnieuw afschilderen. Wij plannen dit op basis van de gemiddelde levensduur van de verf en kijken vooral naar de zwaarst belaste gevels (zon, regen, wind).</p></div>
@@ -5850,7 +5898,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
     </div>
 
     <div class="sec">
-      <div class="sec-label"><span class="num">04</span><span class="h">De planning</span></div>
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">De planning</span></div>
       <div class="timeline-wrap"><div class="timeline">
         <div class="tl-axis"></div>
         ${tlNodes}
@@ -5859,6 +5907,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
         ${tabelRijen}
         <tr class="total"><td colspan="2">Totale investering ${pp}–${eindJaar} &middot; incl. btw</td><td class="amt">${heroTotaal}</td></tr>
       </tbody></table>
+      ${mjopNote}
     </div>
 
     <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 2/3</div></div>
@@ -5871,7 +5920,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
     </div>
 
     <div class="sec">
-      <div class="sec-label"><span class="num">05</span><span class="h">Uw zekerheid</span></div>
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Uw zekerheid</span></div>
       <div class="zek">
         <div class="item"><div class="zh"><span class="dot"></span>Wat de garantie inhoudt</div><p>Als er na oplevering iets niet goed blijkt met het uitgevoerde werk, herstellen wij dat kosteloos binnen de garantietermijn. Dit geldt voor de juiste keuze van materialen, de manier waarop wij die hebben aangebracht en de bescherming tegen weersinvloeden.</p></div>
         <div class="item"><div class="zh"><span class="dot"></span>Wat valt buiten de garantie</div><p>Scheuren in hout en bouwscheuren in muren komen vanuit de ondergrond, niet vanuit het schilderwerk.</p></div>
@@ -5883,8 +5932,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
         <div class="box"><div class="bh">Wat valt buiten dit plan</div><p>Extra werk voeren wij alleen uit na overleg en schriftelijk akkoord. Zo voorkomen we verrassingen achteraf.</p></div>
       </div>
       <div class="quotes">
-        <div class="quote"><div class="qm">&ldquo;</div><p>Heel fijn bedrijf met zeer kundige, vriendelijke en stipte mensen. Alles wordt heel netjes afgedekt, afgewerkt en opgeruimd. Resultaat is echt heel goed.</p><div class="who">— klant Ernes Schilders</div></div>
-        <div class="quote"><div class="qm">&ldquo;</div><p>Professioneel kwaliteitsvakwerk, afspraken worden stipt nagekomen, garantie wordt daadwerkelijk geleverd. Van harte aanbevolen.</p><div class="who">— klant Ernes Schilders</div></div>
+        ${quotesHtml}
       </div>
     </div>
 
