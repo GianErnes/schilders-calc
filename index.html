@@ -1586,6 +1586,30 @@
     }
     .print-only .summary-grid .label { font-weight: 600; color: #555; }
     .print-only .new-page { page-break-before: always; }
+    /* v3.24.2 — Foto-bijlage: 2x2 raster per pagina, foto volledig zichtbaar (contain). */
+    .print-only .fb-page {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10pt 12pt;
+      page-break-inside: avoid;
+    }
+    .print-only .fb-page:not(:last-child) { page-break-after: always; }
+    .print-only .fb-cell { page-break-inside: avoid; }
+    .print-only .fb-img {
+      width: 100%;
+      height: 6.5cm;
+      background: #f0f0f0;
+      border: 0.5pt solid #ccc;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .print-only .fb-img img { width: 100%; height: 100%; object-fit: contain; }
+    .print-only .fb-cap {
+      font-size: 9pt;
+      color: #333;
+      margin-top: 3pt;
+      word-break: break-word;
+    }
   }
 
   /* AUTH OVERLAY */
@@ -1662,7 +1686,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.24.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.24.2</h2>
       <div class="intro-body">
         <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.3).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
@@ -2343,7 +2367,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.24.1';
+const APP_VERSION = 'v3.24.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -6908,6 +6932,7 @@ async function openArchiveerModal() {
 
   // Check beschikbaarheid van conditionele opties
   const heeftMeetstaat = (data.calc.meetstaat || []).length > 0;
+  const heeftFotos = (data.calc.fotos || []).length > 0;
 
   // Onderhoudsplan: laad uit DB om te checken of er een compleet plan is
   let heeftOhp = false;
@@ -6926,6 +6951,7 @@ async function openArchiveerModal() {
     { type: 'offerte',        label: 'Offerte (Yoobi)',     beschikbaar: true,             toelichting: '' },
     { type: 'werkbon',        label: 'Werkbon',             beschikbaar: true,             toelichting: '' },
     { type: 'onderhoudsplan', label: 'Onderhoudsplan',      beschikbaar: heeftOhp,         toelichting: heeftOhp ? '' : 'geen (compleet) onderhoudsplan voor deze calc' },
+    { type: 'fotobijlage',    label: 'Foto-bijlage als PDF', beschikbaar: heeftFotos,      toelichting: heeftFotos ? '' : 'geen foto\u2019s in deze calc' },
   ];
 
   const cbHtml = opties.map(o => {
@@ -7014,6 +7040,7 @@ function _archiveerVolgende() {
     else if (item.type === 'offerte')        printOfferteYoobi();
     else if (item.type === 'werkbon')        printWerkbon();
     else if (item.type === 'onderhoudsplan') _ohpPrint();
+    else if (item.type === 'fotobijlage')    printFotoBijlage();
     else {
       // Onbekend type — sla over, ga door
       window.removeEventListener('afterprint', handler);
@@ -7071,6 +7098,55 @@ function _setPrintTitle(suffix) {
   window.addEventListener('afterprint', restore);
   // Fallback: na 10 seconden hoe dan ook herstellen
   setTimeout(restore, 10000);
+}
+
+// v3.24.2 — Foto-bijlage als PDF: kop in calc-stijl + 2x2-raster per pagina met bijschriften.
+// Async: wacht op signed links én op het laden van de afbeeldingen vóór window.print(),
+// zodat er geen lege vlakken op papier komen. Onderdeel van de Archiveren-sequentie.
+async function printFotoBijlage() {
+  const c = data.calc;
+  if (!c) return;
+  const fotos = (c.fotos || []);
+  if (!fotos.length) { _toast('Geen foto\u2019s om te printen'); return; }
+  const missing = fotos.filter(f => !f.signedUrl);
+  if (missing.length) await _signFotoUrls(missing);
+  const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+
+  let html = `<div class="header-block">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <div class="brand-logo print"></div>
+      <div>
+        <h1>Foto-bijlage</h1>
+        <div class="meta">${_escapeHtml(c.naam || 'Calculatie')}${c.klant ? ' &middot; ' + _escapeHtml(c.klant) : ''}</div>
+      </div>
+    </div>
+    <div style="text-align:right; font-size:9pt;">
+      <div><strong>${datum}</strong></div>
+      <div>${fotos.length} foto${fotos.length === 1 ? '' : '\u2019s'}</div>
+    </div>
+  </div>`;
+
+  for (let i = 0; i < fotos.length; i += 4) {
+    html += '<div class="fb-page">';
+    fotos.slice(i, i + 4).forEach(f => {
+      html += `<div class="fb-cell">
+        <div class="fb-img">${f.signedUrl ? `<img src="${_escapeHtml(f.signedUrl)}" alt="foto">` : ''}</div>
+        <div class="fb-cap">${_escapeHtml(f.opmerking || '')}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  const area = document.getElementById('printArea');
+  area.innerHTML = html;
+  _setPrintTitle('fotobijlage');
+
+  // Wacht tot alle afbeeldingen geladen zijn (of falen) vóór de print-dialoog.
+  const imgs = Array.from(area.querySelectorAll('img'));
+  await Promise.all(imgs.map(img => img.complete
+    ? Promise.resolve()
+    : new Promise(res => { img.onload = img.onerror = res; })));
+  window.print();
 }
 
 function printCalc() {
