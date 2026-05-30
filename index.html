@@ -1610,7 +1610,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.23.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.24.0</h2>
       <div class="intro-body">
         <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.3).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
@@ -2291,7 +2291,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.23.3';
+const APP_VERSION = 'v3.24.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2933,7 +2933,8 @@ function _newCalcObj(naam = 'Nieuwe calculatie') {
     staart: [],
     meetstaat: [],
     notities: '',
-    todos: []
+    todos: [],
+    fotos: []
   };
 }
 function _ensureActiveCalc() {
@@ -3376,7 +3377,7 @@ function _mapCalcHeaderFromDB(row) {
     aangemaakt:          row.aangemaakt || new Date().toISOString(),
     gewijzigd:           row.gewijzigd  || new Date().toISOString(),
     // body wordt later toegevoegd door _loadCalcBody
-    hoofdgroepen: [], staart: [], meetstaat: [], todos: [],
+    hoofdgroepen: [], staart: [], meetstaat: [], todos: [], fotos: [],
     __loaded: false
   };
 }
@@ -3630,8 +3631,8 @@ async function _fetchCalcHeadersFromDB() {
 }
 async function _loadCalcBody(c) {
   if (c.__loaded) return true;
-  // Parallelle fetches: hg-tree + todos + staart + meetstaat
-  const [hgRes, todoRes, staartRes, msRes] = await Promise.all([
+  // Parallelle fetches: hg-tree + todos + staart + meetstaat + fotos
+  const [hgRes, todoRes, staartRes, msRes, fotoRes] = await Promise.all([
     _sbQuery(
       _sb.from('hoofdgroepen')
         .select('*, onderdelen(*, calc_regels(*, calc_regel_stappen(*)))')
@@ -3641,7 +3642,8 @@ async function _loadCalcBody(c) {
     ),
     _sbQuery(_sb.from('todos').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Taken laden'),
     _sbQuery(_sb.from('staart').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Staart laden'),
-    _sbQuery(_sb.from('meetstaat').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Meetstaat laden')
+    _sbQuery(_sb.from('meetstaat').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Meetstaat laden'),
+    _sbQuery(_sb.from('calculatie_fotos').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Foto\u2019s laden')
   ]);
   if (hgRes.error) return false;
   const hgs = (hgRes.data || []).map(hgRow => {
@@ -3667,6 +3669,7 @@ async function _loadCalcBody(c) {
   c.todos     = (todoRes.data   || []).map(_mapTodoFromDB);
   c.staart    = (staartRes.data || []).map(_mapStaartFromDB);
   c.meetstaat = (msRes.data     || []).map(_mapMeetstaatFromDB);
+  c.fotos     = (fotoRes.data   || []).map(_mapFotoFromDB);
   c.__loaded = true;
   return true;
 }
@@ -3709,6 +3712,9 @@ function _touchCalc(calcId) {
   if (c) c.gewijzigd = nu;
 }
 async function _deleteCalcDB(id) {
+  // Eerst de fotomap in Storage opruimen — de DB-cascade ruimt alleen de rijen op,
+  // niet de bestanden, dus dat doen we hier handmatig zodat er geen wezen achterblijven.
+  await _deleteFotoFolder(id);
   // FK heeft ON DELETE CASCADE — alle subtabellen gaan mee
   const { error } = await _sbQuery(
     _sb.from('calculaties').delete().eq('id', id), 'Calculatie verwijderen'
@@ -3931,6 +3937,124 @@ async function _deleteTodoDB(id) {
     _sb.from('todos').delete().eq('id', id), 'Taak verwijderen'
   );
   return !error;
+}
+
+// ============================================================
+// FOTO'S PER CALC — Storage (bucket 'calculatie-fotos') + tabel 'calculatie_fotos'
+// v3.24.0 — bestanden in Storage, metadata (pad, bijschrift, volgorde) in de tabel.
+// ============================================================
+const FOTO_BUCKET = 'calculatie-fotos';
+
+function _mapFotoFromDB(row) {
+  return {
+    id:          row.id,
+    storagePath: row.storage_path,
+    opmerking:   row.opmerking || '',
+    volgorde:    row.volgorde != null ? row.volgorde : 0,
+    signedUrl:   null   // wordt vlak voor het tonen ingevuld door _signFotoUrls
+  };
+}
+function _mapFotoToDB(f, calcId, idx) {
+  return {
+    calculatie_id: calcId,
+    storage_path:  f.storagePath,
+    opmerking:     f.opmerking || '',
+    volgorde:      idx != null ? idx : (f.volgorde || 0)
+  };
+}
+
+// Verklein een afbeelding client-side: langste zijde max 1600 px, JPEG kwaliteit 0,8.
+// Levert een Blob terug (~250-400 KB), of null bij mislukking.
+async function _resizeImageToBlob(file, maxEdge = 1600, quality = 0.8) {
+  try {
+    const dataUrl = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = () => rej(new Error('lezen mislukt'));
+      r.readAsDataURL(file);
+    });
+    const img = await new Promise((res, rej) => {
+      const im = new Image();
+      im.onload = () => res(im);
+      im.onerror = () => rej(new Error('afbeelding laden mislukt'));
+      im.src = dataUrl;
+    });
+    let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    if (w > maxEdge || h > maxEdge) {
+      if (w >= h) { h = Math.round(h * maxEdge / w); w = maxEdge; }
+      else        { w = Math.round(w * maxEdge / h); h = maxEdge; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    return await new Promise(res => canvas.toBlob(res, 'image/jpeg', quality));
+  } catch (e) {
+    console.warn('[Foto verkleinen] mislukt:', e.message);
+    return null;
+  }
+}
+
+// Upload één bestand: verkleinen -> Storage -> rij in calculatie_fotos. Terug: foto-object of null.
+async function _uploadFoto(file, calcId, idx) {
+  const blob = await _resizeImageToBlob(file);
+  if (!blob) { _toast('Kon de foto niet verkleinen — is het wel een afbeelding?'); return null; }
+  const path = `${calcId}/${uid('f')}.jpg`;
+  const up = await _sbQuery(
+    _sb.storage.from(FOTO_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false }),
+    'Foto uploaden'
+  );
+  if (up.error) return null;
+  const ins = await _sbQuery(
+    _sb.from('calculatie_fotos').insert([_mapFotoToDB({ storagePath: path, opmerking: '' }, calcId, idx)]).select(),
+    'Foto opslaan'
+  );
+  if (ins.error || !ins.data || !ins.data[0]) {
+    // Rij-insert mislukt -> het zojuist geüploade bestand weer weghalen, geen wezen.
+    await _sbQuery(_sb.storage.from(FOTO_BUCKET).remove([path]), 'Foto opruimen');
+    return null;
+  }
+  return _mapFotoFromDB(ins.data[0]);
+}
+
+// Vul voor een lijst foto-objecten in één keer tijdelijke (1 uur) signed links in.
+async function _signFotoUrls(fotos) {
+  const paths = (fotos || []).map(f => f.storagePath).filter(Boolean);
+  if (!paths.length) return;
+  const { data, error } = await _sbQuery(
+    _sb.storage.from(FOTO_BUCKET).createSignedUrls(paths, 3600), 'Fotolinks ophalen'
+  );
+  if (error || !data) return;
+  const byPath = {};
+  data.forEach(d => { if (d && d.path) byPath[d.path] = d.signedUrl; });
+  fotos.forEach(f => { f.signedUrl = byPath[f.storagePath] || null; });
+}
+
+// Bijschrift / volgorde bijwerken — vuren-en-vergeten.
+function _updateFotoDB(f) {
+  _sbQuery(
+    _sb.from('calculatie_fotos').update({
+      opmerking: f.opmerking || '', volgorde: f.volgorde || 0
+    }).eq('id', f.id), 'Foto bijwerken'
+  ).then(() => {});
+}
+
+// Eén foto verwijderen: eerst het bestand uit Storage, dan de rij. Geen wezen.
+async function _deleteFotoDB(f) {
+  if (f.storagePath) {
+    await _sbQuery(_sb.storage.from(FOTO_BUCKET).remove([f.storagePath]), 'Fotobestand verwijderen');
+  }
+  const { error } = await _sbQuery(
+    _sb.from('calculatie_fotos').delete().eq('id', f.id), 'Foto verwijderen'
+  );
+  return !error;
+}
+
+// Hele fotomap van een calculatie opruimen (gebruikt bij het verwijderen van een calc).
+async function _deleteFotoFolder(calcId) {
+  const { data, error } = await _sbQuery(_sb.storage.from(FOTO_BUCKET).list(calcId), 'Fotomap lezen');
+  if (error || !data || !data.length) return;
+  const paths = data.map(o => `${calcId}/${o.name}`);
+  await _sbQuery(_sb.storage.from(FOTO_BUCKET).remove(paths), 'Fotomap opruimen');
 }
 
 // ============================================================

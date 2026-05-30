@@ -1,3 +1,22 @@
+## v3.24.0 — Foto's bij een calculatie · stap 2 (datalaag)
+De onzichtbare onderbouw voor foto's per calculatie. Nog niets te klikken — dat komt in stap 3 (het fotoblok in het Notities & taken-paneel). Deze stap zet alleen de leidingen aan.
+
+### Vereist (al gedaan)
+Tabel `calculatie_fotos` + RLS, en een privé Storage-bucket `calculatie-fotos` met de bijbehorende policies. Bestanden leven in Storage, de metadata (pad, bijschrift, volgorde) in de tabel.
+
+### Wat erbij komt
+- `fotos`-array op elke calculatie, die parallel met de taken/staart/meetstaat wordt meegeladen bij het openen van een calc.
+- **Verkleinen vóór upload:** een canvas-stap brengt elke foto terug naar max 1600 px langste zijde, JPEG kwaliteit 0,8 (~250–400 KB), ongeacht de oorspronkelijke grootte.
+- **Upload:** verkleinen → naar Storage (`{calculatie_id}/{willekeurig}.jpg`) → metadata-rij. Mislukt de rij, dan wordt het zojuist geüploade bestand teruggehaald — geen wezen.
+- **Tonen:** tijdelijke (1 uur) signed links worden in één call voor de hele galerij opgehaald, passend bij de privé-bucket.
+- **Bijschrift & verwijderen** per foto; verwijderen haalt eerst het bestand uit Storage, dan de rij.
+- **Opruimen van wezen:** bij het verwijderen van een hele calculatie wordt eerst de complete fotomap van die calc uit Storage geveegd, daarna pas de calculatie zelf. Netjes, zoals beloofd.
+
+### Nog niet zichtbaar
+De upload-, sign-, bijschrift- en verwijder-functies bestaan al, maar worden pas aangeroepen vanuit de UI in stap 3. Tot dan is er in de app niets veranderd dat je kunt zien of klikken.
+
+---
+
 ## v3.23.3 — VvE-variant offerte-bijlage · chunk C (jaartabel + scope-sectie)
 Laatste chunk van de VvE-variant. Hiermee is de schakelaar volledig: Particulier en VvE leveren nu elk een complete, passende bijlage.
 
