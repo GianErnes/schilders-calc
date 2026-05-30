@@ -1,3 +1,23 @@
+## v3.24.4 — Documenten (PDF) bij een calculatie · fase 3
+Het klusdossier kent nu naast notities, taken en foto's ook **documenten**: losse PDF's die je aan een calculatie hangt — bijvoorbeeld een ingescande opname, een getekend formulier of een bestaand MJOP van een VvE. Hiermee is de fotomodule-reeks (fase 1–3) afgerond.
+
+### Vereist (al gedaan)
+Privé Storage-bucket `calculatie-documenten` + tabel `calculatie_documenten` met RLS en storage-policies.
+
+### Wat je kunt doen
+- In het paneel **"Notities, taken & foto's"** staat onderaan nu een **Documenten**-blok met een **"+ PDF"**-knop. Je kunt één of meerdere PDF's tegelijk kiezen.
+- Elk document staat in de lijst met zijn **bestandsnaam**. Klik erop om het in een **nieuw tabblad** te openen; het ×-knopje verwijdert het (met bevestiging).
+- De kop-samenvatting toont nu ook het aantal documenten, bv. "✎ · 4 foto's · 2 documenten".
+- Bestanden tot 50 MB (grens gratis Supabase-laag); grotere worden netjes geweigerd met een melding.
+- Een geüploade PDF gaat **niet** door de Archiveren-printsequentie — het ís al een PDF, dus je opent/downloadt 'm gewoon.
+
+### Onder de motorkap
+- PDF's worden as-is in Storage bewaard (geen verkleining), metadata (pad, naam, grootte) in de tabel; meegeladen bij het openen van een calc, net als de foto's.
+- Tijdelijke (1 uur) signed link bij openen; om pop-upblokkering te vermijden wordt het tabblad synchroon binnen de klik geopend.
+- Dezelfde nette opruiming: verwijder je een document, dan gaan bestand én rij weg; verwijder je een hele calculatie, dan wordt ook de documentmap (én de fotomap) uit Storage geveegd. Geen wezen.
+
+---
+
 ## v3.24.3 — Foto-bijlage: grotere foto's
 Na de eerste praktijkprint bleef de onderkant van de pagina leeg. De foto's in de bijlage zijn nu flink groter (vakhoogte van 6,5 naar 9 cm), zodat het 2×2-raster de A4 beter vult en details beter zichtbaar zijn. Nog steeds 4 per pagina. Liggende foto's blijven volledig passen (ze worden binnen het vak getoond, niet bijgesneden) en krijgen alleen wat smallere boven/onderranden. De kop op pagina 1 houdt genoeg marge zodat de pagina niet overloopt.
 

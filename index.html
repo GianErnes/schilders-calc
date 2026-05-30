@@ -951,6 +951,36 @@
     box-shadow: 0 8px 40px rgba(0,0,0,0.5);
   }
 
+  /* DOCUMENTEN (v3.24.4) */
+  .doc-blok {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--paper-deep);
+  }
+  .doc-rij {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+  }
+  .doc-ico { flex-shrink: 0; }
+  .doc-naam {
+    flex: 1;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 0.2rem 0.3rem;
+    font-size: 0.85rem;
+    color: var(--blue);
+    cursor: pointer;
+    text-decoration: underline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: auto;
+  }
+  .doc-naam:hover { color: var(--ink); }
+
   /* MEETSTAAT */
   /* Hide number-input spinner buttons (we don't use them and they steal Enter key) */
   table.meetstaat-tbl input[type="number"]::-webkit-outer-spin-button,
@@ -1686,7 +1716,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.24.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.24.4</h2>
       <div class="intro-body">
         <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.3).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
@@ -2367,7 +2397,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.24.3';
+const APP_VERSION = 'v3.24.4';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3010,7 +3040,8 @@ function _newCalcObj(naam = 'Nieuwe calculatie') {
     meetstaat: [],
     notities: '',
     todos: [],
-    fotos: []
+    fotos: [],
+    documenten: []
   };
 }
 function _ensureActiveCalc() {
@@ -3453,7 +3484,7 @@ function _mapCalcHeaderFromDB(row) {
     aangemaakt:          row.aangemaakt || new Date().toISOString(),
     gewijzigd:           row.gewijzigd  || new Date().toISOString(),
     // body wordt later toegevoegd door _loadCalcBody
-    hoofdgroepen: [], staart: [], meetstaat: [], todos: [], fotos: [],
+    hoofdgroepen: [], staart: [], meetstaat: [], todos: [], fotos: [], documenten: [],
     __loaded: false
   };
 }
@@ -3707,8 +3738,8 @@ async function _fetchCalcHeadersFromDB() {
 }
 async function _loadCalcBody(c) {
   if (c.__loaded) return true;
-  // Parallelle fetches: hg-tree + todos + staart + meetstaat + fotos
-  const [hgRes, todoRes, staartRes, msRes, fotoRes] = await Promise.all([
+  // Parallelle fetches: hg-tree + todos + staart + meetstaat + fotos + documenten
+  const [hgRes, todoRes, staartRes, msRes, fotoRes, docRes] = await Promise.all([
     _sbQuery(
       _sb.from('hoofdgroepen')
         .select('*, onderdelen(*, calc_regels(*, calc_regel_stappen(*)))')
@@ -3719,7 +3750,8 @@ async function _loadCalcBody(c) {
     _sbQuery(_sb.from('todos').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Taken laden'),
     _sbQuery(_sb.from('staart').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Staart laden'),
     _sbQuery(_sb.from('meetstaat').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Meetstaat laden'),
-    _sbQuery(_sb.from('calculatie_fotos').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Foto\u2019s laden')
+    _sbQuery(_sb.from('calculatie_fotos').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Foto\u2019s laden'),
+    _sbQuery(_sb.from('calculatie_documenten').select('*').eq('calculatie_id', c.id).order('aangemaakt'), 'Documenten laden')
   ]);
   if (hgRes.error) return false;
   const hgs = (hgRes.data || []).map(hgRow => {
@@ -3746,6 +3778,7 @@ async function _loadCalcBody(c) {
   c.staart    = (staartRes.data || []).map(_mapStaartFromDB);
   c.meetstaat = (msRes.data     || []).map(_mapMeetstaatFromDB);
   c.fotos     = (fotoRes.data   || []).map(_mapFotoFromDB);
+  c.documenten = (docRes.data   || []).map(_mapDocFromDB);
   c.__loaded = true;
   return true;
 }
@@ -3788,9 +3821,10 @@ function _touchCalc(calcId) {
   if (c) c.gewijzigd = nu;
 }
 async function _deleteCalcDB(id) {
-  // Eerst de fotomap in Storage opruimen — de DB-cascade ruimt alleen de rijen op,
+  // Eerst de foto- en documentmappen in Storage opruimen — de DB-cascade ruimt alleen de rijen op,
   // niet de bestanden, dus dat doen we hier handmatig zodat er geen wezen achterblijven.
   await _deleteFotoFolder(id);
+  await _deleteDocFolder(id);
   // FK heeft ON DELETE CASCADE — alle subtabellen gaan mee
   const { error } = await _sbQuery(
     _sb.from('calculaties').delete().eq('id', id), 'Calculatie verwijderen'
@@ -4131,6 +4165,69 @@ async function _deleteFotoFolder(calcId) {
   if (error || !data || !data.length) return;
   const paths = data.map(o => `${calcId}/${o.name}`);
   await _sbQuery(_sb.storage.from(FOTO_BUCKET).remove(paths), 'Fotomap opruimen');
+}
+
+// ============================================================
+// DOCUMENTEN PER CALC — Storage (bucket 'calculatie-documenten') + tabel 'calculatie_documenten'
+// v3.24.4 — losse PDF's (opname, formulier, MJOP) bij een calculatie. Geen verkleining;
+// bestanden worden as-is bewaard, metadata (pad, bestandsnaam, grootte) in de tabel.
+// ============================================================
+const DOC_BUCKET = 'calculatie-documenten';
+const DOC_MAX_BYTES = 50 * 1024 * 1024; // 50 MB — grens van de gratis Supabase-laag
+
+function _mapDocFromDB(row) {
+  return {
+    id:           row.id,
+    storagePath:  row.storage_path,
+    bestandsnaam: row.bestandsnaam || 'document.pdf',
+    grootte:      row.grootte != null ? row.grootte : null
+  };
+}
+function _mapDocToDB(d, calcId) {
+  return {
+    calculatie_id: calcId,
+    storage_path:  d.storagePath,
+    bestandsnaam:  d.bestandsnaam || 'document.pdf',
+    grootte:       d.grootte != null ? d.grootte : null
+  };
+}
+
+// Upload één PDF: naar Storage -> rij in calculatie_documenten. Terug: doc-object of null.
+async function _uploadDoc(file, calcId) {
+  const path = `${calcId}/${uid('d')}.pdf`;
+  const up = await _sbQuery(
+    _sb.storage.from(DOC_BUCKET).upload(path, file, { contentType: 'application/pdf', upsert: false }),
+    'Document uploaden'
+  );
+  if (up.error) return null;
+  const ins = await _sbQuery(
+    _sb.from('calculatie_documenten').insert([_mapDocToDB({ storagePath: path, bestandsnaam: file.name, grootte: file.size }, calcId)]).select(),
+    'Document opslaan'
+  );
+  if (ins.error || !ins.data || !ins.data[0]) {
+    await _sbQuery(_sb.storage.from(DOC_BUCKET).remove([path]), 'Document opruimen');
+    return null;
+  }
+  return _mapDocFromDB(ins.data[0]);
+}
+
+// Eén document verwijderen: eerst het bestand uit Storage, dan de rij. Geen wezen.
+async function _deleteDocDB(d) {
+  if (d.storagePath) {
+    await _sbQuery(_sb.storage.from(DOC_BUCKET).remove([d.storagePath]), 'Documentbestand verwijderen');
+  }
+  const { error } = await _sbQuery(
+    _sb.from('calculatie_documenten').delete().eq('id', d.id), 'Document verwijderen'
+  );
+  return !error;
+}
+
+// Hele documentmap van een calculatie opruimen (gebruikt bij het verwijderen van een calc).
+async function _deleteDocFolder(calcId) {
+  const { data, error } = await _sbQuery(_sb.storage.from(DOC_BUCKET).list(calcId), 'Documentmap lezen');
+  if (error || !data || !data.length) return;
+  const paths = data.map(o => `${calcId}/${o.name}`);
+  await _sbQuery(_sb.storage.from(DOC_BUCKET).remove(paths), 'Documentmap opruimen');
 }
 
 // ============================================================
@@ -8948,6 +9045,7 @@ function msKey(e, rowIdx, fieldIdx) {
 let notitiesCollapsedState = {}; // { calcId: true|false (= user override) }
 let _fotoUploadBusy = false; // v3.24.1 — true tijdens uploaden van foto's
 let _fotoSignBusy = false;   // v3.24.1 — voorkomt herhaald signen tijdens één render-cyclus
+let _docUploadBusy = false;  // v3.24.4 — true tijdens uploaden van documenten
 function _isNotitiesCollapsed() {
   if (!data.calc) return true;
   const override = notitiesCollapsedState[data.calc.id];
@@ -8959,7 +9057,8 @@ function _calcHasNotities() {
   const hasText = (data.calc.notities || '').trim().length > 0;
   const hasTodos = (data.calc.todos || []).length > 0;
   const hasFotos = (data.calc.fotos || []).length > 0;
-  return hasText || hasTodos || hasFotos;
+  const hasDocs = (data.calc.documenten || []).length > 0;
+  return hasText || hasTodos || hasFotos || hasDocs;
 }
 function renderNotitiesPaneel() {
   const c = document.getElementById('notitiesPaneel');
@@ -8968,16 +9067,19 @@ function renderNotitiesPaneel() {
   if (data.calc.notities === undefined) data.calc.notities = '';
 
   if (!data.calc.fotos) data.calc.fotos = [];
+  if (!data.calc.documenten) data.calc.documenten = [];
 
   const hasContent = _calcHasNotities();
   const collapsed = _isNotitiesCollapsed();
   const todoCount = data.calc.todos.length;
   const openTodos = data.calc.todos.filter(t => !t.done).length;
   const fotoCount = data.calc.fotos.length;
+  const docCount = data.calc.documenten.length;
   const sumParts = [];
   if ((data.calc.notities || '').trim()) sumParts.push('✎');
   if (todoCount > 0) sumParts.push(`${openTodos}/${todoCount} taken open`);
   if (fotoCount > 0) sumParts.push(`${fotoCount} foto${fotoCount === 1 ? '' : "'s"}`);
+  if (docCount > 0) sumParts.push(`${docCount} document${docCount === 1 ? '' : 'en'}`);
   const summary = !hasContent
     ? '<span style="color:var(--muted);">geen notities</span>'
     : `<span>${sumParts.join(' · ')}</span>`;
@@ -9005,6 +9107,13 @@ function renderNotitiesPaneel() {
         <input type="text" class="foto-bijschrift" value="${(f.opmerking || '').replace(/"/g, '&quot;')}" placeholder="bijschrift…" onchange="updFotoOpmerking('${f.id}', this.value)">
       </div>
     `).join('');
+    const docsHtml = data.calc.documenten.map(d => `
+      <div class="doc-rij">
+        <span class="doc-ico">📄</span>
+        <button class="doc-naam" onclick="openDoc('${d.id}')" title="Open in nieuw tabblad">${_escapeHtml(d.bestandsnaam)}</button>
+        <button class="btn-icon" onclick="delDoc('${d.id}')" title="Verwijder document">×</button>
+      </div>
+    `).join('');
     html += `
       <div class="notities-body">
         <textarea id="notitiesTextarea" rows="4" placeholder="Wensen klant, aandachtspunten, observaties..." onchange="updNotities(this.value)">${data.calc.notities || ''}</textarea>
@@ -9018,6 +9127,12 @@ function renderNotitiesPaneel() {
           <div class="foto-raster">${fotosHtml}</div>
           <input type="file" id="fotoInput" accept="image/*" multiple style="display:none" onchange="addFotos(this)">
           <button class="btn-secondary btn btn-sm" onclick="document.getElementById('fotoInput').click()" ${_fotoUploadBusy ? 'disabled' : ''} style="margin-top: 0.4rem;">${_fotoUploadBusy ? 'Bezig met uploaden…' : '+ Foto\u2019s'}</button>
+        </div>
+        <div class="doc-blok">
+          <div class="todo-list-titel">Documenten${docCount ? ` (${docCount})` : ''}</div>
+          <div class="doc-lijst">${docsHtml}</div>
+          <input type="file" id="docInput" accept="application/pdf" multiple style="display:none" onchange="addDocs(this)">
+          <button class="btn-secondary btn btn-sm" onclick="document.getElementById('docInput').click()" ${_docUploadBusy ? 'disabled' : ''} style="margin-top: 0.4rem;">${_docUploadBusy ? 'Bezig met uploaden…' : '+ PDF'}</button>
         </div>
       </div>`;
   }
@@ -9138,6 +9253,49 @@ function openFotoLightbox(id) {
   img.src = f.signedUrl;
   ov.appendChild(img);
   document.body.appendChild(ov);
+}
+
+// ---- Documenten (v3.24.4) ----
+async function addDocs(inputEl) {
+  if (!data.calc) return;
+  const files = Array.from(inputEl.files || []).filter(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+  inputEl.value = '';
+  if (!files.length) { _toast('Alleen PDF-bestanden'); return; }
+  if (!data.calc.documenten) data.calc.documenten = [];
+  _docUploadBusy = true;
+  renderNotitiesPaneel();
+  let gelukt = 0;
+  for (const file of files) {
+    if (file.size > DOC_MAX_BYTES) { _toast(`"${file.name}" is te groot (max 50 MB)`); continue; }
+    const doc = await _uploadDoc(file, data.calc.id);
+    if (doc) { data.calc.documenten.push(doc); gelukt++; }
+  }
+  if (gelukt) _touchCalc(data.calc.id);
+  _docUploadBusy = false;
+  renderNotitiesPaneel();
+}
+async function openDoc(id) {
+  if (!data.calc || !data.calc.documenten) return;
+  const d = data.calc.documenten.find(x => x.id === id);
+  if (!d) return;
+  // Tabblad synchroon openen binnen de klik (anders blokkeert de pop-upblokkering het na de await).
+  const w = window.open('', '_blank');
+  const { data: signed, error } = await _sbQuery(
+    _sb.storage.from(DOC_BUCKET).createSignedUrl(d.storagePath, 3600), 'Documentlink'
+  );
+  if (error || !signed || !signed.signedUrl) { if (w) w.close(); _toast('Kon document niet openen'); return; }
+  if (w) w.location.href = signed.signedUrl; else window.location.href = signed.signedUrl;
+}
+async function delDoc(id) {
+  if (!data.calc || !data.calc.documenten) return;
+  const d = data.calc.documenten.find(x => x.id === id);
+  if (!d) return;
+  if (!confirm(`"${d.bestandsnaam}" verwijderen?`)) return;
+  const ok = await _deleteDocDB(d);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  data.calc.documenten = data.calc.documenten.filter(x => x.id !== id);
+  _touchCalc(data.calc.id);
+  renderNotitiesPaneel();
 }
 
 // ============================================================
