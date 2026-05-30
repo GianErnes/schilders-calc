@@ -899,6 +899,58 @@
     text-decoration: line-through;
   }
 
+  /* FOTO'S (v3.24.1) */
+  .foto-blok {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--paper-deep);
+  }
+  .foto-raster {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.6rem;
+  }
+  .foto-tegel { display: flex; flex-direction: column; gap: 0.3rem; }
+  .foto-thumb {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--paper-deep);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .foto-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .foto-laden {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+    font-size: 0.72rem; color: var(--muted);
+  }
+  .foto-del {
+    position: absolute; top: 4px; right: 4px;
+    width: 22px; height: 22px; line-height: 20px;
+    border: none; border-radius: 50%;
+    background: rgba(0,0,0,0.55); color: #fff;
+    font-size: 1rem; cursor: pointer; padding: 0;
+  }
+  .foto-del:hover { background: var(--danger, #c0392b); }
+  .foto-bijschrift {
+    width: 100%;
+    padding: 0.25rem 0.4rem;
+    font-size: 0.78rem;
+  }
+  .foto-lightbox {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem; cursor: zoom-out;
+  }
+  .foto-lightbox img {
+    max-width: 100%; max-height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+
   /* MEETSTAAT */
   /* Hide number-input spinner buttons (we don't use them and they steal Enter key) */
   table.meetstaat-tbl input[type="number"]::-webkit-outer-spin-button,
@@ -1610,7 +1662,7 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.24.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.24.1</h2>
       <div class="intro-body">
         <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.3).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
@@ -2291,7 +2343,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.24.0';
+const APP_VERSION = 'v3.24.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -8818,6 +8870,8 @@ function msKey(e, rowIdx, fieldIdx) {
 // ============================================================
 // State per calc-id, zodat keuze niet doorlekt naar andere calcs
 let notitiesCollapsedState = {}; // { calcId: true|false (= user override) }
+let _fotoUploadBusy = false; // v3.24.1 — true tijdens uploaden van foto's
+let _fotoSignBusy = false;   // v3.24.1 — voorkomt herhaald signen tijdens één render-cyclus
 function _isNotitiesCollapsed() {
   if (!data.calc) return true;
   const override = notitiesCollapsedState[data.calc.id];
@@ -8828,7 +8882,8 @@ function _calcHasNotities() {
   if (!data.calc) return false;
   const hasText = (data.calc.notities || '').trim().length > 0;
   const hasTodos = (data.calc.todos || []).length > 0;
-  return hasText || hasTodos;
+  const hasFotos = (data.calc.fotos || []).length > 0;
+  return hasText || hasTodos || hasFotos;
 }
 function renderNotitiesPaneel() {
   const c = document.getElementById('notitiesPaneel');
@@ -8836,17 +8891,24 @@ function renderNotitiesPaneel() {
   if (!data.calc.todos) data.calc.todos = [];
   if (data.calc.notities === undefined) data.calc.notities = '';
 
+  if (!data.calc.fotos) data.calc.fotos = [];
+
   const hasContent = _calcHasNotities();
   const collapsed = _isNotitiesCollapsed();
   const todoCount = data.calc.todos.length;
   const openTodos = data.calc.todos.filter(t => !t.done).length;
+  const fotoCount = data.calc.fotos.length;
+  const sumParts = [];
+  if ((data.calc.notities || '').trim()) sumParts.push('✎');
+  if (todoCount > 0) sumParts.push(`${openTodos}/${todoCount} taken open`);
+  if (fotoCount > 0) sumParts.push(`${fotoCount} foto${fotoCount === 1 ? '' : "'s"}`);
   const summary = !hasContent
     ? '<span style="color:var(--muted);">geen notities</span>'
-    : `<span>${(data.calc.notities || '').trim() ? '✎ ' : ''}${todoCount > 0 ? `${openTodos}/${todoCount} taken open` : ''}</span>`;
+    : `<span>${sumParts.join(' · ')}</span>`;
 
   let html = `<div class="notities-paneel ${collapsed ? 'collapsed' : ''}">
     <div class="notities-header" onclick="toggleNotities()">
-      <span class="notities-title">Notities & taken</span>
+      <span class="notities-title">Notities, taken &amp; foto's</span>
       <span class="notities-summary">${summary}</span>
       <span class="notities-toggle">${collapsed ? '▶' : '▼'}</span>
     </div>`;
@@ -8858,6 +8920,15 @@ function renderNotitiesPaneel() {
         <button class="btn-icon" onclick="delTodo('${t.id}')" title="Verwijder taak">×</button>
       </div>
     `).join('');
+    const fotosHtml = data.calc.fotos.map(f => `
+      <div class="foto-tegel">
+        <div class="foto-thumb" onclick="openFotoLightbox('${f.id}')" title="Klik om te vergroten">
+          ${f.signedUrl ? `<img src="${_escapeHtml(f.signedUrl)}" alt="foto" loading="lazy">` : `<div class="foto-laden">laden…</div>`}
+          <button class="foto-del" onclick="event.stopPropagation(); delFoto('${f.id}')" title="Verwijder foto">×</button>
+        </div>
+        <input type="text" class="foto-bijschrift" value="${(f.opmerking || '').replace(/"/g, '&quot;')}" placeholder="bijschrift…" onchange="updFotoOpmerking('${f.id}', this.value)">
+      </div>
+    `).join('');
     html += `
       <div class="notities-body">
         <textarea id="notitiesTextarea" rows="4" placeholder="Wensen klant, aandachtspunten, observaties..." onchange="updNotities(this.value)">${data.calc.notities || ''}</textarea>
@@ -8866,10 +8937,26 @@ function renderNotitiesPaneel() {
           ${todosHtml}
           <button class="btn-secondary btn btn-sm" onclick="addTodo()" style="margin-top: 0.4rem;">+ Taak</button>
         </div>
+        <div class="foto-blok">
+          <div class="todo-list-titel">Foto's${fotoCount ? ` (${fotoCount})` : ''}</div>
+          <div class="foto-raster">${fotosHtml}</div>
+          <input type="file" id="fotoInput" accept="image/*" multiple style="display:none" onchange="addFotos(this)">
+          <button class="btn-secondary btn btn-sm" onclick="document.getElementById('fotoInput').click()" ${_fotoUploadBusy ? 'disabled' : ''} style="margin-top: 0.4rem;">${_fotoUploadBusy ? 'Bezig met uploaden…' : '+ Foto\u2019s'}</button>
+        </div>
       </div>`;
   }
   html += '</div>';
   c.innerHTML = html;
+
+  // Privé-bucket: foto's zonder link krijgen een tijdelijke (1 uur) signed link, daarna één re-render.
+  if (!collapsed && data.calc.fotos.length) {
+    const teTekenen = data.calc.fotos.filter(f => !f.signedUrl && !f._urlTried);
+    if (teTekenen.length && !_fotoSignBusy) {
+      _fotoSignBusy = true;
+      teTekenen.forEach(f => { f._urlTried = true; });
+      _signFotoUrls(teTekenen).then(() => { _fotoSignBusy = false; renderNotitiesPaneel(); });
+    }
+  }
 }
 function toggleNotities() {
   // Simpel: huidige collapsed-state omdraaien
@@ -8921,6 +9008,60 @@ async function delTodo(id) {
   data.calc.todos = data.calc.todos.filter(x => x.id !== id);
   _touchCalc(data.calc.id);
   renderNotitiesPaneel();
+}
+
+// ---- Foto's (v3.24.1) ----
+async function addFotos(inputEl) {
+  if (!data.calc) return;
+  const files = Array.from(inputEl.files || []).filter(f => f.type && f.type.startsWith('image/'));
+  inputEl.value = ''; // reset zodat dezelfde foto later opnieuw gekozen kan worden
+  if (!files.length) return;
+  if (!data.calc.fotos) data.calc.fotos = [];
+  _fotoUploadBusy = true;
+  renderNotitiesPaneel();
+  let idx = data.calc.fotos.length, gelukt = 0;
+  for (const file of files) {
+    const foto = await _uploadFoto(file, data.calc.id, idx++);
+    if (foto) {
+      await _signFotoUrls([foto]);
+      data.calc.fotos.push(foto);
+      gelukt++;
+    }
+  }
+  if (gelukt) _touchCalc(data.calc.id);
+  _fotoUploadBusy = false;
+  renderNotitiesPaneel();
+}
+async function delFoto(id) {
+  if (!data.calc || !data.calc.fotos) return;
+  const f = data.calc.fotos.find(x => x.id === id);
+  if (!f) return;
+  if (!confirm('Deze foto verwijderen?')) return;
+  const ok = await _deleteFotoDB(f);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  data.calc.fotos = data.calc.fotos.filter(x => x.id !== id);
+  _touchCalc(data.calc.id);
+  renderNotitiesPaneel();
+}
+function updFotoOpmerking(id, value) {
+  if (!data.calc || !data.calc.fotos) return;
+  const f = data.calc.fotos.find(x => x.id === id);
+  if (!f) return;
+  f.opmerking = value;
+  _updateFotoDB(f);
+  _touchCalc(data.calc.id);
+  // geen re-render — invoerveld behoudt focus
+}
+function openFotoLightbox(id) {
+  const f = (data.calc && data.calc.fotos || []).find(x => x.id === id);
+  if (!f || !f.signedUrl) return;
+  const ov = document.createElement('div');
+  ov.className = 'foto-lightbox';
+  ov.onclick = () => ov.remove();
+  const img = document.createElement('img');
+  img.src = f.signedUrl;
+  ov.appendChild(img);
+  document.body.appendChild(ov);
 }
 
 // ============================================================

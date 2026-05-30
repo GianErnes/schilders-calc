@@ -1,3 +1,21 @@
+## v3.24.1 — Foto's bij een calculatie · stap 3 (UI in het klusdossier)
+Nu zichtbaar en bruikbaar. Het "Notities & taken"-paneel heet voortaan **"Notities, taken & foto's"** en is daarmee een compleet klusdossier per calculatie.
+
+### Wat je kunt doen
+- **Foto's toevoegen** met de knop "+ Foto's". Die opent een bestandskiezer waarmee je meerdere foto's tegelijk kiest; op een telefoon biedt dezelfde knop automatisch camera-of-galerij aan. Elke foto wordt vóór upload verkleind, dus ook zware telefoonfoto's gaan vlot.
+- **Galerij** met thumbnails in een raster. Onder elke foto een **bijschrift**-veldje ("voorgevel — kozijn rechtsonder rot").
+- **Vergroten:** klik op een thumbnail voor een schermvullende weergave (handig om op locatie op je telefoon een scheur te beoordelen). Klik ergens om te sluiten.
+- **Verwijderen** met het ×-knopje op de thumbnail (met bevestiging). Haalt het bestand én de regel weg.
+- De **samenvatting** in de kop van het paneel toont nu ook het aantal foto's, bv. "✎ · 2/3 taken open · 4 foto's". Heeft een calculatie foto's, dan klapt het dossier vanzelf open.
+
+### Onder de motorkap
+- Foto's krijgen tijdelijke (1 uur) signed links, in één call voor de hele galerij opgehaald; verloopt een link tijdens een lange sessie, dan wordt hij bij de eerstvolgende weergave vernieuwd.
+- Een uploadteller-knop ("Bezig met uploaden…") voorkomt dubbele acties tijdens het uploaden.
+
+Hiermee is fase 1 compleet. Fase 2 (foto-bijlage printen) en fase 3 (opname-PDF) bouwen later voort op deze galerij.
+
+---
+
 ## v3.24.0 — Foto's bij een calculatie · stap 2 (datalaag)
 De onzichtbare onderbouw voor foto's per calculatie. Nog niets te klikken — dat komt in stap 3 (het fotoblok in het Notities & taken-paneel). Deze stap zet alleen de leidingen aan.
 
