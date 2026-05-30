@@ -1,3 +1,21 @@
+## v3.24.3 — Foto-bijlage: grotere foto's
+Na de eerste praktijkprint bleef de onderkant van de pagina leeg. De foto's in de bijlage zijn nu flink groter (vakhoogte van 6,5 naar 9 cm), zodat het 2×2-raster de A4 beter vult en details beter zichtbaar zijn. Nog steeds 4 per pagina. Liggende foto's blijven volledig passen (ze worden binnen het vak getoond, niet bijgesneden) en krijgen alleen wat smallere boven/onderranden. De kop op pagina 1 houdt genoeg marge zodat de pagina niet overloopt.
+
+---
+
+## v3.24.2 — Foto-bijlage als PDF · fase 2 (in Archiveren)
+De foto's uit het klusdossier kunnen nu als nette PDF-bijlage geprint worden — ondergebracht bij de **Archiveren**-knop, naast Calculatie, Meetstaat, Offerte, Werkbon en Onderhoudsplan. Geen losse knop dus; alle PDF-uitvoer blijft op één plek.
+
+### Wat het doet
+- Nieuwe optie **"Foto-bijlage als PDF"** in de Archiveren-modal. Uitgegrijsd met de melding "geen foto's in deze calc" als er geen foto's zijn, in dezelfde stijl als de Meetstaat- en Onderhoudsplan-opties.
+- Loopt mee in de bestaande archiveer-sequentie: vink je meerdere bijlagen aan, dan komt de foto-bijlage gewoon als één van de print-dialogen voorbij.
+- **Layout:** kop in de stijl van de calculatie-print (Ernes-logo, projectnaam, klant, datum) en daarna **4 foto's per A4 (2×2)** met hun bijschrift eronder. Foto's worden volledig getoond (niet bijgesneden), zodat detail behouden blijft.
+- De signed links en de afbeeldingen worden eerst volledig ingeladen vóór de print-dialoog opent, zodat er geen lege vlakken op papier verschijnen.
+
+Hiermee is fase 2 klaar. Rest nog fase 3 (een opname-PDF opslaan), als je dat later wilt.
+
+---
+
 ## v3.24.1 — Foto's bij een calculatie · stap 3 (UI in het klusdossier)
 Nu zichtbaar en bruikbaar. Het "Notities & taken"-paneel heet voortaan **"Notities, taken & foto's"** en is daarmee een compleet klusdossier per calculatie.
 
