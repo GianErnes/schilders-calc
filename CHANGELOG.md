@@ -1,4 +1,30 @@
-## v3.25.0 — Particulier-bijlage psychologisch omgekeerd
+## v3.25.1 — Bron-calculatie kiezer verbergt zich na keuze
+Zodra je voor een onderhoudsplan een bron-calculatie hebt gekozen, verdwijnt de hele kies-UI (zoekbalk + status-filter-checkboxes + scrollbare lijst met calculaties) uit beeld. In plaats daarvan staat er één compact regeltje met de gekozen bron en een **Wijzig**-knop voor het geval je naar een andere bron wilt switchen. Scheelt visuele ruis tijdens dagelijks gebruik — de hele "riedel" hoort thuis bij het opstarten van een plan, niet bij het bewerken ervan.
+
+### Wijzigingen
+**HTML:**
+- Nieuw element `#ohpBronCompact` boven het bestaande `#ohpBronWrap`-blok, in een lichtgrijs blokje met flex-layout: links de tekst "Bron-calculatie: [naam · klant]", rechts de Wijzig-knop.
+
+**JS state:**
+- Nieuwe boolean `_ohpBronEditing` (default `false`). Hij staat alleen op `true` tussen het moment dat de gebruiker op **Wijzig** klikt en het moment dat een nieuwe bron wordt geselecteerd.
+- Nieuwe functie `_ohpWijzigBron()`: zet de flag op `true` en triggert de render.
+
+**Aangepast — `_ohpRenderHuidigeBron()`:**
+- Werkt nu drie elementen bij: het status-label, het summary-label én de zichtbaarheid van compact-blok versus volledig kies-blok.
+- Bij `!calcId` of `calcId niet gevonden`: compact uit, volledig kies-blok zichtbaar (= nieuw plan, of plan op een verwijderde calc).
+- Bij gekozen bron én `_ohpBronEditing === false`: compact tonen (flex), kies-blok verbergen.
+- Bij gekozen bron én `_ohpBronEditing === true`: compact verbergen, kies-blok zichtbaar (gebruiker is aan het switchen).
+
+**Aangepast — `_ohpSetBronCalc()`:**
+- Zet `_ohpBronEditing = false` aan het begin, zodat na een wisseling automatisch wordt teruggekeerd naar de compacte weergave.
+
+### Niet meegedaan / bewust gelaten
+- De Parameters-`<details>`-summary toont de bron-naam al sinds v3.23.0 in het label "· Bron: [naam]" — die regel blijft ongewijzigd en doet z'n werk bij ingeklapt Parameters-blok.
+- Geen migratie nodig (alleen UI-aanpassing, geen DB-wijzigingen).
+
+---
+
+
 De offerte-bijlage voor particuliere klanten is volledig heringericht: in plaats van "uitleg + cijfers eerst, dan persoonlijke details" begint het document nu met het persoonlijke verhaal van de woning, en pas daarna komt het commerciële verhaal. Voor de VvE-variant is alles ongewijzigd.
 
 ### Nieuwe pagina-volgorde particulier
