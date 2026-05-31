@@ -1,4 +1,28 @@
-## v3.24.4 — Documenten (PDF) bij een calculatie · fase 3
+## v3.24.5 — Beurt-status "reeds uitgevoerd" (datalaag)
+Eerste stap richting de psychologische herinrichting van de particulier-variant van de offerte-bijlage. Deze versie legt alleen de datalaag + UI voor het vinkje; het visuele effect (grijs tonen in tijdlijn/jaarblokken) komt mee in de volgende versie waarin de particulier-bijlage wordt heringericht.
+
+### Vereiste Supabase-migratie (al uitgevoerd)
+```sql
+ALTER TABLE onderhoudsplan_beurten
+  ADD COLUMN IF NOT EXISTS reeds_uitgevoerd BOOLEAN DEFAULT FALSE;
+```
+
+### Wijzigingen
+**Datamodel:**
+- `_mapBeurtFromDB`: leest nieuwe kolom `reeds_uitgevoerd` → JS-veld `reedsUitgevoerd` (boolean, default false).
+- `_mapBeurtToDB`: schrijft `reedsUitgevoerd` → `reeds_uitgevoerd` weg.
+
+**UI — bewerk-modal van een beurt:**
+- Nieuw vinkje tussen het naam/jaar-blok en de modus-radio's: "Deze beurt is reeds uitgevoerd". Lichtgrijs blokje met uitleg eronder, visueel apart van de rekenkundige instellingen zodat het als status-veld opvalt.
+- `_ohpOpenBeurtModal` vult het vinkje; `_ohpMbOpslaan` leest 'm uit en slaat 'm op via de bestaande `_updateBeurt`-flow.
+
+### Architectuur
+- Geen nieuwe tabel of query-functie. Enige backend-wijziging is één kolom met sensible default (FALSE), dus bestaande beurten zijn automatisch "nog niet uitgevoerd".
+- Het veld doet in deze versie nog niets zichtbaars in de bijlage; dat komt in de volgende stap waarin we voor de particulier-variant de hele bijlage psychologisch omkeren (verhaal eerst, pitch tweede) en de Startonderhoudsbeurt anders weergeven afhankelijk van deze vlag.
+
+---
+
+
 Het klusdossier kent nu naast notities, taken en foto's ook **documenten**: losse PDF's die je aan een calculatie hangt — bijvoorbeeld een ingescande opname, een getekend formulier of een bestaand MJOP van een VvE. Hiermee is de fotomodule-reeks (fase 1–3) afgerond.
 
 ### Vereist (al gedaan)
