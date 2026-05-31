@@ -1,4 +1,43 @@
-## v3.24.5 — Beurt-status "reeds uitgevoerd" (datalaag)
+## v3.25.0 — Particulier-bijlage psychologisch omgekeerd
+De offerte-bijlage voor particuliere klanten is volledig heringericht: in plaats van "uitleg + cijfers eerst, dan persoonlijke details" begint het document nu met het persoonlijke verhaal van de woning, en pas daarna komt het commerciële verhaal. Voor de VvE-variant is alles ongewijzigd.
+
+### Nieuwe pagina-volgorde particulier
+**Pagina 1 — het verhaal**
+- Persoonlijke aanhef: *"Hierbij ontvangt u het op maat gemaakte Onderhouds garantie+ plan voor uw woning."*
+- §01 Wat we aantroffen — automatisch gevuld vanuit `calc.notities` (de notitie in de bron-calculatie)
+- §02 Voor uw huis specifiek — de jaar-blokken, met de eerste beurt altijd benoemd als "Startonderhoudsbeurt"
+
+**Pagina 2 — het plan**
+- §03 Wat het plan u biedt — lead-tekst, hero met €/maand en de 6 zekerheden
+- §04 Welke beurten zitten in het plan — controle- en herschilderbeurt-uitleg
+- §05 De planning — alleen de horizontale tijdlijn (geen jaartabel meer)
+
+**Pagina 3 — zekerheid**
+- §06 Uw zekerheid — gelijk aan VvE: garantie-items, prijszekerheid/buiten-plan en quotes
+
+### Belangrijke wijzigingen tegenover de oude particulier-versie
+- **Totaalbedrag uit de hero gehaald.** De €/maand staat nu centraal; het cumulatieve "totale investering" bedrag is voor particulier weggehaald (was psychologisch afschrikkend). Hero strekt zich uit over de volle breedte met €/maand groot en sub-tekst "gemiddeld over X jaar · YYYY–YYYY · inclusief btw".
+- **Jaartabel weggehaald.** De tabel onder de tijdlijn was een derde weergave van dezelfde info (jaartal-rij op tijdlijn + jaar-blokken op p1 + tabel). Voor particulier nu alleen de tijdlijn. Bij VvE blijft de tabel staan (zakelijke context vraagt om expliciete cijfers).
+- **Aanhef-zin als prominente opening** vóór alle secties op pagina 1, in groter formaat met onderlijn.
+- **Calc-notities-sectie** alleen tonen als er notities zijn ingevuld; anders begint het document direct met §01 Voor uw huis specifiek (sectienummering schuift automatisch op via de bestaande `nextSec()`-helper).
+
+### Reeds-uitgevoerd visueel (gebruikt het v3.24.5 vinkje)
+- **Tijdlijn**: kaart, dot, jaartal en verbindingsstem worden in grijze tinten getoond. Na het type-label komt "· reeds uitgevoerd" als gedempt suffix.
+- **Jaar-blokken**: hele blok in grijze tint (linker-rand, dot, kop en tekst). Naast de kop een klein rond "reeds uitgevoerd"-badge in uppercase.
+- De eerste beurt in het plan heet altijd "Startonderhoudsbeurt" — ongeacht status. Een reeds-uitgevoerde startbeurt blijft dus zichtbaar in het plan, maar duidelijk als verleden gemarkeerd.
+
+### Architectuur
+- De template-functie `_ohpBuildOfferteHTML` splitst de body nu in twee varianten via een ternary: één voor particulier (nieuwe omgekeerde volgorde, geen tabel) en één voor VvE (bestaande volgorde, met tabel). CSS, masthead, footer, en alle data-helpers zijn gedeeld.
+- Nieuwe CSS-klassen: `.aanhef`, `.tl-card.done` (+ `.amt`, `.type`, `.stem` varianten), `.tl-dot.done`, `.tl-year.done`, `.yearblock.done` (+ `::before` + `.yhead` + `p` varianten), `.done-tag` (tijdlijn-suffix), `.done-badge` (jaar-blok badge).
+- Aanhef en aangetroffen-content worden vooraf opgebouwd als variabelen (`aanhefHtml`, `aangetroffenHtml`); de ternary zorgt dat ze alleen voor de particulier-variant in de body terechtkomen, zonder dubbele `nextSec()`-side-effects.
+
+### Niet meegedaan / bewust gelaten
+- VvE-variant blijft volledig zoals 'ie was; herinrichting daarvan (indien gewenst, "kritisch kijken naar VvE-document") in een latere ronde.
+- De `calc.notities` voor VvE blijft niet getoond — VvE heeft z'n eigen `plan.scopeOmschrijving`-veld voor "Wat valt onder dit plan" (§03 in VvE-variant). Geen overlap of duplicatie.
+
+---
+
+
 Eerste stap richting de psychologische herinrichting van de particulier-variant van de offerte-bijlage. Deze versie legt alleen de datalaag + UI voor het vinkje; het visuele effect (grijs tonen in tijdlijn/jaarblokken) komt mee in de volgende versie waarin de particulier-bijlage wordt heringericht.
 
 ### Vereiste Supabase-migratie (al uitgevoerd)

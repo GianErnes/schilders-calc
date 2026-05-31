@@ -1716,8 +1716,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.24.5</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.0</h2>
       <div class="intro-body">
+        <p><strong>📐 Particulier-bijlage volledig heringericht — verhaal eerst, pitch tweede (v3.25.0).</strong> De offerte-bijlage voor particuliere klanten is psychologisch omgekeerd: pagina 1 begint met een persoonlijke aanhef, gevolgd door "Wat we aantroffen" (uit de calc-notitie) en "Voor uw huis specifiek" (de jaar-blokken). Pas op pagina 2 komt de pitch: maandbedrag, zekerheden, beurten-uitleg en de horizontale tijdlijn. Het totaalbedrag is bij particulier uit de hero gehaald (€/maand staat centraal), en de jaartabel onder de tijdlijn is weg — die voegde voor particulier niets toe (drie keer dezelfde info). De Startonderhoudsbeurt heet altijd "Startonderhoudsbeurt" in de bijlage, ongeacht z'n echte naam. Reeds-uitgevoerde beurten (v3.24.5-vinkje) worden nu visueel grijs getoond in tijdlijn én jaar-blokken, met een "reeds uitgevoerd"-badge. De VvE-variant blijft ongewijzigd 📄.</p>
         <p><strong>✅ Beurt-status "reeds uitgevoerd" (v3.24.5).</strong> Een nieuwe checkbox in de bewerk-modal van een beurt: "Deze beurt is reeds uitgevoerd". Vinkje aan = de beurt blijft in het plan, maar wordt in de offerte-bijlage straks visueel grijs getoond zodat duidelijk is dat 'm al gehad is. Voorbereiding op de psychologische herinrichting van de particulier-bijlage (komt eraan) waarin we de Startonderhoudsbeurt anders gaan tonen afhankelijk van of die nog moet of al gedaan is. SQL-migratie (kolom <code>reeds_uitgevoerd</code> op <code>onderhoudsplan_beurten</code>) was al uitgevoerd.</p>
         <p><strong>📄 Offerte-bijlage generator — vormgegeven PDF (v3.22.3).</strong> De knop "Offerte-bijlage" in de Onderhoudsplan-tab genereert een volledig vormgegeven PDF van 3 pagina's, in de Ernes-huisstijl, klaar als bijlage bij de Yoobi-offerte. Met een <strong>dynamische tijdlijn die meeschaalt met de looptijd</strong> — de bedrag-kaartjes staan afwisselend boven en onder de lijn zodat ze ook bij een plan van 10+ jaar nooit overlappen. Verder: de "voor uw huis"-teksten per beurt, het maandbedrag, de jaartabel en de vaste verkoopteksten. Geen NAW op de bijlage — die blijft in Yoobi. Print via de knop → in Chrome "Opslaan als PDF". Vereist twee bestanden naast index.html in de repo: <code>ernes-logo.png</code> en <code>onderhouds-garantie-plus.jpg</code>; Libre Franklin komt van Google Fonts 🎨.</p>
         <p><strong>📄 Offerte-tekst per beurt voor de bijlage (v3.21.0).</strong> Eerste stap naar een automatisch gegenereerde, vormgegeven offerte-bijlage voor het Onderhouds garantie+ plan. In de bewerk-modal van elke beurt staat nu een vrij tekstveld "wat troffen we aan / wat gaan we doen". Die tekst hoort bij de beurt en wordt straks per jaar in de PDF-bijlage getoond. Vereist eenmalig een kleine Supabase-migratie (nieuwe kolom <code>offerte_tekst</code> op <code>onderhoudsplan_beurten</code>). De generator zelf (chunk 2) volgt 📐.</p>
@@ -2406,7 +2407,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.24.5';
+const APP_VERSION = 'v3.25.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -5975,6 +5976,11 @@ function _ohpBuildOfferteHTML(plan, calc) {
   const span = (N > 1) ? (100 - 2 * marge) / (N - 1) : 0;
   const posVoor = (i) => (N === 1) ? 50 : (marge + i * span);
 
+  // Startbeurt = de eerste beurt in het plan (chronologisch). Krijgt altijd
+  // het label "Startonderhoudsbeurt", ongeacht z'n echte naam of status.
+  const startBeurtId = beurten.length ? beurten[0].id : null;
+  const _labelVoor = (b) => (b.id === startBeurtId) ? 'Startonderhoudsbeurt' : _ohpTypeLabel(b.naam);
+
   let tlNodes = '';
   let werkIdx = 0;
   jaren.forEach((j, i) => {
@@ -5985,13 +5991,15 @@ function _ohpBuildOfferteHTML(plan, calc) {
       // pak de (eerste) beurt voor label; tel bedragen samen
       const totBedrag = (entry.bedragMee + entry.bedragBuiten);
       const eersteBeurt = entry.beurten[0].b;
-      const typeLabel = _ohpTypeLabel(eersteBeurt.naam);
+      const typeLabel = _labelVoor(eersteBeurt);
       const lvl = (werkIdx % 2 === 0) ? 'hi' : 'lo';
       werkIdx++;
+      const isDone = eersteBeurt.reedsUitgevoerd === true;
+      const doneCls = isDone ? ' done' : '';
       tlNodes += `
-        <div class="tl-card ${lvl}" style="left:${left}%;"><div class="amt">${eur(totBedrag)}</div><div class="type">${_escapeHtml(typeLabel)}</div><div class="stem"></div></div>
-        <div class="tl-node" style="left:${left}%;"><div class="tl-dot"></div></div>
-        <div class="tl-year" style="left:${left}%;">${j}</div>`;
+        <div class="tl-card ${lvl}${doneCls}" style="left:${left}%;"><div class="amt">${eur(totBedrag)}</div><div class="type">${_escapeHtml(typeLabel)}${isDone ? ' <span class="done-tag">· reeds uitgevoerd</span>' : ''}</div><div class="stem"></div></div>
+        <div class="tl-node" style="left:${left}%;"><div class="tl-dot${doneCls}"></div></div>
+        <div class="tl-year${doneCls}" style="left:${left}%;">${j}</div>`;
     } else {
       tlNodes += `
         <div class="tl-node" style="left:${left}%;"><div class="tl-dot empty"></div></div>
@@ -6002,7 +6010,10 @@ function _ohpBuildOfferteHTML(plan, calc) {
   // --- §2 jaar-blokken (voor uw huis specifiek) ---
   let jaarBlokken = '';
   beurten.forEach(b => {
-    const typeLabel = _ohpTypeLabel(b.naam);
+    const typeLabel = _labelVoor(b);
+    const isDone = b.reedsUitgevoerd === true;
+    const doneCls = isDone ? ' done' : '';
+    const doneBadge = isDone ? '<span class="done-badge">reeds uitgevoerd</span>' : '';
     const tekst = (b.offerteTekst || '').trim();
     let body = '';
     if (tekst) {
@@ -6017,8 +6028,8 @@ function _ohpBuildOfferteHTML(plan, calc) {
       }).join('');
     }
     jaarBlokken += `
-      <div class="yearblock">
-        <div class="yhead"><span class="yr">${b.jaartal}</span> &middot; ${_escapeHtml(typeLabel)}</div>
+      <div class="yearblock${doneCls}">
+        <div class="yhead"><span class="yr">${b.jaartal}</span> &middot; ${_escapeHtml(typeLabel)}${doneBadge}</div>
         ${body}
       </div>`;
   });
@@ -6056,8 +6067,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
   const heroInner = isVve
     ? `<div><div class="big">${heroJaar}<span> / jaar</span></div><div class="sub">gemiddeld per jaar te reserveren, inclusief btw</div></div>
         <div class="right"><b>${heroTotaal}</b>totale investering<br>${pp} – ${eindJaar} &middot; ${plan.looptijdJaren} jaar</div>`
-    : `<div><div class="big">${heroMaand}<span> / maand</span></div><div class="sub">gemiddeld over de looptijd, inclusief btw</div></div>
-        <div class="right"><b>${heroTotaal}</b>totale investering<br>${pp} – ${eindJaar} &middot; ${plan.looptijdJaren} jaar</div>`;
+    : `<div><div class="big">${heroMaand}<span> / maand</span></div><div class="sub">gemiddeld over ${plan.looptijdJaren} jaar &middot; ${pp}–${eindJaar} &middot; inclusief btw</div></div>`;
 
   const _benefits = isVve
     ? [
@@ -6102,9 +6112,22 @@ function _ohpBuildOfferteHTML(plan, calc) {
     : `<div class="quote"><div class="qm">&ldquo;</div><p>Heel fijn bedrijf met zeer kundige, vriendelijke en stipte mensen. Alles wordt heel netjes afgedekt, afgewerkt en opgeruimd. Resultaat is echt heel goed.</p><div class="who">— klant Ernes Schilders</div></div>
         <div class="quote"><div class="qm">&ldquo;</div><p>Professioneel kwaliteitsvakwerk, afspraken worden stipt nagekomen, garantie wordt daadwerkelijk geleverd. Van harte aanbevolen.</p><div class="who">— klant Ernes Schilders</div></div>`;
 
+  // Aanhef en "wat we aantroffen" — alleen voor particulier-variant. De aanhef is
+  // vaste tekst; de aangetroffen-tekst komt uit calc.notities.
+  const aanhefHtml = isVve
+    ? ''
+    : `<div class="aanhef"><p>Hierbij ontvangt u het op maat gemaakte Onderhouds garantie+ plan voor uw woning.</p></div>`;
+  const _notitiesTxt = (calc && calc.notities || '').trim();
+  const aangetroffenHtml = (!isVve && _notitiesTxt)
+    ? _notitiesTxt.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
+        .map(p => `<p class="lead">${_escapeHtml(p).replace(/\n/g, '<br>')}</p>`).join('')
+    : '';
+
   // --- Volledige HTML met scoped style ---
-  return `
-<style>
+  // Vanaf v3.25.0: particulier-variant heeft een psychologisch omgekeerde volgorde
+  // (verhaal eerst, plan daarna). VvE-variant behoudt de oorspronkelijke volgorde.
+  // Beide gebruiken dezelfde CSS en helpers; alleen de body-structuur wisselt.
+  const cssHtml = `<style>
 @page{size:A4;margin:0;}
 .print-only{padding:0 !important;font-family:'Libre Franklin',sans-serif !important;max-width:none !important;}
 .ob,.ob *{font-family:'Libre Franklin',sans-serif;box-sizing:border-box;}
@@ -6139,6 +6162,14 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .yearblock .yhead{font-weight:700;font-size:12pt;margin-bottom:2px;}
 .ob .yearblock .yhead .yr{color:var(--brush);}
 .ob .yearblock p{font-size:9.7pt;line-height:1.48;color:#3a352e;max-width:66ch;margin:0 0 4px;}
+.ob .yearblock.done{border-left-color:var(--line);}
+.ob .yearblock.done::before{background:var(--line);}
+.ob .yearblock.done .yhead{color:var(--muted);}
+.ob .yearblock.done .yhead .yr{color:var(--muted);}
+.ob .yearblock.done p{color:var(--muted);}
+.ob .yearblock .done-badge{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:9px;background:var(--line);color:var(--muted);font-size:7.6pt;font-weight:600;letter-spacing:0.4px;text-transform:uppercase;vertical-align:middle;}
+.ob .aanhef{margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line);}
+.ob .aanhef p{font-size:13pt;line-height:1.4;color:var(--ink);font-weight:500;margin:0;max-width:62ch;}
 .ob .callout{background:var(--soft);border-radius:3px;padding:8px 12px;font-size:9pt;margin:6px 0 4px;color:#5a463e;line-height:1.45;}
 .ob .callout b{color:var(--brush-deep);}
 .ob .defs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px;}
@@ -6162,6 +6193,12 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .tl-card .stem{width:1.5px;background:var(--brush);margin:4px auto 0;}
 .ob .tl-card.hi .stem{height:108px;}
 .ob .tl-card.lo .stem{height:52px;}
+.ob .tl-card.done .amt{color:var(--muted);}
+.ob .tl-card.done .type{color:var(--muted);}
+.ob .tl-card.done .stem{background:var(--line);}
+.ob .tl-card.done .done-tag{color:var(--muted);font-weight:500;}
+.ob .tl-dot.done{background:#fff;border-color:var(--muted);box-shadow:0 0 0 2px var(--muted);}
+.ob .tl-year.done{color:var(--muted);}
 .ob table.ptable{width:100%;border-collapse:collapse;margin:0;font-size:10pt;}
 .ob table.ptable th{text-align:left;font-weight:600;font-size:7.5pt;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);padding:0 10px 7px;border:none;border-bottom:1.5px solid var(--ink);background:none;}
 .ob table.ptable td{padding:4.5px 10px;border:none;border-bottom:1px solid var(--line);}
@@ -6185,11 +6222,9 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .foot{position:absolute;left:19mm;right:19mm;bottom:9mm;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:8px;font-size:7.6pt;color:var(--muted);}
 .ob .foot .f-left{display:flex;align-items:center;gap:10px;}
 .ob .foot .f-ernes{height:20px;width:auto;}
-</style>
-
-<div class="ob">
-
-  <div class="page">
+</style>`;
+  const obBody = isVve
+    ? `<div class="page">
     <div class="masthead">
       <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
       <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
@@ -6276,7 +6311,93 @@ function _ohpBuildOfferteHTML(plan, calc) {
     </div>
 
     <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 3/3</div></div>
+  </div>`
+    : `<div class="page">
+    <div class="masthead">
+      <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
+      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
+    </div>
+
+    ${aanhefHtml}
+
+    ${aangetroffenHtml ? `<div class="sec">
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat we aantroffen</span></div>
+      ${aangetroffenHtml}
+    </div>` : ''}
+
+    <div class="sec">
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">${sec02Title}</span></div>
+      ${jaarBlokken || '<p class="lead" style="font-style:italic;color:var(--muted);">Nog geen beurt-omschrijvingen ingevuld.</p>'}
+    </div>
+
+    <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 1/3</div></div>
   </div>
+
+  <div class="page">
+    <div class="masthead">
+      <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
+      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat het plan u biedt</span></div>
+      ${leadHtml}
+      <div class="hero">
+        ${heroInner}
+      </div>
+      <div class="benefits">
+        ${benefitsHtml}
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Welke beurten zitten in het plan</span></div>
+      <div class="defs">
+        <div class="def"><div class="dh"><span class="dot"></span>Controlebeurt</div><p>Een tussentijdse inspectie waarbij we beschadigingen en zwakke plekken in de verflaag plaatselijk bijwerken. Zo verlengen we de levensduur van de afwerking en voorkomen we dat kleine gebreken grote problemen worden.</p></div>
+        <div class="def"><div class="dh"><span class="dot"></span>Herschilderbeurt</div><p>Een volledige onderhoudsbeurt waarbij we losse verf verwijderen, slechte plekken bijwerken en het geheel opnieuw afschilderen. Wij plannen dit op basis van de gemiddelde levensduur van de verf en kijken vooral naar de zwaarst belaste gevels (zon, regen, wind).</p></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">De planning</span></div>
+      <div class="timeline-wrap"><div class="timeline">
+        <div class="tl-axis"></div>
+        ${tlNodes}
+      </div></div>
+    </div>
+
+    <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 2/3</div></div>
+  </div>
+
+  <div class="page">
+    <div class="masthead">
+      <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
+      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Uw zekerheid</span></div>
+      <div class="zek">
+        <div class="item"><div class="zh"><span class="dot"></span>Wat de garantie inhoudt</div><p>Als er na oplevering iets niet goed blijkt met het uitgevoerde werk, herstellen wij dat kosteloos binnen de garantietermijn. Dit geldt voor de juiste keuze van materialen, de manier waarop wij die hebben aangebracht en de bescherming tegen weersinvloeden.</p></div>
+        <div class="item"><div class="zh"><span class="dot"></span>Wat valt buiten de garantie</div><p>Scheuren in hout en bouwscheuren in muren komen vanuit de ondergrond, niet vanuit het schilderwerk.</p></div>
+        <div class="item"><div class="zh"><span class="dot"></span>Vakwerk Plusgarantie-bedrijf</div><p>Wij voeren het kwaliteitskeurmerk Vakwerk Plusgarantie van OnderhoudNL. Bij een eventueel geschil bemiddelt een onafhankelijke geschillencommissie; Stichting AF garandeert de nakoming van de uitspraak.</p></div>
+        <div class="item"><div class="zh"><span class="dot"></span>Altijd opzegbaar</div><p>Wilt u op enig moment stoppen met het plan, dan kan dat, om welke reden dan ook.</p></div>
+      </div>
+      <div class="strip" style="margin-top:18px;">
+        <div class="box"><div class="bh">Prijszekerheid</div><p>De bedragen staan vast tot einde plan. Wij hebben hierin al rekening gehouden met prijsstijgingen, klimaatrisico&rsquo;s en de staat van de ondergrond. Alleen wettelijke btw-aanpassingen worden verrekend.</p></div>
+        <div class="box"><div class="bh">Wat valt buiten dit plan</div><p>Extra werk voeren wij alleen uit na overleg en schriftelijk akkoord. Zo voorkomen we verrassingen achteraf.</p></div>
+      </div>
+      <div class="quotes">
+        ${quotesHtml}
+      </div>
+    </div>
+
+    <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 3/3</div></div>
+  </div>`;
+  return cssHtml + `
+<div class="ob">
+
+${obBody}
 
 </div>`;
 }
