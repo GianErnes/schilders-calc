@@ -1,5 +1,28 @@
-## v3.25.2 — Nieuwe status "Afspraak" voor calculaties
+## v3.25.3 — Nieuwe calculatie start standaard op "Afspraak"
+Aansluiting op v3.25.2: in de praktijk is een nieuwe calculatie bijna altijd een opname-afspraak (klant belt, opname plannen, dan pas inhoudelijk uitwerken). Het opent vanaf nu dus direct in de Afspraak-categorie, scheelt elke keer een klik op de status-dropdown.
+
+### Wijziging
+- Default-template voor `addCalculatie()`: `status: 'afspraak'` (was `'concept'`).
+- Dupliceren (`duplicateCalculatie()`) blijft `status: 'concept'` — een kopie heeft al inhoud, dus dat is geen afspraak meer.
+- Migratie-pad (oude localStorage-data importeren) blijft `status: 'concept'` — bestaande, ingevulde data hoort niet als afspraak.
+
+Eén regel code, één gedragswijziging — past in de bestaande Afspraak-flow zonder nieuwe knoppen of velden.
+
+---
+
+
 Voor opname-afspraken die ingepland zijn bij een klant maar nog geen uitgewerkte calculatie hebben. Workflow: klant belt, je plant opname in, je maakt alvast een calc-record aan met klantnaam (en eventueel datum/notitie), zet 'm op "Afspraak". Na de opname schuif je 'm via de status-dropdown naar "Concept" en werk je uit. Pure UI/sortering — datamodel en alle gegevens blijven onveranderd; alleen een extra waarde voor het bestaande `status`-veld.
+
+### ⚠️ Vereiste Supabase-migratie (correctie achteraf)
+In de oorspronkelijke release van v3.25.2 stond dat geen migratie nodig was. Dat klopte niet — `status` had een CHECK constraint die alleen de oude vijf waarden toeliet. Bij het wisselen van status naar "Afspraak" verscheen: `new row for relation "calculaties" violates check constraint "calculaties_status_check"`. Onderstaande SQL vervangt de constraint zodat 'afspraak' óók is toegestaan:
+
+```sql
+ALTER TABLE calculaties DROP CONSTRAINT IF EXISTS calculaties_status_check;
+ALTER TABLE calculaties ADD CONSTRAINT calculaties_status_check
+  CHECK (status IN ('concept', 'gereed', 'verzonden', 'geaccepteerd', 'verloren', 'afspraak'));
+```
+
+**Les voor Claude (en toekomstige sessies):** ga niet uit van een "vrij tekstveld" wanneer een kolom statussen bevat — altijd het schema verifiëren via `project_knowledge_search` of door de DDL op te vragen voor uitspraken doet over migraties. Eerder in deze sessie schreef ik "geen DB-migratie nodig" zonder de constraint te checken; dat is precies de aanname die fout uitpakt.
 
 ### Wijzigingen
 **Status-set uitgebreid (5 plekken):**
@@ -17,7 +40,7 @@ Voor opname-afspraken die ingepland zijn bij een klant maar nog geen uitgewerkte
 - Nieuwe checkbox "Afspraak" toegevoegd vóór de bestaande "Concept"-checkbox. Default uit; aanvinken laat afspraak-calc's in de lijst verschijnen (voor wie 'm toch ooit als bron wil gebruiken).
 
 ### Niet meegedaan / bewust gelaten
-- Geen DB-migratie nodig — `status` is een bestaande `TEXT`-kolom zonder enum-constraint. De nieuwe waarde wordt gewoon opgeslagen.
+- ~~Geen DB-migratie nodig — `status` is een bestaande `TEXT`-kolom zonder enum-constraint.~~ **Onjuist** — er stond wél een CHECK constraint op `status`; zie de correctie-sectie hierboven voor de noodzakelijke SQL.
 - Geen extra velden bij een afspraak (datum/tijd/adres apart). Bestaande velden volstaan; klanten-naam, notitie en opname-datum-veld (al aanwezig) zijn genoeg.
 - Geen aparte "Nieuwe afspraak"-knop. Je maakt 'm via de gewone "Nieuwe calculatie"-flow en zet 'm via de status-dropdown op Afspraak.
 

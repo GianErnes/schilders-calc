@@ -1716,8 +1716,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.3</h2>
       <div class="intro-body">
+        <p><strong>📅 Nieuwe calculaties starten standaard op "Afspraak" (v3.25.3).</strong> In aansluiting op de Afspraak-categorie uit v3.25.2: klik je nu op "Nieuwe calculatie", dan krijgt 'm direct status <strong>Afspraak</strong> in plaats van Concept. Past bij de workflow waarin een nieuwe calc bijna altijd begint als geplande opname-afspraak — pas na het bezoek schuif je de status naar Concept om uit te werken. Wil je toch direct als Concept beginnen (zeldzaam), dan kies je dat na aanmaak via de status-dropdown. Dupliceren van een bestaande calc blijft wél direct op Concept (de inhoud is dan al ingevuld).</p>
         <p><strong>📅 Nieuwe categorie "Afspraak" voor calculaties (v3.25.2).</strong> Op het dashboard staan calculaties nu ook gegroepeerd onder <strong>Afspraak</strong> — vóór Concept in de volgorde. Bedoeld voor opname-afspraken die ingepland zijn bij een klant maar waar nog geen calculatie voor uitgewerkt is: je maakt alvast een record met klantnaam (en eventueel een datum/notitie), zet 'm op status "Afspraak", en na de opname schuif je 'm via de status-dropdown naar Concept om uit te werken. Een afspraak gedraagt zich verder als een concept — volledig bewerkbaar, niet vergrendeld. In de status-kiezer bij de bron-calculatie voor een onderhoudsplan staat Afspraak default uit (je gebruikt 'm normaal niet als bron). Paarse kleurmarkering 🟣 zodat 'm visueel onderscheidt van de andere statussen.</p>
         <p><strong>🔎 Bron-calculatie kiezer alleen zichtbaar bij nieuw plan (v3.25.1).</strong> Heb je voor een onderhoudsplan eenmaal een bron-calculatie gekozen, dan verdwijnt de hele "Bron-calculatie"-lijst uit beeld (zoekbalk, filters en de rij met calculaties). In plaats daarvan staat er één compact regeltje met de gekozen bron en een kleine <strong>Wijzig</strong>-knop. Wil je voor een tweede onderhoudsplan een andere bron kiezen, klik je op Wijzig en de lijst komt terug. Bij een nieuw plan (nog niets gekozen) zie je de volledige kiezer direct. Scheelt een hoop visuele ruis tijdens dagelijks gebruik 📋.</p>
         <p><strong>📐 Particulier-bijlage volledig heringericht — verhaal eerst, pitch tweede (v3.25.0).</strong> De offerte-bijlage voor particuliere klanten is psychologisch omgekeerd: pagina 1 begint met een persoonlijke aanhef, gevolgd door "Wat we aantroffen" (uit de calc-notitie) en "Voor uw huis specifiek" (de jaar-blokken). Pas op pagina 2 komt de pitch: maandbedrag, zekerheden, beurten-uitleg en de horizontale tijdlijn. Het totaalbedrag is bij particulier uit de hero gehaald (€/maand staat centraal), en de jaartabel onder de tijdlijn is weg — die voegde voor particulier niets toe (drie keer dezelfde info). De Startonderhoudsbeurt heet altijd "Startonderhoudsbeurt" in de bijlage, ongeacht z'n echte naam. Reeds-uitgevoerde beurten (v3.24.5-vinkje) worden nu visueel grijs getoond in tijdlijn én jaar-blokken, met een "reeds uitgevoerd"-badge. De VvE-variant blijft ongewijzigd 📄.</p>
@@ -2414,7 +2415,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.25.2';
+const APP_VERSION = 'v3.25.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3046,7 +3047,7 @@ function _newCalcObj(naam = 'Nieuwe calculatie') {
     schilders: 2,
     uurDag: 7.5,
     volleDagenOverride: null, // null = volg globale instelling, true/false = forceer
-    status: 'concept',
+    status: 'afspraak', // v3.25.3 — workflow start bij opname-afspraak, niet bij uitgewerkt concept
     aangemaakt: new Date().toISOString(),
     gewijzigd: new Date().toISOString(),
     hoofdgroepen: [
