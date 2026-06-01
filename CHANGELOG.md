@@ -1,4 +1,24 @@
-## v3.25.3 — Nieuwe calculatie start standaard op "Afspraak"
+## v3.25.4 — Klant-veld automatisch gevuld vanuit projectnaam
+In de praktijk volgt de projectnaam vrijwel altijd het patroon `"Klantnaam | projectomschrijving"` — bv. *"Mordant | Tuinhuis"*. Het Klant-veld krijgt nu het deel vóór de pipe als auto-fill, zodat je niet elke keer dezelfde klantnaam opnieuw hoeft te typen.
+
+### Logica
+- **Klant leeg** → vullen met het deel vóór `|` (getrimd). Geen pipe in projectnaam? Dan wordt de hele projectnaam de klant.
+- **Klant = vorige auto-waarde** → bijwerken naar nieuwe auto-waarde (typ je projectnaam aan, dan volgt klant).
+- **Klant handmatig ingevuld als iets anders** (bv. "Familie Mordant" ipv "Mordant") → laten staan, geen overschrijving.
+
+Hetzelfde "respect voor handmatige overschrijving"-patroon dat al gebruikt wordt voor opname-datum → deadline auto-fill (sinds v3.16.x). Triggert op `change`-event van het projectnaam-veld (op blur), dus pas zichtbaar zodra je het veld verlaat.
+
+### Wijziging
+- In de globale `change`-event handler (header form binding): vlak na het bepalen van `oldOpname`/`oldDeadline` nu ook `oldNaam` en `oldKlant` vastleggen. Na de hoofdupdate van `data.calc[k]` controleren of `k === 'naam'`, en de auto-fill toepassen indien de voorwaarden kloppen.
+- Helper `_extractKlant(s)` inline gedefinieerd in dezelfde scope: pakt alles vóór de eerste `|` en trimt. Geen pipe? Dan de hele string.
+
+### Niet meegedaan
+- Geen aparte UI-aanwijzing dat het veld auto-gevuld is. Het patroon werkt voor jou onzichtbaar — het is een productivity-tweak, niet een nieuwe feature die uitleg behoeft.
+- Geen retroactieve aanpassing van bestaande calculaties met lege klant-velden. Alleen nieuwe wijzigingen aan projectnaam triggeren de auto-fill.
+
+---
+
+
 Aansluiting op v3.25.2: in de praktijk is een nieuwe calculatie bijna altijd een opname-afspraak (klant belt, opname plannen, dan pas inhoudelijk uitwerken). Het opent vanaf nu dus direct in de Afspraak-categorie, scheelt elke keer een klik op de status-dropdown.
 
 ### Wijziging
