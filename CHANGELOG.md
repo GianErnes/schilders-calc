@@ -1,4 +1,19 @@
-## v3.25.6 — Fix: klant-autofill werkt nu ook bij aanmaken via prompt
+## v3.25.7 — Dashboard: alle status-groepen standaard dichtgeklapt
+Voorheen waren `Afspraak`, `Concept` en `Gereed` standaard open en `Verzonden`/`Geaccepteerd`/`Verloren` standaard dicht. Nu starten alle zes groepen dicht — alleen sectiekoppen tonen titel + aantal + totaal. Rustiger overzicht bij het openen van het dashboard.
+
+### Wijziging
+`_dashCollapsed`-Set bevat nu alle zes statussen ipv alleen de laatste drie:
+```js
+const _dashCollapsed = new Set(['afspraak', 'concept', 'gereed', 'verzonden', 'geaccepteerd', 'verloren']);
+```
+
+### Onveranderd
+- De toggle-state (`toggleDashSection`) blijft per status werken — je kunt elke groep individueel open- of dichtklappen door op de kop te klikken.
+- Geen persistentie van de open/dicht-state: bij elke page-load start je weer met alles dicht. Dat sluit aan bij de intentie "rustig openen" — wil je iets zien, klik je het zelf open.
+
+---
+
+
 De klant-autofill uit v3.25.4 reageerde alleen op het `change`-event van het projectnaam-veld. Dat event vuurt op blur — prima voor wijzigingen achteraf, maar bij "+ Nieuwe calculatie" wordt de naam via een prompt-modal ingevoerd. De naam wordt vervolgens programmatisch in het veld gezet bij het openen van de calc, en programmatische `value`-toewijzingen vuren **geen** change-event. Resultaat: klant bleef leeg ondanks pipe-naam.
 
 ### Wijziging
