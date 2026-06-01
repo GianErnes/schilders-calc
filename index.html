@@ -1716,8 +1716,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.7</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.8</h2>
       <div class="intro-body">
+        <p><strong>🏆 Drie nieuwe succestegels op het dashboard (v3.25.8).</strong> Onder de bestaande tegels (Materialen, Bewerkingen, etc.) staan nu drie extra: <strong>Calculaties</strong> (totaal aantal), <strong>Onderhoudsplannen</strong> (totaal aantal, via een count-query) en <strong>Win-ratio</strong> (geaccepteerd ten opzichte van uitgebracht, als percentage). Concept en Afspraak tellen niet mee bij win-ratio — alleen wat de klant ook echt heeft gezien (verzonden + geaccepteerd + verloren). Heb je nog niets uitgebracht? Dan toont 'm "—". Hover over de tegel voor de exacte aantallen erachter.</p>
         <p><strong>📦 Dashboard: alle status-groepen standaard dichtgeklapt (v3.25.7).</strong> Voorheen waren Afspraak, Concept en Gereed standaard open en Verzonden/Geaccepteerd/Verloren standaard dicht. Nu starten alle zes groepen dicht — alleen de sectiekoppen tonen titel + aantal + totaal. Klik op een kop om uit te klappen. Rustiger overzicht bij het openen van het dashboard.</p>
         <p><strong>🔧 Fix: klant-autofill werkt nu ook bij aanmaken via prompt (v3.25.6).</strong> In v3.25.4 had ik de auto-fill alleen gebonden aan het 'change'-event van het projectnaam-veld — dat vuurt pas als je in dat veld typt en het verlaat. Bij "+ Nieuwe calculatie" wordt de naam echter via een prompt-dialoog ingevoerd, en daarna programmatisch in het veld gezet — geen change-event. Nu wordt de klant direct in `newCalc()` afgeleid uit de prompt-naam (deel vóór '|'). De blur-handler blijft werken voor latere wijzigingen aan het veld zelf.</p>
         <p><strong>🔧 Fix: nieuwe calculatie start nu écht op "Afspraak" (v3.25.5).</strong> In v3.25.3 was de wijziging gedaan in een functie die nergens werd aangeroepen (`_newCalcObj`), waardoor het gedrag in de praktijk niet veranderde. Nu wordt `status: 'afspraak'` expliciet meegegeven aan de echte insert-flow (`newCalc → _insertCalcDB`), zodat 'm direct in de Afspraak-categorie verschijnt. Sorry voor de omweg.</p>
@@ -1758,6 +1759,11 @@
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Verfsystemen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statSys">—</div></div>
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Ondergronden</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statOnd">—</div></div>
       <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Uurloon</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statTar">—</div></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+      <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Calculaties</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statCalc">—</div></div>
+      <div class="settings-section" style="text-align: center;"><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Onderhoudsplannen</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statPlannen">—</div></div>
+      <div class="settings-section" style="text-align: center;" title="Geaccepteerde offertes ten opzichte van het totaal uitgebrachte offertes (verzonden + geaccepteerd + verloren)."><div class="mono" style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);">Win-ratio</div><div style="font-size: 2.2rem; font-weight: 700; color: var(--accent);" id="statWin">—</div></div>
     </div>
     <div class="settings-section">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -2419,7 +2425,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.25.7';
+const APP_VERSION = 'v3.25.8';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -11745,6 +11751,28 @@ function renderDashboard() {
   document.getElementById('statSys').textContent = data.systemen.length;
   document.getElementById('statOnd').textContent = data.ondergronden.length;
   document.getElementById('statTar').textContent = '€' + fmt0(data.settings.uurloon);
+  // v3.25.8 — Succestegels: calculaties totaal, plannen totaal, win-ratio.
+  document.getElementById('statCalc').textContent = data.calculaties.length;
+  const _winEl = document.getElementById('statWin');
+  const _uitgebracht = data.calculaties.filter(c => ['verzonden','geaccepteerd','verloren'].includes(c.status));
+  const _gewonnen = data.calculaties.filter(c => c.status === 'geaccepteerd');
+  if (_uitgebracht.length === 0) {
+    _winEl.textContent = '—';
+    _winEl.title = 'Nog geen offerte uitgebracht — zodra je een calculatie op "verzonden" zet wordt deze tegel actief.';
+  } else {
+    const _pct = Math.round(_gewonnen.length / _uitgebracht.length * 100);
+    _winEl.textContent = _pct + '%';
+    _winEl.title = `${_gewonnen.length} gewonnen van ${_uitgebracht.length} uitgebrachte offerte${_uitgebracht.length===1?'':'s'} (concept en afspraak tellen niet mee).`;
+  }
+  // Plannen-aantal via count-query op de plannen-tabel (geen lokale state in data.*).
+  const _planEl = document.getElementById('statPlannen');
+  if (typeof _sb !== 'undefined' && _sb && _sb.from) {
+    _sb.from('onderhoudsplannen').select('*', { count: 'exact', head: true }).then(({ count, error }) => {
+      _planEl.textContent = (error || count == null) ? '—' : String(count);
+    }).catch(() => { _planEl.textContent = '—'; });
+  } else {
+    _planEl.textContent = '—';
+  }
   renderCalculatiesArchief();
   renderVersieGeschiedenis();  // v3.18.0
 }

@@ -1,4 +1,28 @@
-## v3.25.7 — Dashboard: alle status-groepen standaard dichtgeklapt
+## v3.25.8 — Drie succestegels op het dashboard
+Onder de bestaande "bibliotheek"-tegels (Materialen / Bewerkingen / Verfsystemen / Ondergronden / Uurloon) staat nu een tweede tegel-rij met cijfers over de productie en het resultaat van het bedrijf: aantal calculaties, aantal onderhoudsplannen en de win-ratio. Visueel gelijk aan de andere tegels — dezelfde grid, dezelfde stijl, dezelfde accent-kleur — maar in een aparte grid eronder zodat ze duidelijk een eigen groep vormen.
+
+### Drie tegels
+
+**Calculaties** — `data.calculaties.length`. Alle statussen samen, inclusief afspraken en concepten. Geeft het totale werk-volume.
+
+**Onderhoudsplannen** — via een `count: 'exact', head: true`-query op de `onderhoudsplannen`-tabel. Plannen zitten niet in `data.*` (worden lazy geladen per calculatie), dus deze count komt direct uit Supabase. Bij fout of geen data: "—".
+
+**Win-ratio** — `geaccepteerd / (verzonden + geaccepteerd + verloren) × 100%`, afgerond op heel getal.
+- Bewust niet over álle calculaties: een concept of afspraak is nog "in beweging", die meetellen zou de ratio kunstmatig drukken.
+- Bij `uitgebracht === 0` toon "—" (anders deling-door-nul of een misleidende 0%).
+- Hover toont absolute aantallen ("3 gewonnen van 5 uitgebrachte offertes").
+
+### Wijzigingen
+- HTML: tweede grid eronder met drie `settings-section`-divs, ids `statCalc` / `statPlannen` / `statWin`.
+- `renderDashboard()`: drie regels voor calc-count, win-ratio (synchroon uit `data.calculaties`) en plannen-count (async via Supabase count-query, defensief tegen `_sb` undefined).
+
+### Architectuur
+- Geen nieuwe state of cache voor het plannen-aantal — gewoon één lichte count-query per dashboard-render. Goedkoop genoeg.
+- De win-ratio berekening gebruikt `c.status === 'geaccepteerd'` en `['verzonden','geaccepteerd','verloren'].includes(c.status)`. Andere statussen (concept, afspraak) zijn bewust uitgesloten uit zowel teller als noemer.
+
+---
+
+
 Voorheen waren `Afspraak`, `Concept` en `Gereed` standaard open en `Verzonden`/`Geaccepteerd`/`Verloren` standaard dicht. Nu starten alle zes groepen dicht — alleen sectiekoppen tonen titel + aantal + totaal. Rustiger overzicht bij het openen van het dashboard.
 
 ### Wijziging
