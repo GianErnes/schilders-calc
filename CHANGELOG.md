@@ -1,4 +1,26 @@
-## v3.25.5 — Fix: nieuwe calculatie start nu écht op "Afspraak"
+## v3.25.6 — Fix: klant-autofill werkt nu ook bij aanmaken via prompt
+De klant-autofill uit v3.25.4 reageerde alleen op het `change`-event van het projectnaam-veld. Dat event vuurt op blur — prima voor wijzigingen achteraf, maar bij "+ Nieuwe calculatie" wordt de naam via een prompt-modal ingevoerd. De naam wordt vervolgens programmatisch in het veld gezet bij het openen van de calc, en programmatische `value`-toewijzingen vuren **geen** change-event. Resultaat: klant bleef leeg ondanks pipe-naam.
+
+### Wijziging
+In `newCalc()`, na het lezen van de prompt-naam, wordt klant direct afgeleid uit het deel vóór `|` en meegegeven aan `_insertCalcDB`:
+```js
+const _pipeIdx = naam.indexOf('|');
+const klant = _pipeIdx >= 0 ? naam.slice(0, _pipeIdx).trim() : '';
+const fresh = await _insertCalcDB({ naam, status: 'afspraak', klant });
+```
+
+Geen pipe in de prompt-naam → klant leeg (niet de hele naam, want anders krijg je "Calculatie 5" als klant bij de default-prompt-naam).
+
+### Onveranderd
+De blur-handler uit v3.25.4 op het projectnaam-veld blijft werken voor latere wijzigingen — typ je in het veld iets aan, dan past klant zich automatisch aan (met respect voor handmatige overschrijving).
+
+### Les voor mezelf
+- Bij events: bedenk niet alleen *wanneer* maar ook *door wie* het event wordt getriggerd. `value = …` via JS triggert geen change. Voor "altijd reageren op programmatische wijzigingen" moet de logica óók in de programmatische code zelf staan — niet alleen in event-handlers.
+- Twee complementaire paden: blur-handler vangt typewijzigingen op, expliciete code in `newCalc()` vangt prompt-aanmaak op.
+
+---
+
+
 In v3.25.3 was de wijziging gedaan in `_newCalcObj()` — die functie blijkt dode code (nergens aangeroepen). Het gedrag in de praktijk bleef daardoor onveranderd: nieuwe calculaties startten nog steeds op `concept` omdat de echte insert-flow (`newCalc → _insertCalcDB → _mapCalcHeaderToDB`) op de fallback `c.status || 'concept'` viel.
 
 ### Wijziging

@@ -1716,8 +1716,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.5</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.6</h2>
       <div class="intro-body">
+        <p><strong>🔧 Fix: klant-autofill werkt nu ook bij aanmaken via prompt (v3.25.6).</strong> In v3.25.4 had ik de auto-fill alleen gebonden aan het 'change'-event van het projectnaam-veld — dat vuurt pas als je in dat veld typt en het verlaat. Bij "+ Nieuwe calculatie" wordt de naam echter via een prompt-dialoog ingevoerd, en daarna programmatisch in het veld gezet — geen change-event. Nu wordt de klant direct in `newCalc()` afgeleid uit de prompt-naam (deel vóór '|'). De blur-handler blijft werken voor latere wijzigingen aan het veld zelf.</p>
         <p><strong>🔧 Fix: nieuwe calculatie start nu écht op "Afspraak" (v3.25.5).</strong> In v3.25.3 was de wijziging gedaan in een functie die nergens werd aangeroepen (`_newCalcObj`), waardoor het gedrag in de praktijk niet veranderde. Nu wordt `status: 'afspraak'` expliciet meegegeven aan de echte insert-flow (`newCalc → _insertCalcDB`), zodat 'm direct in de Afspraak-categorie verschijnt. Sorry voor de omweg.</p>
         <p><strong>✍️ Klant-veld wordt automatisch gevuld vanuit projectnaam (v3.25.4).</strong> Typ je een projectnaam met conventie "Klantnaam | projectomschrijving" — bijv. <em>"Mordant | Tuinhuis"</em> — dan vult het Klant-veld zich automatisch met het deel vóór de pipe ("Mordant"). Eén ding minder om elke keer te typen. Heb je het Klant-veld al handmatig ingevuld met iets anders (bv. "Familie Mordant"), dan respecteert de auto-fill dat en laat het staan. Werkt op basis van het bestaande "blur"-patroon dat ook bij opname-datum → deadline auto-fill gebruikt wordt.</p>
         <p><strong>📅 Nieuwe calculaties starten standaard op "Afspraak" (v3.25.3).</strong> In aansluiting op de Afspraak-categorie uit v3.25.2: klik je nu op "Nieuwe calculatie", dan krijgt 'm direct status <strong>Afspraak</strong> in plaats van Concept. Past bij de workflow waarin een nieuwe calc bijna altijd begint als geplande opname-afspraak — pas na het bezoek schuif je de status naar Concept om uit te werken. Wil je toch direct als Concept beginnen (zeldzaam), dan kies je dat na aanmaak via de status-dropdown. Dupliceren van een bestaande calc blijft wél direct op Concept (de inhoud is dan al ingevuld).</p>
@@ -2417,7 +2418,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.25.5';
+const APP_VERSION = 'v3.25.6';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -10196,7 +10197,15 @@ async function newCalc() {
   // v3.25.5 — nieuwe calc start in status 'afspraak' (voorheen viel hij terug op de
   // 'concept' default in _mapCalcHeaderToDB omdat we geen status meegaven; mijn eerdere
   // v3.25.3-poging in _newCalcObj had geen effect omdat die functie dode code blijkt).
-  const fresh = await _insertCalcDB({ naam, status: 'afspraak' });
+  //
+  // v3.25.6 — Klant alvast afleiden uit de naam (deel vóór '|'). De blur-handler op het
+  // projectnaam-veld werkt onafhankelijk daarvan voor latere wijzigingen, maar voor de
+  // initiële creatie via de naam-prompt vuurt geen 'change'-event, dus daar moeten we
+  // 'm hier direct meegeven. Geen pipe in de naam? Dan klant leeg laten — niet de hele
+  // naam overnemen (anders krijg je "Calculatie 5" als klant bij de default-prompt-naam).
+  const _pipeIdx = naam.indexOf('|');
+  const klant = _pipeIdx >= 0 ? naam.slice(0, _pipeIdx).trim() : '';
+  const fresh = await _insertCalcDB({ naam, status: 'afspraak', klant });
   if (!fresh) return;
   fresh.__loaded = true; // verse calc, niets te laden
   data.calculaties.unshift(fresh); // voorop want gewijzigd-desc
