@@ -1,4 +1,22 @@
-## v3.25.10 — Onderhoudsplannen krijgen eigen status (los van de calc)
+## v3.25.11 — Dashboard-tegels compacter
+De bibliotheek-tegels (Materialen, Bewerkingen, Verfsystemen, Ondergronden, Uurloon) en de succestegels (Calculaties, Onderhoudsplannen, Win-ratio) zijn samengevoegd tot één compactere tegel-grid op het dashboard. Scheelt ongeveer 40% verticale ruimte zonder iets aan informatie te verliezen.
+
+### Wijzigingen
+- Twee aparte grids samengevoegd tot één enkele grid.
+- `grid-template-columns`: `minmax(180px, 1fr)` → `minmax(150px, 1fr)`. Met 8 tegels passen ze nu allemaal op één rij op een breed scherm (~1280px+), of netjes 4+4 op een gewone laptop.
+- `gap`: 1rem → 0.6rem.
+- `margin-bottom`: 1.5rem → 1rem.
+- Per tegel: inline `padding: 0.55rem 0.75rem` toegevoegd om de default `settings-section`-padding te overschrijven.
+- Getal-formaat: 2.2rem → 1.55rem, met `line-height: 1.15` voor compactheid.
+- Label: font-size 0.65rem → 0.6rem; letter-spacing 0.12em → 0.1em.
+
+### Niet meegedaan
+- Geen aparte visuele scheiding tussen "bibliotheek" en "productie" tegels — bij compacte rendering werd dat juist drukker. De groepering blijft impliciet (eerste vijf = wat je hebt, laatste drie = wat je doet).
+- Geen layout-forced 4-kolommen: `auto-fit` blijft, zodat 'm responsief schaalt naar 8 op rij, 4+4, 3+3+2 etc. afhankelijk van de schermbreedte.
+
+---
+
+
 Tot v3.25.9 volgde een onderhoudsplan automatisch de status van zijn bron-calculatie. In de praktijk klopt dat niet: calc-status en plan-status zijn twee verschillende beslissingen van de klant. Een klant kan de schilderopdracht accepteren maar het onderhoudsplan afwijzen — of andersom. Vanaf v3.25.10 heeft elk plan z'n eigen status, onafhankelijk van de calc.
 
 ### ⚠️ Vereiste Supabase-migratie
