@@ -1,4 +1,19 @@
-## v3.25.11 — Dashboard-tegels compacter
+## v3.25.12 — Dashboard-tegels nog veel compacter (mini-strip)
+Tegels uit v3.25.11 waren al kleiner, maar nog steeds prominent. Deze versie maakt er een echte mini-strip van bovenaan het dashboard.
+
+### Wijzigingen
+- Getal-formaat: 1.55rem → 0.95rem (ongeveer halvering)
+- Label-font: 0.6rem → 0.55rem; letter-spacing 0.1em → 0.08em
+- Padding: 0.55rem 0.75rem → 0.3rem 0.55rem
+- `minmax`: 150px → 110px → meer tegels naast elkaar
+- `gap`: 0.6rem → 0.4rem
+- `margin-bottom`: 1rem → 0.8rem
+
+Op een gewone laptop passen alle acht tegels nu in één rij. Op smal scherm wraps het responsief naar 4+4 of 5+3.
+
+---
+
+
 De bibliotheek-tegels (Materialen, Bewerkingen, Verfsystemen, Ondergronden, Uurloon) en de succestegels (Calculaties, Onderhoudsplannen, Win-ratio) zijn samengevoegd tot één compactere tegel-grid op het dashboard. Scheelt ongeveer 40% verticale ruimte zonder iets aan informatie te verliezen.
 
 ### Wijzigingen
