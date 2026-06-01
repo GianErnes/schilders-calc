@@ -1,4 +1,43 @@
-## v3.25.9 — Plannen-archief op het dashboard
+## v3.25.10 — Onderhoudsplannen krijgen eigen status (los van de calc)
+Tot v3.25.9 volgde een onderhoudsplan automatisch de status van zijn bron-calculatie. In de praktijk klopt dat niet: calc-status en plan-status zijn twee verschillende beslissingen van de klant. Een klant kan de schilderopdracht accepteren maar het onderhoudsplan afwijzen — of andersom. Vanaf v3.25.10 heeft elk plan z'n eigen status, onafhankelijk van de calc.
+
+### ⚠️ Vereiste Supabase-migratie
+Eénmalig draaien in het schilders-calc-project:
+
+```sql
+ALTER TABLE onderhoudsplannen ADD COLUMN status TEXT;
+UPDATE onderhoudsplannen op SET status = c.status
+  FROM calculaties c WHERE op.calculatie_id = c.id;
+UPDATE onderhoudsplannen SET status = 'concept'
+  WHERE status = 'afspraak' OR status IS NULL;
+ALTER TABLE onderhoudsplannen ALTER COLUMN status SET NOT NULL;
+ALTER TABLE onderhoudsplannen ALTER COLUMN status SET DEFAULT 'concept';
+ALTER TABLE onderhoudsplannen ADD CONSTRAINT onderhoudsplannen_status_check
+  CHECK (status IN ('concept', 'gereed', 'verzonden', 'geaccepteerd', 'verloren'));
+```
+
+Bestaande plannen erven via stap 2 de status van hun bron-calc als startwaarde. 'Afspraak'-status is geen geldige plan-status (een plan ontstaat per definitie pas na opname), die wordt in stap 3 gemapt naar 'concept'. Daarna onafhankelijk te beheren.
+
+### Wijzigingen
+- **Datamodel**: `_mapOhpFromDB` / `_mapOhpToDB` nemen nu een `status`-veld mee (default `'concept'` bij ontbreken).
+- **UI**: nieuwe `Status van plan`-dropdown naast `Type ontvanger` in de Onderhoudsplan-tab. Vijf waarden, met hint *"eigen status, los van de bron-calculatie"*.
+- **`_ohpReadParamsFromUI`**: leest de status mee bij save.
+- **`_ohpRenderParams`**: zet de dropdown bij het laden van een plan, en disable't 'm wanneer er geen bron-calc is.
+- **Event-binding**: `ohpStatus` toegevoegd aan de lijst van velden die `_ohpScheduleSave` / `_ohpFlushSave` triggeren. Een wijziging slaat dus op via de bestaande debounce-flow.
+- **Plannen-archief op dashboard** (v3.25.9): de status-bron is gewisseld van `calc.status` naar `r.status` (uit de plan-row zelf). Query haalt nu ook `status` op naast `id, calculatie_id, gewijzigd`.
+
+### Niet meegedaan / bewust gelaten
+- **Win-ratio-tegel blijft over calc-status** (niet plan-status). De win-ratio meet het commerciële succes van uitgebrachte schilderopdrachten — een plan dat geaccepteerd wordt is een extra metric die je in een latere versie eventueel als aparte tegel kunt toevoegen.
+- **Default-status nieuw plan** is `'concept'`, niet `c.status` van de bron-calc. Een nieuw plan begint altijd vers in concept, ongeacht waar de calc staat.
+- Status-wijziging triggert wel een `gewijzigd`-update (via `_mapOhpToDB`), waardoor het plan in het archief omhoog springt in de sortering — dat is intentioneel: zojuist-gewijzigd boven.
+- Geen aparte "status-geschiedenis"-log. Mocht je willen weten *wanneer* een plan op geaccepteerd is gezet (los van algemene wijzigingen), is dat een latere uitbreiding.
+
+### Les voor mezelf
+- Eerder schreef ik in v3.25.9 dat plan-status uit calc kwam. Pas bij gebruik bleek dat semantisch fout. Bij toekomstige model-keuzes: bij iets dat een "eigen leven" lijkt te leiden (zoals een offerte naast een calc), eerder de vraag stellen *of het echt 1-op-1 dezelfde status moet hebben*. Niet aannemen op basis van convenience.
+
+---
+
+
 Onder het bestaande Calculaties-archief op het dashboard komt een tweede archief: **Onderhoudsplannen**. Dezelfde groepen-per-status-structuur als het calc-archief, dezelfde collapse-gedrag (alles default dicht), maar dan voor onderhoudsplannen. Klik op een rij → spring naar de Onderhoudsplan-tab met dat plan actief.
 
 ### Werking

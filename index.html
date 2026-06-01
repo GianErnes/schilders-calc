@@ -1716,8 +1716,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.9</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.10</h2>
       <div class="intro-body">
+        <p><strong>📝 Onderhoudsplannen krijgen eigen status (v3.25.10).</strong> Tot nu toe volgde een plan de status van zijn bron-calculatie. In de praktijk klopt dat niet: een klant kan de schilderopdracht (calc) accepteren én het 10-jaars onderhoudsplan afwijzen, of andersom. Vanaf nu heeft elk plan z'n eigen <strong>Status van plan</strong>-dropdown bovenaan in de Onderhoudsplan-tab — vijf waarden: Concept · Gereed · Verzonden · Geaccepteerd · Verloren (geen Afspraak — een plan ontstaat per definitie pas na opname). Het plannen-archief op het dashboard groepeert nu volgens plan-status in plaats van calc-status. Bestaande plannen erven via SQL-migratie de calc-status als startwaarde, daarna onafhankelijk te beheren. Eénmalige Supabase-SQL nodig (zie CHANGELOG).</p>
         <p><strong>📋 Plannen-archief op het dashboard (v3.25.9).</strong> Onder het bestaande Calculaties-overzicht staat nu een tweede archief: <strong>Onderhoudsplannen</strong>. Zelfde structuur (groepen per status, klikbare rijen, alle groepen standaard dichtgeklapt), maar dan voor onderhoudsplannen in plaats van calculaties. Per rij zie je het project, de aanvraag-datum, de deadline en wanneer het plan voor het laatst is gewijzigd. <strong>Klik op een rij</strong> en je springt direct naar de Onderhoudsplan-tab met dat plan actief — vanuit het dashboard kun je dus naar een geaccepteerd plan om in te zien, of naar een concept-plan om verder aan te werken. Afspraak-categorie staat niet in dit archief omdat een afspraak per definitie nog geen plan heeft. Totaalbedrag is bewust weggelaten — niet nodig voor navigatie, voorkomt een zware berekening over alle plannen heen.</p>
         <p><strong>🏆 Drie nieuwe succestegels op het dashboard (v3.25.8).</strong> Onder de bestaande tegels (Materialen, Bewerkingen, etc.) staan nu drie extra: <strong>Calculaties</strong> (totaal aantal), <strong>Onderhoudsplannen</strong> (totaal aantal, via een count-query) en <strong>Win-ratio</strong> (geaccepteerd ten opzichte van uitgebracht, als percentage). Concept en Afspraak tellen niet mee bij win-ratio — alleen wat de klant ook echt heeft gezien (verzonden + geaccepteerd + verloren). Heb je nog niets uitgebracht? Dan toont 'm "—". Hover over de tegel voor de exacte aantallen erachter.</p>
         <p><strong>📦 Dashboard: alle status-groepen standaard dichtgeklapt (v3.25.7).</strong> Voorheen waren Afspraak, Concept en Gereed standaard open en Verzonden/Geaccepteerd/Verloren standaard dicht. Nu starten alle zes groepen dicht — alleen de sectiekoppen tonen titel + aantal + totaal. Klik op een kop om uit te klappen. Rustiger overzicht bij het openen van het dashboard.</p>
@@ -1953,6 +1954,15 @@
           <select id="ohpOntvangerType">
             <option value="particulier">Particulier</option>
             <option value="vve">VvE / beheerder</option>
+          </select>
+        </label>
+        <label>Status van plan <span style="font-weight: normal; font-size: 0.75rem; color: var(--muted);">— eigen status, los van de bron-calculatie</span>
+          <select id="ohpStatus">
+            <option value="concept">Concept</option>
+            <option value="gereed">Gereed</option>
+            <option value="verzonden">Verzonden</option>
+            <option value="geaccepteerd">Geaccepteerd</option>
+            <option value="verloren">Verloren</option>
           </select>
         </label>
       </div>
@@ -2433,7 +2443,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.25.9';
+const APP_VERSION = 'v3.25.10';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3605,6 +3615,7 @@ function _mapOhpFromDB(row) {
     notities:      row.notities || '',
     ontvangerType: row.ontvanger_type || 'particulier', // v3.23.0 — 'particulier' | 'vve'
     scopeOmschrijving: row.scope_omschrijving || '',      // v3.23.0 — VvE: wat valt onder het plan
+    status:        row.status || 'concept',               // v3.25.10 — los van calc-status; 5 waarden
     aangemaakt:    row.aangemaakt || null,
     gewijzigd:     row.gewijzigd  || null,
     beurten:       []
@@ -3620,6 +3631,7 @@ function _mapOhpToDB(p) {
     notities:       p.notities || '',
     ontvanger_type: p.ontvangerType || 'particulier', // v3.23.0
     scope_omschrijving: p.scopeOmschrijving || '',      // v3.23.0
+    status:         p.status || 'concept',              // v3.25.10
     gewijzigd:      new Date().toISOString()
   };
 }
@@ -4627,6 +4639,7 @@ function _ohpReadParamsFromUI() {
   const notEl = document.getElementById('ohpNotities');
   const typeEl = document.getElementById('ohpOntvangerType');
   const scopeEl = document.getElementById('ohpScope');
+  const statusEl = document.getElementById('ohpStatus'); // v3.25.10
   return {
     prijspeil:     parseInt(document.getElementById('ohpPrijspeil').value) || null,
     looptijdJaren: parseInt(document.getElementById('ohpLooptijd').value)  || null,
@@ -4634,7 +4647,8 @@ function _ohpReadParamsFromUI() {
     btwPctOverride: (btwParsed != null && !isNaN(btwParsed)) ? btwParsed : null,
     notities: notEl ? (notEl.value || '') : '',
     ontvangerType: typeEl ? (typeEl.value || 'particulier') : 'particulier',
-    scopeOmschrijving: scopeEl ? (scopeEl.value || '') : ''
+    scopeOmschrijving: scopeEl ? (scopeEl.value || '') : '',
+    status: statusEl ? (statusEl.value || 'concept') : 'concept' // v3.25.10
   };
 }
 
@@ -4754,6 +4768,7 @@ function _ohpRenderParams() {
   const elNotities  = document.getElementById('ohpNotities');
   const elType      = document.getElementById('ohpOntvangerType');
   const elScope     = document.getElementById('ohpScope');
+  const elStatus    = document.getElementById('ohpStatus'); // v3.25.10
   const bronBtw     = _ohpBronCalcBtw();
   if (p) {
     elPrijspeil.value = p.prijspeil || '';
@@ -4763,6 +4778,7 @@ function _ohpRenderParams() {
     if (elNotities) elNotities.value = p.notities || '';
     if (elType) elType.value = p.ontvangerType || 'particulier';
     if (elScope) elScope.value = p.scopeOmschrijving || '';
+    if (elStatus) elStatus.value = p.status || 'concept';
   } else {
     elPrijspeil.value = '';
     elLooptijd.value  = '';
@@ -4771,6 +4787,7 @@ function _ohpRenderParams() {
     if (elNotities) elNotities.value = '';
     if (elType) elType.value = 'particulier';
     if (elScope) elScope.value = '';
+    if (elStatus) elStatus.value = 'concept';
   }
   // Hint: toon altijd wat de bron-calc als BTW heeft, zodat afwijking zichtbaar is.
   if (elBtwHint) {
@@ -4791,6 +4808,7 @@ function _ohpRenderParams() {
   if (elNotities) elNotities.disabled = !hasCalc;
   if (elType) elType.disabled = !hasCalc;
   if (elScope) elScope.disabled = !hasCalc;
+  if (elStatus) elStatus.disabled = !hasCalc; // v3.25.10
   _ohpToggleScopeVisibility();
 }
 
@@ -5772,7 +5790,7 @@ function _ohpBindUIEvents() {
     });
     cb._ohpBound = true;
   });
-  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope'].forEach(id => {
+  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope', 'ohpStatus'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el._ohpBound) {
       el.addEventListener('input', _ohpScheduleSave);
@@ -11793,7 +11811,7 @@ async function renderPlannenArchief() {
     return;
   }
   // Haal alle plannen op — alleen de velden die we nodig hebben voor het archief.
-  const { data: rows, error } = await _sb.from('onderhoudsplannen').select('id, calculatie_id, gewijzigd');
+  const { data: rows, error } = await _sb.from('onderhoudsplannen').select('id, calculatie_id, gewijzigd, status');
   if (error || !rows) {
     c.innerHTML = '<div style="color: var(--muted); padding: 0.5rem;">Plannen kon niet geladen worden.</div>';
     return;
@@ -11801,17 +11819,19 @@ async function renderPlannenArchief() {
   // Cross-reference met data.calculaties — plannen waarvan de calc verwijderd
   // is, slaan we over (komt zelden voor; ON DELETE CASCADE zou er normaal voor
   // zorgen dat 't plan ook weg is, maar we wapenen ons hier voor wezen).
+  // Vanaf v3.25.10: status komt uit het plan zelf, niet meer uit de calc.
   const planInfos = rows.map(r => {
     const calc = data.calculaties.find(x => x.id === r.calculatie_id);
     if (!calc) return null;
     return {
+      planId: r.id,
       calcId: r.calculatie_id,
       naam: calc.naam || '',
       klant: calc.klant || '',
       opnameDatum: calc.opnameDatum,
       deadlineDatum: calc.deadlineDatum,
       planGewijzigd: r.gewijzigd,
-      status: calc.status || 'concept'
+      status: r.status || 'concept' // los van calc-status sinds v3.25.10
     };
   }).filter(Boolean);
 
