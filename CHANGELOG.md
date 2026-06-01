@@ -1,4 +1,34 @@
-## v3.25.8 — Drie succestegels op het dashboard
+## v3.25.9 — Plannen-archief op het dashboard
+Onder het bestaande Calculaties-archief op het dashboard komt een tweede archief: **Onderhoudsplannen**. Dezelfde groepen-per-status-structuur als het calc-archief, dezelfde collapse-gedrag (alles default dicht), maar dan voor onderhoudsplannen. Klik op een rij → spring naar de Onderhoudsplan-tab met dat plan actief.
+
+### Werking
+- **5 status-groepen** in vaste volgorde: Concept · Gereed · Verzonden · Geaccepteerd · Verloren. De Afspraak-status doet niet mee — een afspraak heeft per definitie nog geen plan-content.
+- **De status komt uit de calc**, niet uit het plan zelf. Onderhoudsplannen hebben geen eigen status-veld (`_mapOhpToDB` slaat niets op), ze "volgen" de status van hun bron-calculatie via `calculatie_id`.
+- **4 kolommen per rij**: Project (naam + klant uit calc) · Aanvraag (= calc.opnameDatum) · Deadline (= calc.deadlineDatum) · Laatste wijziging (= plan.gewijzigd, NL-kort formaat zoals "12 jun 26").
+- **Sortering** binnen elke groep: laatste wijziging desc — meest recent boven.
+- **Klik op een rij** roept `openPlan(calcId)` aan: triggert eerst een tab-knop-click (zorgt dat de Onderhoudsplan-tab actief wordt via de bestaande nav-handler), daarna `_ohpSetBronCalc(calcId)` om het plan in beeld te krijgen, plus een soepele scroll naar boven.
+
+### Nieuwe functies
+- `renderPlannenArchief()` — async, doet één Supabase-query op `onderhoudsplannen` (alleen `id, calculatie_id, gewijzigd`), cross-referencet met `data.calculaties` voor klant/project/datums/status, groepeert per calc-status en rendert.
+- `openPlan(calcId)` — tab-switch + plan activeren + scroll.
+- `togglePlanSection(status)` — open/dicht-toggle per groep (los van calc-archief's `toggleDashSection`).
+- `_planCollapsed` Set — collapse-state per status, default alle 5 dicht.
+- `_fmtDatumKort(s)` — kort NL datum-formaat met 2-cijferig jaartal voor compactheid in het archief.
+
+### Totaalbedrag bewust weggelaten
+Een plan-totaal incl. BTW vereist `_ohpBeurtBasisBedrag` per beurt — die functie hangt aan `_ohpState.plan` (globale state) en vereist een volledig geladen calc met regels/onderdelen/scaling. Voor een archief-overzicht met alle plannen tegelijk zou dat óf een lange dashboard-load betekenen (alle calcs voorafgaand laden), óf een caching-mechanisme nodig hebben (extra DB-kolom + recompute bij elke plan- en beurt-mutatie). Voor v3.25.9 weggelaten omdat de archief-functie navigatie is — wil je het bedrag zien, open je het plan in de tab. Mogelijk caching toevoegen in een latere versie als de behoefte er is.
+
+### Niet meegedaan / bewust gelaten
+- Geen per-calc "heeft plan"-indicator in het calc-archief — dat zou symmetrisch zijn maar de gebruiker vraagt expliciet om navigatie via dashboard, dat dekt het.
+- Geen filter-controls bovenaan (zoals zoek/datum). Het archief is georganiseerd via collapse — wil je een plan zien, klap je de status open. Bij grotere aantallen kan dit later.
+- Geen "+ Nieuw plan"-knop in deze sectie — plannen worden aangemaakt vanuit een calculatie in de Onderhoudsplan-tab, niet vanaf het dashboard.
+
+### Performance
+Eén lichte query (alleen 3 kolommen) per dashboard-render. Cross-reference is in-memory (`data.calculaties` is al geladen). Geen state-mutaties, geen lazy loads. Schaalbaar tot honderden plannen zonder merkbare vertraging.
+
+---
+
+
 Onder de bestaande "bibliotheek"-tegels (Materialen / Bewerkingen / Verfsystemen / Ondergronden / Uurloon) staat nu een tweede tegel-rij met cijfers over de productie en het resultaat van het bedrijf: aantal calculaties, aantal onderhoudsplannen en de win-ratio. Visueel gelijk aan de andere tegels — dezelfde grid, dezelfde stijl, dezelfde accent-kleur — maar in een aparte grid eronder zodat ze duidelijk een eigen groep vormen.
 
 ### Drie tegels
