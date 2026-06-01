@@ -1,4 +1,29 @@
-## v3.25.1 — Bron-calculatie kiezer verbergt zich na keuze
+## v3.25.2 — Nieuwe status "Afspraak" voor calculaties
+Voor opname-afspraken die ingepland zijn bij een klant maar nog geen uitgewerkte calculatie hebben. Workflow: klant belt, je plant opname in, je maakt alvast een calc-record aan met klantnaam (en eventueel datum/notitie), zet 'm op "Afspraak". Na de opname schuif je 'm via de status-dropdown naar "Concept" en werk je uit. Pure UI/sortering — datamodel en alle gegevens blijven onveranderd; alleen een extra waarde voor het bestaande `status`-veld.
+
+### Wijzigingen
+**Status-set uitgebreid (5 plekken):**
+- `STATUS_LABELS` in `renderCalculatiesArchief()`, print-headers (2×) en de bron-calc-kiezer in de Onderhoudsplan-tab: nu inclusief `afspraak: 'Afspraak'`.
+- `STATUS_COLORS` in `renderCalculatiesArchief()`: `afspraak: '#8b5cf6'` (paars — onderscheidend van de bestaande grijs/oranje/blauw/groen/donkeroranje).
+- `STATUS_ORDER` in `renderCalculatiesArchief()`: `['afspraak', 'concept', ...]` — Afspraak bovenaan in de groepering.
+- `_ohpFilter.status` (bron-calc filter): `afspraak: false` als default (uit) — een afspraak gebruik je normaal niet als bron voor een onderhoudsplan.
+
+**Bewerkbaarheid:**
+- `_isCalcLocked(c)`: een calc met status `afspraak` is **niet** vergrendeld (zelfde behandeling als `concept`).
+- `_touchCalc()`'s `isConcept`-flag: een afspraak telt ook als concept-achtig, dus bij wijzigen wordt het totaal-cache gewoon bijgewerkt.
+- Gevolg: in een afspraak-record kun je naam/klant/datums vrij invullen en aanpassen. Daarmee bewust geen aparte tabel of nieuw datamodel nodig — een afspraak is gewoon een lege calculatie met status `afspraak`.
+
+**Bron-calc-filter (Onderhoudsplan-tab):**
+- Nieuwe checkbox "Afspraak" toegevoegd vóór de bestaande "Concept"-checkbox. Default uit; aanvinken laat afspraak-calc's in de lijst verschijnen (voor wie 'm toch ooit als bron wil gebruiken).
+
+### Niet meegedaan / bewust gelaten
+- Geen DB-migratie nodig — `status` is een bestaande `TEXT`-kolom zonder enum-constraint. De nieuwe waarde wordt gewoon opgeslagen.
+- Geen extra velden bij een afspraak (datum/tijd/adres apart). Bestaande velden volstaan; klanten-naam, notitie en opname-datum-veld (al aanwezig) zijn genoeg.
+- Geen aparte "Nieuwe afspraak"-knop. Je maakt 'm via de gewone "Nieuwe calculatie"-flow en zet 'm via de status-dropdown op Afspraak.
+
+---
+
+
 Zodra je voor een onderhoudsplan een bron-calculatie hebt gekozen, verdwijnt de hele kies-UI (zoekbalk + status-filter-checkboxes + scrollbare lijst met calculaties) uit beeld. In plaats daarvan staat er één compact regeltje met de gekozen bron en een **Wijzig**-knop voor het geval je naar een andere bron wilt switchen. Scheelt visuele ruis tijdens dagelijks gebruik — de hele "riedel" hoort thuis bij het opstarten van een plan, niet bij het bewerken ervan.
 
 ### Wijzigingen

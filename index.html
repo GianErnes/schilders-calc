@@ -1716,8 +1716,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.2</h2>
       <div class="intro-body">
+        <p><strong>📅 Nieuwe categorie "Afspraak" voor calculaties (v3.25.2).</strong> Op het dashboard staan calculaties nu ook gegroepeerd onder <strong>Afspraak</strong> — vóór Concept in de volgorde. Bedoeld voor opname-afspraken die ingepland zijn bij een klant maar waar nog geen calculatie voor uitgewerkt is: je maakt alvast een record met klantnaam (en eventueel een datum/notitie), zet 'm op status "Afspraak", en na de opname schuif je 'm via de status-dropdown naar Concept om uit te werken. Een afspraak gedraagt zich verder als een concept — volledig bewerkbaar, niet vergrendeld. In de status-kiezer bij de bron-calculatie voor een onderhoudsplan staat Afspraak default uit (je gebruikt 'm normaal niet als bron). Paarse kleurmarkering 🟣 zodat 'm visueel onderscheidt van de andere statussen.</p>
         <p><strong>🔎 Bron-calculatie kiezer alleen zichtbaar bij nieuw plan (v3.25.1).</strong> Heb je voor een onderhoudsplan eenmaal een bron-calculatie gekozen, dan verdwijnt de hele "Bron-calculatie"-lijst uit beeld (zoekbalk, filters en de rij met calculaties). In plaats daarvan staat er één compact regeltje met de gekozen bron en een kleine <strong>Wijzig</strong>-knop. Wil je voor een tweede onderhoudsplan een andere bron kiezen, klik je op Wijzig en de lijst komt terug. Bij een nieuw plan (nog niets gekozen) zie je de volledige kiezer direct. Scheelt een hoop visuele ruis tijdens dagelijks gebruik 📋.</p>
         <p><strong>📐 Particulier-bijlage volledig heringericht — verhaal eerst, pitch tweede (v3.25.0).</strong> De offerte-bijlage voor particuliere klanten is psychologisch omgekeerd: pagina 1 begint met een persoonlijke aanhef, gevolgd door "Wat we aantroffen" (uit de calc-notitie) en "Voor uw huis specifiek" (de jaar-blokken). Pas op pagina 2 komt de pitch: maandbedrag, zekerheden, beurten-uitleg en de horizontale tijdlijn. Het totaalbedrag is bij particulier uit de hero gehaald (€/maand staat centraal), en de jaartabel onder de tijdlijn is weg — die voegde voor particulier niets toe (drie keer dezelfde info). De Startonderhoudsbeurt heet altijd "Startonderhoudsbeurt" in de bijlage, ongeacht z'n echte naam. Reeds-uitgevoerde beurten (v3.24.5-vinkje) worden nu visueel grijs getoond in tijdlijn én jaar-blokken, met een "reeds uitgevoerd"-badge. De VvE-variant blijft ongewijzigd 📄.</p>
         <p><strong>✅ Beurt-status "reeds uitgevoerd" (v3.24.5).</strong> Een nieuwe checkbox in de bewerk-modal van een beurt: "Deze beurt is reeds uitgevoerd". Vinkje aan = de beurt blijft in het plan, maar wordt in de offerte-bijlage straks visueel grijs getoond zodat duidelijk is dat 'm al gehad is. Voorbereiding op de psychologische herinrichting van de particulier-bijlage (komt eraan) waarin we de Startonderhoudsbeurt anders gaan tonen afhankelijk van of die nog moet of al gedaan is. SQL-migratie (kolom <code>reeds_uitgevoerd</code> op <code>onderhoudsplan_beurten</code>) was al uitgevoerd.</p>
@@ -1907,6 +1908,7 @@
         </div>
         <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap; align-items: center;">
           <input type="text" id="ohpBronZoek" placeholder="Zoek op naam of klant..." style="flex: 1; min-width: 200px;">
+          <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="afspraak"> Afspraak</label>
           <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="concept" checked> Concept</label>
           <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="gereed" checked> Gereed</label>
           <label style="font-size: 0.85rem;"><input type="checkbox" class="ohpStatusFilter" data-status="geaccepteerd" checked> Geaccepteerd</label>
@@ -2412,7 +2414,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.25.1';
+const APP_VERSION = 'v3.25.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3814,7 +3816,7 @@ function _updateCalcDB(c) {
 function _touchCalc(calcId) {
   // Update gewijzigd-timestamp — vuren-en-vergeten
   const c = data.calculaties.find(x => x.id === calcId);
-  const isConcept = !c || !c.status || c.status === 'concept';
+  const isConcept = !c || !c.status || c.status === 'concept' || c.status === 'afspraak';
   // Bouw payload: altijd gewijzigd, en bij concept óók het nieuw-berekende totaal cachen.
   // Vergrendelde calcs (verzonden/geaccepteerd/etc) krijgen nóóit een nieuwe totaal-waarde
   // via deze route — die wordt enkel gezet bij vergrendelen (zie setCalcStatus).
@@ -4620,7 +4622,7 @@ function _ohpReadParamsFromUI() {
 // Bron-picker filter-state (sessie-lokaal, niet opgeslagen).
 let _ohpFilter = {
   zoek: '',
-  status: { concept: true, gereed: true, geaccepteerd: true, verzonden: false, verloren: false }
+  status: { afspraak: false, concept: true, gereed: true, geaccepteerd: true, verzonden: false, verloren: false }
 };
 
 // v3.25.1 — onzichtbaar maken van bron-kiezer als er al een bron gekozen is.
@@ -7448,7 +7450,7 @@ function printCalc() {
   const btwBedrag = exBtw * sett.btw/100;
   const totaal = exBtw + btwBedrag;
 
-  const STATUS_LABELS = { concept:'Concept', gereed:'Gereed', verzonden:'Verzonden', geaccepteerd:'Geaccepteerd', verloren:'Verloren' };
+  const STATUS_LABELS = { afspraak:'Afspraak', concept:'Concept', gereed:'Gereed', verzonden:'Verzonden', geaccepteerd:'Geaccepteerd', verloren:'Verloren' };
 
   let html = '';
 
@@ -7982,7 +7984,7 @@ function printOfferteYoobi() {
   const afrondingsOverschot = exBtwYoobi - exBtw;
 
   // 9. HTML opbouwen
-  const STATUS_LABELS = { concept:'Concept', gereed:'Gereed', verzonden:'Verzonden', geaccepteerd:'Geaccepteerd', verloren:'Verloren' };
+  const STATUS_LABELS = { afspraak:'Afspraak', concept:'Concept', gereed:'Gereed', verzonden:'Verzonden', geaccepteerd:'Geaccepteerd', verloren:'Verloren' };
 
   let html = '';
 
@@ -10344,7 +10346,7 @@ async function dupCalc(id) {
 // ============================================================
 function _isCalcLocked(c) {
   if (!c) return false;
-  return c.status && c.status !== 'concept';
+  return c.status && c.status !== 'concept' && c.status !== 'afspraak';
 }
 // Gebruik snapshot waar aanwezig, anders live settings.
 function _activeSettings(c) {
@@ -11547,9 +11549,9 @@ function renderCalculatiesArchief() {
     c.innerHTML = '<div class="empty-state">Nog geen calculaties. Maak een nieuwe.</div>';
     return;
   }
-  const STATUS_LABELS = { concept: 'Concept', gereed: 'Gereed', verzonden: 'Verzonden', geaccepteerd: 'Geaccepteerd', verloren: 'Verloren' };
-  const STATUS_COLORS = { concept: 'var(--muted)', gereed: '#f59e0b', verzonden: 'var(--blue)', geaccepteerd: 'var(--green)', verloren: 'var(--accent-deep)' };
-  const STATUS_ORDER = ['concept', 'gereed', 'verzonden', 'geaccepteerd', 'verloren'];
+  const STATUS_LABELS = { afspraak: 'Afspraak', concept: 'Concept', gereed: 'Gereed', verzonden: 'Verzonden', geaccepteerd: 'Geaccepteerd', verloren: 'Verloren' };
+  const STATUS_COLORS = { afspraak: '#8b5cf6', concept: 'var(--muted)', gereed: '#f59e0b', verzonden: 'var(--blue)', geaccepteerd: 'var(--green)', verloren: 'var(--accent-deep)' };
+  const STATUS_ORDER = ['afspraak', 'concept', 'gereed', 'verzonden', 'geaccepteerd', 'verloren'];
 
   // Helpers
   const _today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
