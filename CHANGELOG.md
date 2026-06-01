@@ -1,4 +1,24 @@
-## v3.25.4 — Klant-veld automatisch gevuld vanuit projectnaam
+## v3.25.5 — Fix: nieuwe calculatie start nu écht op "Afspraak"
+In v3.25.3 was de wijziging gedaan in `_newCalcObj()` — die functie blijkt dode code (nergens aangeroepen). Het gedrag in de praktijk bleef daardoor onveranderd: nieuwe calculaties startten nog steeds op `concept` omdat de echte insert-flow (`newCalc → _insertCalcDB → _mapCalcHeaderToDB`) op de fallback `c.status || 'concept'` viel.
+
+### Wijziging
+Bij `newCalc()` wordt nu expliciet `status: 'afspraak'` meegegeven aan `_insertCalcDB`:
+```js
+const fresh = await _insertCalcDB({ naam, status: 'afspraak' });
+```
+`_mapCalcHeaderToDB()` pakt dat op via `c.status || 'concept'` — `c.status` is nu gevuld, dus de fallback wordt niet meer geraakt.
+
+### Les voor mezelf
+- Bij wijziging van defaults: **verifieer de aanroep-keten** voordat je vasthoudt aan een aanname. Een functie aanpassen heeft alleen effect als die functie ook gebruikt wordt.
+- Snelle controle die ik had moeten doen: `grep -n "_newCalcObj" index.html` → 1 voorkomen (alleen de definitie) → rode vlag, niet gerefereerd dus zinloos om aan te passen.
+- Dupliceren en de oude-data-migratie raken `status` netjes via een hardcoded `'concept'`, dus die zijn niet getroffen door deze fout.
+
+### Niet meegedaan
+- `_newCalcObj()` zelf laten staan als dode code (had bij deze sessie kunnen weggehaald, maar buiten scope). Status erin blijft op `'afspraak'` voor consistentie als 'm ooit gebruikt zou worden.
+
+---
+
+
 In de praktijk volgt de projectnaam vrijwel altijd het patroon `"Klantnaam | projectomschrijving"` — bv. *"Mordant | Tuinhuis"*. Het Klant-veld krijgt nu het deel vóór de pipe als auto-fill, zodat je niet elke keer dezelfde klantnaam opnieuw hoeft te typen.
 
 ### Logica
