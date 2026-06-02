@@ -1716,8 +1716,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.25.12</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.26.0</h2>
       <div class="intro-body">
+        <p><strong>📍 Automatische reisafstand via postcode (v3.26.0).</strong> Vul in de calculatie de postcode (en huisnummer) van het werkadres in en klik op "Afstand ophalen". De app berekent dan zelf de enkele reisafstand vanaf je vertrekadres en vult het km-veld in. Adres-opzoeking via PDOK (het gratis Nederlandse adresregister), route-afstand via OpenRouteService. Het km-veld blijft met de hand aanpasbaar, dus je kunt altijd overrulen. Eénmalig instellen onder Instellingen bij "Automatische afstand": je gratis OpenRouteService-sleutel en je vertrekadres. Postcode en huisnummer worden voortaan bij de calculatie bewaard 🚐.</p>
         <p><strong>🔬 Dashboard-tegels nog veel compacter (v3.25.12).</strong> Getallen gehalveerd (1.55rem → 0.95rem), padding gehalveerd, minimum-tegelbreedte van 150px → 110px. Acht tegels passen nu in één rij op zelfs een gewone laptop. Een echte mini-strip aan de bovenkant van het dashboard in plaats van een prominent statenblok.</p>
         <p><strong>🔍 Dashboard-tegels compacter (v3.25.11).</strong> De bibliotheek- en succestegels (Materialen, Calculaties, etc.) zijn samengevoegd tot één compactere grid: kleiner getal-formaat (1.55rem ipv 2.2rem), strakkere padding en smallere minimum-breedte. Op een breed scherm passen alle acht naast elkaar in één rij, op een gewone laptop netjes 4+4. Scheelt ongeveer 40% verticale ruimte op het dashboard zonder iets aan info te verliezen.</p>
         <p><strong>📝 Onderhoudsplannen krijgen eigen status (v3.25.10).</strong> Tot nu toe volgde een plan de status van zijn bron-calculatie. In de praktijk klopt dat niet: een klant kan de schilderopdracht (calc) accepteren én het 10-jaars onderhoudsplan afwijzen, of andersom. Vanaf nu heeft elk plan z'n eigen <strong>Status van plan</strong>-dropdown bovenaan in de Onderhoudsplan-tab — vijf waarden: Concept · Gereed · Verzonden · Geaccepteerd · Verloren (geen Afspraak — een plan ontstaat per definitie pas na opname). Het plannen-archief op het dashboard groepeert nu volgens plan-status in plaats van calc-status. Bestaande plannen erven via SQL-migratie de calc-status als startwaarde, daarna onafhankelijk te beheren. Eénmalige Supabase-SQL nodig (zie CHANGELOG).</p>
@@ -1806,7 +1807,16 @@
     <div class="form-grid">
       <div><label>Projectnaam</label><input type="text" id="calcProject" placeholder="bv. Kerkstraat 12"></div>
       <div><label>Klant</label><input type="text" id="calcKlant"></div>
-      <div><label>Reisafstand (km enkele reis)</label><input type="number" id="calcReis" step="1" min="0" onchange="_renderRayonIndicator()"><div id="reisRayonIndicator" style="margin-top:0.3rem; font-size:0.72rem;"></div></div>
+      <div>
+        <label>Postcode werkadres</label>
+        <div style="display:flex; gap:0.4rem;">
+          <input type="text" id="calcPostcode" placeholder="6433 KE" autocomplete="off" style="flex:1; min-width:0;">
+          <input type="text" id="calcHuisnummer" placeholder="nr." autocomplete="off" style="width:4.5rem;">
+        </div>
+        <button class="btn-secondary btn" onclick="ophaalAfstand()" style="margin-top:0.4rem; font-size:0.78rem; padding:0.3rem 0.6rem;">📍 Afstand ophalen</button>
+        <div id="afstandStatus" style="margin-top:0.3rem; font-size:0.72rem; color:var(--muted);"></div>
+      </div>
+      <div><label>Reisafstand (km enkele reis)</label><input type="number" id="calcReis" step="0.1" min="0" onchange="_renderRayonIndicator()"><div id="reisRayonIndicator" style="margin-top:0.3rem; font-size:0.72rem;"></div></div>
       <div><label>Aantal schilders</label><input type="number" id="calcSchilders" step="1" min="1"></div>
       <div><label>Uren per werkdag</label><input type="number" id="calcUurDag" step="0.5" min="1"></div>
       <div><label>Opname-datum</label><input type="date" id="calcOpname"></div>
@@ -2007,6 +2017,15 @@
         <div><label>Reiskosten (€/km)</label><input type="number" id="setKm" step="0.05" onchange="updSetting('km', this)"></div>
         <div><label>Gem. snelheid (km/u)</label><input type="number" id="setSnelheid" step="5" min="20" onchange="updSetting('snelheid', this)"></div>
         <div><label>Rayon-grens (km enkele reis)</label><input type="number" id="setRayonDrempel" step="1" min="0" onchange="updSetting('rayonDrempel', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">Binnen deze afstand: alleen km-vergoeding, geen reisuren-arbeid. Daarbuiten: volledige reiskosten.</div></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>Automatische afstand</h3>
+      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Vul in de calculatie de postcode van het werkadres in en de app berekent de enkele reisafstand vanaf je vertrekadres. Adres-opzoeking via PDOK (gratis, geen sleutel), route-afstand via OpenRouteService.</em></p>
+      <div class="form-grid">
+        <div style="grid-column: 1 / -1;"><label>OpenRouteService API-sleutel</label><input type="text" id="setOrsKey" placeholder="plak hier je gratis sleutel" autocomplete="off" onchange="updSettingText('orsKey', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">Gratis aan te maken op openrouteservice.org. Wordt in Supabase bewaard, niet in de openbare code.</div></div>
+        <div><label>Vertrek-postcode</label><input type="text" id="setVertrekPostcode" placeholder="bv. 6433 KE" autocomplete="off" onchange="updSettingText('vertrekPostcode', this)"></div>
+        <div><label>Vertrek-huisnummer</label><input type="text" id="setVertrekHuisnummer" placeholder="bv. 2" autocomplete="off" onchange="updSettingText('vertrekHuisnummer', this)"></div>
       </div>
     </div>
     <div class="settings-section">
@@ -2443,7 +2462,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.25.12';
+const APP_VERSION = 'v3.26.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2805,6 +2824,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.26.0', d: '2026-06-02', h: 'Automatische reisafstand: vul de postcode van het werkadres in, app berekent de enkele reis vanaf je vertrekadres (PDOK + OpenRouteService) en vult het km-veld' },
   { v: '3.20.0', d: '2026-05-25', h: 'Materiaal + verbruik per calc-regel-stap aanpasbaar — slim groep-filter + bibliotheek blijft onaangetast (snapshot-architectuur)' },
   { v: '3.19.2', d: '2026-05-25', h: 'Meetstaat-samenvattingen: stippellijntjes tussen rijen donkerder gemaakt (50/50 mix paper-deep + muted) — beter te volgen bij grotere calculaties' },
   { v: '3.19.1', d: '2026-05-25', h: 'Versie-geschiedenis uitgebreid met de oerjaren — 15 entries toegevoegd (5 recent, 8 historisch V2.3-V3.7, 2 tussen-stadia voor Supabase + multi-user)' },
@@ -3520,6 +3540,8 @@ function _mapCalcHeaderFromDB(row) {
     schilders:           row.schilders != null ? row.schilders : 2,
     uurDag:              parseFloat(row.uur_dag) || 7.5,
     reis:                parseFloat(row.reis) || 0,
+    postcode:            row.postcode || '',
+    huisnummer:          row.huisnummer || '',
     volleDagenOverride:  row.volle_dagen_override,
     notities:            row.notities || '',
     settingsSnapshot:    row.settings_snapshot || null,
@@ -3542,6 +3564,8 @@ function _mapCalcHeaderToDB(c) {
     schilders: c.schilders != null ? c.schilders : 2,
     uur_dag: c.uurDag != null ? c.uurDag : 7.5,
     reis: c.reis != null ? c.reis : 0,
+    postcode: c.postcode || '',
+    huisnummer: c.huisnummer || '',
     volle_dagen_override: c.volleDagenOverride != null ? c.volleDagenOverride : null,
     notities: c.notities || '',
     settings_snapshot: c.settingsSnapshot || null,
@@ -9535,6 +9559,9 @@ function renderCalcStructuur() {
   document.getElementById('calcProject').value = data.calc.naam || '';
   document.getElementById('calcKlant').value = data.calc.klant || '';
   document.getElementById('calcReis').value = data.calc.reis || 0;
+  document.getElementById('calcPostcode').value = data.calc.postcode || '';
+  document.getElementById('calcHuisnummer').value = data.calc.huisnummer || '';
+  { const _afSt = document.getElementById('afstandStatus'); if (_afSt) { _afSt.textContent = ''; _afSt.style.color = 'var(--muted)'; } }
   document.getElementById('calcSchilders').value = data.calc.schilders || 2;
   document.getElementById('calcUurDag').value = data.calc.uurDag || 7.5;
   document.getElementById('calcOpname').value = data.calc.opnameDatum || '';
@@ -10486,7 +10513,7 @@ async function setCalcStatus(id, status) {
 
 // header form binding — change-event (op blur) + DB-update voor cloud
 document.addEventListener('change', e => {
-  const map = {calcProject:'naam', calcKlant:'klant', calcReis:'reis', calcSchilders:'schilders', calcUurDag:'uurDag', calcOpname:'opnameDatum', calcDeadline:'deadlineDatum'};
+  const map = {calcProject:'naam', calcKlant:'klant', calcReis:'reis', calcPostcode:'postcode', calcHuisnummer:'huisnummer', calcSchilders:'schilders', calcUurDag:'uurDag', calcOpname:'opnameDatum', calcDeadline:'deadlineDatum'};
   if (map[e.target.id] && data.calc) {
     const k = map[e.target.id];
     const oldNaam = data.calc.naam || '';
@@ -10545,6 +10572,81 @@ function _addDays(yyyymmdd, n) {
   const mm = String(dt.getMonth() + 1).padStart(2, '0');
   const dd = String(dt.getDate()).padStart(2, '0');
   return `${yy}-${mm}-${dd}`;
+}
+// ============================================================
+// AUTOMATISCHE AFSTAND — postcode werkadres → enkele reisafstand
+// v3.26.0 — PDOK Locatieserver (geocoding, gratis) + OpenRouteService (rij-afstand)
+// ============================================================
+let _vertrekCoords = null; // cache binnen sessie: [lon, lat] van het vertrekadres
+
+// PDOK Locatieserver: NL postcode (+ huisnummer) → [lon, lat] in WGS84. Gratis, geen sleutel.
+async function _pdokGeocode(postcode, huisnummer) {
+  const pc = (postcode || '').replace(/\s+/g, '').toUpperCase();
+  const hn = (huisnummer || '').trim();
+  if (!pc) return null;
+  const q = encodeURIComponent(hn ? `${pc} ${hn}` : pc);
+  const url = `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${q}&fq=type:adres&rows=1`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('PDOK ' + res.status);
+  const json = await res.json();
+  const docs = json && json.response && json.response.docs;
+  if (!docs || !docs.length) return null;
+  // centroide_ll heeft de vorm "POINT(lon lat)"
+  const m = /POINT\(([-\d.]+)\s+([-\d.]+)\)/.exec(docs[0].centroide_ll || '');
+  if (!m) return null;
+  return [parseFloat(m[1]), parseFloat(m[2])];
+}
+
+// OpenRouteService: rij-afstand in meters tussen twee [lon,lat]-punten (auto-profiel).
+async function _orsAfstandMeters(orig, dest, key) {
+  const res = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
+    method: 'POST',
+    headers: { 'Authorization': key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ coordinates: [orig, dest] })
+  });
+  if (res.status === 401 || res.status === 403) throw new Error('ORS-sleutel ongeldig');
+  if (!res.ok) throw new Error('ORS ' + res.status);
+  const json = await res.json();
+  const dist = json && json.routes && json.routes[0] && json.routes[0].summary && json.routes[0].summary.distance;
+  if (dist == null) throw new Error('geen route gevonden');
+  return dist;
+}
+
+async function ophaalAfstand() {
+  if (!data.calc) return;
+  const statusEl = document.getElementById('afstandStatus');
+  const setStatus = (txt, kleur) => { if (statusEl) { statusEl.textContent = txt; statusEl.style.color = kleur || 'var(--muted)'; } };
+  const s = data.settings || {};
+  const key = (s.orsKey || '').trim();
+  if (!key) { setStatus('Geen OpenRouteService-sleutel ingesteld (zie Instellingen).', 'var(--danger, #b00020)'); _toast('Stel eerst je OpenRouteService-sleutel in bij Instellingen'); return; }
+  if (!(s.vertrekPostcode || '').trim()) { setStatus('Geen vertrekadres ingesteld (zie Instellingen).', 'var(--danger, #b00020)'); _toast('Stel eerst je vertrekadres in bij Instellingen'); return; }
+  const pc = (document.getElementById('calcPostcode').value || '').trim();
+  const hn = (document.getElementById('calcHuisnummer').value || '').trim();
+  if (!pc) { setStatus('Vul eerst een postcode van het werkadres in.', 'var(--danger, #b00020)'); return; }
+  setStatus('Bezig met ophalen…');
+  try {
+    // 1. Vertrekadres geocoden (gecachet binnen de sessie).
+    if (!_vertrekCoords) {
+      _vertrekCoords = await _pdokGeocode(s.vertrekPostcode, s.vertrekHuisnummer);
+      if (!_vertrekCoords) { setStatus('Vertrekadres niet gevonden bij PDOK, controleer je instellingen.', 'var(--danger, #b00020)'); return; }
+    }
+    // 2. Werkadres geocoden.
+    const destCoords = await _pdokGeocode(pc, hn);
+    if (!destCoords) { setStatus('Werkadres niet gevonden, controleer postcode en huisnummer.', 'var(--danger, #b00020)'); return; }
+    // 3. Rij-afstand opvragen en afronden op 0,1 km.
+    const meters = await _orsAfstandMeters(_vertrekCoords, destCoords, key);
+    const km = Math.round(meters / 100) / 10;
+    // 4. Invullen, opslaan en herberekenen.
+    data.calc.reis = km;
+    const reisInput = document.getElementById('calcReis');
+    if (reisInput) reisInput.value = km;
+    _updateCalcDB(data.calc);
+    renderTotals(); renderDashboard(); _renderRayonIndicator();
+    setStatus(`${km.toLocaleString('nl-NL')} km enkele reis · opgehaald`, 'var(--accent-deep)');
+  } catch (err) {
+    const msg = (err && err.message) ? err.message : 'onbekende fout';
+    setStatus('Ophalen mislukt (' + msg + '). Vul de afstand desnoods met de hand in.', 'var(--danger, #b00020)');
+  }
 }
 // ============================================================
 // STAARTKOSTEN
@@ -11043,6 +11145,9 @@ function loadSettings() {
   document.getElementById('setKm').value = s.km;
   document.getElementById('setSnelheid').value = s.snelheid ?? 50;
   document.getElementById('setRayonDrempel').value = s.rayonDrempel ?? 15;
+  { const _e = document.getElementById('setOrsKey'); if (_e) _e.value = s.orsKey || ''; }
+  { const _e = document.getElementById('setVertrekPostcode'); if (_e) _e.value = s.vertrekPostcode || ''; }
+  { const _e = document.getElementById('setVertrekHuisnummer'); if (_e) _e.value = s.vertrekHuisnummer || ''; }
   document.getElementById('setKleinMat').value = s.kleinMat;
   document.getElementById('setAfval').value = s.afval;
   document.getElementById('setArbo').value = s.arbo;
@@ -11102,6 +11207,14 @@ function updSettingBool(field, inputEl) {
   data.settings[field] = inputEl.checked;
   saveData(); _saveSettingsDB();
   renderTotals(); renderDashboard();
+  showSavedTick(inputEl);
+}
+function updSettingText(field, inputEl) {
+  data.settings[field] = (inputEl.value || '').trim();
+  saveData(); _saveSettingsDB();
+  // Cache van vertrek-coördinaten leegmaken zodra het vertrekadres wijzigt,
+  // anders blijft de oude locatie hangen binnen de sessie.
+  if (field === 'vertrekPostcode' || field === 'vertrekHuisnummer') _vertrekCoords = null;
   showSavedTick(inputEl);
 }
 function showSavedTick(inputEl) {

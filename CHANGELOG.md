@@ -1,3 +1,46 @@
+## v3.26.0 — Automatische reisafstand via postcode (PDOK + OpenRouteService)
+Tot nu toe zocht je de enkele reisafstand handmatig op in een navigatie-app (afstand van Koperslager 2 naar het werkadres) en typte je die over in het km-veld. Vanaf nu kan de app dat zelf: vul de postcode (en eventueel huisnummer) van het werkadres in, klik op "Afstand ophalen" en het km-veld wordt automatisch gevuld. Het veld blijft met de hand aanpasbaar, dus overrulen kan altijd.
+
+### ⚠️ Vereiste Supabase-migratie
+Eénmalig draaien in het schilders-calc-project (idempotent, veilig bij herhaling):
+
+```sql
+ALTER TABLE calculaties ADD COLUMN IF NOT EXISTS postcode text;
+ALTER TABLE calculaties ADD COLUMN IF NOT EXISTS huisnummer text;
+```
+
+Huisnummer bewust `text` zodat toevoegingen als 12A of 2-bis passen.
+
+### Eenmalige instelling
+Onder Instellingen, nieuw blok "Automatische afstand":
+- **OpenRouteService API-sleutel**: gratis aan te maken op openrouteservice.org. Wordt opgeslagen in de Supabase-instellingen (`app_settings.data.orsKey`), dus niet in de openbare GitHub-code.
+- **Vertrekadres** (postcode + huisnummer): standaard leeg, eenmalig je bedrijfsadres invullen (Koperslager 2). Bewust een instelling in plaats van een vaste waarde in de code, zodat het wijzigbaar blijft en de exacte postcode niet hoeft te worden geraden.
+
+### Hoe het werkt
+1. PDOK Locatieserver zet zowel het vertrek- als het werkadres om naar coördinaten (gratis, geen sleutel, het officiële Nederlandse BAG-adresregister). Endpoint `api.pdok.nl/bzk/locatieserver/search/v3_1/free`, filter `type:adres`.
+2. OpenRouteService berekent de rij-afstand (auto-profiel) tussen die twee punten.
+3. De afstand wordt afgerond op 0,1 km en in het km-veld gezet, daarna opgeslagen en alle totalen herberekend.
+
+De vertrek-coördinaten worden binnen de sessie gecachet (`_vertrekCoords`), zodat alleen het werkadres per keer wordt opgezocht. De cache wordt geleegd zodra je het vertrekadres in de instellingen wijzigt.
+
+### Wijzigingen in code
+- `_mapCalcHeaderToDB` en `_mapCalcHeaderFromDB`: `postcode` en `huisnummer` toegevoegd (opslaan en laden).
+- Calc-scherm: velden "Postcode werkadres" en "Huisnr." plus knop "📍 Afstand ophalen" met een statusregel eronder. De knop heeft géén `lock-allowed` en wordt dus automatisch uitgeschakeld bij een vergrendelde calculatie.
+- Reisafstand-veld: `step` van 1 naar 0,1 omdat de berekende waarde decimalen kan bevatten.
+- Change-binding: `calcPostcode` en `calcHuisnummer` toegevoegd aan de map, persisten als tekst.
+- Nieuwe `updSettingText`-helper voor tekst-instellingen (de bestaande `updSetting` doet `parseFloat` en is ongeschikt voor sleutel en postcode).
+- Nieuwe functies `_pdokGeocode`, `_orsAfstandMeters` en `ophaalAfstand`.
+
+### Foutafhandeling
+Nette Nederlandse meldingen onder het veld bij: geen sleutel ingesteld, geen vertrekadres, lege postcode, adres niet gevonden, ongeldige sleutel (HTTP 401 of 403) of geen route. In alle gevallen blijft de handmatig ingevoerde waarde staan.
+
+### Niet meegedaan
+- **Alleen Nederlandse adressen**: PDOK dekt alleen NL. Duitse en Belgische werkadressen (Aken, Vaals, Herzogenrath) worden niet gevonden. Bewuste keuze voor deze versie. Wil je dat later wel, dan kan de adres-stap via OpenRouteService lopen (dekt heel Europa).
+- **Geen autocomplete**: bewust een expliciete knop in plaats van zoeken-tijdens-typen, om API-aanroepen te beperken en jou de controle te laten.
+
+---
+
+
 ## v3.25.12 — Dashboard-tegels nog veel compacter (mini-strip)
 Tegels uit v3.25.11 waren al kleiner, maar nog steeds prominent. Deze versie maakt er een echte mini-strip van bovenaan het dashboard.
 
