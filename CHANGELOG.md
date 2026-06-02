@@ -1,3 +1,42 @@
+## v3.26.2 — Meetstaat: breedte vóór hoogte + vrije ×factor
+Twee wensen uit de praktijk voor de meetstaat.
+
+### ⚠️ Vereiste Supabase-migratie
+Eénmalig draaien in het schilders-calc-project (idempotent):
+
+```sql
+ALTER TABLE meetstaat ADD COLUMN IF NOT EXISTS factor numeric NOT NULL DEFAULT 1;
+```
+
+Bestaande regels krijgen factor 1, dus hun totalen veranderen niet.
+
+### Wijzigingen
+- **Breedte vóór hoogte**: de kolommen "b (cm)" en "h (cm)" zijn van plaats gewisseld, zodat breedte als eerste maat wordt ingevoerd. De Enter-toets springt nu ook eerst naar breedte en dan naar hoogte. De focus na "+ Regel" landt op breedte. Doorgevoerd in zowel de tabel als de meetstaat-PDF. Geen reken-impact: oppervlakte b × h is gelijk aan h × b en de lengte-modus werkte al symmetrisch.
+- **Vrije ×factor**: nieuw veld "factor" tussen aantal en totaal, met decimalen en standaard 1. Het rij-totaal wordt maat × aantal × factor (en bij de stuk-eenheid aantal × factor). De factor wordt opgeslagen per meetstaat-regel, gaat mee bij dupliceren van een calculatie en verschijnt in de meetstaat-PDF (gedimd weergegeven zolang hij 1 is).
+
+### Code
+- Nieuwe kolom verwerkt in `_mapMeetstaatFromDB` en `_mapMeetstaatToDB` (numeriek, default 1).
+- Rij-totaal in `_meetstaatRijTotaal` vermenigvuldigt nu met de factor.
+- `renderMeetstaat`, de Enter-navigatie (`msKey`), de nieuwe-rij-default en de dupliceer-flow bijgewerkt.
+
+---
+
+
+## v3.26.1 — Versie-geschiedenis en welkomstblok aangevuld (gaten gedicht)
+Bij het terugkijken bleek dat zowel de Versie-geschiedenis-tijdlijn als het welkomstblok op het dashboard een gat hadden tussen v3.20.0 en v3.26.0. De bijwerk-stap voor beide overzichten was een tijd overgeslagen, waarschijnlijk door werk in parallelle chats, terwijl APP_VERSION en CHANGELOG wel doorliepen.
+
+### Wijzigingen
+- **RELEASE_HIGHLIGHTS** (de tijdlijn): 24 ontbrekende versies toegevoegd, v3.21.0 tot en met v3.25.12, als één regel per versie. Bron: het welkomstblok voor de v3.25-reeks en de CHANGELOG voor v3.24, v3.23 en v3.22.3.
+- **Welkomstblok** (de paragrafen): 8 ontbrekende paragrafen toegevoegd tussen v3.24.5 en v3.22.3, namelijk de foto-versies v3.24.0 tot en met v3.24.3 en de VvE-versies v3.23.0 tot en met v3.23.3. Bron: de CHANGELOG.
+
+### Niet meegedaan
+- De versies v3.24.4 en v3.22.0 tot en met v3.22.2 hebben nergens een bewaard spoor en zijn overgeslagen in plaats van verzonnen. Daardoor zie je in beide overzichten bijvoorbeeld v3.24.5 meteen gevolgd door v3.24.3.
+- De datums van de bijgevulde tijdlijn-regels staan op "eind mei 2026" omdat exacte dagdatums per versie niet waren vastgelegd. Te verfijnen in de array indien gewenst.
+- Geen functionele of code-wijziging aan de app zelf, dit is puur de twee versie-overzichten.
+
+---
+
+
 ## v3.26.0 — Automatische reisafstand via postcode (PDOK + OpenRouteService)
 Tot nu toe zocht je de enkele reisafstand handmatig op in een navigatie-app (afstand van Koperslager 2 naar het werkadres) en typte je die over in het km-veld. Vanaf nu kan de app dat zelf: vul de postcode (en eventueel huisnummer) van het werkadres in, klik op "Afstand ophalen" en het km-veld wordt automatisch gevuld. Het veld blijft met de hand aanpasbaar, dus overrulen kan altijd.
 
