@@ -1717,8 +1717,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.27.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.27.4</h2>
       <div class="intro-body">
+        <p><strong>📊 Planning: capaciteit per jaar (v3.27.4).</strong> Onder de jaartotalen in de Planning-matrix staan nu drie regels: het percentage van je jaarcapaciteit in euro, het totaal aan manuren per jaar en het percentage van je uren-capaciteit. Zo zie je in één oogopslag hoe vol elk jaar zit. Stel je capaciteit in onder Instellingen bij "Planning": de euro-capaciteit staat standaard op 450.000 (incl. BTW, zelfde grondslag als de matrix), de uren-capaciteit is optioneel en het uren-percentage verschijnt zodra je die invult. De manuren zijn de genormeerde schilderuren, exclusief reis.</p>
         <p><strong>🗑 Onderhoudsplan verwijderen (v3.27.3).</strong> Onderaan een geopend onderhoudsplan staat nu een knop "Verwijder dit plan", met een bevestiging vooraf. Handig om testplannen op te ruimen. Het verwijdert het plan en al z'n beurten. De bron-calculatie blijft gewoon bestaan, want die staat los van het plan en wil je meestal houden.</p>
         <p><strong>🔧 Plan-status wordt nu correct bewaard (v3.27.2).</strong> Een statuswijziging in de Onderhoudsplan-tab (bijvoorbeeld een plan op Verloren of Concept zetten) werd niet opgeslagen en sprong terug naar de oude status. Vanaf nu blijft de gekozen status staan. Dit speelde sinds de plan-status werd ingevoerd: de status kwam toen eenmalig uit de bron-calculatie en kon daarna niet meer in de editor gewijzigd worden. Handig nu je met de Planning-tab de juiste opdrachten wilt tonen.</p>
         <p><strong>🎯 Planning toont alleen opdrachten (v3.27.1).</strong> De Planning-matrix laat nu alleen plannen zien met de status Geaccepteerd, dus de daadwerkelijke opdrachten. Uitgebrachte, concept- en verloren plannen vallen er buiten, want die zijn nog geen opdracht. Let op: plannen die nog op de oude default Concept staan verschijnen pas zodra je ze in de Onderhoudsplan-tab op Geaccepteerd zet. Staat er nog geen enkel plan op Geaccepteerd, dan zie je een melding in plaats van een lege tabel.</p>
@@ -2051,6 +2052,14 @@
         <div style="grid-column: 1 / -1;"><label>OpenRouteService API-sleutel</label><input type="text" id="setOrsKey" placeholder="plak hier je gratis sleutel" autocomplete="off" onchange="updSettingText('orsKey', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">Gratis aan te maken op openrouteservice.org. Wordt in Supabase bewaard, niet in de openbare code.</div></div>
         <div><label>Vertrek-postcode</label><input type="text" id="setVertrekPostcode" placeholder="bv. 6433 KE" autocomplete="off" onchange="updSettingText('vertrekPostcode', this)"></div>
         <div><label>Vertrek-huisnummer</label><input type="text" id="setVertrekHuisnummer" placeholder="bv. 2" autocomplete="off" onchange="updSettingText('vertrekHuisnummer', this)"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>Planning</h3>
+      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Bepaalt de percentages onderaan de Planning-matrix. De euro-capaciteit is je jaaromzet op dezelfde grondslag als de matrix-bedragen, dus inclusief BTW. De uren-capaciteit is optioneel; laat 'm leeg als je geen uren-percentage wilt.</em></p>
+      <div class="form-grid">
+        <div><label>Jaarcapaciteit (€ incl. BTW)</label><input type="number" id="setJaarcapEuro" step="10000" min="0" onchange="updSetting('jaarcapaciteitEuro', this)"></div>
+        <div><label>Jaarcapaciteit (manuren)</label><input type="number" id="setJaarcapUren" step="50" min="0" placeholder="optioneel" onchange="updSetting('jaarcapaciteitUren', this)"></div>
       </div>
     </div>
     <div class="settings-section">
@@ -2487,7 +2496,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.27.3';
+const APP_VERSION = 'v3.27.4';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2849,6 +2858,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.27.4', d: '2026-06-03', h: 'Planning-matrix: capaciteitsregels onderaan met het percentage van je jaaromzet (default 450.000), de manuren per jaar en het percentage van je uren-capaciteit, in te stellen onder Instellingen' },
   { v: '3.27.3', d: '2026-06-03', h: 'Knop "Verwijder dit plan" onderaan een onderhoudsplan, met bevestiging. Ruimt het plan en alle beurten op, de bron-calculatie blijft bestaan' },
   { v: '3.27.2', d: '2026-06-03', h: 'Bugfix: een statuswijziging van een onderhoudsplan in de editor werd niet bewaard en sprong terug, nu blijft de gekozen status (zoals Verloren) staan' },
   { v: '3.27.1', d: '2026-06-03', h: 'Planning-matrix filtert nu op status Geaccepteerd, zodat alleen echte opdrachten in de planning staan en uitgebrachte of verloren plannen erbuiten blijven' },
@@ -3124,6 +3134,8 @@ const defaultData = {
     kleinMat: 4, afval: 1.5, arbo: 2, winst: 10, btw: 21,
     volleDagen: true,
     afrondingsDrempel: 0.6,
+    jaarcapaciteitEuro: 450000, // v3.27.4 — planning: jaaromzet-capaciteit (incl. BTW)
+    jaarcapaciteitUren: null,   // v3.27.4 — planning: jaarcapaciteit in manuren (leeg = geen %)
     groepOpslagen: { ...DEFAULT_GROEP_OPSLAGEN }
   }
 };
@@ -5049,7 +5061,9 @@ function _ohpDagen(calc, sett, projectUren) {
 
 // Hoofdfunctie: bereken het basisbedrag (excl. BTW) van een beurt.
 // Spiegelt letterlijk de directe + risico-formule uit de calc-tab.
+let _ohpLastBeurtUren = 0; // v3.27.4 — manuren werk van de laatst berekende beurt (voor planning-capaciteit)
 function _ohpBeurtBasisBedrag(beurt) {
+  _ohpLastBeurtUren = 0;
   const plan = _ohpState.plan;
   if (!plan) return 0;
   const calc = _ohpBronCalc();
@@ -5103,6 +5117,7 @@ function _ohpBeurtBasisBedrag(beurt) {
   // (kleinschaligheidstoeslag etc.) zodat afrondingstoeslag geen dubbeltelling wordt.
   const extraUrenStaart = _extraUrenUitStaart(calc.staart || [], t, (sett.uurloon || 0));
   const dg = _ohpDagen(calc, sett, t.uren + extraUrenStaart);
+  _ohpLastBeurtUren = t.uren + extraUrenStaart; // v3.27.4 — manuren werk (excl. reis), voor de planning-capaciteit
 
   // 4. Afrondingstoeslag (extra-arbeid bij volle dagen).
   const dagenVerschil = Math.max(0, dg.factureerbaar - dg.werkelijk);
@@ -5349,10 +5364,11 @@ async function _planningRekenPlan(plan) {
     const btwF = _ohpBtwFactor();
     (plan.beurten || []).forEach(b => {
       const basis = _ohpBeurtBasisBedrag(b);
+      const uren = _ohpLastBeurtUren; // v3.27.4 — manuren werk, door de engine weggezet
       const fac = _ohpIndexFactor(b.jaartal, plan.prijspeil, plan.indexeringPct);
       const bedrag = basis * fac * btwF;
       (out.cellen[b.jaartal] = out.cellen[b.jaartal] || []).push({
-        bedrag: bedrag, naam: b.naam || '', reeds: b.reedsUitgevoerd === true
+        bedrag: bedrag, uren: uren, naam: b.naam || '', reeds: b.reedsUitgevoerd === true
       });
     });
   } finally {
@@ -5406,6 +5422,9 @@ async function renderPlanningMatrix() {
   html += '</tr></thead><tbody>';
 
   const jaarTotaal = {}; jaren.forEach(y => jaarTotaal[y] = 0);
+  const urenTotaal = {}; jaren.forEach(y => urenTotaal[y] = 0);
+  const capEuro = parseFloat(data.settings && data.settings.jaarcapaciteitEuro) || 0;
+  const capUren = parseFloat(data.settings && data.settings.jaarcapaciteitUren) || 0;
 
   rijen.forEach(r => {
     html += '<tr>';
@@ -5414,8 +5433,10 @@ async function renderPlanningMatrix() {
       const items = r.cellen[y] || [];
       if (!items.length) { html += '<td></td>'; return; }
       const celBedrag = items.reduce((s, it) => s + it.bedrag, 0);
+      const celUren = items.reduce((s, it) => s + (it.uren || 0), 0);
       const alleReeds = items.every(it => it.reeds);
       jaarTotaal[y] += celBedrag;
+      urenTotaal[y] += celUren;
       const naam = items.map(it => it.naam).filter(Boolean).join(' + ');
       const grijs = alleReeds ? ' style="color: var(--muted); background: var(--bg-soft, #f5f5f5);"' : '';
       const badge = alleReeds ? ' <span style="font-size: 0.7rem; color: var(--muted);">reeds uitgevoerd</span>' : '';
@@ -5429,6 +5450,34 @@ async function renderPlanningMatrix() {
   html += `<td style="${stickyCell}">Totaal per jaar</td>`;
   jaren.forEach(y => { html += `<td class="right">${eur(jaarTotaal[y])}</td>`; });
   html += '</tr>';
+
+  // Euro-percentage van de jaarcapaciteit.
+  if (capEuro > 0) {
+    html += '<tr style="font-size: 0.82rem; color: var(--muted);">';
+    html += `<td style="${stickyCell} color: var(--muted);" title="Aandeel van de jaarcapaciteit in euro (incl. BTW)">% van ${eur(capEuro)}</td>`;
+    jaren.forEach(y => {
+      const pct = jaarTotaal[y] / capEuro * 100;
+      html += `<td class="right">${jaarTotaal[y] ? pct.toFixed(1).replace('.', ',') + '%' : ''}</td>`;
+    });
+    html += '</tr>';
+  }
+
+  // Manuren per jaar.
+  html += '<tr style="font-size: 0.82rem;">';
+  html += `<td style="${stickyCell}" title="Genormeerde schilderuren, exclusief reis">Manuren per jaar</td>`;
+  jaren.forEach(y => { html += `<td class="right">${urenTotaal[y] ? Math.round(urenTotaal[y]) + ' u' : ''}</td>`; });
+  html += '</tr>';
+
+  // Uren-percentage van de uren-capaciteit (alleen als ingesteld).
+  if (capUren > 0) {
+    html += '<tr style="font-size: 0.82rem; color: var(--muted);">';
+    html += `<td style="${stickyCell} color: var(--muted);" title="Aandeel van de jaarcapaciteit in manuren">% van ${Math.round(capUren)} uur</td>`;
+    jaren.forEach(y => {
+      const pct = urenTotaal[y] / capUren * 100;
+      html += `<td class="right">${urenTotaal[y] ? pct.toFixed(1).replace('.', ',') + '%' : ''}</td>`;
+    });
+    html += '</tr>';
+  }
 
   html += '</tbody></table></div>';
   c.innerHTML = html;
@@ -11364,6 +11413,8 @@ function loadSettings() {
   { const _e = document.getElementById('setOrsKey'); if (_e) _e.value = s.orsKey || ''; }
   { const _e = document.getElementById('setVertrekPostcode'); if (_e) _e.value = s.vertrekPostcode || ''; }
   { const _e = document.getElementById('setVertrekHuisnummer'); if (_e) _e.value = s.vertrekHuisnummer || ''; }
+  { const _e = document.getElementById('setJaarcapEuro'); if (_e) _e.value = (s.jaarcapaciteitEuro != null) ? s.jaarcapaciteitEuro : 450000; }
+  { const _e = document.getElementById('setJaarcapUren'); if (_e) _e.value = (s.jaarcapaciteitUren != null && s.jaarcapaciteitUren !== 0) ? s.jaarcapaciteitUren : ''; }
   document.getElementById('setKleinMat').value = s.kleinMat;
   document.getElementById('setAfval').value = s.afval;
   document.getElementById('setArbo').value = s.arbo;

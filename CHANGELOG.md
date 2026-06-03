@@ -1,3 +1,22 @@
+## v3.27.4 — Planning: capaciteit per jaar (brok 3)
+Onder de jaartotalen in de Planning-matrix komen drie capaciteitsregels: het euro-percentage van de jaarcapaciteit, de manuren per jaar en het uren-percentage. Hiermee zie je per jaar hoe vol de planning zit. Brok 3 van het Planning-tabblad.
+
+### Geen migratie
+De capaciteit-instellingen leven in het bestaande `app_settings.data` jsonb-blok, dus geen Supabase-wijziging nodig. Bestaande gebruikers krijgen de euro-capaciteit op de default 450.000 via `defaultData.settings`.
+
+### Wijzigingen
+- **Twee instellingen** onder Instellingen → Planning: jaarcapaciteit in euro (default 450.000, incl. BTW, zelfde grondslag als de matrix-bedragen) en jaarcapaciteit in manuren (optioneel). Het uren-percentage verschijnt alleen als de uren-capaciteit is ingevuld.
+- **Drie regels** onderaan de matrix: "% van [euro-capaciteit]", "Manuren per jaar" en "% van [uren-capaciteit]". Percentages in NL-notatie met komma. Lege cellen blijven leeg.
+- De manuren zijn de genormeerde schilderuren plus de werkdag-tellende staart (bijvoorbeeld kleinschaligheidstoeslag), exclusief reisuren. Conform de keuze "alleen manuren werk".
+
+### Code
+- `defaultData.settings` uitgebreid met `jaarcapaciteitEuro` (450000) en `jaarcapaciteitUren` (null).
+- Instellingen-veld + `loadSettings`-koppeling via de bestaande `updSetting`-flow.
+- De uren per beurt komen uit de bestaande engine: `_ohpBeurtBasisBedrag` rekende de manuren al uit en zet ze nu additief weg in `_ohpLastBeurtUren` (reset bovenin, waarde na de dagen-berekening). De engine-uitkomst en de offerte-bijlage blijven ongewijzigd. `_planningRekenPlan` leest die waarde uit, `renderPlanningMatrix` telt per jaar op en rendert de drie regels.
+
+---
+
+
 ## v3.27.3 — Onderhoudsplan verwijderen
 Er was wel een backend-functie om een plan te verwijderen (`_deleteOhp`, met FK-cascade op de beurten), maar geen knop ervoor. Handig om testplannen op te ruimen voor de Planning-tab in gebruik gaat.
 
