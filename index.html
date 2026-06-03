@@ -1732,8 +1732,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.30.6</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.30.7</h2>
       <div class="intro-body">
+        <p><strong>✓ Vinkje in plaats van "reeds uitgevoerd" (v3.30.7).</strong> In de Planning-matrix tonen uitgevoerde beurten nu een vinkje achter het bedrag in plaats van de tekst "reeds uitgevoerd". Scheelt nog een regel hoogte per cel, en het zegt genoeg.</p>
         <p><strong>🧹 Koptitels weg op alle tabs (v3.30.6).</strong> De grote paginatitel boven elke tab (Calculatie, Materialen, Instellingen en de rest) is weg, want de menubalk laat al zien waar je bent. Scheelt op elke tab een regel hoogte. Het dashboard houdt zijn welkomstblok, en de actieknoppen blijven gewoon rechtsboven staan.</p>
         <p><strong>📕 Compactere Planning: beschrijvingen inklapbaar (v3.30.5).</strong> De beschrijvingen in de matrix staan nu standaard ingeklapt tot één regel, en de intro-tekst en de paginakop zijn weg. Daardoor passen er meer klanten tegelijk in beeld. Wil je de volledige beschrijvingen zien, zet dan bovenaan "Beschrijvingen tonen" aan. Bewerken gaat nog gewoon door op een cel te klikken, daar zie je sowieso de hele tekst.</p>
         <p><strong>↔️ Planning op volle schermbreedte (v3.30.4).</strong> Op een breed scherm gebruikt de Planning-tab nu de hele breedte in plaats van de leesbare 1500px die de andere tabs aanhouden. Zo zie je meer jaren tegelijk zonder te scrollen. De overige tabs blijven netjes op leesbreedte.</p>
@@ -2591,7 +2592,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.30.6';
+const APP_VERSION = 'v3.30.7';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2953,6 +2954,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.30.7', d: '2026-06-03', h: 'Uitgevoerde beurten in de Planning-matrix tonen een vinkje achter het bedrag in plaats van de tekst "reeds uitgevoerd", scheelt nog een regel hoogte per cel' },
   { v: '3.30.6', d: '2026-06-03', h: 'Paginatitels boven elke tab verwijderd (behalve het dashboard-welkomstblok), want de menubalk toont al de actieve tab. Actieknoppen blijven rechtsboven. Scheelt op elke tab een regel hoogte' },
   { v: '3.30.5', d: '2026-06-03', h: 'Compactere Planning: beschrijvingen in de cellen standaard ingeklapt tot één regel (schakelaar "Beschrijvingen tonen" om uit te klappen), plus intro-tekst en paginakop verwijderd. Meer klanten tegelijk in beeld' },
   { v: '3.30.4', d: '2026-06-03', h: 'Planning-tab gebruikt op brede schermen de volledige schermbreedte in plaats van de leesbare 1500px, zodat je meer jaren tegelijk ziet. De andere tabs houden hun leesbreedte' },
@@ -5574,7 +5576,7 @@ async function renderPlanningMatrix() {
       jaarTotaal[y] += celBedrag;
       urenTotaal[y] += celUren;
       const grijs = alleReeds ? ' style="color: var(--muted); background: var(--bg-soft, #f5f5f5);"' : '';
-      const badge = alleReeds ? ' <span style="font-size: 0.7rem; color: var(--muted);">reeds uitgevoerd</span>' : '';
+      const badge = alleReeds ? ' <span title="Reeds uitgevoerd" style="color: var(--muted); font-weight: normal;">✓</span>' : '';
       const links = items.map(it => {
         const label = it.naam || (it.handmatigId ? 'regel' : 'beurt');
         const fn = it.handmatigId ? `_planningOpenHandmatigEdit('${it.handmatigId}')` : `_planningOpenCelEdit('${it.beurtId}')`;

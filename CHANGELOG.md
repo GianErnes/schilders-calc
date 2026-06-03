@@ -1,3 +1,12 @@
+## v3.30.7 — Vinkje voor uitgevoerde beurten in de matrix
+Verdere hoogtebesparing in de Planning-matrix.
+
+### Wijziging
+- De tekst "reeds uitgevoerd" in een matrix-cel (die op smalle kolommen over twee regels brak) is vervangen door een vinkje direct achter het bedrag. Het vinkje staat op de bedrag-regel zodat het altijd zichtbaar blijft, ook als de ingeklapte beschrijving wordt afgekapt. De grijze cel blijft het tweede signaal. De "reeds uitgevoerd"-badge in de onderhoudsplan-jaarblokken (offerte-bijlage) blijft ongewijzigd, daar is ruimte zat.
+
+---
+
+
 ## v3.30.6 — Koptitels weg op alle tabs
 In het verlengde van de compactere Planning: de grote paginatitel boven elke tab is overbodig naast de menubalk en kostte op elke tab verticale ruimte.
 
