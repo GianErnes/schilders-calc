@@ -1,3 +1,17 @@
+## v3.27.2 — Bugfix: plan-status werd niet bewaard
+Een statuswijziging van een onderhoudsplan in de editor (Concept, Gereed, Verzonden, Geaccepteerd, Verloren) werd niet opgeslagen en sprong terug naar de oude status. De dropdown-waarde werd wel gelezen, maar bij het opslaan overschreven door de bestaande status uit het geheugen.
+
+### Oorzaak
+`_ohpSaveParams` bouwt het plan-object op door `_ohpState.plan` te spreaden en daarna een vaste set velden te overschrijven. `status` ontbrak in die set, dus de oude (gespreade) status won altijd. De bug bestond sinds v3.25.10: de status werd toen eenmalig vanuit de bron-calc gezet en kon daarna nooit meer via de editor wijzigen.
+
+### Fix
+- Eén regel: `status: params.status || 'concept'` toegevoegd aan het plan-object in `_ohpSaveParams`. `_ohpReadParamsFromUI` las de waarde al correct uit de dropdown, en `_mapOhpToDB` mapte 'm al naar de kolom. De DB-CHECK-constraint stond Verloren altijd al toe.
+
+Geen migratie nodig.
+
+---
+
+
 ## v3.27.1 — Planning filtert op status Geaccepteerd
 Correctie op brok 2. De matrix toonde álle onderhoudsplannen, maar een uitgebracht plan is nog geen opdracht. Alleen plannen met de status Geaccepteerd horen in de planning.
 

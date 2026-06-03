@@ -1717,8 +1717,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.27.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.27.2</h2>
       <div class="intro-body">
+        <p><strong>🔧 Plan-status wordt nu correct bewaard (v3.27.2).</strong> Een statuswijziging in de Onderhoudsplan-tab (bijvoorbeeld een plan op Verloren of Concept zetten) werd niet opgeslagen en sprong terug naar de oude status. Vanaf nu blijft de gekozen status staan. Dit speelde sinds de plan-status werd ingevoerd: de status kwam toen eenmalig uit de bron-calculatie en kon daarna niet meer in de editor gewijzigd worden. Handig nu je met de Planning-tab de juiste opdrachten wilt tonen.</p>
         <p><strong>🎯 Planning toont alleen opdrachten (v3.27.1).</strong> De Planning-matrix laat nu alleen plannen zien met de status Geaccepteerd, dus de daadwerkelijke opdrachten. Uitgebrachte, concept- en verloren plannen vallen er buiten, want die zijn nog geen opdracht. Let op: plannen die nog op de oude default Concept staan verschijnen pas zodra je ze in de Onderhoudsplan-tab op Geaccepteerd zet. Staat er nog geen enkel plan op Geaccepteerd, dan zie je een melding in plaats van een lege tabel.</p>
         <p><strong>🗓️ Nieuw tabblad Planning (v3.27.0).</strong> Een jaaroverzicht van al je onderhoudsplannen, als vervanger van je Excel/Numbers-sheet. Rijen zijn de klanten, kolommen de jaren, en per cel staat het bedrag met de korte beurt-naam. Reeds uitgevoerde beurten staan grijs. Onderaan het totaal per jaar. De bedragen komen rechtstreeks uit je bestaande plannen (incl. indexering en BTW), er verandert niets aan de berekening zelf. Dit is de eerste stap: de capaciteit-regel (percentage van je jaaromzet), de uren, de contant/abo-splitsing en het meenemen van je oude plannen volgen in de komende stappen.</p>
         <p><strong>📐 Meetstaat: breedte vóór hoogte en een vrije ×factor (v3.26.2).</strong> In de meetstaat staat de kolom breedte nu vóór hoogte, precies in de volgorde waarin je invoert. Ook de Enter-toets volgt die volgorde en de focus na "+ Regel" landt op breedte. De berekening blijft gelijk. Daarnaast een nieuw veld "factor" tussen aantal en totaal: een vrije vermenigvuldiger met decimalen, standaard 1, die in het rij-totaal meedoet (bijvoorbeeld ×2 voor twee zijden of ×1,5 voor een toeslag). De factor verschijnt ook in de meetstaat-PDF. Vereiste eenmalig een Supabase-migratie (kolom factor op de meetstaat-tabel).</p>
@@ -2482,7 +2483,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.27.1';
+const APP_VERSION = 'v3.27.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2844,6 +2845,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.27.2', d: '2026-06-03', h: 'Bugfix: een statuswijziging van een onderhoudsplan in de editor werd niet bewaard en sprong terug, nu blijft de gekozen status (zoals Verloren) staan' },
   { v: '3.27.1', d: '2026-06-03', h: 'Planning-matrix filtert nu op status Geaccepteerd, zodat alleen echte opdrachten in de planning staan en uitgebrachte of verloren plannen erbuiten blijven' },
   { v: '3.27.0', d: '2026-06-03', h: 'Nieuw tabblad Planning: jaaroverzicht van alle onderhoudsplannen als matrix (klanten × jaren), met bedrag en beurt-naam per cel, reeds-uitgevoerd grijs en een jaartotaal' },
   { v: '3.26.2', d: '2026-06-02', h: 'Meetstaat: breedte vóór hoogte (zoals je invoert) plus een vrije ×factor tussen aantal en totaal, decimalen toegestaan en standaard 1, ook in de PDF' },
@@ -3841,7 +3843,8 @@ async function _ohpSaveParams(params) {
     btwPctOverride: params.btwPctOverride,
     notities:      params.notities || '',
     ontvangerType: params.ontvangerType || 'particulier',
-    scopeOmschrijving: params.scopeOmschrijving || ''
+    scopeOmschrijving: params.scopeOmschrijving || '',
+    status:        params.status || 'concept'   // v3.27.2 — werd niet meegenomen, statuswijziging in editor ging verloren
   };
   const saved = await _saveOhpParams(planObj);
   if (saved) _ohpState.plan = saved;
