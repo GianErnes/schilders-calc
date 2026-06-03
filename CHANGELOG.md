@@ -1,3 +1,58 @@
+## v3.27.0 — Nieuw tabblad Planning (brok 1 + 2)
+Eerste twee stappen van het Planning-tabblad, het jaaroverzicht dat de Excel/Numbers-planningsheet vervangt. Een matrix met klanten als rijen en jaren als kolommen, automatisch opgebouwd uit de onderhoudsplannen in Supabase. Gebouwd in brokken: dit is het fundament plus de matrix zelf. Capaciteit-percentage, uren, contant/abo-splitsing en het meenemen van de oude plannen volgen in brok 3 tot en met 5.
+
+### ⚠️ Vereiste Supabase-migratie (brok 1)
+Eénmalig draaien in het schilders-calc-project (idempotent):
+
+```sql
+ALTER TABLE onderhoudsplannen
+  ADD COLUMN IF NOT EXISTS betaalmodel text NOT NULL DEFAULT 'abo';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'onderhoudsplannen_betaalmodel_chk') THEN
+    ALTER TABLE onderhoudsplannen
+      ADD CONSTRAINT onderhoudsplannen_betaalmodel_chk CHECK (betaalmodel IN ('contant','abo'));
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS planning_handmatig (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  klant text NOT NULL,
+  betaalmodel text NOT NULL DEFAULT 'contant' CHECK (betaalmodel IN ('contant','abo')),
+  jaartal integer NOT NULL,
+  bedrag numeric NOT NULL DEFAULT 0,
+  omschrijving text DEFAULT '',
+  reeds_uitgevoerd boolean NOT NULL DEFAULT false,
+  volgorde integer NOT NULL DEFAULT 0,
+  aangemaakt timestamptz NOT NULL DEFAULT now(),
+  gewijzigd timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS planning_handmatig_klant_jaar_idx ON planning_handmatig (klant, jaartal);
+ALTER TABLE planning_handmatig ENABLE ROW LEVEL SECURITY;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'planning_handmatig' AND policyname = 'planning_handmatig_all') THEN
+    CREATE POLICY planning_handmatig_all ON planning_handmatig FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+```
+
+Bestaande calc-plannen komen op betaalmodel `abo` te staan, per plan om te zetten zodra de toggle er is (brok 4). De tabel `planning_handmatig` is nog leeg en wordt in brok 5 gevuld.
+
+### Wijzigingen (brok 2)
+- **Nieuw tabblad Planning** tussen Onderhoudsplan en Instellingen. Toont een jaarmatrix van alle onderhoudsplannen in de app: rijen zijn de klanten (uit de calc-klantnaam, alfabetisch), kolommen de jaren (dynamisch van vroegste tot laatste beurt). Per cel het bedrag inclusief BTW plus de korte beurt-naam. Reeds uitgevoerde beurten staan grijs met een badge. Onderaan een regel met het totaal per jaar.
+- **Nog niet meegenomen** (volgt): capaciteit-percentage van de jaaromzet (default wordt 450.000), de uren-regel, de splitsing contant versus abo en de handmatige regels voor oude plannen.
+
+### Code
+- `_planningFetchAllPlannen` haalt alle plannen plus beurten op in twee queries, los van de editor-state.
+- `_planningRekenPlan` rekent per beurt het bedrag per jaar (basis × indexfactor × btwfactor) uit met de bestáánde engine, via een tijdelijke state-swap op `_ohpState`. De reken-functies (`_ohpBeurtBasisBedrag`, `_ohpBtwFactor`, `_ohpIndexFactor`) en de offerte-bijlage blijven ongewijzigd. Nul risico voor bestaande features.
+- `renderPlanningMatrix` laadt steeds vers zodat plan-bewerkingen meteen kloppen, en zorgt per plan dat de calc-body geladen is via `_loadCalcBody`.
+- Nav-knop, panel en de tab-wissel-aanroep toegevoegd.
+
+---
+
+
 ## v3.26.2 — Meetstaat: breedte vóór hoogte + vrije ×factor
 Twee wensen uit de praktijk voor de meetstaat.
 
