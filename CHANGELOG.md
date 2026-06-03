@@ -1,3 +1,12 @@
+## v3.30.9 — Geen hover-kleur in de Planning-matrix
+De globale `tr:hover td`-regel kleurde de rij onder de cursor warm. In de Planning botste dat met de grijze achtergrond van de reeds-uitgevoerde cellen, wat de leesbaarheid van de gereed-markering verslechterde.
+
+### Wijziging
+- CSS-regel `.planning-matrix tr:hover td { background: transparent; }` zet de hover-kleur uit, maar alleen in de Planning-matrix. Alle andere tabellen (Materialen, Bewerkingen, enzovoort) houden hun rij-hover.
+
+---
+
+
 ## v3.30.8 — Hoger omschrijvingsveld, matrix-schakelaar vervalt
 De omschrijving van een handmatige regel paste niet in het smalle invoerveld. Door er een hoger tekstvak van te maken zie je de hele tekst bij het bewerken, en wordt de matrix-schakelaar overbodig.
 
