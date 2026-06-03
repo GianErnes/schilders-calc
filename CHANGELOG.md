@@ -1,3 +1,22 @@
+## v3.28.0 — Snel bewerken vanuit de Planning-matrix
+De matrix was alleen-lezen, waardoor je voor een kleine bijsturing (notitie, uitstellen) helemaal naar het plan moest navigeren terwijl je de juiste cel al in beeld had. Nu kun je rechtstreeks vanuit een cel bewerken.
+
+### Geen migratie
+Alle gebruikte velden (jaartal, planning_notitie, reeds_uitgevoerd) bestaan al.
+
+### Wijzigingen
+- **Klikbare beurt-naam in de matrix-cel.** Klik of tik op de naam van een beurt en er opent een klein venster met drie velden: het jaar (om de beurt te verschuiven), de planning-notitie en een vinkje reeds-uitgevoerd. Opslaan werkt direct op de beurt en de matrix ververst, dus een verschoven beurt springt meteen naar de juiste jaarkolom.
+- **Notitie-indicator.** Een beurt met een planning-notitie toont een 📝 in de cel. De losse klik-om-te-tonen (v3.27.5) is vervangen: de notitie zie en bewerk je nu in het snelle venster. Het 📝 is alleen nog een signaal dat er een notitie is.
+- Het volledige bewerken (modus, schaling, offerte-tekst) blijft bewust in de Onderhoudsplan-tab. De matrix is de snelle stuurplek.
+
+### Code
+- `_planningRekenPlan` geeft per cel-item de `beurtId` door. `renderPlanningMatrix` bouwt een `_planningBeurtIndex` (beurt-id naar beurt-object plus klantnaam) en rendert de naam als klikbare link.
+- Nieuwe modal `#planningEditModal` plus `_planningOpenCelEdit`, `_planningEditBeurt`-logica, `_planningSaveCelEdit` en `_planningCloseCelEdit`. Opslaan gaat via de bestaande `_updateBeurt`, identiek aan de beurt-modal, dus geen nieuw opslag-pad.
+- `_planningToggleNotitie` (v3.27.5) is vervangen door deze functies.
+
+---
+
+
 ## v3.27.5 — Planning-notitie per beurt
 Elke beurt krijgt een eigen interne planning-notitie, los van de offerte-tekst. Bedoeld als vervanger van de omschrijving-kolommen uit de oude planning-sheet (verplaatst, gestopt, ingepland enzovoort). Komt nergens in een klant-document.
 

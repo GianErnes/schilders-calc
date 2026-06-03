@@ -1717,8 +1717,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.27.5</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.28.0</h2>
       <div class="intro-body">
+        <p><strong>✏️ Snel bewerken vanuit de Planning (v3.28.0).</strong> Je hoeft niet meer naar het plan te navigeren om iets bij te sturen. Klik of tik in de Planning-matrix op de naam van een beurt en er opent een klein venster waarin je drie dingen kunt doen: de planning-notitie schrijven, de beurt naar een ander jaar verschuiven (bijvoorbeeld uitstellen) en 'm op reeds uitgevoerd zetten. Opslaan en de matrix springt meteen goed. Het uitgebreide bewerken (modus, schaling, offerte-tekst) blijft in de Onderhoudsplan-tab. Een 📝 bij een beurt betekent dat er een notitie is.</p>
         <p><strong>📝 Planning-notitie per beurt (v3.27.5).</strong> Elke beurt heeft nu een eigen interne planning-notitie, los van de offerte-tekst. Bedoeld voor jezelf, in de trant van de omschrijving-kolommen uit je oude sheet ("verplaatst ivm dijkwerkzaamheden", "gestopt ivm verkoop"). Je vult 'm in de bewerk-modal van een beurt, onder de offerte-tekst. In de Planning-matrix verschijnt bij zo'n beurt een notitie-icoon; klik of tik erop en de notitie verschijnt. Werkt op de Mac en op de iPad. Deze notitie komt nergens in een klant-document.</p>
         <p><strong>📊 Planning: capaciteit per jaar (v3.27.4).</strong> Onder de jaartotalen in de Planning-matrix staan nu drie regels: het percentage van je jaarcapaciteit in euro, het totaal aan manuren per jaar en het percentage van je uren-capaciteit. Zo zie je in één oogopslag hoe vol elk jaar zit. Stel je capaciteit in onder Instellingen bij "Planning": de euro-capaciteit staat standaard op 450.000 (incl. BTW, zelfde grondslag als de matrix), de uren-capaciteit is optioneel en het uren-percentage verschijnt zodra je die invult. De manuren zijn de genormeerde schilderuren, exclusief reis.</p>
         <p><strong>🗑 Onderhoudsplan verwijderen (v3.27.3).</strong> Onderaan een geopend onderhoudsplan staat nu een knop "Verwijder dit plan", met een bevestiging vooraf. Handig om testplannen op te ruimen. Het verwijdert het plan en al z'n beurten. De bron-calculatie blijft gewoon bestaan, want die staat los van het plan en wil je meestal houden.</p>
@@ -2293,6 +2294,26 @@ Hout binnen;Gronden;m²;6;0,10</div>
   </div>
 </div>
 
+<!-- PLANNING QUICK-EDIT MODAL -->
+<div class="modal-overlay" id="planningEditModal">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-head"><h3>Beurt in de planning</h3><button class="close-x" onclick="_planningCloseCelEdit()">✕</button></div>
+    <div class="modal-body">
+      <div id="planningEditKop" style="color: var(--muted); font-size: 0.9rem; margin-bottom: 0.75rem;"></div>
+      <label>Jaar</label>
+      <input type="number" id="planningEditJaar" min="1900" max="2200" step="1" style="width: 120px; padding: 0.6rem; font-size: 1rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); box-sizing: border-box; font-family: inherit;">
+      <div style="font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;">Een ander jaar invullen verschuift de beurt naar die kolom.</div>
+      <label style="margin-top: 0.9rem;">Planning-notitie (intern)</label>
+      <textarea id="planningEditNotitie" rows="3" placeholder="bv. Uitgesteld ivm verbouwing buren, te veel stof." style="width: 100%; resize: vertical; padding: 0.6rem; font-size: 0.95rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); box-sizing: border-box; font-family: inherit; line-height: 1.45;"></textarea>
+      <label style="margin-top: 0.9rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"><input type="checkbox" id="planningEditReeds"> Deze beurt is reeds uitgevoerd</label>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="_planningCloseCelEdit()">Annuleren</button>
+      <button class="btn" onclick="_planningSaveCelEdit()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD SYSTEM TO ONDERDEEL MODAL -->
 <div class="modal-overlay" id="addSysModal">
   <div class="modal" style="max-width: 640px;">
@@ -2502,7 +2523,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.27.5';
+const APP_VERSION = 'v3.28.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2864,6 +2885,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.28.0', d: '2026-06-03', h: 'Snel bewerken vanuit de Planning-matrix: klik of tik op een beurt en pas in een klein venster de planning-notitie, het jaar (uitstellen) en reeds-uitgevoerd aan, zonder naar het plan te navigeren' },
   { v: '3.27.5', d: '2026-06-03', h: 'Interne planning-notitie per beurt, los van de offerte-tekst. Vul je in de bewerk-modal, en in de Planning-matrix verschijnt een notitie-icoon dat je aanklikt of aantikt' },
   { v: '3.27.4', d: '2026-06-03', h: 'Planning-matrix: capaciteitsregels onderaan met het percentage van je jaaromzet (default 450.000), de manuren per jaar en het percentage van je uren-capaciteit, in te stellen onder Instellingen' },
   { v: '3.27.3', d: '2026-06-03', h: 'Knop "Verwijder dit plan" onderaan een onderhoudsplan, met bevestiging. Ruimt het plan en alle beurten op, de bron-calculatie blijft bestaan' },
@@ -5377,7 +5399,7 @@ async function _planningRekenPlan(plan) {
       const fac = _ohpIndexFactor(b.jaartal, plan.prijspeil, plan.indexeringPct);
       const bedrag = basis * fac * btwF;
       (out.cellen[b.jaartal] = out.cellen[b.jaartal] || []).push({
-        bedrag: bedrag, uren: uren, naam: b.naam || '', reeds: b.reedsUitgevoerd === true, notitie: b.planningNotitie || ''
+        bedrag: bedrag, uren: uren, naam: b.naam || '', reeds: b.reedsUitgevoerd === true, notitie: b.planningNotitie || '', beurtId: b.id
       });
     });
   } finally {
@@ -5399,6 +5421,10 @@ async function renderPlanningMatrix() {
   const rijen = [];
   for (const p of plannen) rijen.push(await _planningRekenPlan(p));
   rijen.sort((a, b) => a.klant.localeCompare(b.klant, 'nl'));
+
+  // Index van beurt-id naar het beurt-object + klantnaam, voor snel bewerken vanuit een cel.
+  _planningBeurtIndex = {};
+  rijen.forEach(r => (r.plan.beurten || []).forEach(b => { _planningBeurtIndex[b.id] = { beurt: b, klant: r.klant }; }));
 
   // Jaarbereik bepalen over alle cellen.
   let minJ = Infinity, maxJ = -Infinity;
@@ -5446,14 +5472,15 @@ async function renderPlanningMatrix() {
       const alleReeds = items.every(it => it.reeds);
       jaarTotaal[y] += celBedrag;
       urenTotaal[y] += celUren;
-      const naam = items.map(it => it.naam).filter(Boolean).join(' + ');
-      const notitie = items.map(it => it.notitie).filter(Boolean).join(' · ');
       const grijs = alleReeds ? ' style="color: var(--muted); background: var(--bg-soft, #f5f5f5);"' : '';
       const badge = alleReeds ? ' <span style="font-size: 0.7rem; color: var(--muted);">reeds uitgevoerd</span>' : '';
-      const notitieHtml = notitie
-        ? ` <button type="button" onclick="_planningToggleNotitie(this)" title="Planning-notitie tonen" style="background: none; border: none; cursor: pointer; font-size: 0.85rem; padding: 0; line-height: 1;">📝</button><div class="planning-notitie-tekst" style="display: none; text-align: left; font-size: 0.74rem; color: var(--muted); margin-top: 0.3rem; white-space: normal; max-width: 220px; padding: 0.3rem 0.4rem; background: var(--bg-soft, #f5f5f5); border-radius: 4px;">${_escapeHtml(notitie)}</div>`
-        : '';
-      html += `<td class="right"${grijs}><strong>${eur(celBedrag)}</strong>${badge}<br><span style="font-size: 0.78rem; color: var(--muted);">${_escapeHtml(naam)}</span>${notitieHtml}</td>`;
+      const links = items.map(it => {
+        const label = it.naam || 'beurt';
+        return `<span onclick="_planningOpenCelEdit('${it.beurtId}')" title="Klik of tik om te bewerken" style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px;">${_escapeHtml(label)}</span>`;
+      }).join(' + ');
+      const heeftNotitie = items.some(it => it.notitie);
+      const notitieInd = heeftNotitie ? ' <span title="Heeft een planning-notitie">📝</span>' : '';
+      html += `<td class="right"${grijs}><strong>${eur(celBedrag)}</strong>${badge}<br><span style="font-size: 0.78rem; color: var(--muted);">${links}${notitieInd}</span></td>`;
     });
     html += '</tr>';
   });
@@ -5496,12 +5523,40 @@ async function renderPlanningMatrix() {
   c.innerHTML = html;
 }
 
-// Toon/verberg de planning-notitie in een matrix-cel. Werkt met klik (Mac) en tik (iPad).
-function _planningToggleNotitie(btn) {
-  const el = btn.parentElement.querySelector('.planning-notitie-tekst');
-  if (!el) return;
-  const open = (el.style.display !== 'none' && el.style.display !== '');
-  el.style.display = open ? 'none' : 'block';
+// Snel bewerken van een beurt rechtstreeks vanuit de Planning-matrix.
+let _planningBeurtIndex = {};
+let _planningEditId = null;
+
+function _planningOpenCelEdit(beurtId) {
+  const ref = _planningBeurtIndex[beurtId];
+  if (!ref) return;
+  _planningEditId = beurtId;
+  const b = ref.beurt;
+  document.getElementById('planningEditKop').textContent = `${ref.klant} · ${b.naam || 'beurt'}`;
+  document.getElementById('planningEditJaar').value = b.jaartal;
+  document.getElementById('planningEditNotitie').value = b.planningNotitie || '';
+  document.getElementById('planningEditReeds').checked = b.reedsUitgevoerd === true;
+  document.getElementById('planningEditModal').classList.add('active');
+}
+
+function _planningCloseCelEdit() {
+  document.getElementById('planningEditModal').classList.remove('active');
+  _planningEditId = null;
+}
+
+async function _planningSaveCelEdit() {
+  const ref = _planningEditId ? _planningBeurtIndex[_planningEditId] : null;
+  if (!ref) { _planningCloseCelEdit(); return; }
+  const b = ref.beurt;
+  b.jaartal = parseInt(document.getElementById('planningEditJaar').value) || b.jaartal;
+  b.planningNotitie = document.getElementById('planningEditNotitie').value || '';
+  b.reedsUitgevoerd = document.getElementById('planningEditReeds').checked === true;
+  const opgeslagen = await _updateBeurt(b);
+  if (!opgeslagen) { _toast('Opslaan mislukt'); return; }
+  Object.assign(b, opgeslagen);
+  _planningCloseCelEdit();
+  _toast('Beurt bijgewerkt');
+  renderPlanningMatrix();
 }
 
 // Voeg een lege beurt toe. Default-jaar = laatste beurtjaar+1, of prijspeil.
