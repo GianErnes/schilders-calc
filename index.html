@@ -1727,8 +1727,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.30.4</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.30.5</h2>
       <div class="intro-body">
+        <p><strong>📕 Compactere Planning: beschrijvingen inklapbaar (v3.30.5).</strong> De beschrijvingen in de matrix staan nu standaard ingeklapt tot één regel, en de intro-tekst en de paginakop zijn weg. Daardoor passen er meer klanten tegelijk in beeld. Wil je de volledige beschrijvingen zien, zet dan bovenaan "Beschrijvingen tonen" aan. Bewerken gaat nog gewoon door op een cel te klikken, daar zie je sowieso de hele tekst.</p>
         <p><strong>↔️ Planning op volle schermbreedte (v3.30.4).</strong> Op een breed scherm gebruikt de Planning-tab nu de hele breedte in plaats van de leesbare 1500px die de andere tabs aanhouden. Zo zie je meer jaren tegelijk zonder te scrollen. De overige tabs blijven netjes op leesbreedte.</p>
         <p><strong>📌 Planning werkt nu als een spreadsheet (v3.30.3).</strong> In de Planning-matrix blijft de jaartallen-rij bovenaan staan en de klantkolom links staan terwijl je scrolt, net als bevroren vensters in Excel. De samenvatting onderaan (subtotaal abonnement, het totaal en de capaciteit-regels) blijft ook in beeld als spreadsheet-voet. De matrix heeft daarvoor een eigen scrollvenster gekregen. Het vastzetten werkte eerst in geen enkele browser door een verborgen overflow-instelling op de tabel, dat is nu opgelost.</p>
         <p><strong>⏩ Opslaan en nog één bij handmatige regels (v3.30.1).</strong> In het handmatige-regel venster zit nu een knop "Opslaan en nog één". Hij bewaart de regel en houdt het venster open met klant en betaalwijze al ingevuld, en zet het jaar alvast een jaar verder. Zo tik je alle jaren van één oud plan snel achter elkaar in, zonder telkens de naam opnieuw te typen.</p>
@@ -2051,10 +2052,11 @@
     </div>
   </section>
   <section class="panel" id="planning">
-    <div class="panel-head"><h2>Planning</h2></div>
     <div class="settings-section">
-      <p style="color: var(--muted); margin-top: 0; font-size: 0.9rem;">Jaaroverzicht van alle geaccepteerde onderhoudsplannen (opdrachten) plus je handmatige (oude) plannen. Rijen zijn klanten, kolommen jaren. Bedragen zijn inclusief BTW. Reeds uitgevoerde beurten staan grijs. Handmatige regels tellen mee in de euro-totalen, maar niet in de manuren want die hebben geen calculatie.</p>
-      <div style="margin-bottom: 0.8rem;"><button class="btn btn-sm" onclick="_planningOpenHandmatigEdit()">+ Handmatige regel</button></div>
+      <div style="margin-bottom: 0.8rem; display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;">
+        <button class="btn btn-sm" onclick="_planningOpenHandmatigEdit()">+ Handmatige regel</button>
+        <label style="font-size: 0.85rem; cursor: pointer; color: var(--muted);"><input type="checkbox" id="planningToonBeschrijving" onchange="_planningToggleBeschrijving(this.checked)"> Beschrijvingen tonen</label>
+      </div>
       <div id="planningMatrix"></div>
     </div>
   </section>
@@ -2583,7 +2585,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.30.4';
+const APP_VERSION = 'v3.30.5';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2945,6 +2947,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.30.5', d: '2026-06-03', h: 'Compactere Planning: beschrijvingen in de cellen standaard ingeklapt tot één regel (schakelaar "Beschrijvingen tonen" om uit te klappen), plus intro-tekst en paginakop verwijderd. Meer klanten tegelijk in beeld' },
   { v: '3.30.4', d: '2026-06-03', h: 'Planning-tab gebruikt op brede schermen de volledige schermbreedte in plaats van de leesbare 1500px, zodat je meer jaren tegelijk ziet. De andere tabs houden hun leesbreedte' },
   { v: '3.30.3', d: '2026-06-03', h: 'Planning-matrix werkt nu echt als een spreadsheet: jaartallen-rij, klantkolom en de samenvatting onderaan blijven vast bij het scrollen. Het vastzetten werd geblokkeerd door een overflow-instelling op de tabel, nu verholpen' },
   { v: '3.30.1', d: '2026-06-03', h: 'Knop "Opslaan en nog één" in het handmatige-regel venster: klant en betaalwijze blijven staan en het jaar springt een jaar verder, zodat je de jaren van één oud plan snel achter elkaar intikt' },
@@ -5572,7 +5575,8 @@ async function renderPlanningMatrix() {
       }).join(' + ');
       const heeftNotitie = items.some(it => it.notitie);
       const notitieInd = heeftNotitie ? ' <span title="Heeft een planning-notitie">📝</span>' : '';
-      h += `<td class="right"${grijs}><strong>${eur(celBedrag)}</strong>${badge}<br><span style="font-size: 0.78rem; color: var(--muted);">${links}${notitieInd}</span></td>`;
+      const klamp = _planningToonBeschrijving ? '' : ' display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;';
+      h += `<td class="right"${grijs}><strong>${eur(celBedrag)}</strong>${badge}<br><span style="font-size: 0.78rem; color: var(--muted);${klamp}">${links}${notitieInd}</span></td>`;
     });
     h += '</tr>';
     return h;
@@ -5663,11 +5667,18 @@ function _planningPinFooter() {
   }
 }
 
+// v3.30.5 — Beschrijvingen in de matrix in- of uitklappen.
+function _planningToggleBeschrijving(aan) {
+  _planningToonBeschrijving = !!aan;
+  renderPlanningMatrix();
+}
+
 // Snel bewerken van een beurt rechtstreeks vanuit de Planning-matrix.
 let _planningBeurtIndex = {};
 let _planningEditId = null;
 let _planningHandmatigIndex = {}; // v3.30.0 — id naar handmatige regel
 let _planningHmEditId = null;     // v3.30.0 — id van de handmatige regel in bewerking, null = nieuw
+let _planningToonBeschrijving = false; // v3.30.5 — beschrijvingen in de cellen standaard ingeklapt
 
 function _planningOpenCelEdit(beurtId) {
   const ref = _planningBeurtIndex[beurtId];

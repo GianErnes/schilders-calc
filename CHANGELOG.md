@@ -1,3 +1,16 @@
+## v3.30.5 — Compactere Planning: inklapbare beschrijvingen
+Meer rijen tegelijk in beeld op de Planning-tab, door verticale ruimte terug te winnen.
+
+### Wijzigingen
+- **Intro-tekst en paginakop "Planning" verwijderd** boven de matrix. De nav laat al zien op welke tab je zit, dus de ruimte gaat nu naar het overzicht.
+- **Beschrijvingen standaard ingeklapt** tot één regel per cel (via `-webkit-line-clamp`), zodat lange omschrijvingen (vooral bij de geïmporteerde plannen) de rijhoogte niet meer opblazen. Een schakelaar "Beschrijvingen tonen" bovenaan klapt ze allemaal uit. Bewerken blijft via klikken op een cel, waar de volledige tekst hoe dan ook in het venster staat.
+
+### Code
+- Module-var `_planningToonBeschrijving` (default false) plus `_planningToggleBeschrijving`. In de cel-render krijgt de beschrijving-regel een line-clamp wanneer de schakelaar uit staat.
+
+---
+
+
 ## v3.30.4 — Planning op volle schermbreedte
 De Planning-matrix is een brede spreadsheet, maar de app kapte de inhoud af op 1500px (goed voor leesbaarheid van formulieren en tekst, jammer voor een breed jaaroverzicht). Nu krijgt alleen de Planning-tab de volle breedte.
 
