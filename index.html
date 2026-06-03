@@ -1717,8 +1717,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.27.4</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.27.5</h2>
       <div class="intro-body">
+        <p><strong>📝 Planning-notitie per beurt (v3.27.5).</strong> Elke beurt heeft nu een eigen interne planning-notitie, los van de offerte-tekst. Bedoeld voor jezelf, in de trant van de omschrijving-kolommen uit je oude sheet ("verplaatst ivm dijkwerkzaamheden", "gestopt ivm verkoop"). Je vult 'm in de bewerk-modal van een beurt, onder de offerte-tekst. In de Planning-matrix verschijnt bij zo'n beurt een notitie-icoon; klik of tik erop en de notitie verschijnt. Werkt op de Mac en op de iPad. Deze notitie komt nergens in een klant-document.</p>
         <p><strong>📊 Planning: capaciteit per jaar (v3.27.4).</strong> Onder de jaartotalen in de Planning-matrix staan nu drie regels: het percentage van je jaarcapaciteit in euro, het totaal aan manuren per jaar en het percentage van je uren-capaciteit. Zo zie je in één oogopslag hoe vol elk jaar zit. Stel je capaciteit in onder Instellingen bij "Planning": de euro-capaciteit staat standaard op 450.000 (incl. BTW, zelfde grondslag als de matrix), de uren-capaciteit is optioneel en het uren-percentage verschijnt zodra je die invult. De manuren zijn de genormeerde schilderuren, exclusief reis.</p>
         <p><strong>🗑 Onderhoudsplan verwijderen (v3.27.3).</strong> Onderaan een geopend onderhoudsplan staat nu een knop "Verwijder dit plan", met een bevestiging vooraf. Handig om testplannen op te ruimen. Het verwijdert het plan en al z'n beurten. De bron-calculatie blijft gewoon bestaan, want die staat los van het plan en wil je meestal houden.</p>
         <p><strong>🔧 Plan-status wordt nu correct bewaard (v3.27.2).</strong> Een statuswijziging in de Onderhoudsplan-tab (bijvoorbeeld een plan op Verloren of Concept zetten) werd niet opgeslagen en sprong terug naar de oude status. Vanaf nu blijft de gekozen status staan. Dit speelde sinds de plan-status werd ingevoerd: de status kwam toen eenmalig uit de bron-calculatie en kon daarna niet meer in de editor gewijzigd worden. Handig nu je met de Planning-tab de juiste opdrachten wilt tonen.</p>
@@ -2274,6 +2275,11 @@ Hout binnen;Gronden;m²;6;0,10</div>
         <textarea id="ohpMbOfferteTekst" rows="4" placeholder="bv. De daklijst aan de linkerzijde (zuidkant) vertoont scheurtjes in de verflaag. Wij verwijderen de scheurende laag en schilderen opnieuw met een grondlaag plus twee afwerklagen..." style="width: 100%; resize: vertical; font-family: inherit; font-size: 0.9rem; line-height: 1.45;"></textarea>
         <div style="font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;">Deze tekst verschijnt onder het jaar in de offerte-bijlage. Leeg laten kan ook — dan toont de bijlage alleen het jaar en het beurttype.</div>
       </div>
+      <div style="margin-top: 1rem;">
+        <label style="margin-bottom: 0.4rem;">Planning-notitie (intern) — niet op de klant-print</label>
+        <textarea id="ohpMbPlanningNotitie" rows="2" placeholder="bv. Verplaatst naar 2026 ivm dijkwerkzaamheden. Of: gestopt ivm verkoop." style="width: 100%; resize: vertical; font-family: inherit; font-size: 0.9rem; line-height: 1.45;"></textarea>
+        <div style="font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;">Alleen voor jou, zichtbaar in de Planning-matrix via het notitie-icoon. Verschijnt nergens in een klant-document.</div>
+      </div>
     </div>
     <div class="modal-foot">
       <div id="ohpMbKopieerWrap" style="position: relative;">
@@ -2496,7 +2502,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.27.4';
+const APP_VERSION = 'v3.27.5';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2858,6 +2864,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.27.5', d: '2026-06-03', h: 'Interne planning-notitie per beurt, los van de offerte-tekst. Vul je in de bewerk-modal, en in de Planning-matrix verschijnt een notitie-icoon dat je aanklikt of aantikt' },
   { v: '3.27.4', d: '2026-06-03', h: 'Planning-matrix: capaciteitsregels onderaan met het percentage van je jaaromzet (default 450.000), de manuren per jaar en het percentage van je uren-capaciteit, in te stellen onder Instellingen' },
   { v: '3.27.3', d: '2026-06-03', h: 'Knop "Verwijder dit plan" onderaan een onderhoudsplan, met bevestiging. Ruimt het plan en alle beurten op, de bron-calculatie blijft bestaan' },
   { v: '3.27.2', d: '2026-06-03', h: 'Bugfix: een statuswijziging van een onderhoudsplan in de editor werd niet bewaard en sprong terug, nu blijft de gekozen status (zoals Verloren) staan' },
@@ -3737,6 +3744,7 @@ function _mapBeurtFromDB(row) {
     scaling:   row.scaling || {},
     meeInGemiddelde: row.mee_in_gemiddelde !== false, // default true
     offerteTekst: row.offerte_tekst || '', // v3.21.0 — vrije tekst per beurt voor de offerte-bijlage
+    planningNotitie: row.planning_notitie || '', // v3.27.5 — interne planning-notitie, los van de offerte-tekst
     reedsUitgevoerd: row.reeds_uitgevoerd === true, // v3.24.5 — beurt is al uitgevoerd (visueel grijs in bijlage)
     aangemaakt: row.aangemaakt || null,
     gewijzigd:  row.gewijzigd  || null
@@ -3752,6 +3760,7 @@ function _mapBeurtToDB(b, planId) {
     scaling:   b.scaling || {},
     mee_in_gemiddelde: b.meeInGemiddelde !== false, // default true
     offerte_tekst: b.offerteTekst || '', // v3.21.0
+    planning_notitie: b.planningNotitie || '', // v3.27.5
     reeds_uitgevoerd: b.reedsUitgevoerd === true, // v3.24.5
     gewijzigd: new Date().toISOString()
   };
@@ -5368,7 +5377,7 @@ async function _planningRekenPlan(plan) {
       const fac = _ohpIndexFactor(b.jaartal, plan.prijspeil, plan.indexeringPct);
       const bedrag = basis * fac * btwF;
       (out.cellen[b.jaartal] = out.cellen[b.jaartal] || []).push({
-        bedrag: bedrag, uren: uren, naam: b.naam || '', reeds: b.reedsUitgevoerd === true
+        bedrag: bedrag, uren: uren, naam: b.naam || '', reeds: b.reedsUitgevoerd === true, notitie: b.planningNotitie || ''
       });
     });
   } finally {
@@ -5438,9 +5447,13 @@ async function renderPlanningMatrix() {
       jaarTotaal[y] += celBedrag;
       urenTotaal[y] += celUren;
       const naam = items.map(it => it.naam).filter(Boolean).join(' + ');
+      const notitie = items.map(it => it.notitie).filter(Boolean).join(' · ');
       const grijs = alleReeds ? ' style="color: var(--muted); background: var(--bg-soft, #f5f5f5);"' : '';
       const badge = alleReeds ? ' <span style="font-size: 0.7rem; color: var(--muted);">reeds uitgevoerd</span>' : '';
-      html += `<td class="right"${grijs}><strong>${eur(celBedrag)}</strong>${badge}<br><span style="font-size: 0.78rem; color: var(--muted);">${_escapeHtml(naam)}</span></td>`;
+      const notitieHtml = notitie
+        ? ` <button type="button" onclick="_planningToggleNotitie(this)" title="Planning-notitie tonen" style="background: none; border: none; cursor: pointer; font-size: 0.85rem; padding: 0; line-height: 1;">📝</button><div class="planning-notitie-tekst" style="display: none; text-align: left; font-size: 0.74rem; color: var(--muted); margin-top: 0.3rem; white-space: normal; max-width: 220px; padding: 0.3rem 0.4rem; background: var(--bg-soft, #f5f5f5); border-radius: 4px;">${_escapeHtml(notitie)}</div>`
+        : '';
+      html += `<td class="right"${grijs}><strong>${eur(celBedrag)}</strong>${badge}<br><span style="font-size: 0.78rem; color: var(--muted);">${_escapeHtml(naam)}</span>${notitieHtml}</td>`;
     });
     html += '</tr>';
   });
@@ -5481,6 +5494,14 @@ async function renderPlanningMatrix() {
 
   html += '</tbody></table></div>';
   c.innerHTML = html;
+}
+
+// Toon/verberg de planning-notitie in een matrix-cel. Werkt met klik (Mac) en tik (iPad).
+function _planningToggleNotitie(btn) {
+  const el = btn.parentElement.querySelector('.planning-notitie-tekst');
+  if (!el) return;
+  const open = (el.style.display !== 'none' && el.style.display !== '');
+  el.style.display = open ? 'none' : 'block';
 }
 
 // Voeg een lege beurt toe. Default-jaar = laatste beurtjaar+1, of prijspeil.
@@ -5580,6 +5601,7 @@ function _ohpOpenBeurtModal(beurtId) {
   document.getElementById('ohpMbNaam').value = b.naam || '';
   document.getElementById('ohpMbJaar').value = b.jaartal;
   document.getElementById('ohpMbOfferteTekst').value = b.offerteTekst || '';
+  document.getElementById('ohpMbPlanningNotitie').value = b.planningNotitie || '';
   document.getElementById('ohpMbReedsUitgevoerd').checked = b.reedsUitgevoerd === true;
   // Zet modus-radio
   document.querySelectorAll('input[name="ohpMbModus"]').forEach(r => {
@@ -5986,11 +6008,13 @@ async function _ohpMbOpslaan() {
   const naam = document.getElementById('ohpMbNaam').value || '';
   const jaar = parseInt(document.getElementById('ohpMbJaar').value) || b.jaartal;
   const offerteTekst = document.getElementById('ohpMbOfferteTekst').value || '';
+  const planningNotitie = document.getElementById('ohpMbPlanningNotitie').value || '';
   const reedsUitgevoerd = document.getElementById('ohpMbReedsUitgevoerd').checked === true;
   // Pas toe
   b.naam = naam;
   b.jaartal = jaar;
   b.offerteTekst = offerteTekst;
+  b.planningNotitie = planningNotitie;
   b.reedsUitgevoerd = reedsUitgevoerd;
   b.modus = _ohpMb.modus;
   b.scaling = _ohpMb.scaling;

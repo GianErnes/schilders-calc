@@ -1,3 +1,24 @@
+## v3.27.5 — Planning-notitie per beurt
+Elke beurt krijgt een eigen interne planning-notitie, los van de offerte-tekst. Bedoeld als vervanger van de omschrijving-kolommen uit de oude planning-sheet (verplaatst, gestopt, ingepland enzovoort). Komt nergens in een klant-document.
+
+### ⚠️ Vereiste Supabase-migratie (al gedraaid)
+```sql
+ALTER TABLE onderhoudsplan_beurten
+  ADD COLUMN IF NOT EXISTS planning_notitie text DEFAULT '';
+```
+
+### Wijzigingen
+- **Nieuw veld** `planning_notitie` op `onderhoudsplan_beurten`, in de mappers als `planningNotitie`.
+- **Textarea "Planning-notitie (intern)"** in de bewerk-modal van een beurt, onder de offerte-tekst, met de melding dat het niet op de klant-print komt.
+- **Notitie-icoon in de Planning-matrix**: bij een beurt met een notitie verschijnt een 📝-icoon. Klik of tik erop en de notitie klapt open onder de cel. Werkt op Mac en iPad, geen hover-afhankelijkheid. Meerdere beurten in dezelfde cel: notities worden samengevoegd.
+
+### Code
+- `_mapBeurtFromDB`/`_mapBeurtToDB` uitgebreid. De bestaande beurt-save (`_updateBeurt`) en read-back nemen het veld automatisch mee.
+- `_planningRekenPlan` geeft de notitie per cel-item door, `renderPlanningMatrix` rendert het icoon plus een verborgen tekst-div, `_planningToggleNotitie` klapt die open/dicht. De offerte-tekst en de klant-bijlage zijn niet aangeraakt.
+
+---
+
+
 ## v3.27.4 — Planning: capaciteit per jaar (brok 3)
 Onder de jaartotalen in de Planning-matrix komen drie capaciteitsregels: het euro-percentage van de jaarcapaciteit, de manuren per jaar en het uren-percentage. Hiermee zie je per jaar hoe vol de planning zit. Brok 3 van het Planning-tabblad.
 
