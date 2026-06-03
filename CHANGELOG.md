@@ -1,3 +1,12 @@
+## v3.30.4 — Planning op volle schermbreedte
+De Planning-matrix is een brede spreadsheet, maar de app kapte de inhoud af op 1500px (goed voor leesbaarheid van formulieren en tekst, jammer voor een breed jaaroverzicht). Nu krijgt alleen de Planning-tab de volle breedte.
+
+### Wijziging
+- CSS-regel `main:has(#planning.active) { max-width: 100%; }`. Alleen wanneer de Planning-tab actief is laat `main` de 1500px-limiet los en gebruikt de volle schermbreedte (minus de standaard marge). Alle andere tabs houden hun leesbare 1500px. Geen JS nodig.
+
+---
+
+
 ## v3.30.3 — Sticky-fix: tabel-overflow blokkeerde het vastzetten
 De vaste rij, kolom en voet uit v3.30.2 werkten in geen enkele browser. Oorzaak: de globale `table`-stijl heeft `overflow: hidden`, en dat element zit dichter bij de cellen dan het scrollvenster. Daardoor koos de browser de tabel als sticky-context in plaats van het scrollvenster, en deed sticky niets. Niet browser-specifiek, dus ook niet door `border-collapse` zoals eerst gedacht.
 
