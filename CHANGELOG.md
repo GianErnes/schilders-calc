@@ -1,3 +1,17 @@
+## v3.30.8 — Hoger omschrijvingsveld, matrix-schakelaar vervalt
+De omschrijving van een handmatige regel paste niet in het smalle invoerveld. Door er een hoger tekstvak van te maken zie je de hele tekst bij het bewerken, en wordt de matrix-schakelaar overbodig.
+
+### Wijzigingen
+- **Omschrijving-veld** in `#planningHandmatigModal` van een enkelregelig invoerveld naar een textarea (4 regels, verticaal uitrekbaar).
+- **Schakelaar "Beschrijvingen tonen"** uit het Planning-panel verwijderd, plus de bijbehorende variabele en functie. De matrix klapt beschrijvingen nu altijd in tot één regel; de volledige tekst lees je door op de cel te klikken.
+
+### Code
+- `phOmschrijving` is nu een `<textarea>` (leest/schrijft via dezelfde `.value`, dus geen verdere aanpassing in opslaan/laden).
+- `_planningToonBeschrijving` en `_planningToggleBeschrijving` verwijderd; de line-clamp in de cel-render is nu onvoorwaardelijk.
+
+---
+
+
 ## v3.30.7 — Vinkje voor uitgevoerde beurten in de matrix
 Verdere hoogtebesparing in de Planning-matrix.
 
