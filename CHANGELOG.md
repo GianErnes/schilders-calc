@@ -1,3 +1,18 @@
+## v3.29.1 — Uitleg toeslag-schaling in de modus-hint
+Kleine documentatie-toevoeging. De subtiele rekenwijze van de toeslagen per beurt-modus stond nergens uitgelegd, waardoor je 'm telkens opnieuw moet uitvogelen. Nu staat het in de hint onder de modus-keuze.
+
+### Wijzigingen
+- **Modus-hints uitgebreid** in de beurt-modal:
+  - Algemeen: alles schaalt evenredig mee, steiger en voorrij incluis.
+  - Per regel: vaste toeslagen schalen mee met het gemiddelde van je regel-percentages.
+  - Per stap: idem, met het gemiddelde van je stap-percentages.
+- Em-dashes in deze hints vervangen door komma's, conform de schrijfafspraak.
+
+Geen functionele of reken-wijziging, alleen tekst.
+
+---
+
+
 ## v3.29.0 — Contant en abonnement gesplitst (brok 4)
 Brok 4 van het Planning-tabblad. Een plan heeft nu een betaalwijze (contant of abonnement) en de matrix splitst de plannen in twee groepen met subtotalen, plus een gezamenlijk totaal met de capaciteit eronder.
 
