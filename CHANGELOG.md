@@ -1,3 +1,19 @@
+## v3.30.2 — Planning-matrix als spreadsheet: vaste rij, kolom en voet
+De Planning-matrix gedraagt zich nu als een spreadsheet met bevroren vensters. De klantkolom plakte eerder niet vast (sticky werkt niet met `border-collapse: collapse` in Safari), dat is opgelost.
+
+### Wijzigingen
+- **Jaartallen-rij** blijft bovenaan staan bij verticaal scrollen, **klantkolom** blijft links staan bij horizontaal scrollen, met de hoek-cel erboven.
+- **Samenvatting onderaan** (laatste subtotaal, totaal per jaar, capaciteit-regels) blijft als voet in beeld, ook tijdens het scrollen.
+- De matrix heeft een eigen scrollvenster gekregen (`max-height: 70vh`, eigen overflow).
+
+### Code
+- `.planning-matrix` op `border-collapse: separate; border-spacing: 0;` gezet, de bekende voorwaarde voor werkende sticky-cellen in Safari. Cel-randen blijven gelijk omdat alleen onder-randen worden gebruikt.
+- Header-cellen sticky top, hoek-cel sticky top en links met de hoogste z-index. Scroll-div met `max-height` en eigen overflow.
+- Voet-rijen krijgen klasse `pm-foot`; `_planningPinFooter()` zet ze na het renderen vast aan de onderkant met een oplopende bottom-offset (van onder naar boven gestapeld), omdat sticky per cel werkt en de rijen in hoogte verschillen.
+
+---
+
+
 ## v3.30.1 — Opslaan en nog één bij handmatige regels
 Kleine maar praktische toevoeging op v3.30.0. Meerdere jaren van één oud plan invoeren ging regel voor regel, telkens met de naam opnieuw. Nu sneller.
 

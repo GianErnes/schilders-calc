@@ -236,6 +236,10 @@
     border-radius: 0;
     margin: 0;
   }
+  .planning-matrix {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
   table {
     width: 100%;
     border-collapse: collapse;
@@ -1717,8 +1721,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.30.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.30.2</h2>
       <div class="intro-body">
+        <p><strong>📌 Planning werkt nu als een spreadsheet (v3.30.2).</strong> In de Planning-matrix blijft de jaartallen-rij bovenaan staan en de klantkolom links staan terwijl je scrolt, net als bevroren vensters in Excel. De samenvatting onderaan (subtotaal abonnement, het totaal en de capaciteit-regels) blijft ook in beeld als spreadsheet-voet. De matrix heeft daarvoor een eigen scrollvenster gekregen. Onder water: de tabel is op een andere manier opgemaakt zodat vastzetten ook in Safari werkt, dat ging eerst mis.</p>
         <p><strong>⏩ Opslaan en nog één bij handmatige regels (v3.30.1).</strong> In het handmatige-regel venster zit nu een knop "Opslaan en nog één". Hij bewaart de regel en houdt het venster open met klant en betaalwijze al ingevuld, en zet het jaar alvast een jaar verder. Zo tik je alle jaren van één oud plan snel achter elkaar in, zonder telkens de naam opnieuw te typen.</p>
         <p><strong>📋 Oude plannen handmatig in de planning (v3.30.0).</strong> De laatste stap van het Planning-tabblad. Naast je app-plannen kun je nu handmatige regels toevoegen voor je oude plannen die nog geen calculatie in de app hebben. Klik op "+ Handmatige regel" boven de matrix, vul klant, betaalwijze, jaar, bedrag (incl. BTW) en een omschrijving in. Meerdere jaren voor dezelfde klant zet je met dezelfde naam, dan komen ze op één rij. Ze verschijnen netjes tussen je app-plannen, gegroepeerd onder Contant en Abonnement, en je klikt op zo'n regel om 'm te wijzigen of te verwijderen. Ze tellen mee in de euro-totalen maar niet in de manuren, want er zit geen calculatie achter. Hierna kan ik je oude sheet in één keer importeren.</p>
         <p><strong>ℹ️ Uitleg bij de beurt-modus (v3.29.1).</strong> De hint onder de modus-keuze in een beurt vertelt nu ook hoe de toeslagen rekenen. Bij Algemeen schaalt alles evenredig mee, steiger en voorrij incluis. Bij Per regel en Per stap schalen de vaste toeslagen mee met het gemiddelde van je percentages. Zo hoef je die rekenwijze niet te onthouden, hij staat er gewoon bij.</p>
@@ -2571,7 +2576,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.30.1';
+const APP_VERSION = 'v3.30.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2933,6 +2938,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.30.2', d: '2026-06-03', h: 'Planning-matrix werkt als een spreadsheet: jaartallen-rij bovenaan en klantkolom links blijven vast bij het scrollen, en de samenvatting onderaan (subtotaal, totaal, capaciteit) blijft als voet in beeld. Sticky werkt nu ook in Safari' },
   { v: '3.30.1', d: '2026-06-03', h: 'Knop "Opslaan en nog één" in het handmatige-regel venster: klant en betaalwijze blijven staan en het jaar springt een jaar verder, zodat je de jaren van één oud plan snel achter elkaar intikt' },
   { v: '3.30.0', d: '2026-06-03', h: 'Handmatige (oude) plannen in de Planning-matrix: voeg via "+ Handmatige regel" plannen zonder calculatie toe, gegroepeerd onder Contant en Abonnement, klikbaar om te wijzigen of verwijderen. Tellen mee in de euro-totalen, niet in de manuren' },
   { v: '3.29.1', d: '2026-06-03', h: 'Modus-hint in de beurt-modal legt nu ook uit hoe de toeslagen (steiger, voorrij) schalen: evenredig bij Algemeen, op het gemiddelde van de percentages bij Per regel en Per stap' },
@@ -5524,12 +5530,12 @@ async function renderPlanningMatrix() {
   const jaren = [];
   for (let y = minJ; y <= maxJ; y++) jaren.push(y);
 
-  const stickyHead = 'position: sticky; left: 0; background: var(--paper); z-index: 2; min-width: 170px; text-align: left;';
+  const stickyHead = 'position: sticky; left: 0; top: 0; background: var(--paper); z-index: 3; min-width: 170px; text-align: left;';
   const stickyCell = 'position: sticky; left: 0; background: var(--paper); z-index: 1;';
 
-  let html = '<div class="table-scroll"><table class="planning-matrix"><thead><tr>';
+  let html = '<div class="table-scroll" style="max-height: 70vh; overflow: auto;"><table class="planning-matrix"><thead><tr>';
   html += `<th style="${stickyHead}">Plan</th>`;
-  jaren.forEach(y => { html += `<th class="right" style="min-width: 120px;">${y}</th>`; });
+  jaren.forEach(y => { html += `<th class="right" style="position: sticky; top: 0; background: var(--paper); z-index: 2; min-width: 120px;">${y}</th>`; });
   html += '</tr></thead><tbody>';
 
   const jaarTotaal = {}; jaren.forEach(y => jaarTotaal[y] = 0);
@@ -5565,13 +5571,13 @@ async function renderPlanningMatrix() {
   };
 
   // Eén groep renderen: koprij, plan-rijen, subtotaal per jaar.
-  const _groepHtml = (groepRijen, label) => {
+  const _groepHtml = (groepRijen, label, isLaatste) => {
     if (!groepRijen.length) return '';
     const sub = {}; jaren.forEach(y => sub[y] = 0);
     groepRijen.forEach(r => jaren.forEach(y => (r.cellen[y] || []).forEach(it => { sub[y] += it.bedrag; })));
     let h = `<tr><td colspan="${jaren.length + 1}" style="${stickyCell} font-weight: 700; background: var(--paper-warm); padding-top: 0.6rem;">${label}</td></tr>`;
     groepRijen.forEach(r => { h += _rijHtml(r); });
-    h += '<tr style="font-weight: 700; border-top: 1px solid var(--paper-deep);">';
+    h += `<tr${isLaatste ? ' class="pm-foot"' : ''} style="font-weight: 700; border-top: 1px solid var(--paper-deep);">`;
     h += `<td style="${stickyCell}">Subtotaal ${label.toLowerCase()} per jaar</td>`;
     jaren.forEach(y => { h += `<td class="right">${sub[y] ? eur(sub[y]) : ''}</td>`; });
     h += '</tr>';
@@ -5583,21 +5589,21 @@ async function renderPlanningMatrix() {
   const beideGroepen = (contantRijen.length > 0 && aboRijen.length > 0);
 
   if (beideGroepen) {
-    html += _groepHtml(contantRijen, 'Contant');
-    html += _groepHtml(aboRijen, 'Abonnement');
+    html += _groepHtml(contantRijen, 'Contant', false);
+    html += _groepHtml(aboRijen, 'Abonnement', true);
   } else {
     rijen.forEach(r => { html += _rijHtml(r); });
   }
 
   // Jaartotaal-regel (gezamenlijk).
-  html += '<tr style="border-top: 2px solid var(--paper-deep); font-weight: 700;">';
+  html += '<tr class="pm-foot" style="border-top: 2px solid var(--paper-deep); font-weight: 700;">';
   html += `<td style="${stickyCell}">${beideGroepen ? 'Totaal per jaar (samen)' : 'Totaal per jaar'}</td>`;
   jaren.forEach(y => { html += `<td class="right">${eur(jaarTotaal[y])}</td>`; });
   html += '</tr>';
 
   // Euro-percentage van de jaarcapaciteit.
   if (capEuro > 0) {
-    html += '<tr style="font-size: 0.82rem; color: var(--muted);">';
+    html += '<tr class="pm-foot" style="font-size: 0.82rem; color: var(--muted);">';
     html += `<td style="${stickyCell} color: var(--muted);" title="Aandeel van de jaarcapaciteit in euro (incl. BTW)">% van ${eur(capEuro)}</td>`;
     jaren.forEach(y => {
       const pct = jaarTotaal[y] / capEuro * 100;
@@ -5607,14 +5613,14 @@ async function renderPlanningMatrix() {
   }
 
   // Manuren per jaar.
-  html += '<tr style="font-size: 0.82rem;">';
+  html += '<tr class="pm-foot" style="font-size: 0.82rem;">';
   html += `<td style="${stickyCell}" title="Genormeerde schilderuren, exclusief reis">Manuren per jaar</td>`;
   jaren.forEach(y => { html += `<td class="right">${urenTotaal[y] ? Math.round(urenTotaal[y]) + ' u' : ''}</td>`; });
   html += '</tr>';
 
   // Uren-percentage van de uren-capaciteit (alleen als ingesteld).
   if (capUren > 0) {
-    html += '<tr style="font-size: 0.82rem; color: var(--muted);">';
+    html += '<tr class="pm-foot" style="font-size: 0.82rem; color: var(--muted);">';
     html += `<td style="${stickyCell} color: var(--muted);" title="Aandeel van de jaarcapaciteit in manuren">% van ${Math.round(capUren)} uur</td>`;
     jaren.forEach(y => {
       const pct = urenTotaal[y] / capUren * 100;
@@ -5625,6 +5631,28 @@ async function renderPlanningMatrix() {
 
   html += '</tbody></table></div>';
   c.innerHTML = html;
+  _planningPinFooter();
+}
+
+// v3.30.2 — Samenvattingsrijen onderaan (laatste subtotaal, totaal, capaciteit) vastzetten aan de
+// onderkant van het scrollvenster, zodat ze als spreadsheet-voet blijven staan. Stapelt van onder
+// naar boven met een oplopende bottom-offset, want sticky werkt per cel en de rijen verschillen in hoogte.
+function _planningPinFooter() {
+  const scroll = document.querySelector('#planningMatrix .table-scroll');
+  if (!scroll) return;
+  const footRows = Array.from(scroll.querySelectorAll('tr.pm-foot'));
+  let cum = 0;
+  for (let i = footRows.length - 1; i >= 0; i--) {
+    const tr = footRows[i];
+    const hgt = tr.getBoundingClientRect().height;
+    Array.from(tr.children).forEach((cell, ci) => {
+      cell.style.position = 'sticky';
+      cell.style.bottom = cum + 'px';
+      cell.style.background = 'var(--paper)';
+      cell.style.zIndex = (ci === 0) ? '3' : '2';
+    });
+    cum += hgt;
+  }
 }
 
 // Snel bewerken van een beurt rechtstreeks vanuit de Planning-matrix.
