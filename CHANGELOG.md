@@ -1,3 +1,20 @@
+## v3.29.0 — Contant en abonnement gesplitst (brok 4)
+Brok 4 van het Planning-tabblad. Een plan heeft nu een betaalwijze (contant of abonnement) en de matrix splitst de plannen in twee groepen met subtotalen, plus een gezamenlijk totaal met de capaciteit eronder.
+
+### Geen migratie
+De kolom `betaalmodel` op `onderhoudsplannen` (default 'abo', CHECK contant/abo) is al in v3.27.0 aangemaakt. Deze release koppelt 'm aan de code.
+
+### Wijzigingen
+- **Betaalwijze-dropdown** in het parameters-blok van het onderhoudsplan (contant of abonnement), naast Type ontvanger en Status. Bestaande plannen staan op abonnement, per plan om te zetten. Bewaart via dezelfde auto-save als de andere parameters.
+- **Splitsing in de matrix**: plannen worden gegroepeerd onder een kop Contant en een kop Abonnement, elk met een subtotaal per jaar. Daaronder het gezamenlijke totaal per jaar plus de capaciteit-percentages (euro en uren) op het geheel, want de capaciteit geldt voor de hele onderneming. Staat er maar één soort, dan vervallen de groepskoppen en toont de matrix gewoon één lijst.
+
+### Code
+- `betaalmodel` toegevoegd aan `_mapOhpFromDB`, `_mapOhpToDB`, `_ohpSaveParams`, `_ohpReadParamsFromUI` en `_ohpRenderParams` (vullen + disablen), plus aan de auto-save-listeners. Volgt exact het patroon van `ontvangerType`.
+- `renderPlanningMatrix` opgesplitst in een rij-helper (`_rijHtml`) en een groep-helper (`_groepHtml`); de gezamenlijke totalen worden in de rij-helper opgeteld zodat de capaciteit-regels ongewijzigd blijven werken.
+
+---
+
+
 ## v3.28.0 — Snel bewerken vanuit de Planning-matrix
 De matrix was alleen-lezen, waardoor je voor een kleine bijsturing (notitie, uitstellen) helemaal naar het plan moest navigeren terwijl je de juiste cel al in beeld had. Nu kun je rechtstreeks vanuit een cel bewerken.
 
