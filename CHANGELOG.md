@@ -1,3 +1,22 @@
+## v3.30.0 — Handmatige oude plannen in de planning (brok 5, stap 1)
+De laatste brok van het Planning-tabblad. Je oude plannen die nog geen calculatie in de app hebben, kun je nu als handmatige regels toevoegen aan de matrix. Stap 1 is de bouw, stap 2 wordt de eenmalige import van je sheet.
+
+### Geen migratie
+De tabel `planning_handmatig` is al in v3.27.0 aangemaakt. Deze release koppelt 'm aan de UI.
+
+### Wijzigingen
+- **Knop "+ Handmatige regel"** boven de Planning-matrix opent een venster met klant, betaalwijze (contant of abonnement), jaar, bedrag (incl. BTW), omschrijving en reeds-uitgevoerd. Meerdere jaren voor dezelfde klant: dezelfde naam gebruiken, dan bundelt de matrix ze op één rij.
+- **Handmatige regels in de matrix**: verschijnen tussen de app-plannen, alfabetisch en gegroepeerd onder Contant en Abonnement met dezelfde subtotalen en het gezamenlijke totaal. Klik op een handmatige cel om te wijzigen of te verwijderen.
+- **Geen uren**: handmatige regels hebben geen calculatie, dus ze tellen mee in de euro-totalen en de euro-capaciteit, maar niet in de manuren-regel. Staat als notitie bij de matrix.
+
+### Code
+- CRUD op `planning_handmatig` via `_sbQuery`: `_planningFetchHandmatig`, plus insert/update/delete in `_planningSaveHandmatig` en `_planningDeleteHandmatig`.
+- `renderPlanningMatrix` haalt de handmatige regels op, groepeert ze per klant tot matrix-rijen (met `handmatig: true` en `handmatigId` per cel-item) en voegt ze samen met de app-rijen vóór het sorteren en het jaarbereik. De rij-helper routeert de cel-klik naar de handmatige editor of de beurt-editor.
+- Nieuwe modal `#planningHandmatigModal` plus `_planningOpenHandmatigEdit` en `_planningCloseHandmatig`. De beurt-index-opbouw is afgeschermd tegen rijen zonder plan.
+
+---
+
+
 ## v3.29.1 — Uitleg toeslag-schaling in de modus-hint
 Kleine documentatie-toevoeging. De subtiele rekenwijze van de toeslagen per beurt-modus stond nergens uitgelegd, waardoor je 'm telkens opnieuw moet uitvogelen. Nu staat het in de hint onder de modus-keuze.
 

@@ -1717,8 +1717,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.29.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.30.0</h2>
       <div class="intro-body">
+        <p><strong>📋 Oude plannen handmatig in de planning (v3.30.0).</strong> De laatste stap van het Planning-tabblad. Naast je app-plannen kun je nu handmatige regels toevoegen voor je oude plannen die nog geen calculatie in de app hebben. Klik op "+ Handmatige regel" boven de matrix, vul klant, betaalwijze, jaar, bedrag (incl. BTW) en een omschrijving in. Meerdere jaren voor dezelfde klant zet je met dezelfde naam, dan komen ze op één rij. Ze verschijnen netjes tussen je app-plannen, gegroepeerd onder Contant en Abonnement, en je klikt op zo'n regel om 'm te wijzigen of te verwijderen. Ze tellen mee in de euro-totalen maar niet in de manuren, want er zit geen calculatie achter. Hierna kan ik je oude sheet in één keer importeren.</p>
         <p><strong>ℹ️ Uitleg bij de beurt-modus (v3.29.1).</strong> De hint onder de modus-keuze in een beurt vertelt nu ook hoe de toeslagen rekenen. Bij Algemeen schaalt alles evenredig mee, steiger en voorrij incluis. Bij Per regel en Per stap schalen de vaste toeslagen mee met het gemiddelde van je percentages. Zo hoef je die rekenwijze niet te onthouden, hij staat er gewoon bij.</p>
         <p><strong>💳 Contant en abonnement gesplitst (v3.29.0).</strong> Elk plan heeft nu een Betaalwijze: contant (per beurt) of abonnement. Je stelt 'm in bij de parameters van het onderhoudsplan. In de Planning-matrix staan de plannen daardoor gegroepeerd onder Contant en Abonnement, elk met een eigen subtotaal per jaar, en daaronder het gezamenlijke totaal met de capaciteit-percentages. Zo zie je in één blik hoeveel omzet uit abonnementen komt en hoeveel uit losse beurten. Bestaande plannen staan op abonnement; zet ze per plan op contant waar nodig.</p>
         <p><strong>✏️ Snel bewerken vanuit de Planning (v3.28.0).</strong> Je hoeft niet meer naar het plan te navigeren om iets bij te sturen. Klik of tik in de Planning-matrix op de naam van een beurt en er opent een klein venster waarin je drie dingen kunt doen: de planning-notitie schrijven, de beurt naar een ander jaar verschuiven (bijvoorbeeld uitstellen) en 'm op reeds uitgevoerd zetten. Opslaan en de matrix springt meteen goed. Het uitgebreide bewerken (modus, schaling, offerte-tekst) blijft in de Onderhoudsplan-tab. Een 📝 bij een beurt betekent dat er een notitie is.</p>
@@ -2039,7 +2040,8 @@
   <section class="panel" id="planning">
     <div class="panel-head"><h2>Planning</h2></div>
     <div class="settings-section">
-      <p style="color: var(--muted); margin-top: 0; font-size: 0.9rem;">Jaaroverzicht van alle geaccepteerde onderhoudsplannen (opdrachten). Rijen zijn klanten, kolommen jaren. Bedragen zijn inclusief BTW. Reeds uitgevoerde beurten staan grijs.</p>
+      <p style="color: var(--muted); margin-top: 0; font-size: 0.9rem;">Jaaroverzicht van alle geaccepteerde onderhoudsplannen (opdrachten) plus je handmatige (oude) plannen. Rijen zijn klanten, kolommen jaren. Bedragen zijn inclusief BTW. Reeds uitgevoerde beurten staan grijs. Handmatige regels tellen mee in de euro-totalen, maar niet in de manuren want die hebben geen calculatie.</p>
+      <div style="margin-bottom: 0.8rem;"><button class="btn btn-sm" onclick="_planningOpenHandmatigEdit()">+ Handmatige regel</button></div>
       <div id="planningMatrix"></div>
     </div>
   </section>
@@ -2322,6 +2324,42 @@ Hout binnen;Gronden;m²;6;0,10</div>
   </div>
 </div>
 
+<!-- PLANNING HANDMATIGE REGEL MODAL -->
+<div class="modal-overlay" id="planningHandmatigModal">
+  <div class="modal" style="max-width: 480px;">
+    <div class="modal-head"><h3 id="phTitel">Handmatige regel</h3><button class="close-x" onclick="_planningCloseHandmatig()">✕</button></div>
+    <div class="modal-body">
+      <label>Klant / plan</label>
+      <input type="text" id="phKlant" placeholder="bv. Göttgens buitenwerk" style="width:100%; padding:0.6rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+      <div style="font-size:0.8rem; color:var(--muted); margin-top:0.3rem;">Meerdere jaren voor dezelfde klant? Gebruik exact dezelfde naam, dan komen ze op één rij.</div>
+      <div style="display:flex; gap:0.8rem; margin-top:0.9rem; flex-wrap:wrap;">
+        <label style="flex:1; min-width:130px;">Betaalwijze
+          <select id="phBetaalmodel" style="width:100%; padding:0.6rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+            <option value="contant">Contant</option>
+            <option value="abo">Abonnement</option>
+          </select>
+        </label>
+        <label style="width:90px;">Jaar
+          <input type="number" id="phJaar" min="1900" max="2200" step="1" style="width:100%; padding:0.6rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+        </label>
+        <label style="width:150px;">Bedrag (€ incl. BTW)
+          <input type="number" id="phBedrag" min="0" step="0.01" style="width:100%; padding:0.6rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+        </label>
+      </div>
+      <label style="margin-top:0.9rem;">Omschrijving</label>
+      <input type="text" id="phOmschrijving" placeholder="bv. Herschilderbeurt, of: verplaatst ivm verbouwing" style="width:100%; padding:0.6rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit;">
+      <label style="margin-top:0.9rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" id="phReeds"> Reeds uitgevoerd</label>
+    </div>
+    <div class="modal-foot" style="justify-content: space-between;">
+      <button class="btn btn-danger btn-sm" id="phDeleteBtn" onclick="_planningDeleteHandmatig()" style="display:none;">Verwijderen</button>
+      <span style="display:flex; gap:0.5rem;">
+        <button class="btn-secondary btn" onclick="_planningCloseHandmatig()">Annuleren</button>
+        <button class="btn" onclick="_planningSaveHandmatig()">Opslaan</button>
+      </span>
+    </div>
+  </div>
+</div>
+
 <!-- ADD SYSTEM TO ONDERDEEL MODAL -->
 <div class="modal-overlay" id="addSysModal">
   <div class="modal" style="max-width: 640px;">
@@ -2531,7 +2569,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.29.1';
+const APP_VERSION = 'v3.30.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2893,6 +2931,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.30.0', d: '2026-06-03', h: 'Handmatige (oude) plannen in de Planning-matrix: voeg via "+ Handmatige regel" plannen zonder calculatie toe, gegroepeerd onder Contant en Abonnement, klikbaar om te wijzigen of verwijderen. Tellen mee in de euro-totalen, niet in de manuren' },
   { v: '3.29.1', d: '2026-06-03', h: 'Modus-hint in de beurt-modal legt nu ook uit hoe de toeslagen (steiger, voorrij) schalen: evenredig bij Algemeen, op het gemiddelde van de percentages bij Per regel en Per stap' },
   { v: '3.29.0', d: '2026-06-03', h: 'Betaalwijze per plan (contant of abonnement) plus splitsing in de Planning-matrix: plannen gegroepeerd onder Contant en Abonnement met subtotalen, en het gezamenlijke totaal met capaciteit eronder' },
   { v: '3.28.0', d: '2026-06-03', h: 'Snel bewerken vanuit de Planning-matrix: klik of tik op een beurt en pas in een klein venster de planning-notitie, het jaar (uitstellen) en reeds-uitgevoerd aan, zonder naar het plan te navigeren' },
@@ -5439,11 +5478,26 @@ async function renderPlanningMatrix() {
   const plannen = allePlannen.filter(p => p.status === 'geaccepteerd');
   const rijen = [];
   for (const p of plannen) rijen.push(await _planningRekenPlan(p));
+
+  // Handmatige (oude) plannen erbij: groepeer planning_handmatig-regels per klant op één rij.
+  const handmatigRows = await _planningFetchHandmatig();
+  _planningHandmatigIndex = {};
+  const hmPerKlant = {};
+  handmatigRows.forEach(row => {
+    _planningHandmatigIndex[row.id] = row;
+    const key = row.klant || '(naamloos)';
+    if (!hmPerKlant[key]) hmPerKlant[key] = { plan: null, klant: key, betaalmodel: row.betaalmodel || 'contant', heeftCalc: false, handmatig: true, cellen: {} };
+    (hmPerKlant[key].cellen[row.jaartal] = hmPerKlant[key].cellen[row.jaartal] || []).push({
+      bedrag: row.bedrag || 0, uren: 0, naam: row.omschrijving || '', reeds: row.reeds_uitgevoerd === true, notitie: '', handmatigId: row.id
+    });
+  });
+  Object.values(hmPerKlant).forEach(r => rijen.push(r));
+
   rijen.sort((a, b) => a.klant.localeCompare(b.klant, 'nl'));
 
   // Index van beurt-id naar het beurt-object + klantnaam, voor snel bewerken vanuit een cel.
   _planningBeurtIndex = {};
-  rijen.forEach(r => (r.plan.beurten || []).forEach(b => { _planningBeurtIndex[b.id] = { beurt: b, klant: r.klant }; }));
+  rijen.forEach(r => ((r.plan && r.plan.beurten) || []).forEach(b => { _planningBeurtIndex[b.id] = { beurt: b, klant: r.klant }; }));
 
   // Jaarbereik bepalen over alle cellen.
   let minJ = Infinity, maxJ = -Infinity;
@@ -5495,8 +5549,9 @@ async function renderPlanningMatrix() {
       const grijs = alleReeds ? ' style="color: var(--muted); background: var(--bg-soft, #f5f5f5);"' : '';
       const badge = alleReeds ? ' <span style="font-size: 0.7rem; color: var(--muted);">reeds uitgevoerd</span>' : '';
       const links = items.map(it => {
-        const label = it.naam || 'beurt';
-        return `<span onclick="_planningOpenCelEdit('${it.beurtId}')" title="Klik of tik om te bewerken" style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px;">${_escapeHtml(label)}</span>`;
+        const label = it.naam || (it.handmatigId ? 'regel' : 'beurt');
+        const fn = it.handmatigId ? `_planningOpenHandmatigEdit('${it.handmatigId}')` : `_planningOpenCelEdit('${it.beurtId}')`;
+        return `<span onclick="${fn}" title="Klik of tik om te bewerken" style="cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px;">${_escapeHtml(label)}</span>`;
       }).join(' + ');
       const heeftNotitie = items.some(it => it.notitie);
       const notitieInd = heeftNotitie ? ' <span title="Heeft een planning-notitie">📝</span>' : '';
@@ -5572,6 +5627,8 @@ async function renderPlanningMatrix() {
 // Snel bewerken van een beurt rechtstreeks vanuit de Planning-matrix.
 let _planningBeurtIndex = {};
 let _planningEditId = null;
+let _planningHandmatigIndex = {}; // v3.30.0 — id naar handmatige regel
+let _planningHmEditId = null;     // v3.30.0 — id van de handmatige regel in bewerking, null = nieuw
 
 function _planningOpenCelEdit(beurtId) {
   const ref = _planningBeurtIndex[beurtId];
@@ -5602,6 +5659,69 @@ async function _planningSaveCelEdit() {
   Object.assign(b, opgeslagen);
   _planningCloseCelEdit();
   _toast('Beurt bijgewerkt');
+  renderPlanningMatrix();
+}
+
+// --- Handmatige planning-regels (oude plannen zonder calc) ---
+async function _planningFetchHandmatig() {
+  if (!_sb) return [];
+  const { data, error } = await _sbQuery(
+    _sb.from('planning_handmatig').select('*').order('klant').order('jaartal'),
+    'Handmatige planning ophalen'
+  );
+  return (error || !data) ? [] : data;
+}
+
+function _planningOpenHandmatigEdit(id) {
+  _planningHmEditId = id || null;
+  const row = id ? _planningHandmatigIndex[id] : null;
+  document.getElementById('phKlant').value = row ? (row.klant || '') : '';
+  document.getElementById('phBetaalmodel').value = row ? (row.betaalmodel || 'contant') : 'contant';
+  document.getElementById('phJaar').value = row ? row.jaartal : new Date().getFullYear();
+  document.getElementById('phBedrag').value = row ? row.bedrag : '';
+  document.getElementById('phOmschrijving').value = row ? (row.omschrijving || '') : '';
+  document.getElementById('phReeds').checked = row ? (row.reeds_uitgevoerd === true) : false;
+  document.getElementById('phDeleteBtn').style.display = id ? '' : 'none';
+  document.getElementById('phTitel').textContent = id ? 'Handmatige regel bewerken' : 'Handmatige regel toevoegen';
+  document.getElementById('planningHandmatigModal').classList.add('active');
+}
+
+function _planningCloseHandmatig() {
+  document.getElementById('planningHandmatigModal').classList.remove('active');
+  _planningHmEditId = null;
+}
+
+async function _planningSaveHandmatig() {
+  const rec = {
+    klant: (document.getElementById('phKlant').value || '').trim(),
+    betaalmodel: document.getElementById('phBetaalmodel').value || 'contant',
+    jaartal: parseInt(document.getElementById('phJaar').value) || new Date().getFullYear(),
+    bedrag: parseFloat(String(document.getElementById('phBedrag').value || '0').replace(',', '.')) || 0,
+    omschrijving: document.getElementById('phOmschrijving').value || '',
+    reeds_uitgevoerd: document.getElementById('phReeds').checked === true
+  };
+  if (!rec.klant) { _toast('Vul een klantnaam in'); return; }
+  let ok;
+  if (_planningHmEditId) {
+    const { error } = await _sbQuery(_sb.from('planning_handmatig').update(rec).eq('id', _planningHmEditId), 'Handmatige regel bijwerken');
+    ok = !error;
+  } else {
+    const { error } = await _sbQuery(_sb.from('planning_handmatig').insert([rec]), 'Handmatige regel toevoegen');
+    ok = !error;
+  }
+  if (!ok) { _toast('Opslaan mislukt'); return; }
+  _planningCloseHandmatig();
+  _toast('Opgeslagen');
+  renderPlanningMatrix();
+}
+
+async function _planningDeleteHandmatig() {
+  if (!_planningHmEditId) return;
+  if (!confirm('Deze handmatige regel verwijderen?')) return;
+  const { error } = await _sbQuery(_sb.from('planning_handmatig').delete().eq('id', _planningHmEditId), 'Handmatige regel verwijderen');
+  if (error) { _toast('Verwijderen mislukt'); return; }
+  _planningCloseHandmatig();
+  _toast('Verwijderd');
   renderPlanningMatrix();
 }
 
