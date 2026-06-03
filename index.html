@@ -1717,8 +1717,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.27.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.27.3</h2>
       <div class="intro-body">
+        <p><strong>🗑 Onderhoudsplan verwijderen (v3.27.3).</strong> Onderaan een geopend onderhoudsplan staat nu een knop "Verwijder dit plan", met een bevestiging vooraf. Handig om testplannen op te ruimen. Het verwijdert het plan en al z'n beurten. De bron-calculatie blijft gewoon bestaan, want die staat los van het plan en wil je meestal houden.</p>
         <p><strong>🔧 Plan-status wordt nu correct bewaard (v3.27.2).</strong> Een statuswijziging in de Onderhoudsplan-tab (bijvoorbeeld een plan op Verloren of Concept zetten) werd niet opgeslagen en sprong terug naar de oude status. Vanaf nu blijft de gekozen status staan. Dit speelde sinds de plan-status werd ingevoerd: de status kwam toen eenmalig uit de bron-calculatie en kon daarna niet meer in de editor gewijzigd worden. Handig nu je met de Planning-tab de juiste opdrachten wilt tonen.</p>
         <p><strong>🎯 Planning toont alleen opdrachten (v3.27.1).</strong> De Planning-matrix laat nu alleen plannen zien met de status Geaccepteerd, dus de daadwerkelijke opdrachten. Uitgebrachte, concept- en verloren plannen vallen er buiten, want die zijn nog geen opdracht. Let op: plannen die nog op de oude default Concept staan verschijnen pas zodra je ze in de Onderhoudsplan-tab op Geaccepteerd zet. Staat er nog geen enkel plan op Geaccepteerd, dan zie je een melding in plaats van een lege tabel.</p>
         <p><strong>🗓️ Nieuw tabblad Planning (v3.27.0).</strong> Een jaaroverzicht van al je onderhoudsplannen, als vervanger van je Excel/Numbers-sheet. Rijen zijn de klanten, kolommen de jaren, en per cel staat het bedrag met de korte beurt-naam. Reeds uitgevoerde beurten staan grijs. Onderaan het totaal per jaar. De bedragen komen rechtstreeks uit je bestaande plannen (incl. indexering en BTW), er verandert niets aan de berekening zelf. Dit is de eerste stap: de capaciteit-regel (percentage van je jaaromzet), de uren, de contant/abo-splitsing en het meenemen van je oude plannen volgen in de komende stappen.</p>
@@ -2018,6 +2019,9 @@
           <div id="ohpBeurtenLijst" style="margin-top: 0.8rem;"></div>
         </div>
         <div id="ohpResultaat" style="margin-top: 1rem;"></div>
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--paper-deep); text-align: right;">
+          <button class="btn btn-danger btn-sm" onclick="_ohpDeletePlan()" title="Verwijder dit onderhoudsplan en alle beurten. De bron-calculatie blijft bestaan.">🗑 Verwijder dit plan</button>
+        </div>
       </div>
     </div>
   </section>
@@ -2483,7 +2487,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.27.2';
+const APP_VERSION = 'v3.27.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2845,6 +2849,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.27.3', d: '2026-06-03', h: 'Knop "Verwijder dit plan" onderaan een onderhoudsplan, met bevestiging. Ruimt het plan en alle beurten op, de bron-calculatie blijft bestaan' },
   { v: '3.27.2', d: '2026-06-03', h: 'Bugfix: een statuswijziging van een onderhoudsplan in de editor werd niet bewaard en sprong terug, nu blijft de gekozen status (zoals Verloren) staan' },
   { v: '3.27.1', d: '2026-06-03', h: 'Planning-matrix filtert nu op status Geaccepteerd, zodat alleen echte opdrachten in de planning staan en uitgebrachte of verloren plannen erbuiten blijven' },
   { v: '3.27.0', d: '2026-06-03', h: 'Nieuw tabblad Planning: jaaroverzicht van alle onderhoudsplannen als matrix (klanten × jaren), met bedrag en beurt-naam per cel, reeds-uitgevoerd grijs en een jaartotaal' },
@@ -5478,6 +5483,24 @@ async function _ohpDeleteBeurt(beurtId) {
   plan.beurten = (plan.beurten || []).filter(b => b.id !== beurtId);
   _ohpRenderBeurtenLijst();
   _ohpRenderResultaat();
+}
+
+// Verwijder het hele plan (met bevestiging). De bron-calculatie blijft bestaan.
+async function _ohpDeletePlan() {
+  const plan = _ohpState.plan;
+  if (!plan || !plan.id) { _toast('Geen plan om te verwijderen'); return; }
+  const n = (plan.beurten || []).length;
+  const vraag = n > 0
+    ? `Dit onderhoudsplan en alle ${n} beurt${n === 1 ? '' : 'en'} verwijderen? De bron-calculatie blijft bestaan. Dit kan niet ongedaan gemaakt worden.`
+    : 'Dit onderhoudsplan verwijderen? De bron-calculatie blijft bestaan. Dit kan niet ongedaan gemaakt worden.';
+  if (!confirm(vraag)) return;
+  const ok = await _deleteOhp(plan.id);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  _ohpState.plan = null;   // plan weg, bron-calc blijft geselecteerd
+  _ohpRenderParams();
+  _ohpRenderInhoud();
+  _toast('Onderhoudsplan verwijderd');
+  renderDashboard();       // plannen-archief en tegels bijwerken
 }
 
 // ----- Bewerk-modal voor één beurt (chunk E) -----

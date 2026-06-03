@@ -1,3 +1,17 @@
+## v3.27.3 — Onderhoudsplan verwijderen
+Er was wel een backend-functie om een plan te verwijderen (`_deleteOhp`, met FK-cascade op de beurten), maar geen knop ervoor. Handig om testplannen op te ruimen voor de Planning-tab in gebruik gaat.
+
+### Wijzigingen
+- **Knop "Verwijder dit plan"** onderaan een geopend onderhoudsplan, visueel losgemaakt van de beurt-acties met een scheidingslijn zodat 'ie niet per ongeluk geraakt wordt.
+- **Bevestiging vooraf** via `confirm`, met het aantal beurten erbij en de melding dat de bron-calculatie blijft bestaan en dat het niet ongedaan te maken is.
+- Na verwijderen: `_ohpState.plan` op null (de bron-calc blijft geselecteerd), params en inhoud opnieuw gerenderd, toast, en `renderDashboard` om het plannen-archief en de tegels bij te werken. De Planning-matrix is bij de volgende keer openen vanzelf vers.
+
+### Code
+- Nieuwe handler `_ohpDeletePlan` naast `_ohpDeleteBeurt`, hergebruikt de bestaande `_deleteOhp`. Geen migratie nodig.
+
+---
+
+
 ## v3.27.2 — Bugfix: plan-status werd niet bewaard
 Een statuswijziging van een onderhoudsplan in de editor (Concept, Gereed, Verzonden, Geaccepteerd, Verloren) werd niet opgeslagen en sprong terug naar de oude status. De dropdown-waarde werd wel gelezen, maar bij het opslaan overschreven door de bestaande status uit het geheugen.
 
