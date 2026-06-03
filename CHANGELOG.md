@@ -1,3 +1,17 @@
+## v3.30.6 — Koptitels weg op alle tabs
+In het verlengde van de compactere Planning: de grote paginatitel boven elke tab is overbodig naast de menubalk en kostte op elke tab verticale ruimte.
+
+### Wijzigingen
+- **Koptitels verborgen** op alle tabs (Calculatie, Meetstaat, Verfsystemen, Bewerkingen, Materialen, Ondergronden, Onderhoudsplan, Instellingen). Het dashboard houdt zijn welkomstblok, dat heeft geen panel-head.
+- **Actieknoppen** in die balken blijven staan en zijn rechts uitgelijnd nu de titel weg is.
+- De Instellingen-kop bevatte alleen een titel en is daarom helemaal verwijderd.
+
+### Code
+- Drie CSS-regels: `.panel-head h2 { display: none; }`, `.panel-head { justify-content: flex-end; }` en `#instellingen .panel-head { display: none; }`. Geen HTML- of JS-wijziging, dus eenvoudig terug te draaien.
+
+---
+
+
 ## v3.30.5 — Compactere Planning: inklapbare beschrijvingen
 Meer rijen tegelijk in beeld op de Planning-tab, door verticale ruimte terug te winnen.
 
