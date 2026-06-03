@@ -1,3 +1,16 @@
+## v3.30.1 — Opslaan en nog één bij handmatige regels
+Kleine maar praktische toevoeging op v3.30.0. Meerdere jaren van één oud plan invoeren ging regel voor regel, telkens met de naam opnieuw. Nu sneller.
+
+### Wijzigingen
+- **Knop "Opslaan en nog één"** in het handmatige-regel venster. Bewaart de regel en houdt het venster open: klant en betaalwijze blijven staan, jaar/bedrag/omschrijving/reeds worden geleegd en het jaar springt alvast een jaar verder. De cursor staat klaar in het bedrag-veld.
+- De gewone "Opslaan" sluit het venster zoals voorheen.
+
+### Code
+- `_planningSaveHandmatig(blijfOpen)` kreeg een parameter. Bij `true` reset de functie naar een nieuwe regel met behoud van klant en betaalwijze in plaats van te sluiten, en hertekent de matrix zodat de zojuist opgeslagen regel meteen zichtbaar is.
+
+---
+
+
 ## v3.30.0 — Handmatige oude plannen in de planning (brok 5, stap 1)
 De laatste brok van het Planning-tabblad. Je oude plannen die nog geen calculatie in de app hebben, kun je nu als handmatige regels toevoegen aan de matrix. Stap 1 is de bouw, stap 2 wordt de eenmalige import van je sheet.
 
