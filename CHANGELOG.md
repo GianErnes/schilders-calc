@@ -1,3 +1,17 @@
+## v3.27.1 — Planning filtert op status Geaccepteerd
+Correctie op brok 2. De matrix toonde álle onderhoudsplannen, maar een uitgebracht plan is nog geen opdracht. Alleen plannen met de status Geaccepteerd horen in de planning.
+
+### Wijzigingen
+- **Filter op Geaccepteerd**: `renderPlanningMatrix` haalt alle plannen op en filtert op `status === 'geaccepteerd'`. Concept, verzonden en verloren plannen vallen er buiten.
+- **Onderscheidende meldingen** in plaats van één generieke lege-tekst: geen plannen in de app, wel plannen maar geen enkel Geaccepteerd (met telling en hint om in de Onderhoudsplan-tab op Geaccepteerd te zetten), of wel Geaccepteerd maar nog zonder beurten.
+- **Introtekst** van het tabblad aangepast naar "alle geaccepteerde onderhoudsplannen (opdrachten)".
+
+### Let op (gegevens)
+Plan-status bestaat sinds v3.25.10. Plannen die daarvóór zijn gemaakt staan op de default Concept en verschijnen pas in de planning zodra ze op Geaccepteerd worden gezet. De vijf plan-statussen (Concept, Gereed, Verzonden, Geaccepteerd, Verloren) bestonden al, ook Verloren.
+
+---
+
+
 ## v3.27.0 — Nieuw tabblad Planning (brok 1 + 2)
 Eerste twee stappen van het Planning-tabblad, het jaaroverzicht dat de Excel/Numbers-planningsheet vervangt. Een matrix met klanten als rijen en jaren als kolommen, automatisch opgebouwd uit de onderhoudsplannen in Supabase. Gebouwd in brokken: dit is het fundament plus de matrix zelf. Capaciteit-percentage, uren, contant/abo-splitsing en het meenemen van de oude plannen volgen in brok 3 tot en met 5.
 
