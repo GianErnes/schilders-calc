@@ -239,6 +239,7 @@
   .planning-matrix {
     border-collapse: separate;
     border-spacing: 0;
+    overflow: visible;
   }
   table {
     width: 100%;
@@ -1721,9 +1722,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.30.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.30.3</h2>
       <div class="intro-body">
-        <p><strong>📌 Planning werkt nu als een spreadsheet (v3.30.2).</strong> In de Planning-matrix blijft de jaartallen-rij bovenaan staan en de klantkolom links staan terwijl je scrolt, net als bevroren vensters in Excel. De samenvatting onderaan (subtotaal abonnement, het totaal en de capaciteit-regels) blijft ook in beeld als spreadsheet-voet. De matrix heeft daarvoor een eigen scrollvenster gekregen. Onder water: de tabel is op een andere manier opgemaakt zodat vastzetten ook in Safari werkt, dat ging eerst mis.</p>
+        <p><strong>📌 Planning werkt nu als een spreadsheet (v3.30.3).</strong> In de Planning-matrix blijft de jaartallen-rij bovenaan staan en de klantkolom links staan terwijl je scrolt, net als bevroren vensters in Excel. De samenvatting onderaan (subtotaal abonnement, het totaal en de capaciteit-regels) blijft ook in beeld als spreadsheet-voet. De matrix heeft daarvoor een eigen scrollvenster gekregen. Het vastzetten werkte eerst in geen enkele browser door een verborgen overflow-instelling op de tabel, dat is nu opgelost.</p>
         <p><strong>⏩ Opslaan en nog één bij handmatige regels (v3.30.1).</strong> In het handmatige-regel venster zit nu een knop "Opslaan en nog één". Hij bewaart de regel en houdt het venster open met klant en betaalwijze al ingevuld, en zet het jaar alvast een jaar verder. Zo tik je alle jaren van één oud plan snel achter elkaar in, zonder telkens de naam opnieuw te typen.</p>
         <p><strong>📋 Oude plannen handmatig in de planning (v3.30.0).</strong> De laatste stap van het Planning-tabblad. Naast je app-plannen kun je nu handmatige regels toevoegen voor je oude plannen die nog geen calculatie in de app hebben. Klik op "+ Handmatige regel" boven de matrix, vul klant, betaalwijze, jaar, bedrag (incl. BTW) en een omschrijving in. Meerdere jaren voor dezelfde klant zet je met dezelfde naam, dan komen ze op één rij. Ze verschijnen netjes tussen je app-plannen, gegroepeerd onder Contant en Abonnement, en je klikt op zo'n regel om 'm te wijzigen of te verwijderen. Ze tellen mee in de euro-totalen maar niet in de manuren, want er zit geen calculatie achter. Hierna kan ik je oude sheet in één keer importeren.</p>
         <p><strong>ℹ️ Uitleg bij de beurt-modus (v3.29.1).</strong> De hint onder de modus-keuze in een beurt vertelt nu ook hoe de toeslagen rekenen. Bij Algemeen schaalt alles evenredig mee, steiger en voorrij incluis. Bij Per regel en Per stap schalen de vaste toeslagen mee met het gemiddelde van je percentages. Zo hoef je die rekenwijze niet te onthouden, hij staat er gewoon bij.</p>
@@ -2576,7 +2577,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.30.2';
+const APP_VERSION = 'v3.30.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -2938,7 +2939,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
-  { v: '3.30.2', d: '2026-06-03', h: 'Planning-matrix werkt als een spreadsheet: jaartallen-rij bovenaan en klantkolom links blijven vast bij het scrollen, en de samenvatting onderaan (subtotaal, totaal, capaciteit) blijft als voet in beeld. Sticky werkt nu ook in Safari' },
+  { v: '3.30.3', d: '2026-06-03', h: 'Planning-matrix werkt nu echt als een spreadsheet: jaartallen-rij, klantkolom en de samenvatting onderaan blijven vast bij het scrollen. Het vastzetten werd geblokkeerd door een overflow-instelling op de tabel, nu verholpen' },
   { v: '3.30.1', d: '2026-06-03', h: 'Knop "Opslaan en nog één" in het handmatige-regel venster: klant en betaalwijze blijven staan en het jaar springt een jaar verder, zodat je de jaren van één oud plan snel achter elkaar intikt' },
   { v: '3.30.0', d: '2026-06-03', h: 'Handmatige (oude) plannen in de Planning-matrix: voeg via "+ Handmatige regel" plannen zonder calculatie toe, gegroepeerd onder Contant en Abonnement, klikbaar om te wijzigen of verwijderen. Tellen mee in de euro-totalen, niet in de manuren' },
   { v: '3.29.1', d: '2026-06-03', h: 'Modus-hint in de beurt-modal legt nu ook uit hoe de toeslagen (steiger, voorrij) schalen: evenredig bij Algemeen, op het gemiddelde van de percentages bij Per regel en Per stap' },

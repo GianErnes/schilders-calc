@@ -1,3 +1,12 @@
+## v3.30.3 — Sticky-fix: tabel-overflow blokkeerde het vastzetten
+De vaste rij, kolom en voet uit v3.30.2 werkten in geen enkele browser. Oorzaak: de globale `table`-stijl heeft `overflow: hidden`, en dat element zit dichter bij de cellen dan het scrollvenster. Daardoor koos de browser de tabel als sticky-context in plaats van het scrollvenster, en deed sticky niets. Niet browser-specifiek, dus ook niet door `border-collapse` zoals eerst gedacht.
+
+### Wijziging
+- `.planning-matrix` op `overflow: visible` gezet, zodat de tabel geen sticky-context meer is en de cellen weer aan het scrollvenster (`.table-scroll`) plakken. De rest van de spreadsheet-opzet uit v3.30.2 blijft ongewijzigd.
+
+---
+
+
 ## v3.30.2 — Planning-matrix als spreadsheet: vaste rij, kolom en voet
 De Planning-matrix gedraagt zich nu als een spreadsheet met bevroren vensters. De klantkolom plakte eerder niet vast (sticky werkt niet met `border-collapse: collapse` in Safari), dat is opgelost.
 
