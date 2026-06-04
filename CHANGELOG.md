@@ -1,3 +1,18 @@
+## v3.31.0 — Zoeken in de dashboard-archieven
+Bij een groeiend aantal projecten wordt scrollen door de dichtgeklapte status-groepen traag. Een zoekbalk per archief lost dat op.
+
+### Wijzigingen
+- **Zoekbalk** boven het Calculaties-archief en boven het Onderhoudsplannen-archief op het dashboard. Filtert op naam en klant (hoofdletterongevoelig).
+- Bij een zoekterm tonen alleen de groepen met treffers, en die klappen automatisch open zodat je de match direct ziet. Lege zoekterm herstelt de normale weergave (gegroepeerd, dichtgeklapt, op sortering).
+- Geen treffers geeft een nette melding per archief.
+
+### Code
+- Zoekvariabelen `_dashCalcZoek` en `_dashPlanZoek`. Het calc-archief (in geheugen) re-rendert per toetsaanslag via `renderCalculatiesArchief`, met een filter bij het groeperen en een geforceerde open-stand bij een zoekterm.
+- Het plannen-archief is gesplitst: `renderPlannenArchief` haalt op en cachet in `_planArchiefCache`, `_renderPlannenArchiefUit` rendert uit die cache met de zoekfilter. Zo geen Supabase-call per toetsaanslag. `togglePlanSection` rendert nu ook uit de cache.
+
+---
+
+
 ## v3.30.9 — Geen hover-kleur in de Planning-matrix
 De globale `tr:hover td`-regel kleurde de rij onder de cursor warm. In de Planning botste dat met de grijze achtergrond van de reeds-uitgevoerde cellen, wat de leesbaarheid van de gereed-markering verslechterde.
 
