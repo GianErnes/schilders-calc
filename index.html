@@ -1801,8 +1801,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.36.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.37.0</h2>
       <div class="intro-body">
+        <p><strong>✎ Kozijn-tekenaar: raam weer weghalen en kozijnen dupliceren (v3.37.0).</strong> Twee handigheden uit de praktijk. Tik je nog eens op het al-gekozen vak-type, dan gaat het vak terug naar vast glas — zo haal je een raam er net zo makkelijk weer af als dat je het erop zette. En in de tekenaar staat nu een knop "Dupliceren": die maakt een kopie van het hele ontwerp (vorm, verdeling en ramen) als nieuwe regel en opent die meteen, zodat je voor een vergelijkbaar kozijn alleen nog de maten hoeft aan te passen.</p>
         <p><strong>✎ Getekende kozijnen blijven zien (v3.36.0 — Brok 3).</strong> Een kozijn dat je hebt getekend, zie je nu terug. Op de meetstaat-regel staat een kleine tekening in plaats van het potlood-knopje; tik erop om hem te openen en bij te werken. En onderaan de Meetstaat-tab staat het overzicht "Getekende kozijnen": alle tekeningen van deze calculatie naast elkaar, met naam en strekkende meters, elk aantikbaar. Zo hou je grip op wat je hebt opgenomen, ook lang na de opname.</p>
         <p><strong>✎ Kozijn-tekenaar, draaiende en vaste ramen (v3.35.0 — Brok 2c).</strong> Per vak geef je nu aan wat het is: vast glas, een vast raam, een draairaam naar binnen of een draairaam naar buiten. Tik een vak aan en kies het type. Vast glas telt niets extra; een vast raam en een draairaam naar binnen tellen het raamhout één keer mee (de omtrek van het vak); een draairaam naar buiten telt twee keer — het raamhout plus de sponningkanten. In de tekening krijgt een raam een eigen randje; een draairaam ook het open-symbool, in stippellijn als het naar binnen draait en doorgetrokken als het naar buiten draait. Onderaan staat de m¹ nu uitgesplitst in frame, tussenwerk en ramen.</p>
         <p><strong>✎ Kozijn-tekenaar, verdelen in ramen en panelen (v3.34.0 — Brok 2b).</strong> Een rechthoekig kozijn kun je nu opdelen. Tik op een vak en kies verticaal of horizontaal delen — zo maak je een bovenlicht met daaronder twee ramen, of een ruitjesverdeling, in een paar tikken. Tik op een deellijn om die te selecteren: je typt dan de exacte positie in centimeters (bijvoorbeeld een bovenlicht van 40 cm) of verwijdert hem weer. De strekkende meters van elke tussenstijl en tussendorpel worden bij de omtrek opgeteld; onderaan zie je de opsplitsing "frame + tussenwerk". Die totale m¹ landt bij Klaar in de regel. Verdelen kan voorlopig alleen bij rechthoekige kozijnen; het frame en de omtrek werken bij alle vormen.</p>
@@ -2424,6 +2425,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
     <div class="modal-foot" style="justify-content: space-between; align-items:center;">
       <div id="kozijnOmtrek" class="kozijn-omtrek">Omtrek: 0,00 m¹</div>
       <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button class="btn-secondary btn" onclick="dupliceerKozijn()">Dupliceren</button>
         <button class="btn-secondary btn" onclick="closeKozijnTekenaar()">Annuleren</button>
         <button class="btn" onclick="saveKozijnTekenaar()">Klaar</button>
       </div>
@@ -2696,7 +2698,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.36.0';
+const APP_VERSION = 'v3.37.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3058,6 +3060,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.37.0', d: '2026-06-06', h: 'Kozijn-tekenaar: een vak-type weer weghalen door nog eens op de gekozen variant te tikken (terug naar vast glas), en een knop "Dupliceren" die een kopie van het hele ontwerp als nieuwe regel maakt en opent — handig om een vergelijkbaar kozijn met andere maten te tekenen' },
   { v: '3.36.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 3: getekende kozijnen blijven zichtbaar. Op de meetstaat-regel een kleine tekening in plaats van het potlood (tik om te openen), en onderaan de Meetstaat-tab een overzicht "Getekende kozijnen" met thumbnail, naam en m¹ per kozijn' },
   { v: '3.35.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 2c: per vak een type — vast glas, vast raam, draairaam naar binnen of naar buiten. Vast raam en draai-binnen tellen het raamhout 1× (omtrek), draai-buiten 2× (raamhout + sponningkanten). Open-symbool in stippellijn (binnen) of doorgetrokken (buiten); m¹ uitgesplitst in frame + tussenwerk + ramen' },
   { v: '3.34.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 2b: rechthoekige kozijnen verdelen in ramen/panelen door op een vak te tikken en verticaal of horizontaal te delen. Deellijnen krijg je op exacte positie door de maat in cm te typen; de lengte van elke tussenstijl en -dorpel telt mee in de m¹ (frame + tussenwerk). Verdelen voorlopig alleen bij rechthoeken' },
@@ -9964,8 +9967,16 @@ const _KOZIJN_DEFAULTS = {
   boog:         { b: 100, h: 120, boogHoogte: 50 }
 };
 let _kozijnEditIdx = null;      // index in data.calc.meetstaat van de open regel
-let _kozijnState = { vorm: 'rechthoek', maten: {}, verdeling: { t: 'vak' } };
-let _kozijnSel = null; // { kind:'vak'|'divider', path:'0.1' }
+let _kozijnState = { vorm: 'rechthoek', maten: {}, verdeling: { t: 'vak' }, markeringen: [] };
+let _kozijnSel = null; // { kind:'vak'|'divider'|'markering', path/idx }
+// Vaste legenda van gebreken (markeringen). Veranderen de m¹ niet; documenteren alleen.
+const _KOZIJN_DEFECTEN = {
+  houtrot:   { label: 'Houtrot',         kleur: '#dc2626' },
+  scheur:    { label: 'Scheur / naad',   kleur: '#ea580c' },
+  kit:       { label: 'Kit vervangen',   kleur: '#2563eb' },
+  losseverf: { label: 'Loszittende verf', kleur: '#d97706' }
+};
+let _kozijnMarkeerType = null; // welk gebrek staat 'klaar' om geplaatst te worden
 
 function _kozijnRenderVormKnoppen() {
   const c = document.getElementById('kozijnVormKnoppen'); if (!c) return;
@@ -10330,7 +10341,6 @@ async function dupliceerKozijn() {
   if (typeof renderTotals === 'function') renderTotals();
   // 3) open de kopie zodat je meteen de maten kunt aanpassen
   openKozijnTekenaar(data.calc.meetstaat.length - 1);
-}
 }
 function msKey(e, rowIdx, fieldIdx) {
   if (e.key !== 'Enter') return;
