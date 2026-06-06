@@ -1891,8 +1891,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.45.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.45.1</h2>
       <div class="intro-body">
+        <p><strong>🔧 Foto-stip aantikken hersteld (v3.45.1).</strong> Op de foto kon je alleen de laatst geplaatste stip verwijderen; een eerdere stip aantikken om hem te selecteren werkte niet. Doordat de aanraking voor het zoomen en slepen werd vastgehouden, wees de tik naar het tekenvlak in plaats van naar de stip eronder. De app bepaalt nu op basis van de positie welke stip je aantikt, dus je kunt elke stip selecteren voor een notitie of om hem te verwijderen — ook ingezoomd.</p>
         <p><strong>📸 Gebreken markeren op foto's (v3.45.0 — Brok 7c).</strong> De gekleurde gebrek-stippen uit de kozijn-tekenaar — houtrot, scheur/naad, kit, loszittende verf — kun je nu ook op een foto zetten. Tik een foto aan: hij opent op het hele scherm met een markeer-balk. Kies een gebrek en tik het op de plek; <strong>knijp om in te zoomen</strong> en sleep om te schuiven, zodat je een rotplekje precies kunt aanwijzen. Tik een stip aan voor een korte notitie of om hem te verwijderen. De stippen blijven op hun plek op elk schermformaat en op de print, want hun positie wordt als fractie van de foto bewaard. Op de foto-tegel zie je een chip met de telling. Handig voor een object zonder kozijn-tekening — bijvoorbeeld een tuinhuis met een foto per zijde. Per foto zet je met "telt mee" aan of de stippen meelopen in de gebrek-toeslagen (standaard uit). De foto-bijlage toont de stippen met een legenda en de notities onder elke foto. <em>Let op: draai eerst de bijgeleverde SQL-migratie in Supabase voor je deze versie uploadt.</em></p>
         <p><strong>✎ Rond raam in de kozijn-tekenaar (v3.44.0 — Brok 7b).</strong> Naast rechthoek, schuin en boog kun je nu ook een <strong>rond</strong> kozijn tekenen — een rondvenster of ossenoog. Je geeft één maat op, de diameter, en het frame wordt een echte cirkel; de omtrek is exact π × diameter. De indeling kent drie standen: <em>heel</em> (één rond glasvlak), <em>kruis</em> (een verticale en horizontale roede door het midden) en <em>spaken</em> (een instelbaar aantal roeden vanuit het midden, gelijk verdeeld — een wagenwiel-patroon). De roeden tellen mee in de strekkende meters: kruis als twee diameters, spaken als het aantal maal de straal. Voor het hele ronde raam kies je één type — vast glas, vast raam, draai naar binnen of naar buiten — net als bij een vak; het raamhout telt dan als de omtrek. Maak je er een <em>vulling</em> van (een dicht rond paneel of luik), dan loopt het oppervlak π × straal² als m² mee, met dezelfde automatische koppeling aan een calc-regel als de andere vullingen. Gebreken markeren werkt ook op het ronde raam. Geen SQL nodig; bestaande tekeningen blijven ongemoeid.</p>
         <p><strong>✎ Verdelen op schuine en boog-kozijnen (v3.43.0 — Brok 7).</strong> Tot nu kon je een kozijn alleen opdelen in ramen, panelen en vulling als het rechthoekig was. Dat kan nu bij <strong>alle</strong> vormen: schuin enkel (lessenaar), schuin punt (puntgevel) en boog. De app rekent de vorm als een veelhoek en knipt bij elke deellijn de werkelijke vorm in twee. Daardoor klopt alles: een tussenstijl hoog in een puntgevel of een tussendorpel hoog in een boog is korter dan onderin, en die kortere lengte telt zo mee in de strekkende meters. Een raam of vulling in een puntgevel krijgt ook echt een schuine bovenkant — eerlijk op het scherm en op de klant-PDF. Het oppervlak van een vulling volgt de echte vorm, dus ook de m² klopt bij schuine en gebogen vlakken. Bestaande rechthoekige tekeningen blijven exact hetzelfde.</p>
@@ -2804,7 +2805,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.45.0';
+const APP_VERSION = 'v3.45.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3166,6 +3167,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.45.1', d: '2026-06-06', h: 'Foutje hersteld: op een foto kon je alleen de laatst geplaatste gebrek-stip verwijderen. Door het vasthouden van de aanraking (voor zoomen/slepen) wees een tik naar het tekenvlak in plaats van naar de stip. De app bepaalt nu op positie welke stip je aantikt, zodat elke stip te selecteren en te verwijderen is, ook ingezoomd' },
   { v: '3.45.0', d: '2026-06-06', h: 'Foto-gebreken Brok 7c: de gekleurde gebrek-stippen (zelfde legenda als de kozijn-tekenaar) kun je nu ook op foto\u2019s plaatsen, met knijp-zoom en pan voor nauwkeurig aanwijzen. Posities als fractie van de foto, dus correct op elk scherm en op de print. Per stip een notitie; per foto een "telt mee"-vlag of de stippen meelopen in de gebrek-toeslagen (standaard uit). Tegel-chip met telling; foto-bijlage toont stippen met legenda en notities. Vereist SQL-migratie (markeringen- en meetel-kolom op calculatie_fotos)' },
   { v: '3.44.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 7b: rond raam (rondvenster) als nieuwe vorm. Eén maat (diameter), frame is een echte cirkel met omtrek π × diameter. Drie indelingen: heel, kruis (twee roeden door het midden) en spaken (instelbaar aantal radiale roeden). Roeden tellen mee in m¹ (kruis = 2× diameter, spaken = N × straal). Eén type voor het hele raam (vast/draai = raamhout als omtrek; vulling = oppervlak π × straal² als m² met automatische regel-koppeling). Gebreken werken ook op rond. Geen SQL nodig' },
   { v: '3.43.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 7: verdelen in ramen, panelen en vulling werkt nu bij alle vormen — schuin enkel, schuin punt en boog, niet meer alleen rechthoek. Elke vorm wordt als convexe veelhoek behandeld; een v/h-deellijn knipt de werkelijke vorm via half-vlak-clipping in twee. Snede-lengte (koorde), oppervlak en raam-omtrek kloppen daardoor bij schuine en gebogen vlakken; een raam/vulling in een puntgevel krijgt een echte schuine bovenkant. Bestaande rechthoek-tekeningen blijven identiek. Geen SQL nodig. Rond raam volgt in 7b' },
@@ -11242,17 +11244,35 @@ function _fmkPointerUp(e) {
   if (_fmkPtr.size < 2) _fmkPinch = null;
   if (_fmkPtr.size === 0) { _fmkPan = null; }
   if (wasTap && tapPt) {
-    const tgt = e.target;
-    if (tgt && tgt.classList && tgt.classList.contains('fmk-mk')) {
-      _fmkTapDot(+tgt.getAttribute('data-i'));
+    // Niet op e.target afgaan: door setPointerCapture is dat altijd het tekenvlak.
+    // Bepaal geometrisch welke stip onder de tik zit.
+    const hit = _fmkHitDot(tapPt);
+    if (hit >= 0) {
+      _fmkTapDot(hit);
     } else if (_fmkType) {
       const fr = _fmkToFrac(tapPt);
       _fmkPlace(fr.fx, fr.fy);
-    } else {
-      if (_fmkSel != null) { _fmkSel = null; _fmkRenderDots(); _fmkRenderNote(); }
+    } else if (_fmkSel != null) {
+      _fmkSel = null; _fmkRenderDots(); _fmkRenderNote();
     }
   }
   _fmkDown = null;
+}
+// Welke stip ligt onder een tik (stage-lokale punt)? -1 als geen. Trefstraal in schermpixels,
+// dus vinger-vriendelijk en onafhankelijk van de zoom. Inzoomen vergroot de tussenruimte,
+// zodat je dicht bij elkaar liggende stippen toch los kunt aantikken en plaatsen.
+function _fmkHitDot(pt) {
+  const mk = (_fmkFoto && _fmkFoto.markeringen) || [];
+  const v = _fmkView;
+  const rad = Math.max(20, _fmkW0 * 0.03);
+  let best = -1, bestD = rad;
+  for (let i = 0; i < mk.length; i++) {
+    const sx = v.tx + (mk[i].fx * _fmkW0) * v.scale;
+    const sy = v.ty + (mk[i].fy * _fmkH0) * v.scale;
+    const d = Math.hypot(pt.x - sx, pt.y - sy);
+    if (d <= bestD) { bestD = d; best = i; }
+  }
+  return best;
 }
 function _fmkRenderBar() {
   const bar = document.getElementById('fmkBar'); if (!bar) return;

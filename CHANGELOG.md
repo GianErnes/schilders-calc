@@ -1,4 +1,13 @@
-## v3.45.0 — Foto-gebreken Brok 7c: gebrek-stippen op foto's met knijp-zoom
+## v3.45.1 — Foto-stip aantikken hersteld
+Op een foto kon alleen de laatst geplaatste gebrek-stip verwijderd worden; een eerdere stip aantikken om hem te selecteren deed niets.
+
+### Oorzaak en oplossing
+Voor soepel zoomen en slepen wordt de aanraking met `setPointerCapture` vastgehouden door het tekenvlak. Daardoor wijst het tik-doel (`e.target`) altijd naar het tekenvlak, nooit naar de stip eronder, zodat de stip-selectie nooit afging — alleen de net geplaatste stip was al geselecteerd en dus verwijderbaar. De tik-afhandeling gaat nu niet meer op het tik-doel af, maar bepaalt geometrisch (schermafstand, vinger-vriendelijke trefstraal) welke stip onder de tik ligt. Daarmee is elke stip te selecteren voor een notitie of om te verwijderen, ook ingezoomd; inzoomen vergroot de tussenruimte zodat dicht bij elkaar liggende stippen los aan te tikken en te plaatsen blijven. Geen SQL nodig.
+
+---
+
+
+
 De gekleurde gebrek-stippen uit de kozijn-tekenaar kunnen nu ook op foto's, voor objecten zonder kozijn-tekening (bijvoorbeeld een tuinhuis met een foto per zijde).
 
 ### Vereist een SQL-migratie
