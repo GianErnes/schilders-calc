@@ -1814,6 +1814,18 @@
       margin-top: 3pt;
       word-break: break-word;
     }
+    .print-only .fb-status {
+      font-size: 8.5pt; margin-top: 3pt; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 4pt;
+    }
+    .print-only .fb-status::before {
+      content: ''; width: 8pt; height: 8pt; border-radius: 50%; display: inline-block;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .print-only .fb-status.telt { color: #1a7a3a; }
+    .print-only .fb-status.telt::before { background: #1a7a3a; }
+    .print-only .fb-status.doc { color: #777; font-weight: 500; }
+    .print-only .fb-status.doc::before { background: #bbb; }
   }
 
   /* AUTH OVERLAY */
@@ -1891,8 +1903,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.45.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.45.2</h2>
       <div class="intro-body">
+        <p><strong>📸 Prijs-status op de foto-bijlage (v3.45.2).</strong> Op de geprinte foto-bijlage zie je nu per foto met gebreken of die meegerekend zijn in de prijs. Staat de "telt mee"-vlag aan, dan staat er groen "Gebreken meegerekend in de prijs"; staat hij uit, dan "Gebreken alleen ter documentatie — niet in de prijs". Zo is in één oogopslag duidelijk wat in de offerte zit en wat puur ter vastlegging is.</p>
         <p><strong>🔧 Foto-stip aantikken hersteld (v3.45.1).</strong> Op de foto kon je alleen de laatst geplaatste stip verwijderen; een eerdere stip aantikken om hem te selecteren werkte niet. Doordat de aanraking voor het zoomen en slepen werd vastgehouden, wees de tik naar het tekenvlak in plaats van naar de stip eronder. De app bepaalt nu op basis van de positie welke stip je aantikt, dus je kunt elke stip selecteren voor een notitie of om hem te verwijderen — ook ingezoomd.</p>
         <p><strong>📸 Gebreken markeren op foto's (v3.45.0 — Brok 7c).</strong> De gekleurde gebrek-stippen uit de kozijn-tekenaar — houtrot, scheur/naad, kit, loszittende verf — kun je nu ook op een foto zetten. Tik een foto aan: hij opent op het hele scherm met een markeer-balk. Kies een gebrek en tik het op de plek; <strong>knijp om in te zoomen</strong> en sleep om te schuiven, zodat je een rotplekje precies kunt aanwijzen. Tik een stip aan voor een korte notitie of om hem te verwijderen. De stippen blijven op hun plek op elk schermformaat en op de print, want hun positie wordt als fractie van de foto bewaard. Op de foto-tegel zie je een chip met de telling. Handig voor een object zonder kozijn-tekening — bijvoorbeeld een tuinhuis met een foto per zijde. Per foto zet je met "telt mee" aan of de stippen meelopen in de gebrek-toeslagen (standaard uit). De foto-bijlage toont de stippen met een legenda en de notities onder elke foto. <em>Let op: draai eerst de bijgeleverde SQL-migratie in Supabase voor je deze versie uploadt.</em></p>
         <p><strong>✎ Rond raam in de kozijn-tekenaar (v3.44.0 — Brok 7b).</strong> Naast rechthoek, schuin en boog kun je nu ook een <strong>rond</strong> kozijn tekenen — een rondvenster of ossenoog. Je geeft één maat op, de diameter, en het frame wordt een echte cirkel; de omtrek is exact π × diameter. De indeling kent drie standen: <em>heel</em> (één rond glasvlak), <em>kruis</em> (een verticale en horizontale roede door het midden) en <em>spaken</em> (een instelbaar aantal roeden vanuit het midden, gelijk verdeeld — een wagenwiel-patroon). De roeden tellen mee in de strekkende meters: kruis als twee diameters, spaken als het aantal maal de straal. Voor het hele ronde raam kies je één type — vast glas, vast raam, draai naar binnen of naar buiten — net als bij een vak; het raamhout telt dan als de omtrek. Maak je er een <em>vulling</em> van (een dicht rond paneel of luik), dan loopt het oppervlak π × straal² als m² mee, met dezelfde automatische koppeling aan een calc-regel als de andere vullingen. Gebreken markeren werkt ook op het ronde raam. Geen SQL nodig; bestaande tekeningen blijven ongemoeid.</p>
@@ -2805,7 +2818,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.45.1';
+const APP_VERSION = 'v3.45.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3167,6 +3180,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.45.2', d: '2026-06-06', h: 'Foto-bijlage toont nu per foto met gebreken of die in de prijs zijn meegerekend: groen "meegerekend in de prijs" als de telt-mee-vlag aanstaat, anders "alleen ter documentatie — niet in de prijs". Geen SQL nodig' },
   { v: '3.45.1', d: '2026-06-06', h: 'Foutje hersteld: op een foto kon je alleen de laatst geplaatste gebrek-stip verwijderen. Door het vasthouden van de aanraking (voor zoomen/slepen) wees een tik naar het tekenvlak in plaats van naar de stip. De app bepaalt nu op positie welke stip je aantikt, zodat elke stip te selecteren en te verwijderen is, ook ingezoomd' },
   { v: '3.45.0', d: '2026-06-06', h: 'Foto-gebreken Brok 7c: de gekleurde gebrek-stippen (zelfde legenda als de kozijn-tekenaar) kun je nu ook op foto\u2019s plaatsen, met knijp-zoom en pan voor nauwkeurig aanwijzen. Posities als fractie van de foto, dus correct op elk scherm en op de print. Per stip een notitie; per foto een "telt mee"-vlag of de stippen meelopen in de gebrek-toeslagen (standaard uit). Tegel-chip met telling; foto-bijlage toont stippen met legenda en notities. Vereist SQL-migratie (markeringen- en meetel-kolom op calculatie_fotos)' },
   { v: '3.44.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 7b: rond raam (rondvenster) als nieuwe vorm. Eén maat (diameter), frame is een echte cirkel met omtrek π × diameter. Drie indelingen: heel, kruis (twee roeden door het midden) en spaken (instelbaar aantal radiale roeden). Roeden tellen mee in m¹ (kruis = 2× diameter, spaken = N × straal). Eén type voor het hele raam (vast/draai = raamhout als omtrek; vulling = oppervlak π × straal² als m² met automatische regel-koppeling). Gebreken werken ook op rond. Geen SQL nodig' },
@@ -8293,12 +8307,19 @@ async function printFotoBijlage() {
     html += '<div class="fb-page">';
     fotos.slice(i, i + 4).forEach(f => {
       const cap = f.opmerking || '';
-      const notities = (f.markeringen || []).filter(m => (m.notitie || '').trim())
+      const mk = (f.markeringen || []);
+      const notities = mk.filter(m => (m.notitie || '').trim())
         .map(m => `${_KOZIJN_DEFECTEN[m.type] ? _KOZIJN_DEFECTEN[m.type].label : 'Gebrek'}: ${m.notitie.trim()}`);
       const capFull = [cap].concat(notities).filter(Boolean).join(' · ');
+      let statusHtml = '';
+      if (mk.length) {
+        const telt = !!f.gebrekenTellen;
+        statusHtml = `<div class="fb-status ${telt ? 'telt' : 'doc'}">${telt ? 'Gebreken meegerekend in de prijs' : 'Gebreken alleen ter documentatie — niet in de prijs'}</div>`;
+      }
       html += `<div class="fb-cell">
         <div class="fb-img">${f.signedUrl ? `<div class="fb-imgwrap"><img src="${_escapeHtml(f.signedUrl)}" alt="foto">${mkSpans(f)}</div>` : ''}</div>
-        <div class="fb-cap">${_escapeHtml(capFull)}</div>
+        ${statusHtml}
+        ${capFull ? `<div class="fb-cap">${_escapeHtml(capFull)}</div>` : ''}
       </div>`;
     });
     html += '</div>';

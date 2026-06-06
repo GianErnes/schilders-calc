@@ -1,4 +1,13 @@
-## v3.45.1 — Foto-stip aantikken hersteld
+## v3.45.2 — Prijs-status op de foto-bijlage
+De geprinte foto-bijlage liet niet zien of een gemarkeerd gebrek ook in de prijs was meegerekend.
+
+### Wijziging
+Per foto met gebreken staat er nu een statusregel onder de foto, met dezelfde "telt mee"-logica als de editor: staat de meetel-vlag van die foto aan, dan "Gebreken meegerekend in de prijs" (groen); staat hij uit, dan "Gebreken alleen ter documentatie — niet in de prijs" (grijs). Zo is op de bijlage in één oogopslag duidelijk wat in de offerte zit en wat puur ter vastlegging is. Geen SQL nodig.
+
+---
+
+
+
 Op een foto kon alleen de laatst geplaatste gebrek-stip verwijderd worden; een eerdere stip aantikken om hem te selecteren deed niets.
 
 ### Oorzaak en oplossing
