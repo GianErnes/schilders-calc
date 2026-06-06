@@ -1,3 +1,18 @@
+## v3.32.0 — Kozijn-tekenaar, Brok 1: de schil
+Eerste, onzichtbare aanzet voor de opname op locatie. De kozijn-tekenaar wordt de grootste functie tot nu toe en komt daarom in brokken. Deze brok legt alleen de opslag en de schil vast; het tekenen zelf volgt.
+
+### Wijzigingen
+- **Potlood-knop per meetstaat-regel** (✎). Opent een schermvullend venster waarin je het kozijn een naam geeft. Die naam vult meteen de omschrijving van de regel. Heeft een regel al een tekening, dan toont de knop 📐 in het accent-rood.
+- De tekening wordt opgeslagen bij de regel en blijft bewaard, ook na de opname. Het venster is bewust nog leeg op één naamveld na — de tekenaar zelf (frame, tussenstijlen en -dorpels, strekkende meters, houtrot-markeringen) komt in Brok 2 en verder.
+
+### Code
+- Nieuwe kolom `tekening` (jsonb) op de meetstaat-tabel. Eén kolom draagt straks álles: frame, maten, stijlen/dorpels, markeringen én behandelcodes. Geen latere migratie meer nodig. Migratie apart aangeleverd, idempotent.
+- `tekening` toegevoegd aan `_mapMeetstaatFromDB` en `_mapMeetstaatToDB`.
+- Overlay `#kozijnTekenaarModal` plus `openKozijnTekenaar` / `closeKozijnTekenaar` / `saveKozijnTekenaar`. De tekening wordt met `Object.assign` aangevuld zodat latere velden bij een herbewerking niet verloren gaan.
+
+---
+
+
 ## v3.31.0 — Zoeken in de dashboard-archieven
 Bij een groeiend aantal projecten wordt scrollen door de dichtgeklapte status-groepen traag. Een zoekbalk per archief lost dat op.
 
