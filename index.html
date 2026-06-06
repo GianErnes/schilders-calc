@@ -1019,6 +1019,18 @@
     color: var(--ink-soft);
     cursor: not-allowed;
   }
+  table.meetstaat-tbl tr.ms-auto { background: var(--paper-warm); }
+  table.meetstaat-tbl tr.ms-auto select:disabled { background: var(--paper-warm); color: var(--ink-soft); cursor: not-allowed; }
+  .ms-auto-tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border: 1px solid var(--paper-deep);
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
+  }
   .ms-num {
     display: inline-block;
     background: var(--accent);
@@ -1805,8 +1817,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.41.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.42.0</h2>
       <div class="intro-body">
+        <p><strong>🚪 Vulling loopt automatisch in de calculatie (v3.42.0 — Brok 6B).</strong> De m² van je deuren en panelen landt nu vanzelf in de calculatie. Per gekoppelde regel houdt de app één meetstaat-regel bij die alle vulling-vakken van die soort optelt — over alle kozijnen in de calculatie heen. Plaats of wijzig je een vulling, dan loopt het bedrag mee; haal je de laatste weg, dan verdwijnt de regel weer. Die automatische regels staan gemarkeerd met "auto" en op slot, zodat je ze niet per ongeluk aanpast; je eigen meetstaat-regels blijven volledig ongemoeid, en een vergrendelde offerte wordt niet aangeraakt. Een vulling die je nog niet gekoppeld hebt telt nog niet mee — koppel hem eerst aan een regel. <em>Let op: draai eerst de bijgeleverde SQL-migratie in Supabase voor je deze versie uploadt.</em></p>
         <p><strong>🚪 Vulling koppelen aan een regel, met label in de tekening (v3.41.0).</strong> Een dichte vulling kan een deur, een paneel of een luik zijn — elk met een eigen norm. Daarom koppel je een vulling-vak nu per stuk aan een <strong>m²-regel uit je calculatie</strong>: tik het vak aan en kies bij "Koppel aan regel" waar het bij hoort. De naam van die regel komt meteen in het vak te staan, zodat je ploeg bij de uitvoering én de klant in één oogopslag zien wat een deur is en wat een paneel. Onder de tekening lopen de m² nu per regel apart mee. Een vulling die je nog niet gekoppeld hebt staat als "nog koppelen" zodat je niks vergeet. Het automatisch invoeren van die m² in de regels volgt in 6b.</p>
         <p><strong>🚪 Deuren en puivulling in de kozijn-tekenaar (v3.40.0 — Brok 6a).</strong> Een vak kun je nu ook als <strong>vulling</strong> markeren: een dicht vlak zoals een deur of een paneel. Dat telt niet in m¹ (omtrek) maar in m² (oppervlak), één kant — buitenwerk. Een losse deur teken je door het hele binnenvlak op vulling te zetten; in een pui zet je alleen de deur- of paneelvakken op vulling en de rest blijft glas of raam. Onder de tekening zie je voortaan twee totalen: de m¹ voor kozijn en ramen, en de m² voor deuren en panelen. Of een vulling als deur of als pui wordt afgerekend bepaal je straks in de calc-regel. De automatische koppeling van die m² naar een eigen regel volgt in de volgende stap (6b).</p>
         <p><strong>💶 Prijskaartje aan de gebreken (v3.39.0).</strong> Onder Instellingen zet je nu een vaste prijs per stuk per gebrek (houtrot, scheur/naad, kit, loszittende verf). Zodra je in een kozijn stippen plaatst, telt de app ze over de hele calculatie en zet per soort automatisch een toeslag neer — bijvoorbeeld "Houtrot herstel — 7 × €15". Het loopt mee als je stippen bijplaatst of weghaalt, en verdwijnt weer als de laatste stip weg is. Je eigen, handmatige toeslagen blijven ongemoeid, en een vergrendelde offerte wordt niet aangeraakt. Vul de prijzen in als je zover bent; staat een prijs op 0, dan gebeurt er niets.</p>
@@ -2714,7 +2727,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.41.0';
+const APP_VERSION = 'v3.42.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3076,6 +3089,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.42.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 6B: de vulling-m² loopt automatisch in de calculatie. Per gekoppelde m²-regel houdt de app één meetstaat-regel bij die alle vulling-vakken van die soort over alle kozijnen optelt. Automatische regels staan op slot en gemarkeerd; handmatige regels en vergrendelde offertes blijven ongemoeid. Vereist SQL-migratie (bron-kolom op meetstaat)' },
   { v: '3.41.0', d: '2026-06-06', h: 'Kozijn-tekenaar 6a (vervolg): een vulling-vak koppel je per stuk aan een m²-regel uit de calculatie (deur, paneel, luik — zoveel soorten als je regels hebt). De regelnaam staat als label in het vak, voor leesbaarheid bij uitvoering en voor de klant. De m² loopt per gekoppelde regel apart mee; nog niet gekoppelde vulling staat als "nog koppelen"' },
   { v: '3.40.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 6a: deuren en puivulling. Nieuw vak-type "vulling" — een dicht vlak (deur of paneel) dat in m² telt (één kant, buitenwerk) i.p.v. in m¹. De tekenaar toont nu twee totalen: m¹ voor kozijn + ramen, m² voor deuren + panelen. Koppeling van die m² naar een eigen calc-regel volgt in 6b' },
   { v: '3.39.0', d: '2026-06-06', h: 'Gebrek-prijzen: vaste prijs per stuk per gebrek in de instellingen; gebrek-stippen lopen automatisch als toeslag-post (aantal × prijs) mee in de calculatie. Vergrendelde offertes en handmatige toeslagen blijven ongemoeid' },
@@ -4675,11 +4689,12 @@ function _mapMeetstaatFromDB(row) {
     factor:       row.factor != null ? parseFloat(row.factor) : 1,
     opmerking:    row.opmerking || '',
     tekening:     row.tekening || null,
-    volgorde:     row.volgorde != null ? row.volgorde : 0
+    volgorde:     row.volgorde != null ? row.volgorde : 0,
+    bron:         row.bron || ''
   };
 }
 function _mapMeetstaatToDB(ms, calcId, idx) {
-  return {
+  const out = {
     calculatie_id:  calcId,
     calc_regel_id:  ms.calcRegelId || null,
     omschrijving:   ms.omschrijving || '',
@@ -4691,6 +4706,8 @@ function _mapMeetstaatToDB(ms, calcId, idx) {
     tekening:       ms.tekening || null,
     volgorde:       idx != null ? idx : (ms.volgorde || 0)
   };
+  if (ms.bron) out.bron = ms.bron;   // alleen meesturen bij auto-regels (kolom optioneel vóór migratie)
+  return out;
 }
 async function _insertMeetstaatDB(ms, calcId, idx) {
   const { data: rows, error } = await _sbQuery(
@@ -9755,17 +9772,19 @@ function renderMeetstaat() {
     const tekenBtn = _thumb
       ? `<span class="kozijn-thumb-btn" title="Kozijn bewerken" onclick="openKozijnTekenaar(${idx})">${_thumb}</span>`
       : `<button class="${_tk ? 'btn' : 'btn-secondary btn'} btn-sm" title="${_tk ? 'Kozijn bewerken' : 'Kozijn tekenen'}" onclick="openKozijnTekenaar(${idx})">${_tk ? '📐' : '✎'}</button>`;
-    html += `<tr data-row="${idx}">
+    const _auto = ms.bron === 'vulling_auto';
+    const _dis = _auto ? 'disabled' : '';
+    html += `<tr data-row="${idx}"${_auto ? ' class="ms-auto"' : ''}>
       <td><span class="ms-num">${idx+1}</span></td>
-      <td data-label="Calc-regel"><select data-field="calcRegelId" onchange="updMeetstaat(${idx},'calcRegelId',this.value)" onkeydown="msKey(event,${idx},0)">${opts}</select></td>
-      <td data-label="Omschrijving"><input type="text" data-field="omschrijving" value="${ms.omschrijving||''}" onchange="updMeetstaat(${idx},'omschrijving',this.value)" onkeydown="msKey(event,${idx},1)"></td>
-      <td data-label="b (cm)"><input type="number" data-field="bCm" min="0" step="1" value="${ms.bCm||0}" onchange="updMeetstaat(${idx},'bCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},2)"></td>
-      <td data-label="h (cm)"><input type="number" data-field="hCm" min="0" step="1" value="${ms.hCm||0}" onchange="updMeetstaat(${idx},'hCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},3)"></td>
-      <td data-label="aantal"><input type="number" data-field="aantal" min="0" step="1" value="${ms.aantal||0}" onchange="updMeetstaat(${idx},'aantal',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},4)"></td>
-      <td data-label="factor"><input type="number" data-field="factor" min="0" step="0.1" value="${ms.factor != null ? ms.factor : 1}" onchange="updMeetstaat(${idx},'factor',parseFloat(this.value)||1)" onkeydown="msKey(event,${idx},5)"></td>
+      <td data-label="Calc-regel"><select data-field="calcRegelId" onchange="updMeetstaat(${idx},'calcRegelId',this.value)" onkeydown="msKey(event,${idx},0)" ${_dis}>${opts}</select></td>
+      <td data-label="Omschrijving"><input type="text" data-field="omschrijving" value="${ms.omschrijving||''}" onchange="updMeetstaat(${idx},'omschrijving',this.value)" onkeydown="msKey(event,${idx},1)" ${_dis}></td>
+      <td data-label="b (cm)"><input type="number" data-field="bCm" min="0" step="1" value="${ms.bCm||0}" onchange="updMeetstaat(${idx},'bCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},2)" ${_dis}></td>
+      <td data-label="h (cm)"><input type="number" data-field="hCm" min="0" step="1" value="${ms.hCm||0}" onchange="updMeetstaat(${idx},'hCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},3)" ${_dis}></td>
+      <td data-label="aantal"><input type="number" data-field="aantal" min="0" step="1" value="${ms.aantal||0}" onchange="updMeetstaat(${idx},'aantal',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},4)" ${_dis}></td>
+      <td data-label="factor"><input type="number" data-field="factor" min="0" step="0.1" value="${ms.factor != null ? ms.factor : 1}" onchange="updMeetstaat(${idx},'factor',parseFloat(this.value)||1)" onkeydown="msKey(event,${idx},5)" ${_dis}></td>
       <td class="num right ms-totaal" data-label="Totaal">${fmt(t.totaal)} ${t.eenheid}</td>
-      <td data-label="Opmerking"><input type="text" data-field="opmerking" value="${ms.opmerking||''}" onchange="updMeetstaat(${idx},'opmerking',this.value)" onkeydown="msKey(event,${idx},6)"></td>
-      <td class="right" style="white-space:nowrap;">${tekenBtn} <button class="btn btn-danger btn-sm" onclick="delMeetstaat(${idx})">×</button></td>
+      <td data-label="Opmerking"><input type="text" data-field="opmerking" value="${ms.opmerking||''}" onchange="updMeetstaat(${idx},'opmerking',this.value)" onkeydown="msKey(event,${idx},6)" ${_dis}></td>
+      <td class="right" style="white-space:nowrap;">${_auto ? '<span class="ms-auto-tag" title="Automatisch bijgehouden uit de kozijntekeningen">auto</span>' : (tekenBtn + ` <button class="btn btn-danger btn-sm" onclick="delMeetstaat(${idx})">×</button>`)}</td>
     </tr>`;
   });
   html += '</tbody></table></div>';
@@ -9891,6 +9910,7 @@ async function addMeetstaat() {
 }
 function updMeetstaat(idx, field, value) {
   if (!data.calc.meetstaat || !data.calc.meetstaat[idx]) return;
+  if (data.calc.meetstaat[idx].bron === 'vulling_auto') { renderMeetstaat(); return; } // auto-regel: niet handmatig wijzigen
   data.calc.meetstaat[idx][field] = value;
   if (data.calc.meetstaat[idx].id) _updateMeetstaatDB(data.calc.meetstaat[idx], data.calc.id);
   _touchCalc(data.calc.id);
@@ -9967,6 +9987,7 @@ async function delMeetstaat(idx) {
   renderCalcStructuur();
   renderTotals();
   await _syncGebrekToeslagen();
+  await _syncVullingMeetstaat();
 }
 function goToMeetstaat(regelId) {
   // Switch to meetstaat tab
@@ -10101,9 +10122,10 @@ function _kozijnBuildInner(g, vorm, verdeling, markeringen, interactive, sel) {
           const sx = r.x + ins, sy = r.y + ins, sw = r.w - 2 * ins, sh = r.h - 2 * ins;
           inner += `<rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sh.toFixed(1)}" fill="${ty === 'vulling' ? 'rgba(124,74,30,0.22)' : 'none'}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
           if (ty === 'vulling' && vk.node && vk.node.label) {
+            const lbl = vk.node.label;
             const lcx = sx + sw / 2, lcy = sy + sh / 2;
-            const lfs = Math.max(7, Math.min(sw / Math.max(4, vk.node.label.length) * 1.7, sh * 0.5));
-            inner += `<text x="${lcx.toFixed(1)}" y="${lcy.toFixed(1)}" font-size="${lfs.toFixed(1)}" fill="#5a3a16" text-anchor="middle" dominant-baseline="central" font-family="system-ui, -apple-system, sans-serif" pointer-events="none">${_escapeHtml(vk.node.label)}</text>`;
+            const lfs = Math.max(6, Math.min(sw * 1.45 / Math.max(4, lbl.length), sh * 0.45));
+            inner += `<text x="${lcx.toFixed(1)}" y="${lcy.toFixed(1)}" font-size="${lfs.toFixed(1)}" fill="#5a3a16" text-anchor="middle" dominant-baseline="central" font-family="system-ui, -apple-system, sans-serif" pointer-events="none">${_escapeHtml(lbl)}</text>`;
           }
           if (ty === 'draai_binnen' || ty === 'draai_buiten') {
             const dash = ty === 'draai_binnen' ? ' stroke-dasharray="5 4"' : '';
@@ -10504,6 +10526,7 @@ async function saveKozijnTekenaar() {
   if (typeof renderCalcStructuur === 'function') renderCalcStructuur();
   if (typeof renderTotals === 'function') renderTotals();
   await _syncGebrekToeslagen();
+  await _syncVullingMeetstaat();
 }
 async function dupliceerKozijn() {
   if (_kozijnEditIdx == null || !data.calc.meetstaat || !data.calc.meetstaat[_kozijnEditIdx]) return;
@@ -10534,6 +10557,7 @@ async function dupliceerKozijn() {
   if (typeof renderCalcStructuur === 'function') renderCalcStructuur();
   if (typeof renderTotals === 'function') renderTotals();
   await _syncGebrekToeslagen();
+  await _syncVullingMeetstaat();
   // 3) open de kopie zodat je meteen de maten kunt aanpassen
   openKozijnTekenaar(data.calc.meetstaat.length - 1);
 }
@@ -12040,6 +12064,71 @@ async function _syncGebrekToeslagen() {
     _touchCalc(data.calc.id);
     saveData();
     if (typeof renderStaartList === 'function') renderStaartList();
+    if (typeof renderTotals === 'function') renderTotals();
+  }
+}
+
+// ============================================================
+// VULLING (DEUREN/PANELEN) → AUTOMATISCHE MEETSTAAT-REGELS (v3.42.0 — 6B)
+// Telt per gekoppelde m²-regel de vulling-vakken over alle tekeningen op
+// en houdt per regel één automatische meetstaat-regel bij (getagd via
+// bron='vulling_auto'). Handmatige meetstaat-regels blijven ongemoeid;
+// vergrendelde offertes worden niet aangeraakt.
+// ============================================================
+function _vullingM2PerRegelAlle() {
+  const acc = {};
+  const rijen = (data.calc && data.calc.meetstaat) ? data.calc.meetstaat : [];
+  rijen.forEach(ms => {
+    const lijst = (ms.tekening && Array.isArray(ms.tekening.vlakkenM2PerRegel)) ? ms.tekening.vlakkenM2PerRegel : [];
+    lijst.forEach(v => {
+      const rid = v.regelId || '';
+      if (!rid) return;                         // niet-gekoppelde vulling telt niet mee
+      acc[rid] = (acc[rid] || 0) + (parseFloat(v.m2) || 0);
+    });
+  });
+  return acc;
+}
+async function _syncVullingMeetstaat() {
+  if (!data.calc) return;
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) return; // bevroren offerte: niet aankomen
+  if (!Array.isArray(data.calc.meetstaat)) data.calc.meetstaat = [];
+  const doel = _vullingM2PerRegelAlle();                                       // { regelId: m² }
+  const autoRijen = data.calc.meetstaat.filter(ms => ms.bron === 'vulling_auto');
+  let veranderd = false;
+  // 1) per doel-regel: invoegen of bijwerken. m² wordt gecodeerd als b×h: hCm=100 (1 m), bCm=m²×100.
+  for (const regelId of Object.keys(doel)) {
+    const m2 = doel[regelId];
+    if (!(m2 > 0.0001)) continue;
+    const bCm = Math.round(m2 * 100);
+    const row = autoRijen.find(ms => ms.calcRegelId === regelId);
+    if (row) {
+      if ((row.bCm || 0) !== bCm || (row.hCm || 0) !== 100 || (row.aantal || 0) !== 1 || (row.factor || 0) !== 1) {
+        row.bCm = bCm; row.hCm = 100; row.aantal = 1; row.factor = 1;
+        row.omschrijving = 'Vulling uit kozijntekeningen (automatisch)';
+        _updateMeetstaatDB(row, data.calc.id);
+        veranderd = true;
+      }
+    } else {
+      const nieuw = {
+        calcRegelId: regelId, omschrijving: 'Vulling uit kozijntekeningen (automatisch)',
+        hCm: 100, bCm: bCm, aantal: 1, factor: 1, opmerking: '', tekening: null, bron: 'vulling_auto'
+      };
+      const saved = await _insertMeetstaatDB(nieuw, data.calc.id, data.calc.meetstaat.length);
+      if (saved) { saved.bron = saved.bron || 'vulling_auto'; data.calc.meetstaat.push(saved); veranderd = true; }
+    }
+  }
+  // 2) verweesde auto-regels weghalen (regel heeft geen vulling-m² meer)
+  for (const row of autoRijen) {
+    if (!(doel[row.calcRegelId] > 0.0001)) {
+      await _deleteMeetstaatDB(row.id);
+      data.calc.meetstaat = data.calc.meetstaat.filter(x => x.id !== row.id);
+      veranderd = true;
+    }
+  }
+  if (veranderd) {
+    _touchCalc(data.calc.id);
+    saveData();
+    if (typeof renderMeetstaat === 'function') renderMeetstaat();
     if (typeof renderTotals === 'function') renderTotals();
   }
 }

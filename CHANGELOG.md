@@ -1,3 +1,20 @@
+## v3.42.0 — Kozijn-tekenaar Brok 6B: vulling loopt automatisch in de calculatie
+De m² van deuren en panelen landt nu vanzelf in de calculatie. Sluitstuk van 6a: je koppelt een vulling-vak aan een regel, en de app voert de m² nu ook daadwerkelijk in.
+
+### Vereist: SQL-migratie eerst
+Draai `2026-06-06_meetstaat_bron.sql` in Supabase **voordat** je deze versie uploadt — de auto-regels gebruiken een nieuwe `bron`-kolom op de meetstaat-tabel. Bestaande regels blijven werken (de kolom wordt alleen meegestuurd bij auto-regels), maar het automatisch invoeren werkt pas na de migratie.
+
+### Wijzigingen
+- Per gekoppelde m²-regel houdt de app één automatische meetstaat-regel bij, die alle vulling-vakken van die soort optelt — over alle kozijnen in de calculatie heen.
+- De regel loopt mee: m² erbij → bedrag erbij; laatste vulling weg → regel verdwijnt.
+- Automatische regels zijn gemarkeerd met "auto", gedempt weergegeven en op slot (niet handmatig te bewerken of te verwijderen). Ze zijn getagd via `bron='vulling_auto'`, zodat je eigen meetstaat-regels volledig ongemoeid blijven.
+- Vergrendelde offertes (gereed/verzonden/geaccepteerd/verloren) worden niet aangeraakt.
+- Niet-gekoppelde vulling telt niet mee — koppel die eerst aan een regel.
+- Technisch: de m² wordt in de auto-regel als b×h gecodeerd (hoogte 1,00 m, breedte = m² × 100 cm), zodat de bestaande meetstaat-rekenkern het zonder aanpassing oppakt.
+
+---
+
+
 ## v3.41.0 — Kozijn-tekenaar 6a (vervolg): vulling koppelen aan een m²-regel
 Het oorspronkelijke vulling-type telde alle m² op één hoop. Maar een dichte vulling kan een deur, een paneel of een luik zijn, en die horen vaak bij verschillende m²-regels met een eigen norm. Eén lumped getal kun je dan niet splitsen. Daarom koppelt een vulling-vak nu per stuk aan een specifieke regel.
 
