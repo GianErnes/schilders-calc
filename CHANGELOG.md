@@ -1,4 +1,23 @@
-## v3.43.0 — Kozijn-tekenaar Brok 7: verdelen op schuine en boog-kozijnen
+## v3.44.0 — Kozijn-tekenaar Brok 7b: rond raam (rondvenster)
+Naast rechthoek, schuin en boog kent de tekenaar nu een ronde vorm: een rondvenster of ossenoog, met een eigen verdeel-model naast de v/h-deelboom.
+
+### Geen SQL nodig
+Puur JS. De ronde indeling staat als JSON in het tekening-object (`{rond:true, mode, n, type, regelId, label}`); er verandert niets aan de database. Bestaande tekeningen blijven ongemoeid. Het verdeling-formaat wordt bij wisselen van/naar de ronde vorm genormaliseerd, zodat het ronde model en de deelboom niet door elkaar lopen.
+
+### Wijzigingen
+- Nieuwe vorm **rond** met één maat: de diameter. Het frame is een echte cirkel (cirkelboog-pad), de omtrek is exact π × diameter.
+- Drie indelingen: **heel** (één rond glasvlak), **kruis** (een verticale en horizontale roede door het midden) en **spaken** (N roeden vanuit het midden naar de rand, gelijk verdeeld; N instelbaar van 2 t/m 12, bovenaan beginnend en met de klok mee). Kruis is feitelijk vier spaken.
+- Roeden tellen mee in het tussenwerk (m¹): kruis = 2 × diameter; spaken = N × straal.
+- Eén type voor het hele ronde raam: glas / vast / draai naar binnen / draai naar buiten. Raamhout-m¹ = 0 / omtrek / omtrek / 2 × omtrek, precies zoals een vak bij de andere vormen.
+- Type **vulling**: een dicht rond paneel of luik. Het oppervlak (π × straal²) loopt als m² mee, met dezelfde automatische koppeling aan een m²-calc-regel als de andere vullingen (Brok 6B-machinerie). De regelnaam staat als label in het midden van het raam.
+- Onderaan dezelfde uitsplitsing "frame + tussenwerk + ramen"; de totale m¹ landt bij Klaar in de regel.
+- Gebrek-markeringen (stippen) werken ook op het ronde raam.
+- Technisch: het ronde model loopt via guards bovenin de reken- en tekenfuncties (`_kozijnOmtrekCm`, `_kozijnMembersCm`, `_kozijnRamenCm`, `_kozijnVlakkenCm2`, `_kozijnVlakkenPerRegel`, `_kozijnBuildInner`, `_kozijnRenderVerdeelControls`), met eigen helpers (`_kozijnRond*`). De deelboom-code raakt rond niet aan.
+
+---
+
+
+
 Verdelen in ramen, panelen en vulling werkte tot nu alleen bij rechthoekige kozijnen. Vanaf nu kan het bij alle vormen: schuin enkel (lessenaar), schuin punt (puntgevel) en boog.
 
 ### Geen SQL nodig
