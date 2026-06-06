@@ -1,4 +1,23 @@
-## v3.44.0 — Kozijn-tekenaar Brok 7b: rond raam (rondvenster)
+## v3.45.0 — Foto-gebreken Brok 7c: gebrek-stippen op foto's met knijp-zoom
+De gekleurde gebrek-stippen uit de kozijn-tekenaar kunnen nu ook op foto's, voor objecten zonder kozijn-tekening (bijvoorbeeld een tuinhuis met een foto per zijde).
+
+### Vereist een SQL-migratie
+Draai eerst de bijgeleverde migratie in Supabase Studio (twee kolommen op `calculatie_fotos`: `markeringen` jsonb en `gebreken_tellen` boolean), daarna pas de code uploaden. De migratie is idempotent (`add column if not exists`).
+
+### Wijzigingen
+- Een foto aantikken opent een markeer-editor op het volledige scherm met dezelfde gebreken-legenda als de tekenaar: houtrot, scheur/naad, kit vervangen, loszittende verf.
+- Kies een gebrek en tik het op de foto. **Knijp-zoom en pan** voor nauwkeurig plaatsen; een tik plaatst, een sleep schuift, twee vingers zoomen. De stippen schalen tegen de zoom in, zodat ze klein en precies blijven.
+- Tik een stip aan voor een korte notitie of om hem te verwijderen.
+- Posities worden als **fractie** van de foto bewaard (0–1 in breedte en hoogte), dus ze blijven correct op elk schermformaat en op de print.
+- Per foto een **"telt mee"-vlag** (standaard uit): staat hij aan, dan lopen de stippen van die foto mee in de automatische gebrek-toeslagen, net als de kozijn-stippen. Zo voorkom je dubbeltelling als hetzelfde gebrek al op een tekening staat.
+- Op de foto-tegel een chip met de telling (gekleurde stippen + aantal); de chip krijgt een accent-rand als de foto meetelt.
+- De foto-bijlage (print) toont de stippen op de juiste plek met een legenda bovenaan en de notities onder elke foto.
+- Technisch: stippen + meetel-vlag in het foto-datamodel (`_mapFotoFromDB`/`_mapFotoToDB`/`_updateFotoDB`); `_telGebreken` telt de meetellende foto-stippen mee; de print-bijlage geeft elke foto-wrapper de juiste beeldverhouding zodat de procent-posities exact op het beeld vallen.
+
+---
+
+
+
 Naast rechthoek, schuin en boog kent de tekenaar nu een ronde vorm: een rondvenster of ossenoog, met een eigen verdeel-model naast de v/h-deelboom.
 
 ### Geen SQL nodig

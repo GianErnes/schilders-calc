@@ -968,6 +968,62 @@
     box-shadow: 0 8px 40px rgba(0,0,0,0.5);
   }
 
+  /* FOTO-GEBREKEN (v3.45.0 — Brok 7c): markeer-editor met knijp-zoom + stippen */
+  .fmk-overlay {
+    position: fixed; inset: 0; z-index: 10000;
+    background: rgba(0,0,0,0.92);
+    display: flex; flex-direction: column;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .fmk-bar {
+    display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+    padding: 0.5rem 0.7rem; background: rgba(20,20,20,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .fmk-bar .fmk-defect {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.35rem 0.55rem; border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.06);
+    color: #fff; cursor: pointer; font-family: inherit; font-size: 0.78rem;
+  }
+  .fmk-bar .fmk-defect.actief { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.25) inset; font-weight: 600; }
+  .fmk-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; flex: 0 0 auto; }
+  .fmk-bar .fmk-sluit { margin-left: auto; padding: 0.35rem 0.7rem; border: none; border-radius: var(--radius); background: #fff; color: #111; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.82rem; }
+  .fmk-tel { display: inline-flex; align-items: center; gap: 0.3rem; color: #fff; font-size: 0.78rem; cursor: pointer; padding: 0.2rem 0.4rem; }
+  .fmk-tel input { width: 16px; height: 16px; }
+  .fmk-stage {
+    flex: 1 1 auto; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    touch-action: none;
+  }
+  .fmk-content { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+  .fmk-content img { display: block; width: 100%; height: 100%; pointer-events: none; }
+  .fmk-mk {
+    position: absolute; width: 5%; padding-bottom: 5%; height: 0;
+    transform: translate(-50%, -50%) scale(var(--fmkscale, 1));
+    border-radius: 50%; border: 2px solid #fff;
+    box-shadow: 0 0 0 1.5px rgba(0,0,0,0.4);
+    cursor: pointer;
+  }
+  .fmk-mk.sel { outline: 2px dashed #fff; outline-offset: 2px; }
+  .fmk-hint { padding: 0.3rem 0.7rem; color: rgba(255,255,255,0.7); font-size: 0.74rem; background: rgba(20,20,20,0.95); text-align: center; }
+  .fmk-note {
+    display: flex; gap: 0.5rem; align-items: center; padding: 0.5rem 0.7rem;
+    background: rgba(20,20,20,0.97); border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .fmk-note input[type=text] { flex: 1 1 auto; min-width: 0; padding: 0.5rem; border: 1px solid rgba(255,255,255,0.25); border-radius: var(--radius); background: rgba(255,255,255,0.95); font-family: inherit; }
+  .fmk-note .fmk-del { padding: 0.5rem 0.7rem; border: none; border-radius: var(--radius); background: var(--danger, #c0392b); color: #fff; cursor: pointer; font-family: inherit; }
+  /* Stippen-chip op de tegel */
+  .foto-mkchip {
+    position: absolute; left: 4px; bottom: 4px; z-index: 2;
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 6px; border-radius: 10px;
+    background: rgba(0,0,0,0.6); color: #fff; font-size: 0.7rem; line-height: 1;
+    pointer-events: none;
+  }
+  .foto-mkchip .fmk-dot { width: 9px; height: 9px; }
+  .foto-mkchip.telt { box-shadow: 0 0 0 1.5px var(--accent, #e63329); }
+
   /* DOCUMENTEN (v3.24.4) */
   .doc-blok {
     margin-top: 0.85rem;
@@ -1734,6 +1790,24 @@
       display: flex; align-items: center; justify-content: center;
     }
     .print-only .fb-img img { width: 100%; height: 100%; object-fit: contain; }
+    .print-only .fb-imgwrap { position: relative; max-width: 100%; max-height: 9cm; }
+    .print-only .fb-imgwrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .print-only .fb-mk {
+      position: absolute; width: 14pt; height: 14pt;
+      transform: translate(-50%, -50%);
+      border-radius: 50%; border: 1.5pt solid #fff;
+      box-shadow: 0 0 0 0.75pt rgba(0,0,0,0.5);
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .print-only .fb-legenda {
+      display: flex; gap: 14pt; flex-wrap: wrap;
+      font-size: 9pt; color: #333; margin: 4pt 0 8pt;
+    }
+    .print-only .fb-legenda span { display: inline-flex; align-items: center; gap: 4pt; }
+    .print-only .fb-legenda i {
+      width: 10pt; height: 10pt; border-radius: 50%; display: inline-block;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
     .print-only .fb-cap {
       font-size: 9pt;
       color: #333;
@@ -1817,8 +1891,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.44.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.45.0</h2>
       <div class="intro-body">
+        <p><strong>📸 Gebreken markeren op foto's (v3.45.0 — Brok 7c).</strong> De gekleurde gebrek-stippen uit de kozijn-tekenaar — houtrot, scheur/naad, kit, loszittende verf — kun je nu ook op een foto zetten. Tik een foto aan: hij opent op het hele scherm met een markeer-balk. Kies een gebrek en tik het op de plek; <strong>knijp om in te zoomen</strong> en sleep om te schuiven, zodat je een rotplekje precies kunt aanwijzen. Tik een stip aan voor een korte notitie of om hem te verwijderen. De stippen blijven op hun plek op elk schermformaat en op de print, want hun positie wordt als fractie van de foto bewaard. Op de foto-tegel zie je een chip met de telling. Handig voor een object zonder kozijn-tekening — bijvoorbeeld een tuinhuis met een foto per zijde. Per foto zet je met "telt mee" aan of de stippen meelopen in de gebrek-toeslagen (standaard uit). De foto-bijlage toont de stippen met een legenda en de notities onder elke foto. <em>Let op: draai eerst de bijgeleverde SQL-migratie in Supabase voor je deze versie uploadt.</em></p>
         <p><strong>✎ Rond raam in de kozijn-tekenaar (v3.44.0 — Brok 7b).</strong> Naast rechthoek, schuin en boog kun je nu ook een <strong>rond</strong> kozijn tekenen — een rondvenster of ossenoog. Je geeft één maat op, de diameter, en het frame wordt een echte cirkel; de omtrek is exact π × diameter. De indeling kent drie standen: <em>heel</em> (één rond glasvlak), <em>kruis</em> (een verticale en horizontale roede door het midden) en <em>spaken</em> (een instelbaar aantal roeden vanuit het midden, gelijk verdeeld — een wagenwiel-patroon). De roeden tellen mee in de strekkende meters: kruis als twee diameters, spaken als het aantal maal de straal. Voor het hele ronde raam kies je één type — vast glas, vast raam, draai naar binnen of naar buiten — net als bij een vak; het raamhout telt dan als de omtrek. Maak je er een <em>vulling</em> van (een dicht rond paneel of luik), dan loopt het oppervlak π × straal² als m² mee, met dezelfde automatische koppeling aan een calc-regel als de andere vullingen. Gebreken markeren werkt ook op het ronde raam. Geen SQL nodig; bestaande tekeningen blijven ongemoeid.</p>
         <p><strong>✎ Verdelen op schuine en boog-kozijnen (v3.43.0 — Brok 7).</strong> Tot nu kon je een kozijn alleen opdelen in ramen, panelen en vulling als het rechthoekig was. Dat kan nu bij <strong>alle</strong> vormen: schuin enkel (lessenaar), schuin punt (puntgevel) en boog. De app rekent de vorm als een veelhoek en knipt bij elke deellijn de werkelijke vorm in twee. Daardoor klopt alles: een tussenstijl hoog in een puntgevel of een tussendorpel hoog in een boog is korter dan onderin, en die kortere lengte telt zo mee in de strekkende meters. Een raam of vulling in een puntgevel krijgt ook echt een schuine bovenkant — eerlijk op het scherm en op de klant-PDF. Het oppervlak van een vulling volgt de echte vorm, dus ook de m² klopt bij schuine en gebogen vlakken. Bestaande rechthoekige tekeningen blijven exact hetzelfde.</p>
         <p><strong>🚪 Vulling loopt automatisch in de calculatie (v3.42.0 — Brok 6B).</strong> De m² van je deuren en panelen landt nu vanzelf in de calculatie. Per gekoppelde regel houdt de app één meetstaat-regel bij die alle vulling-vakken van die soort optelt — over alle kozijnen in de calculatie heen. Plaats of wijzig je een vulling, dan loopt het bedrag mee; haal je de laatste weg, dan verdwijnt de regel weer. Die automatische regels staan gemarkeerd met "auto" en op slot, zodat je ze niet per ongeluk aanpast; je eigen meetstaat-regels blijven volledig ongemoeid, en een vergrendelde offerte wordt niet aangeraakt. Een vulling die je nog niet gekoppeld hebt telt nog niet mee — koppel hem eerst aan een regel. <em>Let op: draai eerst de bijgeleverde SQL-migratie in Supabase voor je deze versie uploadt.</em></p>
@@ -2729,7 +2804,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.44.0';
+const APP_VERSION = 'v3.45.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3091,6 +3166,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.45.0', d: '2026-06-06', h: 'Foto-gebreken Brok 7c: de gekleurde gebrek-stippen (zelfde legenda als de kozijn-tekenaar) kun je nu ook op foto\u2019s plaatsen, met knijp-zoom en pan voor nauwkeurig aanwijzen. Posities als fractie van de foto, dus correct op elk scherm en op de print. Per stip een notitie; per foto een "telt mee"-vlag of de stippen meelopen in de gebrek-toeslagen (standaard uit). Tegel-chip met telling; foto-bijlage toont stippen met legenda en notities. Vereist SQL-migratie (markeringen- en meetel-kolom op calculatie_fotos)' },
   { v: '3.44.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 7b: rond raam (rondvenster) als nieuwe vorm. Eén maat (diameter), frame is een echte cirkel met omtrek π × diameter. Drie indelingen: heel, kruis (twee roeden door het midden) en spaken (instelbaar aantal radiale roeden). Roeden tellen mee in m¹ (kruis = 2× diameter, spaken = N × straal). Eén type voor het hele raam (vast/draai = raamhout als omtrek; vulling = oppervlak π × straal² als m² met automatische regel-koppeling). Gebreken werken ook op rond. Geen SQL nodig' },
   { v: '3.43.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 7: verdelen in ramen, panelen en vulling werkt nu bij alle vormen — schuin enkel, schuin punt en boog, niet meer alleen rechthoek. Elke vorm wordt als convexe veelhoek behandeld; een v/h-deellijn knipt de werkelijke vorm via half-vlak-clipping in twee. Snede-lengte (koorde), oppervlak en raam-omtrek kloppen daardoor bij schuine en gebogen vlakken; een raam/vulling in een puntgevel krijgt een echte schuine bovenkant. Bestaande rechthoek-tekeningen blijven identiek. Geen SQL nodig. Rond raam volgt in 7b' },
   { v: '3.42.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 6B: de vulling-m² loopt automatisch in de calculatie. Per gekoppelde m²-regel houdt de app één meetstaat-regel bij die alle vulling-vakken van die soort over alle kozijnen optelt. Automatische regels staan op slot en gemarkeerd; handmatige regels en vergrendelde offertes blijven ongemoeid. Vereist SQL-migratie (bron-kolom op meetstaat)' },
@@ -4472,6 +4548,8 @@ function _mapFotoFromDB(row) {
     storagePath: row.storage_path,
     opmerking:   row.opmerking || '',
     volgorde:    row.volgorde != null ? row.volgorde : 0,
+    markeringen: Array.isArray(row.markeringen) ? row.markeringen : [],   // [{fx,fy,type,notitie}] — fracties 0..1
+    gebrekenTellen: !!row.gebreken_tellen,                                 // tellen de stippen mee in de toeslagen?
     signedUrl:   null   // wordt vlak voor het tonen ingevuld door _signFotoUrls
   };
 }
@@ -4480,7 +4558,9 @@ function _mapFotoToDB(f, calcId, idx) {
     calculatie_id: calcId,
     storage_path:  f.storagePath,
     opmerking:     f.opmerking || '',
-    volgorde:      idx != null ? idx : (f.volgorde || 0)
+    volgorde:      idx != null ? idx : (f.volgorde || 0),
+    markeringen:   Array.isArray(f.markeringen) ? f.markeringen : [],
+    gebreken_tellen: !!f.gebrekenTellen
   };
 }
 
@@ -4550,11 +4630,13 @@ async function _signFotoUrls(fotos) {
   fotos.forEach(f => { f.signedUrl = byPath[f.storagePath] || null; });
 }
 
-// Bijschrift / volgorde bijwerken — vuren-en-vergeten.
+// Bijschrift / volgorde / markeringen / meetel-vlag bijwerken — vuren-en-vergeten.
 function _updateFotoDB(f) {
   _sbQuery(
     _sb.from('calculatie_fotos').update({
-      opmerking: f.opmerking || '', volgorde: f.volgorde || 0
+      opmerking: f.opmerking || '', volgorde: f.volgorde || 0,
+      markeringen: Array.isArray(f.markeringen) ? f.markeringen : [],
+      gebreken_tellen: !!f.gebrekenTellen
     }).eq('id', f.id), 'Foto bijwerken'
   ).then(() => {});
 }
@@ -8178,6 +8260,14 @@ async function printFotoBijlage() {
   if (missing.length) await _signFotoUrls(missing);
   const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
 
+  // Legenda: welke gebrek-types komen voor op de foto's?
+  const gebruikt = {};
+  fotos.forEach(f => (f.markeringen || []).forEach(m => { gebruikt[m.type] = true; }));
+  const legendaTypes = Object.keys(_KOZIJN_DEFECTEN).filter(k => gebruikt[k]);
+  const legendaHtml = legendaTypes.length
+    ? `<div class="fb-legenda">${legendaTypes.map(k => `<span><i style="background:${_KOZIJN_DEFECTEN[k].kleur};"></i>${_escapeHtml(_KOZIJN_DEFECTEN[k].label)}</span>`).join('')}</div>`
+    : '';
+
   let html = `<div class="header-block">
     <div style="display:flex; align-items:center; gap:0.75rem;">
       <div class="brand-logo print"></div>
@@ -8190,14 +8280,23 @@ async function printFotoBijlage() {
       <div><strong>${datum}</strong></div>
       <div>${fotos.length} foto${fotos.length === 1 ? '' : '\u2019s'}</div>
     </div>
-  </div>`;
+  </div>${legendaHtml}`;
+
+  const mkSpans = (f) => ((f.markeringen || []).map(m => {
+    const d = _KOZIJN_DEFECTEN[m.type] || { kleur: '#dc2626' };
+    return `<span class="fb-mk" style="left:${(m.fx * 100).toFixed(2)}%; top:${(m.fy * 100).toFixed(2)}%; background:${d.kleur};"></span>`;
+  }).join(''));
 
   for (let i = 0; i < fotos.length; i += 4) {
     html += '<div class="fb-page">';
     fotos.slice(i, i + 4).forEach(f => {
+      const cap = f.opmerking || '';
+      const notities = (f.markeringen || []).filter(m => (m.notitie || '').trim())
+        .map(m => `${_KOZIJN_DEFECTEN[m.type] ? _KOZIJN_DEFECTEN[m.type].label : 'Gebrek'}: ${m.notitie.trim()}`);
+      const capFull = [cap].concat(notities).filter(Boolean).join(' · ');
       html += `<div class="fb-cell">
-        <div class="fb-img">${f.signedUrl ? `<img src="${_escapeHtml(f.signedUrl)}" alt="foto">` : ''}</div>
-        <div class="fb-cap">${_escapeHtml(f.opmerking || '')}</div>
+        <div class="fb-img">${f.signedUrl ? `<div class="fb-imgwrap"><img src="${_escapeHtml(f.signedUrl)}" alt="foto">${mkSpans(f)}</div>` : ''}</div>
+        <div class="fb-cap">${_escapeHtml(capFull)}</div>
       </div>`;
     });
     html += '</div>';
@@ -8212,6 +8311,11 @@ async function printFotoBijlage() {
   await Promise.all(imgs.map(img => img.complete
     ? Promise.resolve()
     : new Promise(res => { img.onload = img.onerror = res; })));
+  // De wrapper de beeldverhouding geven (media-onafhankelijk), zodat de stippen exact op het beeld vallen.
+  area.querySelectorAll('.fb-imgwrap').forEach(w => {
+    const im = w.querySelector('img');
+    if (im && im.naturalWidth && im.naturalHeight) w.style.aspectRatio = im.naturalWidth + ' / ' + im.naturalHeight;
+  });
   window.print();
 }
 
@@ -10850,8 +10954,9 @@ function renderNotitiesPaneel() {
     `).join('');
     const fotosHtml = data.calc.fotos.map(f => `
       <div class="foto-tegel">
-        <div class="foto-thumb" onclick="openFotoLightbox('${f.id}')" title="Klik om te vergroten">
+        <div class="foto-thumb" onclick="openFotoLightbox('${f.id}')" title="Klik om te bekijken en gebreken te markeren">
           ${f.signedUrl ? `<img src="${_escapeHtml(f.signedUrl)}" alt="foto" loading="lazy">` : `<div class="foto-laden">laden…</div>`}
+          ${_fotoMkChip(f)}
           <button class="foto-del" onclick="event.stopPropagation(); delFoto('${f.id}')" title="Verwijder foto">×</button>
         </div>
         <input type="text" class="foto-bijschrift" value="${(f.opmerking || '').replace(/"/g, '&quot;')}" placeholder="bijschrift…" onchange="updFotoOpmerking('${f.id}', this.value)">
@@ -10993,16 +11098,223 @@ function updFotoOpmerking(id, value) {
   _touchCalc(data.calc.id);
   // geen re-render — invoerveld behoudt focus
 }
+// Telling-chip op de tegel: één gekleurde stip per voorkomend gebrek-type + totaal.
+function _fotoMkChip(f) {
+  const mk = (f && Array.isArray(f.markeringen)) ? f.markeringen : [];
+  if (!mk.length) return '';
+  const per = {};
+  mk.forEach(m => { per[m.type] = (per[m.type] || 0) + 1; });
+  const dots = Object.keys(_KOZIJN_DEFECTEN).filter(k => per[k]).map(k =>
+    `<span class="fmk-dot" style="background:${_KOZIJN_DEFECTEN[k].kleur};"></span>`).join('');
+  return `<span class="foto-mkchip${f.gebrekenTellen ? ' telt' : ''}" title="${mk.length} gebrek-markering${mk.length === 1 ? '' : 'en'}${f.gebrekenTellen ? ' · telt mee in toeslagen' : ''}">${dots}${mk.length}</span>`;
+}
+// ---- Foto-markeer-editor (v3.45.0 — Brok 7c): stippen + knijp-zoom ----
+let _fmkFoto = null;          // huidige foto
+let _fmkType = null;          // gewapend gebrek-type (of null)
+let _fmkSel = null;           // geselecteerde stip-index (of null)
+let _fmkView = { scale: 1, tx: 0, ty: 0 };
+let _fmkW0 = 0, _fmkH0 = 0;   // basis-beeldmaat bij scale 1 (px)
+let _fmkChanged = false;
+const _fmkPtr = new Map();    // pointerId -> {x,y} (stage-lokaal)
+let _fmkPinch = null;         // { dist, C:{x,y}, ... }
+let _fmkPan = null;           // { x, y }
+let _fmkDown = null;          // { x, y, t } voor tap-detectie
+
 function openFotoLightbox(id) {
   const f = (data.calc && data.calc.fotos || []).find(x => x.id === id);
   if (!f || !f.signedUrl) return;
+  if (!Array.isArray(f.markeringen)) f.markeringen = [];
+  _fmkFoto = f; _fmkType = null; _fmkSel = null; _fmkChanged = false;
+  _fmkView = { scale: 1, tx: 0, ty: 0 }; _fmkPtr.clear(); _fmkPinch = null; _fmkPan = null; _fmkDown = null;
+
   const ov = document.createElement('div');
-  ov.className = 'foto-lightbox';
-  ov.onclick = () => ov.remove();
-  const img = document.createElement('img');
-  img.src = f.signedUrl;
-  ov.appendChild(img);
+  ov.className = 'fmk-overlay'; ov.id = 'fmkOverlay';
+  ov.innerHTML =
+    `<div class="fmk-bar" id="fmkBar"></div>` +
+    `<div class="fmk-hint" id="fmkHint"></div>` +
+    `<div class="fmk-stage" id="fmkStage"><div class="fmk-content" id="fmkContent"><img id="fmkImg" alt="foto"><div id="fmkDots"></div></div></div>` +
+    `<div class="fmk-note" id="fmkNote" style="display:none"></div>`;
   document.body.appendChild(ov);
+
+  const img = document.getElementById('fmkImg');
+  img.onload = () => { _fmkFit(); _fmkRenderDots(); };
+  img.src = f.signedUrl;
+
+  _fmkRenderBar();
+  const stage = document.getElementById('fmkStage');
+  stage.addEventListener('pointerdown', _fmkPointerDown);
+  stage.addEventListener('pointermove', _fmkPointerMove);
+  stage.addEventListener('pointerup', _fmkPointerUp);
+  stage.addEventListener('pointercancel', _fmkPointerUp);
+  window.addEventListener('resize', _fmkOnResize);
+}
+function _fmkOnResize() {
+  // Alleen opnieuw passen als de gebruiker niet ingezoomd is en geen notitie open heeft
+  // (anders zou een toetsenbord-resize de zoom of het typen verstoren).
+  if (_fmkSel != null || _fmkView.scale > 1.01) return;
+  _fmkFit();
+}
+function _fmkClose() {
+  const ov = document.getElementById('fmkOverlay');
+  if (ov) ov.remove();
+  window.removeEventListener('resize', _fmkOnResize);
+  const f = _fmkFoto; _fmkFoto = null; _fmkType = null; _fmkSel = null;
+  if (f && _fmkChanged) {
+    _updateFotoDB(f);
+    _touchCalc(data.calc.id);
+    renderNotitiesPaneel();
+    _syncGebrekToeslagen();
+  }
+}
+function _fmkFit() {
+  const stage = document.getElementById('fmkStage'), img = document.getElementById('fmkImg'), content = document.getElementById('fmkContent');
+  if (!stage || !img || !content || !img.naturalWidth) return;
+  const sw = stage.clientWidth, sh = stage.clientHeight;
+  const ar = img.naturalWidth / img.naturalHeight;
+  let w = sw, h = sw / ar;
+  if (h > sh) { h = sh; w = sh * ar; }
+  _fmkW0 = w; _fmkH0 = h;
+  content.style.width = w + 'px'; content.style.height = h + 'px';
+  _fmkView = { scale: 1, tx: (sw - w) / 2, ty: (sh - h) / 2 };
+  _fmkApply();
+}
+function _fmkApply() {
+  const content = document.getElementById('fmkContent'); if (!content) return;
+  const v = _fmkView;
+  content.style.transform = `translate(${v.tx}px, ${v.ty}px) scale(${v.scale})`;
+  content.style.setProperty('--fmkscale', (1 / v.scale).toFixed(4));
+}
+function _fmkStagePt(e) {
+  const stage = document.getElementById('fmkStage'); const r = stage.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+function _fmkToFrac(pt) {
+  const v = _fmkView;
+  const cx = (pt.x - v.tx) / v.scale, cy = (pt.y - v.ty) / v.scale;
+  return { fx: Math.min(1, Math.max(0, cx / _fmkW0)), fy: Math.min(1, Math.max(0, cy / _fmkH0)) };
+}
+function _fmkPointerDown(e) {
+  e.preventDefault();
+  const stage = document.getElementById('fmkStage');
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  const p = _fmkStagePt(e);
+  _fmkPtr.set(e.pointerId, p);
+  if (_fmkPtr.size === 1) {
+    _fmkDown = { x: p.x, y: p.y, t: Date.now() };
+    _fmkPan = { x: p.x, y: p.y };
+    _fmkPinch = null;
+  } else if (_fmkPtr.size === 2) {
+    _fmkPan = null; _fmkDown = null;
+    const pts = Array.from(_fmkPtr.values());
+    const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    const v = _fmkView;
+    _fmkPinch = { dist, s0: v.scale, C: { x: (mid.x - v.tx) / v.scale, y: (mid.y - v.ty) / v.scale } };
+  }
+}
+function _fmkPointerMove(e) {
+  if (!_fmkPtr.has(e.pointerId)) return;
+  e.preventDefault();
+  const p = _fmkStagePt(e);
+  _fmkPtr.set(e.pointerId, p);
+  if (_fmkPtr.size >= 2 && _fmkPinch) {
+    const pts = Array.from(_fmkPtr.values());
+    const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    let s = _fmkPinch.s0 * (dist / _fmkPinch.dist);
+    s = Math.min(8, Math.max(1, s));
+    _fmkView.scale = s;
+    _fmkView.tx = mid.x - _fmkPinch.C.x * s;
+    _fmkView.ty = mid.y - _fmkPinch.C.y * s;
+    _fmkApply();
+  } else if (_fmkPtr.size === 1 && _fmkPan) {
+    const dx = p.x - _fmkPan.x, dy = p.y - _fmkPan.y;
+    if (_fmkDown && Math.hypot(p.x - _fmkDown.x, p.y - _fmkDown.y) > 8) _fmkDown = null; // werd een sleep, geen tik
+    _fmkView.tx += dx; _fmkView.ty += dy;
+    _fmkPan = { x: p.x, y: p.y };
+    _fmkApply();
+  }
+}
+function _fmkPointerUp(e) {
+  const wasTap = _fmkPtr.size === 1 && _fmkDown && (Date.now() - _fmkDown.t) < 350 && Math.hypot(_fmkStagePt(e).x - _fmkDown.x, _fmkStagePt(e).y - _fmkDown.y) <= 8;
+  const tapPt = _fmkDown ? { x: _fmkDown.x, y: _fmkDown.y } : null;
+  _fmkPtr.delete(e.pointerId);
+  if (_fmkPtr.size < 2) _fmkPinch = null;
+  if (_fmkPtr.size === 0) { _fmkPan = null; }
+  if (wasTap && tapPt) {
+    const tgt = e.target;
+    if (tgt && tgt.classList && tgt.classList.contains('fmk-mk')) {
+      _fmkTapDot(+tgt.getAttribute('data-i'));
+    } else if (_fmkType) {
+      const fr = _fmkToFrac(tapPt);
+      _fmkPlace(fr.fx, fr.fy);
+    } else {
+      if (_fmkSel != null) { _fmkSel = null; _fmkRenderDots(); _fmkRenderNote(); }
+    }
+  }
+  _fmkDown = null;
+}
+function _fmkRenderBar() {
+  const bar = document.getElementById('fmkBar'); if (!bar) return;
+  const btns = Object.keys(_KOZIJN_DEFECTEN).map(k => {
+    const d = _KOZIJN_DEFECTEN[k]; const act = _fmkType === k;
+    return `<button class="fmk-defect${act ? ' actief' : ''}" onclick="_fmkArm('${k}')"><span class="fmk-dot" style="background:${d.kleur};"></span>${d.label}</button>`;
+  }).join('');
+  const tellen = _fmkFoto && _fmkFoto.gebrekenTellen;
+  bar.innerHTML = btns +
+    `<label class="fmk-tel" title="Tellen de stippen van deze foto mee in de gebrek-toeslagen?"><input type="checkbox" ${tellen ? 'checked' : ''} onchange="_fmkToggleTellen(this.checked)">telt mee</label>` +
+    `<button class="fmk-sluit" onclick="_fmkClose()">Klaar</button>`;
+  const hint = document.getElementById('fmkHint');
+  if (hint) hint.textContent = _fmkType
+    ? `Tik op de foto om "${_KOZIJN_DEFECTEN[_fmkType].label}" te plaatsen. Knijp om te zoomen, sleep om te schuiven.`
+    : 'Kies een gebrek en tik het op de foto. Knijp om te zoomen, sleep om te schuiven. Tik een stip aan voor een notitie of om hem te verwijderen.';
+}
+function _fmkRenderDots() {
+  const wrap = document.getElementById('fmkDots'); if (!wrap) return;
+  const mk = (_fmkFoto && _fmkFoto.markeringen) || [];
+  wrap.innerHTML = mk.map((m, i) => {
+    const d = _KOZIJN_DEFECTEN[m.type] || { kleur: '#dc2626' };
+    return `<div class="fmk-mk${_fmkSel === i ? ' sel' : ''}" data-i="${i}" style="left:${(m.fx * 100).toFixed(2)}%; top:${(m.fy * 100).toFixed(2)}%; background:${d.kleur};"></div>`;
+  }).join('');
+}
+function _fmkRenderNote() {
+  const note = document.getElementById('fmkNote'); if (!note) return;
+  const mk = (_fmkFoto && _fmkFoto.markeringen) || [];
+  if (_fmkSel == null || !mk[_fmkSel]) { note.style.display = 'none'; note.innerHTML = ''; return; }
+  const m = mk[_fmkSel]; const d = _KOZIJN_DEFECTEN[m.type] || { label: 'Gebrek' };
+  const nt = (m.notitie || '').replace(/"/g, '&quot;');
+  note.style.display = 'flex';
+  note.innerHTML = `<span class="fmk-dot" style="background:${(_KOZIJN_DEFECTEN[m.type] || {}).kleur || '#dc2626'};"></span><input type="text" value="${nt}" placeholder="${d.label} — notitie (bv. onderdorpel links)" oninput="_fmkSetNote(this.value)"><button class="fmk-del" onclick="_fmkDelDot()">Verwijderen</button>`;
+}
+function _fmkArm(type) {
+  _fmkType = (_fmkType === type) ? null : type;
+  if (_fmkType) { _fmkSel = null; _fmkRenderNote(); }
+  _fmkRenderBar(); _fmkRenderDots();
+}
+function _fmkPlace(fx, fy) {
+  if (!_fmkFoto || !_fmkType) return;
+  if (!Array.isArray(_fmkFoto.markeringen)) _fmkFoto.markeringen = [];
+  _fmkFoto.markeringen.push({ fx: +fx.toFixed(4), fy: +fy.toFixed(4), type: _fmkType, notitie: '' });
+  _fmkSel = _fmkFoto.markeringen.length - 1; _fmkChanged = true;
+  _fmkRenderDots(); _fmkRenderNote();
+}
+function _fmkTapDot(i) {
+  _fmkSel = i; _fmkType = null;
+  _fmkRenderBar(); _fmkRenderDots(); _fmkRenderNote();
+}
+function _fmkSetNote(val) {
+  const mk = (_fmkFoto && _fmkFoto.markeringen) || [];
+  if (_fmkSel != null && mk[_fmkSel]) { mk[_fmkSel].notitie = val; _fmkChanged = true; }
+}
+function _fmkDelDot() {
+  const mk = (_fmkFoto && _fmkFoto.markeringen) || [];
+  if (_fmkSel == null || !mk[_fmkSel]) return;
+  mk.splice(_fmkSel, 1); _fmkSel = null; _fmkChanged = true;
+  _fmkRenderDots(); _fmkRenderNote();
+}
+function _fmkToggleTellen(on) {
+  if (!_fmkFoto) return;
+  _fmkFoto.gebrekenTellen = !!on; _fmkChanged = true;
 }
 
 // ---- Documenten (v3.24.4) ----
@@ -12206,6 +12518,12 @@ function _telGebreken() {
   rijen.forEach(ms => {
     const mk = (ms.tekening && Array.isArray(ms.tekening.markeringen)) ? ms.tekening.markeringen : [];
     mk.forEach(m => { if (tel[m.type] !== undefined) tel[m.type]++; });
+  });
+  // Foto-stippen tellen mee per foto waarvoor de meetel-vlag aanstaat (v3.45.0 — Brok 7c).
+  const fotos = (data.calc && data.calc.fotos) ? data.calc.fotos : [];
+  fotos.forEach(f => {
+    if (!f || !f.gebrekenTellen || !Array.isArray(f.markeringen)) return;
+    f.markeringen.forEach(m => { if (tel[m.type] !== undefined) tel[m.type]++; });
   });
   return tel;
 }
