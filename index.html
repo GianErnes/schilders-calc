@@ -1805,8 +1805,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.38.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.39.0</h2>
       <div class="intro-body">
+        <p><strong>💶 Prijskaartje aan de gebreken (v3.39.0).</strong> Onder Instellingen zet je nu een vaste prijs per stuk per gebrek (houtrot, scheur/naad, kit, loszittende verf). Zodra je in een kozijn stippen plaatst, telt de app ze over de hele calculatie en zet per soort automatisch een toeslag neer — bijvoorbeeld "Houtrot herstel — 7 × €15". Het loopt mee als je stippen bijplaatst of weghaalt, en verdwijnt weer als de laatste stip weg is. Je eigen, handmatige toeslagen blijven ongemoeid, en een vergrendelde offerte wordt niet aangeraakt. Vul de prijzen in als je zover bent; staat een prijs op 0, dan gebeurt er niets.</p>
         <p><strong>🎨 Beter te onderscheiden gebrek-kleuren (v3.38.2).</strong> De markeringen zaten te dicht bij elkaar in de rood-oranje hoek. Ze hebben nu vier duidelijk verschillende kleuren, in lijn met het dashboard-palet: houtrot rood, scheur/naad paars, kit vervangen blauw, loszittende verf groen.</p>
         <p><strong>🔧 Naam onder getekend kozijn volgt de regel (v3.38.1).</strong> In het overzicht "Getekende kozijnen" bleef de oude naam staan als je daarna de omschrijving van de regel aanpaste. Nu is de omschrijving van de regel leidend: pas je die aan, dan verandert de naam onder de tekening mee.</p>
         <p><strong>✎ Kozijn-tekenaar, gebreken markeren (v3.38.0 — Brok 4).</strong> In de tekenaar staat nu een balk "Gebreken": houtrot, scheur of naad, kit vervangen en loszittende verf. Kies een gebrek, tik het op de tekening, en er komt een gekleurde stip op die plek. Tik een stip aan om er een korte notitie bij te zetten ("onderdorpel links") of om hem te verwijderen. De markeringen veranderen de strekkende meters niet — ze documenteren wat er aan de hand is, zichtbaar in de tekening, op de regel en in het overzicht. Werkt bij elke vorm, ook bij schuine en boog-kozijnen.</p>
@@ -2212,6 +2213,11 @@
       <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Veelgebruikte staartkosten als templates.</em></p>
       <div id="staartLib"></div>
       <button class="btn-secondary btn" onclick="addStaartLib()" style="margin-top: 0.5rem;">+ Template toevoegen</button>
+    </div>
+    <div class="settings-section">
+      <h3>Gebrek-prijzen</h3>
+      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Vaste prijs per stuk per gebrek. Zodra je in een kozijn stippen plaatst, verschijnt per soort automatisch een toeslag-post (aantal × prijs) in de calculatie. Staat een prijs op 0, dan gebeurt er niets.</em></p>
+      <div id="gebrekPrijzenGrid" class="cluster-grid"></div>
     </div>
     <div class="settings-section">
       <h3>Data Beheer</h3>
@@ -2706,7 +2712,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.38.2';
+const APP_VERSION = 'v3.39.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3068,6 +3074,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.39.0', d: '2026-06-06', h: 'Gebrek-prijzen: vaste prijs per stuk per gebrek in de instellingen; gebrek-stippen lopen automatisch als toeslag-post (aantal × prijs) mee in de calculatie. Vergrendelde offertes en handmatige toeslagen blijven ongemoeid' },
   { v: '3.38.2', d: '2026-06-06', h: 'Gebrek-markeringen kregen vier duidelijk verschillende kleuren (zaten te dicht bij elkaar in rood-oranje): houtrot rood, scheur/naad paars, kit vervangen blauw, loszittende verf groen — in lijn met het dashboard-statuspalet' },
   { v: '3.38.1', d: '2026-06-06', h: 'Fix: in het overzicht "Getekende kozijnen" volgt de naam onder de tekening nu de omschrijving van de regel (was: bleef hangen op de naam uit de tekenaar)' },
   { v: '3.38.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 4: gebreken markeren. Balk met houtrot, scheur/naad, kit vervangen en loszittende verf — kies er een en tik het als gekleurde stip op de tekening, met optioneel een korte notitie. Verandert de m¹ niet (documentatie); werkt bij elke vorm en is zichtbaar in de tekening, op de regel en in het overzicht' },
@@ -3633,7 +3640,8 @@ function _mapStaartFromDB(row) {
     grondslag:   row.grondslag || '',
     hoeveelheid: parseFloat(row.hoeveelheid) || 0,
     verstopInEenheidsprijs: !!row.verstop_in_eenheidsprijs,
-    teltInWerkdagen: !!row.telt_in_werkdagen
+    teltInWerkdagen: !!row.telt_in_werkdagen,
+    gebrekType: row.gebrek_type || null
   };
 }
 function _mapStaartToDB(s) {
@@ -4625,7 +4633,8 @@ function _mapStaartCalcToDB(s, calcId, idx) {
     hoeveelheid: s.hoeveelheid || 0,
     volgorde:    idx != null ? idx : (s.volgorde || 0),
     verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs,
-    telt_in_werkdagen: !!s.teltInWerkdagen
+    telt_in_werkdagen: !!s.teltInWerkdagen,
+    gebrek_type: s.gebrekType || null
   };
 }
 async function _insertStaartCalcDB(s, calcId, idx) {
@@ -4729,6 +4738,11 @@ async function loadData() {
       if (data.settings.rayonDrempel === undefined) data.settings.rayonDrempel = 15;
       if (data.settings.volleDagen === undefined) data.settings.volleDagen = true;
       if (data.settings.afrondingsDrempel === undefined) data.settings.afrondingsDrempel = 0.6;
+      // Gebrek-prijzen (€ per stuk) — default 0; loopt automatisch in de toeslagen
+      if (!data.settings.gebrekPrijzen || typeof data.settings.gebrekPrijzen !== 'object') data.settings.gebrekPrijzen = {};
+      Object.keys(_KOZIJN_DEFECTEN).forEach(k => {
+        if (data.settings.gebrekPrijzen[k] === undefined) data.settings.gebrekPrijzen[k] = 0;
+      });
       // Ondergronden locatie migration
       if (data.ondergronden) {
         data.ondergronden.forEach(o => {
@@ -9948,6 +9962,7 @@ async function delMeetstaat(idx) {
   renderMeetstaat();
   renderCalcStructuur();
   renderTotals();
+  await _syncGebrekToeslagen();
 }
 function goToMeetstaat(regelId) {
   // Switch to meetstaat tab
@@ -10366,7 +10381,7 @@ function _kozijnBouwTekening() {
   };
   return { tekening, naam, cm };
 }
-function saveKozijnTekenaar() {
+async function saveKozijnTekenaar() {
   if (_kozijnEditIdx == null || !data.calc.meetstaat || !data.calc.meetstaat[_kozijnEditIdx]) {
     closeKozijnTekenaar();
     return;
@@ -10385,6 +10400,7 @@ function saveKozijnTekenaar() {
   renderMeetstaat();
   if (typeof renderCalcStructuur === 'function') renderCalcStructuur();
   if (typeof renderTotals === 'function') renderTotals();
+  await _syncGebrekToeslagen();
 }
 async function dupliceerKozijn() {
   if (_kozijnEditIdx == null || !data.calc.meetstaat || !data.calc.meetstaat[_kozijnEditIdx]) return;
@@ -10414,6 +10430,7 @@ async function dupliceerKozijn() {
   renderMeetstaat();
   if (typeof renderCalcStructuur === 'function') renderCalcStructuur();
   if (typeof renderTotals === 'function') renderTotals();
+  await _syncGebrekToeslagen();
   // 3) open de kopie zodat je meteen de maten kunt aanpassen
   openKozijnTekenaar(data.calc.meetstaat.length - 1);
 }
@@ -11863,6 +11880,67 @@ function _calcWeeks() {
 }
 function calcStaartTotaal() { return data.calc.staart.reduce((s, p) => s + calcStaart(p), 0); }
 
+// ============================================================
+// GEBREK-PRIJZEN → AUTOMATISCHE TOESLAGEN (v3.39.0)
+// Telt de gebrek-stippen over de hele calculatie en zet per
+// gebrek-type één staart-post ("eenheid": stuk × prijs).
+// Posten worden getagd via gebrekType, zodat handmatige
+// toeslag-posten ongemoeid blijven.
+// ============================================================
+function _telGebreken() {
+  const tel = {};
+  Object.keys(_KOZIJN_DEFECTEN).forEach(k => tel[k] = 0);
+  const rijen = (data.calc && data.calc.meetstaat) ? data.calc.meetstaat : [];
+  rijen.forEach(ms => {
+    const mk = (ms.tekening && Array.isArray(ms.tekening.markeringen)) ? ms.tekening.markeringen : [];
+    mk.forEach(m => { if (tel[m.type] !== undefined) tel[m.type]++; });
+  });
+  return tel;
+}
+async function _syncGebrekToeslagen() {
+  if (!data.calc) return;
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) return; // bevroren offerte: niet aankomen
+  if (!Array.isArray(data.calc.staart)) data.calc.staart = [];
+  const tel = _telGebreken();
+  const prijzen = (data.settings && data.settings.gebrekPrijzen) ? data.settings.gebrekPrijzen : {};
+  let veranderd = false;
+  for (const type of Object.keys(_KOZIJN_DEFECTEN)) {
+    const aantal = tel[type] || 0;
+    const prijs = parseFloat(prijzen[type]) || 0;
+    const bestaand = data.calc.staart.find(p => p.gebrekType === type);
+    if (aantal > 0 && prijs > 0) {
+      if (bestaand) {
+        if ((bestaand.hoeveelheid || 0) !== aantal || (bestaand.bedrag || 0) !== prijs) {
+          bestaand.hoeveelheid = aantal;
+          bestaand.bedrag = prijs;
+          _updateStaartCalcDB(bestaand, data.calc.id);
+          veranderd = true;
+        }
+      } else {
+        const post = {
+          naam: `${_KOZIJN_DEFECTEN[type].label} herstel`,
+          type: 'eenheid', bedrag: prijs, eenheid: 'stuk', grondslag: '',
+          hoeveelheid: aantal, verstopInEenheidsprijs: false, teltInWerkdagen: false,
+          gebrekType: type
+        };
+        const saved = await _insertStaartCalcDB(post, data.calc.id, data.calc.staart.length);
+        if (saved) { data.calc.staart.push(saved); veranderd = true; }
+      }
+    } else if (bestaand) {
+      // Geen stippen meer (of geen prijs ingesteld): automatische post weghalen
+      await _deleteStaartCalcDB(bestaand.id);
+      data.calc.staart = data.calc.staart.filter(p => p.id !== bestaand.id);
+      veranderd = true;
+    }
+  }
+  if (veranderd) {
+    _touchCalc(data.calc.id);
+    saveData();
+    if (typeof renderStaartList === 'function') renderStaartList();
+    if (typeof renderTotals === 'function') renderTotals();
+  }
+}
+
 // v3.16.0 — Reken het bedrag van staartposten met teltInWerkdagen=true terug naar
 // uren (bedrag / uurloon) zodat die uren meetellen in de werkdagen-berekening.
 // Voorkomt dubbeltelling met de afrondingstoeslag: door werkelijke dagen op te
@@ -12359,6 +12437,23 @@ function loadSettings() {
       <div class="cluster-grid">${inner}</div>
     </div>`;
   }).join('');
+  const gp = document.getElementById('gebrekPrijzenGrid');
+  if (gp) {
+    const prijzen = s.gebrekPrijzen || {};
+    gp.innerHTML = Object.keys(_KOZIJN_DEFECTEN).map(k => {
+      const def = _KOZIJN_DEFECTEN[k];
+      const v = prijzen[k] != null ? prijzen[k] : 0;
+      return `<div><label><span style="display:inline-block; width:0.7rem; height:0.7rem; border-radius:50%; background:${def.kleur}; margin-right:0.35rem; vertical-align:middle;"></span>${def.label} (€ / stuk)</label><input type="number" step="0.50" min="0" value="${v}" onchange="updGebrekPrijs('${k}', this)"></div>`;
+    }).join('');
+  }
+}
+function updGebrekPrijs(type, inputEl) {
+  if (!data.settings.gebrekPrijzen || typeof data.settings.gebrekPrijzen !== 'object') data.settings.gebrekPrijzen = {};
+  data.settings.gebrekPrijzen[type] = parseFloat(inputEl.value) || 0;
+  saveData(); _saveSettingsDB();
+  // Prijswijziging meteen laten meelopen in een geopende, niet-vergrendelde calc
+  if (data.calc) _syncGebrekToeslagen();
+  showSavedTick(inputEl);
 }
 function updGroepOpslag(g, v, inputEl) {
   data.settings.groepOpslagen[g] = parseFloat(v) || 0;

@@ -1,3 +1,21 @@
+## v3.39.0 — Gebrek-prijzen → automatische toeslagen
+De gebrek-markeringen uit de kozijn-tekenaar krijgen een prijskaartje. Per gebrek-type stel je één keer een vaste prijs per stuk in; de stippen die je tijdens de opname tekent, lopen daarna automatisch als toeslag mee in de calculatie. Daarmee is de cirkel opname → prijs rond.
+
+### Database (migratie vooraf in Supabase Studio)
+- `2026-06-06_staart_gebrek_type.sql` — voegt kolom `gebrek_type` toe aan de `staart`-tabel. Tagt de automatisch gegenereerde gebrek-posten zodat de app zijn eigen posten herkent en handmatige toeslagen met rust laat. Idempotent.
+
+### Instellingen
+- Nieuw blok **Gebrek-prijzen**: vier velden (houtrot, scheur/naad, kit, loszittende verf), € per stuk. Default 0 — staat een prijs op 0, dan verschijnt er niets.
+
+### Werking
+- Bij opslaan, dupliceren of verwijderen van een kozijn telt de app alle gebrek-stippen over de hele calculatie en zet per soort één toeslag-post neer: type "eenheid" (stuk × prijs), bijv. "Houtrot herstel — 7 × €15". Aantal en prijs lopen automatisch mee; bij de laatste stip weg verdwijnt de post.
+- Wijzig je een prijs in de instellingen terwijl een calculatie open staat, dan wordt die meteen bijgewerkt.
+- **Vergrendelde offertes** (gereed/verzonden/geaccepteerd/verloren) worden niet aangeraakt — de snapshot blijft bevroren.
+- **Handmatige toeslag-posten** blijven ongemoeid; de sync werkt alleen zijn eigen, getagde posten bij. Hernoem je een gebrek-post, dan blijft die naam staan — alleen aantal en prijs lopen mee.
+
+---
+
+
 ## v3.38.2 — Beter te onderscheiden gebrek-kleuren
 De markeringen uit Brok 4 zaten met houtrot (rood), scheur (oranje) en loszittende verf (amber) te dicht bij elkaar; alleen kit (blauw) sprong eruit. Als kleine, halfdoorzichtige stippen waren ze nauwelijks uit elkaar te houden.
 
