@@ -1,3 +1,20 @@
+## v3.34.0 — Kozijn-tekenaar, Brok 2b: verdelen in ramen en panelen
+Een rechthoekig kozijn kun je nu opdelen met tussenstijlen en -dorpels, en die strekkende meters tellen mee in de m¹.
+
+### Wijzigingen
+- **Tik-en-splits:** tik op een vak, kies verticaal (│) of horizontaal (─) delen. Recursief, dus bovenlicht-met-ramen-eronder of een ruitjesverdeling gaat in een paar tikken.
+- **Positie per laser-maat:** tik op een deellijn om die te selecteren (kleurt rood), typ de exacte positie in centimeters (bijv. bovenlicht 40 cm) of verwijder de lijn. Geen sleepwerk — de maat komt uit de laser, niet uit de pixels.
+- **m¹ met opsplitsing:** de lengte van elke tussenstijl (= hoogte van zijn vak) en -dorpel (= breedte van zijn vak) telt bij de omtrek op. Onderaan staat "Totaal X m¹ (frame Y + tussenwerk Z)".
+- Verdelen kan voorlopig alleen bij rechthoekige kozijnen; bij schuin/boog werkt het frame en de omtrek wél, met een nette melding bij de verdeel-besturing.
+
+### Code
+- De verdeling is een splits-boom (`{t:'split', r:'v'|'h', pos, k:[...]}`) opgeslagen in `tekening.verdeling`. Geen migratie nodig — past in de bestaande kolom.
+- Exacte m¹: `_kozijnMembersWalk` sommeert de lengte van elke deler op basis van het vak waarin hij staat; positie telt dus mee. Bij Klaar gaat de totale lengte (frame + tussenwerk, cm) via `bCm` in de regel — reken-engine ongemoeid.
+- SVG-hittesten via transparante vak-rechthoeken en brede transparante lijnen (touch-vriendelijk); positie-invoer behoudt focus doordat alleen de tekening hertekent, niet de besturing.
+
+---
+
+
 ## v3.33.0 — Kozijn-tekenaar, Brok 2a: het frame met vormkeuze
 Het tekenvenster (uit Brok 1) doet nu echt iets: je kiest een kozijn-vorm, vult de lasermaten in, ziet het kozijn op schaal en de omtrek loopt live mee als m¹.
 

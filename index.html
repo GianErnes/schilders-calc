@@ -1108,6 +1108,7 @@
   .kozijn-tekening { flex: 1 1 280px; min-width: 240px; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); padding: 0.8rem; display: flex; align-items: center; justify-content: center; min-height: 240px; }
   .kozijn-tekening svg { width: 100%; height: auto; max-height: 42vh; }
   .kozijn-omtrek { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.05rem; color: var(--accent-deep); }
+  .kozijn-verdeel-controls { margin-top: 0.9rem; padding-top: 0.8rem; border-top: 1px solid var(--paper-deep); min-height: 2.2rem; }
   .ms-hoeveelheid-display {
     background: var(--paper-warm);
     border: 1px solid var(--paper-deep);
@@ -1792,8 +1793,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.33.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.34.0</h2>
       <div class="intro-body">
+        <p><strong>✎ Kozijn-tekenaar, verdelen in ramen en panelen (v3.34.0 — Brok 2b).</strong> Een rechthoekig kozijn kun je nu opdelen. Tik op een vak en kies verticaal of horizontaal delen — zo maak je een bovenlicht met daaronder twee ramen, of een ruitjesverdeling, in een paar tikken. Tik op een deellijn om die te selecteren: je typt dan de exacte positie in centimeters (bijvoorbeeld een bovenlicht van 40 cm) of verwijdert hem weer. De strekkende meters van elke tussenstijl en tussendorpel worden bij de omtrek opgeteld; onderaan zie je de opsplitsing "frame + tussenwerk". Die totale m¹ landt bij Klaar in de regel. Verdelen kan voorlopig alleen bij rechthoekige kozijnen; het frame en de omtrek werken bij alle vormen.</p>
         <p><strong>✎ Kozijn-tekenaar, het frame (v3.33.0 — Brok 2a).</strong> Het tekenvenster doet nu echt iets. Kies een vorm — rechthoek, schuin enkel (lessenaar), schuin punt (puntgevel) of boog — vul de lasermaten in centimeters in, en het kozijn wordt meteen op schaal getekend. Onderaan loopt de omtrek live mee: het programma rekent de strekkende meters exact uit, inclusief de echte lengte van een schuine rand of een boog (een schuine bovenkant is langer dan zijn hoogte, een boog volgt de kromme). Bij Klaar landt die omtrek als m¹ in de regel, via het bestaande b-veld — de berekening zelf verandert niet. Het verdelen in losse ramen en panelen met tussenstijlen en -dorpels komt in de volgende stap (Brok 2b).</p>
         <p><strong>📱 Meetstaat als kaarten op een staande iPad (v3.32.1).</strong> Op een smal scherm — een iPad rechtop in de hand of een telefoon — was de meetstaat-tabel met negen kolommen breder dan het scherm, waardoor de factor, het totaal, de opmerking en de teken- en verwijderknoppen rechts buiten beeld vielen. Op smalle schermen wordt elke regel nu een compact kaartje: de calc-regel bovenaan met de knoppen ernaast, daaronder de omschrijving, dan breedte, hoogte, aantal en factor netjes op één regeltje, en het totaal eronder. De hele regel in één oogopslag, met grotere tikvelden. Op brede schermen (de Mac, of de iPad liggend) blijft de vertrouwde tabel.</p>
         <p><strong>✎ Eerste aanzet kozijn-tekenaar (v3.32.0).</strong> De onzichtbare onderbouw voor de opname op locatie: elke meetstaat-regel kan voortaan een kozijn-tekening dragen. Naast de regel staat een potlood-knop die een venster opent waar je het kozijn een naam geeft; die naam vult meteen de omschrijving van de regel. De tekening wordt opgeslagen bij de regel en blijft daar bewaard, ook na de opname. Het tekenen zelf — frame, tussenstijlen en -dorpels, de strekkende meters en de houtrot-markeringen — komt in de volgende stappen. Vereiste eenmalig een Supabase-migratie (kolom <code>tekening</code> op de meetstaat-tabel).</p>
@@ -2407,6 +2409,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
         <div id="kozijnMaten" class="kozijn-maten"></div>
         <div id="kozijnTekening" class="kozijn-tekening"></div>
       </div>
+      <div id="kozijnVerdeelControls" class="kozijn-verdeel-controls"></div>
     </div>
     <div class="modal-foot" style="justify-content: space-between; align-items:center;">
       <div id="kozijnOmtrek" class="kozijn-omtrek">Omtrek: 0,00 m¹</div>
@@ -2683,7 +2686,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.33.0';
+const APP_VERSION = 'v3.34.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3045,6 +3048,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.34.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 2b: rechthoekige kozijnen verdelen in ramen/panelen door op een vak te tikken en verticaal of horizontaal te delen. Deellijnen krijg je op exacte positie door de maat in cm te typen; de lengte van elke tussenstijl en -dorpel telt mee in de m¹ (frame + tussenwerk). Verdelen voorlopig alleen bij rechthoeken' },
   { v: '3.33.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 2a: kies een vorm (rechthoek, schuin enkel, schuin punt, boog), vul de lasermaten in, het kozijn wordt op schaal getekend en de exacte omtrek loopt live mee als m¹ — schuine randen en bogen worden op hun werkelijke lengte gerekend. Die m¹ landt in de regel. Verdelen in ramen/panelen volgt in Brok 2b' },
   { v: '3.32.1', d: '2026-06-06', h: 'Meetstaat op smalle schermen (staande iPad/telefoon) als compacte kaarten in plaats van een te brede tabel: hele regel in beeld, grotere tikvelden, verticaal scrollen. Brede schermen houden de tabel' },
   { v: '3.32.0', d: '2026-06-06', h: 'Eerste aanzet kozijn-tekenaar: elke meetstaat-regel kan een kozijn-tekening dragen (naam + opslag), als onderbouw voor de opname op locatie. Het tekenen zelf volgt in de volgende stappen. Vereiste een migratie (kolom tekening op meetstaat)' },
@@ -9924,7 +9928,8 @@ const _KOZIJN_DEFAULTS = {
   boog:         { b: 100, h: 120, boogHoogte: 50 }
 };
 let _kozijnEditIdx = null;      // index in data.calc.meetstaat van de open regel
-let _kozijnState = { vorm: 'rechthoek', maten: {} };
+let _kozijnState = { vorm: 'rechthoek', maten: {}, verdeling: { t: 'vak' } };
+let _kozijnSel = null; // { kind:'vak'|'divider', path:'0.1' }
 
 function _kozijnRenderVormKnoppen() {
   const c = document.getElementById('kozijnVormKnoppen'); if (!c) return;
@@ -9943,6 +9948,7 @@ function _kozijnRenderMaten() {
 function _kozijnSetVorm(v) {
   if (!_KOZIJN_VORMEN[v]) return;
   _kozijnState.vorm = v;
+  _kozijnSel = null;
   const d = _KOZIJN_DEFAULTS[v]; const m = {};
   Object.keys(d).forEach(k => { m[k] = (_kozijnState.maten && _kozijnState.maten[k] != null) ? _kozijnState.maten[k] : d[k]; });
   _kozijnState.maten = m;
@@ -9997,19 +10003,140 @@ function _kozijnGeometrie() {
   }
   return { d, vbW: b, vbH: H };
 }
-function _kozijnTeken() {
+function _kozijnDrawSvg() {
   const el = document.getElementById('kozijnTekening'); if (!el) return;
   const g = _kozijnGeometrie();
   if (!g || g.vbW <= 0 || g.vbH <= 0) {
     el.innerHTML = '<div style="color:var(--muted); font-size:0.85rem; text-align:center;">Vul de maten in om het kozijn te tekenen.</div>';
     return;
   }
-  el.innerHTML = `<svg viewBox="0 0 ${g.vbW.toFixed(1)} ${g.vbH.toFixed(1)}" preserveAspectRatio="xMidYMid meet"><path d="${g.d}" fill="rgba(70,130,180,0.12)" stroke="#e63329" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  let inner = `<path d="${g.d}" fill="rgba(70,130,180,0.12)" stroke="#e63329" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`;
+  if (_kozijnState.vorm === 'rechthoek' && _kozijnState.verdeling) {
+    const out = { vakken: [], dividers: [] };
+    _kozijnWalk(_kozijnState.verdeling, { x: 0, y: 0, w: g.vbW, h: g.vbH }, '', out);
+    out.vakken.forEach(vk => {
+      const sel = _kozijnSel && _kozijnSel.kind === 'vak' && _kozijnSel.path === vk.path;
+      inner += `<rect x="${vk.rect.x.toFixed(1)}" y="${vk.rect.y.toFixed(1)}" width="${vk.rect.w.toFixed(1)}" height="${vk.rect.h.toFixed(1)}" fill="${sel ? 'rgba(230,51,41,0.10)' : 'transparent'}" ${sel ? 'stroke="#e63329" stroke-width="1.5" vector-effect="non-scaling-stroke"' : ''} pointer-events="all" onclick="_kozijnTapVak('${vk.path}')" style="cursor:pointer"/>`;
+    });
+    out.dividers.forEach(dv => {
+      const sel = _kozijnSel && _kozijnSel.kind === 'divider' && _kozijnSel.path === dv.path;
+      const col = sel ? '#e63329' : '#b45309', sw = sel ? 4 : 2.5;
+      let x1, y1, x2, y2;
+      if (dv.kind === 'v') { x1 = x2 = dv.x; y1 = dv.y; y2 = dv.y + dv.len; } else { y1 = y2 = dv.y; x1 = dv.x; x2 = dv.x + dv.len; }
+      inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${sw}" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>`;
+      inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="transparent" stroke-width="16" vector-effect="non-scaling-stroke" pointer-events="all" onclick="_kozijnTapDivider('${dv.path}')" style="cursor:pointer"/>`;
+    });
+  }
+  el.innerHTML = `<svg viewBox="0 0 ${g.vbW.toFixed(1)} ${g.vbH.toFixed(1)}" preserveAspectRatio="xMidYMid meet" style="overflow:visible">${inner}</svg>`;
+}
+function _kozijnTeken() { _kozijnDrawSvg(); _kozijnRenderVerdeelControls(); }
+
+// --- Verdeling-boom (splits): navigatie en berekening ---
+function _kozijnWalk(node, rect, path, out) {
+  if (!node || node.t !== 'split') { out.vakken.push({ rect, path }); return; }
+  const cp = (i) => (path === '' ? '' : path + '.') + i;
+  if (node.r === 'v') {
+    const xw = rect.w * node.pos;
+    out.dividers.push({ kind: 'v', x: rect.x + xw, y: rect.y, len: rect.h, path });
+    _kozijnWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }, cp(0), out);
+    _kozijnWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h }, cp(1), out);
+  } else {
+    const yh = rect.h * node.pos;
+    out.dividers.push({ kind: 'h', x: rect.x, y: rect.y + yh, len: rect.w, path });
+    _kozijnWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }, cp(0), out);
+    _kozijnWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh }, cp(1), out);
+  }
+}
+function _kozijnMembersWalk(node, rect) {
+  if (!node || node.t !== 'split') return 0;
+  if (node.r === 'v') {
+    const xw = rect.w * node.pos;
+    return rect.h + _kozijnMembersWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }) + _kozijnMembersWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h });
+  }
+  const yh = rect.h * node.pos;
+  return rect.w + _kozijnMembersWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }) + _kozijnMembersWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh });
+}
+function _kozijnMembersCm() {
+  if (_kozijnState.vorm !== 'rechthoek' || !_kozijnState.verdeling) return 0;
+  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
+  return _kozijnMembersWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h });
+}
+function _kozijnTotaalCm() { return _kozijnOmtrekCm() + _kozijnMembersCm(); }
+function _kozijnNodeAt(path) {
+  let node = _kozijnState.verdeling; if (!node) return null;
+  if (path === '') return node;
+  for (const idx of path.split('.')) { if (!node || node.t !== 'split') return null; node = node.k[+idx]; }
+  return node;
+}
+function _kozijnSetNodeAt(path, newNode) {
+  if (path === '') { _kozijnState.verdeling = newNode; return; }
+  const parts = path.split('.'); const last = +parts.pop();
+  let parent = _kozijnState.verdeling;
+  for (const idx of parts) parent = parent.k[+idx];
+  parent.k[last] = newNode;
+}
+function _kozijnRectAt(path) {
+  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
+  let rect = { x: 0, y: 0, w: b, h: h }, node = _kozijnState.verdeling;
+  if (path === '') return rect;
+  for (const idxs of path.split('.')) {
+    const i = +idxs; if (!node || node.t !== 'split') break;
+    if (node.r === 'v') { const xw = rect.w * node.pos; rect = i === 0 ? { x: rect.x, y: rect.y, w: xw, h: rect.h } : { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h }; }
+    else { const yh = rect.h * node.pos; rect = i === 0 ? { x: rect.x, y: rect.y, w: rect.w, h: yh } : { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh }; }
+    node = node.k[i];
+  }
+  return rect;
+}
+function _kozijnTapVak(path) { _kozijnSel = { kind: 'vak', path }; _kozijnTeken(); }
+function _kozijnTapDivider(path) { _kozijnSel = { kind: 'divider', path }; _kozijnTeken(); }
+function _kozijnSplit(path, richting) {
+  const node = _kozijnNodeAt(path); if (!node || node.t === 'split') return;
+  _kozijnSetNodeAt(path, { t: 'split', r: richting, pos: 0.5, k: [{ t: 'vak' }, { t: 'vak' }] });
+  _kozijnSel = null; _kozijnTeken(); _kozijnUpdateOmtrek();
+}
+function _kozijnRemoveSplit(path) {
+  const node = _kozijnNodeAt(path); if (!node || node.t !== 'split') return;
+  _kozijnSetNodeAt(path, { t: 'vak' });
+  _kozijnSel = null; _kozijnTeken(); _kozijnUpdateOmtrek();
+}
+function _kozijnSetPosCm(path, cmVal) {
+  const node = _kozijnNodeAt(path); if (!node || node.t !== 'split') return;
+  const rect = _kozijnRectAt(path); const span = node.r === 'v' ? rect.w : rect.h;
+  if (span <= 0) return;
+  let pos = (parseFloat(cmVal) || 0) / span;
+  pos = Math.min(0.98, Math.max(0.02, pos));
+  node.pos = pos;
+  _kozijnDrawSvg(); _kozijnUpdateOmtrek();
+}
+function _kozijnRenderVerdeelControls() {
+  const el = document.getElementById('kozijnVerdeelControls'); if (!el) return;
+  if (_kozijnState.vorm !== 'rechthoek') {
+    el.innerHTML = '<div style="color:var(--muted); font-size:0.8rem;">Verdelen in ramen en panelen kan voorlopig alleen bij rechthoekige kozijnen. Het frame en de omtrek werken bij alle vormen.</div>';
+    return;
+  }
+  const sel = _kozijnSel;
+  if (!sel) { el.innerHTML = '<div style="color:var(--muted); font-size:0.8rem;">Tik op een vak om het te delen, of op een lijn om die te verplaatsen of te verwijderen.</div>'; return; }
+  if (sel.kind === 'vak') {
+    el.innerHTML = `<div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">Vak delen:</span><button class="btn-secondary btn btn-sm" onclick="_kozijnSplit('${sel.path}','v')">│ verticaal</button><button class="btn-secondary btn btn-sm" onclick="_kozijnSplit('${sel.path}','h')">─ horizontaal</button></div>`;
+    return;
+  }
+  const node = _kozijnNodeAt(sel.path);
+  if (!node || node.t !== 'split') { el.innerHTML = ''; _kozijnSel = null; return; }
+  const rect = _kozijnRectAt(sel.path);
+  const span = node.r === 'v' ? rect.w : rect.h;
+  const posCm = node.pos * span;
+  const naam = node.r === 'v' ? 'Tussenstijl' : 'Tussendorpel';
+  const vanaf = node.r === 'v' ? 'vanaf links' : 'vanaf boven';
+  el.innerHTML = `<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">${naam} · positie ${vanaf} (cm):</span><input type="number" inputmode="decimal" min="0" step="1" value="${Math.round(posCm)}" style="width:90px; padding:0.45rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;" oninput="_kozijnSetPosCm('${sel.path}', this.value)"><span style="font-size:0.75rem; color:var(--muted);">van ${Math.round(span)} cm</span><button class="btn btn-danger btn-sm" onclick="_kozijnRemoveSplit('${sel.path}')">Verwijderen</button></div>`;
 }
 function _kozijnUpdateOmtrek() {
-  const m = _kozijnOmtrekCm() / 100;
+  const omtrek = _kozijnOmtrekCm() / 100, members = _kozijnMembersCm() / 100, totaal = omtrek + members;
   const el = document.getElementById('kozijnOmtrek');
-  if (el) el.textContent = 'Omtrek: ' + m.toFixed(2).replace('.', ',') + ' m¹';
+  if (!el) return;
+  const fm = (x) => x.toFixed(2).replace('.', ',');
+  el.textContent = members > 0
+    ? `Totaal: ${fm(totaal)} m¹  (frame ${fm(omtrek)} + tussenwerk ${fm(members)})`
+    : `Omtrek: ${fm(omtrek)} m¹`;
 }
 
 function openKozijnTekenaar(idx) {
@@ -10019,8 +10146,10 @@ function openKozijnTekenaar(idx) {
   const t = ms.tekening || {};
   _kozijnState = {
     vorm: _KOZIJN_VORMEN[t.vorm] ? t.vorm : 'rechthoek',
-    maten: (t.maten && typeof t.maten === 'object') ? Object.assign({}, t.maten) : Object.assign({}, _KOZIJN_DEFAULTS['rechthoek'])
+    maten: (t.maten && typeof t.maten === 'object') ? Object.assign({}, t.maten) : Object.assign({}, _KOZIJN_DEFAULTS['rechthoek']),
+    verdeling: (t.verdeling && typeof t.verdeling === 'object') ? t.verdeling : { t: 'vak' }
   };
+  _kozijnSel = null;
   const d = _KOZIJN_DEFAULTS[_kozijnState.vorm];
   Object.keys(d).forEach(k => { if (_kozijnState.maten[k] == null) _kozijnState.maten[k] = d[k]; });
   const naamVeld = document.getElementById('kozijnNaam');
@@ -10043,14 +10172,16 @@ function saveKozijnTekenaar() {
   }
   const ms = data.calc.meetstaat[_kozijnEditIdx];
   const naam = ((document.getElementById('kozijnNaam') || {}).value || '').trim();
-  const cm = _kozijnOmtrekCm();
+  const cm = _kozijnTotaalCm();
   ms.tekening = Object.assign({}, ms.tekening || {}, {
     versie: 1, naam, vorm: _kozijnState.vorm,
     maten: Object.assign({}, _kozijnState.maten),
+    verdeling: _kozijnState.verdeling,
     omtrekM1: +(cm / 100).toFixed(3)
   });
-  // De exacte omtrek (cm) in het b-veld, h op 0: de bestaande m¹-engine rekent dat
-  // als lengte × aantal × factor. Zo blijft de reken-engine ongemoeid.
+  // De exacte totaal-lengte (frame + tussenstijlen/-dorpels, in cm) in het b-veld,
+  // h op 0: de bestaande m¹-engine rekent dat als lengte × aantal × factor.
+  // Zo blijft de reken-engine ongemoeid.
   ms.bCm = Math.round(cm);
   ms.hCm = 0;
   if (naam) ms.omschrijving = naam;
