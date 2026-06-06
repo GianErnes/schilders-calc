@@ -1,3 +1,17 @@
+## v3.36.0 — Kozijn-tekenaar, Brok 3: getekende kozijnen blijven zien
+De tekeningen verdwijnen niet meer uit beeld zodra je de m¹ hebt.
+
+### Wijzigingen
+- **Mini-tekening op de regel:** een meetstaat-regel met een tekening toont op de plek van het potlood-knopje een kleine weergave van het kozijn. Eén tik opent de tekenaar om te bekijken of bij te werken. Regels zonder tekening houden het potlood (✎).
+- **Overzicht per calculatie:** onderaan de Meetstaat-tab staat "Getekende kozijnen" — alle tekeningen van deze calculatie naast elkaar, met naam en strekkende meters, elk aantikbaar om te openen.
+
+### Code
+- De teken-logica is opgesplitst: `_kozijnGeometrie(vorm, maten)` en een gedeelde `_kozijnBuildInner(g, vorm, verdeling, interactive, sel)` worden gebruikt door zowel de editor (interactief) als door `_kozijnThumbSvg(tek, hoogte)` voor de statische mini-tekeningen. Eén bron, dus thumbnail en editor lopen niet uiteen.
+- Geen migratie nodig — alles komt uit de bestaande `tekening`-kolom.
+
+---
+
+
 ## v3.35.0 — Kozijn-tekenaar, Brok 2c: draaiende en vaste ramen
 Per vak geef je nu aan wat het is, met de juiste strekkende meters en de juiste tekening.
 
