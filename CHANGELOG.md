@@ -1,3 +1,21 @@
+## v3.41.0 — Kozijn-tekenaar 6a (vervolg): vulling koppelen aan een m²-regel
+Het oorspronkelijke vulling-type telde alle m² op één hoop. Maar een dichte vulling kan een deur, een paneel of een luik zijn, en die horen vaak bij verschillende m²-regels met een eigen norm. Eén lumped getal kun je dan niet splitsen. Daarom koppelt een vulling-vak nu per stuk aan een specifieke regel.
+
+### Wijzigingen
+- Bij een geselecteerd vulling-vak verschijnt "Koppel aan regel": een keuzelijst van de m²-regels uit de huidige calculatie (gefilterd op eenheid m²).
+- De naam van de gekoppelde regel staat als label centraal in het vak — leesbaar bij de uitvoering en voor de klant.
+- De m² loopt nu **per gekoppelde regel** apart mee onder de tekening, niet meer als één totaal. Zoveel soorten als je regels hebt, niet vast op twee.
+- Een vulling die nog niet gekoppeld is, staat apart als "nog koppelen" (rood), zodat je niets vergeet.
+- Het tekening-object bewaart nu `vlakkenM2PerRegel` (regelId, label, m²) naast het totaal — daar leest 6b straks uit.
+
+### Let op
+- Om aan te koppelen moeten de m²-regels (deuren, panelen, ...) al in de calculatie bestaan. Dat past in de werkwijze: eerst het calc-skelet, dan de opname.
+- Vulling-vakken uit v3.40.0 (zonder koppeling) verschijnen automatisch onder "nog koppelen"; er gaat niets verloren.
+- Het automatisch invoeren van de m² in de regels (per regel één meetstaat-regel die meeloopt) volgt in 6b. In deze stap raakt het de bedragen nog niet.
+
+---
+
+
 ## v3.40.0 — Kozijn-tekenaar Brok 6a: deuren en puivulling
 Deuren en dichte panelen (puivulling) zijn m²-werk, geen m¹. Tot nu toe leverde de tekenaar alleen omtrek (m¹). Nu kun je een vak als dichte vulling markeren, en wordt het oppervlak apart geteld.
 

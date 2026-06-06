@@ -1805,8 +1805,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.40.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.41.0</h2>
       <div class="intro-body">
+        <p><strong>🚪 Vulling koppelen aan een regel, met label in de tekening (v3.41.0).</strong> Een dichte vulling kan een deur, een paneel of een luik zijn — elk met een eigen norm. Daarom koppel je een vulling-vak nu per stuk aan een <strong>m²-regel uit je calculatie</strong>: tik het vak aan en kies bij "Koppel aan regel" waar het bij hoort. De naam van die regel komt meteen in het vak te staan, zodat je ploeg bij de uitvoering én de klant in één oogopslag zien wat een deur is en wat een paneel. Onder de tekening lopen de m² nu per regel apart mee. Een vulling die je nog niet gekoppeld hebt staat als "nog koppelen" zodat je niks vergeet. Het automatisch invoeren van die m² in de regels volgt in 6b.</p>
         <p><strong>🚪 Deuren en puivulling in de kozijn-tekenaar (v3.40.0 — Brok 6a).</strong> Een vak kun je nu ook als <strong>vulling</strong> markeren: een dicht vlak zoals een deur of een paneel. Dat telt niet in m¹ (omtrek) maar in m² (oppervlak), één kant — buitenwerk. Een losse deur teken je door het hele binnenvlak op vulling te zetten; in een pui zet je alleen de deur- of paneelvakken op vulling en de rest blijft glas of raam. Onder de tekening zie je voortaan twee totalen: de m¹ voor kozijn en ramen, en de m² voor deuren en panelen. Of een vulling als deur of als pui wordt afgerekend bepaal je straks in de calc-regel. De automatische koppeling van die m² naar een eigen regel volgt in de volgende stap (6b).</p>
         <p><strong>💶 Prijskaartje aan de gebreken (v3.39.0).</strong> Onder Instellingen zet je nu een vaste prijs per stuk per gebrek (houtrot, scheur/naad, kit, loszittende verf). Zodra je in een kozijn stippen plaatst, telt de app ze over de hele calculatie en zet per soort automatisch een toeslag neer — bijvoorbeeld "Houtrot herstel — 7 × €15". Het loopt mee als je stippen bijplaatst of weghaalt, en verdwijnt weer als de laatste stip weg is. Je eigen, handmatige toeslagen blijven ongemoeid, en een vergrendelde offerte wordt niet aangeraakt. Vul de prijzen in als je zover bent; staat een prijs op 0, dan gebeurt er niets.</p>
         <p><strong>🎨 Beter te onderscheiden gebrek-kleuren (v3.38.2).</strong> De markeringen zaten te dicht bij elkaar in de rood-oranje hoek. Ze hebben nu vier duidelijk verschillende kleuren, in lijn met het dashboard-palet: houtrot rood, scheur/naad paars, kit vervangen blauw, loszittende verf groen.</p>
@@ -2713,7 +2714,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.40.0';
+const APP_VERSION = 'v3.41.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3075,6 +3076,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.41.0', d: '2026-06-06', h: 'Kozijn-tekenaar 6a (vervolg): een vulling-vak koppel je per stuk aan een m²-regel uit de calculatie (deur, paneel, luik — zoveel soorten als je regels hebt). De regelnaam staat als label in het vak, voor leesbaarheid bij uitvoering en voor de klant. De m² loopt per gekoppelde regel apart mee; nog niet gekoppelde vulling staat als "nog koppelen"' },
   { v: '3.40.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 6a: deuren en puivulling. Nieuw vak-type "vulling" — een dicht vlak (deur of paneel) dat in m² telt (één kant, buitenwerk) i.p.v. in m¹. De tekenaar toont nu twee totalen: m¹ voor kozijn + ramen, m² voor deuren + panelen. Koppeling van die m² naar een eigen calc-regel volgt in 6b' },
   { v: '3.39.0', d: '2026-06-06', h: 'Gebrek-prijzen: vaste prijs per stuk per gebrek in de instellingen; gebrek-stippen lopen automatisch als toeslag-post (aantal × prijs) mee in de calculatie. Vergrendelde offertes en handmatige toeslagen blijven ongemoeid' },
   { v: '3.38.2', d: '2026-06-06', h: 'Gebrek-markeringen kregen vier duidelijk verschillende kleuren (zaten te dicht bij elkaar in rood-oranje): houtrot rood, scheur/naad paars, kit vervangen blauw, loszittende verf groen — in lijn met het dashboard-statuspalet' },
@@ -10098,6 +10100,11 @@ function _kozijnBuildInner(g, vorm, verdeling, markeringen, interactive, sel) {
         if (r.w - 2 * ins > 0 && r.h - 2 * ins > 0) {
           const sx = r.x + ins, sy = r.y + ins, sw = r.w - 2 * ins, sh = r.h - 2 * ins;
           inner += `<rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sh.toFixed(1)}" fill="${ty === 'vulling' ? 'rgba(124,74,30,0.22)' : 'none'}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
+          if (ty === 'vulling' && vk.node && vk.node.label) {
+            const lcx = sx + sw / 2, lcy = sy + sh / 2;
+            const lfs = Math.max(7, Math.min(sw / Math.max(4, vk.node.label.length) * 1.7, sh * 0.5));
+            inner += `<text x="${lcx.toFixed(1)}" y="${lcy.toFixed(1)}" font-size="${lfs.toFixed(1)}" fill="#5a3a16" text-anchor="middle" dominant-baseline="central" font-family="system-ui, -apple-system, sans-serif" pointer-events="none">${_escapeHtml(vk.node.label)}</text>`;
+          }
           if (ty === 'draai_binnen' || ty === 'draai_buiten') {
             const dash = ty === 'draai_binnen' ? ' stroke-dasharray="5 4"' : '';
             const cx = sx + sw / 2, by = sy + sh;
@@ -10217,6 +10224,56 @@ function _kozijnVlakkenCm2() {
   return _kozijnVlakkenWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h });
 }
 function _kozijnVlakkenM2() { return _kozijnVlakkenCm2() / 10000; }
+function _kozijnM2Regels() {
+  return (typeof _allCalcRegels === 'function' ? _allCalcRegels() : []).filter(x => (x.regel.systeemEenheid || '') === 'm²');
+}
+function _kozijnRegelNaam(regelId) {
+  if (!regelId) return '';
+  const ctx = (typeof _allCalcRegels === 'function' ? _allCalcRegels() : []).find(x => x.regel.id === regelId);
+  if (!ctx) return '';
+  return (ctx.regel.naam || ctx.regel.systeemNaam || '').trim();
+}
+function _kozijnSetVulRegel(path, regelId) {
+  const node = _kozijnNodeAt(path); if (!node || node.t === 'split') return;
+  node.type = 'vulling';
+  node.regelId = regelId || '';
+  node.label = regelId ? _kozijnRegelNaam(regelId) : '';
+  _kozijnTeken(); _kozijnUpdateOmtrek();
+}
+function _kozijnVlakkenPerRegelWalk(node, rect, acc) {
+  if (!node) return;
+  if (node.t !== 'split') {
+    if (node.type === 'vulling') {
+      const key = node.regelId || '';
+      if (!acc[key]) acc[key] = { m2: 0, label: node.label || '' };
+      acc[key].m2 += rect.w * rect.h;          // cm²
+      if (node.label) acc[key].label = node.label;
+    }
+    return;
+  }
+  if (node.r === 'v') {
+    const xw = rect.w * node.pos;
+    _kozijnVlakkenPerRegelWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }, acc);
+    _kozijnVlakkenPerRegelWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h }, acc);
+  } else {
+    const yh = rect.h * node.pos;
+    _kozijnVlakkenPerRegelWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }, acc);
+    _kozijnVlakkenPerRegelWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh }, acc);
+  }
+}
+function _kozijnVlakkenPerRegel() {
+  const acc = {};
+  if (_kozijnState.vorm === 'rechthoek' && _kozijnState.verdeling) {
+    const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
+    _kozijnVlakkenPerRegelWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h }, acc);
+  }
+  Object.keys(acc).forEach(k => { acc[k].m2 = acc[k].m2 / 10000; });
+  return acc;
+}
+function _kozijnVlakkenM2PerRegelLijst() {
+  const per = _kozijnVlakkenPerRegel();
+  return Object.keys(per).filter(k => per[k].m2 > 0.0001).map(k => ({ regelId: k, label: per[k].label || _kozijnRegelNaam(k) || '', m2: +per[k].m2.toFixed(3) }));
+}
 function _kozijnTotaalCm() { return _kozijnOmtrekCm() + _kozijnMembersCm() + _kozijnRamenCm(); }
 function _kozijnNodeAt(path) {
   let node = _kozijnState.verdeling; if (!node) return null;
@@ -10333,7 +10390,18 @@ function _kozijnRenderVerdeelControls() {
     const ty = (vnode && vnode.type) || 'glas';
     const typen = [['glas', 'Vast glas'], ['vast', 'Vast raam'], ['draai_binnen', 'Draai binnen'], ['draai_buiten', 'Draai buiten'], ['vulling', 'Vulling (m²)']];
     const typeBtns = typen.map(([k, lab]) => `<button class="${ty === k ? 'btn' : 'btn-secondary btn'} btn-sm" onclick="_kozijnSetVakType('${sel.path}','${k}')">${lab}</button>`).join('');
-    el.innerHTML = `<div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Type:</span>${typeBtns}</div><div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">Vak delen:</span><button class="btn-secondary btn btn-sm" onclick="_kozijnSplit('${sel.path}','v')">│ verticaal</button><button class="btn-secondary btn btn-sm" onclick="_kozijnSplit('${sel.path}','h')">─ horizontaal</button></div>`;
+    let vulBlok = '';
+    if (ty === 'vulling') {
+      const m2regels = _kozijnM2Regels();
+      if (!m2regels.length) {
+        vulBlok = `<div style="font-size:0.78rem; color:var(--accent-deep); margin-bottom:0.5rem;">Maak eerst een m²-regel in de Calculatie-tab om deze vulling aan te koppelen.</div>`;
+      } else {
+        const cur = (vnode && vnode.regelId) || '';
+        const opts = `<option value="">— nog koppelen —</option>` + m2regels.map(ctx => `<option value="${ctx.regel.id}" ${ctx.regel.id === cur ? 'selected' : ''}>${_escapeHtml(_calcRegelLabel(ctx.regel, ctx))}</option>`).join('');
+        vulBlok = `<div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Koppel aan regel:</span><select onchange="_kozijnSetVulRegel('${sel.path}', this.value)" style="flex:1 1 200px; min-width:160px; padding:0.4rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;">${opts}</select></div>`;
+      }
+    }
+    el.innerHTML = `<div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Type:</span>${typeBtns}</div>${vulBlok}<div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">Vak delen:</span><button class="btn-secondary btn btn-sm" onclick="_kozijnSplit('${sel.path}','v')">│ verticaal</button><button class="btn-secondary btn btn-sm" onclick="_kozijnSplit('${sel.path}','h')">─ horizontaal</button></div>`;
     return;
   }
   const node = _kozijnNodeAt(sel.path);
@@ -10351,7 +10419,6 @@ function _kozijnUpdateOmtrek() {
   const el = document.getElementById('kozijnOmtrek');
   if (!el) return;
   const fm = (x) => x.toFixed(2).replace('.', ',');
-  const vlakken = _kozijnVlakkenM2();
   let m1;
   if (members > 0 || ramen > 0) {
     const delen = [`frame ${fm(omtrek)}`];
@@ -10361,8 +10428,15 @@ function _kozijnUpdateOmtrek() {
   } else {
     m1 = `Omtrek: ${fm(omtrek)} m¹`;
   }
-  if (vlakken > 0) {
-    el.innerHTML = `${m1}<br><span style="color:var(--muted);">Vulling (deuren/panelen): ${fm(vlakken)} m²</span>`;
+  const perRegel = _kozijnVlakkenPerRegel();
+  const m2Lijnen = Object.keys(perRegel)
+    .filter(k => perRegel[k].m2 > 0.0001)
+    .map(k => {
+      const naam = k ? _escapeHtml(perRegel[k].label || _kozijnRegelNaam(k) || 'Vulling') : '<em>nog koppelen</em>';
+      return `<span style="color:${k ? 'var(--ink-soft)' : 'var(--accent-deep)'};">${naam}: ${fm(perRegel[k].m2)} m²</span>`;
+    });
+  if (m2Lijnen.length) {
+    el.innerHTML = `${m1}<br>${m2Lijnen.join('<br>')}`;
   } else {
     el.textContent = m1;
   }
@@ -10405,7 +10479,8 @@ function _kozijnBouwTekening() {
     verdeling: _kozijnState.verdeling,
     markeringen: (_kozijnState.markeringen || []).map(m => Object.assign({}, m)),
     omtrekM1: +(cm / 100).toFixed(3),
-    vlakkenM2: +_kozijnVlakkenM2().toFixed(3)
+    vlakkenM2: +_kozijnVlakkenM2().toFixed(3),
+    vlakkenM2PerRegel: _kozijnVlakkenM2PerRegelLijst()
   };
   return { tekening, naam, cm };
 }
