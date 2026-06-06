@@ -1,3 +1,34 @@
+## v3.38.0 — Kozijn-tekenaar, Brok 4: gebreken markeren
+Op de tekening kun je nu aangeven waar de gebreken zitten — houtrot voorop.
+
+### Wijzigingen
+- **Gebreken-balk** in de tekenaar: houtrot (rood), scheur / naad (oranje), kit vervangen (blauw), loszittende verf (amber). Kies een gebrek en tik het op de tekening; er komt een gekleurde stip op die plek.
+- **Notitie en verwijderen:** tik een geplaatste stip aan om er een korte notitie bij te zetten ("onderdorpel links") of om hem te verwijderen.
+- **Documentatie, geen rekenwerk:** markeringen veranderen de m¹ niet. Ze zijn zichtbaar in de tekenaar, op de mini-tekening van de regel en in het overzicht.
+- Werkt bij elke vorm, ook bij schuine en boog-kozijnen (anders dan het verdelen, dat voorlopig rechthoek-only is).
+
+### Code
+- De markeringen leven als `markeringen: [{x, y, type, notitie}]` in `tekening` (coördinaten in het tekening-coördinatenstelsel; geplaatst via `getScreenCTM().inverse()` zodat de tik exact op de juiste plek landt). Geen migratie nodig.
+- Tekenlogica gedeeld via `_kozijnBuildInner` (dezelfde stippen in editor, thumbnail en overzicht). In markeer-modus ligt er een transparante overlay over de tekening die de tik opvangt; de bestaande tik-vlakken voor delen zijn dan even inactief.
+- Markeringen worden meegenomen in `_kozijnBouwTekening`, dus ze slaan op én komen mee bij Dupliceren (diepe kopie).
+
+---
+
+
+## v3.37.0 — Kozijn-tekenaar: raam weghalen en kozijn dupliceren
+Twee verbeteringen die in het gebruik naar boven kwamen.
+
+### Wijzigingen
+- **Vak-type togglen:** nog eens op de al-gekozen variant tikken zet het vak terug naar vast glas. Zo haal je een raam er net zo makkelijk weer af als dat je het erop zette.
+- **Dupliceren:** een knop in de tekenaar maakt een diepe kopie van het hele ontwerp (vorm, verdeling én ramen) als nieuwe meetstaat-regel op dezelfde calc-regel, en opent die meteen. Voor een vergelijkbaar kozijn hoef je dan alleen de maten aan te passen.
+
+### Code
+- `_kozijnSetVakType` togglet naar `glas` als het aangetikte type al actief is.
+- `_kozijnBouwTekening` gedeeld door opslaan en dupliceren; `dupliceerKozijn` werkt eerst de bron bij, maakt dan een diepe kopie (JSON-clone, eigen verdeling-boom) via `_insertMeetstaatDB` en opent de kopie. Geen migratie nodig.
+
+---
+
+
 ## v3.36.0 — Kozijn-tekenaar, Brok 3: getekende kozijnen blijven zien
 De tekeningen verdwijnen niet meer uit beeld zodra je de m¹ hebt.
 
