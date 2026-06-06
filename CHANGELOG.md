@@ -1,4 +1,26 @@
-## v3.42.0 — Kozijn-tekenaar Brok 6B: vulling loopt automatisch in de calculatie
+## v3.43.0 — Kozijn-tekenaar Brok 7: verdelen op schuine en boog-kozijnen
+Verdelen in ramen, panelen en vulling werkte tot nu alleen bij rechthoekige kozijnen. Vanaf nu kan het bij alle vormen: schuin enkel (lessenaar), schuin punt (puntgevel) en boog.
+
+### Geen SQL nodig
+Puur JS. De verdeling staat als JSON in het tekening-object; er verandert niets aan de database. Bestaande rechthoek-tekeningen renderen en rekenen bit-voor-bit hetzelfde — de rechthoek is gewoon het bijzondere geval van het veelhoek-model.
+
+### Wijzigingen
+- Elke vorm wordt nu behandeld als een convexe veelhoek (de boog als veelhoek met fijne arc-punten). Een verticale of horizontale deellijn knipt de werkelijke vorm via half-vlak-clipping (Sutherland–Hodgman tegen één halfvlak) in twee convexe stukken.
+- De deellijn is de werkelijke koorde waar de snijlijn de vorm kruist. Een tussenstijl hoog in een puntgevel of een tussendorpel hoog in een boog is daardoor korter, en die kortere lengte telt zo mee in het tussenwerk (m¹).
+- Het oppervlak van een vulling volgt de echte geknipte vorm (shoelace), dus de m² klopt ook bij schuine en gebogen vlakken.
+- De raam-omtrek (vast/draai) wordt op de echte vakvorm gerekend.
+- Een raam of vulling in een puntgevel krijgt een echte schuine bovenkant in de tekening — eerlijk op het scherm en op de klant-PDF.
+- De positie van een deellijn in cm wordt nog steeds gerekend tegen het huidige stuk (lokale bounding-box), net als voorheen.
+- De melding "verdelen kan alleen bij rechthoeken" is verdwenen.
+- Technisch: de losse rechthoek-walks zijn vervangen door één veelhoek-collector (`_kozijnCollectFrom`) met meetkunde-helpers (clip, oppervlak, omtrek, koorde, zwaartepunt, inset). `_kozijnGeometrie` leidt het frame-pad nu af uit dezelfde veelhoek-punten, zodat tekening en berekening uit één bron komen.
+
+### Op de horizon
+- Brok 7b: rond raam als nieuwe vorm met eigen verdeling — heel, kruis of N spaken (radiaal past niet in het v/h-deelmodel en krijgt een eigen klein model).
+
+---
+
+
+
 De m² van deuren en panelen landt nu vanzelf in de calculatie. Sluitstuk van 6a: je koppelt een vulling-vak aan een regel, en de app voert de m² nu ook daadwerkelijk in.
 
 ### Vereist: SQL-migratie eerst

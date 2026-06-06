@@ -1817,8 +1817,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.42.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.43.0</h2>
       <div class="intro-body">
+        <p><strong>✎ Verdelen op schuine en boog-kozijnen (v3.43.0 — Brok 7).</strong> Tot nu kon je een kozijn alleen opdelen in ramen, panelen en vulling als het rechthoekig was. Dat kan nu bij <strong>alle</strong> vormen: schuin enkel (lessenaar), schuin punt (puntgevel) en boog. De app rekent de vorm als een veelhoek en knipt bij elke deellijn de werkelijke vorm in twee. Daardoor klopt alles: een tussenstijl hoog in een puntgevel of een tussendorpel hoog in een boog is korter dan onderin, en die kortere lengte telt zo mee in de strekkende meters. Een raam of vulling in een puntgevel krijgt ook echt een schuine bovenkant — eerlijk op het scherm en op de klant-PDF. Het oppervlak van een vulling volgt de echte vorm, dus ook de m² klopt bij schuine en gebogen vlakken. Bestaande rechthoekige tekeningen blijven exact hetzelfde. Het ronde raam met een eigen verdeling (heel, kruis of spaken) volgt in een volgende stap.</p>
         <p><strong>🚪 Vulling loopt automatisch in de calculatie (v3.42.0 — Brok 6B).</strong> De m² van je deuren en panelen landt nu vanzelf in de calculatie. Per gekoppelde regel houdt de app één meetstaat-regel bij die alle vulling-vakken van die soort optelt — over alle kozijnen in de calculatie heen. Plaats of wijzig je een vulling, dan loopt het bedrag mee; haal je de laatste weg, dan verdwijnt de regel weer. Die automatische regels staan gemarkeerd met "auto" en op slot, zodat je ze niet per ongeluk aanpast; je eigen meetstaat-regels blijven volledig ongemoeid, en een vergrendelde offerte wordt niet aangeraakt. Een vulling die je nog niet gekoppeld hebt telt nog niet mee — koppel hem eerst aan een regel. <em>Let op: draai eerst de bijgeleverde SQL-migratie in Supabase voor je deze versie uploadt.</em></p>
         <p><strong>🚪 Vulling koppelen aan een regel, met label in de tekening (v3.41.0).</strong> Een dichte vulling kan een deur, een paneel of een luik zijn — elk met een eigen norm. Daarom koppel je een vulling-vak nu per stuk aan een <strong>m²-regel uit je calculatie</strong>: tik het vak aan en kies bij "Koppel aan regel" waar het bij hoort. De naam van die regel komt meteen in het vak te staan, zodat je ploeg bij de uitvoering én de klant in één oogopslag zien wat een deur is en wat een paneel. Onder de tekening lopen de m² nu per regel apart mee. Een vulling die je nog niet gekoppeld hebt staat als "nog koppelen" zodat je niks vergeet. Het automatisch invoeren van die m² in de regels volgt in 6b.</p>
         <p><strong>🚪 Deuren en puivulling in de kozijn-tekenaar (v3.40.0 — Brok 6a).</strong> Een vak kun je nu ook als <strong>vulling</strong> markeren: een dicht vlak zoals een deur of een paneel. Dat telt niet in m¹ (omtrek) maar in m² (oppervlak), één kant — buitenwerk. Een losse deur teken je door het hele binnenvlak op vulling te zetten; in een pui zet je alleen de deur- of paneelvakken op vulling en de rest blijft glas of raam. Onder de tekening zie je voortaan twee totalen: de m¹ voor kozijn en ramen, en de m² voor deuren en panelen. Of een vulling als deur of als pui wordt afgerekend bepaal je straks in de calc-regel. De automatische koppeling van die m² naar een eigen regel volgt in de volgende stap (6b).</p>
@@ -2727,7 +2728,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.42.0';
+const APP_VERSION = 'v3.43.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3089,6 +3090,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.43.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 7: verdelen in ramen, panelen en vulling werkt nu bij alle vormen — schuin enkel, schuin punt en boog, niet meer alleen rechthoek. Elke vorm wordt als convexe veelhoek behandeld; een v/h-deellijn knipt de werkelijke vorm via half-vlak-clipping in twee. Snede-lengte (koorde), oppervlak en raam-omtrek kloppen daardoor bij schuine en gebogen vlakken; een raam/vulling in een puntgevel krijgt een echte schuine bovenkant. Bestaande rechthoek-tekeningen blijven identiek. Geen SQL nodig. Rond raam volgt in 7b' },
   { v: '3.42.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 6B: de vulling-m² loopt automatisch in de calculatie. Per gekoppelde m²-regel houdt de app één meetstaat-regel bij die alle vulling-vakken van die soort over alle kozijnen optelt. Automatische regels staan op slot en gemarkeerd; handmatige regels en vergrendelde offertes blijven ongemoeid. Vereist SQL-migratie (bron-kolom op meetstaat)' },
   { v: '3.41.0', d: '2026-06-06', h: 'Kozijn-tekenaar 6a (vervolg): een vulling-vak koppel je per stuk aan een m²-regel uit de calculatie (deur, paneel, luik — zoveel soorten als je regels hebt). De regelnaam staat als label in het vak, voor leesbaarheid bij uitvoering en voor de klant. De m² loopt per gekoppelde regel apart mee; nog niet gekoppelde vulling staat als "nog koppelen"' },
   { v: '3.40.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 6a: deuren en puivulling. Nieuw vak-type "vulling" — een dicht vlak (deur of paneel) dat in m² telt (één kant, buitenwerk) i.p.v. in m¹. De tekenaar toont nu twee totalen: m¹ voor kozijn + ramen, m² voor deuren + panelen. Koppeling van die m² naar een eigen calc-regel volgt in 6b' },
@@ -10077,61 +10079,130 @@ function _kozijnOmtrekCm() {
   }
   return 0;
 }
-function _kozijnGeometrie(vorm, maten) {
+// --- Veelhoek-meetkunde (Brok 7) ---
+// Elke vorm is een convexe veelhoek. Een v/h-deellijn knipt via half-vlak-clipping
+// (Sutherland–Hodgman tegen één halfvlak) in twee convexe stukken. Daarmee kloppen
+// snede-lengte, oppervlak en raam-omtrek bij schuine en boog-kozijnen vanzelf.
+function _kozijnAx(p, axis) { return axis === 'x' ? p[0] : p[1]; }
+function _kozijnBBox(pts) {
+  let mnx = Infinity, mny = Infinity, mxx = -Infinity, mxy = -Infinity;
+  pts.forEach(p => { if (p[0] < mnx) mnx = p[0]; if (p[0] > mxx) mxx = p[0]; if (p[1] < mny) mny = p[1]; if (p[1] > mxy) mxy = p[1]; });
+  return { minX: mnx, minY: mny, maxX: mxx, maxY: mxy, w: mxx - mnx, h: mxy - mny };
+}
+function _kozijnPolyArea(pts) {
+  let a = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; a += p[0] * q[1] - q[0] * p[1]; }
+  return Math.abs(a) / 2;
+}
+function _kozijnPolyPerim(pts) {
+  let s = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; s += Math.hypot(q[0] - p[0], q[1] - p[1]); }
+  return s;
+}
+function _kozijnCentroid(pts) {
+  let a = 0, cx = 0, cy = 0;
+  for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; const cr = p[0] * q[1] - q[0] * p[1]; a += cr; cx += (p[0] + q[0]) * cr; cy += (p[1] + q[1]) * cr; }
+  if (Math.abs(a) < 1e-9) { let sx = 0, sy = 0; pts.forEach(p => { sx += p[0]; sy += p[1]; }); return [sx / pts.length, sy / pts.length]; }
+  a *= 0.5; return [cx / (6 * a), cy / (6 * a)];
+}
+function _kozijnEdgeCross(a, b, axis, c) {
+  const va = _kozijnAx(a, axis), vb = _kozijnAx(b, axis), den = vb - va;
+  if (Math.abs(den) < 1e-9) return null;
+  const t = (c - va) / den;
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+}
+// side -1: hou punten waar coord <= c; side +1: coord >= c
+function _kozijnClipHalf(pts, axis, c, side) {
+  const keep = (p) => side < 0 ? (_kozijnAx(p, axis) <= c + 1e-7) : (_kozijnAx(p, axis) >= c - 1e-7);
+  const out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length], ka = keep(a), kb = keep(b);
+    if (ka) out.push(a);
+    if (ka !== kb) { const ip = _kozijnEdgeCross(a, b, axis, c); if (ip) out.push(ip); }
+  }
+  return out;
+}
+// Snijpunten van de lijn axis=c met de rand → de werkelijke koorde (deellijn).
+function _kozijnLineCross(pts, axis, c) {
+  const res = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length], va = _kozijnAx(a, axis) - c, vb = _kozijnAx(b, axis) - c;
+    if (Math.abs(va) < 1e-7 && Math.abs(vb) < 1e-7) continue;
+    if ((va <= 1e-7 && vb >= -1e-7) || (va >= -1e-7 && vb <= 1e-7)) { const ip = _kozijnEdgeCross(a, b, axis, c); if (ip) res.push(ip); }
+  }
+  const key = axis === 'x' ? 1 : 0;
+  res.sort((p, q) => p[key] - q[key]);
+  const dd = [];
+  res.forEach(p => { if (!dd.length || Math.hypot(p[0] - dd[dd.length - 1][0], p[1] - dd[dd.length - 1][1]) > 1e-4) dd.push(p); });
+  return dd;
+}
+// Vak iets naar binnen schalen (per as) om centroïde — voor het raam/vulling-frame.
+function _kozijnInsetPoly(pts, frac) {
+  const bb = _kozijnBBox(pts), c = _kozijnCentroid(pts);
+  const ins = Math.max(2, Math.min(bb.w, bb.h) * frac);
+  const rx = bb.w > 2 * ins ? (bb.w - 2 * ins) / bb.w : 0, ry = bb.h > 2 * ins ? (bb.h - 2 * ins) / bb.h : 0;
+  if (rx <= 0 || ry <= 0) return null;
+  return pts.map(p => [c[0] + (p[0] - c[0]) * rx, c[1] + (p[1] - c[1]) * ry]);
+}
+// Vorm als convexe veelhoek (zelfde coördinaten als het frame-pad).
+function _kozijnPolygon(vorm, maten) {
   const v = vorm || _kozijnState.vorm, m = maten || _kozijnState.maten;
   const b = Math.max(0, +m.b || 0);
-  const P = (x, y) => `${(+x).toFixed(1)} ${(+y).toFixed(1)}`;
-  let H = 0, d = '';
+  let H = 0, pts = [];
   if (v === 'rechthoek') {
     const h = Math.max(0, +m.h || 0); H = h;
-    d = `M ${P(0,0)} L ${P(b,0)} L ${P(b,h)} L ${P(0,h)} Z`;
+    pts = [[0, 0], [b, 0], [b, h], [0, h]];
   } else if (v === 'schuin_enkel') {
     const hl = Math.max(0, +m.hLinks || 0), hr = Math.max(0, +m.hRechts || 0); H = Math.max(hl, hr);
-    d = `M ${P(0,H)} L ${P(b,H)} L ${P(b,H-hr)} L ${P(0,H-hl)} Z`;
+    pts = [[0, H], [b, H], [b, H - hr], [0, H - hl]];
   } else if (v === 'schuin_punt') {
     const hz = Math.max(0, +m.hZijkant || 0), ht = Math.max(0, +m.hTop || 0); H = Math.max(hz, ht);
-    d = `M ${P(0,H)} L ${P(b,H)} L ${P(b,H-hz)} L ${P(b/2,H-ht)} L ${P(0,H-hz)} Z`;
+    pts = [[0, H], [b, H], [b, H - hz], [b / 2, H - ht], [0, H - hz]];
   } else if (v === 'boog') {
     const h = Math.max(0, +m.h || 0), f = Math.max(0, +m.boogHoogte || 0), a = b / 2; H = h + f;
-    d = `M ${P(0,H)} L ${P(b,H)} L ${P(b,f)}`;
+    pts = [[0, H], [b, H], [b, f]];
     if (f > 0 && a > 0) {
       const R = (f * f + a * a) / (2 * f), N = 24;
-      for (let i = 0; i <= N; i++) { const x = b * (1 - i / N); const y = R - Math.sqrt(Math.max(0, R*R - (x-a)*(x-a))); d += ` L ${P(x,y)}`; }
-    } else { d += ` L ${P(0,f)}`; }
-    d += ' Z';
-  }
-  return { d, vbW: b, vbH: H };
+      for (let i = 1; i <= N; i++) { const x = b * (1 - i / N); const y = R - Math.sqrt(Math.max(0, R * R - (x - a) * (x - a))); pts.push([x, y]); }
+    } else { pts.push([0, f]); }
+  } else { return null; }
+  return { pts, vbW: b, vbH: H };
+}
+function _kozijnGeometrie(vorm, maten) {
+  const g = _kozijnPolygon(vorm, maten);
+  if (!g || !g.pts.length) return { d: '', vbW: 0, vbH: 0, pts: [] };
+  const P = (p) => `${(+p[0]).toFixed(1)} ${(+p[1]).toFixed(1)}`;
+  const d = 'M ' + g.pts.map(P).join(' L ') + ' Z';
+  return { d, vbW: g.vbW, vbH: g.vbH, pts: g.pts };
 }
 // Bouwt de binnenkant van de SVG. interactive=true voegt tik-vlakken + selectie toe
 // (editor); interactive=false geeft een statische tekening (thumbnail / overzicht).
 function _kozijnBuildInner(g, vorm, verdeling, markeringen, interactive, sel) {
   const markeerActief = interactive && !!_kozijnMarkeerType;
   let inner = `<path d="${g.d}" fill="rgba(70,130,180,0.12)" stroke="#e63329" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`;
-  if (vorm === 'rechthoek' && verdeling) {
-    const out = { vakken: [], dividers: [] };
-    _kozijnWalk(verdeling, { x: 0, y: 0, w: g.vbW, h: g.vbH }, '', out);
+  if (verdeling && g.pts && g.pts.length >= 3) {
+    const out = _kozijnCollectFrom(verdeling, g.pts);
     out.vakken.forEach(vk => {
+      const ptsStr = vk.pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
       if (interactive) {
         const selv = sel && sel.kind === 'vak' && sel.path === vk.path;
-        inner += `<rect x="${vk.rect.x.toFixed(1)}" y="${vk.rect.y.toFixed(1)}" width="${vk.rect.w.toFixed(1)}" height="${vk.rect.h.toFixed(1)}" fill="${selv ? 'rgba(230,51,41,0.10)' : 'transparent'}" ${selv ? 'stroke="#e63329" stroke-width="1.5" vector-effect="non-scaling-stroke"' : ''} pointer-events="all" onclick="_kozijnTapVak('${vk.path}')" style="cursor:pointer"/>`;
+        inner += `<polygon points="${ptsStr}" fill="${selv ? 'rgba(230,51,41,0.10)' : 'transparent'}" ${selv ? 'stroke="#e63329" stroke-width="1.5" vector-effect="non-scaling-stroke"' : ''} pointer-events="all" onclick="_kozijnTapVak('${vk.path}')" style="cursor:pointer"/>`;
       }
       const ty = (vk.node && vk.node.type) || 'glas';
       if (ty !== 'glas') {
-        const r = vk.rect, ins = Math.max(2, Math.min(r.w, r.h) * 0.08);
-        if (r.w - 2 * ins > 0 && r.h - 2 * ins > 0) {
-          const sx = r.x + ins, sy = r.y + ins, sw = r.w - 2 * ins, sh = r.h - 2 * ins;
-          inner += `<rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sh.toFixed(1)}" fill="${ty === 'vulling' ? 'rgba(124,74,30,0.22)' : 'none'}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
+        const ins = _kozijnInsetPoly(vk.pts, 0.08);
+        if (ins && ins.length >= 3) {
+          const insStr = ins.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+          inner += `<polygon points="${insStr}" fill="${ty === 'vulling' ? 'rgba(124,74,30,0.22)' : 'none'}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
+          const c = _kozijnCentroid(ins), bb = _kozijnBBox(ins);
           if (ty === 'vulling' && vk.node && vk.node.label) {
             const lbl = vk.node.label;
-            const lcx = sx + sw / 2, lcy = sy + sh / 2;
-            const lfs = Math.max(6, Math.min(sw * 1.45 / Math.max(4, lbl.length), sh * 0.45));
-            inner += `<text x="${lcx.toFixed(1)}" y="${lcy.toFixed(1)}" font-size="${lfs.toFixed(1)}" fill="#5a3a16" text-anchor="middle" dominant-baseline="central" font-family="system-ui, -apple-system, sans-serif" pointer-events="none">${_escapeHtml(lbl)}</text>`;
+            const lfs = Math.max(6, Math.min(bb.w * 1.45 / Math.max(4, lbl.length), bb.h * 0.45));
+            inner += `<text x="${c[0].toFixed(1)}" y="${c[1].toFixed(1)}" font-size="${lfs.toFixed(1)}" fill="#5a3a16" text-anchor="middle" dominant-baseline="central" font-family="system-ui, -apple-system, sans-serif" pointer-events="none">${_escapeHtml(lbl)}</text>`;
           }
           if (ty === 'draai_binnen' || ty === 'draai_buiten') {
             const dash = ty === 'draai_binnen' ? ' stroke-dasharray="5 4"' : '';
-            const cx = sx + sw / 2, by = sy + sh;
-            inner += `<line x1="${sx.toFixed(1)}" y1="${by.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${sy.toFixed(1)}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke"${dash} pointer-events="none"/>`;
-            inner += `<line x1="${(sx + sw).toFixed(1)}" y1="${by.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${sy.toFixed(1)}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke"${dash} pointer-events="none"/>`;
+            const tx = c[0], topy = bb.minY, blx = bb.minX, bly = bb.maxY, brx = bb.maxX;
+            inner += `<line x1="${blx.toFixed(1)}" y1="${bly.toFixed(1)}" x2="${tx.toFixed(1)}" y2="${topy.toFixed(1)}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke"${dash} pointer-events="none"/>`;
+            inner += `<line x1="${brx.toFixed(1)}" y1="${bly.toFixed(1)}" x2="${tx.toFixed(1)}" y2="${topy.toFixed(1)}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke"${dash} pointer-events="none"/>`;
           }
         }
       }
@@ -10139,8 +10210,7 @@ function _kozijnBuildInner(g, vorm, verdeling, markeringen, interactive, sel) {
     out.dividers.forEach(dv => {
       const seld = interactive && sel && sel.kind === 'divider' && sel.path === dv.path;
       const col = seld ? '#e63329' : '#b45309', sw = seld ? 4 : 2.5;
-      let x1, y1, x2, y2;
-      if (dv.kind === 'v') { x1 = x2 = dv.x; y1 = dv.y; y2 = dv.y + dv.len; } else { y1 = y2 = dv.y; x1 = dv.x; x2 = dv.x + dv.len; }
+      const x1 = dv.p0[0], y1 = dv.p0[1], x2 = dv.p1[0], y2 = dv.p1[1];
       inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${sw}" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>`;
       if (interactive) inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="transparent" stroke-width="16" vector-effect="non-scaling-stroke" pointer-events="all" onclick="_kozijnTapDivider('${dv.path}')" style="cursor:pointer"/>`;
     });
@@ -10179,71 +10249,53 @@ function _kozijnThumbSvg(tek, heightPx) {
 function _kozijnTeken() { _kozijnDrawSvg(); _kozijnRenderVerdeelControls(); }
 
 // --- Verdeling-boom (splits): navigatie en berekening ---
-function _kozijnWalk(node, rect, path, out) {
-  if (!node || node.t !== 'split') { out.vakken.push({ rect, path, node }); return; }
+// Walkt de deelboom over een veelhoek. Een v/h-split knipt het huidige stuk tegen
+// zijn eigen bounding-box; de deellijn is de werkelijke koorde (p0..p1).
+function _kozijnCollectFrom(node, pts, path, out) {
+  if (!out) out = { vakken: [], dividers: [] };
+  if (path == null) path = '';
+  if (!node || node.t !== 'split') { out.vakken.push({ pts, path, node }); return out; }
   const cp = (i) => (path === '' ? '' : path + '.') + i;
+  const bb = _kozijnBBox(pts);
   if (node.r === 'v') {
-    const xw = rect.w * node.pos;
-    out.dividers.push({ kind: 'v', x: rect.x + xw, y: rect.y, len: rect.h, path });
-    _kozijnWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }, cp(0), out);
-    _kozijnWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h }, cp(1), out);
+    const cx = bb.minX + bb.w * node.pos;
+    const ch = _kozijnLineCross(pts, 'x', cx);
+    if (ch.length >= 2) out.dividers.push({ kind: 'v', p0: ch[0], p1: ch[ch.length - 1], len: Math.hypot(ch[ch.length - 1][0] - ch[0][0], ch[ch.length - 1][1] - ch[0][1]), path });
+    _kozijnCollectFrom(node.k[0], _kozijnClipHalf(pts, 'x', cx, -1), cp(0), out);
+    _kozijnCollectFrom(node.k[1], _kozijnClipHalf(pts, 'x', cx, +1), cp(1), out);
   } else {
-    const yh = rect.h * node.pos;
-    out.dividers.push({ kind: 'h', x: rect.x, y: rect.y + yh, len: rect.w, path });
-    _kozijnWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }, cp(0), out);
-    _kozijnWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh }, cp(1), out);
+    const cy = bb.minY + bb.h * node.pos;
+    const ch = _kozijnLineCross(pts, 'y', cy);
+    if (ch.length >= 2) out.dividers.push({ kind: 'h', p0: ch[0], p1: ch[ch.length - 1], len: Math.hypot(ch[ch.length - 1][0] - ch[0][0], ch[ch.length - 1][1] - ch[0][1]), path });
+    _kozijnCollectFrom(node.k[0], _kozijnClipHalf(pts, 'y', cy, -1), cp(0), out);
+    _kozijnCollectFrom(node.k[1], _kozijnClipHalf(pts, 'y', cy, +1), cp(1), out);
   }
+  return out;
 }
-function _kozijnMembersWalk(node, rect) {
-  if (!node || node.t !== 'split') return 0;
-  if (node.r === 'v') {
-    const xw = rect.w * node.pos;
-    return rect.h + _kozijnMembersWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }) + _kozijnMembersWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h });
-  }
-  const yh = rect.h * node.pos;
-  return rect.w + _kozijnMembersWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }) + _kozijnMembersWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh });
+function _kozijnCollectAll() {
+  const g = _kozijnPolygon(_kozijnState.vorm, _kozijnState.maten);
+  if (!g || g.pts.length < 3) return { vakken: [], dividers: [] };
+  return _kozijnCollectFrom(_kozijnState.verdeling || { t: 'vak' }, g.pts, '', { vakken: [], dividers: [] });
 }
 function _kozijnMembersCm() {
-  if (_kozijnState.vorm !== 'rechthoek' || !_kozijnState.verdeling) return 0;
-  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
-  return _kozijnMembersWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h });
-}
-function _kozijnRamenWalk(node, rect) {
-  if (!node) return 0;
-  if (node.t !== 'split') {
-    const per = 2 * (rect.w + rect.h), ty = node.type || 'glas';
-    if (ty === 'vast' || ty === 'draai_binnen') return per;        // raamhout, 1× omtrek
-    if (ty === 'draai_buiten') return 2 * per;                     // raamhout + sponningkanten, 2× omtrek
-    return 0;                                                       // vast glas
-  }
-  if (node.r === 'v') {
-    const xw = rect.w * node.pos;
-    return _kozijnRamenWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }) + _kozijnRamenWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h });
-  }
-  const yh = rect.h * node.pos;
-  return _kozijnRamenWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }) + _kozijnRamenWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh });
+  if (!_kozijnState.verdeling) return 0;
+  return _kozijnCollectAll().dividers.reduce((s, d) => s + d.len, 0);
 }
 function _kozijnRamenCm() {
-  if (_kozijnState.vorm !== 'rechthoek' || !_kozijnState.verdeling) return 0;
-  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
-  return _kozijnRamenWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h });
-}
-function _kozijnVlakkenWalk(node, rect) {
-  if (!node) return 0;
-  if (node.t !== 'split') {
-    return (node.type === 'vulling') ? (rect.w * rect.h) : 0;   // dichte vulling: oppervlak in cm²
-  }
-  if (node.r === 'v') {
-    const xw = rect.w * node.pos;
-    return _kozijnVlakkenWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }) + _kozijnVlakkenWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h });
-  }
-  const yh = rect.h * node.pos;
-  return _kozijnVlakkenWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }) + _kozijnVlakkenWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh });
+  if (!_kozijnState.verdeling) return 0;
+  let s = 0;
+  _kozijnCollectAll().vakken.forEach(vk => {
+    const ty = (vk.node && vk.node.type) || 'glas';
+    if (ty === 'vast' || ty === 'draai_binnen') s += _kozijnPolyPerim(vk.pts);        // raamhout, 1× omtrek
+    else if (ty === 'draai_buiten') s += 2 * _kozijnPolyPerim(vk.pts);                 // raamhout + sponningkanten, 2× omtrek
+  });
+  return s;
 }
 function _kozijnVlakkenCm2() {
-  if (_kozijnState.vorm !== 'rechthoek' || !_kozijnState.verdeling) return 0;
-  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
-  return _kozijnVlakkenWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h });
+  if (!_kozijnState.verdeling) return 0;
+  let s = 0;
+  _kozijnCollectAll().vakken.forEach(vk => { if (vk.node && vk.node.type === 'vulling') s += _kozijnPolyArea(vk.pts); });
+  return s;
 }
 function _kozijnVlakkenM2() { return _kozijnVlakkenCm2() / 10000; }
 function _kozijnM2Regels() {
@@ -10262,32 +10314,18 @@ function _kozijnSetVulRegel(path, regelId) {
   node.label = regelId ? _kozijnRegelNaam(regelId) : '';
   _kozijnTeken(); _kozijnUpdateOmtrek();
 }
-function _kozijnVlakkenPerRegelWalk(node, rect, acc) {
-  if (!node) return;
-  if (node.t !== 'split') {
-    if (node.type === 'vulling') {
-      const key = node.regelId || '';
-      if (!acc[key]) acc[key] = { m2: 0, label: node.label || '' };
-      acc[key].m2 += rect.w * rect.h;          // cm²
-      if (node.label) acc[key].label = node.label;
-    }
-    return;
-  }
-  if (node.r === 'v') {
-    const xw = rect.w * node.pos;
-    _kozijnVlakkenPerRegelWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }, acc);
-    _kozijnVlakkenPerRegelWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h }, acc);
-  } else {
-    const yh = rect.h * node.pos;
-    _kozijnVlakkenPerRegelWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }, acc);
-    _kozijnVlakkenPerRegelWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh }, acc);
-  }
-}
 function _kozijnVlakkenPerRegel() {
   const acc = {};
-  if (_kozijnState.vorm === 'rechthoek' && _kozijnState.verdeling) {
-    const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
-    _kozijnVlakkenPerRegelWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h }, acc);
+  if (_kozijnState.verdeling) {
+    _kozijnCollectAll().vakken.forEach(vk => {
+      const node = vk.node;
+      if (node && node.type === 'vulling') {
+        const key = node.regelId || '';
+        if (!acc[key]) acc[key] = { m2: 0, label: node.label || '' };
+        acc[key].m2 += _kozijnPolyArea(vk.pts);          // cm²
+        if (node.label) acc[key].label = node.label;
+      }
+    });
   }
   Object.keys(acc).forEach(k => { acc[k].m2 = acc[k].m2 / 10000; });
   return acc;
@@ -10310,17 +10348,19 @@ function _kozijnSetNodeAt(path, newNode) {
   for (const idx of parts) parent = parent.k[+idx];
   parent.k[last] = newNode;
 }
-function _kozijnRectAt(path) {
-  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
-  let rect = { x: 0, y: 0, w: b, h: h }, node = _kozijnState.verdeling;
-  if (path === '') return rect;
+function _kozijnPolyAt(path) {
+  const g = _kozijnPolygon(_kozijnState.vorm, _kozijnState.maten);
+  if (!g || g.pts.length < 3) return null;
+  let pts = g.pts, node = _kozijnState.verdeling;
+  if (path === '') return pts;
   for (const idxs of path.split('.')) {
     const i = +idxs; if (!node || node.t !== 'split') break;
-    if (node.r === 'v') { const xw = rect.w * node.pos; rect = i === 0 ? { x: rect.x, y: rect.y, w: xw, h: rect.h } : { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h }; }
-    else { const yh = rect.h * node.pos; rect = i === 0 ? { x: rect.x, y: rect.y, w: rect.w, h: yh } : { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh }; }
+    const bb = _kozijnBBox(pts);
+    if (node.r === 'v') { const cx = bb.minX + bb.w * node.pos; pts = _kozijnClipHalf(pts, 'x', cx, i === 0 ? -1 : +1); }
+    else { const cy = bb.minY + bb.h * node.pos; pts = _kozijnClipHalf(pts, 'y', cy, i === 0 ? -1 : +1); }
     node = node.k[i];
   }
-  return rect;
+  return pts;
 }
 function _kozijnTapVak(path) { _kozijnSel = { kind: 'vak', path }; _kozijnTeken(); }
 function _kozijnTapDivider(path) { _kozijnSel = { kind: 'divider', path }; _kozijnTeken(); }
@@ -10336,7 +10376,8 @@ function _kozijnRemoveSplit(path) {
 }
 function _kozijnSetPosCm(path, cmVal) {
   const node = _kozijnNodeAt(path); if (!node || node.t !== 'split') return;
-  const rect = _kozijnRectAt(path); const span = node.r === 'v' ? rect.w : rect.h;
+  const pts = _kozijnPolyAt(path); if (!pts) return;
+  const bb = _kozijnBBox(pts); const span = node.r === 'v' ? bb.w : bb.h;
   if (span <= 0) return;
   let pos = (parseFloat(cmVal) || 0) / span;
   pos = Math.min(0.98, Math.max(0.02, pos));
@@ -10401,8 +10442,8 @@ function _kozijnRenderVerdeelControls() {
     el.innerHTML = `<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">${d.label} · notitie:</span><input type="text" value="${nt}" placeholder="bv. onderdorpel links" style="flex:1 1 160px; min-width:140px; padding:0.45rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;" oninput="_kozijnSetMarkNotitie(${_kozijnSel.idx}, this.value)"><button class="btn btn-danger btn-sm" onclick="_kozijnRemoveMarkering(${_kozijnSel.idx})">Verwijderen</button></div>`;
     return;
   }
-  if (_kozijnState.vorm !== 'rechthoek') {
-    el.innerHTML = '<div style="color:var(--muted); font-size:0.8rem;">Verdelen in ramen en panelen kan voorlopig alleen bij rechthoekige kozijnen. Het frame en de omtrek werken bij alle vormen.</div>';
+  if (_kozijnState.vorm !== 'rechthoek' && _kozijnState.vorm !== 'schuin_enkel' && _kozijnState.vorm !== 'schuin_punt' && _kozijnState.vorm !== 'boog') {
+    el.innerHTML = '<div style="color:var(--muted); font-size:0.8rem;">Verdelen is in deze vorm niet beschikbaar.</div>';
     return;
   }
   const sel = _kozijnSel;
@@ -10428,8 +10469,8 @@ function _kozijnRenderVerdeelControls() {
   }
   const node = _kozijnNodeAt(sel.path);
   if (!node || node.t !== 'split') { el.innerHTML = ''; _kozijnSel = null; return; }
-  const rect = _kozijnRectAt(sel.path);
-  const span = node.r === 'v' ? rect.w : rect.h;
+  const pts = _kozijnPolyAt(sel.path); const bb = pts ? _kozijnBBox(pts) : { w: 0, h: 0 };
+  const span = node.r === 'v' ? bb.w : bb.h;
   const posCm = node.pos * span;
   const naam = node.r === 'v' ? 'Tussenstijl' : 'Tussendorpel';
   const vanaf = node.r === 'v' ? 'vanaf links' : 'vanaf boven';
