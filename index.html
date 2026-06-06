@@ -1805,8 +1805,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.39.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.40.0</h2>
       <div class="intro-body">
+        <p><strong>🚪 Deuren en puivulling in de kozijn-tekenaar (v3.40.0 — Brok 6a).</strong> Een vak kun je nu ook als <strong>vulling</strong> markeren: een dicht vlak zoals een deur of een paneel. Dat telt niet in m¹ (omtrek) maar in m² (oppervlak), één kant — buitenwerk. Een losse deur teken je door het hele binnenvlak op vulling te zetten; in een pui zet je alleen de deur- of paneelvakken op vulling en de rest blijft glas of raam. Onder de tekening zie je voortaan twee totalen: de m¹ voor kozijn en ramen, en de m² voor deuren en panelen. Of een vulling als deur of als pui wordt afgerekend bepaal je straks in de calc-regel. De automatische koppeling van die m² naar een eigen regel volgt in de volgende stap (6b).</p>
         <p><strong>💶 Prijskaartje aan de gebreken (v3.39.0).</strong> Onder Instellingen zet je nu een vaste prijs per stuk per gebrek (houtrot, scheur/naad, kit, loszittende verf). Zodra je in een kozijn stippen plaatst, telt de app ze over de hele calculatie en zet per soort automatisch een toeslag neer — bijvoorbeeld "Houtrot herstel — 7 × €15". Het loopt mee als je stippen bijplaatst of weghaalt, en verdwijnt weer als de laatste stip weg is. Je eigen, handmatige toeslagen blijven ongemoeid, en een vergrendelde offerte wordt niet aangeraakt. Vul de prijzen in als je zover bent; staat een prijs op 0, dan gebeurt er niets.</p>
         <p><strong>🎨 Beter te onderscheiden gebrek-kleuren (v3.38.2).</strong> De markeringen zaten te dicht bij elkaar in de rood-oranje hoek. Ze hebben nu vier duidelijk verschillende kleuren, in lijn met het dashboard-palet: houtrot rood, scheur/naad paars, kit vervangen blauw, loszittende verf groen.</p>
         <p><strong>🔧 Naam onder getekend kozijn volgt de regel (v3.38.1).</strong> In het overzicht "Getekende kozijnen" bleef de oude naam staan als je daarna de omschrijving van de regel aanpaste. Nu is de omschrijving van de regel leidend: pas je die aan, dan verandert de naam onder de tekening mee.</p>
@@ -2712,7 +2713,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.39.0';
+const APP_VERSION = 'v3.40.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3074,6 +3075,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.40.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 6a: deuren en puivulling. Nieuw vak-type "vulling" — een dicht vlak (deur of paneel) dat in m² telt (één kant, buitenwerk) i.p.v. in m¹. De tekenaar toont nu twee totalen: m¹ voor kozijn + ramen, m² voor deuren + panelen. Koppeling van die m² naar een eigen calc-regel volgt in 6b' },
   { v: '3.39.0', d: '2026-06-06', h: 'Gebrek-prijzen: vaste prijs per stuk per gebrek in de instellingen; gebrek-stippen lopen automatisch als toeslag-post (aantal × prijs) mee in de calculatie. Vergrendelde offertes en handmatige toeslagen blijven ongemoeid' },
   { v: '3.38.2', d: '2026-06-06', h: 'Gebrek-markeringen kregen vier duidelijk verschillende kleuren (zaten te dicht bij elkaar in rood-oranje): houtrot rood, scheur/naad paars, kit vervangen blauw, loszittende verf groen — in lijn met het dashboard-statuspalet' },
   { v: '3.38.1', d: '2026-06-06', h: 'Fix: in het overzicht "Getekende kozijnen" volgt de naam onder de tekening nu de omschrijving van de regel (was: bleef hangen op de naam uit de tekenaar)' },
@@ -10095,7 +10097,7 @@ function _kozijnBuildInner(g, vorm, verdeling, markeringen, interactive, sel) {
         const r = vk.rect, ins = Math.max(2, Math.min(r.w, r.h) * 0.08);
         if (r.w - 2 * ins > 0 && r.h - 2 * ins > 0) {
           const sx = r.x + ins, sy = r.y + ins, sw = r.w - 2 * ins, sh = r.h - 2 * ins;
-          inner += `<rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sh.toFixed(1)}" fill="none" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
+          inner += `<rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sh.toFixed(1)}" fill="${ty === 'vulling' ? 'rgba(124,74,30,0.22)' : 'none'}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
           if (ty === 'draai_binnen' || ty === 'draai_buiten') {
             const dash = ty === 'draai_binnen' ? ' stroke-dasharray="5 4"' : '';
             const cx = sx + sw / 2, by = sy + sh;
@@ -10197,6 +10199,24 @@ function _kozijnRamenCm() {
   const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
   return _kozijnRamenWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h });
 }
+function _kozijnVlakkenWalk(node, rect) {
+  if (!node) return 0;
+  if (node.t !== 'split') {
+    return (node.type === 'vulling') ? (rect.w * rect.h) : 0;   // dichte vulling: oppervlak in cm²
+  }
+  if (node.r === 'v') {
+    const xw = rect.w * node.pos;
+    return _kozijnVlakkenWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }) + _kozijnVlakkenWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h });
+  }
+  const yh = rect.h * node.pos;
+  return _kozijnVlakkenWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }) + _kozijnVlakkenWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh });
+}
+function _kozijnVlakkenCm2() {
+  if (_kozijnState.vorm !== 'rechthoek' || !_kozijnState.verdeling) return 0;
+  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
+  return _kozijnVlakkenWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h });
+}
+function _kozijnVlakkenM2() { return _kozijnVlakkenCm2() / 10000; }
 function _kozijnTotaalCm() { return _kozijnOmtrekCm() + _kozijnMembersCm() + _kozijnRamenCm(); }
 function _kozijnNodeAt(path) {
   let node = _kozijnState.verdeling; if (!node) return null;
@@ -10311,7 +10331,7 @@ function _kozijnRenderVerdeelControls() {
   if (sel.kind === 'vak') {
     const vnode = _kozijnNodeAt(sel.path);
     const ty = (vnode && vnode.type) || 'glas';
-    const typen = [['glas', 'Vast glas'], ['vast', 'Vast raam'], ['draai_binnen', 'Draai binnen'], ['draai_buiten', 'Draai buiten']];
+    const typen = [['glas', 'Vast glas'], ['vast', 'Vast raam'], ['draai_binnen', 'Draai binnen'], ['draai_buiten', 'Draai buiten'], ['vulling', 'Vulling (m²)']];
     const typeBtns = typen.map(([k, lab]) => `<button class="${ty === k ? 'btn' : 'btn-secondary btn'} btn-sm" onclick="_kozijnSetVakType('${sel.path}','${k}')">${lab}</button>`).join('');
     el.innerHTML = `<div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Type:</span>${typeBtns}</div><div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">Vak delen:</span><button class="btn-secondary btn btn-sm" onclick="_kozijnSplit('${sel.path}','v')">│ verticaal</button><button class="btn-secondary btn btn-sm" onclick="_kozijnSplit('${sel.path}','h')">─ horizontaal</button></div>`;
     return;
@@ -10331,13 +10351,20 @@ function _kozijnUpdateOmtrek() {
   const el = document.getElementById('kozijnOmtrek');
   if (!el) return;
   const fm = (x) => x.toFixed(2).replace('.', ',');
+  const vlakken = _kozijnVlakkenM2();
+  let m1;
   if (members > 0 || ramen > 0) {
     const delen = [`frame ${fm(omtrek)}`];
     if (members > 0) delen.push(`tussenwerk ${fm(members)}`);
     if (ramen > 0) delen.push(`ramen ${fm(ramen)}`);
-    el.textContent = `Totaal: ${fm(totaal)} m¹  (${delen.join(' + ')})`;
+    m1 = `Totaal: ${fm(totaal)} m¹  (${delen.join(' + ')})`;
   } else {
-    el.textContent = `Omtrek: ${fm(omtrek)} m¹`;
+    m1 = `Omtrek: ${fm(omtrek)} m¹`;
+  }
+  if (vlakken > 0) {
+    el.innerHTML = `${m1}<br><span style="color:var(--muted);">Vulling (deuren/panelen): ${fm(vlakken)} m²</span>`;
+  } else {
+    el.textContent = m1;
   }
 }
 
@@ -10377,7 +10404,8 @@ function _kozijnBouwTekening() {
     maten: Object.assign({}, _kozijnState.maten),
     verdeling: _kozijnState.verdeling,
     markeringen: (_kozijnState.markeringen || []).map(m => Object.assign({}, m)),
-    omtrekM1: +(cm / 100).toFixed(3)
+    omtrekM1: +(cm / 100).toFixed(3),
+    vlakkenM2: +_kozijnVlakkenM2().toFixed(3)
   };
   return { tekening, naam, cm };
 }

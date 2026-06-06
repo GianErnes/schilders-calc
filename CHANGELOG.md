@@ -1,3 +1,21 @@
+## v3.40.0 — Kozijn-tekenaar Brok 6a: deuren en puivulling
+Deuren en dichte panelen (puivulling) zijn m²-werk, geen m¹. Tot nu toe leverde de tekenaar alleen omtrek (m¹). Nu kun je een vak als dichte vulling markeren, en wordt het oppervlak apart geteld.
+
+### Wijzigingen
+- Nieuw vak-type **Vulling (m²)** naast vast glas, vast raam en draairaam. Een vulling is een dicht vlak — een deur of een paneel — en telt in m² (oppervlak), niet in m¹.
+- Eén kant gerekend (buitenwerk): de tekenaar levert het kale oppervlak (breedte × hoogte).
+- Werkt in beide situaties: een losse deur (hele binnenvlak op vulling) en een deur of paneel als vak binnen een pui (alleen dat vak op vulling, de rest glas/raam).
+- De tekenaar toont nu twee totalen onder de tekening: **m¹** (frame + tussenwerk + ramen) en **m²** (deuren + panelen).
+- Vulling-vakken krijgen een eigen, gevulde weergave zodat ze visueel verschillen van glas en ramen. Gebreken blijven er gewoon op te markeren.
+- De m² wordt al meegeschreven in het tekening-object (`vlakkenM2`); de automatische koppeling naar een eigen calc-regel volgt in 6b. In deze stap raakt het de calculatie-bedragen nog niet.
+
+### Let op
+- Of een vulling als deur of als puivulling wordt afgerekend, bepaal je in de calc-regel (het m²-verfsysteem). De tekenaar maakt dat onderscheid bewust niet.
+- Verdelen in vakken (en dus ook vulling-vakken) kan nog steeds alleen bij rechthoekige kozijnen. Verdeling bij schuine en gebogen vormen is een aparte, volgende brok.
+
+---
+
+
 ## v3.39.0 — Gebrek-prijzen → automatische toeslagen
 De gebrek-markeringen uit de kozijn-tekenaar krijgen een prijskaartje. Per gebrek-type stel je één keer een vaste prijs per stuk in; de stippen die je tijdens de opname tekent, lopen daarna automatisch als toeslag mee in de calculatie. Daarmee is de cirkel opname → prijs rond.
 
