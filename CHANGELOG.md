@@ -1,3 +1,13 @@
+## v3.38.2 — Beter te onderscheiden gebrek-kleuren
+De markeringen uit Brok 4 zaten met houtrot (rood), scheur (oranje) en loszittende verf (amber) te dicht bij elkaar; alleen kit (blauw) sprong eruit. Als kleine, halfdoorzichtige stippen waren ze nauwelijks uit elkaar te houden.
+
+### Wijzigingen
+- Vier duidelijk verschillende tinten, ontleend aan het dashboard-statuspalet: houtrot rood (#dc2626), scheur/naad paars (#8b5cf6, als "afspraak"), kit vervangen blauw (#2196f3, als "verzonden"), loszittende verf groen (#16a34a, als "geaccepteerd").
+- Stippen iets minder doorzichtig (fill-opacity 0,5 → 0,65) zodat de kleur beter leest.
+
+---
+
+
 ## v3.38.1 — Fix: naam onder getekend kozijn volgt de regel
 In het overzicht "Getekende kozijnen" werd de naam getoond uit de tekenaar (`tekening.naam`), die bevroren bleef. Paste je daarna de omschrijving van de meetstaat-regel aan, dan veranderde het label onder de tekening niet mee.
 
