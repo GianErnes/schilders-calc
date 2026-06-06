@@ -1,3 +1,22 @@
+## v3.33.0 — Kozijn-tekenaar, Brok 2a: het frame met vormkeuze
+Het tekenvenster (uit Brok 1) doet nu echt iets: je kiest een kozijn-vorm, vult de lasermaten in, ziet het kozijn op schaal en de omtrek loopt live mee als m¹.
+
+### Wijzigingen
+- **Vormkeuze:** rechthoek, schuin enkel (lessenaar), schuin punt (puntgevel) en boog (rond én segment, via de boog-hoogte). Per vorm verschijnen de juiste maatvelden in centimeters.
+- **Tekening op schaal:** het kozijn wordt als SVG meteen op de ingevulde verhoudingen getekend (vector-effect non-scaling-stroke, dus de lijn blijft even dik bij elke schaal).
+- **Live omtrek-m¹:** onderaan loopt de omtrek mee in NL-notatie. De schuine rand wordt op werkelijke lengte gerekend (Pythagoras), de boog op echte booglengte (cirkelsegment; rondboog = boog-hoogte gelijk aan halve breedte).
+- **Maat blijft uit de laser:** de tekening levert de structuur, de m¹ komt uit de ingevulde centimeters, niet uit de pixels.
+
+### Code
+- Bij Klaar wordt de exacte omtrek (cm) in `bCm` gezet en `hCm` op 0. De bestaande `_meetstaatRijTotaal` rekent dat bij een m¹-systeem als lengte × aantal × factor — de reken-engine blijft volledig ongemoeid. De tekening (vorm + maten + omtrekM1 + naam) wordt opgeslagen in de `tekening`-kolom.
+- Nieuwe helpers: `_kozijnOmtrekCm`, `_kozijnGeometrie` (SVG-pad), `_kozijnTeken`, plus vorm-/maat-rendering. Geen nieuwe migratie nodig — alles past in de bestaande `tekening`-kolom.
+
+### Let op
+- De tekenaar gaat ervan uit dat de gekoppelde calc-regel een m¹-verfsysteem gebruikt (zoals "Houten kozijn buiten - onderhoud"). Bij meerdere identieke kozijnen gebruik je het aantal-veld van de regel.
+
+---
+
+
 ## v3.32.1 — Meetstaat als kaarten op smalle schermen
 De meetstaat-tabel heeft negen kolommen en was daarmee breder dan een staande iPad. Op zo'n scherm vielen factor, totaal, opmerking en de teken- en verwijderknoppen rechts buiten beeld; je kon ze alleen bereiken door horizontaal te vegen. Dat blokkeerde juist de opname op locatie, waar de iPad vaak rechtop in de hand ligt.
 
