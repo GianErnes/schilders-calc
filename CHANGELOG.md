@@ -1,3 +1,16 @@
+## v3.32.1 — Meetstaat als kaarten op smalle schermen
+De meetstaat-tabel heeft negen kolommen en was daarmee breder dan een staande iPad. Op zo'n scherm vielen factor, totaal, opmerking en de teken- en verwijderknoppen rechts buiten beeld; je kon ze alleen bereiken door horizontaal te vegen. Dat blokkeerde juist de opname op locatie, waar de iPad vaak rechtop in de hand ligt.
+
+### Wijzigingen
+- Op smalle schermen (≤ 1024px breed) wordt elke meetstaat-regel een compact kaartje in plaats van een tabelrij: nummer en knoppen op de bovenste strook, daaronder de calc-regel, de omschrijving, dan b / h / aantal / factor op één regeltje, en het totaal eronder. De hele regel in beeld, grotere tikvelden, verticaal scrollen in plaats van horizontaal vegen.
+- Brede schermen (Mac, iPad liggend) houden de bestaande tabel ongewijzigd.
+
+### Code
+- Eén CSS-media-query (`max-width: 1024px`); geen tweede renderpad, dus schakelt vanzelf mee met de oriëntatie. Elke cel kreeg een `data-label` zodat het veldlabel als `::before` in de kaart verschijnt. De vier cijfervelden delen via flex één regel; de tekstvelden lopen vol.
+
+---
+
+
 ## v3.32.0 — Kozijn-tekenaar, Brok 1: de schil
 Eerste, onzichtbare aanzet voor de opname op locatie. De kozijn-tekenaar wordt de grootste functie tot nu toe en komt daarom in brokken. Deze brok legt alleen de opslag en de schil vast; het tekenen zelf volgt.
 
