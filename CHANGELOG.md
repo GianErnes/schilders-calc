@@ -1,3 +1,20 @@
+## v3.35.0 — Kozijn-tekenaar, Brok 2c: draaiende en vaste ramen
+Per vak geef je nu aan wat het is, met de juiste strekkende meters en de juiste tekening.
+
+### Wijzigingen
+- **Vier vak-types:** vast glas, vast raam, draairaam naar binnen, draairaam naar buiten. Tik een vak aan en kies het type.
+- **Meters per type:** vast glas telt niets; vast raam en draai-binnen tellen het raamhout 1× (de omtrek van het vak); draai-buiten telt 2× — raamhout plus sponningkanten.
+- **Tekening:** een raam krijgt een eigen raamhout-randje; een draairaam ook het open-symbool, in stippellijn (naar binnen) of doorgetrokken (naar buiten).
+- **m¹ uitgesplitst:** onderaan staat nu frame + tussenwerk + ramen.
+
+### Code
+- `_kozijnRamenWalk` loopt de splits-boom langs en telt per leaf-vak de raam-bijdrage op basis van het type (glas 0, vast/binnen 2·(b+h), buiten 4·(b+h)). `_kozijnTotaalCm` = omtrek + tussenwerk + ramen; die totale lengte gaat bij Klaar via `bCm` in de regel.
+- Het vak-type leeft als `type` op het leaf-vak in `tekening.verdeling`. Geen migratie nodig.
+- Open-symbool met `stroke-dasharray` (non-scaling-stroke, dus de streepjes blijven gelijk bij elke schaal). Een ongedeeld kozijn dat één raam is, telt ook mee (het wortel-vak krijgt gewoon een type).
+
+---
+
+
 ## v3.34.0 — Kozijn-tekenaar, Brok 2b: verdelen in ramen en panelen
 Een rechthoekig kozijn kun je nu opdelen met tussenstijlen en -dorpels, en die strekkende meters tellen mee in de m¹.
 
