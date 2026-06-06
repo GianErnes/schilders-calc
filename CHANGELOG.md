@@ -1,3 +1,13 @@
+## v3.38.1 — Fix: naam onder getekend kozijn volgt de regel
+In het overzicht "Getekende kozijnen" werd de naam getoond uit de tekenaar (`tekening.naam`), die bevroren bleef. Paste je daarna de omschrijving van de meetstaat-regel aan, dan veranderde het label onder de tekening niet mee.
+
+### Wijzigingen
+- Het overzicht gebruikt nu `ms.omschrijving` als eerste keuze (valt terug op de tekenaar-naam en anders "Kozijn"). De omschrijving van de regel is daarmee leidend.
+- De tekenaar vult bij openen het naamveld ook met de huidige omschrijving, zodat tekenaar, regel en overzicht consistent blijven.
+
+---
+
+
 ## v3.38.0 — Kozijn-tekenaar, Brok 4: gebreken markeren
 Op de tekening kun je nu aangeven waar de gebreken zitten — houtrot voorop.
 
