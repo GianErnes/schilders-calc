@@ -1817,9 +1817,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.42.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.42.3</h2>
       <div class="intro-body">
-        <p><strong>⌨️ Cijfertoetsenbord op de iPad — nu betrouwbaar (v3.42.2).</strong> De getalvelden van de meetstaat (b, h, aantal) en van de kozijn-tekenaar roepen nu het cijfertoetsenbord op de iPad op, en het factor-veld een cijfertoetsenbord met komma. De vorige opzet (v3.42.1) werd door iPadOS soms genegeerd; de velden staan nu zo ingesteld dat het wél werkt. Tekstvelden geven gewoon letters.</p>
+        <p><strong>⌨️ Compact cijferblok op de iPad (v3.42.3).</strong> De snelle meetvelden — b, h en aantal in de meetstaat, plus de kozijn-maten en de dorpel-positie — roepen nu het compacte cijferblok op (telefoon-toetsenbord), waarmee je vlot tikt. iPadOS toont dat blok namelijk alleen bij het telefoon-type; bij gewoon "cijfers" kreeg je het volledige toetsenbord met een cijferrij erboven. Het factor-veld houdt het decimale toetsenbord, want daar heb je soms een komma nodig.</p>
         <p><strong>🚪 Vulling loopt automatisch in de calculatie (v3.42.0 — Brok 6B).</strong> De m² van je deuren en panelen landt nu vanzelf in de calculatie. Per gekoppelde regel houdt de app één meetstaat-regel bij die alle vulling-vakken van die soort optelt — over alle kozijnen in de calculatie heen. Plaats of wijzig je een vulling, dan loopt het bedrag mee; haal je de laatste weg, dan verdwijnt de regel weer. Die automatische regels staan gemarkeerd met "auto" en op slot, zodat je ze niet per ongeluk aanpast; je eigen meetstaat-regels blijven volledig ongemoeid, en een vergrendelde offerte wordt niet aangeraakt. Een vulling die je nog niet gekoppeld hebt telt nog niet mee — koppel hem eerst aan een regel. <em>Let op: draai eerst de bijgeleverde SQL-migratie in Supabase voor je deze versie uploadt.</em></p>
         <p><strong>🚪 Vulling koppelen aan een regel, met label in de tekening (v3.41.0).</strong> Een dichte vulling kan een deur, een paneel of een luik zijn — elk met een eigen norm. Daarom koppel je een vulling-vak nu per stuk aan een <strong>m²-regel uit je calculatie</strong>: tik het vak aan en kies bij "Koppel aan regel" waar het bij hoort. De naam van die regel komt meteen in het vak te staan, zodat je ploeg bij de uitvoering én de klant in één oogopslag zien wat een deur is en wat een paneel. Onder de tekening lopen de m² nu per regel apart mee. Een vulling die je nog niet gekoppeld hebt staat als "nog koppelen" zodat je niks vergeet. Het automatisch invoeren van die m² in de regels volgt in 6b.</p>
         <p><strong>🚪 Deuren en puivulling in de kozijn-tekenaar (v3.40.0 — Brok 6a).</strong> Een vak kun je nu ook als <strong>vulling</strong> markeren: een dicht vlak zoals een deur of een paneel. Dat telt niet in m¹ (omtrek) maar in m² (oppervlak), één kant — buitenwerk. Een losse deur teken je door het hele binnenvlak op vulling te zetten; in een pui zet je alleen de deur- of paneelvakken op vulling en de rest blijft glas of raam. Onder de tekening zie je voortaan twee totalen: de m¹ voor kozijn en ramen, en de m² voor deuren en panelen. Of een vulling als deur of als pui wordt afgerekend bepaal je straks in de calc-regel. De automatische koppeling van die m² naar een eigen regel volgt in de volgende stap (6b).</p>
@@ -2728,7 +2728,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.42.2';
+const APP_VERSION = 'v3.42.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3090,7 +3090,8 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
-  { v: '3.42.2', d: '2026-06-06', h: 'Cijfertoetsenbord op de iPad nu betrouwbaar: getalvelden van meetstaat en kozijn-tekenaar staan op type=text met inputmode (numeric/decimal), omdat iPadOS de inputmode bij type=number negeerde. Tekstvelden houden letters' },
+  { v: '3.42.3', d: '2026-06-06', h: 'Compact cijferblok op de iPad: de snelle meetvelden (b, h, aantal, kozijn-maten, dorpel-positie) staan nu op inputmode=tel, want iPadOS toont alleen bij het telefoon-type het compacte cijferblok; bij numeric/decimal kreeg je het volledige toetsenbord met cijferrij. Factor blijft decimaal (komma nodig)' },
+  { v: '3.42.2', d: '2026-06-06', h: 'Cijfertoetsenbord op de iPad nu betrouwbaar: getalvelden van meetstaat en kozijn-tekenaar staan op type=text met inputmode, omdat iPadOS de inputmode bij type=number negeerde. Tekstvelden houden letters' },
   { v: '3.42.1', d: '2026-06-06', h: 'Meetstaat-velden kregen inputmode voor het juiste toetsenbord (bleek op de iPad niet voldoende bij type=number; opgelost in v3.42.2)' },
   { v: '3.42.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 6B: de vulling-m² loopt automatisch in de calculatie. Per gekoppelde m²-regel houdt de app één meetstaat-regel bij die alle vulling-vakken van die soort over alle kozijnen optelt. Automatische regels staan op slot en gemarkeerd; handmatige regels en vergrendelde offertes blijven ongemoeid. Vereist SQL-migratie (bron-kolom op meetstaat)' },
   { v: '3.41.0', d: '2026-06-06', h: 'Kozijn-tekenaar 6a (vervolg): een vulling-vak koppel je per stuk aan een m²-regel uit de calculatie (deur, paneel, luik — zoveel soorten als je regels hebt). De regelnaam staat als label in het vak, voor leesbaarheid bij uitvoering en voor de klant. De m² loopt per gekoppelde regel apart mee; nog niet gekoppelde vulling staat als "nog koppelen"' },
@@ -9781,9 +9782,9 @@ function renderMeetstaat() {
       <td><span class="ms-num">${idx+1}</span></td>
       <td data-label="Calc-regel"><select data-field="calcRegelId" onchange="updMeetstaat(${idx},'calcRegelId',this.value)" onkeydown="msKey(event,${idx},0)" ${_dis}>${opts}</select></td>
       <td data-label="Omschrijving"><input type="text" data-field="omschrijving" value="${ms.omschrijving||''}" onchange="updMeetstaat(${idx},'omschrijving',this.value)" onkeydown="msKey(event,${idx},1)" ${_dis}></td>
-      <td data-label="b (cm)"><input type="text" inputmode="numeric" pattern="[0-9]*" data-field="bCm" min="0" step="1" value="${ms.bCm||0}" onchange="updMeetstaat(${idx},'bCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},2)" ${_dis}></td>
-      <td data-label="h (cm)"><input type="text" inputmode="numeric" pattern="[0-9]*" data-field="hCm" min="0" step="1" value="${ms.hCm||0}" onchange="updMeetstaat(${idx},'hCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},3)" ${_dis}></td>
-      <td data-label="aantal"><input type="text" inputmode="numeric" pattern="[0-9]*" data-field="aantal" min="0" step="1" value="${ms.aantal||0}" onchange="updMeetstaat(${idx},'aantal',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},4)" ${_dis}></td>
+      <td data-label="b (cm)"><input type="text" inputmode="tel" pattern="[0-9]*" data-field="bCm" min="0" step="1" value="${ms.bCm||0}" onchange="updMeetstaat(${idx},'bCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},2)" ${_dis}></td>
+      <td data-label="h (cm)"><input type="text" inputmode="tel" pattern="[0-9]*" data-field="hCm" min="0" step="1" value="${ms.hCm||0}" onchange="updMeetstaat(${idx},'hCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},3)" ${_dis}></td>
+      <td data-label="aantal"><input type="text" inputmode="tel" pattern="[0-9]*" data-field="aantal" min="0" step="1" value="${ms.aantal||0}" onchange="updMeetstaat(${idx},'aantal',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},4)" ${_dis}></td>
       <td data-label="factor"><input type="text" inputmode="decimal" data-field="factor" min="0" step="0.1" value="${ms.factor != null ? ms.factor : 1}" onchange="updMeetstaat(${idx},'factor',parseFloat(this.value)||1)" onkeydown="msKey(event,${idx},5)" ${_dis}></td>
       <td class="num right ms-totaal" data-label="Totaal">${fmt(t.totaal)} ${t.eenheid}</td>
       <td data-label="Opmerking"><input type="text" data-field="opmerking" value="${ms.opmerking||''}" onchange="updMeetstaat(${idx},'opmerking',this.value)" onkeydown="msKey(event,${idx},6)" ${_dis}></td>
@@ -10043,7 +10044,7 @@ function _kozijnRenderMaten() {
   const cfg = _KOZIJN_VORMEN[_kozijnState.vorm]; if (!cfg) return;
   c.innerHTML = cfg.velden.map(([key, label]) => {
     const val = (_kozijnState.maten[key] != null) ? _kozijnState.maten[key] : '';
-    return `<label>${label}</label><input type="text" inputmode="decimal" min="0" step="1" value="${val}" oninput="_kozijnMaat('${key}', this.value)">`;
+    return `<label>${label}</label><input type="text" inputmode="tel" min="0" step="1" value="${val}" oninput="_kozijnMaat('${key}', this.value)">`;
   }).join('');
 }
 function _kozijnSetVorm(v) {
@@ -10436,7 +10437,7 @@ function _kozijnRenderVerdeelControls() {
   const posCm = node.pos * span;
   const naam = node.r === 'v' ? 'Tussenstijl' : 'Tussendorpel';
   const vanaf = node.r === 'v' ? 'vanaf links' : 'vanaf boven';
-  el.innerHTML = `<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">${naam} · positie ${vanaf} (cm):</span><input type="text" inputmode="decimal" min="0" step="1" value="${Math.round(posCm)}" style="width:90px; padding:0.45rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;" oninput="_kozijnSetPosCm('${sel.path}', this.value)"><span style="font-size:0.75rem; color:var(--muted);">van ${Math.round(span)} cm</span><button class="btn btn-danger btn-sm" onclick="_kozijnRemoveSplit('${sel.path}')">Verwijderen</button></div>`;
+  el.innerHTML = `<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">${naam} · positie ${vanaf} (cm):</span><input type="text" inputmode="tel" min="0" step="1" value="${Math.round(posCm)}" style="width:90px; padding:0.45rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;" oninput="_kozijnSetPosCm('${sel.path}', this.value)"><span style="font-size:0.75rem; color:var(--muted);">van ${Math.round(span)} cm</span><button class="btn btn-danger btn-sm" onclick="_kozijnRemoveSplit('${sel.path}')">Verwijderen</button></div>`;
 }
 function _kozijnUpdateOmtrek() {
   const omtrek = _kozijnOmtrekCm() / 100, members = _kozijnMembersCm() / 100, ramen = _kozijnRamenCm() / 100;

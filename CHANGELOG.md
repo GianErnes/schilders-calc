@@ -1,3 +1,20 @@
+## v3.42.3 — Compact cijferblok op de iPad
+In v3.42.2 kwam wel het juiste toetsenbord op, maar op de iPad was dat het volledige toetsenbord met een cijferrij bovenaan, niet het compacte cijferblok dat sneller typt. Oorzaak: iPadOS toont het compacte blok alleen bij het telefoon-type (`inputmode="tel"`), niet bij `numeric`/`decimal`.
+
+### Wijzigingen
+- De snelle, vaak-getikte meetvelden staan nu op `inputmode="tel"` → compact cijferblok op de iPad:
+  - Meetstaat: b, h en aantal.
+  - Kozijn-tekenaar: de maatvelden en de positie van een dorpel.
+- Het factor-veld (meetstaat) houdt `inputmode="decimal"`, omdat daar een komma nodig kan zijn (bijv. 1,5); het telefoonblok heeft geen komma.
+- Verwerking blijft via parseInt/parseFloat, dus aan de berekeningen verandert niets.
+
+### Let op
+- Op het telefoonblok staan een paar ongebruikte telefoontekens (zoals + en #); die hebben hier geen functie. De cijfers staan groot en het tikt snel.
+- Ververs de iPad (cache) na het uploaden, zodat de nieuwe versie geladen wordt.
+
+---
+
+
 ## v3.42.2 — Cijfertoetsenbord op de iPad nu betrouwbaar
 In v3.42.1 kreeg de meetstaat `inputmode`, maar op de iPad kwam er toch geen cijfertoetsenbord op. Oorzaak: iPadOS Safari negeert `inputmode` vaak wanneer het veld `type="number"` is.
 
