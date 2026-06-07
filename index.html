@@ -1792,10 +1792,13 @@
     .print-only .fb-imgwrap { position: relative; max-width: 100%; max-height: 9cm; }
     .print-only .fb-imgwrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .print-only .fb-mk {
-      position: absolute; width: 14pt; height: 14pt;
+      position: absolute; width: 16pt; height: 16pt;
       transform: translate(-50%, -50%);
       border-radius: 50%; border: 1.5pt solid #fff;
       box-shadow: 0 0 0 0.75pt rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 8.5pt; font-weight: 700; line-height: 1;
+      font-family: system-ui, -apple-system, sans-serif;
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .print-only .fb-legenda {
@@ -1934,8 +1937,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.46.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.46.2</h2>
       <div class="intro-body">
+        <p><strong>🔢 Genummerde gebreken op de foto-bijlage (v3.46.2).</strong> De gebrek-stippen op de foto's krijgen nu een nummer, net als bij de getekende kozijnen. Onder elke foto staat een genummerde lijst die per stip het gebrek en de notitie toont, dus je ziet meteen welke tekst bij welke plek hoort. De algemene foto-opmerking staat apart bovenaan, los van de gebreken, zodat er niets meer als losse tekst onder de foto verloren staat. Stippen en lijst delen dezelfde kleur en nummering, gelijk aan de kozijn-PDF.</p>
         <p><strong>🔧 Foto-bijlage zonder lege beginpagina (v3.46.1).</strong> De geprinte foto-bijlage begon soms met een lege eerste pagina: de kop stond bovenaan, maar de foto's sprongen pas op pagina twee. Dat kwam doordat het hele fotoblok in één keer naast de kop moest passen. De foto's lopen nu gewoon door onder de kop en vullen de pagina's netjes, twee naast elkaar, zonder dat een foto over een paginarand wordt afgesneden. Werkt ook beter bij het printen vanaf de iPad.</p>
         <p><strong>✎ Loze stijl: twee vleugels zonder middenstijl (v3.46.0).</strong> Bij dubbele openslaande ramen of deuren zonder vaste middenstijl sluiten de twee vleugels direct op elkaar aan, met een slaglat. Tik nu een <strong>verticale</strong> deellijn aan en kies bij "Soort" tussen <em>tussenstijl</em> (zoals altijd, kozijnhout dat meetelt) en <em>loze stijl</em>. Bij loze stijl vervalt het kozijnhout op die lijn: hij telt niet meer mee in het tussenwerk, terwijl beide ramen hun volle raamhout houden. Je rekent op die lijn dan twee raamstijlen in plaats van een tussenstijl plus twee raamstijlen. In de tekening wordt een loze stijl een dun stippellijntje in plaats van de dikke stijl, zodat je in één oogopslag ziet waar wel en geen middenstijl zit. Bedoeld voor twee ramen die aansluiten; horizontale deellijnen blijven gewoon een tussendorpel. Geen SQL nodig.</p>
         <p><strong>📐 Getekende kozijnen als PDF (v3.45.3).</strong> De kozijnen die je in een calculatie hebt getekend kun je nu als nette PDF-bijlage printen, via de Archiveren-knop naast de andere uitvoer. Eén kozijn per rij met de tekening links en de gegevens rechts: vorm, maten, strekkende meters en de vulling-m² als die er is. De gebrek-stippen krijgen op papier een nummer, met een lijstje eronder dat per stip vertelt wat er speelt ("1. Houtrot, onderdorpel links"). Onderaan staat een legenda met de kleuren die op de tekeningen voorkomen. Op de drukke achtergrond van een foto werkt een kleurstip zonder cijfer beter, dus de foto-bijlage houdt zijn eigen stijl; op een schone lijntekening leest een nummer juist prettiger. Handig voor in het dossier en voor de ploeg op locatie. Geen losse knop dus, alle PDF-uitvoer blijft op één plek. Geen SQL nodig.</p>
@@ -2852,7 +2856,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.46.1';
+const APP_VERSION = 'v3.46.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3214,6 +3218,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.46.2', d: '2026-06-07', h: 'Foto-bijlage: de gebrek-stippen op de foto\'s zijn nu genummerd, met onder elke foto een genummerde lijst (gebrek + notitie) waarvan de nummers overeenkomen met de stippen. De algemene foto-opmerking staat apart, los van de gebreken, zodat geen tekst meer losgezongen onder de foto staat. Gelijk aan de getekende-kozijnen-PDF. Geen SQL nodig' },
   { v: '3.46.1', d: '2026-06-07', h: 'Fix foto-bijlage: geen lege eerste pagina meer. Het fotoblok had een harde "niet breken" waardoor het in z\'n geheel naast de kop niet paste en naar pagina twee sprong. De foto\'s lopen nu door onder de kop en vullen de pagina\'s netjes (twee naast elkaar), zonder een foto over de paginarand te snijden. Robuuster bij printen vanaf de iPad. Geen SQL nodig' },
   { v: '3.46.0', d: '2026-06-07', h: 'Kozijn-tekenaar: een verticale deellijn kan nu een loze stijl zijn in plaats van een tussenstijl, voor twee vleugels die zonder middenstijl op elkaar aansluiten (dubbele deuren/ramen). Een loze stijl telt niet mee in het tussenwerk; beide ramen houden hun volle raamhout. In de tekening een dun stippellijntje i.p.v. de dikke stijl. Geen SQL nodig' },
   { v: '3.45.3', d: '2026-06-07', h: 'Getekende kozijnen als PDF, ondergebracht bij Archiveren: één kozijn per rij met de tekening, vorm, maten, m¹ en m². De gebrek-stippen genummerd met een notitie-lijst eronder, en een legenda onderaan met de voorkomende kleuren. Geen SQL nodig' },
@@ -8340,27 +8345,34 @@ async function printFotoBijlage() {
     </div>
   </div>${legendaHtml}`;
 
-  const mkSpans = (f) => ((f.markeringen || []).map(m => {
+  const mkSpans = (f) => ((f.markeringen || []).map((m, i) => {
     const d = _KOZIJN_DEFECTEN[m.type] || { kleur: '#dc2626' };
-    return `<span class="fb-mk" style="left:${(m.fx * 100).toFixed(2)}%; top:${(m.fy * 100).toFixed(2)}%; background:${d.kleur};"></span>`;
+    return `<span class="fb-mk" style="left:${(m.fx * 100).toFixed(2)}%; top:${(m.fy * 100).toFixed(2)}%; background:${d.kleur};">${i + 1}</span>`;
   }).join(''));
 
   html += '<div class="fb-page">';
   fotos.forEach(f => {
       const cap = f.opmerking || '';
       const mk = (f.markeringen || []);
-      const notities = mk.filter(m => (m.notitie || '').trim())
-        .map(m => `${_KOZIJN_DEFECTEN[m.type] ? _KOZIJN_DEFECTEN[m.type].label : 'Gebrek'}: ${m.notitie.trim()}`);
-      const capFull = [cap].concat(notities).filter(Boolean).join(' · ');
       let statusHtml = '';
       if (mk.length) {
         const telt = !!f.gebrekenTellen;
         statusHtml = `<div class="fb-status ${telt ? 'telt' : 'doc'}">${telt ? 'Gebreken meegerekend in de prijs' : 'Gebreken alleen ter documentatie — niet in de prijs'}</div>`;
       }
+      // Genummerde gebrek-lijst onder de foto: de nummers komen overeen met de stippen op de foto.
+      let gebrekenHtml = '';
+      if (mk.length) {
+        gebrekenHtml = mk.map((m, i) => {
+          const def = _KOZIJN_DEFECTEN[m.type] || { label: (m.type || 'Gebrek'), kleur: '#dc2626' };
+          const notitie = (m.notitie || '').trim();
+          return `<div class="kz-gebrek-rij"><span class="kz-nr" style="background:${def.kleur};">${i + 1}</span><span class="kz-gebrek-tekst">${_escapeHtml(def.label)}${notitie ? ` <span class="notitie">${_escapeHtml(notitie)}</span>` : ''}</span></div>`;
+        }).join('');
+      }
       html += `<div class="fb-cell">
         <div class="fb-img">${f.signedUrl ? `<div class="fb-imgwrap"><img src="${_escapeHtml(f.signedUrl)}" alt="foto">${mkSpans(f)}</div>` : ''}</div>
         ${statusHtml}
-        ${capFull ? `<div class="fb-cap">${_escapeHtml(capFull)}</div>` : ''}
+        ${cap ? `<div class="fb-cap">${_escapeHtml(cap)}</div>` : ''}
+        ${gebrekenHtml}
       </div>`;
   });
   html += '</div>';

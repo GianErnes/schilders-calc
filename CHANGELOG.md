@@ -1,3 +1,15 @@
+## v3.46.2 — Genummerde gebreken op de foto-bijlage
+De gebrek-stippen op de foto's stonden zonder nummer, waardoor de notities eronder los van de stippen kwamen te staan. Nu zijn ze, net als bij de getekende kozijnen, genummerd en gekoppeld.
+
+### Wijzigingen
+- Elke gebrek-stip op een foto krijgt een nummer in de cirkel (wit cijfer), in dezelfde volgorde als geplaatst.
+- Onder elke foto staat een genummerde lijst met per stip het gebrek en de notitie. De nummers komen overeen met de stippen op de foto, dus je ziet meteen welke tekst bij welke plek hoort.
+- De algemene foto-opmerking staat nu apart als bijschrift, los van de gebrek-notities. Eerder werden ze samengevoegd tot één regel, waardoor de tekst rommelig en losgezongen onder de foto stond.
+- Stippen en lijst delen dezelfde kleur per gebrek-soort en dezelfde nummering, gelijk aan de getekende-kozijnen-PDF.
+- Alleen de foto-bijlage is geraakt; de rekenkern en de andere PDF's blijven ongemoeid. Geen Supabase-migratie nodig.
+
+---
+
 ## v3.46.1 — Fix: foto-bijlage zonder lege beginpagina
 De geprinte foto-bijlage begon soms met een lege eerste pagina (alleen de kop en de legenda), waarna de foto's pas op pagina twee kwamen.
 
