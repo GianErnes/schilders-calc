@@ -1,3 +1,15 @@
+## v3.46.3 — Foto-bijlage: lege beginpagina nu echt opgelost
+De aanpassing in v3.46.1 loste de lege eerste pagina niet volledig op. Deze versie pakt de oorzaak goed aan.
+
+### Wijzigingen
+- Oorzaak: ook na v3.46.1 had het fotoblok een opmaak met een harde "niet over een paginarand breken". Daardoor sprong het hele blok naar pagina twee als het naast de kop niet in één keer paste, en bleef pagina één leeg op de kop na.
+- Het fotoblok gebruikt nu dezelfde tabel-opmaak als de meetstaat- en calculatie-PDF: de tabel mag tussen de rijen breken, terwijl een rij (en dus een foto) als geheel bij elkaar blijft. Die opmaak breekt in alle browsers betrouwbaar over pagina's, ook bij printen vanaf de iPad.
+- Gevolg: de foto's beginnen onder de kop op pagina één en vullen de pagina's netjes; een foto wordt nooit over een paginarand gesneden. De genummerde stippen en de genummerde notitie-lijst van v3.46.2 blijven ongewijzigd.
+- Let op bij het testen: ververs de app na het uploaden hard (browsercache), anders draait nog de oude versie. Dat verklaarde mogelijk ook waarom de vorige fix "niets leek te doen".
+- Alleen de foto-bijlage is geraakt; de rekenkern en de andere PDF's blijven ongemoeid. Geen Supabase-migratie nodig.
+
+---
+
 ## v3.46.2 — Genummerde gebreken op de foto-bijlage
 De gebrek-stippen op de foto's stonden zonder nummer, waardoor de notities eronder los van de stippen kwamen te staan. Nu zijn ze, net als bij de getekende kozijnen, genummerd en gekoppeld.
 
