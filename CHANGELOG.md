@@ -1,3 +1,19 @@
+## v3.42.2 — Cijfertoetsenbord op de iPad nu betrouwbaar
+In v3.42.1 kreeg de meetstaat `inputmode`, maar op de iPad kwam er toch geen cijfertoetsenbord op. Oorzaak: iPadOS Safari negeert `inputmode` vaak wanneer het veld `type="number"` is.
+
+### Wijzigingen
+- De getalvelden staan nu op `type="text"` met de `inputmode` erbij — dan pakt iPadOS het numerieke toetsenbord wel.
+  - Meetstaat: b, h en aantal → `inputmode="numeric"` (+ `pattern="[0-9]*"`); factor → `inputmode="decimal"`.
+  - Kozijn-tekenaar: de maatvelden en de positie van een dorpel → `inputmode="decimal"`. Die gebruikten dezelfde combinatie en zijn meegenomen.
+- De invoer wordt nog steeds als getal verwerkt (parseInt/parseFloat in de verwerking), dus aan de berekeningen verandert niets.
+- Tekstvelden (omschrijving, opmerking) blijven op tekst en geven gewoon letters.
+
+### Let op
+- Een iPad toont sowieso een groter toetsenbord dan een telefoon; het opent nu op cijfers in plaats van letters. Verversen op de iPad (cache) na het uploaden, zodat de nieuwe versie geladen wordt.
+
+---
+
+
 ## v3.42.1 — Cijfertoetsenbord in de meetstaat (iPad)
 Voor het invoeren ter plaatse op de iPad: de getalvelden van de meetstaat roepen nu het juiste toetsenbord op.
 
