@@ -1,52 +1,144 @@
-## v3.42.3 — Compact cijferblok op de iPad
-In v3.42.2 kwam wel het juiste toetsenbord op, maar op de iPad was dat het volledige toetsenbord met een cijferrij bovenaan, niet het compacte cijferblok dat sneller typt. Oorzaak: iPadOS toont het compacte blok alleen bij het telefoon-type (`inputmode="tel"`), niet bij `numeric`/`decimal`.
+## v3.46.3 — Foto-bijlage: lege beginpagina nu echt opgelost
+De aanpassing in v3.46.1 loste de lege eerste pagina niet volledig op. Deze versie pakt de oorzaak goed aan.
 
 ### Wijzigingen
-- De snelle, vaak-getikte meetvelden staan nu op `inputmode="tel"` → compact cijferblok op de iPad:
-  - Meetstaat: b, h en aantal.
-  - Kozijn-tekenaar: de maatvelden en de positie van een dorpel.
-- Het factor-veld (meetstaat) houdt `inputmode="decimal"`, omdat daar een komma nodig kan zijn (bijv. 1,5); het telefoonblok heeft geen komma.
-- Verwerking blijft via parseInt/parseFloat, dus aan de berekeningen verandert niets.
+- Oorzaak: ook na v3.46.1 had het fotoblok een opmaak met een harde "niet over een paginarand breken". Daardoor sprong het hele blok naar pagina twee als het naast de kop niet in één keer paste, en bleef pagina één leeg op de kop na.
+- Het fotoblok gebruikt nu dezelfde tabel-opmaak als de meetstaat- en calculatie-PDF: de tabel mag tussen de rijen breken, terwijl een rij (en dus een foto) als geheel bij elkaar blijft. Die opmaak breekt in alle browsers betrouwbaar over pagina's, ook bij printen vanaf de iPad.
+- Gevolg: de foto's beginnen onder de kop op pagina één en vullen de pagina's netjes; een foto wordt nooit over een paginarand gesneden. De genummerde stippen en de genummerde notitie-lijst van v3.46.2 blijven ongewijzigd.
+- Let op bij het testen: ververs de app na het uploaden hard (browsercache), anders draait nog de oude versie. Dat verklaarde mogelijk ook waarom de vorige fix "niets leek te doen".
+- Alleen de foto-bijlage is geraakt; de rekenkern en de andere PDF's blijven ongemoeid. Geen Supabase-migratie nodig.
 
-### Let op
-- Op het telefoonblok staan een paar ongebruikte telefoontekens (zoals + en #); die hebben hier geen functie. De cijfers staan groot en het tikt snel.
-- Ververs de iPad (cache) na het uploaden, zodat de nieuwe versie geladen wordt.
+---
+
+## v3.46.2 — Genummerde gebreken op de foto-bijlage
+De gebrek-stippen op de foto's stonden zonder nummer, waardoor de notities eronder los van de stippen kwamen te staan. Nu zijn ze, net als bij de getekende kozijnen, genummerd en gekoppeld.
+
+### Wijzigingen
+- Elke gebrek-stip op een foto krijgt een nummer in de cirkel (wit cijfer), in dezelfde volgorde als geplaatst.
+- Onder elke foto staat een genummerde lijst met per stip het gebrek en de notitie. De nummers komen overeen met de stippen op de foto, dus je ziet meteen welke tekst bij welke plek hoort.
+- De algemene foto-opmerking staat nu apart als bijschrift, los van de gebrek-notities. Eerder werden ze samengevoegd tot één regel, waardoor de tekst rommelig en losgezongen onder de foto stond.
+- Stippen en lijst delen dezelfde kleur per gebrek-soort en dezelfde nummering, gelijk aan de getekende-kozijnen-PDF.
+- Alleen de foto-bijlage is geraakt; de rekenkern en de andere PDF's blijven ongemoeid. Geen Supabase-migratie nodig.
+
+---
+
+## v3.46.1 — Fix: foto-bijlage zonder lege beginpagina
+De geprinte foto-bijlage begon soms met een lege eerste pagina (alleen de kop en de legenda), waarna de foto's pas op pagina twee kwamen.
+
+### Wijzigingen
+- Oorzaak: het fotoblok was een raster met een harde "niet over een paginarand breken". Samen met de kop op pagina één was dat blok te hoog, dus sprong het in z'n geheel naar pagina twee en bleef pagina één leeg achter.
+- De foto's lopen nu door onder de kop in een doorlopende twee-koloms opmaak. Elke foto blijft heel (wordt niet over een paginarand gesneden), maar de pagina's vullen zich gewoon op. Geen lege beginpagina meer.
+- Deze opmaak (inline-block in plaats van CSS-raster) breekt betrouwbaarder over pagina's, ook bij het printen vanaf de iPad.
+- Alleen de foto-bijlage is geraakt; de andere PDF's en de rekenkern blijven ongemoeid. Geen Supabase-migratie nodig.
+
+---
+
+## v3.46.0 — Loze stijl: twee vleugels zonder middenstijl
+Bij dubbele openslaande ramen of deuren zonder vaste middenstijl sluiten de twee vleugels direct op elkaar aan. De kozijn-tekenaar kan dat nu rekenen en tekenen.
+
+### Wijzigingen
+- Een verticale deellijn heeft nu bij "Soort" de keuze tussen tussenstijl (zoals altijd) en loze stijl. Tik de deellijn aan om te kiezen.
+- Een loze stijl telt niet mee in het tussenwerk (geen kozijnhout). Beide aansluitende ramen houden hun volle raamhout, dus op die lijn reken je twee raamstijlen in plaats van een tussenstijl plus twee raamstijlen. Dat klopt met de werkelijkheid: er is geen kozijnstijl, alleen de twee vleugels met een slaglat.
+- In de tekening wordt een loze stijl een dun grijs stippellijntje in plaats van de dikke bruine stijl, zodat in één oogopslag zichtbaar is waar wel en geen middenstijl zit. Dat geldt ook op de getekende-kozijnen-PDF.
+- Alleen voor verticale deellijnen (twee vleugels naast elkaar). Horizontale deellijnen blijven een gewone tussendorpel.
+- De keuze wordt bij de tekening opgeslagen; bestaande tekeningen blijven ongemoeid (zonder de vlag is een deellijn gewoon een tussenstijl, net als voorheen). Geen Supabase-migratie nodig.
+
+---
+
+## v3.45.3 — Getekende kozijnen als PDF, bij Archiveren
+De kozijnen die je in een calculatie hebt getekend kun je nu als PDF-bijlage printen, via dezelfde Archiveren-knop als de andere uitvoer. Eén overzicht van alles wat je hebt opgenomen, voor in het dossier en voor de ploeg op locatie.
+
+### Wijzigingen
+- Nieuwe optie "Getekende kozijnen" in de Archiveren-modal (alleen beschikbaar als er in de calculatie kozijnen getekend zijn).
+- Eén kozijn per rij: de tekening links, rechts de naam, de vorm, de maten, de strekkende meters (m¹) en de vulling-m² als die er is.
+- Gebrek-stippen krijgen op papier een nummer, met onder de tekening een lijstje dat per nummer het gebrek en de notitie toont. Op het scherm tik je een stip aan voor de notitie; op papier kan dat niet, daarom de nummering.
+- Legenda onderaan de pagina met de gebrek-kleuren die op de tekeningen voorkomen, dezelfde conventie als de foto-bijlage.
+- De stippen op de kozijn-tekening worden genummerd (schone lijntekening), terwijl de foto-bijlage gekleurde stippen zonder cijfer houdt (drukke fotoachtergrond). Bewuste keuze: elke bijlage de weergave die daar het best leest.
+- Kop in de calculatie-huisstijl met logo en projectgegevens, net als de andere PDF's. Een kozijn-kaart breekt niet over een paginarand.
+- Technisch: de bestaande tekening-render is uitgebreid met een genummerde stip-variant en een vul-modus voor de printkaart. Geen Supabase-migratie nodig, de tekeningen zaten al opgeslagen bij de meetstaat-regels.
+- En passant: de statusbalk tijdens het archiveren toont nu ook voor de foto-bijlage een nette naam in plaats van de interne sleutel.
+
+---
+
+## v3.45.2 — Prijs-status op de foto-bijlage
+De geprinte foto-bijlage liet niet zien of een gemarkeerd gebrek ook in de prijs was meegerekend.
+
+### Wijziging
+Per foto met gebreken staat er nu een statusregel onder de foto, met dezelfde "telt mee"-logica als de editor: staat de meetel-vlag van die foto aan, dan "Gebreken meegerekend in de prijs" (groen); staat hij uit, dan "Gebreken alleen ter documentatie — niet in de prijs" (grijs). Zo is op de bijlage in één oogopslag duidelijk wat in de offerte zit en wat puur ter vastlegging is. Geen SQL nodig.
 
 ---
 
 
-## v3.42.2 — Cijfertoetsenbord op de iPad nu betrouwbaar
-In v3.42.1 kreeg de meetstaat `inputmode`, maar op de iPad kwam er toch geen cijfertoetsenbord op. Oorzaak: iPadOS Safari negeert `inputmode` vaak wanneer het veld `type="number"` is.
 
-### Wijzigingen
-- De getalvelden staan nu op `type="text"` met de `inputmode` erbij — dan pakt iPadOS het numerieke toetsenbord wel.
-  - Meetstaat: b, h en aantal → `inputmode="numeric"` (+ `pattern="[0-9]*"`); factor → `inputmode="decimal"`.
-  - Kozijn-tekenaar: de maatvelden en de positie van een dorpel → `inputmode="decimal"`. Die gebruikten dezelfde combinatie en zijn meegenomen.
-- De invoer wordt nog steeds als getal verwerkt (parseInt/parseFloat in de verwerking), dus aan de berekeningen verandert niets.
-- Tekstvelden (omschrijving, opmerking) blijven op tekst en geven gewoon letters.
+Op een foto kon alleen de laatst geplaatste gebrek-stip verwijderd worden; een eerdere stip aantikken om hem te selecteren deed niets.
 
-### Let op
-- Een iPad toont sowieso een groter toetsenbord dan een telefoon; het opent nu op cijfers in plaats van letters. Verversen op de iPad (cache) na het uploaden, zodat de nieuwe versie geladen wordt.
+### Oorzaak en oplossing
+Voor soepel zoomen en slepen wordt de aanraking met `setPointerCapture` vastgehouden door het tekenvlak. Daardoor wijst het tik-doel (`e.target`) altijd naar het tekenvlak, nooit naar de stip eronder, zodat de stip-selectie nooit afging — alleen de net geplaatste stip was al geselecteerd en dus verwijderbaar. De tik-afhandeling gaat nu niet meer op het tik-doel af, maar bepaalt geometrisch (schermafstand, vinger-vriendelijke trefstraal) welke stip onder de tik ligt. Daarmee is elke stip te selecteren voor een notitie of om te verwijderen, ook ingezoomd; inzoomen vergroot de tussenruimte zodat dicht bij elkaar liggende stippen los aan te tikken en te plaatsen blijven. Geen SQL nodig.
 
 ---
 
 
-## v3.42.1 — Cijfertoetsenbord in de meetstaat (iPad)
-Voor het invoeren ter plaatse op de iPad: de getalvelden van de meetstaat roepen nu het juiste toetsenbord op.
+
+De gekleurde gebrek-stippen uit de kozijn-tekenaar kunnen nu ook op foto's, voor objecten zonder kozijn-tekening (bijvoorbeeld een tuinhuis met een foto per zijde).
+
+### Vereist een SQL-migratie
+Draai eerst de bijgeleverde migratie in Supabase Studio (twee kolommen op `calculatie_fotos`: `markeringen` jsonb en `gebreken_tellen` boolean), daarna pas de code uploaden. De migratie is idempotent (`add column if not exists`).
 
 ### Wijzigingen
-- b (cm), h (cm) en aantal: `inputmode="numeric"` → cijfertoetsenbord.
-- factor: `inputmode="decimal"` → cijfertoetsenbord met komma/punt.
-- Tekstvelden (omschrijving, opmerking) blijven op tekst, dus daar verschijnen gewoon letters.
-- De kozijn-tekenaar (maatvelden en de positie van een dorpel) had dit al.
-
-### Let op
-- Op een iPad is het toetsenbord altijd groter dan op een telefoon; je krijgt geen kale telefoon-pad, maar wel een toetsenbord dat op cijfers staat in plaats van op letters. Mocht dat in de praktijk nog niet strak genoeg zijn, dan kan het veld op tekst gezet worden met inputmode erbij, wat het cijferblok dwingender oproept.
+- Een foto aantikken opent een markeer-editor op het volledige scherm met dezelfde gebreken-legenda als de tekenaar: houtrot, scheur/naad, kit vervangen, loszittende verf.
+- Kies een gebrek en tik het op de foto. **Knijp-zoom en pan** voor nauwkeurig plaatsen; een tik plaatst, een sleep schuift, twee vingers zoomen. De stippen schalen tegen de zoom in, zodat ze klein en precies blijven.
+- Tik een stip aan voor een korte notitie of om hem te verwijderen.
+- Posities worden als **fractie** van de foto bewaard (0–1 in breedte en hoogte), dus ze blijven correct op elk schermformaat en op de print.
+- Per foto een **"telt mee"-vlag** (standaard uit): staat hij aan, dan lopen de stippen van die foto mee in de automatische gebrek-toeslagen, net als de kozijn-stippen. Zo voorkom je dubbeltelling als hetzelfde gebrek al op een tekening staat.
+- Op de foto-tegel een chip met de telling (gekleurde stippen + aantal); de chip krijgt een accent-rand als de foto meetelt.
+- De foto-bijlage (print) toont de stippen op de juiste plek met een legenda bovenaan en de notities onder elke foto.
+- Technisch: stippen + meetel-vlag in het foto-datamodel (`_mapFotoFromDB`/`_mapFotoToDB`/`_updateFotoDB`); `_telGebreken` telt de meetellende foto-stippen mee; de print-bijlage geeft elke foto-wrapper de juiste beeldverhouding zodat de procent-posities exact op het beeld vallen.
 
 ---
 
 
-## v3.42.0 — Kozijn-tekenaar Brok 6B: vulling loopt automatisch in de calculatie
+
+Naast rechthoek, schuin en boog kent de tekenaar nu een ronde vorm: een rondvenster of ossenoog, met een eigen verdeel-model naast de v/h-deelboom.
+
+### Geen SQL nodig
+Puur JS. De ronde indeling staat als JSON in het tekening-object (`{rond:true, mode, n, type, regelId, label}`); er verandert niets aan de database. Bestaande tekeningen blijven ongemoeid. Het verdeling-formaat wordt bij wisselen van/naar de ronde vorm genormaliseerd, zodat het ronde model en de deelboom niet door elkaar lopen.
+
+### Wijzigingen
+- Nieuwe vorm **rond** met één maat: de diameter. Het frame is een echte cirkel (cirkelboog-pad), de omtrek is exact π × diameter.
+- Drie indelingen: **heel** (één rond glasvlak), **kruis** (een verticale en horizontale roede door het midden) en **spaken** (N roeden vanuit het midden naar de rand, gelijk verdeeld; N instelbaar van 2 t/m 12, bovenaan beginnend en met de klok mee). Kruis is feitelijk vier spaken.
+- Roeden tellen mee in het tussenwerk (m¹): kruis = 2 × diameter; spaken = N × straal.
+- Eén type voor het hele ronde raam: glas / vast / draai naar binnen / draai naar buiten. Raamhout-m¹ = 0 / omtrek / omtrek / 2 × omtrek, precies zoals een vak bij de andere vormen.
+- Type **vulling**: een dicht rond paneel of luik. Het oppervlak (π × straal²) loopt als m² mee, met dezelfde automatische koppeling aan een m²-calc-regel als de andere vullingen (Brok 6B-machinerie). De regelnaam staat als label in het midden van het raam.
+- Onderaan dezelfde uitsplitsing "frame + tussenwerk + ramen"; de totale m¹ landt bij Klaar in de regel.
+- Gebrek-markeringen (stippen) werken ook op het ronde raam.
+- Technisch: het ronde model loopt via guards bovenin de reken- en tekenfuncties (`_kozijnOmtrekCm`, `_kozijnMembersCm`, `_kozijnRamenCm`, `_kozijnVlakkenCm2`, `_kozijnVlakkenPerRegel`, `_kozijnBuildInner`, `_kozijnRenderVerdeelControls`), met eigen helpers (`_kozijnRond*`). De deelboom-code raakt rond niet aan.
+
+---
+
+
+
+Verdelen in ramen, panelen en vulling werkte tot nu alleen bij rechthoekige kozijnen. Vanaf nu kan het bij alle vormen: schuin enkel (lessenaar), schuin punt (puntgevel) en boog.
+
+### Geen SQL nodig
+Puur JS. De verdeling staat als JSON in het tekening-object; er verandert niets aan de database. Bestaande rechthoek-tekeningen renderen en rekenen bit-voor-bit hetzelfde — de rechthoek is gewoon het bijzondere geval van het veelhoek-model.
+
+### Wijzigingen
+- Elke vorm wordt nu behandeld als een convexe veelhoek (de boog als veelhoek met fijne arc-punten). Een verticale of horizontale deellijn knipt de werkelijke vorm via half-vlak-clipping (Sutherland–Hodgman tegen één halfvlak) in twee convexe stukken.
+- De deellijn is de werkelijke koorde waar de snijlijn de vorm kruist. Een tussenstijl hoog in een puntgevel of een tussendorpel hoog in een boog is daardoor korter, en die kortere lengte telt zo mee in het tussenwerk (m¹).
+- Het oppervlak van een vulling volgt de echte geknipte vorm (shoelace), dus de m² klopt ook bij schuine en gebogen vlakken.
+- De raam-omtrek (vast/draai) wordt op de echte vakvorm gerekend.
+- Een raam of vulling in een puntgevel krijgt een echte schuine bovenkant in de tekening — eerlijk op het scherm en op de klant-PDF.
+- De positie van een deellijn in cm wordt nog steeds gerekend tegen het huidige stuk (lokale bounding-box), net als voorheen.
+- De melding "verdelen kan alleen bij rechthoeken" is verdwenen.
+- Technisch: de losse rechthoek-walks zijn vervangen door één veelhoek-collector (`_kozijnCollectFrom`) met meetkunde-helpers (clip, oppervlak, omtrek, koorde, zwaartepunt, inset). `_kozijnGeometrie` leidt het frame-pad nu af uit dezelfde veelhoek-punten, zodat tekening en berekening uit één bron komen.
+
+### Op de horizon
+- Brok 7b: rond raam als nieuwe vorm met eigen verdeling — heel, kruis of N spaken (radiaal past niet in het v/h-deelmodel en krijgt een eigen klein model).
+
+---
+
+
+
 De m² van deuren en panelen landt nu vanzelf in de calculatie. Sluitstuk van 6a: je koppelt een vulling-vak aan een regel, en de app voert de m² nu ook daadwerkelijk in.
 
 ### Vereist: SQL-migratie eerst

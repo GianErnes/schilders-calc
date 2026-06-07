@@ -968,6 +968,62 @@
     box-shadow: 0 8px 40px rgba(0,0,0,0.5);
   }
 
+  /* FOTO-GEBREKEN (v3.45.0 — Brok 7c): markeer-editor met knijp-zoom + stippen */
+  .fmk-overlay {
+    position: fixed; inset: 0; z-index: 10000;
+    background: rgba(0,0,0,0.92);
+    display: flex; flex-direction: column;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .fmk-bar {
+    display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+    padding: 0.5rem 0.7rem; background: rgba(20,20,20,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .fmk-bar .fmk-defect {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.35rem 0.55rem; border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.06);
+    color: #fff; cursor: pointer; font-family: inherit; font-size: 0.78rem;
+  }
+  .fmk-bar .fmk-defect.actief { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.25) inset; font-weight: 600; }
+  .fmk-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; flex: 0 0 auto; }
+  .fmk-bar .fmk-sluit { margin-left: auto; padding: 0.35rem 0.7rem; border: none; border-radius: var(--radius); background: #fff; color: #111; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.82rem; }
+  .fmk-tel { display: inline-flex; align-items: center; gap: 0.3rem; color: #fff; font-size: 0.78rem; cursor: pointer; padding: 0.2rem 0.4rem; }
+  .fmk-tel input { width: 16px; height: 16px; }
+  .fmk-stage {
+    flex: 1 1 auto; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    touch-action: none;
+  }
+  .fmk-content { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+  .fmk-content img { display: block; width: 100%; height: 100%; pointer-events: none; }
+  .fmk-mk {
+    position: absolute; width: 5%; padding-bottom: 5%; height: 0;
+    transform: translate(-50%, -50%) scale(var(--fmkscale, 1));
+    border-radius: 50%; border: 2px solid #fff;
+    box-shadow: 0 0 0 1.5px rgba(0,0,0,0.4);
+    cursor: pointer;
+  }
+  .fmk-mk.sel { outline: 2px dashed #fff; outline-offset: 2px; }
+  .fmk-hint { padding: 0.3rem 0.7rem; color: rgba(255,255,255,0.7); font-size: 0.74rem; background: rgba(20,20,20,0.95); text-align: center; }
+  .fmk-note {
+    display: flex; gap: 0.5rem; align-items: center; padding: 0.5rem 0.7rem;
+    background: rgba(20,20,20,0.97); border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .fmk-note input[type=text] { flex: 1 1 auto; min-width: 0; padding: 0.5rem; border: 1px solid rgba(255,255,255,0.25); border-radius: var(--radius); background: rgba(255,255,255,0.95); font-family: inherit; }
+  .fmk-note .fmk-del { padding: 0.5rem 0.7rem; border: none; border-radius: var(--radius); background: var(--danger, #c0392b); color: #fff; cursor: pointer; font-family: inherit; }
+  /* Stippen-chip op de tegel */
+  .foto-mkchip {
+    position: absolute; left: 4px; bottom: 4px; z-index: 2;
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 6px; border-radius: 10px;
+    background: rgba(0,0,0,0.6); color: #fff; font-size: 0.7rem; line-height: 1;
+    pointer-events: none;
+  }
+  .foto-mkchip .fmk-dot { width: 9px; height: 9px; }
+  .foto-mkchip.telt { box-shadow: 0 0 0 1.5px var(--accent, #e63329); }
+
   /* DOCUMENTEN (v3.24.4) */
   .doc-blok {
     margin-top: 0.85rem;
@@ -1717,14 +1773,11 @@
     .print-only .summary-grid .label { font-weight: 600; color: #555; }
     .print-only .new-page { page-break-before: always; }
     /* v3.24.2 — Foto-bijlage: 2x2 raster per pagina, foto volledig zichtbaar (contain). */
-    .print-only .fb-page {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10pt 12pt;
-      page-break-inside: avoid;
-    }
-    .print-only .fb-page:not(:last-child) { page-break-after: always; }
-    .print-only .fb-cell { page-break-inside: avoid; }
+    .print-only .fb-table { width: 100%; border-collapse: collapse; page-break-inside: auto; margin: 0; }
+    .print-only .fb-table tr { page-break-inside: avoid; }
+    .print-only .fb-table td { width: 50%; vertical-align: top; border: none; padding: 0 7pt 12pt 7pt; }
+    .print-only .fb-table td:first-child { padding-left: 0; }
+    .print-only .fb-table td:last-child { padding-right: 0; }
     .print-only .fb-img {
       width: 100%;
       height: 9cm;
@@ -1734,12 +1787,77 @@
       display: flex; align-items: center; justify-content: center;
     }
     .print-only .fb-img img { width: 100%; height: 100%; object-fit: contain; }
+    .print-only .fb-imgwrap { position: relative; max-width: 100%; max-height: 9cm; }
+    .print-only .fb-imgwrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .print-only .fb-mk {
+      position: absolute; width: 16pt; height: 16pt;
+      transform: translate(-50%, -50%);
+      border-radius: 50%; border: 1.5pt solid #fff;
+      box-shadow: 0 0 0 0.75pt rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 8.5pt; font-weight: 700; line-height: 1;
+      font-family: system-ui, -apple-system, sans-serif;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .print-only .fb-legenda {
+      display: flex; gap: 14pt; flex-wrap: wrap;
+      font-size: 9pt; color: #333; margin: 4pt 0 8pt;
+    }
+    .print-only .fb-legenda span { display: inline-flex; align-items: center; gap: 4pt; }
+    .print-only .fb-legenda i {
+      width: 10pt; height: 10pt; border-radius: 50%; display: inline-block;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
     .print-only .fb-cap {
       font-size: 9pt;
       color: #333;
       margin-top: 3pt;
       word-break: break-word;
     }
+    .print-only .fb-status {
+      font-size: 8.5pt; margin-top: 3pt; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 4pt;
+    }
+    .print-only .fb-status::before {
+      content: ''; width: 8pt; height: 8pt; border-radius: 50%; display: inline-block;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .print-only .fb-status.telt { color: #1a7a3a; }
+    .print-only .fb-status.telt::before { background: #1a7a3a; }
+    .print-only .fb-status.doc { color: #777; font-weight: 500; }
+    .print-only .fb-status.doc::before { background: #bbb; }
+    /* v3.45.3 — Kozijn-tekeningen: één kozijn per rij, tekening links, gegevens rechts. */
+    .print-only .kz-card {
+      display: flex;
+      gap: 0.8cm;
+      align-items: flex-start;
+      padding: 0.45cm 0;
+      border-bottom: 0.5pt solid #ddd;
+      page-break-inside: avoid;
+    }
+    .print-only .kz-card:last-of-type { border-bottom: none; }
+    .print-only .kz-tek {
+      flex: 0 0 7.5cm;
+      height: 6cm;
+      display: flex; align-items: center; justify-content: center;
+      background: #faf9f6;
+      border: 0.5pt solid #e0ddd5;
+      padding: 0.3cm;
+      box-sizing: border-box;
+    }
+    .print-only .kz-tek svg { width: 100%; height: 100%; }
+    .print-only .kz-info { flex: 1 1 auto; min-width: 0; }
+    .print-only .kz-info h3 { font-size: 12pt; margin: 0 0 4pt 0; color: #1a1a1a; }
+    .print-only .kz-meta { font-size: 9pt; color: #444; line-height: 1.5; margin-bottom: 4pt; }
+    .print-only .kz-meta .lbl { color: #888; }
+    .print-only .kz-gebreken-titel { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin: 6pt 0 3pt 0; }
+    .print-only .kz-gebrek-rij { display: flex; align-items: center; gap: 5pt; margin: 2pt 0; font-size: 9pt; color: #333; }
+    .print-only .kz-nr {
+      flex: 0 0 auto; min-width: 13pt; height: 13pt; line-height: 13pt;
+      text-align: center; border-radius: 50%; color: #fff; font-size: 7.5pt; font-weight: 700;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .print-only .kz-gebrek-tekst .notitie { font-style: italic; color: #666; }
   }
 
   /* AUTH OVERLAY */
@@ -1817,9 +1935,18 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.42.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.46.3</h2>
       <div class="intro-body">
-        <p><strong>⌨️ Compact cijferblok op de iPad (v3.42.3).</strong> De snelle meetvelden — b, h en aantal in de meetstaat, plus de kozijn-maten en de dorpel-positie — roepen nu het compacte cijferblok op (telefoon-toetsenbord), waarmee je vlot tikt. iPadOS toont dat blok namelijk alleen bij het telefoon-type; bij gewoon "cijfers" kreeg je het volledige toetsenbord met een cijferrij erboven. Het factor-veld houdt het decimale toetsenbord, want daar heb je soms een komma nodig.</p>
+        <p><strong>🔧 Foto-bijlage: lege beginpagina nu echt weg (v3.46.3).</strong> De eerdere aanpassing in v3.46.1 loste de lege eerste pagina niet helemaal op. De oorzaak is nu goed te pakken: het fotoblok gebruikte een opmaak met een harde "niet over een paginarand breken", waardoor het in z'n geheel naar pagina twee sprong als het naast de kop krap zat. Het fotoblok gebruikt nu dezelfde tabel-opmaak als de meetstaat- en calculatie-PDF, die netjes tussen de rijen breekt. De foto's beginnen dus onder de kop op pagina één, en een foto wordt nooit over een paginarand gesneden. <em>Tip: ververs de app na het uploaden even hard (op de iPad: tabblad sluiten en opnieuw openen), anders draait je browser nog de oude versie.</em></p>
+        <p><strong>🔢 Genummerde gebreken op de foto-bijlage (v3.46.2).</strong> De gebrek-stippen op de foto's krijgen nu een nummer, net als bij de getekende kozijnen. Onder elke foto staat een genummerde lijst die per stip het gebrek en de notitie toont, dus je ziet meteen welke tekst bij welke plek hoort. De algemene foto-opmerking staat apart bovenaan, los van de gebreken, zodat er niets meer als losse tekst onder de foto verloren staat. Stippen en lijst delen dezelfde kleur en nummering, gelijk aan de kozijn-PDF.</p>
+        <p><strong>🔧 Foto-bijlage zonder lege beginpagina (v3.46.1).</strong> De geprinte foto-bijlage begon soms met een lege eerste pagina: de kop stond bovenaan, maar de foto's sprongen pas op pagina twee. Dat kwam doordat het hele fotoblok in één keer naast de kop moest passen. De foto's lopen nu gewoon door onder de kop en vullen de pagina's netjes, twee naast elkaar, zonder dat een foto over een paginarand wordt afgesneden. Werkt ook beter bij het printen vanaf de iPad.</p>
+        <p><strong>✎ Loze stijl: twee vleugels zonder middenstijl (v3.46.0).</strong> Bij dubbele openslaande ramen of deuren zonder vaste middenstijl sluiten de twee vleugels direct op elkaar aan, met een slaglat. Tik nu een <strong>verticale</strong> deellijn aan en kies bij "Soort" tussen <em>tussenstijl</em> (zoals altijd, kozijnhout dat meetelt) en <em>loze stijl</em>. Bij loze stijl vervalt het kozijnhout op die lijn: hij telt niet meer mee in het tussenwerk, terwijl beide ramen hun volle raamhout houden. Je rekent op die lijn dan twee raamstijlen in plaats van een tussenstijl plus twee raamstijlen. In de tekening wordt een loze stijl een dun stippellijntje in plaats van de dikke stijl, zodat je in één oogopslag ziet waar wel en geen middenstijl zit. Bedoeld voor twee ramen die aansluiten; horizontale deellijnen blijven gewoon een tussendorpel. Geen SQL nodig.</p>
+        <p><strong>📐 Getekende kozijnen als PDF (v3.45.3).</strong> De kozijnen die je in een calculatie hebt getekend kun je nu als nette PDF-bijlage printen, via de Archiveren-knop naast de andere uitvoer. Eén kozijn per rij met de tekening links en de gegevens rechts: vorm, maten, strekkende meters en de vulling-m² als die er is. De gebrek-stippen krijgen op papier een nummer, met een lijstje eronder dat per stip vertelt wat er speelt ("1. Houtrot, onderdorpel links"). Onderaan staat een legenda met de kleuren die op de tekeningen voorkomen. Op de drukke achtergrond van een foto werkt een kleurstip zonder cijfer beter, dus de foto-bijlage houdt zijn eigen stijl; op een schone lijntekening leest een nummer juist prettiger. Handig voor in het dossier en voor de ploeg op locatie. Geen losse knop dus, alle PDF-uitvoer blijft op één plek. Geen SQL nodig.</p>
+        <p><strong>📸 Prijs-status op de foto-bijlage (v3.45.2).</strong> Op de geprinte foto-bijlage zie je nu per foto met gebreken of die meegerekend zijn in de prijs. Staat de "telt mee"-vlag aan, dan staat er groen "Gebreken meegerekend in de prijs"; staat hij uit, dan "Gebreken alleen ter documentatie — niet in de prijs". Zo is in één oogopslag duidelijk wat in de offerte zit en wat puur ter vastlegging is.</p>
+        <p><strong>🔧 Foto-stip aantikken hersteld (v3.45.1).</strong> Op de foto kon je alleen de laatst geplaatste stip verwijderen; een eerdere stip aantikken om hem te selecteren werkte niet. Doordat de aanraking voor het zoomen en slepen werd vastgehouden, wees de tik naar het tekenvlak in plaats van naar de stip eronder. De app bepaalt nu op basis van de positie welke stip je aantikt, dus je kunt elke stip selecteren voor een notitie of om hem te verwijderen — ook ingezoomd.</p>
+        <p><strong>📸 Gebreken markeren op foto's (v3.45.0 — Brok 7c).</strong> De gekleurde gebrek-stippen uit de kozijn-tekenaar — houtrot, scheur/naad, kit, loszittende verf — kun je nu ook op een foto zetten. Tik een foto aan: hij opent op het hele scherm met een markeer-balk. Kies een gebrek en tik het op de plek; <strong>knijp om in te zoomen</strong> en sleep om te schuiven, zodat je een rotplekje precies kunt aanwijzen. Tik een stip aan voor een korte notitie of om hem te verwijderen. De stippen blijven op hun plek op elk schermformaat en op de print, want hun positie wordt als fractie van de foto bewaard. Op de foto-tegel zie je een chip met de telling. Handig voor een object zonder kozijn-tekening — bijvoorbeeld een tuinhuis met een foto per zijde. Per foto zet je met "telt mee" aan of de stippen meelopen in de gebrek-toeslagen (standaard uit). De foto-bijlage toont de stippen met een legenda en de notities onder elke foto. <em>Let op: draai eerst de bijgeleverde SQL-migratie in Supabase voor je deze versie uploadt.</em></p>
+        <p><strong>✎ Rond raam in de kozijn-tekenaar (v3.44.0 — Brok 7b).</strong> Naast rechthoek, schuin en boog kun je nu ook een <strong>rond</strong> kozijn tekenen — een rondvenster of ossenoog. Je geeft één maat op, de diameter, en het frame wordt een echte cirkel; de omtrek is exact π × diameter. De indeling kent drie standen: <em>heel</em> (één rond glasvlak), <em>kruis</em> (een verticale en horizontale roede door het midden) en <em>spaken</em> (een instelbaar aantal roeden vanuit het midden, gelijk verdeeld — een wagenwiel-patroon). De roeden tellen mee in de strekkende meters: kruis als twee diameters, spaken als het aantal maal de straal. Voor het hele ronde raam kies je één type — vast glas, vast raam, draai naar binnen of naar buiten — net als bij een vak; het raamhout telt dan als de omtrek. Maak je er een <em>vulling</em> van (een dicht rond paneel of luik), dan loopt het oppervlak π × straal² als m² mee, met dezelfde automatische koppeling aan een calc-regel als de andere vullingen. Gebreken markeren werkt ook op het ronde raam. Geen SQL nodig; bestaande tekeningen blijven ongemoeid.</p>
+        <p><strong>✎ Verdelen op schuine en boog-kozijnen (v3.43.0 — Brok 7).</strong> Tot nu kon je een kozijn alleen opdelen in ramen, panelen en vulling als het rechthoekig was. Dat kan nu bij <strong>alle</strong> vormen: schuin enkel (lessenaar), schuin punt (puntgevel) en boog. De app rekent de vorm als een veelhoek en knipt bij elke deellijn de werkelijke vorm in twee. Daardoor klopt alles: een tussenstijl hoog in een puntgevel of een tussendorpel hoog in een boog is korter dan onderin, en die kortere lengte telt zo mee in de strekkende meters. Een raam of vulling in een puntgevel krijgt ook echt een schuine bovenkant — eerlijk op het scherm en op de klant-PDF. Het oppervlak van een vulling volgt de echte vorm, dus ook de m² klopt bij schuine en gebogen vlakken. Bestaande rechthoekige tekeningen blijven exact hetzelfde.</p>
         <p><strong>🚪 Vulling loopt automatisch in de calculatie (v3.42.0 — Brok 6B).</strong> De m² van je deuren en panelen landt nu vanzelf in de calculatie. Per gekoppelde regel houdt de app één meetstaat-regel bij die alle vulling-vakken van die soort optelt — over alle kozijnen in de calculatie heen. Plaats of wijzig je een vulling, dan loopt het bedrag mee; haal je de laatste weg, dan verdwijnt de regel weer. Die automatische regels staan gemarkeerd met "auto" en op slot, zodat je ze niet per ongeluk aanpast; je eigen meetstaat-regels blijven volledig ongemoeid, en een vergrendelde offerte wordt niet aangeraakt. Een vulling die je nog niet gekoppeld hebt telt nog niet mee — koppel hem eerst aan een regel. <em>Let op: draai eerst de bijgeleverde SQL-migratie in Supabase voor je deze versie uploadt.</em></p>
         <p><strong>🚪 Vulling koppelen aan een regel, met label in de tekening (v3.41.0).</strong> Een dichte vulling kan een deur, een paneel of een luik zijn — elk met een eigen norm. Daarom koppel je een vulling-vak nu per stuk aan een <strong>m²-regel uit je calculatie</strong>: tik het vak aan en kies bij "Koppel aan regel" waar het bij hoort. De naam van die regel komt meteen in het vak te staan, zodat je ploeg bij de uitvoering én de klant in één oogopslag zien wat een deur is en wat een paneel. Onder de tekening lopen de m² nu per regel apart mee. Een vulling die je nog niet gekoppeld hebt staat als "nog koppelen" zodat je niks vergeet. Het automatisch invoeren van die m² in de regels volgt in 6b.</p>
         <p><strong>🚪 Deuren en puivulling in de kozijn-tekenaar (v3.40.0 — Brok 6a).</strong> Een vak kun je nu ook als <strong>vulling</strong> markeren: een dicht vlak zoals een deur of een paneel. Dat telt niet in m¹ (omtrek) maar in m² (oppervlak), één kant — buitenwerk. Een losse deur teken je door het hele binnenvlak op vulling te zetten; in een pui zet je alleen de deur- of paneelvakken op vulling en de rest blijft glas of raam. Onder de tekening zie je voortaan twee totalen: de m¹ voor kozijn en ramen, en de m² voor deuren en panelen. Of een vulling als deur of als pui wordt afgerekend bepaal je straks in de calc-regel. De automatische koppeling van die m² naar een eigen regel volgt in de volgende stap (6b).</p>
@@ -2728,7 +2855,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.42.3';
+const APP_VERSION = 'v3.46.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3090,9 +3217,16 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
-  { v: '3.42.3', d: '2026-06-06', h: 'Compact cijferblok op de iPad: de snelle meetvelden (b, h, aantal, kozijn-maten, dorpel-positie) staan nu op inputmode=tel, want iPadOS toont alleen bij het telefoon-type het compacte cijferblok; bij numeric/decimal kreeg je het volledige toetsenbord met cijferrij. Factor blijft decimaal (komma nodig)' },
-  { v: '3.42.2', d: '2026-06-06', h: 'Cijfertoetsenbord op de iPad nu betrouwbaar: getalvelden van meetstaat en kozijn-tekenaar staan op type=text met inputmode, omdat iPadOS de inputmode bij type=number negeerde. Tekstvelden houden letters' },
-  { v: '3.42.1', d: '2026-06-06', h: 'Meetstaat-velden kregen inputmode voor het juiste toetsenbord (bleek op de iPad niet voldoende bij type=number; opgelost in v3.42.2)' },
+  { v: '3.46.3', d: '2026-06-07', h: 'Foto-bijlage: lege beginpagina nu echt opgelost. De fix van v3.46.1 hield niet; het fotoblok had nog een opmaak met een harde "niet breken" die het hele blok naast de kop naar pagina twee duwde. Het fotoblok gebruikt nu dezelfde tabel-opmaak als de meetstaat-PDF, die tussen rijen breekt, dus de foto\'s starten onder de kop op pagina één. Ververs na uploaden hard. Geen SQL nodig' },
+  { v: '3.46.2', d: '2026-06-07', h: 'Foto-bijlage: de gebrek-stippen op de foto\'s zijn nu genummerd, met onder elke foto een genummerde lijst (gebrek + notitie) waarvan de nummers overeenkomen met de stippen. De algemene foto-opmerking staat apart, los van de gebreken, zodat geen tekst meer losgezongen onder de foto staat. Gelijk aan de getekende-kozijnen-PDF. Geen SQL nodig' },
+  { v: '3.46.1', d: '2026-06-07', h: 'Fix foto-bijlage: geen lege eerste pagina meer. Het fotoblok had een harde "niet breken" waardoor het in z\'n geheel naast de kop niet paste en naar pagina twee sprong. De foto\'s lopen nu door onder de kop en vullen de pagina\'s netjes (twee naast elkaar), zonder een foto over de paginarand te snijden. Robuuster bij printen vanaf de iPad. Geen SQL nodig' },
+  { v: '3.46.0', d: '2026-06-07', h: 'Kozijn-tekenaar: een verticale deellijn kan nu een loze stijl zijn in plaats van een tussenstijl, voor twee vleugels die zonder middenstijl op elkaar aansluiten (dubbele deuren/ramen). Een loze stijl telt niet mee in het tussenwerk; beide ramen houden hun volle raamhout. In de tekening een dun stippellijntje i.p.v. de dikke stijl. Geen SQL nodig' },
+  { v: '3.45.3', d: '2026-06-07', h: 'Getekende kozijnen als PDF, ondergebracht bij Archiveren: één kozijn per rij met de tekening, vorm, maten, m¹ en m². De gebrek-stippen genummerd met een notitie-lijst eronder, en een legenda onderaan met de voorkomende kleuren. Geen SQL nodig' },
+  { v: '3.45.2', d: '2026-06-06', h: 'Foto-bijlage toont nu per foto met gebreken of die in de prijs zijn meegerekend: groen "meegerekend in de prijs" als de telt-mee-vlag aanstaat, anders "alleen ter documentatie — niet in de prijs". Geen SQL nodig' },
+  { v: '3.45.1', d: '2026-06-06', h: 'Foutje hersteld: op een foto kon je alleen de laatst geplaatste gebrek-stip verwijderen. Door het vasthouden van de aanraking (voor zoomen/slepen) wees een tik naar het tekenvlak in plaats van naar de stip. De app bepaalt nu op positie welke stip je aantikt, zodat elke stip te selecteren en te verwijderen is, ook ingezoomd' },
+  { v: '3.45.0', d: '2026-06-06', h: 'Foto-gebreken Brok 7c: de gekleurde gebrek-stippen (zelfde legenda als de kozijn-tekenaar) kun je nu ook op foto\u2019s plaatsen, met knijp-zoom en pan voor nauwkeurig aanwijzen. Posities als fractie van de foto, dus correct op elk scherm en op de print. Per stip een notitie; per foto een "telt mee"-vlag of de stippen meelopen in de gebrek-toeslagen (standaard uit). Tegel-chip met telling; foto-bijlage toont stippen met legenda en notities. Vereist SQL-migratie (markeringen- en meetel-kolom op calculatie_fotos)' },
+  { v: '3.44.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 7b: rond raam (rondvenster) als nieuwe vorm. Eén maat (diameter), frame is een echte cirkel met omtrek π × diameter. Drie indelingen: heel, kruis (twee roeden door het midden) en spaken (instelbaar aantal radiale roeden). Roeden tellen mee in m¹ (kruis = 2× diameter, spaken = N × straal). Eén type voor het hele raam (vast/draai = raamhout als omtrek; vulling = oppervlak π × straal² als m² met automatische regel-koppeling). Gebreken werken ook op rond. Geen SQL nodig' },
+  { v: '3.43.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 7: verdelen in ramen, panelen en vulling werkt nu bij alle vormen — schuin enkel, schuin punt en boog, niet meer alleen rechthoek. Elke vorm wordt als convexe veelhoek behandeld; een v/h-deellijn knipt de werkelijke vorm via half-vlak-clipping in twee. Snede-lengte (koorde), oppervlak en raam-omtrek kloppen daardoor bij schuine en gebogen vlakken; een raam/vulling in een puntgevel krijgt een echte schuine bovenkant. Bestaande rechthoek-tekeningen blijven identiek. Geen SQL nodig. Rond raam volgt in 7b' },
   { v: '3.42.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 6B: de vulling-m² loopt automatisch in de calculatie. Per gekoppelde m²-regel houdt de app één meetstaat-regel bij die alle vulling-vakken van die soort over alle kozijnen optelt. Automatische regels staan op slot en gemarkeerd; handmatige regels en vergrendelde offertes blijven ongemoeid. Vereist SQL-migratie (bron-kolom op meetstaat)' },
   { v: '3.41.0', d: '2026-06-06', h: 'Kozijn-tekenaar 6a (vervolg): een vulling-vak koppel je per stuk aan een m²-regel uit de calculatie (deur, paneel, luik — zoveel soorten als je regels hebt). De regelnaam staat als label in het vak, voor leesbaarheid bij uitvoering en voor de klant. De m² loopt per gekoppelde regel apart mee; nog niet gekoppelde vulling staat als "nog koppelen"' },
   { v: '3.40.0', d: '2026-06-06', h: 'Kozijn-tekenaar Brok 6a: deuren en puivulling. Nieuw vak-type "vulling" — een dicht vlak (deur of paneel) dat in m² telt (één kant, buitenwerk) i.p.v. in m¹. De tekenaar toont nu twee totalen: m¹ voor kozijn + ramen, m² voor deuren + panelen. Koppeling van die m² naar een eigen calc-regel volgt in 6b' },
@@ -4472,6 +4606,8 @@ function _mapFotoFromDB(row) {
     storagePath: row.storage_path,
     opmerking:   row.opmerking || '',
     volgorde:    row.volgorde != null ? row.volgorde : 0,
+    markeringen: Array.isArray(row.markeringen) ? row.markeringen : [],   // [{fx,fy,type,notitie}] — fracties 0..1
+    gebrekenTellen: !!row.gebreken_tellen,                                 // tellen de stippen mee in de toeslagen?
     signedUrl:   null   // wordt vlak voor het tonen ingevuld door _signFotoUrls
   };
 }
@@ -4480,7 +4616,9 @@ function _mapFotoToDB(f, calcId, idx) {
     calculatie_id: calcId,
     storage_path:  f.storagePath,
     opmerking:     f.opmerking || '',
-    volgorde:      idx != null ? idx : (f.volgorde || 0)
+    volgorde:      idx != null ? idx : (f.volgorde || 0),
+    markeringen:   Array.isArray(f.markeringen) ? f.markeringen : [],
+    gebreken_tellen: !!f.gebrekenTellen
   };
 }
 
@@ -4550,11 +4688,13 @@ async function _signFotoUrls(fotos) {
   fotos.forEach(f => { f.signedUrl = byPath[f.storagePath] || null; });
 }
 
-// Bijschrift / volgorde bijwerken — vuren-en-vergeten.
+// Bijschrift / volgorde / markeringen / meetel-vlag bijwerken — vuren-en-vergeten.
 function _updateFotoDB(f) {
   _sbQuery(
     _sb.from('calculatie_fotos').update({
-      opmerking: f.opmerking || '', volgorde: f.volgorde || 0
+      opmerking: f.opmerking || '', volgorde: f.volgorde || 0,
+      markeringen: Array.isArray(f.markeringen) ? f.markeringen : [],
+      gebreken_tellen: !!f.gebrekenTellen
     }).eq('id', f.id), 'Foto bijwerken'
   ).then(() => {});
 }
@@ -7999,6 +8139,7 @@ async function openArchiveerModal() {
   // Check beschikbaarheid van conditionele opties
   const heeftMeetstaat = (data.calc.meetstaat || []).length > 0;
   const heeftFotos = (data.calc.fotos || []).length > 0;
+  const heeftKozijnen = (data.calc.meetstaat || []).some(ms => ms.tekening && ms.tekening.vorm);
 
   // Onderhoudsplan: laad uit DB om te checken of er een compleet plan is
   let heeftOhp = false;
@@ -8014,6 +8155,7 @@ async function openArchiveerModal() {
   const opties = [
     { type: 'calculatie',     label: 'Calculatie als PDF',  beschikbaar: true,             toelichting: '' },
     { type: 'meetstaat',      label: 'Meetstaat als PDF',   beschikbaar: heeftMeetstaat,   toelichting: heeftMeetstaat ? '' : 'geen meetregels in deze calc' },
+    { type: 'kozijnen',       label: 'Getekende kozijnen',  beschikbaar: heeftKozijnen,    toelichting: heeftKozijnen ? '' : 'geen getekende kozijnen in deze calc' },
     { type: 'offerte',        label: 'Offerte (Yoobi)',     beschikbaar: true,             toelichting: '' },
     { type: 'werkbon',        label: 'Werkbon',             beschikbaar: true,             toelichting: '' },
     { type: 'onderhoudsplan', label: 'Onderhoudsplan',      beschikbaar: heeftOhp,         toelichting: heeftOhp ? '' : 'geen (compleet) onderhoudsplan voor deze calc' },
@@ -8051,9 +8193,11 @@ function startArchiveerSequentie() {
   const labelMap = {
     calculatie: 'Calculatie',
     meetstaat: 'Meetstaat',
+    kozijnen: 'Getekende kozijnen',
     offerte: 'Offerte (Yoobi)',
     werkbon: 'Werkbon',
-    onderhoudsplan: 'Onderhoudsplan'
+    onderhoudsplan: 'Onderhoudsplan',
+    fotobijlage: 'Foto-bijlage'
   };
 
   const queue = checked.map(cb => ({
@@ -8103,6 +8247,7 @@ function _archiveerVolgende() {
   try {
     if (item.type === 'calculatie')          printCalc();
     else if (item.type === 'meetstaat')      printMeetstaat();
+    else if (item.type === 'kozijnen')       printKozijnen();
     else if (item.type === 'offerte')        printOfferteYoobi();
     else if (item.type === 'werkbon')        printWerkbon();
     else if (item.type === 'onderhoudsplan') _ohpPrint();
@@ -8178,6 +8323,14 @@ async function printFotoBijlage() {
   if (missing.length) await _signFotoUrls(missing);
   const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
 
+  // Legenda: welke gebrek-types komen voor op de foto's?
+  const gebruikt = {};
+  fotos.forEach(f => (f.markeringen || []).forEach(m => { gebruikt[m.type] = true; }));
+  const legendaTypes = Object.keys(_KOZIJN_DEFECTEN).filter(k => gebruikt[k]);
+  const legendaHtml = legendaTypes.length
+    ? `<div class="fb-legenda">${legendaTypes.map(k => `<span><i style="background:${_KOZIJN_DEFECTEN[k].kleur};"></i>${_escapeHtml(_KOZIJN_DEFECTEN[k].label)}</span>`).join('')}</div>`
+    : '';
+
   let html = `<div class="header-block">
     <div style="display:flex; align-items:center; gap:0.75rem;">
       <div class="brand-logo print"></div>
@@ -8190,18 +8343,44 @@ async function printFotoBijlage() {
       <div><strong>${datum}</strong></div>
       <div>${fotos.length} foto${fotos.length === 1 ? '' : '\u2019s'}</div>
     </div>
-  </div>`;
+  </div>${legendaHtml}`;
 
-  for (let i = 0; i < fotos.length; i += 4) {
-    html += '<div class="fb-page">';
-    fotos.slice(i, i + 4).forEach(f => {
-      html += `<div class="fb-cell">
-        <div class="fb-img">${f.signedUrl ? `<img src="${_escapeHtml(f.signedUrl)}" alt="foto">` : ''}</div>
-        <div class="fb-cap">${_escapeHtml(f.opmerking || '')}</div>
-      </div>`;
+  const mkSpans = (f) => ((f.markeringen || []).map((m, i) => {
+    const d = _KOZIJN_DEFECTEN[m.type] || { kleur: '#dc2626' };
+    return `<span class="fb-mk" style="left:${(m.fx * 100).toFixed(2)}%; top:${(m.fy * 100).toFixed(2)}%; background:${d.kleur};">${i + 1}</span>`;
+  }).join(''));
+
+  html += '<table class="fb-table"><tbody>';
+  for (let i = 0; i < fotos.length; i += 2) {
+    html += '<tr>';
+    [fotos[i], fotos[i + 1]].forEach(f => {
+      if (!f) { html += '<td></td>'; return; }
+      const cap = f.opmerking || '';
+      const mk = (f.markeringen || []);
+      let statusHtml = '';
+      if (mk.length) {
+        const telt = !!f.gebrekenTellen;
+        statusHtml = `<div class="fb-status ${telt ? 'telt' : 'doc'}">${telt ? 'Gebreken meegerekend in de prijs' : 'Gebreken alleen ter documentatie — niet in de prijs'}</div>`;
+      }
+      // Genummerde gebrek-lijst: de nummers komen overeen met de stippen op de foto.
+      let gebrekenHtml = '';
+      if (mk.length) {
+        gebrekenHtml = mk.map((m, idx) => {
+          const def = _KOZIJN_DEFECTEN[m.type] || { label: (m.type || 'Gebrek'), kleur: '#dc2626' };
+          const notitie = (m.notitie || '').trim();
+          return `<div class="kz-gebrek-rij"><span class="kz-nr" style="background:${def.kleur};">${idx + 1}</span><span class="kz-gebrek-tekst">${_escapeHtml(def.label)}${notitie ? ` <span class="notitie">${_escapeHtml(notitie)}</span>` : ''}</span></div>`;
+        }).join('');
+      }
+      html += `<td>
+        <div class="fb-img">${f.signedUrl ? `<div class="fb-imgwrap"><img src="${_escapeHtml(f.signedUrl)}" alt="foto">${mkSpans(f)}</div>` : ''}</div>
+        ${statusHtml}
+        ${cap ? `<div class="fb-cap">${_escapeHtml(cap)}</div>` : ''}
+        ${gebrekenHtml}
+      </td>`;
     });
-    html += '</div>';
+    html += '</tr>';
   }
+  html += '</tbody></table>';
 
   const area = document.getElementById('printArea');
   area.innerHTML = html;
@@ -8212,6 +8391,94 @@ async function printFotoBijlage() {
   await Promise.all(imgs.map(img => img.complete
     ? Promise.resolve()
     : new Promise(res => { img.onload = img.onerror = res; })));
+  // De wrapper de beeldverhouding geven (media-onafhankelijk), zodat de stippen exact op het beeld vallen.
+  area.querySelectorAll('.fb-imgwrap').forEach(w => {
+    const im = w.querySelector('img');
+    if (im && im.naturalWidth && im.naturalHeight) w.style.aspectRatio = im.naturalWidth + ' / ' + im.naturalHeight;
+  });
+  window.print();
+}
+
+// v3.45.3 — Getekende kozijnen als PDF: één kozijn per rij (tekening links, gegevens
+// rechts), genummerde gebrek-stippen met notitie-lijst. Legenda onderaan toont alleen
+// de voorkomende gebrek-types (zelfde conventie als de foto-bijlage). Onderdeel van de
+// Archiveren-sequentie. Geen externe afbeeldingen, dus synchroon printbaar.
+function printKozijnen() {
+  const c = data.calc;
+  if (!c) return;
+  const kozijnen = (c.meetstaat || []).filter(ms => ms.tekening && ms.tekening.vorm);
+  if (!kozijnen.length) { _toast('Geen getekende kozijnen in deze calculatie'); return; }
+  const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+
+  let html = `<div class="header-block">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <div class="brand-logo print"></div>
+      <div>
+        <h1>Kozijn-tekeningen</h1>
+        <div class="meta">${_escapeHtml(c.naam || 'Calculatie')}${c.klant ? ' &middot; ' + _escapeHtml(c.klant) : ''}</div>
+      </div>
+    </div>
+    <div style="text-align:right; font-size:9pt;">
+      <div><strong>${datum}</strong></div>
+      <div>${kozijnen.length} kozijn${kozijnen.length === 1 ? '' : 'en'}</div>
+    </div>
+  </div>`;
+
+  kozijnen.forEach(ms => {
+    const tek = ms.tekening;
+    const naam = _escapeHtml(ms.omschrijving || tek.naam || 'Kozijn');
+    const vormLabel = (_KOZIJN_VORMEN[tek.vorm] || {}).label || tek.vorm;
+    const velden = (_KOZIJN_VORMEN[tek.vorm] || {}).velden || [];
+    const matenStr = velden.map(([k, lbl]) => {
+      const v = (tek.maten && tek.maten[k] != null) ? tek.maten[k] : null;
+      return v != null ? `${lbl.replace(' (cm)', '')}: ${(+v)} cm` : null;
+    }).filter(Boolean).join(' &middot; ');
+    const m1 = (tek.omtrekM1 != null) ? (tek.omtrekM1.toFixed(2).replace('.', ',') + ' m¹') : '';
+    const m2 = (tek.vlakkenM2 != null && tek.vlakkenM2 > 0) ? (tek.vlakkenM2.toFixed(2).replace('.', ',') + ' m²') : '';
+
+    const markeringen = Array.isArray(tek.markeringen) ? tek.markeringen : [];
+    let gebrekenHtml = '';
+    if (markeringen.length) {
+      const rijen = markeringen.map((mk, i) => {
+        const def = _KOZIJN_DEFECTEN[mk.type] || { label: (mk.type || 'Gebrek'), kleur: '#dc2626' };
+        const notitie = (mk.notitie || '').trim();
+        return `<div class="kz-gebrek-rij">
+          <span class="kz-nr" style="background:${def.kleur};">${i + 1}</span>
+          <span class="kz-gebrek-tekst">${_escapeHtml(def.label)}${notitie ? ` <span class="notitie">${_escapeHtml(notitie)}</span>` : ''}</span>
+        </div>`;
+      }).join('');
+      gebrekenHtml = `<div class="kz-gebreken-titel">Gebreken (${markeringen.length})</div>${rijen}`;
+    }
+
+    const metaParts = [`<span class="lbl">Vorm:</span> ${_escapeHtml(vormLabel)}`];
+    if (matenStr) metaParts.push(matenStr);
+    const totParts = [];
+    if (m1) totParts.push(m1);
+    if (m2) totParts.push(m2);
+
+    html += `<div class="kz-card">
+      <div class="kz-tek">${_kozijnThumbSvg(tek, 0, { genummerd: true, fill: true })}</div>
+      <div class="kz-info">
+        <h3>${naam}</h3>
+        <div class="kz-meta">
+          <div>${metaParts.join(' &middot; ')}</div>
+          ${totParts.length ? `<div><strong>${totParts.join(' &middot; ')}</strong></div>` : ''}
+        </div>
+        ${gebrekenHtml}
+      </div>
+    </div>`;
+  });
+
+  // Legenda onderaan: alleen de gebrek-types die op de kozijnen voorkomen.
+  const gebruikt = {};
+  kozijnen.forEach(ms => (ms.tekening.markeringen || []).forEach(m => { gebruikt[m.type] = true; }));
+  const legendaTypes = Object.keys(_KOZIJN_DEFECTEN).filter(k => gebruikt[k]);
+  if (legendaTypes.length) {
+    html += `<div class="fb-legenda" style="margin-top:10pt; padding-top:8pt; border-top:0.5pt solid #ccc;">${legendaTypes.map(k => `<span><i style="background:${_KOZIJN_DEFECTEN[k].kleur};"></i>${_escapeHtml(_KOZIJN_DEFECTEN[k].label)}</span>`).join('')}</div>`;
+  }
+
+  document.getElementById('printArea').innerHTML = html;
+  _setPrintTitle('kozijnen');
   window.print();
 }
 
@@ -9782,10 +10049,10 @@ function renderMeetstaat() {
       <td><span class="ms-num">${idx+1}</span></td>
       <td data-label="Calc-regel"><select data-field="calcRegelId" onchange="updMeetstaat(${idx},'calcRegelId',this.value)" onkeydown="msKey(event,${idx},0)" ${_dis}>${opts}</select></td>
       <td data-label="Omschrijving"><input type="text" data-field="omschrijving" value="${ms.omschrijving||''}" onchange="updMeetstaat(${idx},'omschrijving',this.value)" onkeydown="msKey(event,${idx},1)" ${_dis}></td>
-      <td data-label="b (cm)"><input type="text" inputmode="tel" pattern="[0-9]*" data-field="bCm" min="0" step="1" value="${ms.bCm||0}" onchange="updMeetstaat(${idx},'bCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},2)" ${_dis}></td>
-      <td data-label="h (cm)"><input type="text" inputmode="tel" pattern="[0-9]*" data-field="hCm" min="0" step="1" value="${ms.hCm||0}" onchange="updMeetstaat(${idx},'hCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},3)" ${_dis}></td>
-      <td data-label="aantal"><input type="text" inputmode="tel" pattern="[0-9]*" data-field="aantal" min="0" step="1" value="${ms.aantal||0}" onchange="updMeetstaat(${idx},'aantal',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},4)" ${_dis}></td>
-      <td data-label="factor"><input type="text" inputmode="decimal" data-field="factor" min="0" step="0.1" value="${ms.factor != null ? ms.factor : 1}" onchange="updMeetstaat(${idx},'factor',parseFloat(this.value)||1)" onkeydown="msKey(event,${idx},5)" ${_dis}></td>
+      <td data-label="b (cm)"><input type="number" data-field="bCm" min="0" step="1" value="${ms.bCm||0}" onchange="updMeetstaat(${idx},'bCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},2)" ${_dis}></td>
+      <td data-label="h (cm)"><input type="number" data-field="hCm" min="0" step="1" value="${ms.hCm||0}" onchange="updMeetstaat(${idx},'hCm',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},3)" ${_dis}></td>
+      <td data-label="aantal"><input type="number" data-field="aantal" min="0" step="1" value="${ms.aantal||0}" onchange="updMeetstaat(${idx},'aantal',parseInt(this.value)||0)" onkeydown="msKey(event,${idx},4)" ${_dis}></td>
+      <td data-label="factor"><input type="number" data-field="factor" min="0" step="0.1" value="${ms.factor != null ? ms.factor : 1}" onchange="updMeetstaat(${idx},'factor',parseFloat(this.value)||1)" onkeydown="msKey(event,${idx},5)" ${_dis}></td>
       <td class="num right ms-totaal" data-label="Totaal">${fmt(t.totaal)} ${t.eenheid}</td>
       <td data-label="Opmerking"><input type="text" data-field="opmerking" value="${ms.opmerking||''}" onchange="updMeetstaat(${idx},'opmerking',this.value)" onkeydown="msKey(event,${idx},6)" ${_dis}></td>
       <td class="right" style="white-space:nowrap;">${_auto ? '<span class="ms-auto-tag" title="Automatisch bijgehouden uit de kozijntekeningen">auto</span>' : (tekenBtn + ` <button class="btn btn-danger btn-sm" onclick="delMeetstaat(${idx})">×</button>`)}</td>
@@ -10013,13 +10280,15 @@ const _KOZIJN_VORMEN = {
   rechthoek:    { label: 'Rechthoek',    velden: [['b','Breedte (cm)'], ['h','Hoogte (cm)']] },
   schuin_enkel: { label: 'Schuin enkel', velden: [['b','Breedte (cm)'], ['hLinks','Hoogte links (cm)'], ['hRechts','Hoogte rechts (cm)']] },
   schuin_punt:  { label: 'Schuin punt',  velden: [['b','Breedte (cm)'], ['hZijkant','Hoogte zijkant (cm)'], ['hTop','Hoogte tot punt (cm)']] },
-  boog:         { label: 'Boog',         velden: [['b','Breedte (cm)'], ['h','Hoogte tot aanzet (cm)'], ['boogHoogte','Boog-hoogte (cm)']] }
+  boog:         { label: 'Boog',         velden: [['b','Breedte (cm)'], ['h','Hoogte tot aanzet (cm)'], ['boogHoogte','Boog-hoogte (cm)']] },
+  rond:         { label: 'Rond',         velden: [['d','Diameter (cm)']] }
 };
 const _KOZIJN_DEFAULTS = {
   rechthoek:    { b: 100, h: 120 },
   schuin_enkel: { b: 100, hLinks: 120, hRechts: 90 },
   schuin_punt:  { b: 120, hZijkant: 100, hTop: 160 },
-  boog:         { b: 100, h: 120, boogHoogte: 50 }
+  boog:         { b: 100, h: 120, boogHoogte: 50 },
+  rond:         { d: 80 }
 };
 let _kozijnEditIdx = null;      // index in data.calc.meetstaat van de open regel
 let _kozijnState = { vorm: 'rechthoek', maten: {}, verdeling: { t: 'vak' }, markeringen: [] };
@@ -10044,7 +10313,7 @@ function _kozijnRenderMaten() {
   const cfg = _KOZIJN_VORMEN[_kozijnState.vorm]; if (!cfg) return;
   c.innerHTML = cfg.velden.map(([key, label]) => {
     const val = (_kozijnState.maten[key] != null) ? _kozijnState.maten[key] : '';
-    return `<label>${label}</label><input type="text" inputmode="tel" min="0" step="1" value="${val}" oninput="_kozijnMaat('${key}', this.value)">`;
+    return `<label>${label}</label><input type="number" inputmode="decimal" min="0" step="1" value="${val}" oninput="_kozijnMaat('${key}', this.value)">`;
   }).join('');
 }
 function _kozijnSetVorm(v) {
@@ -10055,6 +10324,12 @@ function _kozijnSetVorm(v) {
   const d = _KOZIJN_DEFAULTS[v]; const m = {};
   Object.keys(d).forEach(k => { m[k] = (_kozijnState.maten && _kozijnState.maten[k] != null) ? _kozijnState.maten[k] : d[k]; });
   _kozijnState.maten = m;
+  // De ronde vorm heeft een eigen verdeling-formaat; bij wisselen normaliseren zodat de twee modellen niet door elkaar lopen.
+  if (v === 'rond' && (!_kozijnState.verdeling || !_kozijnState.verdeling.rond)) {
+    _kozijnState.verdeling = { rond: true, mode: 'heel', n: 6, type: 'glas', regelId: '', label: '' };
+  } else if (v !== 'rond' && _kozijnState.verdeling && _kozijnState.verdeling.rond) {
+    _kozijnState.verdeling = { t: 'vak' };
+  }
   _kozijnRenderVormKnoppen(); _kozijnRenderMaten(); _kozijnRenderMarkeerBalk(); _kozijnTeken(); _kozijnUpdateOmtrek();
 }
 function _kozijnMaat(field, val) {
@@ -10064,6 +10339,7 @@ function _kozijnMaat(field, val) {
 function _kozijnOmtrekCm() {
   const v = _kozijnState.vorm, m = _kozijnState.maten;
   const b = Math.max(0, +m.b || 0);
+  if (v === 'rond') { const d = Math.max(0, +m.d || 0); return Math.PI * d; }
   if (v === 'rechthoek') { const h = Math.max(0, +m.h || 0); return 2 * (b + h); }
   if (v === 'schuin_enkel') {
     const hl = Math.max(0, +m.hLinks || 0), hr = Math.max(0, +m.hRechts || 0);
@@ -10081,80 +10357,249 @@ function _kozijnOmtrekCm() {
   }
   return 0;
 }
-function _kozijnGeometrie(vorm, maten) {
+// --- Veelhoek-meetkunde (Brok 7) ---
+// Elke vorm is een convexe veelhoek. Een v/h-deellijn knipt via half-vlak-clipping
+// (Sutherland–Hodgman tegen één halfvlak) in twee convexe stukken. Daarmee kloppen
+// snede-lengte, oppervlak en raam-omtrek bij schuine en boog-kozijnen vanzelf.
+function _kozijnAx(p, axis) { return axis === 'x' ? p[0] : p[1]; }
+function _kozijnBBox(pts) {
+  let mnx = Infinity, mny = Infinity, mxx = -Infinity, mxy = -Infinity;
+  pts.forEach(p => { if (p[0] < mnx) mnx = p[0]; if (p[0] > mxx) mxx = p[0]; if (p[1] < mny) mny = p[1]; if (p[1] > mxy) mxy = p[1]; });
+  return { minX: mnx, minY: mny, maxX: mxx, maxY: mxy, w: mxx - mnx, h: mxy - mny };
+}
+function _kozijnPolyArea(pts) {
+  let a = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; a += p[0] * q[1] - q[0] * p[1]; }
+  return Math.abs(a) / 2;
+}
+function _kozijnPolyPerim(pts) {
+  let s = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; s += Math.hypot(q[0] - p[0], q[1] - p[1]); }
+  return s;
+}
+function _kozijnCentroid(pts) {
+  let a = 0, cx = 0, cy = 0;
+  for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; const cr = p[0] * q[1] - q[0] * p[1]; a += cr; cx += (p[0] + q[0]) * cr; cy += (p[1] + q[1]) * cr; }
+  if (Math.abs(a) < 1e-9) { let sx = 0, sy = 0; pts.forEach(p => { sx += p[0]; sy += p[1]; }); return [sx / pts.length, sy / pts.length]; }
+  a *= 0.5; return [cx / (6 * a), cy / (6 * a)];
+}
+function _kozijnEdgeCross(a, b, axis, c) {
+  const va = _kozijnAx(a, axis), vb = _kozijnAx(b, axis), den = vb - va;
+  if (Math.abs(den) < 1e-9) return null;
+  const t = (c - va) / den;
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+}
+// side -1: hou punten waar coord <= c; side +1: coord >= c
+function _kozijnClipHalf(pts, axis, c, side) {
+  const keep = (p) => side < 0 ? (_kozijnAx(p, axis) <= c + 1e-7) : (_kozijnAx(p, axis) >= c - 1e-7);
+  const out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length], ka = keep(a), kb = keep(b);
+    if (ka) out.push(a);
+    if (ka !== kb) { const ip = _kozijnEdgeCross(a, b, axis, c); if (ip) out.push(ip); }
+  }
+  return out;
+}
+// Snijpunten van de lijn axis=c met de rand → de werkelijke koorde (deellijn).
+function _kozijnLineCross(pts, axis, c) {
+  const res = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length], va = _kozijnAx(a, axis) - c, vb = _kozijnAx(b, axis) - c;
+    if (Math.abs(va) < 1e-7 && Math.abs(vb) < 1e-7) continue;
+    if ((va <= 1e-7 && vb >= -1e-7) || (va >= -1e-7 && vb <= 1e-7)) { const ip = _kozijnEdgeCross(a, b, axis, c); if (ip) res.push(ip); }
+  }
+  const key = axis === 'x' ? 1 : 0;
+  res.sort((p, q) => p[key] - q[key]);
+  const dd = [];
+  res.forEach(p => { if (!dd.length || Math.hypot(p[0] - dd[dd.length - 1][0], p[1] - dd[dd.length - 1][1]) > 1e-4) dd.push(p); });
+  return dd;
+}
+// Vak iets naar binnen schalen (per as) om centroïde — voor het raam/vulling-frame.
+function _kozijnInsetPoly(pts, frac) {
+  const bb = _kozijnBBox(pts), c = _kozijnCentroid(pts);
+  const ins = Math.max(2, Math.min(bb.w, bb.h) * frac);
+  const rx = bb.w > 2 * ins ? (bb.w - 2 * ins) / bb.w : 0, ry = bb.h > 2 * ins ? (bb.h - 2 * ins) / bb.h : 0;
+  if (rx <= 0 || ry <= 0) return null;
+  return pts.map(p => [c[0] + (p[0] - c[0]) * rx, c[1] + (p[1] - c[1]) * ry]);
+}
+// Vorm als convexe veelhoek (zelfde coördinaten als het frame-pad).
+function _kozijnPolygon(vorm, maten) {
   const v = vorm || _kozijnState.vorm, m = maten || _kozijnState.maten;
   const b = Math.max(0, +m.b || 0);
-  const P = (x, y) => `${(+x).toFixed(1)} ${(+y).toFixed(1)}`;
-  let H = 0, d = '';
+  let H = 0, pts = [];
   if (v === 'rechthoek') {
     const h = Math.max(0, +m.h || 0); H = h;
-    d = `M ${P(0,0)} L ${P(b,0)} L ${P(b,h)} L ${P(0,h)} Z`;
+    pts = [[0, 0], [b, 0], [b, h], [0, h]];
   } else if (v === 'schuin_enkel') {
     const hl = Math.max(0, +m.hLinks || 0), hr = Math.max(0, +m.hRechts || 0); H = Math.max(hl, hr);
-    d = `M ${P(0,H)} L ${P(b,H)} L ${P(b,H-hr)} L ${P(0,H-hl)} Z`;
+    pts = [[0, H], [b, H], [b, H - hr], [0, H - hl]];
   } else if (v === 'schuin_punt') {
     const hz = Math.max(0, +m.hZijkant || 0), ht = Math.max(0, +m.hTop || 0); H = Math.max(hz, ht);
-    d = `M ${P(0,H)} L ${P(b,H)} L ${P(b,H-hz)} L ${P(b/2,H-ht)} L ${P(0,H-hz)} Z`;
+    pts = [[0, H], [b, H], [b, H - hz], [b / 2, H - ht], [0, H - hz]];
   } else if (v === 'boog') {
     const h = Math.max(0, +m.h || 0), f = Math.max(0, +m.boogHoogte || 0), a = b / 2; H = h + f;
-    d = `M ${P(0,H)} L ${P(b,H)} L ${P(b,f)}`;
+    pts = [[0, H], [b, H], [b, f]];
     if (f > 0 && a > 0) {
       const R = (f * f + a * a) / (2 * f), N = 24;
-      for (let i = 0; i <= N; i++) { const x = b * (1 - i / N); const y = R - Math.sqrt(Math.max(0, R*R - (x-a)*(x-a))); d += ` L ${P(x,y)}`; }
-    } else { d += ` L ${P(0,f)}`; }
-    d += ' Z';
+      for (let i = 1; i <= N; i++) { const x = b * (1 - i / N); const y = R - Math.sqrt(Math.max(0, R * R - (x - a) * (x - a))); pts.push([x, y]); }
+    } else { pts.push([0, f]); }
+  } else { return null; }
+  return { pts, vbW: b, vbH: H };
+}
+function _kozijnCirclePath(cx, cy, r) {
+  return `M ${(cx - r).toFixed(1)} ${cy.toFixed(1)} A ${r.toFixed(1)} ${r.toFixed(1)} 0 1 0 ${(cx + r).toFixed(1)} ${cy.toFixed(1)} A ${r.toFixed(1)} ${r.toFixed(1)} 0 1 0 ${(cx - r).toFixed(1)} ${cy.toFixed(1)} Z`;
+}
+function _kozijnGeometrie(vorm, maten) {
+  const vv = vorm || _kozijnState.vorm, mm = maten || _kozijnState.maten;
+  if (vv === 'rond') {
+    const d = Math.max(0, +mm.d || 0);
+    if (d <= 0) return { d: '', vbW: 0, vbH: 0, pts: [], rond: true };
+    const cx = d / 2, cy = d / 2, r = d / 2;
+    return { d: _kozijnCirclePath(cx, cy, r), vbW: d, vbH: d, pts: [], rond: true, cx, cy, r };
   }
-  return { d, vbW: b, vbH: H };
+  const g = _kozijnPolygon(vorm, maten);
+  if (!g || !g.pts.length) return { d: '', vbW: 0, vbH: 0, pts: [] };
+  const P = (p) => `${(+p[0]).toFixed(1)} ${(+p[1]).toFixed(1)}`;
+  const d = 'M ' + g.pts.map(P).join(' L ') + ' Z';
+  return { d, vbW: g.vbW, vbH: g.vbH, pts: g.pts };
 }
 // Bouwt de binnenkant van de SVG. interactive=true voegt tik-vlakken + selectie toe
 // (editor); interactive=false geeft een statische tekening (thumbnail / overzicht).
-function _kozijnBuildInner(g, vorm, verdeling, markeringen, interactive, sel) {
+// --- Rond raam (Brok 7b): eigen verdeel-model (heel / kruis / N spaken), één type voor het hele raam ---
+function _kozijnRondV() {
+  const v = _kozijnState.verdeling;
+  if (v && v.rond) return v;
+  return { rond: true, mode: 'heel', n: 6, type: 'glas', regelId: '', label: '' };
+}
+function _kozijnRondDims() {
+  const d = Math.max(0, +(_kozijnState.maten.d) || 0);
+  return { d, r: d / 2, cx: d / 2, cy: d / 2 };
+}
+function _kozijnRondN(v) { return Math.max(2, Math.min(12, (v && v.n) || 6)); }
+function _kozijnRondRoedenCm() {
+  const v = _kozijnRondV(), dm = _kozijnRondDims();
+  if (v.mode === 'kruis') return 2 * dm.d;          // twee volle roeden door het midden = 2× diameter
+  if (v.mode === 'spaken') return _kozijnRondN(v) * dm.r;  // N spaken, elk midden→rand = straal
+  return 0;
+}
+function _kozijnRondRamenCm() {
+  const v = _kozijnRondV(), dm = _kozijnRondDims(), om = Math.PI * dm.d;
+  if (v.type === 'vast' || v.type === 'draai_binnen') return om;       // raamhout, 1× omtrek
+  if (v.type === 'draai_buiten') return 2 * om;                         // raamhout + sponningkanten, 2× omtrek
+  return 0;
+}
+function _kozijnRondVlakCm2() {
+  const v = _kozijnRondV(), dm = _kozijnRondDims();
+  return v.type === 'vulling' ? Math.PI * dm.r * dm.r : 0;
+}
+function _kozijnRondSetMode(mode) {
+  const v = _kozijnRondV(); v.mode = mode;
+  if (mode === 'spaken' && (!v.n || v.n < 2)) v.n = 6;
+  _kozijnState.verdeling = v; _kozijnTeken(); _kozijnUpdateOmtrek();
+}
+function _kozijnRondSetN(delta) {
+  const v = _kozijnRondV(); v.n = Math.max(2, Math.min(12, _kozijnRondN(v) + delta));
+  _kozijnState.verdeling = v; _kozijnTeken(); _kozijnUpdateOmtrek();
+}
+function _kozijnRondSetType(type) {
+  const v = _kozijnRondV();
+  v.type = (v.type === type) ? 'glas' : type;     // nog eens tikken = terug naar vast glas
+  if (v.type !== 'vulling') { v.regelId = ''; v.label = ''; }
+  _kozijnState.verdeling = v; _kozijnTeken(); _kozijnUpdateOmtrek();
+}
+function _kozijnRondSetVulRegel(regelId) {
+  const v = _kozijnRondV(); v.type = 'vulling';
+  v.regelId = regelId || ''; v.label = regelId ? _kozijnRegelNaam(regelId) : '';
+  _kozijnState.verdeling = v; _kozijnTeken(); _kozijnUpdateOmtrek();
+}
+// Roeden + type-aanduiding binnen de cirkel (frame-cirkel zelf komt uit g.d).
+function _kozijnRondInnerSvg(g, verdeling) {
+  if (!g.rond || !g.r) return '';
+  const v = (verdeling && verdeling.rond) ? verdeling : { mode: 'heel', n: 6, type: 'glas' };
+  const cx = g.cx, cy = g.cy, r = g.r, ty = v.type || 'glas';
+  let s = '';
+  if (ty !== 'glas') {
+    const ir = r - Math.max(2, r * 0.10);
+    if (ir > 2) {
+      s += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${ir.toFixed(1)}" fill="${ty === 'vulling' ? 'rgba(124,74,30,0.22)' : 'none'}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
+      if (ty === 'vulling' && v.label) {
+        const lfs = Math.max(6, Math.min(ir * 1.3 / Math.max(4, v.label.length), ir * 0.7));
+        s += `<text x="${cx.toFixed(1)}" y="${cy.toFixed(1)}" font-size="${lfs.toFixed(1)}" fill="#5a3a16" text-anchor="middle" dominant-baseline="central" font-family="system-ui, -apple-system, sans-serif" pointer-events="none">${_escapeHtml(v.label)}</text>`;
+      }
+      if (ty === 'draai_binnen' || ty === 'draai_buiten') {
+        const dash = ty === 'draai_binnen' ? ' stroke-dasharray="5 4"' : '';
+        s += `<line x1="${(cx - ir).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy - ir).toFixed(1)}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke"${dash} pointer-events="none"/>`;
+        s += `<line x1="${(cx + ir).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy - ir).toFixed(1)}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke"${dash} pointer-events="none"/>`;
+      }
+    }
+  }
+  const roede = (x2, y2) => `<line x1="${cx.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#b45309" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>`;
+  if (v.mode === 'kruis') {
+    s += `<line x1="${cx.toFixed(1)}" y1="${(cy - r).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy + r).toFixed(1)}" stroke="#b45309" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>`;
+    s += `<line x1="${(cx - r).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx + r).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="#b45309" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>`;
+  } else if (v.mode === 'spaken') {
+    const N = _kozijnRondN(v);
+    for (let i = 0; i < N; i++) { const th = -Math.PI / 2 + i * 2 * Math.PI / N; s += roede(cx + r * Math.cos(th), cy + r * Math.sin(th)); }
+  }
+  return s;
+}
+function _kozijnBuildInner(g, vorm, verdeling, markeringen, interactive, sel, opts) {
   const markeerActief = interactive && !!_kozijnMarkeerType;
+  const genummerd = !!(opts && opts.genummerd);
   let inner = `<path d="${g.d}" fill="rgba(70,130,180,0.12)" stroke="#e63329" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`;
-  if (vorm === 'rechthoek' && verdeling) {
-    const out = { vakken: [], dividers: [] };
-    _kozijnWalk(verdeling, { x: 0, y: 0, w: g.vbW, h: g.vbH }, '', out);
+  if (vorm === 'rond') {
+    inner += _kozijnRondInnerSvg(g, verdeling);
+  } else if (verdeling && g.pts && g.pts.length >= 3) {
+    const out = _kozijnCollectFrom(verdeling, g.pts);
     out.vakken.forEach(vk => {
+      const ptsStr = vk.pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
       if (interactive) {
         const selv = sel && sel.kind === 'vak' && sel.path === vk.path;
-        inner += `<rect x="${vk.rect.x.toFixed(1)}" y="${vk.rect.y.toFixed(1)}" width="${vk.rect.w.toFixed(1)}" height="${vk.rect.h.toFixed(1)}" fill="${selv ? 'rgba(230,51,41,0.10)' : 'transparent'}" ${selv ? 'stroke="#e63329" stroke-width="1.5" vector-effect="non-scaling-stroke"' : ''} pointer-events="all" onclick="_kozijnTapVak('${vk.path}')" style="cursor:pointer"/>`;
+        inner += `<polygon points="${ptsStr}" fill="${selv ? 'rgba(230,51,41,0.10)' : 'transparent'}" ${selv ? 'stroke="#e63329" stroke-width="1.5" vector-effect="non-scaling-stroke"' : ''} pointer-events="all" onclick="_kozijnTapVak('${vk.path}')" style="cursor:pointer"/>`;
       }
       const ty = (vk.node && vk.node.type) || 'glas';
       if (ty !== 'glas') {
-        const r = vk.rect, ins = Math.max(2, Math.min(r.w, r.h) * 0.08);
-        if (r.w - 2 * ins > 0 && r.h - 2 * ins > 0) {
-          const sx = r.x + ins, sy = r.y + ins, sw = r.w - 2 * ins, sh = r.h - 2 * ins;
-          inner += `<rect x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" width="${sw.toFixed(1)}" height="${sh.toFixed(1)}" fill="${ty === 'vulling' ? 'rgba(124,74,30,0.22)' : 'none'}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
+        const ins = _kozijnInsetPoly(vk.pts, 0.08);
+        if (ins && ins.length >= 3) {
+          const insStr = ins.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+          inner += `<polygon points="${insStr}" fill="${ty === 'vulling' ? 'rgba(124,74,30,0.22)' : 'none'}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
+          const c = _kozijnCentroid(ins), bb = _kozijnBBox(ins);
           if (ty === 'vulling' && vk.node && vk.node.label) {
             const lbl = vk.node.label;
-            const lcx = sx + sw / 2, lcy = sy + sh / 2;
-            const lfs = Math.max(6, Math.min(sw * 1.45 / Math.max(4, lbl.length), sh * 0.45));
-            inner += `<text x="${lcx.toFixed(1)}" y="${lcy.toFixed(1)}" font-size="${lfs.toFixed(1)}" fill="#5a3a16" text-anchor="middle" dominant-baseline="central" font-family="system-ui, -apple-system, sans-serif" pointer-events="none">${_escapeHtml(lbl)}</text>`;
+            const lfs = Math.max(6, Math.min(bb.w * 1.45 / Math.max(4, lbl.length), bb.h * 0.45));
+            inner += `<text x="${c[0].toFixed(1)}" y="${c[1].toFixed(1)}" font-size="${lfs.toFixed(1)}" fill="#5a3a16" text-anchor="middle" dominant-baseline="central" font-family="system-ui, -apple-system, sans-serif" pointer-events="none">${_escapeHtml(lbl)}</text>`;
           }
           if (ty === 'draai_binnen' || ty === 'draai_buiten') {
             const dash = ty === 'draai_binnen' ? ' stroke-dasharray="5 4"' : '';
-            const cx = sx + sw / 2, by = sy + sh;
-            inner += `<line x1="${sx.toFixed(1)}" y1="${by.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${sy.toFixed(1)}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke"${dash} pointer-events="none"/>`;
-            inner += `<line x1="${(sx + sw).toFixed(1)}" y1="${by.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${sy.toFixed(1)}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke"${dash} pointer-events="none"/>`;
+            const tx = c[0], topy = bb.minY, blx = bb.minX, bly = bb.maxY, brx = bb.maxX;
+            inner += `<line x1="${blx.toFixed(1)}" y1="${bly.toFixed(1)}" x2="${tx.toFixed(1)}" y2="${topy.toFixed(1)}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke"${dash} pointer-events="none"/>`;
+            inner += `<line x1="${brx.toFixed(1)}" y1="${bly.toFixed(1)}" x2="${tx.toFixed(1)}" y2="${topy.toFixed(1)}" stroke="#7c4a1e" stroke-width="2" vector-effect="non-scaling-stroke"${dash} pointer-events="none"/>`;
           }
         }
       }
     });
     out.dividers.forEach(dv => {
       const seld = interactive && sel && sel.kind === 'divider' && sel.path === dv.path;
-      const col = seld ? '#e63329' : '#b45309', sw = seld ? 4 : 2.5;
-      let x1, y1, x2, y2;
-      if (dv.kind === 'v') { x1 = x2 = dv.x; y1 = dv.y; y2 = dv.y + dv.len; } else { y1 = y2 = dv.y; x1 = dv.x; x2 = dv.x + dv.len; }
-      inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${sw}" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>`;
+      const x1 = dv.p0[0], y1 = dv.p0[1], x2 = dv.p1[0], y2 = dv.p1[1];
+      if (dv.geenStijl) {
+        // Loze stijl: geen kozijnhout, alleen een dunne naad waar twee ramen aansluiten.
+        const col = seld ? '#e63329' : '#9ca3af', sw = seld ? 2.5 : 1.2;
+        inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${sw}" vector-effect="non-scaling-stroke" stroke-dasharray="4 3" stroke-linecap="round" pointer-events="none"/>`;
+      } else {
+        const col = seld ? '#e63329' : '#b45309', sw = seld ? 4 : 2.5;
+        inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${sw}" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>`;
+      }
       if (interactive) inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="transparent" stroke-width="16" vector-effect="non-scaling-stroke" pointer-events="all" onclick="_kozijnTapDivider('${dv.path}')" style="cursor:pointer"/>`;
     });
   }
   (markeringen || []).forEach((mk, i) => {
     const def = _KOZIJN_DEFECTEN[mk.type] || { kleur: '#dc2626' };
-    const r = Math.max(3, Math.min(g.vbW, g.vbH) * 0.045);
+    const r = Math.max(genummerd ? 5 : 3, Math.min(g.vbW, g.vbH) * (genummerd ? 0.055 : 0.045));
     const selm = interactive && sel && sel.kind === 'markering' && sel.idx === i;
     const pe = (interactive && !markeerActief) ? 'all' : 'none';
-    inner += `<circle cx="${(+mk.x).toFixed(1)}" cy="${(+mk.y).toFixed(1)}" r="${r.toFixed(1)}" fill="${def.kleur}" fill-opacity="0.65" stroke="${selm ? '#111827' : def.kleur}" stroke-width="${selm ? 3 : 2}" vector-effect="non-scaling-stroke" pointer-events="${pe}"${interactive ? ` onclick="_kozijnTapMarkering(${i})" style="cursor:pointer"` : ''}/>`;
+    inner += `<circle cx="${(+mk.x).toFixed(1)}" cy="${(+mk.y).toFixed(1)}" r="${r.toFixed(1)}" fill="${def.kleur}" fill-opacity="${genummerd ? 0.92 : 0.65}" stroke="${selm ? '#111827' : def.kleur}" stroke-width="${selm ? 3 : 2}" vector-effect="non-scaling-stroke" pointer-events="${pe}"${interactive ? ` onclick="_kozijnTapMarkering(${i})" style="cursor:pointer"` : ''}/>`;
+    if (genummerd) {
+      const fs = (r * 1.25).toFixed(1);
+      inner += `<text x="${(+mk.x).toFixed(1)}" y="${(+mk.y).toFixed(1)}" font-size="${fs}" fill="#ffffff" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="system-ui, -apple-system, sans-serif" pointer-events="none">${i + 1}</text>`;
+    }
   });
   if (markeerActief) {
     inner += `<rect x="0" y="0" width="${g.vbW.toFixed(1)}" height="${g.vbH.toFixed(1)}" fill="transparent" pointer-events="all" onclick="_kozijnPlaatsMarkering(event)" style="cursor:crosshair"/>`;
@@ -10172,82 +10617,69 @@ function _kozijnDrawSvg() {
   el.innerHTML = `<svg viewBox="0 0 ${g.vbW.toFixed(1)} ${g.vbH.toFixed(1)}" preserveAspectRatio="xMidYMid meet" style="overflow:visible">${inner}</svg>`;
 }
 // Statische mini-tekening uit een opgeslagen tekening-object (regel-thumbnail / overzicht).
-function _kozijnThumbSvg(tek, heightPx) {
+function _kozijnThumbSvg(tek, heightPx, opts) {
   if (!tek || !tek.vorm || !tek.maten) return '';
   const g = _kozijnGeometrie(tek.vorm, tek.maten);
   if (!g || g.vbW <= 0 || g.vbH <= 0) return '';
-  const inner = _kozijnBuildInner(g, tek.vorm, tek.verdeling, tek.markeringen, false, null);
-  const hp = heightPx || 38;
-  return `<svg viewBox="0 0 ${g.vbW.toFixed(1)} ${g.vbH.toFixed(1)}" preserveAspectRatio="xMidYMid meet" style="height:${hp}px; width:auto; max-width:100%; display:block; overflow:visible;">${inner}</svg>`;
+  const inner = _kozijnBuildInner(g, tek.vorm, tek.verdeling, tek.markeringen, false, null, opts);
+  const svgStyle = (opts && opts.fill)
+    ? 'width:100%; height:100%; display:block; overflow:visible;'
+    : `height:${heightPx || 38}px; width:auto; max-width:100%; display:block; overflow:visible;`;
+  return `<svg viewBox="0 0 ${g.vbW.toFixed(1)} ${g.vbH.toFixed(1)}" preserveAspectRatio="xMidYMid meet" style="${svgStyle}">${inner}</svg>`;
 }
 function _kozijnTeken() { _kozijnDrawSvg(); _kozijnRenderVerdeelControls(); }
 
 // --- Verdeling-boom (splits): navigatie en berekening ---
-function _kozijnWalk(node, rect, path, out) {
-  if (!node || node.t !== 'split') { out.vakken.push({ rect, path, node }); return; }
+// Walkt de deelboom over een veelhoek. Een v/h-split knipt het huidige stuk tegen
+// zijn eigen bounding-box; de deellijn is de werkelijke koorde (p0..p1).
+function _kozijnCollectFrom(node, pts, path, out) {
+  if (!out) out = { vakken: [], dividers: [] };
+  if (path == null) path = '';
+  if (!node || node.t !== 'split') { out.vakken.push({ pts, path, node }); return out; }
   const cp = (i) => (path === '' ? '' : path + '.') + i;
+  const bb = _kozijnBBox(pts);
   if (node.r === 'v') {
-    const xw = rect.w * node.pos;
-    out.dividers.push({ kind: 'v', x: rect.x + xw, y: rect.y, len: rect.h, path });
-    _kozijnWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }, cp(0), out);
-    _kozijnWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h }, cp(1), out);
+    const cx = bb.minX + bb.w * node.pos;
+    const ch = _kozijnLineCross(pts, 'x', cx);
+    if (ch.length >= 2) out.dividers.push({ kind: 'v', p0: ch[0], p1: ch[ch.length - 1], len: Math.hypot(ch[ch.length - 1][0] - ch[0][0], ch[ch.length - 1][1] - ch[0][1]), path, geenStijl: !!node.geenStijl });
+    _kozijnCollectFrom(node.k[0], _kozijnClipHalf(pts, 'x', cx, -1), cp(0), out);
+    _kozijnCollectFrom(node.k[1], _kozijnClipHalf(pts, 'x', cx, +1), cp(1), out);
   } else {
-    const yh = rect.h * node.pos;
-    out.dividers.push({ kind: 'h', x: rect.x, y: rect.y + yh, len: rect.w, path });
-    _kozijnWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }, cp(0), out);
-    _kozijnWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh }, cp(1), out);
+    const cy = bb.minY + bb.h * node.pos;
+    const ch = _kozijnLineCross(pts, 'y', cy);
+    if (ch.length >= 2) out.dividers.push({ kind: 'h', p0: ch[0], p1: ch[ch.length - 1], len: Math.hypot(ch[ch.length - 1][0] - ch[0][0], ch[ch.length - 1][1] - ch[0][1]), path });
+    _kozijnCollectFrom(node.k[0], _kozijnClipHalf(pts, 'y', cy, -1), cp(0), out);
+    _kozijnCollectFrom(node.k[1], _kozijnClipHalf(pts, 'y', cy, +1), cp(1), out);
   }
+  return out;
 }
-function _kozijnMembersWalk(node, rect) {
-  if (!node || node.t !== 'split') return 0;
-  if (node.r === 'v') {
-    const xw = rect.w * node.pos;
-    return rect.h + _kozijnMembersWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }) + _kozijnMembersWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h });
-  }
-  const yh = rect.h * node.pos;
-  return rect.w + _kozijnMembersWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }) + _kozijnMembersWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh });
+function _kozijnCollectAll() {
+  const g = _kozijnPolygon(_kozijnState.vorm, _kozijnState.maten);
+  if (!g || g.pts.length < 3) return { vakken: [], dividers: [] };
+  return _kozijnCollectFrom(_kozijnState.verdeling || { t: 'vak' }, g.pts, '', { vakken: [], dividers: [] });
 }
 function _kozijnMembersCm() {
-  if (_kozijnState.vorm !== 'rechthoek' || !_kozijnState.verdeling) return 0;
-  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
-  return _kozijnMembersWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h });
-}
-function _kozijnRamenWalk(node, rect) {
-  if (!node) return 0;
-  if (node.t !== 'split') {
-    const per = 2 * (rect.w + rect.h), ty = node.type || 'glas';
-    if (ty === 'vast' || ty === 'draai_binnen') return per;        // raamhout, 1× omtrek
-    if (ty === 'draai_buiten') return 2 * per;                     // raamhout + sponningkanten, 2× omtrek
-    return 0;                                                       // vast glas
-  }
-  if (node.r === 'v') {
-    const xw = rect.w * node.pos;
-    return _kozijnRamenWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }) + _kozijnRamenWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h });
-  }
-  const yh = rect.h * node.pos;
-  return _kozijnRamenWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }) + _kozijnRamenWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh });
+  if (_kozijnState.vorm === 'rond') return _kozijnRondRoedenCm();
+  if (!_kozijnState.verdeling) return 0;
+  return _kozijnCollectAll().dividers.reduce((s, d) => s + (d.geenStijl ? 0 : d.len), 0);
 }
 function _kozijnRamenCm() {
-  if (_kozijnState.vorm !== 'rechthoek' || !_kozijnState.verdeling) return 0;
-  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
-  return _kozijnRamenWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h });
-}
-function _kozijnVlakkenWalk(node, rect) {
-  if (!node) return 0;
-  if (node.t !== 'split') {
-    return (node.type === 'vulling') ? (rect.w * rect.h) : 0;   // dichte vulling: oppervlak in cm²
-  }
-  if (node.r === 'v') {
-    const xw = rect.w * node.pos;
-    return _kozijnVlakkenWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }) + _kozijnVlakkenWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h });
-  }
-  const yh = rect.h * node.pos;
-  return _kozijnVlakkenWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }) + _kozijnVlakkenWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh });
+  if (_kozijnState.vorm === 'rond') return _kozijnRondRamenCm();
+  if (!_kozijnState.verdeling) return 0;
+  let s = 0;
+  _kozijnCollectAll().vakken.forEach(vk => {
+    const ty = (vk.node && vk.node.type) || 'glas';
+    if (ty === 'vast' || ty === 'draai_binnen') s += _kozijnPolyPerim(vk.pts);        // raamhout, 1× omtrek
+    else if (ty === 'draai_buiten') s += 2 * _kozijnPolyPerim(vk.pts);                 // raamhout + sponningkanten, 2× omtrek
+  });
+  return s;
 }
 function _kozijnVlakkenCm2() {
-  if (_kozijnState.vorm !== 'rechthoek' || !_kozijnState.verdeling) return 0;
-  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
-  return _kozijnVlakkenWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h });
+  if (_kozijnState.vorm === 'rond') return _kozijnRondVlakCm2();
+  if (!_kozijnState.verdeling) return 0;
+  let s = 0;
+  _kozijnCollectAll().vakken.forEach(vk => { if (vk.node && vk.node.type === 'vulling') s += _kozijnPolyArea(vk.pts); });
+  return s;
 }
 function _kozijnVlakkenM2() { return _kozijnVlakkenCm2() / 10000; }
 function _kozijnM2Regels() {
@@ -10266,32 +10698,23 @@ function _kozijnSetVulRegel(path, regelId) {
   node.label = regelId ? _kozijnRegelNaam(regelId) : '';
   _kozijnTeken(); _kozijnUpdateOmtrek();
 }
-function _kozijnVlakkenPerRegelWalk(node, rect, acc) {
-  if (!node) return;
-  if (node.t !== 'split') {
-    if (node.type === 'vulling') {
-      const key = node.regelId || '';
-      if (!acc[key]) acc[key] = { m2: 0, label: node.label || '' };
-      acc[key].m2 += rect.w * rect.h;          // cm²
-      if (node.label) acc[key].label = node.label;
-    }
-    return;
-  }
-  if (node.r === 'v') {
-    const xw = rect.w * node.pos;
-    _kozijnVlakkenPerRegelWalk(node.k[0], { x: rect.x, y: rect.y, w: xw, h: rect.h }, acc);
-    _kozijnVlakkenPerRegelWalk(node.k[1], { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h }, acc);
-  } else {
-    const yh = rect.h * node.pos;
-    _kozijnVlakkenPerRegelWalk(node.k[0], { x: rect.x, y: rect.y, w: rect.w, h: yh }, acc);
-    _kozijnVlakkenPerRegelWalk(node.k[1], { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh }, acc);
-  }
-}
 function _kozijnVlakkenPerRegel() {
   const acc = {};
-  if (_kozijnState.vorm === 'rechthoek' && _kozijnState.verdeling) {
-    const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
-    _kozijnVlakkenPerRegelWalk(_kozijnState.verdeling, { x: 0, y: 0, w: b, h: h }, acc);
+  if (_kozijnState.vorm === 'rond') {
+    const v = _kozijnRondV();
+    if (v.type === 'vulling') { const key = v.regelId || ''; acc[key] = { m2: _kozijnRondVlakCm2() / 10000, label: v.label || '' }; }
+    return acc;
+  }
+  if (_kozijnState.verdeling) {
+    _kozijnCollectAll().vakken.forEach(vk => {
+      const node = vk.node;
+      if (node && node.type === 'vulling') {
+        const key = node.regelId || '';
+        if (!acc[key]) acc[key] = { m2: 0, label: node.label || '' };
+        acc[key].m2 += _kozijnPolyArea(vk.pts);          // cm²
+        if (node.label) acc[key].label = node.label;
+      }
+    });
   }
   Object.keys(acc).forEach(k => { acc[k].m2 = acc[k].m2 / 10000; });
   return acc;
@@ -10314,17 +10737,19 @@ function _kozijnSetNodeAt(path, newNode) {
   for (const idx of parts) parent = parent.k[+idx];
   parent.k[last] = newNode;
 }
-function _kozijnRectAt(path) {
-  const b = Math.max(0, +_kozijnState.maten.b || 0), h = Math.max(0, +_kozijnState.maten.h || 0);
-  let rect = { x: 0, y: 0, w: b, h: h }, node = _kozijnState.verdeling;
-  if (path === '') return rect;
+function _kozijnPolyAt(path) {
+  const g = _kozijnPolygon(_kozijnState.vorm, _kozijnState.maten);
+  if (!g || g.pts.length < 3) return null;
+  let pts = g.pts, node = _kozijnState.verdeling;
+  if (path === '') return pts;
   for (const idxs of path.split('.')) {
     const i = +idxs; if (!node || node.t !== 'split') break;
-    if (node.r === 'v') { const xw = rect.w * node.pos; rect = i === 0 ? { x: rect.x, y: rect.y, w: xw, h: rect.h } : { x: rect.x + xw, y: rect.y, w: rect.w - xw, h: rect.h }; }
-    else { const yh = rect.h * node.pos; rect = i === 0 ? { x: rect.x, y: rect.y, w: rect.w, h: yh } : { x: rect.x, y: rect.y + yh, w: rect.w, h: rect.h - yh }; }
+    const bb = _kozijnBBox(pts);
+    if (node.r === 'v') { const cx = bb.minX + bb.w * node.pos; pts = _kozijnClipHalf(pts, 'x', cx, i === 0 ? -1 : +1); }
+    else { const cy = bb.minY + bb.h * node.pos; pts = _kozijnClipHalf(pts, 'y', cy, i === 0 ? -1 : +1); }
     node = node.k[i];
   }
-  return rect;
+  return pts;
 }
 function _kozijnTapVak(path) { _kozijnSel = { kind: 'vak', path }; _kozijnTeken(); }
 function _kozijnTapDivider(path) { _kozijnSel = { kind: 'divider', path }; _kozijnTeken(); }
@@ -10340,7 +10765,8 @@ function _kozijnRemoveSplit(path) {
 }
 function _kozijnSetPosCm(path, cmVal) {
   const node = _kozijnNodeAt(path); if (!node || node.t !== 'split') return;
-  const rect = _kozijnRectAt(path); const span = node.r === 'v' ? rect.w : rect.h;
+  const pts = _kozijnPolyAt(path); if (!pts) return;
+  const bb = _kozijnBBox(pts); const span = node.r === 'v' ? bb.w : bb.h;
   if (span <= 0) return;
   let pos = (parseFloat(cmVal) || 0) / span;
   pos = Math.min(0.98, Math.max(0.02, pos));
@@ -10352,6 +10778,13 @@ function _kozijnSetVakType(path, type) {
   // Nog eens op de al-gekozen variant tikken zet het vak terug naar vast glas (raam eraf).
   const huidig = node.type || 'glas';
   node.type = (huidig === type) ? 'glas' : type;
+  _kozijnTeken(); _kozijnUpdateOmtrek();
+}
+// Verticale deellijn: tussenstijl (kozijnhout, telt mee) of loze stijl (twee ramen
+// sluiten aan, geen kozijnhout — telt niet in het tussenwerk). Alleen voor v-splits.
+function _kozijnSetGeenStijl(path, val) {
+  const node = _kozijnNodeAt(path); if (!node || node.t !== 'split' || node.r !== 'v') return;
+  node.geenStijl = !!val;
   _kozijnTeken(); _kozijnUpdateOmtrek();
 }
 // --- Gebrek-markeringen ---
@@ -10405,8 +10838,37 @@ function _kozijnRenderVerdeelControls() {
     el.innerHTML = `<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">${d.label} · notitie:</span><input type="text" value="${nt}" placeholder="bv. onderdorpel links" style="flex:1 1 160px; min-width:140px; padding:0.45rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;" oninput="_kozijnSetMarkNotitie(${_kozijnSel.idx}, this.value)"><button class="btn btn-danger btn-sm" onclick="_kozijnRemoveMarkering(${_kozijnSel.idx})">Verwijderen</button></div>`;
     return;
   }
-  if (_kozijnState.vorm !== 'rechthoek') {
-    el.innerHTML = '<div style="color:var(--muted); font-size:0.8rem;">Verdelen in ramen en panelen kan voorlopig alleen bij rechthoekige kozijnen. Het frame en de omtrek werken bij alle vormen.</div>';
+  if (_kozijnState.vorm === 'rond') {
+    const v = _kozijnRondV();
+    const modi = [['heel', 'Heel'], ['kruis', 'Kruis'], ['spaken', 'Spaken']];
+    const modiBtns = modi.map(([k, lab]) => `<button class="${v.mode === k ? 'btn' : 'btn-secondary btn'} btn-sm" onclick="_kozijnRondSetMode('${k}')">${lab}</button>`).join('');
+    let nBlok = '';
+    if (v.mode === 'spaken') {
+      const n = _kozijnRondN(v);
+      nBlok = `<div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Aantal spaken:</span><button class="btn-secondary btn btn-sm" onclick="_kozijnRondSetN(-1)">−</button><span style="min-width:1.6rem; text-align:center; font-weight:600;">${n}</span><button class="btn-secondary btn btn-sm" onclick="_kozijnRondSetN(1)">+</button></div>`;
+    }
+    const typen = [['glas', 'Vast glas'], ['vast', 'Vast raam'], ['draai_binnen', 'Draai binnen'], ['draai_buiten', 'Draai buiten'], ['vulling', 'Vulling (m²)']];
+    const typeBtns = typen.map(([k, lab]) => `<button class="${(v.type || 'glas') === k ? 'btn' : 'btn-secondary btn'} btn-sm" onclick="_kozijnRondSetType('${k}')">${lab}</button>`).join('');
+    let vulBlok = '';
+    if (v.type === 'vulling') {
+      const m2regels = _kozijnM2Regels();
+      if (!m2regels.length) {
+        vulBlok = `<div style="font-size:0.78rem; color:var(--accent-deep); margin-bottom:0.5rem;">Maak eerst een m²-regel in de Calculatie-tab om deze vulling aan te koppelen.</div>`;
+      } else {
+        const cur = v.regelId || '';
+        const opts = `<option value="">— nog koppelen —</option>` + m2regels.map(ctx => `<option value="${ctx.regel.id}" ${ctx.regel.id === cur ? 'selected' : ''}>${_escapeHtml(_calcRegelLabel(ctx.regel, ctx))}</option>`).join('');
+        vulBlok = `<div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Koppel aan regel:</span><select onchange="_kozijnRondSetVulRegel(this.value)" style="flex:1 1 200px; min-width:160px; padding:0.4rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;">${opts}</select></div>`;
+      }
+    }
+    el.innerHTML =
+      `<div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Indeling:</span>${modiBtns}</div>` +
+      nBlok +
+      `<div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Type:</span>${typeBtns}</div>` +
+      vulBlok;
+    return;
+  }
+  if (_kozijnState.vorm !== 'rechthoek' && _kozijnState.vorm !== 'schuin_enkel' && _kozijnState.vorm !== 'schuin_punt' && _kozijnState.vorm !== 'boog') {
+    el.innerHTML = '<div style="color:var(--muted); font-size:0.8rem;">Verdelen is in deze vorm niet beschikbaar.</div>';
     return;
   }
   const sel = _kozijnSel;
@@ -10432,12 +10894,17 @@ function _kozijnRenderVerdeelControls() {
   }
   const node = _kozijnNodeAt(sel.path);
   if (!node || node.t !== 'split') { el.innerHTML = ''; _kozijnSel = null; return; }
-  const rect = _kozijnRectAt(sel.path);
-  const span = node.r === 'v' ? rect.w : rect.h;
+  const pts = _kozijnPolyAt(sel.path); const bb = pts ? _kozijnBBox(pts) : { w: 0, h: 0 };
+  const span = node.r === 'v' ? bb.w : bb.h;
   const posCm = node.pos * span;
-  const naam = node.r === 'v' ? 'Tussenstijl' : 'Tussendorpel';
+  const loos = node.r === 'v' && !!node.geenStijl;
+  const naam = node.r === 'v' ? (loos ? 'Loze stijl' : 'Tussenstijl') : 'Tussendorpel';
   const vanaf = node.r === 'v' ? 'vanaf links' : 'vanaf boven';
-  el.innerHTML = `<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">${naam} · positie ${vanaf} (cm):</span><input type="text" inputmode="tel" min="0" step="1" value="${Math.round(posCm)}" style="width:90px; padding:0.45rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;" oninput="_kozijnSetPosCm('${sel.path}', this.value)"><span style="font-size:0.75rem; color:var(--muted);">van ${Math.round(span)} cm</span><button class="btn btn-danger btn-sm" onclick="_kozijnRemoveSplit('${sel.path}')">Verwijderen</button></div>`;
+  // Schakelaar tussenstijl/loze stijl: alleen bij een verticale deellijn (twee vleugels naast elkaar).
+  const stijlToggle = node.r === 'v'
+    ? `<div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Soort:</span><button class="${!loos ? 'btn' : 'btn-secondary btn'} btn-sm" onclick="_kozijnSetGeenStijl('${sel.path}', false)">Tussenstijl</button><button class="${loos ? 'btn' : 'btn-secondary btn'} btn-sm" onclick="_kozijnSetGeenStijl('${sel.path}', true)">Loze stijl</button><span style="font-size:0.72rem; color:var(--muted);">${loos ? 'twee ramen sluiten aan, geen kozijnhout' : 'kozijnhout tussen de vakken'}</span></div>`
+    : '';
+  el.innerHTML = stijlToggle + `<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">${naam} · positie ${vanaf} (cm):</span><input type="number" inputmode="decimal" min="0" step="1" value="${Math.round(posCm)}" style="width:90px; padding:0.45rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;" oninput="_kozijnSetPosCm('${sel.path}', this.value)"><span style="font-size:0.75rem; color:var(--muted);">van ${Math.round(span)} cm</span><button class="btn btn-danger btn-sm" onclick="_kozijnRemoveSplit('${sel.path}')">Verwijderen</button></div>`;
 }
 function _kozijnUpdateOmtrek() {
   const omtrek = _kozijnOmtrekCm() / 100, members = _kozijnMembersCm() / 100, ramen = _kozijnRamenCm() / 100;
@@ -10481,6 +10948,12 @@ function openKozijnTekenaar(idx) {
   };
   _kozijnSel = null;
   _kozijnMarkeerType = null;
+  // Rond heeft een eigen verdeling-formaat; bij openen normaliseren zodat het niet met de deelboom botst.
+  if (_kozijnState.vorm === 'rond' && (!_kozijnState.verdeling || !_kozijnState.verdeling.rond)) {
+    _kozijnState.verdeling = { rond: true, mode: 'heel', n: 6, type: 'glas', regelId: '', label: '' };
+  } else if (_kozijnState.vorm !== 'rond' && _kozijnState.verdeling && _kozijnState.verdeling.rond) {
+    _kozijnState.verdeling = { t: 'vak' };
+  }
   const d = _KOZIJN_DEFAULTS[_kozijnState.vorm];
   Object.keys(d).forEach(k => { if (_kozijnState.maten[k] == null) _kozijnState.maten[k] = d[k]; });
   const naamVeld = document.getElementById('kozijnNaam');
@@ -10669,8 +11142,9 @@ function renderNotitiesPaneel() {
     `).join('');
     const fotosHtml = data.calc.fotos.map(f => `
       <div class="foto-tegel">
-        <div class="foto-thumb" onclick="openFotoLightbox('${f.id}')" title="Klik om te vergroten">
+        <div class="foto-thumb" onclick="openFotoLightbox('${f.id}')" title="Klik om te bekijken en gebreken te markeren">
           ${f.signedUrl ? `<img src="${_escapeHtml(f.signedUrl)}" alt="foto" loading="lazy">` : `<div class="foto-laden">laden…</div>`}
+          ${_fotoMkChip(f)}
           <button class="foto-del" onclick="event.stopPropagation(); delFoto('${f.id}')" title="Verwijder foto">×</button>
         </div>
         <input type="text" class="foto-bijschrift" value="${(f.opmerking || '').replace(/"/g, '&quot;')}" placeholder="bijschrift…" onchange="updFotoOpmerking('${f.id}', this.value)">
@@ -10812,16 +11286,241 @@ function updFotoOpmerking(id, value) {
   _touchCalc(data.calc.id);
   // geen re-render — invoerveld behoudt focus
 }
+// Telling-chip op de tegel: één gekleurde stip per voorkomend gebrek-type + totaal.
+function _fotoMkChip(f) {
+  const mk = (f && Array.isArray(f.markeringen)) ? f.markeringen : [];
+  if (!mk.length) return '';
+  const per = {};
+  mk.forEach(m => { per[m.type] = (per[m.type] || 0) + 1; });
+  const dots = Object.keys(_KOZIJN_DEFECTEN).filter(k => per[k]).map(k =>
+    `<span class="fmk-dot" style="background:${_KOZIJN_DEFECTEN[k].kleur};"></span>`).join('');
+  return `<span class="foto-mkchip${f.gebrekenTellen ? ' telt' : ''}" title="${mk.length} gebrek-markering${mk.length === 1 ? '' : 'en'}${f.gebrekenTellen ? ' · telt mee in toeslagen' : ''}">${dots}${mk.length}</span>`;
+}
+// ---- Foto-markeer-editor (v3.45.0 — Brok 7c): stippen + knijp-zoom ----
+let _fmkFoto = null;          // huidige foto
+let _fmkType = null;          // gewapend gebrek-type (of null)
+let _fmkSel = null;           // geselecteerde stip-index (of null)
+let _fmkView = { scale: 1, tx: 0, ty: 0 };
+let _fmkW0 = 0, _fmkH0 = 0;   // basis-beeldmaat bij scale 1 (px)
+let _fmkChanged = false;
+const _fmkPtr = new Map();    // pointerId -> {x,y} (stage-lokaal)
+let _fmkPinch = null;         // { dist, C:{x,y}, ... }
+let _fmkPan = null;           // { x, y }
+let _fmkDown = null;          // { x, y, t } voor tap-detectie
+
 function openFotoLightbox(id) {
   const f = (data.calc && data.calc.fotos || []).find(x => x.id === id);
   if (!f || !f.signedUrl) return;
+  if (!Array.isArray(f.markeringen)) f.markeringen = [];
+  _fmkFoto = f; _fmkType = null; _fmkSel = null; _fmkChanged = false;
+  _fmkView = { scale: 1, tx: 0, ty: 0 }; _fmkPtr.clear(); _fmkPinch = null; _fmkPan = null; _fmkDown = null;
+
   const ov = document.createElement('div');
-  ov.className = 'foto-lightbox';
-  ov.onclick = () => ov.remove();
-  const img = document.createElement('img');
-  img.src = f.signedUrl;
-  ov.appendChild(img);
+  ov.className = 'fmk-overlay'; ov.id = 'fmkOverlay';
+  ov.innerHTML =
+    `<div class="fmk-bar" id="fmkBar"></div>` +
+    `<div class="fmk-hint" id="fmkHint"></div>` +
+    `<div class="fmk-stage" id="fmkStage"><div class="fmk-content" id="fmkContent"><img id="fmkImg" alt="foto"><div id="fmkDots"></div></div></div>` +
+    `<div class="fmk-note" id="fmkNote" style="display:none"></div>`;
   document.body.appendChild(ov);
+
+  const img = document.getElementById('fmkImg');
+  img.onload = () => { _fmkFit(); _fmkRenderDots(); };
+  img.src = f.signedUrl;
+
+  _fmkRenderBar();
+  const stage = document.getElementById('fmkStage');
+  stage.addEventListener('pointerdown', _fmkPointerDown);
+  stage.addEventListener('pointermove', _fmkPointerMove);
+  stage.addEventListener('pointerup', _fmkPointerUp);
+  stage.addEventListener('pointercancel', _fmkPointerUp);
+  window.addEventListener('resize', _fmkOnResize);
+}
+function _fmkOnResize() {
+  // Alleen opnieuw passen als de gebruiker niet ingezoomd is en geen notitie open heeft
+  // (anders zou een toetsenbord-resize de zoom of het typen verstoren).
+  if (_fmkSel != null || _fmkView.scale > 1.01) return;
+  _fmkFit();
+}
+function _fmkClose() {
+  const ov = document.getElementById('fmkOverlay');
+  if (ov) ov.remove();
+  window.removeEventListener('resize', _fmkOnResize);
+  const f = _fmkFoto; _fmkFoto = null; _fmkType = null; _fmkSel = null;
+  if (f && _fmkChanged) {
+    _updateFotoDB(f);
+    _touchCalc(data.calc.id);
+    renderNotitiesPaneel();
+    _syncGebrekToeslagen();
+  }
+}
+function _fmkFit() {
+  const stage = document.getElementById('fmkStage'), img = document.getElementById('fmkImg'), content = document.getElementById('fmkContent');
+  if (!stage || !img || !content || !img.naturalWidth) return;
+  const sw = stage.clientWidth, sh = stage.clientHeight;
+  const ar = img.naturalWidth / img.naturalHeight;
+  let w = sw, h = sw / ar;
+  if (h > sh) { h = sh; w = sh * ar; }
+  _fmkW0 = w; _fmkH0 = h;
+  content.style.width = w + 'px'; content.style.height = h + 'px';
+  _fmkView = { scale: 1, tx: (sw - w) / 2, ty: (sh - h) / 2 };
+  _fmkApply();
+}
+function _fmkApply() {
+  const content = document.getElementById('fmkContent'); if (!content) return;
+  const v = _fmkView;
+  content.style.transform = `translate(${v.tx}px, ${v.ty}px) scale(${v.scale})`;
+  content.style.setProperty('--fmkscale', (1 / v.scale).toFixed(4));
+}
+function _fmkStagePt(e) {
+  const stage = document.getElementById('fmkStage'); const r = stage.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+function _fmkToFrac(pt) {
+  const v = _fmkView;
+  const cx = (pt.x - v.tx) / v.scale, cy = (pt.y - v.ty) / v.scale;
+  return { fx: Math.min(1, Math.max(0, cx / _fmkW0)), fy: Math.min(1, Math.max(0, cy / _fmkH0)) };
+}
+function _fmkPointerDown(e) {
+  e.preventDefault();
+  const stage = document.getElementById('fmkStage');
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  const p = _fmkStagePt(e);
+  _fmkPtr.set(e.pointerId, p);
+  if (_fmkPtr.size === 1) {
+    _fmkDown = { x: p.x, y: p.y, t: Date.now() };
+    _fmkPan = { x: p.x, y: p.y };
+    _fmkPinch = null;
+  } else if (_fmkPtr.size === 2) {
+    _fmkPan = null; _fmkDown = null;
+    const pts = Array.from(_fmkPtr.values());
+    const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    const v = _fmkView;
+    _fmkPinch = { dist, s0: v.scale, C: { x: (mid.x - v.tx) / v.scale, y: (mid.y - v.ty) / v.scale } };
+  }
+}
+function _fmkPointerMove(e) {
+  if (!_fmkPtr.has(e.pointerId)) return;
+  e.preventDefault();
+  const p = _fmkStagePt(e);
+  _fmkPtr.set(e.pointerId, p);
+  if (_fmkPtr.size >= 2 && _fmkPinch) {
+    const pts = Array.from(_fmkPtr.values());
+    const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    let s = _fmkPinch.s0 * (dist / _fmkPinch.dist);
+    s = Math.min(8, Math.max(1, s));
+    _fmkView.scale = s;
+    _fmkView.tx = mid.x - _fmkPinch.C.x * s;
+    _fmkView.ty = mid.y - _fmkPinch.C.y * s;
+    _fmkApply();
+  } else if (_fmkPtr.size === 1 && _fmkPan) {
+    const dx = p.x - _fmkPan.x, dy = p.y - _fmkPan.y;
+    if (_fmkDown && Math.hypot(p.x - _fmkDown.x, p.y - _fmkDown.y) > 8) _fmkDown = null; // werd een sleep, geen tik
+    _fmkView.tx += dx; _fmkView.ty += dy;
+    _fmkPan = { x: p.x, y: p.y };
+    _fmkApply();
+  }
+}
+function _fmkPointerUp(e) {
+  const wasTap = _fmkPtr.size === 1 && _fmkDown && (Date.now() - _fmkDown.t) < 350 && Math.hypot(_fmkStagePt(e).x - _fmkDown.x, _fmkStagePt(e).y - _fmkDown.y) <= 8;
+  const tapPt = _fmkDown ? { x: _fmkDown.x, y: _fmkDown.y } : null;
+  _fmkPtr.delete(e.pointerId);
+  if (_fmkPtr.size < 2) _fmkPinch = null;
+  if (_fmkPtr.size === 0) { _fmkPan = null; }
+  if (wasTap && tapPt) {
+    // Niet op e.target afgaan: door setPointerCapture is dat altijd het tekenvlak.
+    // Bepaal geometrisch welke stip onder de tik zit.
+    const hit = _fmkHitDot(tapPt);
+    if (hit >= 0) {
+      _fmkTapDot(hit);
+    } else if (_fmkType) {
+      const fr = _fmkToFrac(tapPt);
+      _fmkPlace(fr.fx, fr.fy);
+    } else if (_fmkSel != null) {
+      _fmkSel = null; _fmkRenderDots(); _fmkRenderNote();
+    }
+  }
+  _fmkDown = null;
+}
+// Welke stip ligt onder een tik (stage-lokale punt)? -1 als geen. Trefstraal in schermpixels,
+// dus vinger-vriendelijk en onafhankelijk van de zoom. Inzoomen vergroot de tussenruimte,
+// zodat je dicht bij elkaar liggende stippen toch los kunt aantikken en plaatsen.
+function _fmkHitDot(pt) {
+  const mk = (_fmkFoto && _fmkFoto.markeringen) || [];
+  const v = _fmkView;
+  const rad = Math.max(20, _fmkW0 * 0.03);
+  let best = -1, bestD = rad;
+  for (let i = 0; i < mk.length; i++) {
+    const sx = v.tx + (mk[i].fx * _fmkW0) * v.scale;
+    const sy = v.ty + (mk[i].fy * _fmkH0) * v.scale;
+    const d = Math.hypot(pt.x - sx, pt.y - sy);
+    if (d <= bestD) { bestD = d; best = i; }
+  }
+  return best;
+}
+function _fmkRenderBar() {
+  const bar = document.getElementById('fmkBar'); if (!bar) return;
+  const btns = Object.keys(_KOZIJN_DEFECTEN).map(k => {
+    const d = _KOZIJN_DEFECTEN[k]; const act = _fmkType === k;
+    return `<button class="fmk-defect${act ? ' actief' : ''}" onclick="_fmkArm('${k}')"><span class="fmk-dot" style="background:${d.kleur};"></span>${d.label}</button>`;
+  }).join('');
+  const tellen = _fmkFoto && _fmkFoto.gebrekenTellen;
+  bar.innerHTML = btns +
+    `<label class="fmk-tel" title="Tellen de stippen van deze foto mee in de gebrek-toeslagen?"><input type="checkbox" ${tellen ? 'checked' : ''} onchange="_fmkToggleTellen(this.checked)">telt mee</label>` +
+    `<button class="fmk-sluit" onclick="_fmkClose()">Klaar</button>`;
+  const hint = document.getElementById('fmkHint');
+  if (hint) hint.textContent = _fmkType
+    ? `Tik op de foto om "${_KOZIJN_DEFECTEN[_fmkType].label}" te plaatsen. Knijp om te zoomen, sleep om te schuiven.`
+    : 'Kies een gebrek en tik het op de foto. Knijp om te zoomen, sleep om te schuiven. Tik een stip aan voor een notitie of om hem te verwijderen.';
+}
+function _fmkRenderDots() {
+  const wrap = document.getElementById('fmkDots'); if (!wrap) return;
+  const mk = (_fmkFoto && _fmkFoto.markeringen) || [];
+  wrap.innerHTML = mk.map((m, i) => {
+    const d = _KOZIJN_DEFECTEN[m.type] || { kleur: '#dc2626' };
+    return `<div class="fmk-mk${_fmkSel === i ? ' sel' : ''}" data-i="${i}" style="left:${(m.fx * 100).toFixed(2)}%; top:${(m.fy * 100).toFixed(2)}%; background:${d.kleur};"></div>`;
+  }).join('');
+}
+function _fmkRenderNote() {
+  const note = document.getElementById('fmkNote'); if (!note) return;
+  const mk = (_fmkFoto && _fmkFoto.markeringen) || [];
+  if (_fmkSel == null || !mk[_fmkSel]) { note.style.display = 'none'; note.innerHTML = ''; return; }
+  const m = mk[_fmkSel]; const d = _KOZIJN_DEFECTEN[m.type] || { label: 'Gebrek' };
+  const nt = (m.notitie || '').replace(/"/g, '&quot;');
+  note.style.display = 'flex';
+  note.innerHTML = `<span class="fmk-dot" style="background:${(_KOZIJN_DEFECTEN[m.type] || {}).kleur || '#dc2626'};"></span><input type="text" value="${nt}" placeholder="${d.label} — notitie (bv. onderdorpel links)" oninput="_fmkSetNote(this.value)"><button class="fmk-del" onclick="_fmkDelDot()">Verwijderen</button>`;
+}
+function _fmkArm(type) {
+  _fmkType = (_fmkType === type) ? null : type;
+  if (_fmkType) { _fmkSel = null; _fmkRenderNote(); }
+  _fmkRenderBar(); _fmkRenderDots();
+}
+function _fmkPlace(fx, fy) {
+  if (!_fmkFoto || !_fmkType) return;
+  if (!Array.isArray(_fmkFoto.markeringen)) _fmkFoto.markeringen = [];
+  _fmkFoto.markeringen.push({ fx: +fx.toFixed(4), fy: +fy.toFixed(4), type: _fmkType, notitie: '' });
+  _fmkSel = _fmkFoto.markeringen.length - 1; _fmkChanged = true;
+  _fmkRenderDots(); _fmkRenderNote();
+}
+function _fmkTapDot(i) {
+  _fmkSel = i; _fmkType = null;
+  _fmkRenderBar(); _fmkRenderDots(); _fmkRenderNote();
+}
+function _fmkSetNote(val) {
+  const mk = (_fmkFoto && _fmkFoto.markeringen) || [];
+  if (_fmkSel != null && mk[_fmkSel]) { mk[_fmkSel].notitie = val; _fmkChanged = true; }
+}
+function _fmkDelDot() {
+  const mk = (_fmkFoto && _fmkFoto.markeringen) || [];
+  if (_fmkSel == null || !mk[_fmkSel]) return;
+  mk.splice(_fmkSel, 1); _fmkSel = null; _fmkChanged = true;
+  _fmkRenderDots(); _fmkRenderNote();
+}
+function _fmkToggleTellen(on) {
+  if (!_fmkFoto) return;
+  _fmkFoto.gebrekenTellen = !!on; _fmkChanged = true;
 }
 
 // ---- Documenten (v3.24.4) ----
@@ -12025,6 +12724,12 @@ function _telGebreken() {
   rijen.forEach(ms => {
     const mk = (ms.tekening && Array.isArray(ms.tekening.markeringen)) ? ms.tekening.markeringen : [];
     mk.forEach(m => { if (tel[m.type] !== undefined) tel[m.type]++; });
+  });
+  // Foto-stippen tellen mee per foto waarvoor de meetel-vlag aanstaat (v3.45.0 — Brok 7c).
+  const fotos = (data.calc && data.calc.fotos) ? data.calc.fotos : [];
+  fotos.forEach(f => {
+    if (!f || !f.gebrekenTellen || !Array.isArray(f.markeringen)) return;
+    f.markeringen.forEach(m => { if (tel[m.type] !== undefined) tel[m.type]++; });
   });
   return tel;
 }
