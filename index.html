@@ -1935,8 +1935,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.45.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.46.0</h2>
       <div class="intro-body">
+        <p><strong>✎ Loze stijl: twee vleugels zonder middenstijl (v3.46.0).</strong> Bij dubbele openslaande ramen of deuren zonder vaste middenstijl sluiten de twee vleugels direct op elkaar aan, met een slaglat. Tik nu een <strong>verticale</strong> deellijn aan en kies bij "Soort" tussen <em>tussenstijl</em> (zoals altijd, kozijnhout dat meetelt) en <em>loze stijl</em>. Bij loze stijl vervalt het kozijnhout op die lijn: hij telt niet meer mee in het tussenwerk, terwijl beide ramen hun volle raamhout houden. Je rekent op die lijn dan twee raamstijlen in plaats van een tussenstijl plus twee raamstijlen. In de tekening wordt een loze stijl een dun stippellijntje in plaats van de dikke stijl, zodat je in één oogopslag ziet waar wel en geen middenstijl zit. Bedoeld voor twee ramen die aansluiten; horizontale deellijnen blijven gewoon een tussendorpel. Geen SQL nodig.</p>
         <p><strong>📐 Getekende kozijnen als PDF (v3.45.3).</strong> De kozijnen die je in een calculatie hebt getekend kun je nu als nette PDF-bijlage printen, via de Archiveren-knop naast de andere uitvoer. Eén kozijn per rij met de tekening links en de gegevens rechts: vorm, maten, strekkende meters en de vulling-m² als die er is. De gebrek-stippen krijgen op papier een nummer, met een lijstje eronder dat per stip vertelt wat er speelt ("1. Houtrot, onderdorpel links"). Onderaan staat een legenda met de kleuren die op de tekeningen voorkomen. Op de drukke achtergrond van een foto werkt een kleurstip zonder cijfer beter, dus de foto-bijlage houdt zijn eigen stijl; op een schone lijntekening leest een nummer juist prettiger. Handig voor in het dossier en voor de ploeg op locatie. Geen losse knop dus, alle PDF-uitvoer blijft op één plek. Geen SQL nodig.</p>
         <p><strong>📸 Prijs-status op de foto-bijlage (v3.45.2).</strong> Op de geprinte foto-bijlage zie je nu per foto met gebreken of die meegerekend zijn in de prijs. Staat de "telt mee"-vlag aan, dan staat er groen "Gebreken meegerekend in de prijs"; staat hij uit, dan "Gebreken alleen ter documentatie — niet in de prijs". Zo is in één oogopslag duidelijk wat in de offerte zit en wat puur ter vastlegging is.</p>
         <p><strong>🔧 Foto-stip aantikken hersteld (v3.45.1).</strong> Op de foto kon je alleen de laatst geplaatste stip verwijderen; een eerdere stip aantikken om hem te selecteren werkte niet. Doordat de aanraking voor het zoomen en slepen werd vastgehouden, wees de tik naar het tekenvlak in plaats van naar de stip eronder. De app bepaalt nu op basis van de positie welke stip je aantikt, dus je kunt elke stip selecteren voor een notitie of om hem te verwijderen — ook ingezoomd.</p>
@@ -2851,7 +2852,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.45.3';
+const APP_VERSION = 'v3.46.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3213,6 +3214,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.46.0', d: '2026-06-07', h: 'Kozijn-tekenaar: een verticale deellijn kan nu een loze stijl zijn in plaats van een tussenstijl, voor twee vleugels die zonder middenstijl op elkaar aansluiten (dubbele deuren/ramen). Een loze stijl telt niet mee in het tussenwerk; beide ramen houden hun volle raamhout. In de tekening een dun stippellijntje i.p.v. de dikke stijl. Geen SQL nodig' },
   { v: '3.45.3', d: '2026-06-07', h: 'Getekende kozijnen als PDF, ondergebracht bij Archiveren: één kozijn per rij met de tekening, vorm, maten, m¹ en m². De gebrek-stippen genummerd met een notitie-lijst eronder, en een legenda onderaan met de voorkomende kleuren. Geen SQL nodig' },
   { v: '3.45.2', d: '2026-06-06', h: 'Foto-bijlage toont nu per foto met gebreken of die in de prijs zijn meegerekend: groen "meegerekend in de prijs" als de telt-mee-vlag aanstaat, anders "alleen ter documentatie — niet in de prijs". Geen SQL nodig' },
   { v: '3.45.1', d: '2026-06-06', h: 'Foutje hersteld: op een foto kon je alleen de laatst geplaatste gebrek-stip verwijderen. Door het vasthouden van de aanraking (voor zoomen/slepen) wees een tik naar het tekenvlak in plaats van naar de stip. De app bepaalt nu op positie welke stip je aantikt, zodat elke stip te selecteren en te verwijderen is, ook ingezoomd' },
@@ -10560,9 +10562,15 @@ function _kozijnBuildInner(g, vorm, verdeling, markeringen, interactive, sel, op
     });
     out.dividers.forEach(dv => {
       const seld = interactive && sel && sel.kind === 'divider' && sel.path === dv.path;
-      const col = seld ? '#e63329' : '#b45309', sw = seld ? 4 : 2.5;
       const x1 = dv.p0[0], y1 = dv.p0[1], x2 = dv.p1[0], y2 = dv.p1[1];
-      inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${sw}" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>`;
+      if (dv.geenStijl) {
+        // Loze stijl: geen kozijnhout, alleen een dunne naad waar twee ramen aansluiten.
+        const col = seld ? '#e63329' : '#9ca3af', sw = seld ? 2.5 : 1.2;
+        inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${sw}" vector-effect="non-scaling-stroke" stroke-dasharray="4 3" stroke-linecap="round" pointer-events="none"/>`;
+      } else {
+        const col = seld ? '#e63329' : '#b45309', sw = seld ? 4 : 2.5;
+        inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${sw}" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>`;
+      }
       if (interactive) inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="transparent" stroke-width="16" vector-effect="non-scaling-stroke" pointer-events="all" onclick="_kozijnTapDivider('${dv.path}')" style="cursor:pointer"/>`;
     });
   }
@@ -10617,7 +10625,7 @@ function _kozijnCollectFrom(node, pts, path, out) {
   if (node.r === 'v') {
     const cx = bb.minX + bb.w * node.pos;
     const ch = _kozijnLineCross(pts, 'x', cx);
-    if (ch.length >= 2) out.dividers.push({ kind: 'v', p0: ch[0], p1: ch[ch.length - 1], len: Math.hypot(ch[ch.length - 1][0] - ch[0][0], ch[ch.length - 1][1] - ch[0][1]), path });
+    if (ch.length >= 2) out.dividers.push({ kind: 'v', p0: ch[0], p1: ch[ch.length - 1], len: Math.hypot(ch[ch.length - 1][0] - ch[0][0], ch[ch.length - 1][1] - ch[0][1]), path, geenStijl: !!node.geenStijl });
     _kozijnCollectFrom(node.k[0], _kozijnClipHalf(pts, 'x', cx, -1), cp(0), out);
     _kozijnCollectFrom(node.k[1], _kozijnClipHalf(pts, 'x', cx, +1), cp(1), out);
   } else {
@@ -10637,7 +10645,7 @@ function _kozijnCollectAll() {
 function _kozijnMembersCm() {
   if (_kozijnState.vorm === 'rond') return _kozijnRondRoedenCm();
   if (!_kozijnState.verdeling) return 0;
-  return _kozijnCollectAll().dividers.reduce((s, d) => s + d.len, 0);
+  return _kozijnCollectAll().dividers.reduce((s, d) => s + (d.geenStijl ? 0 : d.len), 0);
 }
 function _kozijnRamenCm() {
   if (_kozijnState.vorm === 'rond') return _kozijnRondRamenCm();
@@ -10756,6 +10764,13 @@ function _kozijnSetVakType(path, type) {
   node.type = (huidig === type) ? 'glas' : type;
   _kozijnTeken(); _kozijnUpdateOmtrek();
 }
+// Verticale deellijn: tussenstijl (kozijnhout, telt mee) of loze stijl (twee ramen
+// sluiten aan, geen kozijnhout — telt niet in het tussenwerk). Alleen voor v-splits.
+function _kozijnSetGeenStijl(path, val) {
+  const node = _kozijnNodeAt(path); if (!node || node.t !== 'split' || node.r !== 'v') return;
+  node.geenStijl = !!val;
+  _kozijnTeken(); _kozijnUpdateOmtrek();
+}
 // --- Gebrek-markeringen ---
 function _kozijnRenderMarkeerBalk() {
   const el = document.getElementById('kozijnMarkeerBalk'); if (!el) return;
@@ -10866,9 +10881,14 @@ function _kozijnRenderVerdeelControls() {
   const pts = _kozijnPolyAt(sel.path); const bb = pts ? _kozijnBBox(pts) : { w: 0, h: 0 };
   const span = node.r === 'v' ? bb.w : bb.h;
   const posCm = node.pos * span;
-  const naam = node.r === 'v' ? 'Tussenstijl' : 'Tussendorpel';
+  const loos = node.r === 'v' && !!node.geenStijl;
+  const naam = node.r === 'v' ? (loos ? 'Loze stijl' : 'Tussenstijl') : 'Tussendorpel';
   const vanaf = node.r === 'v' ? 'vanaf links' : 'vanaf boven';
-  el.innerHTML = `<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">${naam} · positie ${vanaf} (cm):</span><input type="number" inputmode="decimal" min="0" step="1" value="${Math.round(posCm)}" style="width:90px; padding:0.45rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;" oninput="_kozijnSetPosCm('${sel.path}', this.value)"><span style="font-size:0.75rem; color:var(--muted);">van ${Math.round(span)} cm</span><button class="btn btn-danger btn-sm" onclick="_kozijnRemoveSplit('${sel.path}')">Verwijderen</button></div>`;
+  // Schakelaar tussenstijl/loze stijl: alleen bij een verticale deellijn (twee vleugels naast elkaar).
+  const stijlToggle = node.r === 'v'
+    ? `<div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Soort:</span><button class="${!loos ? 'btn' : 'btn-secondary btn'} btn-sm" onclick="_kozijnSetGeenStijl('${sel.path}', false)">Tussenstijl</button><button class="${loos ? 'btn' : 'btn-secondary btn'} btn-sm" onclick="_kozijnSetGeenStijl('${sel.path}', true)">Loze stijl</button><span style="font-size:0.72rem; color:var(--muted);">${loos ? 'twee ramen sluiten aan, geen kozijnhout' : 'kozijnhout tussen de vakken'}</span></div>`
+    : '';
+  el.innerHTML = stijlToggle + `<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">${naam} · positie ${vanaf} (cm):</span><input type="number" inputmode="decimal" min="0" step="1" value="${Math.round(posCm)}" style="width:90px; padding:0.45rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;" oninput="_kozijnSetPosCm('${sel.path}', this.value)"><span style="font-size:0.75rem; color:var(--muted);">van ${Math.round(span)} cm</span><button class="btn btn-danger btn-sm" onclick="_kozijnRemoveSplit('${sel.path}')">Verwijderen</button></div>`;
 }
 function _kozijnUpdateOmtrek() {
   const omtrek = _kozijnOmtrekCm() / 100, members = _kozijnMembersCm() / 100, ramen = _kozijnRamenCm() / 100;

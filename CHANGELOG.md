@@ -1,3 +1,30 @@
+## v3.46.0 — Loze stijl: twee vleugels zonder middenstijl
+Bij dubbele openslaande ramen of deuren zonder vaste middenstijl sluiten de twee vleugels direct op elkaar aan. De kozijn-tekenaar kan dat nu rekenen en tekenen.
+
+### Wijzigingen
+- Een verticale deellijn heeft nu bij "Soort" de keuze tussen tussenstijl (zoals altijd) en loze stijl. Tik de deellijn aan om te kiezen.
+- Een loze stijl telt niet mee in het tussenwerk (geen kozijnhout). Beide aansluitende ramen houden hun volle raamhout, dus op die lijn reken je twee raamstijlen in plaats van een tussenstijl plus twee raamstijlen. Dat klopt met de werkelijkheid: er is geen kozijnstijl, alleen de twee vleugels met een slaglat.
+- In de tekening wordt een loze stijl een dun grijs stippellijntje in plaats van de dikke bruine stijl, zodat in één oogopslag zichtbaar is waar wel en geen middenstijl zit. Dat geldt ook op de getekende-kozijnen-PDF.
+- Alleen voor verticale deellijnen (twee vleugels naast elkaar). Horizontale deellijnen blijven een gewone tussendorpel.
+- De keuze wordt bij de tekening opgeslagen; bestaande tekeningen blijven ongemoeid (zonder de vlag is een deellijn gewoon een tussenstijl, net als voorheen). Geen Supabase-migratie nodig.
+
+---
+
+## v3.45.3 — Getekende kozijnen als PDF, bij Archiveren
+De kozijnen die je in een calculatie hebt getekend kun je nu als PDF-bijlage printen, via dezelfde Archiveren-knop als de andere uitvoer. Eén overzicht van alles wat je hebt opgenomen, voor in het dossier en voor de ploeg op locatie.
+
+### Wijzigingen
+- Nieuwe optie "Getekende kozijnen" in de Archiveren-modal (alleen beschikbaar als er in de calculatie kozijnen getekend zijn).
+- Eén kozijn per rij: de tekening links, rechts de naam, de vorm, de maten, de strekkende meters (m¹) en de vulling-m² als die er is.
+- Gebrek-stippen krijgen op papier een nummer, met onder de tekening een lijstje dat per nummer het gebrek en de notitie toont. Op het scherm tik je een stip aan voor de notitie; op papier kan dat niet, daarom de nummering.
+- Legenda onderaan de pagina met de gebrek-kleuren die op de tekeningen voorkomen, dezelfde conventie als de foto-bijlage.
+- De stippen op de kozijn-tekening worden genummerd (schone lijntekening), terwijl de foto-bijlage gekleurde stippen zonder cijfer houdt (drukke fotoachtergrond). Bewuste keuze: elke bijlage de weergave die daar het best leest.
+- Kop in de calculatie-huisstijl met logo en projectgegevens, net als de andere PDF's. Een kozijn-kaart breekt niet over een paginarand.
+- Technisch: de bestaande tekening-render is uitgebreid met een genummerde stip-variant en een vul-modus voor de printkaart. Geen Supabase-migratie nodig, de tekeningen zaten al opgeslagen bij de meetstaat-regels.
+- En passant: de statusbalk tijdens het archiveren toont nu ook voor de foto-bijlage een nette naam in plaats van de interne sleutel.
+
+---
+
 ## v3.45.2 — Prijs-status op de foto-bijlage
 De geprinte foto-bijlage liet niet zien of een gemarkeerd gebrek ook in de prijs was meegerekend.
 
