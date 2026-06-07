@@ -1,3 +1,14 @@
+## v3.46.1 — Fix: foto-bijlage zonder lege beginpagina
+De geprinte foto-bijlage begon soms met een lege eerste pagina (alleen de kop en de legenda), waarna de foto's pas op pagina twee kwamen.
+
+### Wijzigingen
+- Oorzaak: het fotoblok was een raster met een harde "niet over een paginarand breken". Samen met de kop op pagina één was dat blok te hoog, dus sprong het in z'n geheel naar pagina twee en bleef pagina één leeg achter.
+- De foto's lopen nu door onder de kop in een doorlopende twee-koloms opmaak. Elke foto blijft heel (wordt niet over een paginarand gesneden), maar de pagina's vullen zich gewoon op. Geen lege beginpagina meer.
+- Deze opmaak (inline-block in plaats van CSS-raster) breekt betrouwbaarder over pagina's, ook bij het printen vanaf de iPad.
+- Alleen de foto-bijlage is geraakt; de andere PDF's en de rekenkern blijven ongemoeid. Geen Supabase-migratie nodig.
+
+---
+
 ## v3.46.0 — Loze stijl: twee vleugels zonder middenstijl
 Bij dubbele openslaande ramen of deuren zonder vaste middenstijl sluiten de twee vleugels direct op elkaar aan. De kozijn-tekenaar kan dat nu rekenen en tekenen.
 
