@@ -1,3 +1,14 @@
+## v3.50.1 — Meetstaat-tabel smaller op een breed scherm
+De getalkolommen in de meetstaat rekten op een breed scherm onnodig uit. De tabel heeft nu een vaste kolom-layout.
+
+### Wijzigingen
+- De meetstaat-tabel kreeg een vaste kolom-layout (table-layout: fixed). De kolommen b, h, aantal en factor hebben nu krappe, afgemeten breedtes in plaats van mee te rekken met het scherm.
+- De vrijgekomen ruimte gaat naar de kolommen calc-regel, omschrijving en opmerking, waar bredere velden wel nut hebben.
+- De kaartweergave op een staande iPad of telefoon blijft ongewijzigd. Die zit in een eigen stuk opmaak voor smalle schermen en is niet aangeraakt.
+- Geen Supabase-migratie nodig.
+
+---
+
 ## v3.50.0 — Calc-regel dupliceren
 Een ⎘-knop op elke calc-regel, om de regel met het complete verfsysteem in één keer te kopiëren binnen hetzelfde onderdeel.
 
