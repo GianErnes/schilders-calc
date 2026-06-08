@@ -1,3 +1,17 @@
+## v3.47.0 — Eigen cijferblok voor het steigerwerk
+Een eigen numeriek toetsenbord onder de meetstaat- en kozijn-maatvelden, zodat invoeren op de iPad op de steiger sneller en handschoen-vriendelijk wordt.
+
+### Wijzigingen
+- De velden breedte, hoogte, aantal en factor in de meetstaat, en alle kozijn-maatvelden, openen voortaan een eigen cijferblok. Het iPad-toetsenbord blijft uit (via `inputmode="none"`); het veld blijft wel aanklikbaar.
+- Het blok is een vaste balk onderaan het scherm met grote knoppen 0 tot 9, een wis-toets en een Volgende-toets. De pagina schuift zo dat het actieve veld zichtbaar blijft boven de balk.
+- Knopindeling op verzoek: de Volgende-toets (enter) staat groot rechtsonder, waar hij vertrouwd aanvoelt, en bevestigt de waarde plus springt naar het volgende veld. De wis-toets staat rechtsboven, ver van Volgende, zodat ze niet verwisseld worden. Aan het einde van de reeks sluit het blok vanzelf.
+- De factor is een decimaal veld en krijgt een komma-toets (linksonder); de hele getallen (breedte, hoogte, aantal, kozijn-maten) krijgen die niet. Een komma wordt intern omgerekend naar een punt, zodat de berekening blijft kloppen. De factor wordt ook met een komma getoond.
+- Het eerste cijfer dat je intikt vervangt de bestaande waarde (zoals een rekenmachine); daarna typt het verder. Buiten het veld tikken of op Klaar drukken sluit het blok.
+- Op de Mac met een fysiek toetsenbord blijft normaal typen werken; letters worden in deze numerieke velden geweerd, en Enter/Tab blijven door de velden lopen zoals voorheen.
+- Techniek: de invoervelden zijn van `type="number"` naar `type="text"` gegaan (nodig voor de komma-weergave en betrouwbaar cursorgedrag op iOS); de invoer wordt komma-tolerant ingelezen via nieuwe helpers `_npFloat` en `_npInt`. Het bijwerken van een meetstaat-veld bouwt de tabel niet opnieuw op, dus de velden blijven onder het blok staan. Geen Supabase-migratie nodig.
+
+---
+
 ## v3.46.3 — Foto-bijlage: lege beginpagina nu echt opgelost
 De aanpassing in v3.46.1 loste de lege eerste pagina niet volledig op. Deze versie pakt de oorzaak goed aan.
 
