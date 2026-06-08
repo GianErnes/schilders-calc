@@ -1,3 +1,15 @@
+## v3.48.0 — Verfsystemen dupliceren
+Een Dupliceren-knop op elke verfsysteem-kaart, om snel een variant te maken zonder het origineel te raken.
+
+### Wijzigingen
+- Op elke verfsysteem-kaart staat nu naast Bewerken en Verwijderen een knop Dupliceren.
+- Dupliceren maakt een volledige kopie van het systeem: alle stappen met hun percentages, dezelfde ondergrond, eenheid en notities. De naam krijgt (kopie) erachter.
+- De kopie opent meteen in het bewerk-venster, zodat je hem direct kunt aanpassen (bijvoorbeeld een laag eraf halen of een andere ondergrond kiezen).
+- Het is een echt nieuw systeem in de bibliotheek met eigen regels in Supabase, dus wat je aan de kopie verandert laat het origineel ongemoeid.
+- Techniek: `dupliceerSysteem()` hergebruikt `_insertVerfsysteemDB()` (parent plus stappen) en daarna `editSystem()` op het nieuwe id. Geen Supabase-migratie nodig.
+
+---
+
 ## v3.47.1 — Cijferblok loopt door naar een nieuwe meetregel
 Kleine uitbreiding op het cijferblok van v3.47.0, na de praktijktest op de steiger.
 

@@ -1958,8 +1958,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.47.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.48.0</h2>
       <div class="intro-body">
+        <p><strong>🎨 Verfsystemen dupliceren (v3.48.0).</strong> Op elke verfsysteem-kaart staat nu naast Bewerken en Verwijderen een knop Dupliceren. Die maakt een volledige kopie van het systeem: alle stappen en percentages, dezelfde ondergrond, eenheid en notities. De naam krijgt (kopie) erachter en de kopie opent meteen zodat je hem direct kunt aanpassen. Handig om snel een variant te maken, bijvoorbeeld hetzelfde systeem met een laag minder of voor een andere ondergrond. Het is een echt nieuw systeem, dus wat je aan de kopie verandert laat het origineel ongemoeid. Geen SQL nodig.</p>
         <p><strong>➡️ Cijferblok loopt door naar een nieuwe meetregel (v3.47.1).</strong> Tik je met Volgende door tot en met de factor van de laatste meetregel, dan maakt de app nu automatisch een nieuwe regel aan en springt het cijferblok meteen in de breedte daarvan. Zo tik je op de steiger regel na regel weg zonder tussendoor op "+ Regel" te hoeven. Het gebeurt alleen als de laatste regel ook echt gevuld is (breedte of hoogte ingevuld), zodat er geen lege regels ontstaan als je gewoon klaar bent.</p>
         <p><strong>🔢 Eigen cijferblok voor de steiger (v3.47.0).</strong> Tik je in een meetstaat-veld (breedte, hoogte, aantal of factor) of in een kozijn-maatveld, dan blijft het iPad-toetsenbord voortaan uit en komt er onderaan het scherm een eigen cijferblok op met grote, duidelijke knoppen 0 tot 9 en een wis-toets. Fijn met handschoenen of een vieze duim. De enter-toets heet "Volgende" en staat rechtsonder waar je hem gewend bent: hij bevestigt de waarde en springt meteen naar het volgende veld, zodat je breedte, hoogte, aantal en factor achter elkaar kunt intikken. De wis-toets staat juist rechtsboven, ver van Volgende. Bij de factor staat er een komma bij (de hele getallen krijgen die niet), en die komma wordt intern netjes omgerekend zodat de berekening klopt. Buiten het veld tikken of op Klaar drukken sluit het blok. Op de Mac werkt je gewone toetsenbord gewoon door.</p>
         <p><strong>🔧 Foto-bijlage: lege beginpagina nu echt weg (v3.46.3).</strong> De eerdere aanpassing in v3.46.1 loste de lege eerste pagina niet helemaal op. De oorzaak is nu goed te pakken: het fotoblok gebruikte een opmaak met een harde "niet over een paginarand breken", waardoor het in z'n geheel naar pagina twee sprong als het naast de kop krap zat. Het fotoblok gebruikt nu dezelfde tabel-opmaak als de meetstaat- en calculatie-PDF, die netjes tussen de rijen breekt. De foto's beginnen dus onder de kop op pagina één, en een foto wordt nooit over een paginarand gesneden. <em>Tip: ververs de app na het uploaden even hard (op de iPad: tabblad sluiten en opnieuw openen), anders draait je browser nog de oude versie.</em></p>
@@ -2903,7 +2904,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.47.1';
+const APP_VERSION = 'v3.48.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3265,6 +3266,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.48.0', d: '2026-06-08', h: 'Verfsystemen dupliceren: op elke verfsysteem-kaart staat nu naast Bewerken en Verwijderen een knop Dupliceren. Die maakt een volledige kopie (alle stappen en percentages, dezelfde ondergrond, eenheid en notities, naam met (kopie) erachter) en opent die meteen om aan te passen. Handig voor een variant zoals hetzelfde systeem met een laag minder of voor een andere ondergrond, zonder het origineel te raken. Geen SQL nodig' },
   { v: '3.47.1', d: '2026-06-08', h: 'Cijferblok loopt nu door naar een nieuwe meetregel: Volgende op de factor van de laatste regel maakt automatisch een nieuwe regel aan en springt erin (in de breedte), zodat je regel na regel kunt wegtikken zonder op "+ Regel". Gebeurt alleen als de laatste regel gevuld is (breedte of hoogte), dus geen lege regels. Geen SQL nodig' },
   { v: '3.47.0', d: '2026-06-07', h: 'Eigen cijferblok voor de meetstaat- en kozijn-maatvelden. Het iPad-toetsenbord blijft uit; een vaste balk onderaan toont grote knoppen 0 tot 9 met een wis-toets. De Volgende-toets (enter) staat rechtsonder en springt naar het volgende veld; de wis-toets rechtsboven. De factor krijgt een komma die intern naar een punt wordt omgerekend; hele getallen (b, h, aantal, kozijn-maten) niet. Prettig met handschoenen op de steiger. Geen SQL nodig' },
   { v: '3.46.3', d: '2026-06-07', h: 'Foto-bijlage: lege beginpagina nu echt opgelost. De fix van v3.46.1 hield niet; het fotoblok had nog een opmaak met een harde "niet breken" die het hele blok naast de kop naar pagina twee duwde. Het fotoblok gebruikt nu dezelfde tabel-opmaak als de meetstaat-PDF, die tussen rijen breekt, dus de foto\'s starten onder de kop op pagina één. Ververs na uploaden hard. Geen SQL nodig' },
@@ -9788,6 +9790,7 @@ function _renderSysDetailCard(s) {
     </div>
     <div class="actions">
       <button class="btn-secondary btn btn-sm" onclick="editSystem('${s.id}')">Bewerken</button>
+      <button class="btn-secondary btn btn-sm" onclick="dupliceerSysteem('${s.id}')">Dupliceren</button>
       <button class="btn btn-danger btn-sm" onclick="delSystem('${s.id}')">Verwijderen</button>
     </div>
   </div>`;
@@ -9800,6 +9803,22 @@ async function delSystem(id) {
   // v3.19.0 — reset selectie als verwijderde systeem geselecteerd was
   if (_selSystemId === id) _selSystemId = null;
   renderSystemen(); renderCalcStructuur(); renderTotals();
+}
+async function dupliceerSysteem(id) {
+  const s = data.systemen.find(x => x.id === id);
+  if (!s) return;
+  const kopie = {
+    naam: (s.naam || 'Verfsysteem') + ' (kopie)',
+    ondergrondId: s.ondergrondId,
+    eenheid: s.eenheid,
+    notities: s.notities || '',
+    stappen: (s.stappen || []).map(st => ({ bewerkingId: st.bewerkingId, percentage: st.percentage }))
+  };
+  const nieuw = await _insertVerfsysteemDB(kopie);
+  if (!nieuw) { _toast('Dupliceren mislukt'); return; }
+  data.systemen.push(nieuw);
+  renderSystemen();
+  editSystem(nieuw.id);
 }
 // ============================================================
 // WERKBANK — verfsysteem bewerken met percentages en totalen
