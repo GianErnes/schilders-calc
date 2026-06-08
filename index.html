@@ -1963,8 +1963,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.49.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.50.0</h2>
       <div class="intro-body">
+        <p><strong>⎘ Calc-regel dupliceren (v3.50.0).</strong> Op elke regel in de calculatie staat nu naast het rode verwijderkruisje een knop ⎘. Tik je die, dan maakt de app een volledige kopie van de regel met het hele verfsysteem eronder: alle bewerkingen met hun percentages, dezelfde ondergrond, eenheid, toeslag en hoeveelheid. De kopie komt direct achter het origineel te staan met (kopie) achter de naam, zodat je hem meteen terugvindt en kunt hernoemen. De meetstaat gaat bewust niet mee: de kopie staat met de hoeveelheid van het origineel als handmatig getal en je vult de meting van de kopie zelf opnieuw in. Zo zet je dezelfde opbouw voor een andere plek snel neer zonder het verfsysteem opnieuw samen te stellen. Geen SQL nodig.</p>
         <p><strong>⌫ Wis-toets met een duidelijk symbool (v3.49.2).</strong> De wis-toets op het cijferblok toonde op de iPad geen icoontje, omdat het icoon-lettertype daar niet laadde. De toets heeft nu een gewoon ⌫-symbool dat altijd zichtbaar is, ongeacht het apparaat. Geen SQL nodig.</p>
         <p><strong>❌ Verwijderknop bij kozijnen weer in beeld (v3.49.1).</strong> Het rode kruisje om een meetregel te verwijderen stond rechts naast de kozijn-miniatuur en verdween bij een breed kozijn uit beeld. Het kruisje staat nu links op een vaste plek, vóór het potlood of de miniatuur, dus je kunt elke regel altijd verwijderen ongeacht hoe breed de tekening is. Geen SQL nodig.</p>
         <p><strong>➖ Min-knop op het cijferblok (v3.49.0).</strong> Bij aantal en factor in de meetstaat staat nu een ±-knop op het cijferblok. Tik je die nadat je het getal hebt ingetikt, dan wordt de waarde negatief en nog een tik maakt hem weer positief. Zo trek je een kozijn af van een gevel of binnenwand: maak een aparte regel voor het kozijn, vul breedte en hoogte gewoon positief in en zet het aantal op -1. Het rijtotaal wordt dan negatief en gaat van de wand af. Bij de andere velden zoals breedte, hoogte en de kozijn-maten blijft de knop weg, want daar hoort geen minteken. Geen SQL nodig.</p>
@@ -2913,7 +2914,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.49.2';
+const APP_VERSION = 'v3.50.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3275,6 +3276,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.50.0', d: '2026-06-08', h: 'Calc-regel dupliceren: op elke regel in de calculatie staat nu naast het verwijderkruisje een knop ⎘. Die maakt een volledige kopie van de regel met het hele verfsysteem eronder (alle bewerkingen met hun percentages, dezelfde ondergrond, eenheid, toeslag en hoeveelheid) en zet die direct achter het origineel, met (kopie) achter de naam. De meetstaat gaat niet mee: de kopie staat met de hoeveelheid van het origineel als handmatig getal en je vult de meting zelf opnieuw in. Handig om dezelfde opbouw voor een andere plek snel neer te zetten. Geen SQL nodig' },
   { v: '3.49.2', d: '2026-06-08', h: 'Wis-toets op het cijferblok toont nu een gewoon ⌫-symbool in plaats van een icoon dat op de iPad niet laadde, zodat de toets altijd zichtbaar is. Geen SQL nodig' },
   { v: '3.49.1', d: '2026-06-08', h: 'Verwijderknop bij kozijnen weer in beeld: het rode kruisje om een meetregel te verwijderen verdween bij een breed kozijn uit beeld omdat de miniatuur het wegduwde. Het kruisje staat nu links op een vaste plek, vóór het potlood of de miniatuur, zodat elke regel altijd te verwijderen is. Geen SQL nodig' },
   { v: '3.49.0', d: '2026-06-08', h: 'Min-knop op het cijferblok: bij aantal en factor in de meetstaat staat nu een ±-knop. Tik na het getal om de waarde negatief te maken (nog een tik maakt hem weer positief). Zo trek je een kozijn af van een gevel of wand: aparte regel voor het kozijn, breedte en hoogte positief, aantal op -1, dan wordt het rijtotaal negatief. Bij breedte, hoogte en de kozijn-maten blijft de knop weg. Geen SQL nodig' },
@@ -11973,7 +11975,7 @@ function renderRegel(hgId, odId, r) {
       <div class="regel-stats">
         ${fmt(t.uren)} u<br>
         <span style="color:var(--ink-soft); font-size:0.7rem;">mat. ${eur(t.matVerkoop)}</span><br>
-        ${eur(t.verkoop)} <button class="btn btn-danger btn-sm" onclick="delReg('${hgId}','${odId}','${r.id}')" style="margin-left:0.4rem;">×</button>
+        ${eur(t.verkoop)} <button class="btn-secondary btn btn-sm" onclick="dupRegel('${hgId}','${odId}','${r.id}')" title="Regel met verfsysteem dupliceren (zonder meetstaat)" style="margin-left:0.4rem;">⎘</button><button class="btn btn-danger btn-sm" onclick="delReg('${hgId}','${odId}','${r.id}')" style="margin-left:0.25rem;">×</button>
       </div>
     </div>
     <div class="regel-stappen">
@@ -12402,6 +12404,52 @@ async function selectAddSys(sysId) {
   od.regels.push(saved);
   _touchCalc(data.calc.id);
   renderCalcStructuur();
+}
+// v3.50.0 — Een calc-regel met zijn complete verfsysteem dupliceren binnen
+// hetzelfde onderdeel. De kopie krijgt alle stappen (snapshot plus percentages),
+// dezelfde ondergrond, eenheid, toeslag en hoeveelheid, met "(kopie)" achter de
+// naam. De meetstaat gaat bewust NIET mee: de kopie staat met de hoeveelheid van
+// het origineel als handmatig getal en je vult de meting van de kopie zelf
+// opnieuw in. De kopie komt direct achter het origineel te staan.
+// Hergebruikt _insertRegelDB (parent plus stappen), net als dupCalc.
+async function dupRegel(hgId, odId, rId) {
+  const od = _findOnderdeel(hgId, odId);
+  if (!od) return;
+  const orig = od.regels.find(x => x.id === rId);
+  if (!orig) return;
+
+  // Volgorde tussen het origineel en de volgende regel in, zodat de kopie er
+  // direct achter blijft staan, ook na een herlaad. Is het origineel de laatste,
+  // dan gewoon tien erbij.
+  const idx = od.regels.indexOf(orig);
+  const next = od.regels[idx + 1];
+  const nieuweVolgorde = next
+    ? ((orig.volgorde || 0) + (next.volgorde || 0)) / 2
+    : (orig.volgorde || 0) + 10;
+
+  const payload = {
+    naam:                (orig.naam ? orig.naam + ' ' : '') + '(kopie)',
+    systeemId:           orig.systeemId,
+    hoeveelheid:         orig.hoeveelheid || 0,
+    toeslag:             orig.toeslag || 0,
+    systeemNaam:         orig.systeemNaam,
+    systeemEenheid:      orig.systeemEenheid,
+    systeemOndergrond:   orig.systeemOndergrond,
+    systeemOndergrondId: orig.systeemOndergrondId,
+    systeemLocatie:      orig.systeemLocatie,
+    actief:              orig.actief !== false,
+    volgorde:            nieuweVolgorde,
+    stappen:             (orig.stappen || []).map((st, i) => ({ ...st, volgorde: i }))
+  };
+
+  const saved = await _insertRegelDB(payload, od.id);
+  if (!saved) return;
+
+  od.regels.splice(idx + 1, 0, saved);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur();
+  renderTotals();
+  _toast('Regel gedupliceerd');
 }
 function openSystemFromAdd() {
   // BELANGRIJK: openSystemModal() reset modalSysContext naar null,
