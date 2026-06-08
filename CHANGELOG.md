@@ -1,3 +1,15 @@
+## v3.50.0 — Calc-regel dupliceren
+Een ⎘-knop op elke calc-regel, om de regel met het complete verfsysteem in één keer te kopiëren binnen hetzelfde onderdeel.
+
+### Wijzigingen
+- Op elke regel in de calculatie staat nu naast het rode verwijderkruisje een knop ⎘. Die maakt een volledige kopie van de regel met het hele verfsysteem eronder: alle bewerkingen met hun percentages, dezelfde ondergrond, eenheid, toeslag-percentage en de hoeveelheid. De naam krijgt (kopie) erachter.
+- De kopie komt direct achter het origineel te staan in hetzelfde onderdeel, zodat je hem meteen terugvindt.
+- De meetstaat gaat bewust niet mee. De kopie staat met de hoeveelheid van het origineel als handmatig getal en je vult de meting van de kopie zelf opnieuw in. Past bij de praktijk waarin je dezelfde opbouw voor een andere plek met andere maten neerzet.
+- Een vergrendelde offerte blijft ongemoeid: in een verzonden of geaccepteerde calculatie staat de knop net als de andere knoppen op slot.
+- Techniek: `dupRegel()` hergebruikt `_insertRegelDB()` (parent-regel plus de stappen-snapshot), exact zoals `dupCalc()` dat doet. De kopie krijgt een volgorde tussen het origineel en de volgende regel in. Geen Supabase-migratie nodig.
+
+---
+
 ## v3.49.2 — Wis-toets met een duidelijk symbool
 De wis-toets op het cijferblok toonde op de iPad geen icoon. Hij heeft nu een gewoon ⌫-symbool dat altijd zichtbaar is.
 
