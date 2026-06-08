@@ -1,3 +1,15 @@
+## v3.49.0 — Min-knop op het cijferblok
+Een ±-knop bij aantal en factor, zodat je een kozijn kunt aftrekken van een gevel of binnenwand.
+
+### Wijzigingen
+- Het cijferblok heeft nu een ±-knop, die alleen verschijnt bij de velden aantal en factor in de meetstaat. Tik na het intikken van het getal om de waarde negatief te maken; nog een tik maakt hem weer positief.
+- Een negatieve aantal of factor maakt het rijtotaal negatief en trekt zo van het totaal af. De praktijk: maak een aparte regel voor het kozijn, vul breedte en hoogte positief in en zet het aantal op -1 (of -2, -3 bij meerdere gelijke kozijnen).
+- Bij breedte, hoogte en de kozijn-maatvelden blijft de knop bewust weg, want een negatieve maat hoort daar niet.
+- Op de Mac met fysiek toetsenbord kun je in deze velden nu ook gewoon een minteken typen.
+- Techniek: het cijferblok zet een `np-signon` klasse op het raster bij velden met `data-np-sign`; de ±-toets wisselt het leidende minteken op de waarde. De meetstaat-rekenregel en de Supabase-mapping rekenen al met negatieve waarden door, dus geen migratie nodig.
+
+---
+
 ## v3.48.0 — Verfsystemen dupliceren
 Een Dupliceren-knop op elke verfsysteem-kaart, om snel een variant te maken zonder het origineel te raken.
 

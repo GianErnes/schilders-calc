@@ -1674,6 +1674,11 @@
   #numpadBar .np-enter:active { background: var(--accent-deep); }
   #numpadBar .np-grid.np-int .np-komma { display: none; }
   #numpadBar .np-grid.np-int .np-zero { grid-area: 4 / 1 / 5 / 4; }
+  #numpadBar .np-sign { display: none; }
+  #numpadBar .np-grid.np-signon .np-sign { display: flex; grid-area: 4 / 1; }
+  #numpadBar .np-grid.np-signon:not(.np-int) .np-zero { grid-area: 4 / 2 !important; }
+  #numpadBar .np-grid.np-signon:not(.np-int) .np-komma { grid-area: 4 / 3 !important; }
+  #numpadBar .np-grid.np-signon.np-int .np-zero { grid-area: 4 / 2 / 5 / 4 !important; }
   body.np-open { padding-bottom: 340px; }
   @media print { #numpadBar { display: none !important; } }
 
@@ -1958,8 +1963,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.48.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.49.0</h2>
       <div class="intro-body">
+        <p><strong>➖ Min-knop op het cijferblok (v3.49.0).</strong> Bij aantal en factor in de meetstaat staat nu een ±-knop op het cijferblok. Tik je die nadat je het getal hebt ingetikt, dan wordt de waarde negatief en nog een tik maakt hem weer positief. Zo trek je een kozijn af van een gevel of binnenwand: maak een aparte regel voor het kozijn, vul breedte en hoogte gewoon positief in en zet het aantal op -1. Het rijtotaal wordt dan negatief en gaat van de wand af. Bij de andere velden zoals breedte, hoogte en de kozijn-maten blijft de knop weg, want daar hoort geen minteken. Geen SQL nodig.</p>
         <p><strong>🎨 Verfsystemen dupliceren (v3.48.0).</strong> Op elke verfsysteem-kaart staat nu naast Bewerken en Verwijderen een knop Dupliceren. Die maakt een volledige kopie van het systeem: alle stappen en percentages, dezelfde ondergrond, eenheid en notities. De naam krijgt (kopie) erachter en de kopie opent meteen zodat je hem direct kunt aanpassen. Handig om snel een variant te maken, bijvoorbeeld hetzelfde systeem met een laag minder of voor een andere ondergrond. Het is een echt nieuw systeem, dus wat je aan de kopie verandert laat het origineel ongemoeid. Geen SQL nodig.</p>
         <p><strong>➡️ Cijferblok loopt door naar een nieuwe meetregel (v3.47.1).</strong> Tik je met Volgende door tot en met de factor van de laatste meetregel, dan maakt de app nu automatisch een nieuwe regel aan en springt het cijferblok meteen in de breedte daarvan. Zo tik je op de steiger regel na regel weg zonder tussendoor op "+ Regel" te hoeven. Het gebeurt alleen als de laatste regel ook echt gevuld is (breedte of hoogte ingevuld), zodat er geen lege regels ontstaan als je gewoon klaar bent.</p>
         <p><strong>🔢 Eigen cijferblok voor de steiger (v3.47.0).</strong> Tik je in een meetstaat-veld (breedte, hoogte, aantal of factor) of in een kozijn-maatveld, dan blijft het iPad-toetsenbord voortaan uit en komt er onderaan het scherm een eigen cijferblok op met grote, duidelijke knoppen 0 tot 9 en een wis-toets. Fijn met handschoenen of een vieze duim. De enter-toets heet "Volgende" en staat rechtsonder waar je hem gewend bent: hij bevestigt de waarde en springt meteen naar het volgende veld, zodat je breedte, hoogte, aantal en factor achter elkaar kunt intikken. De wis-toets staat juist rechtsboven, ver van Volgende. Bij de factor staat er een komma bij (de hele getallen krijgen die niet), en die komma wordt intern netjes omgerekend zodat de berekening klopt. Buiten het veld tikken of op Klaar drukken sluit het blok. Op de Mac werkt je gewone toetsenbord gewoon door.</p>
@@ -2894,6 +2900,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
     <button type="button" class="np-key" data-k="3" style="grid-area:3/3;">3</button>
     <button type="button" class="np-key np-komma" id="npKomma" data-k="," style="grid-area:4/1;">,</button>
     <button type="button" class="np-key np-zero" data-k="0" style="grid-area:4/2/5/4;">0</button>
+    <button type="button" class="np-key np-sign" id="npSign" data-k="sign" style="grid-area:4/1;" aria-label="Plus of min">±</button>
   </div>
 </div>
 
@@ -2904,7 +2911,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.48.0';
+const APP_VERSION = 'v3.49.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3266,6 +3273,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.49.0', d: '2026-06-08', h: 'Min-knop op het cijferblok: bij aantal en factor in de meetstaat staat nu een ±-knop. Tik na het getal om de waarde negatief te maken (nog een tik maakt hem weer positief). Zo trek je een kozijn af van een gevel of wand: aparte regel voor het kozijn, breedte en hoogte positief, aantal op -1, dan wordt het rijtotaal negatief. Bij breedte, hoogte en de kozijn-maten blijft de knop weg. Geen SQL nodig' },
   { v: '3.48.0', d: '2026-06-08', h: 'Verfsystemen dupliceren: op elke verfsysteem-kaart staat nu naast Bewerken en Verwijderen een knop Dupliceren. Die maakt een volledige kopie (alle stappen en percentages, dezelfde ondergrond, eenheid en notities, naam met (kopie) erachter) en opent die meteen om aan te passen. Handig voor een variant zoals hetzelfde systeem met een laag minder of voor een andere ondergrond, zonder het origineel te raken. Geen SQL nodig' },
   { v: '3.47.1', d: '2026-06-08', h: 'Cijferblok loopt nu door naar een nieuwe meetregel: Volgende op de factor van de laatste regel maakt automatisch een nieuwe regel aan en springt erin (in de breedte), zodat je regel na regel kunt wegtikken zonder op "+ Regel". Gebeurt alleen als de laatste regel gevuld is (breedte of hoogte), dus geen lege regels. Geen SQL nodig' },
   { v: '3.47.0', d: '2026-06-07', h: 'Eigen cijferblok voor de meetstaat- en kozijn-maatvelden. Het iPad-toetsenbord blijft uit; een vaste balk onderaan toont grote knoppen 0 tot 9 met een wis-toets. De Volgende-toets (enter) staat rechtsonder en springt naar het volgende veld; de wis-toets rechtsboven. De factor krijgt een komma die intern naar een punt wordt omgerekend; hele getallen (b, h, aantal, kozijn-maten) niet. Prettig met handschoenen op de steiger. Geen SQL nodig' },
@@ -10120,8 +10128,8 @@ function renderMeetstaat() {
       <td data-label="Omschrijving"><input type="text" data-field="omschrijving" value="${ms.omschrijving||''}" onchange="updMeetstaat(${idx},'omschrijving',this.value)" onkeydown="msKey(event,${idx},1)" ${_dis}></td>
       <td data-label="b (cm)"><input type="text" inputmode="none" class="np-field" data-np-label="Breedte (cm)" data-field="bCm" value="${ms.bCm||0}" onchange="updMeetstaat(${idx},'bCm',_npInt(this.value))" onkeydown="msKey(event,${idx},2)" ${_dis}></td>
       <td data-label="h (cm)"><input type="text" inputmode="none" class="np-field" data-np-label="Hoogte (cm)" data-field="hCm" value="${ms.hCm||0}" onchange="updMeetstaat(${idx},'hCm',_npInt(this.value))" onkeydown="msKey(event,${idx},3)" ${_dis}></td>
-      <td data-label="aantal"><input type="text" inputmode="none" class="np-field" data-np-label="Aantal" data-field="aantal" value="${ms.aantal||0}" onchange="updMeetstaat(${idx},'aantal',_npInt(this.value))" onkeydown="msKey(event,${idx},4)" ${_dis}></td>
-      <td data-label="factor"><input type="text" inputmode="none" class="np-field" data-dec data-np-label="Factor" data-field="factor" value="${String(ms.factor != null ? ms.factor : 1).replace('.', ',')}" onchange="updMeetstaat(${idx},'factor',_npFloat(this.value,1))" onkeydown="msKey(event,${idx},5)" ${_dis}></td>
+      <td data-label="aantal"><input type="text" inputmode="none" class="np-field" data-np-label="Aantal" data-field="aantal" data-np-sign value="${ms.aantal||0}" onchange="updMeetstaat(${idx},'aantal',_npInt(this.value))" onkeydown="msKey(event,${idx},4)" ${_dis}></td>
+      <td data-label="factor"><input type="text" inputmode="none" class="np-field" data-dec data-np-label="Factor" data-field="factor" data-np-sign value="${String(ms.factor != null ? ms.factor : 1).replace('.', ',')}" onchange="updMeetstaat(${idx},'factor',_npFloat(this.value,1))" onkeydown="msKey(event,${idx},5)" ${_dis}></td>
       <td class="num right ms-totaal" data-label="Totaal">${fmt(t.totaal)} ${t.eenheid}</td>
       <td data-label="Opmerking"><input type="text" data-field="opmerking" value="${ms.opmerking||''}" onchange="updMeetstaat(${idx},'opmerking',this.value)" onkeydown="msKey(event,${idx},6)" ${_dis}></td>
       <td class="right" style="white-space:nowrap;">${_auto ? '<span class="ms-auto-tag" title="Automatisch bijgehouden uit de kozijntekeningen">auto</span>' : (tekenBtn + ` <button class="btn btn-danger btn-sm" onclick="delMeetstaat(${idx})">×</button>`)}</td>
@@ -10295,6 +10303,7 @@ const NumPad = {
       const ctrl = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter','Home','End','Escape'];
       if (ctrl.indexOf(e.key) !== -1) return;
       if (/^[0-9]$/.test(e.key)) { this.fresh = false; return; }
+      if (e.key === '-' && f.hasAttribute('data-np-sign')) { this.fresh = false; return; }
       if ((e.key === ',' || e.key === '.') && f.hasAttribute('data-dec')) { this.fresh = false; return; }
       e.preventDefault();
     });
@@ -10306,7 +10315,10 @@ const NumPad = {
     this.active = field;
     this.dec = field.hasAttribute('data-dec');
     this.fresh = true; // eerste cijfer vervangt de bestaande waarde
-    if (this.grid) this.grid.classList.toggle('np-int', !this.dec);
+    if (this.grid) {
+      this.grid.classList.toggle('np-int', !this.dec);
+      this.grid.classList.toggle('np-signon', field.hasAttribute('data-np-sign'));
+    }
     if (this.label) this.label.textContent = field.getAttribute('data-np-label') || 'Invoeren';
     this.el.classList.add('active');
     this.el.setAttribute('aria-hidden', 'false');
@@ -10333,6 +10345,10 @@ const NumPad = {
       if (this.fresh) { f.value = ''; this.fresh = false; }
       if (String(f.value).indexOf(',') !== -1) return;
       f.value = (f.value === '' ? '0,' : f.value + ',');
+    } else if (k === 'sign') {
+      this.fresh = false;
+      const v = String(f.value);
+      f.value = (v.charAt(0) === '-') ? v.slice(1) : ('-' + v);
     } else {
       if (this.fresh) { f.value = ''; this.fresh = false; }
       if (String(f.value).length < 9) f.value = f.value + k;
