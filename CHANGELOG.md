@@ -1,3 +1,14 @@
+## v3.49.1 — Verwijderknop bij kozijnen weer in beeld
+Het rode kruisje om een meetregel te verwijderen staat nu links op een vaste plek, zodat een brede kozijn-miniatuur het niet meer uit beeld duwt.
+
+### Wijzigingen
+- In de meetstaat staat het verwijder-kruisje nu links in de actie-kolom, vóór het potlood of de kozijn-miniatuur. Daardoor blijft het altijd zichtbaar, ook bij een breed kozijn.
+- Voorheen stond het kruisje rechts naast de miniatuur; bij een brede tekening viel het buiten de kolom en kon je de regel niet verwijderen.
+- De automatische regels (auto) houden zoals altijd geen knoppen, want die worden uit de kozijntekeningen bijgehouden.
+- Geen Supabase-migratie nodig.
+
+---
+
 ## v3.49.0 — Min-knop op het cijferblok
 Een ±-knop bij aantal en factor, zodat je een kozijn kunt aftrekken van een gevel of binnenwand.
 
