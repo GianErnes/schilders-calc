@@ -1958,8 +1958,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.47.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.47.1</h2>
       <div class="intro-body">
+        <p><strong>➡️ Cijferblok loopt door naar een nieuwe meetregel (v3.47.1).</strong> Tik je met Volgende door tot en met de factor van de laatste meetregel, dan maakt de app nu automatisch een nieuwe regel aan en springt het cijferblok meteen in de breedte daarvan. Zo tik je op de steiger regel na regel weg zonder tussendoor op "+ Regel" te hoeven. Het gebeurt alleen als de laatste regel ook echt gevuld is (breedte of hoogte ingevuld), zodat er geen lege regels ontstaan als je gewoon klaar bent.</p>
         <p><strong>🔢 Eigen cijferblok voor de steiger (v3.47.0).</strong> Tik je in een meetstaat-veld (breedte, hoogte, aantal of factor) of in een kozijn-maatveld, dan blijft het iPad-toetsenbord voortaan uit en komt er onderaan het scherm een eigen cijferblok op met grote, duidelijke knoppen 0 tot 9 en een wis-toets. Fijn met handschoenen of een vieze duim. De enter-toets heet "Volgende" en staat rechtsonder waar je hem gewend bent: hij bevestigt de waarde en springt meteen naar het volgende veld, zodat je breedte, hoogte, aantal en factor achter elkaar kunt intikken. De wis-toets staat juist rechtsboven, ver van Volgende. Bij de factor staat er een komma bij (de hele getallen krijgen die niet), en die komma wordt intern netjes omgerekend zodat de berekening klopt. Buiten het veld tikken of op Klaar drukken sluit het blok. Op de Mac werkt je gewone toetsenbord gewoon door.</p>
         <p><strong>🔧 Foto-bijlage: lege beginpagina nu echt weg (v3.46.3).</strong> De eerdere aanpassing in v3.46.1 loste de lege eerste pagina niet helemaal op. De oorzaak is nu goed te pakken: het fotoblok gebruikte een opmaak met een harde "niet over een paginarand breken", waardoor het in z'n geheel naar pagina twee sprong als het naast de kop krap zat. Het fotoblok gebruikt nu dezelfde tabel-opmaak als de meetstaat- en calculatie-PDF, die netjes tussen de rijen breekt. De foto's beginnen dus onder de kop op pagina één, en een foto wordt nooit over een paginarand gesneden. <em>Tip: ververs de app na het uploaden even hard (op de iPad: tabblad sluiten en opnieuw openen), anders draait je browser nog de oude versie.</em></p>
         <p><strong>🔢 Genummerde gebreken op de foto-bijlage (v3.46.2).</strong> De gebrek-stippen op de foto's krijgen nu een nummer, net als bij de getekende kozijnen. Onder elke foto staat een genummerde lijst die per stip het gebrek en de notitie toont, dus je ziet meteen welke tekst bij welke plek hoort. De algemene foto-opmerking staat apart bovenaan, los van de gebreken, zodat er niets meer als losse tekst onder de foto verloren staat. Stippen en lijst delen dezelfde kleur en nummering, gelijk aan de kozijn-PDF.</p>
@@ -2902,7 +2903,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.47.0';
+const APP_VERSION = 'v3.47.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3264,6 +3265,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.47.1', d: '2026-06-08', h: 'Cijferblok loopt nu door naar een nieuwe meetregel: Volgende op de factor van de laatste regel maakt automatisch een nieuwe regel aan en springt erin (in de breedte), zodat je regel na regel kunt wegtikken zonder op "+ Regel". Gebeurt alleen als de laatste regel gevuld is (breedte of hoogte), dus geen lege regels. Geen SQL nodig' },
   { v: '3.47.0', d: '2026-06-07', h: 'Eigen cijferblok voor de meetstaat- en kozijn-maatvelden. Het iPad-toetsenbord blijft uit; een vaste balk onderaan toont grote knoppen 0 tot 9 met een wis-toets. De Volgende-toets (enter) staat rechtsonder en springt naar het volgende veld; de wis-toets rechtsboven. De factor krijgt een komma die intern naar een punt wordt omgerekend; hele getallen (b, h, aantal, kozijn-maten) niet. Prettig met handschoenen op de steiger. Geen SQL nodig' },
   { v: '3.46.3', d: '2026-06-07', h: 'Foto-bijlage: lege beginpagina nu echt opgelost. De fix van v3.46.1 hield niet; het fotoblok had nog een opmaak met een harde "niet breken" die het hele blok naast de kop naar pagina twee duwde. Het fotoblok gebruikt nu dezelfde tabel-opmaak als de meetstaat-PDF, die tussen rijen breekt, dus de foto\'s starten onder de kop op pagina één. Ververs na uploaden hard. Geen SQL nodig' },
   { v: '3.46.2', d: '2026-06-07', h: 'Foto-bijlage: de gebrek-stippen op de foto\'s zijn nu genummerd, met onder elke foto een genummerde lijst (gebrek + notitie) waarvan de nummers overeenkomen met de stippen. De algemene foto-opmerking staat apart, los van de gebreken, zodat geen tekst meer losgezongen onder de foto staat. Gelijk aan de getekende-kozijnen-PDF. Geen SQL nodig' },
@@ -10328,9 +10330,24 @@ const NumPad = {
       const nx = fields[i + 1];
       nx.focus();
       this.open(nx);
-    } else {
-      this.close();
+      return;
     }
+    // Geen volgend veld meer. Bij de factor van de laatste meetstaat-regel:
+    // een nieuwe meetregel aanmaken en erin verder, maar alleen als de regel
+    // gevuld is (breedte of hoogte). addMeetstaat() rendert opnieuw en focust
+    // de breedte van de nieuwe regel, waardoor het blok vanzelf weer opkomt.
+    if (f.getAttribute('data-field') === 'factor' && f.closest('#meetstaatLijst')) {
+      const row = f.closest('tr');
+      const b = row ? row.querySelector('[data-field="bCm"]') : null;
+      const h = row ? row.querySelector('[data-field="hCm"]') : null;
+      const gevuld = (b && _npInt(b.value) > 0) || (h && _npInt(h.value) > 0);
+      if (gevuld && typeof addMeetstaat === 'function') {
+        this.active = null; // huidige regel wordt zo opnieuw gerenderd
+        addMeetstaat();
+        return;
+      }
+    }
+    this.close();
   }
 };
 (function () {

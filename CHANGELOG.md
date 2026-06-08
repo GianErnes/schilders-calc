@@ -1,3 +1,15 @@
+## v3.47.1 — Cijferblok loopt door naar een nieuwe meetregel
+Kleine uitbreiding op het cijferblok van v3.47.0, na de praktijktest op de steiger.
+
+### Wijzigingen
+- Volgende op de factor van de láátste meetregel maakt nu automatisch een nieuwe regel aan en zet het cijferblok meteen in de breedte van die nieuwe regel. Zo kun je regel na regel wegtikken zonder tussendoor op "+ Regel" te drukken.
+- Dit gebeurt alleen als de laatste regel gevuld is (breedte of hoogte groter dan nul). Is de regel leeg, dan sluit het blok gewoon, zodat er geen lege regels ontstaan als je klaar bent.
+- Tussen bestaande regels sprong Volgende al door (van de factor van een regel naar de breedte van de volgende). Dit gedrag is ongewijzigd; alleen het einde van de laatste regel is nieuw.
+- In de kozijntekenaar blijft Volgende binnen de maatvelden; daar wordt uiteraard geen meetregel aangemaakt.
+- Techniek: de bestaande functie `addMeetstaat()` wordt hergebruikt (die voegt de regel toe, rendert opnieuw en focust de breedte van de nieuwe regel), waardoor het cijferblok vanzelf weer opkomt. Geen Supabase-migratie nodig.
+
+---
+
 ## v3.47.0 — Eigen cijferblok voor het steigerwerk
 Een eigen numeriek toetsenbord onder de meetstaat- en kozijn-maatvelden, zodat invoeren op de iPad op de steiger sneller en handschoen-vriendelijk wordt.
 
