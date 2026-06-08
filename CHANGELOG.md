@@ -1,3 +1,12 @@
+## v3.49.2 — Wis-toets met een duidelijk symbool
+De wis-toets op het cijferblok toonde op de iPad geen icoon. Hij heeft nu een gewoon ⌫-symbool dat altijd zichtbaar is.
+
+### Wijzigingen
+- De wis-toets van het cijferblok gebruikt nu het Unicode-teken ⌫ in plaats van een icoon uit het icoon-lettertype. Op de iPad laadde dat lettertype niet, waardoor de toets leeg leek. Het ⌫-teken werkt zonder extra lettertype.
+- Geen Supabase-migratie nodig.
+
+---
+
 ## v3.49.1 — Verwijderknop bij kozijnen weer in beeld
 Het rode kruisje om een meetregel te verwijderen staat nu links op een vaste plek, zodat een brede kozijn-miniatuur het niet meer uit beeld duwt.
 
