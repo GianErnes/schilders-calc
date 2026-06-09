@@ -1,3 +1,15 @@
+## v3.50.2 — Materiaal-bedrag per bewerkingsregel zichtbaar
+Het totale materiaal-bedrag per stap staat nu in beeld, zodat je kunt zien dat het meeschaalt met het percentage.
+
+### Wijzigingen
+- In het grijze regeltje onder elke bewerking in een calc-regel staat nu naast de totale uren ook het totale materiaal-bedrag (verkoop) voor die stap, in blauw.
+- Beide grootheden zijn met het percentage en de hoeveelheid van de regel verrekend. Een stap op 25% toont dus een kwart van de uren en een kwart van het materiaal.
+- Bij een stap zonder gekoppeld materiaal verschijnt het materiaal-bedrag niet, het regeltje blijft dan zoals het was.
+- De berekening zelf is niet aangeraakt. Het materiaal schaalde altijd al correct mee, zowel in de offerteprijs (`calcSnapshotStep`) als in het te bestellen verbruik op de werkbon (`_aggregeerMateriaalVerbruik`). Dit maakt het alleen zichtbaar ter controle.
+- Geen Supabase-migratie nodig.
+
+---
+
 ## v3.50.1 — Meetstaat-tabel smaller op een breed scherm
 De getalkolommen in de meetstaat rekten op een breed scherm onnodig uit. De tabel heeft nu een vaste kolom-layout.
 
