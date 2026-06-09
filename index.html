@@ -1969,8 +1969,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.50.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.50.2</h2>
       <div class="intro-body">
+        <p><strong>🎨 Materiaal-bedrag per bewerkingsregel zichtbaar (v3.50.2).</strong> In het grijze regeltje onder elke bewerking in een calc-regel stonden al de minuten, de arbeidskosten en de totale uren voor die stap. Daar staat nu in blauw ook het totale materiaal-bedrag voor de stap bij. Net als de uren is dat met het percentage en de hoeveelheid verrekend. Zet je een laag op 25% in plaats van 100%, dan zie je zowel de uren als het materiaal naar een kwart zakken. De berekening is niet veranderd, het materiaal schaalde altijd al correct mee in de offerteprijs en op de werkbon, alleen stond het materiaal-bedrag per stap nergens apart in beeld om het te kunnen controleren. Bij een stap zonder gekoppeld materiaal blijft het regeltje zoals het was. Geen SQL nodig.</p>
         <p><strong>↔️ Meetstaat-tabel smaller op een breed scherm (v3.50.1).</strong> Op een breed scherm rekten de kolommen b, h, aantal en factor onnodig ver uit, terwijl een getal als 400 of een 1 maar weinig ruimte nodig heeft. De tabel heeft nu een vaste kolom-layout met krappe getalkolommen, en de ruimte gaat naar de kolommen calc-regel, omschrijving en opmerking waar je hem kunt gebruiken. De kaartweergave op een staande iPad of telefoon blijft precies zoals hij was. Geen SQL nodig.</p>
         <p><strong>⎘ Calc-regel dupliceren (v3.50.0).</strong> Op elke regel in de calculatie staat nu naast het rode verwijderkruisje een knop ⎘. Tik je die, dan maakt de app een volledige kopie van de regel met het hele verfsysteem eronder: alle bewerkingen met hun percentages, dezelfde ondergrond, eenheid, toeslag en hoeveelheid. De kopie komt direct achter het origineel te staan met (kopie) achter de naam, zodat je hem meteen terugvindt en kunt hernoemen. De meetstaat gaat bewust niet mee: de kopie staat met de hoeveelheid van het origineel als handmatig getal en je vult de meting van de kopie zelf opnieuw in. Zo zet je dezelfde opbouw voor een andere plek snel neer zonder het verfsysteem opnieuw samen te stellen. Geen SQL nodig.</p>
         <p><strong>⌫ Wis-toets met een duidelijk symbool (v3.49.2).</strong> De wis-toets op het cijferblok toonde op de iPad geen icoontje, omdat het icoon-lettertype daar niet laadde. De toets heeft nu een gewoon ⌫-symbool dat altijd zichtbaar is, ongeacht het apparaat. Geen SQL nodig.</p>
@@ -2921,7 +2922,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.50.1';
+const APP_VERSION = 'v3.50.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3283,6 +3284,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.50.2', d: '2026-06-09', h: 'Materiaal-bedrag per bewerkingsregel zichtbaar: in het grijze regeltje onder elke bewerking in een calc-regel staat nu naast de totale uren ook het totale materiaal-bedrag voor die stap (in blauw). Beide zijn met het percentage en de hoeveelheid verrekend, dus zet je een stap op 25% dan zie je het materiaal netjes naar een kwart zakken, net als de uren. De berekening zelf is niet gewijzigd, het materiaal schaalde altijd al mee, het was alleen niet apart in beeld. Geen SQL nodig' },
   { v: '3.50.1', d: '2026-06-08', h: 'Meetstaat-tabel smaller op een breed scherm: de kolommen b, h, aantal en factor rekten onnodig uit. De tabel heeft nu een vaste kolom-layout met krappe getalkolommen, waarbij de calc-regel, omschrijving en opmerking de ruimte opvangen. De kaartweergave op een staande iPad of telefoon blijft ongewijzigd. Geen SQL nodig' },
   { v: '3.50.0', d: '2026-06-08', h: 'Calc-regel dupliceren: op elke regel in de calculatie staat nu naast het verwijderkruisje een knop ⎘. Die maakt een volledige kopie van de regel met het hele verfsysteem eronder (alle bewerkingen met hun percentages, dezelfde ondergrond, eenheid, toeslag en hoeveelheid) en zet die direct achter het origineel, met (kopie) achter de naam. De meetstaat gaat niet mee: de kopie staat met de hoeveelheid van het origineel als handmatig getal en je vult de meting zelf opnieuw in. Handig om dezelfde opbouw voor een andere plek snel neer te zetten. Geen SQL nodig' },
   { v: '3.49.2', d: '2026-06-08', h: 'Wis-toets op het cijferblok toont nu een gewoon ⌫-symbool in plaats van een icoon dat op de iPad niet laadde, zodat de toets altijd zichtbaar is. Geen SQL nodig' },
@@ -11907,6 +11909,8 @@ function renderRegel(hgId, odId, r) {
     const matKost = cs.matVerkoop;
     const arbeidKost = cs.uren * (_S().uurloon || 0);
     const totaal = matKost + arbeidKost;
+    // v3.50.2 — totaal materiaal voor deze stap (verkoop), percentage en hoeveelheid verrekend
+    const matTotaalStap = matKost * (r.hoeveelheid || 0);
     // v3.20.0 — Materiaal-dropdown met slim groep-filter (hergebruik van v3.18.5 patroon)
     const stapKey = st.id || `${r.id}_${i}`;
     const expGroep = _resolveExpectedGroup(st.bewerkingNaam);
@@ -11932,7 +11936,7 @@ function renderRegel(hgId, odId, r) {
       <span class="regel-stap-num">${i+1}</span>
       <span class="regel-stap-naam">
         <strong>${st.bewerkingNaam}</strong>
-        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(cs.minuten)} min <span title="Arbeidskosten per ${st.bewerkingEenheid}, percentage verrekend">(€ ${fmt(arbeidKost)})</span><span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span></span>
+        <span style="color:var(--muted); font-size:0.68rem; font-family:'JetBrains Mono', monospace; margin-left:0.4rem;">${st.bewerkingEenheid} · ${fmt(cs.minuten)} min <span title="Arbeidskosten per ${st.bewerkingEenheid}, percentage verrekend">(€ ${fmt(arbeidKost)})</span><span style="color:var(--accent-deep); margin-left:0.5rem;" title="Totale uren voor deze stap, gegeven de hoeveelheid van deze regel">→ ${fmt(stapUrenRegel)} uur</span>${matKost > 0 ? `<span style="color:var(--blue); margin-left:0.4rem;" title="Totaal materiaal (verkoop) voor deze stap, percentage en hoeveelheid verrekend">· mat € ${fmt(matTotaalStap)}</span>` : ''}</span>
       </span>
       <span class="regel-stap-mat">
         <select onchange="updRegelStapMateriaal('${hgId}','${odId}','${r.id}',${i},this.value)">${matOpts}</select>
