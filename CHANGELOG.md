@@ -1,3 +1,17 @@
+## v3.54.0 — Roeden in de kozijn-tekenaar
+Een raam met ruitjes teken je nu echt zo: stel per vak in hoeveel ruitjes het raam breed en hoog is en de roeden tellen mee in de strekkende meters.
+
+### Wijzigingen
+- Tik een vak aan en stel bij "Roeden · ruitjes" met de plus- en min-knoppen in hoeveel ruitjes het raam breed en hoog is, bijvoorbeeld 2 breed × 3 hoog (= 6 ruitjes, dus 1 staande en 2 liggende roeden, maximaal 8×8). Terug naar 1×1 haalt de roeden er weer af.
+- De roeden komen als dunne lijntjes in het vak te staan, duidelijk dunner dan een tussenstijl of tussendorpel, zodat je het verschil in één oogopslag ziet.
+- De strekkende meters van de roeden tellen mee in het totaal dat bij Klaar in de regel landt. In de voet staat de opsplitsing nu als frame + tussenwerk + ramen + roeden.
+- De lengtes kloppen ook in schuine en boog-vakken: elke roede wordt als werkelijke koorde op de vak-vorm geknipt, met dezelfde rekenwijze als de deellijnen.
+- Roeden gaan vanzelf mee bij Dupliceren en bij het kopiëren naar een andere gevel, en zijn zichtbaar op de mini-tekening op de meetstaat-regel, in het overzicht "Getekende kozijnen" en in de kozijnen-PDF, die allemaal dezelfde render delen.
+- Op een vulling (dicht paneel) kun je geen roeden zetten; het ronde raam houdt zijn eigen kruis- en spaken-indeling. Bestaande tekeningen blijven ongewijzigd.
+- Techniek: de ruitjesverdeling wordt als `ro: { k, r }` op de vak-node in de tekening-JSON bewaard; bij 1×1 verdwijnt het veld weer. Geen Supabase-migratie nodig.
+
+---
+
 ## v3.53.0 — Loze onderdorpel in de kozijn-tekenaar
 Een deurkozijn zonder houten onderdorpel: tik op de onderrand van het frame en hij telt niet meer mee.
 
