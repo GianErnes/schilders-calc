@@ -1971,8 +1971,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.52.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.53.0</h2>
       <div class="intro-body">
+        <p><strong>🚪 Loze onderdorpel in de kozijn-tekenaar (v3.53.0).</strong> Een deurkozijn in de gevel heeft vaak geen houten onderdorpel, de deur staat gewoon op de vloer en het kozijnhout loopt alleen links, boven en rechts. Tot nu toe telde de tekenaar die onderkant altijd mee in de strekkende meters. Vanaf nu tik je in de tekenaar op de onderrand van het frame en wisselt die tussen kozijnhout en loos, precies zoals je een verticale deellijn al op loze stijl kon zetten. Een loze dorpel wordt een grijs stippellijntje, de breedte telt niet meer mee in de frame-m¹ en onderin staat achter de omtrek "loze onderdorpel" als geheugensteun. Een korte melding bevestigt elke wissel. Het werkt bij alle vormen behalve rond, gaat vanzelf mee bij het dupliceren en bij het kopiëren naar een andere gevel, en de stippellijn is ook te zien op de kleine tekening op de regel, in het overzicht en in de kozijnen-PDF. Bestaande tekeningen veranderen niet, die houden hun houten dorpel tot jij hem aantikt. Geen SQL nodig.</p>
         <p><strong>⧉ Getekend kozijn kopiëren naar de gevel waar je mee bezig bent (v3.52.0).</strong> Ben je in de meetstaat de gegevens van een nieuwe gevel aan het invoeren en zie je onderin bij "Getekende kozijnen" een model staan dat daar ook voorkomt, dan tik je voortaan op het blauwe ⧉-knopje rechtsboven op die tegel. De app maakt een eigen kopie van de tekening en hangt die als nieuwe regel aan de calc-regel met dezelfde naam in het onderdeel waar je mee bezig bent. Welk onderdeel dat is weet de app uit je onderste invoer-rij, hetzelfde geheugen dat + Regel gebruikt, en de melding vertelt je waar de kopie geland is. De kopie houdt de naam, maten, indeling en ramen van het model. Gebrek-stippen gaan bewust niet mee, want houtrot zit op het exemplaar en niet op het model; wil je een kopie mét gebreken, gebruik dan Dupliceren in de tekenaar. Aantal en factor beginnen op 1. Deuren en panelen worden op regelnaam hergekoppeld binnen de nieuwe gevel; wat niet matcht staat op "nog koppelen". Heeft de gevel nog geen passende calc-regel, dan krijg je een melding dat je die eerst moet toevoegen via het ⧉ op de onderdeel-balk in de Calculatie-tab. Geen SQL nodig.</p>
         <p><strong>📋 Project-totaal per regel-type toont nu alles (v3.51.1).</strong> Onderaan de meetstaat staat het project-totaal per regel-type, geaggregeerd over alle onderdelen, bedoeld voor materiaal-bestelling en voortgang-bewaking. Daar vielen tot nu toe regel-types weg die maar in één gevel of kamer voorkwamen, bijvoorbeeld een hekje voor één raam of een losse deur. Voor een totaaloverzicht wil je juist alles zien, ook wat maar één keer voorkomt, dus die staan er nu allemaal bij. De volgorde is grootste posten eerst, daarbinnen op naam. Geen SQL nodig.</p>
         <p><strong>🪟 Aantal in de kozijn-tekenaar, plus een fix op de vulling (v3.51.0).</strong> Onderaan in de tekenaar, bij de totalen, staat nu een veld <strong>Aantal</strong>. Teken je een kozijn dat meerdere keren identiek voorkomt, dan geef je hier op hoe vaak, bijvoorbeeld 5, en hoef je het niet meer los te dupliceren. De totalen onder de tekening laten meteen zien wat dat oplevert: het per-stuk-getal en daarachter ×N met het totaal, voor zowel de omtrek (m¹) als de vulling (m²). Tegelijk is hier een gat gedicht: het materiaaloppervlak van een vulling, dus een deur of een paneel, schaalde nog niet mee met dat aantal terwijl de omtrek dat allang deed. Vanaf nu telt de vulling ook keer het aantal, net als de omtrek. <em>Let op: heb je in een bestaande calculatie een getekend kozijn met een vulling op een aantal groter dan 1 staan, dan wordt die m² nu hoger en correct. Loop zulke offertes even na als je ze nog gebruikt.</em> Geen SQL nodig.</p>
@@ -2933,7 +2934,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.52.0';
+const APP_VERSION = 'v3.53.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3295,6 +3296,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.53.0', d: '2026-06-10', h: 'Loze onderdorpel in de kozijn-tekenaar. Een deurkozijn heeft vaak geen houten onderdorpel, de deur staat op de vloer. Tik in de tekenaar op de onderrand van het frame en hij wisselt tussen kozijnhout en loos, net als de loze stijl bij een verticale deellijn. Loos = een grijs stippellijntje in de tekening en de breedte telt niet mee in de frame-m¹; achter de omtrek staat "loze onderdorpel" als geheugensteun. Werkt bij alle vormen behalve rond, gaat mee in dupliceren en kopiëren naar een andere gevel, en is zichtbaar op de thumbnails en in de kozijnen-PDF. Bestaande tekeningen blijven gewoon hout. Geen SQL nodig' },
   { v: '3.52.0', d: '2026-06-10', h: 'Getekend kozijn kopiëren naar de gevel waar je mee bezig bent. Op elke tegel in "Getekende kozijnen" staat rechtsboven een blauw ⧉-knopje. Ben je gegevens van een nieuwe gevel aan het invoeren, tik dan dat knopje op het kozijnmodel dat je daar ook hebt: de app maakt een eigen kopie en hangt die aan de calc-regel met dezelfde naam in jouw actieve onderdeel (bepaald via je onderste invoer-rij, zoals + Regel dat onthoudt). Gebrek-stippen gaan niet mee (die horen bij het exemplaar, niet bij het model), aantal en factor beginnen op 1, en deur/paneel-koppelingen worden op regelnaam hergekoppeld of staan op "nog koppelen". Ontbreekt de regel in die gevel, dan vertelt een melding je dat je hem eerst via ⧉ in de Calculatie-tab moet toevoegen. Geen SQL nodig' },
   { v: '3.51.1', d: '2026-06-10', h: 'Project-totaal per regel-type toont nu alle regel-types. Onderaan de meetstaat, bij het project-totaal voor materiaal-bestelling en voortgang, vielen regel-types weg die maar in één gevel of kamer voorkwamen (een hekje, een losse deur). Die staan er nu ook bij, zodat het overzicht compleet is. Volgorde: grootste posten eerst, daarbinnen op naam. Geen SQL nodig' },
   { v: '3.51.0', d: '2026-06-10', h: 'Aantal in de kozijn-tekenaar plus een fix op de vulling. Onderaan in de tekenaar, bij de totalen, staat nu een veld Aantal: geef je daar bijvoorbeeld 5 op, dan telt dit kozijn vijf keer mee. De totalen onder de tekening tonen direct het per-stuk-bedrag én het totaal (×N). Tegelijk is een gat gedicht: de m² van een vulling (deur of paneel) schaalde nog niet mee met het aantal, terwijl de omtrek dat al deed. Vanaf nu telt de vulling ook × aantal (en × factor). LET OP: een bestaande calculatie met een getekend kozijn met vulling op aantal groter dan 1 krijgt hierdoor een hogere, correcte m². Geen SQL nodig' },
@@ -10585,20 +10587,22 @@ function _kozijnOmtrekCm() {
   const v = _kozijnState.vorm, m = _kozijnState.maten;
   const b = Math.max(0, +m.b || 0);
   if (v === 'rond') { const d = Math.max(0, +m.d || 0); return Math.PI * d; }
-  if (v === 'rechthoek') { const h = Math.max(0, +m.h || 0); return 2 * (b + h); }
+  // v3.53.0 — loze onderdorpel: de onderrand (lengte b) telt niet mee in het frame.
+  const dorpelAf = _kozijnState.lozeDorpel ? b : 0;
+  if (v === 'rechthoek') { const h = Math.max(0, +m.h || 0); return 2 * (b + h) - dorpelAf; }
   if (v === 'schuin_enkel') {
     const hl = Math.max(0, +m.hLinks || 0), hr = Math.max(0, +m.hRechts || 0);
-    return b + hl + hr + Math.sqrt(b * b + (hl - hr) * (hl - hr));
+    return b + hl + hr + Math.sqrt(b * b + (hl - hr) * (hl - hr)) - dorpelAf;
   }
   if (v === 'schuin_punt') {
     const hz = Math.max(0, +m.hZijkant || 0), ht = Math.max(0, +m.hTop || 0);
-    return b + 2 * hz + 2 * Math.sqrt((b / 2) * (b / 2) + (ht - hz) * (ht - hz));
+    return b + 2 * hz + 2 * Math.sqrt((b / 2) * (b / 2) + (ht - hz) * (ht - hz)) - dorpelAf;
   }
   if (v === 'boog') {
     const h = Math.max(0, +m.h || 0), f = Math.max(0, +m.boogHoogte || 0), a = b / 2;
     let arc = b;
     if (f > 0 && a > 0) { const R = (f * f + a * a) / (2 * f); arc = 2 * R * Math.asin(Math.min(1, a / R)); }
-    return b + 2 * h + arc;
+    return b + 2 * h + arc - dorpelAf;
   }
   return 0;
 }
@@ -10704,7 +10708,26 @@ function _kozijnGeometrie(vorm, maten) {
   if (!g || !g.pts.length) return { d: '', vbW: 0, vbH: 0, pts: [] };
   const P = (p) => `${(+p[0]).toFixed(1)} ${(+p[1]).toFixed(1)}`;
   const d = 'M ' + g.pts.map(P).join(' L ') + ' Z';
-  return { d, vbW: g.vbW, vbH: g.vbH, pts: g.pts };
+  // v3.53.0 — onderrand (dorpel) lokaliseren: het segment tussen de twee hoekpunten
+  // op de maximale y. dOpen is dezelfde contour zónder dat ondersegment, voor de
+  // weergave van een loze onderdorpel (deurkozijn zonder houten dorpel).
+  let dOpen = '', dorpel = null;
+  const n = g.pts.length;
+  if (n >= 3) {
+    const maxY = Math.max(...g.pts.map(p => p[1]));
+    let bi = -1;
+    for (let i = 0; i < n; i++) {
+      const a = g.pts[i], b2 = g.pts[(i + 1) % n];
+      if (Math.abs(a[1] - maxY) < 0.01 && Math.abs(b2[1] - maxY) < 0.01) { bi = i; break; }
+    }
+    if (bi >= 0) {
+      const ring = [];
+      for (let k = 1; k <= n; k++) ring.push(g.pts[(bi + k) % n]);
+      dOpen = 'M ' + ring.map(P).join(' L ');
+      dorpel = { p0: g.pts[bi], p1: g.pts[(bi + 1) % n] };
+    }
+  }
+  return { d, dOpen, dorpel, vbW: g.vbW, vbH: g.vbH, pts: g.pts };
 }
 // Bouwt de binnenkant van de SVG. interactive=true voegt tik-vlakken + selectie toe
 // (editor); interactive=false geeft een statische tekening (thumbnail / overzicht).
@@ -10789,7 +10812,16 @@ function _kozijnRondInnerSvg(g, verdeling) {
 function _kozijnBuildInner(g, vorm, verdeling, markeringen, interactive, sel, opts) {
   const markeerActief = interactive && !!_kozijnMarkeerType;
   const genummerd = !!(opts && opts.genummerd);
-  let inner = `<path d="${g.d}" fill="rgba(70,130,180,0.12)" stroke="#e63329" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`;
+  // v3.53.0 — loze onderdorpel: frame zonder onderrand (deurkozijn op de vloer).
+  const lozeDorpel = !!(opts && opts.lozeDorpel) && !g.rond && g.dOpen && g.dorpel;
+  let inner;
+  if (lozeDorpel) {
+    inner = `<path d="${g.d}" fill="rgba(70,130,180,0.12)" stroke="none" pointer-events="none"/>`;
+    inner += `<path d="${g.dOpen}" fill="none" stroke="#e63329" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`;
+    inner += `<line x1="${g.dorpel.p0[0].toFixed(1)}" y1="${g.dorpel.p0[1].toFixed(1)}" x2="${g.dorpel.p1[0].toFixed(1)}" y2="${g.dorpel.p1[1].toFixed(1)}" stroke="#9ca3af" stroke-width="1.2" vector-effect="non-scaling-stroke" stroke-dasharray="4 3" stroke-linecap="round" pointer-events="none"/>`;
+  } else {
+    inner = `<path d="${g.d}" fill="rgba(70,130,180,0.12)" stroke="#e63329" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`;
+  }
   if (vorm === 'rond') {
     inner += _kozijnRondInnerSvg(g, verdeling);
   } else if (verdeling && g.pts && g.pts.length >= 3) {
@@ -10835,6 +10867,14 @@ function _kozijnBuildInner(g, vorm, verdeling, markeringen, interactive, sel, op
       if (interactive) inner += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="transparent" stroke-width="16" vector-effect="non-scaling-stroke" pointer-events="all" onclick="_kozijnTapDivider('${dv.path}')" style="cursor:pointer"/>`;
     });
   }
+  // v3.53.0 — tik-zone op de onderdorpel: wisselt tussen kozijnhout en loos.
+  // In markeer-modus niet renderen, dan blijft een tik onderaan een gebrek-stip plaatsen.
+  if (interactive && !markeerActief && !g.rond && g.dorpel) {
+    const ttl = (opts && opts.lozeDorpel)
+      ? 'Onderdorpel is loos (telt niet mee in m¹) — tik om kozijnhout terug te zetten'
+      : 'Onderdorpel is kozijnhout — tik om hem loos te maken (geen houten dorpel)';
+    inner += `<line x1="${g.dorpel.p0[0].toFixed(1)}" y1="${g.dorpel.p0[1].toFixed(1)}" x2="${g.dorpel.p1[0].toFixed(1)}" y2="${g.dorpel.p1[1].toFixed(1)}" stroke="transparent" stroke-width="16" vector-effect="non-scaling-stroke" pointer-events="all" onclick="_kozijnToggleLozeDorpel()" style="cursor:pointer"><title>${ttl}</title></line>`;
+  }
   (markeringen || []).forEach((mk, i) => {
     const def = _KOZIJN_DEFECTEN[mk.type] || { kleur: '#dc2626' };
     const r = Math.max(genummerd ? 5 : 3, Math.min(g.vbW, g.vbH) * (genummerd ? 0.055 : 0.045));
@@ -10858,7 +10898,7 @@ function _kozijnDrawSvg() {
     el.innerHTML = '<div style="color:var(--muted); font-size:0.85rem; text-align:center;">Vul de maten in om het kozijn te tekenen.</div>';
     return;
   }
-  const inner = _kozijnBuildInner(g, _kozijnState.vorm, _kozijnState.verdeling, _kozijnState.markeringen, true, _kozijnSel);
+  const inner = _kozijnBuildInner(g, _kozijnState.vorm, _kozijnState.verdeling, _kozijnState.markeringen, true, _kozijnSel, { lozeDorpel: !!_kozijnState.lozeDorpel });
   el.innerHTML = `<svg viewBox="0 0 ${g.vbW.toFixed(1)} ${g.vbH.toFixed(1)}" preserveAspectRatio="xMidYMid meet" style="overflow:visible">${inner}</svg>`;
 }
 // Statische mini-tekening uit een opgeslagen tekening-object (regel-thumbnail / overzicht).
@@ -10866,7 +10906,7 @@ function _kozijnThumbSvg(tek, heightPx, opts) {
   if (!tek || !tek.vorm || !tek.maten) return '';
   const g = _kozijnGeometrie(tek.vorm, tek.maten);
   if (!g || g.vbW <= 0 || g.vbH <= 0) return '';
-  const inner = _kozijnBuildInner(g, tek.vorm, tek.verdeling, tek.markeringen, false, null, opts);
+  const inner = _kozijnBuildInner(g, tek.vorm, tek.verdeling, tek.markeringen, false, null, Object.assign({}, opts, { lozeDorpel: !!tek.lozeDorpel }));
   const svgStyle = (opts && opts.fill)
     ? 'width:100%; height:100%; display:block; overflow:visible;'
     : `height:${heightPx || 38}px; width:auto; max-width:100%; display:block; overflow:visible;`;
@@ -11032,6 +11072,16 @@ function _kozijnSetGeenStijl(path, val) {
   node.geenStijl = !!val;
   _kozijnTeken(); _kozijnUpdateOmtrek();
 }
+// v3.53.0 — Loze onderdorpel: een deurkozijn heeft vaak geen houten onderdorpel
+// (de deur staat op de vloer). Tik op de onderrand van het frame om te wisselen
+// tussen kozijnhout en loos. Loos = grijze stippellijn, de breedte telt niet mee
+// in de frame-m¹. Zelfde gedachte als de loze stijl bij een verticale deellijn.
+function _kozijnToggleLozeDorpel() {
+  if (_kozijnState.vorm === 'rond') return;
+  _kozijnState.lozeDorpel = !_kozijnState.lozeDorpel;
+  _kozijnTeken(); _kozijnUpdateOmtrek();
+  if (typeof _toast === 'function') _toast(_kozijnState.lozeDorpel ? 'Onderdorpel: loos (telt niet mee)' : 'Onderdorpel: kozijnhout');
+}
 // --- Gebrek-markeringen ---
 function _kozijnRenderMarkeerBalk() {
   const el = document.getElementById('kozijnMarkeerBalk'); if (!el) return;
@@ -11176,6 +11226,9 @@ function _kozijnUpdateOmtrek() {
   if (aantal > 1) {
     m1 += ` &nbsp;×${aantal} = <strong>${fm(totaal * aantal)} m¹</strong>`;
   }
+  if (_kozijnState.lozeDorpel && _kozijnState.vorm !== 'rond') {
+    m1 += ` <span style="color:var(--muted); font-size:0.85em;">· loze onderdorpel</span>`;
+  }
   const perRegel = _kozijnVlakkenPerRegel();
   const m2Lijnen = Object.keys(perRegel)
     .filter(k => perRegel[k].m2 > 0.0001)
@@ -11201,7 +11254,8 @@ function openKozijnTekenaar(idx) {
     vorm: _KOZIJN_VORMEN[t.vorm] ? t.vorm : 'rechthoek',
     maten: (t.maten && typeof t.maten === 'object') ? Object.assign({}, t.maten) : Object.assign({}, _KOZIJN_DEFAULTS['rechthoek']),
     verdeling: (t.verdeling && typeof t.verdeling === 'object') ? t.verdeling : { t: 'vak' },
-    markeringen: Array.isArray(t.markeringen) ? t.markeringen.map(m => Object.assign({}, m)) : []
+    markeringen: Array.isArray(t.markeringen) ? t.markeringen.map(m => Object.assign({}, m)) : [],
+    lozeDorpel: t.lozeDorpel === true
   };
   _kozijnSel = null;
   _kozijnMarkeerType = null;
@@ -11236,6 +11290,7 @@ function _kozijnBouwTekening() {
     maten: Object.assign({}, _kozijnState.maten),
     verdeling: _kozijnState.verdeling,
     markeringen: (_kozijnState.markeringen || []).map(m => Object.assign({}, m)),
+    lozeDorpel: !!_kozijnState.lozeDorpel,
     omtrekM1: +(cm / 100).toFixed(3),
     vlakkenM2: +_kozijnVlakkenM2().toFixed(3),
     vlakkenM2PerRegel: _kozijnVlakkenM2PerRegelLijst()

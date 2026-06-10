@@ -1,3 +1,17 @@
+## v3.53.0 — Loze onderdorpel in de kozijn-tekenaar
+Een deurkozijn zonder houten onderdorpel: tik op de onderrand van het frame en hij telt niet meer mee.
+
+### Wijzigingen
+- Tik in de tekenaar op de onderdorpel van het frame om te wisselen tussen kozijnhout en loos. Een korte melding bevestigt de wissel. In markeer-modus blijft een tik onderaan gewoon een gebrek-stip plaatsen.
+- Een loze dorpel wordt getekend als een dun grijs stippellijntje, in dezelfde stijl als de loze stijl bij een verticale deellijn (v3.46.0).
+- De breedte van de onderrand telt niet mee in de frame-m¹. Dat werkt bij rechthoek, schuin enkel, schuin punt en boog; bij rond bestaat er geen onderdorpel. Achter de omtrek-regel in de tekenaar-voet staat "loze onderdorpel" als geheugensteun.
+- De instelling wordt in de tekening opgeslagen en gaat vanzelf mee bij Dupliceren en bij het kopiëren naar een andere gevel (v3.52.0).
+- De stippellijn is ook zichtbaar op de mini-tekening op de meetstaat-regel, in het overzicht "Getekende kozijnen" en in de kozijnen-PDF, die allemaal dezelfde render delen.
+- Bestaande tekeningen blijven ongewijzigd (houten dorpel) tot je de onderrand aantikt.
+- Techniek: de geometrie levert naast de gesloten contour nu ook een open variant zonder ondersegment (`dOpen`) plus het dorpel-segment zelf; de tik-zone is een brede transparante lijn over de onderrand, naar het patroon van de deellijn-tikzones. Geen Supabase-migratie nodig.
+
+---
+
 ## v3.52.0 — Getekend kozijn kopiëren naar de gevel waar je mee bezig bent
 Een kopieer-knopje op de tegels in "Getekende kozijnen", dat een kozijnmodel in één tik overzet naar het actieve onderdeel.
 
