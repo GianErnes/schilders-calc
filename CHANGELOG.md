@@ -1,3 +1,18 @@
+## v3.51.0 — Aantal in de kozijn-tekenaar, plus een fix op de vulling
+Een aantal-veld in de tekenaar voor identieke kozijnen, en de vulling-m² schaalt nu correct mee.
+
+### Wijzigingen
+- Onderaan in de kozijn-tekenaar, bij de totalen, staat nu een veld Aantal. Geef je daar een getal groter dan 1 op, dan telt dit kozijn zo vaak mee zonder dat je het hoeft te dupliceren.
+- De totalen onder de tekening tonen bij een aantal groter dan 1 zowel het per-stuk-getal als het totaal (×N), voor de omtrek (m¹) en voor de vulling (m²).
+- Het aantal wordt opgeslagen op de meetstaat-regel van de tekening (het bestaande aantal-veld) en pas vastgelegd bij Klaar, net als de naam en de maten.
+
+### Fix
+- De m² van een vulling (deur of paneel) schaalde nog niet mee met het aantal en de factor van het kozijn, terwijl de omtrek dat al wel deed (lengte × aantal × factor). Daardoor telde een getekende deur die meerdere keren voorkwam maar als één deur in de m². Vanaf nu vermenigvuldigt de vulling-m² ook met aantal en factor.
+- **Let op voor bestaande calculaties:** staat er in een offerte een getekend kozijn met een vulling op een aantal groter dan 1, dan wordt de vulling-m² nu hoger en correct. Loop zulke calculaties na als je ze nog gebruikt.
+- Geen Supabase-migratie nodig. Aantal en factor zijn bestaande kolommen op de meetstaat.
+
+---
+
 ## v3.50.2 — Materiaal-bedrag per bewerkingsregel zichtbaar
 Het totale materiaal-bedrag per stap staat nu in beeld, zodat je kunt zien dat het meeschaalt met het percentage.
 

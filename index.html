@@ -1969,8 +1969,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.50.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.51.0</h2>
       <div class="intro-body">
+        <p><strong>🪟 Aantal in de kozijn-tekenaar, plus een fix op de vulling (v3.51.0).</strong> Onderaan in de tekenaar, bij de totalen, staat nu een veld <strong>Aantal</strong>. Teken je een kozijn dat meerdere keren identiek voorkomt, dan geef je hier op hoe vaak, bijvoorbeeld 5, en hoef je het niet meer los te dupliceren. De totalen onder de tekening laten meteen zien wat dat oplevert: het per-stuk-getal en daarachter ×N met het totaal, voor zowel de omtrek (m¹) als de vulling (m²). Tegelijk is hier een gat gedicht: het materiaaloppervlak van een vulling, dus een deur of een paneel, schaalde nog niet mee met dat aantal terwijl de omtrek dat allang deed. Vanaf nu telt de vulling ook keer het aantal, net als de omtrek. <em>Let op: heb je in een bestaande calculatie een getekend kozijn met een vulling op een aantal groter dan 1 staan, dan wordt die m² nu hoger en correct. Loop zulke offertes even na als je ze nog gebruikt.</em> Geen SQL nodig.</p>
         <p><strong>🎨 Materiaal-bedrag per bewerkingsregel zichtbaar (v3.50.2).</strong> In het grijze regeltje onder elke bewerking in een calc-regel stonden al de minuten, de arbeidskosten en de totale uren voor die stap. Daar staat nu in blauw ook het totale materiaal-bedrag voor de stap bij. Net als de uren is dat met het percentage en de hoeveelheid verrekend. Zet je een laag op 25% in plaats van 100%, dan zie je zowel de uren als het materiaal naar een kwart zakken. De berekening is niet veranderd, het materiaal schaalde altijd al correct mee in de offerteprijs en op de werkbon, alleen stond het materiaal-bedrag per stap nergens apart in beeld om het te kunnen controleren. Bij een stap zonder gekoppeld materiaal blijft het regeltje zoals het was. Geen SQL nodig.</p>
         <p><strong>↔️ Meetstaat-tabel smaller op een breed scherm (v3.50.1).</strong> Op een breed scherm rekten de kolommen b, h, aantal en factor onnodig ver uit, terwijl een getal als 400 of een 1 maar weinig ruimte nodig heeft. De tabel heeft nu een vaste kolom-layout met krappe getalkolommen, en de ruimte gaat naar de kolommen calc-regel, omschrijving en opmerking waar je hem kunt gebruiken. De kaartweergave op een staande iPad of telefoon blijft precies zoals hij was. Geen SQL nodig.</p>
         <p><strong>⎘ Calc-regel dupliceren (v3.50.0).</strong> Op elke regel in de calculatie staat nu naast het rode verwijderkruisje een knop ⎘. Tik je die, dan maakt de app een volledige kopie van de regel met het hele verfsysteem eronder: alle bewerkingen met hun percentages, dezelfde ondergrond, eenheid, toeslag en hoeveelheid. De kopie komt direct achter het origineel te staan met (kopie) achter de naam, zodat je hem meteen terugvindt en kunt hernoemen. De meetstaat gaat bewust niet mee: de kopie staat met de hoeveelheid van het origineel als handmatig getal en je vult de meting van de kopie zelf opnieuw in. Zo zet je dezelfde opbouw voor een andere plek snel neer zonder het verfsysteem opnieuw samen te stellen. Geen SQL nodig.</p>
@@ -2623,7 +2624,13 @@ Hout binnen;Gronden;m²;6;0,10</div>
       <div id="kozijnMarkeerBalk" class="kozijn-markeer-balk"></div>
     </div>
     <div class="modal-foot" style="justify-content: space-between; align-items:center;">
-      <div id="kozijnOmtrek" class="kozijn-omtrek">Omtrek: 0,00 m¹</div>
+      <div style="display:flex; flex-direction:column; gap:0.5rem;">
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <label for="kozijnAantal" style="font-size:0.85rem; color:var(--ink-soft); font-weight:600; margin:0;">Aantal <span style="font-weight:400; font-size:0.72rem; color:var(--muted);">— dit kozijn telt zo vaak mee</span></label>
+          <input type="number" id="kozijnAantal" min="1" step="1" value="1" oninput="_kozijnUpdateOmtrek()" style="width:62px; padding:0.4rem; text-align:center; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit; font-size:0.95rem;">
+        </div>
+        <div id="kozijnOmtrek" class="kozijn-omtrek">Omtrek: 0,00 m¹</div>
+      </div>
       <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
         <button class="btn-secondary btn" onclick="dupliceerKozijn()">Dupliceren</button>
         <button class="btn-secondary btn" onclick="closeKozijnTekenaar()">Annuleren</button>
@@ -2922,7 +2929,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.50.2';
+const APP_VERSION = 'v3.51.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3284,6 +3291,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.51.0', d: '2026-06-10', h: 'Aantal in de kozijn-tekenaar plus een fix op de vulling. Onderaan in de tekenaar, bij de totalen, staat nu een veld Aantal: geef je daar bijvoorbeeld 5 op, dan telt dit kozijn vijf keer mee. De totalen onder de tekening tonen direct het per-stuk-bedrag én het totaal (×N). Tegelijk is een gat gedicht: de m² van een vulling (deur of paneel) schaalde nog niet mee met het aantal, terwijl de omtrek dat al deed. Vanaf nu telt de vulling ook × aantal (en × factor). LET OP: een bestaande calculatie met een getekend kozijn met vulling op aantal groter dan 1 krijgt hierdoor een hogere, correcte m². Geen SQL nodig' },
   { v: '3.50.2', d: '2026-06-09', h: 'Materiaal-bedrag per bewerkingsregel zichtbaar: in het grijze regeltje onder elke bewerking in een calc-regel staat nu naast de totale uren ook het totale materiaal-bedrag voor die stap (in blauw). Beide zijn met het percentage en de hoeveelheid verrekend, dus zet je een stap op 25% dan zie je het materiaal netjes naar een kwart zakken, net als de uren. De berekening zelf is niet gewijzigd, het materiaal schaalde altijd al mee, het was alleen niet apart in beeld. Geen SQL nodig' },
   { v: '3.50.1', d: '2026-06-08', h: 'Meetstaat-tabel smaller op een breed scherm: de kolommen b, h, aantal en factor rekten onnodig uit. De tabel heeft nu een vaste kolom-layout met krappe getalkolommen, waarbij de calc-regel, omschrijving en opmerking de ruimte opvangen. De kaartweergave op een staande iPad of telefoon blijft ongewijzigd. Geen SQL nodig' },
   { v: '3.50.0', d: '2026-06-08', h: 'Calc-regel dupliceren: op elke regel in de calculatie staat nu naast het verwijderkruisje een knop ⎘. Die maakt een volledige kopie van de regel met het hele verfsysteem eronder (alle bewerkingen met hun percentages, dezelfde ondergrond, eenheid, toeslag en hoeveelheid) en zet die direct achter het origineel, met (kopie) achter de naam. De meetstaat gaat niet mee: de kopie staat met de hoeveelheid van het origineel als handmatig getal en je vult de meting zelf opnieuw in. Handig om dezelfde opbouw voor een andere plek snel neer te zetten. Geen SQL nodig' },
@@ -11133,9 +11141,16 @@ function _kozijnRenderVerdeelControls() {
     : '';
   el.innerHTML = stijlToggle + `<div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">${naam} · positie ${vanaf} (cm):</span><input type="number" inputmode="decimal" min="0" step="1" value="${Math.round(posCm)}" style="width:90px; padding:0.45rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;" oninput="_kozijnSetPosCm('${sel.path}', this.value)"><span style="font-size:0.75rem; color:var(--muted);">van ${Math.round(span)} cm</span><button class="btn btn-danger btn-sm" onclick="_kozijnRemoveSplit('${sel.path}')">Verwijderen</button></div>`;
 }
+function _kozijnHuidigAantal() {
+  const el = document.getElementById('kozijnAantal');
+  if (!el) return 1;
+  const n = parseInt(el.value, 10);
+  return (n && n > 0) ? n : 1;
+}
 function _kozijnUpdateOmtrek() {
   const omtrek = _kozijnOmtrekCm() / 100, members = _kozijnMembersCm() / 100, ramen = _kozijnRamenCm() / 100;
   const totaal = omtrek + members + ramen;
+  const aantal = _kozijnHuidigAantal();
   const el = document.getElementById('kozijnOmtrek');
   if (!el) return;
   const fm = (x) => x.toFixed(2).replace('.', ',');
@@ -11148,17 +11163,22 @@ function _kozijnUpdateOmtrek() {
   } else {
     m1 = `Omtrek: ${fm(omtrek)} m¹`;
   }
+  if (aantal > 1) {
+    m1 += ` &nbsp;×${aantal} = <strong>${fm(totaal * aantal)} m¹</strong>`;
+  }
   const perRegel = _kozijnVlakkenPerRegel();
   const m2Lijnen = Object.keys(perRegel)
     .filter(k => perRegel[k].m2 > 0.0001)
     .map(k => {
       const naam = k ? _escapeHtml(perRegel[k].label || _kozijnRegelNaam(k) || 'Vulling') : '<em>nog koppelen</em>';
-      return `<span style="color:${k ? 'var(--ink-soft)' : 'var(--accent-deep)'};">${naam}: ${fm(perRegel[k].m2)} m²</span>`;
+      const m2 = perRegel[k].m2;
+      const staart = aantal > 1 ? ` &nbsp;×${aantal} = <strong>${fm(m2 * aantal)} m²</strong>` : '';
+      return `<span style="color:${k ? 'var(--ink-soft)' : 'var(--accent-deep)'};">${naam}: ${fm(m2)} m²${staart}</span>`;
     });
   if (m2Lijnen.length) {
     el.innerHTML = `${m1}<br>${m2Lijnen.join('<br>')}`;
   } else {
-    el.textContent = m1;
+    el.innerHTML = m1;
   }
 }
 
@@ -11185,6 +11205,8 @@ function openKozijnTekenaar(idx) {
   Object.keys(d).forEach(k => { if (_kozijnState.maten[k] == null) _kozijnState.maten[k] = d[k]; });
   const naamVeld = document.getElementById('kozijnNaam');
   if (naamVeld) naamVeld.value = ms.omschrijving || t.naam || '';
+  const aantalVeld = document.getElementById('kozijnAantal');
+  if (aantalVeld) aantalVeld.value = (ms.aantal && ms.aantal > 0) ? ms.aantal : 1;
   _kozijnRenderVormKnoppen(); _kozijnRenderMaten(); _kozijnRenderMarkeerBalk(); _kozijnTeken(); _kozijnUpdateOmtrek();
   const modal = document.getElementById('kozijnTekenaarModal');
   if (modal) modal.classList.add('active');
@@ -11222,6 +11244,7 @@ async function saveKozijnTekenaar() {
   // h op 0: de bestaande m¹-engine rekent dat als lengte × aantal × factor.
   ms.bCm = Math.round(b.cm);
   ms.hCm = 0;
+  ms.aantal = _kozijnHuidigAantal();
   if (b.naam) ms.omschrijving = b.naam;
   if (ms.id) _updateMeetstaatDB(ms, data.calc.id);
   _touchCalc(data.calc.id);
@@ -11239,6 +11262,7 @@ async function dupliceerKozijn() {
   // 1) bron eerst bijwerken, zodat die klopt
   src.tekening = Object.assign({}, src.tekening || {}, b.tekening);
   src.bCm = Math.round(b.cm); src.hCm = 0;
+  src.aantal = _kozijnHuidigAantal();
   if (b.naam) src.omschrijving = b.naam;
   if (src.id) _updateMeetstaatDB(src, data.calc.id);
   // 2) diepe kopie van de tekening (eigen verdeling-boom, geen gedeelde verwijzing)
@@ -13064,10 +13088,13 @@ function _vullingM2PerRegelAlle() {
   const rijen = (data.calc && data.calc.meetstaat) ? data.calc.meetstaat : [];
   rijen.forEach(ms => {
     const lijst = (ms.tekening && Array.isArray(ms.tekening.vlakkenM2PerRegel)) ? ms.tekening.vlakkenM2PerRegel : [];
+    // v3.51.0 — aantal en factor van het kozijn meenemen, net als bij de omtrek (lengte × aantal × factor).
+    // Zo telt de vulling van een kozijn dat N keer voorkomt ook N keer mee.
+    const mult = (ms.aantal && ms.aantal > 0 ? ms.aantal : 1) * (ms.factor != null ? ms.factor : 1);
     lijst.forEach(v => {
       const rid = v.regelId || '';
       if (!rid) return;                         // niet-gekoppelde vulling telt niet mee
-      acc[rid] = (acc[rid] || 0) + (parseFloat(v.m2) || 0);
+      acc[rid] = (acc[rid] || 0) + (parseFloat(v.m2) || 0) * mult;
     });
   });
   return acc;
