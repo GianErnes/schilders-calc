@@ -1,3 +1,16 @@
+## v3.55.0 — Kozijnen-PDF met volledige onderbouwing
+De kozijnen-bijlage laat nu dezelfde onderbouwing zien als de tekenaar: uitsplitsing van de meters, deurnamen met m² en de loze onderdorpel.
+
+### Wijzigingen
+- Onder elk kozijn in de PDF staat de uitsplitsing van de strekkende meters, bijvoorbeeld "42,17 m¹ (frame 12,37 + tussenwerk 8,33 + ramen 21,47)". Posten die nul zijn worden weggelaten en de roeden van v3.54.0 lopen er gewoon in mee.
+- Elke deur of elk paneel krijgt een eigen regel met naam en oppervlak, dus "Geveldeur transparant: 3,42 m²" in plaats van een kaal getal. Een nog niet gekoppelde vulling heet "Vulling". Dit werkt meteen voor alle bestaande tekeningen, want de namen zitten al in de opslag.
+- Heeft het kozijn een loze onderdorpel, dan staat dat als grijze vermelding achter de meters, net als in de voet van de tekenaar.
+- De uitsplitsing wordt vanaf nu bij Klaar in de tekening bewaard (veld `m1Delen` in de tekening-JSON). Tekeningen van vóór deze versie tonen in de PDF het totaal zoals voorheen, tot je ze een keer opent en op Klaar tikt.
+- Het overzicht "Getekende kozijnen" in de app blijft bewust compact: thumbnail, naam en totaal.
+- Geen Supabase-migratie nodig.
+
+---
+
 ## v3.54.0 — Roeden in de kozijn-tekenaar
 Een raam met ruitjes teken je nu echt zo: stel per vak in hoeveel ruitjes het raam breed en hoog is en de roeden tellen mee in de strekkende meters.
 
