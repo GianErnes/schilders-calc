@@ -36,6 +36,8 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
+  /* v3.56.0 — scrolldoelen niet onder de vaste navigatiebalk laten verdwijnen */
+  html { scroll-padding-top: 3.5rem; }
   .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
 
   /* HEADER */
@@ -84,6 +86,10 @@
     background: var(--paper);
     padding: 0 1.5rem;
     overflow-x: auto;
+    /* v3.56.0 — balk blijft bovenin staan bij het scrollen; onder vensters, numpad en meldingen (z >= 100) */
+    position: sticky;
+    top: 0;
+    z-index: 50;
   }
   nav button {
     background: none;
@@ -1971,8 +1977,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.55.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.56.0</h2>
       <div class="intro-body">
+        <p><strong>📌 Navigatiebalk blijft bovenin staan (v3.56.0).</strong> De tabbalk met Dashboard, Calculatie, Meetstaat en de rest scrolt niet meer mee het beeld uit: hij blijft bovenaan plakken. Zo kun je vanuit een lange meetstaat of het normenboek altijd direct naar een andere tab, zonder eerst helemaal terug naar boven te scrollen. De koptekst met het logo scrolt gewoon weg, alleen de balk blijft staan. Vensters, het cijfertoetsenbord en meldingen vallen er netjes overheen zoals je gewend bent en op een smal scherm kun je de balk zelf nog steeds opzij schuiven. Geen SQL nodig.</p>
         <p><strong>📐 Kozijnen-PDF met volledige onderbouwing (v3.55.0).</strong> De kozijnen-bijlage laat nu dezelfde onderbouwing zien als de tekenaar zelf. Onder elk kozijn staat de uitsplitsing van de strekkende meters, bijvoorbeeld "42,17 m¹ (frame 12,37 + tussenwerk 8,33 + ramen 21,47)", met de roeden er gewoon bij als die er zijn. Elke deur of elk paneel krijgt een eigen regel met naam en oppervlak, dus "Geveldeur transparant: 3,42 m²" in plaats van een kaal getal, en een loze onderdorpel staat als grijze vermelding achter de meters. De deurnamen en de loze onderdorpel werken meteen voor alle bestaande tekeningen. De uitsplitsing wordt vanaf nu bij Klaar in de tekening bewaard; tekeningen van vóór deze versie tonen in de PDF het totaal zoals voorheen, tot je ze een keer opent en op Klaar tikt. Geen SQL nodig.</p>
         <p><strong>🪟 Roeden in de kozijn-tekenaar (v3.54.0).</strong> Een raam met ruitjes kun je nu echt zo tekenen. Tik een vak aan en stel bij "Roeden · ruitjes" in hoeveel ruitjes het raam breed en hoog is, bijvoorbeeld 2 breed × 3 hoog. De roeden komen als dunne lijntjes in het vak, duidelijk dunner dan een tussenstijl, en hun strekkende meters tellen gewoon mee in het totaal dat bij Klaar in de regel landt. Onderin de voet zie je de opsplitsing nu als frame + tussenwerk + ramen + roeden. De lengtes kloppen ook in schuine en boog-vakken, want elke roede wordt op de werkelijke vorm geknipt, net als de deellijnen. Roeden gaan vanzelf mee bij Dupliceren en bij het kopiëren naar een andere gevel, en staan ook op de mini-tekening op de regel, in het overzicht en in de kozijnen-PDF. Op een vulling kun je geen roeden zetten; het ronde raam houdt zijn kruis- en spaken-indeling. Bestaande tekeningen blijven ongewijzigd. Geen SQL nodig.</p>
         <p><strong>🚪 Loze onderdorpel in de kozijn-tekenaar (v3.53.0).</strong> Een deurkozijn in de gevel heeft vaak geen houten onderdorpel, de deur staat gewoon op de vloer en het kozijnhout loopt alleen links, boven en rechts. Tot nu toe telde de tekenaar die onderkant altijd mee in de strekkende meters. Vanaf nu tik je in de tekenaar op de onderrand van het frame en wisselt die tussen kozijnhout en loos, precies zoals je een verticale deellijn al op loze stijl kon zetten. Een loze dorpel wordt een grijs stippellijntje, de breedte telt niet meer mee in de frame-m¹ en onderin staat achter de omtrek "loze onderdorpel" als geheugensteun. Een korte melding bevestigt elke wissel. Het werkt bij alle vormen behalve rond, gaat vanzelf mee bij het dupliceren en bij het kopiëren naar een andere gevel, en de stippellijn is ook te zien op de kleine tekening op de regel, in het overzicht en in de kozijnen-PDF. Bestaande tekeningen veranderen niet, die houden hun houten dorpel tot jij hem aantikt. Geen SQL nodig.</p>
@@ -2936,7 +2943,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.55.0';
+const APP_VERSION = 'v3.56.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3298,6 +3305,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.56.0', d: '2026-06-10', h: 'Navigatiebalk blijft bovenin staan bij het scrollen (position: sticky, z-index 50, onder vensters/numpad/meldingen). De koptekst met het logo scrolt gewoon weg; alleen de tabbalk plakt. Scroll-padding zorgt dat scrolldoelen niet onder de balk verdwijnen; op een smal scherm blijft de balk horizontaal schuifbaar. Geen SQL nodig' },
   { v: '3.55.0', d: '2026-06-10', h: 'Kozijnen-PDF met volledige onderbouwing: onder elk kozijn de uitsplitsing van de m¹ (frame + tussenwerk + ramen + roeden), per deur of paneel een eigen regel met naam en m², en de vermelding "loze onderdorpel" waar die aan staat. De uitsplitsing wordt bij Klaar in de tekening bewaard (nieuw veld m1Delen in de tekening-JSON); oudere tekeningen tonen het totaal tot ze opnieuw zijn opgeslagen, de deurnamen en de loze-onderdorpel-vermelding werken meteen voor alle bestaande tekeningen. Geen SQL nodig' },
   { v: '3.54.0', d: '2026-06-10', h: 'Kozijn-tekenaar: roeden per vak. Tik een vak aan en stel in hoeveel ruitjes het raam breed en hoog is (max 8×8); de roeden komen als dunne lijntjes in de tekening en hun m¹ telt mee in het totaal, met "roeden" als aparte post in de voet. Lengtes kloppen ook in schuine en boog-vakken via dezelfde knip-logica als de deellijnen. Gaat mee met dupliceren en kopiëren naar een andere gevel, zichtbaar op thumbnails, overzicht en kozijnen-PDF. Vulling krijgt geen roeden; rond houdt kruis/spaken. Geen SQL nodig' },
   { v: '3.53.0', d: '2026-06-10', h: 'Loze onderdorpel in de kozijn-tekenaar. Een deurkozijn heeft vaak geen houten onderdorpel, de deur staat op de vloer. Tik in de tekenaar op de onderrand van het frame en hij wisselt tussen kozijnhout en loos, net als de loze stijl bij een verticale deellijn. Loos = een grijs stippellijntje in de tekening en de breedte telt niet mee in de frame-m¹; achter de omtrek staat "loze onderdorpel" als geheugensteun. Werkt bij alle vormen behalve rond, gaat mee in dupliceren en kopiëren naar een andere gevel, en is zichtbaar op de thumbnails en in de kozijnen-PDF. Bestaande tekeningen blijven gewoon hout. Geen SQL nodig' },

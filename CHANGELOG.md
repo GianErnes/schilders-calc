@@ -1,3 +1,15 @@
+## v3.56.0 — Navigatiebalk blijft bovenin staan
+De tabbalk plakt nu bovenaan het scherm, zodat je vanuit een lange lijst altijd direct van tab kunt wisselen.
+
+### Wijzigingen
+- De navigatiebalk (Dashboard tot en met Instellingen) blijft bij het scrollen bovenaan staan. De koptekst met het logo scrolt gewoon weg, alleen de tabbalk plakt.
+- De balk ligt boven de pagina-inhoud maar onder vensters, het cijfertoetsenbord en meldingen, dus die blijven werken zoals je gewend bent.
+- Automatisch scrollen naar een veld houdt rekening met de hoogte van de balk, zodat het doel niet half onder de balk verdwijnt.
+- Op een smal scherm kun je de balk zelf nog steeds horizontaal schuiven.
+- Geen Supabase-migratie nodig.
+
+---
+
 ## v3.55.0 — Kozijnen-PDF met volledige onderbouwing
 De kozijnen-bijlage laat nu dezelfde onderbouwing zien als de tekenaar: uitsplitsing van de meters, deurnamen met m² en de loze onderdorpel.
 
