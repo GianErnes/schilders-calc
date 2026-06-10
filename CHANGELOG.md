@@ -1,3 +1,19 @@
+## v3.52.0 — Getekend kozijn kopiëren naar de gevel waar je mee bezig bent
+Een kopieer-knopje op de tegels in "Getekende kozijnen", dat een kozijnmodel in één tik overzet naar het actieve onderdeel.
+
+### Wijzigingen
+- Op elke tegel in het overzicht "Getekende kozijnen" staat rechtsboven een blauw ⧉-knopje. Tikken kopieert het kozijn naar het onderdeel waar je mee bezig bent, zonder dialoogjes.
+- Het actieve onderdeel wordt bepaald via de onderste handmatige meetstaat-rij, hetzelfde onthouden-principe dat + Regel al gebruikt. Automatische vulling-rijen tellen daarbij niet als context.
+- Binnen dat onderdeel zoekt de app de calc-regel met dezelfde naam als waar het bron-kozijn aan hangt en hangt de kopie daaraan. Een melding bevestigt waar de kopie geland is ("Kozijn gekopieerd naar Zuidgevel · Gevelkozijnen en -ramen").
+- De kopie is een eigen exemplaar (losse tekening): naam, vorm, maten, indeling en ramen gaan mee. Gebrek-stippen gaan bewust niet mee; die documenteren het exemplaar, niet het model. Voor een kopie mét gebreken binnen dezelfde regel bestaat Dupliceren in de tekenaar.
+- Aantal en factor van de nieuwe regel beginnen op 1.
+- Vulling-koppelingen (deuren, panelen) worden per vak op regelnaam hergekoppeld binnen het doel-onderdeel. Is daar geen regel met die naam, dan komt het vak op "nog koppelen" te staan, zichtbaar in de tekenaar.
+- Heeft het doel-onderdeel geen calc-regel met de naam van de bron-regel, dan verschijnt een melding met de aanwijzing om die eerst toe te voegen (het blauwe ⧉ op de onderdeel-balk in de Calculatie-tab verspreidt een regel naar andere onderdelen). Er wordt dan niets gekopieerd.
+- Bij een vergrendelde offerte wordt het knopje niet getoond.
+- Geen Supabase-migratie nodig.
+
+---
+
 ## v3.51.1 — Project-totaal per regel-type toont nu alle regel-types
 Regel-types die maar in één onderdeel voorkwamen, vielen weg uit het project-totaal. Nu staan ze er allemaal.
 

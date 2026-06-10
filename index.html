@@ -1186,8 +1186,10 @@
   .kozijn-thumb-btn { display: inline-block; vertical-align: middle; cursor: pointer; border: 1px solid var(--paper-deep); border-radius: var(--radius); background: var(--paper-warm); padding: 2px 4px; }
   .kozijn-thumb-btn:hover { border-color: var(--accent); }
   .kozijn-galerij { display: flex; flex-wrap: wrap; gap: 0.7rem; }
-  .kozijn-galerij-item { width: 120px; border: 1px solid var(--paper-deep); border-radius: var(--radius); background: var(--paper); padding: 0.5rem; cursor: pointer; text-align: center; }
+  .kozijn-galerij-item { width: 120px; border: 1px solid var(--paper-deep); border-radius: var(--radius); background: var(--paper); padding: 0.5rem; cursor: pointer; text-align: center; position: relative; }
   .kozijn-galerij-item:hover { border-color: var(--accent); }
+  .kozijn-galerij-copy { position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--paper-deep); border-radius: var(--radius); background: var(--paper); color: var(--blue); font-size: 0.9rem; cursor: pointer; }
+  .kozijn-galerij-copy:hover { border-color: var(--blue); background: var(--paper-warm); }
   .kozijn-galerij-tek { height: 72px; display: flex; align-items: center; justify-content: center; }
   .kozijn-galerij-naam { font-size: 0.75rem; font-weight: 600; margin-top: 0.35rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .kozijn-galerij-m1 { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent-deep); }
@@ -1969,8 +1971,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.51.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.52.0</h2>
       <div class="intro-body">
+        <p><strong>⧉ Getekend kozijn kopiëren naar de gevel waar je mee bezig bent (v3.52.0).</strong> Ben je in de meetstaat de gegevens van een nieuwe gevel aan het invoeren en zie je onderin bij "Getekende kozijnen" een model staan dat daar ook voorkomt, dan tik je voortaan op het blauwe ⧉-knopje rechtsboven op die tegel. De app maakt een eigen kopie van de tekening en hangt die als nieuwe regel aan de calc-regel met dezelfde naam in het onderdeel waar je mee bezig bent. Welk onderdeel dat is weet de app uit je onderste invoer-rij, hetzelfde geheugen dat + Regel gebruikt, en de melding vertelt je waar de kopie geland is. De kopie houdt de naam, maten, indeling en ramen van het model. Gebrek-stippen gaan bewust niet mee, want houtrot zit op het exemplaar en niet op het model; wil je een kopie mét gebreken, gebruik dan Dupliceren in de tekenaar. Aantal en factor beginnen op 1. Deuren en panelen worden op regelnaam hergekoppeld binnen de nieuwe gevel; wat niet matcht staat op "nog koppelen". Heeft de gevel nog geen passende calc-regel, dan krijg je een melding dat je die eerst moet toevoegen via het ⧉ op de onderdeel-balk in de Calculatie-tab. Geen SQL nodig.</p>
         <p><strong>📋 Project-totaal per regel-type toont nu alles (v3.51.1).</strong> Onderaan de meetstaat staat het project-totaal per regel-type, geaggregeerd over alle onderdelen, bedoeld voor materiaal-bestelling en voortgang-bewaking. Daar vielen tot nu toe regel-types weg die maar in één gevel of kamer voorkwamen, bijvoorbeeld een hekje voor één raam of een losse deur. Voor een totaaloverzicht wil je juist alles zien, ook wat maar één keer voorkomt, dus die staan er nu allemaal bij. De volgorde is grootste posten eerst, daarbinnen op naam. Geen SQL nodig.</p>
         <p><strong>🪟 Aantal in de kozijn-tekenaar, plus een fix op de vulling (v3.51.0).</strong> Onderaan in de tekenaar, bij de totalen, staat nu een veld <strong>Aantal</strong>. Teken je een kozijn dat meerdere keren identiek voorkomt, dan geef je hier op hoe vaak, bijvoorbeeld 5, en hoef je het niet meer los te dupliceren. De totalen onder de tekening laten meteen zien wat dat oplevert: het per-stuk-getal en daarachter ×N met het totaal, voor zowel de omtrek (m¹) als de vulling (m²). Tegelijk is hier een gat gedicht: het materiaaloppervlak van een vulling, dus een deur of een paneel, schaalde nog niet mee met dat aantal terwijl de omtrek dat allang deed. Vanaf nu telt de vulling ook keer het aantal, net als de omtrek. <em>Let op: heb je in een bestaande calculatie een getekend kozijn met een vulling op een aantal groter dan 1 staan, dan wordt die m² nu hoger en correct. Loop zulke offertes even na als je ze nog gebruikt.</em> Geen SQL nodig.</p>
         <p><strong>🎨 Materiaal-bedrag per bewerkingsregel zichtbaar (v3.50.2).</strong> In het grijze regeltje onder elke bewerking in een calc-regel stonden al de minuten, de arbeidskosten en de totale uren voor die stap. Daar staat nu in blauw ook het totale materiaal-bedrag voor de stap bij. Net als de uren is dat met het percentage en de hoeveelheid verrekend. Zet je een laag op 25% in plaats van 100%, dan zie je zowel de uren als het materiaal naar een kwart zakken. De berekening is niet veranderd, het materiaal schaalde altijd al correct mee in de offerteprijs en op de werkbon, alleen stond het materiaal-bedrag per stap nergens apart in beeld om het te kunnen controleren. Bij een stap zonder gekoppeld materiaal blijft het regeltje zoals het was. Geen SQL nodig.</p>
@@ -2930,7 +2933,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.51.1';
+const APP_VERSION = 'v3.52.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3292,6 +3295,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.52.0', d: '2026-06-10', h: 'Getekend kozijn kopiëren naar de gevel waar je mee bezig bent. Op elke tegel in "Getekende kozijnen" staat rechtsboven een blauw ⧉-knopje. Ben je gegevens van een nieuwe gevel aan het invoeren, tik dan dat knopje op het kozijnmodel dat je daar ook hebt: de app maakt een eigen kopie en hangt die aan de calc-regel met dezelfde naam in jouw actieve onderdeel (bepaald via je onderste invoer-rij, zoals + Regel dat onthoudt). Gebrek-stippen gaan niet mee (die horen bij het exemplaar, niet bij het model), aantal en factor beginnen op 1, en deur/paneel-koppelingen worden op regelnaam hergekoppeld of staan op "nog koppelen". Ontbreekt de regel in die gevel, dan vertelt een melding je dat je hem eerst via ⧉ in de Calculatie-tab moet toevoegen. Geen SQL nodig' },
   { v: '3.51.1', d: '2026-06-10', h: 'Project-totaal per regel-type toont nu alle regel-types. Onderaan de meetstaat, bij het project-totaal voor materiaal-bestelling en voortgang, vielen regel-types weg die maar in één gevel of kamer voorkwamen (een hekje, een losse deur). Die staan er nu ook bij, zodat het overzicht compleet is. Volgorde: grootste posten eerst, daarbinnen op naam. Geen SQL nodig' },
   { v: '3.51.0', d: '2026-06-10', h: 'Aantal in de kozijn-tekenaar plus een fix op de vulling. Onderaan in de tekenaar, bij de totalen, staat nu een veld Aantal: geef je daar bijvoorbeeld 5 op, dan telt dit kozijn vijf keer mee. De totalen onder de tekening tonen direct het per-stuk-bedrag én het totaal (×N). Tegelijk is een gat gedicht: de m² van een vulling (deur of paneel) schaalde nog niet mee met het aantal, terwijl de omtrek dat al deed. Vanaf nu telt de vulling ook × aantal (en × factor). LET OP: een bestaande calculatie met een getekend kozijn met vulling op aantal groter dan 1 krijgt hierdoor een hogere, correcte m². Geen SQL nodig' },
   { v: '3.50.2', d: '2026-06-09', h: 'Materiaal-bedrag per bewerkingsregel zichtbaar: in het grijze regeltje onder elke bewerking in een calc-regel staat nu naast de totale uren ook het totale materiaal-bedrag voor die stap (in blauw). Beide zijn met het percentage en de hoeveelheid verrekend, dus zet je een stap op 25% dan zie je het materiaal netjes naar een kwart zakken, net als de uren. De berekening zelf is niet gewijzigd, het materiaal schaalde altijd al mee, het was alleen niet apart in beeld. Geen SQL nodig' },
@@ -10168,13 +10172,16 @@ function renderMeetstaat() {
   const _kozijnen = [];
   data.calc.meetstaat.forEach((ms, idx) => { if (ms.tekening && ms.tekening.vorm) _kozijnen.push({ ms, idx }); });
   if (_kozijnen.length > 0) {
+    const _gLock = (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc));
     html += `<div class="ms-samenvatting" style="margin-top:1.5rem; padding:0.85rem; background:var(--paper-warm); border:1px solid var(--paper-deep); border-radius:var(--radius);">
       <div style="font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:0.6rem;">Getekende kozijnen</div>
       <div class="kozijn-galerij">`;
     _kozijnen.forEach(({ ms, idx }) => {
       const naam = ms.omschrijving || ms.tekening.naam || 'Kozijn';
       const m1 = ms.tekening.omtrekM1 != null ? (ms.tekening.omtrekM1.toFixed(2).replace('.', ',') + ' m¹') : '';
+      const copyBtn = _gLock ? '' : `<span class="kozijn-galerij-copy" title="Kopieer dit kozijn naar het onderdeel waar je mee bezig bent" onclick="event.stopPropagation(); kopieerKozijnNaarActief(${idx})">⧉</span>`;
       html += `<div class="kozijn-galerij-item" onclick="openKozijnTekenaar(${idx})" title="Openen">
+        ${copyBtn}
         <div class="kozijn-galerij-tek">${_kozijnThumbSvg(ms.tekening, 72)}</div>
         <div class="kozijn-galerij-naam">${naam}</div>
         <div class="kozijn-galerij-m1">${m1}</div>
@@ -11291,6 +11298,85 @@ async function dupliceerKozijn() {
   await _syncVullingMeetstaat();
   // 3) open de kopie zodat je meteen de maten kunt aanpassen
   openKozijnTekenaar(data.calc.meetstaat.length - 1);
+}
+// v3.52.0 — Kopieer een getekend kozijn (model) naar het onderdeel waar je mee
+// bezig bent, rechtstreeks vanaf de tegel in "Getekende kozijnen". Het doel is
+// het onderdeel van de onderste handmatige meetstaat-rij (hetzelfde onthouden-
+// principe als + Regel; auto-rijen tellen niet als context). Binnen dat
+// onderdeel zoekt de app de calc-regel met dezelfde naam als waar het bron-
+// kozijn aan hangt en hangt de kopie daaraan. De kopie is een eigen exemplaar:
+// naam, maten, indeling en ramen gaan mee; gebrek-stippen niet (die zijn
+// exemplaar-specifiek — gebruik Dupliceren in de tekenaar voor een kopie mét
+// gebreken). Aantal en factor beginnen op 1. Vulling-koppelingen worden per
+// vak op regelnaam hergekoppeld binnen het doel-onderdeel; lukt dat niet, dan
+// staat het vak op "nog koppelen".
+async function kopieerKozijnNaarActief(idx) {
+  if (!data.calc || !Array.isArray(data.calc.meetstaat) || !data.calc.meetstaat[idx]) return;
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) { _toast('Deze offerte is vergrendeld'); return; }
+  const src = data.calc.meetstaat[idx];
+  if (!src.tekening || !src.tekening.vorm) return;
+  const allRegels = _allCalcRegels();
+
+  // 1) Actief onderdeel: de onderste handmatige rij
+  const handm = data.calc.meetstaat.filter(ms => ms.bron !== 'vulling_auto');
+  const last = handm[handm.length - 1];
+  const lastCtx = last ? allRegels.find(x => x.regel.id === last.calcRegelId) : null;
+  if (!lastCtx) { alert('Geen actief onderdeel gevonden. Voer eerst een meetstaat-regel in voor het onderdeel waar je mee bezig bent.'); return; }
+
+  // 2) De regel in het doel-onderdeel met dezelfde naam als de bron-regel
+  const _norm = (s) => (s || '').toLowerCase().trim();
+  const srcCtx = allRegels.find(x => x.regel.id === src.calcRegelId);
+  const srcNaam = srcCtx ? (srcCtx.regel.naam || '') : '';
+  const doelRegels = allRegels.filter(x => x.odId === lastCtx.odId);
+  const doel = doelRegels.find(x => _norm(x.regel.naam) === _norm(srcNaam));
+  if (!doel) {
+    alert(`"${lastCtx.odNaam}" heeft nog geen calc-regel "${srcNaam}".\n\nVoeg die eerst toe in de Calculatie-tab — het blauwe ⧉ op de onderdeel-balk verspreidt een regel naar andere onderdelen.`);
+    return;
+  }
+
+  // 3) Diepe kopie van de tekening; gebrek-stippen gaan niet mee
+  const kopie = JSON.parse(JSON.stringify(src.tekening));
+  kopie.markeringen = [];
+
+  // 4) Vulling-koppelingen hermappen op regelnaam binnen het doel-onderdeel
+  const mapRegelId = (oudId) => {
+    if (!oudId) return '';
+    const oudCtx = allRegels.find(x => x.regel.id === oudId);
+    const m = oudCtx ? doelRegels.find(x => _norm(x.regel.naam) === _norm(oudCtx.regel.naam)) : null;
+    return m ? m.regel.id : '';
+  };
+  const herkoppel = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (node.regelId !== undefined) {
+      const nieuw = mapRegelId(node.regelId);
+      node.regelId = nieuw;
+      if (!nieuw) node.label = '';
+    }
+    if (Array.isArray(node.k)) node.k.forEach(herkoppel);
+  };
+  herkoppel(kopie.verdeling);
+  if (Array.isArray(kopie.vlakkenM2PerRegel)) {
+    kopie.vlakkenM2PerRegel.forEach(v => {
+      const nieuw = mapRegelId(v.regelId);
+      v.regelId = nieuw;
+      if (!nieuw) v.label = '';
+    });
+  }
+
+  // 5) Nieuwe meetstaat-regel bij de doel-regel
+  const saved = await _insertMeetstaatDB({
+    calcRegelId: doel.regel.id,
+    omschrijving: src.omschrijving || kopie.naam || 'Kozijn',
+    hCm: 0, bCm: src.bCm || 0, aantal: 1, factor: 1, opmerking: '', tekening: kopie
+  }, data.calc.id, data.calc.meetstaat.length);
+  if (!saved) { _toast('Kopiëren mislukt'); return; }
+  data.calc.meetstaat.push(saved);
+  _touchCalc(data.calc.id);
+  renderMeetstaat();
+  if (typeof renderCalcStructuur === 'function') renderCalcStructuur();
+  if (typeof renderTotals === 'function') renderTotals();
+  await _syncVullingMeetstaat();
+  _toast(`Kozijn gekopieerd naar ${lastCtx.odNaam} · ${srcNaam}`);
 }
 function msKey(e, rowIdx, fieldIdx) {
   if (e.key !== 'Enter') return;
