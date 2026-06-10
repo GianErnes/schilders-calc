@@ -1,3 +1,14 @@
+## v3.51.1 — Project-totaal per regel-type toont nu alle regel-types
+Regel-types die maar in één onderdeel voorkwamen, vielen weg uit het project-totaal. Nu staan ze er allemaal.
+
+### Wijzigingen
+- Het overzicht "Project-totaal per regel-type" onderaan de meetstaat toonde alleen regel-types die over meer dan één calc-regel verspreid waren. Een post die maar in één gevel of kamer voorkwam (een hekje, een losse deur) verscheen er niet, terwijl je die voor de materiaal-bestelling net zo goed nodig hebt.
+- Het filter is verwijderd. Alle regel-types staan nu in het project-totaal, ongeacht in hoeveel onderdelen ze voorkomen.
+- De volgorde is grootste posten eerst (meeste regels), daarbinnen alfabetisch op naam, zodat het overzicht stabiel en leesbaar blijft.
+- Geen Supabase-migratie nodig.
+
+---
+
 ## v3.51.0 — Aantal in de kozijn-tekenaar, plus een fix op de vulling
 Een aantal-veld in de tekenaar voor identieke kozijnen, en de vulling-m² schaalt nu correct mee.
 
