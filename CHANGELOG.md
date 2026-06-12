@@ -1,3 +1,14 @@
+## v3.58.0 — Offerte-blok in de calculatie
+Brok A3 van de offertemodule. Onderaan de Calculatie-tab stel je per offerte de teksten en instellingen samen; de generator (brok A4) maakt er straks het document van.
+
+### Wijzigingen
+- Uitklapbaar blok "📄 Offerte" onderaan de Calculatie-tab, onder de totalen. Instellingenrij met klanttype (consument/zakelijk, stuurt de garantietekst en straks de AV-bijlage), offertedatum (standaard vandaag), geldig-tot (springt bij wijzigen van de offertedatum opnieuw op +30 dagen, blijft daarna vrij aanpasbaar) en garantiejaren.
+- Per tekstsectie, in documentvolgorde: aan/uit-vinkje, variantkeuze uit de bibliotheek en de tekst direct zichtbaar in een tekstvak. Aanpassen maakt er een offerte-eigen tekst van met een geel "✎ aangepast"-label en een knop ↺ Bibliotheek om terug te keren; ongewijzigde teksten volgen de bibliotheek live. Werkzaamheden is stapelbaar: + Blok voegt blokken toe, × haalt ze weg (minimaal één blijft staan).
+- Voorbeeld-venster (👁 Voorbeeld, ook bij vergrendelde calculatie te openen): alle gekozen teksten met de documentkoppen en echt gevulde invulvelden. {totaal_incl} komt uit de centrale archief-berekening (respecteert de settings-snapshot van vergrendelde calculaties), {werkdagen} is het factureerbare aantal, datums in lang NL-formaat. Auto-secties staan als grijze placeholders ertussen.
+- Opslag in calculaties.offerte_config (JSON) via een gerichte, gedebouncede update van alleen dat veld. De kolom is bewust niet opgenomen in _mapCalcHeaderToDB, zodat een header-save nooit een verse offerte-config kan overschrijven (zelfde principe als totaal_offerte_origineel). De header-mapper leest de kolom wel mee.
+- Een vergrendelde calculatie zet ook het offerte-blok op slot via de bestaande lock-CSS; alleen de Voorbeeld-knop blijft werken.
+- Geen Supabase-migratie nodig; de kolom offerte_config bestaat sinds brok A1.
+
 ## v3.57.0 — Tab Offerteteksten: de tekstenbibliotheek van de offertemodule
 Brok A2 van de offertemodule. Een eigen tab met alle vaste offerteteksten als bibliotheek, in de volgorde van het offertedocument.
 
