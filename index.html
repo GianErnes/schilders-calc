@@ -1977,8 +1977,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.56.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.56.1</h2>
       <div class="intro-body">
+        <p><strong>🧮 Lijst en calculatie rekenen weer hetzelfde (v3.56.1).</strong> Het dashboard gebruikte voor het bedrag per calculatie een oude, parallelle rekenroute die niet was meegegroeid met de kaart in de calculatie. Toeslag-uren met "telt in werkdagen" deden daar niet mee in de werkdagen, waardoor het archief een afrondingstoeslag rekende die de calculatie terecht niet rekent, de rayon-regeling voor reisuren ontbrak, procent-staartposten rekenden over de verkeerde arbeid en de grondslag subtotaal ontbrak helemaal. Die route is nu regel voor regel gelijkgetrokken met de kaart. Het dashboard geneest zichzelf: zodra je een calculatie opent wordt het juiste bedrag stil teruggeschreven naar de lijst. Het bevroren oorspronkelijke offertebedrag van vergrendelde calculaties blijft bewust met rust; wil je dat ook corrigeren, zet de status even op Concept en terug. Geen SQL nodig.</p>
         <p><strong>📌 Navigatiebalk blijft bovenin staan (v3.56.0).</strong> De tabbalk met Dashboard, Calculatie, Meetstaat en de rest scrolt niet meer mee het beeld uit: hij blijft bovenaan plakken. Zo kun je vanuit een lange meetstaat of het normenboek altijd direct naar een andere tab, zonder eerst helemaal terug naar boven te scrollen. De koptekst met het logo scrolt gewoon weg, alleen de balk blijft staan. Vensters, het cijfertoetsenbord en meldingen vallen er netjes overheen zoals je gewend bent en op een smal scherm kun je de balk zelf nog steeds opzij schuiven. Geen SQL nodig.</p>
         <p><strong>📐 Kozijnen-PDF met volledige onderbouwing (v3.55.0).</strong> De kozijnen-bijlage laat nu dezelfde onderbouwing zien als de tekenaar zelf. Onder elk kozijn staat de uitsplitsing van de strekkende meters, bijvoorbeeld "42,17 m¹ (frame 12,37 + tussenwerk 8,33 + ramen 21,47)", met de roeden er gewoon bij als die er zijn. Elke deur of elk paneel krijgt een eigen regel met naam en oppervlak, dus "Geveldeur transparant: 3,42 m²" in plaats van een kaal getal, en een loze onderdorpel staat als grijze vermelding achter de meters. De deurnamen en de loze onderdorpel werken meteen voor alle bestaande tekeningen. De uitsplitsing wordt vanaf nu bij Klaar in de tekening bewaard; tekeningen van vóór deze versie tonen in de PDF het totaal zoals voorheen, tot je ze een keer opent en op Klaar tikt. Geen SQL nodig.</p>
         <p><strong>🪟 Roeden in de kozijn-tekenaar (v3.54.0).</strong> Een raam met ruitjes kun je nu echt zo tekenen. Tik een vak aan en stel bij "Roeden · ruitjes" in hoeveel ruitjes het raam breed en hoog is, bijvoorbeeld 2 breed × 3 hoog. De roeden komen als dunne lijntjes in het vak, duidelijk dunner dan een tussenstijl, en hun strekkende meters tellen gewoon mee in het totaal dat bij Klaar in de regel landt. Onderin de voet zie je de opsplitsing nu als frame + tussenwerk + ramen + roeden. De lengtes kloppen ook in schuine en boog-vakken, want elke roede wordt op de werkelijke vorm geknipt, net als de deellijnen. Roeden gaan vanzelf mee bij Dupliceren en bij het kopiëren naar een andere gevel, en staan ook op de mini-tekening op de regel, in het overzicht en in de kozijnen-PDF. Op een vulling kun je geen roeden zetten; het ronde raam houdt zijn kruis- en spaken-indeling. Bestaande tekeningen blijven ongewijzigd. Geen SQL nodig.</p>
@@ -2943,7 +2944,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.56.0';
+const APP_VERSION = 'v3.56.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3305,6 +3306,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.56.1', d: '2026-06-12', h: 'Fix: het dashboard-bedrag per calculatie wijkt niet meer af van de calculatie zelf. De archief-rekenroute is regel voor regel gelijkgetrokken met de kaart: toeslag-uren met telt-in-werkdagen tellen mee in de werkdagen (geen onterechte afrondingstoeslag meer), rayon-regeling voor reisuren, procent-staartposten over de arbeid zonder afrondingstoeslag en grondslag subtotaal toegevoegd. Zelfherstel: bij het openen van een calculatie wordt het juiste lijstbedrag stil teruggeschreven. Bevroren originele offertebedragen blijven ongemoeid. Geen SQL nodig' },
   { v: '3.56.0', d: '2026-06-10', h: 'Navigatiebalk blijft bovenin staan bij het scrollen (position: sticky, z-index 50, onder vensters/numpad/meldingen). De koptekst met het logo scrolt gewoon weg; alleen de tabbalk plakt. Scroll-padding zorgt dat scrolldoelen niet onder de balk verdwijnen; op een smal scherm blijft de balk horizontaal schuifbaar. Geen SQL nodig' },
   { v: '3.55.0', d: '2026-06-10', h: 'Kozijnen-PDF met volledige onderbouwing: onder elk kozijn de uitsplitsing van de m¹ (frame + tussenwerk + ramen + roeden), per deur of paneel een eigen regel met naam en m², en de vermelding "loze onderdorpel" waar die aan staat. De uitsplitsing wordt bij Klaar in de tekening bewaard (nieuw veld m1Delen in de tekening-JSON); oudere tekeningen tonen het totaal tot ze opnieuw zijn opgeslagen, de deurnamen en de loze-onderdorpel-vermelding werken meteen voor alle bestaande tekeningen. Geen SQL nodig' },
   { v: '3.54.0', d: '2026-06-10', h: 'Kozijn-tekenaar: roeden per vak. Tik een vak aan en stel in hoeveel ruitjes het raam breed en hoog is (max 8×8); de roeden komen als dunne lijntjes in de tekening en hun m¹ telt mee in het totaal, met "roeden" als aparte post in de voet. Lengtes kloppen ook in schuine en boog-vakken via dezelfde knip-logica als de deellijnen. Gaat mee met dupliceren en kopiëren naar een andere gevel, zichtbaar op thumbnails, overzicht en kozijnen-PDF. Vulling krijgt geen roeden; rond houdt kruis/spaken. Geen SQL nodig' },
@@ -4429,6 +4431,10 @@ async function _loadCalcBody(c) {
   c.fotos     = (fotoRes.data   || []).map(_mapFotoFromDB);
   c.documenten = (docRes.data   || []).map(_mapDocFromDB);
   c.__loaded = true;
+  // v3.56.1 — Zelfherstel van de dashboard-cache: bij het laden het actuele totaal
+  // stil terugschrijven. Geneest lijstbedragen die met de oude archief-formule
+  // gecachet waren. Schrijft alleen bij een afwijking, stil bij fouten.
+  _syncCalcTotalToDB(c);
   return true;
 }
 async function _insertCalcDB(c) {
@@ -14341,9 +14347,18 @@ function _calcTotalForArchive(c, includeInactief = false) {
   // v3.11.0: standaard worden inactieve hoofdgroepen/onderdelen overgeslagen.
   // Met includeInactief=true wordt alles meegeteld — voor het oorspronkelijke
   // offertebedrag dat onveranderd blijft op de PDF.
+  // v3.56.1 — Regel voor regel gelijkgetrokken met de calculatie-kaart (renderTotals),
+  // die door de jaren heen verder ontwikkeld was dan deze archief-route:
+  //  1) staartposten met teltInWerkdagen tellen mee in de werkelijke dagen (v3.16.0),
+  //     anders rekent het archief een afrondingstoeslag die de kaart niet rekent;
+  //  2) rayon-regeling: binnen het rayon kosten reisuren niets, alleen kilometers;
+  //  3) percent-staartposten rekenen over de arbeid ZONDER afrondingstoeslag,
+  //     precies zoals calcStaart via calcProjectTotalen doet;
+  //  4) grondslag 'subtotaal' (verkoopwaarde per regel) wordt nu ook hier ondersteund.
+  // Wijzigt er iets aan de rekenformules? Houd renderTotals en deze functie synchroon.
   const isVergrendeld = c.status && c.status !== 'concept';
   const sett = (isVergrendeld && c.settingsSnapshot) ? c.settingsSnapshot : data.settings;
-  let arbeid = 0, matInkoop = 0, matVerkoop = 0, uren = 0;
+  let arbeid = 0, matInkoop = 0, matVerkoop = 0, uren = 0, verkoop = 0;
   c.hoofdgroepen.forEach(hg => {
     // v3.11.0: skip inactieve hoofdgroepen + onderdelen + regels (tenzij includeInactief)
     if (!includeInactief && !_isActief(hg)) return;
@@ -14365,15 +14380,26 @@ function _calcTotalForArchive(c, includeInactief = false) {
     const tF = 1 + (r.toeslag || 0) / 100;
     const sysUren = sm / 60;
     const sysArbeid = sysUren * sett.uurloon;
+    // Verkoopwaarde per regel — exact dezelfde opbouw als calcRegelTotalen,
+    // nodig als grondslag voor staartposten met grondslag 'subtotaal'.
+    const rKleinMat = smV * (sett.kleinMat || 0) / 100;
+    const rAfval = (sysArbeid + smV) * (sett.afval || 0) / 100;
+    const rArbo = sysArbeid * (sett.arbo || 0) / 100;
+    const rVerkoop = (sysArbeid + smV + rKleinMat + rAfval + rArbo) * (1 + (sett.winst || 0) / 100);
     arbeid += sysArbeid * r.hoeveelheid * tF;
     matInkoop += smI * r.hoeveelheid;
     matVerkoop += smV * r.hoeveelheid;
     uren += sysUren * r.hoeveelheid * tF;
+    verkoop += rVerkoop * r.hoeveelheid * tF;
       });
     });
   });
-  // Reis & dagen
-  const dagenWerkelijk = uren > 0 ? Math.round((uren / (c.schilders || 1) / (c.uurDag || 7.5)) * 100) / 100 : 0;
+  // Grondslag voor percent-staart en de extra werkdag-uren: arbeid vóór afrondingstoeslag.
+  const arbeidBasis = arbeid;
+  // Reis & dagen — incl. extra uren uit staartposten met teltInWerkdagen (v3.16.0)
+  const extraUren = _extraUrenUitStaart(c.staart || [], { arbeid: arbeidBasis, matVerkoop, verkoop }, sett.uurloon || 0);
+  const urenVoorDagen = uren + extraUren;
+  const dagenWerkelijk = urenVoorDagen > 0 ? Math.round((urenVoorDagen / (c.schilders || 1) / (c.uurDag || 7.5)) * 100) / 100 : 0;
   // Resolve volle dagen: per-calc override OR global setting
   let useVolle;
   if (c.volleDagenOverride === true) useVolle = true;
@@ -14396,8 +14422,11 @@ function _calcTotalForArchive(c, includeInactief = false) {
   const afrondingsToeslag = useVolle ? dagenVerschil * (c.schilders||0) * (c.uurDag||7.5) * sett.uurloon : 0;
   arbeid += afrondingsToeslag;
   const snelheid = sett.snelheid || 50;
+  // Rayon-regeling zoals de kaart: binnen het rayon kosten reisuren niets, alleen km.
+  const rayonDrempel = sett.rayonDrempel != null ? sett.rayonDrempel : 15;
+  const binnenRayon = (c.reis || 0) <= rayonDrempel;
   const reisUren = dagenFactureerbaar * (c.schilders || 0) * ((c.reis || 0) / snelheid);
-  const reisTotaal = reisUren * sett.reistijd + dagenFactureerbaar * (c.reis || 0) * 2 * sett.km;
+  const reisTotaal = (binnenRayon ? 0 : reisUren * sett.reistijd) + dagenFactureerbaar * (c.reis || 0) * 2 * sett.km;
   // Staart
   let staartTotaal = 0;
   const weken = dagenFactureerbaar > 0 ? Math.ceil(dagenFactureerbaar / 5) : 0;
@@ -14408,9 +14437,10 @@ function _calcTotalForArchive(c, includeInactief = false) {
     else if (p.type === 'eenheid') staartTotaal += (p.bedrag || 0) * (p.hoeveelheid || 0);
     else if (p.type === 'percent') {
       let basis = 0;
-      if (p.grondslag === 'arbeid') basis = arbeid;
+      if (p.grondslag === 'arbeid') basis = arbeidBasis;
       else if (p.grondslag === 'materiaal') basis = matVerkoop;
-      else if (p.grondslag === 'arbeid_materiaal') basis = arbeid + matVerkoop;
+      else if (p.grondslag === 'arbeid_materiaal') basis = arbeidBasis + matVerkoop;
+      else if (p.grondslag === 'subtotaal') basis = verkoop;
       staartTotaal += basis * (p.bedrag || 0) / 100;
     }
   });

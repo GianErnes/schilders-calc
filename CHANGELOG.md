@@ -1,3 +1,18 @@
+## v3.56.1 — Lijst en calculatie rekenen weer hetzelfde
+Het bedrag op het dashboard kon afwijken van het totaal in de calculatie zelf. De oude archief-rekenroute is regel voor regel gelijkgetrokken met de kaart.
+
+### Wijzigingen
+- Het dashboard gebruikte voor geopende calculaties (en voor het cachen van het lijstbedrag) een oude, parallelle berekening die niet was meegegroeid met de calculatie-kaart. Daardoor kon de lijst bijvoorbeeld € 3.372,15 tonen waar de calculatie € 2.737,01 zegt. De calculatie had altijd gelijk; het lijstbedrag was fout.
+- Gelijkgetrokken: toeslag-uren met "telt in werkdagen" (zoals de kleinschaligheids- en klimtoeslag) tellen nu ook in het archief mee in de werkelijke werkdagen, zodat er geen afrondingstoeslag meer bij komt die de calculatie terecht niet rekent.
+- Gelijkgetrokken: de rayon-regeling. Binnen het rayon kosten reisuren niets, alleen de kilometers tellen.
+- Gelijkgetrokken: procent-staartposten rekenen over de arbeid zonder afrondingstoeslag, precies zoals de kaart, en de grondslag "subtotaal" (verkoopwaarde) wordt nu ook in het archief ondersteund.
+- Zelfherstel: bij het openen van een calculatie wordt het juiste totaal stil teruggeschreven naar de lijst. Foute lijstbedragen genezen dus vanzelf zodra je de calculatie een keer opent; ook een aan/uit-vinkje of statuswissel schrijft het juiste bedrag.
+- Het bevroren "oorspronkelijke offertebedrag" van vergrendelde calculaties blijft bewust ongemoeid. Wil je dat voor een bestaande calculatie corrigeren, zet de status even op Concept en daarna terug; let op dat de instellingen-snapshot dan opnieuw met de huidige tarieven wordt gezet.
+- In de code staat nu een duidelijke waarschuwing dat de kaart en de archieffunctie synchroon gehouden moeten worden bij toekomstige formule-wijzigingen.
+- Geen Supabase-migratie nodig.
+
+---
+
 ## v3.56.0 — Navigatiebalk blijft bovenin staan
 De tabbalk plakt nu bovenaan het scherm, zodat je vanuit een lange lijst altijd direct van tab kunt wisselen.
 
