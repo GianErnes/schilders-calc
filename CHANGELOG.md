@@ -1,3 +1,15 @@
+## v3.57.0 — Tab Offerteteksten: de tekstenbibliotheek van de offertemodule
+Brok A2 van de offertemodule. Een eigen tab met alle vaste offerteteksten als bibliotheek, in de volgorde van het offertedocument.
+
+### Wijzigingen
+- Nieuwe tab Offerteteksten naast de andere bibliotheken. De zestien tekstsecties staan in documentvolgorde, elk uitklapbaar, met de documentkop erbij (bv. "Wat zijn onze bevindingen?"). De automatisch gegenereerde delen (briefhoofd, prijsopgave, ondertekenblok, bijlagenlijst) staan als grijze regels ertussen, zodat de complete documentopbouw zichtbaar is.
+- Per sectie meerdere varianten: naam, volgorde (pijltjes; de sectie hernummert in stappen van 10) en de tekst in een ruim tekstvak. Wijzigingen worden direct bij het verlaten van een veld opgeslagen, zonder re-render zodat de cursor blijft staan. Toevoegen per sectie met + Variant, verwijderen met bevestiging. De open/dicht-stand van de secties blijft staan tijdens het werken.
+- Invulvelden-hulplijst bovenin: {klant}, {project}, {werkdagen}, {totaal_incl}, {geldig_tot}, {opnamedatum} en {garantiejaren} als knoppen, tik om te kopiëren. De generator (brok A4) vult ze straks vanuit de calculatie.
+- Sectieregister OFFERTE_SECTIES als vaste constante in de code (code, naam, documentkop, type tekst/auto, stapelbaar). Brok A3 (offerte-blok in de calculatie) en A4 (generator) bouwen hierop voort. De sectie werkzaamheden is stapelbaar: daar kunnen per offerte meerdere blokken tegelijk in.
+- Offerteteksten laden mee bij het opstarten, net als de andere bibliotheken, en vallen buiten de localStorage-herstelroute.
+- Foutmeldingen bij opslaan, bijwerken en verwijderen tonen de werkelijke Supabase-fout in de toast.
+- Vereist de SQL-migratie van brok A1 (tabel offerte_teksten, kolom offerte_config op calculaties), gedraaid op 12 juni 2026.
+
 ## v3.56.2 — Dashboard rekent nu altijd met de meetstaat
 De archief-berekening deed de meetstaat-som niet zelf en rekende daardoor met verouderde regel-hoeveelheden. Nu doet zij eerst dezelfde som als de calculatie-kaart.
 

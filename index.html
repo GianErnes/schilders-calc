@@ -1968,6 +1968,7 @@
   <button data-tab="bewerkingen">Bewerkingen</button>
   <button data-tab="materialen">Materialen</button>
   <button data-tab="ondergronden">Ondergronden</button>
+  <button data-tab="offerteteksten">Offerteteksten</button>
   <button data-tab="onderhoud">Onderhoudsplan</button>
   <button data-tab="planning">Planning</button>
   <button data-tab="instellingen">Instellingen</button>
@@ -1977,8 +1978,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.56.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.57.0</h2>
       <div class="intro-body">
+        <p><strong>📝 Nieuwe tab Offerteteksten (v3.57.0).</strong> De eerste zichtbare stap van de offertemodule. In de nieuwe tab staan alle vaste offerteteksten als bibliotheek bij elkaar, in de volgorde van het offertedocument: van de inleiding via betaling en garantie tot de afsluiting. Per sectie kun je meerdere varianten bewaren, bijvoorbeeld een garantietekst voor consumenten en een voor zakelijke klanten, en met de pijltjes bepaal je de volgorde. De grijze regels ertussen zijn de delen die de app straks zelf genereert, zoals de prijsopgave en het ondertekenblok, zodat je de hele documentopbouw in één oogopslag ziet. Bovenin staan de invulvelden zoals {klant} en {geldig_tot}: tik erop om ze te kopiëren en plak ze in een tekst, de offerte vult ze bij het genereren zelf in. De bibliotheek is alvast gevuld met de teksten uit een recente offerte als startpunt; pas ze gerust aan. Het kiezen en gebruiken per offerte komt in de volgende stap. Vereist de SQL-migratie van brok A1; die is vandaag al gedraaid.</p>
         <p><strong>📏 Dashboard rekent nu altijd met de meetstaat (v3.56.2).</strong> De meetstaat is de bron van de regel-hoeveelheden, maar die som werd alleen op de regels gezet bij het renderen van de Calculatie-tab van de actieve calculatie. Het dashboard, de bedragen-cache en het bevriezen bij gereedmelden rekenden daardoor met verouderde hoeveelheden uit de database. Bij een calculatie die net via kozijnen en meetstaat is opgebouwd kon de lijst zo een fractie van het echte bedrag tonen, terwijl de kaart het wel goed had. Vanaf nu doet de archief-berekening eerst zelf dezelfde meetstaat-som, voor elke calculatie. Open een calculatie met een afwijkend lijstbedrag één keer en het herstelt zichzelf. Is een calculatie met te lage hoeveelheden gereed gemeld, zet de status dan even op Concept en terug zodat ook het bevroren offertebedrag opnieuw goed wordt vastgelegd. Geen SQL nodig.</p>
         <p><strong>🧮 Lijst en calculatie rekenen weer hetzelfde (v3.56.1).</strong> Het dashboard gebruikte voor het bedrag per calculatie een oude, parallelle rekenroute die niet was meegegroeid met de kaart in de calculatie. Toeslag-uren met "telt in werkdagen" deden daar niet mee in de werkdagen, waardoor het archief een afrondingstoeslag rekende die de calculatie terecht niet rekent, de rayon-regeling voor reisuren ontbrak, procent-staartposten rekenden over de verkeerde arbeid en de grondslag subtotaal ontbrak helemaal. Die route is nu regel voor regel gelijkgetrokken met de kaart. Het dashboard geneest zichzelf: zodra je een calculatie opent wordt het juiste bedrag stil teruggeschreven naar de lijst. Het bevroren oorspronkelijke offertebedrag van vergrendelde calculaties blijft bewust met rust; wil je dat ook corrigeren, zet de status even op Concept en terug. Geen SQL nodig.</p>
         <p><strong>📌 Navigatiebalk blijft bovenin staan (v3.56.0).</strong> De tabbalk met Dashboard, Calculatie, Meetstaat en de rest scrolt niet meer mee het beeld uit: hij blijft bovenaan plakken. Zo kun je vanuit een lange meetstaat of het normenboek altijd direct naar een andere tab, zonder eerst helemaal terug naar boven te scrollen. De koptekst met het logo scrolt gewoon weg, alleen de balk blijft staan. Vensters, het cijfertoetsenbord en meldingen vallen er netjes overheen zoals je gewend bent en op een smal scherm kun je de balk zelf nog steeds opzij schuiven. Geen SQL nodig.</p>
@@ -2243,6 +2245,15 @@
     <div class="panel-head"><h2>Ondergronden</h2><button class="btn" onclick="addOndergrond()">+ Nieuwe Ondergrond</button></div>
     <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Ondergronden gebruik je bij bewerkingen en verfsystemen.</em></p>
     <div id="ondergrondenLijst"></div>
+  </section>
+
+  <section class="panel" id="offerteteksten">
+    <div class="panel-head">
+      <h2>Offerteteksten</h2>
+    </div>
+    <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>De tekstenbibliotheek van de offerte, in de volgorde van het document. Per sectie meerdere varianten; bij het maken van een offerte kies je per sectie een variant en kun je de tekst voor die offerte nog aanpassen. Wijzigingen worden direct opgeslagen.</em></p>
+    <div id="offVeldenHulp"></div>
+    <div id="offTekstenLijst"></div>
   </section>
 
   <section class="panel" id="onderhoud">
@@ -2945,7 +2956,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.56.2';
+const APP_VERSION = 'v3.57.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3307,6 +3318,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.57.0', d: '2026-06-12', h: 'Nieuwe tab Offerteteksten: de tekstenbibliotheek van de offertemodule (brok A2). Alle vaste offerteteksten per sectie bij elkaar in documentvolgorde, met meerdere varianten per sectie (bv. garantie consument/zakelijk), pijltjes voor de volgorde, direct opslaan bij wijzigen en een kopieerbare invulvelden-hulplijst ({klant}, {geldig_tot}, …). De automatisch gegenereerde delen (briefhoofd, prijsopgave, ondertekenblok, bijlagen) staan grijs ertussen zodat de documentopbouw compleet zichtbaar is. Sectieregister OFFERTE_SECTIES als vaste constante voor brok A3/A4. Vereist SQL-migratie brok A1 (offerte_teksten + offerte_config)' },
   { v: '3.56.2', d: '2026-06-12', h: 'Fix: de archief-berekening (dashboard, cache, bevriezen bij gereedmelden) doet nu eerst zelf de meetstaat-som per regel, net als de calculatie-kaart. Voorheen rekende die route met verouderde regel-hoeveelheden uit de database, waardoor een net via kozijnen/meetstaat opgebouwde calculatie op het dashboard een fractie van het echte bedrag kon tonen. Lijstbedragen herstellen zichzelf bij het openen van de calculatie; voor een verkeerd bevroren origineel zet je de status even op Concept en terug. Geen SQL nodig' },
   { v: '3.56.1', d: '2026-06-12', h: 'Fix: het dashboard-bedrag per calculatie wijkt niet meer af van de calculatie zelf. De archief-rekenroute is regel voor regel gelijkgetrokken met de kaart: toeslag-uren met telt-in-werkdagen tellen mee in de werkdagen (geen onterechte afrondingstoeslag meer), rayon-regeling voor reisuren, procent-staartposten over de arbeid zonder afrondingstoeslag en grondslag subtotaal toegevoegd. Zelfherstel: bij het openen van een calculatie wordt het juiste lijstbedrag stil teruggeschreven. Bevroren originele offertebedragen blijven ongemoeid. Geen SQL nodig' },
   { v: '3.56.0', d: '2026-06-10', h: 'Navigatiebalk blijft bovenin staan bij het scrollen (position: sticky, z-index 50, onder vensters/numpad/meldingen). De koptekst met het logo scrolt gewoon weg; alleen de tabbalk plakt. Scroll-padding zorgt dat scrolldoelen niet onder de balk verdwijnen; op een smal scherm blijft de balk horizontaal schuifbaar. Geen SQL nodig' },
@@ -3651,6 +3663,7 @@ data.materialen = [];
 data.ondergronden = [];
 data.bewerkingen = [];
 data.staartLib = [];
+data.offerteTeksten = [];
 data.systemen = [];
 data.calculaties = [];
 data.activeCalcId = null;
@@ -3946,6 +3959,218 @@ async function _deleteStaartDB(id) {
   );
   return !error;
 }
+
+// ============================================================
+// OFFERTETEKSTEN — tekstenbibliotheek van de offertemodule (v3.57.0)
+// Sectieregister: de vaste opbouw van het offertedocument. Brok A3
+// (offerte-blok in de calculatie) en A4 (generator) bouwen hierop voort.
+// type 'tekst' = beheerbaar in de bibliotheek; type 'auto' = door de
+// app gegenereerd (briefhoofd, prijstabel, ondertekenblok, bijlagen).
+// ============================================================
+const OFFERTE_SECTIES = [
+  { code: 'briefhoofd',       naam: 'Briefhoofd en klantgegevens',   kop: '',                                        type: 'auto' },
+  { code: 'inleiding',        naam: 'Inleiding (aanhef)',            kop: '',                                        type: 'tekst', stapelbaar: false },
+  { code: 'bevindingen',      naam: 'Bevindingen',                   kop: 'Wat zijn onze bevindingen?',              type: 'tekst', stapelbaar: false },
+  { code: 'onderdelen',       naam: 'Onderdelen',                    kop: 'Welke onderdelen worden behandeld?',      type: 'tekst', stapelbaar: false },
+  { code: 'werkzaamheden',    naam: 'Werkzaamheden',                 kop: 'Welke werkzaamheden voeren wij uit?',     type: 'tekst', stapelbaar: true },
+  { code: 'prijsopgave',      naam: 'Prijsopgave',                   kop: 'Wat zijn de kosten?',                     type: 'auto' },
+  { code: 'prijsopmerkingen', naam: 'Opmerkingen onder de prijs',    kop: '',                                        type: 'tekst', stapelbaar: false },
+  { code: 'betaling',         naam: 'Betaling',                      kop: 'Hoe en wanneer kunt u betalen?',          type: 'tekst', stapelbaar: false },
+  { code: 'planning',         naam: 'Planning',                      kop: 'Wanneer kunt u ons verwachten?',          type: 'tekst', stapelbaar: false },
+  { code: 'geldigheid',       naam: 'Geldigheid',                    kop: 'Geldigheid van deze offerte',             type: 'tekst', stapelbaar: false },
+  { code: 'verwachtingen',    naam: 'Verwachtingen van de klant',    kop: 'Wat verwachten wij van u?',               type: 'tekst', stapelbaar: false },
+  { code: 'uitsluitingen',    naam: 'Uitsluitingen',                 kop: 'Uitsluiting',                             type: 'tekst', stapelbaar: false },
+  { code: 'houtrot',          naam: 'Houtrot-opmerking',             kop: 'Belangrijke opmerking over houtrot',      type: 'tekst', stapelbaar: false },
+  { code: 'prijsbepalingen',  naam: 'Prijsbepalingen',               kop: 'Prijzen',                                 type: 'tekst', stapelbaar: false },
+  { code: 'meerminderwerk',   naam: 'Meer- en minderwerk',           kop: 'Meer- en minderwerk',                     type: 'tekst', stapelbaar: false },
+  { code: 'garantie',         naam: 'Garantie en aansprakelijkheid', kop: 'Garantiebepalingen en aansprakelijkheid', type: 'tekst', stapelbaar: false },
+  { code: 'afsluiting',       naam: 'Afsluiting',                    kop: 'Zeg ja tegen deze offerte',               type: 'tekst', stapelbaar: false },
+  { code: 'ondertekening',    naam: 'Ondertekenblok',                kop: 'Ondertekening',                           type: 'auto' },
+  { code: 'slotzin',          naam: 'Slotzin (onder ondertekening)', kop: '',                                        type: 'tekst', stapelbaar: false },
+  { code: 'bijlagen',         naam: 'Bijlagenlijst en bijlagen',     kop: 'Bijlagen',                                type: 'auto' }
+];
+
+// Invulvelden die de generator (brok A4) vult vanuit de calculatie.
+const OFFERTE_VELDEN = [
+  { veld: '{klant}',         uitleg: 'naam van de klant' },
+  { veld: '{project}',       uitleg: 'projectnaam met adres' },
+  { veld: '{werkdagen}',     uitleg: 'werkdagen uit de calculatie' },
+  { veld: '{totaal_incl}',   uitleg: 'totaalbedrag incl. BTW' },
+  { veld: '{geldig_tot}',    uitleg: 'vervaldatum van de offerte' },
+  { veld: '{opnamedatum}',   uitleg: 'datum van de opname' },
+  { veld: '{garantiejaren}', uitleg: 'garantietermijn in jaren' }
+];
+
+// HTML-escape voor namen en teksten in het beheerscherm.
+function _offEsc(s) {
+  return String(s == null ? '' : s)
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+// --- DB-laag (zelfde patroon als staart_lib) ---
+function _mapOffTekstFromDB(r) {
+  return { id: r.id, sectie: r.sectie, naam: r.naam || '', inhoud: r.inhoud || '', volgorde: r.volgorde || 0 };
+}
+function _mapOffTekstToDB(t) {
+  return { sectie: t.sectie, naam: t.naam, inhoud: t.inhoud, volgorde: t.volgorde || 0 };
+}
+async function _fetchOffTekstenFromDB() {
+  if (!_sb) return null;
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('offerte_teksten').select('*').order('sectie').order('volgorde'), 'Offerteteksten ophalen'
+  );
+  if (error) return null;
+  return (rows || []).map(_mapOffTekstFromDB);
+}
+async function _insertOffTekstDB(t) {
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('offerte_teksten').insert([_mapOffTekstToDB(t)]).select(), 'Offertetekst opslaan'
+  );
+  if (error) { if (error.message !== 'timeout') _toast('Opslaan mislukt: ' + error.message); return null; }
+  if (!rows || !rows[0]) return null;
+  return _mapOffTekstFromDB(rows[0]);
+}
+function _updateOffTekstDB(t) {
+  _sbQuery(
+    _sb.from('offerte_teksten').update(_mapOffTekstToDB(t)).eq('id', t.id), 'Offertetekst bijwerken'
+  ).then(({ error }) => { if (error && error.message !== 'timeout') _toast('Bijwerken mislukt: ' + error.message); });
+}
+async function _deleteOffTekstDB(id) {
+  const { error } = await _sbQuery(
+    _sb.from('offerte_teksten').delete().eq('id', id), 'Offertetekst verwijderen'
+  );
+  if (error && error.message !== 'timeout') { _toast('Verwijderen mislukt: ' + error.message); return false; }
+  return !error;
+}
+
+// --- UI ---
+// Open/dicht-stand van de secties overleeft een re-render.
+const _offOpenSecties = new Set();
+function _offToggleSectie(code, open) {
+  if (open) _offOpenSecties.add(code); else _offOpenSecties.delete(code);
+}
+
+// Invulveld naar het klembord, met bevestiging.
+function _offKopieerVeld(veld) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(veld).then(
+      () => _toast(veld + ' gekopieerd', 'ok'),
+      () => _toast('Kopiëren mislukt')
+    );
+  } else {
+    _toast('Kopiëren niet beschikbaar in deze browser');
+  }
+}
+
+// Eén variant-kaart binnen een sectie.
+function _offVariantKaart(t, i, n) {
+  const rows = Math.min(14, Math.max(3, (String(t.inhoud).match(/\n/g) || []).length + 2));
+  return `<div style="border:1px solid #eef0f3; border-radius:8px; padding:0.6rem; margin-top:0.5rem; background:#fafbfc;">
+    <div style="display:flex; gap:0.4rem; align-items:center; margin-bottom:0.4rem; flex-wrap:wrap;">
+      <button class="btn-icon" onclick="moveOffTekst('${t.id}',-1)" ${i === 0 ? 'disabled' : ''} title="Omhoog">↑</button>
+      <button class="btn-icon" onclick="moveOffTekst('${t.id}',1)" ${i === n - 1 ? 'disabled' : ''} title="Omlaag">↓</button>
+      <input value="${_offEsc(t.naam)}" onchange="updOffTekst('${t.id}','naam',this.value)" style="flex:1; min-width:160px; font-weight:600;" placeholder="Naam van de variant">
+      <button class="btn btn-danger btn-sm" onclick="delOffTekst('${t.id}')" title="Variant verwijderen">×</button>
+    </div>
+    <textarea rows="${rows}" onchange="updOffTekst('${t.id}','inhoud',this.value)" style="width:100%; font-size:0.85rem; line-height:1.45;" placeholder="Tekst van deze variant…">${_offEsc(t.inhoud)}</textarea>
+  </div>`;
+}
+
+// Hoofd-renderfunctie: aangeroepen bij tab-switch.
+function renderOfferteteksten() {
+  const hulp = document.getElementById('offVeldenHulp');
+  const c = document.getElementById('offTekstenLijst');
+  if (!c) return;
+  if (typeof _sb === 'undefined' || !_sb) {
+    if (hulp) hulp.innerHTML = '';
+    c.innerHTML = '<div class="empty-state">Offerteteksten niet beschikbaar zonder verbinding.</div>';
+    return;
+  }
+  if (!data.offerteTeksten) data.offerteTeksten = [];
+  if (hulp) {
+    hulp.innerHTML = `<div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:0.6rem 0.8rem; margin-bottom:1rem;">
+      <div style="font-size:0.8rem; color:var(--muted); margin-bottom:0.4rem;"><strong>Invulvelden</strong> — tik om te kopiëren en plak in een tekst; de offerte vult ze bij het genereren zelf in:</div>
+      <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+        ${OFFERTE_VELDEN.map(v => `<button class="btn btn-secondary btn-sm" style="font-family:monospace;" onclick="_offKopieerVeld('${v.veld}')" title="${_offEsc(v.uitleg)}">${_offEsc(v.veld)}</button>`).join('')}
+      </div>
+    </div>`;
+  }
+  let html = '';
+  OFFERTE_SECTIES.forEach(sec => {
+    if (sec.type === 'auto') {
+      html += `<div style="display:flex; align-items:center; gap:0.5rem; padding:0.45rem 0.8rem; margin-bottom:0.4rem; border:1px dashed #d1d5db; border-radius:8px; color:var(--muted); font-size:0.85rem;">
+        <span>⚙️</span><span><strong>${_offEsc(sec.naam)}</strong> — automatisch gegenereerd</span></div>`;
+      return;
+    }
+    const items = data.offerteTeksten
+      .filter(t => t.sectie === sec.code)
+      .sort((a, b) => (a.volgorde - b.volgorde) || a.naam.localeCompare(b.naam));
+    const open = _offOpenSecties.has(sec.code) ? 'open' : '';
+    const kopLabel = sec.kop ? `Kop in het document: “${sec.kop}”` : 'Zonder kop in het document';
+    html += `<details ${open} ontoggle="_offToggleSectie('${sec.code}', this.open)" style="border:1px solid #e5e7eb; border-radius:8px; margin-bottom:0.4rem; background:#fff;">
+      <summary style="cursor:pointer; user-select:none; padding:0.55rem 0.8rem; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+        <strong>${_offEsc(sec.naam)}</strong>
+        <span style="color:var(--muted); font-size:0.8rem;">${_offEsc(kopLabel)}${sec.stapelbaar ? ' · stapelbaar' : ''}</span>
+        <span style="margin-left:auto; color:var(--muted); font-size:0.8rem;">${items.length} variant${items.length === 1 ? '' : 'en'}</span>
+        <button class="btn btn-sm" onclick="event.preventDefault(); event.stopPropagation(); addOffTekst('${sec.code}')">+ Variant</button>
+      </summary>
+      <div style="padding:0 0.8rem 0.8rem;">
+        ${items.length ? items.map((t, i) => _offVariantKaart(t, i, items.length)).join('') : '<div style="color:var(--muted); font-size:0.85rem; padding:0.3rem 0;">Nog geen varianten.</div>'}
+      </div>
+    </details>`;
+  });
+  c.innerHTML = html;
+}
+
+// Veld bijwerken: lokaal + DB, bewust zonder re-render zodat de cursor
+// en de open tekstvakken blijven staan.
+function updOffTekst(id, field, val) {
+  const t = data.offerteTeksten.find(x => x.id === id);
+  if (!t) return;
+  t[field] = val;
+  _updateOffTekstDB(t);
+}
+
+async function addOffTekst(sectie) {
+  _offOpenSecties.add(sectie);
+  const binnen = data.offerteTeksten.filter(t => t.sectie === sectie);
+  const maxV = binnen.reduce((m, t) => Math.max(m, t.volgorde || 0), 0);
+  const saved = await _insertOffTekstDB({ sectie, naam: 'Nieuw', inhoud: '', volgorde: maxV + 10 });
+  if (!saved) return;
+  data.offerteTeksten.push(saved);
+  renderOfferteteksten();
+}
+
+async function delOffTekst(id) {
+  const t = data.offerteTeksten.find(x => x.id === id);
+  if (!t) return;
+  if (!confirm('Variant "' + t.naam + '" verwijderen?')) return;
+  const ok = await _deleteOffTekstDB(id);
+  if (!ok) return;
+  data.offerteTeksten = data.offerteTeksten.filter(x => x.id !== id);
+  renderOfferteteksten();
+}
+
+// Volgorde wisselen binnen de sectie: hernummert de hele sectie in
+// stappen van 10 en schrijft alleen gewijzigde rijen terug.
+function moveOffTekst(id, dir) {
+  const t = data.offerteTeksten.find(x => x.id === id);
+  if (!t) return;
+  const binnen = data.offerteTeksten
+    .filter(x => x.sectie === t.sectie)
+    .sort((a, b) => (a.volgorde - b.volgorde) || a.naam.localeCompare(b.naam));
+  const i = binnen.findIndex(x => x.id === id);
+  const j = i + dir;
+  if (j < 0 || j >= binnen.length) return;
+  [binnen[i], binnen[j]] = [binnen[j], binnen[i]];
+  binnen.forEach((x, idx) => {
+    const nieuw = (idx + 1) * 10;
+    if (x.volgorde !== nieuw) { x.volgorde = nieuw; _updateOffTekstDB(x); }
+  });
+  renderOfferteteksten();
+}
+
 
 // ============================================================
 // VERFSYSTEMEN + STAPPEN MAPPING & DB
@@ -4995,7 +5220,7 @@ async function loadData() {
     try {
       const parsed = JSON.parse(saved);
       Object.keys(parsed).forEach(k => {
-        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden' && k !== 'bewerkingen' && k !== 'staartLib' && k !== 'systemen' && k !== 'calculaties' && k !== 'activeCalcId') data[k] = parsed[k];
+        if (k !== 'calc' && k !== 'materialen' && k !== 'ondergronden' && k !== 'bewerkingen' && k !== 'staartLib' && k !== 'offerteTeksten' && k !== 'systemen' && k !== 'calculaties' && k !== 'activeCalcId') data[k] = parsed[k];
       });
       // Calculaties leven nu in Supabase — oude migratie-paths overgeslagen.
       // Settings migrations
@@ -5058,6 +5283,12 @@ async function loadData() {
   const staartFromDB = await _fetchStaartLibFromDB();
   if (staartFromDB !== null) {
     data.staartLib = staartFromDB;
+  }
+
+  // 5b. Fetch offerte-teksten from Supabase (v3.57.0 — tekstenbibliotheek offertemodule)
+  const offTekstenDB = await _fetchOffTekstenFromDB();
+  if (offTekstenDB !== null) {
+    data.offerteTeksten = offTekstenDB;
   }
 
   // 6. Fetch verfsystemen + stappen from Supabase
@@ -5132,6 +5363,7 @@ document.querySelectorAll('nav button').forEach(b => {
     if (b.dataset.tab === 'ondergronden')  renderOndergronden();
     if (b.dataset.tab === 'systemen')      renderSystemen();
     if (b.dataset.tab === 'onderhoud')     renderOnderhoudsplan();
+    if (b.dataset.tab === 'offerteteksten') renderOfferteteksten();
     if (b.dataset.tab === 'planning')      renderPlanningMatrix();
     if (b.dataset.tab === 'instellingen')  loadSettings();
   });
