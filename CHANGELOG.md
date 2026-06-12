@@ -1,3 +1,15 @@
+## v3.56.2 — Dashboard rekent nu altijd met de meetstaat
+De archief-berekening deed de meetstaat-som niet zelf en rekende daardoor met verouderde regel-hoeveelheden. Nu doet zij eerst dezelfde som als de calculatie-kaart.
+
+### Wijzigingen
+- De meetstaat is de bron van de regel-hoeveelheden, maar die som werd alleen voor de actieve calculatie gezet bij het renderen van de Calculatie-tab. Het dashboard, de bedragen-cache en het bevriezen bij gereedmelden gebruikten daardoor de kale hoeveelheden uit de database. Bij een net via kozijnen en meetstaat opgebouwde calculatie (zoals Nacken 13) toonde de lijst zo € 2.069,78 waar de kaart terecht € 11.751,71 zegt.
+- De archief-berekening doet nu als eerste stap zelf de meetstaat-som per regel, in het geheugen en zonder database-writes, met exact dezelfde rijformule als de kaart (stuk, m¹ met één of twee maten, m², inclusief factor). Regels zonder meetstaat-rijen behouden hun handmatige hoeveelheid.
+- Dit corrigeert alle plekken die op deze route leunen: het lijstbedrag voor geopende calculaties, het zelfherstel van de cache, het cachen bij wijzigen en vergrendelen, het bevriezen van het oorspronkelijke offertebedrag en het scenario-blok.
+- Lijstbedragen herstellen zichzelf zodra je de calculatie één keer opent. Is een calculatie met te lage hoeveelheden gereed gemeld, zet de status dan even op Concept en terug zodat het bevroren offertebedrag opnieuw correct wordt vastgelegd; de instellingen-snapshot wordt daarbij opnieuw met de huidige tarieven gezet.
+- Geen Supabase-migratie nodig.
+
+---
+
 ## v3.56.1 — Lijst en calculatie rekenen weer hetzelfde
 Het bedrag op het dashboard kon afwijken van het totaal in de calculatie zelf. De oude archief-rekenroute is regel voor regel gelijkgetrokken met de kaart.
 
