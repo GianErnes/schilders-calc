@@ -1971,6 +1971,7 @@
     .print-only .kz-tek svg { width: 100%; height: 100%; }
     .print-only .kz-info { flex: 1 1 auto; min-width: 0; }
     .print-only .kz-info h3 { font-size: 12pt; margin: 0 0 4pt 0; color: #1a1a1a; }
+    .print-only .kz-locatie { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.07em; color: #b91c1c; margin: -2pt 0 5pt 0; font-weight: 600; }
     .print-only .kz-meta { font-size: 9pt; color: #444; line-height: 1.5; margin-bottom: 4pt; }
     .print-only .kz-meta .lbl { color: #888; }
     .print-only .kz-gebreken-titel { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin: 6pt 0 3pt 0; }
@@ -2059,8 +2060,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.67.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.68.0</h2>
       <div class="intro-body">
+        <p><strong>📍 Gevel op elke kozijntekening in de PDF (v3.68.0).</strong> In de kozijnen-PDF staat nu onder de naam van elk kozijn waar het zit, opgehaald uit de calc-regel waaraan de tekening gekoppeld is: de hoofdgroep en het onderdeel, bijvoorbeeld "Buiten houtwerk · Voorgevel". Zo zie je ook na een week, en de klant net zo goed, meteen aan welk kozijn je kijkt, ook als de tekening zelf maar "Kozijn" heet. De plek komt uit de koppeling, niet uit de naam. Geen SQL nodig.</p>
         <p><strong>🚪 Vulling per kozijntekening in de meetstaat (v3.67.0).</strong> De m² van deuren en panelen wordt niet meer samengerold tot één regel per calc-regel. Voortaan krijg je per kozijntekening een eigen auto-regel, en die staat direct onder zijn tekening in de meetstaat, net als de m¹ die daar al per tekening staat. De regel heet naar zijn bron, bijvoorbeeld "Voorgevel · Geveldeur (auto)", zodat je in één oogopslag ziet welke deur uit welk kozijn komt. Het calc-totaal blijft kloppen want regels met dezelfde calc-regel tellen op. Bestaande open calculaties bouwen de regels vanzelf opnieuw op zodra je de meetstaat aanraakt of een kozijn opslaat; vergrendelde offertes blijven ongemoeid. De kozijnen-PDF toont dit al per tekening en per deur, dus de klant leest meteen waar de m² van gemeten is. Eénmalige SQL-migratie (kolom bron_meetstaat_id op de meetstaat-tabel, al gedaan).</p>
         <p><strong>📍 Adresblok bovenaan de offerte (v3.66.0).</strong> Bovenaan de offerte staat nu een net klantblok met naam, straat met huisnummer, postcode en woonplaats. In het Offerte-blok staat een sectie Adres op de offerte. Standaard staat daar het werkadres uit de calculatie, en met de knop Zoek straat en woonplaats haalt de app die er via de postcode automatisch bij. Alles is met de hand te corrigeren, en wil je een ander correspondentie-adres dan typ je dat gewoon. Geen SQL nodig.</p>
         <p><strong>✍️ Akkoord-stempel op de offerte (v3.65.0).</strong> Geeft de klant akkoord, dan verschijnt in het ondertekenvak van de offerte de regel “Digitaal geaccordeerd door [naam] op [datum]”. De klant ziet zo op het document zelf dat en wanneer hij akkoord heeft gegeven, en slaat hij de pagina op dan staat het erin. Heropent hij later de link, dan staat de stempel er ook. Het IP-adres blijft in de database als bewijs maar staat bewust niet op het papier.</p>
@@ -3081,7 +3083,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.67.0';
+const APP_VERSION = 'v3.68.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3443,6 +3445,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.68.0', d: '2026-06-14', h: 'Kozijnen-PDF toont de locatie per kozijn: onder de naam staat Hoofdgroep · Onderdeel (bv. "Buiten houtwerk · Voorgevel"), opgehaald uit de calc-regel waaraan de tekening-regel gekoppeld is. Zo is na de opname herkenbaar welk kozijn welke gevel is, ook bij een generieke tekeningnaam. _bouwKozijnenHtml bouwt een regelId→locatie-map uit de meegegeven calculatie c (niet data.calc), dus ook doorlopende PDF en archief tonen het juist. Nieuwe .kz-locatie print-stijl. Geen SQL' },
   { v: '3.67.0', d: '2026-06-13', h: 'Vulling-m² niet meer samengerold: per kozijntekening per calc-regel één auto-regel in de meetstaat, direct onder zijn brontekening (net als de m¹ die al per tekening op de regel staat). Naam naar de bron, bv. "Voorgevel · Geveldeur (auto)". Calc-totaal blijft kloppen (regels met dezelfde calc-regel tellen op). _syncVullingMeetstaat keyt nu op bronMeetstaatId + calc-regel i.p.v. alleen calc-regel; nieuwe helper _vullingDoelenPerTekening en _herordenVullingMeetstaat (volgorde = array-index, alleen gewijzigde rijen weggeschreven). Oude samengerolde auto-regels (zonder bronMeetstaatId) worden als wees opgeruimd en vervangen. addMeetstaat baseert defaults op de laatste handmatige regel. Kozijnen-PDF toont dit al per tekening/deur sinds v3.55.0. Eénmalige SQL-migratie (kolom bron_meetstaat_id op meetstaat)' },
   { v: '3.66.0', d: '2026-06-13', h: 'Adresblok op de offerte: off-klant toont naam + straat/huisnummer + postcode/woonplaats i.p.v. klant + projectnaam. Sectie Adres op de offerte in het Offerte-blok met knop Zoek straat en woonplaats (PDOK via _pdokAdres). Opslag in offerte_config.adres als afwijkingen; _offAdresEffectief valt terug op werkadres en klantnaam wanneer leeg. Geen SQL' },
   { v: '3.65.0', d: '2026-06-13', h: 'Akkoord-stempel op de offerte: _accordStempel zet na akkoord “Digitaal geaccordeerd door [naam] op [datum]” in het laatste .off-sign-table td.sign-box (klant-ondertekenvak) binnen het iframe. Wordt gezet direct na een akkoord en ook bij het heropenen van een reeds geaccordeerde link (status akkoord in de GET). IP blijft in de DB, niet op papier. Voorbereiding mail (Resend) en verplicht klant-e-mailveld volgen als apart blok' },
@@ -9282,6 +9285,17 @@ async function printFotoBijlage() {
 // v3.61.0 — bouwt alleen de kozijnen-HTML (geen print) voor hergebruik in de doorlopende PDF.
 function _bouwKozijnenHtml(c, kozijnen) {
   const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+  // v3.68.0 — locatie per kozijn uit de calc-regel-koppeling: Hoofdgroep · Onderdeel.
+  // Uit de meegegeven calculatie c gehaald, niet uit data.calc, zodat de doorlopende
+  // PDF en het archief ook voor een niet-actieve calculatie de juiste plek tonen.
+  const _regelLocatie = {};
+  (c.hoofdgroepen || []).forEach(hg => {
+    (hg.onderdelen || []).forEach(od => {
+      (od.regels || []).forEach(r => {
+        _regelLocatie[r.id] = [hg.naam, od.naam].map(s => (s || '').trim()).filter(Boolean).join(' · ');
+      });
+    });
+  });
 
   let html = `<div class="header-block">
     <div style="display:flex; align-items:center; gap:0.75rem;">
@@ -9300,6 +9314,7 @@ function _bouwKozijnenHtml(c, kozijnen) {
   kozijnen.forEach(ms => {
     const tek = ms.tekening;
     const naam = _escapeHtml(ms.omschrijving || tek.naam || 'Kozijn');
+    const locatie = _regelLocatie[ms.calcRegelId] || '';
     const vormLabel = (_KOZIJN_VORMEN[tek.vorm] || {}).label || tek.vorm;
     const velden = (_KOZIJN_VORMEN[tek.vorm] || {}).velden || [];
     const matenStr = velden.map(([k, lbl]) => {
@@ -9349,6 +9364,7 @@ function _bouwKozijnenHtml(c, kozijnen) {
       <div class="kz-tek">${_kozijnThumbSvg(tek, 0, { genummerd: true, fill: true })}</div>
       <div class="kz-info">
         <h3>${naam}</h3>
+        ${locatie ? `<div class="kz-locatie">${_escapeHtml(locatie)}</div>` : ''}
         <div class="kz-meta">
           <div>${metaParts.join(' &middot; ')}</div>
           ${m1Regel ? `<div><strong>${m1Regel}</strong>${loosNote}</div>` : ''}

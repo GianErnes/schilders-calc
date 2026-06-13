@@ -1,4 +1,12 @@
-## v3.67.0 — Vulling per kozijntekening in de meetstaat
+## v3.68.0 — Gevel op elke kozijntekening in de PDF
+In de kozijnen-PDF staat nu onder de naam van elk kozijn waar het zit.
+
+### Wijzigingen
+- Onder de naam van elk kozijn in de kozijnen-PDF staat voortaan de locatie: de hoofdgroep en het onderdeel uit de calculatie, bijvoorbeeld "Buiten houtwerk · Voorgevel". Die plek wordt opgehaald uit de calc-regel waaraan de meetstaat-regel met de tekening gekoppeld is, niet uit de tekeningnaam. Zo herken je na de opname, en de klant net zo goed, meteen aan welke gevel een kozijn hoort, ook als de tekening generiek "Kozijn" heet.
+- Onder de motorkap bouwt `_bouwKozijnenHtml` een map van calc-regel naar "Hoofdgroep · Onderdeel" uit de meegegeven calculatie `c`, dus ook de doorlopende offerte-PDF en het archief tonen de juiste plek, ook voor een niet-actieve calculatie. Nieuwe print-stijl `.kz-locatie` als rode ondertitel.
+- Een tekening die je een eigen naam hebt gegeven houdt die naam; je kunt een verwarrende naam in de tekenaar gewoon aanpassen. Geen SQL nodig.
+
+
 De m² van deuren en panelen wordt niet meer samengerold. Per kozijntekening krijg je een eigen auto-regel, direct onder zijn tekening.
 
 ### Wijzigingen
