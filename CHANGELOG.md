@@ -1,3 +1,11 @@
+## v3.59.2 — Fix: offertedocument opende niet (LOGO_ERNES)
+Het offertedocument (v3.59.0) deed niets, niet via de knop Offertedocument en niet via het Archiveren-venster. De console toonde een ReferenceError: LOGO_ERNES is not defined.
+
+### Wijzigingen
+- Oorzaak: printOfferteDocument gebruikte LOGO_ERNES voor het briefhoofd, maar die constante is lokaal gedefinieerd binnen _ohpBuildOfferteHTML en daardoor niet bereikbaar vanuit andere functies. De code wierp daardoor een fout vóór window.print, zodat er nooit een printvenster opende. De Archiveren-flow rondde zichzelf wel af (vandaar de melding 1 PDF aangeboden), maar er was niets te zien.
+- Oplossing: het briefhoofd laadt het logo nu via src="erneslogo.png" uit de repo, met dezelfde onerror-fallback als de handtekening (src="handtekening.png"). Geen herhaling van de base64-string, geen scope-afhankelijkheid. Beide afbeeldingen laden mee bij het printen.
+- Vereist dat erneslogo.png en handtekening.png naast index.html in de repo staan (erneslogo.png stond er al).
+
 ## v3.59.1 — Fix: offertedocument in Archiveren
 Het offertedocument (v3.59.0) liet zich wel los printen via de knop, maar bleef hangen wanneer het via het Archiveren-venster werd gekozen: er werd een document aangekondigd en vervolgens gebeurde er niets.
 
