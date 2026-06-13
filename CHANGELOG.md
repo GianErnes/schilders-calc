@@ -1,3 +1,11 @@
+## v3.60.1 — Logo in offertedocument en rustige prijstabel
+Drie punten op het offertedocument: het logo ontbrak, en de horizontale strepen in de prijstabel moesten weg.
+
+### Wijzigingen
+- Logo verscheen niet: printOfferteDocument laadde het via erneslogo.png uit de repo, maar dat bestand stond er niet (of onder een andere naam). Logo en handtekening zijn nu ingebakken in de code als centrale globale constanten LOGO_ERNES en HANDTEKENING_ERNES, vlak vóór de onderhoudsplan-functies, zodat alle print-functies erbij kunnen. De voorheen lokale LOGO_ERNES binnen _ohpBuildOfferteHTML is verwijderd; er is nu één bron voor beide. Er hoeven geen losse bestanden (erneslogo.png, handtekening.png) meer in de repo te staan.
+- Prijstabel rustiger: de hele offerte-HTML zit in een wrapper div.off-doc. Daarop staat CSS die de tabelranden weghaalt. De horizontale strepen tussen de regels zijn weg; alleen een dunne lijn onder de kolomkop, boven de bijkomende kosten en boven het eindtotaal blijft staan. De randen rond het ondertekenvak blijven behouden.
+- De andere PDF's (calculatie, meetstaat, kozijnen, onderhoudsplan, werkbon) zijn niet geraakt; de strepen-loze opmaak geldt alleen binnen .off-doc.
+
 ## v3.60.0 — Eigen offertenummering
 De app deelt nu zelf offertenummers uit in de vorm JJ-NNN (bijvoorbeeld 26-009), met een per jaar oplopende teller en een instelbaar startnummer.
 
