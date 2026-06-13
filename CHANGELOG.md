@@ -1,3 +1,13 @@
+## v3.66.0 — Adresblok bovenaan de offerte
+Bovenaan de offerte staat nu een net klantblok met naam, adres en woonplaats.
+
+### Wijzigingen
+- Het klantblok bovenaan het offertedocument toont nu de naam, de straat met huisnummer en de postcode met woonplaats, in plaats van alleen de klantnaam met de projectnaam. De projectnaam blijft in de titelregel van de offerte staan.
+- Nieuwe sectie Adres op de offerte in het Offerte-blok, met velden voor naam, straat, huisnummer, postcode en woonplaats. Standaard staat daar het werkadres uit de calculatie (postcode en huisnummer) en de klantnaam.
+- Knop Zoek straat en woonplaats: haalt via de postcode (en huisnummer) automatisch de straat en de woonplaats op bij PDOK, gratis en zonder sleutel. Je kunt alles daarna nog met de hand aanpassen.
+- Wil je een ander correspondentie-adres dan het werkadres, dan typ je dat gewoon in de velden. Laat je een veld leeg, dan valt de offerte terug op het werkadres en de klantnaam uit de calculatie.
+- Opgeslagen bij de offerte, geen SQL nodig. Bestaande offertes tonen het werkadres totdat je in het Offerte-blok op zoeken klikt of de velden invult.
+
 ## v3.65.0 — Akkoord-stempel op de offerte
 Na akkoord toont de offerte op de accord-pagina dat en wanneer de klant akkoord heeft gegeven.
 
