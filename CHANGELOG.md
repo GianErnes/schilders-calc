@@ -1,4 +1,10 @@
-## v3.69.0 — Cijferblok selecteert de hele waarde, kozijnnaam blijft niet plakken
+## v3.69.1 — Archiveren begint zonder voorselectie
+Het Archiveren-venster vinkt niet meer alles vooraf aan.
+
+### Wijzigingen
+- In het Archiveren-venster stonden alle beschikbare PDF-opties standaard aangevinkt. Meestal heb je er maar een of twee nodig, dus de selectie begint nu leeg. Je vinkt zelf aan wat je wilt en tikt op Genereer. Niet-beschikbare opties (bijvoorbeeld een onderhoudsplan dat er niet is) blijven grijs. Tik je op Genereer zonder iets te kiezen, dan verschijnt de melding dat je minstens één type moet selecteren. Geen SQL nodig.
+
+
 Twee verbeteringen voor het meten op locatie.
 
 ### Wijzigingen

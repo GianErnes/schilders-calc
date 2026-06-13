@@ -2060,8 +2060,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.69.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.69.1</h2>
       <div class="intro-body">
+        <p><strong>💾 Archiveren begint leeg (v3.69.1).</strong> Het Archiveren-venster vinkt niet meer alles vooraf aan. Je kiest zelf de een of twee PDFs die je nodig hebt en tikt op Genereer. Niet-beschikbare opties blijven grijs.</p>
         <p><strong>⌨️ Cijferblok selecteert de hele waarde, en kozijnnaam blijft niet plakken (v3.69.0).</strong> Twee dingen voor het meten. Tik je op de iPad in een cijferveld (breedte, hoogte, aantal of factor), dan licht de hele waarde nu op, zodat je ziet en zeker weet dat je eerste cijfer de bestaande waarde, meestal de 1, overschrijft. En: de naam die je een kozijn in de tekenaar geeft vult de omschrijving van die regel, maar wordt niet meer doorgezet naar de volgende regel. Die naam hoort immers bij dat ene kozijn. De gevel-koppeling blijft wel staan. Geen SQL nodig.</p>
         <p><strong>🔧 Vulling-regels verschijnen nu vanzelf (v3.68.1).</strong> De regels per kozijntekening uit v3.67.0 werden alleen opnieuw opgebouwd nadat je iets in de meetstaat bewerkte of een kozijn opsloeg. Open je de Meetstaat-tab, dan draait die omzetting nu vanzelf. Een bestaande calculatie vervangt daardoor meteen de oude samengerolde regel door de regels per tekening, zonder dat je eerst iets hoeft aan te raken.</p>
         <p><strong>📍 Gevel op elke kozijntekening in de PDF (v3.68.0).</strong> In de kozijnen-PDF staat nu onder de naam van elk kozijn waar het zit, opgehaald uit de calc-regel waaraan de tekening gekoppeld is: de hoofdgroep en het onderdeel, bijvoorbeeld "Buiten houtwerk · Voorgevel". Zo zie je ook na een week, en de klant net zo goed, meteen aan welk kozijn je kijkt, ook als de tekening zelf maar "Kozijn" heet. De plek komt uit de koppeling, niet uit de naam. Geen SQL nodig.</p>
@@ -3085,7 +3086,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.69.0';
+const APP_VERSION = 'v3.69.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3447,6 +3448,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.69.1', d: '2026-06-14', h: 'Archiveren start zonder voorselectie: de checkboxes in het Archiveren-venster staan standaard uit (openArchiveerModal zette beschikbare opties op checked, nu op leeg), zodat je zelf de 1 of 2 PDFs kiest die je nodig hebt. Niet-beschikbare opties blijven disabled. Genereer toont al een melding bij nul selecties. Geen SQL' },
   { v: '3.69.0', d: '2026-06-14', h: 'Twee verbeteringen voor het meten. (1) Cijferblok op aanraakschermen (iPad): bij het aantikken van een np-field wordt de hele waarde geselecteerd (setSelectionRange in NumPad.open, met korte timeout voor iOS), zodat zichtbaar is dat de eerste cijfer de bestaande waarde overschrijft. De bestaande fresh-stand bleef ongewijzigd. (2) De naam van een kozijntekening vult de omschrijving van die regel maar wordt niet meer doorgezet naar de volgende regel: addMeetstaat erft de omschrijving alleen als de vorige regel géén tekening had; de calc-regel-koppeling blijft wel onthouden. Geen SQL' },
   { v: '3.68.1', d: '2026-06-14', h: 'Fix: de vulling-regels per kozijntekening (v3.67.0) werden alleen door _syncVullingMeetstaat opnieuw opgebouwd bij een meetstaat-bewerking, een Klaar in de tekenaar of een kopie, niet bij het openen van de Meetstaat-tab of bij het laden. Een bestaande open calculatie bleef daardoor de oude samengerolde auto-regel tonen tot je iets aanraakte. De sync draait nu ook bij het openen van de Meetstaat-tab (renderMeetstaat gevolgd door _syncVullingMeetstaat), idempotent: alleen bij een echte wijziging wordt naar de database geschreven. Geen SQL' },
   { v: '3.68.0', d: '2026-06-14', h: 'Kozijnen-PDF toont de locatie per kozijn: onder de naam staat Hoofdgroep · Onderdeel (bv. "Buiten houtwerk · Voorgevel"), opgehaald uit de calc-regel waaraan de tekening-regel gekoppeld is. Zo is na de opname herkenbaar welk kozijn welke gevel is, ook bij een generieke tekeningnaam. _bouwKozijnenHtml bouwt een regelId→locatie-map uit de meegegeven calculatie c (niet data.calc), dus ook doorlopende PDF en archief tonen het juist. Nieuwe .kz-locatie print-stijl. Geen SQL' },
@@ -9039,7 +9041,7 @@ async function openArchiveerModal() {
 
   const cbHtml = opties.map(o => {
     const disabled = !o.beschikbaar ? 'disabled' : '';
-    const checked = o.beschikbaar ? 'checked' : '';
+    const checked = '';   // v3.69.1 — standaard niets aangevinkt; je kiest zelf de 1 of 2 die je nodig hebt
     const greyStyle = o.beschikbaar ? '' : 'color: var(--muted); cursor: not-allowed;';
     const toelichtingHtml = o.toelichting
       ? `<span style="font-size: 0.72rem; color: var(--muted); font-style: italic; margin-left: 0.4rem;">(${o.toelichting})</span>`
