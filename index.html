@@ -2059,8 +2059,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.63.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.64.0</h2>
       <div class="intro-body">
+        <p><strong>🖼️ Kozijnen en foto’s op de accord-pagina (v3.64.0).</strong> De accordeerlink toont nu het volledige document: het offertedocument, de getekende kozijnen, de foto-bijlage en de algemene voorwaarden, net als de knop Offerte + bijlagen en met dezelfde schakelaars per offerte. De klant ziet dus precies wat hij in de PDF zou krijgen. De opmaak komt rechtstreeks uit de print-stijl van de app, dus het oogt gelijk aan de PDF. De fotolinks worden in het snapshot bevroren met een lange houdbaarheid, zodat ze niet na een uur verlopen. Maak voor een bestaande offerte even een nieuwe accordeerlink, dan zitten alle bijlagen erin.</p>
         <p><strong>📎 Voorwaarden op de accord-pagina, vinkje-fix (v3.63.1).</strong> Twee dingen aan de accordeerlink. De algemene voorwaarden lopen nu mee op de accord-pagina, onder de offerte, in de juiste variant (consument of zakelijk). De klant ziet dus waar hij mee akkoord gaat. En het akkoord-vinkje stond verkeerd opgerekt waardoor de tekst ernaast wegviel; dat staat nu weer netjes naast elkaar. Maak voor een bestaande offerte even een nieuwe accordeerlink, dan zitten de voorwaarden erin. De getekende kozijnen en de foto-bijlage volgen in een aparte stap.</p>
         <p><strong>🙋 Aanspreekvorm en melding bij reacties (v3.63.0).</strong> Twee dingen. Ten eerste: in het Offerte-blok staat nu een keuzeveld Aanspreekvorm (heer, mevrouw, heer en mevrouw, familie, of zakelijk). Zet in je inleiding "Geachte {aanhef}," en de app maakt daar "Geachte heer Nacken," van. Het veld {aanhef} staat ook in de invulvelden-lijst op de Offerteteksten-tab. Laat je de aanspreekvorm leeg, dan komt alleen de kale naam, net als voorheen. Ten tweede: op het dashboard verschijnt bovenaan een blok Reacties op offertes zodra een klant akkoord geeft, afwijst of een vraag stelt. Klik Openen om naar de offerte te springen, of Gezien om de melding weg te halen. Een reactie blijft staan tot je zelf op Gezien klikt. Vereist één kleine SQL-migratie (kolom gezien_op, al gedaan).</p>
         <p><strong>🔗 Accorderen via een unieke link (v3.62.0).</strong> Per offerte maak je nu een eigen accordeerlink. In het Offerte-blok staat de knop Accordeerlink: die legt de offerte vast zoals die nu is en geeft je een link voor de klant. De klant opent die link zonder in te loggen, ziet de volledige offerte en kan akkoord geven, afwijzen of een vraag stellen. Bij akkoord moet de klant zijn naam invullen en het akkoord aanvinken; de offerte springt dan op Geaccepteerd. Bij afwijzen springt hij op Verloren. Naam, tijdstip en opmerking worden vastgelegd, zodat dit het ondertekenen in Yoobi vervangt. Een vraag laat de offerte open staan. Vereist de SQL-migratie en de Edge Function offerte-accord in Supabase (eenmalig, al gedaan).</p>
@@ -3077,7 +3078,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.63.1';
+const APP_VERSION = 'v3.64.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3439,6 +3440,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.64.0', d: '2026-06-13', h: 'Accord-pagina toont nu het volledige document (offerte + getekende kozijnen + foto-bijlage + AV), net als printOfferteCompleet en met dezelfde offerte_config-schakelaars. _accordNieuweLink bouwt het complete HTML als snapshot; de iframe wrapt het in .print-only en haalt via _accordPrintCss() de echte @media print-regels (plus de losse .brand-logo data-URI-regel) uit de geladen pagina, zodat alles rendert als de PDF. Eigen off-doc/iframe-CSS vervangen door de print-CSS. Foto-bijlage met _accordFotoHtmlLang: signed links met 1 jaar TTL in het bevroren snapshot (i.p.v. 1 uur), tijdelijk gezet en hersteld. AV met absolute URLs. Screen-overrides: dpv-vw negatieve marges geneutraliseerd, dpv-pagebreak als zichtbare scheidingslijn' },
   { v: '3.63.1', d: '2026-06-13', h: 'Accord-pagina: algemene voorwaarden meegenomen in het snapshot (paginabeelden, variant op klanttype, absolute URLs zodat ze in het iframe laden) en het iframe herberekent zijn hoogte na het laden van die beelden. Akkoord-vinkje-fix: de globale input-breedte (100%) rekte het vinkje op; nu width:auto zodat het vinkje en de akkoordtekst weer naast elkaar staan. Kozijnen en foto-bijlage nog niet meegenomen (fotolinks verlopen, vragen om lange-TTL-signing; bijlagen leunen op print-opmaak)' },
   { v: '3.63.0', d: '2026-06-13', h: 'Aanspreekvorm + reactie-melding. (1) Nieuw keuzeveld Aanspreekvorm per offerte in het Offerte-blok (heer/mevrouw/echtpaar/familie/zakelijk), opgeslagen in offerte_config (geen SQL). Nieuw invulveld {aanhef} via _offAanhef(c,cfg) in _offVulVelden, werkt in voorbeeld en document: "Geachte {aanhef}," -> "Geachte heer Nacken,". Leeg = kale klantnaam (geen regressie). (2) Dashboard-blok Reacties op offertes bovenaan: toont ongeziene akkoord/afgewezen/vraag-reacties uit offerte_accorderingen, klikbaar naar de calc (openCalc + Accordeerlink-venster). Markeren via Gezien per regel of Alles gezien; blijft staan tot je klikt. Vereist kolom gezien_op (eenmalige SQL)' },
   { v: '3.62.0', d: '2026-06-13', h: 'Accorderen via unieke link per offerte (vervangt Yoobi-ondertekenen). Knop Accordeerlink in het Offerte-blok legt een snapshot van de offerte vast en geeft een publieke link (?accord=TOKEN). De klant opent die zonder login, ziet de bevroren offerte read-only in een iframe en kan akkoord geven (naam verplicht + akkoord-vinkje, calc -> geaccepteerd), afwijzen (naam + reden, calc -> verloren) of een vraag stellen (offerte blijft open). Naam, tijdstip, IP en opmerking worden vastgelegd. Publieke kant praat alleen met de Edge Function offerte-accord (service-sleutel, buiten RLS); klant raakt de database nooit rechtstreeks. Nieuwe tabel offerte_accorderingen (eenmalige SQL) en Edge Function offerte-accord in Supabase' },
@@ -16136,42 +16138,8 @@ const _ACCORD_UI_CSS = `
 `;
 
 const _ACCORD_OFFERTE_CSS = `
-* { box-sizing:border-box; }
-body { margin:0; padding:24px; background:#fff; color:#222; font-family:Georgia,'Times New Roman',serif; font-size:11pt; line-height:1.45; }
-.off-doc { max-width:760px; margin:0 auto; }
-.off-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; }
-.off-logo { max-height:64px; width:auto; }
-.off-head-right { text-align:right; font-size:9pt; line-height:1.35; color:#333; }
-.off-klant { margin:10px 0; }
-.off-titel { margin:14px 0 8px; }
-.off-titel .meta { color:#666; font-size:9.5pt; }
-.off-doc h2 { font-size:12pt; margin:16px 0 4px; }
-.off-doc h3 { font-size:11pt; margin:12px 0 4px; }
-.off-doc h4 { font-size:10.5pt; margin:8px 0 2px; }
-.off-tekst { margin:4px 0 8px; }
-.off-doc table { border-collapse:collapse; width:100%; margin:4px 0 12px; }
-.off-doc th, .off-doc td { padding:4px 3px; border:none; text-align:left; vertical-align:top; }
-.off-doc th { border-bottom:1px solid #333; font-size:10pt; }
-.off-doc td.right, .off-doc th.right { text-align:right; }
-.off-doc .num { font-variant-numeric:tabular-nums; white-space:nowrap; }
-.off-doc .proj-row td { font-weight:700; }
-.off-doc .hg-row td { font-weight:700; padding-top:8px; }
-.off-doc .gevel-sub td { border-top:.75px solid #bbb; }
-.off-doc .totaal-row td { border-top:.75px solid #999; font-weight:700; }
-.off-doc .kosten-eind { width:100%; }
-.off-doc .kosten-eind .lbl { text-align:left; }
-.off-doc .kosten-eind .cur { text-align:right; padding-right:6px; color:#666; }
-.off-doc .kosten-eind .te-incl td { border-top:1px solid #333; }
-.off-onderteken { margin-top:18px; }
-.off-sign-table { width:100%; }
-.off-sign-table td { width:50%; vertical-align:bottom; }
-.off-sign { max-height:64px; }
-.sign-box { border-top:1px solid #999; padding-top:4px; height:84px; vertical-align:bottom; }
-.footer-block { margin-top:18px; color:#888; font-size:8.5pt; text-align:center; border-top:1px solid #eee; padding-top:6px; }
-.dpv-blok { margin:0; }
-.dpv-pagebreak { border-top:2px dashed #ccc; margin-top:28px; padding-top:22px; }
-.dpv-vw { text-align:center; }
-.dpv-vw-img { display:block; width:100%; max-width:760px; height:auto; margin:8px auto; border:1px solid #e2e0d9; }
+body { margin:0; background:#fff; -webkit-text-size-adjust:100%; }
+.print-only { background:#fff; }
 `;
 
 /* ===== v3.62.0 accord-via-link (logica) ===== */
@@ -16369,10 +16337,51 @@ async function _accordVerstuur(root, token, mode, form, melding, submit) {
     + '</div>';
 }
 
-function _accordOfferteSrcdoc(offHtml) {
+function _accordOfferteSrcdoc(bodyHtml) {
+  const overrides = '.print-only .dpv-vw{margin-left:0 !important;margin-right:0 !important;}'
+    + '.print-only .dpv-pagebreak{border-top:2px dashed #ccc;}'
+    + 'img{max-width:100%;height:auto;}';
   return '<!doctype html><html lang="nl"><head><meta charset="utf-8">'
     + '<meta name="viewport" content="width=device-width, initial-scale=1">'
-    + '<style>' + _ACCORD_OFFERTE_CSS + '</style></head><body>' + offHtml + '</body></html>';
+    + '<style>' + _ACCORD_OFFERTE_CSS + _accordPrintCss() + overrides + '</style></head>'
+    + '<body><div class="print-only">' + bodyHtml + '</div></body></html>';
+}
+// Haalt de echte print-opmaak uit de geladen pagina (de @media print-regels), zodat
+// offerte, kozijnen, foto's en voorwaarden in het iframe net zo renderen als de PDF.
+// Pakt ook de losse .brand-logo-regel (data-URI-logo) die buiten @media print staat.
+function _accordPrintCss() {
+  let css = '';
+  try {
+    for (const sheet of Array.from(document.styleSheets)) {
+      let rules; try { rules = sheet.cssRules; } catch (e) { continue; }
+      if (!rules) continue;
+      for (const rule of Array.from(rules)) {
+        if (rule.type === 4 && rule.media && /print/.test(rule.media.mediaText)) {
+          for (const inner of Array.from(rule.cssRules)) css += inner.cssText + '\n';
+        } else if (rule.type === 1 && rule.selectorText && rule.selectorText.indexOf('brand-logo') !== -1) {
+          css += rule.cssText + '\n';
+        }
+      }
+    }
+  } catch (e) {}
+  return css;
+}
+// Foto-bijlage-HTML met lange houdbaarheid (1 jaar) zodat de signed links in het
+// bevroren snapshot niet na een uur verlopen. Zet de links tijdelijk en herstelt daarna.
+async function _accordFotoHtmlLang(c, fotos) {
+  const paths = (fotos || []).map(f => f.storagePath).filter(Boolean);
+  const byPath = {};
+  if (paths.length) {
+    try {
+      const { data } = await _sbQuery(_sb.storage.from(FOTO_BUCKET).createSignedUrls(paths, 60 * 60 * 24 * 365), 'Fotolinks (offerte-link)');
+      (data || []).forEach(d => { if (d && d.path) byPath[d.path] = d.signedUrl; });
+    } catch (e) {}
+  }
+  const orig = fotos.map(f => f.signedUrl);
+  fotos.forEach(f => { if (byPath[f.storagePath]) f.signedUrl = byPath[f.storagePath]; });
+  const html = _bouwFotoHtml(c, fotos);
+  fotos.forEach((f, i) => { f.signedUrl = orig[i]; });
+  return html;
 }
 
 /* ---------- Linkbeheer (jouw kant, in het Offerte-blok) ---------- */
@@ -16471,15 +16480,23 @@ async function _accordNieuweLink(c, body, supersede) {
   body.innerHTML = 'Bezig met aanmaken\u2026';
   const offHtml = _bouwOfferteDocHtml();
   if (offHtml == null) { _accordBeheerRender(body, c, null); return; }
-  // Algemene voorwaarden meebevriezen als paginabeelden, met absolute URLs zodat
-  // ze ook op de publieke accord-pagina (iframe) laden. Variant op klanttype.
-  let volledigHtml = offHtml;
+  // Volledig document bevriezen: offerte + getekende kozijnen + foto-bijlage + AV,
+  // net als de knop Offerte + bijlagen, met de per-offerte schakelaars.
+  let volledigHtml = '<div class="dpv-blok">' + offHtml + '</div>';
   try {
     const _cfg = _offCfg();
+    const _koz = (c.meetstaat || []).filter(ms => ms.tekening && ms.tekening.vorm);
+    if (_cfg.bijlageKozijnen !== false && _koz.length) {
+      volledigHtml += '<div class="dpv-blok dpv-pagebreak">' + _bouwKozijnenHtml(c, _koz) + '</div>';
+    }
+    const _fotos = (c.fotos || []);
+    if (_cfg.bijlageFotos !== false && _fotos.length) {
+      const _fh = await _accordFotoHtmlLang(c, _fotos);
+      volledigHtml += '<div class="dpv-blok dpv-pagebreak">' + _fh + '</div>';
+    }
     const _ktype = (_cfg && _cfg.klanttype === 'zakelijk') ? 'zakelijk' : 'consument';
     const _base = location.origin + location.pathname.replace(/[^/]*$/, '');
-    const _av = _bouwVoorwaardenHtml(_ktype).split('src="av-').join('src="' + _base + 'av-');
-    volledigHtml = offHtml + _av;
+    volledigHtml += _bouwVoorwaardenHtml(_ktype).split('src="av-').join('src="' + _base + 'av-');
   } catch (e) {}
   let bedrag = null;
   try { const cij = _berekenOfferteCijfers(c); if (cij) bedrag = cij.totaalIncl; } catch (e) {}

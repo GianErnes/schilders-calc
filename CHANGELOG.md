@@ -1,3 +1,13 @@
+## v3.64.0 — Kozijnen en foto's op de accord-pagina
+De accordeerlink toont nu het volledige document: offerte, getekende kozijnen, foto-bijlage en algemene voorwaarden, net als de knop Offerte + bijlagen.
+
+### Wijzigingen
+- De publieke accord-pagina toont nu het complete document in plaats van alleen het offertedocument. De volgorde is gelijk aan de doorlopende PDF: eerst het offertedocument, dan de getekende kozijnen, dan de foto-bijlage en als laatste de algemene voorwaarden. De per-offerte schakelaars voor kozijnen en foto's worden gerespecteerd.
+- De opmaak komt rechtstreeks uit de print-stijl van de app. Bij het tonen wordt de echte print-opmaak uit de geladen pagina gehaald en in het kadertje toegepast, zodat de klant precies ziet wat in de PDF staat. Het losse logo van de bijlage-koppen (dat als data in een aparte regel zit) gaat automatisch mee.
+- De fotolinks van Supabase verlopen normaal na een uur. Voor de accordeerlink worden ze in het bevroren snapshot gezet met een houdbaarheid van een jaar, zodat de foto's op de accord-pagina blijven werken zolang de offerte geldig is.
+- De algemene voorwaarden worden met absolute adressen bevroren zodat de beelden in het kadertje laden, en de print-truc met negatieve marges is voor het scherm geneutraliseerd. Tussen de onderdelen staat een nette scheidingslijn.
+- Let op: maak voor een bestaande offerte even een nieuwe accordeerlink, dan zitten de kozijnen, de foto's en de voorwaarden in het snapshot. Bestaande links tonen nog hun oude inhoud.
+
 ## v3.63.1 — Algemene voorwaarden op de accord-pagina en vinkje-fix
 De accordeerlink toont nu ook de algemene voorwaarden, en het akkoord-vinkje staat weer netjes.
 
