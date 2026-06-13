@@ -1,4 +1,12 @@
-## v3.68.1 — Vulling-regels per tekening verschijnen vanzelf
+## v3.69.0 — Cijferblok selecteert de hele waarde, kozijnnaam blijft niet plakken
+Twee verbeteringen voor het meten op locatie.
+
+### Wijzigingen
+- Cijferblok op de iPad: tik je in een cijferveld (breedte, hoogte, aantal of factor), dan licht de hele waarde nu op. Zo zie je en weet je zeker dat je eerste cijfer de bestaande waarde, meestal de 1, vervangt. De bestaande werking waarbij het eerste cijfer de waarde overschrijft blijft gelijk; alleen de selectie is nu zichtbaar. Geldt voor aanraakschermen waar het cijferblok opent; op de Mac blijft de gewone cursor-bewerking.
+- De naam die je een kozijn in de tekenaar geeft vult de omschrijving van die meetstaat-regel, maar wordt niet meer doorgezet naar de volgende regel. Die naam hoort bij dat ene kozijn. De koppeling aan de calc-regel (de gevel) blijft wel onthouden, want die is meestal nog van toepassing.
+- Onder de motorkap: `NumPad.open` selecteert bij het openen de volledige veldinhoud (met een korte timeout voor iOS), en `addMeetstaat` neemt de omschrijving alleen over als de vorige handmatige regel geen tekening droeg. Geen SQL nodig.
+
+
 Fix op v3.67.0: de omzetting draait nu ook bij het openen van de Meetstaat-tab.
 
 ### Wijzigingen

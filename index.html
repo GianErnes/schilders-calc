@@ -2060,8 +2060,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.68.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.69.0</h2>
       <div class="intro-body">
+        <p><strong>⌨️ Cijferblok selecteert de hele waarde, en kozijnnaam blijft niet plakken (v3.69.0).</strong> Twee dingen voor het meten. Tik je op de iPad in een cijferveld (breedte, hoogte, aantal of factor), dan licht de hele waarde nu op, zodat je ziet en zeker weet dat je eerste cijfer de bestaande waarde, meestal de 1, overschrijft. En: de naam die je een kozijn in de tekenaar geeft vult de omschrijving van die regel, maar wordt niet meer doorgezet naar de volgende regel. Die naam hoort immers bij dat ene kozijn. De gevel-koppeling blijft wel staan. Geen SQL nodig.</p>
         <p><strong>🔧 Vulling-regels verschijnen nu vanzelf (v3.68.1).</strong> De regels per kozijntekening uit v3.67.0 werden alleen opnieuw opgebouwd nadat je iets in de meetstaat bewerkte of een kozijn opsloeg. Open je de Meetstaat-tab, dan draait die omzetting nu vanzelf. Een bestaande calculatie vervangt daardoor meteen de oude samengerolde regel door de regels per tekening, zonder dat je eerst iets hoeft aan te raken.</p>
         <p><strong>📍 Gevel op elke kozijntekening in de PDF (v3.68.0).</strong> In de kozijnen-PDF staat nu onder de naam van elk kozijn waar het zit, opgehaald uit de calc-regel waaraan de tekening gekoppeld is: de hoofdgroep en het onderdeel, bijvoorbeeld "Buiten houtwerk · Voorgevel". Zo zie je ook na een week, en de klant net zo goed, meteen aan welk kozijn je kijkt, ook als de tekening zelf maar "Kozijn" heet. De plek komt uit de koppeling, niet uit de naam. Geen SQL nodig.</p>
         <p><strong>🚪 Vulling per kozijntekening in de meetstaat (v3.67.0).</strong> De m² van deuren en panelen wordt niet meer samengerold tot één regel per calc-regel. Voortaan krijg je per kozijntekening een eigen auto-regel, en die staat direct onder zijn tekening in de meetstaat, net als de m¹ die daar al per tekening staat. De regel heet naar zijn bron, bijvoorbeeld "Voorgevel · Geveldeur (auto)", zodat je in één oogopslag ziet welke deur uit welk kozijn komt. Het calc-totaal blijft kloppen want regels met dezelfde calc-regel tellen op. Bestaande open calculaties bouwen de regels vanzelf opnieuw op zodra je de meetstaat aanraakt of een kozijn opslaat; vergrendelde offertes blijven ongemoeid. De kozijnen-PDF toont dit al per tekening en per deur, dus de klant leest meteen waar de m² van gemeten is. Eénmalige SQL-migratie (kolom bron_meetstaat_id op de meetstaat-tabel, al gedaan).</p>
@@ -3084,7 +3085,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.68.1';
+const APP_VERSION = 'v3.69.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3446,6 +3447,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.69.0', d: '2026-06-14', h: 'Twee verbeteringen voor het meten. (1) Cijferblok op aanraakschermen (iPad): bij het aantikken van een np-field wordt de hele waarde geselecteerd (setSelectionRange in NumPad.open, met korte timeout voor iOS), zodat zichtbaar is dat de eerste cijfer de bestaande waarde overschrijft. De bestaande fresh-stand bleef ongewijzigd. (2) De naam van een kozijntekening vult de omschrijving van die regel maar wordt niet meer doorgezet naar de volgende regel: addMeetstaat erft de omschrijving alleen als de vorige regel géén tekening had; de calc-regel-koppeling blijft wel onthouden. Geen SQL' },
   { v: '3.68.1', d: '2026-06-14', h: 'Fix: de vulling-regels per kozijntekening (v3.67.0) werden alleen door _syncVullingMeetstaat opnieuw opgebouwd bij een meetstaat-bewerking, een Klaar in de tekenaar of een kopie, niet bij het openen van de Meetstaat-tab of bij het laden. Een bestaande open calculatie bleef daardoor de oude samengerolde auto-regel tonen tot je iets aanraakte. De sync draait nu ook bij het openen van de Meetstaat-tab (renderMeetstaat gevolgd door _syncVullingMeetstaat), idempotent: alleen bij een echte wijziging wordt naar de database geschreven. Geen SQL' },
   { v: '3.68.0', d: '2026-06-14', h: 'Kozijnen-PDF toont de locatie per kozijn: onder de naam staat Hoofdgroep · Onderdeel (bv. "Buiten houtwerk · Voorgevel"), opgehaald uit de calc-regel waaraan de tekening-regel gekoppeld is. Zo is na de opname herkenbaar welk kozijn welke gevel is, ook bij een generieke tekeningnaam. _bouwKozijnenHtml bouwt een regelId→locatie-map uit de meegegeven calculatie c (niet data.calc), dus ook doorlopende PDF en archief tonen het juist. Nieuwe .kz-locatie print-stijl. Geen SQL' },
   { v: '3.67.0', d: '2026-06-13', h: 'Vulling-m² niet meer samengerold: per kozijntekening per calc-regel één auto-regel in de meetstaat, direct onder zijn brontekening (net als de m¹ die al per tekening op de regel staat). Naam naar de bron, bv. "Voorgevel · Geveldeur (auto)". Calc-totaal blijft kloppen (regels met dezelfde calc-regel tellen op). _syncVullingMeetstaat keyt nu op bronMeetstaatId + calc-regel i.p.v. alleen calc-regel; nieuwe helper _vullingDoelenPerTekening en _herordenVullingMeetstaat (volgorde = array-index, alleen gewijzigde rijen weggeschreven). Oude samengerolde auto-regels (zonder bronMeetstaatId) worden als wees opgeruimd en vervangen. addMeetstaat baseert defaults op de laatste handmatige regel. Kozijnen-PDF toont dit al per tekening/deur sinds v3.55.0. Eénmalige SQL-migratie (kolom bron_meetstaat_id op meetstaat)' },
@@ -11564,7 +11566,10 @@ async function addMeetstaat() {
   const handmRijen = data.calc.meetstaat.filter(ms => ms.bron !== 'vulling_auto');
   const last = handmRijen[handmRijen.length - 1];
   const calcRegelId = last ? last.calcRegelId : allRegels[0].regel.id;
-  const omschrijving = last ? (last.omschrijving || '') : '';
+  // v3.69.0 — de naam van een kozijntekening vult de omschrijving van die regel; die naam
+  // hoort bij dat ene kozijn en wordt niet doorgezet naar de volgende regel. De calc-regel
+  // (de gevel) blijft wel onthouden, want die is meestal nog van toepassing.
+  const omschrijving = (last && !(last.tekening && last.tekening.vorm)) ? (last.omschrijving || '') : '';
   const idx = data.calc.meetstaat.length;
   const saved = await _insertMeetstaatDB({
     calcRegelId, omschrijving, hCm: 0, bCm: 0, aantal: 1, factor: 1, opmerking: ''
@@ -11638,7 +11643,10 @@ const NumPad = {
   touch() { return (typeof window !== 'undefined') && (('ontouchstart' in window) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)); },
   open(field) {
     if (!this.touch()) return; // op de Mac (muis/trackpad) geen blok: gewoon toetsenbord
-    if (this.active === field) { this.fresh = true; return; }
+    // v3.69.0 — hele inhoud oplichten zodat je ziet dat de eerste cijfer de bestaande
+    // waarde (meestal 1) overschrijft. Korte timeout zodat iOS de selectie na de focus toont.
+    const _selectAll = () => { try { field.setSelectionRange(0, String(field.value).length); } catch (_) {} };
+    if (this.active === field) { this.fresh = true; setTimeout(_selectAll, 0); return; }
     this.active = field;
     this.dec = field.hasAttribute('data-dec');
     this.fresh = true; // eerste cijfer vervangt de bestaande waarde
@@ -11651,6 +11659,7 @@ const NumPad = {
     this.el.setAttribute('aria-hidden', 'false');
     document.body.classList.add('np-open');
     setTimeout(() => { try { field.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {} }, 70);
+    setTimeout(_selectAll, 0);
   },
   close() {
     if (!this.active) return;
