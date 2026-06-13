@@ -2060,8 +2060,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.68.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.68.1</h2>
       <div class="intro-body">
+        <p><strong>🔧 Vulling-regels verschijnen nu vanzelf (v3.68.1).</strong> De regels per kozijntekening uit v3.67.0 werden alleen opnieuw opgebouwd nadat je iets in de meetstaat bewerkte of een kozijn opsloeg. Open je de Meetstaat-tab, dan draait die omzetting nu vanzelf. Een bestaande calculatie vervangt daardoor meteen de oude samengerolde regel door de regels per tekening, zonder dat je eerst iets hoeft aan te raken.</p>
         <p><strong>📍 Gevel op elke kozijntekening in de PDF (v3.68.0).</strong> In de kozijnen-PDF staat nu onder de naam van elk kozijn waar het zit, opgehaald uit de calc-regel waaraan de tekening gekoppeld is: de hoofdgroep en het onderdeel, bijvoorbeeld "Buiten houtwerk · Voorgevel". Zo zie je ook na een week, en de klant net zo goed, meteen aan welk kozijn je kijkt, ook als de tekening zelf maar "Kozijn" heet. De plek komt uit de koppeling, niet uit de naam. Geen SQL nodig.</p>
         <p><strong>🚪 Vulling per kozijntekening in de meetstaat (v3.67.0).</strong> De m² van deuren en panelen wordt niet meer samengerold tot één regel per calc-regel. Voortaan krijg je per kozijntekening een eigen auto-regel, en die staat direct onder zijn tekening in de meetstaat, net als de m¹ die daar al per tekening staat. De regel heet naar zijn bron, bijvoorbeeld "Voorgevel · Geveldeur (auto)", zodat je in één oogopslag ziet welke deur uit welk kozijn komt. Het calc-totaal blijft kloppen want regels met dezelfde calc-regel tellen op. Bestaande open calculaties bouwen de regels vanzelf opnieuw op zodra je de meetstaat aanraakt of een kozijn opslaat; vergrendelde offertes blijven ongemoeid. De kozijnen-PDF toont dit al per tekening en per deur, dus de klant leest meteen waar de m² van gemeten is. Eénmalige SQL-migratie (kolom bron_meetstaat_id op de meetstaat-tabel, al gedaan).</p>
         <p><strong>📍 Adresblok bovenaan de offerte (v3.66.0).</strong> Bovenaan de offerte staat nu een net klantblok met naam, straat met huisnummer, postcode en woonplaats. In het Offerte-blok staat een sectie Adres op de offerte. Standaard staat daar het werkadres uit de calculatie, en met de knop Zoek straat en woonplaats haalt de app die er via de postcode automatisch bij. Alles is met de hand te corrigeren, en wil je een ander correspondentie-adres dan typ je dat gewoon. Geen SQL nodig.</p>
@@ -3083,7 +3084,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.68.0';
+const APP_VERSION = 'v3.68.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3445,6 +3446,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.68.1', d: '2026-06-14', h: 'Fix: de vulling-regels per kozijntekening (v3.67.0) werden alleen door _syncVullingMeetstaat opnieuw opgebouwd bij een meetstaat-bewerking, een Klaar in de tekenaar of een kopie, niet bij het openen van de Meetstaat-tab of bij het laden. Een bestaande open calculatie bleef daardoor de oude samengerolde auto-regel tonen tot je iets aanraakte. De sync draait nu ook bij het openen van de Meetstaat-tab (renderMeetstaat gevolgd door _syncVullingMeetstaat), idempotent: alleen bij een echte wijziging wordt naar de database geschreven. Geen SQL' },
   { v: '3.68.0', d: '2026-06-14', h: 'Kozijnen-PDF toont de locatie per kozijn: onder de naam staat Hoofdgroep · Onderdeel (bv. "Buiten houtwerk · Voorgevel"), opgehaald uit de calc-regel waaraan de tekening-regel gekoppeld is. Zo is na de opname herkenbaar welk kozijn welke gevel is, ook bij een generieke tekeningnaam. _bouwKozijnenHtml bouwt een regelId→locatie-map uit de meegegeven calculatie c (niet data.calc), dus ook doorlopende PDF en archief tonen het juist. Nieuwe .kz-locatie print-stijl. Geen SQL' },
   { v: '3.67.0', d: '2026-06-13', h: 'Vulling-m² niet meer samengerold: per kozijntekening per calc-regel één auto-regel in de meetstaat, direct onder zijn brontekening (net als de m¹ die al per tekening op de regel staat). Naam naar de bron, bv. "Voorgevel · Geveldeur (auto)". Calc-totaal blijft kloppen (regels met dezelfde calc-regel tellen op). _syncVullingMeetstaat keyt nu op bronMeetstaatId + calc-regel i.p.v. alleen calc-regel; nieuwe helper _vullingDoelenPerTekening en _herordenVullingMeetstaat (volgorde = array-index, alleen gewijzigde rijen weggeschreven). Oude samengerolde auto-regels (zonder bronMeetstaatId) worden als wees opgeruimd en vervangen. addMeetstaat baseert defaults op de laatste handmatige regel. Kozijnen-PDF toont dit al per tekening/deur sinds v3.55.0. Eénmalige SQL-migratie (kolom bron_meetstaat_id op meetstaat)' },
   { v: '3.66.0', d: '2026-06-13', h: 'Adresblok op de offerte: off-klant toont naam + straat/huisnummer + postcode/woonplaats i.p.v. klant + projectnaam. Sectie Adres op de offerte in het Offerte-blok met knop Zoek straat en woonplaats (PDOK via _pdokAdres). Opslag in offerte_config.adres als afwijkingen; _offAdresEffectief valt terug op werkadres en klantnaam wanneer leeg. Geen SQL' },
@@ -5875,7 +5877,7 @@ document.querySelectorAll('nav button').forEach(b => {
     b.classList.add('active');
     document.getElementById(b.dataset.tab).classList.add('active');
     if (b.dataset.tab === 'dashboard')     renderDashboard();
-    if (b.dataset.tab === 'meetstaat')     renderMeetstaat();
+    if (b.dataset.tab === 'meetstaat')     { renderMeetstaat(); _syncVullingMeetstaat(); }
     if (b.dataset.tab === 'materialen')    { _materialenVersToegevoegd = []; _matSort = { key: null, dir: null }; renderMaterialen(); }
     if (b.dataset.tab === 'bewerkingen')   renderBewerkingen();
     if (b.dataset.tab === 'ondergronden')  renderOndergronden();

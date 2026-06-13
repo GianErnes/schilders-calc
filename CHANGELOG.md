@@ -1,4 +1,12 @@
-## v3.68.0 — Gevel op elke kozijntekening in de PDF
+## v3.68.1 — Vulling-regels per tekening verschijnen vanzelf
+Fix op v3.67.0: de omzetting draait nu ook bij het openen van de Meetstaat-tab.
+
+### Wijzigingen
+- De automatische vulling-regels per kozijntekening (v3.67.0) werden alleen opnieuw opgebouwd nadat je iets in de meetstaat bewerkte, een kozijn opsloeg of een kozijn kopieerde. Bij alleen het openen van de Meetstaat-tab gebeurde dat niet, waardoor een bestaande open calculatie de oude samengerolde regel "Vulling uit kozijntekeningen (automatisch)" bleef tonen tot je een rij aanraakte.
+- De sync draait nu ook bij het openen van de Meetstaat-tab. Een bestaande calculatie zet de samengerolde regel daardoor meteen om naar regels per tekening zodra je de tab opent, zonder dat je eerst iets hoeft te wijzigen. De omzetting is idempotent: er wordt alleen naar de database geschreven als er werkelijk iets verandert.
+- Geen SQL nodig. De migratie van v3.67.0 (kolom `bron_meetstaat_id`) blijft de enige die nodig is.
+
+
 In de kozijnen-PDF staat nu onder de naam van elk kozijn waar het zit.
 
 ### Wijzigingen
