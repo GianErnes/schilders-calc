@@ -1,3 +1,12 @@
+## v3.66.1 — Adres vult zichzelf aan
+De straat en woonplaats worden nu automatisch uit de postcode gehaald, en een half adres verschijnt niet meer.
+
+### Wijzigingen
+- Zodra je een offerte opent haalt de app de straat en de woonplaats vanzelf op uit de postcode (via PDOK), als die nog ontbreken. Je hoeft de knop Zoek straat en woonplaats meestal niet meer te gebruiken; die blijft als handmatige optie staan.
+- Het ophalen gebeurt eenmalig per postcode, dus het belast PDOK niet bij elke schermopbouw.
+- Zolang straat en woonplaats nog niet bekend zijn, toont het klantblok bovenaan de offerte geen losse regel meer met alleen een huisnummer of alleen een postcode. Je ziet dan alleen de naam, en de adresregels verschijnen pas als ze compleet zijn.
+- Bij het aanmaken van een accordeerlink wordt het adres ook eerst aangevuld, zodat het bevroren snapshot een net adres bevat.
+
 ## v3.66.0 — Adresblok bovenaan de offerte
 Bovenaan de offerte staat nu een net klantblok met naam, adres en woonplaats.
 
