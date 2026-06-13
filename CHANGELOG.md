@@ -1,3 +1,10 @@
+## v3.59.1 — Fix: offertedocument in Archiveren
+Het offertedocument (v3.59.0) liet zich wel los printen via de knop, maar bleef hangen wanneer het via het Archiveren-venster werd gekozen: er werd een document aangekondigd en vervolgens gebeurde er niets.
+
+### Wijzigingen
+- Oorzaak: printOfferteDocument had een extra wachtstap (Promise.all op het laden van de afbeeldingen in printArea) voordat window.print werd aangeroepen. Het Archiveren-venster wacht zelf al op het afterprint-event om naar het volgende document te gaan; die twee mechanismen botsten, waardoor het printvenster niet of te laat opende.
+- Oplossing: de wachtstap is verwijderd. printOfferteDocument roept nu direct window.print() aan, net als printCalc, printMeetstaat en _ohpPrint. Het logo is een data-URI (meteen beschikbaar) en de handtekening is een klein PNG-bestand dat ruim op tijd meelaadt; na de eerste keer staat het in de browsercache.
+
 ## v3.59.0 — Het offertedocument
 Brok A4a van de offertemodule. De generator die van de calculatie en de gekozen teksten een compleet, vormgegeven offertedocument maakt in de Ernes-huisstijl.
 
