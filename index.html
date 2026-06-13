@@ -1805,6 +1805,25 @@
       color: #888;
       text-align: center;
     }
+    /* v3.59.0 — Offertedocument (brok A4a) */
+    .print-only .off-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16pt;
+    }
+    .print-only .off-logo { height: 52pt; width: auto; }
+    .print-only .off-head-right { font-size: 8.5pt; line-height: 1.4; text-align: right; color: #333; }
+    .print-only .off-klant { margin-bottom: 10pt; font-size: 10pt; }
+    .print-only .off-titel { margin-bottom: 14pt; }
+    .print-only .off-titel strong { font-size: 12pt; }
+    .print-only .off-tekst { font-size: 10pt; line-height: 1.5; margin-bottom: 6pt; text-align: justify; }
+    .print-only .hg-row td { background: #f6f6f6; border-top: 1pt solid #000; }
+    .print-only .off-onderteken { page-break-inside: avoid; margin-top: 16pt; }
+    .print-only .off-sign-table { width: 100%; border-collapse: collapse; }
+    .print-only .off-sign-table td { border: 0.5pt solid #999; padding: 6pt 8pt; vertical-align: bottom; width: 50%; }
+    .print-only .off-sign-table .sign-box { height: 90pt; vertical-align: top; }
+    .print-only .off-sign { max-height: 70pt; max-width: 80%; }
     .print-only .summary-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -1978,8 +1997,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.58.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.59.0</h2>
       <div class="intro-body">
+        <p><strong>📄 Het offertedocument (v3.59.0).</strong> De offertemodule maakt nu een compleet, vormgegeven offertedocument in de Ernes-huisstijl. Onderaan de Calculatie-tab, in het blok Offerte, staat de knop Offertedocument. Die bouwt het hele document op: briefhoofd met logo en bedrijfsgegevens, klant en automatisch offertenummer, alle teksten die je hebt gekozen in de juiste volgorde, de prijsopgave en het ondertekenblok met je handtekening. De prijsopgave kun je per offerte op twee manieren tonen, te kiezen met de nieuwe schakelaar Prijsweergave: per onderdeel met subtotalen zoals je gewend bent, of als losse regels met hoeveelheid en eenheidsprijs zoals de Yoobi-export. Beide rekenen met dezelfde motor, dus het eindbedrag is altijd gelijk. Printen gaat zoals bij het onderhoudsplan via Opslaan als PDF. De Yoobi-export blijft gewoon bestaan, nu als aparte keuze in het Archiveren-venster. Voor de handtekening in het document zet je het bestand handtekening.png naast index.html in de repo. De bijlagen (kozijnen, foto’s, algemene voorwaarden) en het samenvoegen tot één PDF volgen in de volgende stap.</p>
         <p><strong>📄 Offerte-blok in de calculatie (v3.58.0).</strong> Onderaan de Calculatie-tab staat nu een uitklapbaar blok Offerte. Daar stel je per offerte alles samen: klanttype (consument of zakelijk), offertedatum, geldig-tot (springt automatisch op 30 dagen na de offertedatum, maar blijft aanpasbaar) en garantiejaren. Daaronder staan de tekstsecties in de volgorde van het document: per sectie zet je hem aan of uit, kies je een variant uit de bibliotheek en zie je de tekst meteen staan. Pas je die tekst aan, dan geldt dat alleen voor deze offerte; een geel "aangepast"-label en de knop terug-naar-bibliotheek houden het eerlijk. Bij Werkzaamheden stapel je meerdere blokken met + Blok. De knop Voorbeeld opent een venster met alle gekozen teksten waarin de invulvelden echt gevuld zijn vanuit de calculatie, zodat je leest wat de klant straks leest. Alles wordt vanzelf opgeslagen bij de calculatie; een vergrendelde calculatie zet ook dit blok op slot. De prijstabel en het echte document volgen in de volgende stap. Geen SQL nodig.</p>
         <p><strong>📝 Nieuwe tab Offerteteksten (v3.57.0).</strong> De eerste zichtbare stap van de offertemodule. In de nieuwe tab staan alle vaste offerteteksten als bibliotheek bij elkaar, in de volgorde van het offertedocument: van de inleiding via betaling en garantie tot de afsluiting. Per sectie kun je meerdere varianten bewaren, bijvoorbeeld een garantietekst voor consumenten en een voor zakelijke klanten, en met de pijltjes bepaal je de volgorde. De grijze regels ertussen zijn de delen die de app straks zelf genereert, zoals de prijsopgave en het ondertekenblok, zodat je de hele documentopbouw in één oogopslag ziet. Bovenin staan de invulvelden zoals {klant} en {geldig_tot}: tik erop om ze te kopiëren en plak ze in een tekst, de offerte vult ze bij het genereren zelf in. De bibliotheek is alvast gevuld met de teksten uit een recente offerte als startpunt; pas ze gerust aan. Het kiezen en gebruiken per offerte komt in de volgende stap. Vereist de SQL-migratie van brok A1; die is vandaag al gedraaid.</p>
         <p><strong>📏 Dashboard rekent nu altijd met de meetstaat (v3.56.2).</strong> De meetstaat is de bron van de regel-hoeveelheden, maar die som werd alleen op de regels gezet bij het renderen van de Calculatie-tab van de actieve calculatie. Het dashboard, de bedragen-cache en het bevriezen bij gereedmelden rekenden daardoor met verouderde hoeveelheden uit de database. Bij een calculatie die net via kozijnen en meetstaat is opgebouwd kon de lijst zo een fractie van het echte bedrag tonen, terwijl de kaart het wel goed had. Vanaf nu doet de archief-berekening eerst zelf dezelfde meetstaat-som, voor elke calculatie. Open een calculatie met een afwijkend lijstbedrag één keer en het herstelt zichzelf. Is een calculatie met te lage hoeveelheden gereed gemeld, zet de status dan even op Concept en terug zodat ook het bevroren offertebedrag opnieuw goed wordt vastgelegd. Geen SQL nodig.</p>
@@ -2184,6 +2204,7 @@
         <strong>📄 Offerte</strong>
         <span style="color:var(--muted); font-size:0.8rem;">teksten en instellingen voor het offertedocument</span>
         <button class="btn btn-secondary btn-sm lock-allowed" style="margin-left:auto;" onclick="event.preventDefault(); event.stopPropagation(); openOffertePreview()">👁 Voorbeeld</button>
+        <button class="btn btn-sm lock-allowed" onclick="event.preventDefault(); event.stopPropagation(); printOfferteDocument()">📄 Offertedocument</button>
       </summary>
       <div id="offerteBlokBody" style="padding:0 0.8rem 0.8rem;"></div>
     </details>
@@ -2973,7 +2994,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.58.0';
+const APP_VERSION = 'v3.59.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3335,6 +3356,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.59.0', d: '2026-06-12', h: 'Het offertedocument (brok A4a): nieuwe functie printOfferteDocument maakt een compleet vormgegeven Ernes-offertedocument met briefhoofd (logo + bedrijfsgegevens), klant, automatisch offertenummer (JJ-NNNN-V), alle gekozen teksten uit het offerte-blok in documentvolgorde met ingevulde invulvelden, prijsopgave en ondertekenblok met handtekening (handtekening.png naast index.html). Prijsweergave per offerte instelbaar: per onderdeel (Nacken-stijl subtotalen) of regels (hoeveelheid + eenheidsprijs, Yoobi-stijl). Gedeelde rekenkern _berekenOfferteCijfers voedt zowel dit document als de Yoobi-export, zodat eindbedragen identiek zijn. In Archiveren is Offerte (Yoobi) gesplitst in Offertedocument + Offerte (Yoobi-export). Bijlagen en samenvoegen tot één PDF volgen in A4b. Geen SQL nodig' },
   { v: '3.58.0', d: '2026-06-12', h: 'Offerte-blok in de calculatie (brok A3): uitklapbaar blok onderaan de Calculatie-tab met klanttype, offertedatum, geldig-tot (auto +30 dagen, aanpasbaar) en garantiejaren, plus per tekstsectie aan/uit, variantkeuze uit de bibliotheek en per-offerte aanpasbare tekst met aangepast-label en terug-naar-bibliotheek. Werkzaamheden stapelbaar met + Blok. Voorbeeld-venster toont alle teksten met echt gevulde invulvelden ({totaal_incl} uit de archief-berekening, {werkdagen} factureerbaar, datums in NL-formaat). Opslag in calculaties.offerte_config via gerichte, gedebouncede update — de header-save blijft erbuiten. Vergrendelde calculatie = blok op slot. Geen SQL nodig' },
   { v: '3.57.0', d: '2026-06-12', h: 'Nieuwe tab Offerteteksten: de tekstenbibliotheek van de offertemodule (brok A2). Alle vaste offerteteksten per sectie bij elkaar in documentvolgorde, met meerdere varianten per sectie (bv. garantie consument/zakelijk), pijltjes voor de volgorde, direct opslaan bij wijzigen en een kopieerbare invulvelden-hulplijst ({klant}, {geldig_tot}, …). De automatisch gegenereerde delen (briefhoofd, prijsopgave, ondertekenblok, bijlagen) staan grijs ertussen zodat de documentopbouw compleet zichtbaar is. Sectieregister OFFERTE_SECTIES als vaste constante voor brok A3/A4. Vereist SQL-migratie brok A1 (offerte_teksten + offerte_config)' },
   { v: '3.56.2', d: '2026-06-12', h: 'Fix: de archief-berekening (dashboard, cache, bevriezen bij gereedmelden) doet nu eerst zelf de meetstaat-som per regel, net als de calculatie-kaart. Voorheen rekende die route met verouderde regel-hoeveelheden uit de database, waardoor een net via kozijnen/meetstaat opgebouwde calculatie op het dashboard een fractie van het echte bedrag kon tonen. Lijstbedragen herstellen zichzelf bij het openen van de calculatie; voor een verkeerd bevroren origineel zet je de status even op Concept en terug. Geen SQL nodig' },
@@ -4226,6 +4248,7 @@ function _offCfg() {
   if (!cfg.offertedatum) cfg.offertedatum = _offIsoVandaag();
   if (!cfg.geldigTot) cfg.geldigTot = _offIsoPlusDagen(cfg.offertedatum, 30);
   if (cfg.garantiejaren == null) cfg.garantiejaren = '';
+  if (cfg.prijsWeergave !== 'regels') cfg.prijsWeergave = 'onderdeel';
   if (!cfg.secties || typeof cfg.secties !== 'object') cfg.secties = {};
   OFFERTE_SECTIES.filter(s => s.type === 'tekst').forEach(s => {
     if (!cfg.secties[s.code] || typeof cfg.secties[s.code] !== 'object') {
@@ -4332,6 +4355,12 @@ function renderOfferteBlok() {
     </div>
     <div><label>Geldig tot</label><input type="date" value="${cfg.geldigTot}" onchange="_offCfgVeld('geldigTot', this.value)"></div>
     <div><label>Garantiejaren</label><input type="number" min="0" step="1" value="${_offEsc(cfg.garantiejaren)}" onchange="_offCfgVeld('garantiejaren', this.value)"></div>
+    <div><label>Prijsweergave in offerte</label>
+      <select onchange="_offCfgVeld('prijsWeergave', this.value)">
+        <option value="onderdeel" ${cfg.prijsWeergave !== 'regels' ? 'selected' : ''}>Per onderdeel (subtotalen)</option>
+        <option value="regels" ${cfg.prijsWeergave === 'regels' ? 'selected' : ''}>Regels (hoeveelheid en eenheidsprijs)</option>
+      </select>
+    </div>
   </div>`;
   OFFERTE_SECTIES.forEach(sec => {
     if (sec.type === 'auto') {
@@ -8788,7 +8817,8 @@ async function openArchiveerModal() {
     { type: 'calculatie',     label: 'Calculatie als PDF',  beschikbaar: true,             toelichting: '' },
     { type: 'meetstaat',      label: 'Meetstaat als PDF',   beschikbaar: heeftMeetstaat,   toelichting: heeftMeetstaat ? '' : 'geen meetregels in deze calc' },
     { type: 'kozijnen',       label: 'Getekende kozijnen',  beschikbaar: heeftKozijnen,    toelichting: heeftKozijnen ? '' : 'geen getekende kozijnen in deze calc' },
-    { type: 'offerte',        label: 'Offerte (Yoobi)',     beschikbaar: true,             toelichting: '' },
+    { type: 'offerte',        label: 'Offertedocument',     beschikbaar: true,             toelichting: 'het vormgegeven Ernes-document' },
+    { type: 'offerteyoobi',   label: 'Offerte (Yoobi-export)', beschikbaar: true,          toelichting: 'regels met eenheidsprijzen voor de facturatie' },
     { type: 'werkbon',        label: 'Werkbon',             beschikbaar: true,             toelichting: '' },
     { type: 'onderhoudsplan', label: 'Onderhoudsplan',      beschikbaar: heeftOhp,         toelichting: heeftOhp ? '' : 'geen (compleet) onderhoudsplan voor deze calc' },
     { type: 'fotobijlage',    label: 'Foto-bijlage als PDF', beschikbaar: heeftFotos,      toelichting: heeftFotos ? '' : 'geen foto\u2019s in deze calc' },
@@ -8880,7 +8910,8 @@ function _archiveerVolgende() {
     if (item.type === 'calculatie')          printCalc();
     else if (item.type === 'meetstaat')      printMeetstaat();
     else if (item.type === 'kozijnen')       printKozijnen();
-    else if (item.type === 'offerte')        printOfferteYoobi();
+    else if (item.type === 'offerte')        printOfferteDocument();
+    else if (item.type === 'offerteyoobi')   printOfferteYoobi();
     else if (item.type === 'werkbon')        printWerkbon();
     else if (item.type === 'onderhoudsplan') _ohpPrint();
     else if (item.type === 'fotobijlage')    printFotoBijlage();
@@ -9598,6 +9629,129 @@ function printMeetstaat() {
   window.print();
 }
 
+// ============================================================
+// GEDEELDE REKENKERN VOOR DE OFFERTE (v3.59.0 — brok A4a)
+// Eén bron voor zowel de Yoobi-export als het Ernes-offertedocument,
+// zodat de eindbedragen altijd identiek zijn. Geeft alleen cijfers terug,
+// geen HTML. Logica één-op-één overgenomen uit de oude printOfferteYoobi.
+// ============================================================
+function _berekenOfferteCijfers(c) {
+  const sett = _activeSettings(c);
+
+  // 1. Project-niveau berekening
+  const t = calcProjectTotalen();
+  const dagenWerkelijk = _calcDays();
+  const dagenFactureerbaar = _calcDaysFactureerbaar();
+  const volleDagen = _useVolleDagen();
+  const dagenVerschil = Math.max(0, dagenFactureerbaar - dagenWerkelijk);
+  const afrondingsToeslag = volleDagen ? dagenVerschil * (c.schilders||0) * (c.uurDag||7.5) * sett.uurloon : 0;
+  const arbeid = t.arbeid + afrondingsToeslag;
+  const weken = _calcWeeks();
+  const reisAfstand = c.reis || 0;
+  const snelheid = sett.snelheid || 50;
+  const rayonDrempel = sett.rayonDrempel != null ? sett.rayonDrempel : 15;
+  const binnenRayon = reisAfstand <= rayonDrempel;
+  const reisUren = dagenFactureerbaar * (c.schilders||0) * (reisAfstand / snelheid);
+  const reisKostenUren = binnenRayon ? 0 : reisUren * sett.reistijd;
+  const reisKm = dagenFactureerbaar * (reisAfstand * 2) * sett.km;
+  const reisTotaal = reisKostenUren + reisKm;
+  const kleinMat = t.matVerkoop * sett.kleinMat/100;
+  const afval = (arbeid + t.matVerkoop) * sett.afval/100;
+  const arbo = arbeid * sett.arbo/100;
+
+  // 2. Splits staart in verstop vs zichtbaar
+  const staartLijst = (c.staart || []);
+  const staartZichtbaar = staartLijst.filter(p => !p.verstopInEenheidsprijs);
+  const staartVerstopt  = staartLijst.filter(p => p.verstopInEenheidsprijs);
+  const staartZichtbaarTot = staartZichtbaar.reduce((s,p) => s + calcStaart(p), 0);
+  const staartVerstopTot   = staartVerstopt.reduce((s,p) => s + calcStaart(p), 0);
+  const staartTotaal = staartZichtbaarTot + staartVerstopTot;
+
+  const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
+  const winstFactor = 1 + (sett.winst || 0)/100;
+  const winstBedrag = directe * (sett.winst || 0)/100;
+  const exBtw = directe + winstBedrag;
+
+  // 3. Verzamel alle regels met hun verkoopprijs
+  const allRegels = [];
+  c.hoofdgroepen.forEach(hg => hg.onderdelen.forEach(od => od.regels.forEach(r => {
+    if (!r.hoeveelheid || !r.stappen || !r.stappen.length) return;
+    const rt = calcRegelTotalen(r);
+    if (rt.verkoop <= 0) return;
+    allRegels.push({ r, hgNaam: hg.naam, odNaam: od.naam, regelVerkoop: rt.verkoop });
+  })));
+
+  if (!allRegels.length) return null;
+
+  const sumRegelVerkoop = allRegels.reduce((s, x) => s + x.regelVerkoop, 0);
+
+  // 4. Zichtbare bedragen onderaan (incl. winst-aandeel)
+  const reisZichtbaar = reisTotaal * winstFactor;
+  const staartZichtbaarRows = staartZichtbaar.map(p => ({
+    naam: p.naam, type: p.type, bedrag: calcStaart(p) * winstFactor,
+    hoeveelheid: p.hoeveelheid, eenheid: p.eenheid, grondslag: p.grondslag
+  }));
+  const staartZichtbaarRowsTot = staartZichtbaarRows.reduce((s,p) => s + p.bedrag, 0);
+
+  // 5. Bedrag dat in de regels-eenheidsprijzen verwerkt moet worden
+  const exBtwInRegels = exBtw - reisZichtbaar - staartZichtbaarRowsTot;
+
+  // 6. Verhoogfactor voor regel-verkoopprijzen
+  const regelFactor = sumRegelVerkoop > 0 ? exBtwInRegels / sumRegelVerkoop : 1;
+
+  // 7. Per regel: nieuwe eenheidsprijs, naar boven afgerond op 1 cent
+  const ceilToCent = (n) => Math.ceil(n * 100) / 100;
+  const regels = allRegels.map(x => {
+    const echtRegelTotaal = x.regelVerkoop * regelFactor;
+    const echteEenheidsprijs = echtRegelTotaal / x.r.hoeveelheid;
+    const toonprijs = ceilToCent(echteEenheidsprijs);
+    const toonRegelTotaal = toonprijs * x.r.hoeveelheid;
+    return {
+      r: x.r, hgNaam: x.hgNaam, odNaam: x.odNaam,
+      hoeveelheid: x.r.hoeveelheid,
+      eenheid: x.r.systeemEenheid || '',
+      systeemNaam: x.r.systeemNaam || '',
+      naam: x.r.naam || '',
+      toonprijs, toonRegelTotaal
+    };
+  });
+
+  // 8. Eindtotaal
+  const sumRegels = regels.reduce((s, y) => s + y.toonRegelTotaal, 0);
+  const exBtwFinal = sumRegels + reisZichtbaar + staartZichtbaarRowsTot;
+  const btwBedrag = exBtwFinal * sett.btw/100;
+  const totaalIncl = exBtwFinal + btwBedrag;
+  const afrondingsOverschot = exBtwFinal - exBtw;
+
+  return {
+    sett, regels, staartZichtbaarRows, staartVerstopt,
+    reisTotaal, reisZichtbaar, reisAfstand,
+    dagenFactureerbaar, weken,
+    exBtwFinal, btwBedrag, totaalIncl, afrondingsOverschot,
+    fmt, eur
+  };
+}
+
+// Bouwt het automatische offertenummer: jaar + volgnummer uit de calc.
+// Vorm: JJ-NNNN-V (bv. 26-0068-1). Valt terug op een korte hash van het id
+// als er geen numeriek volgnummer beschikbaar is, zodat het altijd werkt.
+function _offerteNummer(c) {
+  const cfg = (c.offerteConfig && typeof c.offerteConfig === 'object') ? c.offerteConfig : {};
+  const jaarBron = cfg.offertedatum || _offIsoVandaag();
+  const jj = String(jaarBron).slice(2, 4);
+  // Volgnummer: gebruik calc.offerteNr indien gezet, anders nummer uit naam,
+  // anders een stabiele waarde uit het id.
+  let volg = cfg.offerteNr || c.offerteNr || null;
+  if (!volg) {
+    const idStr = String(c.id || '');
+    let hash = 0;
+    for (let i = 0; i < idStr.length; i++) hash = (hash * 31 + idStr.charCodeAt(i)) % 10000;
+    volg = String(hash).padStart(4, '0');
+  }
+  const versie = cfg.offerteVersie || 1;
+  return `${jj}-${volg}-${versie}`;
+}
+
 function printOfferteYoobi() {
   const c = data.calc;
   if (!c) return;
@@ -9831,7 +9985,221 @@ function printOfferteYoobi() {
 
 
 // ============================================================
-// WERKBON — print versie voor de schilders op de werkvloer
+// OFFERTEDOCUMENT — het vormgegeven Ernes-document (v3.59.0 — brok A4a)
+// Briefhoofd + alle teksten uit het offerte-blok in documentvolgorde,
+// met de prijstabel op de plek van de sectie 'prijsopgave' in de gekozen
+// weergave (per onderdeel = Nacken-stijl, of regels = Yoobi-stijl).
+// Bijlagen en samenvoegen volgen in A4b.
+// ============================================================
+function printOfferteDocument() {
+  const c = data.calc;
+  if (!c) { _toast('Geen actieve calculatie'); return; }
+  const cfg = _offCfg();
+  const cij = _berekenOfferteCijfers(c);
+  if (!cij) {
+    alert('Deze calculatie bevat geen regels met inhoud. Voeg minimaal één regel met hoeveelheid en verfsysteem toe.');
+    return;
+  }
+  const sett = cij.sett;
+  const eur = cij.eur, fmt = cij.fmt;
+  const offNr = _offerteNummer(c);
+  const datumLang = _offDatumLang(cfg.offertedatum);
+  const prijsWeergave = cfg.prijsWeergave === 'regels' ? 'regels' : 'onderdeel';
+
+  // Bedrijfsgegevens (briefhoofd) — vast, gelijk aan de Nacken-offerte.
+  const BEDRIJF = {
+    naam: 'Ernes schilders',
+    adres: 'Koperslager 2', pc: '6422 PR Heerlen',
+    tel: '045 5321471', email: 'info@ernes.nl', web: 'www.ernes.nl',
+    iban: 'NL20INGB0679760334', bic: 'INGBNL2A',
+    kvk: '92481183', btw: 'NL866067097B01'
+  };
+
+  // Prijstabel-bouwers ---------------------------------------------------
+  // a) Per onderdeel (Nacken-stijl): subtotaal per onderdeel onder de hoofdgroep.
+  function bouwPrijsPerOnderdeel() {
+    let h = '';
+    c.hoofdgroepen.forEach(hg => {
+      const regelsInHg = cij.regels.filter(y => y.hgNaam === hg.naam);
+      if (!regelsInHg.length) return;
+      const odNamen = [...new Set(regelsInHg.map(y => y.odNaam))];
+      h += `<table><tbody>`;
+      h += `<tr class="hg-row"><td><strong>${hg.naam}</strong></td><td class="num right"></td></tr>`;
+      let hgSom = 0;
+      odNamen.forEach(odNaam => {
+        const som = regelsInHg.filter(y => y.odNaam === odNaam).reduce((s, y) => s + y.toonRegelTotaal, 0);
+        hgSom += som;
+        h += `<tr><td style="padding-left:14pt;">${odNaam}</td><td class="num right">${eur(som)}</td></tr>`;
+      });
+      h += `</tbody></table>`;
+    });
+    return h;
+  }
+
+  // b) Regels (Yoobi-stijl): elke regel met hoeveelheid, eenheidsprijs, totaal.
+  function bouwPrijsPerRegel() {
+    let h = '';
+    c.hoofdgroepen.forEach(hg => {
+      const regelsInHg = cij.regels.filter(y => y.hgNaam === hg.naam);
+      if (!regelsInHg.length) return;
+      h += `<h3>${hg.naam}</h3>`;
+      const odNamen = [...new Set(regelsInHg.map(y => y.odNaam))];
+      odNamen.forEach(odNaam => {
+        const regelsInOd = regelsInHg.filter(y => y.odNaam === odNaam);
+        h += `<h4>${odNaam}</h4>
+          <table><thead><tr>
+            <th>Omschrijving</th><th>Verfsysteem</th>
+            <th class="right">Hoeveelheid</th><th class="right">Eenheidsprijs</th><th class="right">Totaal</th>
+          </tr></thead><tbody>`;
+        let odSum = 0;
+        regelsInOd.forEach(y => {
+          odSum += y.toonRegelTotaal;
+          h += `<tr>
+            <td>${y.naam || '—'}</td>
+            <td>${y.systeemNaam || '<em>onbekend</em>'}</td>
+            <td class="num right">${fmt(y.hoeveelheid)} ${y.eenheid}</td>
+            <td class="num right">${eur(y.toonprijs)}</td>
+            <td class="num right">${eur(y.toonRegelTotaal)}</td>
+          </tr>`;
+        });
+        h += `<tr class="totaal-row"><td colspan="4"><strong>Subtotaal ${odNaam}</strong></td><td class="num right">${eur(odSum)}</td></tr>`;
+        h += `</tbody></table>`;
+      });
+    });
+    return h;
+  }
+
+  // Bijkomende kosten + eindtotaal (gelijk voor beide weergaven).
+  function bouwBijkomendEnTotaal() {
+    let h = `<table><tbody>`;
+    if (cij.reisTotaal > 0) {
+      h += `<tr><td>Reiskosten</td><td class="num right">${eur(cij.reisZichtbaar)}</td></tr>`;
+    }
+    cij.staartZichtbaarRows.forEach(p => {
+      h += `<tr><td>${p.naam}</td><td class="num right">${eur(p.bedrag)}</td></tr>`;
+    });
+    h += `<tr class="totaal-row"><td><strong>Totaal excl. BTW</strong></td><td class="num right">${eur(cij.exBtwFinal)}</td></tr>`;
+    h += `<tr><td>BTW (${sett.btw}%)</td><td class="num right">${eur(cij.btwBedrag)}</td></tr>`;
+    h += `<tr class="grand-row"><td><strong>Totaal incl. ${sett.btw}% BTW</strong></td><td class="num right"><strong>${eur(cij.totaalIncl)}</strong></td></tr>`;
+    h += `</tbody></table>`;
+    return h;
+  }
+
+  // HTML opbouwen --------------------------------------------------------
+  let html = '';
+
+  // Briefhoofd
+  html += `<div class="off-head">
+    <div class="off-head-left">
+      <img class="off-logo" src="${LOGO_ERNES}" alt="Ernes schilders">
+    </div>
+    <div class="off-head-right">
+      <div><strong>${BEDRIJF.naam}</strong></div>
+      <div>${BEDRIJF.adres}</div>
+      <div>${BEDRIJF.pc}</div>
+      <div>Telefoon: ${BEDRIJF.tel}</div>
+      <div>E-mail: ${BEDRIJF.email}</div>
+      <div>Internet: ${BEDRIJF.web}</div>
+      <div style="margin-top:4pt;">${BEDRIJF.iban}</div>
+      <div>BIC: ${BEDRIJF.bic}</div>
+      <div>KvK Nr. ${BEDRIJF.kvk}</div>
+      <div>BTW: ${BEDRIJF.btw}</div>
+    </div>
+  </div>`;
+
+  // Klant + offertetitel
+  html += `<div class="off-klant">
+    <div><strong>${c.klant || ''}</strong></div>
+    ${c.naam ? `<div>${c.naam}</div>` : ''}
+  </div>`;
+  html += `<div class="off-titel">
+    <div><strong>Offerte ${offNr} | ${c.naam || ''}</strong></div>
+    <div class="meta">Datum: ${datumLang}</div>
+  </div>`;
+
+  // Secties in documentvolgorde
+  OFFERTE_SECTIES.forEach(sec => {
+    if (sec.code === 'briefhoofd' || sec.code === 'ondertekening') return; // apart afgehandeld
+
+    if (sec.code === 'prijsopgave') {
+      html += `<div class="section"><h2>${sec.kop}</h2>`;
+      if (cij.staartVerstopt.length > 0) {
+        const namen = cij.staartVerstopt.map(p => p.naam).join(', ');
+        html += `<p style="font-size:8.5pt; color:#666;">In de eenheidsprijzen verwerkt: ${namen}.</p>`;
+      }
+      html += (prijsWeergave === 'regels') ? bouwPrijsPerRegel() : bouwPrijsPerOnderdeel();
+      html += bouwBijkomendEnTotaal();
+      html += `</div>`;
+      return;
+    }
+
+    if (sec.code === 'bijlagen') {
+      // A4a: alleen de bijlagenlijst aankondigen; samenvoegen volgt in A4b.
+      return;
+    }
+
+    if (sec.type === 'auto') return;
+    if (sec.code === 'slotzin') return; // komt apart, ná het ondertekenblok
+
+    // Tekstsectie uit het offerte-blok
+    const secCfg = cfg.secties[sec.code];
+    if (!secCfg || !secCfg.aan) return;
+    const blokken = secCfg.blokken.filter(b => b.variantId || b.tekst != null);
+    if (!blokken.length) return;
+    const teksten = blokken.map(b => _offVulVelden(_offBlokTekst(b))).filter(s => s.trim());
+    if (!teksten.length) return;
+
+    html += `<div class="section">`;
+    if (sec.kop) html += `<h2>${sec.kop}</h2>`;
+    teksten.forEach(tk => {
+      html += `<div class="off-tekst">${_offEsc(tk).replace(/\n/g, '<br>')}</div>`;
+    });
+    html += `</div>`;
+  });
+
+  // Ondertekenblok
+  const ondCfg = cfg.secties['ondertekening'];
+  const slotCfg = cfg.secties['slotzin'];
+  html += `<div class="section off-onderteken">
+    <h2>Ondertekening</h2>
+    <table class="off-sign-table"><tbody>
+      <tr>
+        <td class="sign-box">
+          <img class="off-sign" src="handtekening.png" alt="" onerror="this.style.display='none'">
+        </td>
+        <td class="sign-box"></td>
+      </tr>
+      <tr>
+        <td>${BEDRIJF.naam}<br>Gian Ernes</td>
+        <td>Datum:</td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>Naam: ${c.klant || ''}<br><br>Uw naam:</td>
+      </tr>
+    </tbody></table>
+  </div>`;
+
+  // Slotzin (onder de ondertekening) — komt uit het offerte-blok
+  if (slotCfg && slotCfg.aan) {
+    const sb = slotCfg.blokken.filter(b => b.variantId || b.tekst != null);
+    const st = sb.map(b => _offVulVelden(_offBlokTekst(b))).filter(s => s.trim());
+    st.forEach(tk => {
+      html += `<div class="off-tekst" style="margin-top:8pt;">${_offEsc(tk).replace(/\n/g, '<br>')}</div>`;
+    });
+  }
+
+  // Footer
+  html += `<div class="footer-block">Offerte ${offNr} · ${BEDRIJF.naam} · ${datumLang}</div>`;
+
+  document.getElementById('printArea').innerHTML = html;
+  _setPrintTitle('offerte');
+  // Wacht op het laden van logo en (optionele) handtekening vóór print.
+  const imgs = Array.from(document.querySelectorAll('#printArea img'));
+  Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = img.onerror = res; })))
+    .then(() => window.print())
+    .catch(() => window.print());
+}
 // (geen prijzen, geen uren — wel materiaalverbruik per onderdeel + totaal)
 // ============================================================
 

@@ -1,3 +1,17 @@
+## v3.59.0 — Het offertedocument
+Brok A4a van de offertemodule. De generator die van de calculatie en de gekozen teksten een compleet, vormgegeven offertedocument maakt in de Ernes-huisstijl.
+
+### Wijzigingen
+- Nieuwe functie printOfferteDocument bouwt het hele offertedocument: briefhoofd met logo en bedrijfsgegevens, klantblok, automatisch offertenummer (vorm JJ-NNNN-V), datum, alle ingeschakelde teksten uit het offerte-blok in documentvolgorde met hun koppen en ingevulde invulvelden, de prijsopgave op de juiste plek, het ondertekenblok met handtekening en de slotzin. Knop Offertedocument staat in het offerte-blok onderaan de Calculatie-tab, naast Voorbeeld.
+- Prijsweergave per offerte instelbaar met een nieuwe schakelaar in het offerte-blok: per onderdeel (subtotalen per onderdeel onder de hoofdgroep, Nacken-stijl) of regels (elke regel met hoeveelheid, eenheidsprijs en regeltotaal, Yoobi-stijl). Onder beide weergaven volgen de bijkomende kosten (reis en zichtbare staartposten) en het eindtotaal met BTW.
+- Gedeelde rekenkern _berekenOfferteCijfers afgesplitst uit de oude printOfferteYoobi. Zowel het nieuwe offertedocument als de Yoobi-export gebruiken nu deze ene functie, met de verstopte toeslagen proportioneel over de regels verdeeld en eenheidsprijzen naar boven afgerond op een cent. Daardoor zijn de eindbedragen van document en export per definitie identiek.
+- Het ondertekenblok toont de handtekening uit handtekening.png (naast index.html in de repo). Ontbreekt dat bestand, dan blijft het vak netjes leeg. De print wacht op het laden van logo en handtekening voordat de printdialoog opent.
+- In het Archiveren-venster is de oude optie Offerte (Yoobi) vervangen door twee aparte opties: Offertedocument (het nieuwe document) en Offerte (Yoobi-export) voor de facturatie-workflow. De losse functie printOfferteYoobi blijft ongewijzigd bestaan.
+- Offertenummer-helper _offerteNummer: jaar uit de offertedatum plus volgnummer (uit offerteConfig of een stabiele waarde uit het calc-id) plus versie.
+- Print via de browser (Opslaan als PDF), zelfde mechanisme als de andere documenten; gebruikt het bestaande printArea met de print-CSS, aangevuld met offerte-specifieke opmaak.
+- Bijlagen (getekende kozijnen, foto-bijlage, algemene voorwaarden consument/zakelijk) en het samenvoegen tot één doorlopend PDF volgen in brok A4b.
+- Geen Supabase-migratie nodig; bouwt op offerte_teksten en offerte_config uit eerdere brokken.
+
 ## v3.58.0 — Offerte-blok in de calculatie
 Brok A3 van de offertemodule. Onderaan de Calculatie-tab stel je per offerte de teksten en instellingen samen; de generator (brok A4) maakt er straks het document van.
 
