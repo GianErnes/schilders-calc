@@ -1,13 +1,16 @@
-## v3.66.1 — Adres vult zichzelf aan
-De straat en woonplaats worden nu automatisch uit de postcode gehaald, en een half adres verschijnt niet meer.
+## v3.67.0 — Vulling per kozijntekening in de meetstaat
+De m² van deuren en panelen wordt niet meer samengerold. Per kozijntekening krijg je een eigen auto-regel, direct onder zijn tekening.
 
 ### Wijzigingen
-- Zodra je een offerte opent haalt de app de straat en de woonplaats vanzelf op uit de postcode (via PDOK), als die nog ontbreken. Je hoeft de knop Zoek straat en woonplaats meestal niet meer te gebruiken; die blijft als handmatige optie staan.
-- Het ophalen gebeurt eenmalig per postcode, dus het belast PDOK niet bij elke schermopbouw.
-- Zolang straat en woonplaats nog niet bekend zijn, toont het klantblok bovenaan de offerte geen losse regel meer met alleen een huisnummer of alleen een postcode. Je ziet dan alleen de naam, en de adresregels verschijnen pas als ze compleet zijn.
-- Bij het aanmaken van een accordeerlink wordt het adres ook eerst aangevuld, zodat het bevroren snapshot een net adres bevat.
+- De automatische vulling-regels in de meetstaat worden niet meer samengevoegd tot één regel per calc-regel over alle tekeningen heen. Voortaan is er per kozijntekening per calc-regel één auto-regel, en die staat direct onder zijn brontekening, consistent met de m¹ die al per tekening op de regel staat.
+- De auto-regel heet naar zijn bron, bijvoorbeeld "Voorgevel · Geveldeur (auto)", zodat je meteen ziet welke deur of welk paneel uit welk kozijn komt.
+- Het calc-totaal blijft kloppen: meerdere auto-regels met dezelfde calc-regel tellen op in de samenvatting onderaan de meetstaat.
+- Bestaande open calculaties bouwen de regels vanzelf opnieuw op zodra je de meetstaat aanraakt of een kozijn opslaat. De oude samengerolde auto-regels worden daarbij opgeruimd. Vergrendelde offertes blijven ongemoeid.
+- De kozijnen-PDF toont de vulling al sinds v3.55.0 per tekening (kop met de tekeningnaam) en per deur (m² met naam), dus de klant leest meteen waar de m² van gemeten is. De meetstaat sluit hier nu op aan.
+- Onder de motorkap: `_syncVullingMeetstaat` keyt nu op brontekening plus calc-regel in plaats van alleen calc-regel. Nieuwe helpers `_vullingDoelenPerTekening` (doelen per tekening) en `_herordenVullingMeetstaat` (auto-regel onder zijn bron, volgorde vastgezet op de array-index, alleen gewijzigde rijen weggeschreven). `addMeetstaat` baseert de standaardwaarden van een nieuwe regel op de laatste handmatige regel, niet op een auto-regel.
+- Eénmalige SQL-migratie: kolom `bron_meetstaat_id` op de meetstaat-tabel (al gedaan).
 
-## v3.66.0 — Adresblok bovenaan de offerte
+
 Bovenaan de offerte staat nu een net klantblok met naam, adres en woonplaats.
 
 ### Wijzigingen
