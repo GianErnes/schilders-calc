@@ -2059,8 +2059,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.62.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.63.0</h2>
       <div class="intro-body">
+        <p><strong>🙋 Aanspreekvorm en melding bij reacties (v3.63.0).</strong> Twee dingen. Ten eerste: in het Offerte-blok staat nu een keuzeveld Aanspreekvorm (heer, mevrouw, heer en mevrouw, familie, of zakelijk). Zet in je inleiding "Geachte {aanhef}," en de app maakt daar "Geachte heer Nacken," van. Het veld {aanhef} staat ook in de invulvelden-lijst op de Offerteteksten-tab. Laat je de aanspreekvorm leeg, dan komt alleen de kale naam, net als voorheen. Ten tweede: op het dashboard verschijnt bovenaan een blok Reacties op offertes zodra een klant akkoord geeft, afwijst of een vraag stelt. Klik Openen om naar de offerte te springen, of Gezien om de melding weg te halen. Een reactie blijft staan tot je zelf op Gezien klikt. Vereist één kleine SQL-migratie (kolom gezien_op, al gedaan).</p>
         <p><strong>🔗 Accorderen via een unieke link (v3.62.0).</strong> Per offerte maak je nu een eigen accordeerlink. In het Offerte-blok staat de knop Accordeerlink: die legt de offerte vast zoals die nu is en geeft je een link voor de klant. De klant opent die link zonder in te loggen, ziet de volledige offerte en kan akkoord geven, afwijzen of een vraag stellen. Bij akkoord moet de klant zijn naam invullen en het akkoord aanvinken; de offerte springt dan op Geaccepteerd. Bij afwijzen springt hij op Verloren. Naam, tijdstip en opmerking worden vastgelegd, zodat dit het ondertekenen in Yoobi vervangt. Een vraag laat de offerte open staan. Vereist de SQL-migratie en de Edge Function offerte-accord in Supabase (eenmalig, al gedaan).</p>
         <p><strong>📐 Voorwaarden vullen nu de pagina (v3.61.1).</strong> De algemene voorwaarden in de doorlopende PDF stonden te klein doordat de print-marge boven op de eigen marge van het document kwam. Die dubbele marge is weg; de voorwaardenpagina's vullen nu de volle breedte, net als de rest van de offerte.</p>
         <p><strong>📎 Offerte met bijlagen in één doorlopende PDF (v3.61.0).</strong> In het Offerte-blok staat naast Offertedocument nu de knop Offerte + bijlagen. Die maakt één doorlopende PDF: eerst het offertedocument, dan de getekende kozijnen, dan de foto-bijlage, en als laatste altijd de algemene voorwaarden. Met twee schakelaars in het blok zet je de kozijnen en de foto-bijlage per offerte aan of uit. De juiste voorwaarden (consument of zakelijk) worden automatisch gekozen op basis van het klanttype. De voorwaarden lopen mee als paginabeelden, dus zorg dat de vier PNG-bestanden naast index.html in de repo staan.</p>
@@ -3075,7 +3076,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.62.0';
+const APP_VERSION = 'v3.63.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3437,6 +3438,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.63.0', d: '2026-06-13', h: 'Aanspreekvorm + reactie-melding. (1) Nieuw keuzeveld Aanspreekvorm per offerte in het Offerte-blok (heer/mevrouw/echtpaar/familie/zakelijk), opgeslagen in offerte_config (geen SQL). Nieuw invulveld {aanhef} via _offAanhef(c,cfg) in _offVulVelden, werkt in voorbeeld en document: "Geachte {aanhef}," -> "Geachte heer Nacken,". Leeg = kale klantnaam (geen regressie). (2) Dashboard-blok Reacties op offertes bovenaan: toont ongeziene akkoord/afgewezen/vraag-reacties uit offerte_accorderingen, klikbaar naar de calc (openCalc + Accordeerlink-venster). Markeren via Gezien per regel of Alles gezien; blijft staan tot je klikt. Vereist kolom gezien_op (eenmalige SQL)' },
   { v: '3.62.0', d: '2026-06-13', h: 'Accorderen via unieke link per offerte (vervangt Yoobi-ondertekenen). Knop Accordeerlink in het Offerte-blok legt een snapshot van de offerte vast en geeft een publieke link (?accord=TOKEN). De klant opent die zonder login, ziet de bevroren offerte read-only in een iframe en kan akkoord geven (naam verplicht + akkoord-vinkje, calc -> geaccepteerd), afwijzen (naam + reden, calc -> verloren) of een vraag stellen (offerte blijft open). Naam, tijdstip, IP en opmerking worden vastgelegd. Publieke kant praat alleen met de Edge Function offerte-accord (service-sleutel, buiten RLS); klant raakt de database nooit rechtstreeks. Nieuwe tabel offerte_accorderingen (eenmalige SQL) en Edge Function offerte-accord in Supabase' },
   { v: '3.61.1', d: '2026-06-13', h: 'Voorwaarden in de doorlopende PDF vullen nu de volle breedte. De print-marge (1.5cm) kwam boven op de eigen marge van het AV-document (dubbele marge, daardoor klein); voor de dpv-vw-pagina wordt die print-marge nu opgeheven met negatieve marges en is de beeldhoogte begrensd op 26.5cm zodat er geen lege pagina volgt' },
   { v: '3.61.0', d: '2026-06-13', h: 'Doorlopende offerte-PDF (brok A4b): nieuwe knop Offerte + bijlagen in het Offerte-blok maakt in één print het offertedocument, de getekende kozijnen, de foto-bijlage en als laatste de algemene voorwaarden. Twee schakelaars per offerte (kozijnen, foto-bijlage) in offerte_config (geen SQL). AV-variant automatisch op klanttype (consument/zakelijk), meegeleverd als paginabeelden (av-consument-1/2.png, av-zakelijk-1/2.png naast index.html in de repo). Print-functies opgesplitst in herbruikbare HTML-builders (_bouwOfferteDocHtml, _bouwKozijnenHtml, _bouwFotoHtml, _bouwVoorwaardenHtml); losse documenten ongewijzigd' },
@@ -4123,6 +4125,7 @@ const OFFERTE_SECTIES = [
 // Invulvelden die de generator (brok A4) vult vanuit de calculatie.
 const OFFERTE_VELDEN = [
   { veld: '{klant}',         uitleg: 'naam van de klant' },
+  { veld: '{aanhef}',        uitleg: 'aanhef met aanspreekvorm, bv. heer Nacken' },
   { veld: '{project}',       uitleg: 'projectnaam met adres' },
   { veld: '{werkdagen}',     uitleg: 'werkdagen uit de calculatie' },
   { veld: '{totaal_incl}',   uitleg: 'totaalbedrag incl. BTW' },
@@ -4338,6 +4341,7 @@ function _offCfg() {
   if (!cfg.offertedatum) cfg.offertedatum = _offIsoVandaag();
   if (!cfg.geldigTot) cfg.geldigTot = _offIsoPlusDagen(cfg.offertedatum, 30);
   if (cfg.garantiejaren == null) cfg.garantiejaren = '';
+  if (typeof cfg.aanspreekvorm !== 'string') cfg.aanspreekvorm = '';
   if (cfg.prijsWeergave !== 'regels') cfg.prijsWeergave = 'onderdeel';
   if (typeof cfg.bijlageKozijnen !== 'boolean') cfg.bijlageKozijnen = true;
   if (typeof cfg.bijlageFotos !== 'boolean') cfg.bijlageFotos = true;
@@ -4387,6 +4391,7 @@ function _offVulVelden(tekst) {
   const eur = (n) => '€ ' + (n || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const map = {
     '{klant}':         c.klant || '…',
+    '{aanhef}':        _offAanhef(c, cfg),
     '{project}':       c.naam || '…',
     '{werkdagen}':     (dagen != null && dagen > 0) ? String(dagen).replace('.', ',') : '…',
     '{totaal_incl}':   (totaal != null) ? eur(totaal) : '…',
@@ -4441,6 +4446,17 @@ function renderOfferteBlok() {
         <option value="zakelijk" ${cfg.klanttype === 'zakelijk' ? 'selected' : ''}>Zakelijk</option>
       </select>
       <div style="margin-top:0.3rem; font-size:0.72rem; color:var(--muted);">Voor de garantietekst en straks de AV-bijlage.</div>
+    </div>
+    <div><label>Aanspreekvorm</label>
+      <select onchange="_offCfgVeld('aanspreekvorm', this.value)">
+        <option value="" ${!cfg.aanspreekvorm ? 'selected' : ''}>— kies —</option>
+        <option value="heer" ${cfg.aanspreekvorm === 'heer' ? 'selected' : ''}>Heer</option>
+        <option value="mevrouw" ${cfg.aanspreekvorm === 'mevrouw' ? 'selected' : ''}>Mevrouw</option>
+        <option value="echtpaar" ${cfg.aanspreekvorm === 'echtpaar' ? 'selected' : ''}>Heer en mevrouw</option>
+        <option value="familie" ${cfg.aanspreekvorm === 'familie' ? 'selected' : ''}>Familie</option>
+        <option value="zakelijk" ${cfg.aanspreekvorm === 'zakelijk' ? 'selected' : ''}>Zakelijk (geen naam)</option>
+      </select>
+      <div style="margin-top:0.3rem; font-size:0.72rem; color:var(--muted);">Vult {aanhef} in de teksten, bv. "Geachte heer Nacken".</div>
     </div>
     <div><label>Offertedatum</label><input type="date" value="${cfg.offertedatum}" onchange="_offCfgDatum(this.value)">
       <div style="margin-top:0.3rem; font-size:0.72rem; color:var(--muted);">Wijzigen zet "geldig tot" opnieuw op +30 dagen.</div>
@@ -15999,6 +16015,7 @@ function renderDashboard() {
   renderCalculatiesArchief();
   renderPlannenArchief();  // v3.25.9 — plannen-archief onder calc-archief
   renderVersieGeschiedenis();  // v3.18.0
+  _accordMeldingenRender();  // v3.63.0 — reacties-melding op het dashboard
 }
 // ============================================================
 // INIT
@@ -16467,6 +16484,124 @@ async function _accordNieuweLink(c, body, supersede) {
     return;
   }
   // Verse status ophalen en tonen.
+  accordLinkBeheer();
+}
+
+/* ===== v3.63.0 aanhef + reacties-melding ===== */
+/* =====================================================================
+   v3.63.0 — Aanhef met aanspreekvorm ({aanhef}) en melding van reacties
+   op offertes op het dashboard.
+   ===================================================================== */
+
+// Bouwt de aanhef-waarde voor het invulveld {aanhef} op basis van de
+// gekozen aanspreekvorm in het Offerte-blok. Leeg = kale klantnaam.
+function _offAanhef(c, cfg) {
+  const klant = (c && c.klant) ? String(c.klant).trim() : '';
+  const v = (cfg && cfg.aanspreekvorm) ? cfg.aanspreekvorm : '';
+  switch (v) {
+    case 'heer':     return klant ? 'heer ' + klant : 'heer';
+    case 'mevrouw':  return klant ? 'mevrouw ' + klant : 'mevrouw';
+    case 'echtpaar': return klant ? 'heer en mevrouw ' + klant : 'heer en mevrouw';
+    case 'familie':  return klant ? 'familie ' + klant : 'familie';
+    case 'zakelijk': return 'heer, mevrouw';
+    default:         return klant || '\u2026';
+  }
+}
+
+let _accordMeldingLijst = [];
+
+// Toont op het dashboard een blok met nieuwe reacties (akkoord, afgewezen,
+// vraag) die jij nog niet als gezien hebt gemarkeerd.
+async function _accordMeldingenRender() {
+  const dash = document.getElementById('dashboard');
+  if (!dash || !dash.classList.contains('active')) return; // alleen op het dashboard
+  if (!_sb) return;
+  let blk = document.getElementById('accordMeldingen');
+
+  let rows;
+  try {
+    const { data: r, error } = await _sb.from('offerte_accorderingen')
+      .select('id, calculatie_id, status, klant_naam, notitie, vragen, gereageerd_op, gezien_op, aangemaakt_op, calculaties(naam, klant)')
+      .order('aangemaakt_op', { ascending: false });
+    if (error) throw error;
+    rows = r || [];
+  } catch (e) {
+    return; // stil; bij een fout simpelweg geen blok
+  }
+
+  const items = [];
+  rows.forEach(row => {
+    const vragen = Array.isArray(row.vragen) ? row.vragen : [];
+    const laatsteVraag = vragen.length ? vragen[vragen.length - 1] : null;
+    const tReactie = ((row.status === 'akkoord' || row.status === 'afgekeurd') && row.gereageerd_op) ? new Date(row.gereageerd_op).getTime() : 0;
+    const tVraag = (laatsteVraag && laatsteVraag.op) ? new Date(laatsteVraag.op).getTime() : 0;
+    const tEvent = Math.max(tReactie, tVraag);
+    if (!tEvent) return;
+    const tGezien = row.gezien_op ? new Date(row.gezien_op).getTime() : 0;
+    if (tGezien >= tEvent) return; // al gezien
+    let type, tekst;
+    if (tReactie >= tVraag && tReactie > 0) {
+      type = (row.status === 'akkoord') ? 'akkoord' : 'afgekeurd';
+      tekst = (type === 'akkoord' ? 'Geaccordeerd' : 'Afgewezen') + (row.klant_naam ? ' door ' + row.klant_naam : '');
+    } else {
+      type = 'vraag';
+      tekst = 'Nieuwe vraag' + (laatsteVraag && laatsteVraag.naam ? ' van ' + laatsteVraag.naam : '');
+    }
+    items.push({
+      accId: row.id, calcId: row.calculatie_id,
+      project: (row.calculaties && row.calculaties.naam) || '(naamloos)',
+      klant: (row.calculaties && row.calculaties.klant) || '',
+      type: type, tekst: tekst, tEvent: tEvent
+    });
+  });
+  items.sort((a, b) => b.tEvent - a.tEvent);
+  _accordMeldingLijst = items;
+
+  if (!items.length) { if (blk) blk.remove(); return; }
+
+  if (!blk) {
+    blk = document.createElement('div');
+    blk.id = 'accordMeldingen';
+    dash.insertBefore(blk, dash.firstChild);
+  }
+  const ico = { akkoord: '\u2705', afgekeurd: '\u274c', vraag: '\u2753' };
+  let h = '<div style="border:1px solid var(--border); border-radius:8px; margin:0 0 1rem; background:var(--paper); overflow:hidden;">'
+    + '<div style="padding:0.6rem 0.8rem; font-weight:700; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.5rem;">'
+    + '\ud83d\udd14 Reacties op offertes '
+    + '<span style="background:var(--accent); color:#fff; border-radius:10px; padding:0 0.5rem; font-size:0.8rem;">' + items.length + '</span>'
+    + '<button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="accordMarkAllesGezien()">Alles gezien</button>'
+    + '</div>';
+  items.forEach(it => {
+    h += '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.55rem 0.8rem; border-top:1px solid var(--border);">'
+      + '<span style="font-size:1.1rem;">' + ico[it.type] + '</span>'
+      + '<div style="flex:1; min-width:0;">'
+      + '<div style="font-weight:600;">' + _accordEsc(it.project) + (it.klant ? ' <span style="color:var(--muted); font-weight:400;">\u00b7 ' + _accordEsc(it.klant) + '</span>' : '') + '</div>'
+      + '<div style="font-size:0.78rem; color:var(--muted);">' + _accordEsc(it.tekst) + '</div>'
+      + '</div>'
+      + '<button class="btn btn-sm" onclick="accordMeldingOpen(\'' + it.calcId + '\')">Openen</button>'
+      + '<button class="btn btn-secondary btn-sm" onclick="accordMarkGezien(\'' + it.accId + '\')">Gezien</button>'
+      + '</div>';
+  });
+  h += '</div>';
+  blk.innerHTML = h;
+}
+
+async function accordMarkGezien(accId) {
+  try { await _sb.from('offerte_accorderingen').update({ gezien_op: new Date().toISOString() }).eq('id', accId); }
+  catch (e) { _toast('Kon niet als gezien markeren'); return; }
+  _accordMeldingenRender();
+}
+
+async function accordMarkAllesGezien() {
+  const ids = _accordMeldingLijst.map(it => it.accId);
+  if (!ids.length) return;
+  try { await _sb.from('offerte_accorderingen').update({ gezien_op: new Date().toISOString() }).in('id', ids); }
+  catch (e) { _toast('Kon niet als gezien markeren'); return; }
+  _accordMeldingenRender();
+}
+
+async function accordMeldingOpen(calcId) {
+  await openCalc(calcId);
   accordLinkBeheer();
 }
 

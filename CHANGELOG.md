@@ -1,3 +1,14 @@
+## v3.63.0 — Aanspreekvorm in de aanhef en melding bij reacties
+Twee verbeteringen rond de offerte: een nette aanhef met aanspreekvorm, en een melding op het dashboard zodra een klant reageert.
+
+### Wijzigingen
+- Nieuw keuzeveld Aanspreekvorm per offerte in het Offerte-blok, naast Klanttype: heer, mevrouw, heer en mevrouw, familie, of zakelijk (geen naam). Opgeslagen in offerte_config, geen SQL.
+- Nieuw invulveld {aanhef}. Zet in de inleiding "Geachte {aanhef}," en de app vult de aanspreekvorm plus de klantnaam in, bijvoorbeeld "Geachte heer Nacken,". Bij zakelijk wordt het "Geachte heer, mevrouw," zonder naam. Het veld werkt zowel in het Voorbeeld als in het echte document, want het loopt via dezelfde invulveld-functie. Laat je de aanspreekvorm leeg, dan komt alleen de kale klantnaam, precies zoals voorheen, dus geen verrassingen in bestaande offertes.
+- Het veld {aanhef} staat ook in de kopieerbare invulvelden-lijst op de Offerteteksten-tab.
+- Nieuw blok Reacties op offertes bovenaan het dashboard. Zodra een klant via de accordeerlink akkoord geeft, afwijst of een vraag stelt, verschijnt daar een regel met het project, de klant en wat er gebeurd is. Per regel een knop Openen (springt naar die calculatie en opent het Accordeerlink-venster) en een knop Gezien. Bovenin staat Alles gezien.
+- Een reactie blijft in het blok staan tot je zelf op Gezien klikt. Komt er na het wegklikken een nieuwe vraag of reactie, dan verschijnt die opnieuw.
+- Eenmalige Supabase-stap: de kolom gezien_op op offerte_accorderingen, die bijhoudt wat je al gezien hebt. Al uitgevoerd.
+
 ## v3.62.0 — Accorderen via een unieke link per offerte
 Per offerte kun je nu een accordeerlink aanmaken. De klant opent die zonder in te loggen, ziet de volledige offerte read-only en geeft akkoord, wijst af of stelt een vraag. Dit vervangt het digitale ondertekenen in Yoobi.
 
