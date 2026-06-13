@@ -1846,6 +1846,28 @@
     .print-only .off-doc .off-tekst { orphans: 2; widows: 2; }
     .print-only .off-doc table tr { page-break-inside: avoid; }
     .print-only .off-doc thead { display: table-header-group; }
+    /* v3.60.3 — Kostenoverzicht in Yoobi-stijl */
+    .print-only .off-doc .kosten-blok { page-break-before: always; break-before: page; page-break-inside: avoid; break-inside: avoid; }
+    .print-only .off-doc .kosten-kop { width: 100%; margin-bottom: 0; }
+    .print-only .off-doc .kosten-kop th {
+      border-bottom: 1.2pt solid #333 !important;
+      font-weight: 700;
+      font-size: 10.5pt;
+      padding-bottom: 3pt;
+    }
+    .print-only .off-doc .kosten-extra { margin-bottom: 0; }
+    .print-only .off-doc .proj-row td { padding-top: 4pt; }
+    .print-only .off-doc .gevel-sub td {
+      border-top: 0.75pt solid #999;
+      padding-top: 4pt;
+      padding-bottom: 8pt;
+    }
+    .print-only .off-doc .kosten-eind td { padding: 2pt 4pt; }
+    .print-only .off-doc .kosten-eind .lbl { text-align: left; }
+    .print-only .off-doc .kosten-eind .cur { text-align: left; font-style: italic; width: 34pt; }
+    .print-only .off-doc .kosten-eind .te-excl td,
+    .print-only .off-doc .kosten-eind .te-btw td { font-style: italic; }
+    .print-only .off-doc .kosten-eind .te-incl td { border-top: 1pt solid #333; padding-top: 4pt; font-size: 11pt; }
     .print-only .off-logo { height: 52pt; width: auto; }
     .print-only .off-head-right { font-size: 8.5pt; line-height: 1.4; text-align: right; color: #333; }
     .print-only .off-klant { margin-bottom: 10pt; font-size: 10pt; }
@@ -2031,8 +2053,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.60.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.60.3</h2>
       <div class="intro-body">
+        <p><strong>🧾 Kostenoverzicht in Yoobi-stijl (v3.60.3).</strong> Het kostenoverzicht in de offerte is nagebouwd naar je vertrouwde Yoobi-offerte. Per gevel staat nu elke regel als “Gevel | Onderdeel” met het bedrag, en daaronder vetgedrukt het gevel-subtotaal met de volledige gevelnaam. De projectnaam staat als kopregel bovenaan en de eindtotalen staan rechts ingesprongen met een EUR-kolom. De interne regel over de kleinschaligheidstoeslag is uit de offerte gehaald, en het kostenblok begint op een eigen pagina zodat het altijd compleet bij elkaar staat.</p>
         <p><strong>✂️ Strakkere offerte: strepen weg en nette pagina-doorloop (v3.60.2).</strong> Twee laatste puntjes op het offertedocument. De horizontale lijnen onder de koppen zijn weg, het document is nu helemaal lijnloos op de subtiele lijn boven het eindtotaal na. En de tekst loopt nu netjes door over de pagina’s: geen grote witte gaten meer onderaan een pagina. Een kop blijft daarbij nooit alleen onderaan staan, die schuift mee met zijn tekst naar de volgende pagina.</p>
         <p><strong>🎨 Logo in het offertedocument en rustige prijstabel (v3.60.1).</strong> Het briefhoofd toont nu het Ernes-logo. Logo en handtekening zijn ingebakken in de code, dus er hoeven geen losse bestanden meer in de repo te staan en het werkt overal gegarandeerd. De prijstabel in het offertedocument is rustiger gemaakt: de horizontale strepen tussen de regels zijn weg, alleen een subtiele lijn boven de bijkomende kosten en boven het eindtotaal blijft staan.</p>
         <p><strong>🔢 Eigen offertenummering (v3.60.0).</strong> De app deelt nu zelf offertenummers uit in de vorm JJ-NNN, bijvoorbeeld 26-009. De teller telt per jaar op en begint elk nieuw jaar opnieuw bij 1. Een offerte krijgt zijn nummer pas op het moment dat je voor het eerst het offertedocument genereert, en dat nummer blijft daarna vastzitten aan die calculatie, ook als je het document later opnieuw maakt. Onder Instellingen staat een nieuwe sectie Offertenummering waar je het startnummer voor dit jaar instelt; zet het hoger als je wilt aansluiten op een bestaande reeks, bijvoorbeeld bij de overstap vanuit Yoobi. Het eerstvolgende nummer wordt minimaal dat startnummer. Mocht een nummer onverhoopt al in gebruik zijn, bijvoorbeeld door twee apparaten tegelijk, dan schuift de app door naar het eerstvolgende vrije nummer en laat dat weten.</p>
@@ -3041,7 +3064,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.60.2';
+const APP_VERSION = 'v3.60.3';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3403,6 +3426,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.60.3', d: '2026-06-13', h: 'Kostenoverzicht offertedocument nagebouwd naar Yoobi-stijl: per gevel elke onderdeel-regel als \'Gevel | Onderdeel\' met bedrag, daaronder vetgedrukt gevel-subtotaal met volledige gevelnaam (incl. straatzijde/voordeurzijde) en lijn erboven; projectnaam als kopregel bovenaan; kolomkop Naam / Totaal excl. BTW met lijn; eindtotalen in apart rechts-ingesprongen blok met EUR-kolom (inline-style voor betrouwbare uitlijning). Interne regel \'In de eenheidsprijzen verwerkt: Kleinschaligheidstoeslag\' verwijderd uit de offerte. Lijntjes om de blokken weg. Kostenblok begint op eigen pagina (page-break-before) zodat het compleet bij elkaar blijft' },
   { v: '3.60.2', d: '2026-06-13', h: 'Offertedocument verder afgewerkt: alle strepen onder de koppen (h2/h3/h4) verwijderd binnen .off-doc, document nu lijnloos op de subtiele lijn boven het eindtotaal na. Pagina-doorloop verbeterd: secties mogen over paginagrenzen breken (page-break-inside: auto) zodat er geen grote witruimte meer onderaan pagina\'s ontstaat, met page-break-after: avoid op koppen en orphans/widows op de tekst zodat een kop nooit los onderaan een pagina belandt. Tabelrijen breken niet doormidden' },
   { v: '3.60.1', d: '2026-06-13', h: 'Fix en opmaak voor het offertedocument: logo verscheen niet omdat erneslogo.png niet in de repo stond. Logo en handtekening zijn nu ingebakken als centrale globale constanten (LOGO_ERNES, HANDTEKENING_ERNES), bereikbaar voor alle print-functies; de lokale logo-definitie in het onderhoudsplan is verwijderd zodat er één bron is. Geen losse bestanden meer nodig. Daarnaast is de prijstabel in het offertedocument lijnloos gemaakt (wrapper .off-doc): horizontale regelstrepen weg, alleen subtiele lijn boven bijkomende kosten en eindtotaal' },
   { v: '3.60.0', d: '2026-06-13', h: 'Eigen offertenummering in de vorm JJ-NNN (bv. 26-009). Per jaar oplopende teller met jaarlijkse reset, opgeslagen in app_settings (geen migratie). Nieuwe sectie Offertenummering onder Instellingen met instelbaar startnummer (ondergrens voor het jaar, voor aansluiting op Yoobi bij overstap) en een info-veld dat het eerstvolgende nummer toont. Een calc krijgt zijn nummer pas bij het eerst genereren van het offertedocument (_kenOfferteNummerToe) en behoudt het daarna. Botsing-achtervang: bij een al gebruikt nummer schuift de teller door naar het eerstvolgende vrije nummer met een toast-melding' },
@@ -10136,21 +10160,24 @@ function printOfferteDocument() {
   // Prijstabel-bouwers ---------------------------------------------------
   // a) Per onderdeel (Nacken-stijl): subtotaal per onderdeel onder de hoofdgroep.
   function bouwPrijsPerOnderdeel() {
-    let h = '';
+    let h = `<table><tbody>`;
+    // Projectnaam als kopregel bovenaan (zoals Yoobi)
+    h += `<tr class="proj-row"><td>${c.naam || ''}</td><td class="num right"></td></tr>`;
     c.hoofdgroepen.forEach(hg => {
       const regelsInHg = cij.regels.filter(y => y.hgNaam === hg.naam);
       if (!regelsInHg.length) return;
       const odNamen = [...new Set(regelsInHg.map(y => y.odNaam))];
-      h += `<table><tbody>`;
-      h += `<tr class="hg-row"><td><strong>${hg.naam}</strong></td><td class="num right"></td></tr>`;
       let hgSom = 0;
+      // Elke onderdeel-regel: "Gevel | Onderdeel" met het onderdeel-subtotaal
       odNamen.forEach(odNaam => {
         const som = regelsInHg.filter(y => y.odNaam === odNaam).reduce((s, y) => s + y.toonRegelTotaal, 0);
         hgSom += som;
-        h += `<tr><td style="padding-left:14pt;">${odNaam}</td><td class="num right">${eur(som)}</td></tr>`;
+        h += `<tr><td>${hg.naam} | ${odNaam}</td><td class="num right">${eur(som)}</td></tr>`;
       });
-      h += `</tbody></table>`;
+      // Vetgedrukt gevel-subtotaal ónder de onderdelen
+      h += `<tr class="gevel-sub"><td><strong>${hg.naam}</strong></td><td class="num right"><strong>${eur(hgSom)}</strong></td></tr>`;
     });
+    h += `</tbody></table>`;
     return h;
   }
 
@@ -10189,17 +10216,22 @@ function printOfferteDocument() {
 
   // Bijkomende kosten + eindtotaal (gelijk voor beide weergaven).
   function bouwBijkomendEnTotaal() {
-    let h = `<table><tbody>`;
+    // Bijkomende kosten lopen door in de hoofdlijst (reis + zichtbare staart)
+    let h = `<table class="kosten-extra"><tbody>`;
     if (cij.reisTotaal > 0) {
       h += `<tr><td>Reiskosten</td><td class="num right">${eur(cij.reisZichtbaar)}</td></tr>`;
     }
     cij.staartZichtbaarRows.forEach(p => {
       h += `<tr><td>${p.naam}</td><td class="num right">${eur(p.bedrag)}</td></tr>`;
     });
-    h += `<tr class="totaal-row"><td><strong>Totaal excl. BTW</strong></td><td class="num right">${eur(cij.exBtwFinal)}</td></tr>`;
-    h += `<tr><td>BTW (${sett.btw}%)</td><td class="num right">${eur(cij.btwBedrag)}</td></tr>`;
-    h += `<tr class="grand-row"><td><strong>Totaal incl. ${sett.btw}% BTW</strong></td><td class="num right"><strong>${eur(cij.totaalIncl)}</strong></td></tr>`;
     h += `</tbody></table>`;
+    // Eindtotalen als apart, rechts ingesprongen blok (Yoobi-stijl) met EUR-kolom
+    const f = n => cij.fmt(n);
+    h += `<table class="kosten-eind" style="width:52%;margin-left:48%;margin-right:0;"><tbody>
+      <tr class="te-excl"><td class="lbl">Totaal excl. BTW</td><td class="cur">EUR</td><td class="num right">${f(cij.exBtwFinal)}</td></tr>
+      <tr class="te-btw"><td class="lbl">${sett.btw}%</td><td class="cur">EUR</td><td class="num right">${f(cij.btwBedrag)}</td></tr>
+      <tr class="te-incl"><td class="lbl"><strong>Totaal incl. ${sett.btw}% BTW</strong></td><td class="cur"><strong>EUR</strong></td><td class="num right"><strong>${f(cij.totaalIncl)}</strong></td></tr>
+    </tbody></table>`;
     return h;
   }
 
@@ -10240,11 +10272,8 @@ function printOfferteDocument() {
     if (sec.code === 'briefhoofd' || sec.code === 'ondertekening') return; // apart afgehandeld
 
     if (sec.code === 'prijsopgave') {
-      html += `<div class="section"><h2>${sec.kop}</h2>`;
-      if (cij.staartVerstopt.length > 0) {
-        const namen = cij.staartVerstopt.map(p => p.naam).join(', ');
-        html += `<p style="font-size:8.5pt; color:#666;">In de eenheidsprijzen verwerkt: ${namen}.</p>`;
-      }
+      html += `<div class="section kosten-blok"><h2>${sec.kop}</h2>`;
+      html += `<table class="kosten-kop"><thead><tr><th>Naam</th><th class="right">Totaal excl. BTW</th></tr></thead></table>`;
       html += (prijsWeergave === 'regels') ? bouwPrijsPerRegel() : bouwPrijsPerOnderdeel();
       html += bouwBijkomendEnTotaal();
       html += `</div>`;

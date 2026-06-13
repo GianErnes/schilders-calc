@@ -1,3 +1,17 @@
+## v3.60.3 — Kostenoverzicht in Yoobi-stijl
+Het kostenoverzicht in het offertedocument is nagebouwd naar de vertrouwde Yoobi-offerte, plus drie kleinere correcties.
+
+### Wijzigingen
+- Geveluitsplitsing exact als Yoobi (bouwPrijsPerOnderdeel omgebouwd):
+  - Projectnaam als kopregel bovenaan de tabel (.proj-row).
+  - Per gevel staat elke onderdeel-regel als "Gevel | Onderdeel" met het onderdeel-subtotaal.
+  - Daaronder een vetgedrukt gevel-subtotaal met de volledige gevelnaam (inclusief (straatzijde)/(voordeurzijde)), met een lijn erboven (.gevel-sub).
+- Kolomkop toegevoegd: "Naam" links en "Totaal excl. BTW" rechts, met een lijn eronder (.kosten-kop).
+- Eindtotalen in Yoobi-stijl (bouwBijkomendEnTotaal herschreven): bijkomende kosten (reis + zichtbare staart) lopen door in de lijst; de eindtotalen staan in een apart, rechts ingesprongen blok met een EUR-kolom (Totaal excl. BTW, BTW-percentage, Totaal incl. BTW). De rechts-uitlijning is via inline-style gezet zodat ze betrouwbaar werkt, ongeacht de algemene tabel-CSS.
+- Interne regel "In de eenheidsprijzen verwerkt: Kleinschaligheidstoeslag" verwijderd uit de offerte; dit is interne calculatie-informatie en hoort niet in een klantofferte.
+- Lijntjes om de blokken in het kostenoverzicht verwijderd; alleen de subtiele lijnen onder de kolomkop, boven de gevel-subtotalen en boven het eindtotaal blijven staan.
+- Het kostenblok begint op een eigen pagina (page-break-before: always op .kosten-blok) zodat het altijd compleet bij elkaar staat in plaats van gesplitst over twee pagina's. Let op: test dit in Safari; de paginabreuk kan per print-engine verschillen.
+
 ## v3.60.2 — Strakkere offerte: strepen weg en nette pagina-doorloop
 Twee laatste punten op het offertedocument: de strepen onder de koppen moesten weg, en de tekst sprong met grote witruimte naar nieuwe pagina's.
 
