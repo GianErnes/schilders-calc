@@ -1,4 +1,12 @@
-## v3.61.0 — Doorlopende offerte-PDF met bijlagen (brok A4b)
+## v3.61.1 — Voorwaarden vullen de volledige pagina
+De algemene voorwaarden in de doorlopende PDF stonden te klein op de pagina.
+
+### Wijzigingen
+- Oorzaak: de paginabeelden van de voorwaarden bevatten zelf al de marges van het officiële document, en daar kwam de print-marge van het printvenster (1,5 cm rondom, padding op .print-only) nog eens overheen. Dubbele marge, waardoor de voorwaarden klein in het midden stonden.
+- Oplossing: voor de voorwaardenpagina's (.dpv-vw) wordt de horizontale print-marge opgeheven met negatieve marges van 1,5 cm links en rechts, zodat het beeld de volle paginabreedte pakt. De beeldhoogte is begrensd op 26,5 cm zodat een vol beeld nooit een lege vervolgpagina veroorzaakt. Het beeld staat gecentreerd.
+- Alleen CSS; geen wijziging aan de logica of aan de losse documenten.
+
+
 De offertemodule maakt nu in één keer een complete, doorlopende PDF: het offertedocument met de gekozen bijlagen en de algemene voorwaarden achter elkaar.
 
 ### Wijzigingen

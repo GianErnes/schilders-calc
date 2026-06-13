@@ -1891,8 +1891,10 @@
     .print-only .new-page { page-break-before: always; }
     /* v3.61.0 — doorlopende offerte-PDF: elk bijlage-blok op een nieuwe pagina. */
     .print-only .dpv-pagebreak { page-break-before: always; break-before: page; }
-    .print-only .dpv-vw { page-break-inside: avoid; break-inside: avoid; }
-    .print-only .dpv-vw-img { display: block; width: 100%; height: auto; }
+    /* Voorwaarden-pagina's vol op de pagina: de container-marge (1.5cm) opheffen zodat
+       het beeld de volle breedte pakt. Hoogte begrensd zodat er geen lege pagina volgt. */
+    .print-only .dpv-vw { page-break-inside: avoid; break-inside: avoid; margin-left: -1.5cm; margin-right: -1.5cm; text-align: center; }
+    .print-only .dpv-vw-img { display: inline-block; width: auto; height: auto; max-width: 100%; max-height: 26.5cm; }
     /* v3.24.2 — Foto-bijlage: 2x2 raster per pagina, foto volledig zichtbaar (contain). */
     .print-only .fb-table { width: 100%; border-collapse: collapse; page-break-inside: auto; margin: 0; }
     .print-only .fb-table tr { page-break-inside: avoid; }
@@ -2057,8 +2059,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.61.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.61.1</h2>
       <div class="intro-body">
+        <p><strong>📐 Voorwaarden vullen nu de pagina (v3.61.1).</strong> De algemene voorwaarden in de doorlopende PDF stonden te klein doordat de print-marge boven op de eigen marge van het document kwam. Die dubbele marge is weg; de voorwaardenpagina's vullen nu de volle breedte, net als de rest van de offerte.</p>
         <p><strong>📎 Offerte met bijlagen in één doorlopende PDF (v3.61.0).</strong> In het Offerte-blok staat naast Offertedocument nu de knop Offerte + bijlagen. Die maakt één doorlopende PDF: eerst het offertedocument, dan de getekende kozijnen, dan de foto-bijlage, en als laatste altijd de algemene voorwaarden. Met twee schakelaars in het blok zet je de kozijnen en de foto-bijlage per offerte aan of uit. De juiste voorwaarden (consument of zakelijk) worden automatisch gekozen op basis van het klanttype. De voorwaarden lopen mee als paginabeelden, dus zorg dat de vier PNG-bestanden naast index.html in de repo staan.</p>
         <p><strong>🧾 Kostenoverzicht in Yoobi-stijl (v3.60.3).</strong> Het kostenoverzicht in de offerte is nagebouwd naar je vertrouwde Yoobi-offerte. Per gevel staat nu elke regel als “Gevel | Onderdeel” met het bedrag, en daaronder vetgedrukt het gevel-subtotaal met de volledige gevelnaam. De projectnaam staat als kopregel bovenaan en de eindtotalen staan rechts ingesprongen met een EUR-kolom. De interne regel over de kleinschaligheidstoeslag is uit de offerte gehaald, en het kostenblok begint op een eigen pagina zodat het altijd compleet bij elkaar staat.</p>
         <p><strong>✂️ Strakkere offerte: strepen weg en nette pagina-doorloop (v3.60.2).</strong> Twee laatste puntjes op het offertedocument. De horizontale lijnen onder de koppen zijn weg, het document is nu helemaal lijnloos op de subtiele lijn boven het eindtotaal na. En de tekst loopt nu netjes door over de pagina’s: geen grote witte gaten meer onderaan een pagina. Een kop blijft daarbij nooit alleen onderaan staan, die schuift mee met zijn tekst naar de volgende pagina.</p>
@@ -3070,7 +3073,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.61.0';
+const APP_VERSION = 'v3.61.1';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3432,6 +3435,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.61.1', d: '2026-06-13', h: 'Voorwaarden in de doorlopende PDF vullen nu de volle breedte. De print-marge (1.5cm) kwam boven op de eigen marge van het AV-document (dubbele marge, daardoor klein); voor de dpv-vw-pagina wordt die print-marge nu opgeheven met negatieve marges en is de beeldhoogte begrensd op 26.5cm zodat er geen lege pagina volgt' },
   { v: '3.61.0', d: '2026-06-13', h: 'Doorlopende offerte-PDF (brok A4b): nieuwe knop Offerte + bijlagen in het Offerte-blok maakt in één print het offertedocument, de getekende kozijnen, de foto-bijlage en als laatste de algemene voorwaarden. Twee schakelaars per offerte (kozijnen, foto-bijlage) in offerte_config (geen SQL). AV-variant automatisch op klanttype (consument/zakelijk), meegeleverd als paginabeelden (av-consument-1/2.png, av-zakelijk-1/2.png naast index.html in de repo). Print-functies opgesplitst in herbruikbare HTML-builders (_bouwOfferteDocHtml, _bouwKozijnenHtml, _bouwFotoHtml, _bouwVoorwaardenHtml); losse documenten ongewijzigd' },
   { v: '3.60.3', d: '2026-06-13', h: 'Kostenoverzicht offertedocument nagebouwd naar Yoobi-stijl: per gevel elke onderdeel-regel als \'Gevel | Onderdeel\' met bedrag, daaronder vetgedrukt gevel-subtotaal met volledige gevelnaam (incl. straatzijde/voordeurzijde) en lijn erboven; projectnaam als kopregel bovenaan; kolomkop Naam / Totaal excl. BTW met lijn; eindtotalen in apart rechts-ingesprongen blok met EUR-kolom (inline-style voor betrouwbare uitlijning). Interne regel \'In de eenheidsprijzen verwerkt: Kleinschaligheidstoeslag\' verwijderd uit de offerte. Lijntjes om de blokken weg. Kostenblok begint op eigen pagina (page-break-before) zodat het compleet bij elkaar blijft' },
   { v: '3.60.2', d: '2026-06-13', h: 'Offertedocument verder afgewerkt: alle strepen onder de koppen (h2/h3/h4) verwijderd binnen .off-doc, document nu lijnloos op de subtiele lijn boven het eindtotaal na. Pagina-doorloop verbeterd: secties mogen over paginagrenzen breken (page-break-inside: auto) zodat er geen grote witruimte meer onderaan pagina\'s ontstaat, met page-break-after: avoid op koppen en orphans/widows op de tekst zodat een kop nooit los onderaan een pagina belandt. Tabelrijen breken niet doormidden' },
