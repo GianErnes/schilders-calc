@@ -1889,6 +1889,10 @@
     }
     .print-only .summary-grid .label { font-weight: 600; color: #555; }
     .print-only .new-page { page-break-before: always; }
+    /* v3.61.0 — doorlopende offerte-PDF: elk bijlage-blok op een nieuwe pagina. */
+    .print-only .dpv-pagebreak { page-break-before: always; break-before: page; }
+    .print-only .dpv-vw { page-break-inside: avoid; break-inside: avoid; }
+    .print-only .dpv-vw-img { display: block; width: 100%; height: auto; }
     /* v3.24.2 — Foto-bijlage: 2x2 raster per pagina, foto volledig zichtbaar (contain). */
     .print-only .fb-table { width: 100%; border-collapse: collapse; page-break-inside: auto; margin: 0; }
     .print-only .fb-table tr { page-break-inside: avoid; }
@@ -2053,8 +2057,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.60.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.61.0</h2>
       <div class="intro-body">
+        <p><strong>📎 Offerte met bijlagen in één doorlopende PDF (v3.61.0).</strong> In het Offerte-blok staat naast Offertedocument nu de knop Offerte + bijlagen. Die maakt één doorlopende PDF: eerst het offertedocument, dan de getekende kozijnen, dan de foto-bijlage, en als laatste altijd de algemene voorwaarden. Met twee schakelaars in het blok zet je de kozijnen en de foto-bijlage per offerte aan of uit. De juiste voorwaarden (consument of zakelijk) worden automatisch gekozen op basis van het klanttype. De voorwaarden lopen mee als paginabeelden, dus zorg dat de vier PNG-bestanden naast index.html in de repo staan.</p>
         <p><strong>🧾 Kostenoverzicht in Yoobi-stijl (v3.60.3).</strong> Het kostenoverzicht in de offerte is nagebouwd naar je vertrouwde Yoobi-offerte. Per gevel staat nu elke regel als “Gevel | Onderdeel” met het bedrag, en daaronder vetgedrukt het gevel-subtotaal met de volledige gevelnaam. De projectnaam staat als kopregel bovenaan en de eindtotalen staan rechts ingesprongen met een EUR-kolom. De interne regel over de kleinschaligheidstoeslag is uit de offerte gehaald, en het kostenblok begint op een eigen pagina zodat het altijd compleet bij elkaar staat.</p>
         <p><strong>✂️ Strakkere offerte: strepen weg en nette pagina-doorloop (v3.60.2).</strong> Twee laatste puntjes op het offertedocument. De horizontale lijnen onder de koppen zijn weg, het document is nu helemaal lijnloos op de subtiele lijn boven het eindtotaal na. En de tekst loopt nu netjes door over de pagina’s: geen grote witte gaten meer onderaan een pagina. Een kop blijft daarbij nooit alleen onderaan staan, die schuift mee met zijn tekst naar de volgende pagina.</p>
         <p><strong>🎨 Logo in het offertedocument en rustige prijstabel (v3.60.1).</strong> Het briefhoofd toont nu het Ernes-logo. Logo en handtekening zijn ingebakken in de code, dus er hoeven geen losse bestanden meer in de repo te staan en het werkt overal gegarandeerd. De prijstabel in het offertedocument is rustiger gemaakt: de horizontale strepen tussen de regels zijn weg, alleen een subtiele lijn boven de bijkomende kosten en boven het eindtotaal blijft staan.</p>
@@ -2267,6 +2272,7 @@
         <span style="color:var(--muted); font-size:0.8rem;">teksten en instellingen voor het offertedocument</span>
         <button class="btn btn-secondary btn-sm lock-allowed" style="margin-left:auto;" onclick="event.preventDefault(); event.stopPropagation(); openOffertePreview()">👁 Voorbeeld</button>
         <button class="btn btn-sm lock-allowed" onclick="event.preventDefault(); event.stopPropagation(); printOfferteDocument()">📄 Offertedocument</button>
+        <button class="btn btn-sm lock-allowed" onclick="event.preventDefault(); event.stopPropagation(); printOfferteCompleet()">📎 Offerte + bijlagen</button>
       </summary>
       <div id="offerteBlokBody" style="padding:0 0.8rem 0.8rem;"></div>
     </details>
@@ -3064,7 +3070,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.60.3';
+const APP_VERSION = 'v3.61.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3426,6 +3432,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.61.0', d: '2026-06-13', h: 'Doorlopende offerte-PDF (brok A4b): nieuwe knop Offerte + bijlagen in het Offerte-blok maakt in één print het offertedocument, de getekende kozijnen, de foto-bijlage en als laatste de algemene voorwaarden. Twee schakelaars per offerte (kozijnen, foto-bijlage) in offerte_config (geen SQL). AV-variant automatisch op klanttype (consument/zakelijk), meegeleverd als paginabeelden (av-consument-1/2.png, av-zakelijk-1/2.png naast index.html in de repo). Print-functies opgesplitst in herbruikbare HTML-builders (_bouwOfferteDocHtml, _bouwKozijnenHtml, _bouwFotoHtml, _bouwVoorwaardenHtml); losse documenten ongewijzigd' },
   { v: '3.60.3', d: '2026-06-13', h: 'Kostenoverzicht offertedocument nagebouwd naar Yoobi-stijl: per gevel elke onderdeel-regel als \'Gevel | Onderdeel\' met bedrag, daaronder vetgedrukt gevel-subtotaal met volledige gevelnaam (incl. straatzijde/voordeurzijde) en lijn erboven; projectnaam als kopregel bovenaan; kolomkop Naam / Totaal excl. BTW met lijn; eindtotalen in apart rechts-ingesprongen blok met EUR-kolom (inline-style voor betrouwbare uitlijning). Interne regel \'In de eenheidsprijzen verwerkt: Kleinschaligheidstoeslag\' verwijderd uit de offerte. Lijntjes om de blokken weg. Kostenblok begint op eigen pagina (page-break-before) zodat het compleet bij elkaar blijft' },
   { v: '3.60.2', d: '2026-06-13', h: 'Offertedocument verder afgewerkt: alle strepen onder de koppen (h2/h3/h4) verwijderd binnen .off-doc, document nu lijnloos op de subtiele lijn boven het eindtotaal na. Pagina-doorloop verbeterd: secties mogen over paginagrenzen breken (page-break-inside: auto) zodat er geen grote witruimte meer onderaan pagina\'s ontstaat, met page-break-after: avoid op koppen en orphans/widows op de tekst zodat een kop nooit los onderaan een pagina belandt. Tabelrijen breken niet doormidden' },
   { v: '3.60.1', d: '2026-06-13', h: 'Fix en opmaak voor het offertedocument: logo verscheen niet omdat erneslogo.png niet in de repo stond. Logo en handtekening zijn nu ingebakken als centrale globale constanten (LOGO_ERNES, HANDTEKENING_ERNES), bereikbaar voor alle print-functies; de lokale logo-definitie in het onderhoudsplan is verwijderd zodat er één bron is. Geen losse bestanden meer nodig. Daarnaast is de prijstabel in het offertedocument lijnloos gemaakt (wrapper .off-doc): horizontale regelstrepen weg, alleen subtiele lijn boven bijkomende kosten en eindtotaal' },
@@ -4325,6 +4332,8 @@ function _offCfg() {
   if (!cfg.geldigTot) cfg.geldigTot = _offIsoPlusDagen(cfg.offertedatum, 30);
   if (cfg.garantiejaren == null) cfg.garantiejaren = '';
   if (cfg.prijsWeergave !== 'regels') cfg.prijsWeergave = 'onderdeel';
+  if (typeof cfg.bijlageKozijnen !== 'boolean') cfg.bijlageKozijnen = true;
+  if (typeof cfg.bijlageFotos !== 'boolean') cfg.bijlageFotos = true;
   if (!cfg.secties || typeof cfg.secties !== 'object') cfg.secties = {};
   OFFERTE_SECTIES.filter(s => s.type === 'tekst').forEach(s => {
     if (!cfg.secties[s.code] || typeof cfg.secties[s.code] !== 'object') {
@@ -4437,6 +4446,21 @@ function renderOfferteBlok() {
         <option value="regels" ${cfg.prijsWeergave === 'regels' ? 'selected' : ''}>Regels (hoeveelheid en eenheidsprijs)</option>
       </select>
     </div>
+  </div>`;
+  // v3.61.0 — bijlage-schakelaars voor de doorlopende offerte-PDF.
+  const _kozAanwezig = (c.meetstaat || []).some(ms => ms.tekening && ms.tekening.vorm);
+  const _fotoAanwezig = (c.fotos || []).length > 0;
+  html += `<div style="border:1px solid #e5e7eb; border-radius:8px; padding:0.6rem 0.8rem; margin-bottom:0.8rem; background:#fff;">
+    <div style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem;">Bijlagen in de doorlopende PDF</div>
+    <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; margin-bottom:0.25rem;">
+      <input type="checkbox" ${cfg.bijlageKozijnen ? 'checked' : ''} onchange="_offCfgVeld('bijlageKozijnen', this.checked)">
+      <span>Getekende kozijnen${_kozAanwezig ? '' : ' <span style="color:var(--muted);">(geen in deze calc)</span>'}</span>
+    </label>
+    <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem;">
+      <input type="checkbox" ${cfg.bijlageFotos ? 'checked' : ''} onchange="_offCfgVeld('bijlageFotos', this.checked)">
+      <span>Foto-bijlage${_fotoAanwezig ? '' : ' <span style="color:var(--muted);">(geen in deze calc)</span>'}</span>
+    </label>
+    <div style="margin-top:0.4rem; font-size:0.72rem; color:var(--muted);">De algemene voorwaarden (${cfg.klanttype === 'zakelijk' ? 'zakelijk' : 'consument'}) gaan altijd als laatste mee.</div>
   </div>`;
   OFFERTE_SECTIES.forEach(sec => {
     if (sec.type === 'auto') {
@@ -9061,13 +9085,9 @@ function _setPrintTitle(suffix) {
 // v3.24.2 — Foto-bijlage als PDF: kop in calc-stijl + 2x2-raster per pagina met bijschriften.
 // Async: wacht op signed links én op het laden van de afbeeldingen vóór window.print(),
 // zodat er geen lege vlakken op papier komen. Onderdeel van de Archiveren-sequentie.
-async function printFotoBijlage() {
-  const c = data.calc;
-  if (!c) return;
-  const fotos = (c.fotos || []);
-  if (!fotos.length) { _toast('Geen foto\u2019s om te printen'); return; }
-  const missing = fotos.filter(f => !f.signedUrl);
-  if (missing.length) await _signFotoUrls(missing);
+// v3.61.0 — bouwt alleen de foto-bijlage-HTML (geen print). De signed links moeten
+// vooraf gezet zijn; het printen en wachten gebeurt in de aanroepende functie.
+function _bouwFotoHtml(c, fotos) {
   const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
 
   // Legenda: welke gebrek-types komen voor op de foto's?
@@ -9128,7 +9148,18 @@ async function printFotoBijlage() {
     html += '</tr>';
   }
   html += '</tbody></table>';
+  return html;
+}
 
+// Losse foto-bijlage printen (ongewijzigd gedrag).
+async function printFotoBijlage() {
+  const c = data.calc;
+  if (!c) return;
+  const fotos = (c.fotos || []);
+  if (!fotos.length) { _toast('Geen foto\u2019s om te printen'); return; }
+  const missing = fotos.filter(f => !f.signedUrl);
+  if (missing.length) await _signFotoUrls(missing);
+  const html = _bouwFotoHtml(c, fotos);
   const area = document.getElementById('printArea');
   area.innerHTML = html;
   _setPrintTitle('fotobijlage');
@@ -9150,11 +9181,8 @@ async function printFotoBijlage() {
 // rechts), genummerde gebrek-stippen met notitie-lijst. Legenda onderaan toont alleen
 // de voorkomende gebrek-types (zelfde conventie als de foto-bijlage). Onderdeel van de
 // Archiveren-sequentie. Geen externe afbeeldingen, dus synchroon printbaar.
-function printKozijnen() {
-  const c = data.calc;
-  if (!c) return;
-  const kozijnen = (c.meetstaat || []).filter(ms => ms.tekening && ms.tekening.vorm);
-  if (!kozijnen.length) { _toast('Geen getekende kozijnen in deze calculatie'); return; }
+// v3.61.0 — bouwt alleen de kozijnen-HTML (geen print) voor hergebruik in de doorlopende PDF.
+function _bouwKozijnenHtml(c, kozijnen) {
   const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
 
   let html = `<div class="header-block">
@@ -9241,6 +9269,16 @@ function printKozijnen() {
     html += `<div class="fb-legenda" style="margin-top:10pt; padding-top:8pt; border-top:0.5pt solid #ccc;">${legendaTypes.map(k => `<span><i style="background:${_KOZIJN_DEFECTEN[k].kleur};"></i>${_escapeHtml(_KOZIJN_DEFECTEN[k].label)}</span>`).join('')}</div>`;
   }
 
+  return html;
+}
+
+// Losse kozijnen-PDF printen (ongewijzigd gedrag).
+function printKozijnen() {
+  const c = data.calc;
+  if (!c) return;
+  const kozijnen = (c.meetstaat || []).filter(ms => ms.tekening && ms.tekening.vorm);
+  if (!kozijnen.length) { _toast('Geen getekende kozijnen in deze calculatie'); return; }
+  const html = _bouwKozijnenHtml(c, kozijnen);
   document.getElementById('printArea').innerHTML = html;
   _setPrintTitle('kozijnen');
   window.print();
@@ -10133,14 +10171,16 @@ function printOfferteYoobi() {
 // weergave (per onderdeel = Nacken-stijl, of regels = Yoobi-stijl).
 // Bijlagen en samenvoegen volgen in A4b.
 // ============================================================
-function printOfferteDocument() {
+// v3.61.0 — bouwt alleen de offertedocument-HTML (geen print), zodat zowel
+// het losse document als de doorlopende PDF dezelfde opbouw delen.
+function _bouwOfferteDocHtml() {
   const c = data.calc;
-  if (!c) { _toast('Geen actieve calculatie'); return; }
+  if (!c) { _toast('Geen actieve calculatie'); return null; }
   const cfg = _offCfg();
   const cij = _berekenOfferteCijfers(c);
   if (!cij) {
     alert('Deze calculatie bevat geen regels met inhoud. Voeg minimaal één regel met hoeveelheid en verfsysteem toe.');
-    return;
+    return null;
   }
   const sett = cij.sett;
   const eur = cij.eur, fmt = cij.fmt;
@@ -10340,8 +10380,71 @@ function printOfferteDocument() {
   html += `<div class="footer-block">Offerte ${offNr} · ${BEDRIJF.naam} · ${datumLang}</div>`;
   html += '</div>'; // .off-doc
 
+  return html;
+}
+
+// Het losse offertedocument printen (ongewijzigd gedrag).
+function printOfferteDocument() {
+  const html = _bouwOfferteDocHtml();
+  if (html == null) return;
   document.getElementById('printArea').innerHTML = html;
   _setPrintTitle('offerte');
+  window.print();
+}
+
+// v3.61.0 — algemene voorwaarden als paginabeelden, variant per klanttype.
+// De PNG's staan naast index.html in de repo (zie repo-root).
+function _bouwVoorwaardenHtml(klanttype) {
+  const paginas = (klanttype === 'zakelijk')
+    ? ['av-zakelijk-1.png', 'av-zakelijk-2.png']
+    : ['av-consument-1.png', 'av-consument-2.png'];
+  return paginas.map(src =>
+    `<div class="dpv-blok dpv-pagebreak dpv-vw"><img class="dpv-vw-img" src="${src}" alt="Algemene voorwaarden"></div>`
+  ).join('');
+}
+
+// v3.61.0 — A4b: de doorlopende offerte-PDF. Offertedocument, dan de gekozen
+// bijlagen (kozijnen, foto's), dan altijd de algemene voorwaarden, in één print.
+async function printOfferteCompleet() {
+  const c = data.calc;
+  if (!c) { _toast('Geen actieve calculatie'); return; }
+  const cfg = _offCfg();
+
+  // 1. Offertedocument (zelfde opbouw als het losse document).
+  const offHtml = _bouwOfferteDocHtml();
+  if (offHtml == null) return; // melding is al getoond
+  let html = `<div class="dpv-blok">${offHtml}</div>`;
+
+  // 2. Getekende kozijnen (indien aan en aanwezig).
+  const kozijnen = (c.meetstaat || []).filter(ms => ms.tekening && ms.tekening.vorm);
+  if (cfg.bijlageKozijnen !== false && kozijnen.length) {
+    html += `<div class="dpv-blok dpv-pagebreak">${_bouwKozijnenHtml(c, kozijnen)}</div>`;
+  }
+
+  // 3. Foto-bijlage (indien aan en aanwezig). Signed links eerst zetten.
+  const fotos = (c.fotos || []);
+  if (cfg.bijlageFotos !== false && fotos.length) {
+    const missing = fotos.filter(f => !f.signedUrl);
+    if (missing.length) await _signFotoUrls(missing);
+    html += `<div class="dpv-blok dpv-pagebreak">${_bouwFotoHtml(c, fotos)}</div>`;
+  }
+
+  // 4. Algemene voorwaarden (altijd, variant per klanttype).
+  html += _bouwVoorwaardenHtml(cfg.klanttype === 'zakelijk' ? 'zakelijk' : 'consument');
+
+  const area = document.getElementById('printArea');
+  area.innerHTML = html;
+  _setPrintTitle('offerte');
+
+  // Wacht op alle afbeeldingen (foto's, voorwaarden, logo, handtekening) vóór de print-dialoog.
+  const imgs = Array.from(area.querySelectorAll('img'));
+  await Promise.all(imgs.map(img => img.complete
+    ? Promise.resolve()
+    : new Promise(res => { img.onload = img.onerror = res; })));
+  area.querySelectorAll('.fb-imgwrap').forEach(w => {
+    const im = w.querySelector('img');
+    if (im && im.naturalWidth && im.naturalHeight) w.style.aspectRatio = im.naturalWidth + ' / ' + im.naturalHeight;
+  });
   window.print();
 }
 // (geen prijzen, geen uren — wel materiaalverbruik per onderdeel + totaal)

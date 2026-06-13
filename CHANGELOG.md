@@ -1,4 +1,16 @@
-## v3.60.3 — Kostenoverzicht in Yoobi-stijl
+## v3.61.0 — Doorlopende offerte-PDF met bijlagen (brok A4b)
+De offertemodule maakt nu in één keer een complete, doorlopende PDF: het offertedocument met de gekozen bijlagen en de algemene voorwaarden achter elkaar.
+
+### Wijzigingen
+- Nieuwe knop Offerte + bijlagen in het Offerte-blok onderaan de Calculatie-tab, naast Offertedocument en Voorbeeld. Functie printOfferteCompleet bouwt alles in één printArea en doet één window.print(), zodat de browser er via Opslaan als PDF één doorlopend document van maakt.
+- Volgorde in de PDF: 1) het offertedocument, 2) de getekende kozijnen (indien aan en aanwezig), 3) de foto-bijlage (indien aan en aanwezig), 4) altijd de algemene voorwaarden. Tussen elk blok een paginabreuk.
+- Twee schakelaars per offerte in het Offerte-blok: Getekende kozijnen en Foto-bijlage. Opgeslagen in calculaties.offerte_config (JSON), standaard aan. Geen SQL-migratie nodig.
+- De algemene voorwaarden lopen mee als paginabeelden. De variant (consument of zakelijk) wordt automatisch gekozen op basis van het klanttype uit het Offerte-blok. Vereist dat de vier PNG-bestanden naast index.html in de repo staan: av-consument-1.png, av-consument-2.png, av-zakelijk-1.png, av-zakelijk-2.png (A4 op 150 dpi, officiële STAF-voorwaarden).
+- De print-functies zijn opgesplitst in herbruikbare HTML-builders zonder gedragsverandering voor de losse documenten: _bouwOfferteDocHtml (uit printOfferteDocument), _bouwKozijnenHtml (uit printKozijnen) en _bouwFotoHtml (uit printFotoBijlage). De losse knoppen en de Archiveren-flow blijven exact hetzelfde werken.
+- Geen Supabase-migratie en geen PDF-merge-library: alles loopt via de bestaande HTML-plus-window.print()-route. Werkt ook offline op de iPad zodra de beelden in de repo staan.
+- De aankondiging van de bijlagen in het offertedocument zelf (sectie Bijlagen) blijft zoals in A4a; de werkelijke bijlagen zitten nu in de doorlopende PDF.
+
+
 Het kostenoverzicht in het offertedocument is nagebouwd naar de vertrouwde Yoobi-offerte, plus drie kleinere correcties.
 
 ### Wijzigingen
