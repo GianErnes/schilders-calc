@@ -1,3 +1,12 @@
+## v3.65.0 — Akkoord-stempel op de offerte
+Na akkoord toont de offerte op de accord-pagina dat en wanneer de klant akkoord heeft gegeven.
+
+### Wijzigingen
+- Zodra een klant akkoord geeft, verschijnt in het ondertekenvak van de offerte de regel "Digitaal geaccordeerd door [naam] op [datum]". De klant ziet zo op het document zelf dat hij akkoord is gegaan en op welke datum. Slaat hij de accord-pagina op als PDF, dan staat de stempel erin.
+- De stempel verschijnt direct na het akkoord en ook wanneer de klant de link later opnieuw opent.
+- Het IP-adres blijft als bewijs in de database staan, maar wordt bewust niet op het papier gezet.
+- Nog niet hierin: de bevestigingsmail aan de klant en het seintje aan jou bij een reactie. Die vragen eerst het opzetten van de mailprovider (Resend) en de domeinverificatie, en volgen als apart blok.
+
 ## v3.64.0 — Kozijnen en foto's op de accord-pagina
 De accordeerlink toont nu het volledige document: offerte, getekende kozijnen, foto-bijlage en algemene voorwaarden, net als de knop Offerte + bijlagen.
 
