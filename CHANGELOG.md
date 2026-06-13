@@ -1,3 +1,13 @@
+## v3.63.1 — Algemene voorwaarden op de accord-pagina en vinkje-fix
+De accordeerlink toont nu ook de algemene voorwaarden, en het akkoord-vinkje staat weer netjes.
+
+### Wijzigingen
+- De algemene voorwaarden lopen nu mee op de publieke accord-pagina, onder het offertedocument, in de juiste variant (consument of zakelijk) op basis van het klanttype. Ze worden als paginabeelden in het snapshot bevroren op het moment dat je de link aanmaakt, met absolute URLs zodat ze ook in het iframe van de klantpagina laden.
+- Het iframe berekent zijn hoogte opnieuw zodra die voorwaarden-beelden geladen zijn, zodat de pagina niet halverwege wordt afgekapt.
+- Akkoord-vinkje-fix: de app geeft alle invoervelden standaard volledige breedte, en daardoor werd het selectievakje opgerekt en viel de akkoordtekst ernaast weg. Het vakje krijgt nu een eigen breedte, zodat vakje en tekst weer naast elkaar staan.
+- Let op: maak voor een bestaande offerte even een nieuwe accordeerlink, dan zitten de voorwaarden in het snapshot. Bestaande links tonen nog de oude versie zonder voorwaarden.
+- De getekende kozijnen en de foto-bijlage staan nog niet op de accord-pagina. Die volgen apart: de fotolinks van Supabase verlopen na een uur en moeten met een lange houdbaarheid bevroren worden, en de bijlagen leunen op de print-opmaak die voor het scherm meegenomen moet worden.
+
 ## v3.63.0 — Aanspreekvorm in de aanhef en melding bij reacties
 Twee verbeteringen rond de offerte: een nette aanhef met aanspreekvorm, en een melding op het dashboard zodra een klant reageert.
 
