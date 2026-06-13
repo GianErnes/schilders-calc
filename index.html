@@ -2059,8 +2059,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.61.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.62.0</h2>
       <div class="intro-body">
+        <p><strong>🔗 Accorderen via een unieke link (v3.62.0).</strong> Per offerte maak je nu een eigen accordeerlink. In het Offerte-blok staat de knop Accordeerlink: die legt de offerte vast zoals die nu is en geeft je een link voor de klant. De klant opent die link zonder in te loggen, ziet de volledige offerte en kan akkoord geven, afwijzen of een vraag stellen. Bij akkoord moet de klant zijn naam invullen en het akkoord aanvinken; de offerte springt dan op Geaccepteerd. Bij afwijzen springt hij op Verloren. Naam, tijdstip en opmerking worden vastgelegd, zodat dit het ondertekenen in Yoobi vervangt. Een vraag laat de offerte open staan. Vereist de SQL-migratie en de Edge Function offerte-accord in Supabase (eenmalig, al gedaan).</p>
         <p><strong>📐 Voorwaarden vullen nu de pagina (v3.61.1).</strong> De algemene voorwaarden in de doorlopende PDF stonden te klein doordat de print-marge boven op de eigen marge van het document kwam. Die dubbele marge is weg; de voorwaardenpagina's vullen nu de volle breedte, net als de rest van de offerte.</p>
         <p><strong>📎 Offerte met bijlagen in één doorlopende PDF (v3.61.0).</strong> In het Offerte-blok staat naast Offertedocument nu de knop Offerte + bijlagen. Die maakt één doorlopende PDF: eerst het offertedocument, dan de getekende kozijnen, dan de foto-bijlage, en als laatste altijd de algemene voorwaarden. Met twee schakelaars in het blok zet je de kozijnen en de foto-bijlage per offerte aan of uit. De juiste voorwaarden (consument of zakelijk) worden automatisch gekozen op basis van het klanttype. De voorwaarden lopen mee als paginabeelden, dus zorg dat de vier PNG-bestanden naast index.html in de repo staan.</p>
         <p><strong>🧾 Kostenoverzicht in Yoobi-stijl (v3.60.3).</strong> Het kostenoverzicht in de offerte is nagebouwd naar je vertrouwde Yoobi-offerte. Per gevel staat nu elke regel als “Gevel | Onderdeel” met het bedrag, en daaronder vetgedrukt het gevel-subtotaal met de volledige gevelnaam. De projectnaam staat als kopregel bovenaan en de eindtotalen staan rechts ingesprongen met een EUR-kolom. De interne regel over de kleinschaligheidstoeslag is uit de offerte gehaald, en het kostenblok begint op een eigen pagina zodat het altijd compleet bij elkaar staat.</p>
@@ -2276,6 +2277,7 @@
         <button class="btn btn-secondary btn-sm lock-allowed" style="margin-left:auto;" onclick="event.preventDefault(); event.stopPropagation(); openOffertePreview()">👁 Voorbeeld</button>
         <button class="btn btn-sm lock-allowed" onclick="event.preventDefault(); event.stopPropagation(); printOfferteDocument()">📄 Offertedocument</button>
         <button class="btn btn-sm lock-allowed" onclick="event.preventDefault(); event.stopPropagation(); printOfferteCompleet()">📎 Offerte + bijlagen</button>
+        <button class="btn btn-secondary btn-sm lock-allowed" onclick="event.preventDefault(); event.stopPropagation(); accordLinkBeheer()">🔗 Accordeerlink</button>
       </summary>
       <div id="offerteBlokBody" style="padding:0 0.8rem 0.8rem;"></div>
     </details>
@@ -3073,7 +3075,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.61.1';
+const APP_VERSION = 'v3.62.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3435,6 +3437,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.62.0', d: '2026-06-13', h: 'Accorderen via unieke link per offerte (vervangt Yoobi-ondertekenen). Knop Accordeerlink in het Offerte-blok legt een snapshot van de offerte vast en geeft een publieke link (?accord=TOKEN). De klant opent die zonder login, ziet de bevroren offerte read-only in een iframe en kan akkoord geven (naam verplicht + akkoord-vinkje, calc -> geaccepteerd), afwijzen (naam + reden, calc -> verloren) of een vraag stellen (offerte blijft open). Naam, tijdstip, IP en opmerking worden vastgelegd. Publieke kant praat alleen met de Edge Function offerte-accord (service-sleutel, buiten RLS); klant raakt de database nooit rechtstreeks. Nieuwe tabel offerte_accorderingen (eenmalige SQL) en Edge Function offerte-accord in Supabase' },
   { v: '3.61.1', d: '2026-06-13', h: 'Voorwaarden in de doorlopende PDF vullen nu de volle breedte. De print-marge (1.5cm) kwam boven op de eigen marge van het AV-document (dubbele marge, daardoor klein); voor de dpv-vw-pagina wordt die print-marge nu opgeheven met negatieve marges en is de beeldhoogte begrensd op 26.5cm zodat er geen lege pagina volgt' },
   { v: '3.61.0', d: '2026-06-13', h: 'Doorlopende offerte-PDF (brok A4b): nieuwe knop Offerte + bijlagen in het Offerte-blok maakt in één print het offertedocument, de getekende kozijnen, de foto-bijlage en als laatste de algemene voorwaarden. Twee schakelaars per offerte (kozijnen, foto-bijlage) in offerte_config (geen SQL). AV-variant automatisch op klanttype (consument/zakelijk), meegeleverd als paginabeelden (av-consument-1/2.png, av-zakelijk-1/2.png naast index.html in de repo). Print-functies opgesplitst in herbruikbare HTML-builders (_bouwOfferteDocHtml, _bouwKozijnenHtml, _bouwFotoHtml, _bouwVoorwaardenHtml); losse documenten ongewijzigd' },
   { v: '3.60.3', d: '2026-06-13', h: 'Kostenoverzicht offertedocument nagebouwd naar Yoobi-stijl: per gevel elke onderdeel-regel als \'Gevel | Onderdeel\' met bedrag, daaronder vetgedrukt gevel-subtotaal met volledige gevelnaam (incl. straatzijde/voordeurzijde) en lijn erboven; projectnaam als kopregel bovenaan; kolomkop Naam / Totaal excl. BTW met lijn; eindtotalen in apart rechts-ingesprongen blok met EUR-kolom (inline-style voor betrouwbare uitlijning). Interne regel \'In de eenheidsprijzen verwerkt: Kleinschaligheidstoeslag\' verwijderd uit de offerte. Lijntjes om de blokken weg. Kostenblok begint op eigen pagina (page-break-before) zodat het compleet bij elkaar blijft' },
@@ -16018,6 +16021,11 @@ document.getElementById('headerVersion').textContent = APP_VERSION + ' · Voorca
 document.getElementById('appFooter').textContent = 'Schilders Calculatie · ' + APP_VERSION + ' · Data via Supabase cloud';
 
 async function init() {
+  // v3.62.0 — Accord-via-link: staat ?accord=TOKEN in de URL, dan neemt de
+  // publieke accord-pagina het over. Geen login, geen app, geen data-load.
+  const _accordTk = new URLSearchParams(location.search).get('accord');
+  if (_accordTk) { _accordPaginaTonen(_accordTk); return; }
+
   // Maak Supabase client met Auth ingeschakeld
   // detectSessionInUrl=true: leest het access_token uit de URL-hash bij terugkomst uit reset-mail
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -16049,6 +16057,417 @@ async function init() {
   } else {
     document.getElementById('authOverlay').classList.add('active');
   }
+}
+
+
+/* ===== v3.62.0 accord-via-link (CSS) ===== */
+/* v3.62.0 — opmaak voor de publieke accord-pagina en het linkbeheer.
+   Bewust eigen, voorvoegsel-klassen (ac- / acb-) zodat niets botst met de app. */
+const _ACCORD_UI_CSS = `
+#accordRoot { position:fixed; inset:0; overflow:auto; background:#eceae5; z-index:100000; -webkit-text-size-adjust:100%; }
+#accordRoot, #accordRoot * { box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
+#accordRoot .ac-wrap { max-width:820px; margin:0 auto; padding:18px 14px 60px; }
+#accordRoot .ac-laden { padding:60px 20px; text-align:center; color:#666; }
+#accordRoot .ac-kop { text-align:center; padding:14px 0 10px; }
+#accordRoot .ac-kop-titel { font-size:1.4rem; font-weight:700; color:#222; }
+#accordRoot .ac-kop-sub { color:#666; margin-top:2px; }
+#accordRoot .ac-banner { border-radius:10px; padding:12px 14px; margin:10px 0; font-weight:600; text-align:center; }
+#accordRoot .ac-banner.ac-ok { background:#e6f5ec; color:#15803d; border:1px solid #bbe3c9; }
+#accordRoot .ac-banner.ac-nee { background:#fdecec; color:#b42318; border:1px solid #f3c6c2; }
+#accordRoot .ac-offerte { width:100%; border:1px solid #d8d5cd; border-radius:10px; background:#fff; min-height:320px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+#accordRoot .ac-kaart { background:#fff; border:1px solid #d8d5cd; border-radius:12px; padding:16px; margin-top:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+#accordRoot .ac-kaart.ac-fout { max-width:520px; margin:60px auto; text-align:center; }
+#accordRoot .ac-knoppen { display:flex; gap:10px; flex-wrap:wrap; }
+#accordRoot .ac-btn { flex:1 1 140px; padding:14px 12px; border-radius:10px; border:1px solid transparent; font-size:1rem; font-weight:600; cursor:pointer; }
+#accordRoot .ac-btn-ok { background:#16a34a; color:#fff; }
+#accordRoot .ac-btn-nee { background:#fff; color:#b42318; border-color:#e3b6b1; }
+#accordRoot .ac-btn-vraag { background:#fff; color:#1f6feb; border-color:#b7cdf3; }
+#accordRoot .ac-btn.actief { outline:3px solid rgba(0,0,0,.12); }
+#accordRoot .ac-form { margin-top:14px; display:flex; flex-direction:column; gap:4px; }
+#accordRoot .ac-lbl { font-size:.85rem; color:#444; font-weight:600; margin-top:8px; }
+#accordRoot .ac-ster { color:#b42318; }
+#accordRoot .ac-input { width:100%; padding:11px 12px; border:1px solid #cfccc4; border-radius:8px; font-size:1rem; font-family:inherit; }
+#accordRoot .ac-check { display:flex; gap:8px; align-items:flex-start; font-size:.9rem; color:#333; margin-top:10px; line-height:1.4; }
+#accordRoot .ac-check input { margin-top:3px; flex:0 0 auto; }
+#accordRoot .ac-submit { margin-top:14px; padding:14px; border-radius:10px; border:none; color:#fff; font-size:1rem; font-weight:700; cursor:pointer; }
+#accordRoot .ac-submit-ok { background:#16a34a; }
+#accordRoot .ac-submit-nee { background:#b42318; }
+#accordRoot .ac-submit-vraag { background:#1f6feb; }
+#accordRoot .ac-submit:disabled { opacity:.6; cursor:default; }
+#accordRoot .ac-melding { margin-top:12px; border-radius:10px; padding:12px 14px; }
+#accordRoot .ac-melding.ac-ok { background:#e6f5ec; color:#15803d; }
+#accordRoot .ac-voet { text-align:center; color:#999; font-size:.8rem; margin-top:22px; }
+
+#accordBeheerOverlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:9999; padding:16px; }
+#accordBeheerOverlay, #accordBeheerOverlay * { box-sizing:border-box; }
+#accordBeheerOverlay .acb-modal { background:#fff; border-radius:12px; max-width:560px; width:100%; max-height:90vh; overflow:auto; padding:22px; position:relative; box-shadow:0 10px 40px rgba(0,0,0,.25); }
+#accordBeheerOverlay .acb-close { position:absolute; top:10px; right:12px; border:none; background:none; font-size:1.2rem; cursor:pointer; color:#888; }
+#accordBeheerOverlay .acb-body h3 { margin:0 0 4px; font-size:1.1rem; }
+#accordBeheerOverlay .acb-sub { color:#666; font-size:.82rem; margin-bottom:10px; display:block; }
+#accordBeheerOverlay .acb-linkrow { display:flex; gap:8px; margin:6px 0 14px; }
+#accordBeheerOverlay .acb-linkrow input { flex:1; min-width:0; padding:10px; border:1px solid #cfccc4; border-radius:8px; font-size:.82rem; }
+#accordBeheerOverlay .acb-status { border-radius:8px; padding:10px 12px; margin:10px 0; font-weight:600; line-height:1.4; }
+#accordBeheerOverlay .acb-status.open { background:#fff7e6; color:#9a6700; border:1px solid #f0d9a8; }
+#accordBeheerOverlay .acb-status.akkoord { background:#e6f5ec; color:#15803d; border:1px solid #bbe3c9; }
+#accordBeheerOverlay .acb-status.afgekeurd { background:#fdecec; color:#b42318; border:1px solid #f3c6c2; }
+#accordBeheerOverlay .acb-vragen { background:#f4f3ef; border-radius:8px; padding:10px 12px; margin:10px 0; font-size:.85rem; }
+#accordBeheerOverlay .acb-btn { padding:11px 14px; border-radius:8px; border:none; background:#16a34a; color:#fff; font-weight:600; cursor:pointer; }
+#accordBeheerOverlay .acb-btn.sec { background:#fff; color:#333; border:1px solid #cfccc4; margin-top:6px; }
+#accordBeheerOverlay .acb-fout { color:#b42318; }
+`;
+
+const _ACCORD_OFFERTE_CSS = `
+* { box-sizing:border-box; }
+body { margin:0; padding:24px; background:#fff; color:#222; font-family:Georgia,'Times New Roman',serif; font-size:11pt; line-height:1.45; }
+.off-doc { max-width:760px; margin:0 auto; }
+.off-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; }
+.off-logo { max-height:64px; width:auto; }
+.off-head-right { text-align:right; font-size:9pt; line-height:1.35; color:#333; }
+.off-klant { margin:10px 0; }
+.off-titel { margin:14px 0 8px; }
+.off-titel .meta { color:#666; font-size:9.5pt; }
+.off-doc h2 { font-size:12pt; margin:16px 0 4px; }
+.off-doc h3 { font-size:11pt; margin:12px 0 4px; }
+.off-doc h4 { font-size:10.5pt; margin:8px 0 2px; }
+.off-tekst { margin:4px 0 8px; }
+.off-doc table { border-collapse:collapse; width:100%; margin:4px 0 12px; }
+.off-doc th, .off-doc td { padding:4px 3px; border:none; text-align:left; vertical-align:top; }
+.off-doc th { border-bottom:1px solid #333; font-size:10pt; }
+.off-doc td.right, .off-doc th.right { text-align:right; }
+.off-doc .num { font-variant-numeric:tabular-nums; white-space:nowrap; }
+.off-doc .proj-row td { font-weight:700; }
+.off-doc .hg-row td { font-weight:700; padding-top:8px; }
+.off-doc .gevel-sub td { border-top:.75px solid #bbb; }
+.off-doc .totaal-row td { border-top:.75px solid #999; font-weight:700; }
+.off-doc .kosten-eind { width:100%; }
+.off-doc .kosten-eind .lbl { text-align:left; }
+.off-doc .kosten-eind .cur { text-align:right; padding-right:6px; color:#666; }
+.off-doc .kosten-eind .te-incl td { border-top:1px solid #333; }
+.off-onderteken { margin-top:18px; }
+.off-sign-table { width:100%; }
+.off-sign-table td { width:50%; vertical-align:bottom; }
+.off-sign { max-height:64px; }
+.sign-box { border-top:1px solid #999; padding-top:4px; height:84px; vertical-align:bottom; }
+.footer-block { margin-top:18px; color:#888; font-size:8.5pt; text-align:center; border-top:1px solid #eee; padding-top:6px; }
+`;
+
+/* ===== v3.62.0 accord-via-link (logica) ===== */
+/* =====================================================================
+   v3.62.0 — Accorderen via unieke link per offerte
+   - Publieke accord-pagina (geen login): de klant opent de app met
+     ?accord=TOKEN, ziet de bevroren offerte read-only en geeft akkoord,
+     wijst af of stelt een vraag.
+   - Linkbeheer in het Offerte-blok (jouw kant).
+   Praat uitsluitend met de Edge Function offerte-accord, nooit
+   rechtstreeks met de database vanaf de klantkant.
+   ===================================================================== */
+const ACCORD_FN_URL = SUPABASE_URL + '/functions/v1/offerte-accord';
+
+function _accordHeaders() {
+  return {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Content-Type': 'application/json'
+  };
+}
+function _accordEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, m =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
+}
+function _accordEur(n) {
+  return '\u20ac ' + Number(n || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function _accordDatum(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' }); }
+  catch (e) { return iso; }
+}
+function _accordLinkVoor(token) {
+  return location.origin + location.pathname + '?accord=' + token;
+}
+function _accordInjectStyles() {
+  if (document.getElementById('accordInjectedStyles')) return;
+  const s = document.createElement('style');
+  s.id = 'accordInjectedStyles';
+  s.textContent = _ACCORD_UI_CSS;
+  document.head.appendChild(s);
+}
+
+/* ---------- Publieke accord-pagina (klantkant) ---------- */
+async function _accordPaginaTonen(token) {
+  document.title = 'Offerte ter goedkeuring \u2014 Ernes schilders';
+  _accordInjectStyles();
+  const root = document.createElement('div');
+  root.id = 'accordRoot';
+  root.innerHTML = '<div class="ac-laden">Offerte laden\u2026</div>';
+  document.body.appendChild(root);
+
+  let res;
+  try {
+    const r = await fetch(ACCORD_FN_URL + '?token=' + encodeURIComponent(token), { headers: _accordHeaders() });
+    res = await r.json();
+    if (!r.ok || res.error) throw new Error(res.error || ('HTTP ' + r.status));
+  } catch (e) {
+    root.innerHTML = '<div class="ac-kaart ac-fout"><h2>Deze link werkt niet</h2>'
+      + '<p>De offerte kon niet worden geladen. Controleer of je de volledige link hebt geopend, of neem contact op met Ernes schilders.</p></div>';
+    return;
+  }
+  _accordRender(root, token, res);
+}
+
+function _accordRender(root, token, res) {
+  const offHtml = (res.snapshot && res.snapshot.html) ? res.snapshot.html : '<p>Offerte niet beschikbaar.</p>';
+  const bedrag = res.bedrag;
+  const reedsAf = res.status === 'akkoord' || res.status === 'afgekeurd';
+
+  let banner = '';
+  if (res.status === 'akkoord') {
+    banner = '<div class="ac-banner ac-ok">Deze offerte is geaccordeerd'
+      + (res.klant_naam ? ' door ' + _accordEsc(res.klant_naam) : '')
+      + (res.gereageerd_op ? ' op ' + _accordDatum(res.gereageerd_op) : '') + '.</div>';
+  } else if (res.status === 'afgekeurd') {
+    banner = '<div class="ac-banner ac-nee">Deze offerte is afgewezen'
+      + (res.klant_naam ? ' door ' + _accordEsc(res.klant_naam) : '')
+      + (res.gereageerd_op ? ' op ' + _accordDatum(res.gereageerd_op) : '') + '.</div>';
+  }
+
+  root.innerHTML =
+    '<div class="ac-wrap">'
+    + '<div class="ac-kop"><div class="ac-kop-titel">Offerte ter goedkeuring</div>'
+    + '<div class="ac-kop-sub">' + _accordEsc(res.project || '') + (res.klant ? ' \u2014 ' + _accordEsc(res.klant) : '') + '</div></div>'
+    + banner
+    + '<iframe id="acOfferte" class="ac-offerte" title="Offerte"></iframe>'
+    + (reedsAf ? '' : _accordActiesHtml(bedrag))
+    + '<div class="ac-voet">Ernes schilders \u00b7 info@ernes.nl \u00b7 045 5321471</div>'
+    + '</div>';
+
+  const ifr = root.querySelector('#acOfferte');
+  ifr.srcdoc = _accordOfferteSrcdoc(offHtml);
+  ifr.addEventListener('load', () => {
+    try { ifr.style.height = (ifr.contentWindow.document.body.scrollHeight + 40) + 'px'; } catch (e) {}
+  });
+
+  if (!reedsAf) _accordWireActies(root, token, bedrag);
+}
+
+function _accordActiesHtml() {
+  return '<div class="ac-kaart" id="acActies">'
+    + '<div class="ac-knoppen">'
+    + '<button class="ac-btn ac-btn-ok" data-mode="akkoord">Akkoord geven</button>'
+    + '<button class="ac-btn ac-btn-nee" data-mode="afkeuren">Afwijzen</button>'
+    + '<button class="ac-btn ac-btn-vraag" data-mode="vraag">Vraag stellen</button>'
+    + '</div>'
+    + '<div id="acForm" class="ac-form" hidden></div>'
+    + '<div id="acMelding" class="ac-melding" hidden></div>'
+    + '</div>';
+}
+
+function _accordWireActies(root, token, bedrag) {
+  const form = root.querySelector('#acForm');
+  const melding = root.querySelector('#acMelding');
+  root.querySelectorAll('.ac-knoppen .ac-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      root.querySelectorAll('.ac-knoppen .ac-btn').forEach(b => b.classList.toggle('actief', b === btn));
+      melding.hidden = true;
+      form.hidden = false;
+      form.innerHTML = _accordFormHtml(mode, bedrag);
+      const submit = form.querySelector('.ac-submit');
+      submit.addEventListener('click', () => _accordVerstuur(root, token, mode, form, melding, submit));
+    });
+  });
+}
+
+function _accordFormHtml(mode, bedrag) {
+  if (mode === 'akkoord') {
+    return '<label class="ac-lbl">Uw naam <span class="ac-ster">*</span></label>'
+      + '<input type="text" class="ac-input" id="acNaam" placeholder="Voor- en achternaam" autocomplete="name">'
+      + '<label class="ac-lbl">Opmerking (optioneel)</label>'
+      + '<textarea class="ac-input" id="acNotitie" rows="2" placeholder="Eventuele opmerking"></textarea>'
+      + '<label class="ac-check"><input type="checkbox" id="acAkkVink"> Ik ga akkoord met deze offerte van Ernes schilders'
+      + (bedrag != null ? ', bedrag ' + _accordEur(bedrag) + ' incl. btw' : '')
+      + ', inclusief de algemene voorwaarden.</label>'
+      + '<button class="ac-submit ac-submit-ok">Akkoord bevestigen</button>';
+  }
+  if (mode === 'afkeuren') {
+    return '<label class="ac-lbl">Uw naam <span class="ac-ster">*</span></label>'
+      + '<input type="text" class="ac-input" id="acNaam" placeholder="Voor- en achternaam" autocomplete="name">'
+      + '<label class="ac-lbl">Reden van afwijzing</label>'
+      + '<textarea class="ac-input" id="acNotitie" rows="3" placeholder="Waarom wijst u de offerte af?"></textarea>'
+      + '<button class="ac-submit ac-submit-nee">Afwijzing bevestigen</button>';
+  }
+  return '<label class="ac-lbl">Uw naam (optioneel)</label>'
+    + '<input type="text" class="ac-input" id="acNaam" placeholder="Voor- en achternaam" autocomplete="name">'
+    + '<label class="ac-lbl">Uw vraag <span class="ac-ster">*</span></label>'
+    + '<textarea class="ac-input" id="acNotitie" rows="3" placeholder="Stel hier uw vraag"></textarea>'
+    + '<button class="ac-submit ac-submit-vraag">Vraag versturen</button>';
+}
+
+async function _accordVerstuur(root, token, mode, form, melding, submit) {
+  const naam = (form.querySelector('#acNaam') ? form.querySelector('#acNaam').value : '').trim();
+  const notitie = (form.querySelector('#acNotitie') ? form.querySelector('#acNotitie').value : '').trim();
+  if ((mode === 'akkoord' || mode === 'afkeuren') && !naam) { alert('Vul uw naam in.'); return; }
+  if (mode === 'akkoord' && !(form.querySelector('#acAkkVink') && form.querySelector('#acAkkVink').checked)) {
+    alert('Vink het akkoord aan om te bevestigen.'); return;
+  }
+  if (mode === 'afkeuren' && !notitie) { alert('Geef kort de reden van afwijzing.'); return; }
+  if (mode === 'vraag' && !notitie) { alert('Typ uw vraag.'); return; }
+
+  const labels = { akkoord: 'Akkoord bevestigen', afkeuren: 'Afwijzing bevestigen', vraag: 'Vraag versturen' };
+  submit.disabled = true; submit.textContent = 'Bezig\u2026';
+  let res;
+  try {
+    const r = await fetch(ACCORD_FN_URL, {
+      method: 'POST', headers: _accordHeaders(),
+      body: JSON.stringify({ token: token, actie: mode, naam: naam, notitie: notitie })
+    });
+    res = await r.json();
+    if (!r.ok || res.error) throw new Error(res.error || ('HTTP ' + r.status));
+  } catch (e) {
+    submit.disabled = false; submit.textContent = labels[mode];
+    alert('Versturen mislukt: ' + e.message);
+    return;
+  }
+
+  if (mode === 'vraag') {
+    form.hidden = true;
+    root.querySelectorAll('.ac-knoppen .ac-btn').forEach(b => b.classList.remove('actief'));
+    melding.hidden = false;
+    melding.className = 'ac-melding ac-ok';
+    melding.textContent = 'Uw vraag is verstuurd. Ernes schilders neemt contact met u op. U kunt deze offerte daarna alsnog accorderen of afwijzen.';
+    return;
+  }
+  const acties = root.querySelector('#acActies');
+  acties.innerHTML = '<div class="ac-banner ' + (mode === 'akkoord' ? 'ac-ok' : 'ac-nee') + '">'
+    + (mode === 'akkoord' ? 'Bedankt. Uw akkoord is vastgelegd.' : 'Bedankt. Uw reactie is vastgelegd.')
+    + '</div>';
+}
+
+function _accordOfferteSrcdoc(offHtml) {
+  return '<!doctype html><html lang="nl"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<style>' + _ACCORD_OFFERTE_CSS + '</style></head><body>' + offHtml + '</body></html>';
+}
+
+/* ---------- Linkbeheer (jouw kant, in het Offerte-blok) ---------- */
+async function accordLinkBeheer() {
+  const c = data.calc;
+  if (!c || !c.id) { _toast('Geen actieve calculatie'); return; }
+  _accordInjectStyles();
+  let ov = document.getElementById('accordBeheerOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'accordBeheerOverlay';
+    ov.innerHTML = '<div class="acb-modal">'
+      + '<button class="acb-close" title="Sluiten">\u2715</button>'
+      + '<div class="acb-body">Laden\u2026</div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    ov.querySelector('.acb-close').addEventListener('click', () => ov.remove());
+  }
+  const body = ov.querySelector('.acb-body');
+  body.innerHTML = 'Laden\u2026';
+
+  let rij = null;
+  try {
+    const { data: rows, error } = await _sb.from('offerte_accorderingen')
+      .select('*').eq('calculatie_id', c.id)
+      .order('aangemaakt_op', { ascending: false }).limit(1);
+    if (error) throw error;
+    rij = rows && rows[0] ? rows[0] : null;
+  } catch (e) {
+    body.innerHTML = '<p class="acb-fout">Kon de status niet ophalen: ' + _accordEsc(e.message || e) + '</p>';
+    return;
+  }
+  _accordBeheerRender(body, c, rij);
+}
+
+function _accordBeheerRender(body, c, rij) {
+  let h = '<h3>\ud83d\udd17 Accordeerlink</h3>'
+    + '<div class="acb-sub">' + _accordEsc(c.naam || '') + (c.klant ? ' \u2014 ' + _accordEsc(c.klant) : '') + '</div>';
+
+  if (!rij) {
+    h += '<p>Er is nog geen accordeerlink voor deze offerte.</p>'
+      + '<p class="acb-sub">Aanmaken legt de offerte vast zoals die nu is. Wat de klant accordeert, kan daarna niet meer wijzigen.</p>'
+      + '<button class="acb-btn" id="acbNieuw">Accordeerlink aanmaken</button>';
+    body.innerHTML = h;
+    body.querySelector('#acbNieuw').addEventListener('click', () => _accordNieuweLink(c, body, false));
+    return;
+  }
+
+  const link = _accordLinkVoor(rij.token);
+  if (rij.status === 'open') {
+    h += '<div class="acb-status open">Actief. Wacht op reactie van de klant.</div>';
+  } else if (rij.status === 'akkoord') {
+    h += '<div class="acb-status akkoord">Geaccordeerd'
+      + (rij.klant_naam ? ' door ' + _accordEsc(rij.klant_naam) : '')
+      + (rij.gereageerd_op ? ' op ' + _accordDatum(rij.gereageerd_op) : '') + '.'
+      + (rij.notitie ? '<br><span style="font-weight:400;">Opmerking: ' + _accordEsc(rij.notitie) + '</span>' : '')
+      + '</div>';
+  } else if (rij.status === 'afgekeurd') {
+    h += '<div class="acb-status afgekeurd">Afgewezen'
+      + (rij.klant_naam ? ' door ' + _accordEsc(rij.klant_naam) : '')
+      + (rij.gereageerd_op ? ' op ' + _accordDatum(rij.gereageerd_op) : '') + '.'
+      + (rij.notitie ? '<br><span style="font-weight:400;">Reden: ' + _accordEsc(rij.notitie) + '</span>' : '')
+      + '</div>';
+  }
+
+  if (Array.isArray(rij.vragen) && rij.vragen.length) {
+    h += '<div class="acb-vragen"><strong>Vragen van de klant</strong>';
+    rij.vragen.forEach(v => {
+      h += '<div style="margin-top:6px;">' + _accordEsc(v.tekst || '')
+        + '<span class="acb-sub"> \u2014 ' + (v.naam ? _accordEsc(v.naam) + ', ' : '') + _accordDatum(v.op) + '</span></div>';
+    });
+    h += '</div>';
+  }
+
+  h += '<label class="acb-sub">Link voor de klant</label>'
+    + '<div class="acb-linkrow"><input type="text" id="acbLink" readonly value="' + _accordEsc(link) + '">'
+    + '<button class="acb-btn" id="acbKopieer">Kopieer</button></div>'
+    + '<button class="acb-btn sec" id="acbNieuw">Nieuwe link maken</button>';
+  body.innerHTML = h;
+
+  body.querySelector('#acbKopieer').addEventListener('click', () => {
+    const inp = body.querySelector('#acbLink');
+    inp.select();
+    if (navigator.clipboard) navigator.clipboard.writeText(inp.value);
+    else document.execCommand('copy');
+    _toast('Link gekopieerd');
+  });
+  body.querySelector('#acbNieuw').addEventListener('click', () => {
+    const beslist = (rij.status === 'akkoord' || rij.status === 'afgekeurd');
+    if (beslist && !confirm('De klant heeft al gereageerd. Toch een nieuwe link maken? De oude reactie blijft in het overzicht staan.')) return;
+    _accordNieuweLink(c, body, true);
+  });
+}
+
+async function _accordNieuweLink(c, body, supersede) {
+  body.innerHTML = 'Bezig met aanmaken\u2026';
+  const offHtml = _bouwOfferteDocHtml();
+  if (offHtml == null) { _accordBeheerRender(body, c, null); return; }
+  let bedrag = null;
+  try { const cij = _berekenOfferteCijfers(c); if (cij) bedrag = cij.totaalIncl; } catch (e) {}
+
+  let token;
+  if (window.crypto && crypto.randomUUID) token = crypto.randomUUID().replace(/-/g, '') + Date.now().toString(36);
+  else token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+  try {
+    // Oude, nog niet beantwoorde link(s) opruimen zodat er maar e\u00e9n actieve link is.
+    await _sb.from('offerte_accorderingen').delete().eq('calculatie_id', c.id).eq('status', 'open');
+    const { error } = await _sb.from('offerte_accorderingen').insert({
+      calculatie_id: c.id,
+      token: token,
+      snapshot: { html: offHtml, v: APP_VERSION, op: new Date().toISOString() },
+      bedrag: bedrag
+    });
+    if (error) throw error;
+  } catch (e) {
+    body.innerHTML = '<p class="acb-fout">Aanmaken mislukt: ' + _accordEsc(e.message || e) + '</p>';
+    return;
+  }
+  // Verse status ophalen en tonen.
+  accordLinkBeheer();
 }
 
 init();

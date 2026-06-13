@@ -1,3 +1,15 @@
+## v3.62.0 — Accorderen via een unieke link per offerte
+Per offerte kun je nu een accordeerlink aanmaken. De klant opent die zonder in te loggen, ziet de volledige offerte read-only en geeft akkoord, wijst af of stelt een vraag. Dit vervangt het digitale ondertekenen in Yoobi.
+
+### Wijzigingen
+- Nieuwe knop Accordeerlink in het Offerte-blok onderaan de Calculatie-tab. Die legt een snapshot van het offertedocument vast (de offerte zoals die op dat moment is) en geeft een publieke link in de vorm ?accord=TOKEN. Een venster toont de link met een kopieerknop en de actuele status.
+- Publieke accord-pagina in dezelfde index.html: staat ?accord=TOKEN in de URL, dan slaat de app het inloggen en het laden van de app volledig over en toont alleen de accord-pagina. De bevroren offerte wordt in een geïsoleerd iframe getoond, met eigen opmaak, dus net als de PDF en zonder botsing met de app. Logo en handtekening zitten al als data in het document, dus de weergave is zelfstandig.
+- Drie acties voor de klant: Akkoord geven (naam verplicht plus een akkoord-vinkje met het bedrag en verwijzing naar de algemene voorwaarden; de calculatie springt op geaccepteerd), Afwijzen (naam plus reden; de calculatie springt op verloren) en Vraag stellen (een opmerking zonder de offerte af te sluiten; de link blijft geldig).
+- Bij een definitieve reactie worden naam, tijdstip, IP-adres en de opmerking vastgelegd. Dat is de bewijslaag nu dit het ondertekenen vervangt.
+- De klantkant praat uitsluitend met de Edge Function offerte-accord (draait met de service-sleutel, valt buiten RLS). De klant raakt de database nooit rechtstreeks. De anon-sleutel die de pagina meestuurt geeft geen tabeltoegang omdat de grants zijn ingetrokken.
+- Linkbeheer toont per offerte de status: actief en wachtend, geaccordeerd door wie en wanneer, of afgewezen met reden. Eventuele vragen van de klant staan er onder. Met Nieuwe link maken vervang je een nog niet beantwoorde link; een al beantwoorde reactie blijft in het overzicht staan en vraagt eerst om bevestiging.
+- Eenmalige Supabase-stappen: de SQL-migratie voor de tabel offerte_accorderingen en de Edge Function offerte-accord. Beide al uitgevoerd. Geen wijziging aan bestaande tabellen.
+
 ## v3.61.1 — Voorwaarden vullen de volledige pagina
 De algemene voorwaarden in de doorlopende PDF stonden te klein op de pagina.
 
