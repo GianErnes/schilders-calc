@@ -1,3 +1,13 @@
+## v3.60.2 — Strakkere offerte: strepen weg en nette pagina-doorloop
+Twee laatste punten op het offertedocument: de strepen onder de koppen moesten weg, en de tekst sprong met grote witruimte naar nieuwe pagina's.
+
+### Wijzigingen
+- Alle strepen onder de koppen verwijderd binnen .off-doc (h2, h3 en h4 krijgen geen onderlijn meer). Het document is nu lijnloos, op de subtiele lijn boven de bijkomende kosten en boven het eindtotaal na.
+- Pagina-doorloop verbeterd. De secties mochten voorheen niet over een paginagrens breken (page-break-inside: avoid), waardoor een hele sectie naar de volgende pagina schoof en er onderaan grote witruimte achterbleef. Binnen .off-doc breken secties nu wel (page-break-inside: auto), zodat de pagina volledig benut wordt en de tekst vloeiend doorloopt.
+- Koppenbescherming: page-break-after: avoid op de koppen plus orphans/widows op de tekst zorgen dat een kop nooit alleen onderaan een pagina belandt; de kop schuift mee met zijn eerste regels naar de volgende pagina.
+- Tabelrijen in het offertedocument breken niet doormidden over een paginagrens (page-break-inside: avoid op tr), en de kolomkop herhaalt bij een tabel die over twee pagina's loopt.
+- Alleen het offertedocument is geraakt; de andere PDF's gebruiken hun eigen opmaak buiten .off-doc.
+
 ## v3.60.1 — Logo in offertedocument en rustige prijstabel
 Drie punten op het offertedocument: het logo ontbrak, en de horizontale strepen in de prijstabel moesten weg.
 
