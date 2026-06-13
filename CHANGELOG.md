@@ -1,3 +1,14 @@
+## v3.60.0 — Eigen offertenummering
+De app deelt nu zelf offertenummers uit in de vorm JJ-NNN (bijvoorbeeld 26-009), met een per jaar oplopende teller en een instelbaar startnummer.
+
+### Wijzigingen
+- Offertenummer in de vorm JJ-NNN: tweecijferig jaartal, streepje, volgnummer met drie cijfers opgevuld met nullen. De teller telt per jaar op en reset elk nieuw jaar terug naar 1 (of naar het ingestelde startnummer voor dat jaar).
+- Een calculatie krijgt zijn definitieve offertenummer pas op het moment dat het offertedocument voor het eerst wordt gegenereerd (_kenOfferteNummerToe), niet al bij het aanmaken. Zo blijven kladjes en proefberekeningen zonder nummer en blijft de reeks aaneengesloten. Eenmaal toegekend blijft het nummer vast in offerteConfig (offerteJaar + offerteNr), ook bij opnieuw genereren.
+- Nieuwe sectie Offertenummering onder Instellingen met een instelbaar startnummer voor het huidige jaar (ondergrens; het eerstvolgende nummer wordt minimaal dit getal) en een uitgeschakeld info-veld dat toont welk nummer het volgende wordt. Bedoeld om bij de overstap vanuit Yoobi op een bestaande reeks aan te sluiten.
+- Tellerstanden en startnummer staan in app_settings (data.settings.offerteTellers per jaar, data.settings.offerteStartNr). Geen Supabase-migratie nodig.
+- Botsing-achtervang: kent _kenOfferteNummerToe een nummer toe dat al bij een andere calc in gebruik is (bijvoorbeeld door twee apparaten tegelijk), dan schuift de teller door naar het eerstvolgende vrije nummer en toont een toast-melding. Bewuste keuze voor de eenvoudige aanpak passend bij eenmansgebruik, in plaats van een aparte atomair-ophogende tellertabel.
+- De oude noodgreep (volgnummer afgeleid van een hash van het calc-id, vorm JJ-NNNN-V) is vervangen.
+
 ## v3.59.2 — Fix: offertedocument opende niet (LOGO_ERNES)
 Het offertedocument (v3.59.0) deed niets, niet via de knop Offertedocument en niet via het Archiveren-venster. De console toonde een ReferenceError: LOGO_ERNES is not defined.
 

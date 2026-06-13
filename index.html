@@ -1997,8 +1997,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.59.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.60.0</h2>
       <div class="intro-body">
+        <p><strong>🔢 Eigen offertenummering (v3.60.0).</strong> De app deelt nu zelf offertenummers uit in de vorm JJ-NNN, bijvoorbeeld 26-009. De teller telt per jaar op en begint elk nieuw jaar opnieuw bij 1. Een offerte krijgt zijn nummer pas op het moment dat je voor het eerst het offertedocument genereert, en dat nummer blijft daarna vastzitten aan die calculatie, ook als je het document later opnieuw maakt. Onder Instellingen staat een nieuwe sectie Offertenummering waar je het startnummer voor dit jaar instelt; zet het hoger als je wilt aansluiten op een bestaande reeks, bijvoorbeeld bij de overstap vanuit Yoobi. Het eerstvolgende nummer wordt minimaal dat startnummer. Mocht een nummer onverhoopt al in gebruik zijn, bijvoorbeeld door twee apparaten tegelijk, dan schuift de app door naar het eerstvolgende vrije nummer en laat dat weten.</p>
         <p><strong>🔧 Offertedocument opent nu wel (v3.59.2).</strong> Het offertedocument deed niets, niet via de knop en niet via Archiveren: de code stopte met een interne fout omdat het logo niet bereikbaar was vanaf die plek. Het briefhoofd laadt het logo nu uit het bestand erneslogo.png naast index.html, net zoals de handtekening uit handtekening.png komt. Daarmee opent het document weer normaal, los en via Archiveren.</p>
         <p><strong>🔧 Offertedocument werkt nu ook in Archiveren (v3.59.1).</strong> Het offertedocument liet zich wel los printen, maar bleef hangen wanneer je het via het Archiveren-venster koos: er werd een document aangekondigd en daarna gebeurde er niets. De oorzaak was een extra wachtstap op het laden van het logo en de handtekening, die botste met de afhandeling van het Archiveren-venster. Die wachtstap is eruit; het document print nu meteen, net als de calculatie, de meetstaat en het onderhoudsplan. Logo en handtekening laden direct mee.</p>
         <p><strong>📄 Het offertedocument (v3.59.0).</strong> De offertemodule maakt nu een compleet, vormgegeven offertedocument in de Ernes-huisstijl. Onderaan de Calculatie-tab, in het blok Offerte, staat de knop Offertedocument. Die bouwt het hele document op: briefhoofd met logo en bedrijfsgegevens, klant en automatisch offertenummer, alle teksten die je hebt gekozen in de juiste volgorde, de prijsopgave en het ondertekenblok met je handtekening. De prijsopgave kun je per offerte op twee manieren tonen, te kiezen met de nieuwe schakelaar Prijsweergave: per onderdeel met subtotalen zoals je gewend bent, of als losse regels met hoeveelheid en eenheidsprijs zoals de Yoobi-export. Beide rekenen met dezelfde motor, dus het eindbedrag is altijd gelijk. Printen gaat zoals bij het onderhoudsplan via Opslaan als PDF. De Yoobi-export blijft gewoon bestaan, nu als aparte keuze in het Archiveren-venster. Voor de handtekening in het document zet je het bestand handtekening.png naast index.html in de repo. De bijlagen (kozijnen, foto’s, algemene voorwaarden) en het samenvoegen tot één PDF volgen in de volgende stap.</p>
@@ -2427,6 +2428,14 @@
       <div class="form-grid">
         <div><label>Jaarcapaciteit (€ incl. BTW)</label><input type="number" id="setJaarcapEuro" step="10000" min="0" onchange="updSetting('jaarcapaciteitEuro', this)"></div>
         <div><label>Jaarcapaciteit (manuren)</label><input type="number" id="setJaarcapUren" step="50" min="0" placeholder="optioneel" onchange="updSetting('jaarcapaciteitUren', this)"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>Offertenummering</h3>
+      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Het offertenummer heeft de vorm JJ-NNN, bijvoorbeeld 26-009. De teller telt per jaar op en begint elk nieuw jaar opnieuw. Een offerte krijgt zijn nummer pas wanneer je voor het eerst het offertedocument genereert. Het startnummer is de ondergrens voor dit jaar; zet het hoger als je aansluit op een bestaande nummering (bijvoorbeeld bij de overstap vanuit Yoobi).</em></p>
+      <div class="form-grid">
+        <div><label>Startnummer huidig jaar</label><input type="number" id="setOfferteStart" step="1" min="1" onchange="updSetting('offerteStartNr', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">Het eerstvolgende offertenummer wordt minimaal dit nummer.</div></div>
+        <div><label>Volgende nummer wordt</label><input type="text" id="setOfferteVolgende" disabled style="background:var(--bg); color:var(--muted);"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">Ter info, op basis van de huidige stand.</div></div>
       </div>
     </div>
     <div class="settings-section">
@@ -2996,7 +3005,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.59.2';
+const APP_VERSION = 'v3.60.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3358,6 +3367,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.60.0', d: '2026-06-13', h: 'Eigen offertenummering in de vorm JJ-NNN (bv. 26-009). Per jaar oplopende teller met jaarlijkse reset, opgeslagen in app_settings (geen migratie). Nieuwe sectie Offertenummering onder Instellingen met instelbaar startnummer (ondergrens voor het jaar, voor aansluiting op Yoobi bij overstap) en een info-veld dat het eerstvolgende nummer toont. Een calc krijgt zijn nummer pas bij het eerst genereren van het offertedocument (_kenOfferteNummerToe) en behoudt het daarna. Botsing-achtervang: bij een al gebruikt nummer schuift de teller door naar het eerstvolgende vrije nummer met een toast-melding' },
   { v: '3.59.2', d: '2026-06-13', h: 'Fix: het offertedocument deed niets (knop en Archiveren) door een ReferenceError: LOGO_ERNES is not defined. Die constante is lokaal aan _ohpBuildOfferteHTML en niet bereikbaar vanuit printOfferteDocument. Het briefhoofd laadt het logo nu via src=erneslogo.png uit de repo (met onerror-fallback), consistent met de handtekening via handtekening.png. Document opent weer normaal' },
   { v: '3.59.1', d: '2026-06-12', h: 'Fix: het offertedocument bleef hangen in het Archiveren-venster (document aangekondigd, daarna niets). De extra wachtstap op het laden van logo en handtekening botste met de afterprint-afhandeling van Archiveren en is verwijderd; printOfferteDocument doet nu direct window.print() zoals de andere print-functies. Logo (data-URI) en handtekening laden meteen mee' },
   { v: '3.59.0', d: '2026-06-12', h: 'Het offertedocument (brok A4a): nieuwe functie printOfferteDocument maakt een compleet vormgegeven Ernes-offertedocument met briefhoofd (logo + bedrijfsgegevens), klant, automatisch offertenummer (JJ-NNNN-V), alle gekozen teksten uit het offerte-blok in documentvolgorde met ingevulde invulvelden, prijsopgave en ondertekenblok met handtekening (handtekening.png naast index.html). Prijsweergave per offerte instelbaar: per onderdeel (Nacken-stijl subtotalen) of regels (hoeveelheid + eenheidsprijs, Yoobi-stijl). Gedeelde rekenkern _berekenOfferteCijfers voedt zowel dit document als de Yoobi-export, zodat eindbedragen identiek zijn. In Archiveren is Offerte (Yoobi) gesplitst in Offertedocument + Offerte (Yoobi-export). Bijlagen en samenvoegen tot één PDF volgen in A4b. Geen SQL nodig' },
@@ -9739,21 +9749,79 @@ function _berekenOfferteCijfers(c) {
 // Bouwt het automatische offertenummer: jaar + volgnummer uit de calc.
 // Vorm: JJ-NNNN-V (bv. 26-0068-1). Valt terug op een korte hash van het id
 // als er geen numeriek volgnummer beschikbaar is, zodat het altijd werkt.
+// Formatteert jaar+volgnummer naar de vorm JJ-NNN (bv. 26-009).
+function _offerteNummerFormat(jaar, volg) {
+  const jj = String(jaar).slice(2, 4);
+  return `${jj}-${String(volg).padStart(3, '0')}`;
+}
+
+// Leest het reeds toegekende offertenummer van een calc, of geeft null
+// als er nog geen nummer is toegekend.
 function _offerteNummer(c) {
+  if (!c) return null;
   const cfg = (c.offerteConfig && typeof c.offerteConfig === 'object') ? c.offerteConfig : {};
-  const jaarBron = cfg.offertedatum || _offIsoVandaag();
-  const jj = String(jaarBron).slice(2, 4);
-  // Volgnummer: gebruik calc.offerteNr indien gezet, anders nummer uit naam,
-  // anders een stabiele waarde uit het id.
-  let volg = cfg.offerteNr || c.offerteNr || null;
-  if (!volg) {
-    const idStr = String(c.id || '');
-    let hash = 0;
-    for (let i = 0; i < idStr.length; i++) hash = (hash * 31 + idStr.charCodeAt(i)) % 10000;
-    volg = String(hash).padStart(4, '0');
+  if (cfg.offerteJaar && cfg.offerteNr) {
+    return _offerteNummerFormat(cfg.offerteJaar, cfg.offerteNr);
   }
-  const versie = cfg.offerteVersie || 1;
-  return `${jj}-${volg}-${versie}`;
+  return null;
+}
+
+// Berekent welk nummer de volgende offerte van een bepaald jaar zou krijgen,
+// zonder iets toe te kennen of op te slaan. Voor de info-weergave in Instellingen.
+function _offerteVolgendeNummer(jaar) {
+  jaar = jaar || new Date().getFullYear();
+  const tellers = (data.settings.offerteTellers && typeof data.settings.offerteTellers === 'object') ? data.settings.offerteTellers : {};
+  const stand = tellers[jaar] || 0;
+  const start = parseInt(data.settings.offerteStartNr, 10) || 1;
+  const volg = Math.max(stand + 1, start);
+  return _offerteNummerFormat(jaar, volg);
+}
+
+// Controleert of een nummer (jaar+volg) al bij een ANDERE calc in gebruik is.
+function _offerteNummerInGebruik(jaar, volg, behalveId) {
+  return (data.calculaties || []).some(c => {
+    if (c.id === behalveId) return false;
+    const cfg = c.offerteConfig;
+    return cfg && cfg.offerteJaar === jaar && cfg.offerteNr === volg;
+  });
+}
+
+// Kent een offertenummer toe aan een calc als die er nog geen heeft.
+// Hoogt de jaarteller op, respecteert het startnummer en waarschuwt bij
+// een dubbel nummer. Slaat config + settings op. Retourneert het nummer.
+function _kenOfferteNummerToe(c) {
+  if (!c) return null;
+  if (!c.offerteConfig || typeof c.offerteConfig !== 'object') c.offerteConfig = {};
+  const cfg = c.offerteConfig;
+
+  // Al een nummer? Dan laten staan.
+  if (cfg.offerteJaar && cfg.offerteNr) return _offerteNummerFormat(cfg.offerteJaar, cfg.offerteNr);
+
+  const jaarBron = cfg.offertedatum || _offIsoVandaag();
+  const jaar = parseInt(String(jaarBron).slice(0, 4), 10) || new Date().getFullYear();
+
+  if (!data.settings.offerteTellers || typeof data.settings.offerteTellers !== 'object') data.settings.offerteTellers = {};
+  const stand = data.settings.offerteTellers[jaar] || 0;
+  const start = parseInt(data.settings.offerteStartNr, 10) || 1;
+  let volg = Math.max(stand + 1, start);
+
+  // Achtervang: schuif door tot een vrij nummer als er onverhoopt al een
+  // calc met dit nummer bestaat (bv. twee apparaten tegelijk).
+  let botsing = false;
+  while (_offerteNummerInGebruik(jaar, volg, c.id)) { volg++; botsing = true; }
+
+  cfg.offerteJaar = jaar;
+  cfg.offerteNr = volg;
+  data.settings.offerteTellers[jaar] = volg;
+
+  saveData();
+  _offCfgSave();
+  _saveSettingsDB();
+
+  if (botsing) {
+    _toast('Let op: offertenummer was al in gebruik, het volgende vrije nummer is toegekend (' + _offerteNummerFormat(jaar, volg) + ')');
+  }
+  return _offerteNummerFormat(jaar, volg);
 }
 
 function printOfferteYoobi() {
@@ -10006,7 +10074,7 @@ function printOfferteDocument() {
   }
   const sett = cij.sett;
   const eur = cij.eur, fmt = cij.fmt;
-  const offNr = _offerteNummer(c);
+  const offNr = _kenOfferteNummerToe(c);
   const datumLang = _offDatumLang(cfg.offertedatum);
   const prijsWeergave = cfg.prijsWeergave === 'regels' ? 'regels' : 'onderdeel';
 
@@ -14753,6 +14821,8 @@ function loadSettings() {
   { const _e = document.getElementById('setVertrekHuisnummer'); if (_e) _e.value = s.vertrekHuisnummer || ''; }
   { const _e = document.getElementById('setJaarcapEuro'); if (_e) _e.value = (s.jaarcapaciteitEuro != null) ? s.jaarcapaciteitEuro : 450000; }
   { const _e = document.getElementById('setJaarcapUren'); if (_e) _e.value = (s.jaarcapaciteitUren != null && s.jaarcapaciteitUren !== 0) ? s.jaarcapaciteitUren : ''; }
+  { const _e = document.getElementById('setOfferteStart'); if (_e) _e.value = (s.offerteStartNr != null && s.offerteStartNr !== 0) ? s.offerteStartNr : 1; }
+  { const _e = document.getElementById('setOfferteVolgende'); if (_e) _e.value = _offerteVolgendeNummer(new Date().getFullYear()); }
   document.getElementById('setKleinMat').value = s.kleinMat;
   document.getElementById('setAfval').value = s.afval;
   document.getElementById('setArbo').value = s.arbo;
@@ -14805,6 +14875,11 @@ function updSetting(field, inputEl) {
   renderMaterialen(); renderBewerkingen(); renderSystemen(); renderTotals(); renderDashboard();
   // Bij rayonDrempel-wijziging ook de indicator bij het reis-veld updaten
   if (field === 'rayonDrempel') _renderRayonIndicator();
+  // Bij startnummer-wijziging het info-veld 'volgende nummer' meteen bijwerken
+  if (field === 'offerteStartNr') {
+    const _e = document.getElementById('setOfferteVolgende');
+    if (_e) _e.value = _offerteVolgendeNummer(new Date().getFullYear());
+  }
   showSavedTick(inputEl);
 }
 
