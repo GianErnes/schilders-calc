@@ -1,4 +1,14 @@
-## v3.74.0 — Garantie-logo in de voettekst van de offerte
+## v3.75.0 — Klein Ernes-logo bovenaan elke pagina en compactere prijsregels
+Een lopende kopregel met het logo, en een strakker prijsoverzicht.
+
+### Wijzigingen
+- Op de losse offerte-print staat nu boven aan elke pagina een klein Ernes-logo, links uitgelijnd op de contentrand, naast het garantie-logo onderaan. De bovenmarge van de pagina is daarvoor iets ruimer gezet.
+- De regels in de prijstabel staan dichter op elkaar (minder verticale ruimte per regel en minder ruimte na elke tabel). Daardoor neemt het prijsoverzicht in totaal minder ruimte in.
+
+### Aandachtspunt
+- Op de eerste pagina staat al de briefkop met het grote logo. Het kleine logo bovenaan verschijnt daar dus erboven. Wil je het kleine logo alleen vanaf pagina 2, of het op pagina 1 weglaten, dan is dat een aparte aanpassing want de browser zet een vaste kopregel standaard op elke pagina. Net als de voettekst is de herhaling per pagina in Safari minder voorspelbaar dan in Chrome. Geen SQL nodig.
+
+
 Het Vakwerk Plusgarantie-logo staat nu onderaan elke pagina van de offerte.
 
 ### Wijzigingen

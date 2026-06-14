@@ -1816,11 +1816,11 @@
       margin-bottom: 16pt;
     }
     /* v3.60.1 — Rustige, lijnloze opmaak voor het offertedocument */
-    .print-only .off-doc table { border-collapse: collapse; width: 100%; margin: 4pt 0 10pt 0; }
+    .print-only .off-doc table { border-collapse: collapse; width: 100%; margin: 4pt 0 6pt 0; }
     .print-only .off-doc th,
     .print-only .off-doc td {
       border: none;
-      padding: 4pt 2pt;
+      padding: 2pt 2pt;
     }
     .print-only .off-doc th {
       background: none;
@@ -1840,6 +1840,9 @@
        Links uitgelijnd op de contentrand (zelfde als het Ernes-logo bovenaan). */
     .print-only .off-footer-vast { position: fixed; left: 15mm; bottom: 12mm; }
     .print-only .off-footer-vast img { height: 28pt; width: auto; display: block; }
+    /* v3.75.0 — klein Ernes-logo als vaste kopregel, herhaalt op elke pagina (alleen losse offerte-print). */
+    .print-only .off-header-vast { position: fixed; left: 15mm; top: 8mm; }
+    .print-only .off-header-vast img { height: 18pt; width: auto; display: block; }
     /* v3.60.2 — Strakke, lijnloze koppen + nette pagina-doorloop */
     .print-only .off-doc h2 {
       border-bottom: none;
@@ -2079,8 +2082,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.74.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.75.0</h2>
       <div class="intro-body">
+        <p><strong>🔖 Klein Ernes-logo bovenaan elke pagina en compactere prijsregels (v3.75.0).</strong> Op de losse offerte-print staat nu boven aan elke pagina een klein Ernes-logo, naast het garantie-logo onderaan. En de regels in de prijstabel staan dichter op elkaar, zodat het prijsoverzicht in totaal minder ruimte inneemt. Let op: op de eerste pagina staat al het grote logo in de briefkop, dus daar zie je het kleine logo erboven staan. Wil je dat anders, dan hoor ik het. Geen SQL nodig.</p>
         <p><strong>🛡️ Garantie-logo in de voettekst van de offerte (v3.74.0).</strong> Op de losse offerte-print staat nu het Vakwerk Plusgarantie-logo linksonder op elke pagina, uitgelijnd zoals het Ernes-logo bovenaan. Voor de paginanummers "x van y" zet je in het print-venster de optie "Kop- en voetteksten" (Safari) of "Koppen en voetteksten" (Chrome) aan. De doorlopende print met de algemene voorwaarden blijft ongemoeid, zodat die paginavullend blijft. Tip: controleer even of het logo in jouw Safari ook op pagina 2 en verder verschijnt. Geen SQL nodig.</p>
         <p><strong>📏 Prijzen in de offerte op één grootte (v3.73.1).</strong> In de prijstabel van het offertedocument staan de regelkoppen en het eindtotaal nu op dezelfde grootte als de rest van de tekst (10pt). Het lettertype was al gelijk. Geen SQL nodig.</p>
         <p><strong>🏢 Bedrijfsgegevens en logo-grootte instelbaar (v3.73.0).</strong> Onder Instellingen staat nu een blok Bedrijfsgegevens en logo. Daar pas je de naam, het adres, telefoon, e-mail, internet, IBAN, BIC, KvK en BTW aan die in de kop en het ondertekenblok van de offerte staan. Ook de grootte van het logo op de offerte stel je daar in, in punten hoog (standaard 69). De wijzigingen gelden voor elke offerte. Geen SQL nodig.</p>
@@ -3131,7 +3135,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.74.0';
+const APP_VERSION = 'v3.75.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3493,6 +3497,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.75.0', d: '2026-06-14', h: 'Klein Ernes-logo als vaste kopregel op de losse offerte-print (LOGO_ERNES, .off-header-vast position:fixed, links boven op 8mm, 18pt hoog), naast het garantie-logo onderaan. @page-bovenmarge naar 20mm voor de kopregel. Compactere prijstabel: .off-doc td/th padding 4pt naar 2pt verticaal en tabel-ondermarge 10pt naar 6pt. NB: op pagina 1 staat ook de briefkop met het grote logo, dus daar verschijnt het kleine logo erboven. Geen SQL' },
   { v: '3.74.0', d: '2026-06-14', h: 'Vaste voettekst met Vakwerk Plusgarantie-logo op de losse offerte-print, links onderaan op elke pagina (position:fixed), uitgelijnd op de contentrand (15mm, gelijk aan het Ernes-logo bovenaan). Logo OHNL_VakwerkPLUS ingebed als LOGO_VAKWERK (zwarte achtergrond transparant gemaakt met zachte rand, verkleind naar 256px hoog). printOfferteDocument injecteert een eigen @page (A4, marge 16/15/26/15mm) plus de voettekst-div; dit raakt de doorlopende print (printOfferteCompleet) niet, zodat de paginavullende AV-beelden heel blijven. Paginanummers via de browser-printoptie kop-/voettekst. NB: position:fixed-herhaling per pagina is in Safari minder voorspelbaar dan in Chrome. Geen SQL' },
   { v: '3.73.1', d: '2026-06-14', h: 'Offertedocument: prijstabel-groottes gelijkgetrokken naar 10pt (regelkop .off-doc .hg-row td 10.5pt naar 10pt; eindtotaal .grand-row en .kosten-eind .te-incl td 11pt naar 10pt). Lettertype was al gelijk (alleen tabular-nums op cijfers). Vet op koppen, subtotalen en eindtotaal vooralsnog ongemoeid. Geen SQL' },
   { v: '3.73.0', d: '2026-06-14', h: 'Bedrijfsgegevens en logo-grootte instelbaar onder Instellingen, opgeslagen in app_settings (geen SQL). Nieuw blok met naam, adres, postcode/plaats, telefoon, e-mail, internet, IBAN, BIC, KvK en BTW (data.settings.bedrijf, setter updBedrijf) plus logo-grootte in pt (data.settings.offerteLogoPt, standaard 69). De voorheen hardgecodeerde BEDRIJF in _bouwOfferteDocHtml leest nu uit de instellingen met de oude waarden als terugval en is ge-escaped; het logo krijgt een inline hoogte uit offerteLogoPt. Defaults gevuld bij het laden. Geen SQL' },
@@ -10647,9 +10652,10 @@ function _bouwOfferteDocHtml() {
 function printOfferteDocument() {
   const html = _bouwOfferteDocHtml();
   if (html == null) return;
-  const pageCss = `<style id="offPageStyle">@page { size: A4; margin: 16mm 15mm 26mm 15mm; }</style>`;
+  const pageCss = `<style id="offPageStyle">@page { size: A4; margin: 20mm 15mm 26mm 15mm; }</style>`;
+  const header = `<div class="off-header-vast"><img src="${LOGO_ERNES}" alt="Ernes schilders"></div>`;
   const footer = `<div class="off-footer-vast"><img src="${LOGO_VAKWERK}" alt="Vakwerk Plusgarantie"></div>`;
-  document.getElementById('printArea').innerHTML = pageCss + html + footer;
+  document.getElementById('printArea').innerHTML = pageCss + header + html + footer;
   _setPrintTitle('offerte');
   window.print();
 }
