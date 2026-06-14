@@ -2091,8 +2091,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.77.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.78.0</h2>
       <div class="intro-body">
+        <p><strong>📎 De offerte met bijlagen is nu één echte PDF (v3.78.0).</strong> De knop "Offerte + bijlagen" maakt voortaan één doorlopende PDF van de offerte, de getekende kozijnen en de foto's, met de algemene voorwaarden paginavullend achteraan. De kozijntekeningen gaan als scherpe vectortekening mee, de foto's met de genummerde gebreken erop. Het kleine logo en de paginanummers lopen door over de offerte, de kozijnen en de foto's. De algemene voorwaarden blijven paginavullend zonder kop of voet en tellen niet mee in "pagina x van y". Geen SQL nodig.</p>
         <p><strong>✨ Prijsopgave in de PDF opgeruimd (v3.77.2).</strong> Het herhaalde kopje "Omschrijving" per gevel is weg (de bovenste regel "Naam | Totaal excl. BTW" labelt de kolommen al), de bijkomende kosten en het eindtotaal staan nu netjes op dezelfde rechterrand als de overige bedragen, en er zit meer witruimte tussen de kosten en de tekst eronder. Geen SQL nodig.</p>
         <p><strong>📄 Kop "Wat zijn de kosten?" blijft nu bij zijn tabel (v3.77.1).</strong> In het pdfmake-offertedocument schuift de kostenkop voortaan mee naar de volgende pagina als de prijstabel daar niet meer bij past, zodat de kop niet los onderaan een pagina staat. Geldt ook voor de andere koppen. Geen SQL nodig.</p>
         <p><strong>🧾 Het offertedocument is nu een echte PDF (v3.77.0).</strong> De knop "Offerte document" maakt voortaan een echte PDF in plaats van een browser-print. Daardoor loopt het kleine Ernes-logo netjes mee vanaf pagina 2, staat het garantie-logo onder en is er een echt "pagina x van y", identiek in Safari en Chrome. De offerte-met-bijlagen blijft voorlopig zoals hij was. Geen SQL nodig.</p>
@@ -3149,7 +3150,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.77.2';
+const APP_VERSION = 'v3.78.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3511,6 +3512,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.78.0', d: '2026-06-14', h: 'Fase 2 van de overstap naar pdfmake: de knop "Offerte + bijlagen" maakt nu één doorlopende PDF in plaats van een browser-print. Nieuwe async builder _bouwOfferteCompleetDocDef neemt de content van _bouwOfferteDocDef (de offerte) en voegt achtereenvolgens toe: (1) de getekende kozijnen, elk als scherpe vector via pdfmake svg (_kozijnThumbSvg met genummerde gebrek-stippen) links, met rechts een infoblok met locatie, vorm, maten, de m¹-uitsplitsing per onderdeel (frame, tussenwerk, ramen, roeden), m² per vulling, loze onderdorpel en de genummerde gebreken, plus een legenda; (2) de foto-bijlage in twee kolommen, elke foto met de gebrek-stippen via een canvas erop gebrand (genummerd, in de gebrekkleur), met de status (meegerekend in de prijs of alleen ter documentatie), de opmerking en de genummerde gebreken, plus een legenda; (3) de algemene voorwaarden paginavullend achteraan als PNG-paginabeeld, variant per klanttype (consument of zakelijk). Kop (klein Ernes-logo vanaf pagina 2) en voet (Vakwerk-logo plus "pagina x van y") lopen door over de offerte, de kozijnen en de foto’s; de algemene voorwaarden blijven paginavullend zonder kop of voet en tellen niet mee in het paginatotaal. Dit loopt via een onzichtbare marker met id avStart die in de pageBreakBefore-callback het AV-startpaginanummer vastlegt, waarop kop, voet en paginatotaal schakelen. pdfmake kan in de browser geen externe URL’s ophalen, dus de foto’s en de AV-paginabeelden worden eerst via een canvas naar data-URI’s gezet. printOfferteCompleet roept _bouwOfferteCompleetDocDef aan en opent de PDF, met de oude HTML-print als terugval als de bibliotheek niet geladen is. Geen SQL' },
   { v: '3.77.2', d: '2026-06-14', h: 'Prijsopgave in het pdfmake-offertedocument opgeruimd. (1) In de regel-weergave zónder hoeveelheden vervalt de herhaalde kop "Omschrijving | Totaal" per gevel; de bovenste regel "Naam | Totaal excl. BTW" labelt de kolommen al, wat ruimte spaart. (2) Bijkomende kosten en het eindtotaalblok lijnen nu rechts uit op dezelfde rand als de gevelbedragen: alle prijstabellen en het eindtotaal hebben paddingRight 0, kolomgaten lopen via paddingLeft op niet-eerste kolommen (regeltabel 8pt, eindtotaal 6pt) zodat de rechterrand gelijk blijft. (3) Meer witruimte tussen de kosten en de tekst eronder: het eindtotaalblok heeft nu een ondermarge van 24pt (circa twee regels). Geen SQL' },
   { v: '3.77.1', d: '2026-06-14', h: 'Wezen-koppen in het pdfmake-offertedocument voorkomen. De kostenkop ("Wat zijn de kosten?") schuift mee naar de volgende pagina als hij in de onderste 38% van de pagina zou beginnen, zodat de kop, de kolomregel en de eerste prijsrijen samen blijven (eerder stond de kop los onderaan pagina 1 met de tabel pas op pagina 2). Via een document-brede pageBreakBefore-callback: de kostenkop heeft id offKostenKop en breekt op startPosition.top/pageInnerHeight > 0,62; overige koppen (tekstsecties, hoofdgroep- en onderdeelkoppen in de regel-weergave, en het ondertekenblok) zijn gemarkeerd met headlineLevel 1 en breken als ze als laatste node op de pagina zouden staan (followingNodesOnPage leeg). Geen SQL' },
   { v: '3.77.0', d: '2026-06-14', h: 'Fase 1 van de overstap naar pdfmake: het losse offertedocument (knop "Offerte document") wordt nu als echte PDF gegenereerd via pdfmake (geladen van de jsdelivr-CDN, versie 0.2.20). Nieuwe builder _bouwOfferteDocDef spiegelt de inhoud en logica van _bouwOfferteDocHtml: briefhoofd met bedrijfsgegevens, klant met t.a.v., titel met vier regels witruimte, alle tekstsecties (met bullets en regelafbrekingen), prijstabel in beide weergaven (per onderdeel en per regel, met de schakelaars prijsWeergave en prijsRegelsHoeveelheden), bijkomende kosten, eindtotaalblok en ondertekenblok met handtekening. Lopende kop (klein Ernes-logo vanaf pagina 2) en voet (Vakwerk-logo + echt "pagina x van y") per pagina, identiek in Safari en Chrome. printOfferteDocument roept pdfMake.createPdf(dd).open() aan, met de oude HTML-print als terugval als de bibliotheek niet geladen is. _bouwOfferteDocHtml en printOfferteCompleet (offerte met bijlagen) blijven ongemoeid tot fase 2. Lettertype is voorlopig Roboto (pdfmake-standaard). Geen SQL' },
@@ -10977,7 +10979,189 @@ function _bouwVoorwaardenHtml(klanttype) {
 
 // v3.61.0 — A4b: de doorlopende offerte-PDF. Offertedocument, dan de gekozen
 // bijlagen (kozijnen, foto's), dan altijd de algemene voorwaarden, in één print.
+// v3.78.0 — fase 2: offerte + bijlagen als één PDF via pdfmake. pdfmake kan in de browser
+// geen externe URL's ophalen, dus foto's en de AV-paginabeelden worden eerst via een canvas
+// naar data-URI's gezet. De getekende kozijnen gaan als scherpe vector mee (pdfmake `svg`).
+
+// Externe afbeelding naar data-URI via een canvas.
+function _afbeeldingNaarDataUrl(url, mime) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const cv = document.createElement('canvas');
+        cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+        cv.getContext('2d').drawImage(img, 0, 0);
+        resolve(cv.toDataURL(mime || 'image/png', 0.9));
+      } catch (e) { reject(e); }
+    };
+    img.onerror = () => reject(new Error('Afbeelding laden mislukt'));
+    img.src = url;
+  });
+}
+
+// Foto naar data-URI met de gebrek-stippen erop gebrand (genummerd, in de gebrekkleur).
+function _fotoNaarDataUrl(f) {
+  return new Promise((resolve, reject) => {
+    if (!f || !f.signedUrl) { reject(new Error('geen link')); return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const W = img.naturalWidth, H = img.naturalHeight;
+        const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+        const ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const mk = Array.isArray(f.markeringen) ? f.markeringen : [];
+        const r = Math.max(12, Math.round(Math.min(W, H) * 0.035));
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        mk.forEach((m, i) => {
+          const d = _KOZIJN_DEFECTEN[m.type] || { kleur: '#dc2626' };
+          const x = m.fx * W, y = m.fy * H;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = d.kleur; ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(r * 1.1) + 'px sans-serif';
+          ctx.fillText(String(i + 1), x, y);
+        });
+        resolve(cv.toDataURL('image/jpeg', 0.85));
+      } catch (e) { reject(e); }
+    };
+    img.onerror = () => reject(new Error('Foto laden mislukt'));
+    img.src = f.signedUrl;
+  });
+}
+
+// De samengestelde documentdefinitie: offerte + kozijnen + foto's + algemene voorwaarden.
+async function _bouwOfferteCompleetDocDef() {
+  const c = data.calc;
+  if (!c) { _toast('Geen actieve calculatie'); return null; }
+  const cfg = _offCfg();
+  const offDd = _bouwOfferteDocDef();
+  if (!offDd) return null; // melding is al getoond
+  const MUTED = '#8a8a8a';
+  const fmNl = (x) => (+x).toFixed(2).replace('.', ',');
+  const content = offDd.content.slice();
+
+  const legendaRij = (types) => ({ columns: types.map(k => ({ width: 'auto', fontSize: 8.5, text: [{ text: '\u25cf ', color: _KOZIJN_DEFECTEN[k].kleur }, _KOZIJN_DEFECTEN[k].label] })), columnGap: 14, margin: [0, 8, 0, 0] });
+
+  // --- Getekende kozijnen ---
+  const kozijnen = (c.meetstaat || []).filter(ms => ms.tekening && ms.tekening.vorm);
+  if (cfg.bijlageKozijnen !== false && kozijnen.length) {
+    const _regelLocatie = {};
+    (c.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => {
+      _regelLocatie[r.id] = [hg.naam, od.naam].map(s => (s || '').trim()).filter(Boolean).join(' \u00b7 ');
+    })));
+    content.push({ text: 'Kozijn-tekeningen', bold: true, fontSize: 13, pageBreak: 'before', margin: [0, 0, 0, 1] });
+    content.push({ text: (c.naam || '') + (c.klant ? ' \u00b7 ' + c.klant : ''), color: MUTED, fontSize: 9, margin: [0, 0, 0, 8] });
+    kozijnen.forEach(ms => {
+      const tek = ms.tekening;
+      const svg = _kozijnThumbSvg(tek, 0, { genummerd: true, fill: true });
+      const naam = ms.omschrijving || tek.naam || 'Kozijn';
+      const locatie = _regelLocatie[ms.calcRegelId] || '';
+      const vormLabel = (_KOZIJN_VORMEN[tek.vorm] || {}).label || tek.vorm;
+      const velden = (_KOZIJN_VORMEN[tek.vorm] || {}).velden || [];
+      const matenStr = velden.map(([k, lbl]) => { const v = (tek.maten && tek.maten[k] != null) ? tek.maten[k] : null; return v != null ? lbl.replace(' (cm)', '') + ': ' + (+v) + ' cm' : null; }).filter(Boolean).join(' \u00b7 ');
+      const m1 = (tek.omtrekM1 != null) ? (fmNl(tek.omtrekM1) + ' m\u00b9') : '';
+      let m1Regel = m1;
+      const dln = tek.m1Delen;
+      if (m1 && dln && typeof dln === 'object') {
+        const delen = ['frame ' + fmNl(dln.frame || 0)];
+        if (+dln.tussenwerk > 0.0001) delen.push('tussenwerk ' + fmNl(dln.tussenwerk));
+        if (+dln.ramen > 0.0001) delen.push('ramen ' + fmNl(dln.ramen));
+        if (+dln.roeden > 0.0001) delen.push('roeden ' + fmNl(dln.roeden));
+        if (delen.length > 1) m1Regel = m1 + ' (' + delen.join(' + ') + ')';
+      }
+      const loosNote = (tek.lozeDorpel && tek.vorm !== 'rond') ? ' \u00b7 loze onderdorpel' : '';
+      const perRegelVlakken = Array.isArray(tek.vlakkenM2PerRegel) ? tek.vlakkenM2PerRegel.filter(v => v && +v.m2 > 0.0001) : [];
+      const info = [{ text: naam, bold: true, fontSize: 11 }];
+      if (locatie) info.push({ text: locatie, color: MUTED, fontSize: 9, margin: [0, 0, 0, 3] });
+      const metaParts = ['Vorm: ' + vormLabel]; if (matenStr) metaParts.push(matenStr);
+      info.push({ text: metaParts.join(' \u00b7 '), fontSize: 9.5 });
+      if (m1Regel) info.push({ text: m1Regel + loosNote, bold: true, margin: [0, 2, 0, 0] });
+      if (perRegelVlakken.length) perRegelVlakken.forEach(v => info.push({ text: (v.label || 'Vulling') + ': ' + fmNl(v.m2) + ' m\u00b2', bold: true }));
+      else if (tek.vlakkenM2 != null && tek.vlakkenM2 > 0) info.push({ text: fmNl(tek.vlakkenM2) + ' m\u00b2', bold: true });
+      const markeringen = Array.isArray(tek.markeringen) ? tek.markeringen : [];
+      if (markeringen.length) {
+        info.push({ text: 'Gebreken (' + markeringen.length + ')', bold: true, fontSize: 9, margin: [0, 4, 0, 1] });
+        markeringen.forEach((mk, i) => { const def = _KOZIJN_DEFECTEN[mk.type] || { label: mk.type || 'Gebrek', kleur: '#dc2626' }; const notitie = (mk.notitie || '').trim(); info.push({ text: [{ text: (i + 1) + '. ', color: def.kleur, bold: true }, def.label + (notitie ? ' \u2014 ' + notitie : '')], fontSize: 9, margin: [0, 1, 0, 0] }); });
+      }
+      content.push({ columns: [{ width: 150, svg, fit: [150, 200] }, { width: '*', stack: info }], columnGap: 16, margin: [0, 0, 0, 14], unbreakable: true });
+    });
+    const kGebruikt = {}; kozijnen.forEach(ms => (ms.tekening.markeringen || []).forEach(m => { kGebruikt[m.type] = true; }));
+    const kTypes = Object.keys(_KOZIJN_DEFECTEN).filter(k => kGebruikt[k]);
+    if (kTypes.length) content.push(legendaRij(kTypes));
+  }
+
+  // --- Foto-bijlage ---
+  const fotos = (c.fotos || []);
+  if (cfg.bijlageFotos !== false && fotos.length) {
+    const missing = fotos.filter(f => !f.signedUrl);
+    if (missing.length) await _signFotoUrls(missing);
+    const fdata = [];
+    for (const f of fotos) { let url = null; try { url = await _fotoNaarDataUrl(f); } catch (e) { url = null; } fdata.push({ f, url }); }
+    content.push({ text: 'Foto-bijlage', bold: true, fontSize: 13, pageBreak: 'before', margin: [0, 0, 0, 1] });
+    content.push({ text: (c.naam || '') + (c.klant ? ' \u00b7 ' + c.klant : '') + ' \u00b7 ' + fotos.length + ' foto' + (fotos.length === 1 ? '' : '\u2019s'), color: MUTED, fontSize: 9, margin: [0, 0, 0, 8] });
+    const fGebruikt = {}; fotos.forEach(f => (f.markeringen || []).forEach(m => { fGebruikt[m.type] = true; }));
+    const fTypes = Object.keys(_KOZIJN_DEFECTEN).filter(k => fGebruikt[k]);
+    if (fTypes.length) content.push(legendaRij(fTypes));
+    const cell = (item) => {
+      if (!item) return { text: '' };
+      const f = item.f; const st = [];
+      if (item.url) st.push({ image: item.url, fit: [245, 200], margin: [0, 0, 0, 3] });
+      else st.push({ text: '[foto niet beschikbaar]', italics: true, color: '#999', fontSize: 9, margin: [0, 0, 0, 3] });
+      const mk = Array.isArray(f.markeringen) ? f.markeringen : [];
+      if (mk.length) { const telt = !!f.gebrekenTellen; st.push({ text: telt ? 'Gebreken meegerekend in de prijs' : 'Gebreken alleen ter documentatie \u2014 niet in de prijs', fontSize: 8, color: telt ? '#16a34a' : '#888', margin: [0, 0, 0, 2] }); }
+      if (f.opmerking) st.push({ text: f.opmerking, fontSize: 9, margin: [0, 0, 0, 2] });
+      mk.forEach((m, idx) => { const def = _KOZIJN_DEFECTEN[m.type] || { label: m.type || 'Gebrek', kleur: '#dc2626' }; const notitie = (m.notitie || '').trim(); st.push({ text: [{ text: (idx + 1) + '. ', color: def.kleur, bold: true }, def.label + (notitie ? ' \u2014 ' + notitie : '')], fontSize: 9, margin: [0, 1, 0, 0] }); });
+      return { width: '*', stack: st };
+    };
+    for (let i = 0; i < fdata.length; i += 2) content.push({ columns: [cell(fdata[i]), cell(fdata[i + 1])], columnGap: 16, margin: [0, 0, 0, 12] });
+  }
+
+  // --- Algemene voorwaarden (paginavullend, zonder kop/voet) ---
+  const klanttype = (cfg.klanttype === 'zakelijk') ? 'zakelijk' : 'consument';
+  const avFiles = (klanttype === 'zakelijk') ? ['av-zakelijk-1.png', 'av-zakelijk-2.png'] : ['av-consument-1.png', 'av-consument-2.png'];
+  const avImgs = [];
+  for (const fn of avFiles) { try { avImgs.push(await _afbeeldingNaarDataUrl(new URL(fn, location.href).href, 'image/png')); } catch (e) { avImgs.push(null); } }
+  content.push({ text: ' ', id: 'avStart', fontSize: 1, color: '#ffffff', margin: [0, 0, 0, 0] });
+  avImgs.filter(Boolean).forEach((d, i) => content.push({ image: d, fit: [505, 700], alignment: 'center', pageBreak: i === 0 ? undefined : 'before' }));
+
+  let avStartPage = null;
+  return {
+    pageSize: 'A4', pageMargins: [42, 64, 42, 72],
+    defaultStyle: { fontSize: 10, lineHeight: 1.3, color: '#1a1a1a' },
+    info: offDd.info,
+    pageBreakBefore: function (currentNode, following) {
+      if (currentNode.id === 'avStart' && currentNode.startPosition) { avStartPage = currentNode.startPosition.pageNumber + 1; return true; }
+      if (currentNode.id === 'offKostenKop' && currentNode.startPosition && currentNode.startPosition.pageInnerHeight) { if ((currentNode.startPosition.top / currentNode.startPosition.pageInnerHeight) > 0.62) return true; }
+      if (currentNode.headlineLevel === 1 && Array.isArray(following) && following.length === 0) return true;
+      return false;
+    },
+    header: function (currentPage) {
+      if (avStartPage && currentPage >= avStartPage) return null;
+      if (currentPage === 1) return null;
+      return { image: LOGO_ERNES, width: 64, margin: [42, 16, 0, 0] };
+    },
+    footer: function (currentPage) {
+      if (avStartPage && currentPage >= avStartPage) return null;
+      const tot = avStartPage ? (avStartPage - 1) : currentPage;
+      return { margin: [42, 6, 42, 0], columns: [{ image: LOGO_VAKWERK, width: 46 }, { text: 'pagina ' + currentPage + ' van ' + tot, alignment: 'right', fontSize: 8, color: MUTED, margin: [0, 16, 0, 0] }] };
+    },
+    content
+  };
+}
+
 async function printOfferteCompleet() {
+  // v3.78.0 — offerte + bijlagen als echte PDF via pdfmake. Terugval op de oude HTML-print
+  // zolang de bibliotheek niet geladen is.
+  if (typeof pdfMake !== 'undefined' && pdfMake.createPdf) {
+    let dd = null;
+    try { dd = await _bouwOfferteCompleetDocDef(); }
+    catch (e) { _toast('PDF voorbereiden mislukt: ' + (e.message || e)); return; }
+    if (!dd) return;
+    try { pdfMake.createPdf(dd).open(); return; }
+    catch (e) { _toast('PDF maken mislukt: ' + (e.message || e)); return; }
+  }
   const c = data.calc;
   if (!c) { _toast('Geen actieve calculatie'); return; }
   const cfg = _offCfg();

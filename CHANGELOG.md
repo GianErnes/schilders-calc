@@ -1,3 +1,20 @@
+## v3.78.0 — Offerte met bijlagen als één echte PDF (pdfmake, fase 2)
+De knop "Offerte + bijlagen" maakt nu één doorlopende PDF in plaats van een browser-print. De offerte, de getekende kozijnen en de foto's komen achter elkaar, met de algemene voorwaarden paginavullend achteraan.
+
+### Wijzigingen
+- De kozijntekeningen gaan als scherpe vectortekening mee, met de genummerde gebreken erop. Naast elke tekening staat de locatie, de vorm, de maten, de m¹ uitgesplitst per onderdeel, de m² per vulling en de lijst met gebreken.
+- De foto's komen in twee kolommen, elk met de genummerde gebrek-stippen erop, de status (wel of niet meegerekend in de prijs), de opmerking en de lijst met gebreken.
+- De algemene voorwaarden staan paginavullend achteraan, in de juiste variant voor consument of zakelijk.
+- Het kleine Ernes-logo bovenaan en het Vakwerk-logo met "pagina x van y" onderaan lopen door over de offerte, de kozijnen en de foto's. De algemene voorwaarden blijven paginavullend zonder kop of voet en tellen niet mee in het paginatotaal.
+
+### Techniek
+- Nieuwe async builder `_bouwOfferteCompleetDocDef` neemt de content van `_bouwOfferteDocDef` (de offerte) en hangt daar de kozijnen, de foto's en de algemene voorwaarden aan.
+- Kozijntekeningen via pdfmake `svg` (`_kozijnThumbSvg` met `genummerd`/`fill`), zodat ze als vector scherp blijven.
+- pdfmake kan in de browser geen externe URL's ophalen. De foto's en de AV-paginabeelden worden daarom eerst via een canvas naar data-URI's gezet. Op de foto's worden de gebrek-stippen meteen mee op het canvas getekend.
+- Kop, voet en het paginatotaal schakelen op een onzichtbare marker met `id: 'avStart'`. Die legt in de `pageBreakBefore`-callback het AV-startpaginanummer vast (`startPosition.pageNumber + 1`); kop en voet geven `null` vanaf die pagina en het totaal is `avStartPage - 1`.
+- `printOfferteCompleet` roept de nieuwe builder aan en opent de PDF, met de oude HTML-print als terugval als pdfmake niet geladen is. `_bouwOfferteDocHtml`, `_bouwKozijnenHtml`, `_bouwFotoHtml` en `_bouwVoorwaardenHtml` blijven als terugval bestaan.
+- Geen SQL.
+
 ## v3.77.2 — Prijsopgave in de PDF opgeruimd
 Drie verfijningen aan de prijsopgave in het pdfmake-offertedocument.
 
