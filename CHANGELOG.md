@@ -1,4 +1,18 @@
-## v3.79.0 — Ondertekenlink toont de echte offerte-PDF
+## v3.80.0 — Handtekening zwaarder en beter leesbaar
+De handtekening in het offertedocument was te dun en lichtblauw, waardoor hij op papier wegviel. Hij is nu wat steviger aangezet en iets donkerder blauw, zodat hij in print duidelijk leesbaar blijft.
+
+### Wijzigingen
+- De handtekening leest nu duidelijk op een afdruk. Het karakter van de echte pen-handtekening blijft behouden.
+- Verder verandert er niets aan het document.
+
+### Techniek
+- Alleen de data-URI in de constante `HANDTEKENING_ERNES` is vervangen. De twee gebruiksplekken (de `img`-bron in het HTML-document en de pdfmake-`image` in `_bouwOfferteDocDef`) blijven ongewijzigd.
+- De bron-PNG is 3x opgeschaald (LANCZOS), de lijnen licht verdikt via een MaxFilter-dilatatie van 3 px, en de doorzichtigheid met gamma 0,7 opgehaald zodat dunne halen voller worden. Inktkleur donkerblauw (25, 45, 110), transparante achtergrond behouden.
+- Geen SQL.
+
+---
+
+
 De accordeerlink (de pagina waar de klant ondertekent) toont voortaan de echte offerte-PDF in plaats van een nagebootst HTML-document. De klant ziet op telefoon en op desktop precies het document dat verstuurd is, inclusief de foto's en de algemene voorwaarden, zonder app of inloggen.
 
 ### Wijzigingen
