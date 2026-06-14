@@ -1,3 +1,19 @@
+## v3.77.0 — Offertedocument als echte PDF via pdfmake (fase 1)
+De knop "Offerte document" maakt nu een echte PDF in plaats van een browser-print. Dit is de eerste stap van de geplande overstap naar pdfmake.
+
+### Wijzigingen
+- Het losse offertedocument wordt gegenereerd met pdfmake. Daardoor loopt het kleine Ernes-logo netjes mee als kopregel vanaf pagina 2, staat het Vakwerk Plusgarantie-logo onderaan en is er een echt "pagina x van y". Het resultaat is identiek in Safari en Chrome.
+- Alle inhoud is overgenomen: briefhoofd met bedrijfsgegevens, klant met t.a.v., offertetitel met witruimte, alle tekstsecties (met opsommingen en regelafbrekingen), de prijstabel in beide weergaven (per onderdeel en per regel) inclusief de schakelaars, de bijkomende kosten, het eindtotaalblok en het ondertekenblok met handtekening.
+- De offerte-met-bijlagen (knop "Offerte + bijlagen") blijft voorlopig werken zoals hij was. Die volgt in fase 2.
+
+### Techniek
+- Nieuwe functie `_bouwOfferteDocDef` levert een pdfmake-documentdefinitie op, gevoed met `data.calc`, `_offCfg()` en `_berekenOfferteCijfers`. `printOfferteDocument` roept `pdfMake.createPdf(dd).open()` aan.
+- pdfmake en de lettertypes worden geladen via de jsdelivr-CDN (`pdfmake@0.2.20`).
+- Als de bibliotheek niet geladen is (bijvoorbeeld zonder internet), valt `printOfferteDocument` terug op de oude HTML-print.
+- `_bouwOfferteDocHtml` en `printOfferteCompleet` zijn ongemoeid gelaten.
+- Het lettertype is voorlopig Roboto (de pdfmake-standaard). Eigen lettertype inbedden kan later.
+- Geen SQL.
+
 ## v3.76.1 — Meer witruimte tussen klantadres en offertetitel
 In het offertedocument staat nu meer lucht tussen het klantadres en de regel "Offerte ... | ...".
 
