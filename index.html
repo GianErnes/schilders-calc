@@ -469,6 +469,9 @@
   .locatie-tag.binnen { background: #e3f2fd; color: var(--blue-deep); border-color: #bbdefb; }
   .locatie-tag.buiten { background: #e8f5e9; color: var(--green); border-color: #c8e6c9; }
   .locatie-tag.beide { background: #fff3e0; color: var(--accent-deep); border-color: #ffccbc; }
+  /* v3.70.0 — opsommingstekens in offertetekst (voorbeeld op scherm; print heeft eigen .off-doc-regel) */
+  .off-bullets { margin: 0.3rem 0; padding-left: 1.4rem; list-style: disc; }
+  .off-bullets li { margin: 0.15rem 0; }
   .system-card ol {
     list-style: none;
     counter-reset: step;
@@ -1844,6 +1847,8 @@
        een kop blijft nooit alleen onderaan een pagina staan. */
     .print-only .off-doc .section { page-break-inside: auto; margin-bottom: 8pt; }
     .print-only .off-doc .off-tekst { orphans: 2; widows: 2; }
+    .print-only .off-doc .off-bullets { margin: 3pt 0 3pt 0; padding-left: 16pt; list-style: disc; }
+    .print-only .off-doc .off-bullets li { margin: 1.5pt 0; padding-left: 2pt; orphans: 2; widows: 2; }
     .print-only .off-doc table tr { page-break-inside: avoid; }
     .print-only .off-doc thead { display: table-header-group; }
     /* v3.60.3 — Kostenoverzicht in Yoobi-stijl */
@@ -2060,8 +2065,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.69.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.70.0</h2>
       <div class="intro-body">
+        <p><strong>📝 Offerteteksten vooraf gekozen, en bolletjes in de tekst (v3.70.0).</strong> Twee dingen rond de offerte. Bij een nieuwe offerte kiest de app per sectie nu automatisch de tekst die bij het klanttype past. Staat het klanttype op consument, dan staan de consument-teksten meteen klaar en hoef je ze niet meer stuk voor stuk aan te tikken. Heeft een sectie maar één variant, dan wordt die gekozen. Bestaande offertes blijven zoals ze waren. En je kunt opsommingstekens in de tekst zetten: laat een regel beginnen met een streepje en een spatie, dus "- ", en in het voorbeeld en in het offertedocument wordt dat een net bolletje. Geen SQL nodig.</p>
         <p><strong>💾 Archiveren begint leeg (v3.69.1).</strong> Het Archiveren-venster vinkt niet meer alles vooraf aan. Je kiest zelf de een of twee PDFs die je nodig hebt en tikt op Genereer. Niet-beschikbare opties blijven grijs.</p>
         <p><strong>⌨️ Cijferblok selecteert de hele waarde, en kozijnnaam blijft niet plakken (v3.69.0).</strong> Twee dingen voor het meten. Tik je op de iPad in een cijferveld (breedte, hoogte, aantal of factor), dan licht de hele waarde nu op, zodat je ziet en zeker weet dat je eerste cijfer de bestaande waarde, meestal de 1, overschrijft. En: de naam die je een kozijn in de tekenaar geeft vult de omschrijving van die regel, maar wordt niet meer doorgezet naar de volgende regel. Die naam hoort immers bij dat ene kozijn. De gevel-koppeling blijft wel staan. Geen SQL nodig.</p>
         <p><strong>🔧 Vulling-regels verschijnen nu vanzelf (v3.68.1).</strong> De regels per kozijntekening uit v3.67.0 werden alleen opnieuw opgebouwd nadat je iets in de meetstaat bewerkte of een kozijn opsloeg. Open je de Meetstaat-tab, dan draait die omzetting nu vanzelf. Een bestaande calculatie vervangt daardoor meteen de oude samengerolde regel door de regels per tekening, zonder dat je eerst iets hoeft aan te raken.</p>
@@ -3086,7 +3092,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.69.1';
+const APP_VERSION = 'v3.70.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3448,6 +3454,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.70.0', d: '2026-06-14', h: 'Offerteteksten en opsommingstekens. (1) Nieuwe offerte kiest per sectie automatisch de variant die bij het klanttype past: _offStandaardVariantId matcht de naam op consument/zakelijk, anders een neutrale, anders de bovenste. Toegepast bij het aanmaken van de sectie-config in _offCfg, alleen voor nieuwe offertes; bestaande offerte_config blijft ongemoeid. Scheelt het handmatig aantikken per sectie. (2) Opsommingstekens in offertetekst: regels die met "- " (of •/* + spatie) beginnen worden via de nieuwe _offTekstNaarHtml één ul met bolletjes, in zowel het voorbeeld als het offertedocument; overige regels behouden hun regelafbreking. Nieuwe .off-bullets-stijl (scherm + print). Geen SQL' },
   { v: '3.69.1', d: '2026-06-14', h: 'Archiveren start zonder voorselectie: de checkboxes in het Archiveren-venster staan standaard uit (openArchiveerModal zette beschikbare opties op checked, nu op leeg), zodat je zelf de 1 of 2 PDFs kiest die je nodig hebt. Niet-beschikbare opties blijven disabled. Genereer toont al een melding bij nul selecties. Geen SQL' },
   { v: '3.69.0', d: '2026-06-14', h: 'Twee verbeteringen voor het meten. (1) Cijferblok op aanraakschermen (iPad): bij het aantikken van een np-field wordt de hele waarde geselecteerd (setSelectionRange in NumPad.open, met korte timeout voor iOS), zodat zichtbaar is dat de eerste cijfer de bestaande waarde overschrijft. De bestaande fresh-stand bleef ongewijzigd. (2) De naam van een kozijntekening vult de omschrijving van die regel maar wordt niet meer doorgezet naar de volgende regel: addMeetstaat erft de omschrijving alleen als de vorige regel géén tekening had; de calc-regel-koppeling blijft wel onthouden. Geen SQL' },
   { v: '3.68.1', d: '2026-06-14', h: 'Fix: de vulling-regels per kozijntekening (v3.67.0) werden alleen door _syncVullingMeetstaat opnieuw opgebouwd bij een meetstaat-bewerking, een Klaar in de tekenaar of een kopie, niet bij het openen van de Meetstaat-tab of bij het laden. Een bestaande open calculatie bleef daardoor de oude samengerolde auto-regel tonen tot je iets aanraakte. De sync draait nu ook bij het openen van de Meetstaat-tab (renderMeetstaat gevolgd door _syncVullingMeetstaat), idempotent: alleen bij een echte wijziging wordt naar de database geschreven. Geen SQL' },
@@ -4159,6 +4166,31 @@ function _offEsc(s) {
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
 }
+// v3.70.0 — platte offertetekst naar veilige HTML. Regels die beginnen met '- ' (of
+// '•'/'*' gevolgd door een spatie) worden samen één opsommingslijst met bolletjes;
+// overige regels behouden hun regelafbrekingen (newline -> <br>), net als voorheen.
+function _offTekstNaarHtml(tekst) {
+  const lines = String(tekst == null ? '' : tekst).split('\n');
+  const isBullet = (l) => /^\s*[-•*]\s+/.test(l);
+  let html = '';
+  let prevTekst = false;
+  for (let i = 0; i < lines.length; ) {
+    if (isBullet(lines[i])) {
+      let items = '';
+      while (i < lines.length && isBullet(lines[i])) {
+        items += `<li>${_offEsc(lines[i].replace(/^\s*[-•*]\s+/, ''))}</li>`;
+        i++;
+      }
+      html += `<ul class="off-bullets">${items}</ul>`;
+      prevTekst = false;
+    } else {
+      html += (prevTekst ? '<br>' : '') + _offEsc(lines[i]);
+      prevTekst = true;
+      i++;
+    }
+  }
+  return html;
+}
 
 // --- DB-laag (zelfde patroon als staart_lib) ---
 function _mapOffTekstFromDB(r) {
@@ -4368,13 +4400,32 @@ function _offCfg() {
   if (!cfg.secties || typeof cfg.secties !== 'object') cfg.secties = {};
   OFFERTE_SECTIES.filter(s => s.type === 'tekst').forEach(s => {
     if (!cfg.secties[s.code] || typeof cfg.secties[s.code] !== 'object') {
-      cfg.secties[s.code] = { aan: true, blokken: [{ variantId: null, tekst: null }] };
+      // v3.70.0 — nieuwe offerte: per sectie meteen de variant kiezen die bij het
+      // klanttype past (consument), zodat je niet alles handmatig hoeft aan te tikken.
+      cfg.secties[s.code] = { aan: true, blokken: [{ variantId: _offStandaardVariantId(s.code, cfg.klanttype), tekst: null }] };
     }
     const sec = cfg.secties[s.code];
     if (typeof sec.aan !== 'boolean') sec.aan = true;
-    if (!Array.isArray(sec.blokken) || !sec.blokken.length) sec.blokken = [{ variantId: null, tekst: null }];
+    if (!Array.isArray(sec.blokken) || !sec.blokken.length) sec.blokken = [{ variantId: _offStandaardVariantId(s.code, cfg.klanttype), tekst: null }];
   });
   return cfg;
+}
+// v3.70.0 — standaardvariant voor een nieuwe offerte. Kiest de variant waarvan de naam
+// het klanttype bevat (consument of zakelijk); anders een variant die niet expliciet voor
+// het andere klanttype is; anders de bovenste. null als de bibliotheek voor die sectie
+// nog geen tekst heeft (dan blijft de sectie leeg tot je zelf een variant kiest).
+function _offStandaardVariantId(sectieCode, klanttype) {
+  const vars = (data.offerteTeksten || [])
+    .filter(t => t.sectie === sectieCode)
+    .sort((a, b) => (a.volgorde - b.volgorde) || (a.naam || '').localeCompare(b.naam || ''));
+  if (!vars.length) return null;
+  const kt = (klanttype === 'zakelijk') ? 'zakelijk' : 'consument';
+  const ander = (kt === 'zakelijk') ? 'consument' : 'zakelijk';
+  const match = vars.find(v => (v.naam || '').toLowerCase().includes(kt));
+  if (match) return match.id;
+  const neutraal = vars.find(v => !(v.naam || '').toLowerCase().includes(ander));
+  if (neutraal) return neutraal.id;
+  return vars[0].id;
 }
 
 // Gerichte, gedebouncede opslag van alleen offerte_config.
@@ -4675,7 +4726,7 @@ function openOffertePreview() {
       return;
     }
     blokken.forEach(b => {
-      html += `<div style="white-space:pre-wrap; font-size:0.88rem; line-height:1.5; margin:0.3rem 0 0.6rem;">${_offEsc(_offVulVelden(_offBlokTekst(b)))}</div>`;
+      html += `<div style="font-size:0.88rem; line-height:1.5; margin:0.3rem 0 0.6rem;">${_offTekstNaarHtml(_offVulVelden(_offBlokTekst(b)))}</div>`;
     });
   });
   const elBody = document.getElementById('offPreviewBody');
@@ -10461,7 +10512,7 @@ function _bouwOfferteDocHtml() {
     html += `<div class="section">`;
     if (sec.kop) html += `<h2>${sec.kop}</h2>`;
     teksten.forEach(tk => {
-      html += `<div class="off-tekst">${_offEsc(tk).replace(/\n/g, '<br>')}</div>`;
+      html += `<div class="off-tekst">${_offTekstNaarHtml(tk)}</div>`;
     });
     html += `</div>`;
   });

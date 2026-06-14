@@ -1,4 +1,12 @@
-## v3.69.1 — Archiveren begint zonder voorselectie
+## v3.70.0 — Offerteteksten vooraf gekozen, en bolletjes in de tekst
+Minder klikwerk bij een nieuwe offerte, en opsommingstekens in de tekst.
+
+### Wijzigingen
+- Bij een nieuwe offerte kiest de app per sectie automatisch de variant die bij het klanttype past. Omdat het klanttype standaard op consument staat, staan de consument-teksten meteen klaar en hoef je ze niet meer stuk voor stuk aan te tikken. De keuze gaat op naam: een variant met "consument" of "zakelijk" in de naam wordt gekozen op basis van het klanttype, anders een variant zonder dat onderscheid, anders de bovenste. Heeft een sectie nog geen tekst in de bibliotheek, dan blijft die leeg tot je zelf kiest. Dit geldt alleen voor nieuwe offertes; bestaande offertes blijven precies zoals ze waren.
+- Opsommingstekens in de offertetekst: laat een regel beginnen met een streepje en een spatie ("- ") en in het voorbeeld en in het offertedocument wordt dat een bolletje. Meerdere van die regels onder elkaar worden samen één opsommingslijst. Een streepje hoeft niet, ook "•" of "*" gevolgd door een spatie werkt. Gewone regels behouden hun regelafbrekingen zoals voorheen.
+- Onder de motorkap: `_offStandaardVariantId` bepaalt de standaardvariant en wordt aangeroepen bij het opbouwen van de sectie-config in `_offCfg`. `_offTekstNaarHtml` zet platte tekst veilig om naar HTML met opsommingslijsten en wordt gebruikt in zowel het voorbeeld als `_bouwOfferteDocHtml`. Nieuwe `.off-bullets`-stijl voor scherm en print. Geen SQL nodig.
+
+
 Het Archiveren-venster vinkt niet meer alles vooraf aan.
 
 ### Wijzigingen
