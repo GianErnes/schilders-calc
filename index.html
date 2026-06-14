@@ -1836,13 +1836,20 @@
     .print-only .off-doc .totaal-row td { background: none; border-top: 0.75pt solid #999; font-weight: 700; }
     .print-only .off-doc .grand-row td { background: none; color: #000; font-size: 10pt; border-top: 1.5pt solid #000; font-weight: 700; }
     .print-only .off-doc .off-sign-table td { border: 0.5pt solid #999; }
-    /* v3.74.0 — vaste voettekst met garantie-logo, herhaalt op elke pagina (alleen losse offerte-print).
-       Links uitgelijnd op de contentrand (zelfde als het Ernes-logo bovenaan). */
-    .print-only .off-footer-vast { position: fixed; left: 15mm; bottom: 12mm; }
-    .print-only .off-footer-vast img { height: 28pt; width: auto; display: block; }
-    /* v3.75.0 — klein Ernes-logo als vaste kopregel, herhaalt op elke pagina (alleen losse offerte-print). */
-    .print-only .off-header-vast { position: fixed; left: 15mm; top: 8mm; }
-    .print-only .off-header-vast img { height: 18pt; width: auto; display: block; }
+    /* v3.76.0 — lopende kop- en voetregel via een thead/tfoot-tabel rond de offerte-inhoud.
+       Herhaalt op elke offertepagina (losse en doorlopende print). Marge/padding van de
+       gewone off-doc-tabellen hier neutraliseren, en de inhoudsrij mag over pagina's breken. */
+    .print-only .off-doc table.off-running { margin: 0; width: 100%; border-collapse: collapse; }
+    .print-only .off-doc table.off-running > thead { display: table-header-group; }
+    .print-only .off-doc table.off-running > tfoot { display: table-footer-group; }
+    .print-only .off-doc table.off-running > thead > tr > td,
+    .print-only .off-doc table.off-running > tfoot > tr > td,
+    .print-only .off-doc table.off-running > tbody > tr > td { border: none; padding: 0; }
+    .print-only .off-doc table.off-running > tbody > tr { page-break-inside: auto; }
+    .print-only .off-doc .off-run-head { padding-bottom: 6pt; }
+    .print-only .off-doc .off-run-head img { height: 18pt; width: auto; display: block; }
+    .print-only .off-doc .off-run-foot { padding-top: 6pt; }
+    .print-only .off-doc .off-run-foot img { height: 28pt; width: auto; display: block; }
     /* v3.60.2 — Strakke, lijnloze koppen + nette pagina-doorloop */
     .print-only .off-doc h2 {
       border-bottom: none;
@@ -2082,9 +2089,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.75.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.76.0</h2>
       <div class="intro-body">
-        <p><strong>🔖 Klein Ernes-logo bovenaan elke pagina en compactere prijsregels (v3.75.0).</strong> Op de losse offerte-print staat nu boven aan elke pagina een klein Ernes-logo, naast het garantie-logo onderaan. En de regels in de prijstabel staan dichter op elkaar, zodat het prijsoverzicht in totaal minder ruimte inneemt. Let op: op de eerste pagina staat al het grote logo in de briefkop, dus daar zie je het kleine logo erboven staan. Wil je dat anders, dan hoor ik het. Geen SQL nodig.</p>
+        <p><strong>🔁 Logo's nu ook in de offerte-met-bijlagen, via een lopende kop- en voetregel (v3.76.0).</strong> Het Ernes-logo bovenaan en het garantie-logo onderaan lopen nu mee als echte kop- en voetregel op elke offertepagina, in zowel de knop "offerte document" als "offerte + bijlagen". De bijlagen en de algemene voorwaarden blijven daarbij ongemoeid, dus de AV blijft paginavullend. Deze opzet is ook in Safari betrouwbaarder dan de vorige. Paginanummers zet je nog steeds aan via de print-optie "Koppen en voetteksten" van de browser. Geen SQL nodig.</p>
+        <p><strong>🔖 Klein Ernes-logo bovenaan elke pagina en compactere prijsregels (v3.75.0).</strong> Op de offerte-print staat boven aan elke pagina een klein Ernes-logo, naast het garantie-logo onderaan. En de regels in de prijstabel staan dichter op elkaar, zodat het prijsoverzicht in totaal minder ruimte inneemt. Let op: op de eerste pagina staat al het grote logo in de briefkop, dus daar zie je het kleine logo erboven staan. Wil je dat anders, dan hoor ik het. Geen SQL nodig.</p>
         <p><strong>🛡️ Garantie-logo in de voettekst van de offerte (v3.74.0).</strong> Op de losse offerte-print staat nu het Vakwerk Plusgarantie-logo linksonder op elke pagina, uitgelijnd zoals het Ernes-logo bovenaan. Voor de paginanummers "x van y" zet je in het print-venster de optie "Kop- en voetteksten" (Safari) of "Koppen en voetteksten" (Chrome) aan. De doorlopende print met de algemene voorwaarden blijft ongemoeid, zodat die paginavullend blijft. Tip: controleer even of het logo in jouw Safari ook op pagina 2 en verder verschijnt. Geen SQL nodig.</p>
         <p><strong>📏 Prijzen in de offerte op één grootte (v3.73.1).</strong> In de prijstabel van het offertedocument staan de regelkoppen en het eindtotaal nu op dezelfde grootte als de rest van de tekst (10pt). Het lettertype was al gelijk. Geen SQL nodig.</p>
         <p><strong>🏢 Bedrijfsgegevens en logo-grootte instelbaar (v3.73.0).</strong> Onder Instellingen staat nu een blok Bedrijfsgegevens en logo. Daar pas je de naam, het adres, telefoon, e-mail, internet, IBAN, BIC, KvK en BTW aan die in de kop en het ondertekenblok van de offerte staan. Ook de grootte van het logo op de offerte stel je daar in, in punten hoog (standaard 69). De wijzigingen gelden voor elke offerte. Geen SQL nodig.</p>
@@ -3135,7 +3143,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.75.0';
+const APP_VERSION = 'v3.76.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3497,6 +3505,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.76.0', d: '2026-06-14', h: 'Lopende kop- en voetregel via een thead/tfoot-tabel rond de offerte-inhoud in _bouwOfferteDocHtml (table.off-running: thead = Ernes-logo 18pt, tfoot = garantie-logo 28pt, tbody = inhoud). Vervangt de position:fixed-aanpak van v3.74.0/v3.75.0. De logo\'s lopen nu mee op elke offertepagina in zowel printOfferteDocument als printOfferteCompleet; bijlagen en de paginavullende AV (buiten de tabel) blijven ongemoeid (geen @page-margebox meer nodig). CSS neutraliseert off-doc-tabelmarges/padding voor .off-running en zet de inhoudsrij op page-break-inside:auto. Betrouwbaarder per-pagina in Safari dan fixed. Paginanummers nog steeds via de browser-printoptie. Geen SQL' },
   { v: '3.75.0', d: '2026-06-14', h: 'Klein Ernes-logo als vaste kopregel op de losse offerte-print (LOGO_ERNES, .off-header-vast position:fixed, links boven op 8mm, 18pt hoog), naast het garantie-logo onderaan. @page-bovenmarge naar 20mm voor de kopregel. Compactere prijstabel: .off-doc td/th padding 4pt naar 2pt verticaal en tabel-ondermarge 10pt naar 6pt. NB: op pagina 1 staat ook de briefkop met het grote logo, dus daar verschijnt het kleine logo erboven. Geen SQL' },
   { v: '3.74.0', d: '2026-06-14', h: 'Vaste voettekst met Vakwerk Plusgarantie-logo op de losse offerte-print, links onderaan op elke pagina (position:fixed), uitgelijnd op de contentrand (15mm, gelijk aan het Ernes-logo bovenaan). Logo OHNL_VakwerkPLUS ingebed als LOGO_VAKWERK (zwarte achtergrond transparant gemaakt met zachte rand, verkleind naar 256px hoog). printOfferteDocument injecteert een eigen @page (A4, marge 16/15/26/15mm) plus de voettekst-div; dit raakt de doorlopende print (printOfferteCompleet) niet, zodat de paginavullende AV-beelden heel blijven. Paginanummers via de browser-printoptie kop-/voettekst. NB: position:fixed-herhaling per pagina is in Safari minder voorspelbaar dan in Chrome. Geen SQL' },
   { v: '3.73.1', d: '2026-06-14', h: 'Offertedocument: prijstabel-groottes gelijkgetrokken naar 10pt (regelkop .off-doc .hg-row td 10.5pt naar 10pt; eindtotaal .grand-row en .kosten-eind .te-incl td 11pt naar 10pt). Lettertype was al gelijk (alleen tabular-nums op cijfers). Vet op koppen, subtotalen en eindtotaal vooralsnog ongemoeid. Geen SQL' },
@@ -10535,7 +10544,17 @@ function _bouwOfferteDocHtml() {
   }
 
   // HTML opbouwen --------------------------------------------------------
-  let html = '<div class="off-doc">';
+  // v3.76.0 — lopende kop- en voetregel via thead/tfoot rond de offerte-inhoud, zodat
+  // het Ernes-logo boven en het garantie-logo onder op elke offertepagina meelopen, in
+  // zowel de losse als de doorlopende print. Bijlagen en AV staan buiten deze tabel.
+  let html = '<div class="off-doc">'
+    + '<table class="off-running"><thead><tr><td>'
+    +   `<div class="off-run-head"><img src="${LOGO_ERNES}" alt="Ernes schilders"></div>`
+    + '</td></tr></thead>'
+    + '<tfoot><tr><td>'
+    +   `<div class="off-run-foot"><img src="${LOGO_VAKWERK}" alt="Vakwerk Plusgarantie"></div>`
+    + '</td></tr></tfoot>'
+    + '<tbody><tr><td>';
 
   // Briefhoofd
   html += `<div class="off-head">
@@ -10641,21 +10660,20 @@ function _bouwOfferteDocHtml() {
 
   // Footer
   html += `<div class="footer-block">Offerte ${offNr} · ${BEDRIJF.naam} · ${datumLang}</div>`;
+  html += '</td></tr></tbody></table>'; // einde lopende kop/voet-tabel
   html += '</div>'; // .off-doc
 
   return html;
 }
 
-// Het losse offertedocument printen. v3.74.0 — met eigen A4-paginamarge en een
-// vaste voettekst (garantie-logo) die op elke pagina herhaalt. De paginamarge en
-// voettekst gelden alleen hier, niet in de doorlopende print (die houdt de AV paginavullend).
+// Het losse offertedocument printen. v3.76.0 — de lopende kop- en voetregel
+// (Ernes-logo boven, garantie-logo onder) zit nu in _bouwOfferteDocHtml zelf, via
+// een thead/tfoot-tabel. Daardoor lopen ze mee op elke offertepagina, ook in de
+// doorlopende print, zonder de paginavullende AV te raken.
 function printOfferteDocument() {
   const html = _bouwOfferteDocHtml();
   if (html == null) return;
-  const pageCss = `<style id="offPageStyle">@page { size: A4; margin: 20mm 15mm 26mm 15mm; }</style>`;
-  const header = `<div class="off-header-vast"><img src="${LOGO_ERNES}" alt="Ernes schilders"></div>`;
-  const footer = `<div class="off-footer-vast"><img src="${LOGO_VAKWERK}" alt="Vakwerk Plusgarantie"></div>`;
-  document.getElementById('printArea').innerHTML = pageCss + header + html + footer;
+  document.getElementById('printArea').innerHTML = html;
   _setPrintTitle('offerte');
   window.print();
 }

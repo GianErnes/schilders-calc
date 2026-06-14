@@ -1,4 +1,16 @@
-## v3.75.0 — Klein Ernes-logo bovenaan elke pagina en compactere prijsregels
+## v3.76.0 — Logo's ook in de offerte-met-bijlagen via een lopende kop- en voetregel
+De logo's lopen nu mee op elke offertepagina, in beide print-knoppen.
+
+### Wijzigingen
+- Het Ernes-logo bovenaan en het Vakwerk Plusgarantie-logo onderaan zitten nu in een lopende kop- en voetregel rond de offerte-inhoud. Daardoor verschijnen ze op elke offertepagina, niet alleen in de losse print maar ook in de print met bijlagen (offerte + bijlagen).
+- De bijlagen (getekende kozijnen, foto's) en de algemene voorwaarden staan buiten deze kop- en voetregel en blijven dus ongemoeid. De algemene voorwaarden blijven paginavullend.
+- Deze opzet werkt via de kop- en voetgroep van een tabel. Dat is in Safari betrouwbaarder dan de vorige techniek met een vaste positie, en er is geen aparte paginamarge meer voor nodig.
+- Paginanummers zet je nog steeds aan via de print-optie "Koppen en voetteksten" (Safari) of "Koppen en voetteksten" (Chrome). De browser kan een meetellend nummer niet uit het document zelf halen.
+
+### Aandachtspunt
+- Controleer even of in jouw Safari de logo's op alle pagina's meelopen en of de prijstabel netjes op een nieuwe pagina begint. Een lopende voetregel volgt op de laatste pagina de tekst in plaats van strak onderaan te staan; dat is normaal bij deze techniek. Geen SQL nodig.
+
+
 Een lopende kopregel met het logo, en een strakker prijsoverzicht.
 
 ### Wijzigingen
