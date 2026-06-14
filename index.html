@@ -2055,6 +2055,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/pdfmake.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/vfs_fonts.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
 <body>
 
@@ -2091,8 +2092,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.80.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.81.0</h2>
       <div class="intro-body">
+        <p><strong>🗂️ Getekend exemplaar van een geaccordeerde offerte (v3.81.0).</strong> Heeft een klant via de ondertekenlink akkoord gegeven, dan staat er nu in het linkbeheer een knop "Getekend exemplaar (PDF)". Die maakt een archiefkopie van de bevroren offerte met achteraan een aparte bevestigingspagina: geaccordeerd door wie, datum en tijd, project, klant, bedrag en de eventuele opmerking. Werkt voor links die vanaf deze week zijn aangemaakt. Geen SQL nodig.</p>
         <p><strong>🖋️ Handtekening zwaarder en beter leesbaar (v3.80.0).</strong> De handtekening in het offertedocument was te dun en viel op papier weg. Hij is nu wat steviger aangezet en iets donkerder blauw, zodat hij in print duidelijk leesbaar blijft. Verder verandert er niets aan het document. Geen SQL nodig.</p>
         <p><strong>✅ De ondertekenlink toont nu de echte offerte-PDF (v3.79.0).</strong> Als je een ondertekenlink aanmaakt, wordt dezelfde PDF gemaakt als met de knop "Offerte + bijlagen" en bevroren opgeslagen. De klant ziet op telefoon en op desktop precies het document dat je verstuurd hebt, inclusief de foto's en de algemene voorwaarden, zonder app of inloggen. Het akkoord blijft zichtbaar als groene balk boven de offerte en wordt vastgelegd in de administratie. Oude links blijven gewoon werken via de oude weg. Draai eerst de losse SQL voor de nieuwe opslag-bucket.</p>
         <p><strong>📎 De offerte met bijlagen is nu één echte PDF (v3.78.0).</strong> De knop "Offerte + bijlagen" maakt voortaan één doorlopende PDF van de offerte, de getekende kozijnen en de foto's, met de algemene voorwaarden paginavullend achteraan. De kozijntekeningen gaan als scherpe vectortekening mee, de foto's met de genummerde gebreken erop. Het kleine logo en de paginanummers lopen door over de offerte, de kozijnen en de foto's. De algemene voorwaarden blijven paginavullend zonder kop of voet en tellen niet mee in "pagina x van y". Geen SQL nodig.</p>
@@ -3152,7 +3154,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.80.0';
+const APP_VERSION = 'v3.81.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3514,6 +3516,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.81.0', d: '2026-06-14', h: 'Getekend archiefexemplaar van een geaccordeerde offerte. In het linkbeheer (_accordBeheerRender) verschijnt bij status akkoord en een aanwezige bevroren PDF (pdf_path of snapshot.pdf) de knop "Getekend exemplaar (PDF)". Nieuwe functie _accordDownloadGetekend haalt de bevroren PDF op (bij voorkeur via _sb.storage.download op pdf_path zodat er geen CORS speelt, anders via de publieke URL), laadt hem met pdf-lib (nieuw, geladen van de jsdelivr-CDN als globale PDFLib) en voegt achteraan een aparte A4-bevestigingspagina toe met "Akkoordbevestiging", de regel dat de offerte digitaal is geaccordeerd, en de gegevens geaccordeerd-door, datum en tijd (toLocaleString nl-NL), project, klant, bedrag (_accordEur, frozen rij.bedrag) en de eventuele opmerking met eenvoudige woord-wrap via widthOfTextAtSize. Het IP blijft bewust van het papier af, net als bij de scherm-stempel. Tekst wordt naar WinAnsi gesaneerd zodat vreemde tekens de PDF niet breken. De kopie wordt als Blob gedownload met bestandsnaam "[project] - getekend.pdf". Werkt alleen voor links met een bevroren PDF (vanaf v3.79.0); oude HTML-only links krijgen de knop niet. Geen SQL' },
   { v: '3.80.0', d: '2026-06-14', h: 'De ingebakken handtekening (constante HANDTEKENING_ERNES, gebruikt in het HTML-offertedocument en in de pdfmake-PDF via _bouwOfferteDocDef) was te dun en lichtblauw, waardoor hij op papier wegviel. Vervangen door een zwaardere, iets donkerblauwere versie: de bron-PNG is 3x opgeschaald (LANCZOS), de lijnen zijn licht verdikt (MaxFilter-dilatatie 3px) en de alpha is met gamma 0,7 opgehaald zodat dunne, half-doorzichtige halen voller worden, met de inkt op een donkerblauw (25,45,110). Transparante achtergrond behouden. Alleen de data-URI van de constante is gewijzigd, de twee gebruiksplekken (img-src en pdfmake image) blijven ongemoeid. Geen SQL' },
   { v: '3.79.0', d: '2026-06-14', h: 'De accordeerlink (ondertekenpagina) toont voortaan de echte offerte-PDF in plaats van een nagebootst HTML-document. Bij het aanmaken van een link bouwt _accordNieuweLink met _bouwOfferteCompleetDocDef dezelfde PDF als de knop "Offerte + bijlagen", haalt die via pdfMake.createPdf(dd).getBlob op, en uploadt hem naar de nieuwe publieke Storage-bucket accord-pdf onder de bestandsnaam {token}.pdf (upsert). De publieke URL gaat in het bestaande snapshot-veld (snapshot.pdf), zodat de Edge Function offerte-accord ongewijzigd blijft; het pad gaat ook in de nieuwe kolom pdf_path voor opruimen later. _accordRender kiest: is er een snapshot.pdf dan toont het de PDF in een object-element (80vh) met een duidelijke "Offerte openen of downloaden (PDF)"-knop eronder als zekere weg voor iOS; anders de oude iframe-weg met srcdoc, zodat bestaande links blijven werken. De HTML-momentopname wordt nog steeds opgeslagen als terugval als de PDF niet gemaakt of geüpload kan worden. De foto’s zitten in de PDF gebakken, dus geen verlopende fotolinks meer. Het akkoord-stempel ín het document vervalt voor PDF-links (een PDF ligt vast); het akkoord blijft zichtbaar als groene banner boven de offerte en wordt vastgelegd in offerte_accorderingen. Vereist SQL (los geleverd): kolom pdf_path op offerte_accorderingen, publieke bucket accord-pdf (max 25 MB, alleen application/pdf) met insert/update/select-policies voor authenticated; publiek lezen via de publieke URL. De bestandsnaam is de token, dus de PDF is even goed afgeschermd als de link zelf' },
   { v: '3.78.0', d: '2026-06-14', h: 'Fase 2 van de overstap naar pdfmake: de knop "Offerte + bijlagen" maakt nu één doorlopende PDF in plaats van een browser-print. Nieuwe async builder _bouwOfferteCompleetDocDef neemt de content van _bouwOfferteDocDef (de offerte) en voegt achtereenvolgens toe: (1) de getekende kozijnen, elk als scherpe vector via pdfmake svg (_kozijnThumbSvg met genummerde gebrek-stippen) links, met rechts een infoblok met locatie, vorm, maten, de m¹-uitsplitsing per onderdeel (frame, tussenwerk, ramen, roeden), m² per vulling, loze onderdorpel en de genummerde gebreken, plus een legenda; (2) de foto-bijlage in twee kolommen, elke foto met de gebrek-stippen via een canvas erop gebrand (genummerd, in de gebrekkleur), met de status (meegerekend in de prijs of alleen ter documentatie), de opmerking en de genummerde gebreken, plus een legenda; (3) de algemene voorwaarden paginavullend achteraan als PNG-paginabeeld, variant per klanttype (consument of zakelijk). Kop (klein Ernes-logo vanaf pagina 2) en voet (Vakwerk-logo plus "pagina x van y") lopen door over de offerte, de kozijnen en de foto’s; de algemene voorwaarden blijven paginavullend zonder kop of voet en tellen niet mee in het paginatotaal. Dit loopt via een onzichtbare marker met id avStart die in de pageBreakBefore-callback het AV-startpaginanummer vastlegt, waarop kop, voet en paginatotaal schakelen. pdfmake kan in de browser geen externe URL’s ophalen, dus de foto’s en de AV-paginabeelden worden eerst via een canvas naar data-URI’s gezet. printOfferteCompleet roept _bouwOfferteCompleetDocDef aan en opent de PDF, met de oude HTML-print als terugval als de bibliotheek niet geladen is. Geen SQL' },
@@ -17292,6 +17295,12 @@ function _accordBeheerRender(body, c, rij) {
       + '</div>';
   }
 
+  // v3.81.0 — getekend archiefexemplaar: alleen bij akkoord en als er een bevroren PDF is.
+  const _heeftPdf = !!(rij.pdf_path || (rij.snapshot && rij.snapshot.pdf));
+  if (rij.status === 'akkoord' && _heeftPdf) {
+    h += '<button class="acb-btn sec" id="acbGetekend" style="margin-top:8px;">\u2b07\ufe0f Getekend exemplaar (PDF)</button>';
+  }
+
   if (Array.isArray(rij.vragen) && rij.vragen.length) {
     h += '<div class="acb-vragen"><strong>Vragen van de klant</strong>';
     rij.vragen.forEach(v => {
@@ -17319,6 +17328,87 @@ function _accordBeheerRender(body, c, rij) {
     if (beslist && !confirm('De klant heeft al gereageerd. Toch een nieuwe link maken? De oude reactie blijft in het overzicht staan.')) return;
     _accordNieuweLink(c, body, true);
   });
+  const _btnGetekend = body.querySelector('#acbGetekend');
+  if (_btnGetekend) _btnGetekend.addEventListener('click', () => _accordDownloadGetekend(rij, c, _btnGetekend));
+}
+
+// v3.81.0 — Getekend archiefexemplaar: de bevroren offerte-PDF ophalen en er een
+// aparte bevestigingspagina achteraan aan toevoegen (naam, datum/tijd, project, klant,
+// bedrag, opmerking). Het IP blijft bewust van het papier af. Werkt alleen voor links
+// met een bevroren PDF (nieuwe links vanaf v3.79.0).
+async function _accordDownloadGetekend(rij, c, btn) {
+  if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) { _toast('PDF-bibliotheek nog niet geladen, probeer het zo opnieuw'); return; }
+  const path = rij.pdf_path || null;
+  const pdfUrl = (rij.snapshot && rij.snapshot.pdf) ? rij.snapshot.pdf : null;
+  if (!path && !pdfUrl) { _toast('Geen bevroren PDF beschikbaar voor deze offerte'); return; }
+  const oud = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Bezig\u2026'; }
+  try {
+    // Bytes ophalen: bij voorkeur via de SDK (geen CORS), anders via de publieke URL.
+    let bytes;
+    if (path) {
+      const { data, error } = await _sb.storage.from(ACCORD_PDF_BUCKET).download(path);
+      if (error) throw error;
+      bytes = await data.arrayBuffer();
+    } else {
+      const r = await fetch(pdfUrl);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      bytes = await r.arrayBuffer();
+    }
+    const { PDFDocument, StandardFonts, rgb } = PDFLib;
+    const doc = await PDFDocument.load(bytes);
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    const fontB = await doc.embedFont(StandardFonts.HelveticaBold);
+    const page = doc.addPage([595.28, 841.89]); // A4
+    const W = 595.28, ml = 56, mr = 56;
+    // Alleen tekens die in de WinAnsi-codering passen; vreemde tekens worden een vraagteken.
+    const enc = (s) => String(s == null ? '' : s).replace(/[^\x00-\xFF\u20AC\u2018\u2019\u201C\u201D\u2013\u2014\u2022\u2026\u2122]/g, '?');
+    const ink = rgb(0.10, 0.10, 0.10), muted = rgb(0.45, 0.45, 0.45), groen = rgb(0.10, 0.48, 0.23);
+    let y = 770;
+    page.drawText(enc('Akkoordbevestiging'), { x: ml, y: y, size: 22, font: fontB, color: ink });
+    y -= 18;
+    page.drawText(enc((c.naam || '') + (c.klant ? ' \u00b7 ' + c.klant : '')), { x: ml, y: y, size: 10, font: font, color: muted });
+    y -= 40;
+    page.drawText(enc('Deze offerte is digitaal geaccordeerd door de klant.'), { x: ml, y: y, size: 12, font: font, color: groen });
+    y -= 32;
+    let datum = '';
+    if (rij.gereageerd_op) { try { datum = new Date(rij.gereageerd_op).toLocaleString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { datum = String(rij.gereageerd_op); } }
+    const regels = [['Geaccordeerd door', rij.klant_naam || ''], ['Datum en tijd', datum], ['Project', c.naam || ''], ['Klant', c.klant || '']];
+    if (rij.bedrag != null) regels.push(['Bedrag', _accordEur(rij.bedrag) + ' incl. btw']);
+    regels.forEach(function (kv) {
+      page.drawText(enc(kv[0]), { x: ml, y: y, size: 11, font: fontB, color: ink });
+      page.drawText(enc(kv[1]), { x: ml + 130, y: y, size: 11, font: font, color: ink });
+      y -= 22;
+    });
+    if (rij.notitie) {
+      y -= 8;
+      page.drawText(enc('Opmerking van de klant'), { x: ml, y: y, size: 11, font: fontB, color: ink });
+      y -= 18;
+      const maxW = W - ml - mr;
+      const woorden = enc(rij.notitie).split(/\s+/);
+      let regel = '';
+      const flush = function () { if (regel) { page.drawText(regel, { x: ml, y: y, size: 11, font: font, color: ink }); y -= 16; regel = ''; } };
+      woorden.forEach(function (w) {
+        const test = regel ? regel + ' ' + w : w;
+        if (font.widthOfTextAtSize(test, 11) > maxW) { flush(); regel = w; } else { regel = test; }
+      });
+      flush();
+    }
+    page.drawText(enc('Ernes schilders \u00b7 info@ernes.nl \u00b7 045 5321471'), { x: ml, y: 48, size: 9, font: font, color: muted });
+    const uit = await doc.save();
+    const blob = new Blob([uit], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = String(c.naam || 'offerte').replace(/[\\/:*?"<>|]+/g, '-') + ' - getekend.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    _toast('Getekend exemplaar gedownload');
+  } catch (e) {
+    _toast('Maken van het getekende exemplaar mislukt: ' + (e.message || e));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = oud; }
+  }
 }
 
 async function _accordNieuweLink(c, body, supersede) {

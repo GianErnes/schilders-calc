@@ -1,4 +1,23 @@
-## v3.80.0 — Handtekening zwaarder en beter leesbaar
+## v3.81.0 — Getekend exemplaar van een geaccordeerde offerte
+Heeft een klant via de ondertekenlink akkoord gegeven, dan kun je nu een archiefkopie maken van de offerte met de akkoordbevestiging erbij.
+
+### Wijzigingen
+- In het linkbeheer staat bij een geaccordeerde offerte een knop "Getekend exemplaar (PDF)".
+- Die maakt een kopie van de bevroren offerte met achteraan een aparte bevestigingspagina: geaccordeerd door wie, datum en tijd, project, klant, bedrag incl. btw en de eventuele opmerking van de klant.
+- Het document zelf blijft exact zoals het verstuurd is. De bevestiging komt als nette extra pagina achteraan.
+- Het IP-adres blijft bewust van het papier af, net als bij de bevestiging op het scherm. Het blijft in de administratie als bewijs.
+- Werkt voor links die vanaf deze week (v3.79.0) zijn aangemaakt. Oudere links hebben geen bevroren PDF en krijgen de knop niet.
+
+### Techniek
+- Nieuwe functie `_accordDownloadGetekend` haalt de bevroren PDF op (bij voorkeur via `_sb.storage.download` op `pdf_path`, zodat er geen CORS speelt), laadt hem met pdf-lib en voegt een A4-bevestigingspagina toe.
+- pdf-lib is nieuw toegevoegd, geladen van de jsdelivr-CDN als globale `PDFLib`.
+- De datum komt via `toLocaleString('nl-NL')`, het bedrag via `_accordEur` op het frozen `rij.bedrag`. De opmerking wordt eenvoudig afgebroken met `widthOfTextAtSize`. Tekst wordt naar WinAnsi gesaneerd zodat vreemde tekens de PDF niet breken.
+- De kopie wordt als Blob gedownload met bestandsnaam "[project] - getekend.pdf".
+- Geen SQL.
+
+---
+
+
 De handtekening in het offertedocument was te dun en lichtblauw, waardoor hij op papier wegviel. Hij is nu wat steviger aangezet en iets donkerder blauw, zodat hij in print duidelijk leesbaar blijft.
 
 ### Wijzigingen
