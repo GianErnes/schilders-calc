@@ -2092,8 +2092,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.81.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.82.0</h2>
       <div class="intro-body">
+        <p><strong>📥 De klant kan nu zelf de getekende offerte downloaden (v3.82.0).</strong> Geeft de klant via de ondertekenlink akkoord, dan wordt de download-knop op die pagina "Download uw getekende offerte (PDF)". De klant krijgt dan een PDF van de offerte met achteraan dezelfde bevestigingspagina als jouw archiefexemplaar: geaccordeerd door wie, datum en tijd, project, klant, bedrag en opmerking. Heropent de klant later de link, dan kan hij hem opnieuw ophalen. Geen SQL nodig.</p>
         <p><strong>🗂️ Getekend exemplaar van een geaccordeerde offerte (v3.81.0).</strong> Heeft een klant via de ondertekenlink akkoord gegeven, dan staat er nu in het linkbeheer een knop "Getekend exemplaar (PDF)". Die maakt een archiefkopie van de bevroren offerte met achteraan een aparte bevestigingspagina: geaccordeerd door wie, datum en tijd, project, klant, bedrag en de eventuele opmerking. Werkt voor links die vanaf deze week zijn aangemaakt. Geen SQL nodig.</p>
         <p><strong>🖋️ Handtekening zwaarder en beter leesbaar (v3.80.0).</strong> De handtekening in het offertedocument was te dun en viel op papier weg. Hij is nu wat steviger aangezet en iets donkerder blauw, zodat hij in print duidelijk leesbaar blijft. Verder verandert er niets aan het document. Geen SQL nodig.</p>
         <p><strong>✅ De ondertekenlink toont nu de echte offerte-PDF (v3.79.0).</strong> Als je een ondertekenlink aanmaakt, wordt dezelfde PDF gemaakt als met de knop "Offerte + bijlagen" en bevroren opgeslagen. De klant ziet op telefoon en op desktop precies het document dat je verstuurd hebt, inclusief de foto's en de algemene voorwaarden, zonder app of inloggen. Het akkoord blijft zichtbaar als groene balk boven de offerte en wordt vastgelegd in de administratie. Oude links blijven gewoon werken via de oude weg. Draai eerst de losse SQL voor de nieuwe opslag-bucket.</p>
@@ -3154,7 +3155,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.81.0';
+const APP_VERSION = 'v3.82.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3516,6 +3517,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.82.0', d: '2026-06-14', h: 'De klant kan na akkoord zelf de getekende offerte downloaden, met dezelfde bevestigingspagina als het archiefexemplaar van v3.81.0. De pagina-opbouw is uit _accordDownloadGetekend gehaald naar een herbruikbare kern _bouwGetekendePdfBytes(frozenBytes, info) plus _pdfBytesDownload; _accordDownloadGetekend (jouw kant) gebruikt die nu ook. Op de accord-pagina: _accordRender zet _accordCtx (pdfUrl, project, klant, bedrag) en de download-knop staat in een container met id acPdfDl. Bij een al geaccordeerde link (status akkoord in de GET) wordt die meteen vervangen door de groene knop "Download uw getekende offerte (PDF)" via _accordZetGetekendKnop. Bij een verse akkoord in _accordVerstuur wordt dezelfde knop gezet met de net ingevulde naam, het tijdstip (new Date) en de eventuele opmerking, en de bevestigingsbanner meldt dat de getekende offerte hierboven te downloaden is. De klant-kant haalt de bevroren PDF via de publieke URL (anon kan niet via de SDK-download door de RLS) en bouwt de getekende PDF met de al geladen pdf-lib. Bedrag via _accordEur op het frozen bedrag, IP blijft van het papier. Geen SQL' },
   { v: '3.81.0', d: '2026-06-14', h: 'Getekend archiefexemplaar van een geaccordeerde offerte. In het linkbeheer (_accordBeheerRender) verschijnt bij status akkoord en een aanwezige bevroren PDF (pdf_path of snapshot.pdf) de knop "Getekend exemplaar (PDF)". Nieuwe functie _accordDownloadGetekend haalt de bevroren PDF op (bij voorkeur via _sb.storage.download op pdf_path zodat er geen CORS speelt, anders via de publieke URL), laadt hem met pdf-lib (nieuw, geladen van de jsdelivr-CDN als globale PDFLib) en voegt achteraan een aparte A4-bevestigingspagina toe met "Akkoordbevestiging", de regel dat de offerte digitaal is geaccordeerd, en de gegevens geaccordeerd-door, datum en tijd (toLocaleString nl-NL), project, klant, bedrag (_accordEur, frozen rij.bedrag) en de eventuele opmerking met eenvoudige woord-wrap via widthOfTextAtSize. Het IP blijft bewust van het papier af, net als bij de scherm-stempel. Tekst wordt naar WinAnsi gesaneerd zodat vreemde tekens de PDF niet breken. De kopie wordt als Blob gedownload met bestandsnaam "[project] - getekend.pdf". Werkt alleen voor links met een bevroren PDF (vanaf v3.79.0); oude HTML-only links krijgen de knop niet. Geen SQL' },
   { v: '3.80.0', d: '2026-06-14', h: 'De ingebakken handtekening (constante HANDTEKENING_ERNES, gebruikt in het HTML-offertedocument en in de pdfmake-PDF via _bouwOfferteDocDef) was te dun en lichtblauw, waardoor hij op papier wegviel. Vervangen door een zwaardere, iets donkerblauwere versie: de bron-PNG is 3x opgeschaald (LANCZOS), de lijnen zijn licht verdikt (MaxFilter-dilatatie 3px) en de alpha is met gamma 0,7 opgehaald zodat dunne, half-doorzichtige halen voller worden, met de inkt op een donkerblauw (25,45,110). Transparante achtergrond behouden. Alleen de data-URI van de constante is gewijzigd, de twee gebruiksplekken (img-src en pdfmake image) blijven ongemoeid. Geen SQL' },
   { v: '3.79.0', d: '2026-06-14', h: 'De accordeerlink (ondertekenpagina) toont voortaan de echte offerte-PDF in plaats van een nagebootst HTML-document. Bij het aanmaken van een link bouwt _accordNieuweLink met _bouwOfferteCompleetDocDef dezelfde PDF als de knop "Offerte + bijlagen", haalt die via pdfMake.createPdf(dd).getBlob op, en uploadt hem naar de nieuwe publieke Storage-bucket accord-pdf onder de bestandsnaam {token}.pdf (upsert). De publieke URL gaat in het bestaande snapshot-veld (snapshot.pdf), zodat de Edge Function offerte-accord ongewijzigd blijft; het pad gaat ook in de nieuwe kolom pdf_path voor opruimen later. _accordRender kiest: is er een snapshot.pdf dan toont het de PDF in een object-element (80vh) met een duidelijke "Offerte openen of downloaden (PDF)"-knop eronder als zekere weg voor iOS; anders de oude iframe-weg met srcdoc, zodat bestaande links blijven werken. De HTML-momentopname wordt nog steeds opgeslagen als terugval als de PDF niet gemaakt of geüpload kan worden. De foto’s zitten in de PDF gebakken, dus geen verlopende fotolinks meer. Het akkoord-stempel ín het document vervalt voor PDF-links (een PDF ligt vast); het akkoord blijft zichtbaar als groene banner boven de offerte en wordt vastgelegd in offerte_accorderingen. Vereist SQL (los geleverd): kolom pdf_path op offerte_accorderingen, publieke bucket accord-pdf (max 25 MB, alleen application/pdf) met insert/update/select-policies voor authenticated; publiek lezen via de publieke URL. De bestandsnaam is de token, dus de PDF is even goed afgeschermd als de link zelf' },
@@ -17040,7 +17042,7 @@ function _accordRender(root, token, res) {
         + '<div style="padding:24px;text-align:center;color:#555;">De offerte kan hier niet in beeld getoond worden op dit toestel. '
         + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener">Open de offerte (PDF)</a>.</div>'
         + '</object>'
-        + '<div style="margin:10px 0 0;text-align:center;">'
+        + '<div id="acPdfDl" style="margin:10px 0 0;text-align:center;">'
         + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Offerte openen of downloaden (PDF)</a>'
         + '</div>')
     : '<iframe id="acOfferte" class="ac-offerte" title="Offerte"></iframe>';
@@ -17065,6 +17067,14 @@ function _accordRender(root, token, res) {
       try { ifr.contentWindow.document.querySelectorAll('img').forEach(im => { if (!im.complete) im.addEventListener('load', fix); }); } catch (e) {}
       setTimeout(fix, 800); setTimeout(fix, 2000);
     });
+  }
+
+  if (pdfUrl) {
+    _accordCtx = { pdfUrl: pdfUrl, project: res.project, klant: res.klant, bedrag: res.bedrag };
+    // Heropent de klant een al geaccordeerde link, dan meteen de getekende offerte aanbieden.
+    if (res.status === 'akkoord') {
+      _accordZetGetekendKnop(root.querySelector('#acPdfDl'), { naam: res.klant_naam, datumIso: res.gereageerd_op, notitie: res.notitie });
+    }
   }
 
   if (!reedsAf) _accordWireActies(root, token, bedrag);
@@ -17160,10 +17170,15 @@ async function _accordVerstuur(root, token, mode, form, melding, submit) {
   if (mode === 'akkoord') {
     const ifr = root.querySelector('#acOfferte');
     if (ifr) _accordStempel(ifr, naam, new Date().toISOString());
+    // Bij een PDF-link nu de getekende offerte aanbieden om te downloaden.
+    if (_accordCtx && _accordCtx.pdfUrl) {
+      _accordZetGetekendKnop(root.querySelector('#acPdfDl'), { naam: naam, datumIso: new Date().toISOString(), notitie: notitie });
+    }
   }
   const acties = root.querySelector('#acActies');
+  const heeftPdfDl = !!(mode === 'akkoord' && _accordCtx && _accordCtx.pdfUrl);
   acties.innerHTML = '<div class="ac-banner ' + (mode === 'akkoord' ? 'ac-ok' : 'ac-nee') + '">'
-    + (mode === 'akkoord' ? 'Bedankt. Uw akkoord is vastgelegd.' : 'Bedankt. Uw reactie is vastgelegd.')
+    + (mode === 'akkoord' ? 'Bedankt. Uw akkoord is vastgelegd.' + (heeftPdfDl ? ' U kunt hierboven uw getekende offerte downloaden.' : '') : 'Bedankt. Uw reactie is vastgelegd.')
     + '</div>';
 }
 
@@ -17332,10 +17347,68 @@ function _accordBeheerRender(body, c, rij) {
   if (_btnGetekend) _btnGetekend.addEventListener('click', () => _accordDownloadGetekend(rij, c, _btnGetekend));
 }
 
-// v3.81.0 — Getekend archiefexemplaar: de bevroren offerte-PDF ophalen en er een
-// aparte bevestigingspagina achteraan aan toevoegen (naam, datum/tijd, project, klant,
-// bedrag, opmerking). Het IP blijft bewust van het papier af. Werkt alleen voor links
-// met een bevroren PDF (nieuwe links vanaf v3.79.0).
+// v3.81.0 / v3.82.0 — Getekend exemplaar: de bevroren offerte-PDF ophalen en er een aparte
+// bevestigingspagina achteraan aan toevoegen (naam, datum/tijd, project, klant, bedrag,
+// opmerking). Het IP blijft bewust van het papier af. Dezelfde opbouw voor jouw kant
+// (archiefexemplaar) en de klant-kant (download na akkoord).
+//
+// Kern: voegt de bevestigingspagina toe aan de meegegeven PDF-bytes en geeft de nieuwe
+// bytes terug. info = { naam, datumIso, project, klant, bedrag, notitie }.
+async function _bouwGetekendePdfBytes(frozenBytes, info) {
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+  const doc = await PDFDocument.load(frozenBytes);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const fontB = await doc.embedFont(StandardFonts.HelveticaBold);
+  const page = doc.addPage([595.28, 841.89]); // A4
+  const W = 595.28, ml = 56, mr = 56;
+  // Alleen tekens die in de WinAnsi-codering passen; vreemde tekens worden een vraagteken.
+  const enc = (s) => String(s == null ? '' : s).replace(/[^\x00-\xFF\u20AC\u2018\u2019\u201C\u201D\u2013\u2014\u2022\u2026\u2122]/g, '?');
+  const ink = rgb(0.10, 0.10, 0.10), muted = rgb(0.45, 0.45, 0.45), groen = rgb(0.10, 0.48, 0.23);
+  let y = 770;
+  page.drawText(enc('Akkoordbevestiging'), { x: ml, y: y, size: 22, font: fontB, color: ink });
+  y -= 18;
+  page.drawText(enc((info.project || '') + (info.klant ? ' \u00b7 ' + info.klant : '')), { x: ml, y: y, size: 10, font: font, color: muted });
+  y -= 40;
+  page.drawText(enc('Deze offerte is digitaal geaccordeerd door de klant.'), { x: ml, y: y, size: 12, font: font, color: groen });
+  y -= 32;
+  let datum = '';
+  if (info.datumIso) { try { datum = new Date(info.datumIso).toLocaleString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { datum = String(info.datumIso); } }
+  const regels = [['Geaccordeerd door', info.naam || ''], ['Datum en tijd', datum], ['Project', info.project || ''], ['Klant', info.klant || '']];
+  if (info.bedrag != null) regels.push(['Bedrag', _accordEur(info.bedrag) + ' incl. btw']);
+  regels.forEach(function (kv) {
+    page.drawText(enc(kv[0]), { x: ml, y: y, size: 11, font: fontB, color: ink });
+    page.drawText(enc(kv[1]), { x: ml + 130, y: y, size: 11, font: font, color: ink });
+    y -= 22;
+  });
+  if (info.notitie) {
+    y -= 8;
+    page.drawText(enc('Opmerking'), { x: ml, y: y, size: 11, font: fontB, color: ink });
+    y -= 18;
+    const maxW = W - ml - mr;
+    const woorden = enc(info.notitie).split(/\s+/);
+    let regel = '';
+    const flush = function () { if (regel) { page.drawText(regel, { x: ml, y: y, size: 11, font: font, color: ink }); y -= 16; regel = ''; } };
+    woorden.forEach(function (w) {
+      const test = regel ? regel + ' ' + w : w;
+      if (font.widthOfTextAtSize(test, 11) > maxW) { flush(); regel = w; } else { regel = test; }
+    });
+    flush();
+  }
+  page.drawText(enc('Ernes schilders \u00b7 info@ernes.nl \u00b7 045 5321471'), { x: ml, y: 48, size: 9, font: font, color: muted });
+  return await doc.save();
+}
+
+// Hulp: bytes als PDF-bestand laten downloaden.
+function _pdfBytesDownload(bytes, filename) {
+  const blob = new Blob([bytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+}
+
+// Jouw kant: archiefexemplaar vanuit het linkbeheer.
 async function _accordDownloadGetekend(rij, c, btn) {
   if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) { _toast('PDF-bibliotheek nog niet geladen, probeer het zo opnieuw'); return; }
   const path = rij.pdf_path || null;
@@ -17355,60 +17428,47 @@ async function _accordDownloadGetekend(rij, c, btn) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       bytes = await r.arrayBuffer();
     }
-    const { PDFDocument, StandardFonts, rgb } = PDFLib;
-    const doc = await PDFDocument.load(bytes);
-    const font = await doc.embedFont(StandardFonts.Helvetica);
-    const fontB = await doc.embedFont(StandardFonts.HelveticaBold);
-    const page = doc.addPage([595.28, 841.89]); // A4
-    const W = 595.28, ml = 56, mr = 56;
-    // Alleen tekens die in de WinAnsi-codering passen; vreemde tekens worden een vraagteken.
-    const enc = (s) => String(s == null ? '' : s).replace(/[^\x00-\xFF\u20AC\u2018\u2019\u201C\u201D\u2013\u2014\u2022\u2026\u2122]/g, '?');
-    const ink = rgb(0.10, 0.10, 0.10), muted = rgb(0.45, 0.45, 0.45), groen = rgb(0.10, 0.48, 0.23);
-    let y = 770;
-    page.drawText(enc('Akkoordbevestiging'), { x: ml, y: y, size: 22, font: fontB, color: ink });
-    y -= 18;
-    page.drawText(enc((c.naam || '') + (c.klant ? ' \u00b7 ' + c.klant : '')), { x: ml, y: y, size: 10, font: font, color: muted });
-    y -= 40;
-    page.drawText(enc('Deze offerte is digitaal geaccordeerd door de klant.'), { x: ml, y: y, size: 12, font: font, color: groen });
-    y -= 32;
-    let datum = '';
-    if (rij.gereageerd_op) { try { datum = new Date(rij.gereageerd_op).toLocaleString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { datum = String(rij.gereageerd_op); } }
-    const regels = [['Geaccordeerd door', rij.klant_naam || ''], ['Datum en tijd', datum], ['Project', c.naam || ''], ['Klant', c.klant || '']];
-    if (rij.bedrag != null) regels.push(['Bedrag', _accordEur(rij.bedrag) + ' incl. btw']);
-    regels.forEach(function (kv) {
-      page.drawText(enc(kv[0]), { x: ml, y: y, size: 11, font: fontB, color: ink });
-      page.drawText(enc(kv[1]), { x: ml + 130, y: y, size: 11, font: font, color: ink });
-      y -= 22;
-    });
-    if (rij.notitie) {
-      y -= 8;
-      page.drawText(enc('Opmerking van de klant'), { x: ml, y: y, size: 11, font: fontB, color: ink });
-      y -= 18;
-      const maxW = W - ml - mr;
-      const woorden = enc(rij.notitie).split(/\s+/);
-      let regel = '';
-      const flush = function () { if (regel) { page.drawText(regel, { x: ml, y: y, size: 11, font: font, color: ink }); y -= 16; regel = ''; } };
-      woorden.forEach(function (w) {
-        const test = regel ? regel + ' ' + w : w;
-        if (font.widthOfTextAtSize(test, 11) > maxW) { flush(); regel = w; } else { regel = test; }
-      });
-      flush();
-    }
-    page.drawText(enc('Ernes schilders \u00b7 info@ernes.nl \u00b7 045 5321471'), { x: ml, y: 48, size: 9, font: font, color: muted });
-    const uit = await doc.save();
-    const blob = new Blob([uit], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = String(c.naam || 'offerte').replace(/[\\/:*?"<>|]+/g, '-') + ' - getekend.pdf';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    const uit = await _bouwGetekendePdfBytes(bytes, { naam: rij.klant_naam, datumIso: rij.gereageerd_op, project: c.naam, klant: c.klant, bedrag: rij.bedrag, notitie: rij.notitie });
+    _pdfBytesDownload(uit, String(c.naam || 'offerte').replace(/[\\/:*?"<>|]+/g, '-') + ' - getekend.pdf');
     _toast('Getekend exemplaar gedownload');
   } catch (e) {
     _toast('Maken van het getekende exemplaar mislukt: ' + (e.message || e));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = oud; }
   }
+}
+
+// Klant-kant: na akkoord (of bij heropenen van een geaccordeerde link) de getekende
+// offerte downloaden. De publieke PDF-URL en de project/klant/bedrag-gegevens staan in
+// _accordCtx; de naam, datum en opmerking komen mee in info.
+let _accordCtx = null;
+async function _accordKlantDownloadGetekend(info, btn) {
+  if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) { alert('De PDF-bibliotheek is nog niet geladen. Probeer het over een paar seconden opnieuw.'); return; }
+  const pdfUrl = _accordCtx && _accordCtx.pdfUrl;
+  if (!pdfUrl) { alert('De offerte-PDF is niet beschikbaar.'); return; }
+  const oud = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Bezig\u2026'; }
+  try {
+    const r = await fetch(pdfUrl);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const bytes = await r.arrayBuffer();
+    const volledig = Object.assign({ project: _accordCtx.project, klant: _accordCtx.klant, bedrag: _accordCtx.bedrag }, info);
+    const uit = await _bouwGetekendePdfBytes(bytes, volledig);
+    _pdfBytesDownload(uit, String(_accordCtx.project || 'offerte').replace(/[\\/:*?"<>|]+/g, '-') + ' - getekend.pdf');
+  } catch (e) {
+    alert('Downloaden van de getekende offerte mislukt: ' + (e.message || e));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = oud; }
+  }
+}
+
+// Plaatst in een container de groene knop "Download uw getekende offerte (PDF)" en bedraadt
+// hem met de meegegeven akkoord-gegevens.
+function _accordZetGetekendKnop(container, info) {
+  if (!container) return;
+  container.innerHTML = '<button id="acPdfGetekend" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border:0;border-radius:8px;font-weight:600;cursor:pointer;">Download uw getekende offerte (PDF)</button>';
+  const b = container.querySelector('#acPdfGetekend');
+  b.addEventListener('click', function () { _accordKlantDownloadGetekend(info, b); });
 }
 
 async function _accordNieuweLink(c, body, supersede) {

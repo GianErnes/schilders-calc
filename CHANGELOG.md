@@ -1,4 +1,21 @@
-## v3.81.0 — Getekend exemplaar van een geaccordeerde offerte
+## v3.82.0 — Klant kan zelf de getekende offerte downloaden
+Geeft een klant via de ondertekenlink akkoord, dan kan hij nu zelf een PDF downloaden waarin staat dat en wanneer hij getekend heeft. Dezelfde bevestigingspagina als jouw archiefexemplaar.
+
+### Wijzigingen
+- Na akkoord wordt de download-knop op de ondertekenpagina "Download uw getekende offerte (PDF)". De klant krijgt dan de offerte met achteraan de bevestigingspagina: geaccordeerd door wie, datum en tijd, project, klant, bedrag en de eventuele opmerking.
+- Heropent de klant later de link van een al geaccordeerde offerte, dan kan hij de getekende offerte opnieuw ophalen.
+- De offerte in beeld blijft de kale offerte zoals verstuurd. De bevestiging komt als extra pagina in de download.
+- Het IP-adres blijft van het papier af, net als bij jouw archiefexemplaar.
+
+### Techniek
+- De opbouw van de bevestigingspagina is uit `_accordDownloadGetekend` gehaald naar een herbruikbare kern `_bouwGetekendePdfBytes(frozenBytes, info)` plus `_pdfBytesDownload`. Jouw kant gebruikt die nu ook, zodat beide kanten exact dezelfde pagina geven.
+- `_accordRender` zet `_accordCtx` (publieke pdfUrl, project, klant, bedrag) en plaatst de download-knop in een container met id `acPdfDl`. Bij een al geaccordeerde link wordt die meteen vervangen door de getekende-knop via `_accordZetGetekendKnop`.
+- Bij een vers akkoord in `_accordVerstuur` wordt dezelfde knop gezet met de net ingevulde naam, het tijdstip en de eventuele opmerking. De klant-kant haalt de bevroren PDF via de publieke URL (anon kan niet via de SDK-download door de RLS) en bouwt de getekende PDF met de al geladen pdf-lib.
+- Geen SQL.
+
+---
+
+
 Heeft een klant via de ondertekenlink akkoord gegeven, dan kun je nu een archiefkopie maken van de offerte met de akkoordbevestiging erbij.
 
 ### Wijzigingen
