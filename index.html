@@ -2091,8 +2091,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.78.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.79.0</h2>
       <div class="intro-body">
+        <p><strong>✅ De ondertekenlink toont nu de echte offerte-PDF (v3.79.0).</strong> Als je een ondertekenlink aanmaakt, wordt dezelfde PDF gemaakt als met de knop "Offerte + bijlagen" en bevroren opgeslagen. De klant ziet op telefoon en op desktop precies het document dat je verstuurd hebt, inclusief de foto's en de algemene voorwaarden, zonder app of inloggen. Het akkoord blijft zichtbaar als groene balk boven de offerte en wordt vastgelegd in de administratie. Oude links blijven gewoon werken via de oude weg. Draai eerst de losse SQL voor de nieuwe opslag-bucket.</p>
         <p><strong>📎 De offerte met bijlagen is nu één echte PDF (v3.78.0).</strong> De knop "Offerte + bijlagen" maakt voortaan één doorlopende PDF van de offerte, de getekende kozijnen en de foto's, met de algemene voorwaarden paginavullend achteraan. De kozijntekeningen gaan als scherpe vectortekening mee, de foto's met de genummerde gebreken erop. Het kleine logo en de paginanummers lopen door over de offerte, de kozijnen en de foto's. De algemene voorwaarden blijven paginavullend zonder kop of voet en tellen niet mee in "pagina x van y". Geen SQL nodig.</p>
         <p><strong>✨ Prijsopgave in de PDF opgeruimd (v3.77.2).</strong> Het herhaalde kopje "Omschrijving" per gevel is weg (de bovenste regel "Naam | Totaal excl. BTW" labelt de kolommen al), de bijkomende kosten en het eindtotaal staan nu netjes op dezelfde rechterrand als de overige bedragen, en er zit meer witruimte tussen de kosten en de tekst eronder. Geen SQL nodig.</p>
         <p><strong>📄 Kop "Wat zijn de kosten?" blijft nu bij zijn tabel (v3.77.1).</strong> In het pdfmake-offertedocument schuift de kostenkop voortaan mee naar de volgende pagina als de prijstabel daar niet meer bij past, zodat de kop niet los onderaan een pagina staat. Geldt ook voor de andere koppen. Geen SQL nodig.</p>
@@ -3150,7 +3151,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.78.0';
+const APP_VERSION = 'v3.79.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3512,6 +3513,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.79.0', d: '2026-06-14', h: 'De accordeerlink (ondertekenpagina) toont voortaan de echte offerte-PDF in plaats van een nagebootst HTML-document. Bij het aanmaken van een link bouwt _accordNieuweLink met _bouwOfferteCompleetDocDef dezelfde PDF als de knop "Offerte + bijlagen", haalt die via pdfMake.createPdf(dd).getBlob op, en uploadt hem naar de nieuwe publieke Storage-bucket accord-pdf onder de bestandsnaam {token}.pdf (upsert). De publieke URL gaat in het bestaande snapshot-veld (snapshot.pdf), zodat de Edge Function offerte-accord ongewijzigd blijft; het pad gaat ook in de nieuwe kolom pdf_path voor opruimen later. _accordRender kiest: is er een snapshot.pdf dan toont het de PDF in een object-element (80vh) met een duidelijke "Offerte openen of downloaden (PDF)"-knop eronder als zekere weg voor iOS; anders de oude iframe-weg met srcdoc, zodat bestaande links blijven werken. De HTML-momentopname wordt nog steeds opgeslagen als terugval als de PDF niet gemaakt of geüpload kan worden. De foto’s zitten in de PDF gebakken, dus geen verlopende fotolinks meer. Het akkoord-stempel ín het document vervalt voor PDF-links (een PDF ligt vast); het akkoord blijft zichtbaar als groene banner boven de offerte en wordt vastgelegd in offerte_accorderingen. Vereist SQL (los geleverd): kolom pdf_path op offerte_accorderingen, publieke bucket accord-pdf (max 25 MB, alleen application/pdf) met insert/update/select-policies voor authenticated; publiek lezen via de publieke URL. De bestandsnaam is de token, dus de PDF is even goed afgeschermd als de link zelf' },
   { v: '3.78.0', d: '2026-06-14', h: 'Fase 2 van de overstap naar pdfmake: de knop "Offerte + bijlagen" maakt nu één doorlopende PDF in plaats van een browser-print. Nieuwe async builder _bouwOfferteCompleetDocDef neemt de content van _bouwOfferteDocDef (de offerte) en voegt achtereenvolgens toe: (1) de getekende kozijnen, elk als scherpe vector via pdfmake svg (_kozijnThumbSvg met genummerde gebrek-stippen) links, met rechts een infoblok met locatie, vorm, maten, de m¹-uitsplitsing per onderdeel (frame, tussenwerk, ramen, roeden), m² per vulling, loze onderdorpel en de genummerde gebreken, plus een legenda; (2) de foto-bijlage in twee kolommen, elke foto met de gebrek-stippen via een canvas erop gebrand (genummerd, in de gebrekkleur), met de status (meegerekend in de prijs of alleen ter documentatie), de opmerking en de genummerde gebreken, plus een legenda; (3) de algemene voorwaarden paginavullend achteraan als PNG-paginabeeld, variant per klanttype (consument of zakelijk). Kop (klein Ernes-logo vanaf pagina 2) en voet (Vakwerk-logo plus "pagina x van y") lopen door over de offerte, de kozijnen en de foto’s; de algemene voorwaarden blijven paginavullend zonder kop of voet en tellen niet mee in het paginatotaal. Dit loopt via een onzichtbare marker met id avStart die in de pageBreakBefore-callback het AV-startpaginanummer vastlegt, waarop kop, voet en paginatotaal schakelen. pdfmake kan in de browser geen externe URL’s ophalen, dus de foto’s en de AV-paginabeelden worden eerst via een canvas naar data-URI’s gezet. printOfferteCompleet roept _bouwOfferteCompleetDocDef aan en opent de PDF, met de oude HTML-print als terugval als de bibliotheek niet geladen is. Geen SQL' },
   { v: '3.77.2', d: '2026-06-14', h: 'Prijsopgave in het pdfmake-offertedocument opgeruimd. (1) In de regel-weergave zónder hoeveelheden vervalt de herhaalde kop "Omschrijving | Totaal" per gevel; de bovenste regel "Naam | Totaal excl. BTW" labelt de kolommen al, wat ruimte spaart. (2) Bijkomende kosten en het eindtotaalblok lijnen nu rechts uit op dezelfde rand als de gevelbedragen: alle prijstabellen en het eindtotaal hebben paddingRight 0, kolomgaten lopen via paddingLeft op niet-eerste kolommen (regeltabel 8pt, eindtotaal 6pt) zodat de rechterrand gelijk blijft. (3) Meer witruimte tussen de kosten en de tekst eronder: het eindtotaalblok heeft nu een ondermarge van 24pt (circa twee regels). Geen SQL' },
   { v: '3.77.1', d: '2026-06-14', h: 'Wezen-koppen in het pdfmake-offertedocument voorkomen. De kostenkop ("Wat zijn de kosten?") schuift mee naar de volgende pagina als hij in de onderste 38% van de pagina zou beginnen, zodat de kop, de kolomregel en de eerste prijsrijen samen blijven (eerder stond de kop los onderaan pagina 1 met de tabel pas op pagina 2). Via een document-brede pageBreakBefore-callback: de kostenkop heeft id offKostenKop en breekt op startPosition.top/pageInnerHeight > 0,62; overige koppen (tekstsecties, hoofdgroep- en onderdeelkoppen in de regel-weergave, en het ondertekenblok) zijn gemarkeerd met headlineLevel 1 en breken als ze als laatste node op de pagina zouden staan (followingNodesOnPage leeg). Geen SQL' },
@@ -5724,6 +5726,7 @@ async function _deleteFotoFolder(calcId) {
 // ============================================================
 const DOC_BUCKET = 'calculatie-documenten';
 const DOC_MAX_BYTES = 50 * 1024 * 1024; // 50 MB — grens van de gratis Supabase-laag
+const ACCORD_PDF_BUCKET = 'accord-pdf'; // v3.79.0 — bevroren offerte-PDF achter de accordeerlink
 
 function _mapDocFromDB(row) {
   return {
@@ -17010,6 +17013,9 @@ async function _accordPaginaTonen(token) {
 
 function _accordRender(root, token, res) {
   const offHtml = (res.snapshot && res.snapshot.html) ? res.snapshot.html : '<p>Offerte niet beschikbaar.</p>';
+  // v3.79.0 — nieuwe links hebben een bevroren PDF in de snapshot; toon die. Oude links
+  // hebben alleen html en blijven via de oude iframe-weg renderen.
+  const pdfUrl = (res.snapshot && res.snapshot.pdf) ? res.snapshot.pdf : null;
   const bedrag = res.bedrag;
   const reedsAf = res.status === 'akkoord' || res.status === 'afgekeurd';
 
@@ -17024,25 +17030,37 @@ function _accordRender(root, token, res) {
       + (res.gereageerd_op ? ' op ' + _accordDatum(res.gereageerd_op) : '') + '.</div>';
   }
 
+  const docHtml = pdfUrl
+    ? ('<object id="acOffertePdf" class="ac-offerte" data="' + _accordEsc(pdfUrl) + '#view=FitH" type="application/pdf" style="width:100%;height:80vh;border:0;background:#fff;">'
+        + '<div style="padding:24px;text-align:center;color:#555;">De offerte kan hier niet in beeld getoond worden op dit toestel. '
+        + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener">Open de offerte (PDF)</a>.</div>'
+        + '</object>'
+        + '<div style="margin:10px 0 0;text-align:center;">'
+        + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Offerte openen of downloaden (PDF)</a>'
+        + '</div>')
+    : '<iframe id="acOfferte" class="ac-offerte" title="Offerte"></iframe>';
+
   root.innerHTML =
     '<div class="ac-wrap">'
     + '<div class="ac-kop"><div class="ac-kop-titel">Offerte ter goedkeuring</div>'
     + '<div class="ac-kop-sub">' + _accordEsc(res.project || '') + (res.klant ? ' \u2014 ' + _accordEsc(res.klant) : '') + '</div></div>'
     + banner
-    + '<iframe id="acOfferte" class="ac-offerte" title="Offerte"></iframe>'
+    + docHtml
     + (reedsAf ? '' : _accordActiesHtml(bedrag))
     + '<div class="ac-voet">Ernes schilders \u00b7 info@ernes.nl \u00b7 045 5321471</div>'
     + '</div>';
 
-  const ifr = root.querySelector('#acOfferte');
-  ifr.srcdoc = _accordOfferteSrcdoc(offHtml);
-  ifr.addEventListener('load', () => {
-    const fix = () => { try { ifr.style.height = (ifr.contentWindow.document.body.scrollHeight + 40) + 'px'; } catch (e) {} };
-    fix();
-    if (res.status === 'akkoord') _accordStempel(ifr, res.klant_naam, res.gereageerd_op);
-    try { ifr.contentWindow.document.querySelectorAll('img').forEach(im => { if (!im.complete) im.addEventListener('load', fix); }); } catch (e) {}
-    setTimeout(fix, 800); setTimeout(fix, 2000);
-  });
+  if (!pdfUrl) {
+    const ifr = root.querySelector('#acOfferte');
+    ifr.srcdoc = _accordOfferteSrcdoc(offHtml);
+    ifr.addEventListener('load', () => {
+      const fix = () => { try { ifr.style.height = (ifr.contentWindow.document.body.scrollHeight + 40) + 'px'; } catch (e) {} };
+      fix();
+      if (res.status === 'akkoord') _accordStempel(ifr, res.klant_naam, res.gereageerd_op);
+      try { ifr.contentWindow.document.querySelectorAll('img').forEach(im => { if (!im.complete) im.addEventListener('load', fix); }); } catch (e) {}
+      setTimeout(fix, 800); setTimeout(fix, 2000);
+    });
+  }
 
   if (!reedsAf) _accordWireActies(root, token, bedrag);
 }
@@ -17330,13 +17348,40 @@ async function _accordNieuweLink(c, body, supersede) {
   if (window.crypto && crypto.randomUUID) token = crypto.randomUUID().replace(/-/g, '') + Date.now().toString(36);
   else token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36);
 
+  // v3.79.0 — het bevroren document als echte PDF (zelfde opbouw als de knop
+  // "Offerte + bijlagen") in de publieke bucket zetten. De klantpagina toont die PDF.
+  // Lukt het niet (pdfmake niet geladen of upload mislukt), dan blijft de HTML-momentopname
+  // de terugval en werkt de link via de oude weg.
+  let pdfUrl = null, pdfPath = null;
+  try {
+    if (typeof pdfMake !== 'undefined' && pdfMake.createPdf) {
+      const dd = await _bouwOfferteCompleetDocDef();
+      if (dd) {
+        const blob = await new Promise((resolve, reject) => {
+          try { pdfMake.createPdf(dd).getBlob(b => resolve(b)); } catch (err) { reject(err); }
+        });
+        const path = token + '.pdf';
+        const { error: upErr } = await _sb.storage.from(ACCORD_PDF_BUCKET)
+          .upload(path, blob, { contentType: 'application/pdf', upsert: true });
+        if (upErr) throw upErr;
+        const { data: pub } = _sb.storage.from(ACCORD_PDF_BUCKET).getPublicUrl(path);
+        pdfUrl = (pub && pub.publicUrl) ? pub.publicUrl : null;
+        pdfPath = pdfUrl ? path : null;
+      }
+    }
+  } catch (e) {
+    console.warn('Accord-PDF maken/uploaden mislukt, val terug op HTML-momentopname:', e);
+    pdfUrl = null; pdfPath = null;
+  }
+
   try {
     // Oude, nog niet beantwoorde link(s) opruimen zodat er maar e\u00e9n actieve link is.
     await _sb.from('offerte_accorderingen').delete().eq('calculatie_id', c.id).eq('status', 'open');
     const { error } = await _sb.from('offerte_accorderingen').insert({
       calculatie_id: c.id,
       token: token,
-      snapshot: { html: volledigHtml, v: APP_VERSION, op: new Date().toISOString() },
+      snapshot: { html: volledigHtml, pdf: pdfUrl, v: APP_VERSION, op: new Date().toISOString() },
+      pdf_path: pdfPath,
       bedrag: bedrag
     });
     if (error) throw error;

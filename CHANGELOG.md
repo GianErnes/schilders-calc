@@ -1,4 +1,27 @@
-## v3.78.0 — Offerte met bijlagen als één echte PDF (pdfmake, fase 2)
+## v3.79.0 — Ondertekenlink toont de echte offerte-PDF
+De accordeerlink (de pagina waar de klant ondertekent) toont voortaan de echte offerte-PDF in plaats van een nagebootst HTML-document. De klant ziet op telefoon en op desktop precies het document dat verstuurd is, inclusief de foto's en de algemene voorwaarden, zonder app of inloggen.
+
+### Wijzigingen
+- Bij het aanmaken van een ondertekenlink wordt dezelfde PDF gemaakt als met de knop "Offerte + bijlagen" en bevroren opgeslagen. Die PDF verandert nooit meer, ook niet als de calculatie later wijzigt of vergrendeld wordt.
+- De foto's zitten in de PDF gebakken, dus de fotolinks kunnen niet meer verlopen.
+- Het akkoord blijft zichtbaar als groene balk boven de offerte en wordt vastgelegd in de administratie (naam, tijdstip, opmerking). Het stempel ín het document vervalt voor de nieuwe PDF-links, want een PDF ligt vast.
+- Oude links blijven gewoon werken via de oude HTML-weg. Alleen nieuwe links krijgen de PDF.
+- De PDF is even goed afgeschermd als de link zelf: de bestandsnaam is de token uit de link, en de bucket laat geen bladeren toe.
+
+### Techniek
+- `_accordNieuweLink` bouwt via `_bouwOfferteCompleetDocDef` de doc-definitie, haalt de bytes op met `pdfMake.createPdf(dd).getBlob`, en uploadt naar de publieke bucket `accord-pdf` onder `{token}.pdf` (`upsert: true`).
+- De publieke URL gaat in het bestaande `snapshot`-veld (`snapshot.pdf`), zodat de Edge Function `offerte-accord` ongewijzigd blijft. Het pad gaat ook in de nieuwe kolom `pdf_path` voor opruimen later.
+- `_accordRender` kiest: is er een `snapshot.pdf` dan toont het de PDF in een `object` (80vh) met een duidelijke "Offerte openen of downloaden (PDF)"-knop eronder als zekere weg voor iOS; anders de oude iframe-weg met `srcdoc`.
+- De HTML-momentopname wordt nog steeds opgeslagen als terugval, mocht het maken of uploaden van de PDF mislukken (bijvoorbeeld als pdfmake niet geladen is). De link werkt dan via de oude weg.
+
+### SQL (los geleverd, vóór de code gedraaid)
+- Kolom `pdf_path` (text) op `offerte_accorderingen`.
+- Publieke bucket `accord-pdf`, max 25 MB per bestand, alleen `application/pdf`.
+- Policies op `storage.objects` voor `authenticated`: insert, update en select binnen `accord-pdf`. Publiek lezen loopt buiten RLS om via de publieke URL.
+
+---
+
+
 De knop "Offerte + bijlagen" maakt nu één doorlopende PDF in plaats van een browser-print. De offerte, de getekende kozijnen en de foto's komen achter elkaar, met de algemene voorwaarden paginavullend achteraan.
 
 ### Wijzigingen
