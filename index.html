@@ -2065,8 +2065,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.71.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.72.0</h2>
       <div class="intro-body">
+        <p><strong>💶 Prijsweergave regels: hoeveelheden aan of uit (v3.72.0).</strong> Kies je bij Prijsweergave voor Regels, dan staat er nu een schakelaar "Hoeveelheden en eenheidsprijzen tonen". Standaard staat die aan, dus net als voorheen zie je per regel de omschrijving, het verfsysteem, de hoeveelheid, de eenheidsprijs en het bedrag. Zet je hem uit, dan houd je per regel alleen de omschrijving en het regelbedrag over. Zo kun je een offerte per regel sturen zonder je hoeveelheden en eenheidsprijzen prijs te geven. De subtotalen per onderdeel en het eindtotaal blijven gewoon staan. Geen SQL nodig.</p>
         <p><strong>🙋 Contactpersoon op de offerte met t.a.v. en juiste aanhef (v3.71.0).</strong> In het Offerte-blok kun je nu een contactpersoon invullen met voorletters, tussenvoegsel en achternaam. Staat die ingevuld, dan komt er in de kop van de offerte onder de organisatienaam een regel "t.a.v. ..." met de volledige naam, en gebruikt de aanhef de achternaam zonder voorletters, bijvoorbeeld "Geachte heer van der Berg,". Handig bij een bedrijf of VvE, waar de naam de organisatie is. Vul je geen contactpersoon in, dan blijft alles werken zoals voorheen met de klantnaam. Let op: de aanhef verschijnt alleen als je tekst de regel "Geachte {aanhef}," bevat. Geen SQL nodig.</p>
         <p><strong>📝 Offerteteksten vooraf gekozen, en bolletjes in de tekst (v3.70.0).</strong> Twee dingen rond de offerte. Bij een nieuwe offerte kiest de app per sectie nu automatisch de tekst die bij het klanttype past. Staat het klanttype op consument, dan staan de consument-teksten meteen klaar en hoef je ze niet meer stuk voor stuk aan te tikken. Heeft een sectie maar één variant, dan wordt die gekozen. Bestaande offertes blijven zoals ze waren. En je kunt opsommingstekens in de tekst zetten: laat een regel beginnen met een streepje en een spatie, dus "- ", en in het voorbeeld en in het offertedocument wordt dat een net bolletje. Geen SQL nodig.</p>
         <p><strong>💾 Archiveren begint leeg (v3.69.1).</strong> Het Archiveren-venster vinkt niet meer alles vooraf aan. Je kiest zelf de een of twee PDFs die je nodig hebt en tikt op Genereer. Niet-beschikbare opties blijven grijs.</p>
@@ -3093,7 +3094,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.71.0';
+const APP_VERSION = 'v3.72.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3455,6 +3456,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.72.0', d: '2026-06-14', h: 'Prijsweergave Regels met schakelaar voor hoeveelheden. Nieuw veld offerte_config.prijsRegelsHoeveelheden (standaard aan, geen SQL) plus checkbox "Hoeveelheden en eenheidsprijzen tonen" die alleen verschijnt bij prijsWeergave=regels (prijsweergave-select hertekent het blok). Aan = de bestaande Yoobi-tabel (omschrijving, verfsysteem, hoeveelheid, eenheidsprijs, totaal). Uit = alleen omschrijving en regelbedrag per regel, met aangepaste subtotaal-colspan; verfsysteem, hoeveelheid en eenheidsprijs vervallen zodat de calculatie-details niet zichtbaar zijn. bouwPrijsPerRegel vertakt op de schakelaar; subtotalen en eindtotaal ongewijzigd. Geen SQL' },
   { v: '3.71.0', d: '2026-06-14', h: 'Contactpersoon op de offerte. Nieuw blok Contactpersoon in het Offerte-blok met voorletters, tussenvoegsel en achternaam (opslag in offerte_config.contactpersoon, geen SQL). Is de achternaam gevuld, dan toont de kop van het offertedocument onder de naam een regel "t.a.v. <voorletters tussenvoegsel achternaam>" (_offContactVol), en gebruikt de aanhef de achternaam zonder voorletters (_offContactAanhefNaam in _offAanhef): "Geachte heer van der Berg,". Zonder contactpersoon valt de aanhef terug op de klantnaam, zoals voorheen. Nieuwe setter _offCfgContact. Geen SQL' },
   { v: '3.70.0', d: '2026-06-14', h: 'Offerteteksten en opsommingstekens. (1) Nieuwe offerte kiest per sectie automatisch de variant die bij het klanttype past: _offStandaardVariantId matcht de naam op consument/zakelijk, anders een neutrale, anders de bovenste. Toegepast bij het aanmaken van de sectie-config in _offCfg, alleen voor nieuwe offertes; bestaande offerte_config blijft ongemoeid. Scheelt het handmatig aantikken per sectie. (2) Opsommingstekens in offertetekst: regels die met "- " (of •/* + spatie) beginnen worden via de nieuwe _offTekstNaarHtml één ul met bolletjes, in zowel het voorbeeld als het offertedocument; overige regels behouden hun regelafbreking. Nieuwe .off-bullets-stijl (scherm + print). Geen SQL' },
   { v: '3.69.1', d: '2026-06-14', h: 'Archiveren start zonder voorselectie: de checkboxes in het Archiveren-venster staan standaard uit (openArchiveerModal zette beschikbare opties op checked, nu op leeg), zodat je zelf de 1 of 2 PDFs kiest die je nodig hebt. Niet-beschikbare opties blijven disabled. Genereer toont al een melding bij nul selecties. Geen SQL' },
@@ -4398,6 +4400,7 @@ function _offCfg() {
   if (!cfg.adres || typeof cfg.adres !== 'object') cfg.adres = {};
   if (!cfg.contactpersoon || typeof cfg.contactpersoon !== 'object') cfg.contactpersoon = { voorletters: '', tussenvoegsel: '', achternaam: '' };
   if (cfg.prijsWeergave !== 'regels') cfg.prijsWeergave = 'onderdeel';
+  if (typeof cfg.prijsRegelsHoeveelheden !== 'boolean') cfg.prijsRegelsHoeveelheden = true;
   if (typeof cfg.bijlageKozijnen !== 'boolean') cfg.bijlageKozijnen = true;
   if (typeof cfg.bijlageFotos !== 'boolean') cfg.bijlageFotos = true;
   if (!cfg.secties || typeof cfg.secties !== 'object') cfg.secties = {};
@@ -4538,10 +4541,11 @@ function renderOfferteBlok() {
     <div><label>Geldig tot</label><input type="date" value="${cfg.geldigTot}" onchange="_offCfgVeld('geldigTot', this.value)"></div>
     <div><label>Garantiejaren</label><input type="number" min="0" step="1" value="${_offEsc(cfg.garantiejaren)}" onchange="_offCfgVeld('garantiejaren', this.value)"></div>
     <div><label>Prijsweergave in offerte</label>
-      <select onchange="_offCfgVeld('prijsWeergave', this.value)">
+      <select onchange="_offCfgVeld('prijsWeergave', this.value); renderOfferteBlok();">
         <option value="onderdeel" ${cfg.prijsWeergave !== 'regels' ? 'selected' : ''}>Per onderdeel (subtotalen)</option>
         <option value="regels" ${cfg.prijsWeergave === 'regels' ? 'selected' : ''}>Regels (hoeveelheid en eenheidsprijs)</option>
       </select>
+      ${cfg.prijsWeergave === 'regels' ? `<label style="display:flex; align-items:center; gap:0.4rem; margin-top:0.4rem; font-weight:400; font-size:0.8rem; cursor:pointer;"><input type="checkbox" style="width:auto; margin:0;" ${cfg.prijsRegelsHoeveelheden !== false ? 'checked' : ''} onchange="_offCfgVeld('prijsRegelsHoeveelheden', this.checked)"> Hoeveelheden en eenheidsprijzen tonen <span style="color:var(--muted);">(uit = alleen omschrijving en bedrag)</span></label>` : ''}
     </div>
   </div>`;
   // v3.66.0 — adresblok op de offerte (standaard werkadres, PDOK-aanvulling, te corrigeren).
@@ -10410,6 +10414,10 @@ function _bouwOfferteDocHtml() {
 
   // b) Regels (Yoobi-stijl): elke regel met hoeveelheid, eenheidsprijs, totaal.
   function bouwPrijsPerRegel() {
+    // v3.72.0 — schakelaar prijsRegelsHoeveelheden. Aan: omschrijving, verfsysteem,
+    // hoeveelheid, eenheidsprijs en totaal. Uit: alleen omschrijving en regelbedrag,
+    // zodat de calculatie-details (hoeveelheid, eenheidsprijs, verfsysteem) niet zichtbaar zijn.
+    const toonHvh = cfg.prijsRegelsHoeveelheden !== false;
     let h = '';
     c.hoofdgroepen.forEach(hg => {
       const regelsInHg = cij.regels.filter(y => y.hgNaam === hg.naam);
@@ -10418,23 +10426,28 @@ function _bouwOfferteDocHtml() {
       const odNamen = [...new Set(regelsInHg.map(y => y.odNaam))];
       odNamen.forEach(odNaam => {
         const regelsInOd = regelsInHg.filter(y => y.odNaam === odNaam);
-        h += `<h4>${odNaam}</h4>
-          <table><thead><tr>
-            <th>Omschrijving</th><th>Verfsysteem</th>
-            <th class="right">Hoeveelheid</th><th class="right">Eenheidsprijs</th><th class="right">Totaal</th>
-          </tr></thead><tbody>`;
+        h += `<h4>${odNaam}</h4><table><thead><tr>`;
+        h += toonHvh
+          ? `<th>Omschrijving</th><th>Verfsysteem</th><th class="right">Hoeveelheid</th><th class="right">Eenheidsprijs</th><th class="right">Totaal</th>`
+          : `<th>Omschrijving</th><th class="right">Totaal</th>`;
+        h += `</tr></thead><tbody>`;
         let odSum = 0;
         regelsInOd.forEach(y => {
           odSum += y.toonRegelTotaal;
-          h += `<tr>
+          h += toonHvh
+            ? `<tr>
             <td>${y.naam || '—'}</td>
             <td>${y.systeemNaam || '<em>onbekend</em>'}</td>
             <td class="num right">${fmt(y.hoeveelheid)} ${y.eenheid}</td>
             <td class="num right">${eur(y.toonprijs)}</td>
             <td class="num right">${eur(y.toonRegelTotaal)}</td>
+          </tr>`
+            : `<tr>
+            <td>${y.naam || '—'}</td>
+            <td class="num right">${eur(y.toonRegelTotaal)}</td>
           </tr>`;
         });
-        h += `<tr class="totaal-row"><td colspan="4"><strong>Subtotaal ${odNaam}</strong></td><td class="num right">${eur(odSum)}</td></tr>`;
+        h += `<tr class="totaal-row"><td colspan="${toonHvh ? 4 : 1}"><strong>Subtotaal ${odNaam}</strong></td><td class="num right">${eur(odSum)}</td></tr>`;
         h += `</tbody></table>`;
       });
     });

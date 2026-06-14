@@ -1,4 +1,13 @@
-## v3.71.0 — Contactpersoon op de offerte met t.a.v. en juiste aanhef
+## v3.72.0 — Prijsweergave Regels: hoeveelheden aan of uit
+Bij de regel-weergave kun je de hoeveelheden en eenheidsprijzen nu verbergen.
+
+### Wijzigingen
+- Kies je bij Prijsweergave voor Regels, dan staat er nu een schakelaar "Hoeveelheden en eenheidsprijzen tonen". Die staat standaard aan, dus bestaande offertes veranderen niet: je ziet per regel de omschrijving, het verfsysteem, de hoeveelheid, de eenheidsprijs en het bedrag.
+- Zet je de schakelaar uit, dan houd je per regel alleen de omschrijving en het regelbedrag over. Het verfsysteem, de hoeveelheid en de eenheidsprijs vervallen, zodat je een offerte per regel kunt sturen zonder je hoeveelheden en eenheidsprijzen prijs te geven. De subtotalen per onderdeel en het eindtotaal blijven staan.
+- De schakelaar verschijnt alleen wanneer Regels gekozen is. Bij Per onderdeel verandert er niks.
+- Onder de motorkap: nieuw veld `offerte_config.prijsRegelsHoeveelheden` (standaard true). `bouwPrijsPerRegel` vertakt op die schakelaar met de juiste koppen, rijen en subtotaal-colspan. De prijsweergave-keuze hertekent het Offerte-blok zodat de schakelaar meteen verschijnt of verdwijnt. Geen SQL nodig.
+
+
 Voor een bedrijf of VvE adresseer je nu een persoon naast de organisatie.
 
 ### Wijzigingen
