@@ -2091,8 +2091,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.77.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.77.2</h2>
       <div class="intro-body">
+        <p><strong>✨ Prijsopgave in de PDF opgeruimd (v3.77.2).</strong> Het herhaalde kopje "Omschrijving" per gevel is weg (de bovenste regel "Naam | Totaal excl. BTW" labelt de kolommen al), de bijkomende kosten en het eindtotaal staan nu netjes op dezelfde rechterrand als de overige bedragen, en er zit meer witruimte tussen de kosten en de tekst eronder. Geen SQL nodig.</p>
         <p><strong>📄 Kop "Wat zijn de kosten?" blijft nu bij zijn tabel (v3.77.1).</strong> In het pdfmake-offertedocument schuift de kostenkop voortaan mee naar de volgende pagina als de prijstabel daar niet meer bij past, zodat de kop niet los onderaan een pagina staat. Geldt ook voor de andere koppen. Geen SQL nodig.</p>
         <p><strong>🧾 Het offertedocument is nu een echte PDF (v3.77.0).</strong> De knop "Offerte document" maakt voortaan een echte PDF in plaats van een browser-print. Daardoor loopt het kleine Ernes-logo netjes mee vanaf pagina 2, staat het garantie-logo onder en is er een echt "pagina x van y", identiek in Safari en Chrome. De offerte-met-bijlagen blijft voorlopig zoals hij was. Geen SQL nodig.</p>
         <p><strong>↕️ Meer witruimte tussen adres en offertetitel (v3.76.1).</strong> In het offertedocument zit nu meer lucht tussen het klantadres en de regel "Offerte ... | ...". Geen SQL nodig.</p>
@@ -3148,7 +3149,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.77.1';
+const APP_VERSION = 'v3.77.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3510,6 +3511,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.77.2', d: '2026-06-14', h: 'Prijsopgave in het pdfmake-offertedocument opgeruimd. (1) In de regel-weergave zónder hoeveelheden vervalt de herhaalde kop "Omschrijving | Totaal" per gevel; de bovenste regel "Naam | Totaal excl. BTW" labelt de kolommen al, wat ruimte spaart. (2) Bijkomende kosten en het eindtotaalblok lijnen nu rechts uit op dezelfde rand als de gevelbedragen: alle prijstabellen en het eindtotaal hebben paddingRight 0, kolomgaten lopen via paddingLeft op niet-eerste kolommen (regeltabel 8pt, eindtotaal 6pt) zodat de rechterrand gelijk blijft. (3) Meer witruimte tussen de kosten en de tekst eronder: het eindtotaalblok heeft nu een ondermarge van 24pt (circa twee regels). Geen SQL' },
   { v: '3.77.1', d: '2026-06-14', h: 'Wezen-koppen in het pdfmake-offertedocument voorkomen. De kostenkop ("Wat zijn de kosten?") schuift mee naar de volgende pagina als hij in de onderste 38% van de pagina zou beginnen, zodat de kop, de kolomregel en de eerste prijsrijen samen blijven (eerder stond de kop los onderaan pagina 1 met de tabel pas op pagina 2). Via een document-brede pageBreakBefore-callback: de kostenkop heeft id offKostenKop en breekt op startPosition.top/pageInnerHeight > 0,62; overige koppen (tekstsecties, hoofdgroep- en onderdeelkoppen in de regel-weergave, en het ondertekenblok) zijn gemarkeerd met headlineLevel 1 en breken als ze als laatste node op de pagina zouden staan (followingNodesOnPage leeg). Geen SQL' },
   { v: '3.77.0', d: '2026-06-14', h: 'Fase 1 van de overstap naar pdfmake: het losse offertedocument (knop "Offerte document") wordt nu als echte PDF gegenereerd via pdfmake (geladen van de jsdelivr-CDN, versie 0.2.20). Nieuwe builder _bouwOfferteDocDef spiegelt de inhoud en logica van _bouwOfferteDocHtml: briefhoofd met bedrijfsgegevens, klant met t.a.v., titel met vier regels witruimte, alle tekstsecties (met bullets en regelafbrekingen), prijstabel in beide weergaven (per onderdeel en per regel, met de schakelaars prijsWeergave en prijsRegelsHoeveelheden), bijkomende kosten, eindtotaalblok en ondertekenblok met handtekening. Lopende kop (klein Ernes-logo vanaf pagina 2) en voet (Vakwerk-logo + echt "pagina x van y") per pagina, identiek in Safari en Chrome. printOfferteDocument roept pdfMake.createPdf(dd).open() aan, met de oude HTML-print als terugval als de bibliotheek niet geladen is. _bouwOfferteDocHtml en printOfferteCompleet (offerte met bijlagen) blijven ongemoeid tot fase 2. Lettertype is voorlopig Roboto (pdfmake-standaard). Geen SQL' },
   { v: '3.76.1', d: '2026-06-14', h: 'Offertedocument: meer witruimte tussen het klantadres en de offertetitel. .print-only .off-klant margin-bottom van 22pt naar 54pt (circa vier regels lucht boven de regel "Offerte ... | ..."). Geen SQL' },
@@ -10764,10 +10766,10 @@ function _bouwOfferteDocDef() {
       odNamen.forEach(odNaam => {
         const regelsInOd = regelsInHg.filter(y => y.odNaam === odNaam);
         blocks.push({ text: odNaam, bold: true, color: '#555', margin: [0, 4, 0, 1], headlineLevel: 1 });
-        const head = toonHvh
-          ? [{ text: 'Omschrijving', bold: true, fontSize: 9 }, { text: 'Verfsysteem', bold: true, fontSize: 9 }, { text: 'Hoeveelheid', bold: true, alignment: 'right', fontSize: 9 }, { text: 'Eenheidsprijs', bold: true, alignment: 'right', fontSize: 9 }, { text: 'Totaal', bold: true, alignment: 'right', fontSize: 9 }]
-          : [{ text: 'Omschrijving', bold: true, fontSize: 9.5 }, { text: 'Totaal', bold: true, alignment: 'right', fontSize: 9.5 }];
-        const rows = [head];
+        const rows = [];
+        // Bij de regel-weergave zónder hoeveelheden labelt de bovenste regel
+        // "Naam | Totaal excl. BTW" de kolommen al; geen herhaalde kop per gevel.
+        if (toonHvh) rows.push([{ text: 'Omschrijving', bold: true, fontSize: 9 }, { text: 'Verfsysteem', bold: true, fontSize: 9 }, { text: 'Hoeveelheid', bold: true, alignment: 'right', fontSize: 9 }, { text: 'Eenheidsprijs', bold: true, alignment: 'right', fontSize: 9 }, { text: 'Totaal', bold: true, alignment: 'right', fontSize: 9 }]);
         let odSum = 0;
         regelsInOd.forEach(y => {
           odSum += y.toonRegelTotaal;
@@ -10791,7 +10793,7 @@ function _bouwOfferteDocDef() {
         const subIdx = rows.length - 1;
         blocks.push({
           table: { widths: (toonHvh ? ['*', 'auto', 'auto', 'auto', 'auto'] : ['*', 'auto']), body: rows },
-          layout: { hLineWidth: (i) => (i === subIdx ? 0.75 : 0), vLineWidth: () => 0, hLineColor: () => '#999', paddingTop: () => 2, paddingBottom: () => 2, paddingLeft: () => 0, paddingRight: () => 6 }
+          layout: { hLineWidth: (i) => (i === subIdx ? 0.75 : 0), vLineWidth: () => 0, hLineColor: () => '#999', paddingTop: () => 2, paddingBottom: () => 2, paddingLeft: (i) => (i === 0 ? 0 : 8), paddingRight: () => 0 }
         });
       });
     });
@@ -10816,9 +10818,9 @@ function _bouwOfferteDocDef() {
     out.push({
       columns: [
         { width: '*', text: '' },
-        { width: '52%', table: { widths: ['*', 'auto', 'auto'], body: eind }, layout: { hLineWidth: (i) => (i === 2 ? 1 : 0), vLineWidth: () => 0, hLineColor: () => '#333', paddingTop: () => 2, paddingBottom: () => 2, paddingLeft: () => 0, paddingRight: () => 4 } }
+        { width: '52%', table: { widths: ['*', 'auto', 'auto'], body: eind }, layout: { hLineWidth: (i) => (i === 2 ? 1 : 0), vLineWidth: () => 0, hLineColor: () => '#333', paddingTop: () => 2, paddingBottom: () => 2, paddingLeft: (i) => (i === 0 ? 0 : 6), paddingRight: () => 0 } }
       ],
-      margin: [0, 6, 0, 0]
+      margin: [0, 6, 0, 24]
     });
     return out;
   }

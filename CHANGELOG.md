@@ -1,3 +1,17 @@
+## v3.77.2 — Prijsopgave in de PDF opgeruimd
+Drie verfijningen aan de prijsopgave in het pdfmake-offertedocument.
+
+### Wijzigingen
+- Het herhaalde kopje "Omschrijving" per gevel is weg in de regel-weergave zonder hoeveelheden. De bovenste regel "Naam | Totaal excl. BTW" labelt de kolommen al, dus dat scheelt ruimte.
+- De bijkomende kosten (reiskosten en staart) en het eindtotaal staan nu netjes op dezelfde rechterrand als de gevelbedragen.
+- Er zit nu meer witruimte (ongeveer twee regels) tussen de kosten en de tekst eronder.
+
+### Techniek
+- Alle prijstabellen en het eindtotaalblok hebben `paddingRight: 0`, zodat de rechterrand overal gelijk is. Gaten tussen kolommen lopen via `paddingLeft` op niet-eerste kolommen (regeltabel 8pt, eindtotaal 6pt), wat de rechteruitlijning niet verstoort.
+- Het eindtotaalblok heeft een ondermarge van 24pt gekregen.
+- In de regel-weergave wordt de kop-rij van de gevel-tabel alleen nog toegevoegd als de hoeveelheden getoond worden (vijf kolommen).
+- Geen SQL.
+
 ## v3.77.1 — Kostenkop blijft bij de prijstabel (geen wezen-koppen)
 In het pdfmake-offertedocument bleef de kop "Wat zijn de kosten?" met de kolomregel onderaan een pagina staan, terwijl de prijstabel pas op de volgende pagina begon. Dat is opgelost.
 
