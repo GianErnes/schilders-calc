@@ -1,4 +1,12 @@
-## v3.72.0 — Prijsweergave Regels: hoeveelheden aan of uit
+## v3.72.1 — Geen streep onder de kolomkoppen in de offerte
+Rustiger beeld in het offertedocument.
+
+### Wijzigingen
+- De lijn onder de kolomkop "Omschrijving" (en bij de regel-weergave met hoeveelheden ook onder Verfsysteem, Hoeveelheid en Eenheidsprijs) is per onderdeel weggehaald. Bij meerdere onderdelen scheelt dat een hoop herhaalde streepjes.
+- Alleen de sectiekop bovenaan, "Naam | Totaal excl. BTW", houdt zijn lijn als scheiding tussen kop en inhoud.
+- De subtotalen per onderdeel en de lijnen bij het eindtotaal blijven precies zoals ze waren. Geen SQL nodig.
+
+
 Bij de regel-weergave kun je de hoeveelheden en eenheidsprijzen nu verbergen.
 
 ### Wijzigingen
