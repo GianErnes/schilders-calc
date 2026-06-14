@@ -1,4 +1,12 @@
-## v3.72.1 — Geen streep onder de kolomkoppen in de offerte
+## v3.72.2 — Rustiger koppen en links uitgelijnde tekst in de offerte
+Minder schreeuwerige koppen en geen uitgevulde tekst meer.
+
+### Wijzigingen
+- De koppen boven elke alinea in het offertedocument zijn nu even groot als de lopende tekst (10pt) maar wel vet. Daardoor vallen ze rustiger in het document in plaats van als grote koppen. Dit geldt voor de sectiekoppen en de gevel- en onderdeel-labels.
+- De lopende tekst is links uitgelijnd in plaats van uitgevuld over de volle breedte. Zo ontstaan er geen grote, ongelijke spaties meer tussen de woorden.
+- De subtotalen, de bedragen en de eindtotaal-regels blijven precies zoals ze waren. Geen SQL nodig.
+
+
 Rustiger beeld in het offertedocument.
 
 ### Wijzigingen

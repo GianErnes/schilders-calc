@@ -1840,12 +1840,19 @@
     .print-only .off-doc h2 {
       border-bottom: none;
       padding-bottom: 0;
-      margin-top: 14pt;
-      margin-bottom: 5pt;
+      margin-top: 12pt;
+      margin-bottom: 4pt;
+      font-size: 10pt;
+      font-weight: 700;
       page-break-after: avoid;
     }
     .print-only .off-doc h3,
-    .print-only .off-doc h4 { page-break-after: avoid; }
+    .print-only .off-doc h4 {
+      font-size: 10pt;
+      font-weight: 700;
+      margin: 8pt 0 3pt 0;
+      page-break-after: avoid;
+    }
     /* Secties mogen over pagina's breken (geen grote witruimte meer), maar
        een kop blijft nooit alleen onderaan een pagina staan. */
     .print-only .off-doc .section { page-break-inside: auto; margin-bottom: 8pt; }
@@ -1881,7 +1888,7 @@
     .print-only .off-klant { margin-bottom: 10pt; font-size: 10pt; }
     .print-only .off-titel { margin-bottom: 14pt; }
     .print-only .off-titel strong { font-size: 12pt; }
-    .print-only .off-tekst { font-size: 10pt; line-height: 1.5; margin-bottom: 6pt; text-align: justify; }
+    .print-only .off-tekst { font-size: 10pt; line-height: 1.5; margin-bottom: 6pt; text-align: left; }
     .print-only .hg-row td { background: #f6f6f6; border-top: 1pt solid #000; }
     .print-only .off-onderteken { page-break-inside: avoid; margin-top: 16pt; }
     .print-only .off-sign-table { width: 100%; border-collapse: collapse; }
@@ -2068,8 +2075,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.72.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.72.2</h2>
       <div class="intro-body">
+        <p><strong>🔡 Rustiger koppen en links uitgelijnde tekst in de offerte (v3.72.2).</strong> De koppen boven elke alinea in het offertedocument zijn nu even groot als de lopende tekst, maar wel vet, dus minder schreeuwerig. En de tekst is links uitgelijnd in plaats van uitgevuld over de breedte, zodat er geen rare witruimtes meer tussen de woorden vallen. Geen SQL nodig.</p>
         <p><strong>✂️ Geen streep meer onder de kolomkoppen in de offerte (v3.72.1).</strong> In het offertedocument is de lijn onder de kolomkop "Omschrijving" per onderdeel weg, voor een rustiger beeld. Alleen de sectiekop bovenaan ("Naam | Totaal excl. BTW") houdt zijn lijn. De subtotalen en het eindtotaal blijven zoals ze waren. Geen SQL nodig.</p>
         <p><strong>💶 Prijsweergave regels: hoeveelheden aan of uit (v3.72.0).</strong> Kies je bij Prijsweergave voor Regels, dan staat er nu een schakelaar "Hoeveelheden en eenheidsprijzen tonen". Standaard staat die aan, dus net als voorheen zie je per regel de omschrijving, het verfsysteem, de hoeveelheid, de eenheidsprijs en het bedrag. Zet je hem uit, dan houd je per regel alleen de omschrijving en het regelbedrag over. Zo kun je een offerte per regel sturen zonder je hoeveelheden en eenheidsprijzen prijs te geven. De subtotalen per onderdeel en het eindtotaal blijven gewoon staan. Geen SQL nodig.</p>
         <p><strong>🙋 Contactpersoon op de offerte met t.a.v. en juiste aanhef (v3.71.0).</strong> In het Offerte-blok kun je nu een contactpersoon invullen met voorletters, tussenvoegsel en achternaam. Staat die ingevuld, dan komt er in de kop van de offerte onder de organisatienaam een regel "t.a.v. ..." met de volledige naam, en gebruikt de aanhef de achternaam zonder voorletters, bijvoorbeeld "Geachte heer van der Berg,". Handig bij een bedrijf of VvE, waar de naam de organisatie is. Vul je geen contactpersoon in, dan blijft alles werken zoals voorheen met de klantnaam. Let op: de aanhef verschijnt alleen als je tekst de regel "Geachte {aanhef}," bevat. Geen SQL nodig.</p>
@@ -3098,7 +3106,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.72.1';
+const APP_VERSION = 'v3.72.2';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3460,6 +3468,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.72.2', d: '2026-06-14', h: 'Offertedocument rustiger. Koppen (.off-doc h2/h3/h4) nu op 10pt (gelijk aan de lopende tekst) en font-weight 700, dus vet maar niet groter dan de tekst. Lopende tekst (.off-tekst) van text-align justify naar left, zodat woorden niet meer worden uitgerekt over de breedte. Eindtotaal-regels en subtotalen ongewijzigd. Geen SQL' },
   { v: '3.72.1', d: '2026-06-14', h: 'Offertedocument: geen onderrand meer op de kolomkoppen per onderdeel (.off-doc th border-bottom naar none). Alleen de sectiekop .off-doc .kosten-kop th houdt zijn lijn. Subtotaal- (.totaal-row) en eindtotaal-randen ongewijzigd. Geldt voor zowel de regel- als de onderdeel-weergave. Geen SQL' },
   { v: '3.72.0', d: '2026-06-14', h: 'Prijsweergave Regels met schakelaar voor hoeveelheden. Nieuw veld offerte_config.prijsRegelsHoeveelheden (standaard aan, geen SQL) plus checkbox "Hoeveelheden en eenheidsprijzen tonen" die alleen verschijnt bij prijsWeergave=regels (prijsweergave-select hertekent het blok). Aan = de bestaande Yoobi-tabel (omschrijving, verfsysteem, hoeveelheid, eenheidsprijs, totaal). Uit = alleen omschrijving en regelbedrag per regel, met aangepaste subtotaal-colspan; verfsysteem, hoeveelheid en eenheidsprijs vervallen zodat de calculatie-details niet zichtbaar zijn. bouwPrijsPerRegel vertakt op de schakelaar; subtotalen en eindtotaal ongewijzigd. Geen SQL' },
   { v: '3.71.0', d: '2026-06-14', h: 'Contactpersoon op de offerte. Nieuw blok Contactpersoon in het Offerte-blok met voorletters, tussenvoegsel en achternaam (opslag in offerte_config.contactpersoon, geen SQL). Is de achternaam gevuld, dan toont de kop van het offertedocument onder de naam een regel "t.a.v. <voorletters tussenvoegsel achternaam>" (_offContactVol), en gebruikt de aanhef de achternaam zonder voorletters (_offContactAanhefNaam in _offAanhef): "Geachte heer van der Berg,". Zonder contactpersoon valt de aanhef terug op de klantnaam, zoals voorheen. Nieuwe setter _offCfgContact. Geen SQL' },
