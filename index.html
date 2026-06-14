@@ -2065,8 +2065,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.70.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.71.0</h2>
       <div class="intro-body">
+        <p><strong>🙋 Contactpersoon op de offerte met t.a.v. en juiste aanhef (v3.71.0).</strong> In het Offerte-blok kun je nu een contactpersoon invullen met voorletters, tussenvoegsel en achternaam. Staat die ingevuld, dan komt er in de kop van de offerte onder de organisatienaam een regel "t.a.v. ..." met de volledige naam, en gebruikt de aanhef de achternaam zonder voorletters, bijvoorbeeld "Geachte heer van der Berg,". Handig bij een bedrijf of VvE, waar de naam de organisatie is. Vul je geen contactpersoon in, dan blijft alles werken zoals voorheen met de klantnaam. Let op: de aanhef verschijnt alleen als je tekst de regel "Geachte {aanhef}," bevat. Geen SQL nodig.</p>
         <p><strong>📝 Offerteteksten vooraf gekozen, en bolletjes in de tekst (v3.70.0).</strong> Twee dingen rond de offerte. Bij een nieuwe offerte kiest de app per sectie nu automatisch de tekst die bij het klanttype past. Staat het klanttype op consument, dan staan de consument-teksten meteen klaar en hoef je ze niet meer stuk voor stuk aan te tikken. Heeft een sectie maar één variant, dan wordt die gekozen. Bestaande offertes blijven zoals ze waren. En je kunt opsommingstekens in de tekst zetten: laat een regel beginnen met een streepje en een spatie, dus "- ", en in het voorbeeld en in het offertedocument wordt dat een net bolletje. Geen SQL nodig.</p>
         <p><strong>💾 Archiveren begint leeg (v3.69.1).</strong> Het Archiveren-venster vinkt niet meer alles vooraf aan. Je kiest zelf de een of twee PDFs die je nodig hebt en tikt op Genereer. Niet-beschikbare opties blijven grijs.</p>
         <p><strong>⌨️ Cijferblok selecteert de hele waarde, en kozijnnaam blijft niet plakken (v3.69.0).</strong> Twee dingen voor het meten. Tik je op de iPad in een cijferveld (breedte, hoogte, aantal of factor), dan licht de hele waarde nu op, zodat je ziet en zeker weet dat je eerste cijfer de bestaande waarde, meestal de 1, overschrijft. En: de naam die je een kozijn in de tekenaar geeft vult de omschrijving van die regel, maar wordt niet meer doorgezet naar de volgende regel. Die naam hoort immers bij dat ene kozijn. De gevel-koppeling blijft wel staan. Geen SQL nodig.</p>
@@ -3092,7 +3093,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.70.0';
+const APP_VERSION = 'v3.71.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3454,6 +3455,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.71.0', d: '2026-06-14', h: 'Contactpersoon op de offerte. Nieuw blok Contactpersoon in het Offerte-blok met voorletters, tussenvoegsel en achternaam (opslag in offerte_config.contactpersoon, geen SQL). Is de achternaam gevuld, dan toont de kop van het offertedocument onder de naam een regel "t.a.v. <voorletters tussenvoegsel achternaam>" (_offContactVol), en gebruikt de aanhef de achternaam zonder voorletters (_offContactAanhefNaam in _offAanhef): "Geachte heer van der Berg,". Zonder contactpersoon valt de aanhef terug op de klantnaam, zoals voorheen. Nieuwe setter _offCfgContact. Geen SQL' },
   { v: '3.70.0', d: '2026-06-14', h: 'Offerteteksten en opsommingstekens. (1) Nieuwe offerte kiest per sectie automatisch de variant die bij het klanttype past: _offStandaardVariantId matcht de naam op consument/zakelijk, anders een neutrale, anders de bovenste. Toegepast bij het aanmaken van de sectie-config in _offCfg, alleen voor nieuwe offertes; bestaande offerte_config blijft ongemoeid. Scheelt het handmatig aantikken per sectie. (2) Opsommingstekens in offertetekst: regels die met "- " (of •/* + spatie) beginnen worden via de nieuwe _offTekstNaarHtml één ul met bolletjes, in zowel het voorbeeld als het offertedocument; overige regels behouden hun regelafbreking. Nieuwe .off-bullets-stijl (scherm + print). Geen SQL' },
   { v: '3.69.1', d: '2026-06-14', h: 'Archiveren start zonder voorselectie: de checkboxes in het Archiveren-venster staan standaard uit (openArchiveerModal zette beschikbare opties op checked, nu op leeg), zodat je zelf de 1 of 2 PDFs kiest die je nodig hebt. Niet-beschikbare opties blijven disabled. Genereer toont al een melding bij nul selecties. Geen SQL' },
   { v: '3.69.0', d: '2026-06-14', h: 'Twee verbeteringen voor het meten. (1) Cijferblok op aanraakschermen (iPad): bij het aantikken van een np-field wordt de hele waarde geselecteerd (setSelectionRange in NumPad.open, met korte timeout voor iOS), zodat zichtbaar is dat de eerste cijfer de bestaande waarde overschrijft. De bestaande fresh-stand bleef ongewijzigd. (2) De naam van een kozijntekening vult de omschrijving van die regel maar wordt niet meer doorgezet naar de volgende regel: addMeetstaat erft de omschrijving alleen als de vorige regel géén tekening had; de calc-regel-koppeling blijft wel onthouden. Geen SQL' },
@@ -4394,6 +4396,7 @@ function _offCfg() {
   if (cfg.garantiejaren == null) cfg.garantiejaren = '';
   if (typeof cfg.aanspreekvorm !== 'string') cfg.aanspreekvorm = '';
   if (!cfg.adres || typeof cfg.adres !== 'object') cfg.adres = {};
+  if (!cfg.contactpersoon || typeof cfg.contactpersoon !== 'object') cfg.contactpersoon = { voorletters: '', tussenvoegsel: '', achternaam: '' };
   if (cfg.prijsWeergave !== 'regels') cfg.prijsWeergave = 'onderdeel';
   if (typeof cfg.bijlageKozijnen !== 'boolean') cfg.bijlageKozijnen = true;
   if (typeof cfg.bijlageFotos !== 'boolean') cfg.bijlageFotos = true;
@@ -4543,6 +4546,7 @@ function renderOfferteBlok() {
   </div>`;
   // v3.66.0 — adresblok op de offerte (standaard werkadres, PDOK-aanvulling, te corrigeren).
   const _adr = _offAdresEffectief(c, cfg);
+  const _cp = (cfg.contactpersoon && typeof cfg.contactpersoon === 'object') ? cfg.contactpersoon : { voorletters: '', tussenvoegsel: '', achternaam: '' };
   html += `<div style="border:1px solid #e5e7eb; border-radius:8px; padding:0.6rem 0.8rem; margin-bottom:0.8rem; background:#fff;">
     <div style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">Adres op de offerte
       <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="_offAdresZoek()">📍 Zoek straat en woonplaats</button>
@@ -4553,6 +4557,12 @@ function renderOfferteBlok() {
       <div><label>Huisnummer</label><input type="text" value="${_offEsc(_adr.huisnummer)}" placeholder="nr." onchange="_offCfgAdres('huisnummer', this.value)"></div>
       <div><label>Postcode</label><input type="text" value="${_offEsc(_adr.postcode)}" placeholder="0000 AA" onchange="_offCfgAdres('postcode', this.value)"></div>
       <div><label>Woonplaats</label><input type="text" value="${_offEsc(_adr.woonplaats)}" placeholder="Plaats" onchange="_offCfgAdres('woonplaats', this.value)"></div>
+    </div>
+    <div style="margin-top:0.6rem; font-weight:600; font-size:0.8rem;">Contactpersoon <span style="font-weight:400; color:var(--muted);">— vult t.a.v. in de kop en de aanhef (aanhef zonder voorletters)</span></div>
+    <div class="form-grid" style="margin-top:0.3rem;">
+      <div><label>Voorletters</label><input type="text" value="${_offEsc(_cp.voorletters)}" placeholder="J.A." onchange="_offCfgContact('voorletters', this.value)"></div>
+      <div><label>Tussenvoegsel</label><input type="text" value="${_offEsc(_cp.tussenvoegsel)}" placeholder="van der" onchange="_offCfgContact('tussenvoegsel', this.value)"></div>
+      <div><label>Achternaam</label><input type="text" value="${_offEsc(_cp.achternaam)}" placeholder="Beekman" onchange="_offCfgContact('achternaam', this.value)"></div>
     </div>
     <div id="offAdresStatus" style="margin-top:0.4rem; font-size:0.72rem; color:var(--muted);">Standaard het werkadres uit de calculatie. Klik op zoeken om straat en woonplaats uit de postcode te halen, of pas alles handmatig aan.</div>
   </div>`;
@@ -4620,6 +4630,12 @@ function _offCfgAdres(field, waarde) {
   const cfg = _offCfg(); if (!cfg) return;
   if (!cfg.adres || typeof cfg.adres !== 'object') cfg.adres = {};
   cfg.adres[field] = waarde;
+  _offCfgSave();
+}
+function _offCfgContact(field, waarde) {
+  const cfg = _offCfg(); if (!cfg) return;
+  if (!cfg.contactpersoon || typeof cfg.contactpersoon !== 'object') cfg.contactpersoon = { voorletters: '', tussenvoegsel: '', achternaam: '' };
+  cfg.contactpersoon[field] = waarde;
   _offCfgSave();
 }
 async function _pdokAdres(postcode, huisnummer) {
@@ -10470,8 +10486,10 @@ function _bouwOfferteDocHtml() {
 
   // Klant + offertetitel
   const _oa = _offAdresEffectief(c, cfg);
+  const _tav = _offContactVol(cfg);
   html += `<div class="off-klant">
     <div><strong>${_offEsc(_oa.naam)}</strong></div>
+    ${_tav ? `<div>t.a.v. ${_offEsc(_tav)}</div>` : ''}
     ${(_oa.straat || _oa.huisnummer) ? `<div>${_offEsc(_oa.straat)} ${_offEsc(_oa.huisnummer)}</div>` : ''}
     ${(_oa.postcode || _oa.woonplaats) ? `<div>${_offEsc(_oa.postcode)} ${_offEsc(_oa.woonplaats)}</div>` : ''}
   </div>`;
@@ -16762,16 +16780,32 @@ async function _accordNieuweLink(c, body, supersede) {
 
 // Bouwt de aanhef-waarde voor het invulveld {aanhef} op basis van de
 // gekozen aanspreekvorm in het Offerte-blok. Leeg = kale klantnaam.
+// v3.71.0 — contactpersoon (voorletters, tussenvoegsel, achternaam) voor de offerte.
+// Volledige naam mét voorletters, voor de t.a.v.-regel in de kop. Leeg als er geen
+// achternaam is ingevuld.
+function _offContactVol(cfg) {
+  const cp = (cfg && cfg.contactpersoon && typeof cfg.contactpersoon === 'object') ? cfg.contactpersoon : {};
+  if (!(cp.achternaam && String(cp.achternaam).trim())) return '';
+  return [cp.voorletters, cp.tussenvoegsel, cp.achternaam].map(s => (s == null ? '' : String(s).trim())).filter(Boolean).join(' ');
+}
+// Naam voor de aanhef: tussenvoegsel + achternaam, zonder voorletters.
+function _offContactAanhefNaam(cfg) {
+  const cp = (cfg && cfg.contactpersoon && typeof cfg.contactpersoon === 'object') ? cfg.contactpersoon : {};
+  if (!(cp.achternaam && String(cp.achternaam).trim())) return '';
+  return [cp.tussenvoegsel, cp.achternaam].map(s => (s == null ? '' : String(s).trim())).filter(Boolean).join(' ');
+}
 function _offAanhef(c, cfg) {
-  const klant = (c && c.klant) ? String(c.klant).trim() : '';
+  // Is er een contactpersoon ingevuld, dan gebruikt de aanhef diens achternaam (zonder
+  // voorletters); anders valt hij terug op de klantnaam van de calculatie, zoals voorheen.
+  const naam = _offContactAanhefNaam(cfg) || ((c && c.klant) ? String(c.klant).trim() : '');
   const v = (cfg && cfg.aanspreekvorm) ? cfg.aanspreekvorm : '';
   switch (v) {
-    case 'heer':     return klant ? 'heer ' + klant : 'heer';
-    case 'mevrouw':  return klant ? 'mevrouw ' + klant : 'mevrouw';
-    case 'echtpaar': return klant ? 'heer en mevrouw ' + klant : 'heer en mevrouw';
-    case 'familie':  return klant ? 'familie ' + klant : 'familie';
+    case 'heer':     return naam ? 'heer ' + naam : 'heer';
+    case 'mevrouw':  return naam ? 'mevrouw ' + naam : 'mevrouw';
+    case 'echtpaar': return naam ? 'heer en mevrouw ' + naam : 'heer en mevrouw';
+    case 'familie':  return naam ? 'familie ' + naam : 'familie';
     case 'zakelijk': return 'heer, mevrouw';
-    default:         return klant || '\u2026';
+    default:         return naam || '\u2026';
   }
 }
 

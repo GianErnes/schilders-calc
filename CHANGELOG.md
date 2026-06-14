@@ -1,4 +1,14 @@
-## v3.70.0 — Offerteteksten vooraf gekozen, en bolletjes in de tekst
+## v3.71.0 — Contactpersoon op de offerte met t.a.v. en juiste aanhef
+Voor een bedrijf of VvE adresseer je nu een persoon naast de organisatie.
+
+### Wijzigingen
+- In het Offerte-blok onderaan de Calculatie-tab staat nu een blok Contactpersoon met drie velden: voorletters, tussenvoegsel en achternaam. Bedoeld voor offertes aan een bedrijf of VvE, waar de naam de organisatie is en je een specifieke persoon aanschrijft.
+- Is de achternaam ingevuld, dan komt in de kop van het offertedocument onder de organisatienaam een regel "t.a.v. ..." met de volledige naam inclusief voorletters, bijvoorbeeld "t.a.v. J.A. van der Berg".
+- De aanhef gebruikt dan de achternaam zonder voorletters, samen met de aanspreekvorm, dus "Geachte heer van der Berg," in plaats van de organisatienaam. Is er geen contactpersoon ingevuld, dan valt de aanhef terug op de klantnaam van de calculatie, precies zoals voorheen.
+- Let op: de aanhef verschijnt alleen daar waar je tekst de regel "Geachte {aanhef}," bevat. Staat dat niet in je inleiding-variant, dan komt er ook geen aanhef in het document. Dat controleer je in de Offerteteksten-tab.
+- Opslag in `offerte_config.contactpersoon`, geen migratie nodig. Nieuwe helpers `_offContactVol` (voor de t.a.v.) en `_offContactAanhefNaam` (voor de aanhef), aangeroepen in `_bouwOfferteDocHtml` en `_offAanhef`. Nieuwe setter `_offCfgContact`. Geen SQL nodig.
+
+
 Minder klikwerk bij een nieuwe offerte, en opsommingstekens in de tekst.
 
 ### Wijzigingen
