@@ -1,3 +1,15 @@
+## v3.77.1 — Kostenkop blijft bij de prijstabel (geen wezen-koppen)
+In het pdfmake-offertedocument bleef de kop "Wat zijn de kosten?" met de kolomregel onderaan een pagina staan, terwijl de prijstabel pas op de volgende pagina begon. Dat is opgelost.
+
+### Wijzigingen
+- De kostenkop schuift nu mee naar de volgende pagina als hij te laag op de pagina zou beginnen, zodat de kop, de kolomregel en de eerste prijsrijen bij elkaar blijven.
+- Dezelfde bescherming geldt voor de andere koppen: een kop blijft niet los onderaan een pagina staan.
+
+### Techniek
+- Document-brede `pageBreakBefore`-callback. De kostenkop heeft `id: 'offKostenKop'` en breekt bij `startPosition.top / pageInnerHeight > 0,62`.
+- Overige koppen (tekstsecties, de hoofdgroep- en onderdeelkoppen in de regel-weergave en het ondertekenblok) krijgen `headlineLevel: 1` en breken als er geen volgende node meer op de pagina staat (`followingNodesOnPage` leeg).
+- Geen SQL.
+
 ## v3.77.0 — Offertedocument als echte PDF via pdfmake (fase 1)
 De knop "Offerte document" maakt nu een echte PDF in plaats van een browser-print. Dit is de eerste stap van de geplande overstap naar pdfmake.
 
