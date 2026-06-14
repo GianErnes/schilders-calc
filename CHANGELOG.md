@@ -1,3 +1,12 @@
+## v3.76.1 — Meer witruimte tussen klantadres en offertetitel
+In het offertedocument staat nu meer lucht tussen het klantadres en de regel "Offerte ... | ...".
+
+### Wijzigingen
+- De ondermarge van het klantblok (.print-only .off-klant) is vergroot van 22pt naar 54pt, ongeveer vier regels witruimte boven de offertetitel.
+
+### Techniek
+- Alleen CSS. Geen SQL.
+
 ## v3.76.0 — Logo's ook in de offerte-met-bijlagen via een lopende kop- en voetregel
 De logo's lopen nu mee op elke offertepagina, in beide print-knoppen.
 
