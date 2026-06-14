@@ -1,4 +1,24 @@
-## v3.73.0 — Bedrijfsgegevens en logo-grootte instelbaar
+## v3.74.0 — Garantie-logo in de voettekst van de offerte
+Het Vakwerk Plusgarantie-logo staat nu onderaan elke pagina van de offerte.
+
+### Wijzigingen
+- Op de losse offerte-print staat het Vakwerk Plusgarantie-logo links onderaan op elke pagina, uitgelijnd zoals het Ernes-logo bovenaan (op de contentrand). Het logo herhaalt via een vaste positie op iedere pagina.
+- Voor de paginanummers "x van y" zet je in het print-venster de optie "Kop- en voetteksten" (Safari) of "Koppen en voetteksten" (Chrome) aan. De browser zet dan het paginanummer en de datum erbij. Een automatisch meetellend nummer in het document zelf ondersteunen de browsers bij het printen niet.
+- De losse offerte-print gebruikt nu een eigen A4-paginamarge (16mm boven, 15mm zijkanten, 26mm onder voor het logo). De doorlopende print met de bijlagen en de algemene voorwaarden is hierbij niet aangeraakt, zodat de paginavullende AV-beelden heel blijven.
+- Het logo had een zwarte achtergrond. Die is transparant gemaakt met een zachte rand en het logo is verkleind, zodat het op wit papier schoon staat en de code niet onnodig groeit.
+
+### Aandachtspunt
+- De herhaling van een vaste voettekst op elke pagina is in Safari minder voorspelbaar dan in Chrome. Controleer even of het logo in jouw Safari ook op pagina 2 en verder verschijnt. Lukt dat niet, dan is er een alternatieve techniek mogelijk. Geen SQL nodig.
+
+
+De prijstabel gebruikt overal dezelfde lettergrootte.
+
+### Wijzigingen
+- In de prijstabel van het offertedocument stonden de regelkop (10,5pt) en het eindtotaal (11pt) net iets groter dan de lopende tekst. Die staan nu allemaal op 10pt, gelijk aan de rest.
+- Het lettertype was al overal hetzelfde; de cijfers gebruiken alleen tabulaire cijferbreedtes voor nette uitlijning, dat is geen ander lettertype.
+- Het vet op de koppen, de subtotalen en het eindtotaal is in deze versie nog ongemoeid gelaten. Geen SQL nodig.
+
+
 De gegevens in de offertekop staan niet meer vast in de code.
 
 ### Wijzigingen
