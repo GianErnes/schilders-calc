@@ -1,4 +1,20 @@
-## v3.72.2 — Rustiger koppen en links uitgelijnde tekst in de offerte
+## v3.73.0 — Bedrijfsgegevens en logo-grootte instelbaar
+De gegevens in de offertekop staan niet meer vast in de code.
+
+### Wijzigingen
+- Onder Instellingen staat een nieuw blok Bedrijfsgegevens en logo. Daar pas je de bedrijfsnaam, het adres, de postcode met plaats, telefoon, e-mail, internet, IBAN, BIC, KvK-nummer en BTW-nummer aan. Die gegevens staan in de kop en in het ondertekenblok van het offertedocument en gelden voor elke offerte.
+- In hetzelfde blok stel je de logo-grootte van de offerte in, in punten hoog. Standaard 69, hoger is groter.
+- De gegevens werden voorheen vast in de code bewaard. Ze staan nu in de instellingen, met de oude waarden als terugval, zodat een lege of nieuwe installatie er net zo uitziet als voorheen. De waarden worden veilig in HTML weergegeven.
+- Onder de motorkap: `data.settings.bedrijf` (setter `updBedrijf`) en `data.settings.offerteLogoPt`, beide in app_settings, defaults gevuld bij het laden. `_bouwOfferteDocHtml` bouwt het bedrijfsblok en de logo-hoogte uit de instellingen. Geen SQL nodig.
+
+
+Het logo is een derde groter en de kop ademt iets meer.
+
+### Wijzigingen
+- Het Ernes-logo bovenaan het offertedocument is een derde groter (van 52 naar 69 pt hoog).
+- Tussen het klant-adres en het offertenummer zit nu meer witruimte, zodat de kop wat rustiger oogt. Geen SQL nodig.
+
+
 Minder schreeuwerige koppen en geen uitgevulde tekst meer.
 
 ### Wijzigingen
