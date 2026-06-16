@@ -1,4 +1,22 @@
-## v3.82.0 — Klant kan zelf de getekende offerte downloaden
+## v3.83.0 — Sectie Bevindingen volgt de notitie uit de calculatie
+De offertesectie "Wat zijn onze bevindingen?" wordt voortaan automatisch gevuld met de notitie boven in de calculatie. Eén keer intikken tijdens de opname is genoeg.
+
+### Wijzigingen
+- Nieuw invulveld `{bevindingen}` dat de notitie boven in de calculatie ophaalt. Het staat ook in de invulvelden-hulplijst op de Offerteteksten-tab.
+- De sectie Bevindingen staat standaard op dit veld. Pas je de notitie later aan, dan loopt de offerte mee.
+- Wil je voor een offerte een andere formulering, tik dan het veld in de sectie gewoon over. Dat geldt dan alleen voor die offerte, met het gele "aangepast"-label en de knop terug naar de bibliotheek.
+- Bestaande offertes waarin Bevindingen nog leeg is krijgen dit ook. Offertes waar je al tekst in had blijven ongemoeid.
+- Bevindingen met streepjes ervoor worden in het document automatisch opsommingstekens.
+- Geen SQL.
+
+### Techniek
+- `{bevindingen}` toegevoegd aan `_offVulVelden` (`(c.notities||'').trim()`) en aan `OFFERTE_VELDEN`.
+- In `_offCfg` krijgt de sectie bevindingen bij een nieuwe offerte het blok `{ variantId: null, tekst: '{bevindingen}' }`. Een bestaande offerte met een lege bevindingen-sectie wordt veilig opgewaardeerd naar dat veld zonder eigen tekst te overschrijven.
+- Omdat het veld als placeholder in de blok-tekst staat, blijft de koppeling live: het bewerkveld toont `{bevindingen}`, het voorbeeld en het document tonen de actuele notitie.
+
+---
+
+
 Geeft een klant via de ondertekenlink akkoord, dan kan hij nu zelf een PDF downloaden waarin staat dat en wanneer hij getekend heeft. Dezelfde bevestigingspagina als jouw archiefexemplaar.
 
 ### Wijzigingen

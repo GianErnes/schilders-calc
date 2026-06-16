@@ -2092,8 +2092,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.82.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.83.0</h2>
       <div class="intro-body">
+        <p><strong>📝 Sectie Bevindingen volgt nu de notitie uit de calculatie (v3.83.0).</strong> De offertesectie "Wat zijn onze bevindingen?" wordt voortaan automatisch gevuld met de notitie boven in de calculatie. Je tikt je bevindingen tijdens de opname één keer in en ze stromen door naar de offerte. Pas je de notitie later aan, dan loopt de offerte mee. Wil je voor een offerte een andere formulering, tik dan het veld {bevindingen} in de sectie gewoon over. Bestaande offertes waarin Bevindingen nog leeg is krijgen dit ook; offertes waar je al tekst in had blijven ongemoeid. Geen SQL nodig.</p>
         <p><strong>📥 De klant kan nu zelf de getekende offerte downloaden (v3.82.0).</strong> Geeft de klant via de ondertekenlink akkoord, dan wordt de download-knop op die pagina "Download uw getekende offerte (PDF)". De klant krijgt dan een PDF van de offerte met achteraan dezelfde bevestigingspagina als jouw archiefexemplaar: geaccordeerd door wie, datum en tijd, project, klant, bedrag en opmerking. Heropent de klant later de link, dan kan hij hem opnieuw ophalen. Geen SQL nodig.</p>
         <p><strong>🗂️ Getekend exemplaar van een geaccordeerde offerte (v3.81.0).</strong> Heeft een klant via de ondertekenlink akkoord gegeven, dan staat er nu in het linkbeheer een knop "Getekend exemplaar (PDF)". Die maakt een archiefkopie van de bevroren offerte met achteraan een aparte bevestigingspagina: geaccordeerd door wie, datum en tijd, project, klant, bedrag en de eventuele opmerking. Werkt voor links die vanaf deze week zijn aangemaakt. Geen SQL nodig.</p>
         <p><strong>🖋️ Handtekening zwaarder en beter leesbaar (v3.80.0).</strong> De handtekening in het offertedocument was te dun en viel op papier weg. Hij is nu wat steviger aangezet en iets donkerder blauw, zodat hij in print duidelijk leesbaar blijft. Verder verandert er niets aan het document. Geen SQL nodig.</p>
@@ -3155,7 +3156,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.82.0';
+const APP_VERSION = 'v3.83.0';
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3517,6 +3518,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.83.0', d: '2026-06-14', h: 'De offertesectie Bevindingen volgt standaard de notitie boven in de calculatie (c.notities). Nieuw invulveld {bevindingen} in _offVulVelden dat (c.notities||"").trim() ophaalt, ook opgenomen in de OFFERTE_VELDEN-hulplijst op de Offerteteksten-tab. In _offCfg krijgt de sectie bevindingen bij een nieuwe offerte standaard het blok { variantId: null, tekst: "{bevindingen}" } (i.p.v. een bibliotheekvariant), en een bestaande offerte met een nog lege bevindingen-sectie (één blok, variantId null en tekst null/leeg) wordt veilig opgewaardeerd naar dat veld zonder eigen tekst te overschrijven. Live koppeling: omdat het veld als placeholder in de blok-tekst staat, toont het bewerkveld {bevindingen} en het voorbeeld/document de actuele notitie; streepjesregels worden via _offTekstNaarHtml automatisch bullets. Overtikken in de sectie maakt er eigen tekst van (override met aangepast-label, terug-naar-bibliotheek wist de override weer). Geen SQL' },
   { v: '3.82.0', d: '2026-06-14', h: 'De klant kan na akkoord zelf de getekende offerte downloaden, met dezelfde bevestigingspagina als het archiefexemplaar van v3.81.0. De pagina-opbouw is uit _accordDownloadGetekend gehaald naar een herbruikbare kern _bouwGetekendePdfBytes(frozenBytes, info) plus _pdfBytesDownload; _accordDownloadGetekend (jouw kant) gebruikt die nu ook. Op de accord-pagina: _accordRender zet _accordCtx (pdfUrl, project, klant, bedrag) en de download-knop staat in een container met id acPdfDl. Bij een al geaccordeerde link (status akkoord in de GET) wordt die meteen vervangen door de groene knop "Download uw getekende offerte (PDF)" via _accordZetGetekendKnop. Bij een verse akkoord in _accordVerstuur wordt dezelfde knop gezet met de net ingevulde naam, het tijdstip (new Date) en de eventuele opmerking, en de bevestigingsbanner meldt dat de getekende offerte hierboven te downloaden is. De klant-kant haalt de bevroren PDF via de publieke URL (anon kan niet via de SDK-download door de RLS) en bouwt de getekende PDF met de al geladen pdf-lib. Bedrag via _accordEur op het frozen bedrag, IP blijft van het papier. Geen SQL' },
   { v: '3.81.0', d: '2026-06-14', h: 'Getekend archiefexemplaar van een geaccordeerde offerte. In het linkbeheer (_accordBeheerRender) verschijnt bij status akkoord en een aanwezige bevroren PDF (pdf_path of snapshot.pdf) de knop "Getekend exemplaar (PDF)". Nieuwe functie _accordDownloadGetekend haalt de bevroren PDF op (bij voorkeur via _sb.storage.download op pdf_path zodat er geen CORS speelt, anders via de publieke URL), laadt hem met pdf-lib (nieuw, geladen van de jsdelivr-CDN als globale PDFLib) en voegt achteraan een aparte A4-bevestigingspagina toe met "Akkoordbevestiging", de regel dat de offerte digitaal is geaccordeerd, en de gegevens geaccordeerd-door, datum en tijd (toLocaleString nl-NL), project, klant, bedrag (_accordEur, frozen rij.bedrag) en de eventuele opmerking met eenvoudige woord-wrap via widthOfTextAtSize. Het IP blijft bewust van het papier af, net als bij de scherm-stempel. Tekst wordt naar WinAnsi gesaneerd zodat vreemde tekens de PDF niet breken. De kopie wordt als Blob gedownload met bestandsnaam "[project] - getekend.pdf". Werkt alleen voor links met een bevroren PDF (vanaf v3.79.0); oude HTML-only links krijgen de knop niet. Geen SQL' },
   { v: '3.80.0', d: '2026-06-14', h: 'De ingebakken handtekening (constante HANDTEKENING_ERNES, gebruikt in het HTML-offertedocument en in de pdfmake-PDF via _bouwOfferteDocDef) was te dun en lichtblauw, waardoor hij op papier wegviel. Vervangen door een zwaardere, iets donkerblauwere versie: de bron-PNG is 3x opgeschaald (LANCZOS), de lijnen zijn licht verdikt (MaxFilter-dilatatie 3px) en de alpha is met gamma 0,7 opgehaald zodat dunne, half-doorzichtige halen voller worden, met de inkt op een donkerblauw (25,45,110). Transparante achtergrond behouden. Alleen de data-URI van de constante is gewijzigd, de twee gebruiksplekken (img-src en pdfmake image) blijven ongemoeid. Geen SQL' },
@@ -4239,7 +4241,8 @@ const OFFERTE_VELDEN = [
   { veld: '{totaal_incl}',   uitleg: 'totaalbedrag incl. BTW' },
   { veld: '{geldig_tot}',    uitleg: 'vervaldatum van de offerte' },
   { veld: '{opnamedatum}',   uitleg: 'datum van de opname' },
-  { veld: '{garantiejaren}', uitleg: 'garantietermijn in jaren' }
+  { veld: '{garantiejaren}', uitleg: 'garantietermijn in jaren' },
+  { veld: '{bevindingen}',   uitleg: 'de notitie boven in de calculatie' }
 ];
 
 // HTML-escape voor namen en teksten in het beheerscherm.
@@ -4484,14 +4487,26 @@ function _offCfg() {
   if (!cfg.secties || typeof cfg.secties !== 'object') cfg.secties = {};
   OFFERTE_SECTIES.filter(s => s.type === 'tekst').forEach(s => {
     if (!cfg.secties[s.code] || typeof cfg.secties[s.code] !== 'object') {
-      // v3.70.0 — nieuwe offerte: per sectie meteen de variant kiezen die bij het
-      // klanttype past (consument), zodat je niet alles handmatig hoeft aan te tikken.
-      cfg.secties[s.code] = { aan: true, blokken: [{ variantId: _offStandaardVariantId(s.code, cfg.klanttype), tekst: null }] };
+      // v3.83.0 — sectie Bevindingen volgt standaard de notitie boven in de calculatie
+      // via het invulveld {bevindingen}; de overige secties kiezen een bibliotheekvariant.
+      if (s.code === 'bevindingen') {
+        cfg.secties[s.code] = { aan: true, blokken: [{ variantId: null, tekst: '{bevindingen}' }] };
+      } else {
+        cfg.secties[s.code] = { aan: true, blokken: [{ variantId: _offStandaardVariantId(s.code, cfg.klanttype), tekst: null }] };
+      }
     }
     const sec = cfg.secties[s.code];
     if (typeof sec.aan !== 'boolean') sec.aan = true;
     if (!Array.isArray(sec.blokken) || !sec.blokken.length) sec.blokken = [{ variantId: _offStandaardVariantId(s.code, cfg.klanttype), tekst: null }];
   });
+  // v3.83.0 — bestaande offerte met een nog lege Bevindingen-sectie (geen variant, geen
+  // eigen tekst) krijgt alsnog het {bevindingen}-veld. Heeft de gebruiker er al iets
+  // ingezet, dan blijft dat ongemoeid.
+  const _bev = cfg.secties['bevindingen'];
+  if (_bev && Array.isArray(_bev.blokken) && _bev.blokken.length === 1) {
+    const _b0 = _bev.blokken[0];
+    if (_b0 && _b0.variantId == null && (_b0.tekst == null || _b0.tekst === '')) _b0.tekst = '{bevindingen}';
+  }
   return cfg;
 }
 // v3.70.0 — standaardvariant voor een nieuwe offerte. Kiest de variant waarvan de naam
@@ -4552,7 +4567,8 @@ function _offVulVelden(tekst) {
     '{totaal_incl}':   (totaal != null) ? eur(totaal) : '…',
     '{geldig_tot}':    _offDatumLang(cfg ? cfg.geldigTot : null),
     '{opnamedatum}':   _offDatumLang(c.opnameDatum),
-    '{garantiejaren}': (cfg && cfg.garantiejaren !== '') ? String(cfg.garantiejaren) : '…'
+    '{garantiejaren}': (cfg && cfg.garantiejaren !== '') ? String(cfg.garantiejaren) : '…',
+    '{bevindingen}':   (c.notities || '').trim()
   };
   return Object.keys(map).reduce((s, k) => s.split(k).join(map[k]), String(tekst || ''));
 }
