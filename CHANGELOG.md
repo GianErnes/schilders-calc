@@ -1,3 +1,15 @@
+## v3.85.0 — Invulveld {adres} voor de offerteteksten
+Je kunt nu {adres} in een offertetekst zetten. De app vult dan het adres zonder postcode in, bijvoorbeeld Oude Baan 43A, Wittem.
+
+### Wijzigingen
+- Nieuw invulveld `{adres}` dat straat, huisnummer en woonplaats invult, zonder postcode.
+- Het staat tussen de invulvelden op het tabblad Offerteteksten, naast {project}.
+- Het volgt het standaard klantadres, of het afwijkende adres dat je per offerte hebt opgegeven.
+- Lege onderdelen vallen weg en bij een leeg adres verschijnen de puntjes, net als bij de andere velden.
+- Geen SQL.
+
+---
+
 ## v3.84.2 — Fix: uitgezette verfsystemen verdwijnen uit de offerte
 Zet je in een calculatie een regel, onderdeel of hoofdgroep uit, dan telt die nu ook echt niet meer mee in het offertedocument en de Yoobi-export.
 
