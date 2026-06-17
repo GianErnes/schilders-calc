@@ -1,3 +1,17 @@
+## v3.84.1 — Fix: lege calculatie toont weer 0 uur
+Bij een nieuwe of leeggemaakte calculatie bleven de richtwaarde-blokjes het arbeidstotaal van de vorige calculatie tonen. Dat is opgelost.
+
+### Wijzigingen
+- Maak je een nieuwe calculatie aan, of haal je de laatste regel weg, dan springen de blokjes "Toeslag kleine objecten" en "Toeslag klimtijd" nu meteen terug naar 0,00 uur en 30%.
+- Het was alleen een weergave-restje. Het getal werd nergens in een berekening gebruikt, dus aan je cijfers en totalen veranderde niets.
+- Geen SQL.
+
+### Techniek
+- `renderTotals` nam bij een lege calculatie (0 uur en geen staartposten) een vroege return voor de placeholder in `totalsBody`, nog voordat `renderNormRefs()` onderaan werd aangeroepen. Daardoor bleef `#normRefs` op de oude inhoud staan.
+- Opgelost door `renderNormRefs()` ook in die lege-calc-tak aan te roepen, vlak voor de `return`.
+
+---
+
 ## v3.84.0 — Getalvelden: hele waarde selecteren bij aanklikken
 Klik of tik je in een cijferveld in de voorcalculatie, dan is de hele waarde meteen geselecteerd. Tik je een nieuw getal in, dan overschrijft dat de oude waarde direct. Geen tekst meer wissen vooraf.
 
