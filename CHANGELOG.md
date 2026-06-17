@@ -1,3 +1,19 @@
+## v3.84.2 — Fix: uitgezette verfsystemen verdwijnen uit de offerte
+Zet je in een calculatie een regel, onderdeel of hoofdgroep uit, dan telt die nu ook echt niet meer mee in het offertedocument en de Yoobi-export.
+
+### Wijzigingen
+- Een met het vinkje uitgezette regel, onderdeel of hoofdgroep verschijnt niet meer in de offerte.
+- Het projecttotaal hield daar al rekening mee, maar de prijs per regel in de offerte deed dat nog niet. Daardoor verscheen een uitgezet verfsysteem toch en raakten de andere prijzen licht vertekend. Dat klopt nu.
+- Geldt voor de knoppen Offertedocument en Offerte + bijlagen en voor de Yoobi-export.
+- De interne calculatie-print laat ik ongemoeid.
+- Geen SQL.
+
+### Techniek
+- In `_berekenOfferteCijfers` en `printOfferteYoobi` werd `allRegels` opgebouwd door `c.hoofdgroepen`, onderdelen en regels te doorlopen zonder `_isActief`-filter, terwijl `calcProjectTotalen` dat wel doet. Daardoor liepen het totaal en de regelverdeling uit elkaar.
+- Opgelost door bij het verzamelen van `allRegels` te filteren op `_isActief` op alle drie de niveaus, zodat het gelijkloopt met het projecttotaal.
+
+---
+
 ## v3.84.1 — Fix: lege calculatie toont weer 0 uur
 Bij een nieuwe of leeggemaakte calculatie bleven de richtwaarde-blokjes het arbeidstotaal van de vorige calculatie tonen. Dat is opgelost.
 
