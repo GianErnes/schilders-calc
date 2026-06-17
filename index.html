@@ -2092,8 +2092,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.83.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.84.0</h2>
       <div class="intro-body">
+        <p><strong>🔢 Klik in een getalveld en de hele waarde is meteen geselecteerd (v3.84.0).</strong> In de voorcalculatie selecteer je nu met één klik of tik de hele inhoud van een cijferveld, zoals maten, aantallen, prijzen, looptijd of uurloon. Tik je daarna een nieuw getal in, dan overschrijft dat meteen de oude waarde. Geen tekst meer wissen vooraf. Tik je een tweede keer in hetzelfde veld, dan kun je de cursor gewoon ergens neerzetten. Tekstvelden zoals namen, adressen en omschrijvingen blijven zoals ze waren. Werkt op Mac en op de iPad. Geen SQL nodig.</p>
         <p><strong>📝 Sectie Bevindingen volgt nu de notitie uit de calculatie (v3.83.0).</strong> De offertesectie "Wat zijn onze bevindingen?" wordt voortaan automatisch gevuld met de notitie boven in de calculatie. Je tikt je bevindingen tijdens de opname één keer in en ze stromen door naar de offerte. Pas je de notitie later aan, dan loopt de offerte mee. Wil je voor een offerte een andere formulering, tik dan het veld {bevindingen} in de sectie gewoon over. Bestaande offertes waarin Bevindingen nog leeg is krijgen dit ook; offertes waar je al tekst in had blijven ongemoeid. Geen SQL nodig.</p>
         <p><strong>📥 De klant kan nu zelf de getekende offerte downloaden (v3.82.0).</strong> Geeft de klant via de ondertekenlink akkoord, dan wordt de download-knop op die pagina "Download uw getekende offerte (PDF)". De klant krijgt dan een PDF van de offerte met achteraan dezelfde bevestigingspagina als jouw archiefexemplaar: geaccordeerd door wie, datum en tijd, project, klant, bedrag en opmerking. Heropent de klant later de link, dan kan hij hem opnieuw ophalen. Geen SQL nodig.</p>
         <p><strong>🗂️ Getekend exemplaar van een geaccordeerde offerte (v3.81.0).</strong> Heeft een klant via de ondertekenlink akkoord gegeven, dan staat er nu in het linkbeheer een knop "Getekend exemplaar (PDF)". Die maakt een archiefkopie van de bevroren offerte met achteraan een aparte bevestigingspagina: geaccordeerd door wie, datum en tijd, project, klant, bedrag en de eventuele opmerking. Werkt voor links die vanaf deze week zijn aangemaakt. Geen SQL nodig.</p>
@@ -3156,7 +3157,40 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.83.0';
+const APP_VERSION = 'v3.84.0';
+
+// ============================================================
+// GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
+// Eén gedelegeerde luisteraar voor alle huidige en latere
+// type="number" velden. Mac: meteen selecteren en de selectie
+// vasthouden tegen de muisklik. iPad/Safari: opnieuw selecteren
+// nadat het veld actief is geworden. Tweede klik in hetzelfde veld
+// zet gewoon de cursor neer. Spinner-pijltjes blijven werken.
+// ============================================================
+(function(){
+  var _numNetFocus = null;
+  function _isNumVeld(el){
+    return el && el.tagName === 'INPUT' && el.type === 'number' && !el.disabled && !el.readOnly;
+  }
+  function _selNumVeld(el){
+    if (!el || document.activeElement !== el) return;
+    try { el.select(); } catch (_e) {}
+  }
+  document.addEventListener('focusin', function(e){
+    var el = e.target;
+    if (!_isNumVeld(el)) return;
+    _numNetFocus = el;
+    _selNumVeld(el);                                  // Mac: meteen
+    setTimeout(function(){ _selNumVeld(el); }, 0);    // iPad/Safari: opnieuw na settelen
+  });
+  document.addEventListener('mouseup', function(e){
+    var el = _numNetFocus;
+    _numNetFocus = null;
+    if (el && e.target === el) {
+      setTimeout(function(){ _selNumVeld(el); }, 0);  // Mac: na de klik de selectie vasthouden
+    }
+  });
+})();
 
 // ============================================================
 // SUPABASE CONFIG (alleen anon key, geen auth)
@@ -3518,6 +3552,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.84.0', d: '2026-06-17', h: 'Getalvelden selecteren hun hele waarde zodra je ze aanklikt of aantikt, zodat een nieuw getal de oude waarde meteen overschrijft (spreadsheet-gevoel). Eén gedelegeerde focusin-luisteraar op document pakt alle huidige en later gerenderde input[type="number"] velden (56 statisch plus dynamisch opgebouwde), zonder veld-voor-veld bedrading; disabled en readonly velden worden overgeslagen. Op de Mac wordt direct el.select() gedaan plus een herhaling via setTimeout(0) en een tweede herhaling op de mouseup van hetzelfde veld, zodat de muisklik de verse selectie niet wist; op iPad/Safari herstelt de setTimeout-select de selectie die Safari na het focussen soms wist. select() staat in try/catch (number-inputs ondersteunen setSelectionRange niet) en herselecteert alleen als het veld nog document.activeElement is. Een tweede klik in een al gefocust veld zet gewoon de cursor neer (focusin vuurt dan niet) en de spinner-pijltjes blijven werken omdat de mouseup-default niet wordt geblokkeerd (re-select in plaats van preventDefault). Tekstvelden, textareas en select-elementen blijven ongemoeid. Front-end only, geen SQL' },
   { v: '3.83.0', d: '2026-06-14', h: 'De offertesectie Bevindingen volgt standaard de notitie boven in de calculatie (c.notities). Nieuw invulveld {bevindingen} in _offVulVelden dat (c.notities||"").trim() ophaalt, ook opgenomen in de OFFERTE_VELDEN-hulplijst op de Offerteteksten-tab. In _offCfg krijgt de sectie bevindingen bij een nieuwe offerte standaard het blok { variantId: null, tekst: "{bevindingen}" } (i.p.v. een bibliotheekvariant), en een bestaande offerte met een nog lege bevindingen-sectie (één blok, variantId null en tekst null/leeg) wordt veilig opgewaardeerd naar dat veld zonder eigen tekst te overschrijven. Live koppeling: omdat het veld als placeholder in de blok-tekst staat, toont het bewerkveld {bevindingen} en het voorbeeld/document de actuele notitie; streepjesregels worden via _offTekstNaarHtml automatisch bullets. Overtikken in de sectie maakt er eigen tekst van (override met aangepast-label, terug-naar-bibliotheek wist de override weer). Geen SQL' },
   { v: '3.82.0', d: '2026-06-14', h: 'De klant kan na akkoord zelf de getekende offerte downloaden, met dezelfde bevestigingspagina als het archiefexemplaar van v3.81.0. De pagina-opbouw is uit _accordDownloadGetekend gehaald naar een herbruikbare kern _bouwGetekendePdfBytes(frozenBytes, info) plus _pdfBytesDownload; _accordDownloadGetekend (jouw kant) gebruikt die nu ook. Op de accord-pagina: _accordRender zet _accordCtx (pdfUrl, project, klant, bedrag) en de download-knop staat in een container met id acPdfDl. Bij een al geaccordeerde link (status akkoord in de GET) wordt die meteen vervangen door de groene knop "Download uw getekende offerte (PDF)" via _accordZetGetekendKnop. Bij een verse akkoord in _accordVerstuur wordt dezelfde knop gezet met de net ingevulde naam, het tijdstip (new Date) en de eventuele opmerking, en de bevestigingsbanner meldt dat de getekende offerte hierboven te downloaden is. De klant-kant haalt de bevroren PDF via de publieke URL (anon kan niet via de SDK-download door de RLS) en bouwt de getekende PDF met de al geladen pdf-lib. Bedrag via _accordEur op het frozen bedrag, IP blijft van het papier. Geen SQL' },
   { v: '3.81.0', d: '2026-06-14', h: 'Getekend archiefexemplaar van een geaccordeerde offerte. In het linkbeheer (_accordBeheerRender) verschijnt bij status akkoord en een aanwezige bevroren PDF (pdf_path of snapshot.pdf) de knop "Getekend exemplaar (PDF)". Nieuwe functie _accordDownloadGetekend haalt de bevroren PDF op (bij voorkeur via _sb.storage.download op pdf_path zodat er geen CORS speelt, anders via de publieke URL), laadt hem met pdf-lib (nieuw, geladen van de jsdelivr-CDN als globale PDFLib) en voegt achteraan een aparte A4-bevestigingspagina toe met "Akkoordbevestiging", de regel dat de offerte digitaal is geaccordeerd, en de gegevens geaccordeerd-door, datum en tijd (toLocaleString nl-NL), project, klant, bedrag (_accordEur, frozen rij.bedrag) en de eventuele opmerking met eenvoudige woord-wrap via widthOfTextAtSize. Het IP blijft bewust van het papier af, net als bij de scherm-stempel. Tekst wordt naar WinAnsi gesaneerd zodat vreemde tekens de PDF niet breken. De kopie wordt als Blob gedownload met bestandsnaam "[project] - getekend.pdf". Werkt alleen voor links met een bevroren PDF (vanaf v3.79.0); oude HTML-only links krijgen de knop niet. Geen SQL' },

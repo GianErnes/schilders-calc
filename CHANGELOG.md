@@ -1,3 +1,23 @@
+## v3.84.0 — Getalvelden: hele waarde selecteren bij aanklikken
+Klik of tik je in een cijferveld in de voorcalculatie, dan is de hele waarde meteen geselecteerd. Tik je een nieuw getal in, dan overschrijft dat de oude waarde direct. Geen tekst meer wissen vooraf.
+
+### Wijzigingen
+- Elk getalveld (maten, aantallen, prijzen, looptijd, uurloon en alle andere cijfervelden) selecteert zijn hele inhoud zodra je het aanklikt of aantikt.
+- Een nieuw getal overschrijft meteen de oude waarde.
+- Tik je een tweede keer in hetzelfde veld, dan kun je de cursor gewoon ergens neerzetten. Eerste tik selecteert alles, daarna fijn-positioneren.
+- Werkt op Mac en op de iPad. De spinner-pijltjes van een getalveld blijven gewoon werken.
+- Tekstvelden zoals namen, adressen, omschrijvingen en notities blijven ongemoeid.
+- Geen SQL.
+
+### Techniek
+- Eén gedelegeerde `focusin`-luisteraar op `document` pakt alle huidige en later gerenderde `input[type="number"]` velden, zonder veld-voor-veld bedrading; `disabled` en `readonly` velden worden overgeslagen.
+- Mac: directe `el.select()` plus herhaling via `setTimeout(0)` en op de `mouseup` van hetzelfde veld, zodat de muisklik de verse selectie niet wist.
+- iPad/Safari: de `setTimeout`-select herstelt de selectie die Safari na het focussen soms wist.
+- `select()` staat in `try/catch` (number-inputs ondersteunen `setSelectionRange` niet) en herselecteert alleen als het veld nog `document.activeElement` is.
+- De spinner-pijltjes blijven werken omdat de `mouseup`-default niet wordt geblokkeerd (re-select in plaats van `preventDefault`).
+
+---
+
 ## v3.83.0 — Sectie Bevindingen volgt de notitie uit de calculatie
 De offertesectie "Wat zijn onze bevindingen?" wordt voortaan automatisch gevuld met de notitie boven in de calculatie. Eén keer intikken tijdens de opname is genoeg.
 
