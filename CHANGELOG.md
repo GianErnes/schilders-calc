@@ -1,3 +1,14 @@
+## v3.86.0 — Opmerkingen onder de prijs stapelbaar
+De sectie Opmerkingen onder de prijs kan nu meerdere teksten onder elkaar bevatten, net als Werkzaamheden.
+
+### Wijzigingen
+- Bij Opmerkingen onder de prijs staat nu de knop + Blok, waarmee je meerdere teksten in één offerte onder elkaar zet.
+- Zo kun je bijvoorbeeld zowel je standaard opmerking als de uitleg over een stelpost meesturen.
+- Bestaande offertes houden hun ene blok en je kunt er voortaan blokken bij zetten.
+- Geen SQL.
+
+---
+
 ## v3.85.0 — Invulveld {adres} voor de offerteteksten
 Je kunt nu {adres} in een offertetekst zetten. De app vult dan het adres zonder postcode in, bijvoorbeeld Oude Baan 43A, Wittem.
 

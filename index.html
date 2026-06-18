@@ -2092,8 +2092,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.85.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.86.0</h2>
       <div class="intro-body">
+        <p><strong>📚 Meerdere teksten stapelen onder de prijs (v3.86.0).</strong> De sectie Opmerkingen onder de prijs is nu stapelbaar, net als Werkzaamheden. Met de knop + Blok zet je meerdere teksten onder elkaar in één offerte, bijvoorbeeld zowel je standaard opmerking als de uitleg over een stelpost. Bestaande offertes houden gewoon hun ene blok. Geen SQL nodig.</p>
         <p><strong>📍 Nieuw invulveld {adres} voor de offerteteksten (v3.85.0).</strong> Zet {adres} in een offertetekst en de app vult het adres zonder postcode in, bijvoorbeeld Oude Baan 43A, Wittem. Het werkt of je het standaard klantadres gebruikt of een afwijkend adres hebt opgegeven. Je vindt het tussen de invulvelden op het tabblad Offerteteksten. Geen SQL nodig.</p>
         <p><strong>🔧 Fix: uitgezette verfsystemen verdwijnen nu echt uit de offerte (v3.84.2).</strong> Zet je in een calculatie een regel, onderdeel of hoofdgroep uit met het vinkje, dan telt die niet meer mee in het offertedocument en de Yoobi-export. Voorheen verscheen zo'n uitgezette regel toch in de offerte en vertekende dat de andere prijzen licht. Geen SQL nodig.</p>
         <p><strong>🔧 Fix: een lege calculatie toont weer 0 uur (v3.84.1).</strong> Bij een nieuwe of leeggemaakte calculatie bleven de richtwaarde-blokjes (kleine objecten en klimtijd) soms het arbeidstotaal van de vorige calculatie tonen. Dat was alleen een weergave-restje en raakte je berekening niet. De blokjes worden nu ook bij een lege calculatie meteen ververst. Geen SQL nodig.</p>
@@ -3160,7 +3161,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.85.0';
+const APP_VERSION = 'v3.86.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3555,6 +3556,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.86.0', d: '2026-06-17', h: 'De sectie Opmerkingen onder de prijs (prijsopmerkingen) is nu stapelbaar gezet in OFFERTE_SECTIES, net als Werkzaamheden. Daardoor verschijnt in het offerte-blok de knop + Blok (gated op sec.stapelbaar) en kun je via _offCfgBlokAdd meerdere tekstblokken onder deze sectie zetten, elk met een eigen bibliotheekvariant of eigen tekst; het offertedocument en het voorbeeld renderen alle blokken van de sectie onder elkaar via de bestaande generieke blokken-map. Eén vlag omgezet (stapelbaar van false naar true), de rest van het stapel-mechanisme bestond al. Bestaande offertes met één blok blijven ongemoeid en kunnen er voortaan blokken bij krijgen. Front-end only, geen SQL' },
   { v: '3.85.0', d: '2026-06-17', h: 'Nieuw invulveld {adres} voor de offerteteksten: het adres zonder postcode, in de vorm straat huisnummer, woonplaats (bijvoorbeeld Oude Baan 43A, Wittem). Toegevoegd aan de OFFERTE_VELDEN-hulplijst op de Offerteteksten-tab en aan de map in _offVulVelden. De waarde komt uit _offAdresEffectief(c, cfg), zodat het zowel het standaard klant/calc-adres als een per-offerte afwijkend adres respecteert; straat plus huisnummer en de woonplaats worden samengevoegd met een komma ertussen, lege onderdelen vallen weg en bij een volledig leeg adres toont het veld de gebruikelijke puntjes. De postcode blijft bewust weg. Werkt in zowel het voorbeeld als het offertedocument. Geen SQL' },
   { v: '3.84.2', d: '2026-06-17', h: 'Fix: een met de actief-schakelaar uitgezette regel, onderdeel of hoofdgroep verscheen toch in de offerte. Het projecttotaal (via calcProjectTotalen) filterde inactieve items al wel, maar de regel-voor-regel opbouw in _berekenOfferteCijfers en printOfferteYoobi liep c.hoofdgroepen, onderdelen en regels zonder _isActief-filter, waardoor de uitgezette regel in allRegels belandde, een eenheidsprijs kreeg en als regel in de offerte verscheen; bovendien werd het correcte lagere totaal over te veel regels verdeeld, wat de andere eenheidsprijzen licht vertekende. Opgelost door in beide functies bij het verzamelen van allRegels te filteren op _isActief op alle drie de niveaus (hoofdgroep, onderdeel, regel), exact zoals calcProjectTotalen al doet. De per-onderdeel- en per-regel-weergave en het eindtotaal lopen nu gelijk. De interne calculatie-print (printCalc, specificatie verfsystemen) is bewust ongemoeid gelaten. Front-end only, geen SQL' },
   { v: '3.84.1', d: '2026-06-17', h: 'Fix: bij een lege calculatie (nul arbeidsuren en geen staartposten) toonden de richtwaarde-blokken kleine objecten en klimtijd nog het arbeidstotaal van de daarvoor geopende calculatie. Oorzaak: renderTotals neemt bij een lege calc een vroege return (de totalsBody-placeholder "Voeg hoofdgroepen toe") nog voordat renderNormRefs onderaan de functie wordt aangeroepen, waardoor #normRefs niet ververst werd en de oude innerHTML bleef staan. Opgelost door renderNormRefs() ook in die lege-calc-tak aan te roepen vlak voor de return, zodat de blokken meteen terugspringen naar 0,00 uur en 30% (kleine objecten) plus de huidige klimtijd-keuze. Dekt ook het leegmaken van een calc door de laatste regel te verwijderen. Puur weergave, het getal werd nergens in een berekening gebruikt. Front-end only, geen SQL' },
@@ -4257,7 +4259,7 @@ const OFFERTE_SECTIES = [
   { code: 'onderdelen',       naam: 'Onderdelen',                    kop: 'Welke onderdelen worden behandeld?',      type: 'tekst', stapelbaar: false },
   { code: 'werkzaamheden',    naam: 'Werkzaamheden',                 kop: 'Welke werkzaamheden voeren wij uit?',     type: 'tekst', stapelbaar: true },
   { code: 'prijsopgave',      naam: 'Prijsopgave',                   kop: 'Wat zijn de kosten?',                     type: 'auto' },
-  { code: 'prijsopmerkingen', naam: 'Opmerkingen onder de prijs',    kop: '',                                        type: 'tekst', stapelbaar: false },
+  { code: 'prijsopmerkingen', naam: 'Opmerkingen onder de prijs',    kop: '',                                        type: 'tekst', stapelbaar: true },
   { code: 'betaling',         naam: 'Betaling',                      kop: 'Hoe en wanneer kunt u betalen?',          type: 'tekst', stapelbaar: false },
   { code: 'planning',         naam: 'Planning',                      kop: 'Wanneer kunt u ons verwachten?',          type: 'tekst', stapelbaar: false },
   { code: 'geldigheid',       naam: 'Geldigheid',                    kop: 'Geldigheid van deze offerte',             type: 'tekst', stapelbaar: false },
