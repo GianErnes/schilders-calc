@@ -2092,8 +2092,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.87.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.88.0</h2>
       <div class="intro-body">
+        <p><strong>🏢 Nieuw klanttype VVE, en Consument heet nu Particulier (v3.88.0).</strong> In het Offerte-blok kies je voortaan tussen Particulier, VVE en Zakelijk. De oude keuze Consument heet nu Particulier, de werking blijft gelijk. VVE krijgt dezelfde algemene voorwaarden als Zakelijk. De standaardteksten volgen voorlopig ook de zakelijke. In de volgende update laten we de vinkjes van vorige keer de teksten per type kiezen. Geen SQL nodig.</p>
         <p><strong>🏷️ Per offertetekst aanvinken voor welk type hij standaard hoort (v3.87.0).</strong> Op het tabblad Offerteteksten staat nu bij elke variant de regel Standaard aan voor: met drie vinkjes, Particulier, VVE en Zakelijk. Zo leg je per tekst vast bij welk soort offerte hij standaard hoort. Dit is de eerste stap, je kunt je hele bibliotheek nu instellen. De offerte gaat deze vinkjes in een volgende update zelf gebruiken bij het kiezen van de standaardteksten. Draai eerst de losse SQL voor de drie nieuwe kolommen.</p>
         <p><strong>📚 Meerdere teksten stapelen onder de prijs (v3.86.0).</strong> De sectie Opmerkingen onder de prijs is nu stapelbaar, net als Werkzaamheden. Met de knop + Blok zet je meerdere teksten onder elkaar in één offerte, bijvoorbeeld zowel je standaard opmerking als de uitleg over een stelpost. Bestaande offertes houden gewoon hun ene blok. Geen SQL nodig.</p>
         <p><strong>📍 Nieuw invulveld {adres} voor de offerteteksten (v3.85.0).</strong> Zet {adres} in een offertetekst en de app vult het adres zonder postcode in, bijvoorbeeld Oude Baan 43A, Wittem. Het werkt of je het standaard klantadres gebruikt of een afwijkend adres hebt opgegeven. Je vindt het tussen de invulvelden op het tabblad Offerteteksten. Geen SQL nodig.</p>
@@ -3162,7 +3163,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.87.0';
+const APP_VERSION = 'v3.88.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3557,6 +3558,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.88.0', d: '2026-06-19', h: 'Derde klanttype VVE in het offerte-blok. De keuzelijst klanttype heeft nu drie opties: Particulier (waarde consument, label hernoemd), VVE (nieuwe waarde vve) en Zakelijk. De normalisatie in _offCfg laat vve toe als geldige waarde. Alle algemene-voorwaarden-keuzes zijn omgezet naar consument blijft consument, al het andere (zakelijk en vve) krijgt de zakelijke PNG-paginabeelden; dit raakt _bouwVoorwaardenHtml, de pdfmake-AV in het offertedocument, de gecombineerde HTML-print en de accord-pagina. Nieuwe hulpfunctie _offKlanttypeLabel toont Particulier/VVE/Zakelijk in de samenvattingsregel. Voor de tekstkeuze gedraagt vve zich in deze tussenstap als zakelijk (alias in _offStandaardVariantId); de echte vinkje-gestuurde keuze volgt in de volgende brok. Bestaande offertes met consument of zakelijk blijven ongemoeid. Geen SQL' },
   { v: '3.87.0', d: '2026-06-19', h: 'Eerste stap voor standaardteksten per offertetype. Op offerte_teksten zijn drie booleans toegevoegd (std_consument, std_vve, std_zakelijk) via losse SQL met slimme voorvulling op de bestaande naam-logica. In _mapOffTekstFromDB en _mapOffTekstToDB worden de vlaggen nu mee in- en uitgelezen, en in _offVariantKaart staat per variant de regel Standaard aan voor: met drie vinkjes (Particulier, VVE, Zakelijk) die via het generieke updOffTekst direct naar de DB schrijven. De vlaggen sturen de offerte nog niet aan; de standaardkeuze en het derde klanttype VVE volgen in de volgende brokken. SQL eerst draaien' },
   { v: '3.86.0', d: '2026-06-17', h: 'De sectie Opmerkingen onder de prijs (prijsopmerkingen) is nu stapelbaar gezet in OFFERTE_SECTIES, net als Werkzaamheden. Daardoor verschijnt in het offerte-blok de knop + Blok (gated op sec.stapelbaar) en kun je via _offCfgBlokAdd meerdere tekstblokken onder deze sectie zetten, elk met een eigen bibliotheekvariant of eigen tekst; het offertedocument en het voorbeeld renderen alle blokken van de sectie onder elkaar via de bestaande generieke blokken-map. Eén vlag omgezet (stapelbaar van false naar true), de rest van het stapel-mechanisme bestond al. Bestaande offertes met één blok blijven ongemoeid en kunnen er voortaan blokken bij krijgen. Front-end only, geen SQL' },
   { v: '3.85.0', d: '2026-06-17', h: 'Nieuw invulveld {adres} voor de offerteteksten: het adres zonder postcode, in de vorm straat huisnummer, woonplaats (bijvoorbeeld Oude Baan 43A, Wittem). Toegevoegd aan de OFFERTE_VELDEN-hulplijst op de Offerteteksten-tab en aan de map in _offVulVelden. De waarde komt uit _offAdresEffectief(c, cfg), zodat het zowel het standaard klant/calc-adres als een per-offerte afwijkend adres respecteert; straat plus huisnummer en de woonplaats worden samengevoegd met een komma ertussen, lege onderdelen vallen weg en bij een volledig leeg adres toont het veld de gebruikelijke puntjes. De postcode blijft bewust weg. Werkt in zowel het voorbeeld als het offertedocument. Geen SQL' },
@@ -4527,7 +4529,7 @@ function _offCfg() {
   if (!c) return null;
   if (!c.offerteConfig || typeof c.offerteConfig !== 'object') c.offerteConfig = {};
   const cfg = c.offerteConfig;
-  if (cfg.klanttype !== 'zakelijk') cfg.klanttype = 'consument';
+  if (cfg.klanttype !== 'zakelijk' && cfg.klanttype !== 'vve') cfg.klanttype = 'consument';
   if (!cfg.offertedatum) cfg.offertedatum = _offIsoVandaag();
   if (!cfg.geldigTot) cfg.geldigTot = _offIsoPlusDagen(cfg.offertedatum, 30);
   if (cfg.garantiejaren == null) cfg.garantiejaren = '';
@@ -4563,6 +4565,12 @@ function _offCfg() {
   }
   return cfg;
 }
+// Label voor het klanttype in de UI: Particulier, VVE of Zakelijk.
+function _offKlanttypeLabel(kt) {
+  if (kt === 'vve') return 'VVE';
+  if (kt === 'zakelijk') return 'Zakelijk';
+  return 'Particulier';
+}
 // v3.70.0 — standaardvariant voor een nieuwe offerte. Kiest de variant waarvan de naam
 // het klanttype bevat (consument of zakelijk); anders een variant die niet expliciet voor
 // het andere klanttype is; anders de bovenste. null als de bibliotheek voor die sectie
@@ -4572,7 +4580,7 @@ function _offStandaardVariantId(sectieCode, klanttype) {
     .filter(t => t.sectie === sectieCode)
     .sort((a, b) => (a.volgorde - b.volgorde) || (a.naam || '').localeCompare(b.naam || ''));
   if (!vars.length) return null;
-  const kt = (klanttype === 'zakelijk') ? 'zakelijk' : 'consument';
+  const kt = (klanttype === 'zakelijk' || klanttype === 'vve') ? 'zakelijk' : 'consument';
   const ander = (kt === 'zakelijk') ? 'consument' : 'zakelijk';
   const match = vars.find(v => (v.naam || '').toLowerCase().includes(kt));
   if (match) return match.id;
@@ -4672,7 +4680,8 @@ function renderOfferteBlok() {
   let html = `<div class="form-grid" style="margin-bottom:0.8rem;">
     <div><label>Klanttype</label>
       <select onchange="_offCfgVeld('klanttype', this.value)">
-        <option value="consument" ${cfg.klanttype === 'consument' ? 'selected' : ''}>Consument</option>
+        <option value="consument" ${cfg.klanttype === 'consument' ? 'selected' : ''}>Particulier</option>
+        <option value="vve" ${cfg.klanttype === 'vve' ? 'selected' : ''}>VVE</option>
         <option value="zakelijk" ${cfg.klanttype === 'zakelijk' ? 'selected' : ''}>Zakelijk</option>
       </select>
       <div style="margin-top:0.3rem; font-size:0.72rem; color:var(--muted);">Voor de garantietekst en straks de AV-bijlage.</div>
@@ -4736,7 +4745,7 @@ function renderOfferteBlok() {
       <input type="checkbox" ${cfg.bijlageFotos ? 'checked' : ''} onchange="_offCfgVeld('bijlageFotos', this.checked)">
       <span>Foto-bijlage${_fotoAanwezig ? '' : ' <span style="color:var(--muted);">(geen in deze calc)</span>'}</span>
     </label>
-    <div style="margin-top:0.4rem; font-size:0.72rem; color:var(--muted);">De algemene voorwaarden (${cfg.klanttype === 'zakelijk' ? 'zakelijk' : 'consument'}) gaan altijd als laatste mee.</div>
+    <div style="margin-top:0.4rem; font-size:0.72rem; color:var(--muted);">De algemene voorwaarden (${cfg.klanttype === 'consument' ? 'consument' : 'zakelijk'}) gaan altijd als laatste mee.</div>
   </div>`;
   OFFERTE_SECTIES.forEach(sec => {
     if (sec.type === 'auto') {
@@ -4883,7 +4892,7 @@ function openOffertePreview() {
   const cfg = _offCfg();
   let html = `<div style="margin-bottom:1rem; padding-bottom:0.6rem; border-bottom:1px solid var(--border);">
     <div style="font-weight:700;">${_offEsc(c.naam || '(zonder naam)')}</div>
-    <div style="font-size:0.82rem; color:var(--muted);">${_offEsc(c.klant || '')} · offertedatum ${_offEsc(_offDatumLang(cfg.offertedatum))} · geldig tot ${_offEsc(_offDatumLang(cfg.geldigTot))} · ${cfg.klanttype === 'zakelijk' ? 'zakelijk' : 'consument'}</div>
+    <div style="font-size:0.82rem; color:var(--muted);">${_offEsc(c.klant || '')} · offertedatum ${_offEsc(_offDatumLang(cfg.offertedatum))} · geldig tot ${_offEsc(_offDatumLang(cfg.geldigTot))} · ${_offKlanttypeLabel(cfg.klanttype)}</div>
   </div>`;
   OFFERTE_SECTIES.forEach(sec => {
     if (sec.type === 'auto') {
@@ -11057,9 +11066,9 @@ function printOfferteDocument() {
 // v3.61.0 — algemene voorwaarden als paginabeelden, variant per klanttype.
 // De PNG's staan naast index.html in de repo (zie repo-root).
 function _bouwVoorwaardenHtml(klanttype) {
-  const paginas = (klanttype === 'zakelijk')
-    ? ['av-zakelijk-1.png', 'av-zakelijk-2.png']
-    : ['av-consument-1.png', 'av-consument-2.png'];
+  const paginas = (klanttype === 'consument')
+    ? ['av-consument-1.png', 'av-consument-2.png']
+    : ['av-zakelijk-1.png', 'av-zakelijk-2.png'];
   return paginas.map(src =>
     `<div class="dpv-blok dpv-pagebreak dpv-vw"><img class="dpv-vw-img" src="${src}" alt="Algemene voorwaarden"></div>`
   ).join('');
@@ -11207,8 +11216,8 @@ async function _bouwOfferteCompleetDocDef() {
   }
 
   // --- Algemene voorwaarden (paginavullend, zonder kop/voet) ---
-  const klanttype = (cfg.klanttype === 'zakelijk') ? 'zakelijk' : 'consument';
-  const avFiles = (klanttype === 'zakelijk') ? ['av-zakelijk-1.png', 'av-zakelijk-2.png'] : ['av-consument-1.png', 'av-consument-2.png'];
+  const klanttype = (cfg.klanttype === 'consument') ? 'consument' : 'zakelijk';
+  const avFiles = (klanttype === 'consument') ? ['av-consument-1.png', 'av-consument-2.png'] : ['av-zakelijk-1.png', 'av-zakelijk-2.png'];
   const avImgs = [];
   for (const fn of avFiles) { try { avImgs.push(await _afbeeldingNaarDataUrl(new URL(fn, location.href).href, 'image/png')); } catch (e) { avImgs.push(null); } }
   content.push({ text: ' ', id: 'avStart', fontSize: 1, color: '#ffffff', margin: [0, 0, 0, 0] });
@@ -11274,7 +11283,7 @@ async function printOfferteCompleet() {
   }
 
   // 4. Algemene voorwaarden (altijd, variant per klanttype).
-  html += _bouwVoorwaardenHtml(cfg.klanttype === 'zakelijk' ? 'zakelijk' : 'consument');
+  html += _bouwVoorwaardenHtml(cfg.klanttype);
 
   const area = document.getElementById('printArea');
   area.innerHTML = html;
@@ -17568,7 +17577,7 @@ async function _accordNieuweLink(c, body, supersede) {
       const _fh = await _accordFotoHtmlLang(c, _fotos);
       volledigHtml += '<div class="dpv-blok dpv-pagebreak">' + _fh + '</div>';
     }
-    const _ktype = (_cfg && _cfg.klanttype === 'zakelijk') ? 'zakelijk' : 'consument';
+    const _ktype = (_cfg && _cfg.klanttype) ? _cfg.klanttype : 'consument';
     const _base = location.origin + location.pathname.replace(/[^/]*$/, '');
     volledigHtml += _bouwVoorwaardenHtml(_ktype).split('src="av-').join('src="' + _base + 'av-');
   } catch (e) {}

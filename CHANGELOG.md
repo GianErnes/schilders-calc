@@ -1,3 +1,16 @@
+## v3.88.0 — Klanttype VVE in het offerte-blok
+Je kunt een offerte nu op drie typen zetten: Particulier, VVE of Zakelijk. VVE krijgt dezelfde algemene voorwaarden als Zakelijk.
+
+### Wijzigingen
+- De keuzelijst Klanttype in het Offerte-blok heeft nu drie opties: Particulier, VVE en Zakelijk.
+- De keuze die eerst Consument heette is nu Particulier. De werking blijft precies gelijk.
+- VVE krijgt overal de zakelijke algemene voorwaarden: in het offertedocument, in de offerte met bijlagen en op de ondertekenpagina.
+- In de samenvatting boven de teksten staat nu netjes Particulier, VVE of Zakelijk.
+- De standaardteksten volgen voor VVE voorlopig de zakelijke. De vinkjes van v3.87.0 gaan de teksten per type kiezen in de volgende update.
+- Geen SQL.
+
+---
+
 ## v3.87.0 — Standaardtekst per offertetype, vinkjes (eerste stap)
 Per offertetekst kun je nu aanvinken voor welk type hij standaard hoort: Particulier, VVE of Zakelijk. Dit is de eerste stap; de offerte gaat de vinkjes in een volgende update zelf gebruiken.
 
