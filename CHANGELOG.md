@@ -1,3 +1,17 @@
+## v3.87.0 — Standaardtekst per offertetype, vinkjes (eerste stap)
+Per offertetekst kun je nu aanvinken voor welk type hij standaard hoort: Particulier, VVE of Zakelijk. Dit is de eerste stap; de offerte gaat de vinkjes in een volgende update zelf gebruiken.
+
+### Vooraf in Supabase (eenmalig)
+- Draai de losse SQL die drie kolommen toevoegt aan offerte_teksten: std_consument, std_vve, std_zakelijk.
+- De SQL vult de vinkjes meteen slim voor op de bestaande naam-logica, zodat je huidige automatische keuze blijft werken. VVE begint gelijk aan Zakelijk.
+
+### Wijzigingen
+- Op het tabblad Offerteteksten staat bij elke variant de regel Standaard aan voor: met drie vinkjes (Particulier, VVE, Zakelijk).
+- Een vinkje aan of uit wordt meteen bewaard.
+- De vinkjes sturen de offerte nog niet aan. Dat komt in de volgende stap, samen met het derde klanttype VVE in het offerte-blok.
+
+---
+
 ## v3.86.0 — Opmerkingen onder de prijs stapelbaar
 De sectie Opmerkingen onder de prijs kan nu meerdere teksten onder elkaar bevatten, net als Werkzaamheden.
 

@@ -2092,8 +2092,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.86.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.87.0</h2>
       <div class="intro-body">
+        <p><strong>🏷️ Per offertetekst aanvinken voor welk type hij standaard hoort (v3.87.0).</strong> Op het tabblad Offerteteksten staat nu bij elke variant de regel Standaard aan voor: met drie vinkjes, Particulier, VVE en Zakelijk. Zo leg je per tekst vast bij welk soort offerte hij standaard hoort. Dit is de eerste stap, je kunt je hele bibliotheek nu instellen. De offerte gaat deze vinkjes in een volgende update zelf gebruiken bij het kiezen van de standaardteksten. Draai eerst de losse SQL voor de drie nieuwe kolommen.</p>
         <p><strong>📚 Meerdere teksten stapelen onder de prijs (v3.86.0).</strong> De sectie Opmerkingen onder de prijs is nu stapelbaar, net als Werkzaamheden. Met de knop + Blok zet je meerdere teksten onder elkaar in één offerte, bijvoorbeeld zowel je standaard opmerking als de uitleg over een stelpost. Bestaande offertes houden gewoon hun ene blok. Geen SQL nodig.</p>
         <p><strong>📍 Nieuw invulveld {adres} voor de offerteteksten (v3.85.0).</strong> Zet {adres} in een offertetekst en de app vult het adres zonder postcode in, bijvoorbeeld Oude Baan 43A, Wittem. Het werkt of je het standaard klantadres gebruikt of een afwijkend adres hebt opgegeven. Je vindt het tussen de invulvelden op het tabblad Offerteteksten. Geen SQL nodig.</p>
         <p><strong>🔧 Fix: uitgezette verfsystemen verdwijnen nu echt uit de offerte (v3.84.2).</strong> Zet je in een calculatie een regel, onderdeel of hoofdgroep uit met het vinkje, dan telt die niet meer mee in het offertedocument en de Yoobi-export. Voorheen verscheen zo'n uitgezette regel toch in de offerte en vertekende dat de andere prijzen licht. Geen SQL nodig.</p>
@@ -3161,7 +3162,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.86.0';
+const APP_VERSION = 'v3.87.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3556,6 +3557,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.87.0', d: '2026-06-19', h: 'Eerste stap voor standaardteksten per offertetype. Op offerte_teksten zijn drie booleans toegevoegd (std_consument, std_vve, std_zakelijk) via losse SQL met slimme voorvulling op de bestaande naam-logica. In _mapOffTekstFromDB en _mapOffTekstToDB worden de vlaggen nu mee in- en uitgelezen, en in _offVariantKaart staat per variant de regel Standaard aan voor: met drie vinkjes (Particulier, VVE, Zakelijk) die via het generieke updOffTekst direct naar de DB schrijven. De vlaggen sturen de offerte nog niet aan; de standaardkeuze en het derde klanttype VVE volgen in de volgende brokken. SQL eerst draaien' },
   { v: '3.86.0', d: '2026-06-17', h: 'De sectie Opmerkingen onder de prijs (prijsopmerkingen) is nu stapelbaar gezet in OFFERTE_SECTIES, net als Werkzaamheden. Daardoor verschijnt in het offerte-blok de knop + Blok (gated op sec.stapelbaar) en kun je via _offCfgBlokAdd meerdere tekstblokken onder deze sectie zetten, elk met een eigen bibliotheekvariant of eigen tekst; het offertedocument en het voorbeeld renderen alle blokken van de sectie onder elkaar via de bestaande generieke blokken-map. Eén vlag omgezet (stapelbaar van false naar true), de rest van het stapel-mechanisme bestond al. Bestaande offertes met één blok blijven ongemoeid en kunnen er voortaan blokken bij krijgen. Front-end only, geen SQL' },
   { v: '3.85.0', d: '2026-06-17', h: 'Nieuw invulveld {adres} voor de offerteteksten: het adres zonder postcode, in de vorm straat huisnummer, woonplaats (bijvoorbeeld Oude Baan 43A, Wittem). Toegevoegd aan de OFFERTE_VELDEN-hulplijst op de Offerteteksten-tab en aan de map in _offVulVelden. De waarde komt uit _offAdresEffectief(c, cfg), zodat het zowel het standaard klant/calc-adres als een per-offerte afwijkend adres respecteert; straat plus huisnummer en de woonplaats worden samengevoegd met een komma ertussen, lege onderdelen vallen weg en bij een volledig leeg adres toont het veld de gebruikelijke puntjes. De postcode blijft bewust weg. Werkt in zowel het voorbeeld als het offertedocument. Geen SQL' },
   { v: '3.84.2', d: '2026-06-17', h: 'Fix: een met de actief-schakelaar uitgezette regel, onderdeel of hoofdgroep verscheen toch in de offerte. Het projecttotaal (via calcProjectTotalen) filterde inactieve items al wel, maar de regel-voor-regel opbouw in _berekenOfferteCijfers en printOfferteYoobi liep c.hoofdgroepen, onderdelen en regels zonder _isActief-filter, waardoor de uitgezette regel in allRegels belandde, een eenheidsprijs kreeg en als regel in de offerte verscheen; bovendien werd het correcte lagere totaal over te veel regels verdeeld, wat de andere eenheidsprijzen licht vertekende. Opgelost door in beide functies bij het verzamelen van allRegels te filteren op _isActief op alle drie de niveaus (hoofdgroep, onderdeel, regel), exact zoals calcProjectTotalen al doet. De per-onderdeel- en per-regel-weergave en het eindtotaal lopen nu gelijk. De interne calculatie-print (printCalc, specificatie verfsystemen) is bewust ongemoeid gelaten. Front-end only, geen SQL' },
@@ -4323,10 +4325,12 @@ function _offTekstNaarHtml(tekst) {
 
 // --- DB-laag (zelfde patroon als staart_lib) ---
 function _mapOffTekstFromDB(r) {
-  return { id: r.id, sectie: r.sectie, naam: r.naam || '', inhoud: r.inhoud || '', volgorde: r.volgorde || 0 };
+  return { id: r.id, sectie: r.sectie, naam: r.naam || '', inhoud: r.inhoud || '', volgorde: r.volgorde || 0,
+           std_consument: !!r.std_consument, std_vve: !!r.std_vve, std_zakelijk: !!r.std_zakelijk };
 }
 function _mapOffTekstToDB(t) {
-  return { sectie: t.sectie, naam: t.naam, inhoud: t.inhoud, volgorde: t.volgorde || 0 };
+  return { sectie: t.sectie, naam: t.naam, inhoud: t.inhoud, volgorde: t.volgorde || 0,
+           std_consument: !!t.std_consument, std_vve: !!t.std_vve, std_zakelijk: !!t.std_zakelijk };
 }
 async function _fetchOffTekstenFromDB() {
   if (!_sb) return null;
@@ -4385,6 +4389,12 @@ function _offVariantKaart(t, i, n) {
       <button class="btn-icon" onclick="moveOffTekst('${t.id}',1)" ${i === n - 1 ? 'disabled' : ''} title="Omlaag">↓</button>
       <input value="${_offEsc(t.naam)}" onchange="updOffTekst('${t.id}','naam',this.value)" style="flex:1; min-width:160px; font-weight:600;" placeholder="Naam van de variant">
       <button class="btn btn-danger btn-sm" onclick="delOffTekst('${t.id}')" title="Variant verwijderen">×</button>
+    </div>
+    <div style="display:flex; gap:0.9rem; align-items:center; margin:0 0 0.45rem; flex-wrap:wrap; font-size:0.8rem; color:#555;">
+      <span style="font-weight:600; color:#444;">Standaard aan voor:</span>
+      <label style="display:flex; gap:0.3rem; align-items:center; cursor:pointer;"><input type="checkbox" ${t.std_consument ? 'checked' : ''} onchange="updOffTekst('${t.id}','std_consument',this.checked)"> Particulier</label>
+      <label style="display:flex; gap:0.3rem; align-items:center; cursor:pointer;"><input type="checkbox" ${t.std_vve ? 'checked' : ''} onchange="updOffTekst('${t.id}','std_vve',this.checked)"> VVE</label>
+      <label style="display:flex; gap:0.3rem; align-items:center; cursor:pointer;"><input type="checkbox" ${t.std_zakelijk ? 'checked' : ''} onchange="updOffTekst('${t.id}','std_zakelijk',this.checked)"> Zakelijk</label>
     </div>
     <textarea rows="${rows}" onchange="updOffTekst('${t.id}','inhoud',this.value)" style="width:100%; font-size:0.85rem; line-height:1.45;" placeholder="Tekst van deze variant…">${_offEsc(t.inhoud)}</textarea>
   </div>`;
