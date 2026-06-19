@@ -1,3 +1,15 @@
+## v3.89.0 — Vinkjes kiezen de standaardteksten per type
+De vinkjes van v3.87.0 zijn nu actief. Een nieuwe offerte kiest per sectie automatisch de tekst die je voor het gekozen type hebt aangevinkt.
+
+### Wijzigingen
+- Bij een nieuwe offerte pakt elke sectie de bovenste tekst die voor dat type is aangevinkt: Particulier, VVE of Zakelijk.
+- Is er voor een type niets aangevinkt in een sectie, dan pakt de sectie de bovenste tekst zodat hij niet leeg blijft.
+- Bij de stapelbare secties (Werkzaamheden, Opmerkingen onder de prijs) komt één standaardtekst klaar te staan. De rest voeg je toe met + Blok.
+- Dit geldt alleen voor nieuwe offertes. Bestaande offertes houden hun teksten.
+- Geen SQL.
+
+---
+
 ## v3.88.0 — Klanttype VVE in het offerte-blok
 Je kunt een offerte nu op drie typen zetten: Particulier, VVE of Zakelijk. VVE krijgt dezelfde algemene voorwaarden als Zakelijk.
 

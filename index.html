@@ -2092,8 +2092,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.88.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.89.0</h2>
       <div class="intro-body">
+        <p><strong>✅ De vinkjes kiezen nu de standaardteksten per offertetype (v3.89.0).</strong> Maak je een nieuwe offerte, dan pakt elke sectie automatisch de tekst die je voor dat type hebt aangevinkt: Particulier, VVE of Zakelijk. Bij de stapelbare secties komt de bovenste aangevinkte tekst klaar te staan en voeg je de rest toe met + Blok. Staat er voor een type niets aangevinkt, dan pakt de sectie de bovenste tekst zodat hij niet leeg blijft. Bestaande offertes blijven ongemoeid. Geen SQL nodig.</p>
         <p><strong>🏢 Nieuw klanttype VVE, en Consument heet nu Particulier (v3.88.0).</strong> In het Offerte-blok kies je voortaan tussen Particulier, VVE en Zakelijk. De oude keuze Consument heet nu Particulier, de werking blijft gelijk. VVE krijgt dezelfde algemene voorwaarden als Zakelijk. De standaardteksten volgen voorlopig ook de zakelijke. In de volgende update laten we de vinkjes van vorige keer de teksten per type kiezen. Geen SQL nodig.</p>
         <p><strong>🏷️ Per offertetekst aanvinken voor welk type hij standaard hoort (v3.87.0).</strong> Op het tabblad Offerteteksten staat nu bij elke variant de regel Standaard aan voor: met drie vinkjes, Particulier, VVE en Zakelijk. Zo leg je per tekst vast bij welk soort offerte hij standaard hoort. Dit is de eerste stap, je kunt je hele bibliotheek nu instellen. De offerte gaat deze vinkjes in een volgende update zelf gebruiken bij het kiezen van de standaardteksten. Draai eerst de losse SQL voor de drie nieuwe kolommen.</p>
         <p><strong>📚 Meerdere teksten stapelen onder de prijs (v3.86.0).</strong> De sectie Opmerkingen onder de prijs is nu stapelbaar, net als Werkzaamheden. Met de knop + Blok zet je meerdere teksten onder elkaar in één offerte, bijvoorbeeld zowel je standaard opmerking als de uitleg over een stelpost. Bestaande offertes houden gewoon hun ene blok. Geen SQL nodig.</p>
@@ -3163,7 +3164,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.88.0';
+const APP_VERSION = 'v3.89.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3558,6 +3559,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.89.0', d: '2026-06-19', h: 'De vinkjes per offertetekst sturen nu de standaardkeuze. _offStandaardVariantId is herschreven van naam-matching naar de vlaggen: het kiest per klanttype het veld std_consument, std_vve of std_zakelijk en pakt de bovenste aangevinkte variant op volgorde, met terugval op de bovenste variant als er voor dat type niets is aangevinkt. Conform de gekozen aanpak blijft het bij één standaardblok per sectie, ook bij de stapelbare secties; meer blokken voeg je toe met + Blok. Toegepast in de sectie-init van _offCfg, dus alleen voor nieuwe offertes; bestaande offerte_config blijft ongemoeid. De tussenstap-alias voor vve is vervallen. Geen SQL' },
   { v: '3.88.0', d: '2026-06-19', h: 'Derde klanttype VVE in het offerte-blok. De keuzelijst klanttype heeft nu drie opties: Particulier (waarde consument, label hernoemd), VVE (nieuwe waarde vve) en Zakelijk. De normalisatie in _offCfg laat vve toe als geldige waarde. Alle algemene-voorwaarden-keuzes zijn omgezet naar consument blijft consument, al het andere (zakelijk en vve) krijgt de zakelijke PNG-paginabeelden; dit raakt _bouwVoorwaardenHtml, de pdfmake-AV in het offertedocument, de gecombineerde HTML-print en de accord-pagina. Nieuwe hulpfunctie _offKlanttypeLabel toont Particulier/VVE/Zakelijk in de samenvattingsregel. Voor de tekstkeuze gedraagt vve zich in deze tussenstap als zakelijk (alias in _offStandaardVariantId); de echte vinkje-gestuurde keuze volgt in de volgende brok. Bestaande offertes met consument of zakelijk blijven ongemoeid. Geen SQL' },
   { v: '3.87.0', d: '2026-06-19', h: 'Eerste stap voor standaardteksten per offertetype. Op offerte_teksten zijn drie booleans toegevoegd (std_consument, std_vve, std_zakelijk) via losse SQL met slimme voorvulling op de bestaande naam-logica. In _mapOffTekstFromDB en _mapOffTekstToDB worden de vlaggen nu mee in- en uitgelezen, en in _offVariantKaart staat per variant de regel Standaard aan voor: met drie vinkjes (Particulier, VVE, Zakelijk) die via het generieke updOffTekst direct naar de DB schrijven. De vlaggen sturen de offerte nog niet aan; de standaardkeuze en het derde klanttype VVE volgen in de volgende brokken. SQL eerst draaien' },
   { v: '3.86.0', d: '2026-06-17', h: 'De sectie Opmerkingen onder de prijs (prijsopmerkingen) is nu stapelbaar gezet in OFFERTE_SECTIES, net als Werkzaamheden. Daardoor verschijnt in het offerte-blok de knop + Blok (gated op sec.stapelbaar) en kun je via _offCfgBlokAdd meerdere tekstblokken onder deze sectie zetten, elk met een eigen bibliotheekvariant of eigen tekst; het offertedocument en het voorbeeld renderen alle blokken van de sectie onder elkaar via de bestaande generieke blokken-map. Eén vlag omgezet (stapelbaar van false naar true), de rest van het stapel-mechanisme bestond al. Bestaande offertes met één blok blijven ongemoeid en kunnen er voortaan blokken bij krijgen. Front-end only, geen SQL' },
@@ -4571,22 +4573,19 @@ function _offKlanttypeLabel(kt) {
   if (kt === 'zakelijk') return 'Zakelijk';
   return 'Particulier';
 }
-// v3.70.0 — standaardvariant voor een nieuwe offerte. Kiest de variant waarvan de naam
-// het klanttype bevat (consument of zakelijk); anders een variant die niet expliciet voor
-// het andere klanttype is; anders de bovenste. null als de bibliotheek voor die sectie
-// nog geen tekst heeft (dan blijft de sectie leeg tot je zelf een variant kiest).
+// v3.89.0 — standaardvariant voor een nieuwe offerte op basis van de vinkjes per type.
+// Kiest de bovenste variant die voor het gekozen klanttype is aangevinkt
+// (std_consument, std_vve of std_zakelijk). Is er voor dit type niets aangevinkt, dan
+// valt het terug op de bovenste variant zodat de sectie niet leeg blijft. null als de
+// bibliotheek voor die sectie nog geen tekst heeft.
 function _offStandaardVariantId(sectieCode, klanttype) {
   const vars = (data.offerteTeksten || [])
     .filter(t => t.sectie === sectieCode)
     .sort((a, b) => (a.volgorde - b.volgorde) || (a.naam || '').localeCompare(b.naam || ''));
   if (!vars.length) return null;
-  const kt = (klanttype === 'zakelijk' || klanttype === 'vve') ? 'zakelijk' : 'consument';
-  const ander = (kt === 'zakelijk') ? 'consument' : 'zakelijk';
-  const match = vars.find(v => (v.naam || '').toLowerCase().includes(kt));
-  if (match) return match.id;
-  const neutraal = vars.find(v => !(v.naam || '').toLowerCase().includes(ander));
-  if (neutraal) return neutraal.id;
-  return vars[0].id;
+  const veld = (klanttype === 'vve') ? 'std_vve' : (klanttype === 'zakelijk') ? 'std_zakelijk' : 'std_consument';
+  const gekozen = vars.find(v => v[veld]);
+  return (gekozen || vars[0]).id;
 }
 
 // Gerichte, gedebouncede opslag van alleen offerte_config.
