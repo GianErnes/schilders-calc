@@ -1,3 +1,16 @@
+## v3.89.4 — Akkoord-knoppen altijd in beeld op de ondertekenpagina
+Klanten misten op iPad en iPhone de knoppen onderaan de ondertekenpagina. Die staan nu in een vaste balk die altijd zichtbaar is.
+
+### Wijzigingen
+- De knoppen Akkoord geven, Afwijzen en Vraag stellen staan nu in een vaste balk onderaan het scherm, altijd in beeld, met het kopje Wat wilt u doen erboven.
+- Het PDF-venster ving op de iPad en iPhone het scrollen op, waardoor de klant niet bij de knoppen kwam. Met de vaste balk hoeft de klant niet meer te scrollen om te kunnen reageren.
+- Tikt de klant een knop, dan schuift de balk mee zodat het invulveld en het toetsenbord niet in de weg zitten.
+- Het PDF-venster is iets korter gemaakt zodat duidelijker is dat er onderaan iets te kiezen valt.
+- Alleen de ondertekenpagina verandert. Bestaande links blijven werken.
+- Geen SQL.
+
+---
+
 ## v3.89.3 — Grotere meetstaat-tekst en duidelijke teken-knop
 Vervolg op v3.89.2. De tekst in de meetstaat is groter en zwaarder, en het potlood op de teken-knop is nu echt te zien.
 
