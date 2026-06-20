@@ -1,3 +1,15 @@
+## v3.89.3 — Grotere meetstaat-tekst en duidelijke teken-knop
+Vervolg op v3.89.2. De tekst in de meetstaat is groter en zwaarder, en het potlood op de teken-knop is nu echt te zien.
+
+### Wijzigingen
+- De veldlabels in de meetstaat zijn groter en zwaarder, beter leesbaar in de zon.
+- De invoertekst in de meetstaat is iets groter.
+- Het potlood op de teken-knop was een vaag vlekje; nu een duidelijk potlood-pictogram en een grotere knop, zodat je hem goed ziet en raakt.
+- Alleen de meetstaat verandert.
+- Geen SQL.
+
+---
+
 ## v3.89.2 — Beter leesbaar op de iPad in de zon
 De randen van velden en knoppen waren te licht en het cijferblok botste onderaan met de swipebalk. Beide opgelost.
 
