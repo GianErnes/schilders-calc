@@ -2095,8 +2095,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.89.5</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.89.6</h2>
       <div class="intro-body">
+        <p><strong>🟢 Knop "Offerte openen of downloaden" niet meer afgedekt (v3.89.6).</strong> Op de ondertekenpagina dekte de nieuwe vaste knoppenbalk de groene knop "Offerte openen of downloaden (PDF)" half af. Die knop staat nu boven de offerte, ruim weg van de balk onderaan, zodat de klant hem meteen ziet en kan gebruiken. Geen SQL nodig.</p>
         <p><strong>🗂️ Archiveren biedt weer alle PDF's achter elkaar aan (v3.89.5).</strong> Sinds het offertedocument een echte PDF werd, bleef de archiveer-reeks erop hangen: documenten die je ná de offerte had aangevinkt (werkbon, onderhoudsplan, foto-bijlage) werden niet meer aangeboden. De offerte wordt in de reeks nu direct opgeslagen als PDF in je Downloads-map, waarna de reeks gewoon doorloopt naar de rest. Het los printen van de offerte opent nog steeds netjes in een tabblad. Geen SQL nodig.</p>
         <p><strong>👇 Akkoord-knoppen altijd in beeld op de ondertekenpagina (v3.89.4).</strong> Klanten zagen de knoppen Akkoord geven, Afwijzen en Vraag stellen vaak niet, omdat ze onder de offerte stonden en het PDF-venster het scrollen op iPad en iPhone opving. De drie knoppen staan nu in een vaste balk onderaan het scherm, altijd zichtbaar, met het kopje Wat wilt u doen erboven. Tikt de klant een knop, dan schuift de balk netjes mee zodat het invulveld en het toetsenbord niet in de weg zitten. Geen SQL nodig.</p>
         <p><strong>🔎 Grotere meetstaat-tekst en een duidelijke teken-knop (v3.89.3).</strong> De labels en invoertekst in de meetstaat zijn op de iPad groter en zwaarder gezet, zodat je ze in de zon makkelijker leest. Het potlood op de teken-knop was een vaag vlekje; dat is nu een duidelijk potlood-pictogram en de knop is wat groter zodat je hem goed ziet en raakt. Geen SQL nodig.</p>
@@ -3172,7 +3173,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.89.5';
+const APP_VERSION = 'v3.89.6';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3567,6 +3568,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.89.6', d: '2026-06-20', h: 'Vervolg op v3.89.4: de sticky knoppenbalk #acActies dekte de groene knop #acPdfDl ("Offerte openen of downloaden (PDF)") half af, want die stond in de stroom net boven de balk. In _accordRender is het acPdfDl-blok verplaatst van ná het PDF-object naar ervóór (margin van 10px-boven naar 12px-onder), zodat de knop boven de offerte staat en buiten het bereik van de zwevende balk valt. _accordZetGetekendKnop blijft op #acPdfDl werken (positie-onafhankelijk). Alleen de accord-render. Geen SQL' },
   { v: '3.89.5', d: '2026-06-20', h: 'Archiveer-reeks stokte op de offerte. De reeks in _archiveerVolgende wacht per document op het afterprint-event van window.print(), maar printOfferteDocument is sinds v3.77.0 een pdfmake-PDF die via .open() in een tabblad komt en nooit afterprint afvuurt; daardoor liep de reeks vast en werden documenten ná de offerte (werkbon, onderhoudsplan, foto-bijlage) niet meer aangeboden. printOfferteDocument kreeg een optionele parameter forceerDownload: in de reeks roept _archiveerVolgende printOfferteDocument(true) aan, die pdfMake.createPdf(dd).download(projectnaam-offertedocument.pdf) doet, en gaat dan via setTimeout 1000ms door naar het volgende; afterprint wordt voor dit item niet meer aangehaakt. Alleen actief als pdfMake geladen is, anders valt de offerte terug op de oude window.print()-weg met het normale afterprint-pad. Los printen van de offerte buiten archiveren blijft .open() in een tabblad. Geen SQL' },
   { v: '3.89.4', d: '2026-06-20', h: 'Akkoord-knoppen op de publieke ondertekenpagina nu altijd in beeld. De knoppenkaart #acActies stond in de normale stroom na een PDF-object van 80vh dat op iOS de veegbeweging opving, waardoor klanten de knoppen Akkoord/Afwijzen/Vraag niet zagen of bereikten. _accordActiesHtml kreeg de class ac-sticky (position:sticky; bottom:0; z-index:50; top-schaduw; padding-bottom met safe-area-inset) en een kopje ac-acties-titel "Wat wilt u doen?". Bij het openen van het reactieformulier zet _accordWireActies de class ac-expanded (position:static) zodat de kaart meeschuift en het toetsenbord niet hindert, plus scrollIntoView op het formulier; na een verstuurde vraag valt ac-expanded weer weg zodat de balk weer zweeft. PDF-object van 80vh naar 70vh zodat de balk eronder opvalt. Alleen de accord-render, geen wijziging aan de Edge Function of data. Geen SQL' },
   { v: '3.89.3', d: '2026-06-20', h: 'Vervolg op de iPad-leesbaarheid. De meetstaat-kaartlabels (td[data-label]::before) gingen van 0,6rem naar 0,72rem met font-weight 600, en de invoer/select-tekst in de meetstaat van 0,95rem naar 1,02rem met expliciete ink-kleur. De teken-knop bij een meetregel toonde een dun ✎-lijnteken dat op de iPad als vlekje rendert; vervangen door de volle emoji ✏️ en een nieuwe class .ms-tekenbtn (font-size 1,2rem, ruimere padding) zodat het pictogram duidelijk zichtbaar en goed raakbaar is. De 📐 voor een bestaande tekening blijft. Alleen meetstaat geraakt. Geen SQL' },
@@ -17177,13 +17179,13 @@ function _accordRender(root, token, res) {
   }
 
   const docHtml = pdfUrl
-    ? ('<object id="acOffertePdf" class="ac-offerte" data="' + _accordEsc(pdfUrl) + '#view=FitH" type="application/pdf" style="width:100%;height:70vh;border:0;background:#fff;">'
+    ? ('<div id="acPdfDl" style="margin:0 0 12px;text-align:center;">'
+        + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Offerte openen of downloaden (PDF)</a>'
+        + '</div>'
+        + '<object id="acOffertePdf" class="ac-offerte" data="' + _accordEsc(pdfUrl) + '#view=FitH" type="application/pdf" style="width:100%;height:70vh;border:0;background:#fff;">'
         + '<div style="padding:24px;text-align:center;color:#555;">De offerte kan hier niet in beeld getoond worden op dit toestel. '
         + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener">Open de offerte (PDF)</a>.</div>'
-        + '</object>'
-        + '<div id="acPdfDl" style="margin:10px 0 0;text-align:center;">'
-        + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Offerte openen of downloaden (PDF)</a>'
-        + '</div>')
+        + '</object>')
     : '<iframe id="acOfferte" class="ac-offerte" title="Offerte"></iframe>';
 
   root.innerHTML =

@@ -1,3 +1,13 @@
+## v3.89.6 — Knop "Offerte openen of downloaden" niet meer afgedekt
+De nieuwe vaste knoppenbalk op de ondertekenpagina dekte de groene PDF-knop half af. Opgelost.
+
+### Wijzigingen
+- De groene knop "Offerte openen of downloaden (PDF)" staat nu boven de offerte in plaats van eronder, ruim weg van de vaste knoppenbalk onderaan, zodat de klant hem meteen ziet en kan gebruiken.
+- Alleen de ondertekenpagina verandert.
+- Geen SQL.
+
+---
+
 ## v3.89.5 — Archiveren biedt weer alle PDF's achter elkaar aan
 De archiveer-reeks bleef hangen op het offertedocument, waardoor documenten erná niet meer werden aangeboden. Opgelost.
 
