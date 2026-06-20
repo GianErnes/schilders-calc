@@ -1,3 +1,16 @@
+## v3.89.1 — Compactere meetstaat-PDF
+De meetstaat-PDF nam per regel te veel hoogte in, vooral bij grote calculaties. De regels zijn nu strakker en er passen meer meetregels op een pagina.
+
+### Wijzigingen
+- Minder witruimte boven en onder elke regel (celpadding van 0,35rem terug naar 0,12rem).
+- Strakke regelhoogte (line-height 1,2) op de meetregel- en de samenvattingstabel.
+- Vaste kolomindeling zodat de lange calc-regelnaam netjes in zijn eigen kolom afbreekt in plaats van de hele tabel hoger te maken.
+- Indeling en volgorde van de meetregels blijven precies gelijk, alleen lager.
+- Alleen de PDF verandert. De meetstaat op het scherm en de berekening blijven ongemoeid.
+- Geen SQL.
+
+---
+
 ## v3.89.0 — Vinkjes kiezen de standaardteksten per type
 De vinkjes van v3.87.0 zijn nu actief. Een nieuwe offerte kiest per sectie automatisch de tekst die je voor het gekozen type hebt aangevinkt.
 
