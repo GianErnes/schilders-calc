@@ -1,3 +1,16 @@
+## v3.89.2 — Beter leesbaar op de iPad in de zon
+De randen van velden en knoppen waren te licht en het cijferblok botste onderaan met de swipebalk. Beide opgelost.
+
+### Wijzigingen
+- De randen van invoervelden, keuzelijsten en knoppen zijn duidelijk donkerder, zodat ze in zonlicht zichtbaar blijven.
+- De teken/bewerk-knop bij een meetregel valt nu op als knop in plaats van weg te vallen tegen de witte achtergrond.
+- De veldlabels in de meetstaat (CALC-REGEL, B (CM) enzovoort) staan donkerder.
+- Het cijferblok staat iets hoger, zodat de onderste rij (0 en Volgende) niet meer onder de iPad-swipebalk valt.
+- De rustige scheidingslijnen tussen secties blijven zoals ze waren.
+- Geen SQL.
+
+---
+
 ## v3.89.1 — Compactere meetstaat-PDF
 De meetstaat-PDF nam per regel te veel hoogte in, vooral bij grote calculaties. De regels zijn nu strakker en er passen meer meetregels op een pagina.
 
