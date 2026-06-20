@@ -1,3 +1,14 @@
+## v3.89.5 — Archiveren biedt weer alle PDF's achter elkaar aan
+De archiveer-reeks bleef hangen op het offertedocument, waardoor documenten erná niet meer werden aangeboden. Opgelost.
+
+### Wijzigingen
+- Sinds het offertedocument een echte PDF werd, gaf het in de reeks geen signaal dat het klaar was, dus de reeks stopte erop. Documenten die je ná de offerte had aangevinkt (werkbon, onderhoudsplan, foto-bijlage) werden niet meer aangeboden.
+- In de archiveer-reeks wordt de offerte nu direct opgeslagen als PDF in je Downloads-map, waarna de reeks gewoon doorloopt naar de rest.
+- Het los printen van de offerte (buiten archiveren) opent nog steeds netjes in een tabblad zoals je gewend bent.
+- Geen SQL.
+
+---
+
 ## v3.89.4 — Akkoord-knoppen altijd in beeld op de ondertekenpagina
 Klanten misten op iPad en iPhone de knoppen onderaan de ondertekenpagina. Die staan nu in een vaste balk die altijd zichtbaar is.
 
