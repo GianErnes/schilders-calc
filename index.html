@@ -2095,8 +2095,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.91.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.92.0</h2>
       <div class="intro-body">
+        <p><strong>⏱️ Uren zichtbaar op de werkbon en compactere PDF's (v3.92.0).</strong> De werkbon toont nu de uren per regel, per onderdeel en als projecttotaal, zodat je tijdens de uitvoering ook de tijd kunt monitoren en niet alleen het materiaal. Die werkbon-uren zijn de productieve uren: ze worden standaard met tien procent verlaagd voor de indirecte tijd. Dat percentage stel je zelf in onder Instellingen. De calculatie-PDF kreeg bovenaan een kerncijfer-blok met uren, werkdagen en totaal, en de uren springen er nu vetter uit. De volle uren in de calculatie blijven ongewijzigd, de tien procent raakt alleen de werkbon. Geen SQL nodig.</p>
         <p><strong>🔁 Versie-aanduiding bij een herziene offerte (v3.91.0).</strong> Maak je een nieuwe accordeerlink nadat de klant op een eerdere versie heeft gereageerd, dan krijgt de offerte automatisch een versie-aanduiding achter het nummer: V2, V3, enzovoort. De offertedatum schuift dan mee naar vandaag en geldig-tot opnieuw naar dertig dagen erna. Zo ziet de klant meteen dat hij naar een herziene versie kijkt. De eerste versie blijft eruitzien zoals altijd, zonder suffix. Geen SQL nodig.</p>
         <p><strong>🔢 Eigen offertenummer per offerte (v3.90.0).</strong> In het Offerte-blok staat nu een veld Offertenummer, onder Geldig tot. Laat je het leeg, dan deelt de app automatisch een nummer uit zoals voorheen. Vul je het in, bijvoorbeeld het Yoobi-verkoopnummer 260069, dan houdt de offerte dat nummer aan en blijft de automatische teller onaangeroerd. Zo loopt je nummering gelijk met Yoobi wanneer je dat wilt. Geen SQL nodig.</p>
         <p><strong>🟢 Knop "Offerte openen of downloaden" niet meer afgedekt (v3.89.6).</strong> Op de ondertekenpagina dekte de nieuwe vaste knoppenbalk de groene knop "Offerte openen of downloaden (PDF)" half af. Die knop staat nu boven de offerte, ruim weg van de balk onderaan, zodat de klant hem meteen ziet en kan gebruiken. Geen SQL nodig.</p>
@@ -2632,6 +2633,11 @@
           <input type="number" id="setAfrondingsDrempel" step="0.05" min="0" max="1" style="width: 80px;" onchange="updSetting('afrondingsDrempel', this)">
           <span style="color: var(--ink-soft); font-size: 0.78rem;">Pas afronden naar boven als overschot ≥ deze waarde. Default 0,6 = "vanaf halve dag werk over → hele dag factureren".</span>
         </div>
+      </div>
+      <div style="margin-top: 1rem; padding: 0.85rem; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); display: flex; align-items: center; gap: 0.7rem; font-size: 0.82rem;">
+        <label style="margin: 0; flex-shrink: 0;"><strong>Aftrek indirecte uren werkbon (%):</strong></label>
+        <input type="number" id="setIndirecteUrenAftrek" step="1" min="0" max="50" style="width: 80px;" onchange="updSetting('indirecteUrenAftrek', this)">
+        <span style="color: var(--ink-soft); font-size: 0.78rem;">De uren op de werkbon worden met dit percentage verlaagd, zodat je de productieve uren ziet. Default 10. Raakt alleen de werkbon, niet de calculatie of de offerte.</span>
       </div>
     </div>
     <div class="settings-section">
@@ -3175,7 +3181,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.91.0';
+const APP_VERSION = 'v3.92.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3570,6 +3576,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.92.0', d: '2026-06-21', h: 'Uren op de werkbon plus compactere PDF-uitvoer. Nieuwe instelling indirecteUrenAftrek (default 10, in app_settings, geen migratie) met veld setIndirecteUrenAftrek onder Instellingen via de generieke updSetting. In printWerkbon wordt een reductiefactor (100 minus aftrek)/100 berekend; de uren verschijnen als productieve uren op drie niveaus: per regel achter de hoeveelheid (calcRegelTotalen(r).uren maal factor), per onderdeel als subtotaal-blok (calcOnderdeelTotalenOrigineel(od).uren maal factor) en als projecttotaal-blok boven de materiaal-boodschappenlijst (calcProjectTotalenOrigineel().uren maal factor). Alleen het verlaagde getal, geen voetnoot, geen geld op de werkbon. printCalc kreeg bovenaan een kerncijfer-blok met totaal uren, werkdagen (factureerbaar plus werkelijk) en totaal incl. BTW, en de regel-uren staan nu vet zodat ze tussen de euro-kolommen opvallen. De calculatie houdt de volle uren, de aftrek raakt hem niet. Geen SQL' },
   { v: '3.91.0', d: '2026-06-21', h: 'Versie-aanduiding bij een herziene offerte. _offerteNummer plakt een suffix V{n} achter het nummer (vrij of automatisch) zodra offerte_config.offerteVersie groter is dan 1; V1 blijft verborgen zodat een eerste offerte ongewijzigd oogt. In _accordNieuweLink wordt vóór het bouwen van het bevroren document gecontroleerd of er al een accordering voor de calc bestaat waarop de klant heeft gereageerd (gereageerd_op gevuld, status akkoord of afgekeurd, of een niet-lege vragen-array); zo ja, dan offerteVersie +1, offertedatum naar vandaag en geldigTot naar +30 dagen, direct weggeschreven naar calculaties.offerte_config. Het versienummer leeft in offerte_config, dus geen migratie. Geen SQL' },
   { v: '3.90.0', d: '2026-06-21', h: 'Eigen offertenummer per offerte. Nieuw veld Offertenummer in het offerte-blok (onder Geldig tot) dat offerte_config.offerteNummerVrij vult via _offCfgVeld; geen migratie. Is het veld gevuld, dan heeft het voorrang: _offerteNummer geeft de getrimde vrije waarde terug en _kenOfferteNummerToe slaat de auto-toekenning over zodat de jaarteller niet ophoogt. Leeg laten valt terug op de automatische JJ-NNN-nummering zoals voorheen. Nieuwe helper _offerteAutoNummer levert het automatische nummer (toegekend of volgende) voor de placeholder en de uitleg onder het veld. Bedoeld om de Yoobi-verkoopnummering te kunnen aanhouden. Geen SQL' },
   { v: '3.89.6', d: '2026-06-20', h: 'Vervolg op v3.89.4: de sticky knoppenbalk #acActies dekte de groene knop #acPdfDl ("Offerte openen of downloaden (PDF)") half af, want die stond in de stroom net boven de balk. In _accordRender is het acPdfDl-blok verplaatst van ná het PDF-object naar ervóór (margin van 10px-boven naar 12px-onder), zodat de knop boven de offerte staat en buiten het bereik van de zwevende balk valt. _accordZetGetekendKnop blijft op #acPdfDl werken (positie-onafhankelijk). Alleen de accord-render. Geen SQL' },
@@ -3961,6 +3968,7 @@ const defaultData = {
     kleinMat: 4, afval: 1.5, arbo: 2, winst: 10, btw: 21,
     volleDagen: true,
     afrondingsDrempel: 0.6,
+    indirecteUrenAftrek: 10, // v3.92.0 — aftrek indirecte uren op werkbon (%)
     jaarcapaciteitEuro: 450000, // v3.27.4 — planning: jaaromzet-capaciteit (incl. BTW)
     jaarcapaciteitUren: null,   // v3.27.4 — planning: jaarcapaciteit in manuren (leeg = geen %)
     groepOpslagen: { ...DEFAULT_GROEP_OPSLAGEN }
@@ -6019,6 +6027,8 @@ async function loadData() {
       if (data.settings.rayonDrempel === undefined) data.settings.rayonDrempel = 15;
       if (data.settings.volleDagen === undefined) data.settings.volleDagen = true;
       if (data.settings.afrondingsDrempel === undefined) data.settings.afrondingsDrempel = 0.6;
+      // v3.92.0 — aftrek indirecte uren op de werkbon (%), standaard 10
+      if (data.settings.indirecteUrenAftrek === undefined) data.settings.indirecteUrenAftrek = 10;
       // v3.73.0 — instelbare logo-grootte (pt) en bewerkbare bedrijfsgegevens voor de offerte
       if (data.settings.offerteLogoPt === undefined) data.settings.offerteLogoPt = 69;
       if (!data.settings.bedrijf || typeof data.settings.bedrijf !== 'object') data.settings.bedrijf = {};
@@ -9745,6 +9755,24 @@ function printCalc() {
     </div>
   </div>`;
 
+  // v3.92.0 — kerncijfer-blok: uren, dagen en totaal in één oogopslag
+  html += `<div class="section" style="page-break-inside:avoid;">
+    <div style="display:flex; gap:10pt; text-align:center;">
+      <div style="flex:1; padding:8pt 6pt; background:#f1f4f7; border:1pt solid #c8d4e0; border-radius:4pt;">
+        <div style="font-size:8pt; color:#666; text-transform:uppercase; letter-spacing:0.5pt;">Totaal uren</div>
+        <div style="font-size:16pt; font-weight:bold; margin-top:2pt;">${fmt(t.uren)} u</div>
+      </div>
+      <div style="flex:1; padding:8pt 6pt; background:#f1f4f7; border:1pt solid #c8d4e0; border-radius:4pt;">
+        <div style="font-size:8pt; color:#666; text-transform:uppercase; letter-spacing:0.5pt;">Werkdagen</div>
+        <div style="font-size:16pt; font-weight:bold; margin-top:2pt;">${dagenFactureerbaar}${dagenFactureerbaar !== dagenWerkelijk ? ` <span style="font-size:9pt; color:#888; font-weight:normal;">(${fmt1(dagenWerkelijk)} werk.)</span>` : ''}</div>
+      </div>
+      <div style="flex:1; padding:8pt 6pt; background:#eef6ee; border:1pt solid #bcd6bc; border-radius:4pt;">
+        <div style="font-size:8pt; color:#666; text-transform:uppercase; letter-spacing:0.5pt;">Totaal incl. BTW</div>
+        <div style="font-size:16pt; font-weight:bold; margin-top:2pt;">${eur(totaal)}</div>
+      </div>
+    </div>
+  </div>`;
+
   // Notities & to-dos (alleen tonen als er content is)
   const notitiesText = (c.notities || '').trim();
   const todos = (c.todos || []);
@@ -9805,7 +9833,7 @@ function printCalc() {
               <td>${r.systeemNaam || '<em>onbekend</em>'}</td>
               <td class="num right">${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</td>
               <td class="num right">${r.toeslag||0}%</td>
-              <td class="num right">${fmt(rt.uren)} u</td>
+              <td class="num right"><strong>${fmt(rt.uren)} u</strong></td>
               <td class="num right">${eur(rt.matVerkoop)}</td>
               <td class="num right">${eur(rt.verkoop)}</td>
             </tr>`;
@@ -11466,6 +11494,10 @@ function printWerkbon() {
   if (!c) return;
   const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
 
+  // v3.92.0 — uren op de werkbon zijn de productieve uren: begroot minus indirecte-uren-aftrek
+  const _aftrek = (data.settings && data.settings.indirecteUrenAftrek != null) ? data.settings.indirecteUrenAftrek : 10;
+  const _urenFactor = Math.max(0, (100 - _aftrek) / 100);
+
   let html = '';
 
   // Header — alleen klant + werkgegevens, geen "Voorcalculatie · Intern document"
@@ -11499,7 +11531,7 @@ function printWerkbon() {
           <span style="color:#666;"> — ${r.systeemNaam || '<em>onbekend systeem</em>'}</span>
         </div>`;
         html += `<div style="font-size:10pt; color:#333; margin-bottom:4pt;">
-          <strong>${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</strong>${r.toeslag ? ` · ${r.toeslag}% staat-toeslag` : ''}
+          <strong>${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</strong>${r.toeslag ? ` · ${r.toeslag}% staat-toeslag` : ''} · <strong>${fmt1(calcRegelTotalen(r).uren * _urenFactor)} u</strong>
         </div>`;
         // Tabel met # | bewerking | %
         if (!r.stappen || !r.stappen.length) {
@@ -11531,6 +11563,13 @@ function printWerkbon() {
           html += `</div>`;
         }
       });
+      // v3.92.0 — productieve uren-subtotaal voor dit onderdeel
+      const _odUren = calcOnderdeelTotalenOrigineel(od).uren * _urenFactor;
+      if (_odUren > 0) {
+        html += `<div style="margin-top:10pt; padding:5pt 8pt; background:#f1f4f7; border-left:3pt solid #4a6b8a; font-size:9.5pt;">
+          <strong>Uren onderdeel ${od.naam}: ${fmt1(_odUren)} u</strong>
+        </div>`;
+      }
       // Materiaal-overzicht voor dit onderdeel (geaggregeerd over alle regels)
       const matRowsOnderdeel = _aggregeerMateriaalVerbruik(od.regels);
       if (matRowsOnderdeel.length) {
@@ -11554,6 +11593,13 @@ function printWerkbon() {
       (od.regels || []).forEach(r => alleRegels.push(r));
     });
   });
+  // v3.92.0 — projecttotaal productieve uren (boven het materiaal-totaal)
+  const _projUren = calcProjectTotalenOrigineel().uren * _urenFactor;
+  if (_projUren > 0) {
+    html += `<div style="margin-top:18pt; padding:8pt 10pt; border-top:1.5pt solid #333; background:#eef2f6; page-break-inside:avoid;">
+      <span style="font-size:11pt; font-weight:bold;">Uren totaal project: ${fmt1(_projUren)} u</span>
+    </div>`;
+  }
   const matRowsTotaal = _aggregeerMateriaalVerbruik(alleRegels);
   if (matRowsTotaal.length) {
     html += `<div style="margin-top:18pt; padding-top:10pt; border-top:1.5pt solid #333; page-break-inside:avoid;">
@@ -16002,6 +16048,7 @@ function loadSettings() {
   if (cb) cb.checked = s.volleDagen !== false;
   const drempelInput = document.getElementById('setAfrondingsDrempel');
   if (drempelInput) drempelInput.value = s.afrondingsDrempel ?? 0.6;
+  { const _e = document.getElementById('setIndirecteUrenAftrek'); if (_e) _e.value = (s.indirecteUrenAftrek != null) ? s.indirecteUrenAftrek : 10; }
   const c = document.getElementById('groepOpslagen');
   c.innerHTML = GROEP_CLUSTERS.map(cluster => {
     const inner = cluster.groepen.map(g => {

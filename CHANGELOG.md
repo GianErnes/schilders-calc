@@ -1,3 +1,18 @@
+## v3.92.0 — Uren op de werkbon en compactere PDF's
+De werkbon laat nu ook de uren zien, zodat je tijdens de uitvoering naast het materiaal ook de tijd kunt monitoren. De calculatie-PDF werd compacter zodat de uren beter opvallen.
+
+### Wijzigingen
+- De werkbon toont de uren per regel, per onderdeel en als projecttotaal, in dezelfde opzet als het materiaal.
+- Die werkbon-uren zijn de productieve uren: ze worden standaard met tien procent verlaagd voor de indirecte tijd.
+- Het aftrekpercentage is instelbaar onder Instellingen, met tien als standaard. Het raakt alleen de werkbon, niet de calculatie of de offerte.
+- Op de werkbon staat alleen het verlaagde getal, zonder voetnoot en zonder bedragen.
+- De calculatie-PDF kreeg bovenaan een kerncijfer-blok met totaal uren, werkdagen en totaal incl. BTW.
+- De uren staan in de calculatie nu vet uitgelicht zodat ze opvallen tussen de bedragen.
+- De volle uren in de calculatie blijven ongewijzigd.
+- Geen SQL.
+
+---
+
 ## v3.91.0 — Versie-aanduiding bij een herziene offerte
 Maak je een offerte opnieuw nadat de klant heeft gereageerd, dan markeert de app dat als een nieuwe versie.
 
