@@ -1,3 +1,14 @@
+## v3.90.0 — Eigen offertenummer per offerte
+Je kunt nu per offerte zelf het nummer bepalen, zodat je de Yoobi-verkoopnummering kunt aanhouden.
+
+### Wijzigingen
+- In het Offerte-blok staat een nieuw veld Offertenummer, onder Geldig tot. Laat je het leeg, dan deelt de app automatisch een nummer uit zoals voorheen.
+- Vul je het in, bijvoorbeeld het Yoobi-verkoopnummer 260069, dan houdt de offerte dat nummer aan in het document en op de ondertekenpagina.
+- Bij een handmatig nummer blijft de automatische jaarteller onaangeroerd, dus je verbruikt geen auto-nummers die je niet gebruikt.
+- Geen SQL.
+
+---
+
 ## v3.89.6 — Knop "Offerte openen of downloaden" niet meer afgedekt
 De nieuwe vaste knoppenbalk op de ondertekenpagina dekte de groene PDF-knop half af. Opgelost.
 
