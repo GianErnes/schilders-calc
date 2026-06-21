@@ -1,3 +1,14 @@
+## v3.91.0 — Versie-aanduiding bij een herziene offerte
+Maak je een offerte opnieuw nadat de klant heeft gereageerd, dan markeert de app dat als een nieuwe versie.
+
+### Wijzigingen
+- Reageert de klant op een offerte (akkoord, afwijzing of een vraag) en maak je daarna een nieuwe accordeerlink, dan krijgt de offerte automatisch V2, V3, enzovoort achter het nummer.
+- De offertedatum schuift bij die nieuwe versie mee naar vandaag, en geldig-tot opnieuw naar dertig dagen erna.
+- De eerste versie blijft eruitzien zoals voorheen, zonder suffix. De suffix verschijnt pas vanaf V2.
+- Geen SQL.
+
+---
+
 ## v3.90.0 — Eigen offertenummer per offerte
 Je kunt nu per offerte zelf het nummer bepalen, zodat je de Yoobi-verkoopnummering kunt aanhouden.
 
