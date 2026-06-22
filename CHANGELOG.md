@@ -1,3 +1,20 @@
+## v3.93.0 — Klant uit Yoobi ophalen
+Bovenaan de calculatie haal je met één zoekactie de klantgegevens uit Yoobi op. De koppeling leest alleen, Yoobi blijft de bron.
+
+### Wijzigingen
+- Nieuwe knop "Klant uit Yoobi" in de calculatie-kop, naast Archiveren en Nieuwe.
+- Een zoekvenster zoekt op naam of relatienummer en toont de treffers met relatienummer.
+- Kies je een relatie, dan vult de app het Klant-veld, de postcode en het huisnummer van het werkadres, en in het Offerte-blok het klanttype, het adres en de contactpersoon.
+- Het adres wordt heuristisch in straat en huisnummer gesplitst, de contactpersoon in voorletters, tussenvoegsel en achternaam. Klopt het niet, dan corrigeer je het veld.
+- Nieuw e-mailveld in het Offerte-blok. Staan er bij Yoobi twee e-mailadressen, dan kies je in het venster welke meegaat. Dit veld is de basis voor het verzenden via Resend later.
+- Telefoon, relatienummer, KvK en BTW toont het venster ter referentie, die worden niet opgeslagen.
+- De app roept de functie ingelogd aan met de Supabase-sessie, klaar voor Verify JWT aan.
+- Een VvE komt bij Yoobi als Zakelijk binnen, dat pas je zelf aan.
+- Yoobi is leidend, ingevulde velden worden overschreven.
+- Geen SQL.
+
+---
+
 ## v3.92.0 — Uren op de werkbon en compactere PDF's
 De werkbon laat nu ook de uren zien, zodat je tijdens de uitvoering naast het materiaal ook de tijd kunt monitoren. De calculatie-PDF werd compacter zodat de uren beter opvallen.
 
