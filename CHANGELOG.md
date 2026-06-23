@@ -1,3 +1,18 @@
+## v3.95.0 — Automatische mails bij een reactie op de offerte (deel 1)
+Reageert een klant via de accordeerlink, dan gaan er nu mails uit via Resend. De koppeling werkt server-side, de sleutel blijft in Supabase.
+
+### Wijzigingen
+- Bij akkoord krijgt de klant een bevestiging met jouw volledige handtekening (logo, contactblok, keurmerken, KvK).
+- Bij elke reactie (akkoord, afwijzing of vraag) krijg jij een seintje op info@ernes.nl.
+- Bij afwijzing of een vraag krijgt de klant niets automatisch, dat handel je zelf af.
+- De mails komen van offerte@ernes.nl, antwoorden landen op info@ernes.nl.
+- Het versturen kan de registratie van de reactie nooit breken: faalt een mail, dan wordt de reactie nog steeds vastgelegd.
+- De app legt het offertenummer, de aanhef en het e-mailadres mee vast in de accordeerlink, zodat de functie ze bevroren kan uitlezen.
+- Offerte verzenden vanuit de app (deel 2) volgt apart.
+- Vereist de bijgewerkte Edge Function offerte-accord en de secret RESEND_API_KEY. Geen SQL.
+
+---
+
 ## v3.94.0 — Verfsystemen compacter in calculatie en werkbon
 De verfsysteem-opbouw stond eerst bij elke regel opnieuw. Nu staat elk uniek recept nog maar één keer, met daaronder waar het gebruikt wordt.
 
