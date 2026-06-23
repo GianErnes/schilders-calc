@@ -1,3 +1,18 @@
+## v3.96.0 — Offerte mailen vanuit de app (deel 2)
+De cirkel is rond: vanuit het accordeerlink-venster mail je de offerte rechtstreeks naar de klant.
+
+### Wijzigingen
+- Nieuwe knop "Offerte mailen naar klant" onder de link in het accordeerlink-venster, alleen bij een open link.
+- Eronder zie je naar welk e-mailadres het gaat. Heeft de link geen adres, dan vul je het e-mailveld in en maak je een nieuwe link.
+- Voor het versturen krijg je een bevestiging met het e-mailadres erin.
+- De mail bevat een duidelijke knop "Offerte bekijken en akkoord geven", de geldigheidsdatum en je volledige handtekening.
+- Na het versturen gaat de calculatie automatisch op Verzonden (een al verder gevorderde status blijft staan).
+- De mail komt van offerte@ernes.nl, antwoorden landen op info@ernes.nl.
+- De app legt nu ook de geldig-tot-datum mee vast in de accordeerlink.
+- Vereist de nieuwe Edge Function offerte-verzenden en de secret RESEND_API_KEY. Geen SQL.
+
+---
+
 ## v3.95.0 — Automatische mails bij een reactie op de offerte (deel 1)
 Reageert een klant via de accordeerlink, dan gaan er nu mails uit via Resend. De koppeling werkt server-side, de sleutel blijft in Supabase.
 

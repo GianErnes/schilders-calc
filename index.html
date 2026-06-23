@@ -2095,8 +2095,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.95.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.96.0</h2>
       <div class="intro-body">
+        <p><strong>📧 Offerte mailen vanuit de app (v3.96.0, deel 2).</strong> In het accordeerlink-venster staat nu onder de link de knop "Offerte mailen naar klant". Die mailt de offerte rechtstreeks naar het e-mailadres van de klant, met een duidelijke knop "Offerte bekijken en akkoord geven" die naar de accordeerpagina leidt, plus je volledige handtekening. Je krijgt eerst een bevestiging met het e-mailadres erin voor je verstuurt. Na het versturen gaat de calculatie automatisch op Verzonden. Je mailt de bestaande open link, dus maak de link eerst aan (met het e-mailveld ingevuld). De mail komt van offerte@ernes.nl, antwoorden landen op info@ernes.nl. Vereist de nieuwe Edge Function offerte-verzenden en de secret RESEND_API_KEY, geen SQL. Daarmee is de cirkel rond: verzenden, accorderen, bevestiging.</p>
         <p><strong>📧 Automatische mails bij een reactie op de offerte (v3.95.0, deel 1).</strong> Reageert een klant via de accordeerlink, dan gaan er nu mails uit via Resend. Geeft de klant akkoord, dan krijgt hij een nette bevestiging met jouw handtekening, en krijg jij een seintje op info@ernes.nl. Wijst de klant af of stelt hij een vraag, dan krijg jij alleen het seintje en handel je het zelf af. De mails komen van offerte@ernes.nl, antwoorden landen op info@ernes.nl. Zodat de functie de juiste aanhef, het offertenummer en het e-mailadres heeft, legt de app die nu mee vast in de accordeerlink-snapshot. Verzenden van de offerte zelf vanuit de app (deel 2) volgt apart. Vereist de nieuwe Edge Function offerte-accord en de secret RESEND_API_KEY, geen SQL.</p>
         <p><strong>🎨 Verfsystemen compacter in calculatie en werkbon (v3.94.0).</strong> De verfsysteem-opbouw stond eerst bij elke regel opnieuw, ook als hetzelfde systeem tien keer terugkwam. Nu staat elk uniek recept nog maar één keer, met daaronder de plekken waar het gebruikt wordt. Op de calculatie heet dat blok \"Specificatie verfsystemen\" en het is strakker en kleiner gezet. Op de werkbon zijn de stappen weg bij de regels en staan ze in één blok \"Verfsystemen — opbouw\" onderaan; bij de regel zelf blijft de systeemnaam staan als verwijzing. Een regel waar je een materiaal of percentage hebt overschreven telt als een eigen variant en krijgt een eigen regeltje. Scheelt fors papier bij projecten met veel gelijke kozijnen. Geen SQL nodig.</p>
         <p><strong>🔍 Klant uit Yoobi ophalen (v3.93.0).</strong> Bovenaan de calculatie staat naast Archiveren en Nieuwe de knop "Klant uit Yoobi". Je zoekt op naam of relatienummer, kiest de relatie uit de lijst en de app vult meteen de klantgegevens in: het Klant-veld, de postcode en het huisnummer van het werkadres, en in het Offerte-blok het klanttype, het adres, de contactpersoon en een nieuw e-mailveld. Staan er bij Yoobi twee e-mailadressen, dan kies je in het venster welke meegaat. Telefoon, relatienummer, KvK en BTW toont het venster ter referentie, die sla je niet op. De koppeling leest alleen, Yoobi blijft de bron, dus ingevulde velden worden overschreven met de Yoobi-waarde. Een VvE komt bij Yoobi als Zakelijk binnen, dat pas je zelf aan. Geen SQL nodig.</p>
@@ -3199,7 +3200,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.95.0';
+const APP_VERSION = 'v3.96.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3594,6 +3595,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.96.0', d: '2026-06-23', h: 'Resend-mails deel 2: offerte mailen vanuit de app. In _accordBeheerRender staat bij een open link onder de linkrij de knop acbMail "Offerte mailen naar klant" met daaronder het ontvangeradres uit rij.snapshot.klantEmail (of een rode hint als de link geen adres heeft). _offerteMailen vraagt een bevestiging via confirm met het adres, roept _offerteVerzendCall(token) aan (ingelogde POST naar de Edge Function offerte-verzenden met de Supabase-sessie als Bearer plus apikey), zet bij succes de calc via setCalcStatus op verzonden mits de status nog afspraak/concept/gereed is, toont een toast en ververst het venster. De nieuwe Edge Function offerte-verzenden leest de snapshot (klantEmail, aanhef, offertenummer, geldigTot) en calculaties(naam) van de open accordering, bouwt mail A met onderwerp "Offerte {label}", een oranje knop "Offerte bekijken en akkoord geven" naar de accordeerpagina (?accord=TOKEN), de geldig-tot-datum en de volledige handtekening, en verstuurt via Resend (from offerte@ernes.nl, reply_to info@ernes.nl). Mislukt het versturen, dan geeft de functie een fout terug en blijft de status ongewijzigd. App-kant: _accordNieuweLink schrijft nu ook geldigTot in de snapshot. Vereist de nieuwe Edge Function en de secret RESEND_API_KEY. Geen SQL' },
   { v: '3.95.0', d: '2026-06-23', h: 'Resend-mails deel 1: bevestiging aan de klant bij akkoord (mail B) en intern seintje bij elke reactie (mail C), afgevuurd vanuit de Edge Function offerte-accord na het wegschrijven van de reactie. Resend-aanroep via https://api.resend.com/emails met Bearer RESEND_API_KEY; from "Ernes Schilders <offerte@ernes.nl>", reply_to info@ernes.nl. Bij akkoord: mail B naar de klant (volledige HTML-handtekening met logo, contactblok, keurmerken en KvK, plaatjes vanaf www.ernes.nl/images/handtekening) plus mail C naar info@. Bij afkeuren of vraag: alleen mail C. Het versturen zit in try/catch en kan de accordregistratie nooit breken (mail faalt stil, reactie wordt altijd vastgelegd). De functie haalt extra snapshot- en calculatievelden op (snapshot, calculaties(naam, klant)). App-kant: _accordNieuweLink schrijft offertenummer (via _offerteNummer), aanhef (via _offAanhef) en klantEmail (offerte_config.email) mee in de snapshot zodat de functie ze bevroren uitleest in plaats van de offertenummer-logica na te maken. Offerte verzenden vanuit de app (mail A, deel 2) volgt apart. Vereist de bijgewerkte Edge Function en de secret RESEND_API_KEY. Geen SQL' },
   { v: '3.94.0', d: '2026-06-22', h: 'Verfsysteem-overzichten gededupliceerd en compacter op calculatie en werkbon. Nieuwe helper _groepeerUniekeVerfsystemen(regelCtxs) groepeert regels-met-stappen op een recept-handtekening (systeemNaam/eenheid/ondergrond/locatie plus per stap bewerkingNaam, percentage, geschaalde minuten, materiaalNaam, geschaald verbruik en matInkoop) zodat identieke recepten samenvallen; een overschreven materiaal of percentage geeft een eigen variant. Helper _gebruiktBijTekst toont de gebruiksplekken. In printCalc vervangt dit het oude per-regel blok door één Specificatie verfsystemen met alle zeven kolommen behouden maar kleiner gezet. In printWerkbon zijn de inline stappen-tabellen per regel vervangen door verzamelen in _wbSpecRegels en één blok Verfsystemen — opbouw onderaan met # / Bewerking / % en Gebruikt bij; de systeemnaam blijft bij de regel staan. Geen SQL' },
   { v: '3.93.0', d: '2026-06-22', h: 'Yoobi-klantkoppeling brok 3: knop "Klant uit Yoobi" in de calculatie-kop opent een zoekvenster (modal id yoobiModal). _yoobiCall doet een ingelogde fetch naar de Edge Function yoobi-klant met de Supabase-sessie als Bearer-token plus apikey-header, zodat het blijft werken zodra Verify JWT aan gaat. _yoobiZoek roept ?q=TERM aan en toont de treffers (naam plus relatienummer); _yoobiKiesRelatie roept ?code=RELATIENUMMER aan, bewaart het detail in _yoobiHuidig en toont een overzicht via _yoobiRenderDetail met een radiokeuze tussen contactpersoon-mail en relatie-mail. _yoobiVulIn schrijft naam naar data.calc.klant, splitst het adres heuristisch met _yoobiSplitAdres (eerste cijfer start het huisnummer) naar postcode en huisnummer op het werkadres (_updateCalcDB), en vult het Offerte-blok: klanttype via _yoobiMapKlanttype (particulier naar consument, vve naar vve, rest naar zakelijk), het adres, de contactpersoon best-effort gesplitst met _yoobiSplitContact (voorletters/tussenvoegsel/achternaam) en het gekozen e-mailadres. Nieuw veld offerte_config.email met default in _offCfg en een invoerveld in het adresblok van renderOfferteBlok. Telefoon, relatienummer, kvk en btw worden alleen getoond, niet opgeslagen. Yoobi is leidend, ingevulde velden worden overschreven. Geen SQL' },
@@ -17805,8 +17807,15 @@ function _accordBeheerRender(body, c, rij) {
 
   h += '<label class="acb-sub">Link voor de klant</label>'
     + '<div class="acb-linkrow"><input type="text" id="acbLink" readonly value="' + _accordEsc(link) + '">'
-    + '<button class="acb-btn" id="acbKopieer">Kopieer</button></div>'
-    + '<button class="acb-btn sec" id="acbNieuw">Nieuwe link maken</button>';
+    + '<button class="acb-btn" id="acbKopieer">Kopieer</button></div>';
+  if (rij.status === 'open') {
+    const _email = (rij.snapshot && rij.snapshot.klantEmail) ? String(rij.snapshot.klantEmail).trim() : '';
+    h += '<button class="acb-btn" id="acbMail" style="margin-bottom:4px;">\ud83d\udce7 Offerte mailen naar klant</button>'
+      + (_email
+          ? '<div class="acb-sub" style="margin:0 0 12px;">Naar ' + _accordEsc(_email) + '</div>'
+          : '<div class="acb-sub" style="margin:0 0 12px;color:#b00020;">Geen e-mailadres in deze link. Vul het e-mailveld in het Offerte-blok in en maak daarna een nieuwe link.</div>');
+  }
+  h += '<button class="acb-btn sec" id="acbNieuw">Nieuwe link maken</button>';
   body.innerHTML = h;
 
   body.querySelector('#acbKopieer').addEventListener('click', () => {
@@ -17823,6 +17832,51 @@ function _accordBeheerRender(body, c, rij) {
   });
   const _btnGetekend = body.querySelector('#acbGetekend');
   if (_btnGetekend) _btnGetekend.addEventListener('click', () => _accordDownloadGetekend(rij, c, _btnGetekend));
+  const _btnMail = body.querySelector('#acbMail');
+  if (_btnMail) _btnMail.addEventListener('click', () => _offerteMailen(c, rij, body));
+}
+
+// v3.96.0 — Offerte mailen vanuit het accordeerlink-venster (deel 2).
+// Mailt de bestaande open link naar de klant via de Edge Function
+// offerte-verzenden en zet de calc daarna op Verzonden.
+async function _offerteVerzendCall(token) {
+  let auth = SUPABASE_KEY;
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    if (session && session.access_token) auth = session.access_token;
+  } catch (e) { /* val terug op anon */ }
+  const res = await fetch(SUPABASE_URL + '/functions/v1/offerte-verzenden', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + auth, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token })
+  });
+  let js = null;
+  try { js = await res.json(); } catch (e) {}
+  if (!res.ok || !js || !js.ok) {
+    throw new Error((js && js.error) ? js.error : ('fout ' + res.status));
+  }
+  return js;
+}
+
+async function _offerteMailen(c, rij, body) {
+  if (!rij || rij.status !== 'open') { _toast('Alleen een open link kun je mailen.'); return; }
+  const email = (rij.snapshot && rij.snapshot.klantEmail) ? String(rij.snapshot.klantEmail).trim() : '';
+  if (!email) { _toast('Geen e-mailadres in deze link. Vul het e-mailveld in en maak een nieuwe link.'); return; }
+  if (!confirm('Offerte mailen naar ' + email + '?')) return;
+  const btn = body ? body.querySelector('#acbMail') : null;
+  if (btn) { btn.disabled = true; btn.textContent = 'Versturen\u2026'; }
+  try {
+    await _offerteVerzendCall(rij.token);
+    // Calc op Verzonden, maar nooit een al verder gevorderde status terugzetten.
+    if (c && ['afspraak', 'concept', 'gereed'].includes(c.status)) {
+      try { await setCalcStatus(c.id, 'verzonden'); } catch (e) {}
+    }
+    _toast('Offerte gemaild naar ' + email, 'ok');
+    accordLinkBeheer(); // venster verversen met de nieuwe stand
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = '\ud83d\udce7 Offerte mailen naar klant'; }
+    _toast('Mailen mislukt: ' + (e.message || e));
+  }
 }
 
 // v3.81.0 / v3.82.0 — Getekend exemplaar: de bevroren offerte-PDF ophalen en er een aparte
@@ -18035,7 +18089,8 @@ async function _accordNieuweLink(c, body, supersede) {
         // v3.95.0 — bevroren klantgegevens voor de Resend-mails (offerte-accord leest deze uit).
         offertenummer: _offerteNummer(c) || '',
         aanhef: _offAanhef(c, (c.offerteConfig && typeof c.offerteConfig === 'object') ? c.offerteConfig : {}),
-        klantEmail: ((c.offerteConfig && c.offerteConfig.email) || '').trim()
+        klantEmail: ((c.offerteConfig && c.offerteConfig.email) || '').trim(),
+        geldigTot: ((c.offerteConfig && c.offerteConfig.geldigTot) || '')  // v3.96.0 — voor mail A
       },
       pdf_path: pdfPath,
       bedrag: bedrag
