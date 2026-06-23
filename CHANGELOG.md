@@ -1,3 +1,17 @@
+## v3.94.0 — Verfsystemen compacter in calculatie en werkbon
+De verfsysteem-opbouw stond eerst bij elke regel opnieuw. Nu staat elk uniek recept nog maar één keer, met daaronder waar het gebruikt wordt.
+
+### Wijzigingen
+- Elk uniek verfsysteem-recept wordt nog maar één keer getoond in plaats van per regel.
+- Recepten worden samengevoegd op hun inhoud. Een overschreven materiaal of percentage telt als een eigen variant en krijgt een eigen regel.
+- Onder elk recept staat een regel "Gebruikt bij" met de plekken waar het systeem zit.
+- Op de calculatie heet het blok nu "Specificatie verfsystemen". Alle kolommen zijn behouden, maar het is kleiner en strakker gezet.
+- Op de werkbon zijn de stappen weg bij de losse regels. Ze staan nu in één blok "Verfsystemen — opbouw" onderaan.
+- Bij de werkbon-regel blijft de systeemnaam staan als verwijzing naar het opbouw-blok.
+- Geen SQL.
+
+---
+
 ## v3.93.0 — Klant uit Yoobi ophalen
 Bovenaan de calculatie haal je met één zoekactie de klantgegevens uit Yoobi op. De koppeling leest alleen, Yoobi blijft de bron.
 

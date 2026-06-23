@@ -2095,8 +2095,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.93.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.94.0</h2>
       <div class="intro-body">
+        <p><strong>🎨 Verfsystemen compacter in calculatie en werkbon (v3.94.0).</strong> De verfsysteem-opbouw stond eerst bij elke regel opnieuw, ook als hetzelfde systeem tien keer terugkwam. Nu staat elk uniek recept nog maar één keer, met daaronder de plekken waar het gebruikt wordt. Op de calculatie heet dat blok \"Specificatie verfsystemen\" en het is strakker en kleiner gezet. Op de werkbon zijn de stappen weg bij de regels en staan ze in één blok \"Verfsystemen — opbouw\" onderaan; bij de regel zelf blijft de systeemnaam staan als verwijzing. Een regel waar je een materiaal of percentage hebt overschreven telt als een eigen variant en krijgt een eigen regeltje. Scheelt fors papier bij projecten met veel gelijke kozijnen. Geen SQL nodig.</p>
         <p><strong>🔍 Klant uit Yoobi ophalen (v3.93.0).</strong> Bovenaan de calculatie staat naast Archiveren en Nieuwe de knop "Klant uit Yoobi". Je zoekt op naam of relatienummer, kiest de relatie uit de lijst en de app vult meteen de klantgegevens in: het Klant-veld, de postcode en het huisnummer van het werkadres, en in het Offerte-blok het klanttype, het adres, de contactpersoon en een nieuw e-mailveld. Staan er bij Yoobi twee e-mailadressen, dan kies je in het venster welke meegaat. Telefoon, relatienummer, KvK en BTW toont het venster ter referentie, die sla je niet op. De koppeling leest alleen, Yoobi blijft de bron, dus ingevulde velden worden overschreven met de Yoobi-waarde. Een VvE komt bij Yoobi als Zakelijk binnen, dat pas je zelf aan. Geen SQL nodig.</p>
         <p><strong>⏱️ Uren zichtbaar op de werkbon en compactere PDF's (v3.92.0).</strong> De werkbon toont nu de uren per regel, per onderdeel en als projecttotaal, zodat je tijdens de uitvoering ook de tijd kunt monitoren en niet alleen het materiaal. Die werkbon-uren zijn de productieve uren: ze worden standaard met tien procent verlaagd voor de indirecte tijd. Dat percentage stel je zelf in onder Instellingen. De calculatie-PDF kreeg bovenaan een kerncijfer-blok met uren, werkdagen en totaal, en de uren springen er nu vetter uit. De volle uren in de calculatie blijven ongewijzigd, de tien procent raakt alleen de werkbon. Geen SQL nodig.</p>
         <p><strong>🔁 Versie-aanduiding bij een herziene offerte (v3.91.0).</strong> Maak je een nieuwe accordeerlink nadat de klant op een eerdere versie heeft gereageerd, dan krijgt de offerte automatisch een versie-aanduiding achter het nummer: V2, V3, enzovoort. De offertedatum schuift dan mee naar vandaag en geldig-tot opnieuw naar dertig dagen erna. Zo ziet de klant meteen dat hij naar een herziene versie kijkt. De eerste versie blijft eruitzien zoals altijd, zonder suffix. Geen SQL nodig.</p>
@@ -3197,7 +3198,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.93.0';
+const APP_VERSION = 'v3.94.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3592,6 +3593,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.94.0', d: '2026-06-22', h: 'Verfsysteem-overzichten gededupliceerd en compacter op calculatie en werkbon. Nieuwe helper _groepeerUniekeVerfsystemen(regelCtxs) groepeert regels-met-stappen op een recept-handtekening (systeemNaam/eenheid/ondergrond/locatie plus per stap bewerkingNaam, percentage, geschaalde minuten, materiaalNaam, geschaald verbruik en matInkoop) zodat identieke recepten samenvallen; een overschreven materiaal of percentage geeft een eigen variant. Helper _gebruiktBijTekst toont de gebruiksplekken. In printCalc vervangt dit het oude per-regel blok door één Specificatie verfsystemen met alle zeven kolommen behouden maar kleiner gezet. In printWerkbon zijn de inline stappen-tabellen per regel vervangen door verzamelen in _wbSpecRegels en één blok Verfsystemen — opbouw onderaan met # / Bewerking / % en Gebruikt bij; de systeemnaam blijft bij de regel staan. Geen SQL' },
   { v: '3.93.0', d: '2026-06-22', h: 'Yoobi-klantkoppeling brok 3: knop "Klant uit Yoobi" in de calculatie-kop opent een zoekvenster (modal id yoobiModal). _yoobiCall doet een ingelogde fetch naar de Edge Function yoobi-klant met de Supabase-sessie als Bearer-token plus apikey-header, zodat het blijft werken zodra Verify JWT aan gaat. _yoobiZoek roept ?q=TERM aan en toont de treffers (naam plus relatienummer); _yoobiKiesRelatie roept ?code=RELATIENUMMER aan, bewaart het detail in _yoobiHuidig en toont een overzicht via _yoobiRenderDetail met een radiokeuze tussen contactpersoon-mail en relatie-mail. _yoobiVulIn schrijft naam naar data.calc.klant, splitst het adres heuristisch met _yoobiSplitAdres (eerste cijfer start het huisnummer) naar postcode en huisnummer op het werkadres (_updateCalcDB), en vult het Offerte-blok: klanttype via _yoobiMapKlanttype (particulier naar consument, vve naar vve, rest naar zakelijk), het adres, de contactpersoon best-effort gesplitst met _yoobiSplitContact (voorletters/tussenvoegsel/achternaam) en het gekozen e-mailadres. Nieuw veld offerte_config.email met default in _offCfg en een invoerveld in het adresblok van renderOfferteBlok. Telefoon, relatienummer, kvk en btw worden alleen getoond, niet opgeslagen. Yoobi is leidend, ingevulde velden worden overschreven. Geen SQL' },
   { v: '3.92.0', d: '2026-06-21', h: 'Uren op de werkbon plus compactere PDF-uitvoer. Nieuwe instelling indirecteUrenAftrek (default 10, in app_settings, geen migratie) met veld setIndirecteUrenAftrek onder Instellingen via de generieke updSetting. In printWerkbon wordt een reductiefactor (100 minus aftrek)/100 berekend; de uren verschijnen als productieve uren op drie niveaus: per regel achter de hoeveelheid (calcRegelTotalen(r).uren maal factor), per onderdeel als subtotaal-blok (calcOnderdeelTotalenOrigineel(od).uren maal factor) en als projecttotaal-blok boven de materiaal-boodschappenlijst (calcProjectTotalenOrigineel().uren maal factor). Alleen het verlaagde getal, geen voetnoot, geen geld op de werkbon. printCalc kreeg bovenaan een kerncijfer-blok met totaal uren, werkdagen (factureerbaar plus werkelijk) en totaal incl. BTW, en de regel-uren staan nu vet zodat ze tussen de euro-kolommen opvallen. De calculatie houdt de volle uren, de aftrek raakt hem niet. Geen SQL' },
   { v: '3.91.0', d: '2026-06-21', h: 'Versie-aanduiding bij een herziene offerte. _offerteNummer plakt een suffix V{n} achter het nummer (vrij of automatisch) zodra offerte_config.offerteVersie groter is dan 1; V1 blijft verborgen zodat een eerste offerte ongewijzigd oogt. In _accordNieuweLink wordt vóór het bouwen van het bevroren document gecontroleerd of er al een accordering voor de calc bestaat waarop de klant heeft gereageerd (gereageerd_op gevuld, status akkoord of afgekeurd, of een niet-lege vragen-array); zo ja, dan offerteVersie +1, offertedatum naar vandaag en geldigTot naar +30 dagen, direct weggeschreven naar calculaties.offerte_config. Het versienummer leeft in offerte_config, dus geen migratie. Geen SQL' },
@@ -10166,45 +10168,42 @@ function printCalc() {
   html += `</tbody></table>
   </div>`;
 
-  // Verfsystemen-specificatie per regel (uit snapshot)
-  const allRegels = [];
+  // v3.94.0 — Verfsystemen-specificatie: elk uniek recept één keer (uit snapshot)
+  const _specRegels = [];
   c.hoofdgroepen.forEach(hg => hg.onderdelen.forEach(od => od.regels.forEach(r => {
-    if (r.stappen && r.stappen.length) allRegels.push({ r, hgNaam: hg.naam, odNaam: od.naam });
+    if (r.stappen && r.stappen.length) _specRegels.push({ r, hgNaam: hg.naam, odNaam: od.naam });
   })));
-  if (allRegels.length > 0) {
+  const _uniekeSys = _groepeerUniekeVerfsystemen(_specRegels);
+  if (_uniekeSys.length > 0) {
     html += `<div class="section new-page">
-      <h2>Specificatie verfsystemen per regel</h2>
-      <div class="meta"><em>Snapshot van de gebruikte recepten zoals bevroren in de calculatie. Wijzigingen aan de bibliotheek na het toevoegen van de regel zijn hier niet meer in verwerkt.</em></div>`;
-    allRegels.forEach(({ r, hgNaam, odNaam }) => {
-      const sysCalc = calcRegelTotalen({ ...r, hoeveelheid: 1, toeslag: 0 });
-      let totMin = 0, totMatInk = 0;
-      r.stappen.forEach(st => { const cs = calcSnapshotStep(st); totMin += cs.minuten; totMatInk += cs.matInkoop; });
-      html += `<h3>${r.systeemNaam} <span style="color:#666; font-weight:400; font-size:0.85em;">— ${hgNaam} / ${odNaam}${r.naam ? ' / ' + r.naam : ''}</span></h3>
-        <div class="meta">${r.systeemOndergrond || '?'} · per ${r.systeemEenheid} · ${r.systeemLocatie || ''}</div>
-        <table><thead><tr>
-          <th>#</th><th>Bewerking</th><th class="right">%</th><th class="right">Min/eenh</th>
-          <th>Materiaal</th><th class="right">Verbruik</th><th class="right">€ inkoop</th>
+      <h2>Specificatie verfsystemen</h2>
+      <div class="meta"><em>Elk uniek recept één keer, met de plekken waar het gebruikt wordt. Snapshot zoals bevroren in de calculatie; latere wijzigingen aan de bibliotheek staan hier niet in.</em></div>`;
+    _uniekeSys.forEach(sys => {
+      html += `<div style="margin-top:9pt; page-break-inside:avoid;">
+        <div style="font-size:10pt; font-weight:bold;">${sys.sysNaam} <span style="color:#666; font-weight:400; font-size:0.85em;">· ${sys.sysOndergrond || '?'} · per ${sys.sysEenheid} · ${sys.sysLocatie || ''}</span></div>
+        <table style="font-size:8.5pt; margin-top:2pt;"><thead><tr>
+          <th style="padding:1.5pt 4pt;">#</th><th style="padding:1.5pt 4pt;">Bewerking</th><th class="right" style="padding:1.5pt 4pt;">%</th><th class="right" style="padding:1.5pt 4pt;">Min/eenh</th>
+          <th style="padding:1.5pt 4pt;">Materiaal</th><th class="right" style="padding:1.5pt 4pt;">Verbruik</th><th class="right" style="padding:1.5pt 4pt;">€ inkoop</th>
         </tr></thead><tbody>`;
-      r.stappen.forEach((st, i) => {
-        const cs = calcSnapshotStep(st);
-        const verbruikScaled = (st.verbruik || 0) * (st.percentage??100)/100;
+      sys.stappen.forEach((s, i) => {
         html += `<tr>
-          <td>${i+1}</td>
-          <td>${st.bewerkingNaam}</td>
-          <td class="num right">${st.percentage??100}%</td>
-          <td class="num right">${fmt(cs.minuten)}</td>
-          <td>${st.materiaalNaam || '—'}</td>
-          <td class="num right">${st.materiaalNaam ? fmt3(verbruikScaled) + ' ' + st.materiaalEenheid : '—'}</td>
-          <td class="num right">${eur(cs.matInkoop)}</td>
+          <td style="padding:1.5pt 4pt;">${i+1}</td>
+          <td style="padding:1.5pt 4pt;">${s.bewerkingNaam}</td>
+          <td class="num right" style="padding:1.5pt 4pt;">${s.percentage}%</td>
+          <td class="num right" style="padding:1.5pt 4pt;">${fmt(s.minuten)}</td>
+          <td style="padding:1.5pt 4pt;">${s.materiaalNaam || '—'}</td>
+          <td class="num right" style="padding:1.5pt 4pt;">${s.materiaalNaam ? fmt3(s.verbruikScaled) + ' ' + s.materiaalEenheid : '—'}</td>
+          <td class="num right" style="padding:1.5pt 4pt;">${eur(s.matInkoop)}</td>
         </tr>`;
       });
       html += `<tr class="totaal-row">
-        <td colspan="3"><strong>Totaal per ${r.systeemEenheid}</strong></td>
-        <td class="num right">${fmt(totMin)} min</td>
+        <td colspan="3" style="padding:1.5pt 4pt;"><strong>Totaal per ${sys.sysEenheid}</strong></td>
+        <td class="num right" style="padding:1.5pt 4pt;">${fmt(sys.totMin)} min</td>
         <td colspan="2"></td>
-        <td class="num right">${eur(totMatInk)}</td>
-      </tr>`;
-      html += `</tbody></table>`;
+        <td class="num right" style="padding:1.5pt 4pt;">${eur(sys.totMatInk)}</td>
+      </tr></tbody></table>
+        <div class="meta" style="font-size:7.5pt; margin-top:1pt;">Gebruikt bij: ${_gebruiktBijTekst(sys.gebruikt)}</div>
+      </div>`;
     });
     html += `</div>`;
   }
@@ -11713,6 +11712,8 @@ function printWerkbon() {
     </div>
   </div>`;
 
+  // v3.94.0 — verzamel regels-met-stappen voor het opbouw-blok onderaan
+  const _wbSpecRegels = [];
   // Loop hoofdgroepen → onderdelen → regels
   c.hoofdgroepen.forEach(hg => {
     if (!hg.onderdelen || !hg.onderdelen.length) return;
@@ -11732,24 +11733,8 @@ function printWerkbon() {
         html += `<div style="font-size:10pt; color:#333; margin-bottom:4pt;">
           <strong>${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</strong>${r.toeslag ? ` · ${r.toeslag}% staat-toeslag` : ''} · <strong>${fmt1(calcRegelTotalen(r).uren * _urenFactor)} u</strong>
         </div>`;
-        // Tabel met # | bewerking | %
-        if (!r.stappen || !r.stappen.length) {
-          html += `<div style="font-style:italic; color:#888;">Geen stappen.</div>`;
-        } else {
-          html += `<table style="margin-bottom:6pt;"><thead><tr>
-            <th style="width:25pt;">#</th>
-            <th>Bewerking</th>
-            <th class="right" style="width:50pt;">%</th>
-          </tr></thead><tbody>`;
-          r.stappen.forEach((st, i) => {
-            html += `<tr>
-              <td>${i+1}</td>
-              <td>${st.bewerkingNaam || '—'}</td>
-              <td class="num right">${fmt(st.percentage != null ? st.percentage : 100)}%</td>
-            </tr>`;
-          });
-          html += `</tbody></table>`;
-        }
+        // v3.94.0 — stappen niet meer per regel; recept staat één keer in het opbouw-blok onderaan
+        if (r.stappen && r.stappen.length) _wbSpecRegels.push({ r, hgNaam: hg.naam, odNaam: od.naam });
         // Materiaal-overzicht voor deze regel (kleurzone-niveau)
         const matRowsRegel = _aggregeerMateriaalVerbruik([r]);
         if (matRowsRegel.length) {
@@ -11807,6 +11792,28 @@ function printWerkbon() {
         <em>Theoretisch basisverbruik — gebruik dit als ondergrens voor je bestelling.</em>
       </div>`;
     html += _renderMateriaalTabel(matRowsTotaal, { metGroepen: true });
+    html += `</div>`;
+  }
+
+  // v3.94.0 — Verfsystemen-opbouw: elk uniek recept één keer, onderaan de werkbon
+  const _wbUniek = _groepeerUniekeVerfsystemen(_wbSpecRegels);
+  if (_wbUniek.length) {
+    html += `<div style="margin-top:18pt; padding-top:10pt; border-top:1.5pt solid #333;">
+      <h2 style="margin-top:0;">Verfsystemen — opbouw</h2>
+      <div style="font-size:8.5pt; color:#666; margin-bottom:4pt;"><em>Elk verfsysteem één keer. Bij de regels hierboven staat de systeemnaam als verwijzing.</em></div>`;
+    _wbUniek.forEach(sys => {
+      html += `<div style="margin-top:8pt; page-break-inside:avoid;">
+        <div style="font-size:10pt; font-weight:bold;">${sys.sysNaam} <span style="color:#666; font-weight:400; font-size:0.85em;">· ${sys.sysOndergrond || '?'} · per ${sys.sysEenheid} · ${sys.sysLocatie || ''}</span></div>
+        <table style="margin-bottom:2pt;"><thead><tr>
+          <th style="width:25pt;">#</th><th>Bewerking</th><th class="right" style="width:50pt;">%</th>
+        </tr></thead><tbody>`;
+      sys.stappen.forEach((s, i) => {
+        html += `<tr><td>${i+1}</td><td>${s.bewerkingNaam}</td><td class="num right">${fmt(s.percentage)}%</td></tr>`;
+      });
+      html += `</tbody></table>
+        <div style="font-size:7.5pt; color:#777;">Gebruikt bij: ${_gebruiktBijTekst(sys.gebruikt)}</div>
+      </div>`;
+    });
     html += `</div>`;
   }
 
@@ -11895,6 +11902,54 @@ function calcSnapshotStep(stap) {
     matVerkoop = matInkoop * (1 + opslag/100);
   }
   return { uren, minuten, matInkoop, matVerkoop };
+}
+// v3.94.0 — groepeer regels-met-stappen tot unieke verfsystemen op recept-handtekening,
+// zodat hetzelfde recept maar één keer getoond hoeft te worden (calculatie + werkbon).
+function _groepeerUniekeVerfsystemen(regelCtxs) {
+  const map = new Map();
+  regelCtxs.forEach(({ r, hgNaam, odNaam }) => {
+    if (!r.stappen || !r.stappen.length) return;
+    const stappen = r.stappen.map(st => {
+      const cs = calcSnapshotStep(st);
+      const pct = (st.percentage != null ? st.percentage : 100);
+      return {
+        bewerkingNaam: st.bewerkingNaam || '—',
+        percentage: pct,
+        minuten: cs.minuten,
+        matInkoop: cs.matInkoop,
+        materiaalNaam: st.materiaalNaam || '',
+        materiaalEenheid: st.materiaalEenheid || '',
+        verbruikScaled: (st.verbruik || 0) * pct / 100
+      };
+    });
+    let totMin = 0, totMatInk = 0;
+    stappen.forEach(s => { totMin += s.minuten; totMatInk += s.matInkoop; });
+    const sig = JSON.stringify({
+      n: r.systeemNaam || '', e: r.systeemEenheid || '', o: r.systeemOndergrond || '', l: r.systeemLocatie || '',
+      s: stappen.map(s => [s.bewerkingNaam, s.percentage, Math.round(s.minuten*100), s.materiaalNaam, Math.round(s.verbruikScaled*1000), Math.round(s.matInkoop*100)])
+    });
+    const loc = { hgNaam, odNaam, regelNaam: (r.naam && r.naam.trim()) ? r.naam : '' };
+    if (map.has(sig)) {
+      map.get(sig).gebruikt.push(loc);
+    } else {
+      map.set(sig, {
+        sysNaam: r.systeemNaam || 'onbekend systeem',
+        sysEenheid: r.systeemEenheid || '',
+        sysOndergrond: r.systeemOndergrond || '',
+        sysLocatie: r.systeemLocatie || '',
+        stappen, totMin, totMatInk,
+        gebruikt: [loc]
+      });
+    }
+  });
+  return Array.from(map.values());
+}
+function _gebruiktBijTekst(gebruikt) {
+  return gebruikt.map(g => {
+    let s = (g.hgNaam || '') + ' / ' + (g.odNaam || '');
+    if (g.regelNaam) s += ' / ' + g.regelNaam;
+    return s;
+  }).join(' · ');
 }
 // Backward-compat: old calcStep was for bibliotheek-side use in werkbank-modal
 function calcStep(stap) {
