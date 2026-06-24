@@ -1,3 +1,19 @@
+## v3.99.0 — Alle contactpersonen kiezen bij de Yoobi-import
+Een zakelijke klant of VvE heeft vaak meerdere contactpersonen. Die zie en kies je nu allemaal.
+
+### Wijzigingen
+- In het Yoobi-zoekvenster staan onder "Contactpersoon" nu alle contactpersonen van de relatie als keuzerondjes, elk met naam en e-mail.
+- Je kiest wie er als t.a.v. op de offerte komt. Die keuze vult meteen het juiste e-mailadres in.
+- Onder E-mail kies je "Van de gekozen contactpersoon" of, als die er is, het relatie-/factuuradres.
+- Valt de lijst leeg of stuurt de functie nog de oude vorm, dan valt het terug op één contactpersoon, zodat niks breekt tijdens de overgang.
+
+### Edge Function (los deployen in Studio)
+- yoobi-klant geeft nu een `contacten`-array mee uit `d.contactpersons`, elk met naam, e-mail en telefoon. De bestaande enkele velden blijven staan voor terugval.
+- Plak de bijgewerkte yoobi-klant in de Edge Functions-editor en deploy. De volgorde maakt niet uit door de terugval, maar voor meerdere contacten moet deze functie wel bijgewerkt zijn.
+- Geen SQL.
+
+---
+
 ## v3.98.0 — Werkadres los van het briefhoofd bij zakelijke klanten
 Bij een zakelijke klant hoort het werkadres niet bovenaan de brief. Dat is nu gescheiden.
 

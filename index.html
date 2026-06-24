@@ -2095,8 +2095,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.98.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.99.0</h2>
       <div class="intro-body">
+        <p><strong>👥 Alle contactpersonen kiezen bij de Yoobi-import (v3.99.0).</strong> Een zakelijke klant of VvE heeft vaak meerdere contactpersonen. De Yoobi-import toonde er maar één. Nu zie je in het zoekvenster onder "Contactpersoon" alle contactpersonen van de relatie als keuzerondjes, elk met naam en e-mail. Je kiest wie er als t.a.v. op de offerte komt, en die keuze vult meteen het e-mailadres in. Wil je de offerte toch naar het factuuradres sturen, dan kies je dat onder E-mail. Let op: hiervoor moet ook de Edge Function yoobi-klant bijgewerkt zijn, anders blijft het bij één contactpersoon. Geen SQL nodig.</p>
         <p><strong>🏢 Werkadres los van het briefhoofd bij zakelijke klanten (v3.98.0).</strong> Werk je voor een zakelijke klant op een adres van hún klant, dan hoort dat werkadres niet bovenaan de brief. Daarom is bij klanttype Zakelijk het adresblok nu gesplitst: "Adres klant (briefhoofd)" is het kantooradres van je opdrachtgever en komt bovenaan de offerte, en een apart "Werkadres" houdt de plek waar je het werk uitvoert. Dat werkadres zet je in je tekst met het nieuwe invulveld {werkadres}, naast het bestaande {adres}. Voor particulier en VvE verandert er niets, daar blijft het één adresblok dat terugvalt op het werkadres. Let op bij bestaande zakelijke offertes: het oude werkadres staat nog in het briefhoofd-veld, dat overschrijf je eenmalig met het kantooradres van je klant. Geen SQL nodig.</p>
         <p><strong>⏱️ Totaal uren in één oogopslag (v3.97.0).</strong> In het rekenpaneel rechts heette de bovenste regel "Totaal uren", maar dat was alleen het schilderwerk zelf. De toeslag-uren eronder (kleinschaligheid, afdekken, klim, reiskosten) moest je er zelf bij optellen. Die bovenste regel heet nu "Uren schilderwerk" en onder de toeslagen staat een vetgedrukte regel "Totaal uren incl. toeslagen" met de echte all-in. Dat getal is precies de basis waarmee de app de werkdagen rekent, dus paneel en planning lopen gelijk. Niets aan de rekenkern gewijzigd, alleen zichtbaar gemaakt. Geen SQL nodig.</p>
         <p><strong>📧 Offerte mailen vanuit de app (v3.96.0, deel 2).</strong> In het accordeerlink-venster staat nu onder de link de knop "Offerte mailen naar klant". Die mailt de offerte rechtstreeks naar het e-mailadres van de klant, met een duidelijke knop "Offerte bekijken en akkoord geven" die naar de accordeerpagina leidt, plus je volledige handtekening. Je krijgt eerst een bevestiging met het e-mailadres erin voor je verstuurt. Na het versturen gaat de calculatie automatisch op Verzonden. Je mailt de bestaande open link, dus maak de link eerst aan (met het e-mailveld ingevuld). De mail komt van offerte@ernes.nl, antwoorden landen op info@ernes.nl. Vereist de nieuwe Edge Function offerte-verzenden en de secret RESEND_API_KEY, geen SQL. Daarmee is de cirkel rond: verzenden, accorderen, bevestiging.</p>
@@ -3202,7 +3203,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.98.0';
+const APP_VERSION = 'v3.99.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3597,6 +3598,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.99.0', d: '2026-06-24', h: 'Meerdere contactpersonen kiesbaar bij de Yoobi-import. App-kant: _yoobiRenderDetail bouwt nu een contacten-lijst uit r.contacten (array van {naam, email}), met terugval op de oude enkele r.contactpersoon/r.emailContactpersoon zodat niks breekt als de Edge Function nog de oude vorm stuurt. De lijst rendert als radiogroep yoobiContactKeuze, elk rondje draagt data-naam en data-email; de oude losse Contactpersoon-regel en de oude contact/relatie e-mailradio zijn vervangen. De e-mailkeuze yoobiEmailKeuze heeft nu "Van de gekozen contactpersoon" (sentinel __contact__, default) plus optioneel het relatie-/factuuradres (alleen als dat niet al bij een contact zit). _yoobiVulIn leest de gekozen contact (dataset.naam naar _yoobiSplitContact voor cfg.contactpersoon, dataset.email als standaardmail) en de e-mailkeuze (sentinel valt terug op de contactmail, anders op het relatie-adres). Edge Function yoobi-klant: nieuwe helper mapContacten(d.contactpersons) levert per contact {naam (fullName), email, telefoon} via findInfo op cp.contactinfo; cleanCustomer geeft die mee als contacten-array, de bestaande enkele velden blijven voor terugval. Edge Function los deployen in Studio. Geen SQL' },
   { v: '3.98.0', d: '2026-06-24', h: 'Werkadres losgetrokken van het briefhoofd voor zakelijke klanten. _offAdresEffectief is klanttype-bewust: bij cfg.klanttype zakelijk valt het briefhoofd-adres niet meer terug op het werkadres uit de calc-kop (c.postcode/c.huisnummer), alleen de naam valt terug op c.klant; particulier en vve houden de bestaande werkadres-terugval. Nieuwe helper _offWerkadresEffectief(c, cfg) levert het werkadres uit cfg.werkadres (JSON, geen migratie) met terugval op de calc-kop voor postcode en huisnummer; setter _offCfgWerkadres en PDOK-zoek _offWerkadresZoek (schrijft straat/woonplaats naar cfg.werkadres). Nieuw invulveld {werkadres} in _offVulVelden en in de OFFERTE_VELDEN-hulplijst, zonder postcode net als {adres}. In renderOfferteBlok heet het bestaande adresblok bij zakelijk "Adres klant (briefhoofd)" met aangepaste hint, en verschijnt er alleen bij zakelijk een apart Werkadres-blok (straat, huisnummer, postcode, woonplaats plus zoekknop). cfg.werkadres genormaliseerd in _offCfg. Briefhoofd en {werkadres} werken in zowel de HTML-preview als het pdfmake-document omdat beide via de gedeelde helpers lopen. Geen SQL' },
   { v: '3.97.0', d: '2026-06-24', h: 'Urenblok in renderTotals verhelderd. De bovenste regel "Totaal uren" toonde alleen t.uren (schilderwerk) terwijl de toeslag-uren als losse + regels eronder stonden zonder optelsom. De bovenste regel heet nu "Uren schilderwerk"; na de toeslag-regels staat een vetgedrukte regel "Totaal uren incl. toeslagen" met t.uren plus extraUren. extraUren wordt in renderTotals berekend via _extraUrenUitStaart(data.calc.staart, t, sett.uurloon), exact dezelfde aanroep die _calcDays gebruikt, zodat het getoonde all-in getal 1-op-1 de basis van de werkdagen-berekening is. De regel wordt altijd getoond, ook zonder toeslagen (dan gelijk aan schilderwerk). Puur display, rekenkern ongemoeid. Calculatie-PDF kerncijfer-blok nog niet meegenomen. Geen SQL' },
   { v: '3.96.0', d: '2026-06-23', h: 'Resend-mails deel 2: offerte mailen vanuit de app. In _accordBeheerRender staat bij een open link onder de linkrij de knop acbMail "Offerte mailen naar klant" met daaronder het ontvangeradres uit rij.snapshot.klantEmail (of een rode hint als de link geen adres heeft). _offerteMailen vraagt een bevestiging via confirm met het adres, roept _offerteVerzendCall(token) aan (ingelogde POST naar de Edge Function offerte-verzenden met de Supabase-sessie als Bearer plus apikey), zet bij succes de calc via setCalcStatus op verzonden mits de status nog afspraak/concept/gereed is, toont een toast en ververst het venster. De nieuwe Edge Function offerte-verzenden leest de snapshot (klantEmail, aanhef, offertenummer, geldigTot) en calculaties(naam) van de open accordering, bouwt mail A met onderwerp "Offerte {label}", een oranje knop "Offerte bekijken en akkoord geven" naar de accordeerpagina (?accord=TOKEN), de geldig-tot-datum en de volledige handtekening, en verstuurt via Resend (from offerte@ernes.nl, reply_to info@ernes.nl). Mislukt het versturen, dan geeft de functie een fout terug en blijft de status ongewijzigd. App-kant: _accordNieuweLink schrijft nu ook geldigTot in de snapshot. Vereist de nieuwe Edge Function en de secret RESEND_API_KEY. Geen SQL' },
@@ -4993,19 +4995,22 @@ async function _yoobiKiesRelatie(code) {
 function _yoobiRenderDetail(r) {
   const det = document.getElementById('yoobiDetail');
   const split = _yoobiSplitAdres(r.adres || '');
-  const cp = _yoobiSplitContact(r.contactpersoon || '');
+  // v3.99.0 — alle contactpersonen; terugval op de oude enkele contactpersoon.
+  let contacten = Array.isArray(r.contacten) ? r.contacten.filter(c => c && (c.naam || c.email)) : [];
+  if (!contacten.length && (r.contactpersoon || r.emailContactpersoon)) contacten = [{ naam: r.contactpersoon || '', email: r.emailContactpersoon || '' }];
   const ktLabel = _offKlanttypeLabel(_yoobiMapKlanttype(r.klanttype));
   const _rij = (label, waarde) => `<div style="display:flex; gap:0.6rem; padding:0.15rem 0;"><span style="min-width:9rem; color:var(--muted);">${_offEsc(label)}</span><span>${waarde ? _offEsc(waarde) : '<span style=\"color:var(--muted);\">—</span>'}</span></div>`;
-  // E-mailkeuze: contactpersoon-mail en relatie-mail, dubbele weglaten.
-  const emails = [];
-  if (r.emailContactpersoon) emails.push({ label: 'Contactpersoon', val: r.emailContactpersoon });
-  if (r.emailRelatie && r.emailRelatie !== r.emailContactpersoon) emails.push({ label: 'Relatie', val: r.emailRelatie });
-  let emailHtml;
-  if (!emails.length) {
-    emailHtml = '<div style="color:var(--muted); font-size:0.85rem;">Geen e-mailadres bij deze relatie.</div>';
+  // v3.99.0 — contactpersonen als keuzelijst; elk rondje zet t.a.v. en standaard het e-mailadres.
+  let contactHtml;
+  if (!contacten.length) {
+    contactHtml = '<div style="color:var(--muted); font-size:0.85rem;">Geen contactpersoon bij deze relatie.</div>';
   } else {
-    emailHtml = emails.map((e, i) => `<label style="display:flex; align-items:center; gap:0.45rem; font-weight:400; font-size:0.85rem; cursor:pointer; padding:0.1rem 0;"><input type="radio" name="yoobiEmailKeuze" value="${_offEsc(e.val)}" ${i === 0 ? 'checked' : ''} style="width:auto; margin:0;"> <strong>${_offEsc(e.label)}:</strong> ${_offEsc(e.val)}</label>`).join('');
+    contactHtml = contacten.map((co, i) => `<label style="display:flex; align-items:center; gap:0.45rem; font-weight:400; font-size:0.85rem; cursor:pointer; padding:0.12rem 0;"><input type="radio" name="yoobiContactKeuze" value="${i}" data-naam="${_offEsc(co.naam || '')}" data-email="${_offEsc(co.email || '')}" ${i === 0 ? 'checked' : ''} style="width:auto; margin:0;"> <strong>${_offEsc(co.naam || '(naamloos)')}</strong>${co.email ? ` <span style="color:var(--muted);">${_offEsc(co.email)}</span>` : ' <span style="color:var(--muted);">(geen e-mail)</span>'}</label>`).join('');
   }
+  // E-mailkeuze: de gekozen contactpersoon, of het relatie-/factuuradres.
+  const relMail = (r.emailRelatie && !contacten.some(c => c.email === r.emailRelatie)) ? r.emailRelatie : '';
+  let emailHtml = `<label style="display:flex; align-items:center; gap:0.45rem; font-weight:400; font-size:0.85rem; cursor:pointer; padding:0.12rem 0;"><input type="radio" name="yoobiEmailKeuze" value="__contact__" checked style="width:auto; margin:0;"> Van de gekozen contactpersoon</label>`;
+  if (relMail) emailHtml += `<label style="display:flex; align-items:center; gap:0.45rem; font-weight:400; font-size:0.85rem; cursor:pointer; padding:0.12rem 0;"><input type="radio" name="yoobiEmailKeuze" value="${_offEsc(relMail)}" style="width:auto; margin:0;"> <strong>Relatie (factuur):</strong> ${_offEsc(relMail)}</label>`;
   det.innerHTML = `
     <div style="border:1px solid #e5e7eb; border-radius:8px; padding:0.7rem 0.9rem; background:#fff; font-size:0.85rem;">
       <div style="font-weight:600; margin-bottom:0.4rem;">${_offEsc(r.naam || '—')} <span style="font-weight:400; color:var(--muted);">· ${_offEsc(String(r.relatienummer || ''))}</span></div>
@@ -5014,7 +5019,8 @@ function _yoobiRenderDetail(r) {
       ${_rij('Huisnummer', split.huisnummer)}
       ${_rij('Postcode', r.postcode)}
       ${_rij('Woonplaats', r.plaats)}
-      ${_rij('Contactpersoon', [cp.voorletters, cp.tussenvoegsel, cp.achternaam].filter(Boolean).join(' '))}
+      <div style="margin:0.5rem 0 0.2rem; font-weight:600;">Contactpersoon (kies wie op de offerte komt)</div>
+      ${contactHtml}
       <div style="margin:0.5rem 0 0.2rem; font-weight:600;">E-mail (kies welke meegaat)</div>
       ${emailHtml}
       <div style="margin-top:0.6rem; padding-top:0.5rem; border-top:1px solid #eee; color:var(--muted);">Alleen ter referentie, wordt niet opgeslagen:</div>
@@ -5087,9 +5093,13 @@ function _yoobiVulIn() {
     cfg.adres.huisnummer = split.huisnummer || '';
     cfg.adres.postcode = r.postcode || '';
     cfg.adres.woonplaats = r.plaats || '';
-    cfg.contactpersoon = _yoobiSplitContact(r.contactpersoon || '');
-    const gekozen = document.querySelector('input[name="yoobiEmailKeuze"]:checked');
-    cfg.email = gekozen ? gekozen.value : (r.emailContactpersoon || r.emailRelatie || '');
+    // v3.99.0 — gekozen contactpersoon stuurt zowel de t.a.v. als standaard het e-mailadres.
+    const gekozenContact = document.querySelector('input[name="yoobiContactKeuze"]:checked');
+    const contactNaam = gekozenContact ? (gekozenContact.dataset.naam || '') : (r.contactpersoon || '');
+    const contactMail = gekozenContact ? (gekozenContact.dataset.email || '') : (r.emailContactpersoon || '');
+    cfg.contactpersoon = _yoobiSplitContact(contactNaam);
+    const gekozenMail = document.querySelector('input[name="yoobiEmailKeuze"]:checked');
+    cfg.email = (!gekozenMail || gekozenMail.value === '__contact__') ? (contactMail || r.emailRelatie || '') : gekozenMail.value;
     _offCfgSave();
   }
 
