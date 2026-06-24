@@ -1,3 +1,21 @@
+## v4.1.0 — Reiskosten buiten rayon: altijd minstens 1 rit
+Reiskosten kwamen bij een mini-klus op € 0 uit, ook buiten rayon. Dat is rechtgetrokken.
+
+### Wat er verandert
+- Reiskosten (reisuren-arbeid en km-vergoeding) rekenden per factureerbare dag. Een klus die onder de afrond-drempel naar 0 factureerbare dagen viel, rekende dus € 0 reis, ook al was de klant buiten rayon.
+- Vanaf nu rekent een klus buiten rayon altijd minstens 1 rit, ook als hij naar 0 dagen afrondt.
+- Binnen rayon verandert er niets. Een normale meerdaagse klus rekent ongewijzigd zijn factureerbare dagen aan ritten. Een lege calc rekent geen rit.
+- De reis-regel toont nu ook bij zo'n mini-klus de opbouw (1 dag heen en terug plus reisuren), dus het bedrag blijft navolgbaar.
+
+### Onder de motorkap
+- Eén regel, op alle zes de reis-berekeningen identiek doorgevoerd (calc-paneel, offerte-PDF, werkbon en dashboard), zodat de routes niet uit elkaar lopen.
+- Geen SQL.
+
+### Praktisch
+- Een eerder verzonden (vergrendelde) calculatie herrekent niet vanzelf. Wil je het reisbedrag daar bijwerken: status even op Concept en terug naar Verzonden.
+
+---
+
 ## v4.0.1 — Compacte calc-kop
 De drie blokken bovenaan de Calculatie-tab zijn flink ingedicht.
 
