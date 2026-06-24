@@ -2095,8 +2095,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.97.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v3.98.0</h2>
       <div class="intro-body">
+        <p><strong>🏢 Werkadres los van het briefhoofd bij zakelijke klanten (v3.98.0).</strong> Werk je voor een zakelijke klant op een adres van hún klant, dan hoort dat werkadres niet bovenaan de brief. Daarom is bij klanttype Zakelijk het adresblok nu gesplitst: "Adres klant (briefhoofd)" is het kantooradres van je opdrachtgever en komt bovenaan de offerte, en een apart "Werkadres" houdt de plek waar je het werk uitvoert. Dat werkadres zet je in je tekst met het nieuwe invulveld {werkadres}, naast het bestaande {adres}. Voor particulier en VvE verandert er niets, daar blijft het één adresblok dat terugvalt op het werkadres. Let op bij bestaande zakelijke offertes: het oude werkadres staat nog in het briefhoofd-veld, dat overschrijf je eenmalig met het kantooradres van je klant. Geen SQL nodig.</p>
         <p><strong>⏱️ Totaal uren in één oogopslag (v3.97.0).</strong> In het rekenpaneel rechts heette de bovenste regel "Totaal uren", maar dat was alleen het schilderwerk zelf. De toeslag-uren eronder (kleinschaligheid, afdekken, klim, reiskosten) moest je er zelf bij optellen. Die bovenste regel heet nu "Uren schilderwerk" en onder de toeslagen staat een vetgedrukte regel "Totaal uren incl. toeslagen" met de echte all-in. Dat getal is precies de basis waarmee de app de werkdagen rekent, dus paneel en planning lopen gelijk. Niets aan de rekenkern gewijzigd, alleen zichtbaar gemaakt. Geen SQL nodig.</p>
         <p><strong>📧 Offerte mailen vanuit de app (v3.96.0, deel 2).</strong> In het accordeerlink-venster staat nu onder de link de knop "Offerte mailen naar klant". Die mailt de offerte rechtstreeks naar het e-mailadres van de klant, met een duidelijke knop "Offerte bekijken en akkoord geven" die naar de accordeerpagina leidt, plus je volledige handtekening. Je krijgt eerst een bevestiging met het e-mailadres erin voor je verstuurt. Na het versturen gaat de calculatie automatisch op Verzonden. Je mailt de bestaande open link, dus maak de link eerst aan (met het e-mailveld ingevuld). De mail komt van offerte@ernes.nl, antwoorden landen op info@ernes.nl. Vereist de nieuwe Edge Function offerte-verzenden en de secret RESEND_API_KEY, geen SQL. Daarmee is de cirkel rond: verzenden, accorderen, bevestiging.</p>
         <p><strong>📧 Automatische mails bij een reactie op de offerte (v3.95.0, deel 1).</strong> Reageert een klant via de accordeerlink, dan gaan er nu mails uit via Resend. Geeft de klant akkoord, dan krijgt hij een nette bevestiging met jouw handtekening, en krijg jij een seintje op info@ernes.nl. Wijst de klant af of stelt hij een vraag, dan krijg jij alleen het seintje en handel je het zelf af. De mails komen van offerte@ernes.nl, antwoorden landen op info@ernes.nl. Zodat de functie de juiste aanhef, het offertenummer en het e-mailadres heeft, legt de app die nu mee vast in de accordeerlink-snapshot. Verzenden van de offerte zelf vanuit de app (deel 2) volgt apart. Vereist de nieuwe Edge Function offerte-accord en de secret RESEND_API_KEY, geen SQL.</p>
@@ -3201,7 +3202,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v3.97.0';
+const APP_VERSION = 'v3.98.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3596,6 +3597,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '3.98.0', d: '2026-06-24', h: 'Werkadres losgetrokken van het briefhoofd voor zakelijke klanten. _offAdresEffectief is klanttype-bewust: bij cfg.klanttype zakelijk valt het briefhoofd-adres niet meer terug op het werkadres uit de calc-kop (c.postcode/c.huisnummer), alleen de naam valt terug op c.klant; particulier en vve houden de bestaande werkadres-terugval. Nieuwe helper _offWerkadresEffectief(c, cfg) levert het werkadres uit cfg.werkadres (JSON, geen migratie) met terugval op de calc-kop voor postcode en huisnummer; setter _offCfgWerkadres en PDOK-zoek _offWerkadresZoek (schrijft straat/woonplaats naar cfg.werkadres). Nieuw invulveld {werkadres} in _offVulVelden en in de OFFERTE_VELDEN-hulplijst, zonder postcode net als {adres}. In renderOfferteBlok heet het bestaande adresblok bij zakelijk "Adres klant (briefhoofd)" met aangepaste hint, en verschijnt er alleen bij zakelijk een apart Werkadres-blok (straat, huisnummer, postcode, woonplaats plus zoekknop). cfg.werkadres genormaliseerd in _offCfg. Briefhoofd en {werkadres} werken in zowel de HTML-preview als het pdfmake-document omdat beide via de gedeelde helpers lopen. Geen SQL' },
   { v: '3.97.0', d: '2026-06-24', h: 'Urenblok in renderTotals verhelderd. De bovenste regel "Totaal uren" toonde alleen t.uren (schilderwerk) terwijl de toeslag-uren als losse + regels eronder stonden zonder optelsom. De bovenste regel heet nu "Uren schilderwerk"; na de toeslag-regels staat een vetgedrukte regel "Totaal uren incl. toeslagen" met t.uren plus extraUren. extraUren wordt in renderTotals berekend via _extraUrenUitStaart(data.calc.staart, t, sett.uurloon), exact dezelfde aanroep die _calcDays gebruikt, zodat het getoonde all-in getal 1-op-1 de basis van de werkdagen-berekening is. De regel wordt altijd getoond, ook zonder toeslagen (dan gelijk aan schilderwerk). Puur display, rekenkern ongemoeid. Calculatie-PDF kerncijfer-blok nog niet meegenomen. Geen SQL' },
   { v: '3.96.0', d: '2026-06-23', h: 'Resend-mails deel 2: offerte mailen vanuit de app. In _accordBeheerRender staat bij een open link onder de linkrij de knop acbMail "Offerte mailen naar klant" met daaronder het ontvangeradres uit rij.snapshot.klantEmail (of een rode hint als de link geen adres heeft). _offerteMailen vraagt een bevestiging via confirm met het adres, roept _offerteVerzendCall(token) aan (ingelogde POST naar de Edge Function offerte-verzenden met de Supabase-sessie als Bearer plus apikey), zet bij succes de calc via setCalcStatus op verzonden mits de status nog afspraak/concept/gereed is, toont een toast en ververst het venster. De nieuwe Edge Function offerte-verzenden leest de snapshot (klantEmail, aanhef, offertenummer, geldigTot) en calculaties(naam) van de open accordering, bouwt mail A met onderwerp "Offerte {label}", een oranje knop "Offerte bekijken en akkoord geven" naar de accordeerpagina (?accord=TOKEN), de geldig-tot-datum en de volledige handtekening, en verstuurt via Resend (from offerte@ernes.nl, reply_to info@ernes.nl). Mislukt het versturen, dan geeft de functie een fout terug en blijft de status ongewijzigd. App-kant: _accordNieuweLink schrijft nu ook geldigTot in de snapshot. Vereist de nieuwe Edge Function en de secret RESEND_API_KEY. Geen SQL' },
   { v: '3.95.0', d: '2026-06-23', h: 'Resend-mails deel 1: bevestiging aan de klant bij akkoord (mail B) en intern seintje bij elke reactie (mail C), afgevuurd vanuit de Edge Function offerte-accord na het wegschrijven van de reactie. Resend-aanroep via https://api.resend.com/emails met Bearer RESEND_API_KEY; from "Ernes Schilders <offerte@ernes.nl>", reply_to info@ernes.nl. Bij akkoord: mail B naar de klant (volledige HTML-handtekening met logo, contactblok, keurmerken en KvK, plaatjes vanaf www.ernes.nl/images/handtekening) plus mail C naar info@. Bij afkeuren of vraag: alleen mail C. Het versturen zit in try/catch en kan de accordregistratie nooit breken (mail faalt stil, reactie wordt altijd vastgelegd). De functie haalt extra snapshot- en calculatievelden op (snapshot, calculaties(naam, klant)). App-kant: _accordNieuweLink schrijft offertenummer (via _offerteNummer), aanhef (via _offAanhef) en klantEmail (offerte_config.email) mee in de snapshot zodat de functie ze bevroren uitleest in plaats van de offertenummer-logica na te maken. Offerte verzenden vanuit de app (mail A, deel 2) volgt apart. Vereist de bijgewerkte Edge Function en de secret RESEND_API_KEY. Geen SQL' },
@@ -4339,6 +4341,7 @@ const OFFERTE_VELDEN = [
   { veld: '{aanhef}',        uitleg: 'aanhef met aanspreekvorm, bv. heer Nacken' },
   { veld: '{project}',       uitleg: 'projectnaam met adres' },
   { veld: '{adres}',         uitleg: 'adres zonder postcode, bv. Oude Baan 43A, Wittem' },
+  { veld: '{werkadres}',     uitleg: 'werkadres zonder postcode (zakelijk: het adres waar het werk wordt uitgevoerd)' },
   { veld: '{werkdagen}',     uitleg: 'werkdagen uit de calculatie' },
   { veld: '{totaal_incl}',   uitleg: 'totaalbedrag incl. BTW' },
   { veld: '{geldig_tot}',    uitleg: 'vervaldatum van de offerte' },
@@ -4589,6 +4592,7 @@ function _offCfg() {
   if (cfg.garantiejaren == null) cfg.garantiejaren = '';
   if (typeof cfg.aanspreekvorm !== 'string') cfg.aanspreekvorm = '';
   if (!cfg.adres || typeof cfg.adres !== 'object') cfg.adres = {};
+  if (!cfg.werkadres || typeof cfg.werkadres !== 'object') cfg.werkadres = {};
   if (!cfg.contactpersoon || typeof cfg.contactpersoon !== 'object') cfg.contactpersoon = { voorletters: '', tussenvoegsel: '', achternaam: '' };
   if (typeof cfg.email !== 'string') cfg.email = '';
   if (cfg.prijsWeergave !== 'regels') cfg.prijsWeergave = 'onderdeel';
@@ -4677,11 +4681,16 @@ function _offVulVelden(tekst) {
   const _adr = _offAdresEffectief(c, cfg);
   const _adrStraatNr = [_adr.straat, _adr.huisnummer].filter(Boolean).join(' ').trim();
   const _adresZonderPostcode = [_adrStraatNr, _adr.woonplaats].filter(Boolean).join(', ');
+  // v3.98.0 — het werkadres zonder postcode voor het invulveld {werkadres}
+  const _wa = _offWerkadresEffectief(c, cfg);
+  const _waStraatNr = [_wa.straat, _wa.huisnummer].filter(Boolean).join(' ').trim();
+  const _werkadresZonderPostcode = [_waStraatNr, _wa.woonplaats].filter(Boolean).join(', ');
   const map = {
     '{klant}':         c.klant || '…',
     '{aanhef}':        _offAanhef(c, cfg),
     '{project}':       c.naam || '…',
     '{adres}':         _adresZonderPostcode || '…',
+    '{werkadres}':     _werkadresZonderPostcode || '…',
     '{werkdagen}':     (dagen != null && dagen > 0) ? String(dagen).replace('.', ',') : '…',
     '{totaal_incl}':   (totaal != null) ? eur(totaal) : '…',
     '{geldig_tot}':    _offDatumLang(cfg ? cfg.geldigTot : null),
@@ -4766,10 +4775,12 @@ function renderOfferteBlok() {
     </div>
   </div>`;
   // v3.66.0 — adresblok op de offerte (standaard werkadres, PDOK-aanvulling, te corrigeren).
+  // v3.98.0 — bij zakelijk is dit het briefhoofd-adres (kantooradres klant); het werkadres staat los eronder.
+  const _zakOff = cfg.klanttype === 'zakelijk';
   const _adr = _offAdresEffectief(c, cfg);
   const _cp = (cfg.contactpersoon && typeof cfg.contactpersoon === 'object') ? cfg.contactpersoon : { voorletters: '', tussenvoegsel: '', achternaam: '' };
   html += `<div style="border:1px solid #e5e7eb; border-radius:8px; padding:0.6rem 0.8rem; margin-bottom:0.8rem; background:#fff;">
-    <div style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">Adres op de offerte
+    <div style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">${_zakOff ? 'Adres klant (briefhoofd)' : 'Adres op de offerte'}
       <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="_offAdresZoek()">📍 Zoek straat en woonplaats</button>
     </div>
     <div class="form-grid">
@@ -4788,8 +4799,24 @@ function renderOfferteBlok() {
     <div class="form-grid" style="margin-top:0.3rem;">
       <div><label>E-mail <span style="font-weight:400; color:var(--muted);">— voor het verzenden van de offerte</span></label><input type="email" value="${_offEsc(cfg.email || '')}" placeholder="naam@voorbeeld.nl" onchange="_offCfgVeld('email', this.value.trim())"></div>
     </div>
-    <div id="offAdresStatus" style="margin-top:0.4rem; font-size:0.72rem; color:var(--muted);">Standaard het werkadres uit de calculatie. Klik op zoeken om straat en woonplaats uit de postcode te halen, of pas alles handmatig aan.</div>
+    <div id="offAdresStatus" style="margin-top:0.4rem; font-size:0.72rem; color:var(--muted);">${_zakOff ? 'Het kantooradres van je klant, dit komt bovenaan de brief. Het werkadres vul je hieronder apart in en toon je in de tekst met {werkadres}.' : 'Standaard het werkadres uit de calculatie. Klik op zoeken om straat en woonplaats uit de postcode te halen, of pas alles handmatig aan.'}</div>
   </div>`;
+  // v3.98.0 — werkadres-blok, alleen voor zakelijke klanten. Het briefhoofd hierboven is de klant zelf.
+  if (_zakOff) {
+    const _wadr = _offWerkadresEffectief(c, cfg);
+    html += `<div style="border:1px solid #e5e7eb; border-radius:8px; padding:0.6rem 0.8rem; margin-bottom:0.8rem; background:#fff;">
+      <div style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">Werkadres
+        <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="_offWerkadresZoek()">📍 Zoek straat en woonplaats</button>
+      </div>
+      <div class="form-grid">
+        <div><label>Straat</label><input type="text" value="${_offEsc(_wadr.straat)}" placeholder="Straatnaam" onchange="_offCfgWerkadres('straat', this.value)"></div>
+        <div><label>Huisnummer</label><input type="text" value="${_offEsc(_wadr.huisnummer)}" placeholder="nr." onchange="_offCfgWerkadres('huisnummer', this.value)"></div>
+        <div><label>Postcode</label><input type="text" value="${_offEsc(_wadr.postcode)}" placeholder="0000 AA" onchange="_offCfgWerkadres('postcode', this.value)"></div>
+        <div><label>Woonplaats</label><input type="text" value="${_offEsc(_wadr.woonplaats)}" placeholder="Plaats" onchange="_offCfgWerkadres('woonplaats', this.value)"></div>
+      </div>
+      <div id="offWerkadresStatus" style="margin-top:0.4rem; font-size:0.72rem; color:var(--muted);">Waar het werk wordt uitgevoerd. Postcode en huisnummer komen uit de calculatie. Klik op zoeken voor straat en woonplaats. Toon dit in je tekst met het invulveld {werkadres}.</div>
+    </div>`;
+  }
   // v3.61.0 — bijlage-schakelaars voor de doorlopende offerte-PDF.
   const _kozAanwezig = (c.meetstaat || []).some(ms => ms.tekening && ms.tekening.vorm);
   const _fotoAanwezig = (c.fotos || []).length > 0;
@@ -4842,18 +4869,38 @@ function _offCfgVeld(veld, waarde) {
 // v3.66.0 — adresblok op de offerte. cfg.adres bevat alleen afwijkingen; leeg = werkadres/klant.
 function _offAdresEffectief(c, cfg) {
   const a = (cfg && cfg.adres && typeof cfg.adres === 'object') ? cfg.adres : {};
+  // v3.98.0 — bij een zakelijke klant is het briefhoofd het kantooradres van de klant,
+  // niet het werkadres. Daarom geen terugval op het werkadres uit de calc-kop voor zakelijk.
+  const zakelijk = cfg && cfg.klanttype === 'zakelijk';
   return {
     naam:       (a.naam != null && a.naam !== '') ? a.naam : (c.klant || ''),
     straat:     a.straat || '',
-    huisnummer: (a.huisnummer != null && a.huisnummer !== '') ? a.huisnummer : (c.huisnummer || ''),
-    postcode:   (a.postcode != null && a.postcode !== '') ? a.postcode : (c.postcode || ''),
+    huisnummer: (a.huisnummer != null && a.huisnummer !== '') ? a.huisnummer : (zakelijk ? '' : (c.huisnummer || '')),
+    postcode:   (a.postcode != null && a.postcode !== '') ? a.postcode : (zakelijk ? '' : (c.postcode || '')),
     woonplaats: a.woonplaats || ''
+  };
+}
+// v3.98.0 — het werkadres: waar het werk wordt uitgevoerd. Postcode en huisnummer vallen
+// terug op de calc-kop; straat en woonplaats komen uit cfg.werkadres (PDOK of handmatig).
+function _offWerkadresEffectief(c, cfg) {
+  const w = (cfg && cfg.werkadres && typeof cfg.werkadres === 'object') ? cfg.werkadres : {};
+  return {
+    straat:     w.straat || '',
+    huisnummer: (w.huisnummer != null && w.huisnummer !== '') ? w.huisnummer : (c.huisnummer || ''),
+    postcode:   (w.postcode != null && w.postcode !== '') ? w.postcode : (c.postcode || ''),
+    woonplaats: w.woonplaats || ''
   };
 }
 function _offCfgAdres(field, waarde) {
   const cfg = _offCfg(); if (!cfg) return;
   if (!cfg.adres || typeof cfg.adres !== 'object') cfg.adres = {};
   cfg.adres[field] = waarde;
+  _offCfgSave();
+}
+function _offCfgWerkadres(field, waarde) {
+  const cfg = _offCfg(); if (!cfg) return;
+  if (!cfg.werkadres || typeof cfg.werkadres !== 'object') cfg.werkadres = {};
+  cfg.werkadres[field] = waarde;
   _offCfgSave();
 }
 function _offCfgContact(field, waarde) {
@@ -5066,6 +5113,23 @@ async function _offAdresZoek() {
     if (!cfg.adres || typeof cfg.adres !== 'object') cfg.adres = {};
     cfg.adres.straat = a.straat;
     cfg.adres.woonplaats = a.woonplaats;
+    _offCfgSave();
+    renderOfferteBlok();
+  } catch (e) { set('Opzoeken mislukt: ' + (e.message || e)); }
+}
+async function _offWerkadresZoek() {
+  const c = data.calc; const cfg = _offCfg(); if (!c || !cfg) return;
+  const statusEl = document.getElementById('offWerkadresStatus');
+  const set = (t) => { if (statusEl) statusEl.textContent = t; };
+  const eff = _offWerkadresEffectief(c, cfg);
+  if (!eff.postcode) { set('Vul eerst een postcode in.'); return; }
+  set('Zoeken\u2026');
+  try {
+    const a = await _pdokAdres(eff.postcode, eff.huisnummer);
+    if (!a || (!a.straat && !a.woonplaats)) { set('Geen adres gevonden bij deze postcode.'); return; }
+    if (!cfg.werkadres || typeof cfg.werkadres !== 'object') cfg.werkadres = {};
+    cfg.werkadres.straat = a.straat;
+    cfg.werkadres.woonplaats = a.woonplaats;
     _offCfgSave();
     renderOfferteBlok();
   } catch (e) { set('Opzoeken mislukt: ' + (e.message || e)); }

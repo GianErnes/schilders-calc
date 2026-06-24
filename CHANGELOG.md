@@ -1,3 +1,17 @@
+## v3.98.0 — Werkadres los van het briefhoofd bij zakelijke klanten
+Bij een zakelijke klant hoort het werkadres niet bovenaan de brief. Dat is nu gescheiden.
+
+### Wijzigingen
+- Bij klanttype Zakelijk is het adresblok gesplitst: "Adres klant (briefhoofd)" is het kantooradres van je opdrachtgever en komt bovenaan de offerte.
+- Een apart "Werkadres" houdt de plek waar je het werk uitvoert. Postcode en huisnummer komen uit de calculatie, straat en woonplaats haal je op met de zoekknop.
+- Het briefhoofd valt bij zakelijk niet meer terug op het werkadres, zodat het adres van de klant-van-klant niet meer bovenaan de brief belandt.
+- Nieuw invulveld {werkadres} om het werkadres in je tekst te tonen, naast het bestaande {adres}.
+- Voor Particulier en VvE verandert er niets: één adresblok dat terugvalt op het werkadres.
+- Let op bij bestaande zakelijke offertes: het oude werkadres staat nog in het briefhoofd-veld, dat overschrijf je eenmalig met het kantooradres van je klant.
+- Opslag in offerte_config (JSON). Geen SQL.
+
+---
+
 ## v3.97.0 — Totaal uren in één oogopslag
 Het rekenpaneel toont nu de all-in uren als eigen regel, zodat je niet meer zelf hoeft op te tellen.
 
