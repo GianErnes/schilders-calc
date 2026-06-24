@@ -1,3 +1,19 @@
+## v4.0.1 — Compacte calc-kop
+De drie blokken bovenaan de Calculatie-tab zijn flink ingedicht.
+
+### Wat er compacter is
+- Elk blok (Project en planning, Klant en adres, Offerte-instellingen) is nu één kaart in plaats van losse bordered boxen per subgroep.
+- De tussenkopjes Contactpersoon, Werkadres en Briefhoofd scheiden de groepen met een dunne lijn binnen dezelfde kaart.
+- Velden zijn lager, met kleinere tussenruimte en een doorlopend raster.
+- De knoppen Afstand ophalen en Zoek staan naast het Werkadres-kopje, niet meer op een eigen regel.
+- De bijlage-schakelaars staan op één regel onder de offerte-instellingen.
+
+### Onder de motorkap
+- Nieuwe, los staande stijlset (kblok, kgrid, subkop) voor de calc-kop. De globale form-grid van de andere tabs blijft ongemoeid.
+- Geen functionele wijziging, alleen dichtheid. Geen SQL.
+
+---
+
 ## v4.0.0 — Klant- en adresgegevens gebundeld
 De Calculatie-tab is bovenaan opnieuw ingedeeld. Alle klant- en adresgegevens staan nu bij elkaar, niet meer verspreid over de calc-kop en het Offerte-blok.
 
