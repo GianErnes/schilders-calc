@@ -1,3 +1,24 @@
+## v4.0.0 — Klant- en adresgegevens gebundeld
+De Calculatie-tab is bovenaan opnieuw ingedeeld. Alle klant- en adresgegevens staan nu bij elkaar, niet meer verspreid over de calc-kop en het Offerte-blok.
+
+### Indeling boven in de Calculatie-tab
+- "Project en planning": projectnaam, aantal schilders, uren per werkdag, opname-datum, deadline.
+- "Klant en adres": klant, klanttype, aanspreekvorm, contactpersoon, e-mail en het werkadres, met de reisafstand en Afstand ophalen er direct naast. Bij Zakelijk en VvE staat hier ook het aparte briefhoofd-adres.
+- "Offerte-instellingen": offertedatum, geldig tot, offertenummer, garantie, prijsweergave en de bijlage-schakelaars.
+- Onderaan, inklapbaar: alleen nog de offerteteksten, met de knoppen Voorbeeld, Offertedocument en Accordeerlink.
+
+### Werkadres en reisafstand
+- Het werkadres is nu één plek. De reisafstand rekent altijd naar de werklocatie, niet naar het kantooradres van de klant.
+- Bij Particulier is het briefhoofd het werkadres. Bij Zakelijk en VvE staat het briefhoofd los van het werkadres.
+- Yoobi vult bij een zakelijke klant of VvE alleen het briefhoofd en laat het werkadres aan jou, zodat de reisafstand meteen klopt.
+- Bestaande particuliere offertes behouden hun straat en woonplaats via terugval op het oude adresveld.
+
+### Onder de motorkap
+- De rekenvelden houden hun ID's en bedrading, alleen verplaatst. Geen wijziging aan de rekenkern.
+- Geen SQL.
+
+---
+
 ## v3.99.0 — Alle contactpersonen kiezen bij de Yoobi-import
 Een zakelijke klant of VvE heeft vaak meerdere contactpersonen. Die zie en kies je nu allemaal.
 
