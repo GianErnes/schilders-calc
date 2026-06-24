@@ -1,3 +1,16 @@
+## v3.97.0 — Totaal uren in één oogopslag
+Het rekenpaneel toont nu de all-in uren als eigen regel, zodat je niet meer zelf hoeft op te tellen.
+
+### Wijzigingen
+- De bovenste regel "Totaal uren" heet nu "Uren schilderwerk", want dat is wat erin staat: alleen de bewerkingen.
+- Onder de toeslag-regels staat een nieuwe, vetgedrukte regel "Totaal uren incl. toeslagen" met de echte all-in.
+- Dat all-in getal is precies de basis waarmee de app de werkdagen rekent, dus paneel en planning lopen gelijk.
+- De regel wordt altijd getoond, ook als er geen toeslagen zijn (dan gelijk aan het schilderwerk).
+- Alleen het paneel is aangepast. De rekenkern is ongemoeid. De calculatie-PDF volgt eventueel apart.
+- Geen SQL.
+
+---
+
 ## v3.96.0 — Offerte mailen vanuit de app (deel 2)
 De cirkel is rond: vanuit het accordeerlink-venster mail je de offerte rechtstreeks naar de klant.
 
