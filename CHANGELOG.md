@@ -1,3 +1,18 @@
+## v4.2.1 — Materiaalkosten per eenheid op de bewerkingsregel
+De bewerkingsregel toont nu het materiaal ook per eenheid, niet alleen als totaal.
+
+### Wat er verandert
+- Op een bewerkingsregel stonden de minuten en de arbeidskosten per eenheid, maar het materiaal alleen als totaal. Dat oogde verwarrend naast het verkoopbedrag rechts, dat per eenheid is.
+- Achter de arbeidskosten staat nu ook het materiaal per eenheid, bijvoorbeeld "12,00 min (€ 15,00) · mat € 0,01/m²".
+- Het totaal materiaal blijft gewoon na de pijl staan.
+- Zo zie je dat arbeid plus materiaal per eenheid het bedrag rechts oplevert.
+
+### Onder de motorkap
+- Alleen weergave op de regel. De rekenkern verandert niet.
+- Geen SQL.
+
+---
+
 ## v4.2.0 — GEACCORDEERD-stempel op het getekend exemplaar
 Het getekend exemplaar krijgt nu op elke pagina een klein akkoord-stempel.
 
