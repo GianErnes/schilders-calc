@@ -1,3 +1,18 @@
+## v4.2.2 — Hoeveelheden in de beurt-modal netjes afgerond
+Sommige hoeveelheden toonden een sliert decimalen. Dat is opgelost.
+
+### Wat er verandert
+- In het venster Beurt bewerken van een onderhoudsplan stonden hoeveelheden soms als 3.3135000000000003 of 13.100000000000001. Dat zijn rekenrestjes van de computer.
+- Ze staan nu afgerond op maximaal twee decimalen, met een komma: 3,31 en 13,1.
+- Schone getallen blijven schoon: 120 blijft 120, 710,4 blijft 710,4.
+
+### Onder de motorkap
+- Alleen de weergave in dat venster. De cijfers zelf en de rekenkern blijven ongemoeid.
+- De print-weergaves rondden al af, die waren dus al goed.
+- Geen SQL.
+
+---
+
 ## v4.2.1 — Materiaalkosten per eenheid op de bewerkingsregel
 De bewerkingsregel toont nu het materiaal ook per eenheid, niet alleen als totaal.
 

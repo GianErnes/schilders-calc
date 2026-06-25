@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.2.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.2.2</h2>
       <div class="intro-body">
+        <p><strong>🔣 Hoeveelheden in de beurt-modal netjes afgerond (v4.2.2).</strong> In het venster Beurt bewerken van een onderhoudsplan toonden sommige hoeveelheden een sliert decimalen, zoals 3.3135000000000003 of 13.100000000000001. Dat zijn rekenrestjes van de computer. Ze staan nu afgerond op maximaal twee decimalen, met een komma, dus 3,31 en 13,1. Schone gehele getallen blijven schoon: 120 blijft 120, 710,4 blijft 710,4. Alleen de weergave in dat venster, aan de cijfers zelf verandert niets. Geen SQL nodig.</p>
         <p><strong>🔢 Materiaalkosten per eenheid op de bewerkingsregel (v4.2.1).</strong> Op een bewerkingsregel stonden de minuten en de arbeidskosten per eenheid, maar het materiaal alleen als totaal. Daardoor leek het verkoopbedrag per eenheid niet te kloppen. Nu staat het materiaal ook per eenheid achter de arbeid, bijvoorbeeld "12,00 min (€ 15,00) · mat € 0,01/m²", en het totaal blijft gewoon na de pijl staan. Zo zie je in één oogopslag dat arbeid plus materiaal per eenheid het bedrag rechts oplevert. Alleen weergave, niets aan de rekenkern. Geen SQL nodig.</p>
         <p><strong>✅ GEACCORDEERD-stempel op het getekend exemplaar (v4.2.0).</strong> Het getekend exemplaar van een geaccordeerde offerte krijgt nu op elke pagina rechtsboven een klein groen stempeltje met "GEACCORDEERD", de datum en de naam van de klant. De aparte akkoordbevestiging achteraan blijft gewoon staan. Het stempel komt op alle offertepagina's inclusief de bijlagen, alleen niet op de bevestigingspagina zelf. Werkt zowel voor jouw archiefkopie als voor de download die de klant na akkoord kan ophalen, want beide gebruiken dezelfde opbouw. De PDF wordt elke keer vers gemaakt, dus ook bij al geaccordeerde offertes staat het stempel er meteen op. Geen SQL nodig.</p>
         <p><strong>🧱 Totaal materiaal incl. toeslagen in het rekenpaneel (v4.1.1).</strong> Onder Materiaal verkoop stonden de toeslagen klein materiaal, afval en ARBO als losse plus-regels, en het materiaalbedrag was alleen de basis. Voor Yoobi moest je die toeslagen er zelf bij optellen. Er staat nu een vetgedrukte regel "Totaal materiaal incl. toeslagen" onder de plus-regels, net als bij de uren. Dat bedrag neem je zo over. Puur een optelregel in het paneel, aan de rekenkern verandert niets.</p>
@@ -3213,7 +3214,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.2.1';
+const APP_VERSION = 'v4.2.2';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3608,6 +3609,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.2.2', d: '2026-06-24', h: 'Hoeveelheden in de beurt-modal (onderhoudsplan) afgerond op maximaal twee decimalen. De twee regel-weergaves in _ohpOpenBeurtModal toonden r.hoeveelheid rauw, waardoor floating-point-restjes zoals 3.3135000000000003 en 13.100000000000001 zichtbaar werden. Nu via Number(r.hoeveelheid).toLocaleString(nl-NL, maximumFractionDigits 2): komma-decimaal, ruis weg, en geen onnodige nullen zodat schone getallen schoon blijven (120 blijft 120, 710,4 blijft 710,4). Lege of nul-hoeveelheid blijft leeg, net als voorheen. De print-weergaves gebruikten al fmt en waren dus al schoon. Alleen weergave in dat venster, geen wijziging aan de data of de rekenkern. Geen SQL' },
   { v: '4.2.1', d: '2026-06-24', h: 'Materiaalkosten per eenheid op de bewerkingsregel in de calc-structuur. De regel toonde minuten en arbeidskosten per eenheid maar materiaal alleen als totaal (matTotaalStap), wat verwarrend was omdat het verkoopbedrag rechts per eenheid is. Achter de arbeidskosten staat nu ook het materiaal per eenheid (matKost, oftewel cs.matVerkoop) met de eenheid erbij, alleen als matKost groter dan 0, in dezelfde blauwe stijl. Het bestaande totaal na de pijl blijft staan. Zo is het verkoopbedrag per eenheid herleidbaar: arbeid per eenheid plus materiaal per eenheid. Alleen weergave, geen wijziging aan de rekenkern. Geen SQL' },
   { v: '4.2.0', d: '2026-06-24', h: 'GEACCORDEERD-stempel op elke pagina van het getekend exemplaar. In _bouwGetekendePdfBytes (de gedeelde pdf-lib-opbouw voor jouw archiefkopie én de klant-download na akkoord) wordt vlak voor doc.save() over alle paginas behalve de laatste (de zojuist toegevoegde bevestigingspagina) een klein stempel rechtsboven getekend: een licht groen kader met groene rand, daarin "GEACCORDEERD" vet in groen, daaronder de akkoorddatum (toLocaleDateString nl-NL, dag-maand-jaar) en de naam van de klant (info.naam, via de bestaande WinAnsi-sanitisatie, afgekapt als hij te breed wordt). De stempelbreedte schaalt mee met de breedste regel; positie is per pagina rechtsboven via pg.getSize(), dus ook landschap-bijlagen kloppen. De bevestigingspagina zelf krijgt geen stempel via de slice(0, -1). Alleen pdf-lib-tekenwerk, geen wijziging aan de offerte-opbouw of de rekenkern, en omdat het exemplaar vers wordt gebouwd geldt het meteen voor bestaande geaccordeerde offertes. Geen SQL' },
   { v: '4.1.1', d: '2026-06-24', h: 'Vetgedrukte regel "Totaal materiaal incl. toeslagen" in renderTotals, onder de plus-regels klein materiaal, afval en ARBO. Toont matVerkoop plus kleinMat plus afval plus arbo, zodat het materiaalbedrag inclusief de toeslagen in één keer over te nemen is in Yoobi (de gebruiker boekt alle drie de toeslagen daar onder materiaal). Spiegelt de bestaande regel Totaal uren incl. toeslagen. Alleen in het calc-paneel, niet in de calc-PDF, net als bij de uren-regel. Puur display, rekenkern en directe-kosten-optelling ongemoeid. Geen SQL' },
@@ -7767,7 +7769,7 @@ function _ohpMbRenderPerRegel(container) {
         const huidigPct = regelsMap[r.id] != null ? regelsMap[r.id] : 100;
         const dim = huidigPct === 0 ? ' style="opacity: 0.5;"' : '';
         html += `<div${dim} style="display: grid; grid-template-columns: 1fr 90px 90px; gap: 0.5rem; align-items: center; padding: 0.2rem 0; margin-left: 0.6rem;">
-          <span style="font-size: 0.9rem;">${_escapeHtml(r.naam || '(zonder naam)')} <span style="color: var(--muted); font-size: 0.8rem;">${r.hoeveelheid || ''} ${r.eenheid || ''}</span></span>
+          <span style="font-size: 0.9rem;">${_escapeHtml(r.naam || '(zonder naam)')} <span style="color: var(--muted); font-size: 0.8rem;">${r.hoeveelheid ? Number(r.hoeveelheid).toLocaleString('nl-NL', { maximumFractionDigits: 2 }) : ''} ${r.eenheid || ''}</span></span>
           <span class="right" style="font-size: 0.85rem; color: var(--muted);">${eur(regelBasis)}</span>
           <span><input type="number" min="0" max="200" step="1" value="${huidigPct}" data-regelid="${r.id}" class="ohp-mb-pr-cel" style="width: 70px;"> %</span>
         </div>`;
@@ -7859,7 +7861,7 @@ function _ohpMbRenderPerStap(container) {
         html += `<div style="margin-left: 0.6rem; margin-bottom: 0.3rem; border-left: 2px solid ${isOpen ? 'var(--accent, #2563eb)' : 'transparent'}; padding-left: 0.5rem;">
           <div class="ohp-mb-ps-kop" data-regelid="${r.id}" style="display: grid; grid-template-columns: 18px 1fr 100px; gap: 0.5rem; align-items: center; padding: 0.25rem 0; cursor: pointer; user-select: none;">
             <span>${caret}</span>
-            <span style="font-size: 0.9rem;">${_escapeHtml(r.naam || '(zonder naam)')} <span style="color: var(--muted); font-size: 0.8rem;">${r.hoeveelheid || ''} ${r.eenheid || ''}</span></span>
+            <span style="font-size: 0.9rem;">${_escapeHtml(r.naam || '(zonder naam)')} <span style="color: var(--muted); font-size: 0.8rem;">${r.hoeveelheid ? Number(r.hoeveelheid).toLocaleString('nl-NL', { maximumFractionDigits: 2 }) : ''} ${r.eenheid || ''}</span></span>
             <span class="right" style="font-size: 0.8rem; ${labelStyle}">${samen.label}</span>
           </div>`;
         if (isOpen) {
