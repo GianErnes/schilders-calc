@@ -2106,8 +2106,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.1.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.2.0</h2>
       <div class="intro-body">
+        <p><strong>✅ GEACCORDEERD-stempel op het getekend exemplaar (v4.2.0).</strong> Het getekend exemplaar van een geaccordeerde offerte krijgt nu op elke pagina rechtsboven een klein groen stempeltje met "GEACCORDEERD", de datum en de naam van de klant. De aparte akkoordbevestiging achteraan blijft gewoon staan. Het stempel komt op alle offertepagina's inclusief de bijlagen, alleen niet op de bevestigingspagina zelf. Werkt zowel voor jouw archiefkopie als voor de download die de klant na akkoord kan ophalen, want beide gebruiken dezelfde opbouw. De PDF wordt elke keer vers gemaakt, dus ook bij al geaccordeerde offertes staat het stempel er meteen op. Geen SQL nodig.</p>
+        <p><strong>🧱 Totaal materiaal incl. toeslagen in het rekenpaneel (v4.1.1).</strong> Onder Materiaal verkoop stonden de toeslagen klein materiaal, afval en ARBO als losse plus-regels, en het materiaalbedrag was alleen de basis. Voor Yoobi moest je die toeslagen er zelf bij optellen. Er staat nu een vetgedrukte regel "Totaal materiaal incl. toeslagen" onder de plus-regels, net als bij de uren. Dat bedrag neem je zo over. Puur een optelregel in het paneel, aan de rekenkern verandert niets.</p>
         <p><strong>🚐 Reiskosten buiten rayon: altijd minstens 1 rit (v4.1.0).</strong> Reiskosten rekenden per factureerbare dag. Bij een mini-klus die naar 0 dagen afrondt (werk onder de afrond-drempel) kwam de rit daardoor op € 0 uit, ook al was de klant buiten rayon. Vanaf nu rekent een klus buiten rayon altijd minstens 1 rit, ook als hij naar 0 dagen afrondt. Een normale klus van twee dagen blijft gewoon twee ritten rekenen, en binnen rayon verandert er niets. De regel staat op alle plekken gelijk: calc-paneel, offerte-PDF, werkbon en dashboard rekenen identiek. De reis-regel toont nu ook bij zo'n mini-klus de opbouw, dus je ziet meteen waar het bedrag vandaan komt.</p>
         <p><strong>🧭 Klant- en adresgegevens gebundeld en compact (v4.0.1).</strong> De Calculatie-tab is bovenaan opnieuw ingedeeld in drie strakke blokken. "Project en planning" met projectnaam, aantal schilders, uren per werkdag, opname-datum en deadline. "Klant en adres" met de klant, klanttype, aanspreekvorm, contactpersoon, e-mail en het werkadres, met de reisafstand en de knoppen Afstand ophalen en Zoek er direct naast. Bij een zakelijke klant of VvE staat daar ook het aparte briefhoofd-adres. "Offerte-instellingen" met datums, offertenummer, garantie, prijsweergave en de bijlage-schakelaars. Alleen de offerteteksten blijven inklapbaar onderaan. Elk blok is nu één kaart met een doorlopend raster en dunne tussenkopjes, lagere velden en minder witruimte. Het werkadres is één plek die de reisafstand stuurt, dus die rekent altijd naar de werklocatie. Yoobi vult bij een zakelijke klant alleen het briefhoofd en laat het werkadres aan jou. Geen SQL nodig.</p>
         <p><strong>👥 Alle contactpersonen kiezen bij de Yoobi-import (v3.99.0).</strong> Een zakelijke klant of VvE heeft vaak meerdere contactpersonen. De Yoobi-import toonde er maar één. Nu zie je in het zoekvenster onder "Contactpersoon" alle contactpersonen van de relatie als keuzerondjes, elk met naam en e-mail. Je kiest wie er als t.a.v. op de offerte komt, en die keuze vult meteen het e-mailadres in. Wil je de offerte toch naar het factuuradres sturen, dan kies je dat onder E-mail. Let op: hiervoor moet ook de Edge Function yoobi-klant bijgewerkt zijn, anders blijft het bij één contactpersoon. Geen SQL nodig.</p>
@@ -3210,7 +3212,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.1.0';
+const APP_VERSION = 'v4.2.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3605,6 +3607,8 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.2.0', d: '2026-06-24', h: 'GEACCORDEERD-stempel op elke pagina van het getekend exemplaar. In _bouwGetekendePdfBytes (de gedeelde pdf-lib-opbouw voor jouw archiefkopie én de klant-download na akkoord) wordt vlak voor doc.save() over alle paginas behalve de laatste (de zojuist toegevoegde bevestigingspagina) een klein stempel rechtsboven getekend: een licht groen kader met groene rand, daarin "GEACCORDEERD" vet in groen, daaronder de akkoorddatum (toLocaleDateString nl-NL, dag-maand-jaar) en de naam van de klant (info.naam, via de bestaande WinAnsi-sanitisatie, afgekapt als hij te breed wordt). De stempelbreedte schaalt mee met de breedste regel; positie is per pagina rechtsboven via pg.getSize(), dus ook landschap-bijlagen kloppen. De bevestigingspagina zelf krijgt geen stempel via de slice(0, -1). Alleen pdf-lib-tekenwerk, geen wijziging aan de offerte-opbouw of de rekenkern, en omdat het exemplaar vers wordt gebouwd geldt het meteen voor bestaande geaccordeerde offertes. Geen SQL' },
+  { v: '4.1.1', d: '2026-06-24', h: 'Vetgedrukte regel "Totaal materiaal incl. toeslagen" in renderTotals, onder de plus-regels klein materiaal, afval en ARBO. Toont matVerkoop plus kleinMat plus afval plus arbo, zodat het materiaalbedrag inclusief de toeslagen in één keer over te nemen is in Yoobi (de gebruiker boekt alle drie de toeslagen daar onder materiaal). Spiegelt de bestaande regel Totaal uren incl. toeslagen. Alleen in het calc-paneel, niet in de calc-PDF, net als bij de uren-regel. Puur display, rekenkern en directe-kosten-optelling ongemoeid. Geen SQL' },
   { v: '4.1.0', d: '2026-06-24', h: 'Reiskosten buiten rayon rekenen altijd minstens 1 rit. De reiskosten (zowel reisuren-arbeid als km-vergoeding) schaalden met de factureerbare dagen; bij een mini-klus die onder de afrond-drempel naar 0 factureerbare dagen viel, kwam de rit daardoor op € 0 uit, ook buiten rayon. Nieuwe regel via een reisDagen-tussenwaarde: buiten rayon en bij werkelijke dagen groter dan 0 wordt reisDagen Math.max(dagenFactureerbaar, 1), anders gewoon dagenFactureerbaar. Binnen rayon en bij een lege calc verandert niets, een normale meerdaagse klus rekent ongewijzigd zijn factureerbare dagen aan ritten. De regel is op alle zes de reis-berekeningen identiek doorgevoerd (hoofdcalc, drie archief/PDF-routes, calc-paneel en dashboard) plus de twee opbouw-labels (print-regel en calc-paneel) die nu reisDagen tonen in plaats van dagenFactureerbaar, zodat het reisbedrag ook bij een mini-klus zijn uitleg houdt. Geen SQL' },
   { v: '4.0.1', d: '2026-06-24', h: 'Compacte calc-kop. De drie blokken Project en planning, Klant en adres en Offerte-instellingen zijn elk teruggebracht tot één kaart met een doorlopend raster (kgrid) en dunne tussenkopjes (Contactpersoon, Werkadres, Briefhoofd) als scheidingsregels, in plaats van losse bordered boxen per subgroep. Velden zijn lager (kleinere padding en fontgrootte), de tussenruimte is kleiner en de knoppen Afstand ophalen en Zoek staan nu naast het Werkadres-kopje in plaats van op een eigen regel. De bijlage-schakelaars staan op één regel onder de offerte-instellingen. Nieuwe scoped stijlset (kblok, kblok-kop, kgrid, subkop) raakt de globale form-grid van de andere tabs niet. Geen functionele wijziging, alleen dichtheid. Geen SQL' },
   { v: '4.0.0', d: '2026-06-24', h: 'Klant- en adresgegevens gebundeld; calc-kop herverdeeld. De Calculatie-tab heeft bovenaan nu drie blokken: een statisch "Project en planning" (projectnaam, schilders, uren/werkdag, opname, deadline), en twee door renderOfferteBlok gevulde containers klantAdresBlok en offerteInstellingenBlok. renderOfferteBlok is herschreven en vult drie doelen: klantAdresBlok (klant via calcKlant, klanttype, aanspreekvorm, contactpersoon, e-mail, werkadres met calcPostcode/calcHuisnummer/straat/woonplaats plus reisafstand calcReis, knop Afstand ophalen en rayon-indicator, en bij zakelijk/VvE het briefhoofd-blok), offerteInstellingenBlok (offertedatum, geldig tot, offertenummer, garantie, prijsweergave, bijlagen) en het inklapbare offerteBlokBody (alleen de tekstsecties). De rekenvelden houden hun ID\'s, de gedelegeerde change-listener op document blijft ze opslaan, en de render-fill in renderCalcStructuur is voor die velden weggehaald omdat renderOfferteBlok ze nu met waarde rendert; _renderRayonIndicator wordt aan het eind van renderOfferteBlok aangeroepen. _offAdresEffectief is herschreven: zakelijk en VvE krijgen het briefhoofd uit cfg.adres, particulier krijgt het werkadres. _offWerkadresEffectief haalt postcode/huisnummer uit de calc-kop en valt voor straat/woonplaats bij particulier terug op het oude cfg.adres. _yoobiVulIn vult bij zakelijk/VvE het werkadres in de calc-kop niet meer (alleen het briefhoofd), zodat de reisafstand naar de werklocatie rekent. Het losse Offerte-blok heet nu Offerteteksten. Geen SQL' },
@@ -16320,6 +16324,7 @@ function renderTotals() {
     <div class="line indent"><span>+ klein mat.</span><span>${eur(kleinMat)}</span></div>
     <div class="line indent"><span>+ afval</span><span>${eur(afval)}</span></div>
     <div class="line indent"><span>+ ARBO</span><span>${eur(arbo)}</span></div>
+    <div class="line"><span><strong>Totaal materiaal incl. toeslagen</strong></span><span><strong>${eur(matVerkoop + kleinMat + afval + arbo)}</strong></span></div>
     <div class="line"><span>Reis${reisDagen === 0 ? '' : ` (${reisDagen === 1 ? '1 dag' : `${reisDagen} dgn`} × heen+terug${binnenRayon ? ', binnen rayon' : ' + reisuren'})`}</span><span>${eur(reisTotaal)}</span></div>
     <div class="line"><span>Staartkosten</span><span>${eur(staartTotaal)}</span></div>
     <div class="line divider"><span>Directe kosten</span><span>${eur(directe)}</span></div>
@@ -18043,6 +18048,34 @@ async function _bouwGetekendePdfBytes(frozenBytes, info) {
     flush();
   }
   page.drawText(enc('Ernes schilders \u00b7 info@ernes.nl \u00b7 045 5321471'), { x: ml, y: 48, size: 9, font: font, color: muted });
+
+  // v4.2.0 — Stempel "GEACCORDEERD" + datum + klantnaam rechtsboven op elke offertepagina.
+  // Alle paginas behalve de zojuist toegevoegde bevestigingspagina (de laatste).
+  {
+    const datumKort = info.datumIso
+      ? (function () { try { return new Date(info.datumIso).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch (e) { return ''; } })()
+      : '';
+    const sTitel = 10, sKlein = 7.5, pad = 6, boxH = 40, marge = 22, maxInner = 190;
+    let naamReg = enc(info.naam || '');
+    while (naamReg && font.widthOfTextAtSize(naamReg, sKlein) > maxInner) naamReg = naamReg.slice(0, -1);
+    const innerW = Math.max(
+      fontB.widthOfTextAtSize('GEACCORDEERD', sTitel),
+      font.widthOfTextAtSize(datumKort, sKlein),
+      font.widthOfTextAtSize(naamReg, sKlein)
+    );
+    const boxW = innerW + pad * 2;
+    const vulGroen = rgb(0.93, 0.98, 0.94);
+    const alle = doc.getPages();
+    alle.slice(0, -1).forEach(function (pg) {
+      const sz = pg.getSize();
+      const bx = sz.width - boxW - marge;
+      const by = sz.height - boxH - marge;
+      pg.drawRectangle({ x: bx, y: by, width: boxW, height: boxH, color: vulGroen, opacity: 0.9, borderColor: groen, borderWidth: 1 });
+      pg.drawText('GEACCORDEERD', { x: bx + pad, y: by + 31, size: sTitel, font: fontB, color: groen });
+      pg.drawText(datumKort, { x: bx + pad, y: by + 18, size: sKlein, font: font, color: ink });
+      pg.drawText(naamReg, { x: bx + pad, y: by + 7, size: sKlein, font: font, color: ink });
+    });
+  }
   return await doc.save();
 }
 

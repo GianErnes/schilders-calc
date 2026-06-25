@@ -1,3 +1,35 @@
+## v4.2.0 — GEACCORDEERD-stempel op het getekend exemplaar
+Het getekend exemplaar krijgt nu op elke pagina een klein akkoord-stempel.
+
+### Wat er nieuw is
+- Op elke offertepagina van het getekend exemplaar staat rechtsboven een klein groen stempel: "GEACCORDEERD", de datum en de naam van de klant.
+- Het stempel komt op alle pagina's inclusief de bijlagen (kozijnen, foto's, voorwaarden), alleen niet op de akkoordbevestiging achteraan.
+- De aparte bevestigingspagina achteraan blijft gewoon staan.
+- Werkt voor jouw archiefkopie én voor de download die de klant na akkoord ophaalt, want beide gebruiken dezelfde opbouw.
+- Het exemplaar wordt elke keer vers gemaakt, dus het stempel staat er ook meteen op bij offertes die al geaccordeerd waren.
+
+### Onder de motorkap
+- Alleen tekenwerk in _bouwGetekendePdfBytes met pdf-lib. De offerte-opbouw en de rekenkern blijven ongemoeid.
+- Het stempel schaalt mee met de breedste regel en wordt per pagina rechtsboven geplaatst, dus ook landschap-bijlagen kloppen.
+- Geen SQL.
+
+---
+
+## v4.1.1 — Totaal materiaal incl. toeslagen
+Het materiaalbedrag in het rekenpaneel toont nu de toeslagen er al bij opgeteld.
+
+### Wat er verandert
+- Onder Materiaal verkoop staan de toeslagen klein materiaal, afval en ARBO nog steeds als losse plus-regels.
+- Daaronder staat nu een vetgedrukte regel "Totaal materiaal incl. toeslagen" met de basis plus alle drie de toeslagen.
+- Dat bedrag neem je zo over in Yoobi, zonder zelf op te tellen. Net als de regel Totaal uren incl. toeslagen.
+
+### Onder de motorkap
+- Alleen een optelregel in het calc-paneel. De rekenkern en de optelling naar Directe kosten blijven ongewijzigd.
+- De regel staat in het paneel, niet in de calc-PDF, net als bij de uren-regel.
+- Geen SQL.
+
+---
+
 ## v4.1.0 — Reiskosten buiten rayon: altijd minstens 1 rit
 Reiskosten kwamen bij een mini-klus op € 0 uit, ook buiten rayon. Dat is rechtgetrokken.
 
