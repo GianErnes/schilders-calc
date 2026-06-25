@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.2.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.3.0</h2>
       <div class="intro-body">
+        <p><strong>📄 Onderhoudsplan loopt nu netjes door over meer pagina's (v4.3.0).</strong> Bij langere plannen liep de tekst van de onderhoudsbeurten in sectie 02 van de eerste pagina af en vielen de laatste beurten weg, en werd ook de planningstabel afgekapt, met de voettekst eroverheen. De brochure wordt nu opgebouwd uit losse blokken die automatisch over zoveel pagina's worden verdeeld als nodig. Elke pagina krijgt het Ernes-logo bovenaan, de voettekst onderaan en het juiste "pagina x van y". Een lange beurtbeschrijving of een lange planningstabel schuift voortaan vanzelf door naar de volgende pagina. De strakke opmaak blijft, alleen het aantal pagina's past zich aan het plan aan. Geen SQL nodig.</p>
         <p><strong>🔣 Hoeveelheden in de beurt-modal netjes afgerond (v4.2.2).</strong> In het venster Beurt bewerken van een onderhoudsplan toonden sommige hoeveelheden een sliert decimalen, zoals 3.3135000000000003 of 13.100000000000001. Dat zijn rekenrestjes van de computer. Ze staan nu afgerond op maximaal twee decimalen, met een komma, dus 3,31 en 13,1. Schone gehele getallen blijven schoon: 120 blijft 120, 710,4 blijft 710,4. Alleen de weergave in dat venster, aan de cijfers zelf verandert niets. Geen SQL nodig.</p>
         <p><strong>🔢 Materiaalkosten per eenheid op de bewerkingsregel (v4.2.1).</strong> Op een bewerkingsregel stonden de minuten en de arbeidskosten per eenheid, maar het materiaal alleen als totaal. Daardoor leek het verkoopbedrag per eenheid niet te kloppen. Nu staat het materiaal ook per eenheid achter de arbeid, bijvoorbeeld "12,00 min (€ 15,00) · mat € 0,01/m²", en het totaal blijft gewoon na de pijl staan. Zo zie je in één oogopslag dat arbeid plus materiaal per eenheid het bedrag rechts oplevert. Alleen weergave, niets aan de rekenkern. Geen SQL nodig.</p>
         <p><strong>✅ GEACCORDEERD-stempel op het getekend exemplaar (v4.2.0).</strong> Het getekend exemplaar van een geaccordeerde offerte krijgt nu op elke pagina rechtsboven een klein groen stempeltje met "GEACCORDEERD", de datum en de naam van de klant. De aparte akkoordbevestiging achteraan blijft gewoon staan. Het stempel komt op alle offertepagina's inclusief de bijlagen, alleen niet op de bevestigingspagina zelf. Werkt zowel voor jouw archiefkopie als voor de download die de klant na akkoord kan ophalen, want beide gebruiken dezelfde opbouw. De PDF wordt elke keer vers gemaakt, dus ook bij al geaccordeerde offertes staat het stempel er meteen op. Geen SQL nodig.</p>
@@ -3214,7 +3215,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.2.2';
+const APP_VERSION = 'v4.3.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3609,6 +3610,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.3.0', d: '2026-06-24', h: 'Onderhoudsplan-brochure paginieert nu automatisch. _ohpBuildOfferteHTML levert de inhoud niet meer als drie vaste A4-pagina\'s met overflow:hidden, maar als een platte reeks .ob-block elementen (sectie 02 als label plus losse jaarblokken, de planningstabel als afzonderlijk data-split blok). Een nieuwe functie _ohpPaginate() draait na het injecteren en na het laden van de fonts: ze meet met een lege proefpagina de beschikbare contenthoogte tussen masthead en voettekst, meet per blok de werkelijke hoogte inclusief marges, en pakt de blokken greedy in vaste .page-divs. De planningstabel wordt zo nodig per rij gesplitst met een herhaalde koprij. Elke gegenereerde pagina krijgt masthead, voettekst en het juiste pagina x van y. printArea (op het scherm display:none) wordt tijdens het meten tijdelijk offscreen en visibility:hidden gezet en daarna hersteld. Hiermee vallen lange sectie 02-beschrijvingen en lange planningstabellen niet meer weg en overlapt de voettekst niet meer. Werkt voor de VvE- en de particulier-variant. Geen SQL' },
   { v: '4.2.2', d: '2026-06-24', h: 'Hoeveelheden in de beurt-modal (onderhoudsplan) afgerond op maximaal twee decimalen. De twee regel-weergaves in _ohpOpenBeurtModal toonden r.hoeveelheid rauw, waardoor floating-point-restjes zoals 3.3135000000000003 en 13.100000000000001 zichtbaar werden. Nu via Number(r.hoeveelheid).toLocaleString(nl-NL, maximumFractionDigits 2): komma-decimaal, ruis weg, en geen onnodige nullen zodat schone getallen schoon blijven (120 blijft 120, 710,4 blijft 710,4). Lege of nul-hoeveelheid blijft leeg, net als voorheen. De print-weergaves gebruikten al fmt en waren dus al schoon. Alleen weergave in dat venster, geen wijziging aan de data of de rekenkern. Geen SQL' },
   { v: '4.2.1', d: '2026-06-24', h: 'Materiaalkosten per eenheid op de bewerkingsregel in de calc-structuur. De regel toonde minuten en arbeidskosten per eenheid maar materiaal alleen als totaal (matTotaalStap), wat verwarrend was omdat het verkoopbedrag rechts per eenheid is. Achter de arbeidskosten staat nu ook het materiaal per eenheid (matKost, oftewel cs.matVerkoop) met de eenheid erbij, alleen als matKost groter dan 0, in dezelfde blauwe stijl. Het bestaande totaal na de pijl blijft staan. Zo is het verkoopbedrag per eenheid herleidbaar: arbeid per eenheid plus materiaal per eenheid. Alleen weergave, geen wijziging aan de rekenkern. Geen SQL' },
   { v: '4.2.0', d: '2026-06-24', h: 'GEACCORDEERD-stempel op elke pagina van het getekend exemplaar. In _bouwGetekendePdfBytes (de gedeelde pdf-lib-opbouw voor jouw archiefkopie én de klant-download na akkoord) wordt vlak voor doc.save() over alle paginas behalve de laatste (de zojuist toegevoegde bevestigingspagina) een klein stempel rechtsboven getekend: een licht groen kader met groene rand, daarin "GEACCORDEERD" vet in groen, daaronder de akkoorddatum (toLocaleDateString nl-NL, dag-maand-jaar) en de naam van de klant (info.naam, via de bestaande WinAnsi-sanitisatie, afgekapt als hij te breed wordt). De stempelbreedte schaalt mee met de breedste regel; positie is per pagina rechtsboven via pg.getSize(), dus ook landschap-bijlagen kloppen. De bevestigingspagina zelf krijgt geen stempel via de slice(0, -1). Alleen pdf-lib-tekenwerk, geen wijziging aan de offerte-opbouw of de rekenkern, en omdat het exemplaar vers wordt gebouwd geldt het meteen voor bestaande geaccordeerde offertes. Geen SQL' },
@@ -8451,6 +8453,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
 
   // --- §2 jaar-blokken (voor uw huis specifiek) ---
   let jaarBlokken = '';
+  const jaarBlokkenArr = [];
   beurten.forEach(b => {
     const typeLabel = _labelVoor(b);
     const isDone = b.reedsUitgevoerd === true;
@@ -8469,11 +8472,12 @@ function _ohpBuildOfferteHTML(plan, calc) {
         return `<p>${_escapeHtml(p)}</p>`;
       }).join('');
     }
-    jaarBlokken += `
-      <div class="yearblock${doneCls}">
+    const _yb = `<div class="yearblock${doneCls}">
         <div class="yhead"><span class="yr">${b.jaartal}</span> &middot; ${_escapeHtml(typeLabel)}${doneBadge}</div>
         ${body}
       </div>`;
+    jaarBlokkenArr.push(_yb);
+    jaarBlokken += '\n      ' + _yb;
   });
 
   // --- §4 tabel ---
@@ -8577,6 +8581,9 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob{--ink:#231f20;--paper:#ffffff;--brush:#f1491c;--brush-deep:#c93914;--muted:#8c8479;--line:#e7e2d9;--soft:#fbeee9;--shadow:0 1px 3px rgba(35,31,32,.06);color:var(--ink);font-size:10.5pt;line-height:1.55;}
 .ob .page{width:210mm;height:296mm;padding:13mm 19mm 14mm;position:relative;background:#fff;overflow:hidden;page-break-after:always;}
 .ob .page:last-child{page-break-after:auto;}
+.ob #obBlocks{width:172mm;}
+.ob .ob-block{margin-bottom:14px;}
+.ob .pg-content > .ob-block:last-child{margin-bottom:0;}
 .ob .masthead{display:flex;justify-content:space-between;align-items:center;border-bottom:2.5px solid var(--ink);padding-bottom:11px;margin-bottom:22px;}
 .ob .m-ernes{height:46px;width:auto;}
 .ob .m-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
@@ -8665,183 +8672,220 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .foot .f-left{display:flex;align-items:center;gap:10px;}
 .ob .foot .f-ernes{height:20px;width:auto;}
 </style>`;
-  const obBody = isVve
-    ? `<div class="page">
-    <div class="masthead">
+  // ---------------------------------------------------------------
+  // v4.3.0 — Blok-gebaseerde opbouw t.b.v. automatische paginering.
+  // De brochure wordt niet meer in drie vaste pagina's gegoten, maar als
+  // een platte reeks blokken aangeleverd. _ohpPaginate() meet daarna de
+  // hoogtes en verdeelt ze over zoveel vaste A4-pagina's als nodig, elk
+  // met masthead, voettekst en het juiste "pagina x van y". Zo loopt een
+  // lange sectie 02 of een lange planningstabel netjes door naar een
+  // volgende pagina in plaats van afgekapt te worden.
+  // ---------------------------------------------------------------
+  const mastheadHtml = `<div class="masthead">
       <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
       <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
-    </div>
+    </div>`;
+  const footLeftHtml = `<div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div>`;
+  const footBase = `Onderhoudsplan ${pp}–${eindJaar}`;
 
-    <div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat het plan inhoudt</span></div>
-      ${leadHtml}
-      <div class="hero">
-        ${heroInner}
-      </div>
-      <div class="benefits">
-        ${benefitsHtml}
-      </div>
-    </div>
+  const defsCardsHtml = `<div class="def"><div class="dh"><span class="dot"></span>Controlebeurt</div><p>Een tussentijdse inspectie waarbij we beschadigingen en zwakke plekken in de verflaag plaatselijk bijwerken. Zo verlengen we de levensduur van de afwerking en voorkomen we dat kleine gebreken grote problemen worden.</p></div>
+        <div class="def"><div class="dh"><span class="dot"></span>Herschilderbeurt</div><p>Een volledige onderhoudsbeurt waarbij we losse verf verwijderen, slechte plekken bijwerken en het geheel opnieuw afschilderen. Wij plannen dit op basis van de gemiddelde levensduur van de verf en kijken vooral naar de zwaarst belaste gevels (zon, regen, wind).</p></div>`;
 
-    <div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">${sec02Title}</span></div>
-      ${jaarBlokken || '<p class="lead" style="font-style:italic;color:var(--muted);">Nog geen beurt-omschrijvingen ingevuld.</p>'}
-    </div>
+  const zekItemsHtml = `<div class="item"><div class="zh"><span class="dot"></span>Wat de garantie inhoudt</div><p>Als er na oplevering iets niet goed blijkt met het uitgevoerde werk, herstellen wij dat kosteloos binnen de garantietermijn. Dit geldt voor de juiste keuze van materialen, de manier waarop wij die hebben aangebracht en de bescherming tegen weersinvloeden.</p></div>
+        <div class="item"><div class="zh"><span class="dot"></span>Wat valt buiten de garantie</div><p>Scheuren in hout en bouwscheuren in muren komen vanuit de ondergrond, niet vanuit het schilderwerk.</p></div>
+        <div class="item"><div class="zh"><span class="dot"></span>Vakwerk Plusgarantie-bedrijf</div><p>Wij voeren het kwaliteitskeurmerk Vakwerk Plusgarantie van OnderhoudNL. Bij een eventueel geschil bemiddelt een onafhankelijke geschillencommissie; Stichting AF garandeert de nakoming van de uitspraak.</p></div>
+        <div class="item"><div class="zh"><span class="dot"></span>Altijd opzegbaar</div><p>Wilt u op enig moment stoppen met het plan, dan kan dat, om welke reden dan ook.</p></div>`;
 
-    <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 1/3</div></div>
-  </div>
+  const stripBoxesHtml = `<div class="box"><div class="bh">Prijszekerheid</div><p>De bedragen staan vast tot einde plan. Wij hebben hierin al rekening gehouden met prijsstijgingen, klimaatrisico&rsquo;s en de staat van de ondergrond. Alleen wettelijke btw-aanpassingen worden verrekend.</p></div>
+        <div class="box"><div class="bh">Wat valt buiten dit plan</div><p>Extra werk voeren wij alleen uit na overleg en schriftelijk akkoord. Zo voorkomen we verrassingen achteraf.</p></div>`;
 
-  <div class="page">
-    <div class="masthead">
-      <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
-      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
-    </div>
-
-    ${scopeBody ? `<div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat valt onder dit plan</span></div>
-      ${scopeBody}
-    </div>` : ''}
-
-    <div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Welke beurten zitten in het plan</span></div>
-      <div class="defs">
-        <div class="def"><div class="dh"><span class="dot"></span>Controlebeurt</div><p>Een tussentijdse inspectie waarbij we beschadigingen en zwakke plekken in de verflaag plaatselijk bijwerken. Zo verlengen we de levensduur van de afwerking en voorkomen we dat kleine gebreken grote problemen worden.</p></div>
-        <div class="def"><div class="dh"><span class="dot"></span>Herschilderbeurt</div><p>Een volledige onderhoudsbeurt waarbij we losse verf verwijderen, slechte plekken bijwerken en het geheel opnieuw afschilderen. Wij plannen dit op basis van de gemiddelde levensduur van de verf en kijken vooral naar de zwaarst belaste gevels (zon, regen, wind).</p></div>
-      </div>
-    </div>
-
-    <div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">De planning</span></div>
-      <div class="timeline-wrap"><div class="timeline">
-        <div class="tl-axis"></div>
-        ${tlNodes}
-      </div></div>
-      ${isVve ? `<table class="ptable"><thead><tr><th style="width:12%;">Jaar</th><th>Onderhoudsbeurt</th><th style="width:19%;text-align:right;">Excl. btw</th><th style="width:19%;text-align:right;">Incl. btw</th></tr></thead><tbody>
+  const planTableHtml = `<table class="ptable"><thead><tr><th style="width:12%;">Jaar</th><th>Onderhoudsbeurt</th><th style="width:19%;text-align:right;">Excl. btw</th><th style="width:19%;text-align:right;">Incl. btw</th></tr></thead><tbody>
         ${tabelRijen}
         <tr class="total"><td colspan="2">Totale investering ${pp}–${eindJaar}</td><td class="amt">${eur(totaalExcl)}</td><td class="amt">${heroTotaal}</td></tr>
-      </tbody></table>` : `<table class="ptable"><thead><tr><th style="width:13%;">Jaar</th><th>Onderhoudsbeurt</th><th style="width:18%;text-align:right;">Bedrag</th></tr></thead><tbody>
-        ${tabelRijen}
-        <tr class="total"><td colspan="2">Totale investering ${pp}–${eindJaar} &middot; incl. btw</td><td class="amt">${heroTotaal}</td></tr>
-      </tbody></table>`}
-      ${mjopNote}
-    </div>
+      </tbody></table>`;
 
-    <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 2/3</div></div>
-  </div>
+  const _blk = (html) => `<div class="ob-block">${html}</div>`;
+  const _sec02Blokken = (labelNum) => {
+    const lbl = `<div class="sec-label"><span class="num">${labelNum}</span><span class="h">${sec02Title}</span></div>`;
+    const out = [];
+    if (jaarBlokkenArr.length) {
+      out.push(_blk(lbl + jaarBlokkenArr[0]));
+      for (let i = 1; i < jaarBlokkenArr.length; i++) out.push(_blk(jaarBlokkenArr[i]));
+    } else {
+      out.push(_blk(lbl + '<p class="lead" style="font-style:italic;color:var(--muted);">Nog geen beurt-omschrijvingen ingevuld.</p>'));
+    }
+    return out;
+  };
 
-  <div class="page">
-    <div class="masthead">
-      <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
-      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
-    </div>
-
-    <div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Uw zekerheid</span></div>
-      <div class="zek">
-        <div class="item"><div class="zh"><span class="dot"></span>Wat de garantie inhoudt</div><p>Als er na oplevering iets niet goed blijkt met het uitgevoerde werk, herstellen wij dat kosteloos binnen de garantietermijn. Dit geldt voor de juiste keuze van materialen, de manier waarop wij die hebben aangebracht en de bescherming tegen weersinvloeden.</p></div>
-        <div class="item"><div class="zh"><span class="dot"></span>Wat valt buiten de garantie</div><p>Scheuren in hout en bouwscheuren in muren komen vanuit de ondergrond, niet vanuit het schilderwerk.</p></div>
-        <div class="item"><div class="zh"><span class="dot"></span>Vakwerk Plusgarantie-bedrijf</div><p>Wij voeren het kwaliteitskeurmerk Vakwerk Plusgarantie van OnderhoudNL. Bij een eventueel geschil bemiddelt een onafhankelijke geschillencommissie; Stichting AF garandeert de nakoming van de uitspraak.</p></div>
-        <div class="item"><div class="zh"><span class="dot"></span>Altijd opzegbaar</div><p>Wilt u op enig moment stoppen met het plan, dan kan dat, om welke reden dan ook.</p></div>
-      </div>
-      <div class="strip" style="margin-top:18px;">
-        <div class="box"><div class="bh">Prijszekerheid</div><p>De bedragen staan vast tot einde plan. Wij hebben hierin al rekening gehouden met prijsstijgingen, klimaatrisico&rsquo;s en de staat van de ondergrond. Alleen wettelijke btw-aanpassingen worden verrekend.</p></div>
-        <div class="box"><div class="bh">Wat valt buiten dit plan</div><p>Extra werk voeren wij alleen uit na overleg en schriftelijk akkoord. Zo voorkomen we verrassingen achteraf.</p></div>
-      </div>
-      <div class="quotes">
-        ${quotesHtml}
-      </div>
-    </div>
-
-    <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 3/3</div></div>
-  </div>`
-    : `<div class="page">
-    <div class="masthead">
-      <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
-      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
-    </div>
-
-    ${aanhefHtml}
-
-    ${aangetroffenHtml ? `<div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat we aantroffen</span></div>
-      ${aangetroffenHtml}
-    </div>` : ''}
-
-    <div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">${sec02Title}</span></div>
-      ${jaarBlokken || '<p class="lead" style="font-style:italic;color:var(--muted);">Nog geen beurt-omschrijvingen ingevuld.</p>'}
-    </div>
-
-    <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 1/3</div></div>
-  </div>
-
-  <div class="page">
-    <div class="masthead">
-      <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
-      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
-    </div>
-
-    <div class="sec">
+  let blocks;
+  if (isVve) {
+    blocks = [];
+    blocks.push(_blk(`<div class="sec">
+      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat het plan inhoudt</span></div>
+      ${leadHtml}
+      <div class="hero">${heroInner}</div>
+      <div class="benefits">${benefitsHtml}</div>
+    </div>`));
+    _sec02Blokken(nextSec()).forEach(b => blocks.push(b));
+    if (scopeBody) blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat valt onder dit plan</span></div>${scopeBody}</div>`));
+    blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Welke beurten zitten in het plan</span></div><div class="defs">${defsCardsHtml}</div></div>`));
+    blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">De planning</span></div><div class="timeline-wrap"><div class="timeline"><div class="tl-axis"></div>${tlNodes}</div></div></div>`));
+    blocks.push(`<div class="ob-block" data-split="table">${planTableHtml}</div>`);
+    if (mjopNote) blocks.push(_blk(mjopNote));
+    blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Uw zekerheid</span></div><div class="zek">${zekItemsHtml}</div></div>`));
+    blocks.push(_blk(`<div class="strip">${stripBoxesHtml}</div>`));
+    blocks.push(_blk(`<div class="quotes">${quotesHtml}</div>`));
+  } else {
+    blocks = [];
+    if (aanhefHtml) blocks.push(_blk(aanhefHtml));
+    if (aangetroffenHtml) blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat we aantroffen</span></div>${aangetroffenHtml}</div>`));
+    _sec02Blokken(nextSec()).forEach(b => blocks.push(b));
+    blocks.push(_blk(`<div class="sec">
       <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat het plan u biedt</span></div>
       ${leadHtml}
-      <div class="hero">
-        ${heroInner}
-      </div>
-      <div class="benefits">
-        ${benefitsHtml}
-      </div>
-    </div>
+      <div class="hero">${heroInner}</div>
+      <div class="benefits">${benefitsHtml}</div>
+    </div>`));
+    blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Welke beurten zitten in het plan</span></div><div class="defs">${defsCardsHtml}</div></div>`));
+    blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">De planning</span></div><div class="timeline-wrap"><div class="timeline"><div class="tl-axis"></div>${tlNodes}</div></div></div>`));
+    blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Uw zekerheid</span></div><div class="zek">${zekItemsHtml}</div></div>`));
+    blocks.push(_blk(`<div class="strip">${stripBoxesHtml}</div>`));
+    blocks.push(_blk(`<div class="quotes">${quotesHtml}</div>`));
+  }
 
-    <div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Welke beurten zitten in het plan</span></div>
-      <div class="defs">
-        <div class="def"><div class="dh"><span class="dot"></span>Controlebeurt</div><p>Een tussentijdse inspectie waarbij we beschadigingen en zwakke plekken in de verflaag plaatselijk bijwerken. Zo verlengen we de levensduur van de afwerking en voorkomen we dat kleine gebreken grote problemen worden.</p></div>
-        <div class="def"><div class="dh"><span class="dot"></span>Herschilderbeurt</div><p>Een volledige onderhoudsbeurt waarbij we losse verf verwijderen, slechte plekken bijwerken en het geheel opnieuw afschilderen. Wij plannen dit op basis van de gemiddelde levensduur van de verf en kijken vooral naar de zwaarst belaste gevels (zon, regen, wind).</p></div>
-      </div>
-    </div>
+  const blocksHtml = blocks.join('\n      ');
 
-    <div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">De planning</span></div>
-      <div class="timeline-wrap"><div class="timeline">
-        <div class="tl-axis"></div>
-        ${tlNodes}
-      </div></div>
-    </div>
-
-    <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 2/3</div></div>
-  </div>
-
-  <div class="page">
-    <div class="masthead">
-      <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
-      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
-    </div>
-
-    <div class="sec">
-      <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Uw zekerheid</span></div>
-      <div class="zek">
-        <div class="item"><div class="zh"><span class="dot"></span>Wat de garantie inhoudt</div><p>Als er na oplevering iets niet goed blijkt met het uitgevoerde werk, herstellen wij dat kosteloos binnen de garantietermijn. Dit geldt voor de juiste keuze van materialen, de manier waarop wij die hebben aangebracht en de bescherming tegen weersinvloeden.</p></div>
-        <div class="item"><div class="zh"><span class="dot"></span>Wat valt buiten de garantie</div><p>Scheuren in hout en bouwscheuren in muren komen vanuit de ondergrond, niet vanuit het schilderwerk.</p></div>
-        <div class="item"><div class="zh"><span class="dot"></span>Vakwerk Plusgarantie-bedrijf</div><p>Wij voeren het kwaliteitskeurmerk Vakwerk Plusgarantie van OnderhoudNL. Bij een eventueel geschil bemiddelt een onafhankelijke geschillencommissie; Stichting AF garandeert de nakoming van de uitspraak.</p></div>
-        <div class="item"><div class="zh"><span class="dot"></span>Altijd opzegbaar</div><p>Wilt u op enig moment stoppen met het plan, dan kan dat, om welke reden dan ook.</p></div>
-      </div>
-      <div class="strip" style="margin-top:18px;">
-        <div class="box"><div class="bh">Prijszekerheid</div><p>De bedragen staan vast tot einde plan. Wij hebben hierin al rekening gehouden met prijsstijgingen, klimaatrisico&rsquo;s en de staat van de ondergrond. Alleen wettelijke btw-aanpassingen worden verrekend.</p></div>
-        <div class="box"><div class="bh">Wat valt buiten dit plan</div><p>Extra werk voeren wij alleen uit na overleg en schriftelijk akkoord. Zo voorkomen we verrassingen achteraf.</p></div>
-      </div>
-      <div class="quotes">
-        ${quotesHtml}
-      </div>
-    </div>
-
-    <div class="foot"><div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div><div>Onderhoudsplan ${pp}–${eindJaar} &middot; pagina 3/3</div></div>
-  </div>`;
   return cssHtml + `
-<div class="ob">
-
-${obBody}
-
+<div class="ob" id="obRoot" data-footbase="${footBase}">
+<template id="obMastheadTpl">${mastheadHtml}</template>
+<template id="obFootLeftTpl">${footLeftHtml}</template>
+<div id="obBlocks">
+      ${blocksHtml}
+</div>
 </div>`;
+}
+
+// v4.3.0 — Verdeelt de losse brochure-blokken over vaste A4-pagina's.
+// Draait ná het injecteren van de HTML en ná het laden van de fonts, vlak
+// voor window.print(). Meet de beschikbare hoogte per pagina en de hoogte
+// van elk blok, pakt ze greedy in pagina's, splitst zo nodig de planningstabel
+// per rij (met herhaalde koprij), en zet op elke pagina masthead, voettekst
+// en "pagina x van y". printArea staat op het scherm op display:none, dus we
+// maken hem tijdelijk meetbaar (offscreen, onzichtbaar) en herstellen dat weer.
+function _ohpPaginate() {
+  try {
+    const root = document.getElementById('obRoot');
+    const printArea = document.getElementById('printArea');
+    if (!root || !printArea) return;
+    const mastheadTplEl = document.getElementById('obMastheadTpl');
+    const footLeftTplEl = document.getElementById('obFootLeftTpl');
+    const blocksWrap = document.getElementById('obBlocks');
+    if (!mastheadTplEl || !footLeftTplEl || !blocksWrap) return;
+
+    const mastheadHTML = mastheadTplEl.innerHTML;
+    const footLeftHTML = footLeftTplEl.innerHTML;
+    const footBase = root.getAttribute('data-footbase') || '';
+    const footHtmlFor = (n, total) => `<div class="foot">${footLeftHTML}<div class="f-right">${footBase} &middot; pagina ${n} van ${total}</div></div>`;
+
+    const _restore = () => {
+      printArea.style.display = '';
+      printArea.style.position = '';
+      printArea.style.left = '';
+      printArea.style.top = '';
+      printArea.style.visibility = '';
+      printArea.style.width = '';
+    };
+
+    // printArea meetbaar maken: offscreen en onzichtbaar (visibility:hidden behoudt layout).
+    printArea.style.display = 'block';
+    printArea.style.position = 'fixed';
+    printArea.style.left = '-10000px';
+    printArea.style.top = '0';
+    printArea.style.visibility = 'hidden';
+    printArea.style.width = '210mm';
+
+    // 1) Beschikbare contenthoogte per pagina meten met een lege proefpagina.
+    const measPage = document.createElement('div');
+    measPage.className = 'page';
+    measPage.style.cssText = 'position:absolute;left:0;top:0;';
+    measPage.innerHTML = mastheadHTML + '<div class="pg-content"></div>' + footHtmlFor(1, 9);
+    root.appendChild(measPage);
+    const measContent = measPage.querySelector('.pg-content');
+    const measFoot = measPage.querySelector('.foot');
+    const SAFETY = 10;
+    const budget = (measFoot.getBoundingClientRect().top - measContent.getBoundingClientRect().top) - SAFETY;
+    root.removeChild(measPage);
+    if (!(budget > 50)) { _restore(); return; }
+
+    // 2) Blokken en hun werkelijke hoogte (incl. marges) meten.
+    const blockEls = Array.from(blocksWrap.children);
+    if (!blockEls.length) { _restore(); return; }
+    const wrapTop = blocksWrap.getBoundingClientRect().top;
+    const tops = blockEls.map(el => el.getBoundingClientRect().top - wrapTop);
+    const totalH = blocksWrap.scrollHeight;
+    const items = blockEls.map((el, i) => {
+      const consumed = ((i + 1 < blockEls.length) ? tops[i + 1] : totalH) - tops[i];
+      return { el, consumed: Math.max(consumed, el.getBoundingClientRect().height), split: el.getAttribute('data-split') === 'table' };
+    });
+
+    // 3) Greedy inpakken in pagina's.
+    const pages = [];
+    let cur = [];
+    let run = 0;
+    const flush = () => { if (cur.length) { pages.push(cur); cur = []; run = 0; } };
+    for (const it of items) {
+      if (!it.split) {
+        if (run > 0 && (run + it.consumed) > budget) flush();
+        cur.push(it.el.outerHTML);
+        run += it.consumed;
+        continue;
+      }
+      // Splitsbare planningstabel: per rij verdelen, koprij per stuk herhalen.
+      const tbl = it.el.querySelector('table');
+      if (!tbl) { if (run > 0 && (run + it.consumed) > budget) flush(); cur.push(it.el.outerHTML); run += it.consumed; continue; }
+      const thead = tbl.querySelector('thead');
+      const theadH = thead ? thead.getBoundingClientRect().height : 0;
+      const theadHTML = thead ? thead.outerHTML : '';
+      const rowEls = Array.from(tbl.querySelectorAll('tbody > tr'));
+      const rowH = rowEls.map(r => r.getBoundingClientRect().height);
+      let idx = 0;
+      while (idx < rowEls.length) {
+        if (run > 0 && (run + theadH + rowH[idx]) > budget) flush();
+        let chunk = '';
+        let chunkH = theadH;
+        while (idx < rowEls.length && (run + chunkH + rowH[idx]) <= budget) {
+          chunk += rowEls[idx].outerHTML;
+          chunkH += rowH[idx];
+          idx++;
+        }
+        if (chunk === '' && idx < rowEls.length) { // borg tegen vastlopen
+          chunk += rowEls[idx].outerHTML;
+          chunkH += rowH[idx];
+          idx++;
+        }
+        cur.push(`<table class="ptable">${theadHTML}<tbody>${chunk}</tbody></table>`);
+        run += chunkH;
+        if (idx < rowEls.length) flush();
+      }
+    }
+    flush();
+
+    // 4) Pagina's renderen met masthead, content en voettekst (juiste x van y).
+    const total = pages.length || 1;
+    let html = '';
+    for (let p = 0; p < pages.length; p++) {
+      html += `<div class="page">${mastheadHTML}<div class="pg-content">${pages[p].join('')}</div>${footHtmlFor(p + 1, total)}</div>`;
+    }
+
+    // 5) Losse blokken vervangen door de opgemaakte pagina's; printArea herstellen.
+    blocksWrap.outerHTML = html;
+    _restore();
+  } catch (e) {
+    try {
+      const pa = document.getElementById('printArea');
+      if (pa) { pa.style.display = ''; pa.style.position = ''; pa.style.left = ''; pa.style.top = ''; pa.style.visibility = ''; pa.style.width = ''; }
+    } catch (_) {}
+  }
 }
 
 function _ohpPrintOfferte() {
@@ -8863,8 +8907,9 @@ function _ohpPrintOfferte() {
       document.fonts.load('600 16px "Libre Franklin"'),
       document.fonts.load('700 16px "Libre Franklin"'),
       document.fonts.load('900 16px "Libre Franklin"')
-    ]).then(() => window.print()).catch(() => window.print());
+    ]).then(() => { _ohpPaginate(); window.print(); }).catch(() => { _ohpPaginate(); window.print(); });
   } else {
+    _ohpPaginate();
     window.print();
   }
 }

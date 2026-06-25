@@ -1,3 +1,20 @@
+## v4.3.0 — Onderhoudsplan loopt netjes door over meer pagina's
+Bij langere plannen viel inhoud weg. Dat is opgelost.
+
+### Wat er verandert
+- De tekst van de onderhoudsbeurten in sectie 02 liep van pagina 1 af, waardoor de laatste beurten wegvielen en de voettekst eroverheen viel. Dat gebeurt niet meer.
+- Ook de planningstabel werd bij lange plannen afgekapt. Die loopt nu netjes door.
+- De brochure wordt opgebouwd uit losse blokken en automatisch verdeeld over zoveel pagina's als nodig.
+- Elke pagina krijgt het Ernes-logo bovenaan, de voettekst onderaan en het juiste "pagina x van y".
+
+### Onder de motorkap
+- De drie vaste pagina's zijn vervangen door een platte reeks blokken. _ohpPaginate() meet na het laden van de fonts de beschikbare hoogte per pagina en de hoogte van elk blok, en pakt ze in vaste A4-pagina's.
+- De planningstabel wordt zo nodig per rij gesplitst, met een herhaalde koprij op de volgende pagina.
+- De strakke opmaak blijft hetzelfde, alleen het aantal pagina's past zich aan het plan aan.
+- Werkt voor de VvE- en de particulier-variant. Geen SQL.
+
+---
+
 ## v4.2.2 — Hoeveelheden in de beurt-modal netjes afgerond
 Sommige hoeveelheden toonden een sliert decimalen. Dat is opgelost.
 
