@@ -1,3 +1,15 @@
+## v4.4.0 — Meetstaat-bijlage toont nu alle posten
+De bijlage liet alleen de gemeten posten zien. Dat is nu compleet.
+
+### Wat er verandert
+- De meetstaat-bijlage liep alleen door de meetregels uit de Meetstaat-tab. Posten waar je de hoeveelheid rechtstreeks in de verfsysteem-post hebt getypt vielen weg, dus je zag maar de helft.
+- De bijlage begint nu met een volledig overzicht "Hoeveelheden per post" van álle posten met een hoeveelheid: onderdeel, post, hoeveelheid en eenheid, met de vermelding of die gemeten is of rechtstreeks ingevuld.
+- Daaronder staat zoals voorheen het meetdetail met breedte, hoogte en aantal voor de posten die je via de Meetstaat-tab hebt opgebouwd.
+- Geen bedragen in de bijlage, puur de scope. Geschikt als bijlage voor een VvE naast de kozijntekening en de foto's.
+- De bijlage stopt nu pas met een lege melding als er helemaal geen posten met een hoeveelheid zijn, niet meer zodra er geen meetregels zijn. Geen SQL.
+
+---
+
 ## v4.3.0 — Onderhoudsplan loopt netjes door over meer pagina's
 Bij langere plannen viel inhoud weg. Dat is opgelost.
 

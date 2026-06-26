@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.3.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.4.0</h2>
       <div class="intro-body">
+        <p><strong>📐 Meetstaat-bijlage toont nu alle posten, ook de rechtstreeks ingevulde (v4.4.0).</strong> De meetstaat-bijlage liep alleen door de meetregels uit de Meetstaat-tab, dus posten waar je de hoeveelheid rechtstreeks in de verfsysteem-post hebt getypt vielen weg. Dat liet maar de helft zien. Nu begint de bijlage met een volledig overzicht "Hoeveelheden per post" van álle posten met een hoeveelheid: onderdeel, post, hoeveelheid en eenheid, met de vermelding of de hoeveelheid gemeten is of rechtstreeks ingevuld. Daaronder staat zoals voorheen het meetdetail met breedte, hoogte en aantal voor de posten die je wél via de Meetstaat-tab hebt opgebouwd. Geen bedragen, puur de scope, geschikt als bijlage voor een VvE naast de kozijntekening en de foto's. Geen SQL nodig.</p>
         <p><strong>📄 Onderhoudsplan loopt nu netjes door over meer pagina's (v4.3.0).</strong> Bij langere plannen liep de tekst van de onderhoudsbeurten in sectie 02 van de eerste pagina af en vielen de laatste beurten weg, en werd ook de planningstabel afgekapt, met de voettekst eroverheen. De brochure wordt nu opgebouwd uit losse blokken die automatisch over zoveel pagina's worden verdeeld als nodig. Elke pagina krijgt het Ernes-logo bovenaan, de voettekst onderaan en het juiste "pagina x van y". Een lange beurtbeschrijving of een lange planningstabel schuift voortaan vanzelf door naar de volgende pagina. De strakke opmaak blijft, alleen het aantal pagina's past zich aan het plan aan. Geen SQL nodig.</p>
         <p><strong>🔣 Hoeveelheden in de beurt-modal netjes afgerond (v4.2.2).</strong> In het venster Beurt bewerken van een onderhoudsplan toonden sommige hoeveelheden een sliert decimalen, zoals 3.3135000000000003 of 13.100000000000001. Dat zijn rekenrestjes van de computer. Ze staan nu afgerond op maximaal twee decimalen, met een komma, dus 3,31 en 13,1. Schone gehele getallen blijven schoon: 120 blijft 120, 710,4 blijft 710,4. Alleen de weergave in dat venster, aan de cijfers zelf verandert niets. Geen SQL nodig.</p>
         <p><strong>🔢 Materiaalkosten per eenheid op de bewerkingsregel (v4.2.1).</strong> Op een bewerkingsregel stonden de minuten en de arbeidskosten per eenheid, maar het materiaal alleen als totaal. Daardoor leek het verkoopbedrag per eenheid niet te kloppen. Nu staat het materiaal ook per eenheid achter de arbeid, bijvoorbeeld "12,00 min (€ 15,00) · mat € 0,01/m²", en het totaal blijft gewoon na de pijl staan. Zo zie je in één oogopslag dat arbeid plus materiaal per eenheid het bedrag rechts oplevert. Alleen weergave, niets aan de rekenkern. Geen SQL nodig.</p>
@@ -3215,7 +3216,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.3.0';
+const APP_VERSION = 'v4.4.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3610,6 +3611,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.4.0', d: '2026-06-24', h: 'Meetstaat-bijlage (printMeetstaat) toont nu de volledige scope. Voorheen liep de bijlage alleen door c.meetstaat, waardoor calc-regels waarvan de hoeveelheid rechtstreeks in de verfsysteem-post is ingevuld (zonder meetregels) volledig uit de bijlage vielen. Nu begint de bijlage met een sectie Hoeveelheden per post die alle posten met hoeveelheid > 0 toont (onderdeel via hgNaam/odNaam, post, r.hoeveelheid plus r.systeemEenheid, en of de post gemeten is of rechtstreeks ingevuld). Het bestaande meetdetail met b/h/aantal/factor/totaal blijft eronder staan voor de posten die wél via de Meetstaat-tab zijn opgebouwd. De lege-staat treedt nu pas op als er helemaal geen posten met hoeveelheid zijn, niet meer zodra er geen meetregels zijn. Geen bedragen in de bijlage. Geen SQL' },
   { v: '4.3.0', d: '2026-06-24', h: 'Onderhoudsplan-brochure paginieert nu automatisch. _ohpBuildOfferteHTML levert de inhoud niet meer als drie vaste A4-pagina\'s met overflow:hidden, maar als een platte reeks .ob-block elementen (sectie 02 als label plus losse jaarblokken, de planningstabel als afzonderlijk data-split blok). Een nieuwe functie _ohpPaginate() draait na het injecteren en na het laden van de fonts: ze meet met een lege proefpagina de beschikbare contenthoogte tussen masthead en voettekst, meet per blok de werkelijke hoogte inclusief marges, en pakt de blokken greedy in vaste .page-divs. De planningstabel wordt zo nodig per rij gesplitst met een herhaalde koprij. Elke gegenereerde pagina krijgt masthead, voettekst en het juiste pagina x van y. printArea (op het scherm display:none) wordt tijdens het meten tijdelijk offscreen en visibility:hidden gezet en daarna hersteld. Hiermee vallen lange sectie 02-beschrijvingen en lange planningstabellen niet meer weg en overlapt de voettekst niet meer. Werkt voor de VvE- en de particulier-variant. Geen SQL' },
   { v: '4.2.2', d: '2026-06-24', h: 'Hoeveelheden in de beurt-modal (onderhoudsplan) afgerond op maximaal twee decimalen. De twee regel-weergaves in _ohpOpenBeurtModal toonden r.hoeveelheid rauw, waardoor floating-point-restjes zoals 3.3135000000000003 en 13.100000000000001 zichtbaar werden. Nu via Number(r.hoeveelheid).toLocaleString(nl-NL, maximumFractionDigits 2): komma-decimaal, ruis weg, en geen onnodige nullen zodat schone getallen schoon blijven (120 blijft 120, 710,4 blijft 710,4). Lege of nul-hoeveelheid blijft leeg, net als voorheen. De print-weergaves gebruikten al fmt en waren dus al schoon. Alleen weergave in dat venster, geen wijziging aan de data of de rekenkern. Geen SQL' },
   { v: '4.2.1', d: '2026-06-24', h: 'Materiaalkosten per eenheid op de bewerkingsregel in de calc-structuur. De regel toonde minuten en arbeidskosten per eenheid maar materiaal alleen als totaal (matTotaalStap), wat verwarrend was omdat het verkoopbedrag rechts per eenheid is. Achter de arbeidskosten staat nu ook het materiaal per eenheid (matKost, oftewel cs.matVerkoop) met de eenheid erbij, alleen als matKost groter dan 0, in dezelfde blauwe stijl. Het bestaande totaal na de pijl blijft staan. Zo is het verkoopbedrag per eenheid herleidbaar: arbeid per eenheid plus materiaal per eenheid. Alleen weergave, geen wijziging aan de rekenkern. Geen SQL' },
@@ -10408,6 +10410,21 @@ function printMeetstaat() {
 
   const meetstaat = c.meetstaat || [];
 
+  // Per calc-regel: aantal metingen en gemeten totaal (alleen voor regels mét meetdetail).
+  const byRegel = {};
+  meetstaat.forEach(ms => {
+    if (!ms.calcRegelId) return;
+    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0 };
+    const t = _meetstaatRijTotaal(ms);
+    byRegel[ms.calcRegelId].count++;
+    byRegel[ms.calcRegelId].totaal += t.totaal;
+  });
+
+  // v4.4.0 — Volledig overzicht: alle posten met een hoeveelheid, ongeacht of die
+  // via de meetstaat is opgebouwd of rechtstreeks in de verfsysteem-post is ingevuld.
+  const posten = allRegels.filter(x => (x.regel.hoeveelheid || 0) > 0);
+  const gemetenAantal = Object.keys(byRegel).length;
+
   let html = '';
 
   // Header
@@ -10416,7 +10433,7 @@ function printMeetstaat() {
       <div class="brand-logo print"></div>
       <div>
         <h1>Meetstaat</h1>
-        <div class="meta">Bijlage bij offerte · Detailmeting per calc-regel</div>
+        <div class="meta">Bijlage bij offerte · Hoeveelheden per post</div>
       </div>
     </div>
     <div style="text-align: right; font-size: 9pt;">
@@ -10430,26 +10447,60 @@ function printMeetstaat() {
     <div class="summary-grid">
       <div><span class="label">Klant: </span>${c.klant||'—'}</div>
       <div><span class="label">Opname-datum: </span>${c.opnameDatum ? new Date(c.opnameDatum + 'T00:00:00').toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' }) : '—'}</div>
-      <div><span class="label">Aantal meetregels: </span>${meetstaat.length}</div>
-      <div><span class="label">Aantal calc-regels in meting: </span>${Object.keys(meetstaat.reduce((a,m) => { if (m.calcRegelId) a[m.calcRegelId]=1; return a; }, {})).length}</div>
+      <div><span class="label">Aantal posten: </span>${posten.length}</div>
+      <div><span class="label">Waarvan met meetdetail: </span>${gemetenAantal}</div>
     </div>
   </div>`;
 
-  // Empty state
-  if (!meetstaat.length) {
+  // Lege staat: alleen als er helemaal geen posten met een hoeveelheid zijn.
+  if (!posten.length) {
     html += `<div class="section" style="text-align:center; padding: 2rem; color:#888;">
-      <em>Geen meetstaat-regels in deze calculatie. Voeg meetregels toe in de Meetstaat-tab.</em>
+      <em>Geen posten met een hoeveelheid in deze calculatie. Vul hoeveelheden in bij de verfsysteem-posten of voeg meetregels toe in de Meetstaat-tab.</em>
     </div>`;
-    html += `<div class="footer-block">Schilders Calculatie · ${APP_VERSION} · Geprint op ${datum}</div>`;
+    html += `<div class="footer-block">Meetstaat · ${c.naam || ''}${c.klant ? ' · ' + c.klant : ''} · ${APP_VERSION} · Geprint op ${datum}</div>`;
     document.getElementById('printArea').innerHTML = html;
     _setPrintTitle('meetstaat');
     window.print();
     return;
   }
 
-  // Meetstaat-tabel
+  // Volledig overzicht: hoeveelheden per post (alle posten, ook de rechtstreeks ingevulde).
   html += `<div class="section section-flow">
-    <h2>Meetregels</h2>
+    <h2>Hoeveelheden per post</h2>
+    <table style="width:100%; border-collapse:collapse; font-size:9pt; table-layout:fixed; line-height:1.2;">
+      <colgroup>
+        <col style="width:30%;"><col style="width:34%;"><col style="width:18%;"><col style="width:18%;">
+      </colgroup>
+      <thead>
+        <tr style="background:#f0ede4; border-bottom:1.5px solid #999;">
+          <th style="padding:0.15rem 0.3rem; text-align:left;">Onderdeel</th>
+          <th style="padding:0.15rem 0.3rem; text-align:left;">Post</th>
+          <th style="padding:0.15rem 0.3rem; text-align:right;">Hoeveelheid</th>
+          <th style="padding:0.15rem 0.3rem; text-align:left;">Meetdetail</th>
+        </tr>
+      </thead>
+      <tbody>`;
+  posten.forEach(x => {
+    const r = x.regel;
+    const onderdeel = `${x.hgNaam || ''}${x.odNaam ? ' · ' + x.odNaam : ''}`.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '—';
+    const post = (r.naam || r.systeemNaam || '—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const eenheid = r.systeemEenheid || '';
+    const gem = byRegel[r.id];
+    const herkomst = gem ? `${gem.count} meting${gem.count === 1 ? '' : 'en'}` : '<span style="color:#bbb;">rechtstreeks ingevuld</span>';
+    html += `<tr style="border-bottom:1px solid #e5e0d0;">
+      <td style="padding:0.15rem 0.3rem; overflow-wrap:anywhere;">${onderdeel}</td>
+      <td style="padding:0.15rem 0.3rem; overflow-wrap:anywhere;">${post}</td>
+      <td style="padding:0.15rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace; font-weight:600;">${fmt(r.hoeveelheid)} ${eenheid}</td>
+      <td style="padding:0.15rem 0.3rem; color:#666;">${herkomst}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>
+  </div>`;
+
+  // Meetdetail per post — alleen voor de posten die via de Meetstaat-tab zijn opgebouwd.
+  if (meetstaat.length) {
+    html += `<div class="section section-flow">
+    <h2>Meetdetail per post</h2>
     <table style="width:100%; border-collapse:collapse; font-size:9pt; table-layout:fixed; line-height:1.2;">
       <colgroup>
         <col style="width:4%;"><col style="width:23%;"><col style="width:16%;">
@@ -10470,68 +10521,32 @@ function printMeetstaat() {
         </tr>
       </thead>
       <tbody>`;
-  meetstaat.forEach((ms, idx) => {
-    const ctx = regelById[ms.calcRegelId];
-    const regelLabel = ctx ? _calcRegelLabel(ctx.regel, ctx) : '<em style="color:#aaa;">— regel ontbreekt —</em>';
-    const t = _meetstaatRijTotaal(ms);
-    const omschrijving = (ms.omschrijving || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '<span style="color:#bbb;">—</span>';
-    const opmerking = (ms.opmerking || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '<span style="color:#bbb;">—</span>';
-    const hCm = ms.hCm || 0;
-    const bCm = ms.bCm || 0;
-    const aantal = ms.aantal || 0;
-    const factor = ms.factor != null ? ms.factor : 1;
-    // Lege rijen (hCm=0 en bCm=0 en aantal=0) iets afzwakken, zodat klant ziet dat ze niet meetellen
-    const isLeeg = (hCm === 0 && bCm === 0 && aantal === 0);
-    const rowStyle = isLeeg ? 'opacity:0.4;' : '';
-    html += `<tr style="border-bottom:1px solid #e5e0d0; ${rowStyle}">
-      <td style="padding:0.12rem 0.3rem; color:#888; font-family:'JetBrains Mono', monospace;">${idx+1}</td>
-      <td style="padding:0.12rem 0.3rem; overflow-wrap:anywhere;">${regelLabel}</td>
-      <td style="padding:0.12rem 0.3rem; overflow-wrap:anywhere;">${omschrijving}</td>
-      <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${bCm > 0 ? bCm : '<span style="color:#bbb;">—</span>'}</td>
-      <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${hCm > 0 ? hCm : '<span style="color:#bbb;">—</span>'}</td>
-      <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${aantal > 0 ? aantal : '<span style="color:#bbb;">—</span>'}</td>
-      <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${factor !== 1 ? factor.toLocaleString('nl-NL') : '<span style="color:#bbb;">1</span>'}</td>
-      <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace; font-weight:600;">${t.totaal > 0 ? fmt(t.totaal) + ' ' + t.eenheid : '<span style="color:#bbb;">—</span>'}</td>
-      <td style="padding:0.12rem 0.3rem; font-style:italic; color:#666; overflow-wrap:anywhere;">${opmerking}</td>
-    </tr>`;
-  });
-  html += `</tbody></table>
-  </div>`;
-
-  // Samenvatting per calc-regel
-  const byRegel = {};
-  meetstaat.forEach(ms => {
-    if (!ms.calcRegelId) return;
-    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0 };
-    const t = _meetstaatRijTotaal(ms);
-    byRegel[ms.calcRegelId].count++;
-    byRegel[ms.calcRegelId].totaal += t.totaal;
-  });
-  if (Object.keys(byRegel).length > 0) {
-    html += `<div class="section section-flow">
-      <h2>Samenvatting per calc-regel</h2>
-      <table style="width:100%; border-collapse:collapse; font-size:9pt; line-height:1.2;">
-        <thead>
-          <tr style="background:#f0ede4; border-bottom:1.5px solid #999;">
-            <th style="padding:0.15rem 0.3rem; text-align:left;">Calc-regel</th>
-            <th style="padding:0.15rem 0.3rem; text-align:right; width:120px;">Aantal metingen</th>
-            <th style="padding:0.15rem 0.3rem; text-align:right; width:120px;">Totaal</th>
-          </tr>
-        </thead>
-        <tbody>`;
-    Object.keys(byRegel).forEach(rid => {
-      const ctx = regelById[rid];
-      if (!ctx) return;
-      const r = ctx.regel;
-      const eenheid = r.systeemEenheid || '';
-      html += `<tr style="border-bottom:1px solid #e5e0d0;">
-        <td style="padding:0.15rem 0.3rem;">${_calcRegelLabel(r, ctx)}</td>
-        <td style="padding:0.15rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${byRegel[rid].count}</td>
-        <td style="padding:0.15rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace; font-weight:600;">${fmt(byRegel[rid].totaal)} ${eenheid}</td>
+    meetstaat.forEach((ms, idx) => {
+      const ctx = regelById[ms.calcRegelId];
+      const regelLabel = ctx ? _calcRegelLabel(ctx.regel, ctx) : '<em style="color:#aaa;">— regel ontbreekt —</em>';
+      const t = _meetstaatRijTotaal(ms);
+      const omschrijving = (ms.omschrijving || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '<span style="color:#bbb;">—</span>';
+      const opmerking = (ms.opmerking || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '<span style="color:#bbb;">—</span>';
+      const hCm = ms.hCm || 0;
+      const bCm = ms.bCm || 0;
+      const aantal = ms.aantal || 0;
+      const factor = ms.factor != null ? ms.factor : 1;
+      const isLeeg = (hCm === 0 && bCm === 0 && aantal === 0);
+      const rowStyle = isLeeg ? 'opacity:0.4;' : '';
+      html += `<tr style="border-bottom:1px solid #e5e0d0; ${rowStyle}">
+        <td style="padding:0.12rem 0.3rem; color:#888; font-family:'JetBrains Mono', monospace;">${idx+1}</td>
+        <td style="padding:0.12rem 0.3rem; overflow-wrap:anywhere;">${regelLabel}</td>
+        <td style="padding:0.12rem 0.3rem; overflow-wrap:anywhere;">${omschrijving}</td>
+        <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${bCm > 0 ? bCm : '<span style="color:#bbb;">—</span>'}</td>
+        <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${hCm > 0 ? hCm : '<span style="color:#bbb;">—</span>'}</td>
+        <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${aantal > 0 ? aantal : '<span style="color:#bbb;">—</span>'}</td>
+        <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${factor !== 1 ? factor.toLocaleString('nl-NL') : '<span style="color:#bbb;">1</span>'}</td>
+        <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace; font-weight:600;">${t.totaal > 0 ? fmt(t.totaal) + ' ' + t.eenheid : '<span style="color:#bbb;">—</span>'}</td>
+        <td style="padding:0.12rem 0.3rem; font-style:italic; color:#666; overflow-wrap:anywhere;">${opmerking}</td>
       </tr>`;
     });
     html += `</tbody></table>
-    </div>`;
+  </div>`;
   }
 
   // Footer
