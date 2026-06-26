@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.4.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.5.0</h2>
       <div class="intro-body">
+        <p><strong>🪟 Aantal per kozijn op de kozijntekening-print (v4.5.0).</strong> Op de kozijntekeningen stond wel de vorm, de maten en de m¹ en m² per stuk, maar niet hoeveel van elk kozijn er zijn. Nu staat op elke kozijnkaart "Aantal: 3 stuks", uit het aantal-veld van de meetstaat-regel. Heeft een kozijn er meer dan één, dan staat er duidelijk bij dat de afmetingen en hoeveelheden per stuk zijn. De kop telt nu ook kloppend: in plaats van alleen het aantal tekeningen toont hij "5 tekeningen · 12 kozijnen", waarbij dat tweede getal de som van alle aantallen is. Dit werkt door in de losse print, de doorlopende weergave, het archief en de gecombineerde Offerte plus bijlagen-PDF. Geen SQL nodig.</p>
         <p><strong>📐 Meetstaat-bijlage toont nu alle posten, ook de rechtstreeks ingevulde (v4.4.0).</strong> De meetstaat-bijlage liep alleen door de meetregels uit de Meetstaat-tab, dus posten waar je de hoeveelheid rechtstreeks in de verfsysteem-post hebt getypt vielen weg. Dat liet maar de helft zien. Nu begint de bijlage met een volledig overzicht "Hoeveelheden per post" van álle posten met een hoeveelheid: onderdeel, post, hoeveelheid en eenheid, met de vermelding of de hoeveelheid gemeten is of rechtstreeks ingevuld. Daaronder staat zoals voorheen het meetdetail met breedte, hoogte en aantal voor de posten die je wél via de Meetstaat-tab hebt opgebouwd. Geen bedragen, puur de scope, geschikt als bijlage voor een VvE naast de kozijntekening en de foto's. Geen SQL nodig.</p>
         <p><strong>📄 Onderhoudsplan loopt nu netjes door over meer pagina's (v4.3.0).</strong> Bij langere plannen liep de tekst van de onderhoudsbeurten in sectie 02 van de eerste pagina af en vielen de laatste beurten weg, en werd ook de planningstabel afgekapt, met de voettekst eroverheen. De brochure wordt nu opgebouwd uit losse blokken die automatisch over zoveel pagina's worden verdeeld als nodig. Elke pagina krijgt het Ernes-logo bovenaan, de voettekst onderaan en het juiste "pagina x van y". Een lange beurtbeschrijving of een lange planningstabel schuift voortaan vanzelf door naar de volgende pagina. De strakke opmaak blijft, alleen het aantal pagina's past zich aan het plan aan. Geen SQL nodig.</p>
         <p><strong>🔣 Hoeveelheden in de beurt-modal netjes afgerond (v4.2.2).</strong> In het venster Beurt bewerken van een onderhoudsplan toonden sommige hoeveelheden een sliert decimalen, zoals 3.3135000000000003 of 13.100000000000001. Dat zijn rekenrestjes van de computer. Ze staan nu afgerond op maximaal twee decimalen, met een komma, dus 3,31 en 13,1. Schone gehele getallen blijven schoon: 120 blijft 120, 710,4 blijft 710,4. Alleen de weergave in dat venster, aan de cijfers zelf verandert niets. Geen SQL nodig.</p>
@@ -3216,7 +3217,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.4.0';
+const APP_VERSION = 'v4.5.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3611,6 +3612,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.5.0', d: '2026-06-24', h: 'Aantal per kozijn op de kozijntekening-print. Elke kozijnkaart toont nu "Aantal: N stuks" uit ms.aantal (het aantal-veld van de meetstaat-regel), met bij meer dan één stuk de notitie dat de afmetingen en hoeveelheden per stuk zijn (m¹/m² blijven per stuk, geen totalen op de kaart). De kop telt nu kloppend: aantal tekeningen plus de som van de aantallen als werkelijke kozijnen ("5 tekeningen · 12 kozijnen"), of gewoon "N kozijnen" als die gelijk zijn. Doorgevoerd in beide renderers: de HTML-bouwer _bouwKozijnenHtml (losse print, doorlopende weergave, archief) en de pdfmake-bouwer in _bouwOfferteCompleetDocDef (gecombineerde Offerte plus bijlagen-PDF). Geen SQL' },
   { v: '4.4.0', d: '2026-06-24', h: 'Meetstaat-bijlage (printMeetstaat) toont nu de volledige scope. Voorheen liep de bijlage alleen door c.meetstaat, waardoor calc-regels waarvan de hoeveelheid rechtstreeks in de verfsysteem-post is ingevuld (zonder meetregels) volledig uit de bijlage vielen. Nu begint de bijlage met een sectie Hoeveelheden per post die alle posten met hoeveelheid > 0 toont (onderdeel via hgNaam/odNaam, post, r.hoeveelheid plus r.systeemEenheid, en of de post gemeten is of rechtstreeks ingevuld). Het bestaande meetdetail met b/h/aantal/factor/totaal blijft eronder staan voor de posten die wél via de Meetstaat-tab zijn opgebouwd. De lege-staat treedt nu pas op als er helemaal geen posten met hoeveelheid zijn, niet meer zodra er geen meetregels zijn. Geen bedragen in de bijlage. Geen SQL' },
   { v: '4.3.0', d: '2026-06-24', h: 'Onderhoudsplan-brochure paginieert nu automatisch. _ohpBuildOfferteHTML levert de inhoud niet meer als drie vaste A4-pagina\'s met overflow:hidden, maar als een platte reeks .ob-block elementen (sectie 02 als label plus losse jaarblokken, de planningstabel als afzonderlijk data-split blok). Een nieuwe functie _ohpPaginate() draait na het injecteren en na het laden van de fonts: ze meet met een lege proefpagina de beschikbare contenthoogte tussen masthead en voettekst, meet per blok de werkelijke hoogte inclusief marges, en pakt de blokken greedy in vaste .page-divs. De planningstabel wordt zo nodig per rij gesplitst met een herhaalde koprij. Elke gegenereerde pagina krijgt masthead, voettekst en het juiste pagina x van y. printArea (op het scherm display:none) wordt tijdens het meten tijdelijk offscreen en visibility:hidden gezet en daarna hersteld. Hiermee vallen lange sectie 02-beschrijvingen en lange planningstabellen niet meer weg en overlapt de voettekst niet meer. Werkt voor de VvE- en de particulier-variant. Geen SQL' },
   { v: '4.2.2', d: '2026-06-24', h: 'Hoeveelheden in de beurt-modal (onderhoudsplan) afgerond op maximaal twee decimalen. De twee regel-weergaves in _ohpOpenBeurtModal toonden r.hoeveelheid rauw, waardoor floating-point-restjes zoals 3.3135000000000003 en 13.100000000000001 zichtbaar werden. Nu via Number(r.hoeveelheid).toLocaleString(nl-NL, maximumFractionDigits 2): komma-decimaal, ruis weg, en geen onnodige nullen zodat schone getallen schoon blijven (120 blijft 120, 710,4 blijft 710,4). Lege of nul-hoeveelheid blijft leeg, net als voorheen. De print-weergaves gebruikten al fmt en waren dus al schoon. Alleen weergave in dat venster, geen wijziging aan de data of de rekenkern. Geen SQL' },
@@ -9956,6 +9958,12 @@ function _bouwKozijnenHtml(c, kozijnen) {
     });
   });
 
+  // v4.5.0 — kloppende kop: aantal tekeningen plus de som van de aantallen (werkelijke kozijnen).
+  const totaalStuks = kozijnen.reduce((s, k) => s + Math.max(0, +k.aantal || 0), 0);
+  const kopTelling = (totaalStuks && totaalStuks !== kozijnen.length)
+    ? `${kozijnen.length} tekening${kozijnen.length === 1 ? '' : 'en'} &middot; ${totaalStuks} kozijn${totaalStuks === 1 ? '' : 'en'}`
+    : `${kozijnen.length} kozijn${kozijnen.length === 1 ? '' : 'en'}`;
+
   let html = `<div class="header-block">
     <div style="display:flex; align-items:center; gap:0.75rem;">
       <div class="brand-logo print"></div>
@@ -9966,7 +9974,7 @@ function _bouwKozijnenHtml(c, kozijnen) {
     </div>
     <div style="text-align:right; font-size:9pt;">
       <div><strong>${datum}</strong></div>
-      <div>${kozijnen.length} kozijn${kozijnen.length === 1 ? '' : 'en'}</div>
+      <div>${kopTelling}</div>
     </div>
   </div>`;
 
@@ -9974,6 +9982,7 @@ function _bouwKozijnenHtml(c, kozijnen) {
     const tek = ms.tekening;
     const naam = _escapeHtml(ms.omschrijving || tek.naam || 'Kozijn');
     const locatie = _regelLocatie[ms.calcRegelId] || '';
+    const aantal = Math.max(0, +ms.aantal || 0);
     const vormLabel = (_KOZIJN_VORMEN[tek.vorm] || {}).label || tek.vorm;
     const velden = (_KOZIJN_VORMEN[tek.vorm] || {}).velden || [];
     const matenStr = velden.map(([k, lbl]) => {
@@ -10024,10 +10033,12 @@ function _bouwKozijnenHtml(c, kozijnen) {
       <div class="kz-info">
         <h3>${naam}</h3>
         ${locatie ? `<div class="kz-locatie">${_escapeHtml(locatie)}</div>` : ''}
+        ${aantal >= 1 ? `<div class="kz-aantal" style="font-weight:600; margin:1pt 0 2pt;">Aantal: ${aantal} ${aantal === 1 ? 'stuk' : 'stuks'}</div>` : ''}
         <div class="kz-meta">
           <div>${metaParts.join(' &middot; ')}</div>
           ${m1Regel ? `<div><strong>${m1Regel}</strong>${loosNote}</div>` : ''}
           ${m2Html}
+          ${aantal > 1 ? `<div style="font-weight:400; color:#666; font-size:8pt; margin-top:1pt;">Afmetingen en hoeveelheden per stuk</div>` : ''}
         </div>
         ${gebrekenHtml}
       </div>
@@ -11638,6 +11649,7 @@ async function _bouwOfferteCompleetDocDef() {
       const svg = _kozijnThumbSvg(tek, 0, { genummerd: true, fill: true });
       const naam = ms.omschrijving || tek.naam || 'Kozijn';
       const locatie = _regelLocatie[ms.calcRegelId] || '';
+      const aantal = Math.max(0, +ms.aantal || 0);
       const vormLabel = (_KOZIJN_VORMEN[tek.vorm] || {}).label || tek.vorm;
       const velden = (_KOZIJN_VORMEN[tek.vorm] || {}).velden || [];
       const matenStr = velden.map(([k, lbl]) => { const v = (tek.maten && tek.maten[k] != null) ? tek.maten[k] : null; return v != null ? lbl.replace(' (cm)', '') + ': ' + (+v) + ' cm' : null; }).filter(Boolean).join(' \u00b7 ');
@@ -11655,11 +11667,13 @@ async function _bouwOfferteCompleetDocDef() {
       const perRegelVlakken = Array.isArray(tek.vlakkenM2PerRegel) ? tek.vlakkenM2PerRegel.filter(v => v && +v.m2 > 0.0001) : [];
       const info = [{ text: naam, bold: true, fontSize: 11 }];
       if (locatie) info.push({ text: locatie, color: MUTED, fontSize: 9, margin: [0, 0, 0, 3] });
+      if (aantal >= 1) info.push({ text: 'Aantal: ' + aantal + ' ' + (aantal === 1 ? 'stuk' : 'stuks'), bold: true, margin: [0, 0, 0, 2] });
       const metaParts = ['Vorm: ' + vormLabel]; if (matenStr) metaParts.push(matenStr);
       info.push({ text: metaParts.join(' \u00b7 '), fontSize: 9.5 });
       if (m1Regel) info.push({ text: m1Regel + loosNote, bold: true, margin: [0, 2, 0, 0] });
       if (perRegelVlakken.length) perRegelVlakken.forEach(v => info.push({ text: (v.label || 'Vulling') + ': ' + fmNl(v.m2) + ' m\u00b2', bold: true }));
       else if (tek.vlakkenM2 != null && tek.vlakkenM2 > 0) info.push({ text: fmNl(tek.vlakkenM2) + ' m\u00b2', bold: true });
+      if (aantal > 1) info.push({ text: 'Afmetingen en hoeveelheden per stuk', color: MUTED, fontSize: 8, margin: [0, 1, 0, 0] });
       const markeringen = Array.isArray(tek.markeringen) ? tek.markeringen : [];
       if (markeringen.length) {
         info.push({ text: 'Gebreken (' + markeringen.length + ')', bold: true, fontSize: 9, margin: [0, 4, 0, 1] });

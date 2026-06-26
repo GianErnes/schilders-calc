@@ -1,3 +1,14 @@
+## v4.5.0 — Aantal per kozijn op de kozijntekening
+De tekening liet niet zien hoeveel van elk kozijn er zijn. Dat staat er nu bij.
+
+### Wat er verandert
+- Op elke kozijnkaart staat nu "Aantal: 3 stuks", uit het aantal-veld van de meetstaat-regel.
+- Heeft een kozijn er meer dan één, dan staat er duidelijk bij dat de afmetingen en de m¹ en m² per stuk zijn.
+- De kop telt nu kloppend: in plaats van alleen het aantal tekeningen toont hij "5 tekeningen · 12 kozijnen", waarbij dat tweede getal de som van alle aantallen is. Zijn ze gelijk, dan staat er gewoon "N kozijnen".
+- Dit werkt door in de losse kozijntekening-print, de doorlopende weergave, het archief en de gecombineerde Offerte plus bijlagen-PDF. Geen SQL.
+
+---
+
 ## v4.4.0 — Meetstaat-bijlage toont nu alle posten
 De bijlage liet alleen de gemeten posten zien. Dat is nu compleet.
 
