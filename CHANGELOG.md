@@ -1,3 +1,15 @@
+## v4.7.1 — (incl. btw) in de kolomkoppen van het liquiditeitsoverzicht
+Extra duidelijkheid op de VvE-bijlage, om discussie achteraf te voorkomen.
+
+### Wat er verandert
+- De sectie Reservering en liquiditeit vermeldt al bovenaan dat de bedragen inclusief btw zijn. Nu staat er ook onder elke bedragkolom (Uitgave, Reservering, Cum. gereserveerd, Cum. uitgegeven, Saldo-opbouw) een klein, rustig "(incl. btw)".
+- Alleen opmaak, verder verandert er niets. Geen SQL nodig.
+
+### Onder de motorkap
+- De koprij van de .liq-table krijgt per bedragkolom een span.ex met "(incl. btw)". Nieuwe scoped CSS .ob table.liq-table th .ex: display block, niet-uppercase, muted, 6pt.
+
+---
+
 ## v4.7.0 — Reservering en liquiditeit op de VvE-bijlage (blok B)
 De VvE-bijlage laat nu zien of de reserve van de vereniging de pieken in het plan dekt.
 

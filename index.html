@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.1</h2>
       <div class="intro-body">
+        <p><strong>🧾 (incl. btw) in de kolomkoppen van het liquiditeitsoverzicht (v4.7.1).</strong> De sectie Reservering en liquiditeit vermeldt al bovenaan dat de bedragen inclusief btw zijn. Voor extra duidelijkheid en om elke discussie achteraf te voorkomen staat nu ook onder elke bedragkolom een klein, rustig "(incl. btw)". Alleen opmaak. Geen SQL nodig.</p>
         <p><strong>💧 Reservering en liquiditeit op de VvE-bijlage (v4.7.0).</strong> De VvE-bijlage krijgt een nieuwe sectie "Reservering en liquiditeit". Een eenvoudig beeld toont de pot die de vereniging opbouwt als ze jaarlijks de geadviseerde reservering opzij zet, tegenover wat er volgens de planning uitgaat. Waar de uitgaven even boven de opbouw uitkomen, wordt het gat gemarkeerd. Daaronder een tabel met per jaar de uitgave, de reservering, het cumulatief gereserveerde en uitgegeven en het saldo-opbouw, met de negatieve saldoregels in rood. Als sluitstuk één zin met het laagste punt: hoeveel de reserve op dat moment minstens moet bedragen om de uitgaven te dekken. Zo ziet de penningmeester in één blik of de kas de pieken dekt, zonder dat wij iets over hun reserve beweren. Alles rekent uit je bestaande beurten, inclusief btw, alleen bij VvE. Geen SQL nodig.</p>
         <p><strong>🔴 100%-zegel op de garantieregel netjes passend (v4.6.2).</strong> Op de VvE-bijlage liep de tekst "100%" in het rode zegel over de rand van het bolletje. De tekst staat nu kleiner en het bolletje is iets ruimer, zodat "100%" netjes binnen de cirkel valt. Alleen opmaak, verder verandert er niets. Geen SQL nodig.</p>
         <p><strong>📄 Externe posten op de VvE-bijlage plus de garantieregel voorin (v4.6.1).</strong> De externe posten die je in v4.6.0 invoert verschijnen nu ook op de VvE-offerte-bijlage, in een eigen sectie "Wat u zelf regelt en wanneer". Een post die de garantie raakt krijgt een oranje markering "Voorwaarde voor garantie", een toekomstpost de rustige markering "Voor uw MJOP", met het jaar en, als je het hebt ingevuld, een indicatief richtbedrag. Bovenaan de bijlage staat nieuw de garantieregel voorin: een opvallend 100%-blok dat de garantie koppelt aan tijdige uitvoering en het op tijd regelen van de externe posten, met de btw-clausule erin verwerkt. Alles alleen bij het ontvangertype VvE, de particulier-bijlage blijft ongewijzigd. Geen SQL nodig.</p>
@@ -3228,7 +3229,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.7.0';
+const APP_VERSION = 'v4.7.1';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3623,6 +3624,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.7.1', d: '2026-06-27', h: 'Duidelijkheidsfix in blok B: onder elke bedragkolom van de .liq-table (Uitgave, Reservering, Cum. gereserveerd, Cum. uitgegeven, Saldo-opbouw) staat nu een klein "(incl. btw)" via een span.ex, naast de bestaande zin bovenaan. Nieuwe scoped CSS .ob table.liq-table th .ex (display:block, niet-uppercase, muted, 6pt). Alleen opmaak. Geen SQL.' },
   { v: '4.7.0', d: '2026-06-27', h: 'Blok B: sectie "Reservering en liquiditeit" op de VvE-offerte-bijlage. In _ohpBuildOfferteHTML, alleen isVve, wordt uit perJaar (incl btw) en gemPerJaar een liquiditeitsoverzicht gebouwd: per jaar uitgave, reservering, cumulatief gereserveerd (R maal n), cumulatief uitgegeven en het saldo (cr min cu); het laagste saldo is de benodigde reserve op dat moment. Een inline SVG toont twee polylijnen op euro-schaal, cumulatief gereserveerd (brush) tegenover cumulatief uitgegeven (ink), met gridlijnen en jaarlabels, en bij een negatief laagste punt een gemarkeerd gat met de tekst "uit reserve". Daaronder een .liq-table met de saldo-kolom (negatief in brush-deep via eurSaldo met echte minus) en een callout-conclusie met het laagste punt. SVG-kleuren als vaste hex omdat var() niet werkt in SVG-presentatieattributen bij print. Het blok wordt na de jaartabel en mjopNote met een eigen nextSec() gepusht. Nieuwe scoped CSS (.liq-svg, .liq-legend, .liq-table). Particulier ongewijzigd. Geen SQL.' },
   { v: '4.6.2', d: '2026-06-27', h: 'Opmaakfix: de "100%"-tekst in het zegel van de garantieregel-voorin liep over de rand van de cirkel. .ob .garblok .seal van 40px naar 44px, font-size van 12.5pt naar 9.5pt, font-weight 900 naar 800, letter-spacing -0.3px en white-space:nowrap toegevoegd, zodat 100% binnen het bolletje valt. Alleen CSS. Geen SQL.' },
   { v: '4.6.1', d: '2026-06-27', h: 'Externe posten op de VvE-offerte-bijlage (brok 2) plus de garantieregel voorin. In _ohpBuildOfferteHTML, alleen bij isVve: een nieuwe sectie "Wat u zelf regelt en wanneer" gevoed door plan.externPosten, geplaatst na "Wat valt onder dit plan" met een eigen nextSec()-nummer. Per post een kaart .epost met variant cond (raaktGarantie, oranje linkerrand en tag "Voorwaarde voor garantie") of future (grijze tag "Voor uw MJOP"), de omschrijving als titel, de toelichting, en een emeta-regel met Wanneer (jaartal, brush bij cond) en Richtbedrag (alleen als richtbedrag > 0, als "€ N indicatief" via toLocaleString nl-NL). Daarboven een niet-genummerd .garblok-blok met 100%-zegel dat de garantie koppelt aan tijdige uitvoering en, als er posten zijn, aan het op tijd regelen daarvan, met de btw-clausule. Nieuwe scoped CSS (.garblok, .epost en varianten). Particulier-variant ongewijzigd. Geen SQL.' },
@@ -8769,7 +8771,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
       const neg = r.saldo < 0 ? ' style="color:#c93914;font-weight:700;"' : '';
       trows += `<tr><td>${r.jaar}</td><td class="amt">${r.uit ? eur(r.uit) : '\u2013'}</td><td class="amt">${eur(r.res)}</td><td class="amt">${eur(r.cr)}</td><td class="amt">${eur(r.cu)}</td><td class="amt"${neg}>${eurSaldo(r.saldo)}</td></tr>`;
     });
-    const lqTable = `<table class="ptable liq-table"><tr><th>Jaar</th><th class="amt">Uitgave</th><th class="amt">Reservering</th><th class="amt">Cum. gereserveerd</th><th class="amt">Cum. uitgegeven</th><th class="amt">Saldo-opbouw</th></tr>${trows}</table>`;
+    const lqTable = `<table class="ptable liq-table"><tr><th>Jaar</th><th class="amt">Uitgave<span class="ex">(incl. btw)</span></th><th class="amt">Reservering<span class="ex">(incl. btw)</span></th><th class="amt">Cum. gereserveerd<span class="ex">(incl. btw)</span></th><th class="amt">Cum. uitgegeven<span class="ex">(incl. btw)</span></th><th class="amt">Saldo-opbouw<span class="ex">(incl. btw)</span></th></tr>${trows}</table>`;
     const concl = (laagste.saldo < 0)
       ? `<div class="callout" style="margin-top:12px;"><b>Wat dit voor uw reserve betekent:</b> op het laagste punt, in ${laagste.jaar}, moet uw reserve minstens ${eur(Math.abs(laagste.saldo))} bedragen om de uitgaven te dekken. Daarna bouwt de pot weer op en is het plan aan het eind van de looptijd gedekt.</div>`
       : `<div class="callout" style="margin-top:12px;"><b>Wat dit voor uw reserve betekent:</b> met de geadviseerde jaarreservering blijft de opgebouwde pot het hele plan boven de uitgaven, dus de reservering dekt de pieken.</div>`;
@@ -8869,6 +8871,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .liq-legend i.ln.ink{border-color:var(--ink);}
 .ob table.liq-table{font-size:9pt;}
 .ob table.liq-table th,.ob table.liq-table td{padding:3.5px 8px;}
+.ob table.liq-table th .ex{display:block;font-weight:400;text-transform:none;letter-spacing:0;font-size:6pt;color:var(--muted);margin-top:1px;}
 .ob .defs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px;}
 .ob .def{background:#fff;border:1px solid var(--line);border-radius:4px;padding:14px 16px;box-shadow:var(--shadow);}
 .ob .def .dh{font-size:11.5pt;font-weight:700;margin-bottom:5px;}
