@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.6.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.0</h2>
       <div class="intro-body">
+        <p><strong>💧 Reservering en liquiditeit op de VvE-bijlage (v4.7.0).</strong> De VvE-bijlage krijgt een nieuwe sectie "Reservering en liquiditeit". Een eenvoudig beeld toont de pot die de vereniging opbouwt als ze jaarlijks de geadviseerde reservering opzij zet, tegenover wat er volgens de planning uitgaat. Waar de uitgaven even boven de opbouw uitkomen, wordt het gat gemarkeerd. Daaronder een tabel met per jaar de uitgave, de reservering, het cumulatief gereserveerde en uitgegeven en het saldo-opbouw, met de negatieve saldoregels in rood. Als sluitstuk één zin met het laagste punt: hoeveel de reserve op dat moment minstens moet bedragen om de uitgaven te dekken. Zo ziet de penningmeester in één blik of de kas de pieken dekt, zonder dat wij iets over hun reserve beweren. Alles rekent uit je bestaande beurten, inclusief btw, alleen bij VvE. Geen SQL nodig.</p>
         <p><strong>🔴 100%-zegel op de garantieregel netjes passend (v4.6.2).</strong> Op de VvE-bijlage liep de tekst "100%" in het rode zegel over de rand van het bolletje. De tekst staat nu kleiner en het bolletje is iets ruimer, zodat "100%" netjes binnen de cirkel valt. Alleen opmaak, verder verandert er niets. Geen SQL nodig.</p>
         <p><strong>📄 Externe posten op de VvE-bijlage plus de garantieregel voorin (v4.6.1).</strong> De externe posten die je in v4.6.0 invoert verschijnen nu ook op de VvE-offerte-bijlage, in een eigen sectie "Wat u zelf regelt en wanneer". Een post die de garantie raakt krijgt een oranje markering "Voorwaarde voor garantie", een toekomstpost de rustige markering "Voor uw MJOP", met het jaar en, als je het hebt ingevuld, een indicatief richtbedrag. Bovenaan de bijlage staat nieuw de garantieregel voorin: een opvallend 100%-blok dat de garantie koppelt aan tijdige uitvoering en het op tijd regelen van de externe posten, met de btw-clausule erin verwerkt. Alles alleen bij het ontvangertype VvE, de particulier-bijlage blijft ongewijzigd. Geen SQL nodig.</p>
         <p><strong>🏗️ Externe posten in het VvE-onderhoudsplan (v4.6.0).</strong> Eerste stap naar de regisseur-bijlage. Je kunt nu per onderhoudsplan vastleggen wat de VvE zelf moet laten regelen buiten dit plan, zoals het herstel van dilatatievoegen of een nieuwe toplaag op de balkonvloeren. Onderaan het plan staat het blok Externe posten waar je per post de omschrijving, een toelichting, het jaar en een optioneel richtbedrag invult, plus het Type post: Voorwaarde voor garantie of Voor uw MJOP. Die keuze stuurt straks de markering op de bijlage. In deze stap alleen de invoer en de opslag. De sectie op de offerte-bijlage zelf met de garantieregel voorin volgt in v4.6.1. Vereiste eenmalig een Supabase-migratie (nieuwe tabel onderhoudsplan_externe_posten), die al is uitgevoerd.</p>
@@ -3227,7 +3228,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.6.2';
+const APP_VERSION = 'v4.7.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3622,6 +3623,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.7.0', d: '2026-06-27', h: 'Blok B: sectie "Reservering en liquiditeit" op de VvE-offerte-bijlage. In _ohpBuildOfferteHTML, alleen isVve, wordt uit perJaar (incl btw) en gemPerJaar een liquiditeitsoverzicht gebouwd: per jaar uitgave, reservering, cumulatief gereserveerd (R maal n), cumulatief uitgegeven en het saldo (cr min cu); het laagste saldo is de benodigde reserve op dat moment. Een inline SVG toont twee polylijnen op euro-schaal, cumulatief gereserveerd (brush) tegenover cumulatief uitgegeven (ink), met gridlijnen en jaarlabels, en bij een negatief laagste punt een gemarkeerd gat met de tekst "uit reserve". Daaronder een .liq-table met de saldo-kolom (negatief in brush-deep via eurSaldo met echte minus) en een callout-conclusie met het laagste punt. SVG-kleuren als vaste hex omdat var() niet werkt in SVG-presentatieattributen bij print. Het blok wordt na de jaartabel en mjopNote met een eigen nextSec() gepusht. Nieuwe scoped CSS (.liq-svg, .liq-legend, .liq-table). Particulier ongewijzigd. Geen SQL.' },
   { v: '4.6.2', d: '2026-06-27', h: 'Opmaakfix: de "100%"-tekst in het zegel van de garantieregel-voorin liep over de rand van de cirkel. .ob .garblok .seal van 40px naar 44px, font-size van 12.5pt naar 9.5pt, font-weight 900 naar 800, letter-spacing -0.3px en white-space:nowrap toegevoegd, zodat 100% binnen het bolletje valt. Alleen CSS. Geen SQL.' },
   { v: '4.6.1', d: '2026-06-27', h: 'Externe posten op de VvE-offerte-bijlage (brok 2) plus de garantieregel voorin. In _ohpBuildOfferteHTML, alleen bij isVve: een nieuwe sectie "Wat u zelf regelt en wanneer" gevoed door plan.externPosten, geplaatst na "Wat valt onder dit plan" met een eigen nextSec()-nummer. Per post een kaart .epost met variant cond (raaktGarantie, oranje linkerrand en tag "Voorwaarde voor garantie") of future (grijze tag "Voor uw MJOP"), de omschrijving als titel, de toelichting, en een emeta-regel met Wanneer (jaartal, brush bij cond) en Richtbedrag (alleen als richtbedrag > 0, als "€ N indicatief" via toLocaleString nl-NL). Daarboven een niet-genummerd .garblok-blok met 100%-zegel dat de garantie koppelt aan tijdige uitvoering en, als er posten zijn, aan het op tijd regelen daarvan, met de btw-clausule. Nieuwe scoped CSS (.garblok, .epost en varianten). Particulier-variant ongewijzigd. Geen SQL.' },
   { v: '4.6.0', d: '2026-06-26', h: 'Externe posten per onderhoudsplan (brok 1: datalaag en invoer). Nieuwe tabel onderhoudsplan_externe_posten (plan_id naar onderhoudsplannen met cascade, user_id default auth.uid(), omschrijving, toelichting, jaartal nullable, richtbedrag nullable zodat leeg echt leeg is, raakt_garantie boolean, volgorde) met RLS per gebruiker. Mapping _mapExternFromDB/_mapExternToDB; CRUD _addExtern/_updateExtern/_deleteExtern; fetch meegenomen in _fetchOhpByCalc als plan.externPosten en bewaard via de spread in _saveOhpParams. Invoerblok ohpExternSectie onder de beurten in ohpPlanBlok, gerenderd door _ohpRenderExternLijst (omschrijving, Type post-dropdown die raaktGarantie schrijft, jaar, richtbedrag, toelichting) met handlers _ohpAddExtern/_ohpUpdExternVeld/_ohpDeleteExtern; geen herrender bij veldwijziging zodat de focus blijft staan. _ohpRenderInhoud rendert de lijst mee. De bijlage-sectie en de garantieregel voorin volgen in 4.6.1. Eenmalige SQL al uitgevoerd.' },
@@ -8724,6 +8726,56 @@ function _ohpBuildOfferteHTML(plan, calc) {
     ? `<div class="garblok"><div class="seal">100%</div><div class="gtxt"><b>Volledige garantie, de hele looptijd</b><p>Onze 100% garantie geldt de hele looptijd van het plan, mits het onderhoud volgens planning wordt uitgevoerd${_garExtraClause}. Zo nemen wij het onderhoudsrisico van u over en weet u vooraf waar u aan toe bent. Alleen wettelijke btw-wijzigingen kunnen nog worden doorberekend.</p></div></div>`
     : '';
 
+  // v4.7.0 — Blok B: reservering en liquiditeit. Alleen VvE. Cumulatief gereserveerd
+  // tegenover cumulatief uitgegeven, met het laagste saldo als benodigde reserve.
+  // Vaste hex-kleuren in de SVG: var() werkt niet in SVG-presentatieattributen bij print.
+  let liquiditeitBody = '';
+  if (isVve && jaren.length) {
+    const C_INK = '#231f20', C_BRUSH = '#f1491c', C_BRUSHD = '#c93914', C_MUTED = '#8c8479', C_LINE = '#e7e2d9';
+    const eurSaldo = v => (v < 0 ? '\u2212' + eur(Math.abs(v)) : eur(v));
+    const R = gemPerJaar; // geadviseerde jaarreservering, incl btw
+    let _cr = 0, _cu = 0;
+    const lqRows = jaren.map((j, i) => {
+      const e = perJaar[j];
+      const uit = e ? (e.bedragMee + e.bedragBuiten) : 0;
+      _cr = R * (i + 1);
+      _cu += uit;
+      return { jaar: j, uit, res: R, cr: _cr, cu: _cu, saldo: _cr - _cu };
+    });
+    const laagste = lqRows.reduce((a, b) => (b.saldo < a.saldo ? b : a), lqRows[0]);
+    const VW = 520, VH = 190, x0 = 14, x1 = 506, yBas = 158, yTop = 12;
+    const maxv = Math.max(_cr, _cu, 1) * 1.05;
+    const N2 = lqRows.length;
+    const X = i => N2 > 1 ? (x0 + i * (x1 - x0) / (N2 - 1)) : ((x0 + x1) / 2);
+    const Y = v => yBas - (v / maxv) * (yBas - yTop);
+    const crPts = lqRows.map((r, i) => `${X(i).toFixed(1)},${Y(r.cr).toFixed(1)}`).join(' ');
+    const cuPts = lqRows.map((r, i) => `${X(i).toFixed(1)},${Y(r.cu).toFixed(1)}`).join(' ');
+    const li = lqRows.indexOf(laagste);
+    const gapx = X(li), gapTop = Y(laagste.cu), gapBot = Y(laagste.cr);
+    let grid = '';
+    for (let g = 1; g <= 4; g++) {
+      const gv = (maxv / 4) * g, gy = Y(gv).toFixed(1);
+      grid += `<line x1="${x0}" y1="${gy}" x2="${x1}" y2="${gy}" stroke="${C_LINE}" stroke-width="0.5"/><text x="${x0 - 2}" y="${(Y(gv) + 3).toFixed(1)}" text-anchor="end" font-size="5.5" fill="${C_MUTED}">${Math.round(gv / 1000)}k</text>`;
+    }
+    let yl = '';
+    lqRows.forEach((r, i) => { yl += `<text x="${X(i).toFixed(1)}" y="${yBas + 12}" text-anchor="middle" font-size="5.5" fill="${C_MUTED}">${String(r.jaar).slice(2)}</text>`; });
+    const gapMark = (laagste.saldo < 0)
+      ? `<rect x="${(gapx - 7).toFixed(1)}" y="${gapTop.toFixed(1)}" width="14" height="${(gapBot - gapTop).toFixed(1)}" fill="${C_BRUSH}" opacity="0.16"/><line x1="${gapx.toFixed(1)}" y1="${gapTop.toFixed(1)}" x2="${gapx.toFixed(1)}" y2="${gapBot.toFixed(1)}" stroke="${C_BRUSHD}" stroke-width="1" stroke-dasharray="2 2"/><text x="${(gapx + 10).toFixed(1)}" y="${((gapTop + gapBot) / 2).toFixed(1)}" font-size="6" fill="${C_BRUSHD}" font-weight="700">uit reserve ${eur(Math.abs(laagste.saldo))}</text>`
+      : '';
+    const svg = `<svg viewBox="0 0 ${VW} ${VH}" class="liq-svg" xmlns="http://www.w3.org/2000/svg"><line x1="${x0}" y1="${yBas}" x2="${x1}" y2="${yBas}" stroke="${C_INK}" stroke-width="0.8"/>${grid}${gapMark}<polyline points="${cuPts}" fill="none" stroke="${C_INK}" stroke-width="1.6"/><polyline points="${crPts}" fill="none" stroke="${C_BRUSH}" stroke-width="1.6"/>${yl}</svg>`;
+    const legend = `<div class="liq-legend"><span><i class="ln brush"></i>Cumulatief gereserveerd</span><span><i class="ln ink"></i>Cumulatief uitgegeven</span></div>`;
+    let trows = '';
+    lqRows.forEach(r => {
+      const neg = r.saldo < 0 ? ' style="color:#c93914;font-weight:700;"' : '';
+      trows += `<tr><td>${r.jaar}</td><td class="amt">${r.uit ? eur(r.uit) : '\u2013'}</td><td class="amt">${eur(r.res)}</td><td class="amt">${eur(r.cr)}</td><td class="amt">${eur(r.cu)}</td><td class="amt"${neg}>${eurSaldo(r.saldo)}</td></tr>`;
+    });
+    const lqTable = `<table class="ptable liq-table"><tr><th>Jaar</th><th class="amt">Uitgave</th><th class="amt">Reservering</th><th class="amt">Cum. gereserveerd</th><th class="amt">Cum. uitgegeven</th><th class="amt">Saldo-opbouw</th></tr>${trows}</table>`;
+    const concl = (laagste.saldo < 0)
+      ? `<div class="callout" style="margin-top:12px;"><b>Wat dit voor uw reserve betekent:</b> op het laagste punt, in ${laagste.jaar}, moet uw reserve minstens ${eur(Math.abs(laagste.saldo))} bedragen om de uitgaven te dekken. Daarna bouwt de pot weer op en is het plan aan het eind van de looptijd gedekt.</div>`
+      : `<div class="callout" style="margin-top:12px;"><b>Wat dit voor uw reserve betekent:</b> met de geadviseerde jaarreservering blijft de opgebouwde pot het hele plan boven de uitgaven, dus de reservering dekt de pieken.</div>`;
+    liquiditeitBody = `<p class="lead">Hieronder ziet u de pot die u opbouwt als u jaarlijks de geadviseerde reservering opzij zet, tegenover wat er volgens de planning uitgaat. Zo ziet u in \u00e9\u00e9n blik of uw reserve de pieken dekt. De bedragen zijn inclusief btw.</p>${svg}${legend}${lqTable}${concl}`;
+  }
+
   // Quotes — VvE-variant is voorlopige voorbeeldtekst; vervang door een echte referentie.
   const quotesHtml = isVve
     ? `<div class="quote"><div class="qm">&ldquo;</div><p>Ernes denkt mee met onze meerjarenplanning. De bedragen staan vast, dus we weten precies wat we moeten reserveren. Het bestuur is volledig ontzorgd.</p><div class="who">— beheerder VvE-complex (klant Ernes Schilders)</div></div>
@@ -8810,6 +8862,13 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .epost .emeta .lbl{text-transform:uppercase;letter-spacing:0.6px;font-size:7.4pt;color:var(--muted);display:block;margin-bottom:1px;}
 .ob .epost .emeta .val{font-weight:700;color:var(--ink);font-size:10pt;}
 .ob .epost .emeta .val.brush{color:var(--brush-deep);}
+.ob .liq-svg{width:100%;height:auto;margin:10px 0 4px;}
+.ob .liq-legend{display:flex;gap:26px;font-size:8.5pt;color:#3a352e;margin:0 0 8px;}
+.ob .liq-legend i.ln{display:inline-block;width:16px;height:0;border-top:2.5px solid;margin-right:6px;vertical-align:middle;}
+.ob .liq-legend i.ln.brush{border-color:var(--brush);}
+.ob .liq-legend i.ln.ink{border-color:var(--ink);}
+.ob table.liq-table{font-size:9pt;}
+.ob table.liq-table th,.ob table.liq-table td{padding:3.5px 8px;}
 .ob .defs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px;}
 .ob .def{background:#fff;border:1px solid var(--line);border-radius:4px;padding:14px 16px;box-shadow:var(--shadow);}
 .ob .def .dh{font-size:11.5pt;font-weight:700;margin-bottom:5px;}
@@ -8923,6 +8982,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
     blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">De planning</span></div><div class="timeline-wrap"><div class="timeline"><div class="tl-axis"></div>${tlNodes}</div></div></div>`));
     blocks.push(`<div class="ob-block" data-split="table">${planTableHtml}</div>`);
     if (mjopNote) blocks.push(_blk(mjopNote));
+    if (liquiditeitBody) blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Reservering en liquiditeit</span></div>${liquiditeitBody}</div>`));
     blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Uw zekerheid</span></div><div class="zek">${zekItemsHtml}</div></div>`));
     blocks.push(_blk(`<div class="strip">${stripBoxesHtml}</div>`));
     blocks.push(_blk(`<div class="quotes">${quotesHtml}</div>`));

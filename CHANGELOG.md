@@ -1,3 +1,20 @@
+## v4.7.0 — Reservering en liquiditeit op de VvE-bijlage (blok B)
+De VvE-bijlage laat nu zien of de reserve van de vereniging de pieken in het plan dekt.
+
+### Wat er verandert
+- Nieuwe sectie "Reservering en liquiditeit" op de VvE-offerte-bijlage, na de jaartabel.
+- Een eenvoudig beeld toont twee lijnen op dezelfde euro-schaal: de pot die de vereniging opbouwt als ze jaarlijks de geadviseerde reservering opzij zet (oranje), tegenover wat er volgens de planning uitgaat (donker). Waar de uitgaven even boven de opbouw uitkomen, wordt het gat gemarkeerd met de tekst hoeveel er op dat moment uit de reserve gaat.
+- Daaronder een tabel met per jaar de uitgave, de reservering, het cumulatief gereserveerde, het cumulatief uitgegeven en het saldo-opbouw. Negatieve saldoregels staan rood.
+- Als sluitstuk één zin met het laagste punt: in welk jaar de reserve het meest wordt aangesproken en hoeveel ze op dat moment minstens moet bedragen om de uitgaven te dekken. Zo ziet de penningmeester in één blik of de kas de pieken dekt, zonder dat wij iets over hun reserve beweren.
+- Alles rekent uit je bestaande beurten, inclusief btw, en alleen bij het ontvangertype VvE. De particulier-bijlage blijft ongewijzigd. Geen SQL nodig.
+
+### Onder de motorkap
+- In _ohpBuildOfferteHTML wordt bij isVve uit perJaar (incl btw) en gemPerJaar een reeks lqRows opgebouwd met per jaar uitgave, reservering, cumulatief gereserveerd (R maal n), cumulatief uitgegeven en saldo (cr min cu). Het laagste saldo bepaalt de benodigde reserve.
+- Het beeld is een inline SVG met twee polylijnen, gridlijnen, jaarlabels en bij een negatief laagste punt een gemarkeerd gat. De kleuren staan als vaste hex in de SVG, omdat var() niet werkt in SVG-presentatieattributen bij printen naar PDF.
+- De saldo-kolom toont negatieven via eurSaldo met een echte minus. Het blok wordt na de jaartabel en de mjopNote met een eigen nextSec()-nummer gepusht, zodat de nummering doorloopt. Nieuwe scoped CSS .liq-svg, .liq-legend en .liq-table.
+
+---
+
 ## v4.6.2 — 100%-zegel op de garantieregel netjes passend
 Kleine opmaakfix op de VvE-bijlage.
 
