@@ -1,3 +1,20 @@
+## v4.6.1 — Externe posten op de VvE-bijlage en de garantieregel voorin (brok 2)
+De externe posten uit v4.6.0 verschijnen nu ook op de VvE-offerte-bijlage, met een opvallende garantieregel bovenaan.
+
+### Wat er verandert
+- De VvE-bijlage krijgt een nieuwe sectie "Wat u zelf regelt en wanneer", direct na "Wat valt onder dit plan". Daarin staan de externe posten die je bij het plan hebt ingevuld.
+- Een post die de garantie raakt krijgt een oranje markering "Voorwaarde voor garantie", een toekomstpost de rustige markering "Voor uw MJOP". Per post zie je het jaar en, als je het hebt ingevuld, een indicatief richtbedrag. Liet je het richtbedrag leeg, dan staat het er niet.
+- Bovenaan de bijlage staat nieuw de garantieregel voorin: een opvallend 100%-blok dat de garantie koppelt aan tijdige uitvoering en, als er externe posten zijn, aan het op tijd regelen daarvan. De btw-clausule is erin verwerkt, zodat daar op de ALV geen discussie over ontstaat.
+- Alles alleen bij het ontvangertype VvE. De particulier-bijlage blijft ongewijzigd. Geen SQL nodig.
+
+### Onder de motorkap
+- In _ohpBuildOfferteHTML worden bij isVve twee onderdelen toegevoegd. _externPosten wordt uit plan.externPosten gesorteerd op volgorde. _epCardsHtml bouwt per post een .epost-kaart (variant cond of future), met de toelichting en een emeta-regel die Wanneer (jaartal, brush bij cond) en Richtbedrag (alleen bij bedrag > 0, geformatteerd via toLocaleString nl-NL) alleen toont als die gevuld zijn.
+- externPostenBody (intro plus kaarten) wordt in de blokvolgorde na scopeBody met een eigen nextSec()-nummer als genummerde sectie gepusht, zodat de nummering automatisch doorloopt.
+- garantieVoorinHtml is een niet-genummerd .garblok-blok dat na het inhoud-blok en vóór "Voor uw complex specifiek" wordt gepusht. De externe-postenzin verschijnt alleen als er posten zijn.
+- Nieuwe scoped CSS onder .ob: .garblok met zegel en .epost met de varianten cond en future.
+
+---
+
 ## v4.6.0 — Externe posten in het VvE-onderhoudsplan (brok 1: invoer)
 Je kunt nu per onderhoudsplan vastleggen wat de VvE zelf moet laten regelen buiten dit plan. Eerste stap naar de regisseur-bijlage.
 
