@@ -1,3 +1,15 @@
+## v4.6.2 — 100%-zegel op de garantieregel netjes passend
+Kleine opmaakfix op de VvE-bijlage.
+
+### Wat er verandert
+- De tekst "100%" in het rode zegel van de garantieregel-voorin liep over de rand van het bolletje. De tekst staat nu kleiner en het bolletje is iets ruimer, zodat "100%" netjes binnen de cirkel valt.
+- Alleen opmaak, verder verandert er niets aan de bijlage. Geen SQL nodig.
+
+### Onder de motorkap
+- .ob .garblok .seal: 40px naar 44px, font-size 12.5pt naar 9.5pt, font-weight 900 naar 800, plus letter-spacing -0.3px en white-space:nowrap.
+
+---
+
 ## v4.6.1 — Externe posten op de VvE-bijlage en de garantieregel voorin (brok 2)
 De externe posten uit v4.6.0 verschijnen nu ook op de VvE-offerte-bijlage, met een opvallende garantieregel bovenaan.
 
