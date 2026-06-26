@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.5.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.6.0</h2>
       <div class="intro-body">
+        <p><strong>🏗️ Externe posten in het VvE-onderhoudsplan (v4.6.0).</strong> Eerste stap naar de regisseur-bijlage. Je kunt nu per onderhoudsplan vastleggen wat de VvE zelf moet laten regelen buiten dit plan, zoals het herstel van dilatatievoegen of een nieuwe toplaag op de balkonvloeren. Onderaan het plan staat het blok Externe posten waar je per post de omschrijving, een toelichting, het jaar en een optioneel richtbedrag invult, plus het Type post: Voorwaarde voor garantie of Voor uw MJOP. Die keuze stuurt straks de markering op de bijlage. In deze stap alleen de invoer en de opslag. De sectie op de offerte-bijlage zelf met de garantieregel voorin volgt in v4.6.1. Vereiste eenmalig een Supabase-migratie (nieuwe tabel onderhoudsplan_externe_posten), die al is uitgevoerd.</p>
         <p><strong>🪟 Aantal per kozijn op de kozijntekening-print (v4.5.0).</strong> Op de kozijntekeningen stond wel de vorm, de maten en de m¹ en m² per stuk, maar niet hoeveel van elk kozijn er zijn. Nu staat op elke kozijnkaart "Aantal: 3 stuks", uit het aantal-veld van de meetstaat-regel. Heeft een kozijn er meer dan één, dan staat er duidelijk bij dat de afmetingen en hoeveelheden per stuk zijn. De kop telt nu ook kloppend: in plaats van alleen het aantal tekeningen toont hij "5 tekeningen · 12 kozijnen", waarbij dat tweede getal de som van alle aantallen is. Dit werkt door in de losse print, de doorlopende weergave, het archief en de gecombineerde Offerte plus bijlagen-PDF. Geen SQL nodig.</p>
         <p><strong>📐 Meetstaat-bijlage toont nu alle posten, ook de rechtstreeks ingevulde (v4.4.0).</strong> De meetstaat-bijlage liep alleen door de meetregels uit de Meetstaat-tab, dus posten waar je de hoeveelheid rechtstreeks in de verfsysteem-post hebt getypt vielen weg. Dat liet maar de helft zien. Nu begint de bijlage met een volledig overzicht "Hoeveelheden per post" van álle posten met een hoeveelheid: onderdeel, post, hoeveelheid en eenheid, met de vermelding of de hoeveelheid gemeten is of rechtstreeks ingevuld. Daaronder staat zoals voorheen het meetdetail met breedte, hoogte en aantal voor de posten die je wél via de Meetstaat-tab hebt opgebouwd. Geen bedragen, puur de scope, geschikt als bijlage voor een VvE naast de kozijntekening en de foto's. Geen SQL nodig.</p>
         <p><strong>📄 Onderhoudsplan loopt nu netjes door over meer pagina's (v4.3.0).</strong> Bij langere plannen liep de tekst van de onderhoudsbeurten in sectie 02 van de eerste pagina af en vielen de laatste beurten weg, en werd ook de planningstabel afgekapt, met de voettekst eroverheen. De brochure wordt nu opgebouwd uit losse blokken die automatisch over zoveel pagina's worden verdeeld als nodig. Elke pagina krijgt het Ernes-logo bovenaan, de voettekst onderaan en het juiste "pagina x van y". Een lange beurtbeschrijving of een lange planningstabel schuift voortaan vanzelf door naar de volgende pagina. De strakke opmaak blijft, alleen het aantal pagina's past zich aan het plan aan. Geen SQL nodig.</p>
@@ -2563,6 +2564,13 @@
             </div>
           </div>
           <div id="ohpBeurtenLijst" style="margin-top: 0.8rem;"></div>
+        </div>
+        <div class="settings-section" id="ohpExternSectie" style="margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <h3 style="margin: 0;">Externe posten <span style="font-weight: normal; font-size: 0.8rem; color: var(--muted);">— wat de VvE zelf regelt buiten dit plan; verschijnt op de VvE-bijlage</span></h3>
+            <button class="btn" onclick="_ohpAddExtern()">+ Post toevoegen</button>
+          </div>
+          <div id="ohpExternLijst" style="margin-top: 0.8rem;"></div>
         </div>
         <div id="ohpResultaat" style="margin-top: 1rem;"></div>
         <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--paper-deep); text-align: right;">
@@ -3217,7 +3225,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.5.0';
+const APP_VERSION = 'v4.6.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3612,6 +3620,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.6.0', d: '2026-06-26', h: 'Externe posten per onderhoudsplan (brok 1: datalaag en invoer). Nieuwe tabel onderhoudsplan_externe_posten (plan_id naar onderhoudsplannen met cascade, user_id default auth.uid(), omschrijving, toelichting, jaartal nullable, richtbedrag nullable zodat leeg echt leeg is, raakt_garantie boolean, volgorde) met RLS per gebruiker. Mapping _mapExternFromDB/_mapExternToDB; CRUD _addExtern/_updateExtern/_deleteExtern; fetch meegenomen in _fetchOhpByCalc als plan.externPosten en bewaard via de spread in _saveOhpParams. Invoerblok ohpExternSectie onder de beurten in ohpPlanBlok, gerenderd door _ohpRenderExternLijst (omschrijving, Type post-dropdown die raaktGarantie schrijft, jaar, richtbedrag, toelichting) met handlers _ohpAddExtern/_ohpUpdExternVeld/_ohpDeleteExtern; geen herrender bij veldwijziging zodat de focus blijft staan. _ohpRenderInhoud rendert de lijst mee. De bijlage-sectie en de garantieregel voorin volgen in 4.6.1. Eenmalige SQL al uitgevoerd.' },
   { v: '4.5.0', d: '2026-06-24', h: 'Aantal per kozijn op de kozijntekening-print. Elke kozijnkaart toont nu "Aantal: N stuks" uit ms.aantal (het aantal-veld van de meetstaat-regel), met bij meer dan één stuk de notitie dat de afmetingen en hoeveelheden per stuk zijn (m¹/m² blijven per stuk, geen totalen op de kaart). De kop telt nu kloppend: aantal tekeningen plus de som van de aantallen als werkelijke kozijnen ("5 tekeningen · 12 kozijnen"), of gewoon "N kozijnen" als die gelijk zijn. Doorgevoerd in beide renderers: de HTML-bouwer _bouwKozijnenHtml (losse print, doorlopende weergave, archief) en de pdfmake-bouwer in _bouwOfferteCompleetDocDef (gecombineerde Offerte plus bijlagen-PDF). Geen SQL' },
   { v: '4.4.0', d: '2026-06-24', h: 'Meetstaat-bijlage (printMeetstaat) toont nu de volledige scope. Voorheen liep de bijlage alleen door c.meetstaat, waardoor calc-regels waarvan de hoeveelheid rechtstreeks in de verfsysteem-post is ingevuld (zonder meetregels) volledig uit de bijlage vielen. Nu begint de bijlage met een sectie Hoeveelheden per post die alle posten met hoeveelheid > 0 toont (onderdeel via hgNaam/odNaam, post, r.hoeveelheid plus r.systeemEenheid, en of de post gemeten is of rechtstreeks ingevuld). Het bestaande meetdetail met b/h/aantal/factor/totaal blijft eronder staan voor de posten die wél via de Meetstaat-tab zijn opgebouwd. De lege-staat treedt nu pas op als er helemaal geen posten met hoeveelheid zijn, niet meer zodra er geen meetregels zijn. Geen bedragen in de bijlage. Geen SQL' },
   { v: '4.3.0', d: '2026-06-24', h: 'Onderhoudsplan-brochure paginieert nu automatisch. _ohpBuildOfferteHTML levert de inhoud niet meer als drie vaste A4-pagina\'s met overflow:hidden, maar als een platte reeks .ob-block elementen (sectie 02 als label plus losse jaarblokken, de planningstabel als afzonderlijk data-split blok). Een nieuwe functie _ohpPaginate() draait na het injecteren en na het laden van de fonts: ze meet met een lege proefpagina de beschikbare contenthoogte tussen masthead en voettekst, meet per blok de werkelijke hoogte inclusief marges, en pakt de blokken greedy in vaste .page-divs. De planningstabel wordt zo nodig per rij gesplitst met een herhaalde koprij. Elke gegenereerde pagina krijgt masthead, voettekst en het juiste pagina x van y. printArea (op het scherm display:none) wordt tijdens het meten tijdelijk offscreen en visibility:hidden gezet en daarna hersteld. Hiermee vallen lange sectie 02-beschrijvingen en lange planningstabellen niet meer weg en overlapt de voettekst niet meer. Werkt voor de VvE- en de particulier-variant. Geen SQL' },
@@ -5601,6 +5610,35 @@ function _mapBeurtToDB(b, planId) {
   };
 }
 
+// ----- Externe posten (buiten dit plan) — v4.6.0 -----
+// Wat de VvE zelf moet (laten) regelen: dilatatievoegen, balkonvloeren e.d.
+function _mapExternFromDB(row) {
+  return {
+    id:            row.id,
+    planId:        row.plan_id,
+    omschrijving:  row.omschrijving || '',
+    toelichting:   row.toelichting || '',
+    jaartal:       row.jaartal != null ? row.jaartal : null,
+    richtbedrag:   row.richtbedrag != null ? row.richtbedrag : null, // leeg = niet tonen
+    raaktGarantie: row.raakt_garantie === true,                      // true = voorwaarde voor onze garantie
+    volgorde:      row.volgorde != null ? row.volgorde : 0,
+    aangemaakt:    row.aangemaakt || null,
+    gewijzigd:     row.gewijzigd  || null
+  };
+}
+function _mapExternToDB(p, planId) {
+  return {
+    plan_id:        planId || p.planId,
+    omschrijving:   p.omschrijving || '',
+    toelichting:    p.toelichting || '',
+    jaartal:        (p.jaartal === '' || p.jaartal == null) ? null : (parseInt(p.jaartal) || null),
+    richtbedrag:    (p.richtbedrag === '' || p.richtbedrag == null) ? null : (Number(p.richtbedrag) || null),
+    raakt_garantie: p.raaktGarantie === true,
+    volgorde:       p.volgorde != null ? p.volgorde : 0,
+    gewijzigd:      new Date().toISOString()
+  };
+}
+
 // Haal het plan op voor een calculatie. Geeft null als er geen plan is.
 async function _fetchOhpByCalc(calcId) {
   if (!_sb || !calcId) return null;
@@ -5615,6 +5653,11 @@ async function _fetchOhpByCalc(calcId) {
     'Beurten ophalen'
   );
   if (!e2 && beurten) plan.beurten = beurten.map(_mapBeurtFromDB);
+  const { data: extern, error: e3 } = await _sbQuery(
+    _sb.from('onderhoudsplan_externe_posten').select('*').eq('plan_id', plan.id).order('volgorde'),
+    'Externe posten ophalen'
+  );
+  if (!e3 && extern) plan.externPosten = extern.map(_mapExternFromDB);
   return plan;
 }
 
@@ -5674,6 +5717,33 @@ async function _deleteBeurt(beurtId) {
   if (!_sb || !beurtId) return false;
   const { error } = await _sbQuery(
     _sb.from('onderhoudsplan_beurten').delete().eq('id', beurtId), 'Beurt verwijderen'
+  );
+  return !error;
+}
+
+// ----- Externe posten CRUD — v4.6.0 -----
+async function _addExtern(planId, post) {
+  if (!_sb || !planId) return null;
+  const { data, error } = await _sbQuery(
+    _sb.from('onderhoudsplan_externe_posten').insert([_mapExternToDB(post, planId)]).select().single(),
+    'Externe post toevoegen'
+  );
+  if (error || !data) return null;
+  return _mapExternFromDB(data);
+}
+async function _updateExtern(post) {
+  if (!_sb || !post || !post.id) return null;
+  const { data, error } = await _sbQuery(
+    _sb.from('onderhoudsplan_externe_posten').update(_mapExternToDB(post)).eq('id', post.id).select().single(),
+    'Externe post bijwerken'
+  );
+  if (error || !data) return null;
+  return _mapExternFromDB(data);
+}
+async function _deleteExtern(postId) {
+  if (!_sb || !postId) return false;
+  const { error } = await _sbQuery(
+    _sb.from('onderhoudsplan_externe_posten').delete().eq('id', postId), 'Externe post verwijderen'
   );
   return !error;
 }
@@ -6824,6 +6894,7 @@ function _ohpRenderInhoud() {
   leeg.style.display = 'none';
   blok.style.display = '';
   _ohpRenderBeurtenLijst();
+  _ohpRenderExternLijst();
   _ohpRenderResultaat();
 }
 
@@ -7138,6 +7209,32 @@ function _ohpRenderBeurtenLijst() {
 }
 
 // Render het resultaat-blok: totalen + jaartabel.
+function _ohpRenderExternLijst() {
+  const c = document.getElementById('ohpExternLijst');
+  if (!c) return;
+  const plan = _ohpState.plan;
+  const posten = ((plan && plan.externPosten) || []).slice().sort((a, b) => (a.volgorde || 0) - (b.volgorde || 0));
+  if (!posten.length) {
+    c.innerHTML = '<div style="color: var(--muted); font-style: italic;">Nog geen externe posten. Voeg toe wat de VvE zelf moet laten regelen, zoals herstel van dilatatievoegen of een nieuwe toplaag op de balkonvloeren.</div>';
+    return;
+  }
+  c.innerHTML = posten.map(p => {
+    const ja = p.raaktGarantie === true;
+    return `<div class="settings-section" style="margin-bottom: 0.6rem;">
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.5rem;">
+        <label style="font-size: 0.8rem; color: var(--muted);">Omschrijving<input type="text" value="${_escapeHtml(p.omschrijving)}" placeholder="bv Herstel dilatatievoegen" onchange="_ohpUpdExternVeld('${p.id}','omschrijving',this.value)" style="width: 100%; display: block; margin-top: 0.2rem; padding: 0.4rem; border: 1px solid var(--border); border-radius: 4px; font-family: inherit;"></label>
+        <label style="font-size: 0.8rem; color: var(--muted);">Type post<select onchange="_ohpUpdExternVeld('${p.id}','raaktGarantie',this.value)" style="width: 100%; display: block; margin-top: 0.2rem; padding: 0.4rem; border: 1px solid var(--border); border-radius: 4px; font-family: inherit;"><option value="ja"${ja ? ' selected' : ''}>Voorwaarde voor garantie</option><option value="nee"${ja ? '' : ' selected'}>Voor uw MJOP</option></select></label>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.4rem;">
+        <label style="font-size: 0.8rem; color: var(--muted);">Jaar<input type="number" value="${p.jaartal != null ? p.jaartal : ''}" placeholder="bv 2027" onchange="_ohpUpdExternVeld('${p.id}','jaartal',this.value)" style="width: 100%; display: block; margin-top: 0.2rem; padding: 0.4rem; border: 1px solid var(--border); border-radius: 4px; font-family: inherit;"></label>
+        <label style="font-size: 0.8rem; color: var(--muted);">Richtbedrag €<input type="number" step="0.01" value="${p.richtbedrag != null ? p.richtbedrag : ''}" placeholder="leeg = niet tonen" onchange="_ohpUpdExternVeld('${p.id}','richtbedrag',this.value)" style="width: 100%; display: block; margin-top: 0.2rem; padding: 0.4rem; border: 1px solid var(--border); border-radius: 4px; font-family: inherit;"></label>
+      </div>
+      <label style="font-size: 0.8rem; color: var(--muted); display: block; margin-top: 0.4rem;">Toelichting<textarea rows="2" placeholder="waarom het telt en wanneer" onchange="_ohpUpdExternVeld('${p.id}','toelichting',this.value)" style="width: 100%; display: block; margin-top: 0.2rem; padding: 0.4rem; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; resize: vertical;">${_escapeHtml(p.toelichting)}</textarea></label>
+      <div style="text-align: right; margin-top: 0.3rem;"><button class="btn btn-danger btn-sm" onclick="_ohpDeleteExtern('${p.id}')">🗑 Verwijder</button></div>
+    </div>`;
+  }).join('');
+}
+
 function _ohpRenderResultaat() {
   const c = document.getElementById('ohpResultaat');
   if (!c) return;
@@ -7614,6 +7711,43 @@ async function _ohpDeleteBeurt(beurtId) {
   plan.beurten = (plan.beurten || []).filter(b => b.id !== beurtId);
   _ohpRenderBeurtenLijst();
   _ohpRenderResultaat();
+}
+
+// ----- Externe posten: handlers — v4.6.0 -----
+async function _ohpAddExtern() {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const huidige = (plan.externPosten || []);
+  const nieuw = { omschrijving: '', toelichting: '', jaartal: null, richtbedrag: null, raaktGarantie: false, volgorde: huidige.length };
+  const opgeslagen = await _addExtern(plan.id, nieuw);
+  if (!opgeslagen) { _toast('Externe post toevoegen mislukt'); return; }
+  if (!plan.externPosten) plan.externPosten = [];
+  plan.externPosten.push(opgeslagen);
+  _ohpRenderExternLijst();
+}
+// Werk één veld bij vanuit de lijst-inputs. Geen herrender, zodat de focus tijdens invullen blijft staan.
+async function _ohpUpdExternVeld(postId, veld, value) {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const p = (plan.externPosten || []).find(x => x.id === postId);
+  if (!p) return;
+  if (veld === 'omschrijving') p.omschrijving = value || '';
+  else if (veld === 'toelichting') p.toelichting = value || '';
+  else if (veld === 'jaartal') p.jaartal = (value === '' ? null : (parseInt(value) || null));
+  else if (veld === 'richtbedrag') p.richtbedrag = (value === '' ? null : (Number(value) || null));
+  else if (veld === 'raaktGarantie') p.raaktGarantie = (value === 'ja');
+  const opgeslagen = await _updateExtern(p);
+  if (!opgeslagen) { _toast('Externe post bijwerken mislukt'); return; }
+  Object.assign(p, opgeslagen);
+}
+async function _ohpDeleteExtern(postId) {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  if (!confirm('Externe post verwijderen?')) return;
+  const ok = await _deleteExtern(postId);
+  if (!ok) { _toast('Verwijderen mislukt'); return; }
+  plan.externPosten = (plan.externPosten || []).filter(p => p.id !== postId);
+  _ohpRenderExternLijst();
 }
 
 // Verwijder het hele plan (met bevestiging). De bron-calculatie blijft bestaan.

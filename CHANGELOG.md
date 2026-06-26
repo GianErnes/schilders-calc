@@ -1,3 +1,20 @@
+## v4.6.0 — Externe posten in het VvE-onderhoudsplan (brok 1: invoer)
+Je kunt nu per onderhoudsplan vastleggen wat de VvE zelf moet laten regelen buiten dit plan. Eerste stap naar de regisseur-bijlage.
+
+### Wat er verandert
+- Onderaan een onderhoudsplan staat het nieuwe blok "Externe posten". Daar leg je per post vast wat buiten dit plan valt maar wel bij het complex hoort, zoals herstel van dilatatievoegen of een nieuwe toplaag op de balkonvloeren.
+- Per post vul je in: de omschrijving, een toelichting (waarom het telt en wanneer), het jaar en een optioneel richtbedrag. Laat je het richtbedrag leeg, dan komt het straks niet op de bijlage.
+- Je kiest per post een Type post: "Voorwaarde voor garantie" (raakt onze garantie, zoals de voegen) of "Voor uw MJOP" (toekomstig advies, zoals de balkonvloeren). Die keuze stuurt straks de markering en de kleur op de bijlage.
+- In deze stap alleen de invoer en de opslag. De sectie op de offerte-bijlage zelf, met de garantieregel voorin en de twee soorten posten, volgt in v4.6.1.
+- Eenmalige Supabase-migratie nodig (nieuwe tabel onderhoudsplan_externe_posten), die al is uitgevoerd.
+
+### Onder de motorkap
+- Nieuwe tabel onderhoudsplan_externe_posten spiegelt onderhoudsplan_beurten: plan_id naar onderhoudsplannen met cascade-delete, user_id default auth.uid(), RLS per gebruiker. Velden omschrijving, toelichting, jaartal (nullable), richtbedrag (nullable, geen default), raakt_garantie (boolean) en volgorde.
+- Mapping _mapExternFromDB/_mapExternToDB; CRUD _addExtern/_updateExtern/_deleteExtern. De posten worden in _fetchOhpByCalc meegeladen als plan.externPosten en blijven via de spread in _saveOhpParams behouden.
+- Het invoerblok ohpExternSectie staat onder de beurten in ohpPlanBlok en wordt gerenderd door _ohpRenderExternLijst, met handlers _ohpAddExtern/_ohpUpdExternVeld/_ohpDeleteExtern. Bij een veldwijziging wordt niet herrenderd zodat de focus tijdens het invullen blijft staan. _ohpRenderInhoud rendert de lijst mee zodra een plan in beeld komt.
+
+---
+
 ## v4.5.0 — Aantal per kozijn op de kozijntekening
 De tekening liet niet zien hoeveel van elk kozijn er zijn. Dat staat er nu bij.
 
