@@ -1,3 +1,13 @@
+## v4.7.12 — Logische bestandsnaam voor het onderhoudsplan
+Bij het opslaan als PDF stelde de print-dialoog standaard "Schilders Calculatie" voor.
+
+### Wat er verandert
+- De onderhoudsplan-bijlage stelt nu, net als de offerte, een logische bestandsnaam voor op basis van de projectnaam: "{projectnaam}-onderhoudsplan".
+- Zo staan de offerte en het onderhoudsplan van dezelfde klant netjes naast elkaar in je map en hoef je de naam niet meer over te typen.
+- Geen SQL nodig.
+
+---
+
 ## v4.7.11 — Resultaat in plaats van een klusjeslijst
 De bijlage maakt nu expliciet dat je een resultaat verkoopt en geen lijst met losse handelingen.
 
