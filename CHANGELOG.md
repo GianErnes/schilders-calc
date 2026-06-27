@@ -1,3 +1,20 @@
+## v4.7.2 — Maandbijdrage per eigenaar en scherpere onder-water-periode (VvE-bijlage)
+Het grote getal vertaald naar eigenarenniveau, plus een correcte band in het liquiditeitsbeeld.
+
+### Wat er verandert
+- Je kunt nu bij een onderhoudsplan het aantal appartementen invullen. Het veld staat in de VvE-sectie van de plan-parameters en verschijnt alleen bij ontvangertype VvE.
+- Op de VvE-bijlage wordt het grote getal vertaald naar de eigenaar: gemiddeld ongeveer een bedrag per appartement per maand. Het staat op twee plekken. Hoog in de bijlage als cascade onder het totaal en de jaarreservering, zodat de eigenaar meteen het kleine maandbedrag ziet. En in de liquiditeitssectie als rustige regel in de context van de reservering.
+- Het bedrag is de jaarreservering inclusief btw, gedeeld door het aantal appartementen, gedeeld door twaalf. Er staat duidelijk bij dat het een gemiddelde is en dat de werkelijke bijdrage per breukdeel loopt, zodat niemand het als een exacte aanslag leest.
+- De onder-water-band in het liquiditeitsbeeld loopt nu correct. Hij start op het uitgavejaar zelf, want de reserve wordt pas aangesproken op het moment dat een beurt betaald wordt, en loopt door tot de echte kruising van de lijnen waar de opbouw de uitgaven weer inhaalt. Het diepste punt blijft apart gemarkeerd met de stippellijn.
+- De conclusiezin noemt de hele periode dat de reserve wordt aangesproken, niet langer alleen het diepste punt.
+
+### Onder de motorkap
+- Nieuwe kolom aantal_appartementen op onderhoudsplannen, mapping aantalAppartementen heen en terug, invoerveld ohpAantalApp in ohpScopeWrap (mee gelezen, gevuld, uitgeschakeld zonder bron-calc en aan de auto-opslaan listeners toegevoegd).
+- In _ohpBuildOfferteHTML: perMaandPerApp = gemPerJaar / aantalApp / 12, alleen bij isVve met aantal ingevuld. Cascade-regel .appmaand in de hero en een Per eigenaar-callout in de liquiditeitssectie.
+- De band wordt opgebouwd uit aaneengesloten reeksen met negatief saldo: links X(firstNeg), rechts xAtZero(lastNeg) of het laatste punt. Meerdere negatieve periodes worden elk apart getekend. De conclusiezin gebruikt firstNeg tot en met lastNeg met het diepste punt.
+
+---
+
 ## v4.7.1 — (incl. btw) in de kolomkoppen van het liquiditeitsoverzicht
 Extra duidelijkheid op de VvE-bijlage, om discussie achteraf te voorkomen.
 

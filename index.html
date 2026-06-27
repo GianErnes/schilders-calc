@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.2</h2>
       <div class="intro-body">
+        <p><strong>👥 Maandbijdrage per eigenaar plus scherpere onder-water-periode (v4.7.2).</strong> Twee dingen voor de VvE-bijlage. Je kunt nu bij het plan het aantal appartementen invullen (alleen bij VvE). Op de bijlage verschijnt dan het grote getal vertaald naar eigenarenniveau: hoog in de bijlage als cascade onder het totaal en de jaarreservering, en nog eens in de liquiditeitssectie, telkens als "gemiddeld ongeveer € X per appartement per maand". Het is een gemiddelde, de echte verdeling loopt per breukdeel, dat staat erbij. Daarnaast loopt de onder-water-band in het liquiditeitsbeeld nu correct: hij start op het uitgavejaar zelf, want de reserve wordt pas bij betaling aangesproken, en loopt door tot de echte kruising waar de opbouw de uitgaven weer inhaalt. De conclusiezin noemt de hele periode dat de reserve wordt aangesproken, niet alleen het diepste punt. Vereiste eerst een kleine Supabase-migratie (kolom <code>aantal_appartementen</code> op <code>onderhoudsplannen</code>).</p>
         <p><strong>🧾 (incl. btw) in de kolomkoppen van het liquiditeitsoverzicht (v4.7.1).</strong> De sectie Reservering en liquiditeit vermeldt al bovenaan dat de bedragen inclusief btw zijn. Voor extra duidelijkheid en om elke discussie achteraf te voorkomen staat nu ook onder elke bedragkolom een klein, rustig "(incl. btw)". Alleen opmaak. Geen SQL nodig.</p>
         <p><strong>💧 Reservering en liquiditeit op de VvE-bijlage (v4.7.0).</strong> De VvE-bijlage krijgt een nieuwe sectie "Reservering en liquiditeit". Een eenvoudig beeld toont de pot die de vereniging opbouwt als ze jaarlijks de geadviseerde reservering opzij zet, tegenover wat er volgens de planning uitgaat. Waar de uitgaven even boven de opbouw uitkomen, wordt het gat gemarkeerd. Daaronder een tabel met per jaar de uitgave, de reservering, het cumulatief gereserveerde en uitgegeven en het saldo-opbouw, met de negatieve saldoregels in rood. Als sluitstuk één zin met het laagste punt: hoeveel de reserve op dat moment minstens moet bedragen om de uitgaven te dekken. Zo ziet de penningmeester in één blik of de kas de pieken dekt, zonder dat wij iets over hun reserve beweren. Alles rekent uit je bestaande beurten, inclusief btw, alleen bij VvE. Geen SQL nodig.</p>
         <p><strong>🔴 100%-zegel op de garantieregel netjes passend (v4.6.2).</strong> Op de VvE-bijlage liep de tekst "100%" in het rode zegel over de rand van het bolletje. De tekst staat nu kleiner en het bolletje is iets ruimer, zodat "100%" netjes binnen de cirkel valt. Alleen opmaak, verder verandert er niets. Geen SQL nodig.</p>
@@ -2543,6 +2544,9 @@
         </label>
       </div>
       <div id="ohpScopeWrap" style="margin-top: 1rem; display: none;">
+        <label style="display: block; margin-bottom: 1rem;">Aantal appartementen <span style="font-weight: normal; font-size: 0.75rem; color: var(--muted);">— alleen VvE; voor de gemiddelde maandbijdrage per eigenaar op de bijlage</span><br>
+          <input type="number" id="ohpAantalApp" min="1" max="2000" step="1" placeholder="bv. 24" style="width: 160px; font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; margin-top: 0.35rem;">
+        </label>
         <label>Scope — wat valt onder dit plan <span style="font-weight: normal; font-size: 0.75rem; color: var(--muted);">— alleen VvE; verschijnt als aparte sectie op de bijlage</span></label>
         <textarea id="ohpScope" rows="3" placeholder="Bijv. 'Alle houten kozijnen, draaiende delen en boeidelen aan voor- en achtergevel; houten galerijhekken; bergingsdeuren begane grond. Metselwerk, dakbedekking en kunststof onderdelen vallen buiten dit plan.'" style="width: 100%; font-family: inherit; font-size: 0.9rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; resize: vertical;"></textarea>
       </div>
@@ -3229,7 +3233,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.7.1';
+const APP_VERSION = 'v4.7.2';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3624,6 +3628,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.7.2', d: '2026-06-27', h: 'VvE-bijlage: maandbijdrage per appartement plus scherpere onder-water-periode in blok B. Nieuw veld aantal appartementen op het plan (kolom aantal_appartementen, mapping aantalAppartementen, invoer ohpAantalApp in de VvE-sectie ohpScopeWrap, gelezen/gevuld/opgeslagen). In _ohpBuildOfferteHTML wordt perMaandPerApp = gemPerJaar / aantalApp / 12 getoond, alleen bij isVve met aantal ingevuld: als cascade-regel .appmaand in de hero onder de jaarreservering en als callout "Per eigenaar" in de liquiditeitssectie, met de kanttekening dat het een gemiddelde is en de echte bijdrage per breukdeel loopt. De onder-water-band in het liquiditeitsbeeld start nu op het uitgavejaar (X(firstNeg), reserve wordt pas bij betaling aangesproken) in plaats van op de geometrische linkerkruising, en loopt rechts tot de echte kruising via xAtZero; meerdere negatieve periodes worden elk als aparte band getekend. Het diepste punt houdt de stippellijn met "diepst". De conclusiezin noemt de hele periode (van firstNeg tot en met lastNeg, het diepst in laagste.jaar). Migratie aantal_appartementen al uitgevoerd.' },
   { v: '4.7.1', d: '2026-06-27', h: 'Duidelijkheidsfix in blok B: onder elke bedragkolom van de .liq-table (Uitgave, Reservering, Cum. gereserveerd, Cum. uitgegeven, Saldo-opbouw) staat nu een klein "(incl. btw)" via een span.ex, naast de bestaande zin bovenaan. Nieuwe scoped CSS .ob table.liq-table th .ex (display:block, niet-uppercase, muted, 6pt). Alleen opmaak. Geen SQL.' },
   { v: '4.7.0', d: '2026-06-27', h: 'Blok B: sectie "Reservering en liquiditeit" op de VvE-offerte-bijlage. In _ohpBuildOfferteHTML, alleen isVve, wordt uit perJaar (incl btw) en gemPerJaar een liquiditeitsoverzicht gebouwd: per jaar uitgave, reservering, cumulatief gereserveerd (R maal n), cumulatief uitgegeven en het saldo (cr min cu); het laagste saldo is de benodigde reserve op dat moment. Een inline SVG toont twee polylijnen op euro-schaal, cumulatief gereserveerd (brush) tegenover cumulatief uitgegeven (ink), met gridlijnen en jaarlabels, en bij een negatief laagste punt een gemarkeerd gat met de tekst "uit reserve". Daaronder een .liq-table met de saldo-kolom (negatief in brush-deep via eurSaldo met echte minus) en een callout-conclusie met het laagste punt. SVG-kleuren als vaste hex omdat var() niet werkt in SVG-presentatieattributen bij print. Het blok wordt na de jaartabel en mjopNote met een eigen nextSec() gepusht. Nieuwe scoped CSS (.liq-svg, .liq-legend, .liq-table). Particulier ongewijzigd. Geen SQL.' },
   { v: '4.6.2', d: '2026-06-27', h: 'Opmaakfix: de "100%"-tekst in het zegel van de garantieregel-voorin liep over de rand van de cirkel. .ob .garblok .seal van 40px naar 44px, font-size van 12.5pt naar 9.5pt, font-weight 900 naar 800, letter-spacing -0.3px en white-space:nowrap toegevoegd, zodat 100% binnen het bolletje valt. Alleen CSS. Geen SQL.' },
@@ -5564,6 +5569,7 @@ function _mapOhpFromDB(row) {
     ontvangerType: row.ontvanger_type || 'particulier', // v3.23.0 — 'particulier' | 'vve'
     betaalmodel: row.betaalmodel || 'abo', // v3.29.0 — 'contant' | 'abo', voor de planning-splitsing
     scopeOmschrijving: row.scope_omschrijving || '',      // v3.23.0 — VvE: wat valt onder het plan
+    aantalAppartementen: row.aantal_appartementen != null ? row.aantal_appartementen : null, // v4.7.2 — VvE: voor maandbijdrage per eigenaar
     status:        row.status || 'concept',               // v3.25.10 — los van calc-status; 5 waarden
     aangemaakt:    row.aangemaakt || null,
     gewijzigd:     row.gewijzigd  || null,
@@ -5581,6 +5587,7 @@ function _mapOhpToDB(p) {
     ontvanger_type: p.ontvangerType || 'particulier', // v3.23.0
     betaalmodel: p.betaalmodel || 'abo', // v3.29.0
     scope_omschrijving: p.scopeOmschrijving || '',      // v3.23.0
+    aantal_appartementen: p.aantalAppartementen != null ? p.aantalAppartementen : null, // v4.7.2
     status:         p.status || 'concept',              // v3.25.10
     gewijzigd:      new Date().toISOString()
   };
@@ -5784,6 +5791,7 @@ async function _ohpSaveParams(params) {
     ontvangerType: params.ontvangerType || 'particulier',
     betaalmodel:   params.betaalmodel || 'abo',
     scopeOmschrijving: params.scopeOmschrijving || '',
+    aantalAppartementen: params.aantalAppartementen != null ? params.aantalAppartementen : null, // v4.7.2
     status:        params.status || 'concept'   // v3.27.2 — werd niet meegenomen, statuswijziging in editor ging verloren
   };
   const saved = await _saveOhpParams(planObj);
@@ -6695,6 +6703,7 @@ function _ohpReadParamsFromUI() {
   const notEl = document.getElementById('ohpNotities');
   const typeEl = document.getElementById('ohpOntvangerType');
   const scopeEl = document.getElementById('ohpScope');
+  const appEl = document.getElementById('ohpAantalApp'); // v4.7.2
   const statusEl = document.getElementById('ohpStatus'); // v3.25.10
   const betaalEl = document.getElementById('ohpBetaalmodel'); // v3.29.0
   return {
@@ -6705,6 +6714,7 @@ function _ohpReadParamsFromUI() {
     notities: notEl ? (notEl.value || '') : '',
     ontvangerType: typeEl ? (typeEl.value || 'particulier') : 'particulier',
     scopeOmschrijving: scopeEl ? (scopeEl.value || '') : '',
+    aantalAppartementen: appEl ? (parseInt(appEl.value) || null) : null, // v4.7.2
     status: statusEl ? (statusEl.value || 'concept') : 'concept', // v3.25.10
     betaalmodel: betaalEl ? (betaalEl.value || 'abo') : 'abo' // v3.29.0
   };
@@ -6826,6 +6836,7 @@ function _ohpRenderParams() {
   const elNotities  = document.getElementById('ohpNotities');
   const elType      = document.getElementById('ohpOntvangerType');
   const elScope     = document.getElementById('ohpScope');
+  const elAantalApp = document.getElementById('ohpAantalApp'); // v4.7.2
   const elStatus    = document.getElementById('ohpStatus'); // v3.25.10
   const elBetaalmodel = document.getElementById('ohpBetaalmodel'); // v3.29.0
   const bronBtw     = _ohpBronCalcBtw();
@@ -6837,6 +6848,7 @@ function _ohpRenderParams() {
     if (elNotities) elNotities.value = p.notities || '';
     if (elType) elType.value = p.ontvangerType || 'particulier';
     if (elScope) elScope.value = p.scopeOmschrijving || '';
+    if (elAantalApp) elAantalApp.value = p.aantalAppartementen || '';
     if (elStatus) elStatus.value = p.status || 'concept';
     if (elBetaalmodel) elBetaalmodel.value = p.betaalmodel || 'abo';
   } else {
@@ -6847,6 +6859,7 @@ function _ohpRenderParams() {
     if (elNotities) elNotities.value = '';
     if (elType) elType.value = 'particulier';
     if (elScope) elScope.value = '';
+    if (elAantalApp) elAantalApp.value = '';
     if (elStatus) elStatus.value = 'concept';
     if (elBetaalmodel) elBetaalmodel.value = 'abo';
   }
@@ -6869,6 +6882,7 @@ function _ohpRenderParams() {
   if (elNotities) elNotities.disabled = !hasCalc;
   if (elType) elType.disabled = !hasCalc;
   if (elScope) elScope.disabled = !hasCalc;
+  if (elAantalApp) elAantalApp.disabled = !hasCalc; // v4.7.2
   if (elStatus) elStatus.disabled = !hasCalc; // v3.25.10
   if (elBetaalmodel) elBetaalmodel.disabled = !hasCalc; // v3.29.0
   _ohpToggleScopeVisibility();
@@ -8298,7 +8312,7 @@ function _ohpBindUIEvents() {
     });
     cb._ohpBound = true;
   });
-  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope', 'ohpStatus', 'ohpBetaalmodel'].forEach(id => {
+  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope', 'ohpAantalApp', 'ohpStatus', 'ohpBetaalmodel'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el._ohpBound) {
       el.addEventListener('input', _ohpScheduleSave);
@@ -8551,6 +8565,9 @@ function _ohpBuildOfferteHTML(plan, calc) {
   });
   const gemPerJaar = plan.looptijdJaren > 0 ? (totaalGemiddelde / plan.looptijdJaren) : 0;
   const gemPerMaand = gemPerJaar / 12;
+  // v4.7.2 — gemiddelde maandbijdrage per appartement (alleen bij VvE met aantal ingevuld)
+  const aantalApp = (plan.aantalAppartementen != null && plan.aantalAppartementen > 0) ? plan.aantalAppartementen : null;
+  const perMaandPerApp = aantalApp ? (gemPerJaar / aantalApp / 12) : null;
 
   // --- §1 hero ---
   const isVve = (plan.ontvangerType === 'vve'); // v3.23.0 chunk B
@@ -8656,8 +8673,11 @@ function _ohpBuildOfferteHTML(plan, calc) {
     : `<p class="lead">Wij plannen het schilderonderhoud aan uw woning voor de komende jaren, voeren het op tijd uit en garanderen het resultaat. U hoeft niet meer zelf bij te houden wanneer wat moet. Dat doen wij.</p>
       <p class="lead">Door tijdig onderhoud voorkomen we groot herstel later. Dat houdt uw woning mooier én is op lange termijn voordeliger.</p>`;
 
+  const _appMaandHero = (perMaandPerApp != null)
+    ? `<div class="appmaand">&asymp; ${eur(perMaandPerApp)} per appartement per maand</div>`
+    : '';
   const heroInner = isVve
-    ? `<div><div class="big">${heroJaar}<span> / jaar</span></div><div class="sub">gemiddeld per jaar te reserveren, inclusief btw</div></div>
+    ? `<div><div class="big">${heroJaar}<span> / jaar</span></div><div class="sub">gemiddeld per jaar te reserveren, inclusief btw</div>${_appMaandHero}</div>
         <div class="right"><b>${heroTotaal}</b>totale investering<br>${pp} – ${eindJaar} &middot; ${plan.looptijdJaren} jaar</div>`
     : `<div><div class="big">${heroMaand}<span> / maand</span></div><div class="sub">gemiddeld over ${plan.looptijdJaren} jaar &middot; ${pp}–${eindJaar} &middot; inclusief btw</div></div>`;
 
@@ -8761,10 +8781,30 @@ function _ohpBuildOfferteHTML(plan, calc) {
     }
     let yl = '';
     lqRows.forEach((r, i) => { yl += `<text x="${X(i).toFixed(1)}" y="${yBas + 12}" text-anchor="middle" font-size="5.5" fill="${C_MUTED}">${String(r.jaar).slice(2)}</text>`; });
-    const gapMark = (laagste.saldo < 0)
-      ? `<rect x="${(gapx - 7).toFixed(1)}" y="${gapTop.toFixed(1)}" width="14" height="${(gapBot - gapTop).toFixed(1)}" fill="${C_BRUSH}" opacity="0.16"/><line x1="${gapx.toFixed(1)}" y1="${gapTop.toFixed(1)}" x2="${gapx.toFixed(1)}" y2="${gapBot.toFixed(1)}" stroke="${C_BRUSHD}" stroke-width="1" stroke-dasharray="2 2"/><text x="${(gapx + 10).toFixed(1)}" y="${((gapTop + gapBot) / 2).toFixed(1)}" font-size="6" fill="${C_BRUSHD}" font-weight="700">uit reserve ${eur(Math.abs(laagste.saldo))}</text>`
-      : '';
-    const svg = `<svg viewBox="0 0 ${VW} ${VH}" class="liq-svg" xmlns="http://www.w3.org/2000/svg"><line x1="${x0}" y1="${yBas}" x2="${x1}" y2="${yBas}" stroke="${C_INK}" stroke-width="0.8"/>${grid}${gapMark}<polyline points="${cuPts}" fill="none" stroke="${C_INK}" stroke-width="1.6"/><polyline points="${crPts}" fill="none" stroke="${C_BRUSH}" stroke-width="1.6"/>${yl}</svg>`;
+    // v4.7.2 — onder-water-periode als band: links op het uitgavejaar (de reserve wordt
+    // pas bij betaling aangesproken), rechts tot de echte kruising. Diepste punt apart.
+    const xAtZero = idx => {
+      const s0 = lqRows[idx].saldo, s1 = lqRows[idx + 1].saldo;
+      return X(idx) + (s0 / (s0 - s1)) * (X(idx + 1) - X(idx));
+    };
+    const bands = [];
+    for (let bi = 0; bi < N2;) {
+      if (lqRows[bi].saldo < 0) {
+        const sx = X(bi);
+        let bj = bi;
+        while (bj + 1 < N2 && lqRows[bj + 1].saldo < 0) bj++;
+        const ex = (bj === N2 - 1) ? X(N2 - 1) : xAtZero(bj);
+        bands.push({ sx, ex, bi, bj });
+        bi = bj + 1;
+      } else bi++;
+    }
+    let bandMark = '';
+    bands.forEach(bd => {
+      bandMark += `<rect x="${bd.sx.toFixed(1)}" y="${yTop}" width="${(bd.ex - bd.sx).toFixed(1)}" height="${yBas - yTop}" fill="${C_BRUSH}" opacity="0.09"/>`;
+      if (bd.bi <= li && li <= bd.bj) bandMark += `<text x="${((bd.sx + bd.ex) / 2).toFixed(1)}" y="${yTop + 8}" text-anchor="middle" font-size="6" fill="${C_BRUSHD}" font-weight="700">reserve aangesproken</text>`;
+    });
+    if (laagste.saldo < 0) bandMark += `<line x1="${gapx.toFixed(1)}" y1="${gapTop.toFixed(1)}" x2="${gapx.toFixed(1)}" y2="${gapBot.toFixed(1)}" stroke="${C_BRUSHD}" stroke-width="1" stroke-dasharray="2 2"/><circle cx="${gapx.toFixed(1)}" cy="${gapTop.toFixed(1)}" r="2" fill="${C_BRUSHD}"/><text x="${(gapx + 6).toFixed(1)}" y="${((gapTop + gapBot) / 2).toFixed(1)}" font-size="6" fill="${C_BRUSHD}" font-weight="700">diepst ${eur(Math.abs(laagste.saldo))}</text>`;
+    const svg = `<svg viewBox="0 0 ${VW} ${VH}" class="liq-svg" xmlns="http://www.w3.org/2000/svg"><line x1="${x0}" y1="${yBas}" x2="${x1}" y2="${yBas}" stroke="${C_INK}" stroke-width="0.8"/>${grid}${bandMark}<polyline points="${cuPts}" fill="none" stroke="${C_INK}" stroke-width="1.6"/><polyline points="${crPts}" fill="none" stroke="${C_BRUSH}" stroke-width="1.6"/>${yl}</svg>`;
     const legend = `<div class="liq-legend"><span><i class="ln brush"></i>Cumulatief gereserveerd</span><span><i class="ln ink"></i>Cumulatief uitgegeven</span></div>`;
     let trows = '';
     lqRows.forEach(r => {
@@ -8772,10 +8812,15 @@ function _ohpBuildOfferteHTML(plan, calc) {
       trows += `<tr><td>${r.jaar}</td><td class="amt">${r.uit ? eur(r.uit) : '\u2013'}</td><td class="amt">${eur(r.res)}</td><td class="amt">${eur(r.cr)}</td><td class="amt">${eur(r.cu)}</td><td class="amt"${neg}>${eurSaldo(r.saldo)}</td></tr>`;
     });
     const lqTable = `<table class="ptable liq-table"><tr><th>Jaar</th><th class="amt">Uitgave<span class="ex">(incl. btw)</span></th><th class="amt">Reservering<span class="ex">(incl. btw)</span></th><th class="amt">Cum. gereserveerd<span class="ex">(incl. btw)</span></th><th class="amt">Cum. uitgegeven<span class="ex">(incl. btw)</span></th><th class="amt">Saldo-opbouw<span class="ex">(incl. btw)</span></th></tr>${trows}</table>`;
+    const _negRows = lqRows.filter(r => r.saldo < 0);
+    const _periode = _negRows.length ? ((_negRows[0].jaar === _negRows[_negRows.length - 1].jaar) ? `in ${_negRows[0].jaar}` : `van ${_negRows[0].jaar} tot en met ${_negRows[_negRows.length - 1].jaar}`) : '';
     const concl = (laagste.saldo < 0)
-      ? `<div class="callout" style="margin-top:12px;"><b>Wat dit voor uw reserve betekent:</b> op het laagste punt, in ${laagste.jaar}, moet uw reserve minstens ${eur(Math.abs(laagste.saldo))} bedragen om de uitgaven te dekken. Daarna bouwt de pot weer op en is het plan aan het eind van de looptijd gedekt.</div>`
+      ? `<div class="callout" style="margin-top:12px;"><b>Wat dit voor uw reserve betekent:</b> ${_periode} spreekt u uw reserve aan, het diepst in ${laagste.jaar}. Op dat punt moet uw reserve minstens ${eur(Math.abs(laagste.saldo))} bedragen om de uitgaven te dekken. Daarna is de pot weer aangevuld en is het plan aan het eind van de looptijd gedekt.</div>`
       : `<div class="callout" style="margin-top:12px;"><b>Wat dit voor uw reserve betekent:</b> met de geadviseerde jaarreservering blijft de opgebouwde pot het hele plan boven de uitgaven, dus de reservering dekt de pieken.</div>`;
-    liquiditeitBody = `<p class="lead">Hieronder ziet u de pot die u opbouwt als u jaarlijks de geadviseerde reservering opzij zet, tegenover wat er volgens de planning uitgaat. Zo ziet u in \u00e9\u00e9n blik of uw reserve de pieken dekt. De bedragen zijn inclusief btw.</p>${svg}${legend}${lqTable}${concl}`;
+    const _appMaandLiq = (perMaandPerApp != null)
+      ? `<div class="callout" style="margin-top:10px;"><b>Per eigenaar:</b> omgerekend over ${aantalApp} appartementen reserveert elke eigenaar hiervoor gemiddeld ongeveer ${eur(perMaandPerApp)} per maand. Dit is een gemiddelde; de werkelijke bijdrage loopt per breukdeel.</div>`
+      : '';
+    liquiditeitBody = `<p class="lead">Hieronder ziet u de pot die u opbouwt als u jaarlijks de geadviseerde reservering opzij zet, tegenover wat er volgens de planning uitgaat. Zo ziet u in \u00e9\u00e9n blik of uw reserve de pieken dekt. De bedragen zijn inclusief btw.</p>${svg}${legend}${lqTable}${concl}${_appMaandLiq}`;
   }
 
   // Quotes — VvE-variant is voorlopige voorbeeldtekst; vervang door een echte referentie.
@@ -8826,6 +8871,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .hero .big{font-weight:900;font-size:30pt;line-height:0.95;letter-spacing:-0.5px;}
 .ob .hero .big span{color:var(--brush);}
 .ob .hero .sub{font-size:9pt;color:#c9c2b6;margin-top:5px;}
+.ob .hero .appmaand{font-size:11.5pt;font-weight:800;color:var(--brush);margin-top:9px;letter-spacing:-0.2px;}
 .ob .hero .right{text-align:right;font-size:8.5pt;color:#b8b1a4;line-height:1.5;}
 .ob .hero .right b{color:#fff;font-weight:700;font-size:11pt;display:block;}
 .ob .benefits{display:grid;grid-template-columns:1fr 1fr;gap:9px 26px;margin-top:16px;}
