@@ -1,3 +1,19 @@
+## v4.7.4 — Liquiditeitssectie paginieert netjes en kwantificeert elke dip
+Twee fixes op pagina 4 van de VvE-bijlage, naar aanleiding van een plan met een lange looptijd en twee aparte tekortmomenten.
+
+### Wat er verandert
+- Bij een lange looptijd liep de liquiditeitstabel samen met het beeld en de conclusie over de paginarand, waardoor de conclusiezin tegen de voettekst botste en werd afgekapt. De sectie is nu opgesplitst: het beeld met de sectiekop, daarna de tabel als apart blok dat netjes per rij over pagina's mag breken met een herhaalde koprij, en de conclusie als los blok erna. Niets botst nog met de voettekst.
+- In de grafiek krijgt nu elke periode waarin de reserve wordt aangesproken zijn eigen bedrag, niet alleen de diepste. Spreekt een plan de reserve op twee losse momenten aan, dan staan beide bedragen in het beeld, met het woord "diepst" op het diepste punt.
+- De conclusiezin noemt nu de werkelijke jaren waarin de reserve wordt aangesproken. Twee losse dips, bijvoorbeeld 2028 en 2030 met een positief 2029 ertussen, worden als aparte momenten beschreven in plaats van als één doorlopende periode.
+- Geen SQL nodig.
+
+### Onder de motorkap
+- De liquiditeitssectie wordt als drie .ob-blokken gepusht: een .sec-blok met kop, beeld en legenda; de .liq-table als data-split="table" blok (nu met thead en tbody); en een blok met de conclusie en de per-eigenaar-callout.
+- _ohpPaginate gebruikt bij het splitsen van een tabel nu tbl.className in plaats van een hardgecodeerde class, zodat de liq-table-opmaak op vervolgpagina's behouden blijft.
+- De band-markering loopt per band en zet de stippellijn op het diepste punt binnen die band met het bijbehorende bedrag. De conclusie-periode wordt uit de banden afgeleid.
+
+---
+
 ## v4.7.3 — Geen dataverlies meer bij het opmeten op de iPad
 Belangrijke fix voor de meetstaat: ingevoerde maten konden verloren gaan en dat is nu verholpen.
 
