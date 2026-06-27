@@ -1,3 +1,25 @@
+## v4.7.14 — Juridisch waterdichte bedenktermijn op de besluitpagina
+Na een scherpe juridische check van de adviseur is de wetsverwijzing onder het ALV-besluit gecorrigeerd.
+
+### Wat er verandert
+- De disclaimer verwees voor de termijn van één maand alleen naar artikel 2:15 BW. Dat artikel regelt de vernietigbaarheid van besluiten, maar kent voor gewone verenigingen een termijn van een jaar.
+- De kortere termijn van één maand voor een VvE-besluit staat in artikel 5:130 BW (Boek 5, goederenrecht). De tekst verwijst nu naar artikel 5:130 in verbinding met artikel 2:15 van het Burgerlijk Wetboek.
+- De termijn loopt nu vanaf de dag waarop de eigenaar van het besluit heeft kennisgenomen of redelijkerwijs had kunnen kennisnemen, conform de wettelijke formulering.
+- Zo struikelt geen enkele VvE-beheerder of advocaat er nog over. Geen SQL nodig.
+
+---
+
+## v4.7.13 — Scherpere conclusiezin bij de liquiditeit
+De slotzin onder het liquiditeitsbeeld kon verkeerd gelezen worden, na een terechte opmerking van de adviseur aangepast.
+
+### Wat er verandert
+- De zin zei "op dat punt moet uw reserve minstens € X bedragen", wat kon lezen alsof € X de hele benodigde reserve was. In werkelijkheid heeft de VvE op dat moment cumulatief al veel meer gereserveerd.
+- € X is een eenmalig tekort in de opbouw vanaf het prijspeil tegenover de uitgaven tot dan toe. De zin maakt dat nu duidelijk: dat verschil vangt de VvE op uit de reserve die ze al heeft.
+- Zo klopt de boodschap met de tabel en kan een ervaren penningmeester er niet meer over struikelen. De berekening en de tabel blijven ongewijzigd.
+- Geen SQL nodig.
+
+---
+
 ## v4.7.12 — Logische bestandsnaam voor het onderhoudsplan
 Bij het opslaan als PDF stelde de print-dialoog standaard "Schilders Calculatie" voor.
 
