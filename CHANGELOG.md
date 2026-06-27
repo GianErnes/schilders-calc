@@ -1,3 +1,24 @@
+## v4.7.11 — Resultaat in plaats van een klusjeslijst
+De bijlage maakt nu expliciet dat je een resultaat verkoopt en geen lijst met losse handelingen.
+
+### Wat er verandert
+- **Sectie 01 opent met de kern van het aanbod.** Geen lijst met losse klusjes maar een resultaat: het pand de hele looptijd in goede staat, met 100% garantie. Wanneer wij controleren, waar wij bijwerken en wanneer wij volledig overschilderen bepalen wij vakkundig en op het juiste moment; de eigenaar beoordeelt het eindresultaat. In gewone taal, met een eigen tekst voor de VvE (uw complex) en de particulier (uw woning). De looptijd vult de app dynamisch.
+- **Zekerheidspagina, voor de vakman benoemd.** "Wat de garantie inhoudt" opent nu met de term resultaatverplichting: wij staan niet in voor losse handelingen maar voor het resultaat, schilderwerk dat volgens goed schildersvakmanschap zijn beschermende functie behoudt.
+- **Wie bepaalt of het resultaat goed is.** Het Vakwerk-item beantwoordt die vraag: verschil je met de klant van mening over de staat van het werk, dan oordeelt de onafhankelijke geschillencommissie en niet Ernes zelf, met Stichting AF als borg voor de nakoming.
+- Geen SQL nodig.
+
+---
+
+## v4.7.10 — Eerlijker belofte over het kostenoverzicht
+De regel "Voor uw administratie" in de VvE-bijlage beloofde de cijfers "ook als overzicht per onderdeel", zonder te zeggen op welk niveau.
+
+### Wat er verandert
+- De zin belooft nu een samenvattend kostenoverzicht per onderdeel op prijspeil (het basisjaar van het plan), en vermeldt zelf dat de indexering naar latere jaren in de jaarbedragen van het plan zit.
+- Zo belooft de brochure precies wat de app kan leveren: subtotalen per element op prijspeil, zonder eenheidsprijzen, en niet geïndexeerd per onderdeel. De eenheidsprijzen blijven binnen en het is meteen duidelijk waar de indexering leeft.
+- Geen SQL nodig.
+
+---
+
 ## v4.7.9 — Logo's in de bijlage hersteld
 Bij het maken van de onderhoudsplan-bijlage bleven het Ernes-logo en het Onderhoudsgarantie+ plan-logo soms leeg, terwijl de tekst er wel stond.
 
