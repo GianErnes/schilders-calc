@@ -1,3 +1,24 @@
+## v4.7.9 — Logo's in de bijlage hersteld
+Bij het maken van de onderhoudsplan-bijlage bleven het Ernes-logo en het Onderhoudsgarantie+ plan-logo soms leeg, terwijl de tekst er wel stond.
+
+### Wat er verandert
+- De logo's in de kop (Ernes links, Onderhoudsgarantie+ plan rechts) en het kleine Ernes-logo in de voettekst komen nu altijd mee bij het printen.
+- De oorzaak was de timing: de browser, vooral Safari, maakte het printbeeld voordat die ingebedde afbeeldingen klaar waren met laden. De app wacht nu tot ze gedecodeerd zijn voordat hij de pagina's opmaakt en print.
+- Geen SQL nodig.
+
+---
+
+## v4.7.8 — Rustiger hero-blok
+Het opvallende kader met de jaarreservering bovenaan de bijlage was een koud, bijna zwart vlak dat op de verder warme pagina te heftig uitsprong.
+
+### Wat er verandert
+- Het hero-blok is nu een licht blok op wit met alleen een dunne lijn eromheen, in plaats van een gevuld zwart vlak.
+- Het bedrag staat in inkt, het oranje "/ jaar" (of "/ maand") blijft het accent, en de bijregels staan in rustige tinten.
+- Het belangrijkste getal trekt nog steeds de aandacht, maar de hele pagina ademt nu dezelfde rust.
+- Geldt voor de VvE- en de particulier-bijlage. Geen SQL nodig.
+
+---
+
 ## v4.7.7 — Besluitpagina, kenmerk in de kop en het Vakwerk-embleem
 De VvE-bijlage sluit nu af met een formele besluitpagina, het offertenummer staat als kenmerk in de kop, en het keurmerk-embleem staat op de zekerheidspagina.
 

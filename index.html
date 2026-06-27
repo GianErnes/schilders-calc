@@ -2106,8 +2106,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.7</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.9</h2>
       <div class="intro-body">
+        <p><strong>🖼️ Logo's in de kop en voet van de bijlage hersteld (v4.7.9).</strong> Bij het maken van de onderhoudsplan-bijlage bleven het Ernes-logo links en het Onderhoudsgarantie+ plan-logo rechts soms leeg, terwijl de tekst er wel stond. Dat kwam doordat de browser, vooral Safari, het printbeeld maakte voordat die logo's (ingebedde afbeeldingen) klaar waren met laden. De app wacht nu netjes tot de logo's gedecodeerd zijn voordat hij de pagina's opmaakt en print, zodat ze altijd meekomen. Geen SQL nodig.</p>
+        <p><strong>🎈 Rustiger hero-blok (v4.7.8).</strong> Het opvallende kader met de jaarreservering bovenaan de bijlage was een koud, bijna zwart vlak dat er op de verder warme en rustige pagina te heftig uitsprong. Het is nu een licht blok met alleen een dunne lijn eromheen op wit, met het bedrag in inkt en het oranje "/ jaar" dat het werk doet. Zo trekt het belangrijkste getal nog steeds de aandacht, maar ademt de hele pagina dezelfde rust. Geldt voor de VvE- en de particulier-bijlage. Geen SQL nodig.</p>
         <p><strong>🏛️ Besluitpagina, kenmerk in de kop en het keurmerk-embleem (v4.7.7).</strong> De VvE-bijlage sluit nu af met een formele besluitpagina waarmee de vergadering van eigenaren het plan kan vaststellen. Daarop staan drie besluitpunten (het plan vaststellen, de reservering opnemen in de begroting en opdracht verlenen aan Ernes), de kerngetallen herhaald, een stemblok met voor, tegen, onthouding en het quorum, een regel voor datum en handtekening van de voorzitter, en onderaan de wettelijke bedenktermijn. Het offertenummer staat nu ook als kenmerk in de kop op elke pagina, en op de zekerheidspagina staat het Vakwerk Plusgarantie-embleem met een accent in de eigen blauwtint van het keurmerk. Geen SQL nodig.</p>
         <p><strong>🏷️ Titel in de kop van de bijlage (v4.7.6).</strong> Boven de lijn op elke pagina van het onderhoudsplan staat nu een titel, zodat een lezer die een losse pagina in handen krijgt meteen weet waar het over gaat. In het midden van de kop staat klein "Onderhoudsgarantie+ plan", daaronder de complexnaam dik met de scope erachter, bijvoorbeeld "VvE Nieuw Welten VIII · Buitenwerk". De complexnaam komt uit het klant-veld van de calculatie en de scope uit het deel na de streep in de projectnaam, met een nette terugval als die streep er niet is. De looptijd blijft rechts bij het garantie-logo. Geen SQL nodig.</p>
         <p><strong>🎯 Liquiditeitsgrafiek afgewerkt tot in de finesse (v4.7.5).</strong> De laatste verfijningen van blok B op de VvE-bijlage. Elk bedrag dat op een dieptepunt uit de reserve gaat staat nu rustig onder het bijbehorende jaar, los van de lijnen, met een stippellijn die van het punt omlaag loopt en netjes om het jaartal heen breekt voor hij het bedrag bereikt. De euro-bedragen in de liquiditeitstabel breken niet meer af boven de tienduizend euro. En de legenda heeft een derde regel die uitlegt wat dat dieptepunt-bedrag betekent, voor de lezer die het niet meteen ziet. Geen SQL nodig.</p>
@@ -3238,7 +3240,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.7.7';
+const APP_VERSION = 'v4.7.9';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3633,6 +3635,8 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.7.9', d: '2026-06-27', h: 'Logo-fix in de onderhoudsplan-bijlage. Het Ernes-logo in de kop en de voet en het Onderhoudsgarantie+ plan-logo in de kop bleven bij het printen soms leeg, terwijl de tekst wel verscheen, vooral in Safari. Oorzaak: de data-URI-afbeeldingen waren nog niet gedecodeerd op het moment dat _ohpPaginate de pagina opmaakte en window.print() het printbeeld vastlegde. Nieuwe helper _ohpPreloadImages() verzamelt alle img-bronnen uit de kop- en voet-templates en de blokken en decodeert ze (via Image.decode, met onload/onerror als terugval) vóór de paginering en de print. De printflow in _ohpPrintOfferte wacht nu eerst op de fonts en daarna op deze afbeeldingen, in beide takken (met en zonder document.fonts). Alleen het printpad van de bijlage; geen wijziging aan de inhoud of opmaak. Geen SQL.' },
+  { v: '4.7.8', d: '2026-06-27', h: 'Rustiger hero-blok in de onderhoudsplan-bijlage. Het kader met de jaarreservering (VvE) of de maandprijs (particulier) was een koud, bijna zwart vlak (background var(--ink), witte tekst) dat op de verder warme pagina te zwaar uitsprong. Het is nu variant D: een licht blok op wit met alleen een dunne omlijning (background #fff, border 1.6px solid var(--ink), box-sizing border-box). Het grote bedrag staat in inkt, het "/ jaar" of "/ maand" blijft brush-oranje, de subregel en de rechterkolom in muted, en de per-maand-per-appartement-regel in brush-deep voor genoeg contrast op wit. Zo blijft het de blikvanger zonder de harde zwarte klap, en ademt de hele pagina dezelfde rust. Alleen CSS in de bijlage-stijl; geen wijziging aan de inhoud of de berekening. Geen SQL.' },
   { v: '4.7.7', d: '2026-06-27', h: 'Blok D (ALV-besluitpagina), kenmerk in de kop en het Vakwerk-embleem op de zekerheidspagina. (1) De VvE-bijlage krijgt als laatste sectie "Besluit van de vergadering van eigenaren" (auto-genummerd via nextSec, alleen voor isVve): lead, drie besluitpunten in een genummerde lijst (plan vaststellen met complex/scope/looptijd, reservering opnemen, opdracht aan Ernes), een kenmerkregel die het plan als besluitstuk neerzet en naar de offerte in de administratie verwijst, de kerngetallen-strip (looptijd/totaal/jaarreservering), een stemblok met voor/tegen/onthouding plus aanwezige tegenover vereiste stemmen en quorum ja/nee, invulregels voor datum en handtekening voorzitter, en de wettelijke bedenktermijn (art. 2:15 BW) als disclaimer. Punt 1 zet de scope met kleine letter in de zin via _scopeZin. (2) Het offertenummer via _offerteNummer(calc) staat nu als "Kenmerk ..." in de masthead (m-ref) op elke pagina, en op de besluitpagina ook als regel zodat een losse pagina in de notulen volledig is; offertedatum via _offDatumLang(calc.offerteConfig.offertedatum). Is er geen nummer toegekend, dan een invulregel. (3) Op de zekerheidspagina staat het Vakwerk Plusgarantie-embleem (LOGO_VAKWERK) naast de keurmerk-regel, met een border en stip in de eigen blauwtint van het embleem (nieuwe var --vakblue #0080b8, gesampled uit het logo); het oranje blijft het accent van de rest. Nieuwe scoped CSS voor .besluit, .kenmerk, .kg, .stem, .besluit-sec .fill, .disc en .zek .item.keur. Geen SQL.' },
   { v: '4.7.6', d: '2026-06-27', h: 'Titel in de masthead van de onderhoudsplan-bijlage. Boven de scheidingslijn, in het midden tussen het Ernes-logo en het garantie-logo, staat nu een titelblok (variant B): klein "Onderhoudsgarantie+ plan" als plantype, daaronder de complexnaam dik met de scope erachter, bijvoorbeeld "VvE Nieuw Welten VIII &middot; Buitenwerk". De complexnaam komt uit calc.klant; valt dat weg, dan het deel vr de "|" in de projectnaam (calc.naam). De scope komt uit het deel na de "|" in de projectnaam, en wordt weggelaten als die streep er niet is. De looptijd blijft rechts bij het garantie-logo onder de m-right-kolom. Nieuwe scoped CSS .ob .m-title (.t-type uppercase muted 7.5pt, .t1 10.5pt met .t1 b op 800). Werkt voor de VvE- en de particulier-variant omdat de masthead n keer wordt opgebouwd. Klantnaam en scope via _escapeHtml ontsmet. Geen SQL.' },
   { v: '4.7.5', d: '2026-06-27', h: 'Finesse-afwerking van de liquiditeitsgrafiek in blok B van de VvE-bijlage. (1) Het bedrag dat op een dieptepunt uit de reserve gaat staat nu gecentreerd onder het bijbehorende jaar, onder de nullijn, los van de polylijnen; het label "diepst" is uit het beeld gehaald omdat de conclusiezin het diepste punt al noemt. (2) De stippellijn loopt van het dieptepunt (cu) omlaag in twee segmenten: van het punt tot net boven het jaartal en, na een gat rond het jaartal, van net eronder tot vlak boven het bedrag. Zo breekt de lijn netjes om het jaartal heen. De viewBox-hoogte ging van 190 naar 210 voor de extra ruimte onderaan. (3) De bedragen in de .liq-table breken niet meer af boven de tienduizend euro via .ob table.liq-table td.amt{white-space:nowrap}. (4) Derde legenda-item met een dashed brush-deep marker en de tekst "bedrag dat u op dat moment uit uw reserve haalt"; de legenda mag nu afbreken (flex-wrap, gap 8px 26px). Geen SQL.' },
@@ -8896,13 +8900,13 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .sec-label .h{font-size:16pt;font-weight:700;}
 .ob .lead{font-size:10.5pt;line-height:1.55;max-width:64ch;color:#3a352e;}
 .ob .lead+.lead{margin-top:7px;}
-.ob .hero{background:var(--ink);color:#fff;border-radius:4px;padding:20px 26px;display:flex;justify-content:space-between;align-items:center;margin:16px 0 0;}
+.ob .hero{background:#fff;color:var(--ink);border:1.6px solid var(--ink);border-radius:4px;padding:20px 26px;display:flex;justify-content:space-between;align-items:center;margin:16px 0 0;box-sizing:border-box;}
 .ob .hero .big{font-weight:900;font-size:30pt;line-height:0.95;letter-spacing:-0.5px;}
 .ob .hero .big span{color:var(--brush);}
-.ob .hero .sub{font-size:9pt;color:#c9c2b6;margin-top:5px;}
-.ob .hero .appmaand{font-size:11.5pt;font-weight:800;color:var(--brush);margin-top:9px;letter-spacing:-0.2px;}
-.ob .hero .right{text-align:right;font-size:8.5pt;color:#b8b1a4;line-height:1.5;}
-.ob .hero .right b{color:#fff;font-weight:700;font-size:11pt;display:block;}
+.ob .hero .sub{font-size:9pt;color:var(--muted);margin-top:5px;}
+.ob .hero .appmaand{font-size:11.5pt;font-weight:800;color:var(--brush-deep);margin-top:9px;letter-spacing:-0.2px;}
+.ob .hero .right{text-align:right;font-size:8.5pt;color:var(--muted);line-height:1.5;}
+.ob .hero .right b{color:var(--ink);font-weight:700;font-size:11pt;display:block;}
 .ob .benefits{display:grid;grid-template-columns:1fr 1fr;gap:9px 26px;margin-top:16px;}
 .ob .benefit{display:flex;gap:10px;align-items:flex-start;}
 .ob .benefit .tick{flex:0 0 auto;width:19px;height:19px;border-radius:50%;background:var(--brush);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-top:1px;}
@@ -9190,6 +9194,31 @@ function _ohpBuildOfferteHTML(plan, calc) {
 </div>`;
 }
 
+// v4.7.9 — Decodeert de data-URI-logo's (kop en voet) vooraf, zodat ze klaar
+// zijn voordat de paginator meet en de browser het printbeeld maakt. Zonder dit
+// bleven vooral in Safari de logo's leeg terwijl de tekst wel verscheen.
+function _ohpPreloadImages() {
+  try {
+    const pa = document.getElementById('printArea');
+    if (!pa) return Promise.resolve();
+    const srcs = new Set();
+    pa.querySelectorAll('template').forEach(t => {
+      if (t.content) t.content.querySelectorAll('img').forEach(im => { if (im.src) srcs.add(im.src); });
+    });
+    pa.querySelectorAll('img').forEach(im => { if (im.src) srcs.add(im.src); });
+    const list = Array.from(srcs);
+    if (!list.length) return Promise.resolve();
+    return Promise.all(list.map(src => {
+      const im = new Image();
+      im.src = src;
+      if (im.decode) return im.decode().catch(() => {});
+      return new Promise(res => { im.onload = im.onerror = res; });
+    }));
+  } catch (e) {
+    return Promise.resolve();
+  }
+}
+
 // v4.3.0 — Verdeelt de losse brochure-blokken over vaste A4-pagina's.
 // Draait ná het injecteren van de HTML en ná het laden van de fonts, vlak
 // voor window.print(). Meet de beschikbare hoogte per pagina en de hoogte
@@ -9325,17 +9354,19 @@ function _ohpPrintOfferte() {
   const beurten = (plan.beurten || []).filter(b => b.jaartal >= pp && b.jaartal <= eind);
   if (!beurten.length) { _toast('Voeg eerst minstens \u00e9\u00e9n beurt toe'); return; }
   document.getElementById('printArea').innerHTML = _ohpBuildOfferteHTML(plan, calc);
-  // Wacht tot Libre Franklin geladen is — anders print de browser met een fallback-font.
+  // Wacht tot Libre Franklin én de data-URI-logo's klaar zijn — anders print de
+  // browser met een fallback-font of zonder logo's (Safari maakt het printbeeld
+  // anders voordat de afbeeldingen gedecodeerd zijn).
+  const _afterFonts = () => _ohpPreloadImages().then(() => { _ohpPaginate(); window.print(); }).catch(() => { _ohpPaginate(); window.print(); });
   if (document.fonts && document.fonts.load) {
     Promise.all([
       document.fonts.load('400 16px "Libre Franklin"'),
       document.fonts.load('600 16px "Libre Franklin"'),
       document.fonts.load('700 16px "Libre Franklin"'),
       document.fonts.load('900 16px "Libre Franklin"')
-    ]).then(() => { _ohpPaginate(); window.print(); }).catch(() => { _ohpPaginate(); window.print(); });
+    ]).then(_afterFonts).catch(_afterFonts);
   } else {
-    _ohpPaginate();
-    window.print();
+    _afterFonts();
   }
 }
 
