@@ -1,3 +1,19 @@
+## v4.7.7 — Besluitpagina, kenmerk in de kop en het Vakwerk-embleem
+De VvE-bijlage sluit nu af met een formele besluitpagina, het offertenummer staat als kenmerk in de kop, en het keurmerk-embleem staat op de zekerheidspagina.
+
+### Wat er verandert
+- **Besluitpagina (blok D, alleen VvE).** Als laatste sectie "Besluit van de vergadering van eigenaren": drie besluitpunten (het plan vaststellen voor het complex en de scope over de looptijd, de jaarlijkse reservering opnemen in de begroting, opdracht verlenen aan Ernes), de kerngetallen herhaald, een stemblok met voor, tegen, onthouding en het quorum, een regel voor datum en handtekening van de voorzitter, en de wettelijke bedenktermijn (artikel 2:15 BW) onderaan.
+- **Plan is het besluitstuk.** De kenmerkregel zet het onderhoudsplan neer als het stuk waarover wordt besloten; het kenmerk verwijst naar de bijbehorende offerte in de administratie. De offerte zelf wordt niet als bijlage meegeplakt.
+- **Kenmerk in de kop.** Het offertenummer staat nu als "Kenmerk ..." rechts in de kop op elke pagina, en nog eens op de besluitpagina zelf zodat een losse pagina in de notulen volledig is. Is er nog geen nummer toegekend, dan een invulregel.
+- **Vakwerk-embleem.** Op de zekerheidspagina staat het Vakwerk Plusgarantie-embleem naast de keurmerk-regel, met een accent in de eigen blauwtint van het keurmerk. Het oranje blijft het accent van de rest van de brochure.
+- Geen SQL nodig.
+
+### Onder de motorkap
+- Nieuw besluit-lichaam in _ohpBuildOfferteHTML, met sectienummering via nextSec in de juiste volgorde; offertenummer via _offerteNummer(calc) en datum via _offDatumLang.
+- Nieuwe CSS-variabele --vakblue (#0080b8), gesampled uit het embleem, en scoped CSS voor de besluitlijst, de kerngetallen-strip, het stemblok, het invulgedeelte en het keurmerk-item.
+
+---
+
 ## v4.7.6 — Titel in de kop van de onderhoudsplan-bijlage
 Boven de lijn op elke pagina staat nu een titel, zodat een losse pagina meteen herkenbaar is.
 

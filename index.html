@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.6</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.7</h2>
       <div class="intro-body">
+        <p><strong>🏛️ Besluitpagina, kenmerk in de kop en het keurmerk-embleem (v4.7.7).</strong> De VvE-bijlage sluit nu af met een formele besluitpagina waarmee de vergadering van eigenaren het plan kan vaststellen. Daarop staan drie besluitpunten (het plan vaststellen, de reservering opnemen in de begroting en opdracht verlenen aan Ernes), de kerngetallen herhaald, een stemblok met voor, tegen, onthouding en het quorum, een regel voor datum en handtekening van de voorzitter, en onderaan de wettelijke bedenktermijn. Het offertenummer staat nu ook als kenmerk in de kop op elke pagina, en op de zekerheidspagina staat het Vakwerk Plusgarantie-embleem met een accent in de eigen blauwtint van het keurmerk. Geen SQL nodig.</p>
         <p><strong>🏷️ Titel in de kop van de bijlage (v4.7.6).</strong> Boven de lijn op elke pagina van het onderhoudsplan staat nu een titel, zodat een lezer die een losse pagina in handen krijgt meteen weet waar het over gaat. In het midden van de kop staat klein "Onderhoudsgarantie+ plan", daaronder de complexnaam dik met de scope erachter, bijvoorbeeld "VvE Nieuw Welten VIII · Buitenwerk". De complexnaam komt uit het klant-veld van de calculatie en de scope uit het deel na de streep in de projectnaam, met een nette terugval als die streep er niet is. De looptijd blijft rechts bij het garantie-logo. Geen SQL nodig.</p>
         <p><strong>🎯 Liquiditeitsgrafiek afgewerkt tot in de finesse (v4.7.5).</strong> De laatste verfijningen van blok B op de VvE-bijlage. Elk bedrag dat op een dieptepunt uit de reserve gaat staat nu rustig onder het bijbehorende jaar, los van de lijnen, met een stippellijn die van het punt omlaag loopt en netjes om het jaartal heen breekt voor hij het bedrag bereikt. De euro-bedragen in de liquiditeitstabel breken niet meer af boven de tienduizend euro. En de legenda heeft een derde regel die uitlegt wat dat dieptepunt-bedrag betekent, voor de lezer die het niet meteen ziet. Geen SQL nodig.</p>
         <p><strong>📄 Liquiditeitssectie paginieert netjes en kwantificeert elke dip (v4.7.4).</strong> Twee fixes op pagina 4 van de VvE-bijlage. Bij een lange looptijd liep de tabel samen met het beeld en de conclusie over de paginarand en botste de conclusiezin met de voettekst. De sectie is nu opgesplitst: het beeld met de sectiekop, de tabel als apart blok dat per rij over pagina's mag breken met een herhaalde koprij, en de conclusie als los blok erna. Daarnaast krijgt nu elke periode waarin de reserve wordt aangesproken zijn eigen bedrag in de grafiek, niet alleen de diepste. Spreekt een plan de reserve op twee losse momenten aan, dan staan beide bedragen in het beeld en noemt de conclusiezin de aparte jaren in plaats van een doorlopende periode. Geen SQL nodig.</p>
@@ -3237,7 +3238,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.7.6';
+const APP_VERSION = 'v4.7.7';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3632,6 +3633,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.7.7', d: '2026-06-27', h: 'Blok D (ALV-besluitpagina), kenmerk in de kop en het Vakwerk-embleem op de zekerheidspagina. (1) De VvE-bijlage krijgt als laatste sectie "Besluit van de vergadering van eigenaren" (auto-genummerd via nextSec, alleen voor isVve): lead, drie besluitpunten in een genummerde lijst (plan vaststellen met complex/scope/looptijd, reservering opnemen, opdracht aan Ernes), een kenmerkregel die het plan als besluitstuk neerzet en naar de offerte in de administratie verwijst, de kerngetallen-strip (looptijd/totaal/jaarreservering), een stemblok met voor/tegen/onthouding plus aanwezige tegenover vereiste stemmen en quorum ja/nee, invulregels voor datum en handtekening voorzitter, en de wettelijke bedenktermijn (art. 2:15 BW) als disclaimer. Punt 1 zet de scope met kleine letter in de zin via _scopeZin. (2) Het offertenummer via _offerteNummer(calc) staat nu als "Kenmerk ..." in de masthead (m-ref) op elke pagina, en op de besluitpagina ook als regel zodat een losse pagina in de notulen volledig is; offertedatum via _offDatumLang(calc.offerteConfig.offertedatum). Is er geen nummer toegekend, dan een invulregel. (3) Op de zekerheidspagina staat het Vakwerk Plusgarantie-embleem (LOGO_VAKWERK) naast de keurmerk-regel, met een border en stip in de eigen blauwtint van het embleem (nieuwe var --vakblue #0080b8, gesampled uit het logo); het oranje blijft het accent van de rest. Nieuwe scoped CSS voor .besluit, .kenmerk, .kg, .stem, .besluit-sec .fill, .disc en .zek .item.keur. Geen SQL.' },
   { v: '4.7.6', d: '2026-06-27', h: 'Titel in de masthead van de onderhoudsplan-bijlage. Boven de scheidingslijn, in het midden tussen het Ernes-logo en het garantie-logo, staat nu een titelblok (variant B): klein "Onderhoudsgarantie+ plan" als plantype, daaronder de complexnaam dik met de scope erachter, bijvoorbeeld "VvE Nieuw Welten VIII &middot; Buitenwerk". De complexnaam komt uit calc.klant; valt dat weg, dan het deel vr de "|" in de projectnaam (calc.naam). De scope komt uit het deel na de "|" in de projectnaam, en wordt weggelaten als die streep er niet is. De looptijd blijft rechts bij het garantie-logo onder de m-right-kolom. Nieuwe scoped CSS .ob .m-title (.t-type uppercase muted 7.5pt, .t1 10.5pt met .t1 b op 800). Werkt voor de VvE- en de particulier-variant omdat de masthead n keer wordt opgebouwd. Klantnaam en scope via _escapeHtml ontsmet. Geen SQL.' },
   { v: '4.7.5', d: '2026-06-27', h: 'Finesse-afwerking van de liquiditeitsgrafiek in blok B van de VvE-bijlage. (1) Het bedrag dat op een dieptepunt uit de reserve gaat staat nu gecentreerd onder het bijbehorende jaar, onder de nullijn, los van de polylijnen; het label "diepst" is uit het beeld gehaald omdat de conclusiezin het diepste punt al noemt. (2) De stippellijn loopt van het dieptepunt (cu) omlaag in twee segmenten: van het punt tot net boven het jaartal en, na een gat rond het jaartal, van net eronder tot vlak boven het bedrag. Zo breekt de lijn netjes om het jaartal heen. De viewBox-hoogte ging van 190 naar 210 voor de extra ruimte onderaan. (3) De bedragen in de .liq-table breken niet meer af boven de tienduizend euro via .ob table.liq-table td.amt{white-space:nowrap}. (4) Derde legenda-item met een dashed brush-deep marker en de tekst "bedrag dat u op dat moment uit uw reserve haalt"; de legenda mag nu afbreken (flex-wrap, gap 8px 26px). Geen SQL.' },
   { v: '4.7.4', d: '2026-06-27', h: 'Twee fixes in blok B van de VvE-bijlage. (1) Paginering: het liquiditeitsblok was \u00e9\u00e9n onsplitsbaar blok dat bij een lange looptijd over de paginarand liep en de conclusiezin tegen de voettekst duwde. Het is nu opgesplitst in drie blokken: een .sec-blok met de kop, het beeld en de legenda; de .liq-table als apart data-split="table" blok (nu met thead en tbody) dat _ohpPaginate per rij over pagina breekt; en een los blok met de conclusie en de per-eigenaar-callout. _ohpPaginate gebruikt bij het splitsen nu tbl.className in plaats van een hardgecodeerde class="ptable", zodat de liq-table-opmaak op vervolgpagina behouden blijft. (2) Elke onder-water-band krijgt nu zijn eigen diepste punt met stippellijn en bedrag; alleen het globale diepste punt houdt het label "diepst" en de "reserve aangesproken"-tekst. De conclusiezin leidt de periode af uit de banden (in {jaar} of van {a} tot en met {b}, met " en " aaneengeregen), zodat twee losse dips niet langer als \u00e9\u00e9n doorlopende periode worden beschreven. Geen SQL.' },
@@ -8872,7 +8874,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .print-only{padding:0 !important;font-family:'Libre Franklin',sans-serif !important;max-width:none !important;}
 .ob,.ob *{font-family:'Libre Franklin',sans-serif;box-sizing:border-box;}
 .ob,.ob *,.ob *::before,.ob *::after{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
-.ob{--ink:#231f20;--paper:#ffffff;--brush:#f1491c;--brush-deep:#c93914;--muted:#8c8479;--line:#e7e2d9;--soft:#fbeee9;--shadow:0 1px 3px rgba(35,31,32,.06);color:var(--ink);font-size:10.5pt;line-height:1.55;}
+.ob{--ink:#231f20;--paper:#ffffff;--brush:#f1491c;--brush-deep:#c93914;--muted:#8c8479;--line:#e7e2d9;--soft:#fbeee9;--vakblue:#0080b8;--shadow:0 1px 3px rgba(35,31,32,.06);color:var(--ink);font-size:10.5pt;line-height:1.55;}
 .ob .page{width:210mm;height:296mm;padding:13mm 19mm 14mm;position:relative;background:#fff;overflow:hidden;page-break-after:always;}
 .ob .page:last-child{page-break-after:auto;}
 .ob #obBlocks{width:172mm;}
@@ -8887,6 +8889,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .m-title .t-type{font-size:7.5pt;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;}
 .ob .m-title .t1{font-size:10.5pt;color:var(--ink);}
 .ob .m-title .t1 b{font-weight:800;}
+.ob .m-ref{font-size:7.5pt;color:var(--muted);letter-spacing:0.5px;}
 .ob .sec{margin-bottom:19px;}
 .ob .sec-label{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
 .ob .sec-label .num{font-weight:800;font-size:13pt;color:var(--brush);}
@@ -8988,6 +8991,43 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .zek .item .zh{font-weight:700;font-size:12pt;margin-bottom:4px;}
 .ob .zek .item .zh .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--brush);margin-right:7px;vertical-align:middle;}
 .ob .zek .item p{font-size:9.6pt;line-height:1.5;color:#4a443b;margin:0;}
+.ob .zek .item.keur{display:flex;gap:14px;align-items:flex-start;border-left:3px solid var(--vakblue);padding-left:12px;}
+.ob .zek .item.keur .tekst{flex:1;}
+.ob .zek .item.keur .zh .dot{background:var(--vakblue);}
+.ob .zek .item.keur .emb{flex:none;width:62px;}
+.ob .zek .item.keur .emb img{width:62px;height:auto;display:block;}
+.ob .besluit{margin:6px 0 4px;}
+.ob .besluit .intro{font-weight:700;margin-bottom:8px;}
+.ob .besluit ol{margin:0;padding-left:0;list-style:none;counter-reset:b;}
+.ob .besluit li{counter-increment:b;position:relative;padding:7px 0 7px 30px;border-bottom:1px solid var(--line);line-height:1.45;}
+.ob .besluit li:last-child{border-bottom:none;}
+.ob .besluit li::before{content:counter(b);position:absolute;left:0;top:7px;width:20px;height:20px;border-radius:50%;background:var(--brush);color:#fff;font-weight:800;font-size:9pt;text-align:center;line-height:20px;}
+.ob .kenmerk{margin:12px 0 2px;font-size:8.5pt;color:#5a534a;line-height:1.45;}
+.ob .kenmerk b{color:var(--ink);}
+.ob .kenmerk .invul{display:inline-block;min-width:140px;border-bottom:1px solid var(--ink);}
+.ob .kenmerk .invul.kort{min-width:90px;}
+.ob .kg{display:flex;gap:0;margin:14px 0 4px;border:1px solid var(--line);border-radius:4px;overflow:hidden;}
+.ob .kg .cell{flex:1;padding:10px 14px;border-right:1px solid var(--line);}
+.ob .kg .cell:last-child{border-right:none;}
+.ob .kg .cell .lab{font-size:7pt;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.ob .kg .cell .val{font-size:13pt;font-weight:800;margin-top:2px;}
+.ob .kg .cell .sub{font-size:7.5pt;color:var(--muted);margin-top:1px;}
+.ob .stem{margin-top:22px;border:1px solid var(--line);border-radius:4px;padding:14px 16px;}
+.ob .stem .sh{font-size:9pt;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px;}
+.ob .stem .grid{display:flex;gap:10px;margin-bottom:14px;}
+.ob .stem .vak{flex:1;}
+.ob .stem .vak .l{font-size:8.5pt;color:#3a352e;margin-bottom:4px;}
+.ob .stem .vak .b{border:1px solid var(--ink);border-radius:3px;height:26px;}
+.ob .stem .quorum{display:flex;gap:26px;align-items:flex-end;font-size:9pt;color:#3a352e;flex-wrap:wrap;}
+.ob .stem .quorum .q{display:flex;align-items:flex-end;gap:6px;}
+.ob .stem .quorum .ln{display:inline-block;width:48px;border-bottom:1px solid var(--ink);height:16px;}
+.ob .stem .quorum .jn{font-weight:700;letter-spacing:1px;}
+.ob .besluit-sec .fill{margin-top:18px;}
+.ob .besluit-sec .fill .row{display:flex;align-items:flex-end;gap:14px;margin-bottom:20px;}
+.ob .besluit-sec .fill .row .lab{font-size:9.5pt;color:#3a352e;width:160px;flex:none;padding-bottom:3px;}
+.ob .besluit-sec .fill .row .line{flex:1;border-bottom:1px solid var(--ink);height:18px;}
+.ob .besluit-sec .fill .row.sig .line{height:46px;}
+.ob .disc{margin-top:24px;padding-top:10px;border-top:1px solid var(--line);font-size:7.5pt;color:var(--muted);line-height:1.45;}
 .ob .quotes{margin-top:26px;border-top:1px solid var(--line);padding-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:28px;}
 .ob .quote{position:relative;padding-left:8px;}
 .ob .quote .qm{position:absolute;left:-6px;top:-20px;font-size:40pt;color:var(--brush);opacity:0.4;line-height:1;font-weight:900;}
@@ -9012,13 +9052,17 @@ function _ohpBuildOfferteHTML(plan, calc) {
   const _klantNaam = (calc && calc.klant) ? String(calc.klant).trim() : '';
   const _complexNaam = _klantNaam || (_pipeIdx >= 0 ? _projNaam.slice(0, _pipeIdx).trim() : _projNaam.trim());
   const _scopeNaam = _pipeIdx >= 0 ? _projNaam.slice(_pipeIdx + 1).trim() : '';
+  // v4.7.7 — kenmerk (offertenummer + datum) voor de kop en de besluitpagina.
+  const _offNr = _offerteNummer(calc);
+  const _offCfgD = (calc && calc.offerteConfig && typeof calc.offerteConfig === 'object') ? calc.offerteConfig : {};
+  const _offDatum = _offCfgD.offertedatum ? _offDatumLang(_offCfgD.offertedatum) : '';
   const _titelHtml = _complexNaam
     ? `<div class="m-title one"><div class="t-type">Onderhoudsgarantie+ plan</div><div class="t1"><b>${_escapeHtml(_complexNaam)}</b>${_scopeNaam ? ' &middot; ' + _escapeHtml(_scopeNaam) : ''}</div></div>`
     : '';
   const mastheadHtml = `<div class="masthead">
       <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
       ${_titelHtml}
-      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
+      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div>${_offNr ? '<div class="m-ref">Kenmerk ' + _escapeHtml(_offNr) + '</div>' : ''}</div>
     </div>`;
   const footLeftHtml = `<div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div>`;
   const footBase = `Onderhoudsplan ${pp}–${eindJaar}`;
@@ -9028,7 +9072,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
 
   const zekItemsHtml = `<div class="item"><div class="zh"><span class="dot"></span>Wat de garantie inhoudt</div><p>Als er na oplevering iets niet goed blijkt met het uitgevoerde werk, herstellen wij dat kosteloos binnen de garantietermijn. Dit geldt voor de juiste keuze van materialen, de manier waarop wij die hebben aangebracht en de bescherming tegen weersinvloeden.</p></div>
         <div class="item"><div class="zh"><span class="dot"></span>Wat valt buiten de garantie</div><p>Scheuren in hout en bouwscheuren in muren komen vanuit de ondergrond, niet vanuit het schilderwerk.</p></div>
-        <div class="item"><div class="zh"><span class="dot"></span>Vakwerk Plusgarantie-bedrijf</div><p>Wij voeren het kwaliteitskeurmerk Vakwerk Plusgarantie van OnderhoudNL. Bij een eventueel geschil bemiddelt een onafhankelijke geschillencommissie; Stichting AF garandeert de nakoming van de uitspraak.</p></div>
+        <div class="item keur"><div class="tekst"><div class="zh"><span class="dot"></span>Vakwerk Plusgarantie-bedrijf</div><p>Wij voeren het kwaliteitskeurmerk Vakwerk Plusgarantie van OnderhoudNL. Bij een eventueel geschil bemiddelt een onafhankelijke geschillencommissie; Stichting AF garandeert de nakoming van de uitspraak.</p></div><div class="emb"><img src="${LOGO_VAKWERK}" alt="Vakwerk Plusgarantie"></div></div>
         <div class="item"><div class="zh"><span class="dot"></span>Altijd opzegbaar</div><p>Wilt u op enig moment stoppen met het plan, dan kan dat, om welke reden dan ook.</p></div>`;
 
   const stripBoxesHtml = `<div class="box"><div class="bh">Prijszekerheid</div><p>De bedragen staan vast tot einde plan. Wij hebben hierin al rekening gehouden met prijsstijgingen, klimaatrisico&rsquo;s en de staat van de ondergrond. Alleen wettelijke btw-aanpassingen worden verrekend.</p></div>
@@ -9051,6 +9095,44 @@ function _ohpBuildOfferteHTML(plan, calc) {
     }
     return out;
   };
+
+  // v4.7.7 — blok D: ALV-besluitpagina (alleen VvE). Plan is het besluitstuk;
+  // het kenmerk verwijst naar de bijbehorende offerte in de administratie.
+  const _scopeZin = _scopeNaam ? (_scopeNaam.charAt(0).toLowerCase() + _scopeNaam.slice(1)) : '';
+  const _besluitKenmerk = _offNr
+    ? `<div class="kenmerk">Dit onderhoudsplan is het stuk waarover wordt besloten. Het kenmerk <b>${_escapeHtml(_offNr)}</b>${_offDatum ? ', d.d. ' + _escapeHtml(_offDatum) + ',' : ''} verwijst naar de bijbehorende offerte in de administratie van Ernes Schilders.</div>`
+    : `<div class="kenmerk">Dit onderhoudsplan is het stuk waarover wordt besloten. Kenmerk offerte: <span class="invul"></span> d.d. <span class="invul kort"></span> (administratie Ernes Schilders).</div>`;
+  const _besluitBody = `<p class="lead">Op deze pagina legt de vergadering van eigenaren het besluit over dit onderhoudsplan vast. De pagina is zelfstandig leesbaar; kenmerk en kerngetallen staan hieronder herhaald.</p>
+      <div class="besluit"><div class="intro">De vergadering van eigenaren, bijeen op de hieronder genoemde datum, besluit:</div>
+        <ol>
+          <li>het meerjaren onderhoudsplan voor ${_escapeHtml(_complexNaam)}${_scopeZin ? ', ' + _escapeHtml(_scopeZin) : ''}, ${pp} tot en met ${eindJaar} vast te stellen;</li>
+          <li>de jaarlijkse reservering van ${eur(gemPerJaar)} (inclusief btw) hiervoor op te nemen in de begroting;</li>
+          <li>opdracht te verlenen aan Ernes Schilders voor de uitvoering van het onderhoud volgens dit plan.</li>
+        </ol></div>
+      ${_besluitKenmerk}
+      <div class="kg">
+        <div class="cell"><div class="lab">Looptijd</div><div class="val">${plan.looptijdJaren} jaar</div><div class="sub">${pp} &ndash; ${eindJaar}</div></div>
+        <div class="cell"><div class="lab">Totale investering</div><div class="val">${heroTotaal}</div><div class="sub">inclusief btw</div></div>
+        <div class="cell"><div class="lab">Jaarlijkse reservering</div><div class="val">${eur(gemPerJaar)}</div><div class="sub">per jaar, inclusief btw</div></div>
+      </div>
+      <div class="stem">
+        <div class="sh">Uitslag van de stemming</div>
+        <div class="grid">
+          <div class="vak"><div class="l">Stemmen voor</div><div class="b"></div></div>
+          <div class="vak"><div class="l">Stemmen tegen</div><div class="b"></div></div>
+          <div class="vak"><div class="l">Onthoudingen</div><div class="b"></div></div>
+        </div>
+        <div class="quorum">
+          <div class="q">Aanwezige of vertegenwoordigde stemmen <span class="ln"></span></div>
+          <div class="q">Vereist voor quorum <span class="ln"></span></div>
+          <div class="q">Quorum behaald <span class="jn">ja / nee</span></div>
+        </div>
+      </div>
+      <div class="fill">
+        <div class="row"><span class="lab">Datum vergadering</span><span class="line"></span></div>
+        <div class="row sig"><span class="lab">Handtekening voorzitter</span><span class="line"></span></div>
+      </div>
+      <div class="disc">Dit besluit is genomen conform de statuten en de splitsingsakte van de vereniging. Op grond van artikel 2:15 BW kan een eigenaar een besluit binnen één maand na kennisgeving ter vernietiging voorleggen aan de kantonrechter. De termijn gaat in op de dag na de schriftelijke kennisgeving van dit besluit aan de eigenaars.</div>`;
 
   let blocks;
   if (isVve) {
@@ -9077,6 +9159,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
     blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Uw zekerheid</span></div><div class="zek">${zekItemsHtml}</div></div>`));
     blocks.push(_blk(`<div class="strip">${stripBoxesHtml}</div>`));
     blocks.push(_blk(`<div class="quotes">${quotesHtml}</div>`));
+    blocks.push(_blk(`<div class="sec besluit-sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Besluit van de vergadering van eigenaren</span></div>${_besluitBody}</div>`));
   } else {
     blocks = [];
     if (aanhefHtml) blocks.push(_blk(aanhefHtml));
