@@ -1,3 +1,19 @@
+## v4.7.3 — Geen dataverlies meer bij het opmeten op de iPad
+Belangrijke fix voor de meetstaat: ingevoerde maten konden verloren gaan en dat is nu verholpen.
+
+### Wat er verandert
+- Een getalveld in de meetstaat werd pas opgeslagen op het moment dat je op Volgende tikte of het cijferblok sloot. Tikte je rechtstreeks van het ene veld naar het andere, bijvoorbeeld om een breedte of aantal te corrigeren, dan werd het veld dat je verliet niet opgeslagen. De waarde stond wel in beeld, maar de browser slaat een programmatisch gezette waarde niet vanzelf op bij het wegtikken, en het cijferblok legde het oude veld niet vast voor het naar het nieuwe sprong. Daardoor waren sommige velden na het herladen leeg.
+- Het cijferblok legt nu elk veld vast op het moment dat je het verlaat, of je nu Volgende gebruikt of gewoon naar een ander veld tikt. Elke ingevoerde maat wordt opgeslagen.
+- Vangnet: lukt een opslag toch niet, bijvoorbeeld door een korte hapering in de verbinding bij de klant, dan krijg je nu meteen een duidelijke waarschuwing in plaats van dat de meting stil verdwijnt. Zo weet je het ter plekke en niet pas thuis.
+- Geen SQL nodig.
+
+### Onder de motorkap
+- De np-velden committen via een change-event. Dat event vuurde het cijferblok alleen af in next() (Volgende) en close() (buiten tikken). Rechtstreeks wisselen tussen twee getalvelden committe het verlaten veld niet.
+- NumPad.open() commit nu het vorige actieve veld bij elke wissel. next() dispatcht niet meer dubbel: de commit loopt via de wissel-commit in open(), of expliciet vlak voor addMeetstaat bij de auto-nieuwe-regel. close() blijft het laatste veld committen.
+- _updateMeetstaatDB toont nu een toast bij res.error, zodat ook een Supabase-foutantwoord zichtbaar wordt; dat werd voorheen alleen naar de console geschreven.
+
+---
+
 ## v4.7.2 — Maandbijdrage per eigenaar en scherpere onder-water-periode (VvE-bijlage)
 Het grote getal vertaald naar eigenarenniveau, plus een correcte band in het liquiditeitsbeeld.
 

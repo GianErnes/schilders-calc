@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.3</h2>
       <div class="intro-body">
+        <p><strong>🛟 Geen dataverlies meer bij het opmeten op de iPad (v4.7.3).</strong> Belangrijke fix voor de meetstaat. Een getalveld werd pas opgeslagen als je op Volgende tikte of het cijferblok sloot. Tikte je rechtstreeks van het ene veld naar het andere, dan vuurde de browser geen change af op het veld dat je verliet en ging die invoer verloren, vandaar dat sommige breedtes en aantallen na het herladen leeg waren. Het cijferblok legt nu elk veld vast op het moment dat je het verlaat, op welke manier dan ook. Daarbovenop een vangnet: lukt een opslag toch niet, bijvoorbeeld door een hapering in de wifi bij de klant, dan krijg je meteen een duidelijke waarschuwing in plaats van dat de meting stil verdwijnt. Geen SQL nodig.</p>
         <p><strong>👥 Maandbijdrage per eigenaar plus scherpere onder-water-periode (v4.7.2).</strong> Twee dingen voor de VvE-bijlage. Je kunt nu bij het plan het aantal appartementen invullen (alleen bij VvE). Op de bijlage verschijnt dan het grote getal vertaald naar eigenarenniveau: hoog in de bijlage als cascade onder het totaal en de jaarreservering, en nog eens in de liquiditeitssectie, telkens als "gemiddeld ongeveer € X per appartement per maand". Het is een gemiddelde, de echte verdeling loopt per breukdeel, dat staat erbij. Daarnaast loopt de onder-water-band in het liquiditeitsbeeld nu correct: hij start op het uitgavejaar zelf, want de reserve wordt pas bij betaling aangesproken, en loopt door tot de echte kruising waar de opbouw de uitgaven weer inhaalt. De conclusiezin noemt de hele periode dat de reserve wordt aangesproken, niet alleen het diepste punt. Vereiste eerst een kleine Supabase-migratie (kolom <code>aantal_appartementen</code> op <code>onderhoudsplannen</code>).</p>
         <p><strong>🧾 (incl. btw) in de kolomkoppen van het liquiditeitsoverzicht (v4.7.1).</strong> De sectie Reservering en liquiditeit vermeldt al bovenaan dat de bedragen inclusief btw zijn. Voor extra duidelijkheid en om elke discussie achteraf te voorkomen staat nu ook onder elke bedragkolom een klein, rustig "(incl. btw)". Alleen opmaak. Geen SQL nodig.</p>
         <p><strong>💧 Reservering en liquiditeit op de VvE-bijlage (v4.7.0).</strong> De VvE-bijlage krijgt een nieuwe sectie "Reservering en liquiditeit". Een eenvoudig beeld toont de pot die de vereniging opbouwt als ze jaarlijks de geadviseerde reservering opzij zet, tegenover wat er volgens de planning uitgaat. Waar de uitgaven even boven de opbouw uitkomen, wordt het gat gemarkeerd. Daaronder een tabel met per jaar de uitgave, de reservering, het cumulatief gereserveerde en uitgegeven en het saldo-opbouw, met de negatieve saldoregels in rood. Als sluitstuk één zin met het laagste punt: hoeveel de reserve op dat moment minstens moet bedragen om de uitgaven te dekken. Zo ziet de penningmeester in één blik of de kas de pieken dekt, zonder dat wij iets over hun reserve beweren. Alles rekent uit je bestaande beurten, inclusief btw, alleen bij VvE. Geen SQL nodig.</p>
@@ -3233,7 +3234,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.7.2';
+const APP_VERSION = 'v4.7.3';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3628,6 +3629,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.7.3', d: '2026-06-27', h: 'Dataverlies-fix in de meetstaat op aanraakschermen. De np-velden slaan op via een change-event, dat het cijferblok alleen afvuurde in next() (Volgende) en close() (buiten tikken); rechtstreeks van het ene getalveld naar het andere tikken committe het verlaten veld niet, want een programmatisch gezette waarde triggert geen native change. NumPad.open() commit nu het vorige actieve veld bij elke wissel, next() pre-dispatcht niet meer dubbel (commit loopt via de wissel-commit, of expliciet vlak voor addMeetstaat bij de auto-nieuwe-regel), en close() blijft het laatste veld committen. Daardoor wordt elk veld vastgelegd zodra je het verlaat, ongeacht de route. Vangnet: _updateMeetstaatDB toont nu een toast bij res.error, zodat ook een Supabase-foutantwoord (dat _sbQuery niet toastte) zichtbaar wordt en een meting nooit stil verloren gaat. Geen SQL.' },
   { v: '4.7.2', d: '2026-06-27', h: 'VvE-bijlage: maandbijdrage per appartement plus scherpere onder-water-periode in blok B. Nieuw veld aantal appartementen op het plan (kolom aantal_appartementen, mapping aantalAppartementen, invoer ohpAantalApp in de VvE-sectie ohpScopeWrap, gelezen/gevuld/opgeslagen). In _ohpBuildOfferteHTML wordt perMaandPerApp = gemPerJaar / aantalApp / 12 getoond, alleen bij isVve met aantal ingevuld: als cascade-regel .appmaand in de hero onder de jaarreservering en als callout "Per eigenaar" in de liquiditeitssectie, met de kanttekening dat het een gemiddelde is en de echte bijdrage per breukdeel loopt. De onder-water-band in het liquiditeitsbeeld start nu op het uitgavejaar (X(firstNeg), reserve wordt pas bij betaling aangesproken) in plaats van op de geometrische linkerkruising, en loopt rechts tot de echte kruising via xAtZero; meerdere negatieve periodes worden elk als aparte band getekend. Het diepste punt houdt de stippellijn met "diepst". De conclusiezin noemt de hele periode (van firstNeg tot en met lastNeg, het diepst in laagste.jaar). Migratie aantal_appartementen al uitgevoerd.' },
   { v: '4.7.1', d: '2026-06-27', h: 'Duidelijkheidsfix in blok B: onder elke bedragkolom van de .liq-table (Uitgave, Reservering, Cum. gereserveerd, Cum. uitgegeven, Saldo-opbouw) staat nu een klein "(incl. btw)" via een span.ex, naast de bestaande zin bovenaan. Nieuwe scoped CSS .ob table.liq-table th .ex (display:block, niet-uppercase, muted, 6pt). Alleen opmaak. Geen SQL.' },
   { v: '4.7.0', d: '2026-06-27', h: 'Blok B: sectie "Reservering en liquiditeit" op de VvE-offerte-bijlage. In _ohpBuildOfferteHTML, alleen isVve, wordt uit perJaar (incl btw) en gemPerJaar een liquiditeitsoverzicht gebouwd: per jaar uitgave, reservering, cumulatief gereserveerd (R maal n), cumulatief uitgegeven en het saldo (cr min cu); het laagste saldo is de benodigde reserve op dat moment. Een inline SVG toont twee polylijnen op euro-schaal, cumulatief gereserveerd (brush) tegenover cumulatief uitgegeven (ink), met gridlijnen en jaarlabels, en bij een negatief laagste punt een gemarkeerd gat met de tekst "uit reserve". Daaronder een .liq-table met de saldo-kolom (negatief in brush-deep via eurSaldo met echte minus) en een callout-conclusie met het laagste punt. SVG-kleuren als vaste hex omdat var() niet werkt in SVG-presentatieattributen bij print. Het blok wordt na de jaartabel en mjopNote met een eigen nextSec() gepusht. Nieuwe scoped CSS (.liq-svg, .liq-legend, .liq-table). Particulier ongewijzigd. Geen SQL.' },
@@ -6399,7 +6401,12 @@ function _updateMeetstaatDB(ms, calcId) {
   _sbQuery(
     _sb.from('meetstaat').update(_mapMeetstaatToDB(ms, calcId, ms.volgorde || 0)).eq('id', ms.id),
     'Meetstaat-rij bijwerken'
-  ).then(() => {});
+  ).then(res => {
+    // v4.7.3 — vangnet: _sbQuery toast wel bij een netwerkfout maar niet bij een
+    // Supabase-foutantwoord. Hier maken we elke mislukte opslag zichtbaar, zodat een
+    // meting nooit stil verdwijnt en je het ter plekke kunt overdoen.
+    if (res && res.error) _toast('Let op: een meting kon niet worden opgeslagen. Controleer je verbinding en sla hem opnieuw op.');
+  });
 }
 async function _deleteMeetstaatDB(id) {
   const { error } = await _sbQuery(
@@ -13247,6 +13254,12 @@ const NumPad = {
     // waarde (meestal 1) overschrijft. Korte timeout zodat iOS de selectie na de focus toont.
     const _selectAll = () => { try { field.setSelectionRange(0, String(field.value).length); } catch (_) {} };
     if (this.active === field) { this.fresh = true; setTimeout(_selectAll, 0); return; }
+    // v4.7.3 — commit het vorige veld voordat we wisselen. Bij rechtstreeks tikken van het
+    // ene getalveld naar het andere vuurt 'change' niet vanzelf (de waarde is programmatisch
+    // gezet), waardoor de invoer verloren ging. Nu leggen we hem expliciet vast.
+    if (this.active && this.active !== field) {
+      this.active.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     this.active = field;
     this.dec = field.hasAttribute('data-dec');
     this.fresh = true; // eerste cijfer vervangt de bestaande waarde
@@ -13292,12 +13305,12 @@ const NumPad = {
     f.dispatchEvent(new Event('input', { bubbles: true }));
   },
   next(f) {
-    f.dispatchEvent(new Event('change', { bubbles: true }));
     const scope = f.closest('.modal-overlay') || document;
     const fields = Array.prototype.slice.call(scope.querySelectorAll('.np-field'))
       .filter(x => x.offsetParent !== null && !x.disabled);
     const i = fields.indexOf(f);
     if (i !== -1 && i + 1 < fields.length) {
+      // De wissel-commit in open() legt het huidige veld (f) vast zodra het volgende focust.
       const nx = fields[i + 1];
       nx.focus();
       this.open(nx);
@@ -13313,6 +13326,7 @@ const NumPad = {
       const h = row ? row.querySelector('[data-field="hCm"]') : null;
       const gevuld = (b && _npInt(b.value) > 0) || (h && _npInt(h.value) > 0);
       if (gevuld && typeof addMeetstaat === 'function') {
+        f.dispatchEvent(new Event('change', { bubbles: true })); // commit de factor voor we de regel verlaten
         this.active = null; // huidige regel wordt zo opnieuw gerenderd
         addMeetstaat();
         return;
