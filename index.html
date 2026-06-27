@@ -2106,8 +2106,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.4</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.6</h2>
       <div class="intro-body">
+        <p><strong>🏷️ Titel in de kop van de bijlage (v4.7.6).</strong> Boven de lijn op elke pagina van het onderhoudsplan staat nu een titel, zodat een lezer die een losse pagina in handen krijgt meteen weet waar het over gaat. In het midden van de kop staat klein "Onderhoudsgarantie+ plan", daaronder de complexnaam dik met de scope erachter, bijvoorbeeld "VvE Nieuw Welten VIII · Buitenwerk". De complexnaam komt uit het klant-veld van de calculatie en de scope uit het deel na de streep in de projectnaam, met een nette terugval als die streep er niet is. De looptijd blijft rechts bij het garantie-logo. Geen SQL nodig.</p>
+        <p><strong>🎯 Liquiditeitsgrafiek afgewerkt tot in de finesse (v4.7.5).</strong> De laatste verfijningen van blok B op de VvE-bijlage. Elk bedrag dat op een dieptepunt uit de reserve gaat staat nu rustig onder het bijbehorende jaar, los van de lijnen, met een stippellijn die van het punt omlaag loopt en netjes om het jaartal heen breekt voor hij het bedrag bereikt. De euro-bedragen in de liquiditeitstabel breken niet meer af boven de tienduizend euro. En de legenda heeft een derde regel die uitlegt wat dat dieptepunt-bedrag betekent, voor de lezer die het niet meteen ziet. Geen SQL nodig.</p>
         <p><strong>📄 Liquiditeitssectie paginieert netjes en kwantificeert elke dip (v4.7.4).</strong> Twee fixes op pagina 4 van de VvE-bijlage. Bij een lange looptijd liep de tabel samen met het beeld en de conclusie over de paginarand en botste de conclusiezin met de voettekst. De sectie is nu opgesplitst: het beeld met de sectiekop, de tabel als apart blok dat per rij over pagina's mag breken met een herhaalde koprij, en de conclusie als los blok erna. Daarnaast krijgt nu elke periode waarin de reserve wordt aangesproken zijn eigen bedrag in de grafiek, niet alleen de diepste. Spreekt een plan de reserve op twee losse momenten aan, dan staan beide bedragen in het beeld en noemt de conclusiezin de aparte jaren in plaats van een doorlopende periode. Geen SQL nodig.</p>
         <p><strong>🛟 Geen dataverlies meer bij het opmeten op de iPad (v4.7.3).</strong> Belangrijke fix voor de meetstaat. Een getalveld werd pas opgeslagen als je op Volgende tikte of het cijferblok sloot. Tikte je rechtstreeks van het ene veld naar het andere, dan vuurde de browser geen change af op het veld dat je verliet en ging die invoer verloren, vandaar dat sommige breedtes en aantallen na het herladen leeg waren. Het cijferblok legt nu elk veld vast op het moment dat je het verlaat, op welke manier dan ook. Daarbovenop een vangnet: lukt een opslag toch niet, bijvoorbeeld door een hapering in de wifi bij de klant, dan krijg je meteen een duidelijke waarschuwing in plaats van dat de meting stil verdwijnt. Geen SQL nodig.</p>
         <p><strong>👥 Maandbijdrage per eigenaar plus scherpere onder-water-periode (v4.7.2).</strong> Twee dingen voor de VvE-bijlage. Je kunt nu bij het plan het aantal appartementen invullen (alleen bij VvE). Op de bijlage verschijnt dan het grote getal vertaald naar eigenarenniveau: hoog in de bijlage als cascade onder het totaal en de jaarreservering, en nog eens in de liquiditeitssectie, telkens als "gemiddeld ongeveer € X per appartement per maand". Het is een gemiddelde, de echte verdeling loopt per breukdeel, dat staat erbij. Daarnaast loopt de onder-water-band in het liquiditeitsbeeld nu correct: hij start op het uitgavejaar zelf, want de reserve wordt pas bij betaling aangesproken, en loopt door tot de echte kruising waar de opbouw de uitgaven weer inhaalt. De conclusiezin noemt de hele periode dat de reserve wordt aangesproken, niet alleen het diepste punt. Vereiste eerst een kleine Supabase-migratie (kolom <code>aantal_appartementen</code> op <code>onderhoudsplannen</code>).</p>
@@ -3235,7 +3237,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.7.4';
+const APP_VERSION = 'v4.7.6';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3630,6 +3632,8 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.7.6', d: '2026-06-27', h: 'Titel in de masthead van de onderhoudsplan-bijlage. Boven de scheidingslijn, in het midden tussen het Ernes-logo en het garantie-logo, staat nu een titelblok (variant B): klein "Onderhoudsgarantie+ plan" als plantype, daaronder de complexnaam dik met de scope erachter, bijvoorbeeld "VvE Nieuw Welten VIII &middot; Buitenwerk". De complexnaam komt uit calc.klant; valt dat weg, dan het deel vr de "|" in de projectnaam (calc.naam). De scope komt uit het deel na de "|" in de projectnaam, en wordt weggelaten als die streep er niet is. De looptijd blijft rechts bij het garantie-logo onder de m-right-kolom. Nieuwe scoped CSS .ob .m-title (.t-type uppercase muted 7.5pt, .t1 10.5pt met .t1 b op 800). Werkt voor de VvE- en de particulier-variant omdat de masthead n keer wordt opgebouwd. Klantnaam en scope via _escapeHtml ontsmet. Geen SQL.' },
+  { v: '4.7.5', d: '2026-06-27', h: 'Finesse-afwerking van de liquiditeitsgrafiek in blok B van de VvE-bijlage. (1) Het bedrag dat op een dieptepunt uit de reserve gaat staat nu gecentreerd onder het bijbehorende jaar, onder de nullijn, los van de polylijnen; het label "diepst" is uit het beeld gehaald omdat de conclusiezin het diepste punt al noemt. (2) De stippellijn loopt van het dieptepunt (cu) omlaag in twee segmenten: van het punt tot net boven het jaartal en, na een gat rond het jaartal, van net eronder tot vlak boven het bedrag. Zo breekt de lijn netjes om het jaartal heen. De viewBox-hoogte ging van 190 naar 210 voor de extra ruimte onderaan. (3) De bedragen in de .liq-table breken niet meer af boven de tienduizend euro via .ob table.liq-table td.amt{white-space:nowrap}. (4) Derde legenda-item met een dashed brush-deep marker en de tekst "bedrag dat u op dat moment uit uw reserve haalt"; de legenda mag nu afbreken (flex-wrap, gap 8px 26px). Geen SQL.' },
   { v: '4.7.4', d: '2026-06-27', h: 'Twee fixes in blok B van de VvE-bijlage. (1) Paginering: het liquiditeitsblok was \u00e9\u00e9n onsplitsbaar blok dat bij een lange looptijd over de paginarand liep en de conclusiezin tegen de voettekst duwde. Het is nu opgesplitst in drie blokken: een .sec-blok met de kop, het beeld en de legenda; de .liq-table als apart data-split="table" blok (nu met thead en tbody) dat _ohpPaginate per rij over pagina breekt; en een los blok met de conclusie en de per-eigenaar-callout. _ohpPaginate gebruikt bij het splitsen nu tbl.className in plaats van een hardgecodeerde class="ptable", zodat de liq-table-opmaak op vervolgpagina behouden blijft. (2) Elke onder-water-band krijgt nu zijn eigen diepste punt met stippellijn en bedrag; alleen het globale diepste punt houdt het label "diepst" en de "reserve aangesproken"-tekst. De conclusiezin leidt de periode af uit de banden (in {jaar} of van {a} tot en met {b}, met " en " aaneengeregen), zodat twee losse dips niet langer als \u00e9\u00e9n doorlopende periode worden beschreven. Geen SQL.' },
   { v: '4.7.3', d: '2026-06-27', h: 'Dataverlies-fix in de meetstaat op aanraakschermen. De np-velden slaan op via een change-event, dat het cijferblok alleen afvuurde in next() (Volgende) en close() (buiten tikken); rechtstreeks van het ene getalveld naar het andere tikken committe het verlaten veld niet, want een programmatisch gezette waarde triggert geen native change. NumPad.open() commit nu het vorige actieve veld bij elke wissel, next() pre-dispatcht niet meer dubbel (commit loopt via de wissel-commit, of expliciet vlak voor addMeetstaat bij de auto-nieuwe-regel), en close() blijft het laatste veld committen. Daardoor wordt elk veld vastgelegd zodra je het verlaat, ongeacht de route. Vangnet: _updateMeetstaatDB toont nu een toast bij res.error, zodat ook een Supabase-foutantwoord (dat _sbQuery niet toastte) zichtbaar wordt en een meting nooit stil verloren gaat. Geen SQL.' },
   { v: '4.7.2', d: '2026-06-27', h: 'VvE-bijlage: maandbijdrage per appartement plus scherpere onder-water-periode in blok B. Nieuw veld aantal appartementen op het plan (kolom aantal_appartementen, mapping aantalAppartementen, invoer ohpAantalApp in de VvE-sectie ohpScopeWrap, gelezen/gevuld/opgeslagen). In _ohpBuildOfferteHTML wordt perMaandPerApp = gemPerJaar / aantalApp / 12 getoond, alleen bij isVve met aantal ingevuld: als cascade-regel .appmaand in de hero onder de jaarreservering en als callout "Per eigenaar" in de liquiditeitssectie, met de kanttekening dat het een gemiddelde is en de echte bijdrage per breukdeel loopt. De onder-water-band in het liquiditeitsbeeld start nu op het uitgavejaar (X(firstNeg), reserve wordt pas bij betaling aangesproken) in plaats van op de geometrische linkerkruising, en loopt rechts tot de echte kruising via xAtZero; meerdere negatieve periodes worden elk als aparte band getekend. Het diepste punt houdt de stippellijn met "diepst". De conclusiezin noemt de hele periode (van firstNeg tot en met lastNeg, het diepst in laagste.jaar). Migratie aantal_appartementen al uitgevoerd.' },
@@ -8774,7 +8778,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
       return { jaar: j, uit, res: R, cr: _cr, cu: _cu, saldo: _cr - _cu };
     });
     const laagste = lqRows.reduce((a, b) => (b.saldo < a.saldo ? b : a), lqRows[0]);
-    const VW = 520, VH = 190, x0 = 14, x1 = 506, yBas = 158, yTop = 12;
+    const VW = 520, VH = 210, x0 = 14, x1 = 506, yBas = 158, yTop = 12;
     const maxv = Math.max(_cr, _cu, 1) * 1.05;
     const N2 = lqRows.length;
     const X = i => N2 > 1 ? (x0 + i * (x1 - x0) / (N2 - 1)) : ((x0 + x1) / 2);
@@ -8816,10 +8820,10 @@ function _ohpBuildOfferteHTML(plan, calc) {
       const dx = X(di), dTop = Y(lqRows[di].cu), dBot = Y(lqRows[di].cr);
       const isDiepst = (di === li);
       if (isDiepst) bandMark += `<text x="${((bd.sx + bd.ex) / 2).toFixed(1)}" y="${yTop + 8}" text-anchor="middle" font-size="6" fill="${C_BRUSHD}" font-weight="700">reserve aangesproken</text>`;
-      bandMark += `<line x1="${dx.toFixed(1)}" y1="${dTop.toFixed(1)}" x2="${dx.toFixed(1)}" y2="${dBot.toFixed(1)}" stroke="${C_BRUSHD}" stroke-width="1" stroke-dasharray="2 2"/><circle cx="${dx.toFixed(1)}" cy="${dTop.toFixed(1)}" r="2" fill="${C_BRUSHD}"/><text x="${(dx + 6).toFixed(1)}" y="${((dTop + dBot) / 2).toFixed(1)}" font-size="6" fill="${C_BRUSHD}" font-weight="700">${(isDiepst ? 'diepst ' : '') + eur(Math.abs(lqRows[di].saldo))}</text>`;
+      bandMark += `<line x1="${dx.toFixed(1)}" y1="${dTop.toFixed(1)}" x2="${dx.toFixed(1)}" y2="${(yBas + 4)}" stroke="${C_BRUSHD}" stroke-width="1" stroke-dasharray="2 2"/><line x1="${dx.toFixed(1)}" y1="${(yBas + 16)}" x2="${dx.toFixed(1)}" y2="${(yBas + 24)}" stroke="${C_BRUSHD}" stroke-width="1" stroke-dasharray="2 2"/><circle cx="${dx.toFixed(1)}" cy="${dTop.toFixed(1)}" r="2" fill="${C_BRUSHD}"/><text x="${dx.toFixed(1)}" y="${(yBas + 30)}" text-anchor="middle" font-size="6" fill="${C_BRUSHD}" font-weight="700">${eur(Math.abs(lqRows[di].saldo))}</text>`;
     });
     const svg = `<svg viewBox="0 0 ${VW} ${VH}" class="liq-svg" xmlns="http://www.w3.org/2000/svg"><line x1="${x0}" y1="${yBas}" x2="${x1}" y2="${yBas}" stroke="${C_INK}" stroke-width="0.8"/>${grid}${bandMark}<polyline points="${cuPts}" fill="none" stroke="${C_INK}" stroke-width="1.6"/><polyline points="${crPts}" fill="none" stroke="${C_BRUSH}" stroke-width="1.6"/>${yl}</svg>`;
-    const legend = `<div class="liq-legend"><span><i class="ln brush"></i>Cumulatief gereserveerd</span><span><i class="ln ink"></i>Cumulatief uitgegeven</span></div>`;
+    const legend = `<div class="liq-legend"><span><i class="ln brush"></i>Cumulatief gereserveerd</span><span><i class="ln ink"></i>Cumulatief uitgegeven</span><span><i class="ln dip"></i>bedrag dat u op dat moment uit uw reserve haalt</span></div>`;
     let trows = '';
     lqRows.forEach(r => {
       const neg = r.saldo < 0 ? ' style="color:#c93914;font-weight:700;"' : '';
@@ -8879,6 +8883,10 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .m-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
 .ob .m-ogp{height:32px;width:auto;}
 .ob .years{font-weight:700;font-size:12pt;letter-spacing:0.5px;}
+.ob .m-title{text-align:center;line-height:1.3;padding:0 10px;}
+.ob .m-title .t-type{font-size:7.5pt;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.ob .m-title .t1{font-size:10.5pt;color:var(--ink);}
+.ob .m-title .t1 b{font-weight:800;}
 .ob .sec{margin-bottom:19px;}
 .ob .sec-label{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
 .ob .sec-label .num{font-weight:800;font-size:13pt;color:var(--brush);}
@@ -8929,12 +8937,14 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .epost .emeta .val{font-weight:700;color:var(--ink);font-size:10pt;}
 .ob .epost .emeta .val.brush{color:var(--brush-deep);}
 .ob .liq-svg{width:100%;height:auto;margin:10px 0 4px;}
-.ob .liq-legend{display:flex;gap:26px;font-size:8.5pt;color:#3a352e;margin:0 0 8px;}
+.ob .liq-legend{display:flex;flex-wrap:wrap;gap:8px 26px;font-size:8.5pt;color:#3a352e;margin:0 0 8px;}
 .ob .liq-legend i.ln{display:inline-block;width:16px;height:0;border-top:2.5px solid;margin-right:6px;vertical-align:middle;}
 .ob .liq-legend i.ln.brush{border-color:var(--brush);}
 .ob .liq-legend i.ln.ink{border-color:var(--ink);}
+.ob .liq-legend i.ln.dip{border-top-style:dashed;border-color:var(--brush-deep);}
 .ob table.liq-table{font-size:9pt;}
 .ob table.liq-table th,.ob table.liq-table td{padding:3.5px 8px;}
+.ob table.liq-table td.amt{white-space:nowrap;}
 .ob table.liq-table th .ex{display:block;font-weight:400;text-transform:none;letter-spacing:0;font-size:6pt;color:var(--muted);margin-top:1px;}
 .ob .defs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px;}
 .ob .def{background:#fff;border:1px solid var(--line);border-radius:4px;padding:14px 16px;box-shadow:var(--shadow);}
@@ -8996,8 +9006,18 @@ function _ohpBuildOfferteHTML(plan, calc) {
   // lange sectie 02 of een lange planningstabel netjes door naar een
   // volgende pagina in plaats van afgekapt te worden.
   // ---------------------------------------------------------------
+  // v4.7.6 — kop-titel: plantype, complex (calc.klant) en scope (deel na "|" in de projectnaam).
+  const _projNaam = (calc && calc.naam) ? String(calc.naam) : '';
+  const _pipeIdx = _projNaam.indexOf('|');
+  const _klantNaam = (calc && calc.klant) ? String(calc.klant).trim() : '';
+  const _complexNaam = _klantNaam || (_pipeIdx >= 0 ? _projNaam.slice(0, _pipeIdx).trim() : _projNaam.trim());
+  const _scopeNaam = _pipeIdx >= 0 ? _projNaam.slice(_pipeIdx + 1).trim() : '';
+  const _titelHtml = _complexNaam
+    ? `<div class="m-title one"><div class="t-type">Onderhoudsgarantie+ plan</div><div class="t1"><b>${_escapeHtml(_complexNaam)}</b>${_scopeNaam ? ' &middot; ' + _escapeHtml(_scopeNaam) : ''}</div></div>`
+    : '';
   const mastheadHtml = `<div class="masthead">
       <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
+      ${_titelHtml}
       <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div></div>
     </div>`;
   const footLeftHtml = `<div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div>`;
