@@ -1,3 +1,38 @@
+## v4.7.6 — Titel in de kop van de onderhoudsplan-bijlage
+Boven de lijn op elke pagina staat nu een titel, zodat een losse pagina meteen herkenbaar is.
+
+### Wat er verandert
+- In het midden van de kop, tussen het Ernes-logo en het garantie-logo, staat klein "Onderhoudsgarantie+ plan", daaronder de complexnaam dik met de scope erachter, bijvoorbeeld "VvE Nieuw Welten VIII · Buitenwerk".
+- De complexnaam komt uit het klant-veld van de calculatie. Is dat leeg, dan wordt het deel vóór de streep in de projectnaam gebruikt.
+- De scope komt uit het deel na de streep in de projectnaam (de afspraak "Klant | omschrijving"), en wordt weggelaten als die streep er niet is.
+- De looptijd blijft rechts bij het garantie-logo.
+- Werkt zowel voor de VvE- als de particulier-bijlage.
+- Geen SQL nodig.
+
+### Onder de motorkap
+- Nieuw titelblok in mastheadHtml, opgebouwd uit calc.klant en het na-streep-deel van calc.naam, met _escapeHtml op beide.
+- Nieuwe scoped CSS .ob .m-title met .t-type (uppercase, muted, 7.5pt) en .t1 (10.5pt, complexnaam vet via .t1 b).
+
+---
+
+## v4.7.5 — Liquiditeitsgrafiek afgewerkt tot in de finesse
+De laatste verfijningen van blok B op de VvE-bijlage, na het in het echt bekijken van een plan met twee aparte tekortmomenten.
+
+### Wat er verandert
+- Het bedrag dat op een dieptepunt uit de reserve gaat staat nu rustig onder het bijbehorende jaar, onder de nullijn en los van de lijnen. Geen overlap meer met de oranje of zwarte lijn.
+- Een stippellijn loopt van het dieptepunt omlaag en breekt netjes open rond het jaartal, zodat het jaar in een schoon gaatje staat en de lijn er onder weer een paar stippen oppakt richting het bedrag.
+- De euro-bedragen in de liquiditeitstabel breken niet meer af boven de tienduizend euro. "€ 38.065,77" blijft altijd op één regel.
+- De legenda heeft een derde regel met een streepje in dezelfde stijl als de markering in de grafiek en de uitleg "bedrag dat u op dat moment uit uw reserve haalt", voor de lezer die het getal niet meteen plaatst.
+- Het woord "diepst" staat niet meer in de grafiek zelf; de conclusiezin onder de tabel noemt het diepste punt al.
+- Geen SQL nodig.
+
+### Onder de motorkap
+- De viewBox-hoogte van de grafiek ging van 190 naar 210 voor de ruimte onder de jaartallen.
+- De stippellijn bestaat nu uit twee segmenten met een gat rond het jaartal: van cu tot net boven het jaar, en van net onder het jaar tot vlak boven het bedrag.
+- Nieuwe scoped CSS: .ob table.liq-table td.amt{white-space:nowrap}, .ob .liq-legend met flex-wrap en gap 8px 26px, en .ob .liq-legend i.ln.dip met een dashed brush-deep marker.
+
+---
+
 ## v4.7.4 — Liquiditeitssectie paginieert netjes en kwantificeert elke dip
 Twee fixes op pagina 4 van de VvE-bijlage, naar aanleiding van een plan met een lange looptijd en twee aparte tekortmomenten.
 
