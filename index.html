@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.10.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.10.2</h2>
       <div class="intro-body">
+        <p><strong>✂️ Schonere titel in Craft (v4.10.2).</strong> De titel van het Craft-document is nu alleen de projectnaam, zonder de klantnaam ervoor. Die zit meestal al in de projectnaam, dus dat stond dubbel. Geen SQL nodig.</p>
         <p><strong>📍 Locatie onder de kozijntekeningen in Craft (v4.10.1).</strong> Onder elke kozijntekening in Craft staat nu ook waar het kozijn zit, net als in de offerte. Het onderschrift is uitgebreid naar naam, locatie, aantal stuks en de gebreken, bijvoorbeeld "Kozijn · Voorgevel · 1 stuk · 1. Houtrot". De locatie komt uit de hoofdgroep en het onderdeel van je calculatie. Heeft een kozijn geen locatie, dan valt dat deel gewoon weg. Geen SQL nodig.</p>
         <p><strong>🪟 Kozijntekeningen mee naar Craft (v4.10.0).</strong> De knop "Naar Craft" stuurt nu ook de kozijntekeningen mee, met de genummerde gebrekstippen erop net als in de offerte. Ze komen als plaatje onder "Foto's", direct na de foto's, met een compact onderschrift: naam, aantal stuks en de gebreken. Daarmee is de werkvoorbereiding naar Craft compleet: tekst, foto's én kozijnen, in één druk op de knop. Geen SQL nodig.</p>
         <p><strong>📸 Foto's mee naar Craft, plus dubbeldruk-fix (v4.9.0).</strong> De knop "Naar Craft" stuurt nu ook de foto's mee, met de genummerde gebrekstippen erop net als in de offerte, netjes onder het kopje "Foto's" met een onderschrift dat de gebreken benoemt. Voor een vlotte verzending worden ze automatisch verkleind. En het dubbel-stuur-probleem is opgelost: zodra je drukt, schakelt de knop uit en toont "⏳ Bezig…", en je krijgt meteen de melding "Duplicaat zoeken in Craft…". Zo kun je niet meer per ongeluk twee keer drukken terwijl hij nog werkt, en zie je altijd dat er iets gebeurt. De kozijntekeningen volgen in de volgende stap. Geen SQL nodig.</p>
@@ -3250,7 +3251,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.10.1';
+const APP_VERSION = 'v4.10.2';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3645,6 +3646,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.10.2', d: '2026-06-28', h: 'Schonere titel in Craft. De documenttitel is nu alleen de projectnaam: titel = "🏠" + (c.naam || c.klant || "Project"), in plaats van klant en projectnaam met een pipe ertussen. De klantnaam zit meestal al in c.naam, dus dat stond dubbelop in de kop. Alleen de titelopbouw in craftNaarCraft; verder niets gewijzigd. Geen SQL.' },
   { v: '4.10.1', d: '2026-06-28', h: 'Locatie in het onderschrift van de kozijntekeningen in Craft. _craftBouwKozijnen bouwt nu, net als de offerte-bijlage, een regelLocatie-map op (per r.id de hoofdgroep.naam · onderdeel.naam uit c.hoofdgroepen) en geeft regelLocatie[ms.calcRegelId] mee aan _craftKozijnBijschrift. Dat bijschrift heeft een tweede parameter locatie gekregen en zet die tussen de naam en het aantal: naam · locatie · aantal stuks · gebreken (bijvoorbeeld "Kozijn · Voorgevel · 1 stuk · 1. Houtrot"). Zonder locatie (los kozijn zonder hoofdgroep) valt dat deel weg en blijft het zoals voorheen. Alleen het onderschrift; de tekening, de stippen en de verzending zijn ongewijzigd. Geen SQL.' },
   { v: '4.10.0', d: '2026-06-28', h: 'Craft-koppeling brok 4c: kozijntekeningen mee naar Craft. Nieuwe helper _craftBouwKozijnen(c) loopt door c.meetstaat gefilterd op ms.tekening.vorm, bouwt per kozijn de SVG via _kozijnThumbSvg(ms.tekening, 0, {genummerd:true, fill:true}) (met de genummerde gebrekstippen erin), en zet die om naar een PNG via _craftSvgNaarPng. Die rasteraar leest vbW/vbH uit de viewBox, injecteert xmlns en een vaste width/height in de svg-tag (anders rendert de browser de SVG niet als Image), tekent hem via een Blob-URL op een canvas met witte achtergrond en 6% witrand, en geeft een PNG data-URL terug (geen taint want de blob is same-origin). Compact onderschrift via _craftKozijnBijschrift: naam (ms.omschrijving of tek.naam), aantal stuks en de genummerde gebreken. craftNaarCraft bouwt nu fotos en kozijnen apart en stuurt fotos.concat(kozijnen) als één fotos-array, zodat de kozijnen op volgorde na de foto\\u0027s onder het kopje Foto\\u0027s landen; de knop toont tijdens deze fase "⏳ Beeld…" en de slottoast meldt het aantal foto\\u0027s en kozijnen apart. Edge Function ongewijzigd. Geen SQL.' },
   { v: '4.9.0', d: '2026-06-28', h: 'Craft-koppeling brok 4b plus dubbeldruk-fix. (1) Foto\\u0027s mee naar Craft: _craftBouwFotos(c) signt de URL\\u0027s (_signFotoUrls op de fotos zonder signedUrl), bakt per foto de genummerde gebrekstippen via _craftFotoDataUrl(f, 1600) (eigen verkleinende variant van _fotoNaarDataUrl: schaalt naar max 1600px en geeft JPEG q0.82, stippen uit f.markeringen met kleur uit _KOZIJN_DEFECTEN), en bouwt per foto een caption via _craftFotoBijschrift (f.opmerking plus de genummerde gebreken, matcht de stippen). craftNaarCraft stuurt na de tekst een tweede _craftCall({documentId, fotos}) zodat de Edge Function ze op volgorde onder het kopje Foto\\u0027s plaatst (in 4c komen de kozijnen aan dezelfde array toe). (2) Dubbeldruk-fix: nieuwe vlag _craftBezig plus knopvergrendeling. Bij de druk wordt craftKnop meteen disabled met opacity 0.6 en tekst "⏳ Bezig…", en er volgt direct een toast "Duplicaat zoeken in Craft…". De hele flow draait nu in een try/finally; de finally zet _craftBezig terug op false, heft de disable op en roept _craftKnopBijwerken aan, zodat de knop altijd in de juiste (groene of normale) stand eindigt, ook bij een fout of annulering. Daarmee is het stille gat tussen de druk en het bevestigingsvenster weg en kan er geen tweede verzending meer tegelijk starten. Geen SQL.' },
@@ -5278,7 +5280,7 @@ async function craftNaarCraft() {
   const ga = confirm('Gevonden duplicaat:\n"' + kandidaat.title + '"\naangemaakt ' + aangemaakt + '\n\nWerkvoorbereiding hierheen sturen?');
   if (!ga) return;
 
-  const titel = '🏠' + [c.klant, c.naam].filter(Boolean).join(' | ');
+  const titel = '🏠' + (c.naam || c.klant || 'Project');
   let adres = '', mapsUrl = '';
   try {
     const wa = _offWerkadresEffectief(c, cfg);

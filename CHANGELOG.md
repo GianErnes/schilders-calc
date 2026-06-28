@@ -1,3 +1,12 @@
+## v4.10.2 — Schonere titel in Craft
+De titel van het Craft-document is nu alleen de projectnaam, zonder de klantnaam ervoor.
+
+### Wat er verandert
+- De documenttitel was "klant | projectnaam", maar de klantnaam zit meestal al in de projectnaam, dus dat stond dubbelop in de kop (bijvoorbeeld "Familie R. Hermans | Hermans | Buitenwerk...").
+- Nu is de titel alleen de projectnaam. Heeft een project bij uitzondering geen naam, dan valt hij terug op de klantnaam.
+- Alleen de titel verandert. De rest van de export blijft hetzelfde.
+- Geen SQL nodig.
+
 ## v4.10.1 — Locatie onder de kozijntekeningen in Craft
 Onder elke kozijntekening in Craft staat nu ook waar het kozijn zit, zodat je op de werkvloer meteen ziet of het de voorgevel, achtergevel of zijkant is.
 
