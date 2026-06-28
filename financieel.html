@@ -213,6 +213,10 @@
   .cost-row .cost-head { display: flex; justify-content: space-between; font-size: 0.86rem; margin-bottom: 0.26rem; }
   .cost-row .cost-head .name { color: var(--ink-soft); }
   .cost-row .cost-head .amt { font-weight: 600; }
+  .cost-months { display: flex; flex-wrap: wrap; gap: 5px; margin: 0.1rem 0 0.5rem; }
+  .cost-months button { font: inherit; font-size: 0.78rem; padding: 3px 10px; border: 1px solid var(--paper-deep); background: var(--paper); color: var(--muted); border-radius: 999px; cursor: pointer; }
+  .cost-months button:hover { border-color: var(--accent); color: var(--ink); }
+  .cost-months button.actief { background: var(--accent); border-color: var(--accent); color: #fff; }
   .cost-track { height: 9px; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: 999px; overflow: hidden; }
   .cost-fill { height: 100%; background: var(--accent); border-radius: 999px; opacity: 0.85; }
 
@@ -323,7 +327,8 @@
     </div>
     <div class="card">
       <h2>Kosten per categorie</h2>
-      <div class="card-sub">Dit jaar tot nu toe</div>
+      <div class="cost-months" id="costMonths"></div>
+      <div class="card-sub" id="costSub">Dit jaar tot nu toe</div>
       <div class="cost-list" id="costList"></div>
     </div>
   </div>
@@ -533,13 +538,37 @@ document.getElementById('btwMeta').innerHTML = `
 document.getElementById('btwDeadline').innerHTML = `⏱ Aangifte &amp; betaling vóór ${DATA.btw.deadline}`;
 
 // ---------- Kosten ----------
-const maxKost = Math.max(...DATA.kosten.map(k => k.bedrag));
-document.getElementById('costList').innerHTML = DATA.kosten.map(k => `
-  <div class="cost-row">
-    <div class="cost-head"><span class="name">${k.naam}</span><span class="amt num">${eur(k.bedrag)}</span></div>
-    <div class="cost-track"><div class="cost-fill" style="width:${k.bedrag/maxKost*100}%"></div></div>
-  </div>
-`).join('');
+const MAANDVOL = { jan: 'januari', feb: 'februari', mrt: 'maart', apr: 'april', mei: 'mei', jun: 'juni', jul: 'juli', aug: 'augustus', sep: 'september', okt: 'oktober', nov: 'november', dec: 'december' };
+
+function renderKosten(lijst, sub) {
+  document.getElementById('costSub').textContent = sub;
+  if (!lijst || !lijst.length) {
+    document.getElementById('costList').innerHTML = '<div class="card-sub">Geen kosten geboekt in deze maand.</div>';
+    return;
+  }
+  const maxKost = Math.max(...lijst.map(k => Math.abs(k.bedrag)));
+  document.getElementById('costList').innerHTML = lijst.map(k => `
+    <div class="cost-row">
+      <div class="cost-head"><span class="name">${k.naam}</span><span class="amt num">${eur(k.bedrag)}</span></div>
+      <div class="cost-track"><div class="cost-fill" style="width:${maxKost ? Math.max(0, Math.min(100, Math.abs(k.bedrag) / maxKost * 100)) : 0}%"></div></div>
+    </div>
+  `).join('');
+}
+
+// Maandkiezer: "Heel jaar" plus elke maand met cijfers
+const knoppen = [{ label: 'Heel jaar', lijst: DATA.kosten, sub: 'Dit jaar tot nu toe' }]
+  .concat((DATA.kostenPerMaand || []).map(pm => ({ label: pm.m, lijst: pm.kosten, sub: 'Kosten in ' + (MAANDVOL[pm.m] || pm.m) })));
+const knopBar = document.getElementById('costMonths');
+knopBar.innerHTML = knoppen.map((k, i) => `<button data-i="${i}">${k.label}</button>`).join('');
+knopBar.querySelectorAll('button').forEach((btn, i) => {
+  btn.addEventListener('click', () => {
+    knopBar.querySelectorAll('button').forEach(b => b.classList.remove('actief'));
+    btn.classList.add('actief');
+    renderKosten(knoppen[i].lijst, knoppen[i].sub);
+  });
+});
+knopBar.querySelector('button').classList.add('actief');
+renderKosten(DATA.kosten, 'Dit jaar tot nu toe');
 } // ---------- einde render ----------
 
 // ---------- inloggen en cijfers laden ----------
