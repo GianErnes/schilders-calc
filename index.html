@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.9.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.10.0</h2>
       <div class="intro-body">
+        <p><strong>🪟 Kozijntekeningen mee naar Craft (v4.10.0).</strong> De knop "Naar Craft" stuurt nu ook de kozijntekeningen mee, met de genummerde gebrekstippen erop net als in de offerte. Ze komen als plaatje onder "Foto's", direct na de foto's, met een compact onderschrift: naam, aantal stuks en de gebreken. Daarmee is de werkvoorbereiding naar Craft compleet: tekst, foto's én kozijnen, in één druk op de knop. Geen SQL nodig.</p>
         <p><strong>📸 Foto's mee naar Craft, plus dubbeldruk-fix (v4.9.0).</strong> De knop "Naar Craft" stuurt nu ook de foto's mee, met de genummerde gebrekstippen erop net als in de offerte, netjes onder het kopje "Foto's" met een onderschrift dat de gebreken benoemt. Voor een vlotte verzending worden ze automatisch verkleind. En het dubbel-stuur-probleem is opgelost: zodra je drukt, schakelt de knop uit en toont "⏳ Bezig…", en je krijgt meteen de melding "Duplicaat zoeken in Craft…". Zo kun je niet meer per ongeluk twee keer drukken terwijl hij nog werkt, en zie je altijd dat er iets gebeurt. De kozijntekeningen volgen in de volgende stap. Geen SQL nodig.</p>
         <p><strong>🏗️ Werkvoorbereiding rechtstreeks naar Craft (v4.8.0).</strong> Bovenaan de calculatie staat naast "Klant uit Yoobi" de nieuwe knop "Naar Craft". Dupliceer eerst het projectsjabloon in Craft, druk dan op de knop: de app zoekt het verse "🏠Projectnaam"-duplicaat, laat je in een venster zien welk document hij gevonden heeft (titel en aanmaaktijd) en vult na jouw bevestiging de titel, het adres met een routelink en de drie tekstblokken in. Bevindingen gaat naar Bevindingen, onderdelen naar "Wat gaan we doen", werkzaamheden naar "Hoe doen we het". Is het verstuurd, dan wordt de knop groen met datum en tijd, zodat je nooit per ongeluk dubbel stuurt. Opnieuw sturen kan, je krijgt eerst het bevestigingsvenster. Foto's en kozijntekeningen volgen in een latere stap. Eenmalige SQL al uitgevoerd.</p>
         <p><strong>⚖️ Juridisch waterdichte bedenktermijn op de besluitpagina (v4.7.14).</strong> De verwijzing onder het ALV-besluit noemde alleen artikel 2:15 BW voor de termijn van één maand. Dat artikel geldt voor gewone verenigingen met een termijn van een jaar; de maand-termijn voor een VvE-besluit staat in artikel 5:130 BW uit Boek 5. De disclaimer verwijst nu naar artikel 5:130 in verbinding met artikel 2:15 van het Burgerlijk Wetboek, en de termijn loopt vanaf de dag waarop de eigenaar van het besluit heeft kennisgenomen of redelijkerwijs had kunnen kennisnemen. Zo struikelt geen enkele VvE-beheerder of advocaat er nog over. Geen SQL nodig.</p>
@@ -3248,7 +3249,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.9.0';
+const APP_VERSION = 'v4.10.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3643,6 +3644,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.10.0', d: '2026-06-28', h: 'Craft-koppeling brok 4c: kozijntekeningen mee naar Craft. Nieuwe helper _craftBouwKozijnen(c) loopt door c.meetstaat gefilterd op ms.tekening.vorm, bouwt per kozijn de SVG via _kozijnThumbSvg(ms.tekening, 0, {genummerd:true, fill:true}) (met de genummerde gebrekstippen erin), en zet die om naar een PNG via _craftSvgNaarPng. Die rasteraar leest vbW/vbH uit de viewBox, injecteert xmlns en een vaste width/height in de svg-tag (anders rendert de browser de SVG niet als Image), tekent hem via een Blob-URL op een canvas met witte achtergrond en 6% witrand, en geeft een PNG data-URL terug (geen taint want de blob is same-origin). Compact onderschrift via _craftKozijnBijschrift: naam (ms.omschrijving of tek.naam), aantal stuks en de genummerde gebreken. craftNaarCraft bouwt nu fotos en kozijnen apart en stuurt fotos.concat(kozijnen) als één fotos-array, zodat de kozijnen op volgorde na de foto\\u0027s onder het kopje Foto\\u0027s landen; de knop toont tijdens deze fase "⏳ Beeld…" en de slottoast meldt het aantal foto\\u0027s en kozijnen apart. Edge Function ongewijzigd. Geen SQL.' },
   { v: '4.9.0', d: '2026-06-28', h: 'Craft-koppeling brok 4b plus dubbeldruk-fix. (1) Foto\\u0027s mee naar Craft: _craftBouwFotos(c) signt de URL\\u0027s (_signFotoUrls op de fotos zonder signedUrl), bakt per foto de genummerde gebrekstippen via _craftFotoDataUrl(f, 1600) (eigen verkleinende variant van _fotoNaarDataUrl: schaalt naar max 1600px en geeft JPEG q0.82, stippen uit f.markeringen met kleur uit _KOZIJN_DEFECTEN), en bouwt per foto een caption via _craftFotoBijschrift (f.opmerking plus de genummerde gebreken, matcht de stippen). craftNaarCraft stuurt na de tekst een tweede _craftCall({documentId, fotos}) zodat de Edge Function ze op volgorde onder het kopje Foto\\u0027s plaatst (in 4c komen de kozijnen aan dezelfde array toe). (2) Dubbeldruk-fix: nieuwe vlag _craftBezig plus knopvergrendeling. Bij de druk wordt craftKnop meteen disabled met opacity 0.6 en tekst "⏳ Bezig…", en er volgt direct een toast "Duplicaat zoeken in Craft…". De hele flow draait nu in een try/finally; de finally zet _craftBezig terug op false, heft de disable op en roept _craftKnopBijwerken aan, zodat de knop altijd in de juiste (groene of normale) stand eindigt, ook bij een fout of annulering. Daarmee is het stille gat tussen de druk en het bevestigingsvenster weg en kan er geen tweede verzending meer tegelijk starten. Geen SQL.' },
   { v: '4.8.0', d: '2026-06-28', h: 'Craft-koppeling brok 4a: knop "Naar Craft" in de calculatie-kop (panel-actions, naast Klant uit Yoobi, id craftKnop). Stuurt de werkvoorbereiding naar het verse "🏠Projectnaam"-duplicaat in Craft via de Edge Function craft-werkvoorbereiding. Nieuwe constante CRAFT_FUNCTIE_URL. _craftCall doet een ingelogde POST (Supabase-sessie als Bearer plus apikey, zelfde patroon als _yoobiCall). craftNaarCraft roept eerst _craftCall({}) aan voor het overzicht, zoekt in documents.laatste_25 het document met titel exact "🏠Projectnaam" (het onaangeraakte duplicaat), toont een confirm-vangnet met titel en aanmaaktijd, en stuurt daarna documentId plus data: titel ("🏠" + klant + " | " + naam), adres en mapsUrl uit _offWerkadresEffectief (Google Maps-zoeklink), en de drie tekstblokken via _craftSectieTekst(cfg, code) die per sectie de blokken filtert en _offVulVelden(_offBlokTekst(b)) toepast. Mapping: bevindingen naar Bevindingen, onderdelen naar watGaanWeDoen, werkzaamheden naar hoeDoenWeHet. Na succes wordt de calc gemarkeerd als geëxporteerd: nieuw veld craftGeexporteerdOp (kolom craft_geexporteerd_op, alleen in _mapCalcHeaderFromDB; weggeschreven via een gerichte update zodat een header-save het niet overschrijft), en _craftKnopBijwerken maakt de knop groen met "✅ In Craft (dd-mm uu:mm)". _craftKnopBijwerken draait ook aan het eind van renderCalcStructuur zodat de stand bij elke calc-wissel klopt. Foto\\u0027s en kozijntekeningen volgen in 4b/4c. Eenmalige SQL (kolom toevoegen) al uitgevoerd.' },
   { v: '4.7.14', d: '2026-06-27', h: 'Juridisch correcte bedenktermijn op de ALV-besluitpagina, na een scherpe juridische check van de adviseur. De disclaimer verwees voor de termijn van één maand alleen naar artikel 2:15 BW; dat artikel regelt de vernietigbaarheid van besluiten maar kent voor gewone verenigingen en BV\\u0027s een termijn van een jaar. De kortere termijn van één maand voor een VvE-besluit staat in artikel 5:130 lid 1 BW (Boek 5, goederenrecht). De disc-tekst in _besluitBody verwijst nu naar artikel 5:130 in verbinding met artikel 2:15 van het Burgerlijk Wetboek, met de juiste aanvang van de termijn: vanaf de dag waarop de eigenaar van het besluit heeft kennisgenomen of redelijkerwijs had kunnen kennisnemen. De aparte zin over de termijnaanvang verviel, want dat zit nu in de wettelijke formulering zelf. Alleen tekst; geen SQL.' },
@@ -5170,6 +5172,73 @@ async function _craftBouwFotos(c) {
   return uit;
 }
 
+// 4c — Kozijn-SVG omzetten naar een PNG data-URL (Craft neemt geen SVG aan).
+function _craftSvgNaarPng(svg, maxDim) {
+  return new Promise((resolve, reject) => {
+    const mm = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
+    let vbW = mm ? parseFloat(mm[1]) : 400;
+    let vbH = mm ? parseFloat(mm[2]) : 300;
+    if (!(vbW > 0) || !(vbH > 0)) { vbW = 400; vbH = 300; }
+    const md = maxDim || 800;
+    const schaal = md / Math.max(vbW, vbH);
+    const w = Math.round(vbW * schaal), h = Math.round(vbH * schaal);
+    const pad = Math.round(Math.max(w, h) * 0.06);
+    // xmlns en vaste maat toevoegen, anders rendert de browser de SVG niet als plaatje.
+    const svg2 = svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" ');
+    const blob = new Blob([svg2], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const cv = document.createElement('canvas');
+        cv.width = w + pad * 2; cv.height = h + pad * 2;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.drawImage(img, pad, pad, w, h);
+        URL.revokeObjectURL(url);
+        resolve(cv.toDataURL('image/png'));
+      } catch (e) { URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Kozijntekening renderen mislukt')); };
+    img.src = url;
+  });
+}
+
+// Compact onderschrift bij een kozijntekening: naam, aantal stuks, gebreken.
+function _craftKozijnBijschrift(ms) {
+  const tek = ms.tekening || {};
+  const naam = ms.omschrijving || tek.naam || 'Kozijn';
+  const aantal = Math.max(0, +ms.aantal || 0);
+  const delen = [naam];
+  if (aantal >= 1) delen.push(aantal + ' ' + (aantal === 1 ? 'stuk' : 'stuks'));
+  const mk = Array.isArray(tek.markeringen) ? tek.markeringen : [];
+  if (mk.length) {
+    const lijst = mk.map((m, i) => {
+      const lbl = (_KOZIJN_DEFECTEN[m.type] || {}).label || m.type || 'Gebrek';
+      return (i + 1) + '. ' + lbl;
+    }).join(', ');
+    delen.push(lijst);
+  }
+  return delen.join(' \u00b7 ');
+}
+
+// Bouwt de kozijn-afbeeldingen (met genummerde gebrekstippen) voor Craft.
+async function _craftBouwKozijnen(c) {
+  const kozijnen = (c.meetstaat || []).filter(ms => ms.tekening && ms.tekening.vorm);
+  if (!kozijnen.length) return [];
+  const uit = [];
+  for (const ms of kozijnen) {
+    let svg = '';
+    try { svg = _kozijnThumbSvg(ms.tekening, 0, { genummerd: true, fill: true }); } catch (e) { svg = ''; }
+    if (!svg) continue;
+    let png = null;
+    try { png = await _craftSvgNaarPng(svg, 800); } catch (e) { png = null; }
+    if (!png) continue;
+    uit.push({ base64: png, mime: 'image/png', caption: _craftKozijnBijschrift(ms) });
+  }
+  return uit;
+}
+
 let _craftBezig = false;
 async function craftNaarCraft() {
   if (_craftBezig) return;
@@ -5235,19 +5304,21 @@ async function craftNaarCraft() {
     return;
   }
 
-    // Foto's met gebrekstippen meesturen (4b).
+    // Foto's en kozijntekeningen met gebrekstippen meesturen (4b + 4c).
     try {
-      const afbeeldingen = await _craftBouwFotos(c);
+      if (knop) knop.textContent = '⏳ Beeld…';
+      const fotos = await _craftBouwFotos(c);
+      const kozijnen = await _craftBouwKozijnen(c);
+      const afbeeldingen = fotos.concat(kozijnen);
       if (afbeeldingen.length) {
-        if (knop) knop.textContent = '⏳ Foto\u2019s…';
-        _toast(afbeeldingen.length + ' foto' + (afbeeldingen.length === 1 ? '' : "'s") + ' versturen…', 'ok');
+        _toast(afbeeldingen.length + ' afbeelding' + (afbeeldingen.length === 1 ? '' : 'en') + ' versturen…', 'ok');
         const fres = await _craftCall({ documentId: kandidaat.id, fotos: afbeeldingen });
         const gelukt = (fres && fres.fotos && Array.isArray(fres.fotos.resultaten))
           ? fres.fotos.resultaten.filter(r => r.status === 200).length : 0;
-        _toast(gelukt + ' van ' + afbeeldingen.length + " foto's in Craft.", 'ok');
+        _toast(gelukt + ' van ' + afbeeldingen.length + ' afbeeldingen in Craft (' + fotos.length + " foto's, " + kozijnen.length + ' kozijnen).', 'ok');
       }
     } catch (e) {
-      _toast("Foto's versturen mislukt: " + e.message);
+      _toast('Beeld versturen mislukt: ' + e.message);
     }
 
     // Gelukt: markeer de calc als geëxporteerd (lokaal + gericht in de DB).
