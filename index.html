@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.8.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.9.0</h2>
       <div class="intro-body">
+        <p><strong>📸 Foto's mee naar Craft, plus dubbeldruk-fix (v4.9.0).</strong> De knop "Naar Craft" stuurt nu ook de foto's mee, met de genummerde gebrekstippen erop net als in de offerte, netjes onder het kopje "Foto's" met een onderschrift dat de gebreken benoemt. Voor een vlotte verzending worden ze automatisch verkleind. En het dubbel-stuur-probleem is opgelost: zodra je drukt, schakelt de knop uit en toont "⏳ Bezig…", en je krijgt meteen de melding "Duplicaat zoeken in Craft…". Zo kun je niet meer per ongeluk twee keer drukken terwijl hij nog werkt, en zie je altijd dat er iets gebeurt. De kozijntekeningen volgen in de volgende stap. Geen SQL nodig.</p>
         <p><strong>🏗️ Werkvoorbereiding rechtstreeks naar Craft (v4.8.0).</strong> Bovenaan de calculatie staat naast "Klant uit Yoobi" de nieuwe knop "Naar Craft". Dupliceer eerst het projectsjabloon in Craft, druk dan op de knop: de app zoekt het verse "🏠Projectnaam"-duplicaat, laat je in een venster zien welk document hij gevonden heeft (titel en aanmaaktijd) en vult na jouw bevestiging de titel, het adres met een routelink en de drie tekstblokken in. Bevindingen gaat naar Bevindingen, onderdelen naar "Wat gaan we doen", werkzaamheden naar "Hoe doen we het". Is het verstuurd, dan wordt de knop groen met datum en tijd, zodat je nooit per ongeluk dubbel stuurt. Opnieuw sturen kan, je krijgt eerst het bevestigingsvenster. Foto's en kozijntekeningen volgen in een latere stap. Eenmalige SQL al uitgevoerd.</p>
         <p><strong>⚖️ Juridisch waterdichte bedenktermijn op de besluitpagina (v4.7.14).</strong> De verwijzing onder het ALV-besluit noemde alleen artikel 2:15 BW voor de termijn van één maand. Dat artikel geldt voor gewone verenigingen met een termijn van een jaar; de maand-termijn voor een VvE-besluit staat in artikel 5:130 BW uit Boek 5. De disclaimer verwijst nu naar artikel 5:130 in verbinding met artikel 2:15 van het Burgerlijk Wetboek, en de termijn loopt vanaf de dag waarop de eigenaar van het besluit heeft kennisgenomen of redelijkerwijs had kunnen kennisnemen. Zo struikelt geen enkele VvE-beheerder of advocaat er nog over. Geen SQL nodig.</p>
         <p><strong>💧 Scherpere conclusiezin bij de liquiditeit (v4.7.13).</strong> De slotzin onder het liquiditeitsbeeld zei "op dat punt moet uw reserve minstens € X bedragen", wat kon lezen alsof dat de hele benodigde reserve was. In werkelijkheid is € X een eenmalig tekort in de opbouw vanaf het prijspeil, dat de VvE opvangt uit de reserve die ze al heeft. De zin maakt dat nu duidelijk: de reserveringen vanaf het prijspeil komen op het diepste punt zoveel tekort op de uitgaven, en dat eenmalige verschil vangt u op uit uw bestaande reserve. Zo klopt de boodschap met de tabel en kan een ervaren penningmeester er niet meer over struikelen. Geen SQL nodig.</p>
@@ -3247,7 +3248,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.8.0';
+const APP_VERSION = 'v4.9.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3642,6 +3643,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.9.0', d: '2026-06-28', h: 'Craft-koppeling brok 4b plus dubbeldruk-fix. (1) Foto\\u0027s mee naar Craft: _craftBouwFotos(c) signt de URL\\u0027s (_signFotoUrls op de fotos zonder signedUrl), bakt per foto de genummerde gebrekstippen via _craftFotoDataUrl(f, 1600) (eigen verkleinende variant van _fotoNaarDataUrl: schaalt naar max 1600px en geeft JPEG q0.82, stippen uit f.markeringen met kleur uit _KOZIJN_DEFECTEN), en bouwt per foto een caption via _craftFotoBijschrift (f.opmerking plus de genummerde gebreken, matcht de stippen). craftNaarCraft stuurt na de tekst een tweede _craftCall({documentId, fotos}) zodat de Edge Function ze op volgorde onder het kopje Foto\\u0027s plaatst (in 4c komen de kozijnen aan dezelfde array toe). (2) Dubbeldruk-fix: nieuwe vlag _craftBezig plus knopvergrendeling. Bij de druk wordt craftKnop meteen disabled met opacity 0.6 en tekst "⏳ Bezig…", en er volgt direct een toast "Duplicaat zoeken in Craft…". De hele flow draait nu in een try/finally; de finally zet _craftBezig terug op false, heft de disable op en roept _craftKnopBijwerken aan, zodat de knop altijd in de juiste (groene of normale) stand eindigt, ook bij een fout of annulering. Daarmee is het stille gat tussen de druk en het bevestigingsvenster weg en kan er geen tweede verzending meer tegelijk starten. Geen SQL.' },
   { v: '4.8.0', d: '2026-06-28', h: 'Craft-koppeling brok 4a: knop "Naar Craft" in de calculatie-kop (panel-actions, naast Klant uit Yoobi, id craftKnop). Stuurt de werkvoorbereiding naar het verse "🏠Projectnaam"-duplicaat in Craft via de Edge Function craft-werkvoorbereiding. Nieuwe constante CRAFT_FUNCTIE_URL. _craftCall doet een ingelogde POST (Supabase-sessie als Bearer plus apikey, zelfde patroon als _yoobiCall). craftNaarCraft roept eerst _craftCall({}) aan voor het overzicht, zoekt in documents.laatste_25 het document met titel exact "🏠Projectnaam" (het onaangeraakte duplicaat), toont een confirm-vangnet met titel en aanmaaktijd, en stuurt daarna documentId plus data: titel ("🏠" + klant + " | " + naam), adres en mapsUrl uit _offWerkadresEffectief (Google Maps-zoeklink), en de drie tekstblokken via _craftSectieTekst(cfg, code) die per sectie de blokken filtert en _offVulVelden(_offBlokTekst(b)) toepast. Mapping: bevindingen naar Bevindingen, onderdelen naar watGaanWeDoen, werkzaamheden naar hoeDoenWeHet. Na succes wordt de calc gemarkeerd als geëxporteerd: nieuw veld craftGeexporteerdOp (kolom craft_geexporteerd_op, alleen in _mapCalcHeaderFromDB; weggeschreven via een gerichte update zodat een header-save het niet overschrijft), en _craftKnopBijwerken maakt de knop groen met "✅ In Craft (dd-mm uu:mm)". _craftKnopBijwerken draait ook aan het eind van renderCalcStructuur zodat de stand bij elke calc-wissel klopt. Foto\\u0027s en kozijntekeningen volgen in 4b/4c. Eenmalige SQL (kolom toevoegen) al uitgevoerd.' },
   { v: '4.7.14', d: '2026-06-27', h: 'Juridisch correcte bedenktermijn op de ALV-besluitpagina, na een scherpe juridische check van de adviseur. De disclaimer verwees voor de termijn van één maand alleen naar artikel 2:15 BW; dat artikel regelt de vernietigbaarheid van besluiten maar kent voor gewone verenigingen en BV\\u0027s een termijn van een jaar. De kortere termijn van één maand voor een VvE-besluit staat in artikel 5:130 lid 1 BW (Boek 5, goederenrecht). De disc-tekst in _besluitBody verwijst nu naar artikel 5:130 in verbinding met artikel 2:15 van het Burgerlijk Wetboek, met de juiste aanvang van de termijn: vanaf de dag waarop de eigenaar van het besluit heeft kennisgenomen of redelijkerwijs had kunnen kennisnemen. De aparte zin over de termijnaanvang verviel, want dat zit nu in de wettelijke formulering zelf. Alleen tekst; geen SQL.' },
   { v: '4.7.13', d: '2026-06-27', h: 'Conclusiezin van het liquiditeitsblok aangescherpt na opmerking van de adviseur. De zin zei "Op dat punt moet uw reserve minstens € X bedragen om de uitgaven te dekken", wat kon lezen alsof € X de totale benodigde reserve was, terwijl de VvE op dat moment cumulatief al veel meer heeft gereserveerd. € X (het diepste saldo-opbouwpunt, bv. -€ 8.593,50) is in werkelijkheid een eenmalig tekort van de opbouw vanaf het prijspeil tegenover de uitgaven tot dan toe, op te vangen uit de bestaande reserve. Nieuwe formulering: "De reserveringen vanaf {pp} komen op dat moment € X tekort op de uitgaven tot dan toe; dit eenmalige verschil vangt u op uit uw bestaande reserve, die op dat punt dus minstens dat bedrag beschikbaar moet hebben." Alleen de tekst van de concl-callout in het liquiditeitsblok; de berekening en de tabel blijven gelijk. Geen SQL.' },
@@ -5103,15 +5105,87 @@ function _craftKnopBijwerken() {
   }
 }
 
+// 4b — Verkleinde foto met genummerde gebrekstippen, als JPEG data-URL (voor Craft).
+function _craftFotoDataUrl(f, maxDim) {
+  return new Promise((resolve, reject) => {
+    if (!f || !f.signedUrl) { reject(new Error('geen link')); return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const md = maxDim || 1600;
+        let W = img.naturalWidth, H = img.naturalHeight;
+        const schaal = Math.min(1, md / Math.max(W, H));
+        W = Math.round(W * schaal); H = Math.round(H * schaal);
+        const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+        const ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0, W, H);
+        const mk = Array.isArray(f.markeringen) ? f.markeringen : [];
+        const r = Math.max(10, Math.round(Math.min(W, H) * 0.035));
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        mk.forEach((m, i) => {
+          const d = _KOZIJN_DEFECTEN[m.type] || { kleur: '#dc2626' };
+          const x = m.fx * W, y = m.fy * H;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = d.kleur; ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(r * 1.1) + 'px sans-serif';
+          ctx.fillText(String(i + 1), x, y);
+        });
+        resolve(cv.toDataURL('image/jpeg', 0.82));
+      } catch (e) { reject(e); }
+    };
+    img.onerror = () => reject(new Error('Foto laden mislukt'));
+    img.src = f.signedUrl;
+  });
+}
+
+// Onderschrift bij een foto: opmerking plus de genummerde gebreken (matcht de stippen).
+function _craftFotoBijschrift(f) {
+  const delen = [];
+  if (f.opmerking && f.opmerking.trim()) delen.push(f.opmerking.trim());
+  const mk = Array.isArray(f.markeringen) ? f.markeringen : [];
+  if (mk.length) {
+    const lijst = mk.map((m, i) => {
+      const lbl = (_KOZIJN_DEFECTEN[m.type] || {}).label || m.type || 'Gebrek';
+      const nt = (m.notitie || '').trim();
+      return (i + 1) + '. ' + lbl + (nt ? ' \u2014 ' + nt : '');
+    }).join(', ');
+    delen.push(lijst);
+  }
+  return delen.join(' \u00b7 ');
+}
+
+// Bouwt de afbeeldingen-array voor Craft (4b: foto's; in 4c komen de kozijnen erbij).
+async function _craftBouwFotos(c) {
+  const fotos = (c.fotos || []);
+  if (!fotos.length) return [];
+  const missing = fotos.filter(f => !f.signedUrl);
+  if (missing.length) await _signFotoUrls(missing);
+  const uit = [];
+  for (const f of fotos) {
+    let dataUrl = null;
+    try { dataUrl = await _craftFotoDataUrl(f, 1600); } catch (e) { dataUrl = null; }
+    if (!dataUrl) continue;
+    uit.push({ base64: dataUrl, mime: 'image/jpeg', caption: _craftFotoBijschrift(f) });
+  }
+  return uit;
+}
+
+let _craftBezig = false;
 async function craftNaarCraft() {
+  if (_craftBezig) return;
   const c = data.calc;
   if (!c) { _toast('Geen calculatie open.'); return; }
   const cfg = _offCfg();
   if (!cfg) { _toast('Geen offerte-config beschikbaar.'); return; }
 
-  let kandidaat = null;
+  _craftBezig = true;
+  const knop = document.getElementById('craftKnop');
+  if (knop) { knop.disabled = true; knop.style.opacity = '0.6'; knop.textContent = '⏳ Bezig…'; }
   try {
-    const overzicht = await _craftCall({});
+    _toast('Duplicaat zoeken in Craft…', 'ok');
+    let kandidaat = null;
+    try {
+      const overzicht = await _craftCall({});
     const docs = (overzicht && overzicht.documents && overzicht.documents.laatste_25) || [];
     kandidaat = docs.find(d => (d.title || '').trim() === '🏠Projectnaam') || null;
   } catch (e) {
@@ -5161,14 +5235,33 @@ async function craftNaarCraft() {
     return;
   }
 
-  // Gelukt: markeer de calc als geëxporteerd (lokaal + gericht in de DB).
-  const nu = new Date().toISOString();
-  c.craftGeexporteerdOp = nu;
-  _craftKnopBijwerken();
-  try {
-    await _sb.from('calculaties').update({ craft_geexporteerd_op: nu }).eq('id', c.id);
-  } catch (e) { /* knop is al bijgewerkt; een volgende load herstelt zo nodig */ }
-  _toast('Werkvoorbereiding naar Craft gestuurd.', 'ok');
+    // Foto's met gebrekstippen meesturen (4b).
+    try {
+      const afbeeldingen = await _craftBouwFotos(c);
+      if (afbeeldingen.length) {
+        if (knop) knop.textContent = '⏳ Foto\u2019s…';
+        _toast(afbeeldingen.length + ' foto' + (afbeeldingen.length === 1 ? '' : "'s") + ' versturen…', 'ok');
+        const fres = await _craftCall({ documentId: kandidaat.id, fotos: afbeeldingen });
+        const gelukt = (fres && fres.fotos && Array.isArray(fres.fotos.resultaten))
+          ? fres.fotos.resultaten.filter(r => r.status === 200).length : 0;
+        _toast(gelukt + ' van ' + afbeeldingen.length + " foto's in Craft.", 'ok');
+      }
+    } catch (e) {
+      _toast("Foto's versturen mislukt: " + e.message);
+    }
+
+    // Gelukt: markeer de calc als geëxporteerd (lokaal + gericht in de DB).
+    const nu = new Date().toISOString();
+    c.craftGeexporteerdOp = nu;
+    try {
+      await _sb.from('calculaties').update({ craft_geexporteerd_op: nu }).eq('id', c.id);
+    } catch (e) { /* knop wordt in finally bijgewerkt; een volgende load herstelt zo nodig */ }
+    _toast('Werkvoorbereiding naar Craft gestuurd.', 'ok');
+  } finally {
+    _craftBezig = false;
+    if (knop) { knop.disabled = false; knop.style.opacity = ''; }
+    _craftKnopBijwerken();
+  }
 }
 
 async function _yoobiZoek() {

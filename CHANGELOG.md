@@ -1,3 +1,15 @@
+## v4.9.0 — Foto's mee naar Craft, plus dubbeldruk-fix
+De werkvoorbereiding naar Craft is nu compleet met beeld: de foto's gaan mee, met de genummerde gebrekstippen erop. En het vervelende dubbel-stuur-probleem is opgelost.
+
+### Wat er verandert
+- De knop "Naar Craft" stuurt nu na de tekst ook de foto's mee. Ze landen op volgorde onder het kopje "Foto's" in het Craft-document.
+- Op elke foto staan de genummerde gebrekstippen, in dezelfde kleuren als in de offerte (houtrot, scheur, kit, losse verf). Onder elke foto komt een onderschrift met jouw opmerking en de genummerde gebreken, zodat de stippen meteen te lezen zijn.
+- De foto's worden voor de verzending automatisch verkleind (max 1600px). Scherp genoeg om elk gebrek te zien, en klein genoeg om vlot te versturen zonder tegen de groottelimiet aan te lopen.
+- Dubbeldruk-fix: zodra je op "Naar Craft" drukt, schakelt de knop meteen uit en toont "⏳ Bezig…", en verschijnt direct de melding "Duplicaat zoeken in Craft…". Daardoor kun je niet meer per ongeluk een tweede keer drukken terwijl de eerste nog bezig is, en zie je altijd dat er iets gebeurt. Eerder bleef het scherm in dat eerste moment stil, waardoor een tweede druk een dubbele verzending veroorzaakte.
+- De knop eindigt altijd in de juiste stand (groen na succes, normaal na annulering of fout), ook als er onderweg iets misgaat.
+- De kozijntekeningen volgen in de volgende stap; die komen in Craft bij dezelfde "Foto's", zodat de volgorde klopt.
+- Geen SQL nodig. Vereist de bestaande Edge Function craft-werkvoorbereiding.
+
 ## v4.8.0 — Werkvoorbereiding rechtstreeks naar Craft
 De brug naar Craft staat. Na een offerte druk je bovenaan de calculatie op de nieuwe knop "Naar Craft" en de werkvoorbereiding staat in een paar tellen klaar in je Craft-projectdocument, zonder overtypen.
 
