@@ -1,3 +1,13 @@
+## v4.10.1 — Locatie onder de kozijntekeningen in Craft
+Onder elke kozijntekening in Craft staat nu ook waar het kozijn zit, zodat je op de werkvloer meteen ziet of het de voorgevel, achtergevel of zijkant is.
+
+### Wat er verandert
+- Het onderschrift onder een kozijntekening is uitgebreid van "naam · aantal stuks · gebreken" naar "naam · locatie · aantal stuks · gebreken", bijvoorbeeld "Kozijn · Voorgevel · 1 stuk · 1. Houtrot".
+- De locatie komt uit de hoofdgroep en het onderdeel van je calculatie waar het kozijn onder valt, precies zoals in de offerte-bijlage.
+- Heeft een kozijn geen locatie (een los kozijn zonder hoofdgroep), dan valt dat deel gewoon weg en staat er net als voorheen "Kozijn · 1 stuk".
+- Alleen het onderschrift verandert. De tekening zelf, de gebrekstippen en de verzending blijven hetzelfde.
+- Geen SQL nodig.
+
 ## v4.10.0 — Kozijntekeningen mee naar Craft
 De werkvoorbereiding naar Craft is nu compleet. Met één druk op de knop staan de tekst, de foto's én de kozijntekeningen in je Craft-projectdocument.
 
