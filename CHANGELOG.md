@@ -1,3 +1,14 @@
+## v4.10.0 — Kozijntekeningen mee naar Craft
+De werkvoorbereiding naar Craft is nu compleet. Met één druk op de knop staan de tekst, de foto's én de kozijntekeningen in je Craft-projectdocument.
+
+### Wat er verandert
+- De knop "Naar Craft" stuurt nu ook de kozijntekeningen mee. Ze komen als plaatje onder het kopje "Foto's", direct na de foto's.
+- Op elke kozijntekening staan de genummerde gebrekstippen, net als in de offerte en op de foto's.
+- Onder elke kozijntekening staat een compact onderschrift: de naam, het aantal stuks en de gebreken, bijvoorbeeld "Voorgevel kozijn 1 · 3 stuks · 1. Houtrot, 2. Kit vervangen".
+- Tijdens het versturen van het beeld toont de knop "⏳ Beeld…", en de slotmelding vertelt hoeveel foto's en hoeveel kozijnen er in Craft staan.
+- Technisch: een kozijntekening is in de app een SVG-lijntekening. Die wordt nu omgezet naar een PNG-plaatje voordat hij naar Craft gaat, op een witte achtergrond met een nette rand eromheen.
+- Geen SQL nodig. Vereist de bestaande Edge Function craft-werkvoorbereiding.
+
 ## v4.9.0 — Foto's mee naar Craft, plus dubbeldruk-fix
 De werkvoorbereiding naar Craft is nu compleet met beeld: de foto's gaan mee, met de genummerde gebrekstippen erop. En het vervelende dubbel-stuur-probleem is opgelost.
 
