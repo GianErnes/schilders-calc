@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ernes Schilders — Financieel overzicht</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1d21;
+    --ink-soft: #4b5563;
+    --paper: #ffffff;
+    --paper-warm: #f9fafb;
+    --paper-deep: #e5e7eb;
+    --page: #f5f6f7;
+    --accent: #e63329;        /* Yoobi rood */
+    --accent-deep: #c62828;
+    --muted: #6b7280;
+    --field-border: #9ca3af;
+    --green: #16a34a;
+    --amber: #ea580c;
+    --blue: #2196f3;
+    --blue-soft: #cfe3f7;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+    --radius: 6px;
+    --radius-lg: 8px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 1.4rem 1.4rem 3rem;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.4rem;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header .sub { color: var(--muted); font-size: 0.85rem; margin-top: 0.15rem; }
+  .header-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; }
+  .updated { color: var(--muted); font-size: 0.82rem; }
+  .demo-badge {
+    display: inline-block;
+    background: #fff4f3;
+    color: var(--accent-deep);
+    border: 1px solid #f6cfcc;
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  /* KPI ROW */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.9rem;
+    margin-bottom: 0.9rem;
+  }
+  .kpi {
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 0.95rem 1.05rem;
+  }
+  .kpi .label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .kpi .value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-top: 0.35rem;
+    line-height: 1.1;
+  }
+  .kpi .delta {
+    margin-top: 0.45rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .delta.up { color: var(--green); }
+  .delta.down { color: var(--accent); }
+  .delta .vs { color: var(--muted); font-weight: 500; }
+
+  /* WERKKAPITAAL OPBOUW STROOK */
+  .wk-strip {
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 0.75rem 1.05rem;
+    margin-bottom: 1.4rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.55rem;
+    font-size: 0.9rem;
+  }
+  .wk-strip .lbl { color: var(--muted); font-weight: 600; margin-right: 0.4rem; }
+  .wk-term { display: inline-flex; align-items: baseline; gap: 0.3rem; }
+  .wk-term .t { color: var(--ink-soft); font-size: 0.82rem; }
+  .wk-op { color: var(--field-border); font-weight: 700; padding: 0 0.1rem; }
+  .wk-eq { margin-left: auto; font-weight: 700; display: inline-flex; align-items: baseline; gap: 0.4rem; }
+  .wk-eq .t { color: var(--muted); font-size: 0.82rem; font-weight: 600; }
+  .neg { color: var(--accent-deep); }
+  .pos { color: var(--ink); }
+
+  /* CARDS GRID */
+  .row {
+    display: grid;
+    gap: 0.9rem;
+    margin-bottom: 0.9rem;
+  }
+  .row.two { grid-template-columns: 1fr 1fr; }
+  .row.wide { grid-template-columns: 1fr; }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--paper-deep);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.05rem 1.15rem 1.2rem;
+  }
+  .card h2 {
+    margin: 0 0 0.2rem;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .card .card-sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 0.9rem; }
+
+  /* CHART */
+  .legend { display: flex; gap: 1.1rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 0.4rem; }
+  .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  .swatch.line { width: 16px; height: 3px; border-radius: 2px; }
+  .chart-totals { display: flex; gap: 1.6rem; flex-wrap: wrap; margin-top: 0.6rem; padding-top: 0.8rem; border-top: 1px solid var(--paper-deep); }
+  .chart-totals .ct .t { font-size: 0.76rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .chart-totals .ct .v { font-size: 1.05rem; font-weight: 700; margin-top: 0.1rem; }
+  svg { display: block; width: 100%; height: auto; }
+  .gridline { stroke: var(--paper-deep); stroke-width: 1; }
+  .axis-label { fill: var(--muted); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+  .month-label { fill: var(--ink-soft); font-size: 12px; font-weight: 600; }
+  .pt-label { fill: var(--ink-soft); font-size: 10.5px; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+  /* BANKSALDO VERLOOP */
+  .bank-head { display: flex; align-items: baseline; gap: 1.6rem; flex-wrap: wrap; margin: 0.2rem 0 0.9rem; }
+  .bank-head .now { line-height: 1.1; }
+  .bank-head .now .cap { font-size: 0.76rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; display: block; margin-bottom: 0.18rem; }
+  .bank-head .now .v { font-size: 1.45rem; font-weight: 700; }
+  .bank-head .ext { font-size: 0.84rem; color: var(--ink-soft); }
+  .bank-head .ext b { font-weight: 600; }
+  .bank-head .ext .hi { color: var(--green); }
+  .bank-head .ext .lo { color: var(--amber); }
+
+  /* OPENSTAANDE POSTEN */
+  .big-amount { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+  .big-amount .cap { font-size: 0.8rem; color: var(--muted); font-weight: 600; display: block; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.2rem; }
+  .age { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  .age-row { }
+  .age-row .age-head { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.28rem; }
+  .age-row .age-head .term { color: var(--ink-soft); }
+  .age-row .age-head .amt { font-weight: 600; }
+  .bar-track { height: 8px; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: 999px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 999px; }
+  .bar-ok { background: var(--green); }
+  .bar-warn { background: var(--amber); }
+  .bar-late { background: var(--accent); }
+
+  /* BTW */
+  .btw-amount { font-size: 1.6rem; font-weight: 700; color: var(--accent-deep); }
+  .btw-meta { margin-top: 0.9rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem 1rem; }
+  .btw-meta .mi .t { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+  .btw-meta .mi .v { font-weight: 600; margin-top: 0.1rem; }
+  .deadline-note { margin-top: 0.9rem; font-size: 0.82rem; color: var(--amber); font-weight: 600; display: flex; align-items: center; gap: 0.4rem; }
+
+  /* KOSTEN */
+  .cost-list { display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.2rem; }
+  .cost-row .cost-head { display: flex; justify-content: space-between; font-size: 0.86rem; margin-bottom: 0.26rem; }
+  .cost-row .cost-head .name { color: var(--ink-soft); }
+  .cost-row .cost-head .amt { font-weight: 600; }
+  .cost-track { height: 9px; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: 999px; overflow: hidden; }
+  .cost-fill { height: 100%; background: var(--accent); border-radius: 999px; opacity: 0.85; }
+
+  @media (max-width: 900px) {
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .row.two { grid-template-columns: 1fr; }
+    .wk-eq { margin-left: 0; width: 100%; padding-top: 0.4rem; border-top: 1px dashed var(--paper-deep); justify-content: flex-end; }
+  }
+  @media (max-width: 520px) {
+    .kpis { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .kpi .value { font-size: 1.45rem; }
+    .wrap { padding: 1rem 0.9rem 2.5rem; }
+  }
+  /* Inlog en laadscherm */
+  #app-loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:14px;background:#f5f6f7;z-index:90}
+  #login{position:fixed;inset:0;background:#f5f6f7;display:none;align-items:center;justify-content:center;z-index:100}
+  #login .box{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:30px;width:320px;box-shadow:0 6px 28px rgba(0,0,0,.07)}
+  #login h2{margin:0 0 4px;font-size:18px;color:#1a1d21}
+  #login p{margin:0 0 18px;font-size:13px;color:#6b7280}
+  #login input{width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:10px;border:1px solid #e5e7eb;border-radius:6px;font-size:14px}
+  #login button{width:100%;padding:11px;background:#e63329;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+  #login .err{color:#e63329;font-size:12px;margin-top:8px;min-height:16px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="app-loading">Cijfers laden…</div>
+<div id="login">
+  <div class="box">
+    <h2>Financieel overzicht</h2>
+    <p>Log in met je Schilders Calc account.</p>
+    <input id="email" type="email" placeholder="E-mailadres" autocomplete="username">
+    <input id="wachtwoord" type="password" placeholder="Wachtwoord" autocomplete="current-password">
+    <button id="loginBtn">Inloggen</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+<div class="wrap" style="display:none">
+  <header>
+    <div>
+      <h1>Ernes Schilders — Financieel overzicht</h1>
+      <div class="sub">Boekjaar 2026 · administratie Ernes Schilders VOF</div>
+    </div>
+    <div class="header-right">
+      <span class="updated" id="bijgewerkt"></span>
+    </div>
+  </header>
+
+  <!-- KPI ROW -->
+  <div class="kpis" id="kpis"></div>
+
+  <!-- WERKKAPITAAL OPBOUW -->
+  <div class="wk-strip" id="wkStrip"></div>
+
+  <!-- OMZET & RESULTAAT -->
+  <div class="row wide">
+    <div class="card">
+      <h2>Omzet &amp; resultaat</h2>
+      <div class="card-sub">Per maand, dit jaar tegen vorig jaar</div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent)"></i> Omzet 2026</span>
+        <span><i class="swatch" style="background:var(--blue-soft);border:1px solid var(--blue)"></i> Omzet 2025</span>
+        <span><i class="swatch line" style="background:var(--ink)"></i> Resultaat 2026 (opgebouwd)</span>
+      </div>
+      <div id="chart"></div>
+      <div class="chart-totals" id="chartTotals"></div>
+    </div>
+  </div>
+
+  <!-- LIQUIDITEIT / BANKSALDO VERLOOP -->
+  <div class="row wide">
+    <div class="card">
+      <h2>Liquiditeit — banksaldo verloop</h2>
+      <div class="card-sub">Stand per maandeinde, 2026 tegen 2025</div>
+      <div class="bank-head" id="bankHead"></div>
+      <div class="legend">
+        <span><i class="swatch line" style="background:var(--accent)"></i> Banksaldo 2026</span>
+        <span><i class="swatch line" style="background:var(--blue)"></i> Banksaldo 2025</span>
+      </div>
+      <div id="bankChart"></div>
+    </div>
+  </div>
+
+  <!-- OPENSTAANDE POSTEN -->
+  <div class="row two">
+    <div class="card">
+      <h2>Openstaande debiteuren</h2>
+      <div class="card-sub">Wat klanten jou nog moeten betalen</div>
+      <div class="big-amount"><span class="cap">Totaal openstaand</span><span class="num" id="debTotal"></span></div>
+      <div class="age" id="debAge"></div>
+    </div>
+    <div class="card">
+      <h2>Openstaande crediteuren</h2>
+      <div class="card-sub">Wat jij nog aan leveranciers moet betalen</div>
+      <div class="big-amount"><span class="cap">Totaal openstaand</span><span class="num" id="credTotal"></span></div>
+      <div class="age" id="credAge"></div>
+    </div>
+  </div>
+
+  <!-- BTW + KOSTEN -->
+  <div class="row two">
+    <div class="card">
+      <h2>BTW-positie</h2>
+      <div class="card-sub">Lopend kwartaal (Q2 2026)</div>
+      <div class="btw-amount num" id="btwAmount"></div>
+      <div class="btw-meta" id="btwMeta"></div>
+      <div class="deadline-note" id="btwDeadline"></div>
+    </div>
+    <div class="card">
+      <h2>Kosten per categorie</h2>
+      <div class="card-sub">Dit jaar tot nu toe</div>
+      <div class="cost-list" id="costList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  Verbinding met Supabase. De cijfers komen uit de tabel
+//  fin_dashboard, die door de Yuki-vuller wordt bijgewerkt.
+// ============================================================
+const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ---------- helpers ----------
+const eur = n => '€ ' + Math.round(n).toLocaleString('nl-NL');
+const pct = (a, b) => b === 0 ? 0 : Math.round(((a - b) / b) * 100);
+
+function deltaHtml(now, prev) {
+  const p = pct(now, prev);
+  const up = p >= 0;
+  const arrow = up ? '▲' : '▼';
+  return `<span class="delta ${up ? 'up' : 'down'}">${arrow} ${Math.abs(p)}% <span class="vs">vs vorig jaar</span></span>`;
+}
+
+// ---------- render: vult het hele dashboard met de meegegeven cijfers ----------
+function render(DATA, bijgewerkt) {
+  const bgEl = document.getElementById('bijgewerkt');
+  if (bgEl) bgEl.textContent = bijgewerkt
+    ? 'Bijgewerkt ' + new Date(bijgewerkt).toLocaleString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : '';
+
+// ---------- KPI's ----------
+const wk = DATA.werkkapitaal;
+const wkTotal = wk.bank + wk.debiteuren + wk.voorraad - wk.crediteuren - wk.btw;
+
+document.getElementById('kpis').innerHTML = `
+  <div class="kpi">
+    <div class="label">Omzet 2026</div>
+    <div class="value num">${eur(DATA.omzet.jaar)}</div>
+    ${deltaHtml(DATA.omzet.jaar, DATA.omzet.vorig)}
+  </div>
+  <div class="kpi">
+    <div class="label">Resultaat 2026</div>
+    <div class="value num" style="color:var(--green)">${eur(DATA.resultaat.jaar)}</div>
+    ${deltaHtml(DATA.resultaat.jaar, DATA.resultaat.vorig)}
+  </div>
+  <div class="kpi">
+    <div class="label">Werkkapitaal</div>
+    <div class="value num">${eur(wkTotal)}</div>
+    <span class="delta up">● gezonde buffer</span>
+  </div>
+  <div class="kpi">
+    <div class="label">Banksaldo</div>
+    <div class="value num">${eur(DATA.banksaldo)}</div>
+    <span class="delta"><span class="vs">stand vandaag</span></span>
+  </div>
+`;
+
+// ---------- Werkkapitaal opbouw ----------
+function term(t, val, neg) {
+  return `<span class="wk-term"><span class="t">${t}</span><span class="num ${neg ? 'neg' : 'pos'}">${eur(val)}</span></span>`;
+}
+document.getElementById('wkStrip').innerHTML = `
+  <span class="lbl">Werkkapitaal opbouw</span>
+  ${term('bank', wk.bank)}
+  <span class="wk-op">+</span>${term('debiteuren', wk.debiteuren)}
+  <span class="wk-op">+</span>${term('voorraad', wk.voorraad)}
+  <span class="wk-op">−</span>${term('crediteuren', wk.crediteuren, true)}
+  <span class="wk-op">−</span>${term('te betalen btw', wk.btw, true)}
+  <span class="wk-eq"><span class="t">werkkapitaal</span><span class="num">${eur(wkTotal)}</span></span>
+`;
+
+// ---------- Chart ----------
+(function drawChart() {
+  const W = 720, H = 280, padL = 52, padR = 16, padT = 14, padB = 34;
+  const months = DATA.maanden;
+  // Opgebouwd (cumulatief) resultaat per maand, voor de lijn
+  let _c = 0;
+  const cumRes = months.map(m => m.res == null ? null : (_c += m.res));
+  const maxCum = Math.max(0, ...cumRes.filter(v => v != null));
+  const maxVal = Math.max(maxCum, ...months.map(m => Math.max(m.nu || 0, m.vorig)));
+  const yMax = Math.ceil(maxVal / 10000) * 10000;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const x = i => padL + (i + 0.5) * (plotW / months.length);
+  const y = v => padT + plotH - (v / yMax) * plotH;
+  const groupW = plotW / months.length;
+  const barW = groupW * 0.26;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Omzet per maand">`;
+  // gridlines + y labels
+  const steps = yMax / 10000;
+  for (let s = 0; s <= steps; s++) {
+    const val = s * 10000;
+    const yy = y(val);
+    svg += `<line class="gridline" x1="${padL}" y1="${yy}" x2="${W - padR}" y2="${yy}"/>`;
+    svg += `<text class="axis-label" x="${padL - 8}" y="${yy + 4}" text-anchor="end">${val/1000}k</text>`;
+  }
+  // bars
+  months.forEach((m, i) => {
+    const cx = x(i);
+    const xVorig = cx - barW - 2;
+    const xNu = cx + 2;
+    svg += `<rect x="${xVorig}" y="${y(m.vorig)}" width="${barW}" height="${plotH + padT - y(m.vorig)}" rx="2" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="0.75"/>`;
+    if (m.nu != null) svg += `<rect x="${xNu}" y="${y(m.nu)}" width="${barW}" height="${plotH + padT - y(m.nu)}" rx="2" fill="var(--accent)"/>`;
+    svg += `<text class="month-label" x="${cx}" y="${H - 12}" text-anchor="middle">${m.m}</text>`;
+  });
+  // resultaat line — opgebouwd over het jaar
+  let path = '', startedR = false;
+  months.forEach((m, i) => {
+    if (cumRes[i] == null) return;
+    path += (startedR ? 'L' : 'M') + x(i) + ',' + y(cumRes[i]) + ' ';
+    startedR = true;
+  });
+  svg += `<path d="${path}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>`;
+  months.forEach((m, i) => { if (cumRes[i] == null) return; svg += `<circle cx="${x(i)}" cy="${y(cumRes[i])}" r="3" fill="var(--ink)"/>`; });
+  svg += `</svg>`;
+  document.getElementById('chart').innerHTML = svg;
+})();
+
+// chart totals
+const laatsteMaand = [...DATA.maanden].reverse().find(m => m.nu != null);
+const tm = laatsteMaand ? laatsteMaand.m : '';
+const omzetYtd = DATA.maanden.reduce((s, m) => s + (m.nu || 0), 0);
+const omzetYtdVorig = DATA.maanden.reduce((s, m) => s + (m.nu != null ? m.vorig : 0), 0);
+const resYtd = DATA.maanden.reduce((s, m) => s + (m.res || 0), 0);
+document.getElementById('chartTotals').innerHTML = `
+  <div class="ct"><div class="t">Omzet t/m ${tm}</div><div class="v num">${eur(omzetYtd)}</div></div>
+  <div class="ct"><div class="t">Zelfde periode 2025</div><div class="v num">${eur(omzetYtdVorig)}</div></div>
+  <div class="ct"><div class="t">Resultaat t/m ${tm}</div><div class="v num" style="color:var(--green)">${eur(resYtd)}</div></div>
+`;
+
+// ---------- Banksaldo verloop ----------
+(function drawBankChart() {
+  const h = DATA.banksaldoMnd;
+  const W = 720, H = 240, padL = 52, padR = 16, padT = 22, padB = 30;
+  const allVals = h.flatMap(d => [d.vorig, d.nu]).filter(v => v != null);
+  const yMax = Math.ceil(Math.max(...allVals) / 10000) * 10000;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const x = i => padL + i * (plotW / (h.length - 1));
+  const y = v => padT + plotH - (v / yMax) * plotH;
+
+  function linePath(key) {
+    let d = '', started = false;
+    h.forEach((row, i) => {
+      if (row[key] == null) return;
+      d += (started ? 'L' : 'M') + x(i) + ',' + y(row[key]) + ' ';
+      started = true;
+    });
+    return d;
+  }
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Banksaldo per maand, 2026 tegen 2025">`;
+  const steps = yMax / 10000;
+  for (let s = 0; s <= steps; s++) {
+    const val = s * 10000, yy = y(val);
+    svg += `<line class="gridline" x1="${padL}" y1="${yy}" x2="${W - padR}" y2="${yy}"/>`;
+    svg += `<text class="axis-label" x="${padL - 8}" y="${yy + 4}" text-anchor="end">${val/1000}k</text>`;
+  }
+  // 2025 eerst (achtergrond), dan 2026 erover
+  svg += `<path d="${linePath('vorig')}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  svg += `<path d="${linePath('nu')}" fill="none" stroke="var(--accent)" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>`;
+  h.forEach((d, i) => { svg += `<text class="month-label" x="${x(i)}" y="${H - 10}" text-anchor="middle">${d.m}</text>`; });
+  svg += `</svg>`;
+  document.getElementById('bankChart').innerHTML = svg;
+
+  // huidige stand = laatste maand met een 2026-waarde
+  let curI = -1;
+  h.forEach((d, i) => { if (d.nu != null) curI = i; });
+  const cur = h[curI].nu, vorigZelfdeMaand = h[curI].vorig;
+  const verschil = pct(cur, vorigZelfdeMaand);
+  const up = verschil >= 0;
+  document.getElementById('bankHead').innerHTML = `
+    <div class="now"><span class="cap">Huidige stand</span><span class="v num">${eur(cur)}</span></div>
+    <div class="ext">Zelfde maand 2025 <b class="num">${eur(vorigZelfdeMaand)}</b>
+      <span class="delta ${up ? 'up' : 'down'}" style="margin-left:0.4rem">${up ? '▲' : '▼'} ${Math.abs(verschil)}%</span>
+    </div>
+  `;
+})();
+
+// ---------- Openstaande posten ----------
+function renderAge(elId, data) {
+  const total = data.d0 + data.d30 + data.d60;
+  const rows = [
+    { term: '0 – 30 dagen',  amt: data.d0,  cls: 'bar-ok' },
+    { term: '30 – 60 dagen', amt: data.d30, cls: 'bar-warn' },
+    { term: '60+ dagen',     amt: data.d60, cls: 'bar-late' }
+  ];
+  document.getElementById(elId).innerHTML = rows.map(r => `
+    <div class="age-row">
+      <div class="age-head"><span class="term">${r.term}</span><span class="amt num">${eur(r.amt)}</span></div>
+      <div class="bar-track"><div class="bar-fill ${r.cls}" style="width:${total ? Math.max(0, Math.min(100, r.amt / total * 100)) : 0}%"></div></div>
+    </div>
+  `).join('');
+  return total;
+}
+document.getElementById('debTotal').textContent  = eur(renderAge('debAge', DATA.debiteuren));
+document.getElementById('credTotal').textContent = eur(renderAge('credAge', DATA.crediteuren));
+
+// ---------- BTW ----------
+document.getElementById('btwAmount').textContent = eur(DATA.btw.bedrag) + '  ' ;
+document.getElementById('btwAmount').innerHTML = eur(DATA.btw.bedrag) + ` <span style="font-size:0.95rem;font-weight:600;color:var(--ink-soft);font-family:'Inter',sans-serif">${DATA.btw.type}</span>`;
+document.getElementById('btwMeta').innerHTML = `
+  <div class="mi"><div class="t">Omzet-btw (af te dragen)</div><div class="v num">${eur(DATA.btw.omzetBtw)}</div></div>
+  <div class="mi"><div class="t">Voorbelasting (aftrekbaar)</div><div class="v num">${eur(DATA.btw.voorbelasting)}</div></div>
+`;
+document.getElementById('btwDeadline').innerHTML = `⏱ Aangifte &amp; betaling vóór ${DATA.btw.deadline}`;
+
+// ---------- Kosten ----------
+const maxKost = Math.max(...DATA.kosten.map(k => k.bedrag));
+document.getElementById('costList').innerHTML = DATA.kosten.map(k => `
+  <div class="cost-row">
+    <div class="cost-head"><span class="name">${k.naam}</span><span class="amt num">${eur(k.bedrag)}</span></div>
+    <div class="cost-track"><div class="cost-fill" style="width:${k.bedrag/maxKost*100}%"></div></div>
+  </div>
+`).join('');
+} // ---------- einde render ----------
+
+// ---------- inloggen en cijfers laden ----------
+async function laadData() {
+  const loading = document.getElementById('app-loading');
+  loading.style.display = 'flex';
+  try {
+    const { data, error } = await sb.from('fin_dashboard').select('data,bijgewerkt_op').eq('id', 'huidig').single();
+    if (error || !data) { loading.textContent = 'De cijfers konden niet geladen worden.'; return; }
+    render(data.data, data.bijgewerkt_op);
+    document.getElementById('login').style.display = 'none';
+    loading.style.display = 'none';
+    document.querySelector('.wrap').style.display = '';
+  } catch (e) {
+    loading.textContent = 'De cijfers konden niet geladen worden.';
+  }
+}
+
+function toonLogin() {
+  document.getElementById('app-loading').style.display = 'none';
+  document.getElementById('login').style.display = 'flex';
+}
+
+async function inloggen() {
+  const email = document.getElementById('email').value.trim();
+  const wachtwoord = document.getElementById('wachtwoord').value;
+  const err = document.getElementById('loginErr');
+  err.textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email, password: wachtwoord });
+  if (error) { err.textContent = 'Inloggen mislukt. Controleer je e-mailadres en wachtwoord.'; return; }
+  document.getElementById('login').style.display = 'none';
+  laadData();
+}
+
+document.getElementById('loginBtn').addEventListener('click', inloggen);
+document.getElementById('wachtwoord').addEventListener('keydown', e => { if (e.key === 'Enter') inloggen(); });
+
+(async function start() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) laadData(); else toonLogin();
+})();
+</script>
+</body>
+</html>
