@@ -163,6 +163,27 @@
   }
   .card .card-sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 0.9rem; }
 
+  /* MAANDBERICHTEN ARCHIEF */
+  .bericht-item { border: 1px solid var(--paper-deep); border-radius: var(--radius); margin-bottom: 0.55rem; overflow: hidden; }
+  .bericht-item:last-child { margin-bottom: 0; }
+  .bericht-kop {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+    padding: 0.7rem 0.9rem; cursor: pointer; user-select: none;
+    background: var(--paper-warm); transition: background 0.15s;
+  }
+  .bericht-kop:hover { background: var(--paper-deep); }
+  .bericht-kop .maand { font-weight: 600; font-size: 0.92rem; }
+  .bericht-kop .datum { color: var(--muted); font-size: 0.76rem; margin-left: 0.55rem; font-weight: 400; }
+  .bericht-kop .chevron { color: var(--muted); transition: transform 0.18s; flex-shrink: 0; }
+  .bericht-item.open .chevron { transform: rotate(90deg); }
+  .bericht-body { display: none; padding: 0.3rem 1.1rem 1.05rem; border-top: 1px solid var(--paper-deep); }
+  .bericht-item.open .bericht-body { display: block; }
+  .bericht-body h3 { font-size: 1.02rem; font-weight: 700; margin: 1rem 0 0.3rem; color: var(--ink); }
+  .bericht-body h4 { font-size: 0.9rem; font-weight: 700; margin: 0.95rem 0 0.25rem; color: var(--ink-soft); }
+  .bericht-body p { margin: 0.55rem 0; line-height: 1.55; color: var(--ink-soft); }
+  .bericht-body h3:first-child, .bericht-body p:first-child { margin-top: 0.5rem; }
+  .bericht-leeg { color: var(--muted); font-size: 0.85rem; padding: 0.2rem 0; }
+
   /* CHART */
   .legend { display: flex; gap: 1.1rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 0.4rem; }
   .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
@@ -330,6 +351,11 @@
       <div class="cost-months" id="costMonths"></div>
       <div class="card-sub" id="costSub">Dit jaar tot nu toe</div>
       <div class="cost-list" id="costList"></div>
+    </div>
+    <div class="card">
+      <h2>Maandberichten van de adviseur</h2>
+      <div class="card-sub">Klik een maand open om het bericht terug te lezen</div>
+      <div id="berichtenLijst"><div class="bericht-leeg">Berichten laden…</div></div>
     </div>
   </div>
 </div>
@@ -572,6 +598,57 @@ renderKosten(DATA.kosten, 'Dit jaar tot nu toe');
 } // ---------- einde render ----------
 
 // ---------- inloggen en cijfers laden ----------
+// Markdown van het maandbericht naar nette HTML, gelijk aan de mailopmaak.
+function mdNaarHtml(md) {
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = s => esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  return (md || '').trim().split(/\n\n+/).map(blok => {
+    blok = blok.trim();
+    if (!blok) return '';
+    if (blok.startsWith('## ')) return '<h4>' + inline(blok.slice(3)) + '</h4>';
+    if (blok.startsWith('# ')) return '<h3>' + inline(blok.slice(2)) + '</h3>';
+    return '<p>' + blok.split('\n').map(r => inline(r.trim())).join('<br>') + '</p>';
+  }).join('');
+}
+
+// Haalt de bewaarde maandberichten op en toont ze als inklapbare lijst, nieuwste eerst.
+async function laadBerichten() {
+  const lijst = document.getElementById('berichtenLijst');
+  if (!lijst) return;
+  try {
+    const { data, error } = await sb.from('fin_berichten')
+      .select('id,maand,bericht,aangemaakt_op')
+      .order('id', { ascending: false });
+    if (error) { lijst.innerHTML = '<div class="bericht-leeg">De berichten konden niet geladen worden.</div>'; return; }
+    if (!data || !data.length) {
+      lijst.innerHTML = '<div class="bericht-leeg">Nog geen maandberichten. Zodra het eerste bericht is opgesteld verschijnt het hier.</div>';
+      return;
+    }
+    lijst.innerHTML = '';
+    data.forEach(b => {
+      const dt = new Date(b.aangemaakt_op);
+      const datum = isNaN(dt.getTime()) ? '' : dt.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+      const item = document.createElement('div');
+      item.className = 'bericht-item';
+      const kop = document.createElement('div');
+      kop.className = 'bericht-kop';
+      kop.innerHTML = '<span><span class="maand"></span><span class="datum"></span></span>'
+        + '<svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+      kop.querySelector('.maand').textContent = b.maand || b.id;
+      kop.querySelector('.datum').textContent = datum ? 'opgesteld ' + datum : '';
+      const body = document.createElement('div');
+      body.className = 'bericht-body';
+      body.innerHTML = mdNaarHtml(b.bericht);
+      kop.addEventListener('click', () => item.classList.toggle('open'));
+      item.appendChild(kop);
+      item.appendChild(body);
+      lijst.appendChild(item);
+    });
+  } catch (e) {
+    lijst.innerHTML = '<div class="bericht-leeg">De berichten konden niet geladen worden.</div>';
+  }
+}
+
 async function laadData() {
   const loading = document.getElementById('app-loading');
   loading.style.display = 'flex';
@@ -582,6 +659,7 @@ async function laadData() {
     document.getElementById('login').style.display = 'none';
     loading.style.display = 'none';
     document.querySelector('.wrap').style.display = '';
+    laadBerichten();
   } catch (e) {
     loading.textContent = 'De cijfers konden niet geladen worden.';
   }
