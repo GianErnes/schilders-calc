@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.7.14</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.8.0</h2>
       <div class="intro-body">
+        <p><strong>🏗️ Werkvoorbereiding rechtstreeks naar Craft (v4.8.0).</strong> Bovenaan de calculatie staat naast "Klant uit Yoobi" de nieuwe knop "Naar Craft". Dupliceer eerst het projectsjabloon in Craft, druk dan op de knop: de app zoekt het verse "🏠Projectnaam"-duplicaat, laat je in een venster zien welk document hij gevonden heeft (titel en aanmaaktijd) en vult na jouw bevestiging de titel, het adres met een routelink en de drie tekstblokken in. Bevindingen gaat naar Bevindingen, onderdelen naar "Wat gaan we doen", werkzaamheden naar "Hoe doen we het". Is het verstuurd, dan wordt de knop groen met datum en tijd, zodat je nooit per ongeluk dubbel stuurt. Opnieuw sturen kan, je krijgt eerst het bevestigingsvenster. Foto's en kozijntekeningen volgen in een latere stap. Eenmalige SQL al uitgevoerd.</p>
         <p><strong>⚖️ Juridisch waterdichte bedenktermijn op de besluitpagina (v4.7.14).</strong> De verwijzing onder het ALV-besluit noemde alleen artikel 2:15 BW voor de termijn van één maand. Dat artikel geldt voor gewone verenigingen met een termijn van een jaar; de maand-termijn voor een VvE-besluit staat in artikel 5:130 BW uit Boek 5. De disclaimer verwijst nu naar artikel 5:130 in verbinding met artikel 2:15 van het Burgerlijk Wetboek, en de termijn loopt vanaf de dag waarop de eigenaar van het besluit heeft kennisgenomen of redelijkerwijs had kunnen kennisnemen. Zo struikelt geen enkele VvE-beheerder of advocaat er nog over. Geen SQL nodig.</p>
         <p><strong>💧 Scherpere conclusiezin bij de liquiditeit (v4.7.13).</strong> De slotzin onder het liquiditeitsbeeld zei "op dat punt moet uw reserve minstens € X bedragen", wat kon lezen alsof dat de hele benodigde reserve was. In werkelijkheid is € X een eenmalig tekort in de opbouw vanaf het prijspeil, dat de VvE opvangt uit de reserve die ze al heeft. De zin maakt dat nu duidelijk: de reserveringen vanaf het prijspeil komen op het diepste punt zoveel tekort op de uitgaven, en dat eenmalige verschil vangt u op uit uw bestaande reserve. Zo klopt de boodschap met de tabel en kan een ervaren penningmeester er niet meer over struikelen. Geen SQL nodig.</p>
         <p><strong>💾 Logische bestandsnaam voor de onderhoudsplan-bijlage (v4.7.12).</strong> Bij het opslaan als PDF stelde de print-dialoog standaard de naam "Schilders Calculatie" voor. De bijlage stelt nu net als de offerte een logische naam voor op basis van de projectnaam: "{projectnaam}-onderhoudsplan". Zo staan de offerte en het onderhoudsplan van dezelfde klant netjes naast elkaar in je map en hoef je niets meer over te typen. Geen SQL nodig.</p>
@@ -2357,6 +2358,7 @@
       <div class="panel-actions">
         <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span>
         <button class="btn-secondary btn lock-allowed" onclick="openYoobiZoek()" title="Zoek een klant in Yoobi en vul de klantgegevens automatisch in">🔍 Klant uit Yoobi</button>
+        <button id="craftKnop" class="btn-secondary btn lock-allowed" onclick="craftNaarCraft()" title="Stuur de werkvoorbereiding (titel, adres en de drie tekstblokken) naar het verse Craft-document">🏗️ Naar Craft</button>
         <button class="btn-secondary btn lock-allowed" onclick="openArchiveerModal()" title="Genereer 1 of meerdere PDFs voor in de projectmap (calculatie, meetstaat, offerte, werkbon, onderhoudsplan)">💾 Archiveren</button>
         <button class="btn-secondary btn lock-allowed" onclick="newCalc()">+ Nieuwe</button>
       </div>
@@ -3245,7 +3247,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.7.14';
+const APP_VERSION = 'v4.8.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3640,6 +3642,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.8.0', d: '2026-06-28', h: 'Craft-koppeling brok 4a: knop "Naar Craft" in de calculatie-kop (panel-actions, naast Klant uit Yoobi, id craftKnop). Stuurt de werkvoorbereiding naar het verse "🏠Projectnaam"-duplicaat in Craft via de Edge Function craft-werkvoorbereiding. Nieuwe constante CRAFT_FUNCTIE_URL. _craftCall doet een ingelogde POST (Supabase-sessie als Bearer plus apikey, zelfde patroon als _yoobiCall). craftNaarCraft roept eerst _craftCall({}) aan voor het overzicht, zoekt in documents.laatste_25 het document met titel exact "🏠Projectnaam" (het onaangeraakte duplicaat), toont een confirm-vangnet met titel en aanmaaktijd, en stuurt daarna documentId plus data: titel ("🏠" + klant + " | " + naam), adres en mapsUrl uit _offWerkadresEffectief (Google Maps-zoeklink), en de drie tekstblokken via _craftSectieTekst(cfg, code) die per sectie de blokken filtert en _offVulVelden(_offBlokTekst(b)) toepast. Mapping: bevindingen naar Bevindingen, onderdelen naar watGaanWeDoen, werkzaamheden naar hoeDoenWeHet. Na succes wordt de calc gemarkeerd als geëxporteerd: nieuw veld craftGeexporteerdOp (kolom craft_geexporteerd_op, alleen in _mapCalcHeaderFromDB; weggeschreven via een gerichte update zodat een header-save het niet overschrijft), en _craftKnopBijwerken maakt de knop groen met "✅ In Craft (dd-mm uu:mm)". _craftKnopBijwerken draait ook aan het eind van renderCalcStructuur zodat de stand bij elke calc-wissel klopt. Foto\\u0027s en kozijntekeningen volgen in 4b/4c. Eenmalige SQL (kolom toevoegen) al uitgevoerd.' },
   { v: '4.7.14', d: '2026-06-27', h: 'Juridisch correcte bedenktermijn op de ALV-besluitpagina, na een scherpe juridische check van de adviseur. De disclaimer verwees voor de termijn van één maand alleen naar artikel 2:15 BW; dat artikel regelt de vernietigbaarheid van besluiten maar kent voor gewone verenigingen en BV\\u0027s een termijn van een jaar. De kortere termijn van één maand voor een VvE-besluit staat in artikel 5:130 lid 1 BW (Boek 5, goederenrecht). De disc-tekst in _besluitBody verwijst nu naar artikel 5:130 in verbinding met artikel 2:15 van het Burgerlijk Wetboek, met de juiste aanvang van de termijn: vanaf de dag waarop de eigenaar van het besluit heeft kennisgenomen of redelijkerwijs had kunnen kennisnemen. De aparte zin over de termijnaanvang verviel, want dat zit nu in de wettelijke formulering zelf. Alleen tekst; geen SQL.' },
   { v: '4.7.13', d: '2026-06-27', h: 'Conclusiezin van het liquiditeitsblok aangescherpt na opmerking van de adviseur. De zin zei "Op dat punt moet uw reserve minstens € X bedragen om de uitgaven te dekken", wat kon lezen alsof € X de totale benodigde reserve was, terwijl de VvE op dat moment cumulatief al veel meer heeft gereserveerd. € X (het diepste saldo-opbouwpunt, bv. -€ 8.593,50) is in werkelijkheid een eenmalig tekort van de opbouw vanaf het prijspeil tegenover de uitgaven tot dan toe, op te vangen uit de bestaande reserve. Nieuwe formulering: "De reserveringen vanaf {pp} komen op dat moment € X tekort op de uitgaven tot dan toe; dit eenmalige verschil vangt u op uit uw bestaande reserve, die op dat punt dus minstens dat bedrag beschikbaar moet hebben." Alleen de tekst van de concl-callout in het liquiditeitsblok; de berekening en de tabel blijven gelijk. Geen SQL.' },
   { v: '4.7.12', d: '2026-06-27', h: 'Logische bestandsnaam bij het opslaan van de onderhoudsplan-bijlage. De print-dialoog ("Bewaar als PDF") stelde standaard "Schilders Calculatie" voor, omdat _ohpPrintOfferte de document.title niet aanpaste. _setPrintTitle heeft nu een optionele tweede parameter naamOverride; is die gevuld, dan gebruikt de functie die naam in plaats van data.calc.naam (zodat de bijlage de naam van de bron-calculatie van het plan pakt, niet de toevallig open calc). _ohpPrintOfferte roept _setPrintTitle("onderhoudsplan", calc.naam) aan vlak na het opbouwen van de HTML, dus de voorgestelde bestandsnaam wordt "{projectnaam}-onderhoudsplan", consistent met "{projectnaam}-offerte". De afterprint-herstel en de setTimeout-terugval blijven werken. Geen SQL.' },
@@ -5015,6 +5018,7 @@ async function _pdokAdres(postcode, huisnummer) {
 // het Klant-veld, het werkadres en het Offerte-blok.
 // ============================================================
 const YOOBI_FUNCTIE_URL = SUPABASE_URL + '/functions/v1/yoobi-klant';
+const CRAFT_FUNCTIE_URL = SUPABASE_URL + '/functions/v1/craft-werkvoorbereiding';
 let _yoobiHuidig = null; // laatst opgehaalde relatie-detail
 
 function openYoobiZoek() {
@@ -5042,6 +5046,129 @@ async function _yoobiCall(queryString) {
   });
   if (!res.ok) throw new Error('Yoobi ' + res.status);
   return await res.json();
+}
+
+// ============================================================
+// CRAFT-WERKVOORBEREIDING — knop "Naar Craft"
+// Stuurt titel, adres en de drie tekstblokken naar het verse
+// "🏠Projectnaam"-duplicaat in Craft. Foto's en kozijnen volgen
+// in een latere stap. Ingelogde aanroep, zelfde patroon als Yoobi.
+// ============================================================
+async function _craftCall(payload) {
+  let token = SUPABASE_KEY;
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    if (session && session.access_token) token = session.access_token;
+  } catch (e) { /* val terug op anon */ }
+  const res = await fetch(CRAFT_FUNCTIE_URL, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload || {})
+  });
+  if (!res.ok) throw new Error('Craft ' + res.status);
+  return await res.json();
+}
+
+// Tekst van één offerte-sectie met de invulvelden al vervangen.
+function _craftSectieTekst(cfg, code) {
+  const sc = cfg && cfg.secties ? cfg.secties[code] : null;
+  if (!sc || !sc.aan) return '';
+  const blokken = (sc.blokken || []).filter(b => b.variantId || b.tekst != null);
+  return blokken.map(b => _offVulVelden(_offBlokTekst(b))).filter(s => s.trim()).join('\n\n');
+}
+
+// Knop bijwerken: groen met datum/tijd als de calc al naar Craft is gestuurd.
+function _craftKnopBijwerken() {
+  const knop = document.getElementById('craftKnop');
+  if (!knop) return;
+  const c = data.calc;
+  const stamp = c ? c.craftGeexporteerdOp : null;
+  if (stamp) {
+    const d = new Date(stamp);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    knop.textContent = '✅ In Craft (' + dd + '-' + mm + ' ' + hh + ':' + mi + ')';
+    knop.style.background = '#dcfce7';
+    knop.style.borderColor = '#16a34a';
+    knop.style.color = '#15803d';
+    knop.title = 'Al naar Craft gestuurd op ' + d.toLocaleString('nl-NL') + '. Opnieuw sturen kan, je krijgt eerst een bevestiging.';
+  } else {
+    knop.textContent = '🏗️ Naar Craft';
+    knop.style.background = '';
+    knop.style.borderColor = '';
+    knop.style.color = '';
+    knop.title = 'Stuur de werkvoorbereiding (titel, adres en de drie tekstblokken) naar het verse Craft-document';
+  }
+}
+
+async function craftNaarCraft() {
+  const c = data.calc;
+  if (!c) { _toast('Geen calculatie open.'); return; }
+  const cfg = _offCfg();
+  if (!cfg) { _toast('Geen offerte-config beschikbaar.'); return; }
+
+  let kandidaat = null;
+  try {
+    const overzicht = await _craftCall({});
+    const docs = (overzicht && overzicht.documents && overzicht.documents.laatste_25) || [];
+    kandidaat = docs.find(d => (d.title || '').trim() === '🏠Projectnaam') || null;
+  } catch (e) {
+    _toast('Kon Craft niet bereiken: ' + e.message);
+    return;
+  }
+  if (!kandidaat) {
+    _toast('Geen vers duplicaat gevonden. Dupliceer eerst het sjabloon in Craft.');
+    return;
+  }
+
+  const aangemaakt = kandidaat.createdAt ? new Date(kandidaat.createdAt).toLocaleString('nl-NL') : 'onbekend';
+  const ga = confirm('Gevonden duplicaat:\n"' + kandidaat.title + '"\naangemaakt ' + aangemaakt + '\n\nWerkvoorbereiding hierheen sturen?');
+  if (!ga) return;
+
+  const titel = '🏠' + [c.klant, c.naam].filter(Boolean).join(' | ');
+  let adres = '', mapsUrl = '';
+  try {
+    const wa = _offWerkadresEffectief(c, cfg);
+    const straatNr = [wa.straat, wa.huisnummer].filter(Boolean).join(' ').trim();
+    const pcPlaats = [wa.postcode, wa.woonplaats].filter(Boolean).join(' ').trim();
+    adres = [straatNr, pcPlaats].filter(Boolean).join(', ');
+    if (adres) mapsUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(adres);
+  } catch (e) { /* adres blijft leeg */ }
+
+  const payload = {
+    documentId: kandidaat.id,
+    data: {
+      titel: titel,
+      adres: adres,
+      mapsUrl: mapsUrl,
+      bevindingen: _craftSectieTekst(cfg, 'bevindingen'),
+      watGaanWeDoen: _craftSectieTekst(cfg, 'onderdelen'),
+      hoeDoenWeHet: _craftSectieTekst(cfg, 'werkzaamheden')
+    }
+  };
+
+  let res = null;
+  try {
+    res = await _craftCall(payload);
+  } catch (e) {
+    _toast('Versturen naar Craft mislukt: ' + e.message);
+    return;
+  }
+  if (!res || !res.ok) {
+    _toast('Craft gaf een onverwacht antwoord.');
+    return;
+  }
+
+  // Gelukt: markeer de calc als geëxporteerd (lokaal + gericht in de DB).
+  const nu = new Date().toISOString();
+  c.craftGeexporteerdOp = nu;
+  _craftKnopBijwerken();
+  try {
+    await _sb.from('calculaties').update({ craft_geexporteerd_op: nu }).eq('id', c.id);
+  } catch (e) { /* knop is al bijgewerkt; een volgende load herstelt zo nodig */ }
+  _toast('Werkvoorbereiding naar Craft gestuurd.', 'ok');
 }
 
 async function _yoobiZoek() {
@@ -5496,6 +5623,7 @@ function _mapCalcHeaderFromDB(row) {
     settingsSnapshot:    row.settings_snapshot || null,
     opnameDatum:         row.opname_datum || null,
     deadlineDatum:       row.deadline_datum || null,
+    craftGeexporteerdOp: row.craft_geexporteerd_op || null,
     // v3.58.0 — offerte-instellingen (brok A3). Bewust NIET in _mapCalcHeaderToDB:
     // wordt uitsluitend via een gerichte update van alleen dit veld weggeschreven
     // (_offCfgSave), zodat een header-save nooit een verse config overschrijft.
@@ -15148,6 +15276,7 @@ function renderCalcStructuur() {
   renderStaartList();
   renderTotals();
   renderOfferteBlok();
+  _craftKnopBijwerken();
   _applyCalcLockUI();
 }
 function renderHoofdgroep(hg) {

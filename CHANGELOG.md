@@ -1,3 +1,16 @@
+## v4.8.0 — Werkvoorbereiding rechtstreeks naar Craft
+De brug naar Craft staat. Na een offerte druk je bovenaan de calculatie op de nieuwe knop "Naar Craft" en de werkvoorbereiding staat in een paar tellen klaar in je Craft-projectdocument, zonder overtypen.
+
+### Wat er verandert
+- Bovenaan de calculatie staat naast "Klant uit Yoobi" de knop "🏗️ Naar Craft".
+- De werkwijze: dupliceer eerst het projectsjabloon in Craft (Route A), druk dan op de knop. De app zoekt automatisch het verse, nog onaangeraakte "🏠Projectnaam"-duplicaat.
+- Een vangnet-venster laat zien welk document hij gevonden heeft (titel en aanmaaktijd) en vraagt om bevestiging, zodat er nooit in het verkeerde project geschreven wordt.
+- Na bevestiging vult de app de titel ("🏠 klant | project"), het adres met een routelink naar Google Maps, en de drie tekstblokken: bevindingen naar "Bevindingen", onderdelen naar "Wat gaan we doen", werkzaamheden naar "Hoe doen we het". De teksten komen uit je offertesecties, met de invulvelden al vervangen.
+- De statische riedel in het sjabloon (Houtrot Checklist, Materiaal, Veiligheid en de rest) blijft onaangeroerd staan.
+- Is het verstuurd, dan wordt de knop groen met datum en tijd ("✅ In Craft (dd-mm uu:mm)"), blijvend opgeslagen op de calculatie. Zo zie je in één oogopslag dat een project al klaarstaat en stuur je niet per ongeluk dubbel. Opnieuw sturen kan, je krijgt dan eerst weer het bevestigingsvenster.
+- Foto's met de genummerde gebrekstippen en de kozijntekeningen volgen in een latere stap (4b en 4c).
+- Eenmalige SQL (de kolom craft_geexporteerd_op toevoegen) is al uitgevoerd. Vereist de Edge Function craft-werkvoorbereiding.
+
 ## v4.7.14 — Juridisch waterdichte bedenktermijn op de besluitpagina
 Na een scherpe juridische check van de adviseur is de wetsverwijzing onder het ALV-besluit gecorrigeerd.
 
