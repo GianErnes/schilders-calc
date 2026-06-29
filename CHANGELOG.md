@@ -1,3 +1,13 @@
+## v4.10.3 — Geen leeg keuzerondje meer bij Klant uit Yoobi
+In het zoekvenster Klant uit Yoobi zie je bij een relatie met maar één contactpersoon nu gewoon de naam en het e-mailadres als tekst, niet meer als keuzerondje.
+
+### Wat er verandert
+- Heeft een relatie precies één contactpersoon, dan staat die als platte tekst onder "Contactpersoon", in plaats van als keuzerondje. Een rondje met maar één optie staat altijd aan en is niet uit te zetten, wat verwarrend overkwam alsof er iets vastzat.
+- De losse regel "E-mail (kies welke meegaat)" valt weg zolang er geen apart factuuradres bekend is. De mail komt dan altijd van de gekozen contactpersoon, dus daar viel niks te kiezen.
+- Heeft een relatie wél meerdere contactpersonen (vaak bij een zakelijke klant of VvE), of is er een los factuuradres bekend, dan verschijnen de keuzerondjes gewoon weer, precies zoals voorheen.
+- Onder water verandert er niets aan het invullen: er is altijd precies één keuze actief per groep, zichtbaar of verborgen. De knop "Velden invullen" werkt ongewijzigd.
+- Geen SQL nodig. De Edge Function yoobi-klant blijft hetzelfde.
+
 ## v4.10.2 — Schonere titel in Craft
 De titel van het Craft-document is nu alleen de projectnaam, zonder de klantnaam ervoor.
 

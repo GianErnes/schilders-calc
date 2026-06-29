@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.10.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.10.3</h2>
       <div class="intro-body">
+        <p><strong>📇 Geen leeg keuzerondje meer bij Klant uit Yoobi (v4.10.3).</strong> Heeft een relatie maar één contactpersoon en geen apart factuuradres, dan zie je die nu gewoon als tekst staan in plaats van als keuzerondje. Een rondje verscheen anders ook als er niks te kiezen viel, en dat kun je dan niet uitzetten. De rondjes komen vanzelf terug bij een zakelijke klant of VvE met meerdere contactpersonen, of als er een los factuuradres bekend is. Geen SQL nodig.</p>
         <p><strong>✂️ Schonere titel in Craft (v4.10.2).</strong> De titel van het Craft-document is nu alleen de projectnaam, zonder de klantnaam ervoor. Die zit meestal al in de projectnaam, dus dat stond dubbel. Geen SQL nodig.</p>
         <p><strong>📍 Locatie onder de kozijntekeningen in Craft (v4.10.1).</strong> Onder elke kozijntekening in Craft staat nu ook waar het kozijn zit, net als in de offerte. Het onderschrift is uitgebreid naar naam, locatie, aantal stuks en de gebreken, bijvoorbeeld "Kozijn · Voorgevel · 1 stuk · 1. Houtrot". De locatie komt uit de hoofdgroep en het onderdeel van je calculatie. Heeft een kozijn geen locatie, dan valt dat deel gewoon weg. Geen SQL nodig.</p>
         <p><strong>🪟 Kozijntekeningen mee naar Craft (v4.10.0).</strong> De knop "Naar Craft" stuurt nu ook de kozijntekeningen mee, met de genummerde gebrekstippen erop net als in de offerte. Ze komen als plaatje onder "Foto's", direct na de foto's, met een compact onderschrift: naam, aantal stuks en de gebreken. Daarmee is de werkvoorbereiding naar Craft compleet: tekst, foto's én kozijnen, in één druk op de knop. Geen SQL nodig.</p>
@@ -3251,7 +3252,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.10.2';
+const APP_VERSION = 'v4.10.3';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3646,6 +3647,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.10.3', d: '2026-06-29', h: 'Geen leeg keuzerondje meer in de Yoobi-import. _yoobiRenderDetail toont de contactpersoon en de e-mailbron alleen als keuzerondje wanneer er echt iets te kiezen valt. Bij precies één contactpersoon komt die als platte tekst (naam, e-mail) met een verborgen, aangevinkte radio yoobiContactKeuze value 0 (data-naam, data-email) zodat _yoobiVulIn de keuze ongewijzigd leest; bij nul of meerdere contactpersonen blijft het gedrag zoals voorheen (melding respectievelijk zichtbare rondjes). De e-mailkeuze yoobiEmailKeuze toont alleen rondjes als er een apart relatie-/factuuradres (relMail) is; anders staat er een verborgen, aangevinkte radio __contact__ en valt de hele E-mail-kop weg, want de mail komt dan altijd van de gekozen contactpersoon. _yoobiVulIn is niet gewijzigd: er is altijd precies één aangevinkte radio per groep, zichtbaar of verborgen. Reden: een radioknop met maar één optie staat altijd aan en is niet uit te zetten, wat verwarrend overkwam. Geen SQL.' },
   { v: '4.10.2', d: '2026-06-28', h: 'Schonere titel in Craft. De documenttitel is nu alleen de projectnaam: titel = "🏠" + (c.naam || c.klant || "Project"), in plaats van klant en projectnaam met een pipe ertussen. De klantnaam zit meestal al in c.naam, dus dat stond dubbelop in de kop. Alleen de titelopbouw in craftNaarCraft; verder niets gewijzigd. Geen SQL.' },
   { v: '4.10.1', d: '2026-06-28', h: 'Locatie in het onderschrift van de kozijntekeningen in Craft. _craftBouwKozijnen bouwt nu, net als de offerte-bijlage, een regelLocatie-map op (per r.id de hoofdgroep.naam · onderdeel.naam uit c.hoofdgroepen) en geeft regelLocatie[ms.calcRegelId] mee aan _craftKozijnBijschrift. Dat bijschrift heeft een tweede parameter locatie gekregen en zet die tussen de naam en het aantal: naam · locatie · aantal stuks · gebreken (bijvoorbeeld "Kozijn · Voorgevel · 1 stuk · 1. Houtrot"). Zonder locatie (los kozijn zonder hoofdgroep) valt dat deel weg en blijft het zoals voorheen. Alleen het onderschrift; de tekening, de stippen en de verzending zijn ongewijzigd. Geen SQL.' },
   { v: '4.10.0', d: '2026-06-28', h: 'Craft-koppeling brok 4c: kozijntekeningen mee naar Craft. Nieuwe helper _craftBouwKozijnen(c) loopt door c.meetstaat gefilterd op ms.tekening.vorm, bouwt per kozijn de SVG via _kozijnThumbSvg(ms.tekening, 0, {genummerd:true, fill:true}) (met de genummerde gebrekstippen erin), en zet die om naar een PNG via _craftSvgNaarPng. Die rasteraar leest vbW/vbH uit de viewBox, injecteert xmlns en een vaste width/height in de svg-tag (anders rendert de browser de SVG niet als Image), tekent hem via een Blob-URL op een canvas met witte achtergrond en 6% witrand, en geeft een PNG data-URL terug (geen taint want de blob is same-origin). Compact onderschrift via _craftKozijnBijschrift: naam (ms.omschrijving of tek.naam), aantal stuks en de genummerde gebreken. craftNaarCraft bouwt nu fotos en kozijnen apart en stuurt fotos.concat(kozijnen) als één fotos-array, zodat de kozijnen op volgorde na de foto\\u0027s onder het kopje Foto\\u0027s landen; de knop toont tijdens deze fase "⏳ Beeld…" en de slottoast meldt het aantal foto\\u0027s en kozijnen apart. Edge Function ongewijzigd. Geen SQL.' },
@@ -5385,17 +5387,34 @@ function _yoobiRenderDetail(r) {
   if (!contacten.length && (r.contactpersoon || r.emailContactpersoon)) contacten = [{ naam: r.contactpersoon || '', email: r.emailContactpersoon || '' }];
   const ktLabel = _offKlanttypeLabel(_yoobiMapKlanttype(r.klanttype));
   const _rij = (label, waarde) => `<div style="display:flex; gap:0.6rem; padding:0.15rem 0;"><span style="min-width:9rem; color:var(--muted);">${_offEsc(label)}</span><span>${waarde ? _offEsc(waarde) : '<span style=\"color:var(--muted);\">—</span>'}</span></div>`;
-  // v3.99.0 — contactpersonen als keuzelijst; elk rondje zet t.a.v. en standaard het e-mailadres.
-  let contactHtml;
+  // v4.10.3 — contactpersonen als keuzelijst, maar bij maar één mogelijkheid geen keuzerondje:
+  //           dan platte tekst plus een verborgen, aangevinkte radio zodat _yoobiVulIn de keuze
+  //           ongewijzigd kan lezen. Rondjes verschijnen alleen waar echt iets te kiezen valt.
+  let contactBlok;
   if (!contacten.length) {
-    contactHtml = '<div style="color:var(--muted); font-size:0.85rem;">Geen contactpersoon bij deze relatie.</div>';
+    contactBlok = `<div style="margin:0.5rem 0 0.2rem; font-weight:600;">Contactpersoon</div><div style="color:var(--muted); font-size:0.85rem;">Geen contactpersoon bij deze relatie.</div>`;
+  } else if (contacten.length === 1) {
+    const co = contacten[0];
+    const mailTxt = co.email ? `<span style="color:var(--muted);">, ${_offEsc(co.email)}</span>` : ` <span style="color:var(--muted);">(geen e-mail)</span>`;
+    contactBlok = `<div style="margin:0.5rem 0 0.2rem; font-weight:600;">Contactpersoon</div>`
+      + `<input type="radio" name="yoobiContactKeuze" value="0" data-naam="${_offEsc(co.naam || '')}" data-email="${_offEsc(co.email || '')}" checked style="display:none;">`
+      + `<div style="font-size:0.85rem;"><strong>${_offEsc(co.naam || '(naamloos)')}</strong>${mailTxt}</div>`;
   } else {
-    contactHtml = contacten.map((co, i) => `<label style="display:flex; align-items:center; gap:0.45rem; font-weight:400; font-size:0.85rem; cursor:pointer; padding:0.12rem 0;"><input type="radio" name="yoobiContactKeuze" value="${i}" data-naam="${_offEsc(co.naam || '')}" data-email="${_offEsc(co.email || '')}" ${i === 0 ? 'checked' : ''} style="width:auto; margin:0;"> <strong>${_offEsc(co.naam || '(naamloos)')}</strong>${co.email ? ` <span style="color:var(--muted);">${_offEsc(co.email)}</span>` : ' <span style="color:var(--muted);">(geen e-mail)</span>'}</label>`).join('');
+    const lijst = contacten.map((co, i) => `<label style="display:flex; align-items:center; gap:0.45rem; font-weight:400; font-size:0.85rem; cursor:pointer; padding:0.12rem 0;"><input type="radio" name="yoobiContactKeuze" value="${i}" data-naam="${_offEsc(co.naam || '')}" data-email="${_offEsc(co.email || '')}" ${i === 0 ? 'checked' : ''} style="width:auto; margin:0;"> <strong>${_offEsc(co.naam || '(naamloos)')}</strong>${co.email ? ` <span style="color:var(--muted);">${_offEsc(co.email)}</span>` : ' <span style="color:var(--muted);">(geen e-mail)</span>'}</label>`).join('');
+    contactBlok = `<div style="margin:0.5rem 0 0.2rem; font-weight:600;">Contactpersoon (kies wie op de offerte komt)</div>${lijst}`;
   }
-  // E-mailkeuze: de gekozen contactpersoon, of het relatie-/factuuradres.
+  // E-mailkeuze: alleen een keuzerondje tonen als er echt iets te kiezen valt (apart factuuradres).
+  //              Zonder alternatief komt de mail van de gekozen contactpersoon; een verborgen radio
+  //              houdt die keuze leesbaar voor _yoobiVulIn, zonder de gebruiker een lege keuze voor te schotelen.
   const relMail = (r.emailRelatie && !contacten.some(c => c.email === r.emailRelatie)) ? r.emailRelatie : '';
-  let emailHtml = `<label style="display:flex; align-items:center; gap:0.45rem; font-weight:400; font-size:0.85rem; cursor:pointer; padding:0.12rem 0;"><input type="radio" name="yoobiEmailKeuze" value="__contact__" checked style="width:auto; margin:0;"> Van de gekozen contactpersoon</label>`;
-  if (relMail) emailHtml += `<label style="display:flex; align-items:center; gap:0.45rem; font-weight:400; font-size:0.85rem; cursor:pointer; padding:0.12rem 0;"><input type="radio" name="yoobiEmailKeuze" value="${_offEsc(relMail)}" style="width:auto; margin:0;"> <strong>Relatie (factuur):</strong> ${_offEsc(relMail)}</label>`;
+  let emailBlok;
+  if (relMail) {
+    let emailHtml = `<label style="display:flex; align-items:center; gap:0.45rem; font-weight:400; font-size:0.85rem; cursor:pointer; padding:0.12rem 0;"><input type="radio" name="yoobiEmailKeuze" value="__contact__" checked style="width:auto; margin:0;"> Van de gekozen contactpersoon</label>`;
+    emailHtml += `<label style="display:flex; align-items:center; gap:0.45rem; font-weight:400; font-size:0.85rem; cursor:pointer; padding:0.12rem 0;"><input type="radio" name="yoobiEmailKeuze" value="${_offEsc(relMail)}" style="width:auto; margin:0;"> <strong>Relatie (factuur):</strong> ${_offEsc(relMail)}</label>`;
+    emailBlok = `<div style="margin:0.5rem 0 0.2rem; font-weight:600;">E-mail (kies welke meegaat)</div>${emailHtml}`;
+  } else {
+    emailBlok = `<input type="radio" name="yoobiEmailKeuze" value="__contact__" checked style="display:none;">`;
+  }
   det.innerHTML = `
     <div style="border:1px solid #e5e7eb; border-radius:8px; padding:0.7rem 0.9rem; background:#fff; font-size:0.85rem;">
       <div style="font-weight:600; margin-bottom:0.4rem;">${_offEsc(r.naam || '—')} <span style="font-weight:400; color:var(--muted);">· ${_offEsc(String(r.relatienummer || ''))}</span></div>
@@ -5404,10 +5423,8 @@ function _yoobiRenderDetail(r) {
       ${_rij('Huisnummer', split.huisnummer)}
       ${_rij('Postcode', r.postcode)}
       ${_rij('Woonplaats', r.plaats)}
-      <div style="margin:0.5rem 0 0.2rem; font-weight:600;">Contactpersoon (kies wie op de offerte komt)</div>
-      ${contactHtml}
-      <div style="margin:0.5rem 0 0.2rem; font-weight:600;">E-mail (kies welke meegaat)</div>
-      ${emailHtml}
+      ${contactBlok}
+      ${emailBlok}
       <div style="margin-top:0.6rem; padding-top:0.5rem; border-top:1px solid #eee; color:var(--muted);">Alleen ter referentie, wordt niet opgeslagen:</div>
       ${_rij('Telefoon', r.telefoon)}
       ${_rij('Relatienummer', String(r.relatienummer || ''))}
