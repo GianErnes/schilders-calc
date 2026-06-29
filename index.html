@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.10.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.10.4</h2>
       <div class="intro-body">
+        <p><strong>🎯 Naar Craft pakt nu het juiste duplicaat (v4.10.4).</strong> Staan er meerdere documenten "🏠Projectnaam" in Craft, bijvoorbeeld een oud sjabloon en je verse duplicaat van vandaag, dan koos de app vroeger zomaar de eerste uit de lijst. Dat kon het oude zijn. Nu kiest hij altijd de nieuwste op aanmaakdatum. En is dat gekozen document toch niet van vandaag, dan zie je in het bevestigingsvenster een duidelijke waarschuwing, zodat je nooit per ongeluk in een oud document schrijft. Geen SQL nodig.</p>
         <p><strong>📇 Geen leeg keuzerondje meer bij Klant uit Yoobi (v4.10.3).</strong> Heeft een relatie maar één contactpersoon en geen apart factuuradres, dan zie je die nu gewoon als tekst staan in plaats van als keuzerondje. Een rondje verscheen anders ook als er niks te kiezen viel, en dat kun je dan niet uitzetten. De rondjes komen vanzelf terug bij een zakelijke klant of VvE met meerdere contactpersonen, of als er een los factuuradres bekend is. Geen SQL nodig.</p>
         <p><strong>✂️ Schonere titel in Craft (v4.10.2).</strong> De titel van het Craft-document is nu alleen de projectnaam, zonder de klantnaam ervoor. Die zit meestal al in de projectnaam, dus dat stond dubbel. Geen SQL nodig.</p>
         <p><strong>📍 Locatie onder de kozijntekeningen in Craft (v4.10.1).</strong> Onder elke kozijntekening in Craft staat nu ook waar het kozijn zit, net als in de offerte. Het onderschrift is uitgebreid naar naam, locatie, aantal stuks en de gebreken, bijvoorbeeld "Kozijn · Voorgevel · 1 stuk · 1. Houtrot". De locatie komt uit de hoofdgroep en het onderdeel van je calculatie. Heeft een kozijn geen locatie, dan valt dat deel gewoon weg. Geen SQL nodig.</p>
@@ -3252,7 +3253,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.10.3';
+const APP_VERSION = 'v4.10.4';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3647,6 +3648,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.10.4', d: '2026-06-29', h: 'Naar Craft kiest bij meerdere "🏠Projectnaam"-treffers nu het nieuwste duplicaat in plaats van de eerste uit de lijst. craftNaarCraft filtert alle documenten in documents.laatste_25 met titel exact "🏠Projectnaam", sorteert ze aflopend op createdAt en pakt treffers[0]. Voorheen deed docs.find() dat, die de eerste array-positie pakt; bij een oud sjabloon plus een vers duplicaat kon dat het oude document zijn (incident: oud sjabloon van 19-3-2025 werd voorgesteld in plaats van het verse duplicaat). Vangnet erbij: vanVandaag vergelijkt kandidaat.createdAt via toDateString() met new Date(); is het niet dezelfde kalenderdag, dan komt er een waarschuwingsregel in de confirm ("LET OP: dit duplicaat is NIET van vandaag"). Geen SQL.' },
   { v: '4.10.3', d: '2026-06-29', h: 'Geen leeg keuzerondje meer in de Yoobi-import. _yoobiRenderDetail toont de contactpersoon en de e-mailbron alleen als keuzerondje wanneer er echt iets te kiezen valt. Bij precies één contactpersoon komt die als platte tekst (naam, e-mail) met een verborgen, aangevinkte radio yoobiContactKeuze value 0 (data-naam, data-email) zodat _yoobiVulIn de keuze ongewijzigd leest; bij nul of meerdere contactpersonen blijft het gedrag zoals voorheen (melding respectievelijk zichtbare rondjes). De e-mailkeuze yoobiEmailKeuze toont alleen rondjes als er een apart relatie-/factuuradres (relMail) is; anders staat er een verborgen, aangevinkte radio __contact__ en valt de hele E-mail-kop weg, want de mail komt dan altijd van de gekozen contactpersoon. _yoobiVulIn is niet gewijzigd: er is altijd precies één aangevinkte radio per groep, zichtbaar of verborgen. Reden: een radioknop met maar één optie staat altijd aan en is niet uit te zetten, wat verwarrend overkwam. Geen SQL.' },
   { v: '4.10.2', d: '2026-06-28', h: 'Schonere titel in Craft. De documenttitel is nu alleen de projectnaam: titel = "🏠" + (c.naam || c.klant || "Project"), in plaats van klant en projectnaam met een pipe ertussen. De klantnaam zit meestal al in c.naam, dus dat stond dubbelop in de kop. Alleen de titelopbouw in craftNaarCraft; verder niets gewijzigd. Geen SQL.' },
   { v: '4.10.1', d: '2026-06-28', h: 'Locatie in het onderschrift van de kozijntekeningen in Craft. _craftBouwKozijnen bouwt nu, net als de offerte-bijlage, een regelLocatie-map op (per r.id de hoofdgroep.naam · onderdeel.naam uit c.hoofdgroepen) en geeft regelLocatie[ms.calcRegelId] mee aan _craftKozijnBijschrift. Dat bijschrift heeft een tweede parameter locatie gekregen en zet die tussen de naam en het aantal: naam · locatie · aantal stuks · gebreken (bijvoorbeeld "Kozijn · Voorgevel · 1 stuk · 1. Houtrot"). Zonder locatie (los kozijn zonder hoofdgroep) valt dat deel weg en blijft het zoals voorheen. Alleen het onderschrift; de tekening, de stippen en de verzending zijn ongewijzigd. Geen SQL.' },
@@ -5268,7 +5270,10 @@ async function craftNaarCraft() {
     try {
       const overzicht = await _craftCall({});
     const docs = (overzicht && overzicht.documents && overzicht.documents.laatste_25) || [];
-    kandidaat = docs.find(d => (d.title || '').trim() === '🏠Projectnaam') || null;
+    const treffers = docs
+      .filter(d => (d.title || '').trim() === '🏠Projectnaam')
+      .sort((a, b) => (new Date(b.createdAt || 0)) - (new Date(a.createdAt || 0)));
+    kandidaat = treffers[0] || null;
   } catch (e) {
     _toast('Kon Craft niet bereiken: ' + e.message);
     return;
@@ -5279,7 +5284,9 @@ async function craftNaarCraft() {
   }
 
   const aangemaakt = kandidaat.createdAt ? new Date(kandidaat.createdAt).toLocaleString('nl-NL') : 'onbekend';
-  const ga = confirm('Gevonden duplicaat:\n"' + kandidaat.title + '"\naangemaakt ' + aangemaakt + '\n\nWerkvoorbereiding hierheen sturen?');
+  const vanVandaag = kandidaat.createdAt && new Date(kandidaat.createdAt).toDateString() === new Date().toDateString();
+  const waarschuwing = vanVandaag ? '' : '\n\n⚠ LET OP: dit duplicaat is NIET van vandaag. Heb je wel een vers sjabloon gedupliceerd?';
+  const ga = confirm('Gevonden duplicaat:\n"' + kandidaat.title + '"\naangemaakt ' + aangemaakt + waarschuwing + '\n\nWerkvoorbereiding hierheen sturen?');
   if (!ga) return;
 
   const titel = '🏠' + (c.naam || c.klant || 'Project');

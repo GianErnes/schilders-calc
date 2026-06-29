@@ -1,3 +1,13 @@
+## v4.10.4 — Naar Craft pakt nu het juiste duplicaat
+Staan er meerdere documenten "🏠Projectnaam" in Craft, dan koos de app vroeger zomaar de eerste uit de lijst. Nu kiest hij altijd het nieuwste, plus een waarschuwing als dat duplicaat niet van vandaag is.
+
+### Wat er verandert
+- Bij meerdere treffers op de titel "🏠Projectnaam" werd de eerste uit de lijst gekozen. Dat kon een oud sjabloon zijn in plaats van je verse duplicaat van vandaag (zoals het oude sjabloon van 19-3-2025 dat onverwacht werd voorgesteld).
+- De app verzamelt nu alle treffers, sorteert ze op aanmaakdatum en pakt het nieuwste document.
+- Is het gekozen duplicaat toch niet van vandaag, dan staat er in het bevestigingsvenster een duidelijke waarschuwing dat het niet van vandaag is. Zo schrijf je nooit per ongeluk in een oud document.
+- Het bevestigingsvenster blijft titel en aanmaaktijd tonen, dus je ziet altijd zelf wat je gaat overschrijven.
+- Geen SQL nodig.
+
 ## v4.10.3 — Geen leeg keuzerondje meer bij Klant uit Yoobi
 In het zoekvenster Klant uit Yoobi zie je bij een relatie met maar één contactpersoon nu gewoon de naam en het e-mailadres als tekst, niet meer als keuzerondje.
 
