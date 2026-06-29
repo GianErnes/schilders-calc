@@ -1,3 +1,12 @@
+## v4.10.6 — Melding na het dupliceren van een calculatie
+Druk je in de lijst op het kopieer-knopje, dan zegt een korte melding nu meteen waar de kopie staat.
+
+### Wat er verandert
+- Na het dupliceren verschijnt de melding "Kopie gemaakt, staat nu bij Concept".
+- Reden: het kopieer-knopje staat op elke rij, ongeacht status, maar een kopie komt altijd bij Concept terecht. Druk je vanuit de groep Verzonden, dan zag je op die plek niets gebeuren terwijl de kopie zich onder Concept opstapelde. Verwarrend, zeker als je een paar keer drukt.
+- Aan het dupliceren zelf verandert niets, alleen de terugkoppeling.
+- Geen SQL nodig.
+
 ## v4.10.5 — Naar Craft stopt bij meerdere sjabloon-duplicaten
 Staan er per ongeluk meerdere documenten "🏠Projectnaam" tegelijk in Craft, dan stuurt de app niets meer en vraagt hij je eerst op te ruimen tot er precies één over is.
 
