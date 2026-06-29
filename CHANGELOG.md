@@ -1,3 +1,14 @@
+## v4.10.5 — Naar Craft stopt bij meerdere sjabloon-duplicaten
+Staan er per ongeluk meerdere documenten "🏠Projectnaam" tegelijk in Craft, dan stuurt de app niets meer en vraagt hij je eerst op te ruimen tot er precies één over is.
+
+### Wat er verandert
+- De app telt hoeveel documenten "🏠Projectnaam" hij in Craft vindt. Zijn dat er meer dan één, dan verstuurt hij niets, maar meldt hij het aantal en vraagt je op te ruimen tot er precies één over is, het verse duplicaat van vandaag.
+- Reden: de echte oorzaak van het eerder verkeerd gevulde document was rommel in Craft. Meerdere sjablonen plus losse oude "Projectnaam"-documenten van eerdere proeven, waardoor de titel op meerdere documenten matchte en de app naar een ander exemplaar kon schrijven. De knop werd dan groen terwijl het juiste document leeg bleef.
+- Met dit vangnet kan dat niet meer stilletjes gebeuren.
+- De aanmaakdatum van een vers duplicaat is wél van vandaag, dat is bevestigd. De sortering op datum en de waarschuwing "niet van vandaag" uit v4.10.4 blijven staan als tweede net.
+- Advies voor in Craft: houd één projectsjabloon aan en gooi oude "Projectnaam"-duplicaten weg.
+- Geen SQL nodig.
+
 ## v4.10.4 — Naar Craft pakt nu het juiste duplicaat
 Staan er meerdere documenten "🏠Projectnaam" in Craft, dan koos de app vroeger zomaar de eerste uit de lijst. Nu kiest hij altijd het nieuwste, plus een waarschuwing als dat duplicaat niet van vandaag is.
 
