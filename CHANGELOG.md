@@ -1,3 +1,14 @@
+## v4.11.0 — Getekend exemplaar zichtbaar in mail en viewer, meldingen verversen vanzelf
+Na een akkoord ziet de klant nu overal hetzelfde gestempelde document en zie jij de reactie zonder herladen.
+
+### Wat er verandert
+- De bevestigingsmail na een akkoord bevat een groene knop "Uw getekende offerte bekijken en downloaden" naar de accordeerpagina. Dit deel zit in de Edge Function offerte-accord en is al gedeployed.
+- Op de accordeerpagina toont de viewer na een akkoord het gestempelde exemplaar: de GEACCORDEERD-stempel op elke pagina en de akkoordbevestiging achteraan, precies wat de downloadknop levert. Tijdens het opbouwen staat er kort een melding boven de viewer.
+- Vóór het akkoord blijft de kale bevroren offerte in beeld en dat hoort ook zo, want dat is het document waar de klant zijn akkoord op geeft.
+- De downloadknop hergebruikt het al opgebouwde exemplaar en reageert daardoor sneller. Mislukt het opbouwen om welke reden dan ook, dan blijft de oude weergave staan en werkt de downloadknop zoals voorheen.
+- Het blok Reacties op offertes op het dashboard ververst nu vanzelf, bij terugkeer naar het venster en stil elke minuut. Een akkoord verschijnt dus zonder de app te herladen.
+- Geen SQL nodig.
+
 ## v4.10.6 — Melding na het dupliceren van een calculatie
 Druk je in de lijst op het kopieer-knopje, dan zegt een korte melding nu meteen waar de kopie staat.
 
