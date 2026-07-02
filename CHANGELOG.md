@@ -1,3 +1,13 @@
+## v4.11.1 — Doorlichting: verdwenen meldingen terug, strakker vergrendelen en 383 regels opgeruimd
+De hele app is doorgelicht op sluimerende fouten (linter over alle code plus eigen controles op dubbele namen, stille fouten, klantinvoer-afscherming, geheimen en dode code). De uitslag was verrassend schoon; de drie gevonden punten zijn opgepakt.
+
+### Wat er verandert
+- Meldingen bij "Werkadres zoeken" (offerte) en "Afstand ophalen" (reiskosten) verschenen nergens meer: hun statusregel was bij een eerdere herinrichting uit de opmaak verdwenen. Ze verschijnen nu als melding onderin beeld, dus je ziet weer "Zoeken…", "Geen adres gevonden" of "Geen OpenRouteService-sleutel ingesteld" in plaats van niets.
+- Vergrendelen (status naar verzonden of geaccepteerd) breekt voortaan netjes af met een duidelijke melding als de calculatie op dat moment niet uit de database geladen kan worden, bijvoorbeeld door een netwerkhapering. De status springt dan terug en je probeert het gewoon opnieuw. Voorheen ging de vergrendeling stil door en kon er een leeg of verkeerd bevroren bedrag ontstaan. Kan het oorspronkelijke offertebedrag niet bevroren worden, dan zie je daar nu ook een waarschuwing van.
+- Opgeruimd: zes functies die nergens meer werden aangeroepen (restanten van een oude onderhoudsplan-opzet en de eenmalige v2.4.1-importers, samen 383 regels), twee achtergebleven sectiekoppen en de laatste debug-regel. De instellingenpagina meldde de importers overigens al als weggehaald; nu klopt dat ook echt.
+- Het volledige doorlichtingsrapport staat in het projectarchief (Doorlichting_SchildersCalc_v4.11.0.md).
+- Geen SQL nodig.
+
 ## v4.11.0 — Getekend exemplaar zichtbaar in mail en viewer, meldingen verversen vanzelf
 Na een akkoord ziet de klant nu overal hetzelfde gestempelde document en zie jij de reactie zonder herladen.
 
