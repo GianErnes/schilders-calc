@@ -1,3 +1,14 @@
+## v4.12.0 — Accordeerlink verloopt op de geldig-tot-datum
+Een offerte die na de vervaldatum wordt geopend is dicht voor accorderen en afwijzen. De klant ziet een nette verlopen-melding en kan alleen nog een vraag stellen; al beantwoorde offertes blijven gewoon werken.
+
+### Wat er verandert
+- Opent een klant een nog onbeantwoorde offerte-link ná de geldig-tot-datum, dan verschijnt "Offerte verlopen op [datum]" in plaats van het document. De knoppen Akkoord geven en Afwijzen zijn weg; alleen het vraagformulier staat open en die vragen komen gewoon bij jou binnen, met een passende bevestiging voor de klant.
+- De grendel zit ook in de Edge Function zelf: een laat akkoord of een late afwijzing wordt daar geweigerd, ook als iemand om de pagina heen werkt. Het bevroren document wordt bij een verlopen open link bovendien niet meer meegestuurd naar de browser.
+- De vervaldatum komt uit de offerte-instellingen van de calculatie (Geldig tot in het Offerte-blok), niet uit het bevroren snapshot. Daardoor werkt de controle meteen voor alle bestaande links, ook die van vóór deze versie.
+- Al geaccordeerde of afgewezen offertes blijven na de vervaldatum volledig bereikbaar, inclusief het getekende exemplaar en de downloadknop uit de bevestigingsmail.
+- Ontbreekt de geldig-tot-datum of is hij onleesbaar, dan blokkeert er niets: de link gedraagt zich dan zoals voorheen.
+- Vereist eenmalig de bijgewerkte Edge Function offerte-accord (meegeleverd als offerte-accord.ts, plakken in Supabase Studio en deployen). Geen SQL nodig.
+
 ## v4.11.1 — Doorlichting: verdwenen meldingen terug, strakker vergrendelen en 383 regels opgeruimd
 De hele app is doorgelicht op sluimerende fouten (linter over alle code plus eigen controles op dubbele namen, stille fouten, klantinvoer-afscherming, geheimen en dode code). De uitslag was verrassend schoon; de drie gevonden punten zijn opgepakt.
 

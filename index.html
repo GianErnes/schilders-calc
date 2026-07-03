@@ -2106,8 +2106,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.11.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.12.0</h2>
       <div class="intro-body">
+        <p><strong>⏳ Accordeerlink verloopt op de geldig-tot-datum (v4.12.0).</strong> Opent een klant een nog onbeantwoorde offerte-link ná de vervaldatum, dan blijft het document weg en zijn de knoppen Akkoord en Afwijzen dicht. De klant ziet een nette verlopen-melding en kan alleen nog een vraag stellen, die gewoon bij jou binnenkomt. De grendel zit ook in de Edge Function zelf, dus een laat akkoord wordt eveneens geweigerd als iemand om de pagina heen werkt. Al geaccordeerde of afgewezen offertes blijven volledig bereikbaar, inclusief het getekende exemplaar en de downloadknop uit de bevestigingsmail. De vervaldatum komt uit de offerte-instellingen van de calculatie, dus dit werkt meteen voor alle bestaande links. Vereist eenmalig de bijgewerkte Edge Function offerte-accord. Geen SQL nodig.</p>
         <p><strong>🔍 Doorlichting: verdwenen meldingen terug en strakker vergrendelen (v4.11.1).</strong> De hele app is doorgelicht op sluimerende fouten en de uitkomst was verrassend schoon. Drie punten zijn opgepakt. Meldingen bij "Werkadres zoeken" en "Afstand ophalen" verschenen nergens meer omdat hun plekje uit de opmaak was verdwenen; ze komen nu als melding onderin beeld, dus je ziet weer waarom iets niet lukt. Vergrendelen breekt voortaan netjes af met een duidelijke melding als de calculatie op dat moment niet geladen kan worden, zodat er nooit stil een verkeerd bevroren bedrag ontstaat. En 380 regels dode code uit oude versies zijn opgeruimd, waaronder de v2.4.1-importers die volgens de instellingenpagina al lang weg waren. Het volledige rapport staat in het projectarchief. Geen SQL nodig.</p>
         <p><strong>📄 Getekend exemplaar in de mail en in beeld (v4.11.0).</strong> Drie dingen rond het accorderen. De bevestigingsmail na een akkoord bevat nu een groene knop waarmee de klant zijn getekende offerte kan bekijken en downloaden. Op de accordeerpagina toont de viewer na een akkoord voortaan het gestempelde exemplaar zelf, met de GEACCORDEERD-stempels op elke pagina en de bevestigingspagina achteraan, precies wat de downloadknop levert. En het blok Reacties op offertes op het dashboard ververst nu vanzelf, bij terugkeer naar het venster en stil elke minuut, dus een akkoord verschijnt zonder herladen. Geen SQL nodig.</p>
         <p><strong>📋 Melding na het dupliceren van een calculatie (v4.10.6).</strong> Druk je in de lijst op het kopieer-knopje ⎘, dan komt de kopie altijd terecht bij Concept, ook als je hem indrukt vanuit Verzonden of een andere groep. Dat was even zoeken. Vanaf nu zegt een korte melding meteen "Kopie gemaakt, staat nu bij Concept", zodat je ziet dat het gelukt is en waar de kopie staat. Geen SQL nodig.</p>
@@ -3257,7 +3258,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.11.1';
+const APP_VERSION = 'v4.12.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3651,6 +3652,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.12.0', d: '2026-07-03', h: 'Accordeerlink verloopt op de geldig-tot-datum. Edge Function offerte-accord (apart gedeployed): GET joint calculaties(naam, klant, offerte_config), leest geldigTot (yyyy-mm-dd) via leesGeldigTot met formaatcheck, geeft geldig_tot en verlopen terug en stuurt bij een verlopen open link de snapshot niet meer mee naar de browser; POST weigert akkoord en afkeuren met 410 zodra vandaag (Europe/Amsterdam, en-CA notatie) na geldigTot valt, vraag blijft toegestaan; geen of onleesbare datum blokkeert niets. App-kant: _accordRender vertakt bij res.verlopen en status open naar het nieuwe _accordRenderVerlopen (kop Offerte verlopen, ac-nee banner met de datum via _accordDatum, alleen het vraagformulier via _accordFormHtml, geen document), nieuwe vlag _accordVerlopenModus laat _accordVerstuur de vraag-bevestiging tonen zonder de zin over alsnog accorderen. Reeds beantwoorde links blijven ongewijzigd, inclusief getekend exemplaar. Geen SQL' },
   { v: '4.11.1', d: '2026-07-01', h: 'Doorlichting-opvolging. Volledige code-audit gedraaid (ESLint met 11 foutregels over alle inline JS, plus eigen checks op dubbele functies/ids, stille catches, XSS bij klantinvoer, geheimen, listener-stapeling, tagbalans en dode code): uitslag schoon op drie punten na, alle drie opgepakt. (1) _offWerkadresZoek en ophaalAfstand schreven status/fouten naar niet-bestaande elementen offWerkadresStatus en afstandStatus; hun set/setStatus-helpers vallen nu terug op _toast, en de dubbele losse _toast-aanroepen in ophaalAfstand zijn vervallen. (2) setCalcStatus: bewaart oudeStatus en oudSnapshot; faalt _loadCalcBody bij het vergrendelen, dan status en snapshot terugdraaien, toast, renderDashboard en afbreken in plaats van stil doorvergrendelen; de stille catch rond het bevriezen van totaal_offerte_origineel toont nu een waarschuwing. (3) Opgeruimd: _ohpVasteUitleg, _ohpBeurtBeschrijving, importData, resetData, importLibFromV241, importCalcsFromV241 (383 regels, nergens aangeroepen; de instellingen-tekst meldde de importers al als weggehaald), twee wees-sectiebanners en de laatste console.log (v3.9.6.3). Rapport: Doorlichting_SchildersCalc_v4.11.0.md. Geen SQL' },
   { v: '4.11.0', d: '2026-07-01', h: 'Getekend exemplaar in de viewer, downloadknop in mail B en zelfverversende reactie-meldingen. (1) Edge Function offerte-accord (apart gedeployed): mailBevestiging krijgt de token als vierde parameter en mail B bevat een groene knop "Uw getekende offerte bekijken en downloaden" naar de accordeerpagina (?accord=TOKEN). (2) Nieuwe _accordToonGetekendInViewer(root, info): bouwt na een akkoord (vers in _accordVerstuur en heropend in _accordRender) het gestempelde exemplaar via _bouwGetekendePdfBytes, bewaart de bytes in _accordGetekendBytes en vervangt het object #acOffertePdf door een verse kloon met een blob-URL (data-attribuut wisselen herlaadt niet in elke browser); tijdens het bouwen staat statusregel #acGetekendStatus boven de viewer. _accordKlantDownloadGetekend gebruikt dezelfde cache en bouwt alleen zelf als de viewer dat nog niet deed. Mislukt het bouwen, dan blijft de kale bevroren weergave staan (stil vangnet, geen regressie). (3) _accordMeldingenRender draait nu ook bij visibilitychange en window-focus en via een stille poll van 60 s; de functie bewaakt zelf dashboard-actief en verbinding. Geen SQL' },
   { v: '4.10.6', d: '2026-06-29', h: 'Bevestigingsmelding na dupliceren van een calculatie. dupCalc toont na data.calculaties.unshift(fresh) en renderDashboard() een _toast("Kopie gemaakt, staat nu bij Concept.", "ok"). Reden: het kopieer-knopje ⎘ staat op elke rij ongeacht status, maar dupCalc zet de kopie altijd op status concept, dus wie vanuit de groep Verzonden dupliceert zag op die plek niets gebeuren terwijl de kopie onder Concept landde (verwarrend; in de praktijk acht kopieën gestapeld zonder zichtbare terugkoppeling). De melding maakt nu meteen duidelijk dat het gelukt is en waar de kopie staat. Geen gedragswijziging aan het dupliceren zelf, alleen feedback. Geen SQL.' },
@@ -18145,6 +18147,11 @@ function _accordRender(root, token, res) {
   const bedrag = res.bedrag;
   const reedsAf = res.status === 'akkoord' || res.status === 'afgekeurd';
 
+  // v4.12.0 — verlopen en nog onbeantwoord: geen document en geen accord-knoppen,
+  // alleen de verlopen-melding met het vraagformulier. Al beantwoorde links
+  // (akkoord of afgekeurd) blijven ook na de vervaldatum gewoon werken.
+  if (!reedsAf && res.verlopen) { _accordRenderVerlopen(root, token, res); return; }
+
   let banner = '';
   if (res.status === 'akkoord') {
     banner = '<div class="ac-banner ac-ok">Deze offerte is geaccordeerd'
@@ -18199,6 +18206,31 @@ function _accordRender(root, token, res) {
   }
 
   if (!reedsAf) _accordWireActies(root, token, bedrag);
+}
+
+// v4.12.0 — pagina voor een verlopen, nog onbeantwoorde offerte: het document
+// blijft weg (de Edge Function stuurt de snapshot dan ook niet meer mee) en
+// alleen het vraagformulier staat open. Vragen komen gewoon binnen zoals altijd.
+function _accordRenderVerlopen(root, token, res) {
+  _accordVerlopenModus = true;
+  const datum = res.geldig_tot ? _accordDatum(res.geldig_tot) : '';
+  root.innerHTML =
+    '<div class="ac-wrap">'
+    + '<div class="ac-kop"><div class="ac-kop-titel">Offerte verlopen</div>'
+    + '<div class="ac-kop-sub">' + _accordEsc(res.project || '') + (res.klant ? ' \u2014 ' + _accordEsc(res.klant) : '') + '</div></div>'
+    + '<div class="ac-banner ac-nee">Deze offerte is verlopen' + (datum ? ' op ' + _accordEsc(datum) : '') + ' en kan niet meer worden geaccordeerd of afgewezen.</div>'
+    + '<div class="ac-kaart" id="acActies">'
+    + '<div class="ac-acties-titel">Heeft u een vraag of wilt u een nieuwe aanbieding?</div>'
+    + '<div style="margin:0 0 10px; color:#555;">Stel hieronder uw vraag, dan neemt Ernes schilders contact met u op.</div>'
+    + '<div id="acForm" class="ac-form">' + _accordFormHtml('vraag', null) + '</div>'
+    + '<div id="acMelding" class="ac-melding" hidden></div>'
+    + '</div>'
+    + '<div class="ac-voet">Ernes schilders \u00b7 info@ernes.nl \u00b7 045 5321471</div>'
+    + '</div>';
+  const form = root.querySelector('#acForm');
+  const melding = root.querySelector('#acMelding');
+  const submit = form.querySelector('.ac-submit');
+  submit.addEventListener('click', () => _accordVerstuur(root, token, 'vraag', form, melding, submit));
 }
 
 function _accordActiesHtml() {
@@ -18291,7 +18323,10 @@ async function _accordVerstuur(root, token, mode, form, melding, submit) {
     if (actiesKaart) actiesKaart.classList.remove('ac-expanded');
     melding.hidden = false;
     melding.className = 'ac-melding ac-ok';
-    melding.textContent = 'Uw vraag is verstuurd. Ernes schilders neemt contact met u op. U kunt deze offerte daarna alsnog accorderen of afwijzen.';
+    // v4.12.0 — op een verlopen pagina klopt "alsnog accorderen" niet meer.
+    melding.textContent = _accordVerlopenModus
+      ? 'Uw vraag is verstuurd. Ernes schilders neemt contact met u op.'
+      : 'Uw vraag is verstuurd. Ernes schilders neemt contact met u op. U kunt deze offerte daarna alsnog accorderen of afwijzen.';
     return;
   }
   if (mode === 'akkoord') {
@@ -18652,6 +18687,7 @@ async function _accordDownloadGetekend(rij, c, btn) {
 // offerte downloaden. De publieke PDF-URL en de project/klant/bedrag-gegevens staan in
 // _accordCtx; de naam, datum en opmerking komen mee in info.
 let _accordCtx = null;
+let _accordVerlopenModus = false;  // v4.12.0 — true zodra de verlopen-pagina getoond wordt
 let _accordGetekendBytes = null;  // v4.11.0 — één keer gebouwd, gedeeld door viewer en downloadknop
 async function _accordKlantDownloadGetekend(info, btn) {
   if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) { alert('De PDF-bibliotheek is nog niet geladen. Probeer het over een paar seconden opnieuw.'); return; }
