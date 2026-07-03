@@ -1,3 +1,14 @@
+## v4.13.0 — Vraagbaak: hulp bij de bediening van de app
+Rechts in beeld staat na het inloggen een blauw verticaal label Vraagbaak, in de stijl van de Help-tab van Yoobi. Bedoeld voor Maud en iedereen die de app leert kennen: vraag hoe iets werkt en het antwoord komt uit de handleiding.
+
+### Wat er verandert
+- Klik op het label en er opent een venster: vraag typen, antwoord lezen en doorvragen in hetzelfde gesprek. Sluit je het venster, dan begint het gesprek de volgende keer schoon.
+- De vraagbaak kent uitsluitend de handleiding, de acht secties uit de kennisbron van Blok 2: knoppen, tabbladen en werkwijze. Vragen over het schildersvak, prijzen of klantsituaties wijst hij vriendelijk door naar Gian en staat iets niet in de handleiding, dan zegt hij dat eerlijk in plaats van iets te verzinnen.
+- Elke vraag wordt met antwoord, model, tokens, geschatte kosten in euro en de vrager vastgelegd in app_help_log, zodat je gebruik en kosten kunt terugzien in Supabase Studio.
+- De antwoorden komen van Claude (Haiku 4.5) via de nieuwe Edge Function app-hulp. De API-sleutel blijft in de Supabase-secrets en de functie werkt alleen voor ingelogde gebruikers. Reken op ongeveer anderhalve cent per vraag.
+- Het label staat op elke tab, verschijnt pas na het inloggen en doet niet mee op prints en op de accordeerpagina.
+- Vereist eenmalig de nieuwe Edge Function app-hulp (meegeleverd als app-hulp.ts, plakken in Supabase Studio en deployen met Verify JWT uit). Blok 1 en Blok 2 van de vraagbaak moeten gedraaid zijn. Geen nieuwe SQL.
+
 ## v4.12.0 — Accordeerlink verloopt op de geldig-tot-datum
 Een offerte die na de vervaldatum wordt geopend is dicht voor accorderen en afwijzen. De klant ziet een nette verlopen-melding en kan alleen nog een vraag stellen; al beantwoorde offertes blijven gewoon werken.
 
