@@ -2136,8 +2136,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.13.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.14.0</h2>
       <div class="intro-body">
+        <p><strong>👁 Zien wanneer de klant de offerte opent, plus het versieveld (v4.14.0).</strong> In het Accordeerlink-venster staat nu wanneer de klant de offertepagina voor het eerst opende en hoe vaak, en bij die allereerste opening krijg je een seintje op info@ernes.nl. Zo weet je dat er gekeken wordt voordat er gereageerd wordt. Wil je de pagina zelf bekijken, gebruik dan de nieuwe knop Zelf bekijken in dat venster: die opening telt niet mee. Daarnaast staat het versienummer van de offerte nu als veld Versie in de Offerte-instellingen, naast het offertenummer; de automatische ophoging bij een herziene offerte blijft werken en is nu zichtbaar en aanpasbaar. Vereist eenmalig de bijgewerkte Edge Function offerte-accord; de SQL is al gedraaid.</p>
         <p><strong>💬 Vraagbaak: hulp bij de bediening van de app (v4.13.0).</strong> Rechts in beeld staat na het inloggen een blauw label Vraagbaak, in de stijl van de Help-tab van Yoobi. Klik erop, typ je vraag ("Hoe maak ik een nieuwe calculatie?") en het antwoord komt uit de handleiding, met doorvragen in hetzelfde venster. De vraagbaak kent alleen de knoppen en de werkwijze van de app; vragen over het vak of over prijzen wijst hij vriendelijk door naar Gian en staat iets niet in de handleiding, dan zegt hij dat eerlijk. Elke vraag komt met antwoord en geschatte kosten in het log app_help_log. Vereist eenmalig de nieuwe Edge Function app-hulp. Geen SQL nodig.</p>
         <p><strong>⏳ Accordeerlink verloopt op de geldig-tot-datum (v4.12.0).</strong> Opent een klant een nog onbeantwoorde offerte-link ná de vervaldatum, dan blijft het document weg en zijn de knoppen Akkoord en Afwijzen dicht. De klant ziet een nette verlopen-melding en kan alleen nog een vraag stellen, die gewoon bij jou binnenkomt. De grendel zit ook in de Edge Function zelf, dus een laat akkoord wordt eveneens geweigerd als iemand om de pagina heen werkt. Al geaccordeerde of afgewezen offertes blijven volledig bereikbaar, inclusief het getekende exemplaar en de downloadknop uit de bevestigingsmail. De vervaldatum komt uit de offerte-instellingen van de calculatie, dus dit werkt meteen voor alle bestaande links. Vereist eenmalig de bijgewerkte Edge Function offerte-accord. Geen SQL nodig.</p>
         <p><strong>🔍 Doorlichting: verdwenen meldingen terug en strakker vergrendelen (v4.11.1).</strong> De hele app is doorgelicht op sluimerende fouten en de uitkomst was verrassend schoon. Drie punten zijn opgepakt. Meldingen bij "Werkadres zoeken" en "Afstand ophalen" verschenen nergens meer omdat hun plekje uit de opmaak was verdwenen; ze komen nu als melding onderin beeld, dus je ziet weer waarom iets niet lukt. Vergrendelen breekt voortaan netjes af met een duidelijke melding als de calculatie op dat moment niet geladen kan worden, zodat er nooit stil een verkeerd bevroren bedrag ontstaat. En 380 regels dode code uit oude versies zijn opgeruimd, waaronder de v2.4.1-importers die volgens de instellingenpagina al lang weg waren. Het volledige rapport staat in het projectarchief. Geen SQL nodig.</p>
@@ -3306,7 +3307,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.13.0';
+const APP_VERSION = 'v4.14.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3702,6 +3703,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.14.0', d: '2026-07-03', h: 'Openings-signaal op de accordeerlink plus zichtbaar versieveld. (1) Edge Function offerte-accord (apart gedeployed): de GET selecteert eerste_geopend_op en geopend_aantal erbij en registreert per opening laatst_geopend_op, geopend_aantal +1 en eenmalig eerste_geopend_op (kolommen via eenmalige SQL); bij de allereerste opening gaat mail D (mailEersteOpening, stijl van mail C) naar info@ernes.nl met klant, project, offertenummer en tijdstip. Openingen met ?intern=1 slaan registratie en mail over. Alles niet-fataal in try/catch. (2) App: _accordBeheerRender toont onder de status een acb-sub-regel "Geopend: n×, eerste keer …, laatst …" of "Nog niet door de klant geopend" (bij status open), plus knop acbBekijk "Zelf bekijken (telt niet mee)" die de link met &intern=1 opent; de klantpagina geeft de intern-vlag uit de URL door aan de GET (_internOpen bij de ACCORD_FN_URL-fetch). (3) Veld Versie in de Offerte-instellingen naast Offertenummer: toont offerte_config.offerteVersie (genormaliseerd naar minimaal 1 in _offCfg), aanpasbaar via _offCfgVeld met Math.max(1, parseInt); de V-suffix vanaf 2 en de automatische ophoging uit v3.91.0 blijven ongewijzigd. SQL al uitgevoerd' },
   { v: '4.13.0', d: '2026-07-03', h: 'Vraagbaak voor de app-bediening. Verticaal label #vraagbaakTab rechts (writing-mode vertical-rl, var(--blue), display geregeld in _showApp en bij uitloggen net als userBadge, verborgen op print), modal vraagbaakModal met chatweergave (vb-vraag/vb-antwoord via textContent, dus geen HTML-injectie; gesprek leeg bij elk openen). _vraagbaakStel POST naar de nieuwe Edge Function app-hulp (APP_HULP_FN_URL, zelfde tokenpatroon als _yoobiCall) met { vraag, historie max 12 beurten }. De functie (app-hulp.ts, apart gedeployed, Verify JWT uit, geen backticks): controleert de login via /auth/v1/user (levert e-mail voor het log), leest app_help_kb (actief, op volgorde) met de service-rol, bouwt een Nederlandse instructie (alleen bediening uit de handleiding, vakvragen en prijsvragen naar Gian, eerlijk bij ontbreken), roept claude-haiku-4-5 aan (max_tokens 1000, nette user/assistant-afwisseling) en schrijft vraag/antwoord/model/tokens/kosten_eur/gebruiker niet-blokkerend naar app_help_log. Kosten: $1/$5 per MTok, koers 0.87 als vaste schatting, ongeveer anderhalve cent per vraag. Geen SQL' },
   { v: '4.12.0', d: '2026-07-03', h: 'Accordeerlink verloopt op de geldig-tot-datum. Edge Function offerte-accord (apart gedeployed): GET joint calculaties(naam, klant, offerte_config), leest geldigTot (yyyy-mm-dd) via leesGeldigTot met formaatcheck, geeft geldig_tot en verlopen terug en stuurt bij een verlopen open link de snapshot niet meer mee naar de browser; POST weigert akkoord en afkeuren met 410 zodra vandaag (Europe/Amsterdam, en-CA notatie) na geldigTot valt, vraag blijft toegestaan; geen of onleesbare datum blokkeert niets. App-kant: _accordRender vertakt bij res.verlopen en status open naar het nieuwe _accordRenderVerlopen (kop Offerte verlopen, ac-nee banner met de datum via _accordDatum, alleen het vraagformulier via _accordFormHtml, geen document), nieuwe vlag _accordVerlopenModus laat _accordVerstuur de vraag-bevestiging tonen zonder de zin over alsnog accorderen. Reeds beantwoorde links blijven ongewijzigd, inclusief getekend exemplaar. Geen SQL' },
   { v: '4.11.1', d: '2026-07-01', h: 'Doorlichting-opvolging. Volledige code-audit gedraaid (ESLint met 11 foutregels over alle inline JS, plus eigen checks op dubbele functies/ids, stille catches, XSS bij klantinvoer, geheimen, listener-stapeling, tagbalans en dode code): uitslag schoon op drie punten na, alle drie opgepakt. (1) _offWerkadresZoek en ophaalAfstand schreven status/fouten naar niet-bestaande elementen offWerkadresStatus en afstandStatus; hun set/setStatus-helpers vallen nu terug op _toast, en de dubbele losse _toast-aanroepen in ophaalAfstand zijn vervallen. (2) setCalcStatus: bewaart oudeStatus en oudSnapshot; faalt _loadCalcBody bij het vergrendelen, dan status en snapshot terugdraaien, toast, renderDashboard en afbreken in plaats van stil doorvergrendelen; de stille catch rond het bevriezen van totaal_offerte_origineel toont nu een waarschuwing. (3) Opgeruimd: _ohpVasteUitleg, _ohpBeurtBeschrijving, importData, resetData, importLibFromV241, importCalcsFromV241 (383 regels, nergens aangeroepen; de instellingen-tekst meldde de importers al als weggehaald), twee wees-sectiebanners en de laatste console.log (v3.9.6.3). Rapport: Doorlichting_SchildersCalc_v4.11.0.md. Geen SQL' },
@@ -4746,6 +4748,7 @@ function _offCfg() {
   if (typeof cfg.prijsRegelsHoeveelheden !== 'boolean') cfg.prijsRegelsHoeveelheden = true;
   if (typeof cfg.bijlageKozijnen !== 'boolean') cfg.bijlageKozijnen = true;
   if (typeof cfg.bijlageFotos !== 'boolean') cfg.bijlageFotos = true;
+  cfg.offerteVersie = Math.max(1, parseInt(cfg.offerteVersie, 10) || 1); // v4.14.0 — zichtbaar en aanpasbaar versieveld
   if (!cfg.secties || typeof cfg.secties !== 'object') cfg.secties = {};
   OFFERTE_SECTIES.filter(s => s.type === 'tekst').forEach(s => {
     if (!cfg.secties[s.code] || typeof cfg.secties[s.code] !== 'object') {
@@ -4951,6 +4954,7 @@ function renderOfferteBlok() {
       <div><label>Offertedatum</label><input type="date" value="${cfg.offertedatum}" onchange="_offCfgDatum(this.value)"></div>
       <div><label>Geldig tot</label><input type="date" value="${cfg.geldigTot}" onchange="_offCfgVeld('geldigTot', this.value)"></div>
       <div><label>Offertenummer <span class="sub-muted">leeg = ${_offEsc(_offerteAutoNummer(c))}</span></label><input type="text" value="${_offEsc(cfg.offerteNummerVrij)}" placeholder="${_offEsc(_offerteAutoNummer(c))}" onchange="_offCfgVeld('offerteNummerVrij', this.value.trim())"></div>
+      <div><label>Versie <span class="sub-muted">V-aanduiding vanaf 2</span></label><input type="number" min="1" step="1" value="${cfg.offerteVersie}" onchange="_offCfgVeld('offerteVersie', Math.max(1, parseInt(this.value, 10) || 1))"></div>
       <div><label>Garantiejaren</label><input type="number" min="0" step="1" value="${_offEsc(cfg.garantiejaren)}" onchange="_offCfgVeld('garantiejaren', this.value)"></div>
       <div><label>Prijsweergave in offerte</label>
         <select onchange="_offCfgVeld('prijsWeergave', this.value); renderOfferteBlok();">
@@ -18263,7 +18267,8 @@ async function _accordPaginaTonen(token) {
 
   let res;
   try {
-    const r = await fetch(ACCORD_FN_URL + '?token=' + encodeURIComponent(token), { headers: _accordHeaders() });
+    const _internOpen = (() => { try { return new URLSearchParams(location.search).get('intern') === '1'; } catch (e) { return false; } })(); // v4.14.0
+    const r = await fetch(ACCORD_FN_URL + '?token=' + encodeURIComponent(token) + (_internOpen ? '&intern=1' : ''), { headers: _accordHeaders() });
     res = await r.json();
     if (!r.ok || res.error) throw new Error(res.error || ('HTTP ' + r.status));
   } catch (e) {
@@ -18610,6 +18615,17 @@ function _accordBeheerRender(body, c, rij) {
       + '</div>';
   }
 
+  // v4.14.0 — openings-signaal: wanneer en hoe vaak de klant de pagina opende.
+  const _geopend = rij.geopend_aantal || 0;
+  if (_geopend > 0) {
+    h += '<div class="acb-sub" style="margin-top:6px;">Geopend: ' + _geopend + '\u00d7'
+      + (rij.eerste_geopend_op ? ', eerste keer ' + _accordDatum(rij.eerste_geopend_op) : '')
+      + (_geopend > 1 && rij.laatst_geopend_op ? ', laatst ' + _accordDatum(rij.laatst_geopend_op) : '')
+      + '.</div>';
+  } else if (rij.status === 'open') {
+    h += '<div class="acb-sub" style="margin-top:6px;">Nog niet door de klant geopend.</div>';
+  }
+
   // v3.81.0 — getekend archiefexemplaar: alleen bij akkoord en als er een bevroren PDF is.
   const _heeftPdf = !!(rij.pdf_path || (rij.snapshot && rij.snapshot.pdf));
   if (rij.status === 'akkoord' && _heeftPdf) {
@@ -18628,6 +18644,7 @@ function _accordBeheerRender(body, c, rij) {
   h += '<label class="acb-sub">Link voor de klant</label>'
     + '<div class="acb-linkrow"><input type="text" id="acbLink" readonly value="' + _accordEsc(link) + '">'
     + '<button class="acb-btn" id="acbKopieer">Kopieer</button></div>';
+  h += '<button class="acb-btn sec" id="acbBekijk" style="margin-bottom:4px;" title="Opent de klantpagina zonder de openingsteller te verhogen">\ud83d\udc41 Zelf bekijken (telt niet mee)</button>';
   if (rij.status === 'open') {
     const _email = (rij.snapshot && rij.snapshot.klantEmail) ? String(rij.snapshot.klantEmail).trim() : '';
     h += '<button class="acb-btn" id="acbMail" style="margin-bottom:4px;">\ud83d\udce7 Offerte mailen naar klant</button>'
@@ -18644,6 +18661,9 @@ function _accordBeheerRender(body, c, rij) {
     if (navigator.clipboard) navigator.clipboard.writeText(inp.value);
     else document.execCommand('copy');
     _toast('Link gekopieerd');
+  });
+  body.querySelector('#acbBekijk').addEventListener('click', () => {
+    window.open(link + '&intern=1', '_blank', 'noopener'); // v4.14.0 — interne opening telt niet mee
   });
   body.querySelector('#acbNieuw').addEventListener('click', () => {
     const beslist = (rij.status === 'akkoord' || rij.status === 'afgekeurd');

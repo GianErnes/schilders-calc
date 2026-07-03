@@ -1,3 +1,13 @@
+## v4.14.0 — Zien wanneer de klant de offerte opent, plus het versieveld
+Twee wensen uit de praktijk. Je wilt weten of de klant al gekeken heeft voordat er gereageerd wordt, en je wilt het versienummer van een offerte kunnen zien en zo nodig aanpassen.
+
+### Wat er verandert
+- Elke opening van de accordeerpagina wordt geregistreerd. In het Accordeerlink-venster staat nu "Geopend: 3×, eerste keer …, laatst …" of "Nog niet door de klant geopend". Bij de allereerste opening krijg je een seintje op info@ernes.nl met klant, project en offertenummer.
+- Gekozen voor het meten van de pagina-opening en niet van de mail-opening: mailmeting via een pixel is onbetrouwbaar (Apple Mail meldt alles als geopend, andere programma's blokkeren het) en de pagina-opening is bovendien het signaal dat telt: de klant heeft de offerte echt bekeken.
+- Nieuwe knop Zelf bekijken in het Accordeerlink-venster opent de klantpagina zonder dat de teller oploopt en zonder seintje. Kopieer je de kale link en open je hem los, dan telt die wel gewoon mee.
+- Het versienummer van de offerte staat nu als veld Versie in de Offerte-instellingen, naast het Offertenummer. De automatische ophoging bij een herziene offerte (na een reactie van de klant) blijft werken en is nu zichtbaar en corrigeerbaar. Op het document blijft de V-aanduiding pas vanaf versie 2 verschijnen.
+- Vereist eenmalig de bijgewerkte Edge Function offerte-accord (meegeleverd als offerte-accord.ts, plakken in Supabase Studio en deployen). De bijbehorende SQL (drie kolommen) is al gedraaid.
+
 ## v4.13.0 — Vraagbaak: hulp bij de bediening van de app
 Rechts in beeld staat na het inloggen een blauw verticaal label Vraagbaak, in de stijl van de Help-tab van Yoobi. Bedoeld voor Maud en iedereen die de app leert kennen: vraag hoe iets werkt en het antwoord komt uit de handleiding.
 
