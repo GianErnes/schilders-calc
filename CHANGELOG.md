@@ -1,3 +1,12 @@
+## v4.14.3 — Versie ophogen bij nieuwe link is een vraag geworden
+Op testoffertes bleef de versie naar 2 springen, ook met het versieveld op 1: de app zag de eigen testreacties op eerdere links aan voor klantreacties en maakte van elke nieuwe accordeerlink automatisch een herziening.
+
+### Wat er verandert
+- Is er op een eerdere link gereageerd, dan vraagt de app bij het maken van een nieuwe link of dit een herziene offerte is. OK hoogt de versie op, zet de offertedatum op vandaag en geldig-tot opnieuw op dertig dagen, precies het oude gedrag. Annuleren houdt versie en datum zoals ze staan.
+- Het versieveld in de Offerte-instellingen is daarmee echt leidend. Veld op 1 en bij de vraag Annuleren kiezen geeft een offerte met alleen het offertenummer, zonder V-aanduiding.
+- Zonder eerdere reacties verandert er niets: geen vraag en geen ophoging, zoals voorheen.
+- Alleen app-bestanden. Geen SQL en geen Edge Function.
+
 ## v4.14.2 — Fix: dubbel dashboardblok Reacties op offertes
 Het blok Reacties op offertes kon twee of drie keer tegelijk op het dashboard staan, met dezelfde melding erin.
 
