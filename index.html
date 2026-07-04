@@ -2136,8 +2136,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.14.4</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.15.0</h2>
       <div class="intro-body">
+        <p><strong>📊 Vraagbaak-gebruik zichtbaar in Instellingen (v4.15.0).</strong> Onderaan de Instellingen-tab staat een nieuw blok Vraagbaak. Bovenaan de tellers: het aantal vragen en de kosten van deze maand en het totaal, rechtstreeks uit het log. Daaronder de laatste twintig vragen met datum en wie hem stelde; tik op een vraag en het volledige antwoord klapt uit, handig om te zien wat er gevraagd wordt en of de vraagbaak het goed uitlegt. Het blok laadt pas bij het openen van de tab en heeft een Ververs-knop. Sinds de overstap op het slimmere Sonnet-model kost een vraag zo'n vier à vijf cent; de tellers rekenen met de werkelijke kosten uit het log. Geen SQL en geen Edge Function nodig.</p>
         <p><strong>🔧 Fototekst blijft bij zijn foto (v4.14.4).</strong> In de fotobijlage van het gecombineerde PDF-document kon de tekst onder de onderste fotorij naar de volgende pagina schuiven: de foto's pasten nog net, het onderschrift niet meer. Elke fotorij is nu onsplitsbaar; past een rij niet meer helemaal op de pagina, dan verhuist hij in zijn geheel, met foto's, status, onderschrift en gebrekenlijst samen. Dat kost hooguit wat wit onderaan een pagina en geldt ook voor het bevroren document achter de accordeerlink. Geen SQL en geen Edge Function.</p>
         <p><strong>🔧 Versie ophogen is voortaan een vraag (v4.14.3).</strong> Bij het maken van een nieuwe accordeerlink hoogde de app de offerteversie automatisch op zodra er op een eerdere link was gereageerd. Eigen testreacties telden daarin mee, waardoor het versieveld terugzetten niet hielp: de linkaanmaak zette hem meteen weer een versie hoger. Vanaf nu vraagt de app het gewoon. OK maakt er een herziene offerte van, met de volgende versie, offertedatum vandaag en geldig-tot opnieuw dertig dagen; Annuleren houdt versie en datum zoals ze staan. Versie 1 blijft zonder V-aanduiding, dus een geteste maar nooit verzonden offerte gaat onder het kale offertenummer de deur uit. Geen SQL en geen Edge Function.</p>
         <p><strong>🔧 Dashboardmelding staat weer enkel (v4.14.2).</strong> Het blok Reacties op offertes kon dubbel of driedubbel op het dashboard verschijnen wanneer de drie verversers uit v4.11.0 (terugkeer naar het venster, focus en de minuutpoll) tegelijk vuurden: elk zag "nog geen blok" vóór het ophalen van de data en voegde er daarna zelf één toe. Het blok wordt nu pas ná het ophalen opgezocht en een zelfheling ruimt bestaande dubbelingen automatisch op, dus een dashboard dat al dubbel stond is binnen een minuut vanzelf schoon. Geen SQL en geen Edge Function.</p>
@@ -2755,6 +2756,12 @@
       <button class="btn-secondary btn" onclick="exportData()">⇩ Exporteer calculaties (JSON)</button>
       <p style="color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; font-style: italic;">Exporteer een JSON-back-up van al je calculaties. De migratie-importers uit v2.4.1 zijn weggehaald nu de cloud-data definitief is.</p>
     </div>
+    <div class="settings-section">
+      <h3>Vraagbaak</h3>
+      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.6rem;">Gebruik en kosten van de vraagbaak, rechtstreeks uit het log. Tik op een vraag voor het volledige antwoord. <button class="btn-secondary btn btn-sm" onclick="vraagbaakLogLaden(true)" style="margin-left: 0.4rem;">🔄 Ververs</button></p>
+      <div id="vbLogTotalen" style="font-size: 0.9rem; margin-bottom: 0.6rem;">Nog niet geladen.</div>
+      <div id="vbLogLijst"></div>
+    </div>
   </section>
 
 </main>
@@ -3311,7 +3318,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.14.4';
+const APP_VERSION = 'v4.15.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3707,6 +3714,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.15.0', d: '2026-07-04', h: 'Vraagbaak-gebruik in Instellingen. Nieuw settings-blok Vraagbaak onderaan de Instellingen-tab: tellers voor deze maand en totaal (aantal vragen en kosten) plus de laatste twintig vragen met uitklapbaar antwoord (volledige vraag, gebruiker en antwoord). Twee _sbQuery-calls rechtstreeks op app_help_log: slim (aangemaakt_op, kosten_eur, aflopend, servermax 1000 rijen met eerlijk "laatste 1000"-label bij de kaap) voor de tellers en de laatste 20 volledige rijen voor de lijst. Lazy geladen via de nav-handler bij het openen van Instellingen (vraagbaakLogLaden, eenmalig per sessie, Ververs-knop forceert herladen), alles ontsmet met _escapeHtml, bedragen via eur(), mailnaam voor de @ in de rij en het volledige adres in de uitklap. Geen SQL en geen Edge Function; de leesrechten op app_help_log bestonden al sinds Blok 1.' },
   { v: '4.14.4', d: '2026-07-04', h: 'Fix: losraken van het foto-onderschrift in de pdfmake-fotobijlage. Elke fotorij in _bouwOfferteCompleetDocDef is een columns-node met per cel een stack (image, status, opmerking, gebrekenlijst); pdfmake mocht binnen die node afbreken, waardoor bij een rij onderaan de pagina de foto\u2019s bleven staan en de tekst naar de volgende pagina liep. De rij-node heeft nu unbreakable: true, dus een niet-passende rij verhuist compleet. Raakt de knop Offerte + bijlagen, het bevroren accord-document en de archiveerreeks; de losse HTML-fotobijlage (fb-table met page-break-inside: avoid per tr) was al beschermd. Geen SQL' },
   { v: '4.14.3', d: '2026-07-04', h: 'Versie-ophoging bij nieuwe accordeerlink is een bevestigingsvraag geworden. _accordNieuweLink hoogde offerteVersie onvoorwaardelijk op zodra een eerdere accordering gereageerd_op, status akkoord/afgekeurd of vragen had (v3.91.0); eigen testreacties telden mee, waardoor het versieveld uit v4.14.0 bij elke nieuwe link werd overschreven. Nu bij gedetecteerde reacties een confirm met beide gevolgen benoemd: OK doet exact het oude gedrag (versie +1, offertedatum vandaag, geldigTot +30 dagen, opslaan in offerte_config), Annuleren laat versie, datum en geldig-tot ongemoeid. Zonder eerdere reacties geen vraag, zoals voorheen. Geen SQL' },
   { v: '4.14.2', d: '2026-07-04', h: 'Fix: dubbel dashboardblok Reacties op offertes. _accordMeldingenRender zocht het blok op vóór de await naar offerte_accorderingen en besliste daarna op die verouderde check; vuurden focus, visibilitychange en de 60s-poll (v4.11.0) tegelijk, dan zag elke aanroep "geen blok", voegde elk er één in en werkte de verversing daarna alleen het eerste exemplaar bij. Nu: getElementById pas ná de await (tussen opzoeken en insertBefore zit geen await meer, dus geen interleaving mogelijk) plus zelfheling bovenin die alle #accordMeldingen-exemplaren na het eerste verwijdert, zodat een al vervuild dashboard binnen één poll schoon is. Geen SQL' },
@@ -5178,6 +5186,74 @@ async function _vraagbaakStel() {
     knop.disabled = false;
     veld.focus();
   }
+}
+
+// ============================================================
+// VRAAGBAAK-GEBRUIK (v4.15.0) — blok onderaan Instellingen.
+// Leest app_help_log rechtstreeks (leesrechten bestaan al):
+// tellers voor deze maand en totaal, plus de laatste 20 vragen
+// met uitklapbaar antwoord. Lazy geladen bij openen van de tab.
+// ============================================================
+let _vbLogGeladen = false;
+
+async function vraagbaakLogLaden(force = false) {
+  const totEl = document.getElementById('vbLogTotalen');
+  const lijstEl = document.getElementById('vbLogLijst');
+  if (!totEl || !lijstEl) return;
+  if (_vbLogGeladen && !force) return;
+  totEl.textContent = 'Laden…';
+  lijstEl.innerHTML = '';
+
+  const [slim, lijst] = await Promise.all([
+    _sbQuery(_sb.from('app_help_log').select('aangemaakt_op,kosten_eur').order('aangemaakt_op', { ascending: false }), 'Vraagbaak-log tellers'),
+    _sbQuery(_sb.from('app_help_log').select('aangemaakt_op,gebruiker,vraag,antwoord,kosten_eur').order('aangemaakt_op', { ascending: false }).limit(20), 'Vraagbaak-log lijst')
+  ]);
+  if ((slim && slim.error) || (lijst && lijst.error)) {
+    totEl.textContent = 'Laden mislukt. Probeer Ververs.';
+    return;
+  }
+  const alle = (slim && slim.data) || [];
+  const rijen = (lijst && lijst.data) || [];
+
+  const nu = new Date();
+  const maandStart = new Date(nu.getFullYear(), nu.getMonth(), 1);
+  let mAant = 0, mEur = 0, tEur = 0;
+  alle.forEach(r => {
+    const k = Number(r.kosten_eur) || 0;
+    tEur += k;
+    if (r.aangemaakt_op && new Date(r.aangemaakt_op) >= maandStart) { mAant++; mEur += k; }
+  });
+  // Server geeft maximaal 1000 rijen terug; ver voorbij de horizon, maar wel eerlijk labelen.
+  const capNoot = alle.length >= 1000 ? ' (laatste 1000)' : '';
+  totEl.innerHTML = 'Deze maand: <strong>' + mAant + '</strong> vragen · <strong>' + eur(mEur) + '</strong> &nbsp;·&nbsp; Totaal' + capNoot + ': <strong>' + alle.length + '</strong> vragen · <strong>' + eur(tEur) + '</strong>';
+
+  if (!rijen.length) {
+    lijstEl.innerHTML = '<p style="color: var(--muted); font-size: 0.82rem;">Nog geen vragen gesteld.</p>';
+  } else {
+    lijstEl.innerHTML = rijen.map((r, i) => {
+      const d = r.aangemaakt_op ? new Date(r.aangemaakt_op).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
+      const wie = _escapeHtml(String(r.gebruiker || '').split('@')[0] || '?');
+      return '<div style="border-top: 1px solid var(--paper-deep);">' +
+        '<div onclick="vbLogToggle(' + i + ')" style="cursor: pointer; display: flex; gap: 0.6rem; align-items: baseline; padding: 0.45rem 0;">' +
+          '<span style="color: var(--muted); font-size: 0.78rem; flex-shrink: 0;">' + d + '</span>' +
+          '<span style="color: var(--muted); font-size: 0.78rem; flex-shrink: 0;">' + wie + '</span>' +
+          '<span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + _escapeHtml(r.vraag || '') + '</span>' +
+          '<span style="color: var(--muted); font-size: 0.78rem; flex-shrink: 0;">' + eur(Number(r.kosten_eur) || 0) + '</span>' +
+        '</div>' +
+        '<div id="vbLogAntwoord' + i + '" style="display: none; margin: 0 0 0.55rem; padding: 0.55rem 0.65rem; background: var(--paper-warm); border-radius: var(--radius); font-size: 0.85rem;">' +
+          '<div style="font-weight: 600; margin-bottom: 0.3rem;">' + _escapeHtml(r.vraag || '') + '</div>' +
+          '<div style="color: var(--muted); font-size: 0.75rem; margin-bottom: 0.35rem;">' + _escapeHtml(r.gebruiker || '') + '</div>' +
+          '<div style="white-space: pre-wrap;">' + _escapeHtml(r.antwoord || '(geen antwoord opgeslagen)') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+  _vbLogGeladen = true;
+}
+
+function vbLogToggle(i) {
+  const el = document.getElementById('vbLogAntwoord' + i);
+  if (el) el.style.display = (el.style.display === 'none') ? 'block' : 'none';
 }
 
 // ============================================================
@@ -7089,7 +7165,7 @@ document.querySelectorAll('nav button').forEach(b => {
     if (b.dataset.tab === 'onderhoud')     renderOnderhoudsplan();
     if (b.dataset.tab === 'offerteteksten') renderOfferteteksten();
     if (b.dataset.tab === 'planning')      renderPlanningMatrix();
-    if (b.dataset.tab === 'instellingen')  loadSettings();
+    if (b.dataset.tab === 'instellingen')  { loadSettings(); vraagbaakLogLaden(); }
   });
 });
 

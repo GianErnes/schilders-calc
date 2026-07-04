@@ -1,3 +1,12 @@
+## v4.15.0 — Vraagbaak-gebruik zichtbaar in Instellingen
+Er was geen zicht op wat er aan de vraagbaak gevraagd werd en wat dat kostte; kijken kon alleen met een query in Supabase Studio.
+
+### Wat er verandert
+- Onderaan de Instellingen-tab staat een nieuw blok Vraagbaak met tellers voor deze maand en het totaal: aantal vragen en kosten in euro, rechtstreeks uit het log.
+- Daaronder de laatste twintig vragen met datum en wie hem stelde. Tik op een vraag en de volledige vraag met het antwoord klapt uit, zo zie je meteen wat er gevraagd wordt en of de vraagbaak het goed uitlegt.
+- Het blok laadt pas bij het openen van de Instellingen-tab en heeft een Ververs-knop voor tussentijds herladen.
+- Alleen app-bestanden. Geen SQL en geen Edge Function; de leesrechten op het log bestonden al.
+
 ## v4.14.4 — Fix: fototekst blijft bij zijn foto
 In de fotobijlage van het gecombineerde PDF-document kon het onderschrift van de onderste fotorij naar de volgende pagina springen: de foto's pasten nog net onderaan, de tekst eronder niet meer.
 
