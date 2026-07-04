@@ -1,3 +1,11 @@
+## v4.14.1 — Fix: V-aanduiding nu ook op het offertedocument
+Het nieuwe versieveld uit v4.14.0 maakte een sluimerende fout zichtbaar die er sinds v3.91.0 in zat: het versienummer werd overal netjes bijgehouden en stond al in de seintjes-mails, maar op het offertedocument zelf ontbrak de V-aanduiding.
+
+### Wat er verandert
+- De documentbouwers halen het toonnummer voortaan op via de functie die de versie kent. De V staat daardoor op de titelregel, in de voettekst, in de PDF-eigenschappen en in de bestandsnaam, en dus ook op het bevroren document achter een nieuwe accordeerlink.
+- Versie 1 blijft zonder aanduiding, een eerste offerte oogt onveranderd. Een herziene offerte overschrijft in de klantmap niet langer stilletjes de vorige versie, want de bestandsnaam verschilt voortaan.
+- Alleen app-bestanden. Geen SQL en geen Edge Function.
+
 ## v4.14.0 — Zien wanneer de klant de offerte opent, plus het versieveld
 Twee wensen uit de praktijk. Je wilt weten of de klant al gekeken heeft voordat er gereageerd wordt, en je wilt het versienummer van een offerte kunnen zien en zo nodig aanpassen.
 
