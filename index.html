@@ -2136,8 +2136,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.14.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.14.4</h2>
       <div class="intro-body">
+        <p><strong>🔧 Fototekst blijft bij zijn foto (v4.14.4).</strong> In de fotobijlage van het gecombineerde PDF-document kon de tekst onder de onderste fotorij naar de volgende pagina schuiven: de foto's pasten nog net, het onderschrift niet meer. Elke fotorij is nu onsplitsbaar; past een rij niet meer helemaal op de pagina, dan verhuist hij in zijn geheel, met foto's, status, onderschrift en gebrekenlijst samen. Dat kost hooguit wat wit onderaan een pagina en geldt ook voor het bevroren document achter de accordeerlink. Geen SQL en geen Edge Function.</p>
         <p><strong>🔧 Versie ophogen is voortaan een vraag (v4.14.3).</strong> Bij het maken van een nieuwe accordeerlink hoogde de app de offerteversie automatisch op zodra er op een eerdere link was gereageerd. Eigen testreacties telden daarin mee, waardoor het versieveld terugzetten niet hielp: de linkaanmaak zette hem meteen weer een versie hoger. Vanaf nu vraagt de app het gewoon. OK maakt er een herziene offerte van, met de volgende versie, offertedatum vandaag en geldig-tot opnieuw dertig dagen; Annuleren houdt versie en datum zoals ze staan. Versie 1 blijft zonder V-aanduiding, dus een geteste maar nooit verzonden offerte gaat onder het kale offertenummer de deur uit. Geen SQL en geen Edge Function.</p>
         <p><strong>🔧 Dashboardmelding staat weer enkel (v4.14.2).</strong> Het blok Reacties op offertes kon dubbel of driedubbel op het dashboard verschijnen wanneer de drie verversers uit v4.11.0 (terugkeer naar het venster, focus en de minuutpoll) tegelijk vuurden: elk zag "nog geen blok" vóór het ophalen van de data en voegde er daarna zelf één toe. Het blok wordt nu pas ná het ophalen opgezocht en een zelfheling ruimt bestaande dubbelingen automatisch op, dus een dashboard dat al dubbel stond is binnen een minuut vanzelf schoon. Geen SQL en geen Edge Function.</p>
         <p><strong>🔧 V-aanduiding nu ook op het offertedocument (v4.14.1).</strong> Het versienummer werd overal netjes bijgehouden en stond al in de seintjes-mails, maar op het document zelf ontbrak de V, een sluimerende fout sinds v3.91.0 die door het nieuwe versieveld zichtbaar werd. Vanaf nu staat de V-aanduiding ook op de titelregel, in de voettekst, in de PDF-eigenschappen en in de bestandsnaam, en dus ook op het bevroren document achter een nieuwe accordeerlink. Versie 1 blijft zoals altijd zonder aanduiding. Geen SQL en geen Edge Function.</p>
@@ -3310,7 +3311,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.14.3';
+const APP_VERSION = 'v4.14.4';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3706,6 +3707,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.14.4', d: '2026-07-04', h: 'Fix: losraken van het foto-onderschrift in de pdfmake-fotobijlage. Elke fotorij in _bouwOfferteCompleetDocDef is een columns-node met per cel een stack (image, status, opmerking, gebrekenlijst); pdfmake mocht binnen die node afbreken, waardoor bij een rij onderaan de pagina de foto\u2019s bleven staan en de tekst naar de volgende pagina liep. De rij-node heeft nu unbreakable: true, dus een niet-passende rij verhuist compleet. Raakt de knop Offerte + bijlagen, het bevroren accord-document en de archiveerreeks; de losse HTML-fotobijlage (fb-table met page-break-inside: avoid per tr) was al beschermd. Geen SQL' },
   { v: '4.14.3', d: '2026-07-04', h: 'Versie-ophoging bij nieuwe accordeerlink is een bevestigingsvraag geworden. _accordNieuweLink hoogde offerteVersie onvoorwaardelijk op zodra een eerdere accordering gereageerd_op, status akkoord/afgekeurd of vragen had (v3.91.0); eigen testreacties telden mee, waardoor het versieveld uit v4.14.0 bij elke nieuwe link werd overschreven. Nu bij gedetecteerde reacties een confirm met beide gevolgen benoemd: OK doet exact het oude gedrag (versie +1, offertedatum vandaag, geldigTot +30 dagen, opslaan in offerte_config), Annuleren laat versie, datum en geldig-tot ongemoeid. Zonder eerdere reacties geen vraag, zoals voorheen. Geen SQL' },
   { v: '4.14.2', d: '2026-07-04', h: 'Fix: dubbel dashboardblok Reacties op offertes. _accordMeldingenRender zocht het blok op vóór de await naar offerte_accorderingen en besliste daarna op die verouderde check; vuurden focus, visibilitychange en de 60s-poll (v4.11.0) tegelijk, dan zag elke aanroep "geen blok", voegde elk er één in en werkte de verversing daarna alleen het eerste exemplaar bij. Nu: getElementById pas ná de await (tussen opzoeken en insertBefore zit geen await meer, dus geen interleaving mogelijk) plus zelfheling bovenin die alle #accordMeldingen-exemplaren na het eerste verwijdert, zodat een al vervuild dashboard binnen één poll schoon is. Geen SQL' },
   { v: '4.14.1', d: '2026-07-04', h: 'Fix: V-aanduiding op het offertedocument zelf. Beide documentbouwers haalden het toonnummer op via _kenOfferteNummerToe, de kale toekenningsfunctie die geen versies kent; de V-suffix uit v3.91.0 zat alleen in _offerteNummer en bereikte daardoor wel de VvE-kenmerkregel en snapshot.offertenummer (labels en mails) maar nooit het document. Beide bouwers kennen nu eerst het nummer toe en halen daarna het toonnummer op via _offerteNummer(c), waardoor titelregel, voettekst, PDF-info en bestandsnaam de V dragen vanaf versie 2, ook in het bevroren accord-document. Zichtbaar geworden door het versieveld uit v4.14.0. Geen SQL' },
@@ -12630,7 +12632,8 @@ async function _bouwOfferteCompleetDocDef() {
       mk.forEach((m, idx) => { const def = _KOZIJN_DEFECTEN[m.type] || { label: m.type || 'Gebrek', kleur: '#dc2626' }; const notitie = (m.notitie || '').trim(); st.push({ text: [{ text: (idx + 1) + '. ', color: def.kleur, bold: true }, def.label + (notitie ? ' \u2014 ' + notitie : '')], fontSize: 9, margin: [0, 1, 0, 0] }); });
       return { width: '*', stack: st };
     };
-    for (let i = 0; i < fdata.length; i += 2) content.push({ columns: [cell(fdata[i]), cell(fdata[i + 1])], columnGap: 16, margin: [0, 0, 0, 12] });
+    // v4.14.4 — onsplitsbaar: foto en onderschrift blijven altijd samen op één pagina.
+    for (let i = 0; i < fdata.length; i += 2) content.push({ unbreakable: true, columns: [cell(fdata[i]), cell(fdata[i + 1])], columnGap: 16, margin: [0, 0, 0, 12] });
   }
 
   // --- Algemene voorwaarden (paginavullend, zonder kop/voet) ---

@@ -1,3 +1,12 @@
+## v4.14.4 — Fix: fototekst blijft bij zijn foto
+In de fotobijlage van het gecombineerde PDF-document kon het onderschrift van de onderste fotorij naar de volgende pagina springen: de foto's pasten nog net onderaan, de tekst eronder niet meer.
+
+### Wat er verandert
+- Elke fotorij is nu onsplitsbaar. Past een rij niet meer helemaal op de pagina, dan verhuist hij in zijn geheel naar de volgende, met foto's, status, onderschrift en gebrekenlijst samen.
+- Dat kost hooguit wat extra wit onderaan een pagina en werkt bij elk aantal foto's en elke tekstlengte, dus ook bij andere fotoformaten van een volgende klant.
+- Geldt overal waar dit document wordt gemaakt: de knop Offerte + bijlagen, het bevroren document achter de accordeerlink en de archiveerreeks.
+- Alleen app-bestanden. Geen SQL en geen Edge Function.
+
 ## v4.14.3 — Versie ophogen bij nieuwe link is een vraag geworden
 Op testoffertes bleef de versie naar 2 springen, ook met het versieveld op 1: de app zag de eigen testreacties op eerdere links aan voor klantreacties en maakte van elke nieuwe accordeerlink automatisch een herziening.
 
