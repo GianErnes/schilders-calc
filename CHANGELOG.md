@@ -1,3 +1,11 @@
+## v4.14.2 — Fix: dubbel dashboardblok Reacties op offertes
+Het blok Reacties op offertes kon twee of drie keer tegelijk op het dashboard staan, met dezelfde melding erin.
+
+### Wat er verandert
+- De oorzaak was een race in de verversing. Sinds v4.11.0 wordt het blok ververst bij terugkeer naar het venster, bij focus en via een stille minuutpoll. Vuurden die tegelijk, dan zag elke aanroep "nog geen blok" vóór het ophalen van de data en plakte er daarna zelf één neer. Alleen het eerste blok werd daarna nog bijgewerkt, de rest bleef als bevroren kopie staan.
+- Het blok wordt nu pas ná het ophalen van de data opgezocht, waardoor dubbel invoegen niet meer kan. Een zelfheling ruimt bestaande dubbelingen bovendien automatisch op, dus een dashboard dat al dubbel stond is binnen een minuut vanzelf schoon.
+- Alleen app-bestanden. Geen SQL en geen Edge Function.
+
 ## v4.14.1 — Fix: V-aanduiding nu ook op het offertedocument
 Het nieuwe versieveld uit v4.14.0 maakte een sluimerende fout zichtbaar die er sinds v3.91.0 in zat: het versienummer werd overal netjes bijgehouden en stond al in de seintjes-mails, maar op het offertedocument zelf ontbrak de V-aanduiding.
 

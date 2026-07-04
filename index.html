@@ -2136,8 +2136,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.14.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.14.2</h2>
       <div class="intro-body">
+        <p><strong>🔧 Dashboardmelding staat weer enkel (v4.14.2).</strong> Het blok Reacties op offertes kon dubbel of driedubbel op het dashboard verschijnen wanneer de drie verversers uit v4.11.0 (terugkeer naar het venster, focus en de minuutpoll) tegelijk vuurden: elk zag "nog geen blok" vóór het ophalen van de data en voegde er daarna zelf één toe. Het blok wordt nu pas ná het ophalen opgezocht en een zelfheling ruimt bestaande dubbelingen automatisch op, dus een dashboard dat al dubbel stond is binnen een minuut vanzelf schoon. Geen SQL en geen Edge Function.</p>
         <p><strong>🔧 V-aanduiding nu ook op het offertedocument (v4.14.1).</strong> Het versienummer werd overal netjes bijgehouden en stond al in de seintjes-mails, maar op het document zelf ontbrak de V, een sluimerende fout sinds v3.91.0 die door het nieuwe versieveld zichtbaar werd. Vanaf nu staat de V-aanduiding ook op de titelregel, in de voettekst, in de PDF-eigenschappen en in de bestandsnaam, en dus ook op het bevroren document achter een nieuwe accordeerlink. Versie 1 blijft zoals altijd zonder aanduiding. Geen SQL en geen Edge Function.</p>
         <p><strong>👁 Zien wanneer de klant de offerte opent, plus het versieveld (v4.14.0).</strong> In het Accordeerlink-venster staat nu wanneer de klant de offertepagina voor het eerst opende en hoe vaak, en bij die allereerste opening krijg je een seintje op info@ernes.nl. Zo weet je dat er gekeken wordt voordat er gereageerd wordt. Wil je de pagina zelf bekijken, gebruik dan de nieuwe knop Zelf bekijken in dat venster: die opening telt niet mee. Daarnaast staat het versienummer van de offerte nu als veld Versie in de Offerte-instellingen, naast het offertenummer; de automatische ophoging bij een herziene offerte blijft werken en is nu zichtbaar en aanpasbaar. Vereist eenmalig de bijgewerkte Edge Function offerte-accord; de SQL is al gedraaid.</p>
         <p><strong>💬 Vraagbaak: hulp bij de bediening van de app (v4.13.0).</strong> Rechts in beeld staat na het inloggen een blauw label Vraagbaak, in de stijl van de Help-tab van Yoobi. Klik erop, typ je vraag ("Hoe maak ik een nieuwe calculatie?") en het antwoord komt uit de handleiding, met doorvragen in hetzelfde venster. De vraagbaak kent alleen de knoppen en de werkwijze van de app; vragen over het vak of over prijzen wijst hij vriendelijk door naar Gian en staat iets niet in de handleiding, dan zegt hij dat eerlijk. Elke vraag komt met antwoord en geschatte kosten in het log app_help_log. Vereist eenmalig de nieuwe Edge Function app-hulp. Geen SQL nodig.</p>
@@ -3308,7 +3309,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.14.1';
+const APP_VERSION = 'v4.14.2';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3704,6 +3705,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.14.2', d: '2026-07-04', h: 'Fix: dubbel dashboardblok Reacties op offertes. _accordMeldingenRender zocht het blok op vóór de await naar offerte_accorderingen en besliste daarna op die verouderde check; vuurden focus, visibilitychange en de 60s-poll (v4.11.0) tegelijk, dan zag elke aanroep "geen blok", voegde elk er één in en werkte de verversing daarna alleen het eerste exemplaar bij. Nu: getElementById pas ná de await (tussen opzoeken en insertBefore zit geen await meer, dus geen interleaving mogelijk) plus zelfheling bovenin die alle #accordMeldingen-exemplaren na het eerste verwijdert, zodat een al vervuild dashboard binnen één poll schoon is. Geen SQL' },
   { v: '4.14.1', d: '2026-07-04', h: 'Fix: V-aanduiding op het offertedocument zelf. Beide documentbouwers haalden het toonnummer op via _kenOfferteNummerToe, de kale toekenningsfunctie die geen versies kent; de V-suffix uit v3.91.0 zat alleen in _offerteNummer en bereikte daardoor wel de VvE-kenmerkregel en snapshot.offertenummer (labels en mails) maar nooit het document. Beide bouwers kennen nu eerst het nummer toe en halen daarna het toonnummer op via _offerteNummer(c), waardoor titelregel, voettekst, PDF-info en bestandsnaam de V dragen vanaf versie 2, ook in het bevroren accord-document. Zichtbaar geworden door het versieveld uit v4.14.0. Geen SQL' },
   { v: '4.14.0', d: '2026-07-03', h: 'Openings-signaal op de accordeerlink plus zichtbaar versieveld. (1) Edge Function offerte-accord (apart gedeployed): de GET selecteert eerste_geopend_op en geopend_aantal erbij en registreert per opening laatst_geopend_op, geopend_aantal +1 en eenmalig eerste_geopend_op (kolommen via eenmalige SQL); bij de allereerste opening gaat mail D (mailEersteOpening, stijl van mail C) naar info@ernes.nl met klant, project, offertenummer en tijdstip. Openingen met ?intern=1 slaan registratie en mail over. Alles niet-fataal in try/catch. (2) App: _accordBeheerRender toont onder de status een acb-sub-regel "Geopend: n×, eerste keer …, laatst …" of "Nog niet door de klant geopend" (bij status open), plus knop acbBekijk "Zelf bekijken (telt niet mee)" die de link met &intern=1 opent; de klantpagina geeft de intern-vlag uit de URL door aan de GET (_internOpen bij de ACCORD_FN_URL-fetch). (3) Veld Versie in de Offerte-instellingen naast Offertenummer: toont offerte_config.offerteVersie (genormaliseerd naar minimaal 1 in _offCfg), aanpasbaar via _offCfgVeld met Math.max(1, parseInt); de V-suffix vanaf 2 en de automatische ophoging uit v3.91.0 blijven ongewijzigd. SQL al uitgevoerd' },
   { v: '4.13.0', d: '2026-07-03', h: 'Vraagbaak voor de app-bediening. Verticaal label #vraagbaakTab rechts (writing-mode vertical-rl, var(--blue), display geregeld in _showApp en bij uitloggen net als userBadge, verborgen op print), modal vraagbaakModal met chatweergave (vb-vraag/vb-antwoord via textContent, dus geen HTML-injectie; gesprek leeg bij elk openen). _vraagbaakStel POST naar de nieuwe Edge Function app-hulp (APP_HULP_FN_URL, zelfde tokenpatroon als _yoobiCall) met { vraag, historie max 12 beurten }. De functie (app-hulp.ts, apart gedeployed, Verify JWT uit, geen backticks): controleert de login via /auth/v1/user (levert e-mail voor het log), leest app_help_kb (actief, op volgorde) met de service-rol, bouwt een Nederlandse instructie (alleen bediening uit de handleiding, vakvragen en prijsvragen naar Gian, eerlijk bij ontbreken), roept claude-haiku-4-5 aan (max_tokens 1000, nette user/assistant-afwisseling) en schrijft vraag/antwoord/model/tokens/kosten_eur/gebruiker niet-blokkerend naar app_help_log. Kosten: $1/$5 per MTok, koers 0.87 als vaste schatting, ongeveer anderhalve cent per vraag. Geen SQL' },
@@ -19071,7 +19073,10 @@ async function _accordMeldingenRender() {
   const dash = document.getElementById('dashboard');
   if (!dash || !dash.classList.contains('active')) return; // alleen op het dashboard
   if (!_sb) return;
-  let blk = document.getElementById('accordMeldingen');
+  // v4.14.2 — zelfheling: door de oude invoeg-race kunnen er dubbele blokken
+  // staan; alles na het eerste exemplaar opruimen.
+  const _dubbels = document.querySelectorAll('#accordMeldingen');
+  for (let i = 1; i < _dubbels.length; i++) _dubbels[i].remove();
 
   let rows;
   try {
@@ -19112,6 +19117,10 @@ async function _accordMeldingenRender() {
   items.sort((a, b) => b.tEvent - a.tEvent);
   _accordMeldingLijst = items;
 
+  // v4.14.2 — het blok pas ná de await opzoeken. De oude volgorde (opzoeken vóór
+  // het ophalen) liet focus, visibilitychange en de minuutpoll elk een eigen blok
+  // invoegen als ze tegelijk vuurden: dubbele blokken op het dashboard.
+  let blk = document.getElementById('accordMeldingen');
   if (!items.length) { if (blk) blk.remove(); return; }
 
   if (!blk) {
