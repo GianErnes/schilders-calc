@@ -1,3 +1,13 @@
+## v4.17.0 — Leescontrole: Claude leest de offerte na (laag 2)
+De harde controles van laag 1 vangen de aantoonbare punten, maar wat er echt in de klantgerichte teksten staat bleef leeswerk voor eigen ogen. Op een lange dag glipt daar weleens een kromme zin, een vergeten onderdeel of een los invulveld doorheen.
+
+### Wat er verandert
+- In het controlevenster staat onder de harde controles nu het blok Leescontrole met een eigen startknop. Claude krijgt een compacte samenvatting: projectnaam, klant en klanttype, de gecalculeerde regels met systeem, ondergrond en binnen of buiten, de staartposten, de ingevulde offerteteksten per sectie en de fotobeschrijvingen.
+- Zes leespunten worden nagelopen: past de projectnaam bij het werk, is de klantwens goed omschreven, sluiten de offerteteksten aan op de calculatie, dekken de beschrijvingen alle ondergronden, kloppen de fotobeschrijvingen inhoudelijk en zijn spelling en zinsopbouw in orde. Een invulveld dat nog letterlijk tussen accolades staat wordt altijd gemeld.
+- De uitkomst verschijnt in dezelfde stijl als laag 1, met alleen de zwaartes controleer en ter overweging. Nooit blokkerend en nadrukkelijk geen goedkeuring: ook bij nul meldingen blijf jij de eindlezer. Onderaan staat wat de beurt kostte.
+- Elke beurt wordt door de Edge Function gelogd in de nieuwe tabel offerte_controle_log met gebruiker, calculatie, model, tokens en kosten. Model claude-sonnet-4-6, enkele centen per beurt.
+- Vereist de SQL-migratie offerte_controle_log (al gedraaid) en eenmalig de nieuwe Edge Function offerte-leescontrole.
+
 ## v4.16.0 — Knop Controleer: de offerte nalopen voor hij de deur uit gaat
 De controlelijst voor een offerte zat alleen in het hoofd: klantgegevens, offertenummer, geldigheid, prijsweergave, benaming van de regels, toeslagen, houtrot, fotobeschrijvingen en de betalingstekst werden op het oog nagelopen en daar glipte weleens wat doorheen.
 
