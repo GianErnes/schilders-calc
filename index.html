@@ -2136,8 +2136,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.15.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.16.0</h2>
       <div class="intro-body">
+        <p><strong>📋 Knop Controleer: de offerte nalopen voor hij de deur uit gaat (v4.16.0).</strong> In de knoppenbalk van de calculatie staat nu de knop Controleer, ook bruikbaar op een vergrendelde calculatie. Die loopt in één keer de harde punten van de controlelijst na: klantnaam en werkadres compleet, klanttype passend bij de naam, contactpersoon en aanspreekvorm, e-mailadres aanwezig, Yoobi-offertenummer ingevuld, geldigheid passend bij het klanttype, prijsweergave op regels zonder hoeveelheden en eenheidsprijzen, regels benaamd in plaats van de kale systeemnaam, percentages, toeslagen in de staart, de houtrot-opmerking passend bij binnen- of buitenwerk, fotobeschrijvingen en de betalingstekst bij het juiste klanttype. De uitkomst is een venster met aandachtspunten in drie zwaartes: blokkerend, controleer en ter overweging. Nadrukkelijk geen goedkeuring: ook bij nul meldingen vraagt de app je de klantgerichte teksten zelf na te lezen. De leescontrole van die teksten (laag 2) volgt in een aparte stap. Daarnaast volgt de standaard geldig-tot nu het klanttype: particulier 14 dagen, zakelijk 30 en VvE 180. Wissel je van klanttype, dan schuift de datum mee, en ook een herziene offerte via de accordeerlink rekent met deze norm. Geen SQL en geen Edge Function.</p>
         <p><strong>📊 Vraagbaak-gebruik zichtbaar in Instellingen (v4.15.0).</strong> Onderaan de Instellingen-tab staat een nieuw blok Vraagbaak. Bovenaan de tellers: het aantal vragen en de kosten van deze maand en het totaal, rechtstreeks uit het log. Daaronder de laatste twintig vragen met datum en wie hem stelde; tik op een vraag en het volledige antwoord klapt uit, handig om te zien wat er gevraagd wordt en of de vraagbaak het goed uitlegt. Het blok laadt pas bij het openen van de tab en heeft een Ververs-knop. Sinds de overstap op het slimmere Sonnet-model kost een vraag zo'n vier à vijf cent; de tellers rekenen met de werkelijke kosten uit het log. Geen SQL en geen Edge Function nodig.</p>
         <p><strong>🔧 Fototekst blijft bij zijn foto (v4.14.4).</strong> In de fotobijlage van het gecombineerde PDF-document kon de tekst onder de onderste fotorij naar de volgende pagina schuiven: de foto's pasten nog net, het onderschrift niet meer. Elke fotorij is nu onsplitsbaar; past een rij niet meer helemaal op de pagina, dan verhuist hij in zijn geheel, met foto's, status, onderschrift en gebrekenlijst samen. Dat kost hooguit wat wit onderaan een pagina en geldt ook voor het bevroren document achter de accordeerlink. Geen SQL en geen Edge Function.</p>
         <p><strong>🔧 Versie ophogen is voortaan een vraag (v4.14.3).</strong> Bij het maken van een nieuwe accordeerlink hoogde de app de offerteversie automatisch op zodra er op een eerdere link was gereageerd. Eigen testreacties telden daarin mee, waardoor het versieveld terugzetten niet hielp: de linkaanmaak zette hem meteen weer een versie hoger. Vanaf nu vraagt de app het gewoon. OK maakt er een herziene offerte van, met de volgende versie, offertedatum vandaag en geldig-tot opnieuw dertig dagen; Annuleren houdt versie en datum zoals ze staan. Versie 1 blijft zonder V-aanduiding, dus een geteste maar nooit verzonden offerte gaat onder het kale offertenummer de deur uit. Geen SQL en geen Edge Function.</p>
@@ -2407,6 +2408,7 @@
         <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span>
         <button class="btn-secondary btn lock-allowed" onclick="openYoobiZoek()" title="Zoek een klant in Yoobi en vul de klantgegevens automatisch in">🔍 Klant uit Yoobi</button>
         <button id="craftKnop" class="btn-secondary btn lock-allowed" onclick="craftNaarCraft()" title="Stuur de werkvoorbereiding (titel, adres en de drie tekstblokken) naar het verse Craft-document">🏗️ Naar Craft</button>
+        <button class="btn-secondary btn lock-allowed" onclick="controleerCalc()" title="Loop de calculatie en offerte na op aandachtspunten voordat de offerte de deur uit gaat">📋 Controleer</button>
         <button class="btn-secondary btn lock-allowed" onclick="openArchiveerModal()" title="Genereer 1 of meerdere PDFs voor in de projectmap (calculatie, meetstaat, offerte, werkbon, onderhoudsplan)">💾 Archiveren</button>
         <button class="btn-secondary btn lock-allowed" onclick="newCalc()">+ Nieuwe</button>
       </div>
@@ -2772,6 +2774,14 @@
   <div class="modal">
     <div class="modal-head"><h3>Voorbeeld offerteteksten</h3><button class="close-x" onclick="closeOffertePreview()">✕</button></div>
     <div class="modal-body" id="offPreviewBody"></div>
+  </div>
+</div>
+
+<!-- CONTROLEER-MODAL (v4.16.0) — aandachtspunten laag 1, geen goedkeuring -->
+<div class="modal-overlay" id="controleModal" onclick="if (event.target === this) closeControleModal()">
+  <div class="modal">
+    <div class="modal-head"><h3>📋 Controle van calculatie en offerte</h3><button class="close-x" onclick="closeControleModal()">✕</button></div>
+    <div class="modal-body" id="controleBody"></div>
   </div>
 </div>
 
@@ -3318,7 +3328,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.15.0';
+const APP_VERSION = 'v4.16.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3714,6 +3724,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.16.0', d: '2026-07-04', h: 'Knop Controleer (laag 1) plus geldig-tot-norm per klanttype. Nieuwe knop in de panel-actions van de Calculatie-tab (lock-allowed) opent controleModal; _controleerVerzamel loopt dertien harde controles na en levert meldingen in drie zwaartes (blokkerend, controleer, ter overweging): klantnaam en werkadres via _offWerkadresEffectief plus postcodeformaat en briefhoofd-adres bij zakelijk/VvE, klanttype-heuristiek op de klantnaam (VvE/BV/NV/stichting), contactpersoon-velden en aanspreekvorm, e-mailadres, offerteNummerVrij als Yoobi-verkoopnummer (zes cijfers), geldigheid tegen de norm en verstreken geldig-tot, prijsweergave regels zonder hoeveelheden, regels met lege of kale systeemnaam, alle stappercentages op 100, lege staart, houtrot-sectie tegen systeemLocatie buiten/binnen, fotobeschrijvingen (zwaarte volgt bijlageFotos) en de betalingsvariant tegen de std-vlaggen uit v3.87.0. Vangnet als geen enkele regel een hoeveelheid heeft. Nul meldingen geeft bewust geen goedkeuring maar de opdracht de teksten zelf na te lezen; laag 2 (leescontrole via Edge Function) volgt apart. Nieuwe helper _offGeldigDagenNorm (consument 14, zakelijk 30, vve 180) stuurt de default in _offCfg, _offCfgDatum, de nieuwe klanttype-handler _offCfgKlanttype (zet geldig-tot mee bij een typewissel) en de herziene-offerte-flow in _accordNieuweLink inclusief de confirmtekst. Geen SQL' },
   { v: '4.15.0', d: '2026-07-04', h: 'Vraagbaak-gebruik in Instellingen. Nieuw settings-blok Vraagbaak onderaan de Instellingen-tab: tellers voor deze maand en totaal (aantal vragen en kosten) plus de laatste twintig vragen met uitklapbaar antwoord (volledige vraag, gebruiker en antwoord). Twee _sbQuery-calls rechtstreeks op app_help_log: slim (aangemaakt_op, kosten_eur, aflopend, servermax 1000 rijen met eerlijk "laatste 1000"-label bij de kaap) voor de tellers en de laatste 20 volledige rijen voor de lijst. Lazy geladen via de nav-handler bij het openen van Instellingen (vraagbaakLogLaden, eenmalig per sessie, Ververs-knop forceert herladen), alles ontsmet met _escapeHtml, bedragen via eur(), mailnaam voor de @ in de rij en het volledige adres in de uitklap. Geen SQL en geen Edge Function; de leesrechten op app_help_log bestonden al sinds Blok 1.' },
   { v: '4.14.4', d: '2026-07-04', h: 'Fix: losraken van het foto-onderschrift in de pdfmake-fotobijlage. Elke fotorij in _bouwOfferteCompleetDocDef is een columns-node met per cel een stack (image, status, opmerking, gebrekenlijst); pdfmake mocht binnen die node afbreken, waardoor bij een rij onderaan de pagina de foto\u2019s bleven staan en de tekst naar de volgende pagina liep. De rij-node heeft nu unbreakable: true, dus een niet-passende rij verhuist compleet. Raakt de knop Offerte + bijlagen, het bevroren accord-document en de archiveerreeks; de losse HTML-fotobijlage (fb-table met page-break-inside: avoid per tr) was al beschermd. Geen SQL' },
   { v: '4.14.3', d: '2026-07-04', h: 'Versie-ophoging bij nieuwe accordeerlink is een bevestigingsvraag geworden. _accordNieuweLink hoogde offerteVersie onvoorwaardelijk op zodra een eerdere accordering gereageerd_op, status akkoord/afgekeurd of vragen had (v3.91.0); eigen testreacties telden mee, waardoor het versieveld uit v4.14.0 bij elke nieuwe link werd overschreven. Nu bij gedetecteerde reacties een confirm met beide gevolgen benoemd: OK doet exact het oude gedrag (versie +1, offertedatum vandaag, geldigTot +30 dagen, opslaan in offerte_config), Annuleren laat versie, datum en geldig-tot ongemoeid. Zonder eerdere reacties geen vraag, zoals voorheen. Geen SQL' },
@@ -4753,7 +4764,7 @@ function _offCfg() {
   const cfg = c.offerteConfig;
   if (cfg.klanttype !== 'zakelijk' && cfg.klanttype !== 'vve') cfg.klanttype = 'consument';
   if (!cfg.offertedatum) cfg.offertedatum = _offIsoVandaag();
-  if (!cfg.geldigTot) cfg.geldigTot = _offIsoPlusDagen(cfg.offertedatum, 30);
+  if (!cfg.geldigTot) cfg.geldigTot = _offIsoPlusDagen(cfg.offertedatum, _offGeldigDagenNorm(cfg.klanttype));
   if (cfg.garantiejaren == null) cfg.garantiejaren = '';
   if (typeof cfg.aanspreekvorm !== 'string') cfg.aanspreekvorm = '';
   if (!cfg.adres || typeof cfg.adres !== 'object') cfg.adres = {};
@@ -4810,6 +4821,211 @@ function _offStandaardVariantId(sectieCode, klanttype) {
   const gekozen = vars.find(v => v[veld]);
   return (gekozen || vars[0]).id;
 }
+
+// ============================================================
+// CONTROLEER (v4.16.0) — laag 1: harde controles op calculatie
+// en offerte vóór de offerte de deur uit gaat. Uitkomst zijn
+// aandachtspunten in drie zwaartes (blokkerend, controleer,
+// ter overweging), nadrukkelijk geen goedkeuring. Laag 2, de
+// leescontrole van de teksten via een Edge Function, volgt apart.
+// ============================================================
+function _ctlRegelLoop(c, fn) {
+  (c.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => fn(r, hg, od))));
+}
+function _ctlDagenTussen(isoA, isoB) {
+  if (!isoA || !isoB) return null;
+  const a = new Date(String(isoA).slice(0, 10) + 'T00:00:00');
+  const b = new Date(String(isoB).slice(0, 10) + 'T00:00:00');
+  if (isNaN(a.getTime()) || isNaN(b.getTime())) return null;
+  return Math.round((b - a) / 86400000);
+}
+function _controleerVerzamel() {
+  const c = data.calc;
+  const cfg = _offCfg();
+  if (!c || !cfg) return [];
+  const m = [];
+  const blok = (t) => m.push({ n: 0, t });
+  const check = (t) => m.push({ n: 1, t });
+  const overweeg = (t) => m.push({ n: 2, t });
+
+  // Vangnet: is er überhaupt iets gecalculeerd?
+  let regelsMetHoeveelheid = 0;
+  _ctlRegelLoop(c, r => { if ((parseFloat(r.hoeveelheid) || 0) > 0) regelsMetHoeveelheid++; });
+  if (!regelsMetHoeveelheid) blok('Er is niets gecalculeerd: geen enkele regel heeft een hoeveelheid.');
+
+  // 1. Klantnaam en werkadres (blokkerend), postcodeformaat en briefhoofd (controleer)
+  if (!(c.klant || '').trim()) blok('De klantnaam is leeg.');
+  const wa = _offWerkadresEffectief(c, cfg);
+  const ontbreekt = [];
+  if (!(wa.straat || '').trim()) ontbreekt.push('straat');
+  if (!(wa.huisnummer || '').trim()) ontbreekt.push('huisnummer');
+  if (!(wa.postcode || '').trim()) ontbreekt.push('postcode');
+  if (!(wa.woonplaats || '').trim()) ontbreekt.push('woonplaats');
+  if (ontbreekt.length) blok('Het werkadres is onvolledig: ' + ontbreekt.join(', ') + ' ontbreekt.');
+  else if (!/^\d{4}\s?[A-Za-z]{2}$/.test((wa.postcode || '').trim())) check('De postcode van het werkadres (' + wa.postcode + ') heeft niet de vorm 1234 AB.');
+  if (cfg.klanttype === 'zakelijk' || cfg.klanttype === 'vve') {
+    const ba = (cfg.adres && typeof cfg.adres === 'object') ? cfg.adres : {};
+    const bOntbreekt = [];
+    if (!(ba.straat || '').trim()) bOntbreekt.push('straat');
+    if (!(ba.huisnummer || '').trim()) bOntbreekt.push('huisnummer');
+    if (!(ba.postcode || '').trim()) bOntbreekt.push('postcode');
+    if (!(ba.woonplaats || '').trim()) bOntbreekt.push('woonplaats');
+    if (bOntbreekt.length) check('Het briefhoofd-adres is onvolledig: ' + bOntbreekt.join(', ') + ' ontbreekt.');
+  }
+
+  // 2. Klanttype-heuristiek op de klantnaam
+  const kn = (c.klant || '');
+  if (/\bvve\b|\bv\.v\.e\b|vereniging van eigena/i.test(kn) && cfg.klanttype !== 'vve') {
+    check('De klantnaam lijkt een VvE maar het klanttype staat op ' + _offKlanttypeLabel(cfg.klanttype) + '.');
+  } else if (/\bbv\b|\bb\.v\b|\bnv\b|\bn\.v\b|stichting|holding|gmbh/i.test(kn) && cfg.klanttype === 'consument') {
+    check('De klantnaam lijkt zakelijk maar het klanttype staat op Particulier.');
+  }
+
+  // 3. Contactpersoon en aanspreekvorm
+  const cp = (cfg.contactpersoon && typeof cfg.contactpersoon === 'object') ? cfg.contactpersoon : {};
+  const cpAchter = (cp.achternaam || '').trim();
+  const cpVoor = (cp.voorletters || '').trim();
+  if (cpAchter && !cpVoor) check('De contactpersoon heeft een achternaam maar geen voorletters.');
+  if (cpVoor && !cpAchter) check('De contactpersoon heeft voorletters maar geen achternaam.');
+  if ((cfg.klanttype === 'zakelijk' || cfg.klanttype === 'vve') && !cpAchter) {
+    overweeg('Geen contactpersoon ingevuld; de aanhef wordt de organisatienaam.');
+  }
+  if (cfg.klanttype === 'consument' && !(cfg.aanspreekvorm || '').trim()) {
+    overweeg('Geen aanspreekvorm gekozen; de aanhef wordt de kale klantnaam.');
+  }
+
+  // 4. E-mailadres
+  const em = (cfg.email || '').trim();
+  if (!em) blok('Het e-mailadres van de klant ontbreekt; de offerte kan niet gemaild worden.');
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) check('Het e-mailadres (' + em + ') ziet er niet geldig uit.');
+
+  // 5. Offertenummer volgens Yoobi-verkoop
+  const nrVrij = (cfg.offerteNummerVrij || '').trim();
+  if (!nrVrij) check('Het offertenummer is de automatische reeks (' + _offerteAutoNummer(c) + '); er is geen Yoobi-verkoopnummer ingevuld.');
+  else if (!/^\d{6}$/.test(nrVrij)) overweeg('Het offertenummer "' + nrVrij + '" heeft niet de vorm van een Yoobi-verkoopnummer (zes cijfers).');
+
+  // 6. Geldigheid passend bij het klanttype
+  const vandaag = _offIsoVandaag();
+  if (cfg.geldigTot && cfg.geldigTot < vandaag) {
+    blok('De geldig-tot-datum (' + _offDatumLang(cfg.geldigTot) + ') is al verstreken.');
+  }
+  const dagen = _ctlDagenTussen(cfg.offertedatum, cfg.geldigTot);
+  const norm = _offGeldigDagenNorm(cfg.klanttype);
+  if (dagen != null && dagen !== norm) {
+    check('De geldigheid is ' + dagen + ' dagen; de norm voor ' + _offKlanttypeLabel(cfg.klanttype) + ' is ' + norm + ' dagen.');
+  }
+
+  // 7. Prijsweergave: regels zonder hoeveelheden en eenheidsprijzen
+  if (cfg.prijsWeergave !== 'regels') {
+    check('De prijsweergave staat op "Per onderdeel"; de norm is "Regels" zonder hoeveelheden en eenheidsprijzen.');
+  } else if (cfg.prijsRegelsHoeveelheden !== false) {
+    check('De prijsweergave toont hoeveelheden en eenheidsprijzen; de norm is regels zonder die kolommen.');
+  }
+
+  // 8. Regels benaamd: geen lege naam of kale systeemnaam op de offerte
+  const kaal = [];
+  _ctlRegelLoop(c, (r, hg, od) => {
+    if ((parseFloat(r.hoeveelheid) || 0) <= 0) return;
+    const naam = (r.naam || '').trim();
+    const sys = (r.systeemNaam || '').trim();
+    if (!naam || naam.toLowerCase() === sys.toLowerCase()) {
+      kaal.push((hg.naam || '?') + ' · ' + (od.naam || '?') + ' · ' + (naam || sys || 'zonder naam'));
+    }
+  });
+  if (kaal.length) {
+    const toon = kaal.slice(0, 5).join('; ') + (kaal.length > 5 ? ' en nog ' + (kaal.length - 5) : '');
+    check(kaal.length + (kaal.length === 1 ? ' regel draagt' : ' regels dragen') + ' de kale systeemnaam of geen naam: ' + toon + '.');
+  }
+
+  // 9. Percentages: staat alles op 100?
+  let stappenTotaal = 0, stappenAfwijkend = 0;
+  _ctlRegelLoop(c, r => {
+    if ((parseFloat(r.hoeveelheid) || 0) <= 0) return;
+    (r.stappen || []).forEach(st => {
+      stappenTotaal++;
+      if ((st.percentage != null ? st.percentage : 100) !== 100) stappenAfwijkend++;
+    });
+  });
+  if (stappenTotaal > 0 && stappenAfwijkend === 0) {
+    overweeg('Alle bewerkingsstappen staan op 100%; is nergens een lager percentage van toepassing?');
+  }
+
+  // 10. Toeslagen in de staart
+  if (!(c.staart || []).length) {
+    overweeg('De staart is leeg: geen klimtoeslag, kleinschaligheid of andere toeslagen gekozen.');
+  }
+
+  // 11. Houtrot-opmerking passend bij binnen- of buitenwerk
+  let heeftBuiten = false, heeftBeide = false, heeftLocatie = false;
+  _ctlRegelLoop(c, r => {
+    if ((parseFloat(r.hoeveelheid) || 0) <= 0) return;
+    heeftLocatie = true;
+    if (r.systeemLocatie === 'buiten') heeftBuiten = true;
+    if (r.systeemLocatie === 'beide' || !r.systeemLocatie) heeftBeide = true;
+  });
+  const houtrotAan = !!(cfg.secties && cfg.secties.houtrot && cfg.secties.houtrot.aan);
+  if (heeftBuiten && !houtrotAan) check('Er is buitenwerk gecalculeerd maar de houtrot-opmerking staat uit.');
+  if (heeftLocatie && !heeftBuiten && !heeftBeide && houtrotAan) overweeg('Alleen binnenwerk gecalculeerd maar de houtrot-opmerking staat aan.');
+
+  // 12. Fotobeschrijvingen
+  const fotos = c.fotos || [];
+  const zonder = fotos.filter(f => !(f.opmerking || '').trim()).length;
+  if (zonder > 0) {
+    const t = zonder + ' van de ' + fotos.length + ' foto\'s ' + (zonder === 1 ? 'heeft' : 'hebben') + ' geen beschrijving.';
+    if (cfg.bijlageFotos) check(t); else overweeg(t + ' De fotobijlage staat overigens uit.');
+  }
+
+  // 13. Betalingstekst hoort bij het klanttype (de blokkeuze; de inhoud is laag 2)
+  const bet = cfg.secties && cfg.secties.betaling;
+  const stdVeld = (cfg.klanttype === 'vve') ? 'std_vve' : (cfg.klanttype === 'zakelijk') ? 'std_zakelijk' : 'std_consument';
+  if (!bet || !bet.aan) {
+    check('De sectie Betaling staat uit.');
+  } else {
+    const b0 = (bet.blokken || [])[0] || {};
+    if (b0.tekst != null && b0.tekst !== '') {
+      overweeg('De betalingstekst is eigen tekst; of de inhoud bij het klanttype past is leeswerk (laag 2).');
+    } else if (b0.variantId) {
+      const gekozenVar = (data.offerteTeksten || []).find(t => t.id === b0.variantId);
+      const stdVar = (data.offerteTeksten || []).find(t => t.sectie === 'betaling' && t[stdVeld]);
+      if (gekozenVar && !gekozenVar[stdVeld] && stdVar) {
+        check('De gekozen betalingstekst "' + gekozenVar.naam + '" is niet de standaard voor ' + _offKlanttypeLabel(cfg.klanttype) + '; standaard is "' + stdVar.naam + '".');
+      } else if (gekozenVar && !gekozenVar[stdVeld] && (gekozenVar.std_consument || gekozenVar.std_vve || gekozenVar.std_zakelijk)) {
+        check('De gekozen betalingstekst "' + gekozenVar.naam + '" staat als standaard voor een ander klanttype.');
+      }
+    } else {
+      check('De sectie Betaling staat aan maar heeft geen tekst gekozen.');
+    }
+  }
+
+  return m;
+}
+function controleerCalc() {
+  if (!data.calc) { _toast('Open eerst een calculatie.'); return; }
+  const meldingen = _controleerVerzamel();
+  const body = document.getElementById('controleBody');
+  if (!body) return;
+  const groepen = [
+    { n: 0, kop: 'Blokkerend', kleur: '#dc2626', uitleg: 'hiermee kan de offerte niet de deur uit' },
+    { n: 1, kop: 'Controleer', kleur: '#d97706', uitleg: 'waarschijnlijk niet in orde, kijk het na' },
+    { n: 2, kop: 'Ter overweging', kleur: '#6b7280', uitleg: 'kan kloppen, maar sta er even bij stil' }
+  ];
+  let html = '<div style="font-size:0.8rem; color:var(--muted); margin-bottom:0.7rem;">Aandachtspunten uit de harde controles (laag 1). Dit is nadrukkelijk geen goedkeuring; de leescontrole van de teksten (laag 2) volgt later.</div>';
+  if (!meldingen.length) {
+    html += '<div style="border:1px solid var(--paper-deep); border-radius:8px; padding:0.8rem; background:var(--paper); font-size:0.88rem;">Geen aandachtspunten uit de harde controles. Lees de klantgerichte teksten zelf nog na voordat de offerte de deur uit gaat.</div>';
+  } else {
+    groepen.forEach(g => {
+      const items = meldingen.filter(x => x.n === g.n);
+      if (!items.length) return;
+      html += '<div style="margin-bottom:0.8rem;">'
+        + '<div style="font-weight:700; color:' + g.kleur + '; font-size:0.85rem; margin-bottom:0.2rem;">' + g.kop + ' (' + items.length + ') <span style="font-weight:400; color:var(--muted); font-size:0.75rem;">· ' + g.uitleg + '</span></div>'
+        + items.map(x => '<div style="border-left:3px solid ' + g.kleur + '; padding:0.3rem 0.55rem; margin-bottom:0.25rem; background:var(--paper); border-radius:0 6px 6px 0; font-size:0.85rem;">' + _escapeHtml(x.t) + '</div>').join('')
+        + '</div>';
+    });
+  }
+  body.innerHTML = html;
+  document.getElementById('controleModal').classList.add('active');
+}
+function closeControleModal() { document.getElementById('controleModal').classList.remove('active'); }
 
 // Gerichte, gedebouncede opslag van alleen offerte_config.
 let _offCfgSaveTimer = null;
@@ -4920,7 +5136,7 @@ function renderOfferteBlok() {
     let ka = `<div class="kblok-kop">Klant en adres</div><div class="kblok"><div class="kgrid">
       <div><label>Klant</label><input type="text" id="calcKlant" value="${_offEsc(c.klant || '')}"></div>
       <div><label>Klanttype</label>
-        <select onchange="_offCfgVeld('klanttype', this.value); renderOfferteBlok();">
+        <select onchange="_offCfgKlanttype(this.value)">
           <option value="consument" ${cfg.klanttype === 'consument' ? 'selected' : ''}>Particulier</option>
           <option value="vve" ${cfg.klanttype === 'vve' ? 'selected' : ''}>VVE</option>
           <option value="zakelijk" ${cfg.klanttype === 'zakelijk' ? 'selected' : ''}>Zakelijk</option>
@@ -5799,10 +6015,26 @@ async function _offWerkadresZoek() {
     renderOfferteBlok();
   } catch (e) { set('Opzoeken mislukt: ' + (e.message || e)); }
 }
+// v4.16.0 — geldigheidsnorm per klanttype: consument 14, zakelijk 30, VvE 180 dagen.
+// De VvE-termijn is lang omdat het besluit via de ALV loopt.
+function _offGeldigDagenNorm(klanttype) {
+  if (klanttype === 'vve') return 180;
+  if (klanttype === 'zakelijk') return 30;
+  return 14;
+}
 function _offCfgDatum(iso) {
   const cfg = _offCfg(); if (!cfg) return;
   cfg.offertedatum = iso || _offIsoVandaag();
-  cfg.geldigTot = _offIsoPlusDagen(cfg.offertedatum, 30);
+  cfg.geldigTot = _offIsoPlusDagen(cfg.offertedatum, _offGeldigDagenNorm(cfg.klanttype));
+  _offCfgSave();
+  renderOfferteBlok();
+}
+// v4.16.0 — klanttype wisselen zet geldig-tot mee op de norm van het nieuwe type,
+// gerekend vanaf de offertedatum. Handmatig bijstellen kan daarna gewoon.
+function _offCfgKlanttype(waarde) {
+  const cfg = _offCfg(); if (!cfg) return;
+  cfg.klanttype = (waarde === 'zakelijk' || waarde === 'vve') ? waarde : 'consument';
+  cfg.geldigTot = _offIsoPlusDagen(cfg.offertedatum, _offGeldigDagenNorm(cfg.klanttype));
   _offCfgSave();
   renderOfferteBlok();
 }
@@ -19028,16 +19260,17 @@ async function _accordNieuweLink(c, body, supersede) {
       // anders altijd een hogere versie af, ook als de klant nooit iets ontving;
       // het versieveld uit v4.14.0 werd daardoor bij elke nieuwe link overschreven.
       const _huidig = parseInt(_cfgH.offerteVersie, 10) || 1;
+      const _dagenH = _offGeldigDagenNorm(_cfgH.klanttype); // v4.16.0 — norm per klanttype
       const _ophogen = confirm(
         'Op een eerdere accordeerlink van deze offerte is gereageerd.\n\n' +
         'Is deze nieuwe link een herziene offerte?\n\n' +
-        'OK = versie ophogen naar V' + (_huidig + 1) + ', offertedatum vandaag, geldig-tot +30 dagen.\n' +
+        'OK = versie ophogen naar V' + (_huidig + 1) + ', offertedatum vandaag, geldig-tot +' + _dagenH + ' dagen.\n' +
         'Annuleren = versie ' + _huidig + ' houden' + (_huidig === 1 ? ' (offertenummer zonder V-aanduiding)' : '') + ', datum ongewijzigd.'
       );
       if (_ophogen) {
         _cfgH.offerteVersie = _huidig + 1;
         _cfgH.offertedatum = _offIsoVandaag();
-        _cfgH.geldigTot = _offIsoPlusDagen(_cfgH.offertedatum, 30);
+        _cfgH.geldigTot = _offIsoPlusDagen(_cfgH.offertedatum, _dagenH);
         try { await _sb.from('calculaties').update({ offerte_config: _cfgH }).eq('id', c.id); } catch (e2) {}
       }
     }

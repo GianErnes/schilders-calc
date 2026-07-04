@@ -1,3 +1,13 @@
+## v4.16.0 — Knop Controleer: de offerte nalopen voor hij de deur uit gaat
+De controlelijst voor een offerte zat alleen in het hoofd: klantgegevens, offertenummer, geldigheid, prijsweergave, benaming van de regels, toeslagen, houtrot, fotobeschrijvingen en de betalingstekst werden op het oog nagelopen en daar glipte weleens wat doorheen.
+
+### Wat er verandert
+- In de knoppenbalk van de Calculatie-tab staat de knop Controleer, ook bruikbaar op een vergrendelde calculatie. Die voert dertien harde controles uit en toont de uitkomst in een venster met aandachtspunten in drie zwaartes: blokkerend (hiermee kan de offerte niet de deur uit), controleer (waarschijnlijk niet in orde) en ter overweging (kan kloppen, maar sta er even bij stil).
+- Gecontroleerd worden: klantnaam en werkadres compleet plus postcodeformaat, briefhoofd-adres bij zakelijk en VvE, klanttype passend bij de klantnaam, contactpersoon en aanspreekvorm, e-mailadres, Yoobi-offertenummer ingevuld, geldigheid passend bij het klanttype, prijsweergave op regels zonder hoeveelheden en eenheidsprijzen, regels benaamd in plaats van de kale systeemnaam, percentages niet allemaal op 100, toeslagen in de staart, de houtrot-opmerking passend bij binnen- of buitenwerk, fotobeschrijvingen en de betalingstekst als standaardvariant voor het klanttype. Plus een vangnet als er helemaal niets gecalculeerd is.
+- Nadrukkelijk geen goedkeuring: ook bij nul meldingen vraagt de app je de klantgerichte teksten zelf na te lezen. De leescontrole van die teksten (laag 2, via een Edge Function volgens het vraagbaak-patroon) volgt in een aparte release.
+- De standaard geldig-tot volgt nu het klanttype: particulier 14 dagen, zakelijk 30 en VvE 180, die laatste vanwege het ALV-traject. Bij het wisselen van klanttype schuift de datum mee en ook een herziene offerte via de accordeerlink rekent met deze norm. Handmatig bijstellen blijft gewoon mogelijk.
+- Alleen app-bestanden. Geen SQL en geen Edge Function.
+
 ## v4.15.0 — Vraagbaak-gebruik zichtbaar in Instellingen
 Er was geen zicht op wat er aan de vraagbaak gevraagd werd en wat dat kostte; kijken kon alleen met een query in Supabase Studio.
 
