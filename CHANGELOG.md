@@ -1,3 +1,14 @@
+## v4.18.0 — Controle als zijpaneel: lezen en meteen corrigeren
+De controle-uitslag stond in een venster dat de app blokkeerde: lezen of corrigeren, niet allebei. En de leescontrole meldde dezelfde onderliggende oorzaak onder meerdere leespunten, vier keer hetzelfde verhaal in andere woorden.
+
+### Wat er verandert
+- De controle opent nu als zijpaneel rechts; de app schuift mee naar links en blijft volledig bedienbaar. Je loopt het lijstje af en corrigeert direct in de calculatie, de offerteteksten of de fotobeschrijvingen, ook als je daarvoor binnen de app naar een andere tab gaat. Op een smal scherm vult het paneel het hele scherm.
+- Meldingen zijn afvinkbaar: aantikken streept door en dimt, bovenin telt een regel x van y afgevinkt mee. Alleen voor de sessie, er wordt niets opgeslagen.
+- De knop Ververs draait de harde controles (laag 1) gratis opnieuw op de actuele stand, direct na je correcties. De leescontrole-uitslag eronder blijft gewoon staan; afgevinkte laag 1-meldingen beginnen bewust weer blanco.
+- De betaalde leescontrole-uitslag overleeft het sluiten en heropenen van het paneel bij dezelfde calculatie, inclusief de vinkjes.
+- Bundelregel in de Edge Function: raakt dezelfde onderliggende oorzaak meerdere leespunten (zoals werk dat wel in de teksten staat maar niet in de calculatie), dan wordt dat precies één melding onder het best passende punt in plaats van vier herhalingen.
+- Herdeploy van de Edge Function offerte-leescontrole nodig. Geen SQL.
+
 ## v4.17.0 — Leescontrole: Claude leest de offerte na (laag 2)
 De harde controles van laag 1 vangen de aantoonbare punten, maar wat er echt in de klantgerichte teksten staat bleef leeswerk voor eigen ogen. Op een lange dag glipt daar weleens een kromme zin, een vergeten onderdeel of een los invulveld doorheen.
 

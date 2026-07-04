@@ -1353,6 +1353,31 @@
     padding: 1rem;
   }
   .modal-overlay.active { display: flex; }
+
+  /* Controlepaneel (v4.18.0): zijpaneel rechts dat de app-inhoud naar links duwt */
+  #controlePaneel {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 420px; max-width: 100vw;
+    background: var(--paper); border-left: 1px solid var(--paper-deep);
+    box-shadow: -6px 0 18px rgba(0,0,0,0.08);
+    z-index: 90; display: none; flex-direction: column;
+  }
+  #controlePaneel.active { display: flex; }
+  #controlePaneel .paneel-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+    padding: 0.75rem 1rem; border-bottom: 1px solid var(--paper-deep);
+  }
+  #controlePaneel .paneel-head h3 { margin: 0; font-size: 1rem; }
+  #controlePaneel .paneel-body { flex: 1; overflow-y: auto; padding: 0.9rem 1rem; }
+  body.controle-open { padding-right: 420px; }
+  body.controle-open #vraagbaakTab { right: 420px; }
+  .ctl-item { cursor: pointer; }
+  .ctl-item.ctl-af { opacity: 0.42; text-decoration: line-through; }
+  @media (max-width: 900px) {
+    body.controle-open { padding-right: 0; }
+    body.controle-open #vraagbaakTab { right: 0; }
+    #controlePaneel { width: 100vw; }
+  }
   .modal {
     background: var(--paper);
     border-radius: var(--radius-lg);
@@ -1748,7 +1773,7 @@
 
   @media print {
     /* Hide everything except print area */
-    body > header, body > nav, body > main, body > footer, body > .modal-overlay { display: none !important; }
+    body > header, body > nav, body > main, body > footer, body > .modal-overlay, body > #controlePaneel { display: none !important; }
     body { background: #fff !important; padding: 0; margin: 0; }
     .print-only { display: block !important; }
     .brand-logo, .brand-logo.print { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
@@ -2136,8 +2161,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.17.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.18.0</h2>
       <div class="intro-body">
+        <p><strong>📌 Controle als zijpaneel: lezen en meteen corrigeren (v4.18.0).</strong> De controle-uitslag zit niet langer in een venster dat de app blokkeert maar in een zijpaneel rechts; de app schuift mee naar links en blijft volledig bedienbaar, ook als je binnen de app naar een andere tab gaat. Tik een melding aan om hem af te vinken (doorgestreept en gedimd, met een teller bovenin; alleen voor deze sessie, er wordt niets opgeslagen). De knop Ververs draait de harde controles gratis opnieuw na je correcties; de leescontrole-uitslag blijft daarbij staan en overleeft ook het sluiten en heropenen van het paneel bij dezelfde calculatie. In de Edge Function zit nu een bundelregel: één onderliggende oorzaak levert één melding op onder het best passende punt in plaats van dezelfde constatering onder meerdere punten. Herdeploy van offerte-leescontrole nodig; geen SQL.</p>
         <p><strong>🔎 Leescontrole: Claude leest de offerte na (v4.17.0).</strong> Open de knop Controleer en onder de harde controles staat nu het blok Leescontrole. Eén druk en Claude leest de klantgerichte teksten na op zes punten: past de projectnaam bij het werk, is de klantwens goed omschreven, sluiten de offerteteksten aan op wat er gecalculeerd is, dekken de beschrijvingen alle ondergronden, kloppen de fotobeschrijvingen inhoudelijk en zijn spelling en zinsopbouw in orde. Een invulveld dat nog los tussen accolades in de tekst staat wordt altijd gemeld. De uitkomst verschijnt als aandachtspunten in de bekende zwaartes controleer en ter overweging, nooit als goedkeuring: jij blijft de eindlezer. Elke beurt kost enkele centen en komt met tokens en kosten in het nieuwe log offerte_controle_log. Vereist eenmalig de nieuwe Edge Function offerte-leescontrole; de SQL-migratie is al gedraaid.</p>
         <p><strong>📋 Knop Controleer: de offerte nalopen voor hij de deur uit gaat (v4.16.0).</strong> In de knoppenbalk van de calculatie staat nu de knop Controleer, ook bruikbaar op een vergrendelde calculatie. Die loopt in één keer de harde punten van de controlelijst na: klantnaam en werkadres compleet, klanttype passend bij de naam, contactpersoon en aanspreekvorm, e-mailadres aanwezig, Yoobi-offertenummer ingevuld, geldigheid passend bij het klanttype, prijsweergave op regels zonder hoeveelheden en eenheidsprijzen, regels benaamd in plaats van de kale systeemnaam, percentages, toeslagen in de staart, de houtrot-opmerking passend bij binnen- of buitenwerk, fotobeschrijvingen en de betalingstekst bij het juiste klanttype. De uitkomst is een venster met aandachtspunten in drie zwaartes: blokkerend, controleer en ter overweging. Nadrukkelijk geen goedkeuring: ook bij nul meldingen vraagt de app je de klantgerichte teksten zelf na te lezen. De leescontrole van die teksten (laag 2) volgt in een aparte stap. Daarnaast volgt de standaard geldig-tot nu het klanttype: particulier 14 dagen, zakelijk 30 en VvE 180. Wissel je van klanttype, dan schuift de datum mee, en ook een herziene offerte via de accordeerlink rekent met deze norm. Geen SQL en geen Edge Function.</p>
         <p><strong>📊 Vraagbaak-gebruik zichtbaar in Instellingen (v4.15.0).</strong> Onderaan de Instellingen-tab staat een nieuw blok Vraagbaak. Bovenaan de tellers: het aantal vragen en de kosten van deze maand en het totaal, rechtstreeks uit het log. Daaronder de laatste twintig vragen met datum en wie hem stelde; tik op een vraag en het volledige antwoord klapt uit, handig om te zien wat er gevraagd wordt en of de vraagbaak het goed uitlegt. Het blok laadt pas bij het openen van de tab en heeft een Ververs-knop. Sinds de overstap op het slimmere Sonnet-model kost een vraag zo'n vier à vijf cent; de tellers rekenen met de werkelijke kosten uit het log. Geen SQL en geen Edge Function nodig.</p>
@@ -2779,12 +2805,16 @@
 </div>
 
 <!-- CONTROLEER-MODAL (v4.16.0) — aandachtspunten laag 1, geen goedkeuring -->
-<div class="modal-overlay" id="controleModal" onclick="if (event.target === this) closeControleModal()">
-  <div class="modal">
-    <div class="modal-head"><h3>📋 Controle van calculatie en offerte</h3><button class="close-x" onclick="closeControleModal()">✕</button></div>
-    <div class="modal-body" id="controleBody"></div>
+<aside id="controlePaneel" aria-label="Controle van calculatie en offerte">
+  <div class="paneel-head">
+    <div>
+      <h3>📋 Controle</h3>
+      <div id="ctlPaneelSub" style="font-size:0.72rem; color:var(--muted);"></div>
+    </div>
+    <button class="close-x" onclick="closeControlePaneel()">✕</button>
   </div>
-</div>
+  <div class="paneel-body" id="controleBody"></div>
+</aside>
 
 <div class="modal-overlay" id="yoobiModal" onclick="if (event.target === this) closeYoobiModal()">
   <div class="modal">
@@ -3329,7 +3359,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.17.0';
+const APP_VERSION = 'v4.18.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3725,6 +3755,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.18.0', d: '2026-07-04', h: 'Controlepaneel in plaats van modal plus bundelregel tegen dubbelingen. controleModal vervangen door aside #controlePaneel (position fixed rechts, 420px, z-index 90, paneel-head met de calcnaam in #ctlPaneelSub en paneel-body als #controleBody); body.controle-open zet padding-right 420px zodat header, sticky nav en main naar links schuiven en duwt #vraagbaakTab mee (right 420px); media max-width 900px valt terug op volle breedte zonder duwen en de printregel verbergt het paneel. controleerCalc bouwt nu alleen het skelet (teller #ctlTeller, container #ctlLaag1, ongewijzigd leescontroleblok) en delegeert naar _ctlRenderLaag1, die de dertien harde controles rendert met een Ververs-knop: gratis herdraaien op de actuele geheugentoestand, afvinkstatus van laag 1 reset daarbij bewust. Alle meldingen (laag 1 en laag 2) kregen class ctl-item met onclick _ctlToggle(this): klik streept door via .ctl-af en _ctlTellerUpdate telt x van y afgevinkt via querySelectorAll; niets wordt opgeslagen. closeControlePaneel bewaart de betaalde leescontrole-uitslag inclusief vinkjes in _lcLaatste { calcId, html } en controleerCalc zet die terug bij dezelfde calculatie. Edge Function offerte-leescontrole.ts: nieuwe spelregel die dezelfde onderliggende oorzaak bundelt tot precies één melding onder het best passende punt in plaats van herhalingen bij meerdere punten; herdeploy nodig. Geen SQL' },
   { v: '4.17.0', d: '2026-07-04', h: 'Leescontrole (laag 2) via de nieuwe Edge Function offerte-leescontrole. In controleerCalc staat onder de laag 1-uitkomst een blok Leescontrole met startknop en resultaatcontainer; _leescontroleVerzamel bouwt de compacte samenvatting: projectnaam, klant, klanttype via _offKlanttypeLabel, actieve regels (hoeveelheid > 0 en actief) met groep, onderdeel, naam, systeemNaam, systeemOndergrond, systeemLocatie en hoeveelheid plus eenheid, de staartnamen, per actieve tekstsectie de effectieve ingevulde tekst via _offBlokTekst plus _offVulVelden en de gevulde fotobeschrijvingen met nummer. _leescontroleStart POST naar OFFERTE_CONTROLE_FN_URL (zelfde tokenpatroon als de vraagbaak) met { calcId, calcNaam, samenvatting }; _leescontroleRender toont de meldingen in de zwaartes controleer en ter overweging met puntlabel uit LC_PUNT_LABELS en de kosten van de beurt via eur(). De functie (offerte-leescontrole.ts, apart gedeployed, Verify JWT uit, geen backticks): logincheck via /auth/v1/user, Nederlandse instructie met de zes leespunten 14 t/m 19 en JSON-only uitvoer, claude-sonnet-4-6 max_tokens 2000, sanering van de meldingen (zwaarte-whitelist, punt 14 t/m 19, cap 40, tekst max 600 tekens) en niet-blokkerend loggen naar offerte_controle_log met tokens en kosten_eur ($3/$15 per MTok, koers 0.87). Vereist de migratie offerte_controle_log (gedraaid) en eenmalig de nieuwe Edge Function' },
   { v: '4.16.0', d: '2026-07-04', h: 'Knop Controleer (laag 1) plus geldig-tot-norm per klanttype. Nieuwe knop in de panel-actions van de Calculatie-tab (lock-allowed) opent controleModal; _controleerVerzamel loopt dertien harde controles na en levert meldingen in drie zwaartes (blokkerend, controleer, ter overweging): klantnaam en werkadres via _offWerkadresEffectief plus postcodeformaat en briefhoofd-adres bij zakelijk/VvE, klanttype-heuristiek op de klantnaam (VvE/BV/NV/stichting), contactpersoon-velden en aanspreekvorm, e-mailadres, offerteNummerVrij als Yoobi-verkoopnummer (zes cijfers), geldigheid tegen de norm en verstreken geldig-tot, prijsweergave regels zonder hoeveelheden, regels met lege of kale systeemnaam, alle stappercentages op 100, lege staart, houtrot-sectie tegen systeemLocatie buiten/binnen, fotobeschrijvingen (zwaarte volgt bijlageFotos) en de betalingsvariant tegen de std-vlaggen uit v3.87.0. Vangnet als geen enkele regel een hoeveelheid heeft. Nul meldingen geeft bewust geen goedkeuring maar de opdracht de teksten zelf na te lezen; laag 2 (leescontrole via Edge Function) volgt apart. Nieuwe helper _offGeldigDagenNorm (consument 14, zakelijk 30, vve 180) stuurt de default in _offCfg, _offCfgDatum, de nieuwe klanttype-handler _offCfgKlanttype (zet geldig-tot mee bij een typewissel) en de herziene-offerte-flow in _accordNieuweLink inclusief de confirmtekst. Geen SQL' },
   { v: '4.15.0', d: '2026-07-04', h: 'Vraagbaak-gebruik in Instellingen. Nieuw settings-blok Vraagbaak onderaan de Instellingen-tab: tellers voor deze maand en totaal (aantal vragen en kosten) plus de laatste twintig vragen met uitklapbaar antwoord (volledige vraag, gebruiker en antwoord). Twee _sbQuery-calls rechtstreeks op app_help_log: slim (aangemaakt_op, kosten_eur, aflopend, servermax 1000 rijen met eerlijk "laatste 1000"-label bij de kaap) voor de tellers en de laatste 20 volledige rijen voor de lijst. Lazy geladen via de nav-handler bij het openen van Instellingen (vraagbaakLogLaden, eenmalig per sessie, Ververs-knop forceert herladen), alles ontsmet met _escapeHtml, bedragen via eur(), mailnaam voor de @ in de rij en het volledige adres in de uitklap. Geen SQL en geen Edge Function; de leesrechten op app_help_log bestonden al sinds Blok 1.' },
@@ -5003,15 +5034,51 @@ function _controleerVerzamel() {
 }
 function controleerCalc() {
   if (!data.calc) { _toast('Open eerst een calculatie.'); return; }
-  const meldingen = _controleerVerzamel();
   const body = document.getElementById('controleBody');
   if (!body) return;
+  body.innerHTML = '<div id="ctlTeller" style="font-size:0.72rem; color:var(--muted); margin-bottom:0.5rem;"></div>'
+    + '<div id="ctlLaag1"></div>'
+    + '<div style="border-top:1px solid var(--paper-deep); margin-top:0.9rem; padding-top:0.8rem;">'
+    + '<div style="font-weight:700; font-size:0.85rem; margin-bottom:0.2rem;">🔎 Leescontrole (laag 2)</div>'
+    + '<div style="font-size:0.8rem; color:var(--muted); margin-bottom:0.5rem;">Claude leest de klantgerichte teksten na: projectnaam, klantwens, aansluiting op de calculatie, ondergronden, fotobeschrijvingen en spelling en zinsopbouw. Kost enkele centen per beurt.</div>'
+    + '<button class="btn-secondary btn" id="leescontroleKnop" onclick="_leescontroleStart()">🔎 Leescontrole starten</button>'
+    + '<div id="leescontroleResultaat" style="margin-top:0.7rem;"></div>'
+    + '</div>';
+  _ctlRenderLaag1();
+  // Betaalde leescontrole-uitslag van dezelfde calculatie terugzetten na sluiten en heropenen
+  if (_lcLaatste && _lcLaatste.calcId === data.calc.id) {
+    const uit = document.getElementById('leescontroleResultaat');
+    if (uit) uit.innerHTML = _lcLaatste.html;
+  }
+  document.getElementById('controlePaneel').classList.add('active');
+  document.body.classList.add('controle-open');
+  _ctlTellerUpdate();
+}
+
+function closeControlePaneel() {
+  const uit = document.getElementById('leescontroleResultaat');
+  if (uit && uit.innerHTML && data.calc) _lcLaatste = { calcId: data.calc.id, html: uit.innerHTML };
+  document.getElementById('controlePaneel').classList.remove('active');
+  document.body.classList.remove('controle-open');
+}
+
+// Laag 1 (her)tekenen. Gratis en direct, dus vrij te verversen na correcties;
+// afgevinkte laag 1-meldingen beginnen dan bewust weer blanco.
+function _ctlRenderLaag1() {
+  const doel = document.getElementById('ctlLaag1');
+  if (!doel || !data.calc) return;
+  const sub = document.getElementById('ctlPaneelSub');
+  if (sub) sub.textContent = data.calc.naam || '';
+  const meldingen = _controleerVerzamel();
   const groepen = [
     { n: 0, kop: 'Blokkerend', kleur: '#dc2626', uitleg: 'hiermee kan de offerte niet de deur uit' },
     { n: 1, kop: 'Controleer', kleur: '#d97706', uitleg: 'waarschijnlijk niet in orde, kijk het na' },
     { n: 2, kop: 'Ter overweging', kleur: '#6b7280', uitleg: 'kan kloppen, maar sta er even bij stil' }
   ];
-  let html = '<div style="font-size:0.8rem; color:var(--muted); margin-bottom:0.7rem;">Aandachtspunten uit de harde controles (laag 1). Dit is nadrukkelijk geen goedkeuring; de leescontrole van de teksten staat eronder.</div>';
+  let html = '<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem; margin-bottom:0.5rem;">'
+    + '<div style="font-size:0.8rem; color:var(--muted);">Harde controles (laag 1). Geen goedkeuring. Tik een melding aan om hem af te vinken.</div>'
+    + '<button class="btn-secondary btn" onclick="_ctlRenderLaag1()" title="Draai de harde controles opnieuw na je correcties (gratis)">↻ Ververs</button>'
+    + '</div>';
   if (!meldingen.length) {
     html += '<div style="border:1px solid var(--paper-deep); border-radius:8px; padding:0.8rem; background:var(--paper); font-size:0.88rem;">Geen aandachtspunten uit de harde controles. Lees de klantgerichte teksten zelf nog na voordat de offerte de deur uit gaat.</div>';
   } else {
@@ -5020,20 +5087,24 @@ function controleerCalc() {
       if (!items.length) return;
       html += '<div style="margin-bottom:0.8rem;">'
         + '<div style="font-weight:700; color:' + g.kleur + '; font-size:0.85rem; margin-bottom:0.2rem;">' + g.kop + ' (' + items.length + ') <span style="font-weight:400; color:var(--muted); font-size:0.75rem;">· ' + g.uitleg + '</span></div>'
-        + items.map(x => '<div style="border-left:3px solid ' + g.kleur + '; padding:0.3rem 0.55rem; margin-bottom:0.25rem; background:var(--paper); border-radius:0 6px 6px 0; font-size:0.85rem;">' + _escapeHtml(x.t) + '</div>').join('')
+        + items.map(x => '<div class="ctl-item" onclick="_ctlToggle(this)" style="border-left:3px solid ' + g.kleur + '; padding:0.3rem 0.55rem; margin-bottom:0.25rem; background:var(--paper); border-radius:0 6px 6px 0; font-size:0.85rem;">' + _escapeHtml(x.t) + '</div>').join('')
         + '</div>';
     });
   }
-  html += '<div style="border-top:1px solid var(--paper-deep); margin-top:0.9rem; padding-top:0.8rem;">'
-    + '<div style="font-weight:700; font-size:0.85rem; margin-bottom:0.2rem;">🔎 Leescontrole (laag 2)</div>'
-    + '<div style="font-size:0.8rem; color:var(--muted); margin-bottom:0.5rem;">Claude leest de klantgerichte teksten na: projectnaam, klantwens, aansluiting op de calculatie, ondergronden, fotobeschrijvingen en spelling en zinsopbouw. Kost enkele centen per beurt.</div>'
-    + '<button class="btn-secondary btn" id="leescontroleKnop" onclick="_leescontroleStart()">🔎 Leescontrole starten</button>'
-    + '<div id="leescontroleResultaat" style="margin-top:0.7rem;"></div>'
-    + '</div>';
-  body.innerHTML = html;
-  document.getElementById('controleModal').classList.add('active');
+  doel.innerHTML = html;
+  _ctlTellerUpdate();
 }
-function closeControleModal() { document.getElementById('controleModal').classList.remove('active'); }
+
+// Afvinken: puur visueel en alleen voor deze sessie, niets wordt opgeslagen.
+function _ctlToggle(el) { el.classList.toggle('ctl-af'); _ctlTellerUpdate(); }
+
+function _ctlTellerUpdate() {
+  const t = document.getElementById('ctlTeller');
+  if (!t) return;
+  const alle = document.querySelectorAll('#controleBody .ctl-item');
+  const af = document.querySelectorAll('#controleBody .ctl-item.ctl-af');
+  t.textContent = alle.length ? (af.length + ' van ' + alle.length + ' afgevinkt') : '';
+}
 
 // ============================================================
 // LEESCONTROLE (v4.17.0) — laag 2: Claude leest de klantgerichte
@@ -5045,6 +5116,7 @@ function closeControleModal() { document.getElementById('controleModal').classLi
 const OFFERTE_CONTROLE_FN_URL = SUPABASE_URL + '/functions/v1/offerte-leescontrole';
 const LC_PUNT_LABELS = { 14: 'Projectnaam', 15: 'Klantwens', 16: 'Tekst vs calculatie', 17: 'Ondergronden', 18: 'Foto\'s', 19: 'Spelling' };
 let _leescontroleBezig = false;
+let _lcLaatste = null; // laatste betaalde leescontrole-uitslag: { calcId, html }, overleeft sluiten en heropenen van het paneel
 
 // Compacte samenvatting voor de leescontrole: wat de klant echt te
 // lezen krijgt (ingevulde teksten) naast wat er echt gecalculeerd is.
@@ -5146,7 +5218,7 @@ function _leescontroleRender(uit, antw) {
         + '<div style="font-weight:700; color:' + g.kleur + '; font-size:0.85rem; margin-bottom:0.2rem;">' + g.kop + ' (' + items.length + ') <span style="font-weight:400; color:var(--muted); font-size:0.75rem;">· ' + g.uitleg + '</span></div>'
         + items.map(x => {
             const label = LC_PUNT_LABELS[x.punt] ? '<span style="color:var(--muted); font-size:0.75rem;">' + LC_PUNT_LABELS[x.punt] + ' · </span>' : '';
-            return '<div style="border-left:3px solid ' + g.kleur + '; padding:0.3rem 0.55rem; margin-bottom:0.25rem; background:var(--paper); border-radius:0 6px 6px 0; font-size:0.85rem;">' + label + _escapeHtml(x.tekst || '') + '</div>';
+            return '<div class="ctl-item" onclick="_ctlToggle(this)" style="border-left:3px solid ' + g.kleur + '; padding:0.3rem 0.55rem; margin-bottom:0.25rem; background:var(--paper); border-radius:0 6px 6px 0; font-size:0.85rem;">' + label + _escapeHtml(x.tekst || '') + '</div>';
           }).join('')
         + '</div>';
     });
@@ -5154,6 +5226,7 @@ function _leescontroleRender(uit, antw) {
   const kosten = (typeof antw.kosten_eur === 'number') ? antw.kosten_eur : null;
   html += '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.3rem;">Aandachtspunten van de leescontrole, geen goedkeuring.' + (kosten != null ? ' Deze beurt kostte ' + eur(kosten) + '.' : '') + '</div>';
   uit.innerHTML = html;
+  _ctlTellerUpdate();
 }
 
 // Gerichte, gedebouncede opslag van alleen offerte_config.
