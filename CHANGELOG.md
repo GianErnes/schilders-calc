@@ -1,3 +1,14 @@
+## v4.19.0 — Geaccordeerde offerte in de archiveer-reeks
+Het getekende exemplaar, het enige document met de handtekening van de klant erop, zat niet in de archiveer-reeks. Het kwam dus niet standaard in de Yoobi-verkoop en de relatiemap terecht, terwijl juist dat bestand het bewijs is.
+
+### Wat er verandert
+- Het Archiveren-venster heeft een nieuwe regel direct onder het Offertedocument: Geaccordeerde offerte (getekend). Ligt er voor de calculatie een akkoord met bevroren PDF, dan is de optie beschikbaar; zonder akkoord blijft hij grijs met een toelichting, net als de andere niet-beschikbare opties.
+- Het vinkje staat alvast aan zodra er een akkoord ligt, want archiveren gebeurt in de praktijk vrijwel altijd ná een akkoord. De rest van het venster start leeg zoals sinds v3.69.1 de bedoeling is.
+- In de reeks gedraagt het getekende exemplaar zich als het offertedocument: direct opslaan in de Downloads-map en doorlopen naar het volgende document, geen printdialoog. Het is exact hetzelfde bestand als de knop Getekend exemplaar in het linkbeheer, met de GEACCORDEERD-stempels en de bevestigingspagina achteraan, onder dezelfde bestandsnaam.
+- Bij meerdere akkoorden pakt de reeks het nieuwste met een bevroren PDF.
+- Bijvangst: de statusbalk van de reeks noemde het offertedocument nog "Offerte (Yoobi)" en had geen label voor de Yoobi-export; beide labels kloppen nu.
+- Geen SQL en geen Edge Function-wijziging.
+
 ## v4.18.0 — Controle als zijpaneel: lezen en meteen corrigeren
 De controle-uitslag stond in een venster dat de app blokkeerde: lezen of corrigeren, niet allebei. En de leescontrole meldde dezelfde onderliggende oorzaak onder meerdere leespunten, vier keer hetzelfde verhaal in andere woorden.
 
