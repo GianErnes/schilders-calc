@@ -1,3 +1,12 @@
+## v4.20.0 — Controle-gebruik zichtbaar in Instellingen
+Van de leescontrole was in de app niet te zien hoe vaak hij draaide en wat dat kostte. Per beurt stond het onderaan het controle-paneel, maar het totaal en de losse beurten waren alleen met een query in Supabase Studio te bekijken. De Vraagbaak had dat inzicht sinds v4.15.0 wel, de controle nog niet.
+
+### Wat er verandert
+- Onderaan de Instellingen-tab staat een nieuw blok Controle, gespiegeld op het Vraagbaak-blok. Bovenaan de tellers voor deze maand en het totaal: aantal leescontrole-beurten en de kosten in euro, rechtstreeks uit offerte_controle_log.
+- Daaronder de laatste twintig beurten met datum, wie hem draaide, welke calculatie, het aantal meldingen en de kosten. Tik een beurt aan en de meldingen klappen uit in dezelfde stijl als het controle-paneel, met de zwaartes controleer en ter overweging en het punt-label.
+- Het blok laadt pas bij het openen van de tab en heeft een eigen Ververs-knop, net als de Vraagbaak.
+- Vereist eenmalig de leesrecht-migratie op offerte_controle_log zodat ingelogde gebruikers hem mogen lezen. Verder alleen app-bestanden, geen Edge Function-wijziging.
+
 ## v4.19.1 — Leescontrole naar Claude Opus 4.8
 De leescontrole (laag 2) las de klantgerichte teksten na met Sonnet. Voor een controleknop is minder ruis de grootste winst, en een zwaarder model levert daar een verfijndere check: scherper op het verschil tussen tekst en calculatie en trouwer aan de bundelregel uit v4.18.0.
 
