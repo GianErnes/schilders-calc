@@ -1,3 +1,13 @@
+## v4.19.1 — Leescontrole naar Claude Opus 4.8
+De leescontrole (laag 2) las de klantgerichte teksten na met Sonnet. Voor een controleknop is minder ruis de grootste winst, en een zwaarder model levert daar een verfijndere check: scherper op het verschil tussen tekst en calculatie en trouwer aan de bundelregel uit v4.18.0.
+
+### Wat er verandert
+- De Edge Function offerte-leescontrole draait voortaan op claude-opus-4-8 in plaats van claude-sonnet-4-6. In de app zelf verandert niets aan de bediening.
+- De tariefconstanten in de functie zijn meegewijzigd van $3/$15 naar $5/$25 per miljoen tokens, zodat de kostenberekening naar offerte_controle_log en de tellers blijven kloppen.
+- Een leescontrole kost hierdoor grofweg een dubbeltje in plaats van enkele centen, mede doordat de nieuwe tokenizer zo'n 30% meer tokens telt. Op het volume van een schildersbedrijf blijft dat verwaarloosbaar.
+- Terugdraaien is één regel: het model en de twee tarieven terugzetten en opnieuw deployen.
+- Herdeploy van offerte-leescontrole nodig. Geen SQL.
+
 ## v4.19.0 — Geaccordeerde offerte in de archiveer-reeks
 Het getekende exemplaar, het enige document met de handtekening van de klant erop, zat niet in de archiveer-reeks. Het kwam dus niet standaard in de Yoobi-verkoop en de relatiemap terecht, terwijl juist dat bestand het bewijs is.
 
