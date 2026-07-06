@@ -1,3 +1,14 @@
+## v4.20.1 — Naar Craft telt alleen het duplicaat van vandaag
+De knop Naar Craft zocht alle documenten met de titel "🏠Projectnaam" en stopte zodra er meer dan één was. Maar het sjabloon zelf staat óók als "🏠Projectnaam"-document in Craft, dus zodra je dat dupliceerde stonden er altijd twee en deed de knop niets. De datum die je verwacht dat hij pakt, die van het verse duplicaat, kwam nooit aan bod omdat de noodrem uit v4.10.5 er eerder tussen zat.
+
+### Wat er verandert
+- craftNaarCraft filtert de "🏠Projectnaam"-treffers nu eerst op aanmaakdatum vandaag. Het oude sjabloon valt daarmee weg en het verse duplicaat van vandaag blijft over.
+- Precies één van vandaag: die gaat door met de bestaande bevestiging.
+- Nul van vandaag maar wel een ouder exemplaar: melding dat alleen het sjabloon er nog staat en dat je eerst moet dupliceren.
+- Twee of meer van vandaag: de noodrem blijft staan, hij stopt en vraagt op te ruimen tot er één van vandaag over is.
+- De "niet van vandaag"-waarschuwing in het bevestigingsvenster wordt hierdoor altijd leeg, maar blijft als vangnet in de code staan.
+- Geen SQL en geen Edge Function-wijziging.
+
 ## v4.20.0 — Controle-gebruik zichtbaar in Instellingen
 Van de leescontrole was in de app niet te zien hoe vaak hij draaide en wat dat kostte. Per beurt stond het onderaan het controle-paneel, maar het totaal en de losse beurten waren alleen met een query in Supabase Studio te bekijken. De Vraagbaak had dat inzicht sinds v4.15.0 wel, de controle nog niet.
 
