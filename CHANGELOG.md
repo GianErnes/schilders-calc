@@ -1,3 +1,13 @@
+## v4.21.0 — Datum op het onderhoudsplan-document
+De bijlage van het onderhoudsplan droeg geen documentdatum. Een VvE-beheerder merkte dat op: een besluitstuk zonder datum is lastig. De offertedatum werd wel al berekend, maar stond alleen verstopt in de kenmerkzin op de ALV-besluitpagina en nergens op het document zelf.
+
+### Wat er verandert
+- In de kop (masthead) staat rechtsboven, onder de Kenmerk-regel, een nieuwe datumregel "d.d. ...", in dezelfde kleine gedempte stijl als het kenmerk. Omdat de kop op elke pagina wordt herhaald, staat de datum op elke pagina.
+- De datum komt uit de offertedatum van het plan, gelijk aan het gewone offertedocument.
+- Is er nog geen offertedatum ingevuld, dan valt de kop terug op de datum van vandaag, zodat er altijd een datum op het document staat.
+- De besluitpagina blijft ongewijzigd; daar stond de datum al in de kenmerkzin.
+- Werkt voor de VvE- en de particulier-variant. Geen SQL en geen Edge Function.
+
 ## v4.20.1 — Naar Craft telt alleen het duplicaat van vandaag
 De knop Naar Craft zocht alle documenten met de titel "🏠Projectnaam" en stopte zodra er meer dan één was. Maar het sjabloon zelf staat óók als "🏠Projectnaam"-document in Craft, dus zodra je dat dupliceerde stonden er altijd twee en deed de knop niets. De datum die je verwacht dat hij pakt, die van het verse duplicaat, kwam nooit aan bod omdat de noodrem uit v4.10.5 er eerder tussen zat.
 

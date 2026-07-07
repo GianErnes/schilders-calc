@@ -2161,8 +2161,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.20.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.21.0</h2>
       <div class="intro-body">
+        <p><strong>📅 Datum op het onderhoudsplan-document (v4.21.0).</strong> Op de bijlage van het onderhoudsplan ontbrak een documentdatum, iets wat een VvE-beheerder terecht opmerkte. In de kop staat nu rechtsboven, onder het kenmerk, een datumregel "d.d. ...". Hij pakt de offertedatum van het plan, net als het gewone offertedocument. Is er nog geen offertedatum ingevuld, dan valt hij terug op de datum van vandaag zodat er altijd een datum op staat. Geldt voor de VvE- en de particulier-variant. Geen SQL nodig.</p>
         <p><strong>🏗️ Naar Craft kijkt nu alleen naar het duplicaat van vandaag (v4.20.1).</strong> Staat het sjabloon "🏠Projectnaam" zelf ook nog in Craft, dan stopte de knop omdat hij twee documenten zag en niet wist welke de jouwe was. Nu telt hij alleen de verse duplicaten van vandaag. Het oude sjabloon valt weg en het duplicaat van net gaat vanzelf door. Heb je nog geen vers duplicaat gemaakt, dan zegt hij dat alleen het sjabloon er staat en dat je eerst moet dupliceren. Staan er wel twee verse van dezelfde dag, dan stopt hij nog steeds en vraagt hij op te ruimen. Geen SQL nodig.</p>
         <p><strong>📊 Zie het gebruik van de controle in Instellingen (v4.20.0).</strong> Onderaan de Instellingen-tab staat een nieuw blok Controle, net als het Vraagbaak-blok. Bovenaan de tellers: het aantal leescontrole-beurten en de kosten van deze maand en het totaal, rechtstreeks uit het log. Daaronder de laatste twintig beurten met datum, wie hem draaide en welke calculatie; tik een beurt aan en de meldingen die de controle vond klappen uit, met hun zwaarte en het punt-label. Het blok laadt pas bij het openen van de tab en heeft een Ververs-knop. Vereist eenmalig de leesrecht-migratie op offerte_controle_log; verder geen Edge Function.</p>
         <p><strong>🔎 Leescontrole draait nu op een zwaarder model (v4.19.1).</strong> De leescontrole onder de knop Controleer las de teksten na met Sonnet; dat is nu Claude Opus 4.8, een verfijnder model dat scherper let op verschillen tussen tekst en calculatie en zich beter aan de bundelregel houdt: minder losse meldingen, minder ruis. In de app verandert er niets aan de bediening. Wel kost een leescontrole hierdoor grofweg een dubbeltje in plaats van enkele centen; dat zie je terug in het log offerte_controle_log en in de tellers. Vereist eenmalig de opnieuw gedeployde Edge Function offerte-leescontrole; geen SQL.</p>
@@ -3369,7 +3370,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.20.1';
+const APP_VERSION = 'v4.21.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3765,6 +3766,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.21.0', d: '2026-07-07', h: 'Documentdatum in de kop van de onderhoudsplan-bijlage (_ohpBuildOfferteHTML). De offertedatum werd via _offDatum al berekend maar stond alleen in de besluit-kenmerkzin (blok D, alleen VvE) en nergens op het document zelf; een VvE-beheerder merkte de ontbrekende datum op. Nieuw: _kopDatum = _offDatum || _offDatumLang(_kopVandaagIso), met _kopVandaagIso als lokale YYYY-MM-DD van vandaag (getFullYear/getMonth+1/getDate met padStart, bewust niet toISOString wegens UTC-verschuiving rond middernacht). In de masthead m-right, na de m-ref Kenmerk-regel, een nieuwe div class m-date met d.d. plus _escapeHtml(_kopDatum). Nieuwe scoped CSS .ob .m-date, identiek aan .m-ref (7.5pt, muted, letter-spacing 0.5px). Omdat de masthead via het obMastheadTpl-template op elke pagina wordt herhaald, staat de datum op elke pagina, VvE en particulier. _offDatum en dus de besluitpagina blijven ongewijzigd. Geen SQL, geen Edge Function.' },
   { v: '4.20.1', d: '2026-07-06', h: 'Naar Craft filtert de "🏠Projectnaam"-treffers nu eerst op aanmaakdatum vandaag voordat er geteld wordt. craftNaarCraft: alleTreffers = alle documents.laatste_25 met titel exact "🏠Projectnaam" (aflopend op createdAt), daarna verseVandaag = alleTreffers gefilterd op new Date(createdAt).toDateString() === new Date().toDateString(); aantalTreffers en kandidaat komen voortaan uit verseVandaag. Reden: het sjabloon zelf staat als "🏠Projectnaam"-document in Craft, dus bij elk vers duplicaat zag de v4.10.5-noodrem er twee en stopte hij altijd (incident 06-07-2026: knop deed niets, twee treffers). Met de datumfilter valt het oude sjabloon weg en blijft het verse duplicaat van vandaag over. Nul van vandaag met wel een ouder exemplaar geeft nu de melding dat alleen het sjabloon er staat; twee of meer verse van vandaag houden de noodrem (tekst nu "van vandaag"). De downstream vanVandaag-waarschuwing wordt hierdoor altijd leeg maar blijft als vangnet staan. Geen SQL, geen Edge Function.' },
   { v: '4.20.0', d: '2026-07-05', h: 'Controle-gebruik zichtbaar in Instellingen, gespiegeld op het Vraagbaak-blok van v4.15.0. Nieuw settings-blok Controle onderaan de Instellingen-tab met tellers voor deze maand en totaal (aantal leescontrole-beurten en kosten) plus de laatste twintig beurten met uitklapbare meldingen. Twee _sbQuery-calls op offerte_controle_log: slim (aangemaakt_op, kosten_eur, aflopend, servermax 1000 met laatste-1000-label bij de kaap) voor de tellers en de laatste 20 rijen (aangemaakt_op, gebruiker, calc_naam, kosten_eur, meldingen) voor de lijst. controleLogLaden lazy via de nav-handler bij het openen van Instellingen (eenmalig per sessie, Ververs forceert herladen), ctlLogToggle klapt de meldingen uit en _ctlLogMeldHtml rendert ze statisch in de zwaartes controleer en ter overweging met puntlabel uit LC_PUNT_LABELS, alles ontsmet met _escapeHtml en bedragen via eur(). Vereist de leesrecht-migratie op offerte_controle_log (authenticated SELECT); verder alleen app-bestanden.' },
   { v: '4.19.1', d: '2026-07-05', h: 'Leescontrole (laag 2) naar Claude Opus 4.8. Alleen de Edge Function offerte-leescontrole wijzigt: MODEL van claude-sonnet-4-6 naar claude-opus-4-8 en de tariefconstanten PRIJS_IN_USD_MTOK/PRIJS_UIT_USD_MTOK van 3/15 naar 5/25 zodat de kostenberekening naar offerte_controle_log klopt. Reden: scherper oordeel op punt 16 (tekst versus calculatie) en betere naleving van de v4.18.0-bundelregel, dus minder losse en dubbele meldingen. Kosten per leescontrole gaan van enkele centen naar grofweg een dubbeltje (mede door de nieuwe tokenizer die ~30% meer tokens telt). Geen wijziging in index.html-gedrag; deze versiebump legt alleen het modelspoor vast. Herdeploy van offerte-leescontrole nodig; geen SQL.' },
@@ -9990,6 +9992,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .m-title .t1{font-size:10.5pt;color:var(--ink);}
 .ob .m-title .t1 b{font-weight:800;}
 .ob .m-ref{font-size:7.5pt;color:var(--muted);letter-spacing:0.5px;}
+.ob .m-date{font-size:7.5pt;color:var(--muted);letter-spacing:0.5px;}
 .ob .sec{margin-bottom:19px;}
 .ob .sec-label{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
 .ob .sec-label .num{font-weight:800;font-size:13pt;color:var(--brush);}
@@ -10156,13 +10159,16 @@ function _ohpBuildOfferteHTML(plan, calc) {
   const _offNr = _offerteNummer(calc);
   const _offCfgD = (calc && calc.offerteConfig && typeof calc.offerteConfig === 'object') ? calc.offerteConfig : {};
   const _offDatum = _offCfgD.offertedatum ? _offDatumLang(_offCfgD.offertedatum) : '';
+  // v4.21.0 - documentdatum voor de kop; terugval op de datum van vandaag als de offertedatum leeg is.
+  const _kopVandaagIso = (function(){ const _d = new Date(); const _m = String(_d.getMonth() + 1).padStart(2, '0'); const _dd = String(_d.getDate()).padStart(2, '0'); return _d.getFullYear() + '-' + _m + '-' + _dd; })();
+  const _kopDatum = _offDatum || _offDatumLang(_kopVandaagIso);
   const _titelHtml = _complexNaam
     ? `<div class="m-title one"><div class="t-type">Onderhoudsgarantie+ plan</div><div class="t1"><b>${_escapeHtml(_complexNaam)}</b>${_scopeNaam ? ' &middot; ' + _escapeHtml(_scopeNaam) : ''}</div></div>`
     : '';
   const mastheadHtml = `<div class="masthead">
       <img class="m-ernes" src="${LOGO_ERNES}" alt="Ernes Schilders">
       ${_titelHtml}
-      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div>${_offNr ? '<div class="m-ref">Kenmerk ' + _escapeHtml(_offNr) + '</div>' : ''}</div>
+      <div class="m-right"><img class="m-ogp" src="${LOGO_OGP}" alt="Onderhouds garantie+ plan"><div class="years">${pp} — ${eindJaar}</div>${_offNr ? '<div class="m-ref">Kenmerk ' + _escapeHtml(_offNr) + '</div>' : ''}<div class="m-date">d.d. ${_escapeHtml(_kopDatum)}</div></div>
     </div>`;
   const footLeftHtml = `<div class="f-left"><img class="f-ernes" src="${LOGO_ERNES}" alt="Ernes"><span>Koperslager 2, Heerlen &middot; 045 532 1471 &middot; info@ernes.nl</span></div>`;
   const footBase = `Onderhoudsplan ${pp}–${eindJaar}`;
