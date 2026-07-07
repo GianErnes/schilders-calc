@@ -445,11 +445,11 @@
     </div>
 
     <div class="fld" id="s_piepwrap">
-      <div class="k">Herinnering</div>
-      <div class="toggle" id="s_toggle"><span id="s_toggletekst">Piep aan</span><span class="sw"></span></div>
-      <div class="snooze"><b>Uitstellen</b>
-        <button class="chip">5 min</button><button class="chip">1 uur</button>
-        <button class="chip">vanavond</button><button class="chip">morgen</button>
+      <div class="k">Melding</div>
+      <div class="toggle" id="s_toggle"><span id="s_toggletekst">Melding aan</span><span class="sw"></span></div>
+      <div class="snooze" id="s_snooze"><b>Uitstellen</b>
+        <button class="chip" data-snooze="min5">5 min</button><button class="chip" data-snooze="uur1">1 uur</button>
+        <button class="chip" data-snooze="avond">vanavond</button><button class="chip" data-snooze="morgen">morgen</button>
       </div>
     </div>
 
@@ -492,7 +492,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.3.1';
+const APP_VERSION = 'v0.4.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -644,7 +644,7 @@ async function haalTaken(){
 const NA_VIER = new Date().getHours() >= 16;
 
 const RUBRIEKEN = [
-  { key:'vandaag',   titel:'Vandaag',        sub:'jouw keuze plus wat vandaag piept',        open:true,    klasse:'today' },
+  { key:'vandaag',   titel:'Vandaag',        sub:'jouw keuze plus de meldingen van vandaag',        open:true,    klasse:'today' },
   { key:'los',       titel:'Losse taken',    sub:'je eigen taken',                        open:false },
   { key:'herhalend', titel:'Herhalend ↻',    sub:'',                                         open:false },
   { key:'klant',     titel:'Klantopvolging', sub:'uit Yoobi · alleen bekijken',              open:NA_VIER, klasse:'gated' },
@@ -896,10 +896,11 @@ function openTask(t){
   document.getElementById('s_vandaag').classList.toggle('uit', !vandaagAan);
   document.getElementById('s_vandaagtekst').textContent = vandaagAan ? 'Staat in Vandaag' : 'Vandaag oppakken';
 
-  /* piep */
+  /* melding */
   zet('s_piepwrap', modus === 'eigen');
+  zet('s_snooze', modus === 'eigen');
   document.getElementById('s_toggle').classList.toggle('uit', !t.piep);
-  document.getElementById('s_toggletekst').textContent = t.piep ? 'Piep aan' : 'Piep uit';
+  document.getElementById('s_toggletekst').textContent = t.piep ? 'Melding aan' : 'Melding uit';
 
   /* bellen */
   const nummer = t.tel || t.klant_tel;
@@ -960,8 +961,9 @@ function openNieuw(){
   document.getElementById('s_vandaagtekst').textContent = 'Vandaag oppakken';
 
   zet('s_piepwrap', true);
+  zet('s_snooze', false);
   document.getElementById('s_toggle').classList.remove('uit');
-  document.getElementById('s_toggletekst').textContent = 'Piep aan';
+  document.getElementById('s_toggletekst').textContent = 'Melding aan';
 
   zet('s_telwrap', true);
   zet('s_telinput', true);
@@ -1181,7 +1183,7 @@ async function schakelVandaag(){
 async function schakelPiep(){
   const aanNu = document.getElementById('s_toggle').classList.contains('uit'); /* wordt aan */
   document.getElementById('s_toggle').classList.toggle('uit', !aanNu);
-  document.getElementById('s_toggletekst').textContent = aanNu ? 'Piep aan' : 'Piep uit';
+  document.getElementById('s_toggletekst').textContent = aanNu ? 'Melding aan' : 'Melding uit';
   if(!VEL || VEL.modus === 'nieuw') return;
   const t = VEL.taak;
   let piep_op = null;
@@ -1190,7 +1192,33 @@ async function schakelPiep(){
     piep_op = naarTimestamp(lokaalISO(t._gepland), u || '09:00');
   }
   const { error } = await sb.from('taken').update({ piep: aanNu, piep_op: piep_op }).eq('crmtaskid', t.crmtaskid);
-  if(error){ toast('Piep opslaan lukt niet: ' + error.message); return; }
+  if(error){ toast('Melding opslaan lukt niet: ' + error.message); return; }
+  await laadTaken();
+}
+
+/* Uitstellen: verzet het meldingsmoment. De brug levert hem dan
+   vanzelf opnieuw, want het geleverd-merkje klopt niet meer. */
+async function verzetMelding(hoe){
+  if(!VEL || VEL.modus !== 'eigen') return;
+  const t = VEL.taak;
+  const nu = new Date();
+  let doel;
+  if(hoe === 'min5'){ doel = new Date(nu.getTime() + 5 * 60000); }
+  else if(hoe === 'uur1'){ doel = new Date(nu.getTime() + 3600000); }
+  else if(hoe === 'avond'){
+    doel = new Date(nu); doel.setHours(19, 0, 0, 0);
+    if(doel <= nu) doel = new Date(nu.getTime() + 3600000);
+  } else {
+    doel = new Date(nu); doel.setDate(doel.getDate() + 1); doel.setHours(9, 0, 0, 0);
+  }
+  const doelTs = timestampVan(doel);
+  const { error } = await sb.from('taken').update({
+    piep: true, piep_op: doelTs, melding_geleverd_op: null,
+  }).eq('crmtaskid', t.crmtaskid);
+  if(error){ toast('Uitstellen lukt niet: ' + error.message); return; }
+  document.getElementById('s_toggle').classList.remove('uit');
+  document.getElementById('s_toggletekst').textContent = 'Melding aan';
+  toast('Melding verzet naar ' + datumTekst(doel) + ' ' + tijdTekst(doel));
   await laadTaken();
 }
 
@@ -1395,8 +1423,9 @@ document.getElementById('s_segment').addEventListener('click', function(e){
 });
 document.getElementById('s_toggle').addEventListener('click', schakelPiep);
 document.getElementById('s_vandaag').addEventListener('click', schakelVandaag);
-document.querySelectorAll('.snooze .chip').forEach(function(c){
-  c.addEventListener('click', function(){ toast('Uitstellen gaat werken zodra de piep aan de Herinneringen hangt'); });
+document.getElementById('s_snooze').addEventListener('click', function(e){
+  const b = e.target.closest('[data-snooze]');
+  if(b) verzetMelding(b.dataset.snooze);
 });
 document.getElementById('s_picker').addEventListener('click', function(e){
   const b = e.target.closest('button');
