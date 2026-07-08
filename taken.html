@@ -497,7 +497,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.5.0';
+const APP_VERSION = 'v0.5.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -1096,30 +1096,44 @@ async function vinkAf(){
       return;
     }
 
+    /* Wat in het vel staat is de waarheid: afvinken bewaart eerst. */
+    const w = velWaarden();
+    const vers = {
+      notitie: w.notitie || null,
+      tel: w.tel || null,
+      piep: w.piepAan,
+    };
+    if(w.titel) vers.onderwerp = w.titel;
+
     if(t.soort === 'herhalend' && t.herhaling_n && t.herhaling_eenheid){
       /* logregel in Voltooid plus de herhaler schuift door */
       const kopie = {
         bron:'eigen', status:'actueel', soort:'eenmalig',
-        onderwerp: t.onderwerp, notitie: t.notitie, tel: t.tel,
-        gepland_op: t.gepland_op, toegewezen_aan: t.toegewezen_aan,
+        onderwerp: w.titel || t.onderwerp, notitie: vers.notitie, tel: vers.tel,
+        gepland_op: w.ts || t.gepland_op, toegewezen_aan: t.toegewezen_aan,
         piep:false, voltooid_op: nuTs, aangemaakt_door: UID,
       };
       const { data: nieuw, error: e1 } = await sb.from('taken').insert(kopie).select().single();
       if(e1) throw e1;
-      const volgende = volgendeDatum(t._gepland, t.herhaling_n, t.herhaling_eenheid);
+      const anker = w.ts ? parseTijdstip(w.ts) : t._gepland;
+      const volgende = volgendeDatum(anker, t.herhaling_n, t.herhaling_eenheid);
       const volgendeTs = timestampVan(volgende);
-      const { error: e2 } = await sb.from('taken').update({
+      const herhalerUpdate = Object.assign({}, vers, {
         gepland_op: volgendeTs,
-        piep_op: t.piep ? volgendeTs : null,
+        piep_op: w.piepAan ? volgendeTs : null,
         vandaag: false, vandaag_op: null,
-      }).eq('crmtaskid', t.crmtaskid);
+      });
+      const { error: e2 } = await sb.from('taken').update(herhalerUpdate).eq('crmtaskid', t.crmtaskid);
       if(e2) throw e2;
       LAATSTE_AFVINK = { type:'herhaler', kopieId: nieuw.crmtaskid, taakId: t.crmtaskid,
         oudeDatum: t.gepland_op, oudePiepOp: t.piep_op, oudVandaag: t.vandaag, oudVandaagOp: t.vandaag_op };
       sluitVel();
       toastMetActie('Afgevinkt, volgende keer ' + datumTekst(volgende), 'Ongedaan maken', maakOngedaan);
     } else {
-      const { error } = await sb.from('taken').update({ voltooid_op: nuTs }).eq('crmtaskid', t.crmtaskid);
+      const upd = Object.assign({}, vers, {
+        gepland_op: w.ts, piep_op: w.piep_op, voltooid_op: nuTs,
+      });
+      const { error } = await sb.from('taken').update(upd).eq('crmtaskid', t.crmtaskid);
       if(error) throw error;
       LAATSTE_AFVINK = { type:'gewoon', taakId: t.crmtaskid };
       sluitVel();
