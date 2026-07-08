@@ -66,10 +66,16 @@
   }
   .melding.fout{border-color:#f3c1c1;background:#fdf6f6;color:#a43d3d}
 
-  .section{margin-bottom:9px}
+  .section{margin-bottom:9px;--balk:var(--card);--balkrand:var(--line);--vak:transparent}
+  .section[data-key="vandaag"]{--balk:#f9e4e1;--balkrand:#f0cfc9;--vak:#fbeeec}
+  .section[data-key="los"]{--balk:#f8f0d3;--balkrand:#ecdfae;--vak:#fbf6e2}
+  .section[data-key="herhalend"]{--balk:#e2edfa;--balkrand:#c9dcf3;--vak:#eaf2fb}
+  .section[data-key="klant"]{--balk:#f9e4e1;--balkrand:#f0cfc9;--vak:#fbeeec}
+  .section[data-key="voltooid"]{--balk:#e3f2e9;--balkrand:#cde6d8;--vak:#ecf6f0}
+  .section[data-key="vervallen"]{--balk:#f1f2f4;--balkrand:#e3e6e9;--vak:#f3f4f6}
   .head{
     width:100%;display:flex;align-items:center;gap:11px;
-    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    background:var(--balk);border:1px solid var(--balkrand);border-radius:14px;
     padding:11px 14px;cursor:pointer;text-align:left;font:inherit;color:inherit;
     box-shadow:var(--shadow);transition:border-color .15s, background .15s;
   }
@@ -91,9 +97,9 @@
   .chev{width:9px;height:9px;border-right:2.2px solid var(--ink-faint);border-bottom:2.2px solid var(--ink-faint);transform:rotate(-45deg);transition:transform .2s;margin-left:2px;flex:none}
   .section.open .chev{transform:rotate(45deg)}
 
-  .cards{display:none;padding:0 2px}
-  .section.open .cards{display:block}
-  .cards .inner{padding:9px 0 2px;display:flex;flex-direction:column;gap:8px}
+  .cards{display:none}
+  .section.open .cards{display:block;background:var(--vak);border-radius:12px;padding:2px 7px}
+  .cards .inner{padding:7px 0;display:flex;flex-direction:column;gap:8px}
 
   .card{
     display:flex;align-items:flex-start;gap:11px;background:var(--card);
@@ -102,7 +108,7 @@
   }
   .card:active{transform:scale(.985)}
   .card:focus-visible{outline:2.5px solid var(--gian);outline-offset:2px}
-  .card .who{width:14px;height:14px;border-radius:50%;flex:none;margin-top:2px;box-shadow:0 0 0 3px rgba(0,0,0,.03)}
+  .card .who{width:14px;height:14px;border-radius:50%;flex:none;margin-top:2px;box-shadow:0 0 0 2px #fff}
   .card .body{flex:1;min-width:0}
   .card .ttl{font-size:14.5px;font-weight:650;line-height:1.3}
   .card .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;align-items:center}
@@ -119,18 +125,17 @@
 
   /* hero: vandaag-actueel opgelicht */
   .card.hero{
-    background:linear-gradient(180deg,#f4f8ff, #ffffff 70%);
-    border:1.5px solid var(--hero-line);
-    box-shadow:0 2px 4px rgba(37,99,235,.08), 0 10px 22px rgba(37,99,235,.10);
+    background:#ffffff;
+    border:1.5px solid #e9b8ad;
+    box-shadow:0 2px 4px rgba(192,87,68,.10), 0 10px 22px rgba(192,87,68,.10);
     position:relative;
   }
   .card.hero .now{
-    position:absolute;top:-8px;left:13px;background:var(--gian);color:#fff;
+    position:absolute;top:-8px;left:13px;background:#c05744;color:#fff;
     font-size:10px;font-weight:800;letter-spacing:.4px;padding:2px 8px;border-radius:999px;text-transform:uppercase
   }
   .card.hero .ttl{font-size:15.5px;font-weight:750;padding-top:2px}
 
-  .section.today .head{background:var(--hero-tint);border-color:var(--hero-line)}
 
   /* klantopvolging afgeschermd overdag */
   .section.gated .head{background:#f2f3f5;border-style:dashed;border-color:#d7dbe1}
@@ -145,11 +150,11 @@
     border:1px solid var(--hero-line);border-radius:999px;padding:5px 12px;cursor:pointer
   }
   .section.gated.open .gatehint{display:none}
-  .section.gated.open .head{background:var(--card);border-style:solid;border-color:var(--line)}
+  .section.gated.open .head{background:var(--balk);border-style:solid;border-color:var(--balkrand)}
   .section.gated.open .head .title .t{color:var(--ink)}
 
   /* voltooid + vervallen gedempt */
-  .section.done .head,.section.lapsed .head{background:#f4f5f7;box-shadow:none}
+  .section.done .head,.section.lapsed .head{box-shadow:none}
   .section.done .card{opacity:.72}
   .section.done .card .ttl{text-decoration:line-through;color:var(--ink-soft);font-weight:600}
   .section.lapsed .head .title .t{color:var(--ink-faint)}
@@ -492,7 +497,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.4.1';
+const APP_VERSION = 'v0.5.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
