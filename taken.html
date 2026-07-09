@@ -506,7 +506,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.7.1';
+const APP_VERSION = 'v0.7.2';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -619,7 +619,6 @@ function persoonVan(t){
 }
 function rubriekVan(t, nu, vandaagISO){
   if(t.voltooid_op) return 'voltooid';
-  if(t.status === 'vervallen') return 'vervallen';
   const dagkeuze = t.vandaag && t.vandaag_op === vandaagISO;
   const eigenVandaag = t.bron === 'eigen' && t._gepland && zelfdeDag(t._gepland, nu);
   if(dagkeuze || eigenVandaag) return 'vandaag';
@@ -664,7 +663,6 @@ const RUBRIEKEN = [
   { key:'herhalend', titel:'Herhalend ↻',    sub:'',                                         open:false },
   { key:'klant',     titel:'Klantopvolging', sub:'uit Yoobi · alleen bekijken',              open:NA_VIER, klasse:'gated' },
   { key:'voltooid',  titel:'Voltooid',       sub:'je eigen afgevinkte taken',                open:false,   klasse:'done' },
-  { key:'vervallen', titel:'Vervallen',      sub:'van vóór 2025 · voor Maud om na te lopen', open:false,   klasse:'lapsed' },
 ];
 RUBRIEKEN.forEach(r => { OPEN_STAND[r.key] = r.open; });
 
