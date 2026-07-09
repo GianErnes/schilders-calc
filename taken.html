@@ -150,6 +150,15 @@
     border:1px solid var(--hero-line);border-radius:999px;padding:5px 12px;cursor:pointer
   }
   .section.gated.open .gatehint{display:none}
+  .ophaal-knop{
+    flex:none;width:27px;height:27px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:#eceafb;color:#6d5bb8;font-size:15px;font-weight:800;
+    margin-right:8px;cursor:pointer;user-select:none;border:1px solid #ddd8f3;
+  }
+  .ophaal-knop:active{transform:scale(.9)}
+  .ophaal-knop.draait{animation:ophaalspin 1s linear infinite}
+  @keyframes ophaalspin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
   .section.gated.open .head{background:var(--balk);border-style:solid;border-color:var(--balkrand)}
   .section.gated.open .head .title .t{color:var(--ink)}
 
@@ -497,7 +506,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.6.1';
+const APP_VERSION = 'v0.7.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -770,6 +779,7 @@ function bouwRubriek(r){
     '<button class="head" aria-expanded="' + open + '">' +
     cluster(eigen) +
     '<span class="title"><span class="t">' + r.titel + '</span><span class="sub">' + sub + '</span></span>' +
+    (r.key === 'klant' ? '<span class="ophaal-knop" data-ophaal="1" role="button" tabindex="0" aria-label="Yoobi ophalen" title="Yoobi ophalen">\u21bb</span>' : '') +
     '<span class="count">' + eigen.length + '</span><span class="chev"></span>' +
     '</button>' + gatehint +
     '<div class="cards"><div class="inner">' + kaarten + extraNoot + '</div></div></div>';
@@ -1392,6 +1402,81 @@ async function start(){
   await laadTaken();
 }
 
+/* ────────────────────────────────────────────────────────
+   Yoobi ophalen: knop in het Klantopvolging-balkje.
+   Roept de sync-function aan met het eigen aanmeld-token
+   (rol 'alles'), en volgt de voortgang tot de ronde rond is.
+   ──────────────────────────────────────────────────────── */
+let YOOBI_BEZIG = false;
+
+function ophaalStand(draait, subtekst){
+  const sec = document.querySelector('.section[data-key="klant"]');
+  if(!sec) return;
+  const knop = sec.querySelector('[data-ophaal]');
+  if(knop) knop.classList.toggle('draait', draait);
+  if(subtekst != null){
+    const sub = sec.querySelector('.title .sub');
+    if(sub) sub.textContent = subtekst;
+  }
+}
+
+async function haalYoobiOp(){
+  if(YOOBI_BEZIG) return;
+  YOOBI_BEZIG = true;
+  ophaalStand(true, 'bezig met ophalen uit Yoobi\u2026');
+
+  try{
+    const { data: sess } = await sb.auth.getSession();
+    const token = sess && sess.session ? sess.session.access_token : null;
+    if(!token){ toast('Meld je eerst opnieuw aan'); YOOBI_BEZIG=false; ophaalStand(false); await laadTaken(); return; }
+
+    // Stand vóór het aftrappen onthouden.
+    let startStamp = null;
+    try{
+      const r0 = await sb.rpc('taken_sync_status');
+      if(r0.data && r0.data[0]) startStamp = r0.data[0].bijgewerkt;
+    }catch(e){}
+
+    // Aftrappen met het eigen token.
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/yoobi-taken-sync', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + token, 'Content-Type':'application/json' },
+      body:'{}',
+    });
+    if(resp.status !== 202 && !resp.ok){
+      if(resp.status === 401){ toast('Geen rechten om op te halen, meld opnieuw aan'); }
+      else { toast('Ophalen start niet (' + resp.status + ')'); }
+      YOOBI_BEZIG=false; ophaalStand(false); await laadTaken(); return;
+    }
+
+    // Volgen tot klaar: fase idle met een verse tijdstempel.
+    const maxPogingen = 60;
+    for(let i=0;i<maxPogingen;i++){
+      await new Promise(r => setTimeout(r, 3000));
+      let fase=null, nog=null, stamp=null;
+      try{
+        const rp = await sb.rpc('taken_sync_status');
+        if(rp.data && rp.data[0]){ fase=rp.data[0].fase; nog=rp.data[0].nog_te_gaan; stamp=rp.data[0].bijgewerkt; }
+      }catch(e){}
+      if(fase === 'bezig' && nog != null) ophaalStand(true, 'bezig met ophalen\u2026 nog ' + nog);
+      if(fase === 'idle' && stamp && stamp !== startStamp){
+        YOOBI_BEZIG=false;
+        await laadTaken();
+        toast('Klantopvolging bijgewerkt');
+        return;
+      }
+    }
+    // Duurt langer dan verwacht: toch verversen, hij loopt door.
+    YOOBI_BEZIG=false;
+    await laadTaken();
+    toast('Ophalen loopt nog door, lijst is alvast ververst');
+  }catch(e){
+    YOOBI_BEZIG=false;
+    ophaalStand(false);
+    toast('Ophalen mislukt: ' + (e.message || e));
+  }
+}
+
 async function init(){
   document.getElementById('datumVandaag').textContent = datumKort();
   const { data } = await sb.auth.getSession();
@@ -1412,6 +1497,8 @@ document.getElementById('lijst').addEventListener('click', async function(e){
     location.reload();
     return;
   }
+  const ophaalKnop = e.target.closest('[data-ophaal]');
+  if(ophaalKnop){ e.stopPropagation(); haalYoobiOp(); return; }
   const toonKnop = e.target.closest('[data-toon]');
   if(toonKnop){
     e.stopPropagation();
