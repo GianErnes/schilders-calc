@@ -506,7 +506,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.7.2';
+const APP_VERSION = 'v0.7.3';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -661,7 +661,7 @@ const RUBRIEKEN = [
   { key:'vandaag',   titel:'Vandaag',        sub:'jouw keuze plus de meldingen van vandaag',        open:true,    klasse:'today' },
   { key:'los',       titel:'Losse taken',    sub:'je eigen taken',                        open:false },
   { key:'herhalend', titel:'Herhalend ↻',    sub:'',                                         open:false },
-  { key:'klant',     titel:'Klantopvolging', sub:'uit Yoobi · alleen bekijken',              open:NA_VIER, klasse:'gated' },
+  { key:'klant',     titel:'Klantopvolging', sub:'uit Yoobi · alleen bekijken',              open:false, klasse:'gated' },
   { key:'voltooid',  titel:'Voltooid',       sub:'je eigen afgevinkte taken',                open:false,   klasse:'done' },
 ];
 RUBRIEKEN.forEach(r => { OPEN_STAND[r.key] = r.open; });
@@ -765,9 +765,7 @@ function bouwRubriek(r){
     LAATSTE_HERO = heroId;
   }
 
-  const gatehint = (r.key === 'klant' && !NA_VIER && !open) ?
-    '<div class="gatehint"><span>◷ Verschijnt vanzelf na 16:00</span>' +
-    '<button type="button" data-toon="klant">Nu tonen</button></div>' : '';
+  const gatehint = '';
 
   const kaarten = zichtbaar.length
     ? zichtbaar.map(t => kaart(t, t.crmtaskid === heroId)).join('')
