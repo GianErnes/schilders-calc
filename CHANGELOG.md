@@ -1,3 +1,15 @@
+## v4.21.1 — Kolommen in de beurt-modal springen niet meer
+In het venster Beurt bewerken van een onderhoudsplan stonden regels op 0% niet meer in de nette kolommen: naam, bedrag en percentageveldje vielen achter elkaar op één regel. Regels die daarna van 0 naar een ander percentage werden gezet bleven ook verkeerd staan, omdat typen de regel niet opnieuw tekent.
+
+### Oorzaak
+De grijze weergave van 0%-regels werd als een tweede style-attribuut op dezelfde div gezet. De browser leest alleen het eerste style-attribuut en gooit het tweede weg, en daarmee verdween de hele kolomindeling.
+
+### Wat er verandert
+- De grijze weergave en de kolomindeling staan nu samen in één style-attribuut, zodat ze allebei werken.
+- Gerepareerd op twee plekken: de regels in de modus Per regel en de stap-regels in de modus Per stap.
+- Alle regels staan nu in dezelfde kolommen; regels op 0% blijven gewoon grijs getoond.
+- Puur weergave, geen rekenwerk. Geen SQL en geen Edge Function.
+
 ## v4.21.0 — Datum op het onderhoudsplan-document
 De bijlage van het onderhoudsplan droeg geen documentdatum. Een VvE-beheerder merkte dat op: een besluitstuk zonder datum is lastig. De offertedatum werd wel al berekend, maar stond alleen verstopt in de kenmerkzin op de ALV-besluitpagina en nergens op het document zelf.
 
