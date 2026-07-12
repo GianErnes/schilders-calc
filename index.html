@@ -2188,8 +2188,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.24.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.24.1</h2>
       <div class="intro-body">
+        <p><strong>🔧 Windroosletters altijd leesbaar (v4.24.1).</strong> De letters N, O, Z en W op de liggingsfoto stonden kaal op de luchtfoto en vielen weg op donkere daken en schaduw. Ze krijgen nu een witte rand eronder, zoals plaatsnamen op een topografische kaart, en blijven daardoor op elke ondergrond leesbaar. Bestaande liggingsfoto's veranderen niet vanzelf: genereer de foto opnieuw in de sectie Ligging. Geen SQL nodig.</p>
         <p><strong>🧭 Liggingsfoto als magazine-rij in de brochure (v4.24.0).</strong> De liggingsfoto stond als eerste blok op volle breedte bovenaan pagina 1 van de onderhoudsplan-bijlage. Omdat het blok erna vaak niet meer paste, bleef de foto alleen achter met veel wit eromheen. De foto staat nu links op 58% van de breedte met rechts ernaast een tekstkolom: een klein kopje Ligging met daaronder de uitleg over de noordoriëntatie en de weerzijde. De rij is nog maar zo'n 6 cm hoog, dus het volgende inhoudsblok past er vrijwel altijd onder en pagina 1 vult zich. Geldt voor de VvE- en de particulier-variant. Geen SQL nodig.</p>
         <p><strong>Σ Rekenverantwoording per onderhoudsbeurt (v4.23.0).</strong> In de beurtenlijst van het onderhoudsplan staat per beurt een nieuwe Σ-knop. Die opent een zijpaneel rechts, net als de Controle, met de volledige rekenopbouw van die beurt: elk regelbedrag met het toegepaste percentage, gegroepeerd per hoofdgroep en onderdeel, hoe het gemiddelde voor de vaste toeslagen tot stand kwam, de afrondingstoeslag, reiskosten, opslagen en staartposten stuk voor stuk, en dan de optelling naar het bedrag excl. BTW op prijspeil. Daaronder de indexering met de factor voluit (bijvoorbeeld 1,065^8 = 1,655), de BTW en het eindbedrag dat één op één gelijk is aan de tijdlijn. Het paneel toont wat de rekenkern zelf heeft gedaan, dus afwijken kan niet; bij vergrendelde plannen rekent hij vanzelf met de bevroren instellingen en dat staat er ook bij. Bij de modus Per stap klapt elke regel uit naar de stappen. Alleen intern op scherm, niets verandert aan de offertedocumenten. Geen SQL nodig.</p>
         <p><strong>🧭 Liggingsfoto met windroos op het onderhoudsplan (v4.22.0).</strong> In het tabblad Onderhoudsplan staat boven de beurten een nieuwe sectie <em>Ligging</em>. Die haalt op basis van de postcode uit de calculatie een luchtfoto van boven op en tekent er een windroos overheen. Je kiest de uitsnede (60 m voor een woonhuis, 100 m voor een klein complex, of ruimer) en of de weerzijde gemarkeerd wordt: de oranje wig van zuid tot west, de kant met de meeste zon, UV en slagregen. Zo zie je in één oogopslag welke gevel op welke windrichting staat, zowel bij het opstellen als bij het beoordelen van het plan. De foto komt ook bovenaan pagina 1 van de offerte-bijlage, met een bijschrift dat uitlegt waarom bepaalde gevels vaker terugkomen. De luchtfoto komt van PDOK: open data, gratis, geen sleutel nodig. Het noorden staat in het Rijksdriehoekstelsel altijd boven, dus de roos hoeft nooit gedraaid te worden. Vereist éénmalig SQL (los geleverd) 🧭.</p>
@@ -3419,7 +3420,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.24.0';
+const APP_VERSION = 'v4.24.1';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3815,6 +3816,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.24.1', d: '2026-07-12', h: 'Witte halo om de windroosletters op de liggingsfoto. In _ohpLiggingTeken werden N/Z/O/W buiten de schijf direct op de luchtfoto gezet met fillText in #1f2430, onleesbaar op donkere daken en schaduw. Nieuw: per letter eerst strokeText met rgba(255,255,255,0.9), lineWidth max(3, r*0.10) en lineJoin round, daaroverheen de bestaande donkere fillText; letters als array met forEach. Schijf, noordpijl, weerzijde-wig en schaalbalk (die had al een wit vlak) ongewijzigd. Werkt alleen op nieuw gegenereerde foto s; bestaande ligging.jpg in de bucket moet opnieuw gegenereerd worden via de sectie Ligging. Geen SQL, geen Edge Function.' },
   { v: '4.24.0', d: '2026-07-12', h: 'Liggingsfoto als magazine-rij in de onderhoudsplan-brochure. Het liggingblok (v4.22.0) stond als eerste ob-block op volle breedte (16:9, ~10 cm hoog); de greedy paginator van _ohpPaginate kreeg het forse vervolgblok (VvE: Wat het plan inhoudt met hero en benefits; particulier: aanhef plus Wat we aantroffen) er dan niet meer onder, waardoor pagina 1 alleen de foto met veel wit toonde. Nieuw: .ob .ligging is een grid van 58% foto links en een tekstkolom rechts (align-items center) met .ligging-kicker (8pt, uppercase, letter-spacing) en de bestaande bijschrifttekst als .ligging-bij op 9.5pt. De rij is ~6 cm hoog zodat het volgende blok vrijwel altijd op pagina 1 past. Blokvolgorde, sectienummering en de geruisloze terugval zonder foto ongewijzigd; beide takken. Alleen opmaak van het liggingblok. Geen SQL, geen Edge Function.' },
   { v: '4.23.0', d: '2026-07-12', h: 'Rekenverantwoording per onderhoudsbeurt als zijpaneel. Σ-knop per rij in _ohpRenderBeurtenLijst (knoppenkolom 110 naar 150px) opent aside #ohpVerPaneel (patroon controlePaneel: fixed rechts 460px, body.ohpver-open duwt content en #vraagbaakTab, max-width 900px volle breedte, print verbergt). Geen tweede rekenmachine: _ohpBeurtBasisBedrag(beurt, metTrace) schrijft tijdens het gewone rekenen zijn tussenstappen naar _ohpLastTrace (bron snapshot/live, modus, extraFactor plus aantalFactoren, per regel via nieuwe trace-parameter op _ohpProjectRauw met basis/factor/resultaat en 0%-regels grijs zichtbaar zonder het rekenpad te raken, per stap via stapTrace-parameter op _ohpRegelRauw, dagen en afrondingstoeslag, reis met binnen/buiten rayon, kleinMat/afval/arbo, staartposten bruto keer extraFactor bij vast en eenheid, directe, risico, exBtw). _ohpVerHtml rendert negen blokken met hoofdgroep- en onderdeel-koppen tussen de regels; indexering met machtsnotatie via _ohpIndexFactor en BTW via _ohpBtwFactor, eindbedrag gelijk aan de tijdlijn. Controle en Verantwoording sluiten elkaar wederzijds. Herbouwd op de live v4.22.0 (windroos) na versie-botsing met een parallelle chat, 12-07-2026. Alleen intern op scherm. Geen SQL, geen Edge Function.' },
   { v: '4.22.0', d: '2026-07-12', h: 'Liggingsfoto met windroos op het onderhoudsplan. Nieuwe sectie Ligging (ohpLiggingSectie, een details boven de Beurten in ohpPlanBlok) haalt via de PDOK Luchtfoto RGB WMS een luchtfoto van boven op en tekent er op canvas een windroos, een schaalbalk en een optionele weerzijde-wig (zuid tot west, oranje) overheen. Coordinaten via _ohpLiggingGeocodeRD, dat centroide_rd van de PDOK Locatieserver leest op basis van postcode en huisnummer uit de calculatie; RD is metrisch dus de uitsnede in meters is letterlijk de bbox-breedte. WMS-aanroep vastgesteld met een testpagina op de echte GitHub Pages-herkomst: 1.3.0, crs=EPSG:28992, bbox als minx,miny,maxx,maxy (de 1.1.1-variant en de omgekeerde asvolgorde geven het verkeerde gebied). PDOK stuurt CORS-headers mee, dus het canvas blijft schoon en het beeld is te exporteren; geen Edge Function-proxy nodig. Bron is 8 cm per pixel, dus breedte = meters / 0,08 met 2500 als plafond, verhouding 16:9. Uitsnedes 60, 100, 150 en 250 m. Het samengestelde beeld gaat als JPEG naar de bestaande bucket calculatie-fotos onder {calcId}/ligging.jpg met upsert, dus geen nieuwe bucket en geen nieuwe policies; het wordt mee opgeruimd bij het verwijderen van de calculatie en verschijnt niet in de fotolijst (die komt uit calculatie_fotos). Nieuwe jsonb-kolom ligging op onderhoudsplannen met pad, rdX, rdY, span, laag, weerzijde en gemaakt, meegenomen in _mapOhpToDB en _mapOhpFromDB. In de brochure komt de foto als eerste blok op pagina 1 (beide takken, VvE en particulier) met een bijschrift over noordorientatie en de weerzijde; _ohpPrintOfferte is async geworden en zet de foto vooraf klaar als data-URL in _ohpLiggingPrintUrl, want _ohpBuildOfferteHTML is synchroon en window.print() wacht niet op een netwerk-fetch (zelfde reden als de data-URI-logo s in v4.7.9). Het interne Print onderhoudsplan blijft ongewijzigd. Geen rekenwerk aangeraakt. Vereist SQL (los geleverd)' },
@@ -8526,16 +8528,20 @@ function _ohpLiggingTeken(img, spanM, weerzijde) {
   ctx.fillStyle = '#b91c1c';
   ctx.fill();
 
-  // Letters
+  // Letters — met witte halo (strokeText onder fillText), zodat ze op donkere
+  // daken en schaduw net zo leesbaar zijn als op lichte bestrating (v4.24.1).
   ctx.fillStyle = '#1f2430';
   ctx.font = '700 ' + Math.round(r * 0.36) + 'px -apple-system, "Segoe UI", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  ctx.lineWidth = Math.max(3, Math.round(r * 0.10));
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
   const d = r * 1.30;
-  ctx.fillText('N', cx, cy - d);
-  ctx.fillText('Z', cx, cy + d);
-  ctx.fillText('O', cx + d, cy);
-  ctx.fillText('W', cx - d, cy);
+  [['N', cx, cy - d], ['Z', cx, cy + d], ['O', cx + d, cy], ['W', cx - d, cy]].forEach(([lt, lx, ly]) => {
+    ctx.strokeText(lt, lx, ly);
+    ctx.fillText(lt, lx, ly);
+  });
   ctx.restore();
 
   // Schaalbalk linksonder, op een wit vlakje zodat hij op elke ondergrond leesbaar is.

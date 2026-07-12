@@ -1,3 +1,11 @@
+## v4.24.1 — Windroosletters altijd leesbaar
+De letters N, O, Z en W op de liggingsfoto stonden kaal op de luchtfoto en vielen weg op donkere daken en schaduw.
+
+### Wat er verandert
+- Elke letter krijgt een witte rand onder de donkere vulling, zoals plaatsnamen op een topografische kaart. Daardoor leesbaar op elke ondergrond.
+- Geldt voor nieuw gegenereerde foto's; een bestaande liggingsfoto verandert niet vanzelf. Genereer hem opnieuw in de sectie Ligging op het onderhoudsplan.
+- Geen SQL en geen Edge Function.
+
 ## v4.24.0 — Liggingsfoto als magazine-rij in de brochure
 De liggingsfoto stond als eerste blok op volle breedte bovenaan pagina 1 van de onderhoudsplan-bijlage. Het blok erna paste er vaak niet meer onder, waardoor de foto alleen achterbleef met veel wit eromheen.
 
