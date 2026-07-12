@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDOK luchtfoto-test</title>
+<style>
+  :root {
+    --lijn: #e2e5ea; --tekst: #1f2430; --grijs: #6b7280;
+    --goed: #15803d; --fout: #b91c1c; --wacht: #b45309;
+    --vlak: #f7f8fa;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--tekst); margin: 0; padding: 1.5rem; line-height: 1.5;
+    max-width: 1000px; margin: 0 auto;
+  }
+  h1 { font-size: 1.4rem; margin: 0 0 0.25rem; }
+  h2 { font-size: 1.05rem; margin: 1.75rem 0 0.6rem; }
+  .sub { color: var(--grijs); font-size: 0.9rem; margin: 0 0 1.25rem; }
+  .kader {
+    border: 1px solid var(--lijn); border-radius: 10px;
+    padding: 1rem; margin-bottom: 1rem; background: #fff;
+  }
+  .rij { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end; }
+  label { display: block; font-size: 0.78rem; color: var(--grijs); margin-bottom: 0.2rem; }
+  input, select {
+    padding: 0.45rem 0.6rem; border: 1px solid var(--lijn);
+    border-radius: 7px; font-size: 0.95rem; font-family: inherit;
+  }
+  button {
+    padding: 0.5rem 1rem; border: 0; border-radius: 7px;
+    background: #2563eb; color: #fff; font-size: 0.95rem;
+    font-family: inherit; cursor: pointer; font-weight: 600;
+  }
+  button.grijs { background: #4b5563; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .melding { padding: 0.35rem 0; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+  .goed::before  { content: "OK   "; color: var(--goed); font-weight: 700; }
+  .fout::before  { content: "FOUT "; color: var(--fout); font-weight: 700; }
+  .wacht::before { content: "...  "; color: var(--wacht); font-weight: 700; }
+  .info::before  { content: "     "; }
+  .melding span { color: var(--grijs); }
+  .conclusie {
+    margin-top: 0.9rem; padding: 0.75rem 0.9rem; border-radius: 8px;
+    background: var(--vlak); font-weight: 600; font-size: 0.95rem;
+  }
+  .varianten { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .variant { flex: 1 1 240px; }
+  .variant img {
+    width: 100%; border: 1px solid var(--lijn); border-radius: 8px;
+    display: block; background: var(--vlak); min-height: 120px;
+  }
+  .variant .kop { font-size: 0.78rem; color: var(--grijs); margin-bottom: 0.3rem; }
+  canvas { max-width: 100%; border: 1px solid var(--lijn); border-radius: 10px; display: block; }
+  code { background: var(--vlak); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.85rem; }
+  .waarschuwing {
+    background: #fef3c7; border: 1px solid #fcd34d; color: #78350f;
+    padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.9rem; margin-bottom: 1rem;
+  }
+  .verborgen { display: none; }
+</style>
+</head>
+<body>
+
+<h1>PDOK luchtfoto-test</h1>
+<p class="sub">Wegwerp-testpagina. Toetst of de luchtfoto rechtstreeks vanuit de browser bruikbaar is voor de liggingsfoto met windroos. Na de test mag dit bestand weer uit de repo.</p>
+
+<div id="origin_waarschuwing" class="waarschuwing verborgen"></div>
+
+<div class="kader">
+  <div class="rij">
+    <div>
+      <label for="pc">Postcode</label>
+      <input id="pc" size="9" placeholder="6367 AB" autocomplete="off">
+    </div>
+    <div>
+      <label for="hn">Huisnummer</label>
+      <input id="hn" size="5" placeholder="12" autocomplete="off">
+    </div>
+    <div>
+      <label for="laag">Luchtfoto</label>
+      <select id="laag">
+        <option value="Actueel_orthoHR">Actueel 8 cm (hoge resolutie)</option>
+        <option value="Actueel_ortho25">Actueel 25 cm</option>
+      </select>
+    </div>
+    <div>
+      <label for="span">Breedte uitsnede</label>
+      <select id="span">
+        <option value="60">60 m (woonhuis)</option>
+        <option value="100" selected>100 m (woonhuis ruim)</option>
+        <option value="150">150 m (klein complex)</option>
+        <option value="250">250 m (groot complex)</option>
+      </select>
+    </div>
+    <div>
+      <button id="start">Test uitvoeren</button>
+    </div>
+  </div>
+</div>
+
+<h2>1. Diagnose</h2>
+<div class="kader">
+  <div id="log"></div>
+  <div id="conclusie" class="conclusie verborgen"></div>
+</div>
+
+<h2>2. Welke bbox-variant klopt</h2>
+<p class="sub" style="margin-bottom:0.5rem">Drie manieren om PDOK om hetzelfde uitsnede te vragen. Eén ervan hoort het juiste gebied te tonen. De andere twee tonen zee, België of niets.</p>
+<div class="kader">
+  <div class="varianten">
+    <div class="variant">
+      <div class="kop">A · WMS 1.3.0, bbox x,y</div>
+      <img id="vA" alt="">
+    </div>
+    <div class="variant">
+      <div class="kop">B · WMS 1.3.0, bbox y,x</div>
+      <img id="vB" alt="">
+    </div>
+    <div class="variant">
+      <div class="kop">C · WMS 1.1.1, bbox x,y</div>
+      <img id="vC" alt="">
+    </div>
+  </div>
+</div>
+
+<h2>3. Compositie met windroos</h2>
+<div class="kader">
+  <div class="rij" style="margin-bottom:0.8rem">
+    <div>
+      <label for="kies">Variant tekenen</label>
+      <select id="kies">
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+      </select>
+    </div>
+    <div>
+      <label><input type="checkbox" id="weer" checked style="width:auto"> Weerzijde markeren (zuid tot west)</label>
+    </div>
+    <div><button id="teken" class="grijs" disabled>Teken</button></div>
+    <div><button id="download" class="grijs" disabled>Download PNG</button></div>
+  </div>
+  <canvas id="doek" width="800" height="600"></canvas>
+  <p class="sub" style="margin:0.6rem 0 0">In het Rijksdriehoekstelsel staat het noorden altijd boven. De windroos hoeft dus nooit gedraaid te worden.</p>
+</div>
+
+<script>
+'use strict';
+
+const WMS = 'https://service.pdok.nl/hwh/luchtfotorgb/wms/v1_0';
+const BREED = 800, HOOG = 600;
+
+let RD = null;          // [x, y] in Rijksdriehoek, meters
+let SPAN = 100;         // breedte uitsnede in meters
+let BEELDEN = {};       // variant -> Image (met CORS geladen, indien mogelijk)
+
+/* ---------- logregels ---------- */
+function log(tekst, soort, extra) {
+  const d = document.createElement('div');
+  d.className = 'melding ' + (soort || 'info');
+  d.innerHTML = tekst + (extra ? ' <span>' + extra + '</span>' : '');
+  document.getElementById('log').appendChild(d);
+  return d;
+}
+function wisLog() { document.getElementById('log').innerHTML = ''; }
+
+/* ---------- origin-check ---------- */
+(function () {
+  const o = window.location.origin;
+  if (o === 'null' || window.location.protocol === 'file:') {
+    const w = document.getElementById('origin_waarschuwing');
+    w.classList.remove('verborgen');
+    w.innerHTML = '<strong>Let op: je opent deze pagina als lokaal bestand.</strong> ' +
+      'De CORS-uitkomst is dan niet betrouwbaar, want de browser stuurt geen echte herkomst mee. ' +
+      'Zet dit bestand op GitHub Pages en open het via ' +
+      '<code>https://gianernes.github.io/schilders-calc/pdok-test.html</code>. ' +
+      'Alleen die uitkomst telt.';
+  }
+})();
+
+/* ---------- geocoderen, zelfde bron als de app ---------- */
+async function geocode(pc, hn) {
+  const q = encodeURIComponent((pc + ' ' + hn).trim());
+  const url = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=' + q +
+              '&fq=type:adres&rows=1&fl=weergavenaam,centroide_ll,centroide_rd';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('locatieserver gaf status ' + res.status);
+  const j = await res.json();
+  const docs = (j.response && j.response.docs) || [];
+  if (!docs.length) return null;
+  const rd = /POINT\(([-\d.]+)\s+([-\d.]+)\)/.exec(docs[0].centroide_rd || '');
+  const ll = /POINT\(([-\d.]+)\s+([-\d.]+)\)/.exec(docs[0].centroide_ll || '');
+  return {
+    naam: docs[0].weergavenaam || '',
+    rd: rd ? [parseFloat(rd[1]), parseFloat(rd[2])] : null,
+    ll: ll ? [parseFloat(ll[1]), parseFloat(ll[2])] : null
+  };
+}
+
+/* ---------- WMS-url bouwen ---------- */
+function wmsUrl(variant) {
+  const laag = document.getElementById('laag').value;
+  const halfB = SPAN / 2;
+  const halfH = (SPAN * HOOG / BREED) / 2;
+  const minx = RD[0] - halfB, maxx = RD[0] + halfB;
+  const miny = RD[1] - halfH, maxy = RD[1] + halfH;
+  const g = [
+    'service=WMS',
+    'request=GetMap',
+    'layers=' + laag,
+    'styles=',
+    'width=' + BREED,
+    'height=' + HOOG,
+    'format=image/jpeg'
+  ];
+  if (variant === 'C') {
+    g.push('version=1.1.1', 'srs=EPSG:28992',
+           'bbox=' + [minx, miny, maxx, maxy].join(','));
+  } else if (variant === 'B') {
+    g.push('version=1.3.0', 'crs=EPSG:28992',
+           'bbox=' + [miny, minx, maxy, maxx].join(','));
+  } else {
+    g.push('version=1.3.0', 'crs=EPSG:28992',
+           'bbox=' + [minx, miny, maxx, maxy].join(','));
+  }
+  return WMS + '?' + g.join('&');
+}
+
+/* ---------- beeld laden ---------- */
+function laadBeeld(url, metCors) {
+  return new Promise(function (klaar, mis) {
+    const img = new Image();
+    if (metCors) img.crossOrigin = 'anonymous';
+    img.onload = function () { klaar(img); };
+    img.onerror = function () { mis(new Error('beeld laadde niet')); };
+    img.src = url;
+  });
+}
+
+/* ---------- canvas-export testen ---------- */
+function canvasExportLukt(img) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth || BREED;
+  c.height = img.naturalHeight || HOOG;
+  c.getContext('2d').drawImage(img, 0, 0);
+  c.toDataURL('image/jpeg', 0.8);   // gooit SecurityError bij besmet canvas
+  return true;
+}
+
+/* ---------- de test ---------- */
+async function test() {
+  const pc = document.getElementById('pc').value.trim();
+  const hn = document.getElementById('hn').value.trim();
+  if (!pc) { alert('Vul een postcode in.'); return; }
+
+  const knop = document.getElementById('start');
+  knop.disabled = true;
+  document.getElementById('teken').disabled = true;
+  document.getElementById('download').disabled = true;
+  document.getElementById('conclusie').classList.add('verborgen');
+  BEELDEN = {};
+  wisLog();
+  SPAN = parseInt(document.getElementById('span').value, 10);
+
+  log('Herkomst van deze pagina', 'info', window.location.origin);
+
+  /* stap 1: adres naar coordinaten */
+  const r1 = log('PDOK Locatieserver bevragen', 'wacht');
+  let plek;
+  try {
+    plek = await geocode(pc, hn);
+    if (!plek || !plek.rd) throw new Error('adres niet gevonden of geen RD-coordinaat');
+    r1.className = 'melding goed';
+    r1.innerHTML = 'PDOK Locatieserver <span>' + plek.naam +
+      ' &middot; RD ' + plek.rd[0].toFixed(0) + ' / ' + plek.rd[1].toFixed(0) + '</span>';
+    RD = plek.rd;
+  } catch (e) {
+    r1.className = 'melding fout';
+    r1.innerHTML = 'PDOK Locatieserver <span>' + e.message + '</span>';
+    knop.disabled = false;
+    return;
+  }
+
+  /* stap 2: drie bbox-varianten, gewoon laden (zonder CORS) */
+  const varianten = ['A', 'B', 'C'];
+  for (const v of varianten) {
+    const url = wmsUrl(v);
+    document.getElementById('v' + v).src = url;
+    const r = log('Variant ' + v + ' opgehaald', 'wacht');
+    try {
+      await laadBeeld(url, false);
+      r.className = 'melding goed';
+      r.innerHTML = 'Variant ' + v + ' opgehaald <span>beeld komt binnen</span>';
+    } catch (e) {
+      r.className = 'melding fout';
+      r.innerHTML = 'Variant ' + v + ' opgehaald <span>geen beeld</span>';
+    }
+  }
+  log('Kijk hieronder welke variant het juiste gebied toont', 'info');
+
+  /* stap 3: de eigenlijke hypothese, CORS */
+  let corsOk = false, exportOk = false, fetchOk = false;
+
+  const r3 = log('Beeld laden met crossOrigin=anonymous', 'wacht');
+  for (const v of varianten) {
+    try {
+      BEELDEN[v] = await laadBeeld(wmsUrl(v), true);
+      corsOk = true;
+    } catch (e) { /* variant kan ook om andere reden falen */ }
+  }
+  if (corsOk) {
+    r3.className = 'melding goed';
+    r3.innerHTML = 'Beeld laden met crossOrigin=anonymous <span>PDOK stuurt CORS-headers mee</span>';
+  } else {
+    r3.className = 'melding fout';
+    r3.innerHTML = 'Beeld laden met crossOrigin=anonymous <span>geweigerd, geen CORS-headers</span>';
+  }
+
+  const r4 = log('Canvas exporteren (toDataURL)', 'wacht');
+  if (corsOk) {
+    const eerste = BEELDEN[Object.keys(BEELDEN)[0]];
+    try {
+      canvasExportLukt(eerste);
+      exportOk = true;
+      r4.className = 'melding goed';
+      r4.innerHTML = 'Canvas exporteren (toDataURL) <span>canvas is schoon, PNG-export kan</span>';
+    } catch (e) {
+      r4.className = 'melding fout';
+      r4.innerHTML = 'Canvas exporteren (toDataURL) <span>canvas is besmet: ' + e.name + '</span>';
+    }
+  } else {
+    r4.className = 'melding fout';
+    r4.innerHTML = 'Canvas exporteren (toDataURL) <span>niet getest, CORS ontbreekt</span>';
+  }
+
+  const r5 = log('fetch() op de WMS', 'wacht');
+  try {
+    const res = await fetch(wmsUrl('A'));
+    if (!res.ok) throw new Error('status ' + res.status);
+    const blob = await res.blob();
+    fetchOk = true;
+    r5.className = 'melding goed';
+    r5.innerHTML = 'fetch() op de WMS <span>' + Math.round(blob.size / 1024) + ' kB, type ' + blob.type + '</span>';
+  } catch (e) {
+    r5.className = 'melding fout';
+    r5.innerHTML = 'fetch() op de WMS <span>' + e.message + '</span>';
+  }
+
+  /* conclusie */
+  const c = document.getElementById('conclusie');
+  c.classList.remove('verborgen');
+  if (corsOk && exportOk) {
+    c.style.background = '#dcfce7';
+    c.textContent = 'Hypothese bevestigd. De liggingsfoto kan volledig in de browser: ophalen, windroos eroverheen, opslaan als PNG. Geen Edge Function nodig.';
+    document.getElementById('teken').disabled = false;
+  } else {
+    c.style.background = '#fee2e2';
+    c.textContent = 'Hypothese verworpen. De browser mag het beeld tonen maar niet exporteren. ' +
+      'Terugvalplan: een Supabase Edge Function haalt de foto op en geeft hem door, dan is het canvas wel schoon.';
+  }
+
+  knop.disabled = false;
+}
+
+/* ---------- windroos tekenen ---------- */
+function tekenCompositie() {
+  const v = document.getElementById('kies').value;
+  const img = BEELDEN[v];
+  if (!img) { alert('Variant ' + v + ' is niet geladen.'); return; }
+
+  const doek = document.getElementById('doek');
+  const W = img.naturalWidth || BREED;
+  const H = img.naturalHeight || HOOG;
+  doek.width = W; doek.height = H;
+  const ctx = doek.getContext('2d');
+  ctx.drawImage(img, 0, 0, W, H);
+
+  const r = Math.round(Math.min(W, H) * 0.11);
+  const cx = W - r - 26, cy = r + 26;
+  const graden = function (g) { return (g - 90) * Math.PI / 180; };
+
+  /* weerzijde: zuid tot west, de kant met zon en slagregen */
+  if (document.getElementById('weer').checked) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r * 2.4, graden(180), graden(270));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(249, 115, 22, 0.28)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* schijf */
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(31,36,48,0.85)';
+  ctx.stroke();
+
+  /* noordpijl */
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r * 0.78);
+  ctx.lineTo(cx - r * 0.2, cy + r * 0.12);
+  ctx.lineTo(cx + r * 0.2, cy + r * 0.12);
+  ctx.closePath();
+  ctx.fillStyle = '#b91c1c';
+  ctx.fill();
+
+  /* letters */
+  ctx.fillStyle = '#1f2430';
+  ctx.font = '700 ' + Math.round(r * 0.36) + 'px -apple-system, Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const pos = r * 1.32;
+  ctx.fillText('N', cx, cy - pos);
+  ctx.fillText('Z', cx, cy + pos);
+  ctx.fillText('O', cx + pos, cy);
+  ctx.fillText('W', cx - pos, cy);
+
+  /* schaalbalk */
+  let balkM = Math.round(SPAN / 5 / 5) * 5;
+  if (balkM < 5) balkM = 5;
+  const balkPx = balkM / SPAN * W;
+  const bx = 26, by = H - 30;
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillRect(bx - 8, by - 20, balkPx + 16, 34);
+  ctx.fillStyle = '#1f2430';
+  ctx.fillRect(bx, by, balkPx, 4);
+  ctx.font = '600 13px -apple-system, Segoe UI, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(balkM + ' m', bx, by - 6);
+  ctx.restore();
+
+  document.getElementById('download').disabled = false;
+}
+
+function downloadPng() {
+  const doek = document.getElementById('doek');
+  try {
+    doek.toBlob(function (blob) {
+      if (!blob) { alert('Export mislukt.'); return; }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'liggingsfoto-test.png';
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    }, 'image/png');
+  } catch (e) {
+    alert('Export mislukt: ' + e.name + '. Het canvas is besmet, dus CORS ontbreekt.');
+  }
+}
+
+document.getElementById('start').addEventListener('click', test);
+document.getElementById('teken').addEventListener('click', tekenCompositie);
+document.getElementById('download').addEventListener('click', downloadPng);
+</script>
+
+</body>
+</html>
