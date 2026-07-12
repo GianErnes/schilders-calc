@@ -1,16 +1,37 @@
-## v4.22.0 — Rekenverantwoording per onderhoudsbeurt
-Het meerjarenonderhoudsplan rekende tot nu toe achter de schermen: beurt-percentages, meeschalende toeslagen, risico-opslag en indexering waren niet te controleren. Nieuw is een Σ-knop per beurt in de beurtenlijst die een zijpaneel rechts opent, in hetzelfde patroon als de Controle.
+## v4.22.0 — Liggingsfoto met windroos op het onderhoudsplan
+Onderhoud is weersgevoelig, en welke gevel het zwaarst te verduren krijgt hangt af van waar hij op uitkijkt. Die informatie zat nergens in de app. Nu wel.
 
-### Wat het paneel toont
-- Welke instellingen gelden: de bevroren momentopname bij een vergrendelde bron-calculatie, of de live instellingen.
-- De schaal van de beurt en hoe het gemiddelde percentage voor de vaste toeslagen tot stand kwam (som van n factoren gedeeld door n).
-- Per regel het basisbedrag bij 100%, het toegepaste percentage en het resultaat; regels op 0% blijven grijs zichtbaar. Bij de modus Per stap klapt elke regel uit naar de stappen met hun eigen percentage.
-- Uren, dagen en de afrondingstoeslag; reiskosten met binnen of buiten rayon; klein materiaal, afval en arbo; de staartposten stuk voor stuk met de schaling erbij.
-- De optelling naar directe kosten, de risico-opslag en het bedrag excl. BTW op prijspeil.
-- De indexering met de factor voluit (bijvoorbeeld 1,065^8 = 1,655), de BTW en het eindbedrag dat één op één gelijk is aan de tijdlijn.
+### De sectie Ligging
+Boven de beurten in het tabblad Onderhoudsplan staat een nieuwe, inklapbare sectie **Ligging**. Die haalt op basis van de postcode uit de calculatie een luchtfoto van boven op en tekent er een windroos overheen.
 
-### Hoe het werkt
-Geen tweede rekenmachine: de bestaande rekenkern schrijft tijdens het gewone rekenen zijn tussenstappen weg en het paneel toont die. De verantwoording kan daardoor nooit afwijken van het plan. Alleen intern op scherm; de offertedocumenten en de brochure-PDF veranderen niet. Controle en Verantwoording kunnen niet tegelijk open staan. Geen SQL en geen Edge Function.
+- **Uitsnede kiezen**: 60 m voor een woonhuis, 100 m voor een klein complex, of ruimer (150 en 250 m).
+- **Weerzijde markeren**: een doorschijnende oranje wig van zuid tot west, de kant met de meeste zon, UV en slagregen. Aan of uit te zetten.
+- Windroos rechtsboven, schaalbalk linksonder. Vernieuwen en verwijderen kan altijd.
+
+Het noorden staat in het Rijksdriehoekstelsel altijd boven, dus de roos hoeft nooit gedraaid te worden.
+
+### Op de brochure
+De foto komt bovenaan pagina 1 van de offerte-bijlage, bij zowel de VvE- als de particuliere variant, met een bijschrift dat uitlegt wat je ziet. Dat maakt de foto meteen verkoopargument: het vertelt waarom bepaalde gevels vaker terugkomen in het plan.
+
+Het interne overzicht **Print onderhoudsplan** blijft ongewijzigd.
+
+### Onder de motorkap
+De luchtfoto komt van PDOK Luchtfoto RGB: open data onder CC BY, gratis, geen sleutel nodig. De aanroep is eerst met een wegwerp-testpagina op de echte GitHub Pages-herkomst gemeten, niet uit het hoofd geschreven:
+
+- WMS 1.3.0, `crs=EPSG:28992`, bbox in de volgorde minx,miny,maxx,maxy. De 1.1.1-variant en de omgekeerde asvolgorde leveren het verkeerde gebied op.
+- PDOK stuurt CORS-headers mee, dus het canvas blijft schoon en het samengestelde beeld is te exporteren. Er is geen Edge Function-proxy nodig.
+- De bron is 8 cm per pixel. Meer pixels vragen dan de bron heeft geeft alleen een opgeblazen beeld, dus de breedte volgt uit de uitsnede: meters gedeeld door 0,08, met 2500 als plafond. Verhouding 16:9.
+
+Het beeld gaat als JPEG naar de bestaande bucket `calculatie-fotos` onder `{calculatieId}/ligging.jpg`. Geen nieuwe bucket, geen nieuwe policies, en het wordt vanzelf mee opgeruimd als de calculatie wordt verwijderd. In de fotolijst van de calculatie verschijnt het niet, want die lijst komt uit een tabel en niet uit de map.
+
+### Vereist SQL
+Eénmalig, los geleverd:
+
+```sql
+alter table onderhoudsplannen add column if not exists ligging jsonb;
+```
+
+Er is niets aan het rekenwerk, de beurten of de indexering veranderd.
 
 ## v4.21.1 — Kolommen in de beurt-modal springen niet meer
 In het venster Beurt bewerken van een onderhoudsplan stonden regels op 0% niet meer in de nette kolommen: naam, bedrag en percentageveldje vielen achter elkaar op één regel. Regels die daarna van 0 naar een ander percentage werden gezet bleven ook verkeerd staan, omdat typen de regel niet opnieuw tekent.

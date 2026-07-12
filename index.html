@@ -1378,33 +1378,6 @@
     body.controle-open #vraagbaakTab { right: 0; }
     #controlePaneel { width: 100vw; }
   }
-  /* Rekenverantwoording onderhoudsplan (v4.22.0): zelfde zijpaneel-patroon als Controle */
-  #ohpVerPaneel {
-    position: fixed; top: 0; right: 0; bottom: 0;
-    width: 460px; max-width: 100vw;
-    background: var(--paper); border-left: 1px solid var(--paper-deep);
-    box-shadow: -6px 0 18px rgba(0,0,0,0.08);
-    z-index: 90; display: none; flex-direction: column;
-  }
-  #ohpVerPaneel.active { display: flex; }
-  #ohpVerPaneel .paneel-head {
-    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
-    padding: 0.75rem 1rem; border-bottom: 1px solid var(--paper-deep);
-  }
-  #ohpVerPaneel .paneel-head h3 { margin: 0; font-size: 1rem; }
-  #ohpVerPaneel .paneel-body { flex: 1; overflow-y: auto; padding: 0.9rem 1rem; font-size: 0.82rem; }
-  #ohpVerPaneel table.ver-tab { width: 100%; border-collapse: collapse; margin: 0.3rem 0 0.6rem; }
-  #ohpVerPaneel table.ver-tab td { padding: 0.15rem 0.2rem; vertical-align: top; }
-  #ohpVerPaneel table.ver-tab td.right { text-align: right; white-space: nowrap; }
-  #ohpVerPaneel .ver-kop { font-weight: 700; font-size: 0.85rem; margin: 0.8rem 0 0.2rem; border-top: 1px solid var(--paper-deep); padding-top: 0.7rem; }
-  #ohpVerPaneel .ver-kop:first-child { border-top: none; margin-top: 0; padding-top: 0; }
-  body.ohpver-open { padding-right: 460px; }
-  body.ohpver-open #vraagbaakTab { right: 460px; }
-  @media (max-width: 900px) {
-    body.ohpver-open { padding-right: 0; }
-    body.ohpver-open #vraagbaakTab { right: 0; }
-    #ohpVerPaneel { width: 100vw; }
-  }
   .modal {
     background: var(--paper);
     border-radius: var(--radius-lg);
@@ -1800,7 +1773,7 @@
 
   @media print {
     /* Hide everything except print area */
-    body > header, body > nav, body > main, body > footer, body > .modal-overlay, body > #controlePaneel, body > #ohpVerPaneel { display: none !important; }
+    body > header, body > nav, body > main, body > footer, body > .modal-overlay, body > #controlePaneel { display: none !important; }
     body { background: #fff !important; padding: 0; margin: 0; }
     .print-only { display: block !important; }
     .brand-logo, .brand-logo.print { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
@@ -2190,7 +2163,7 @@
     <div class="intro intro-collapsible collapsed" id="introBlock">
       <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.22.0</h2>
       <div class="intro-body">
-        <p><strong>Σ Rekenverantwoording per onderhoudsbeurt (v4.22.0).</strong> In de beurtenlijst van het onderhoudsplan staat per beurt een nieuwe Σ-knop. Die opent een zijpaneel rechts, net als de Controle, met de volledige rekenopbouw van die beurt: elk regelbedrag met het toegepaste percentage, hoe het gemiddelde voor de vaste toeslagen tot stand kwam, de afrondingstoeslag, reiskosten, opslagen en staartposten stuk voor stuk, en dan de optelling naar het bedrag excl. BTW op prijspeil. Daaronder de indexering met de factor voluit (bijvoorbeeld 1,065^8 = 1,655), de BTW en het eindbedrag dat één op één gelijk is aan de tijdlijn. Het paneel toont wat de rekenkern zelf heeft gedaan, dus afwijken kan niet; bij vergrendelde plannen rekent hij vanzelf met de bevroren instellingen en dat staat er ook bij. Alleen intern op scherm, niets verandert aan de offertedocumenten. Geen SQL nodig.</p>
+        <p><strong>🧭 Liggingsfoto met windroos op het onderhoudsplan (v4.22.0).</strong> In het tabblad Onderhoudsplan staat boven de beurten een nieuwe sectie <em>Ligging</em>. Die haalt op basis van de postcode uit de calculatie een luchtfoto van boven op en tekent er een windroos overheen. Je kiest de uitsnede (60 m voor een woonhuis, 100 m voor een klein complex, of ruimer) en of de weerzijde gemarkeerd wordt: de oranje wig van zuid tot west, de kant met de meeste zon, UV en slagregen. Zo zie je in één oogopslag welke gevel op welke windrichting staat, zowel bij het opstellen als bij het beoordelen van het plan. De foto komt ook bovenaan pagina 1 van de offerte-bijlage, met een bijschrift dat uitlegt waarom bepaalde gevels vaker terugkomen. De luchtfoto komt van PDOK: open data, gratis, geen sleutel nodig. Het noorden staat in het Rijksdriehoekstelsel altijd boven, dus de roos hoeft nooit gedraaid te worden. Vereist éénmalig SQL (los geleverd) 🧭.</p>
         <p><strong>🔧 Kolommen in de beurt-modal springen niet meer (v4.21.1).</strong> In het venster Beurt bewerken van een onderhoudsplan stonden regels op 0% niet meer in de nette kolommen: naam, bedrag en percentageveldje vielen achter elkaar op één regel. Oorzaak was een dubbel style-attribuut waardoor de browser de kolomindeling weggooide zodra een regel grijs werd getoond. Dat is gerepareerd voor de modus Per regel en voor de stap-regels in de modus Per stap. Alle regels staan nu in dezelfde kolommen; regels op 0% blijven gewoon grijs. Geen SQL nodig.</p>
         <p><strong>📅 Datum op het onderhoudsplan-document (v4.21.0).</strong> Op de bijlage van het onderhoudsplan ontbrak een documentdatum, iets wat een VvE-beheerder terecht opmerkte. In de kop staat nu rechtsboven, onder het kenmerk, een datumregel "d.d. ...". Hij pakt de offertedatum van het plan, net als het gewone offertedocument. Is er nog geen offertedatum ingevuld, dan valt hij terug op de datum van vandaag zodat er altijd een datum op staat. Geldt voor de VvE- en de particulier-variant. Geen SQL nodig.</p>
         <p><strong>🏗️ Naar Craft kijkt nu alleen naar het duplicaat van vandaag (v4.20.1).</strong> Staat het sjabloon "🏠Projectnaam" zelf ook nog in Craft, dan stopte de knop omdat hij twee documenten zag en niet wist welke de jouwe was. Nu telt hij alleen de verse duplicaten van vandaag. Het oude sjabloon valt weg en het duplicaat van net gaat vanzelf door. Heb je nog geen vers duplicaat gemaakt, dan zegt hij dat alleen het sjabloon er staat en dat je eerst moet dupliceren. Staan er wel twee verse van dezelfde dag, dan stopt hij nog steeds en vraagt hij op te ruimen. Geen SQL nodig.</p>
@@ -2687,6 +2660,12 @@
         Kies een bron-calculatie om te beginnen.
       </div>
       <div id="ohpPlanBlok" style="display: none;">
+        <details class="settings-section" id="ohpLiggingSectie" open style="margin-bottom: 1rem;">
+          <summary style="cursor: pointer;">
+            <h3 style="margin: 0; display: inline;">Ligging <span style="font-weight: normal; font-size: 0.8rem; color: var(--muted);">&mdash; luchtfoto van boven met windroos; het noorden staat altijd boven</span></h3>
+          </summary>
+          <div id="ohpLiggingInhoud" style="margin-top: 0.8rem;"></div>
+        </details>
         <div class="settings-section">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
             <h3 style="margin: 0;">Beurten</h3>
@@ -2854,18 +2833,6 @@
     <button class="close-x" onclick="closeControlePaneel()">✕</button>
   </div>
   <div class="paneel-body" id="controleBody"></div>
-</aside>
-
-<!-- REKENVERANTWOORDING ONDERHOUDSPLAN (v4.22.0) — alleen intern, op scherm -->
-<aside id="ohpVerPaneel" aria-label="Rekenverantwoording van een onderhoudsbeurt">
-  <div class="paneel-head">
-    <div>
-      <h3>Σ Rekenverantwoording</h3>
-      <div id="ohpVerSub" style="font-size:0.72rem; color:var(--muted);"></div>
-    </div>
-    <button class="close-x" onclick="closeOhpVerantwoording()">✕</button>
-  </div>
-  <div class="paneel-body" id="ohpVerBody"></div>
 </aside>
 
 <div class="modal-overlay" id="yoobiModal" onclick="if (event.target === this) closeYoobiModal()">
@@ -3807,7 +3774,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
-  { v: '4.22.0', d: '2026-07-12', h: 'Rekenverantwoording per onderhoudsbeurt als zijpaneel. Σ-knop per rij in _ohpRenderBeurtenLijst (knoppenkolom 110 naar 150px) opent aside #ohpVerPaneel (patroon controlePaneel: fixed rechts 460px, body.ohpver-open duwt content en #vraagbaakTab, max-width 900px volle breedte, print verbergt). Geen tweede rekenmachine: _ohpBeurtBasisBedrag(beurt, metTrace) schrijft tijdens het gewone rekenen zijn tussenstappen naar _ohpLastTrace (bron snapshot/live, modus, extraFactor plus aantalFactoren, per regel via nieuwe trace-parameter op _ohpProjectRauw met basis/factor/resultaat en 0%-regels grijs zichtbaar zonder het rekenpad te raken, per stap via stapTrace-parameter op _ohpRegelRauw, dagen en afrondingstoeslag, reis met binnen/buiten rayon, kleinMat/afval/arbo, staartposten bruto keer extraFactor bij vast en eenheid, directe, risico, exBtw). _ohpVerHtml rendert negen blokken; indexering met machtsnotatie via _ohpIndexFactor en BTW via _ohpBtwFactor, eindbedrag gelijk aan de tijdlijn. Controle en Verantwoording sluiten elkaar wederzijds. Alleen intern op scherm. Geen SQL, geen Edge Function.' },
+  { v: '4.22.0', d: '2026-07-12', h: 'Liggingsfoto met windroos op het onderhoudsplan. Nieuwe sectie Ligging (ohpLiggingSectie, een details boven de Beurten in ohpPlanBlok) haalt via de PDOK Luchtfoto RGB WMS een luchtfoto van boven op en tekent er op canvas een windroos, een schaalbalk en een optionele weerzijde-wig (zuid tot west, oranje) overheen. Coordinaten via _ohpLiggingGeocodeRD, dat centroide_rd van de PDOK Locatieserver leest op basis van postcode en huisnummer uit de calculatie; RD is metrisch dus de uitsnede in meters is letterlijk de bbox-breedte. WMS-aanroep vastgesteld met een testpagina op de echte GitHub Pages-herkomst: 1.3.0, crs=EPSG:28992, bbox als minx,miny,maxx,maxy (de 1.1.1-variant en de omgekeerde asvolgorde geven het verkeerde gebied). PDOK stuurt CORS-headers mee, dus het canvas blijft schoon en het beeld is te exporteren; geen Edge Function-proxy nodig. Bron is 8 cm per pixel, dus breedte = meters / 0,08 met 2500 als plafond, verhouding 16:9. Uitsnedes 60, 100, 150 en 250 m. Het samengestelde beeld gaat als JPEG naar de bestaande bucket calculatie-fotos onder {calcId}/ligging.jpg met upsert, dus geen nieuwe bucket en geen nieuwe policies; het wordt mee opgeruimd bij het verwijderen van de calculatie en verschijnt niet in de fotolijst (die komt uit calculatie_fotos). Nieuwe jsonb-kolom ligging op onderhoudsplannen met pad, rdX, rdY, span, laag, weerzijde en gemaakt, meegenomen in _mapOhpToDB en _mapOhpFromDB. In de brochure komt de foto als eerste blok op pagina 1 (beide takken, VvE en particulier) met een bijschrift over noordorientatie en de weerzijde; _ohpPrintOfferte is async geworden en zet de foto vooraf klaar als data-URL in _ohpLiggingPrintUrl, want _ohpBuildOfferteHTML is synchroon en window.print() wacht niet op een netwerk-fetch (zelfde reden als de data-URI-logo s in v4.7.9). Het interne Print onderhoudsplan blijft ongewijzigd. Geen rekenwerk aangeraakt. Vereist SQL (los geleverd)' },
   { v: '4.21.1', d: '2026-07-11', h: 'Dubbel style-attribuut in de beurt-modal gerepareerd. In _ohpMbRenderPerRegel en _ohpMbRenderPerStap kreeg een regel of stap op 0% een dim-variabele als losse style="opacity: 0.5;" naast het bestaande style-attribuut met de grid-indeling; de browser honoreert alleen het eerste style-attribuut, dus de grid verviel en naam, bedrag en percentageveld vielen inline achter elkaar (verspringen, screenshot 11-07-2026). Regels die van 0 naar een ander percentage werden getypt bleven verkeerd staan omdat het input-event niet herrendert. Fix: dim is nu een opacity-fragment dat vooraan in het ene style-attribuut wordt geplakt (style="${dim}display: grid; ..."), op beide plekken. Puur weergave, geen rekenwerk, geen SQL, geen Edge Function.' },
   { v: '4.21.0', d: '2026-07-07', h: 'Documentdatum in de kop van de onderhoudsplan-bijlage (_ohpBuildOfferteHTML). De offertedatum werd via _offDatum al berekend maar stond alleen in de besluit-kenmerkzin (blok D, alleen VvE) en nergens op het document zelf; een VvE-beheerder merkte de ontbrekende datum op. Nieuw: _kopDatum = _offDatum || _offDatumLang(_kopVandaagIso), met _kopVandaagIso als lokale YYYY-MM-DD van vandaag (getFullYear/getMonth+1/getDate met padStart, bewust niet toISOString wegens UTC-verschuiving rond middernacht). In de masthead m-right, na de m-ref Kenmerk-regel, een nieuwe div class m-date met d.d. plus _escapeHtml(_kopDatum). Nieuwe scoped CSS .ob .m-date, identiek aan .m-ref (7.5pt, muted, letter-spacing 0.5px). Omdat de masthead via het obMastheadTpl-template op elke pagina wordt herhaald, staat de datum op elke pagina, VvE en particulier. _offDatum en dus de besluitpagina blijven ongewijzigd. Geen SQL, geen Edge Function.' },
   { v: '4.20.1', d: '2026-07-06', h: 'Naar Craft filtert de "🏠Projectnaam"-treffers nu eerst op aanmaakdatum vandaag voordat er geteld wordt. craftNaarCraft: alleTreffers = alle documents.laatste_25 met titel exact "🏠Projectnaam" (aflopend op createdAt), daarna verseVandaag = alleTreffers gefilterd op new Date(createdAt).toDateString() === new Date().toDateString(); aantalTreffers en kandidaat komen voortaan uit verseVandaag. Reden: het sjabloon zelf staat als "🏠Projectnaam"-document in Craft, dus bij elk vers duplicaat zag de v4.10.5-noodrem er twee en stopte hij altijd (incident 06-07-2026: knop deed niets, twee treffers). Met de datumfilter valt het oude sjabloon weg en blijft het verse duplicaat van vandaag over. Nul van vandaag met wel een ouder exemplaar geeft nu de melding dat alleen het sjabloon er staat; twee of meer verse van vandaag houden de noodrem (tekst nu "van vandaag"). De downstream vanVandaag-waarschuwing wordt hierdoor altijd leeg maar blijft als vangnet staan. Geen SQL, geen Edge Function.' },
@@ -5109,7 +5076,6 @@ function controleerCalc() {
     const uit = document.getElementById('leescontroleResultaat');
     if (uit) uit.innerHTML = _lcLaatste.html;
   }
-  closeOhpVerantwoording();
   document.getElementById('controlePaneel').classList.add('active');
   document.body.classList.add('controle-open');
   _ctlTellerUpdate();
@@ -6763,6 +6729,7 @@ function _mapOhpFromDB(row) {
     scopeOmschrijving: row.scope_omschrijving || '',      // v3.23.0 — VvE: wat valt onder het plan
     aantalAppartementen: row.aantal_appartementen != null ? row.aantal_appartementen : null, // v4.7.2 — VvE: voor maandbijdrage per eigenaar
     status:        row.status || 'concept',               // v3.25.10 — los van calc-status; 5 waarden
+    ligging:       row.ligging || null,                   // v4.22.0 - { pad, rdX, rdY, span, laag, weerzijde, gemaakt }
     aangemaakt:    row.aangemaakt || null,
     gewijzigd:     row.gewijzigd  || null,
     beurten:       []
@@ -6781,6 +6748,7 @@ function _mapOhpToDB(p) {
     scope_omschrijving: p.scopeOmschrijving || '',      // v3.23.0
     aantal_appartementen: p.aantalAppartementen != null ? p.aantalAppartementen : null, // v4.7.2
     status:         p.status || 'concept',              // v3.25.10
+    ligging:        p.ligging || null,                  // v4.22.0 - liggingsfoto: pad + parameters
     gewijzigd:      new Date().toISOString()
   };
 }
@@ -8112,6 +8080,7 @@ function _ohpRenderInhoud() {
   }
   leeg.style.display = 'none';
   blok.style.display = '';
+  _ohpRenderLigging();
   _ohpRenderBeurtenLijst();
   _ohpRenderExternLijst();
   _ohpRenderResultaat();
@@ -8149,30 +8118,19 @@ function _ohpStapTotaal(stap, sett) {
 // Bereken regel-totalen (rauwe arbeid en materiaal) — GEEN winst per regel.
 // Spiegelt het arbeids- en materiaal-deel van calcRegelTotalen, maar zonder
 // directe/winst-opslag (die wordt op project-niveau toegepast).
-function _ohpRegelRauw(r, sett, stappenOverride, stapTrace) {
+function _ohpRegelRauw(r, sett, stappenOverride) {
   if (!r.hoeveelheid || !r.stappen || !r.stappen.length) {
     return { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0 };
   }
   let minuten = 0, matInkoop = 0, matVerkoop = 0;
-  const trTF = 1 + (r.toeslag || 0) / 100; // v4.22.0 — alleen voor stapTrace-bijdragen
   r.stappen.forEach(st => {
     let workStap = st;
-    let beurtFactor = 1;
     if (stappenOverride && stappenOverride.has(st.id)) {
       const extraFactor = stappenOverride.get(st.id); // 0..1
-      beurtFactor = extraFactor;
       workStap = { ...st, percentage: (st.percentage ?? 100) * extraFactor };
     }
     const c = _ohpStapTotaal(workStap, sett);
     minuten += c.minuten; matInkoop += c.matInkoop; matVerkoop += c.matVerkoop;
-    if (stapTrace) {
-      stapTrace.push({
-        naam: st.naam || '(zonder naam)',
-        factor: beurtFactor,
-        arbeid: (c.minuten / 60) * (sett.uurloon || 0) * r.hoeveelheid * trTF,
-        matVerkoop: c.matVerkoop * r.hoeveelheid
-      });
-    }
   });
   const uren = minuten / 60;
   const arbeid = uren * (sett.uurloon || 0);
@@ -8189,26 +8147,15 @@ function _ohpRegelRauw(r, sett, stappenOverride, stapTrace) {
 // Project-totalen (rauw): som van alle regels met optionele scaling.
 // regelScaling: Map<regelId, factor 0..1> of null
 // stapScaling:  Map<stapId, factor 0..1> of null
-function _ohpProjectRauw(calc, sett, regelScaling, stapScaling, trace) {
+function _ohpProjectRauw(calc, sett, regelScaling, stapScaling) {
   const tot = { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0 };
   (calc.hoofdgroepen || []).forEach(hg => {
     (hg.onderdelen || []).forEach(od => {
       (od.regels || []).forEach(r => {
         const rFactor = (regelScaling && regelScaling.has(r.id)) ? regelScaling.get(r.id) : 1;
-        if (rFactor === 0) {
-          // v4.22.0 — voor de verantwoording tonen we 0%-regels wel (grijs), rekenpad blijft ongewijzigd.
-          if (trace) {
-            const rNul = _ohpRegelRauw(r, sett, stapScaling);
-            trace.regels.push({ hg: hg.naam || '', od: od.naam || '', naam: r.naam || '(zonder naam)', hoeveelheid: r.hoeveelheid, eenheid: r.eenheid || '', factor: 0, basis: rNul.arbeid + rNul.matVerkoop, resultaat: 0, stappen: null });
-          }
-          return;
-        }
-        const stapTrace = (trace && stapScaling) ? [] : null;
-        const rTot = _ohpRegelRauw(r, sett, stapScaling, stapTrace);
+        if (rFactor === 0) return;
+        const rTot = _ohpRegelRauw(r, sett, stapScaling);
         Object.keys(tot).forEach(k => tot[k] += (rTot[k] || 0) * rFactor);
-        if (trace) {
-          trace.regels.push({ hg: hg.naam || '', od: od.naam || '', naam: r.naam || '(zonder naam)', hoeveelheid: r.hoeveelheid, eenheid: r.eenheid || '', factor: rFactor, basis: rTot.arbeid + rTot.matVerkoop, resultaat: (rTot.arbeid + rTot.matVerkoop) * rFactor, stappen: stapTrace });
-        }
       });
     });
   });
@@ -8263,16 +8210,13 @@ function _ohpDagen(calc, sett, projectUren) {
 // Hoofdfunctie: bereken het basisbedrag (excl. BTW) van een beurt.
 // Spiegelt letterlijk de directe + risico-formule uit de calc-tab.
 let _ohpLastBeurtUren = 0; // v3.27.4 — manuren werk van de laatst berekende beurt (voor planning-capaciteit)
-let _ohpLastTrace = null;      // v4.22.0 — tussenstappen van de laatst berekende beurt (rekenverantwoording)
-function _ohpBeurtBasisBedrag(beurt, metTrace) {
+function _ohpBeurtBasisBedrag(beurt) {
   _ohpLastBeurtUren = 0;
-  if (metTrace) _ohpLastTrace = null;
   const plan = _ohpState.plan;
   if (!plan) return 0;
   const calc = _ohpBronCalc();
   if (!calc || !calc.__loaded) return 0;
   const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
-  const tr = metTrace ? { bron: (calc.settingsSnapshot ? 'snapshot' : 'live'), modus: beurt.modus, regels: [], staart: [] } : null;
 
   // 1. Bouw scaling-maps op basis van modus.
   let regelScaling = null;
@@ -8313,12 +8257,8 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
     return 0;
   }
 
-  if (tr) {
-    tr.extraFactor = extraFactor;
-    tr.aantalFactoren = stapScaling ? stapScaling.size : (regelScaling ? regelScaling.size : 0);
-  }
   // 2. Project-totalen (rauw, geschaald).
-  const t = _ohpProjectRauw(calc, sett, regelScaling, stapScaling, tr);
+  const t = _ohpProjectRauw(calc, sett, regelScaling, stapScaling);
 
   // 3. Dagen factureerbaar en weken op basis van project-uren.
   // v3.16.0: voeg extra uren toe uit staartposten met teltInWerkdagen=true
@@ -8326,13 +8266,11 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
   const extraUrenStaart = _extraUrenUitStaart(calc.staart || [], t, (sett.uurloon || 0));
   const dg = _ohpDagen(calc, sett, t.uren + extraUrenStaart);
   _ohpLastBeurtUren = t.uren + extraUrenStaart; // v3.27.4 — manuren werk (excl. reis), voor de planning-capaciteit
-  if (tr) { tr.totalen = { uren: t.uren, arbeid: t.arbeid, matVerkoop: t.matVerkoop }; tr.extraUrenStaart = extraUrenStaart; tr.dagen = dg; }
 
   // 4. Afrondingstoeslag (extra-arbeid bij volle dagen).
   const dagenVerschil = Math.max(0, dg.factureerbaar - dg.werkelijk);
   const afrondingsToeslag = dg.volleDagen ? dagenVerschil * (calc.schilders || 0) * (calc.uurDag || 7.5) * (sett.uurloon || 0) : 0;
   const arbeid = t.arbeid + afrondingsToeslag;
-  if (tr) tr.afronding = { verschil: dagenVerschil, toeslag: afrondingsToeslag, volleDagen: dg.volleDagen };
 
   // 5. Reiskosten op basis van factureerbare dagen (schalen mee met geschaald werk).
   // v3.14.0 — Binnen rayon (≤ sett.rayonDrempel km enkele reis): alleen km-vergoeding,
@@ -8347,13 +8285,11 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
   const reisKostenUren = binnenRayon ? 0 : reisUren * (sett.reistijd || 0);
   const reisKm = reisDagen * (reisAfstand * 2) * (sett.km || 0);
   const reisTotaal = reisKostenUren + reisKm;
-  if (tr) tr.reis = { afstand: reisAfstand, binnenRayon: binnenRayon, rayonDrempel: rayonDrempel, reisDagen: reisDagen, kostenUren: reisKostenUren, km: reisKm, totaal: reisTotaal };
 
   // 6. Opslagen.
   const kleinMat = t.matVerkoop * (sett.kleinMat || 0) / 100;
   const afval = (arbeid + t.matVerkoop) * (sett.afval || 0) / 100;
   const arbo = arbeid * (sett.arbo || 0) / 100;
-  if (tr) tr.opslagen = { kleinMatPct: sett.kleinMat || 0, kleinMat: kleinMat, afvalPct: sett.afval || 0, afval: afval, arboPct: sett.arbo || 0, arbo: arbo };
 
   // 7. Staart — elk staart-post berekenen op het geschaalde project, daarna nogmaals × extraFactor
   //    (zodat een controlebeurt van 15% ook 15% staart krijgt, geen 100%).
@@ -8362,29 +8298,362 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
   let staartTotaal = 0;
   (calc.staart || []).forEach(p => {
     const post = _ohpStaartPost(p, calc, sett, t, dg.factureerbaar, dg.weken);
-    const geschaald = (p.type === 'vast' || p.type === 'eenheid');
-    const netto = geschaald ? post * extraFactor : post;
-    staartTotaal += netto;
-    if (tr) tr.staart.push({ naam: p.naam || '(zonder naam)', type: p.type, bruto: post, geschaald: geschaald, netto: netto });
+    if (p.type === 'vast' || p.type === 'eenheid') {
+      staartTotaal += post * extraFactor;
+    } else {
+      staartTotaal += post;
+    }
   });
 
   // 8. Directe kosten en risico.
   const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
   const winstBedrag = directe * (sett.winst || 0) / 100;
   const exBtw = directe + winstBedrag;
-  if (tr) {
-    tr.arbeidInclAfronding = arbeid;
-    tr.staartTotaal = staartTotaal;
-    tr.directe = directe;
-    tr.risicoPct = sett.winst || 0;
-    tr.risicoBedrag = winstBedrag;
-    tr.exBtw = exBtw;
-    _ohpLastTrace = tr;
-  }
   return exBtw;
 }
 
 // Helper: vind de bron-calculatie in data.calculaties.
+// ============================================================
+// LIGGINGSFOTO (v4.22.0)
+// ============================================================
+// Een luchtfoto van boven met een windroos erover, zodat je bij het opstellen
+// en het beoordelen van het plan meteen ziet welke gevel op welke windrichting
+// staat. Bron: PDOK Luchtfoto RGB (open data, CC BY, geen sleutel, geen kosten).
+//
+// Vastgesteld met een testpagina op 12-07-2026, draaiend op de echte GitHub
+// Pages-herkomst (lokaal testen geeft een onbetrouwbare CORS-uitkomst):
+//   - WMS 1.3.0 met crs=EPSG:28992 en bbox in de volgorde minx,miny,maxx,maxy.
+//     De WMS 1.1.1-variant en de omgekeerde asvolgorde leveren het verkeerde
+//     gebied op. Niet wijzigen zonder opnieuw te meten.
+//   - PDOK stuurt CORS-headers mee. Daardoor blijft het canvas schoon en kunnen
+//     we het samengestelde beeld exporteren. Geen Edge Function-proxy nodig.
+//
+// In het Rijksdriehoekstelsel staat het noorden altijd boven, dus de windroos
+// hoeft nooit gedraaid te worden.
+//
+// De luchtfoto heeft 8 cm per pixel. Meer pixels vragen dan de bron heeft geeft
+// alleen een opgeblazen beeld, dus de breedte volgt uit de uitsnede:
+// breedte = meters / 0,08, met 2500 als plafond (de WMS-limiet). Verhouding
+// 16:9, zodat het beeld vol breed op de brochure past naast het openingsblok.
+
+const OHP_WMS  = 'https://service.pdok.nl/hwh/luchtfotorgb/wms/v1_0';
+const OHP_LAAG = 'Actueel_orthoHR';   // Luchtfoto Actueel Ortho 8cm RGB
+const OHP_M_PER_PIXEL = 0.08;
+const OHP_WMS_MAX = 2500;
+const OHP_SPANS = [
+  { m: 60,  label: '60 m \u2014 woonhuis' },
+  { m: 100, label: '100 m \u2014 klein complex' },
+  { m: 150, label: '150 m \u2014 complex' },
+  { m: 250, label: '250 m \u2014 groot complex' }
+];
+
+// Staat er al een foto, dan toont de sectie die. Deze vlag zet hem tijdelijk
+// terug op de invulrij, zodat je de uitsnede kunt wijzigen en opnieuw ophalen.
+let _ohpLiggingInstellen = false;
+
+// Data-URL van de liggingsfoto, vlak voor het printen klaargezet door
+// _ohpPrintOfferte. De brochure bakt afbeeldingen als data-URI in de HTML,
+// net als de logo's, omdat window.print() niet wacht op een netwerk-fetch.
+let _ohpLiggingPrintUrl = null;
+
+// Postcode en huisnummer naar Rijksdriehoek-coordinaten. Zelfde bron als de
+// automatische reisafstand (v3.26.0), maar dan het RD-zwaartepunt in plaats van
+// lengte- en breedtegraad. RD is metrisch, dus een uitsnede van 60 meter is
+// letterlijk 60 in coordinaat-eenheden.
+async function _ohpLiggingGeocodeRD(postcode, huisnummer) {
+  const q = encodeURIComponent(((postcode || '') + ' ' + (huisnummer || '')).trim());
+  const url = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=' + q +
+              '&fq=type:adres&rows=1&fl=weergavenaam,centroide_rd';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('PDOK gaf status ' + res.status);
+  const j = await res.json();
+  const docs = (j.response && j.response.docs) || [];
+  if (!docs.length) return null;
+  const m = /POINT\(([-\d.]+)\s+([-\d.]+)\)/.exec(docs[0].centroide_rd || '');
+  if (!m) return null;
+  return { naam: docs[0].weergavenaam || '', x: parseFloat(m[1]), y: parseFloat(m[2]) };
+}
+
+// Bouwt de GetMap-aanroep. Variant A uit de test: 1.3.0, crs, bbox als x,y.
+function _ohpLiggingWmsUrl(x, y, spanM) {
+  let breedte = Math.round(spanM / OHP_M_PER_PIXEL);
+  if (breedte > OHP_WMS_MAX) breedte = OHP_WMS_MAX;
+  const hoogte = Math.round(breedte * 9 / 16);
+  const spanV  = spanM * 9 / 16;
+  const minx = x - spanM / 2, maxx = x + spanM / 2;
+  const miny = y - spanV / 2, maxy = y + spanV / 2;
+  const p = [
+    'service=WMS', 'version=1.3.0', 'request=GetMap',
+    'layers=' + OHP_LAAG, 'styles=',
+    'crs=EPSG:28992',
+    'bbox=' + [minx, miny, maxx, maxy].join(','),
+    'width=' + breedte, 'height=' + hoogte,
+    'format=image/jpeg'
+  ];
+  return OHP_WMS + '?' + p.join('&');
+}
+
+// Tekent windroos, weerzijde en schaalbalk over de luchtfoto. Geeft een JPEG-blob.
+function _ohpLiggingTeken(img, spanM, weerzijde) {
+  const W = img.naturalWidth, H = img.naturalHeight;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  ctx.drawImage(img, 0, 0, W, H);
+
+  // Kompasgraden naar canvas-hoek: 0 graden is noord (recht omhoog), met de klok mee.
+  const hoek = (g) => (g - 90) * Math.PI / 180;
+  const r    = Math.round(Math.min(W, H) * 0.13);
+  const rand = Math.round(r * 0.6);   // ruim genoeg zodat de letter O binnen het beeld valt
+  const cx   = W - r - rand;
+  const cy   = r + rand;
+
+  // De weerzijde: zuid tot west. Zon, UV en slagregen komen uit die hoek, dus
+  // daar verweren de gevels het snelst. De noordkant heeft een andere belasting
+  // (blijft langer nat, groeit dicht) en wordt hier bewust niet gemarkeerd.
+  if (weerzijde) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r * 2.3, hoek(180), hoek(270));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(249, 115, 22, 0.28)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Schijf
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+  ctx.fill();
+  ctx.lineWidth = Math.max(2, Math.round(r * 0.05));
+  ctx.strokeStyle = 'rgba(31, 36, 48, 0.85)';
+  ctx.stroke();
+
+  // Noordpijl
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r * 0.78);
+  ctx.lineTo(cx - r * 0.20, cy + r * 0.12);
+  ctx.lineTo(cx + r * 0.20, cy + r * 0.12);
+  ctx.closePath();
+  ctx.fillStyle = '#b91c1c';
+  ctx.fill();
+
+  // Letters
+  ctx.fillStyle = '#1f2430';
+  ctx.font = '700 ' + Math.round(r * 0.36) + 'px -apple-system, "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const d = r * 1.30;
+  ctx.fillText('N', cx, cy - d);
+  ctx.fillText('Z', cx, cy + d);
+  ctx.fillText('O', cx + d, cy);
+  ctx.fillText('W', cx - d, cy);
+  ctx.restore();
+
+  // Schaalbalk linksonder, op een wit vlakje zodat hij op elke ondergrond leesbaar is.
+  let balkM = Math.round(spanM / 5 / 5) * 5;
+  if (balkM < 5) balkM = 5;
+  const balkPx = balkM / spanM * W;
+  const bx = Math.round(W * 0.03);
+  const by = H - Math.round(H * 0.07);
+  const dik = Math.max(3, Math.round(H * 0.007));
+  const tekstH = Math.round(r * 0.26);
+  ctx.save();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.fillRect(bx - 8, by - tekstH - 12, balkPx + 16, tekstH + dik + 20);
+  ctx.fillStyle = '#1f2430';
+  ctx.fillRect(bx, by, balkPx, dik);
+  ctx.font = '600 ' + tekstH + 'px -apple-system, "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(balkM + ' m', bx, by - 5);
+  ctx.restore();
+
+  return new Promise((klaar) => { cv.toBlob(klaar, 'image/jpeg', 0.9); });
+}
+
+// De hele keten: adres opzoeken, luchtfoto laden, windroos erover, opslaan.
+async function _ohpLiggingOphalen() {
+  const plan = _ohpState.plan;
+  const calc = _ohpBronCalc();
+  if (!plan || !calc || !_sb) return;
+
+  const spanEl = document.getElementById('ohpLiggingSpan');
+  const weerEl = document.getElementById('ohpLiggingWeer');
+  const knop   = document.getElementById('ohpLiggingKnop');
+  const status = document.getElementById('ohpLiggingStatus');
+  const spanM  = parseInt(spanEl ? spanEl.value : 60, 10) || 60;
+  const weerzijde = weerEl ? weerEl.checked : true;
+  const zeg = (t) => { if (status) status.textContent = t; };
+
+  if (knop) knop.disabled = true;
+  try {
+    zeg('Pand opzoeken bij PDOK\u2026');
+    const plek = await _ohpLiggingGeocodeRD(calc.postcode, calc.huisnummer);
+    if (!plek) {
+      zeg('Dit adres is niet gevonden bij PDOK. Klopt de postcode en het huisnummer?');
+      if (knop) knop.disabled = false;
+      return;
+    }
+
+    zeg('Luchtfoto ophalen\u2026');
+    const img = await new Promise((klaar, mis) => {
+      const i = new Image();
+      i.crossOrigin = 'anonymous';   // PDOK stuurt CORS-headers, dus het canvas blijft schoon
+      i.onload  = () => klaar(i);
+      i.onerror = () => mis(new Error('de luchtfoto laadde niet'));
+      i.src = _ohpLiggingWmsUrl(plek.x, plek.y, spanM);
+    });
+
+    zeg('Windroos tekenen\u2026');
+    const blob = await _ohpLiggingTeken(img, spanM, weerzijde);
+    if (!blob) throw new Error('het beeld kon niet samengesteld worden');
+
+    zeg('Opslaan\u2026');
+    // Vaste naam per calculatie, met upsert. Staat in dezelfde map als de foto's
+    // van de calculatie, dus hij wordt vanzelf mee opgeruimd als de calculatie
+    // wordt verwijderd. Hij verschijnt niet in de fotolijst, want die komt uit
+    // de tabel calculatie_fotos en niet uit de Storage-map.
+    const pad = calc.id + '/ligging.jpg';
+    const up = await _sbQuery(
+      _sb.storage.from(FOTO_BUCKET).upload(pad, blob, { contentType: 'image/jpeg', upsert: true }),
+      'Liggingsfoto uploaden'
+    );
+    if (up.error) throw new Error('opslaan mislukte');
+
+    plan.ligging = {
+      pad: pad, rdX: plek.x, rdY: plek.y, span: spanM,
+      laag: OHP_LAAG, weerzijde: weerzijde, gemaakt: new Date().toISOString()
+    };
+    const bewaard = await _saveOhpParams(plan);
+    if (bewaard) _ohpState.plan = bewaard;
+
+    _ohpLiggingInstellen = false;
+    _ohpRenderLigging();
+    _toast('Liggingsfoto opgehaald');
+  } catch (e) {
+    zeg('Het lukte niet: ' + (e.message || 'onbekende fout'));
+    if (knop) knop.disabled = false;
+  }
+}
+
+async function _ohpLiggingVerwijder() {
+  const plan = _ohpState.plan;
+  if (!plan || !plan.ligging || !plan.ligging.pad || !_sb) return;
+  if (!confirm('De liggingsfoto verwijderen? Hij verdwijnt dan ook van de brochure.')) return;
+  await _sbQuery(_sb.storage.from(FOTO_BUCKET).remove([plan.ligging.pad]), 'Liggingsfoto verwijderen');
+  plan.ligging = null;
+  const bewaard = await _saveOhpParams(plan);
+  if (bewaard) _ohpState.plan = bewaard;
+  _ohpLiggingInstellen = false;
+  _ohpRenderLigging();
+  _toast('Liggingsfoto verwijderd');
+}
+
+function _ohpLiggingVernieuw()  { _ohpLiggingInstellen = true;  _ohpRenderLigging(); }
+function _ohpLiggingAnnuleer()  { _ohpLiggingInstellen = false; _ohpRenderLigging(); }
+
+// Zet de foto uit Storage in het img-element van de sectie.
+async function _ohpLiggingToonBeeld(pad) {
+  if (!_sb) return;
+  const { data, error } = await _sbQuery(
+    _sb.storage.from(FOTO_BUCKET).createSignedUrl(pad, 3600), 'Liggingsfoto tonen'
+  );
+  const el = document.getElementById('ohpLiggingBeeld');
+  if (!el) return;
+  if (error || !data || !data.signedUrl) { el.alt = 'De foto kon niet geladen worden'; return; }
+  el.src = data.signedUrl;
+}
+
+// Haalt de foto op en maakt er een data-URL van, voor in de brochure.
+async function _ohpLiggingDataUrl(plan) {
+  const lig = plan && plan.ligging;
+  if (!lig || !lig.pad || !_sb) return null;
+  try {
+    const { data, error } = await _sbQuery(
+      _sb.storage.from(FOTO_BUCKET).createSignedUrl(lig.pad, 3600), 'Liggingsfoto voor de brochure'
+    );
+    if (error || !data || !data.signedUrl) return null;
+    const res = await fetch(data.signedUrl);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise((klaar) => {
+      const r = new FileReader();
+      r.onloadend = () => klaar(r.result);
+      r.onerror   = () => klaar(null);
+      r.readAsDataURL(blob);
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+function _ohpRenderLigging() {
+  const el = document.getElementById('ohpLiggingInhoud');
+  if (!el) return;
+  const plan = _ohpState.plan;
+  const calc = _ohpBronCalc();
+  if (!plan || !calc) { el.innerHTML = ''; return; }
+
+  const lig = plan.ligging || null;
+
+  // Er is een foto: toon hem.
+  if (lig && lig.pad && !_ohpLiggingInstellen) {
+    const datum = lig.gemaakt
+      ? new Date(lig.gemaakt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '';
+    const meta = ['8 cm luchtfoto', lig.span + ' m breed',
+                  lig.weerzijde ? 'weerzijde gemarkeerd' : 'zonder weerzijde', datum]
+                 .filter(Boolean).join(' \u00b7 ');
+    el.innerHTML =
+      '<img id="ohpLiggingBeeld" alt="Luchtfoto met windroos" style="width: 100%; max-width: 720px; display: block; border: 1px solid var(--border); border-radius: 6px;">' +
+      '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; max-width: 720px;">' +
+        '<span style="color: var(--muted); font-size: 0.82rem;">' + _escapeHtml(meta) + '</span>' +
+        '<span style="display: flex; gap: 0.4rem;">' +
+          '<button class="btn btn-secondary btn-sm" onclick="_ohpLiggingVernieuw()">Vernieuwen</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="_ohpLiggingVerwijder()">Verwijderen</button>' +
+        '</span>' +
+      '</div>';
+    _ohpLiggingToonBeeld(lig.pad);
+    return;
+  }
+
+  // Nog geen foto (of vernieuwen): toon de invulrij.
+  const pc = (calc.postcode || '').trim();
+  const hn = (calc.huisnummer || '').trim();
+  if (!pc) {
+    el.innerHTML = '<div style="color: var(--muted); font-style: italic;">Vul eerst de postcode van het werkadres in bij de calculatie. Daarmee zoekt de app het pand op.</div>';
+    return;
+  }
+
+  const huidigSpan = (lig && lig.span) || 60;
+  const huidigWeer = lig ? !!lig.weerzijde : true;
+  const opties = OHP_SPANS.map(o =>
+    '<option value="' + o.m + '"' + (o.m === huidigSpan ? ' selected' : '') + '>' + _escapeHtml(o.label) + '</option>'
+  ).join('');
+
+  el.innerHTML =
+    '<div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">' +
+      '<div>' +
+        '<label style="display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.2rem;">Werkadres</label>' +
+        '<div style="padding: 0.35rem 0;">' + _escapeHtml((pc + ' ' + hn).trim()) + '</div>' +
+      '</div>' +
+      '<div>' +
+        '<label style="display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.2rem;">Uitsnede</label>' +
+        '<select id="ohpLiggingSpan">' + opties + '</select>' +
+      '</div>' +
+      '<div style="padding-bottom: 0.4rem;">' +
+        '<label style="font-size: 0.88rem;"><input type="checkbox" id="ohpLiggingWeer"' + (huidigWeer ? ' checked' : '') + '> Weerzijde markeren (zuid tot west)</label>' +
+      '</div>' +
+      '<div><button class="btn" id="ohpLiggingKnop" onclick="_ohpLiggingOphalen()">Liggingsfoto ophalen</button></div>' +
+      (lig && lig.pad ? '<div><button class="btn btn-secondary" onclick="_ohpLiggingAnnuleer()">Annuleren</button></div>' : '') +
+    '</div>' +
+    '<div id="ohpLiggingStatus" style="margin-top: 0.5rem; color: var(--muted); font-size: 0.85rem;"></div>';
+}
+
 function _ohpBronCalc() {
   if (!_ohpState.calcId) return null;
   return (data.calculaties || []).find(c => c.id === _ohpState.calcId) || null;
@@ -8420,179 +8689,6 @@ function _ohpBtwFactor() {
 }
 
 // Render de beurten-lijst.
-// ============================================================
-// REKENVERANTWOORDING (v4.22.0) — toont de trace van _ohpBeurtBasisBedrag.
-// Alleen intern, op scherm. Geen tweede rekenmachine: het paneel rendert
-// de tussenstappen die de rekenkern zelf heeft weggeschreven (_ohpLastTrace).
-// ============================================================
-async function _ohpOpenVerantwoording(beurtId) {
-  const plan = _ohpState.plan;
-  if (!plan) return;
-  const b = (plan.beurten || []).find(x => x.id === beurtId);
-  if (!b) return;
-  const ok = await _ohpEnsureBronLoaded();
-  if (!ok) { _toast('Bron-calculatie kon niet geladen worden.'); return; }
-  const basis = _ohpBeurtBasisBedrag(b, true);
-  const tr = _ohpLastTrace;
-  if (!tr) { _toast('Geen berekening beschikbaar voor deze beurt.'); return; }
-  const sub = document.getElementById('ohpVerSub');
-  if (sub) sub.textContent = (b.naam || 'Beurt') + ' \u00b7 ' + (b.jaartal || '');
-  const body = document.getElementById('ohpVerBody');
-  if (body) body.innerHTML = _ohpVerHtml(b, tr, basis, plan);
-  if (typeof closeControlePaneel === 'function') closeControlePaneel();
-  document.getElementById('ohpVerPaneel').classList.add('active');
-  document.body.classList.add('ohpver-open');
-}
-
-function closeOhpVerantwoording() {
-  const p = document.getElementById('ohpVerPaneel');
-  if (p) p.classList.remove('active');
-  document.body.classList.remove('ohpver-open');
-}
-
-// Percentage-weergave van een factor 0..2, max 1 decimaal.
-function _ohpVerPct(f) {
-  return ((f || 0) * 100).toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + '%';
-}
-
-function _ohpVerHtml(b, tr, basis, plan) {
-  const rij = (label, waarde, vet) => `<tr><td${vet ? ' style="font-weight:700;"' : ''}>${label}</td><td class="right"${vet ? ' style="font-weight:700;"' : ''}>${waarde}</td></tr>`;
-  let h = '';
-
-  // 0. Bron van de instellingen
-  const bronTekst = tr.bron === 'snapshot'
-    ? 'Vergrendelde momentopname (settingsSnapshot) \u2014 live tariefwijzigingen tellen niet mee.'
-    : 'Live instellingen \u2014 de calculatie is niet vergrendeld.';
-  h += `<div style="font-size:0.75rem; color:var(--muted); margin-bottom:0.6rem;">Instellingen: ${bronTekst}</div>`;
-
-  // 1. Schaal-modus
-  h += '<div class="ver-kop">Schaal van deze beurt</div>';
-  if (tr.modus === 'algemeen') {
-    h += `<div>Algemeen percentage: <strong>${_ohpVerPct(tr.extraFactor)}</strong> op alle regels. Staartposten van het type vast en eenheid schalen met hetzelfde percentage mee.</div>`;
-  } else if (tr.modus === 'per_regel') {
-    h += `<div>Per regel een eigen percentage. Gemiddelde van ${tr.aantalFactoren} regelfactoren = <strong>${_ohpVerPct(tr.extraFactor)}</strong>; dat gemiddelde wordt toegepast op staartposten van het type vast en eenheid.</div>`;
-  } else if (tr.modus === 'per_stap') {
-    h += `<div>Per stap een eigen percentage. Gemiddelde van ${tr.aantalFactoren} stapfactoren = <strong>${_ohpVerPct(tr.extraFactor)}</strong>; dat gemiddelde wordt toegepast op staartposten van het type vast en eenheid.</div>`;
-  }
-
-  // 2. Regels
-  h += '<div class="ver-kop">Regels</div>';
-  let vorigeHg = null;
-  (tr.regels || []).forEach(rg => {
-    if (rg.hg !== vorigeHg) {
-      h += `<div style="font-weight:700; margin-top:0.4rem;">${_escapeHtml(rg.hg || '(zonder naam)')}</div>`;
-      vorigeHg = rg.hg;
-    }
-    const dim = rg.factor === 0 ? 'opacity: 0.45; ' : '';
-    const hoev = rg.hoeveelheid ? Number(rg.hoeveelheid).toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + ' ' + (rg.eenheid || '') : '';
-    const regelRij = `<div style="${dim}display:grid; grid-template-columns: 1fr 52px 78px 78px; gap:0.35rem; align-items:baseline; padding:0.12rem 0;">
-      <span>${_escapeHtml(rg.naam)} <span style="color:var(--muted); font-size:0.75rem;">${hoev}</span></span>
-      <span style="text-align:right;">${_ohpVerPct(rg.factor)}</span>
-      <span style="text-align:right; color:var(--muted);">${eur(rg.basis)}</span>
-      <span style="text-align:right;">${eur(rg.resultaat)}</span>
-    </div>`;
-    if (rg.stappen && rg.stappen.length) {
-      let stapHtml = '';
-      rg.stappen.forEach(st => {
-        const sdim = st.factor === 0 ? 'opacity: 0.45; ' : '';
-        stapHtml += `<div style="${sdim}display:grid; grid-template-columns: 1fr 52px 78px; gap:0.35rem; padding:0.08rem 0; font-size:0.78rem;">
-          <span>${_escapeHtml(st.naam)}</span>
-          <span style="text-align:right;">${_ohpVerPct(st.factor)}</span>
-          <span style="text-align:right;">${eur(st.arbeid + st.matVerkoop)}</span>
-        </div>`;
-      });
-      h += `<details style="margin:0;"><summary style="cursor:pointer; list-style:none;">${regelRij}</summary><div style="margin-left:0.8rem; border-left:2px solid var(--paper-deep); padding-left:0.5rem; margin-bottom:0.3rem;">${stapHtml}</div></details>`;
-    } else {
-      h += regelRij;
-    }
-  });
-  h += `<div style="display:grid; grid-template-columns: 1fr 78px; gap:0.35rem; border-top:1px solid var(--paper-deep); margin-top:0.3rem; padding-top:0.3rem; font-weight:700;">
-    <span>Subtotaal regels (arbeid ${eur(tr.totalen.arbeid)} + materiaal ${eur(tr.totalen.matVerkoop)})</span>
-    <span style="text-align:right;">${eur(tr.totalen.arbeid + tr.totalen.matVerkoop)}</span>
-  </div>`;
-  h += '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.2rem;">Basis = rauwe arbeid + materiaalverkoop bij 100%. In beurt = basis \u00d7 percentage.</div>';
-
-  // 3. Uren, dagen en afronding
-  h += '<div class="ver-kop">Uren, dagen en afronding</div>';
-  h += '<table class="ver-tab">';
-  h += rij('Uren schilderwerk (geschaald)', tr.totalen.uren.toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + ' u');
-  if (tr.extraUrenStaart > 0) h += rij('Extra uren uit staartposten', tr.extraUrenStaart.toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + ' u');
-  h += rij('Dagen werkelijk \u2192 factureerbaar', tr.dagen.werkelijk.toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + ' \u2192 ' + tr.dagen.factureerbaar.toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + (tr.afronding.volleDagen ? ' (volle dagen aan)' : ' (volle dagen uit)'));
-  h += rij('Afrondingstoeslag (extra arbeid)', eur(tr.afronding.toeslag));
-  h += '</table>';
-
-  // 4. Reiskosten
-  h += '<div class="ver-kop">Reiskosten</div>';
-  h += '<table class="ver-tab">';
-  h += rij('Afstand enkele reis', tr.reis.afstand.toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + ' km ' + (tr.reis.binnenRayon ? '(binnen rayon \u2264 ' + tr.reis.rayonDrempel + ' km: alleen km-vergoeding)' : '(buiten rayon)'));
-  h += rij('Reisdagen', tr.reis.reisDagen.toLocaleString('nl-NL', { maximumFractionDigits: 2 }));
-  h += rij('Reisuren-arbeid', eur(tr.reis.kostenUren));
-  h += rij('Kilometervergoeding', eur(tr.reis.km));
-  h += rij('Reiskosten totaal', eur(tr.reis.totaal), true);
-  h += '</table>';
-
-  // 5. Opslagen
-  h += '<div class="ver-kop">Opslagen</div>';
-  h += '<table class="ver-tab">';
-  h += rij('Klein materiaal (' + tr.opslagen.kleinMatPct + '% over materiaal)', eur(tr.opslagen.kleinMat));
-  h += rij('Afval (' + tr.opslagen.afvalPct + '% over arbeid + materiaal)', eur(tr.opslagen.afval));
-  h += rij('Arbo (' + tr.opslagen.arboPct + '% over arbeid)', eur(tr.opslagen.arbo));
-  h += '</table>';
-
-  // 6. Staartposten
-  h += '<div class="ver-kop">Staartposten</div>';
-  if (tr.staart.length) {
-    h += '<table class="ver-tab">';
-    tr.staart.forEach(p => {
-      const uitleg = p.geschaald ? (eur(p.bruto) + ' \u00d7 ' + _ohpVerPct(tr.extraFactor)) : eur(p.bruto) + ' (schaalt via dagen/grondslag)';
-      h += rij(_escapeHtml(p.naam) + ' <span style="color:var(--muted); font-size:0.75rem;">' + uitleg + '</span>', eur(p.netto));
-    });
-    h += rij('Staart totaal', eur(tr.staartTotaal), true);
-    h += '</table>';
-  } else {
-    h += '<div style="color:var(--muted);">Geen staartposten in de bron-calculatie.</div>';
-  }
-
-  // 7. Naar excl. BTW op prijspeil basisjaar
-  h += '<div class="ver-kop">Optelling naar prijspeil ' + plan.prijspeil + '</div>';
-  h += '<table class="ver-tab">';
-  h += rij('Arbeid incl. afrondingstoeslag', eur(tr.arbeidInclAfronding));
-  h += rij('Materiaal (verkoop)', eur(tr.totalen.matVerkoop));
-  h += rij('Reiskosten', eur(tr.reis.totaal));
-  h += rij('Klein materiaal + afval + arbo', eur(tr.opslagen.kleinMat + tr.opslagen.afval + tr.opslagen.arbo));
-  h += rij('Staartposten', eur(tr.staartTotaal));
-  h += rij('Directe kosten', eur(tr.directe), true);
-  h += rij('+ Risico (' + tr.risicoPct + '% over directe kosten)', eur(tr.risicoBedrag));
-  h += rij('Excl. BTW, prijspeil ' + plan.prijspeil, eur(tr.exBtw), true);
-  h += '</table>';
-
-  // 8. Indexering
-  const jaren = (b.jaartal || 0) - (plan.prijspeil || 0);
-  const idxPct = plan.indexeringPct || 0;
-  const factor = _ohpIndexFactor(b.jaartal, plan.prijspeil, idxPct);
-  const grond = (1 + idxPct / 100).toLocaleString('nl-NL', { maximumFractionDigits: 3 });
-  const factorStr = factor.toLocaleString('nl-NL', { maximumFractionDigits: 3 });
-  const geindExBtw = basis * factor;
-  h += '<div class="ver-kop">Indexering</div>';
-  h += '<table class="ver-tab">';
-  h += rij('Prijspeil \u2192 beurtjaar', plan.prijspeil + ' \u2192 ' + b.jaartal + ' (' + jaren + ' jaar)');
-  h += rij('Index per jaar', idxPct.toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + '%');
-  h += rij('Factor', grond + '^' + jaren + ' = ' + factorStr);
-  h += rij('Ge\u00efndexeerd excl. BTW', eur(geindExBtw), true);
-  h += '</table>';
-
-  // 9. BTW en eindbedrag
-  const btwF = _ohpBtwFactor();
-  const btwPct = ((btwF - 1) * 100).toLocaleString('nl-NL', { maximumFractionDigits: 1 });
-  h += '<div class="ver-kop">BTW en eindbedrag</div>';
-  h += '<table class="ver-tab">';
-  h += rij('BTW', btwPct + '%');
-  h += rij('Eindbedrag incl. BTW (gelijk aan de tijdlijn)', eur(geindExBtw * btwF), true);
-  h += '</table>';
-
-  return h;
-}
-
 function _ohpRenderBeurtenLijst() {
   const c = document.getElementById('ohpBeurtenLijst');
   if (!c) return;
@@ -8612,7 +8708,7 @@ function _ohpRenderBeurtenLijst() {
   html += '<th style="width: 140px;" class="right">Basis (excl. BTW)</th>';
   html += '<th style="width: 160px;" class="right">Geïndexeerd (incl. BTW)</th>';
   html += '<th style="width: 100px; text-align: center;" title="Meerekenen in gemiddelde jaarbedrag?">Mee in gem.</th>';
-  html += '<th style="width: 150px;"></th>';
+  html += '<th style="width: 110px;"></th>';
   html += '</tr></thead><tbody>';
   beurten.forEach(b => {
     const basis = _ohpBeurtBasisBedrag(b);
@@ -8632,7 +8728,6 @@ function _ohpRenderBeurtenLijst() {
       <td class="right"><strong>${eur(geindIncBtw)}</strong></td>
       <td style="text-align: center;"><input type="checkbox" ${mee ? 'checked' : ''} onchange="_ohpUpdBeurtVeld('${b.id}','meeInGemiddelde',this.checked)"></td>
       <td class="right">
-        <button class="btn btn-sm" title="Rekenverantwoording" onclick="_ohpOpenVerantwoording('${b.id}')">Σ</button>
         <button class="btn btn-sm" onclick="_ohpOpenBeurtModal('${b.id}')">Bewerken</button>
         <button class="btn btn-danger btn-sm" onclick="_ohpDeleteBeurt('${b.id}')">×</button>
       </td>
@@ -10236,6 +10331,9 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob,.ob *{font-family:'Libre Franklin',sans-serif;box-sizing:border-box;}
 .ob,.ob *,.ob *::before,.ob *::after{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
 .ob{--ink:#231f20;--paper:#ffffff;--brush:#f1491c;--brush-deep:#c93914;--muted:#8c8479;--line:#e7e2d9;--soft:#fbeee9;--vakblue:#0080b8;--shadow:0 1px 3px rgba(35,31,32,.06);color:var(--ink);font-size:10.5pt;line-height:1.55;}
+.ob .ligging{margin:0 0 5mm;}
+.ob .ligging img{width:100%;display:block;border-radius:2mm;}
+.ob .ligging-bij{margin-top:2mm;font-size:8.5pt;color:#6b7280;line-height:1.4;}
 .ob .page{width:210mm;height:296mm;padding:13mm 19mm 14mm;position:relative;background:#fff;overflow:hidden;page-break-after:always;}
 .ob .page:last-child{page-break-after:auto;}
 .ob #obBlocks{width:172mm;}
@@ -10449,6 +10547,20 @@ function _ohpBuildOfferteHTML(plan, calc) {
       </tbody></table>`;
 
   const _blk = (html) => `<div class="ob-block">${html}</div>`;
+
+  // v4.22.0 - Liggingsfoto bovenaan pagina 1. De data-URL is vlak hiervoor
+  // klaargezet door _ohpPrintOfferte; window.print() wacht niet op een
+  // netwerk-fetch, dus een losse URL zou een leeg vak geven (vooral in Safari).
+  // Geen foto bij het plan, dan vervalt het blok geruisloos.
+  const _ligWeer = !!(plan.ligging && plan.ligging.weerzijde);
+  const _ligBij  = 'Ligging en ori\u00ebntatie van het pand. Het noorden staat boven.' +
+    (_ligWeer
+      ? ' De oranje markering is de zijde van zuid tot west: de kant met de meeste zon, UV en slagregen, en daarmee de gevels die het snelst verweren.'
+      : '');
+  const liggingBlok = _ohpLiggingPrintUrl
+    ? _blk('<div class="ligging"><img src="' + _ohpLiggingPrintUrl + '" alt="Luchtfoto van boven met windroos">' +
+           '<div class="ligging-bij">' + _escapeHtml(_ligBij) + '</div></div>')
+    : null;
   const _sec02Blokken = (labelNum) => {
     const lbl = `<div class="sec-label"><span class="num">${labelNum}</span><span class="h">${sec02Title}</span></div>`;
     const out = [];
@@ -10502,6 +10614,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
   let blocks;
   if (isVve) {
     blocks = [];
+    if (liggingBlok) blocks.push(liggingBlok);
     blocks.push(_blk(`<div class="sec">
       <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat het plan inhoudt</span></div>
       ${leadHtml}
@@ -10527,6 +10640,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
     blocks.push(_blk(`<div class="sec besluit-sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Besluit van de vergadering van eigenaren</span></div>${_besluitBody}</div>`));
   } else {
     blocks = [];
+    if (liggingBlok) blocks.push(liggingBlok);
     if (aanhefHtml) blocks.push(_blk(aanhefHtml));
     if (aangetroffenHtml) blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat we aantroffen</span></div>${aangetroffenHtml}</div>`));
     _sec02Blokken(nextSec()).forEach(b => blocks.push(b));
@@ -10703,7 +10817,7 @@ function _ohpPaginate() {
   }
 }
 
-function _ohpPrintOfferte() {
+async function _ohpPrintOfferte() {
   const plan = _ohpState.plan;
   if (!plan || !plan.prijspeil || !plan.looptijdJaren) {
     _toast('Plan eerst compleet invullen voor de offerte-bijlage');
@@ -10714,6 +10828,9 @@ function _ohpPrintOfferte() {
   const pp = plan.prijspeil, eind = pp + plan.looptijdJaren;
   const beurten = (plan.beurten || []).filter(b => b.jaartal >= pp && b.jaartal <= eind);
   if (!beurten.length) { _toast('Voeg eerst minstens \u00e9\u00e9n beurt toe'); return; }
+  // v4.22.0 - De liggingsfoto als data-URL klaarzetten, want _ohpBuildOfferteHTML
+  // is synchroon en window.print() wacht niet op een netwerk-fetch.
+  _ohpLiggingPrintUrl = await _ohpLiggingDataUrl(plan);
   document.getElementById('printArea').innerHTML = _ohpBuildOfferteHTML(plan, calc);
   // Bestandsnaam in de print-dialoog: "{projectnaam}-onderhoudsplan", net als de offerte.
   _setPrintTitle('onderhoudsplan', calc.naam);
