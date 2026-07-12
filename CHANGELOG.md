@@ -1,3 +1,12 @@
+## v4.24.0 — Liggingsfoto als magazine-rij in de brochure
+De liggingsfoto stond als eerste blok op volle breedte bovenaan pagina 1 van de onderhoudsplan-bijlage. Het blok erna paste er vaak niet meer onder, waardoor de foto alleen achterbleef met veel wit eromheen.
+
+### Wat er verandert
+- De foto staat nu links op 58% van de breedte, met rechts ernaast een verticaal gecentreerde tekstkolom: een klein kopje Ligging en daaronder de uitleg over de noordoriëntatie en de weerzijde.
+- De rij is nog maar zo'n 6 cm hoog in plaats van ruim 10, dus het volgende inhoudsblok past er vrijwel altijd onder en pagina 1 vult zich.
+- Geldt voor de VvE- en de particulier-variant. Blokvolgorde en sectienummering blijven ongewijzigd; zonder foto vervalt de rij geruisloos zoals voorheen.
+- Puur opmaak. Geen SQL en geen Edge Function.
+
 ## v4.23.0 — Rekenverantwoording per onderhoudsbeurt
 Het meerjarenonderhoudsplan rekende tot nu toe achter de schermen: beurt-percentages, meeschalende toeslagen, risico-opslag en indexering waren niet te controleren. Nieuw is een Σ-knop per beurt in de beurtenlijst die een zijpaneel rechts opent, in hetzelfde patroon als de Controle.
 
