@@ -1378,6 +1378,33 @@
     body.controle-open #vraagbaakTab { right: 0; }
     #controlePaneel { width: 100vw; }
   }
+  /* Rekenverantwoording onderhoudsplan (v4.23.0): zelfde zijpaneel-patroon als Controle */
+  #ohpVerPaneel {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 460px; max-width: 100vw;
+    background: var(--paper); border-left: 1px solid var(--paper-deep);
+    box-shadow: -6px 0 18px rgba(0,0,0,0.08);
+    z-index: 90; display: none; flex-direction: column;
+  }
+  #ohpVerPaneel.active { display: flex; }
+  #ohpVerPaneel .paneel-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+    padding: 0.75rem 1rem; border-bottom: 1px solid var(--paper-deep);
+  }
+  #ohpVerPaneel .paneel-head h3 { margin: 0; font-size: 1rem; }
+  #ohpVerPaneel .paneel-body { flex: 1; overflow-y: auto; padding: 0.9rem 1rem; font-size: 0.82rem; }
+  #ohpVerPaneel table.ver-tab { width: 100%; border-collapse: collapse; margin: 0.3rem 0 0.6rem; }
+  #ohpVerPaneel table.ver-tab td { padding: 0.15rem 0.2rem; vertical-align: top; }
+  #ohpVerPaneel table.ver-tab td.right { text-align: right; white-space: nowrap; }
+  #ohpVerPaneel .ver-kop { font-weight: 700; font-size: 0.85rem; margin: 0.8rem 0 0.2rem; border-top: 1px solid var(--paper-deep); padding-top: 0.7rem; }
+  #ohpVerPaneel .ver-kop:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+  body.ohpver-open { padding-right: 460px; }
+  body.ohpver-open #vraagbaakTab { right: 460px; }
+  @media (max-width: 900px) {
+    body.ohpver-open { padding-right: 0; }
+    body.ohpver-open #vraagbaakTab { right: 0; }
+    #ohpVerPaneel { width: 100vw; }
+  }
   .modal {
     background: var(--paper);
     border-radius: var(--radius-lg);
@@ -1773,7 +1800,7 @@
 
   @media print {
     /* Hide everything except print area */
-    body > header, body > nav, body > main, body > footer, body > .modal-overlay, body > #controlePaneel { display: none !important; }
+    body > header, body > nav, body > main, body > footer, body > .modal-overlay, body > #controlePaneel, body > #ohpVerPaneel { display: none !important; }
     body { background: #fff !important; padding: 0; margin: 0; }
     .print-only { display: block !important; }
     .brand-logo, .brand-logo.print { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
@@ -2161,8 +2188,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.22.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.23.0</h2>
       <div class="intro-body">
+        <p><strong>Σ Rekenverantwoording per onderhoudsbeurt (v4.23.0).</strong> In de beurtenlijst van het onderhoudsplan staat per beurt een nieuwe Σ-knop. Die opent een zijpaneel rechts, net als de Controle, met de volledige rekenopbouw van die beurt: elk regelbedrag met het toegepaste percentage, gegroepeerd per hoofdgroep en onderdeel, hoe het gemiddelde voor de vaste toeslagen tot stand kwam, de afrondingstoeslag, reiskosten, opslagen en staartposten stuk voor stuk, en dan de optelling naar het bedrag excl. BTW op prijspeil. Daaronder de indexering met de factor voluit (bijvoorbeeld 1,065^8 = 1,655), de BTW en het eindbedrag dat één op één gelijk is aan de tijdlijn. Het paneel toont wat de rekenkern zelf heeft gedaan, dus afwijken kan niet; bij vergrendelde plannen rekent hij vanzelf met de bevroren instellingen en dat staat er ook bij. Bij de modus Per stap klapt elke regel uit naar de stappen. Alleen intern op scherm, niets verandert aan de offertedocumenten. Geen SQL nodig.</p>
         <p><strong>🧭 Liggingsfoto met windroos op het onderhoudsplan (v4.22.0).</strong> In het tabblad Onderhoudsplan staat boven de beurten een nieuwe sectie <em>Ligging</em>. Die haalt op basis van de postcode uit de calculatie een luchtfoto van boven op en tekent er een windroos overheen. Je kiest de uitsnede (60 m voor een woonhuis, 100 m voor een klein complex, of ruimer) en of de weerzijde gemarkeerd wordt: de oranje wig van zuid tot west, de kant met de meeste zon, UV en slagregen. Zo zie je in één oogopslag welke gevel op welke windrichting staat, zowel bij het opstellen als bij het beoordelen van het plan. De foto komt ook bovenaan pagina 1 van de offerte-bijlage, met een bijschrift dat uitlegt waarom bepaalde gevels vaker terugkomen. De luchtfoto komt van PDOK: open data, gratis, geen sleutel nodig. Het noorden staat in het Rijksdriehoekstelsel altijd boven, dus de roos hoeft nooit gedraaid te worden. Vereist éénmalig SQL (los geleverd) 🧭.</p>
         <p><strong>🔧 Kolommen in de beurt-modal springen niet meer (v4.21.1).</strong> In het venster Beurt bewerken van een onderhoudsplan stonden regels op 0% niet meer in de nette kolommen: naam, bedrag en percentageveldje vielen achter elkaar op één regel. Oorzaak was een dubbel style-attribuut waardoor de browser de kolomindeling weggooide zodra een regel grijs werd getoond. Dat is gerepareerd voor de modus Per regel en voor de stap-regels in de modus Per stap. Alle regels staan nu in dezelfde kolommen; regels op 0% blijven gewoon grijs. Geen SQL nodig.</p>
         <p><strong>📅 Datum op het onderhoudsplan-document (v4.21.0).</strong> Op de bijlage van het onderhoudsplan ontbrak een documentdatum, iets wat een VvE-beheerder terecht opmerkte. In de kop staat nu rechtsboven, onder het kenmerk, een datumregel "d.d. ...". Hij pakt de offertedatum van het plan, net als het gewone offertedocument. Is er nog geen offertedatum ingevuld, dan valt hij terug op de datum van vandaag zodat er altijd een datum op staat. Geldt voor de VvE- en de particulier-variant. Geen SQL nodig.</p>
@@ -2835,6 +2863,18 @@
   <div class="paneel-body" id="controleBody"></div>
 </aside>
 
+<!-- REKENVERANTWOORDING ONDERHOUDSPLAN (v4.23.0) — alleen intern, op scherm -->
+<aside id="ohpVerPaneel" aria-label="Rekenverantwoording van een onderhoudsbeurt">
+  <div class="paneel-head">
+    <div>
+      <h3>Σ Rekenverantwoording</h3>
+      <div id="ohpVerSub" style="font-size:0.72rem; color:var(--muted);"></div>
+    </div>
+    <button class="close-x" onclick="closeOhpVerantwoording()">✕</button>
+  </div>
+  <div class="paneel-body" id="ohpVerBody"></div>
+</aside>
+
 <div class="modal-overlay" id="yoobiModal" onclick="if (event.target === this) closeYoobiModal()">
   <div class="modal">
     <div class="modal-head"><h3>🔍 Klant uit Yoobi</h3><button class="close-x" onclick="closeYoobiModal()">✕</button></div>
@@ -3378,7 +3418,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.22.0';
+const APP_VERSION = 'v4.23.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3774,6 +3814,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.23.0', d: '2026-07-12', h: 'Rekenverantwoording per onderhoudsbeurt als zijpaneel. Σ-knop per rij in _ohpRenderBeurtenLijst (knoppenkolom 110 naar 150px) opent aside #ohpVerPaneel (patroon controlePaneel: fixed rechts 460px, body.ohpver-open duwt content en #vraagbaakTab, max-width 900px volle breedte, print verbergt). Geen tweede rekenmachine: _ohpBeurtBasisBedrag(beurt, metTrace) schrijft tijdens het gewone rekenen zijn tussenstappen naar _ohpLastTrace (bron snapshot/live, modus, extraFactor plus aantalFactoren, per regel via nieuwe trace-parameter op _ohpProjectRauw met basis/factor/resultaat en 0%-regels grijs zichtbaar zonder het rekenpad te raken, per stap via stapTrace-parameter op _ohpRegelRauw, dagen en afrondingstoeslag, reis met binnen/buiten rayon, kleinMat/afval/arbo, staartposten bruto keer extraFactor bij vast en eenheid, directe, risico, exBtw). _ohpVerHtml rendert negen blokken met hoofdgroep- en onderdeel-koppen tussen de regels; indexering met machtsnotatie via _ohpIndexFactor en BTW via _ohpBtwFactor, eindbedrag gelijk aan de tijdlijn. Controle en Verantwoording sluiten elkaar wederzijds. Herbouwd op de live v4.22.0 (windroos) na versie-botsing met een parallelle chat, 12-07-2026. Alleen intern op scherm. Geen SQL, geen Edge Function.' },
   { v: '4.22.0', d: '2026-07-12', h: 'Liggingsfoto met windroos op het onderhoudsplan. Nieuwe sectie Ligging (ohpLiggingSectie, een details boven de Beurten in ohpPlanBlok) haalt via de PDOK Luchtfoto RGB WMS een luchtfoto van boven op en tekent er op canvas een windroos, een schaalbalk en een optionele weerzijde-wig (zuid tot west, oranje) overheen. Coordinaten via _ohpLiggingGeocodeRD, dat centroide_rd van de PDOK Locatieserver leest op basis van postcode en huisnummer uit de calculatie; RD is metrisch dus de uitsnede in meters is letterlijk de bbox-breedte. WMS-aanroep vastgesteld met een testpagina op de echte GitHub Pages-herkomst: 1.3.0, crs=EPSG:28992, bbox als minx,miny,maxx,maxy (de 1.1.1-variant en de omgekeerde asvolgorde geven het verkeerde gebied). PDOK stuurt CORS-headers mee, dus het canvas blijft schoon en het beeld is te exporteren; geen Edge Function-proxy nodig. Bron is 8 cm per pixel, dus breedte = meters / 0,08 met 2500 als plafond, verhouding 16:9. Uitsnedes 60, 100, 150 en 250 m. Het samengestelde beeld gaat als JPEG naar de bestaande bucket calculatie-fotos onder {calcId}/ligging.jpg met upsert, dus geen nieuwe bucket en geen nieuwe policies; het wordt mee opgeruimd bij het verwijderen van de calculatie en verschijnt niet in de fotolijst (die komt uit calculatie_fotos). Nieuwe jsonb-kolom ligging op onderhoudsplannen met pad, rdX, rdY, span, laag, weerzijde en gemaakt, meegenomen in _mapOhpToDB en _mapOhpFromDB. In de brochure komt de foto als eerste blok op pagina 1 (beide takken, VvE en particulier) met een bijschrift over noordorientatie en de weerzijde; _ohpPrintOfferte is async geworden en zet de foto vooraf klaar als data-URL in _ohpLiggingPrintUrl, want _ohpBuildOfferteHTML is synchroon en window.print() wacht niet op een netwerk-fetch (zelfde reden als de data-URI-logo s in v4.7.9). Het interne Print onderhoudsplan blijft ongewijzigd. Geen rekenwerk aangeraakt. Vereist SQL (los geleverd)' },
   { v: '4.21.1', d: '2026-07-11', h: 'Dubbel style-attribuut in de beurt-modal gerepareerd. In _ohpMbRenderPerRegel en _ohpMbRenderPerStap kreeg een regel of stap op 0% een dim-variabele als losse style="opacity: 0.5;" naast het bestaande style-attribuut met de grid-indeling; de browser honoreert alleen het eerste style-attribuut, dus de grid verviel en naam, bedrag en percentageveld vielen inline achter elkaar (verspringen, screenshot 11-07-2026). Regels die van 0 naar een ander percentage werden getypt bleven verkeerd staan omdat het input-event niet herrendert. Fix: dim is nu een opacity-fragment dat vooraan in het ene style-attribuut wordt geplakt (style="${dim}display: grid; ..."), op beide plekken. Puur weergave, geen rekenwerk, geen SQL, geen Edge Function.' },
   { v: '4.21.0', d: '2026-07-07', h: 'Documentdatum in de kop van de onderhoudsplan-bijlage (_ohpBuildOfferteHTML). De offertedatum werd via _offDatum al berekend maar stond alleen in de besluit-kenmerkzin (blok D, alleen VvE) en nergens op het document zelf; een VvE-beheerder merkte de ontbrekende datum op. Nieuw: _kopDatum = _offDatum || _offDatumLang(_kopVandaagIso), met _kopVandaagIso als lokale YYYY-MM-DD van vandaag (getFullYear/getMonth+1/getDate met padStart, bewust niet toISOString wegens UTC-verschuiving rond middernacht). In de masthead m-right, na de m-ref Kenmerk-regel, een nieuwe div class m-date met d.d. plus _escapeHtml(_kopDatum). Nieuwe scoped CSS .ob .m-date, identiek aan .m-ref (7.5pt, muted, letter-spacing 0.5px). Omdat de masthead via het obMastheadTpl-template op elke pagina wordt herhaald, staat de datum op elke pagina, VvE en particulier. _offDatum en dus de besluitpagina blijven ongewijzigd. Geen SQL, geen Edge Function.' },
@@ -5076,6 +5117,7 @@ function controleerCalc() {
     const uit = document.getElementById('leescontroleResultaat');
     if (uit) uit.innerHTML = _lcLaatste.html;
   }
+  closeOhpVerantwoording();
   document.getElementById('controlePaneel').classList.add('active');
   document.body.classList.add('controle-open');
   _ctlTellerUpdate();
@@ -8118,19 +8160,30 @@ function _ohpStapTotaal(stap, sett) {
 // Bereken regel-totalen (rauwe arbeid en materiaal) — GEEN winst per regel.
 // Spiegelt het arbeids- en materiaal-deel van calcRegelTotalen, maar zonder
 // directe/winst-opslag (die wordt op project-niveau toegepast).
-function _ohpRegelRauw(r, sett, stappenOverride) {
+function _ohpRegelRauw(r, sett, stappenOverride, stapTrace) {
   if (!r.hoeveelheid || !r.stappen || !r.stappen.length) {
     return { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0 };
   }
   let minuten = 0, matInkoop = 0, matVerkoop = 0;
+  const trTF = 1 + (r.toeslag || 0) / 100; // v4.23.0 — alleen voor stapTrace-bijdragen
   r.stappen.forEach(st => {
     let workStap = st;
+    let beurtFactor = 1;
     if (stappenOverride && stappenOverride.has(st.id)) {
       const extraFactor = stappenOverride.get(st.id); // 0..1
+      beurtFactor = extraFactor;
       workStap = { ...st, percentage: (st.percentage ?? 100) * extraFactor };
     }
     const c = _ohpStapTotaal(workStap, sett);
     minuten += c.minuten; matInkoop += c.matInkoop; matVerkoop += c.matVerkoop;
+    if (stapTrace) {
+      stapTrace.push({
+        naam: st.naam || '(zonder naam)',
+        factor: beurtFactor,
+        arbeid: (c.minuten / 60) * (sett.uurloon || 0) * r.hoeveelheid * trTF,
+        matVerkoop: c.matVerkoop * r.hoeveelheid
+      });
+    }
   });
   const uren = minuten / 60;
   const arbeid = uren * (sett.uurloon || 0);
@@ -8147,15 +8200,26 @@ function _ohpRegelRauw(r, sett, stappenOverride) {
 // Project-totalen (rauw): som van alle regels met optionele scaling.
 // regelScaling: Map<regelId, factor 0..1> of null
 // stapScaling:  Map<stapId, factor 0..1> of null
-function _ohpProjectRauw(calc, sett, regelScaling, stapScaling) {
+function _ohpProjectRauw(calc, sett, regelScaling, stapScaling, trace) {
   const tot = { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0 };
   (calc.hoofdgroepen || []).forEach(hg => {
     (hg.onderdelen || []).forEach(od => {
       (od.regels || []).forEach(r => {
         const rFactor = (regelScaling && regelScaling.has(r.id)) ? regelScaling.get(r.id) : 1;
-        if (rFactor === 0) return;
-        const rTot = _ohpRegelRauw(r, sett, stapScaling);
+        if (rFactor === 0) {
+          // v4.23.0 — voor de verantwoording tonen we 0%-regels wel (grijs), rekenpad blijft ongewijzigd.
+          if (trace) {
+            const rNul = _ohpRegelRauw(r, sett, stapScaling);
+            trace.regels.push({ hg: hg.naam || '', od: od.naam || '', naam: r.naam || '(zonder naam)', hoeveelheid: r.hoeveelheid, eenheid: r.eenheid || '', factor: 0, basis: rNul.arbeid + rNul.matVerkoop, resultaat: 0, stappen: null });
+          }
+          return;
+        }
+        const stapTrace = (trace && stapScaling) ? [] : null;
+        const rTot = _ohpRegelRauw(r, sett, stapScaling, stapTrace);
         Object.keys(tot).forEach(k => tot[k] += (rTot[k] || 0) * rFactor);
+        if (trace) {
+          trace.regels.push({ hg: hg.naam || '', od: od.naam || '', naam: r.naam || '(zonder naam)', hoeveelheid: r.hoeveelheid, eenheid: r.eenheid || '', factor: rFactor, basis: rTot.arbeid + rTot.matVerkoop, resultaat: (rTot.arbeid + rTot.matVerkoop) * rFactor, stappen: stapTrace });
+        }
       });
     });
   });
@@ -8210,13 +8274,16 @@ function _ohpDagen(calc, sett, projectUren) {
 // Hoofdfunctie: bereken het basisbedrag (excl. BTW) van een beurt.
 // Spiegelt letterlijk de directe + risico-formule uit de calc-tab.
 let _ohpLastBeurtUren = 0; // v3.27.4 — manuren werk van de laatst berekende beurt (voor planning-capaciteit)
-function _ohpBeurtBasisBedrag(beurt) {
+let _ohpLastTrace = null;      // v4.23.0 — tussenstappen van de laatst berekende beurt (rekenverantwoording)
+function _ohpBeurtBasisBedrag(beurt, metTrace) {
   _ohpLastBeurtUren = 0;
+  if (metTrace) _ohpLastTrace = null;
   const plan = _ohpState.plan;
   if (!plan) return 0;
   const calc = _ohpBronCalc();
   if (!calc || !calc.__loaded) return 0;
   const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+  const tr = metTrace ? { bron: (calc.settingsSnapshot ? 'snapshot' : 'live'), modus: beurt.modus, regels: [], staart: [] } : null;
 
   // 1. Bouw scaling-maps op basis van modus.
   let regelScaling = null;
@@ -8257,8 +8324,12 @@ function _ohpBeurtBasisBedrag(beurt) {
     return 0;
   }
 
+  if (tr) {
+    tr.extraFactor = extraFactor;
+    tr.aantalFactoren = stapScaling ? stapScaling.size : (regelScaling ? regelScaling.size : 0);
+  }
   // 2. Project-totalen (rauw, geschaald).
-  const t = _ohpProjectRauw(calc, sett, regelScaling, stapScaling);
+  const t = _ohpProjectRauw(calc, sett, regelScaling, stapScaling, tr);
 
   // 3. Dagen factureerbaar en weken op basis van project-uren.
   // v3.16.0: voeg extra uren toe uit staartposten met teltInWerkdagen=true
@@ -8266,11 +8337,13 @@ function _ohpBeurtBasisBedrag(beurt) {
   const extraUrenStaart = _extraUrenUitStaart(calc.staart || [], t, (sett.uurloon || 0));
   const dg = _ohpDagen(calc, sett, t.uren + extraUrenStaart);
   _ohpLastBeurtUren = t.uren + extraUrenStaart; // v3.27.4 — manuren werk (excl. reis), voor de planning-capaciteit
+  if (tr) { tr.totalen = { uren: t.uren, arbeid: t.arbeid, matVerkoop: t.matVerkoop }; tr.extraUrenStaart = extraUrenStaart; tr.dagen = dg; }
 
   // 4. Afrondingstoeslag (extra-arbeid bij volle dagen).
   const dagenVerschil = Math.max(0, dg.factureerbaar - dg.werkelijk);
   const afrondingsToeslag = dg.volleDagen ? dagenVerschil * (calc.schilders || 0) * (calc.uurDag || 7.5) * (sett.uurloon || 0) : 0;
   const arbeid = t.arbeid + afrondingsToeslag;
+  if (tr) tr.afronding = { verschil: dagenVerschil, toeslag: afrondingsToeslag, volleDagen: dg.volleDagen };
 
   // 5. Reiskosten op basis van factureerbare dagen (schalen mee met geschaald werk).
   // v3.14.0 — Binnen rayon (≤ sett.rayonDrempel km enkele reis): alleen km-vergoeding,
@@ -8285,11 +8358,13 @@ function _ohpBeurtBasisBedrag(beurt) {
   const reisKostenUren = binnenRayon ? 0 : reisUren * (sett.reistijd || 0);
   const reisKm = reisDagen * (reisAfstand * 2) * (sett.km || 0);
   const reisTotaal = reisKostenUren + reisKm;
+  if (tr) tr.reis = { afstand: reisAfstand, binnenRayon: binnenRayon, rayonDrempel: rayonDrempel, reisDagen: reisDagen, kostenUren: reisKostenUren, km: reisKm, totaal: reisTotaal };
 
   // 6. Opslagen.
   const kleinMat = t.matVerkoop * (sett.kleinMat || 0) / 100;
   const afval = (arbeid + t.matVerkoop) * (sett.afval || 0) / 100;
   const arbo = arbeid * (sett.arbo || 0) / 100;
+  if (tr) tr.opslagen = { kleinMatPct: sett.kleinMat || 0, kleinMat: kleinMat, afvalPct: sett.afval || 0, afval: afval, arboPct: sett.arbo || 0, arbo: arbo };
 
   // 7. Staart — elk staart-post berekenen op het geschaalde project, daarna nogmaals × extraFactor
   //    (zodat een controlebeurt van 15% ook 15% staart krijgt, geen 100%).
@@ -8298,17 +8373,25 @@ function _ohpBeurtBasisBedrag(beurt) {
   let staartTotaal = 0;
   (calc.staart || []).forEach(p => {
     const post = _ohpStaartPost(p, calc, sett, t, dg.factureerbaar, dg.weken);
-    if (p.type === 'vast' || p.type === 'eenheid') {
-      staartTotaal += post * extraFactor;
-    } else {
-      staartTotaal += post;
-    }
+    const geschaald = (p.type === 'vast' || p.type === 'eenheid');
+    const netto = geschaald ? post * extraFactor : post;
+    staartTotaal += netto;
+    if (tr) tr.staart.push({ naam: p.naam || '(zonder naam)', type: p.type, bruto: post, geschaald: geschaald, netto: netto });
   });
 
   // 8. Directe kosten en risico.
   const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
   const winstBedrag = directe * (sett.winst || 0) / 100;
   const exBtw = directe + winstBedrag;
+  if (tr) {
+    tr.arbeidInclAfronding = arbeid;
+    tr.staartTotaal = staartTotaal;
+    tr.directe = directe;
+    tr.risicoPct = sett.winst || 0;
+    tr.risicoBedrag = winstBedrag;
+    tr.exBtw = exBtw;
+    _ohpLastTrace = tr;
+  }
   return exBtw;
 }
 
@@ -8689,6 +8772,184 @@ function _ohpBtwFactor() {
 }
 
 // Render de beurten-lijst.
+// ============================================================
+// REKENVERANTWOORDING (v4.23.0) — toont de trace van _ohpBeurtBasisBedrag.
+// Alleen intern, op scherm. Geen tweede rekenmachine: het paneel rendert
+// de tussenstappen die de rekenkern zelf heeft weggeschreven (_ohpLastTrace).
+// ============================================================
+async function _ohpOpenVerantwoording(beurtId) {
+  const plan = _ohpState.plan;
+  if (!plan) return;
+  const b = (plan.beurten || []).find(x => x.id === beurtId);
+  if (!b) return;
+  const ok = await _ohpEnsureBronLoaded();
+  if (!ok) { _toast('Bron-calculatie kon niet geladen worden.'); return; }
+  const basis = _ohpBeurtBasisBedrag(b, true);
+  const tr = _ohpLastTrace;
+  if (!tr) { _toast('Geen berekening beschikbaar voor deze beurt.'); return; }
+  const sub = document.getElementById('ohpVerSub');
+  if (sub) sub.textContent = (b.naam || 'Beurt') + ' \u00b7 ' + (b.jaartal || '');
+  const body = document.getElementById('ohpVerBody');
+  if (body) body.innerHTML = _ohpVerHtml(b, tr, basis, plan);
+  if (typeof closeControlePaneel === 'function') closeControlePaneel();
+  document.getElementById('ohpVerPaneel').classList.add('active');
+  document.body.classList.add('ohpver-open');
+}
+
+function closeOhpVerantwoording() {
+  const p = document.getElementById('ohpVerPaneel');
+  if (p) p.classList.remove('active');
+  document.body.classList.remove('ohpver-open');
+}
+
+// Percentage-weergave van een factor 0..2, max 1 decimaal.
+function _ohpVerPct(f) {
+  return ((f || 0) * 100).toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + '%';
+}
+
+function _ohpVerHtml(b, tr, basis, plan) {
+  const rij = (label, waarde, vet) => `<tr><td${vet ? ' style="font-weight:700;"' : ''}>${label}</td><td class="right"${vet ? ' style="font-weight:700;"' : ''}>${waarde}</td></tr>`;
+  let h = '';
+
+  // 0. Bron van de instellingen
+  const bronTekst = tr.bron === 'snapshot'
+    ? 'Vergrendelde momentopname (settingsSnapshot) \u2014 live tariefwijzigingen tellen niet mee.'
+    : 'Live instellingen \u2014 de calculatie is niet vergrendeld.';
+  h += `<div style="font-size:0.75rem; color:var(--muted); margin-bottom:0.6rem;">Instellingen: ${bronTekst}</div>`;
+
+  // 1. Schaal-modus
+  h += '<div class="ver-kop">Schaal van deze beurt</div>';
+  if (tr.modus === 'algemeen') {
+    h += `<div>Algemeen percentage: <strong>${_ohpVerPct(tr.extraFactor)}</strong> op alle regels. Staartposten van het type vast en eenheid schalen met hetzelfde percentage mee.</div>`;
+  } else if (tr.modus === 'per_regel') {
+    h += `<div>Per regel een eigen percentage. Gemiddelde van ${tr.aantalFactoren} regelfactoren = <strong>${_ohpVerPct(tr.extraFactor)}</strong>; dat gemiddelde wordt toegepast op staartposten van het type vast en eenheid.</div>`;
+  } else if (tr.modus === 'per_stap') {
+    h += `<div>Per stap een eigen percentage. Gemiddelde van ${tr.aantalFactoren} stapfactoren = <strong>${_ohpVerPct(tr.extraFactor)}</strong>; dat gemiddelde wordt toegepast op staartposten van het type vast en eenheid.</div>`;
+  }
+
+  // 2. Regels
+  h += '<div class="ver-kop">Regels</div>';
+  let vorigeHg = null, vorigeOd = null;
+  (tr.regels || []).forEach(rg => {
+    if (rg.hg !== vorigeHg) {
+      h += `<div style="font-weight:700; margin-top:0.4rem;">${_escapeHtml(rg.hg || '(zonder naam)')}</div>`;
+      vorigeHg = rg.hg;
+      vorigeOd = null;
+    }
+    if (rg.od !== vorigeOd) {
+      h += `<div style="color:var(--muted); font-size:0.78rem; margin-top:0.25rem;">${_escapeHtml(rg.od || '(zonder naam)')}</div>`;
+      vorigeOd = rg.od;
+    }
+    const dim = rg.factor === 0 ? 'opacity: 0.45; ' : '';
+    const hoev = rg.hoeveelheid ? Number(rg.hoeveelheid).toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + ' ' + (rg.eenheid || '') : '';
+    const regelRij = `<div style="${dim}display:grid; grid-template-columns: 1fr 52px 78px 78px; gap:0.35rem; align-items:baseline; padding:0.12rem 0;">
+      <span>${_escapeHtml(rg.naam)} <span style="color:var(--muted); font-size:0.75rem;">${hoev}</span></span>
+      <span style="text-align:right;">${_ohpVerPct(rg.factor)}</span>
+      <span style="text-align:right; color:var(--muted);">${eur(rg.basis)}</span>
+      <span style="text-align:right;">${eur(rg.resultaat)}</span>
+    </div>`;
+    if (rg.stappen && rg.stappen.length) {
+      let stapHtml = '';
+      rg.stappen.forEach(st => {
+        const sdim = st.factor === 0 ? 'opacity: 0.45; ' : '';
+        stapHtml += `<div style="${sdim}display:grid; grid-template-columns: 1fr 52px 78px; gap:0.35rem; padding:0.08rem 0; font-size:0.78rem;">
+          <span>${_escapeHtml(st.naam)}</span>
+          <span style="text-align:right;">${_ohpVerPct(st.factor)}</span>
+          <span style="text-align:right;">${eur(st.arbeid + st.matVerkoop)}</span>
+        </div>`;
+      });
+      h += `<details style="margin:0;"><summary style="cursor:pointer; list-style:none;">${regelRij}</summary><div style="margin-left:0.8rem; border-left:2px solid var(--paper-deep); padding-left:0.5rem; margin-bottom:0.3rem;">${stapHtml}</div></details>`;
+    } else {
+      h += regelRij;
+    }
+  });
+  h += `<div style="display:grid; grid-template-columns: 1fr 78px; gap:0.35rem; border-top:1px solid var(--paper-deep); margin-top:0.3rem; padding-top:0.3rem; font-weight:700;">
+    <span>Subtotaal regels (arbeid ${eur(tr.totalen.arbeid)} + materiaal ${eur(tr.totalen.matVerkoop)})</span>
+    <span style="text-align:right;">${eur(tr.totalen.arbeid + tr.totalen.matVerkoop)}</span>
+  </div>`;
+  h += '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.2rem;">Basis = rauwe arbeid + materiaalverkoop bij 100%. In beurt = basis \u00d7 percentage.</div>';
+
+  // 3. Uren, dagen en afronding
+  h += '<div class="ver-kop">Uren, dagen en afronding</div>';
+  h += '<table class="ver-tab">';
+  h += rij('Uren schilderwerk (geschaald)', tr.totalen.uren.toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + ' u');
+  if (tr.extraUrenStaart > 0) h += rij('Extra uren uit staartposten', tr.extraUrenStaart.toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + ' u');
+  h += rij('Dagen werkelijk \u2192 factureerbaar', tr.dagen.werkelijk.toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + ' \u2192 ' + tr.dagen.factureerbaar.toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + (tr.afronding.volleDagen ? ' (volle dagen aan)' : ' (volle dagen uit)'));
+  h += rij('Afrondingstoeslag (extra arbeid)', eur(tr.afronding.toeslag));
+  h += '</table>';
+
+  // 4. Reiskosten
+  h += '<div class="ver-kop">Reiskosten</div>';
+  h += '<table class="ver-tab">';
+  h += rij('Afstand enkele reis', tr.reis.afstand.toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + ' km ' + (tr.reis.binnenRayon ? '(binnen rayon \u2264 ' + tr.reis.rayonDrempel + ' km: alleen km-vergoeding)' : '(buiten rayon)'));
+  h += rij('Reisdagen', tr.reis.reisDagen.toLocaleString('nl-NL', { maximumFractionDigits: 2 }));
+  h += rij('Reisuren-arbeid', eur(tr.reis.kostenUren));
+  h += rij('Kilometervergoeding', eur(tr.reis.km));
+  h += rij('Reiskosten totaal', eur(tr.reis.totaal), true);
+  h += '</table>';
+
+  // 5. Opslagen
+  h += '<div class="ver-kop">Opslagen</div>';
+  h += '<table class="ver-tab">';
+  h += rij('Klein materiaal (' + tr.opslagen.kleinMatPct + '% over materiaal)', eur(tr.opslagen.kleinMat));
+  h += rij('Afval (' + tr.opslagen.afvalPct + '% over arbeid + materiaal)', eur(tr.opslagen.afval));
+  h += rij('Arbo (' + tr.opslagen.arboPct + '% over arbeid)', eur(tr.opslagen.arbo));
+  h += '</table>';
+
+  // 6. Staartposten
+  h += '<div class="ver-kop">Staartposten</div>';
+  if (tr.staart.length) {
+    h += '<table class="ver-tab">';
+    tr.staart.forEach(p => {
+      const uitleg = p.geschaald ? (eur(p.bruto) + ' \u00d7 ' + _ohpVerPct(tr.extraFactor)) : eur(p.bruto) + ' (schaalt via dagen/grondslag)';
+      h += rij(_escapeHtml(p.naam) + ' <span style="color:var(--muted); font-size:0.75rem;">' + uitleg + '</span>', eur(p.netto));
+    });
+    h += rij('Staart totaal', eur(tr.staartTotaal), true);
+    h += '</table>';
+  } else {
+    h += '<div style="color:var(--muted);">Geen staartposten in de bron-calculatie.</div>';
+  }
+
+  // 7. Naar excl. BTW op prijspeil basisjaar
+  h += '<div class="ver-kop">Optelling naar prijspeil ' + plan.prijspeil + '</div>';
+  h += '<table class="ver-tab">';
+  h += rij('Arbeid incl. afrondingstoeslag', eur(tr.arbeidInclAfronding));
+  h += rij('Materiaal (verkoop)', eur(tr.totalen.matVerkoop));
+  h += rij('Reiskosten', eur(tr.reis.totaal));
+  h += rij('Klein materiaal + afval + arbo', eur(tr.opslagen.kleinMat + tr.opslagen.afval + tr.opslagen.arbo));
+  h += rij('Staartposten', eur(tr.staartTotaal));
+  h += rij('Directe kosten', eur(tr.directe), true);
+  h += rij('+ Risico (' + tr.risicoPct + '% over directe kosten)', eur(tr.risicoBedrag));
+  h += rij('Excl. BTW, prijspeil ' + plan.prijspeil, eur(tr.exBtw), true);
+  h += '</table>';
+
+  // 8. Indexering
+  const jaren = (b.jaartal || 0) - (plan.prijspeil || 0);
+  const idxPct = plan.indexeringPct || 0;
+  const factor = _ohpIndexFactor(b.jaartal, plan.prijspeil, idxPct);
+  const grond = (1 + idxPct / 100).toLocaleString('nl-NL', { maximumFractionDigits: 3 });
+  const factorStr = factor.toLocaleString('nl-NL', { maximumFractionDigits: 3 });
+  const geindExBtw = basis * factor;
+  h += '<div class="ver-kop">Indexering</div>';
+  h += '<table class="ver-tab">';
+  h += rij('Prijspeil \u2192 beurtjaar', plan.prijspeil + ' \u2192 ' + b.jaartal + ' (' + jaren + ' jaar)');
+  h += rij('Index per jaar', idxPct.toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + '%');
+  h += rij('Factor', grond + '^' + jaren + ' = ' + factorStr);
+  h += rij('Ge\u00efndexeerd excl. BTW', eur(geindExBtw), true);
+  h += '</table>';
+
+  // 9. BTW en eindbedrag
+  const btwF = _ohpBtwFactor();
+  const btwPct = ((btwF - 1) * 100).toLocaleString('nl-NL', { maximumFractionDigits: 1 });
+  h += '<div class="ver-kop">BTW en eindbedrag</div>';
+  h += '<table class="ver-tab">';
+  h += rij('BTW', btwPct + '%');
+  h += rij('Eindbedrag incl. BTW (gelijk aan de tijdlijn)', eur(geindExBtw * btwF), true);
+  h += '</table>';
+
+  return h;
+}
+
 function _ohpRenderBeurtenLijst() {
   const c = document.getElementById('ohpBeurtenLijst');
   if (!c) return;
@@ -8708,7 +8969,7 @@ function _ohpRenderBeurtenLijst() {
   html += '<th style="width: 140px;" class="right">Basis (excl. BTW)</th>';
   html += '<th style="width: 160px;" class="right">Geïndexeerd (incl. BTW)</th>';
   html += '<th style="width: 100px; text-align: center;" title="Meerekenen in gemiddelde jaarbedrag?">Mee in gem.</th>';
-  html += '<th style="width: 110px;"></th>';
+  html += '<th style="width: 150px;"></th>';
   html += '</tr></thead><tbody>';
   beurten.forEach(b => {
     const basis = _ohpBeurtBasisBedrag(b);
@@ -8728,6 +8989,7 @@ function _ohpRenderBeurtenLijst() {
       <td class="right"><strong>${eur(geindIncBtw)}</strong></td>
       <td style="text-align: center;"><input type="checkbox" ${mee ? 'checked' : ''} onchange="_ohpUpdBeurtVeld('${b.id}','meeInGemiddelde',this.checked)"></td>
       <td class="right">
+        <button class="btn btn-sm" title="Rekenverantwoording" onclick="_ohpOpenVerantwoording('${b.id}')">Σ</button>
         <button class="btn btn-sm" onclick="_ohpOpenBeurtModal('${b.id}')">Bewerken</button>
         <button class="btn btn-danger btn-sm" onclick="_ohpDeleteBeurt('${b.id}')">×</button>
       </td>

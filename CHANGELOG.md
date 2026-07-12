@@ -1,3 +1,20 @@
+## v4.23.0 — Rekenverantwoording per onderhoudsbeurt
+Het meerjarenonderhoudsplan rekende tot nu toe achter de schermen: beurt-percentages, meeschalende toeslagen, risico-opslag en indexering waren niet te controleren. Nieuw is een Σ-knop per beurt in de beurtenlijst die een zijpaneel rechts opent, in hetzelfde patroon als de Controle.
+
+### Wat het paneel toont
+- Welke instellingen gelden: de bevroren momentopname bij een vergrendelde bron-calculatie, of de live instellingen.
+- De schaal van de beurt en hoe het gemiddelde percentage voor de vaste toeslagen tot stand kwam (som van n factoren gedeeld door n).
+- Per regel het basisbedrag bij 100%, het toegepaste percentage en het resultaat, gegroepeerd per hoofdgroep en onderdeel zodat gelijknamige regels van verschillende gevels uit elkaar te houden zijn; regels op 0% blijven grijs zichtbaar. Bij de modus Per stap klapt elke regel uit naar de stappen met hun eigen percentage.
+- Uren, dagen en de afrondingstoeslag; reiskosten met binnen of buiten rayon; klein materiaal, afval en arbo; de staartposten stuk voor stuk met de schaling erbij.
+- De optelling naar directe kosten, de risico-opslag en het bedrag excl. BTW op prijspeil.
+- De indexering met de factor voluit (bijvoorbeeld 1,065^8 = 1,655), de BTW en het eindbedrag dat één op één gelijk is aan de tijdlijn.
+
+### Hoe het werkt
+Geen tweede rekenmachine: de bestaande rekenkern schrijft tijdens het gewone rekenen zijn tussenstappen weg en het paneel toont die. De verantwoording kan daardoor nooit afwijken van het plan. Alleen intern op scherm; de offertedocumenten en de brochure-PDF veranderen niet. Controle en Verantwoording kunnen niet tegelijk open staan.
+
+### Versienummer
+Deze feature was in de werkchat eerst als v4.22.0/v4.22.1 gebouwd op basis v4.21.1, terwijl een parallelle chat de windroos-liggingsfoto als v4.22.0 uitbracht. De rekenverantwoording is daarom herbouwd op de live v4.22.0 en uitgebracht als v4.23.0; de tussenversies zijn nooit live geweest. Geen SQL en geen Edge Function.
+
 ## v4.22.0 — Liggingsfoto met windroos op het onderhoudsplan
 Onderhoud is weersgevoelig, en welke gevel het zwaarst te verduren krijgt hangt af van waar hij op uitkijkt. Die informatie zat nergens in de app. Nu wel.
 
