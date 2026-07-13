@@ -1,3 +1,6 @@
+## v4.25.0 — Aanspreekvorm stuurt de adressering
+Vul bij Klant alleen de achternaam in. De aanspreekvorm zet zelf het nette voorvoegsel in het adresblok van de offerte (De heer en mevrouw Weerts, Familie Weerts) en de aanhef blijft "Geachte heer en mevrouw Weerts,". Voorvoegsels die al in de klantnaam staan (Familie, De heer, Mevrouw) worden eerst weggestript, dus oude calculaties geven nooit een dubbeling. Zakelijk en VvE (briefhoofd) ongewijzigd. Geen SQL nodig.
+
 ## v4.24.1 — Windroosletters altijd leesbaar
 De letters N, O, Z en W op de liggingsfoto stonden kaal op de luchtfoto en vielen weg op donkere daken en schaduw.
 
