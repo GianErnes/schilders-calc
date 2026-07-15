@@ -507,6 +507,14 @@
     <button class="weglink" id="s_weg" style="display:none">Taak verwijderen</button>
   </div>
 
+  <div class="sheet" id="beheersheet" role="dialog" aria-label="Meldingsadressen">
+    <div class="grip"></div>
+    <h2>Meldingsadressen</h2>
+    <p style="margin:2px 0 4px;font-size:13px;color:var(--ink-faint);line-height:1.4">Het adres waarop iemand een taakmelding per mail krijgt. Leeg laten betekent geen mail voor die persoon.</p>
+    <div id="beheerlijst"></div>
+    <button class="bewaarknop" id="beheer_bewaar">Bewaren</button>
+  </div>
+
   <!-- aanmeldscherm: eenmalig per toestel, daarna nooit meer -->
   <div class="login" id="login">
     <div class="kaart">
@@ -525,7 +533,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.7.6';
+const APP_VERSION = 'v0.8.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -545,6 +553,7 @@ const PERSOON_VOLGORDE = ['gian','max','maud','jens','bjorn','overig'];
 let IK = null;            /* { persoon, rol, yoobi_naam } */
 let UID = null;
 let MAP_YOOBI = {};       /* Yoobi-naam -> persoon */
+let ROLLEN = [];          /* alle rijen uit taken_rollen */
 let TAKEN = [];
 let ZOEK = '';
 let LAATSTE_HERO = null;
@@ -820,8 +829,10 @@ function bouwMeetstrook(){
 
 function bouwVoet(){
   const naam = IK ? PERSOON[IK.persoon].naam : '';
+  const rechts = (IK && IK.rol === 'alles' ? '<button type="button" id="beheerMail">meldingsadressen</button> ' : '') +
+    '<button type="button" id="afmelden">afmelden</button>';
   return '<div class="voet"><span>taken ' + APP_VERSION + (naam ? ' · aangemeld als ' + esc(naam) : '') + '</span>' +
-    '<button type="button" id="afmelden">afmelden</button></div>';
+    '<span>' + rechts + '</span></div>';
 }
 
 /* ────────────────────────────────────────────────────────
@@ -1066,6 +1077,52 @@ function sluitVel(){
   VEL = null;
 }
 
+function openBeheer(){
+  if(!IK || IK.rol !== 'alles') return;
+  const personen = PERSOON_VOLGORDE.filter(p => p !== 'overig' && ROLLEN.some(r => r.persoon === p));
+  document.getElementById('beheerlijst').innerHTML = personen.map(function(p){
+    return '<div class="fld"><div class="k">' + esc(PERSOON[p].naam) + '</div>' +
+      '<input class="veldinput" type="email" autocomplete="email" autocapitalize="off" spellcheck="false" data-persoon="' + p + '" placeholder="geen mail"></div>';
+  }).join('') || '<p style="font-size:13px;color:var(--ink-faint)">Nog geen aangemelde personen gevonden.</p>';
+  personen.forEach(function(p){
+    const rij = ROLLEN.find(r => r.persoon === p);
+    const el = document.querySelector('#beheerlijst input[data-persoon="' + p + '"]');
+    if(el) el.value = rij && rij.mail ? rij.mail : '';
+  });
+  document.getElementById('scrim').classList.add('show');
+  document.getElementById('beheersheet').classList.add('show');
+  document.getElementById('beheersheet').scrollTop = 0;
+}
+
+function sluitBeheer(){
+  document.getElementById('scrim').classList.remove('show');
+  document.getElementById('beheersheet').classList.remove('show');
+}
+
+async function bewaarBeheer(){
+  const knop = document.getElementById('beheer_bewaar');
+  knop.disabled = true;
+  try{
+    const velden = document.querySelectorAll('#beheerlijst input[data-persoon]');
+    for(const el of velden){
+      const p = el.dataset.persoon;
+      const mail = el.value.trim();
+      const rij = ROLLEN.find(r => r.persoon === p);
+      const huidig = rij && rij.mail ? rij.mail : '';
+      if(mail === huidig) continue;
+      const { error } = await sb.rpc('set_meld_mail', { p_persoon: p, p_mail: mail });
+      if(error) throw error;
+      if(rij) rij.mail = mail || null;
+    }
+    sluitBeheer();
+    toast('Meldingsadressen bewaard');
+  }catch(e){
+    toast('Bewaren lukt niet: ' + (e.message || e));
+  }finally{
+    knop.disabled = false;
+  }
+}
+
 /* ────────────────────────────────────────────────────────
    Schrijven: toevoegen, bewaren, afvinken, verwijderen
    ──────────────────────────────────────────────────────── */
@@ -1107,6 +1164,11 @@ async function slaOp(){
     vandaag: w.vandaagAan,
     vandaag_op: w.vandaagAan ? lokaalISO(new Date()) : null,
   };
+
+  /* mailmelding opnieuw scherpstellen als de melding nog in de toekomst ligt */
+  if(VEL.modus !== 'nieuw' && w.piepAan && w.piep_op && new Date(w.piep_op).getTime() > Date.now()){
+    rij.mail_op = null;
+  }
 
   try{
     let taakId = null;
@@ -1191,6 +1253,7 @@ async function vinkAf(){
         gepland_op: volgendeTs,
         piep_op: w.piepAan ? volgendeTs : null,
         vandaag: false, vandaag_op: null,
+        mail_op: null,
       });
       const { error: e2 } = await sb.from('taken').update(herhalerUpdate).eq('crmtaskid', t.crmtaskid);
       if(e2) throw e2;
@@ -1279,7 +1342,7 @@ async function schakelPiep(){
     const u = tijdTekst(t._gepland);
     piep_op = naarTimestamp(lokaalISO(t._gepland), u || '09:00');
   }
-  const { error } = await sb.from('taken').update({ piep: aanNu, piep_op: piep_op }).eq('crmtaskid', t.crmtaskid);
+  const { error } = await sb.from('taken').update({ piep: aanNu, piep_op: piep_op, mail_op: null }).eq('crmtaskid', t.crmtaskid);
   if(error){ toast('Melding opslaan lukt niet: ' + error.message); return; }
   await laadTaken();
 }
@@ -1301,7 +1364,7 @@ async function verzetMelding(hoe){
   }
   const doelTs = timestampVan(doel);
   const { error } = await sb.from('taken').update({
-    piep: true, piep_op: doelTs, melding_geleverd_op: null,
+    piep: true, piep_op: doelTs, melding_geleverd_op: null, mail_op: null,
   }).eq('crmtaskid', t.crmtaskid);
   if(error){ toast('Uitstellen lukt niet: ' + error.message); return; }
   document.getElementById('s_toggle').classList.remove('uit');
@@ -1417,6 +1480,7 @@ async function laadProfiel(){
     toonMelding('De rollentabel is niet leesbaar: ' + esc(error.message), true);
     return false;
   }
+  ROLLEN = data || [];
   MAP_YOOBI = {};
   IK = null;
   (data || []).forEach(r => {
@@ -1538,6 +1602,7 @@ async function init(){
    Gedrag
    ──────────────────────────────────────────────────────── */
 document.getElementById('lijst').addEventListener('click', async function(e){
+  if(e.target.closest('#beheerMail')){ openBeheer(); return; }
   if(e.target.closest('#afmelden')){
     await sb.auth.signOut();
     location.reload();
@@ -1595,7 +1660,8 @@ zoekWisEl.addEventListener('click', function(){
   render();
   zoekveldEl.focus();
 });
-document.getElementById('scrim').addEventListener('click', sluitVel);
+document.getElementById('scrim').addEventListener('click', function(){ sluitVel(); sluitBeheer(); });
+document.getElementById('beheer_bewaar').addEventListener('click', bewaarBeheer);
 document.addEventListener('keydown', function(e){ if(e.key === 'Escape') sluitVel(); });
 
 document.getElementById('s_segment').addEventListener('click', function(e){
