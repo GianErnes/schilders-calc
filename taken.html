@@ -130,6 +130,7 @@
   .pill.yoobi{background:#f1f0fb;color:#6d5bb8}
   .pill.date{background:#f0f2f5;color:var(--ink-soft)}
   .pill.klant{background:#f0f2f5;color:var(--ink-soft)}
+  .pill.offerte{background:#fff1e8;color:#c2410c}
   .pill.foto{background:#f0f2f5;color:var(--ink-soft)}
   .card .bell{flex:none;color:var(--ink-faint);font-size:15px;margin-top:1px}
   .card .bell.on{color:var(--gian)}
@@ -533,7 +534,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.8.0';
+const APP_VERSION = 'v0.9.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -643,13 +644,14 @@ function timestampVan(d){
    Verrijken: per taak persoon, rubriek en weergavedatum
    ──────────────────────────────────────────────────────── */
 function persoonVan(t){
-  if(t.bron === 'eigen') return t.toegewezen_aan || 'overig';
-  return MAP_YOOBI[t.username] || 'overig';
+  if(t.bron === 'yoobi') return MAP_YOOBI[t.username] || 'overig';
+  return t.toegewezen_aan || 'overig';
 }
 function rubriekVan(t, nu, vandaagISO){
+  if(t.status === 'vervallen') return 'vervallen';
   if(t.voltooid_op) return 'voltooid';
   const dagkeuze = t.vandaag && t.vandaag_op === vandaagISO;
-  const eigenVandaag = t.bron === 'eigen' && t._gepland && zelfdeDag(t._gepland, nu);
+  const eigenVandaag = t.bron !== 'yoobi' && t._gepland && zelfdeDag(t._gepland, nu);
   if(dagkeuze || eigenVandaag) return 'vandaag';
   if(t.bron === 'yoobi') return 'klant';
   if(t.soort === 'herhalend') return 'herhalend';
@@ -692,6 +694,7 @@ const RUBRIEKEN = [
   { key:'herhalend', titel:'Herhalend ↻',    sub:'',                                         open:false },
   { key:'klant',     titel:'Klantopvolging', sub:'uit Yoobi · alleen bekijken',              open:false, klasse:'gated' },
   { key:'voltooid',  titel:'Voltooid',       sub:'je eigen afgevinkte taken',                open:false,   klasse:'done' },
+  { key:'vervallen', titel:'Vervallen',      sub:'niet meer nodig, blijft als historie',     open:false,   klasse:'lapsed' },
 ];
 RUBRIEKEN.forEach(r => { OPEN_STAND[r.key] = r.open; });
 
@@ -723,9 +726,10 @@ function pillen(t){
   const rep = herhalingTekst(t.herhaling_n, t.herhaling_eenheid);
   if(rep) p.push('<span class="pill rep">↻ ' + esc(rep) + '</span>');
   if(t.bron === 'yoobi' && t._rubriek !== 'vervallen') p.push('<span class="pill yoobi">Yoobi</span>');
+  if(t.bron === 'offerte' && t._rubriek !== 'vervallen') p.push('<span class="pill offerte">Offerte</span>');
   if(t.tel || t.klant_tel) p.push('<span class="pill tel">✆ bellen</span>');
   if(t.foto_pad) p.push('<span class="pill foto">📷</span>');
-  if(t.klantnaam && t.bron === 'eigen') p.push('<span class="pill klant">' + esc(t.klantnaam) + '</span>');
+  if(t.klantnaam && t.bron !== 'yoobi') p.push('<span class="pill klant">' + esc(t.klantnaam) + '</span>');
   if(t._rubriek === 'voltooid' && t._voltooid) p.push('<span class="pill date">✓ ' + esc(datumTekst(t._voltooid)) + '</span>');
   if(t._rubriek === 'vervallen' && t._gepland) p.push('<span class="pill date">' + esc(datumTekst(t._gepland)) + '</span>');
   if(t._rubriek === 'herhalend' && !t._binnenWeek) p.push('<span class="pill date">verschijnt later</span>');
@@ -867,7 +871,7 @@ function render(){
   if(ZOEK){
     lijst.innerHTML = bouwTreffers() + bouwVoet();
   } else {
-    lijst.innerHTML = RUBRIEKEN.map(bouwRubriek).join('') + bouwMeetstrook() + bouwVoet();
+    lijst.innerHTML = RUBRIEKEN.filter(r => r.key !== 'vervallen' || TAKEN.some(t => t._rubriek === 'vervallen')).map(bouwRubriek).join('') + bouwMeetstrook() + bouwVoet();
   }
   window.scrollTo(0, scrollY);
 }
@@ -923,6 +927,7 @@ function openTask(t){
     '<span style="font-size:13px;font-weight:700;color:var(--ink-soft)">' + esc(pk.naam) + '</span>' +
     (t.klantnaam ? '<span class="pill klant">' + esc(t.klantnaam) + '</span>' : '') +
     (isYoobi ? '<span class="pill yoobi">Yoobi · alleen bekijken</span>' : '') +
+    (t.bron === 'offerte' ? '<span class="pill offerte">Offerte</span>' : '') +
     (t._voltooid ? '<span class="pill date">✓ ' + esc(datumTekst(t._voltooid)) + '</span>' : '');
 
   /* afvink-knop */
@@ -931,7 +936,7 @@ function openTask(t){
     zet('s_klaar', true);
     klaarKnop.textContent = '✓ Afvinken';
     klaarKnop.classList.remove('terug');
-  } else if(modus === 'klaar' && t.bron === 'eigen' && t._rubriek === 'voltooid'){
+  } else if(modus === 'klaar' && t.bron !== 'yoobi' && t._rubriek === 'voltooid'){
     zet('s_klaar', true);
     klaarKnop.textContent = '↩ Terug naar open';
     klaarKnop.classList.add('terug');
