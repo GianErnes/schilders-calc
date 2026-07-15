@@ -258,6 +258,17 @@
     background:rgba(20,25,35,.72);color:#fff;border:none;cursor:pointer;
     font-size:15px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;
   }
+  .docrow{
+    display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;
+    padding:10px 12px;background:#fbfcfd;margin-bottom:8px;cursor:pointer
+  }
+  .docrow .dnaam{flex:1;font-size:13px;font-weight:600;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .docrow .dkb{font-size:11px;color:var(--ink-faint);flex:none}
+  .docrow .dweg{
+    flex:none;width:26px;height:26px;border-radius:50%;background:#f3f4f6;color:var(--ink-soft);
+    border:none;cursor:pointer;font-size:13px;font-weight:800;line-height:1;
+    display:flex;align-items:center;justify-content:center
+  }
   .row2{display:flex;gap:10px}
   .row2 .box{flex:1;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fbfcfd}
   .kk{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-faint)}
@@ -453,6 +464,13 @@
       <input type="file" id="s_fotofile" accept="image/*" style="display:none">
     </div>
 
+    <div class="fld" id="s_docwrap_fld">
+      <div class="k">Documenten (PDF)</div>
+      <div id="s_doclijst"></div>
+      <div class="photo" id="s_docknop">📎 PDF toevoegen</div>
+      <input type="file" id="s_docfile" accept="application/pdf" multiple style="display:none">
+    </div>
+
     <div class="fld">
       <div class="k">Wanneer</div>
       <div class="row2" id="s_wanneer_lezen" style="display:none">
@@ -534,12 +552,14 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.9.0';
+const APP_VERSION = 'v0.10.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-taken-auth' } });
 const FOTO_BUCKET = 'taken-fotos';
+const DOC_BUCKET = 'taken-documenten';
+let DOCS_TELLING = {};    /* crmtaskid -> aantal PDF-bijlagen */
 
 const PERSOON = {
   gian:   { naam:'Gian',   css:'var(--gian)'   },
@@ -729,6 +749,7 @@ function pillen(t){
   if(t.bron === 'offerte' && t._rubriek !== 'vervallen') p.push('<span class="pill offerte">Offerte</span>');
   if(t.tel || t.klant_tel) p.push('<span class="pill tel">✆ bellen</span>');
   if(t.foto_pad) p.push('<span class="pill foto">📷</span>');
+  if(DOCS_TELLING[t.crmtaskid]) p.push('<span class="pill foto">📎' + (DOCS_TELLING[t.crmtaskid] > 1 ? ' ' + DOCS_TELLING[t.crmtaskid] : '') + '</span>');
   if(t.klantnaam && t.bron !== 'yoobi') p.push('<span class="pill klant">' + esc(t.klantnaam) + '</span>');
   if(t._rubriek === 'voltooid' && t._voltooid) p.push('<span class="pill date">✓ ' + esc(datumTekst(t._voltooid)) + '</span>');
   if(t._rubriek === 'vervallen' && t._gepland) p.push('<span class="pill date">' + esc(datumTekst(t._gepland)) + '</span>');
@@ -965,6 +986,11 @@ function openTask(t){
   }
   zet('s_fotoweg', modus === 'eigen');
 
+  /* documenten */
+  zet('s_docwrap_fld', true);
+  zet('s_docknop', modus !== 'klaar');
+  laadDocs(t);
+
   /* wanneer */
   zet('s_wanneer_lezen', modus !== 'eigen');
   zet('s_wanneer_invullen', modus === 'eigen');
@@ -1039,6 +1065,7 @@ function openNieuw(){
   zet('s_fotowrap_fld', true);
   toonFoto(null);
   zet('s_fotoweg', true);
+  zet('s_docwrap_fld', false);
 
   zet('s_wanneer_lezen', false);
   zet('s_wanneer_invullen', true);
@@ -1408,6 +1435,65 @@ async function kiesFoto(e){
   if(VEL.modus !== 'nieuw') toast('Foto staat klaar, tik Bewaren om vast te leggen');
 }
 
+function grootteTekst(b){
+  if(!b && b !== 0) return '';
+  if(b < 1024 * 1024) return Math.max(1, Math.round(b / 1024)) + ' kB';
+  return (b / 1048576).toFixed(1) + ' MB';
+}
+
+async function laadDocs(t){
+  const lijst = document.getElementById('s_doclijst');
+  lijst.innerHTML = '';
+  const { data, error } = await sb.from('taak_documenten')
+    .select('*').eq('taak_id', t.crmtaskid).order('aangemaakt');
+  if(error || !data) return;
+  DOCS_TELLING[t.crmtaskid] = data.length;
+  const magWeg = IK && IK.persoon === 'gian';
+  lijst.innerHTML = data.map(function(d){
+    return '<div class="docrow" data-pad="' + esc(d.storage_path) + '">' +
+      '<span>📄</span>' +
+      '<span class="dnaam">' + esc(d.bestandsnaam || 'document.pdf') + '</span>' +
+      '<span class="dkb">' + grootteTekst(d.grootte) + '</span>' +
+      (magWeg ? '<button type="button" class="dweg" data-doc="' + esc(d.id) + '" aria-label="Verwijderen">✕</button>' : '') +
+      '</div>';
+  }).join('');
+}
+
+async function openDoc(pad){
+  const { data, error } = await sb.storage.from(DOC_BUCKET).createSignedUrl(pad, 300);
+  if(error || !data || !data.signedUrl){ toast('Openen lukt niet'); return; }
+  window.open(data.signedUrl, '_blank');
+}
+
+async function wegDoc(docId, pad){
+  if(!confirm('Dit document verwijderen?')) return;
+  const { error } = await sb.from('taak_documenten').delete().eq('id', docId);
+  if(error){ toast('Verwijderen lukt niet: ' + esc(error.message)); return; }
+  sb.storage.from(DOC_BUCKET).remove([pad]);
+  if(VEL && VEL.taak) await laadDocs(VEL.taak);
+  render();
+}
+
+async function kiesDoc(e){
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  if(!files.length || !VEL || !VEL.taak) return;
+  for(const f of files){
+    if(f.type !== 'application/pdf'){ toast(esc(f.name) + ' is geen PDF, overgeslagen'); continue; }
+    const naam = f.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const pad = VEL.taak.crmtaskid + '/' + Date.now() + '_' + naam;
+    const { error: upErr } = await sb.storage.from(DOC_BUCKET)
+      .upload(pad, f, { contentType: 'application/pdf' });
+    if(upErr){ toast('Uploaden van ' + esc(f.name) + ' lukt niet: ' + esc(upErr.message)); continue; }
+    const { error: rijErr } = await sb.from('taak_documenten')
+      .insert({ taak_id: VEL.taak.crmtaskid, storage_path: pad, bestandsnaam: f.name, grootte: f.size });
+    if(rijErr){ toast('Vastleggen van ' + esc(f.name) + ' lukt niet'); continue; }
+  }
+  toast('Document(en) toegevoegd');
+  await laadDocs(VEL.taak);
+  render();
+}
+
 function fotoWeg(){
   VEL.fotoBlob = null;
   VEL.fotoWeg = true;
@@ -1503,6 +1589,11 @@ async function laadProfiel(){
 async function laadTaken(){
   try{
     TAKEN = await haalTaken();
+    DOCS_TELLING = {};
+    const { data: docRijen } = await sb.from('taak_documenten').select('taak_id');
+    (docRijen || []).forEach(function(d){
+      DOCS_TELLING[d.taak_id] = (DOCS_TELLING[d.taak_id] || 0) + 1;
+    });
   }catch(e){
     toonMelding('Taken laden lukt niet: ' + esc(e.message || String(e)), true);
     return;
@@ -1690,6 +1781,16 @@ document.getElementById('s_photo').addEventListener('click', function(){
   document.getElementById('s_fotofile').click();
 });
 document.getElementById('s_fotofile').addEventListener('change', kiesFoto);
+document.getElementById('s_docknop').addEventListener('click', function(){
+  document.getElementById('s_docfile').click();
+});
+document.getElementById('s_docfile').addEventListener('change', kiesDoc);
+document.getElementById('s_doclijst').addEventListener('click', function(e){
+  const weg = e.target.closest('.dweg');
+  const rij = e.target.closest('.docrow');
+  if(weg && rij){ e.stopPropagation(); wegDoc(weg.dataset.doc, rij.dataset.pad); return; }
+  if(rij) openDoc(rij.dataset.pad);
+});
 document.getElementById('s_fotoweg').addEventListener('click', function(e){
   e.stopPropagation();
   if(!VEL || VEL.modus === 'yoobi' || VEL.modus === 'klaar') return;
