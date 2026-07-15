@@ -552,7 +552,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.10.0';
+const APP_VERSION = 'v0.10.2';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -933,7 +933,7 @@ function openTask(t){
   const isYoobi = t.bron === 'yoobi';
   const isKlaar = t._rubriek === 'voltooid' || t._rubriek === 'vervallen';
   const modus = isKlaar ? 'klaar' : (isYoobi ? 'yoobi' : 'eigen');
-  VEL = { modus: modus, taak: t, soort: t.soort === 'herhalend' ? 'herhalend' : 'eenmalig', persoon: t._persoon, fotoBlob: null, fotoWeg: false };
+  VEL = { modus: modus, taak: t, soort: t.soort === 'herhalend' ? 'herhalend' : 'eenmalig', persoon: t._persoon, fotoBlob: null, fotoWeg: false, docFiles: [] };
 
   /* titel */
   zet('s_title', modus !== 'eigen');
@@ -1043,7 +1043,7 @@ function openTask(t){
 }
 
 function openNieuw(){
-  VEL = { modus:'nieuw', taak:null, soort:'eenmalig', persoon: IK ? IK.persoon : 'gian', fotoBlob:null, fotoWeg:false };
+  VEL = { modus:'nieuw', taak:null, soort:'eenmalig', persoon: IK ? IK.persoon : 'gian', fotoBlob:null, fotoWeg:false, docFiles: [] };
 
   zet('s_title', false);
   zet('s_titelinput', true);
@@ -1065,7 +1065,9 @@ function openNieuw(){
   zet('s_fotowrap_fld', true);
   toonFoto(null);
   zet('s_fotoweg', true);
-  zet('s_docwrap_fld', false);
+  zet('s_docwrap_fld', true);
+  zet('s_docknop', true);
+  document.getElementById('s_doclijst').innerHTML = '';
 
   zet('s_wanneer_lezen', false);
   zet('s_wanneer_invullen', true);
@@ -1211,6 +1213,12 @@ async function slaOp(){
       const { data, error } = await sb.from('taken').insert(rij).select().single();
       if(error) throw error;
       taakId = data.crmtaskid;
+      if(VEL.docFiles && VEL.docFiles.length){
+        const uit = await uploadDocs(taakId, VEL.docFiles);
+        if(uit.fout) toast(uit.fout);
+        DOCS_TELLING[taakId] = uit.geslaagd;
+        VEL.docFiles = [];
+      }
     } else {
       taakId = VEL.taak.crmtaskid;
       const { error } = await sb.from('taken').update(rij).eq('crmtaskid', taakId);
@@ -1474,22 +1482,56 @@ async function wegDoc(docId, pad){
   render();
 }
 
+function toonKlaargezet(){
+  const lijst = document.getElementById('s_doclijst');
+  lijst.innerHTML = VEL.docFiles.map(function(f, i){
+    return '<div class="docrow" data-idx="' + i + '">' +
+      '<span>📄</span>' +
+      '<span class="dnaam">' + esc(f.name) + '</span>' +
+      '<span class="dkb">' + grootteTekst(f.size) + '</span>' +
+      '<button type="button" class="dweg" data-staged="' + i + '" aria-label="Weghalen">✕</button>' +
+      '</div>';
+  }).join('');
+}
+
+async function uploadDocs(taakId, files){
+  let geslaagd = 0;
+  let fout = '';
+  for(const f of files){
+    const naam = f.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const pad = taakId + '/' + Date.now() + '_' + naam;
+    const { error: upErr } = await sb.storage.from(DOC_BUCKET)
+      .upload(pad, f, { contentType: 'application/pdf' });
+    if(upErr){ fout = 'Uploaden van ' + esc(f.name) + ' lukt niet: ' + esc(upErr.message); continue; }
+    const { error: rijErr } = await sb.from('taak_documenten')
+      .insert({ taak_id: taakId, storage_path: pad, bestandsnaam: f.name, grootte: f.size });
+    if(rijErr){ fout = 'Vastleggen van ' + esc(f.name) + ' lukt niet: ' + esc(rijErr.message); continue; }
+    geslaagd++;
+  }
+  return { geslaagd: geslaagd, fout: fout };
+}
+
 async function kiesDoc(e){
   const files = Array.from(e.target.files || []);
   e.target.value = '';
-  if(!files.length || !VEL || !VEL.taak) return;
+  if(!files.length || !VEL) return;
+  const pdfs = [];
+  let fout = '';
   for(const f of files){
-    if(f.type !== 'application/pdf'){ toast(esc(f.name) + ' is geen PDF, overgeslagen'); continue; }
-    const naam = f.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const pad = VEL.taak.crmtaskid + '/' + Date.now() + '_' + naam;
-    const { error: upErr } = await sb.storage.from(DOC_BUCKET)
-      .upload(pad, f, { contentType: 'application/pdf' });
-    if(upErr){ toast('Uploaden van ' + esc(f.name) + ' lukt niet: ' + esc(upErr.message)); continue; }
-    const { error: rijErr } = await sb.from('taak_documenten')
-      .insert({ taak_id: VEL.taak.crmtaskid, storage_path: pad, bestandsnaam: f.name, grootte: f.size });
-    if(rijErr){ toast('Vastleggen van ' + esc(f.name) + ' lukt niet'); continue; }
+    if(f.type !== 'application/pdf'){ fout = esc(f.name) + ' is geen PDF, overgeslagen'; continue; }
+    pdfs.push(f);
   }
-  toast('Document(en) toegevoegd');
+  if(VEL.modus === 'nieuw'){
+    VEL.docFiles = VEL.docFiles.concat(pdfs);
+    toonKlaargezet();
+    if(fout) toast(fout);
+    else if(pdfs.length) toast('Staat klaar, tik Bewaren om vast te leggen');
+    return;
+  }
+  if(!VEL.taak) return;
+  const uit = await uploadDocs(VEL.taak.crmtaskid, pdfs);
+  if(fout || uit.fout) toast(uit.fout || fout);
+  else if(uit.geslaagd) toast(uit.geslaagd === 1 ? 'Document toegevoegd' : uit.geslaagd + ' documenten toegevoegd');
   await laadDocs(VEL.taak);
   render();
 }
@@ -1788,8 +1830,14 @@ document.getElementById('s_docfile').addEventListener('change', kiesDoc);
 document.getElementById('s_doclijst').addEventListener('click', function(e){
   const weg = e.target.closest('.dweg');
   const rij = e.target.closest('.docrow');
+  if(weg && weg.dataset.staged != null){
+    e.stopPropagation();
+    VEL.docFiles.splice(parseInt(weg.dataset.staged, 10), 1);
+    toonKlaargezet();
+    return;
+  }
   if(weg && rij){ e.stopPropagation(); wegDoc(weg.dataset.doc, rij.dataset.pad); return; }
-  if(rij) openDoc(rij.dataset.pad);
+  if(rij && rij.dataset.pad) openDoc(rij.dataset.pad);
 });
 document.getElementById('s_fotoweg').addEventListener('click', function(e){
   e.stopPropagation();
