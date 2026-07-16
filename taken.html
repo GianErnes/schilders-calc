@@ -442,6 +442,7 @@
         <input type="number" id="s_ritme_n" min="1" max="365" value="1" inputmode="numeric">
         <select id="s_ritme_eenheid">
           <option value="dag">dagen</option>
+          <option value="werkdag">werkdagen</option>
           <option value="week" selected>weken</option>
           <option value="maand">maanden</option>
           <option value="jaar">jaar</option>
@@ -552,7 +553,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.10.2';
+const APP_VERSION = 'v0.11.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -637,8 +638,8 @@ function tijdTekst(d){
 }
 function herhalingTekst(n, eenheid){
   if(!n || !eenheid) return '';
-  if(n === 1) return { dag:'elke dag', week:'elke week', maand:'elke maand', jaar:'elk jaar' }[eenheid] || '';
-  const mv = { dag:'dagen', week:'weken', maand:'maanden', jaar:'jaar' }[eenheid] || eenheid;
+  if(n === 1) return { dag:'elke dag', werkdag:'elke werkdag', week:'elke week', maand:'elke maand', jaar:'elk jaar' }[eenheid] || '';
+  const mv = { dag:'dagen', werkdag:'werkdagen', week:'weken', maand:'maanden', jaar:'jaar' }[eenheid] || eenheid;
   return 'elke ' + n + ' ' + mv;
 }
 /* Volgende datum in het ritme, gerekend vanaf de vaste ankerdatum. */
@@ -648,6 +649,12 @@ function volgendeDatum(anker, n, eenheid){
   let stop = 0;
   do{
     if(eenheid === 'dag') d.setDate(d.getDate() + n);
+    else if(eenheid === 'werkdag'){
+      /* n werkdagen vooruit; zaterdag en zondag tellen niet mee */
+      for(let i = 0; i < n; i++){
+        do{ d.setDate(d.getDate() + 1); } while(d.getDay() === 0 || d.getDay() === 6);
+      }
+    }
     else if(eenheid === 'week') d.setDate(d.getDate() + 7 * n);
     else if(eenheid === 'maand') d.setMonth(d.getMonth() + n);
     else d.setFullYear(d.getFullYear() + n);
