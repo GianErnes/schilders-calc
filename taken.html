@@ -565,7 +565,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.13.0';
+const APP_VERSION = 'v0.13.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -836,8 +836,11 @@ function sorteer(lijst, rubriek){
    rol 'alles'  -> alles, eventueel versmald met het persoonsfilter bovenaan. */
 function zichtbareTaken(){
   if(IK && IK.rol === 'eigen'){
+    /* v0.13.1: op BRON filteren, niet op rubriek — klanttaken die in Vandaag of
+       Voltooid staan blijven zo ook zichtbaar. Casing-onafhankelijk vergeleken. */
+    const zietKlant = ZIET_KLANT_ALTIJD.indexOf(String(IK.persoon || '').toLowerCase()) >= 0;
     return TAKEN.filter(t => t._persoon === IK.persoon ||
-      (t._rubriek === 'klant' && ZIET_KLANT_ALTIJD.indexOf(IK.persoon) >= 0));
+      (zietKlant && t.bron === 'yoobi'));
   }
   if(IK && IK.rol === 'alles' && FILTER_PERSOON !== 'alle'){
     return TAKEN.filter(t => t._persoon === FILTER_PERSOON);
