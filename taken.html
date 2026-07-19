@@ -243,8 +243,9 @@
   .fld{margin-top:16px}
   .fld .k{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-faint);margin-bottom:7px}
   .note{
-    width:100%;min-height:96px;border:1px solid var(--line);border-radius:12px;padding:11px 12px;
-    font:inherit;font-size:16px;color:var(--ink);resize:none;background:#fbfcfd
+    width:100%;min-height:190px;max-height:55vh;overflow-y:auto;
+    border:1px solid var(--line);border-radius:12px;padding:12px 13px;
+    font:inherit;font-size:16px;line-height:1.5;color:var(--ink);resize:vertical;background:#fbfcfd
   }
   .note:focus{outline:2px solid var(--hero-line);border-color:var(--hero-line)}
   .photo{
@@ -452,7 +453,7 @@
 
     <div class="fld" id="s_notewrap">
       <div class="k">Notitie</div>
-      <textarea class="note" id="s_note" placeholder="Typ hier je aantekeningen, maten, kleurcodes…"></textarea>
+      <textarea class="note" id="s_note" placeholder="Typ hier je aantekeningen, maten, kleurcodes…" oninput="groeiNotitie(this)"></textarea>
     </div>
 
     <div class="fld" id="s_fotowrap_fld">
@@ -917,6 +918,13 @@ function render(){
 /* ────────────────────────────────────────────────────────
    Detailvel: tonen
    ──────────────────────────────────────────────────────── */
+function groeiNotitie(el){
+  el = el || document.getElementById('s_note');
+  if(!el) return;
+  el.style.height = 'auto';
+  el.style.height = Math.max(el.scrollHeight + 2, 190) + 'px';
+}
+
 function zet(id, zichtbaar){
   document.getElementById(id).style.display = zichtbaar ? '' : 'none';
 }
@@ -992,6 +1000,7 @@ function openTask(t){
   zet('s_notewrap', !isYoobi);
   document.getElementById('s_note').value = t.notitie || '';
   document.getElementById('s_note').readOnly = modus === 'klaar';
+  setTimeout(() => groeiNotitie(), 60);
 
   /* foto */
   zet('s_fotowrap_fld', modus === 'eigen' || (modus === 'klaar' && t.foto_pad));
@@ -1078,6 +1087,7 @@ function openNieuw(){
   zet('s_notewrap', true);
   document.getElementById('s_note').value = '';
   document.getElementById('s_note').readOnly = false;
+  setTimeout(() => groeiNotitie(), 60);
 
   zet('s_fotowrap_fld', true);
   toonFoto(null);
