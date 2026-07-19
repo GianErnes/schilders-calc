@@ -565,7 +565,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.13.1';
+const APP_VERSION = 'v0.13.2';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -589,7 +589,6 @@ let UID = null;
 let MAP_YOOBI = {};       /* Yoobi-naam -> persoon */
 let ROLLEN = [];          /* alle rijen uit taken_rollen */
 let FILTER_PERSOON = 'alle';                 /* persoonsfilter, alleen rol 'alles' */
-const ZIET_KLANT_ALTIJD = ['maud'];          /* ziet Klantopvolging ook bij rol 'eigen' */
 let TAKEN = [];
 let ZOEK = '';
 let LAATSTE_HERO = null;
@@ -836,11 +835,11 @@ function sorteer(lijst, rubriek){
    rol 'alles'  -> alles, eventueel versmald met het persoonsfilter bovenaan. */
 function zichtbareTaken(){
   if(IK && IK.rol === 'eigen'){
-    /* v0.13.1: op BRON filteren, niet op rubriek — klanttaken die in Vandaag of
-       Voltooid staan blijven zo ook zichtbaar. Casing-onafhankelijk vergeleken. */
-    const zietKlant = ZIET_KLANT_ALTIJD.indexOf(String(IK.persoon || '').toLowerCase()) >= 0;
+    /* v0.13.2: ziet_klant komt uit taken_rollen — dezelfde vlag stuurt de
+       RLS-policy op de server, dus client en server kunnen niet uiteenlopen.
+       Op BRON gefilterd zodat klanttaken in elke rubriek zichtbaar blijven. */
     return TAKEN.filter(t => t._persoon === IK.persoon ||
-      (zietKlant && t.bron === 'yoobi'));
+      (IK.ziet_klant && t.bron === 'yoobi'));
   }
   if(IK && IK.rol === 'alles' && FILTER_PERSOON !== 'alle'){
     return TAKEN.filter(t => t._persoon === FILTER_PERSOON);
@@ -1691,7 +1690,7 @@ async function laadProfiel(){
   IK = null;
   (data || []).forEach(r => {
     if(r.yoobi_naam) MAP_YOOBI[r.yoobi_naam] = r.persoon;
-    if(r.user_id === UID) IK = { persoon: r.persoon, rol: r.rol, yoobi_naam: r.yoobi_naam };
+    if(r.user_id === UID) IK = { persoon: r.persoon, rol: r.rol, yoobi_naam: r.yoobi_naam, ziet_klant: r.ziet_klant === true };
   });
   if(!IK){
     toonMelding('Dit account is aangemeld maar nog niet gekoppeld in taken_rollen. ' +
