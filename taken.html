@@ -553,7 +553,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.11.0';
+const APP_VERSION = 'v0.12.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -635,6 +635,16 @@ function tijdTekst(d){
   const u = d.getHours(), m = d.getMinutes();
   if(u === 0 && m === 0) return '';
   return String(u).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+/* Afvinkregel: altijd wanneer, en bij metWie ook door wie als dat bekend is. */
+function afvinkTekst(t, metWie){
+  if(!t._voltooid) return '';
+  const d = t._voltooid;
+  const klok = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  const wanneer = datumTekst(d) + ' ' + klok;
+  if(!metWie) return wanneer;
+  const wie = t.voltooid_door && PERSOON[t.voltooid_door] ? PERSOON[t.voltooid_door].naam : '';
+  return wie ? 'door ' + wie + ', ' + wanneer : wanneer;
 }
 function herhalingTekst(n, eenheid){
   if(!n || !eenheid) return '';
@@ -758,7 +768,7 @@ function pillen(t){
   if(t.foto_pad) p.push('<span class="pill foto">📷</span>');
   if(DOCS_TELLING[t.crmtaskid]) p.push('<span class="pill foto">📎' + (DOCS_TELLING[t.crmtaskid] > 1 ? ' ' + DOCS_TELLING[t.crmtaskid] : '') + '</span>');
   if(t.klantnaam && t.bron !== 'yoobi') p.push('<span class="pill klant">' + esc(t.klantnaam) + '</span>');
-  if(t._rubriek === 'voltooid' && t._voltooid) p.push('<span class="pill date">✓ ' + esc(datumTekst(t._voltooid)) + '</span>');
+  if(t._rubriek === 'voltooid' && t._voltooid) p.push('<span class="pill date">✓ ' + esc(afvinkTekst(t, false)) + '</span>');
   if(t._rubriek === 'vervallen' && t._gepland) p.push('<span class="pill date">' + esc(datumTekst(t._gepland)) + '</span>');
   if(t._rubriek === 'herhalend' && !t._binnenWeek) p.push('<span class="pill date">verschijnt later</span>');
   return p.join('');
@@ -956,7 +966,7 @@ function openTask(t){
     (t.klantnaam ? '<span class="pill klant">' + esc(t.klantnaam) + '</span>' : '') +
     (isYoobi ? '<span class="pill yoobi">Yoobi · alleen bekijken</span>' : '') +
     (t.bron === 'offerte' ? '<span class="pill offerte">Offerte</span>' : '') +
-    (t._voltooid ? '<span class="pill date">✓ ' + esc(datumTekst(t._voltooid)) + '</span>' : '');
+    (t._voltooid ? '<span class="pill date">✓ Afgevinkt ' + esc(afvinkTekst(t, true)) + '</span>' : '');
 
   /* afvink-knop */
   const klaarKnop = document.getElementById('s_klaar');
@@ -1266,7 +1276,7 @@ async function vinkAf(){
   try{
     if(VEL.modus === 'klaar'){
       /* terug naar open */
-      const { error } = await sb.from('taken').update({ voltooid_op: null }).eq('crmtaskid', t.crmtaskid);
+      const { error } = await sb.from('taken').update({ voltooid_op: null, voltooid_door: null }).eq('crmtaskid', t.crmtaskid);
       if(error) throw error;
       sluitVel();
       toast('Terug naar open');
@@ -1289,7 +1299,7 @@ async function vinkAf(){
         bron:'eigen', status:'actueel', soort:'eenmalig',
         onderwerp: w.titel || t.onderwerp, notitie: vers.notitie, tel: vers.tel,
         gepland_op: w.ts || t.gepland_op, toegewezen_aan: t.toegewezen_aan,
-        piep:false, voltooid_op: nuTs, aangemaakt_door: UID,
+        piep:false, voltooid_op: nuTs, voltooid_door: IK ? IK.persoon : null, aangemaakt_door: UID,
       };
       const { data: nieuw, error: e1 } = await sb.from('taken').insert(kopie).select().single();
       if(e1) throw e1;
@@ -1310,7 +1320,7 @@ async function vinkAf(){
       toastMetActie('Afgevinkt, volgende keer ' + datumTekst(volgende), 'Ongedaan maken', maakOngedaan);
     } else {
       const upd = Object.assign({}, vers, {
-        gepland_op: w.ts, piep_op: w.piep_op, voltooid_op: nuTs,
+        gepland_op: w.ts, piep_op: w.piep_op, voltooid_op: nuTs, voltooid_door: IK ? IK.persoon : null,
       });
       const { error } = await sb.from('taken').update(upd).eq('crmtaskid', t.crmtaskid);
       if(error) throw error;
@@ -1330,7 +1340,7 @@ async function maakOngedaan(){
   LAATSTE_AFVINK = null;
   try{
     if(u.type === 'gewoon'){
-      const { error } = await sb.from('taken').update({ voltooid_op: null }).eq('crmtaskid', u.taakId);
+      const { error } = await sb.from('taken').update({ voltooid_op: null, voltooid_door: null }).eq('crmtaskid', u.taakId);
       if(error) throw error;
     } else {
       const { error: e1 } = await sb.from('taken').delete().eq('crmtaskid', u.kopieId);
