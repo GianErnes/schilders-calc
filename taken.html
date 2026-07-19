@@ -565,7 +565,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.13.2';
+const APP_VERSION = 'v0.13.3';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -583,6 +583,9 @@ const PERSOON = {
   overig: { naam:'Overig', css:'var(--overig)' },
 };
 const PERSOON_VOLGORDE = ['gian','max','maud','jens','bjorn','overig'];
+/* Altijd een geldige persoonsinfo teruggeven — onbekende waarden worden 'Overig'
+   in plaats van een crash (v0.13.3). */
+function pInfo(p){ return PERSOON[p] || PERSOON.overig; }
 
 let IK = null;            /* { persoon, rol, yoobi_naam } */
 let UID = null;
@@ -694,8 +697,10 @@ function timestampVan(d){
    Verrijken: per taak persoon, rubriek en weergavedatum
    ──────────────────────────────────────────────────────── */
 function persoonVan(t){
-  if(t.bron === 'yoobi') return MAP_YOOBI[t.username] || 'overig';
-  return t.toegewezen_aan || 'overig';
+  const ruw = t.bron === 'yoobi' ? (MAP_YOOBI[t.username] || 'overig')
+                                 : (t.toegewezen_aan || 'overig');
+  const p = String(ruw).toLowerCase().trim();
+  return PERSOON[p] ? p : 'overig';
 }
 function rubriekVan(t, nu, vandaagISO){
   if(t.status === 'vervallen') return 'vervallen';
@@ -760,7 +765,7 @@ function cluster(taken){
   const uniek = PERSOON_VOLGORDE.filter(p => taken.some(t => t._persoon === p));
   const eerste = uniek.slice(0,4);
   const rest = uniek.length - eerste.length;
-  let h = eerste.map(p => '<i class="d" style="background:' + PERSOON[p].css + '"></i>').join('');
+  let h = eerste.map(p => '<i class="d" style="background:' + pInfo(p).css + '"></i>').join('');
   if(rest > 0) h += '<span class="more">+' + rest + '</span>';
   return '<span class="cluster">' + h + '</span>';
 }
@@ -795,7 +800,7 @@ function kaart(t, hero){
     '<span class="bell' + (t.piep ? ' on' : '') + '">' + (t.piep ? '🔔' : '🔕') + '</span>';
   return '<div class="card' + (hero ? ' hero' : '') + '" tabindex="0" data-id="' + esc(t.crmtaskid) + '">' +
     (hero ? '<span class="now">Nu</span>' : '') +
-    '<span class="who" style="background:' + PERSOON[t._persoon].css + '"></span>' +
+    '<span class="who" style="background:' + pInfo(t._persoon).css + '"></span>' +
     '<span class="body"><div class="ttl">' + titel + '</div>' +
     (meta ? '<div class="meta">' + meta + '</div>' : '') +
     '</span>' + bel + '</div>';
@@ -855,7 +860,7 @@ function bouwPersoonsfilter(){
   let h = '<button type="button" data-p="alle" class="' + (FILTER_PERSOON === 'alle' ? 'sel' : '') + '">Alle</button>';
   h += personen.map(p =>
     '<button type="button" data-p="' + p + '" class="' + (FILTER_PERSOON === p ? 'sel' : '') + '">' +
-    '<i class="d" style="background:' + PERSOON[p].css + '"></i>' + PERSOON[p].naam + '</button>').join('');
+    '<i class="d" style="background:' + pInfo(p).css + '"></i>' + pInfo(p).naam + '</button>').join('');
   bak.innerHTML = h;
   bak.classList.add('zie');
 }
@@ -903,9 +908,9 @@ function bouwMeetstrook(){
   open.forEach(t => telling[t._persoon]++);
 
   const segs = PERSOON_VOLGORDE.filter(p => telling[p] > 0)
-    .map(p => '<i style="flex:' + telling[p] + ';background:' + PERSOON[p].css + '"></i>').join('');
+    .map(p => '<i style="flex:' + telling[p] + ';background:' + pInfo(p).css + '"></i>').join('');
   const legend = PERSOON_VOLGORDE.filter(p => telling[p] > 0)
-    .map(p => '<span><i class="d" style="background:' + PERSOON[p].css + '"></i>' + PERSOON[p].naam + ' ' + telling[p] + '</span>').join('');
+    .map(p => '<span><i class="d" style="background:' + pInfo(p).css + '"></i>' + pInfo(p).naam + ' ' + telling[p] + '</span>').join('');
 
   return '<div class="meten">' +
     '<div class="lbl"><b>Verdeling</b><span>' + open.length + ' openstaand</span></div>' +
@@ -914,7 +919,7 @@ function bouwMeetstrook(){
 }
 
 function bouwVoet(){
-  const naam = IK ? PERSOON[IK.persoon].naam : '';
+  const naam = IK ? pInfo(IK.persoon).naam : '';
   const rechts = (IK && IK.rol === 'alles' ? '<button type="button" id="beheerMail">meldingsadressen</button> ' : '') +
     '<button type="button" id="afmelden">afmelden</button>';
   return '<div class="voet"><span>taken ' + APP_VERSION + (naam ? ' · aangemeld als ' + esc(naam) : '') + '</span>' +
@@ -948,16 +953,21 @@ function bouwTreffers(){
 }
 
 function render(){
-  const scrollY = window.scrollY;
-  bouwPersoonsfilter();
-  const zicht = zichtbareTaken();
-  const lijst = document.getElementById('lijst');
-  if(ZOEK){
-    lijst.innerHTML = bouwTreffers() + bouwVoet();
-  } else {
-    lijst.innerHTML = RUBRIEKEN.filter(r => r.key !== 'vervallen' || zicht.some(t => t._rubriek === 'vervallen')).map(bouwRubriek).join('') + bouwMeetstrook() + bouwVoet();
+  try{
+    const scrollY = window.scrollY;
+    bouwPersoonsfilter();
+    const zicht = zichtbareTaken();
+    const lijst = document.getElementById('lijst');
+    if(ZOEK){
+      lijst.innerHTML = bouwTreffers() + bouwVoet();
+    } else {
+      lijst.innerHTML = RUBRIEKEN.filter(r => r.key !== 'vervallen' || zicht.some(t => t._rubriek === 'vervallen')).map(bouwRubriek).join('') + bouwMeetstrook() + bouwVoet();
+    }
+    window.scrollTo(0, scrollY);
+  }catch(e){
+    document.getElementById('lijst').innerHTML =
+      '<div class="melding">Weergave-fout: ' + esc(e.message || String(e)) + '</div>';
   }
-  window.scrollTo(0, scrollY);
 }
 
 /* ────────────────────────────────────────────────────────
@@ -1012,7 +1022,7 @@ function openTask(t){
   document.getElementById('s_titelinput').value = t.onderwerp || '';
 
   /* wie-regel */
-  const pk = PERSOON[t._persoon];
+  const pk = pInfo(t._persoon);
   document.getElementById('s_whorow').innerHTML =
     '<span style="width:13px;height:13px;border-radius:50%;background:' + pk.css + '"></span>' +
     '<span style="font-size:13px;font-weight:700;color:var(--ink-soft)">' + esc(pk.naam) + '</span>' +
@@ -1187,7 +1197,7 @@ function openBeheer(){
   if(!IK || IK.rol !== 'alles') return;
   const personen = PERSOON_VOLGORDE.filter(p => p !== 'overig' && ROLLEN.some(r => r.persoon === p));
   document.getElementById('beheerlijst').innerHTML = personen.map(function(p){
-    return '<div class="fld"><div class="k">' + esc(PERSOON[p].naam) + '</div>' +
+    return '<div class="fld"><div class="k">' + esc(pInfo(p).naam) + '</div>' +
       '<input class="veldinput" type="email" autocomplete="email" autocapitalize="off" spellcheck="false" data-persoon="' + p + '" placeholder="geen mail"></div>';
   }).join('') || '<p style="font-size:13px;color:var(--ink-faint)">Nog geen aangemelde personen gevonden.</p>';
   personen.forEach(function(p){
