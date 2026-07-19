@@ -247,6 +247,15 @@
     border:1px solid var(--line);border-radius:12px;padding:12px 13px;
     font:inherit;font-size:16px;line-height:1.5;color:var(--ink);resize:vertical;background:#fbfcfd
   }
+  .pfilter{display:none;gap:8px;flex-wrap:wrap;padding:2px 18px 10px}
+  .pfilter.zie{display:flex}
+  .pfilter button{
+    display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;font-weight:600;
+    color:var(--ink-soft);cursor:pointer
+  }
+  .pfilter button.sel{border-color:var(--ink);color:var(--ink);background:#f4f6f8}
+  .pfilter .d{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
   .note:focus{outline:2px solid var(--hero-line);border-color:var(--hero-line)}
   .photo{
     border:1.5px dashed #ccd3dc;border-radius:12px;padding:16px;text-align:center;color:var(--ink-faint);
@@ -407,6 +416,8 @@
       </div>
     </div>
 
+    <div class="pfilter" id="pfilter"></div>
+
     <div class="list" id="lijst">
       <div class="melding">Taken laden…</div>
     </div>
@@ -554,7 +565,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.12.0';
+const APP_VERSION = 'v0.13.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -577,6 +588,8 @@ let IK = null;            /* { persoon, rol, yoobi_naam } */
 let UID = null;
 let MAP_YOOBI = {};       /* Yoobi-naam -> persoon */
 let ROLLEN = [];          /* alle rijen uit taken_rollen */
+let FILTER_PERSOON = 'alle';                 /* persoonsfilter, alleen rol 'alles' */
+const ZIET_KLANT_ALTIJD = ['maud'];          /* ziet Klantopvolging ook bij rol 'eigen' */
 let TAKEN = [];
 let ZOEK = '';
 let LAATSTE_HERO = null;
@@ -817,8 +830,36 @@ function sorteer(lijst, rubriek){
   return kopie;
 }
 
+/* Welke taken deze gebruiker mag zien.
+   rol 'eigen'  -> alleen eigen taken; wie in ZIET_KLANT_ALTIJD staat ziet
+                   daarnaast de volledige Klantopvolging.
+   rol 'alles'  -> alles, eventueel versmald met het persoonsfilter bovenaan. */
+function zichtbareTaken(){
+  if(IK && IK.rol === 'eigen'){
+    return TAKEN.filter(t => t._persoon === IK.persoon ||
+      (t._rubriek === 'klant' && ZIET_KLANT_ALTIJD.indexOf(IK.persoon) >= 0));
+  }
+  if(IK && IK.rol === 'alles' && FILTER_PERSOON !== 'alle'){
+    return TAKEN.filter(t => t._persoon === FILTER_PERSOON);
+  }
+  return TAKEN;
+}
+
+function bouwPersoonsfilter(){
+  const bak = document.getElementById('pfilter');
+  if(!IK || IK.rol !== 'alles'){ bak.classList.remove('zie'); return; }
+  const personen = PERSOON_VOLGORDE.filter(p =>
+    ROLLEN.some(r => r.persoon === p) || TAKEN.some(t => t._persoon === p));
+  let h = '<button type="button" data-p="alle" class="' + (FILTER_PERSOON === 'alle' ? 'sel' : '') + '">Alle</button>';
+  h += personen.map(p =>
+    '<button type="button" data-p="' + p + '" class="' + (FILTER_PERSOON === p ? 'sel' : '') + '">' +
+    '<i class="d" style="background:' + PERSOON[p].css + '"></i>' + PERSOON[p].naam + '</button>').join('');
+  bak.innerHTML = h;
+  bak.classList.add('zie');
+}
+
 function bouwRubriek(r){
-  const eigen = sorteer(TAKEN.filter(t => t._rubriek === r.key), r.key);
+  const eigen = sorteer(zichtbareTaken().filter(t => t._rubriek === r.key), r.key);
   const open = OPEN_STAND[r.key];
 
   let zichtbaar = eigen;
@@ -854,7 +895,7 @@ function bouwRubriek(r){
 }
 
 function bouwMeetstrook(){
-  const open = TAKEN.filter(t => t._rubriek !== 'voltooid' && t._rubriek !== 'vervallen');
+  const open = zichtbareTaken().filter(t => t._rubriek !== 'voltooid' && t._rubriek !== 'vervallen');
   const telling = {};
   PERSOON_VOLGORDE.forEach(p => telling[p] = 0);
   open.forEach(t => telling[t._persoon]++);
@@ -887,7 +928,7 @@ function normaliseer(t){
 
 function bouwTreffers(){
   const q = normaliseer(ZOEK);
-  const treffers = TAKEN.filter(function(t){
+  const treffers = zichtbareTaken().filter(function(t){
     const h = normaliseer((t.onderwerp || '') + ' ' + (t.klantnaam || '') + ' ' + (t.notitie || ''));
     return h.indexOf(q) >= 0;
   });
@@ -906,11 +947,13 @@ function bouwTreffers(){
 
 function render(){
   const scrollY = window.scrollY;
+  bouwPersoonsfilter();
+  const zicht = zichtbareTaken();
   const lijst = document.getElementById('lijst');
   if(ZOEK){
     lijst.innerHTML = bouwTreffers() + bouwVoet();
   } else {
-    lijst.innerHTML = RUBRIEKEN.filter(r => r.key !== 'vervallen' || TAKEN.some(t => t._rubriek === 'vervallen')).map(bouwRubriek).join('') + bouwMeetstrook() + bouwVoet();
+    lijst.innerHTML = RUBRIEKEN.filter(r => r.key !== 'vervallen' || zicht.some(t => t._rubriek === 'vervallen')).map(bouwRubriek).join('') + bouwMeetstrook() + bouwVoet();
   }
   window.scrollTo(0, scrollY);
 }
@@ -1810,6 +1853,11 @@ document.getElementById('lijst').addEventListener('keydown', function(e){
 });
 
 document.getElementById('fab').addEventListener('click', openNieuw);
+document.getElementById('pfilter').addEventListener('click', function(ev){
+  const b = ev.target.closest('button'); if(!b) return;
+  FILTER_PERSOON = b.dataset.p;
+  render();
+});
 
 const zoekveldEl = document.getElementById('zoekveld');
 const zoekWisEl = document.getElementById('zoekWis');
