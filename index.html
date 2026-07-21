@@ -2188,8 +2188,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.26.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.27.0</h2>
       <div class="intro-body">
+        <p><strong>📇 Klant uit Yoobi vult nu ook het briefhoofd (v4.27.0).</strong> Haal je een particulier uit Yoobi, dan zet de app het klantadres voortaan ook in het briefhoofd (Adres op de offerte), zodat het meteen bovenaan de offerte staat zonder overtypen. Werk je ergens anders, zoals op een huurpand, dan pas je alleen het werkadres aan en blijft het briefhoofd het klantadres. Bovendien komt bij een particulier alleen de kale achternaam in het Klant-veld te staan, zodat de aanspreekvorm zelf het nette voorvoegsel plaatst (De heer en mevrouw Mordant). Zakelijk en VvE houden hun volledige bedrijfsnaam. Geen SQL nodig.</p>
         <p><strong>🔧 Offertenummer-veld netjes in lijn (v4.26.1).</strong> Het veld Offertenummer stond in het Offerte-instellingen-blok wat lager dan de andere velden, doordat de uitleg in het label over drie regels brak. Die uitleg staat nu als kleine notitie onder het invulveld, zodat het vakje weer op één lijn staat met Offertedatum, Geldig tot en de rest. Alleen opmaak. Geen SQL nodig.</p>
         <p><strong>🏠 Apart briefadres bij een particulier (v4.26.0).</strong> Werk je op een ander adres dan waar de klant woont, bijvoorbeeld een echtpaar dat thuis woont terwijl we op hun huurpand schilderen, dan vul je bij Klant en adres onder Adres op de offerte (briefhoofd) hun woonadres in. Dat komt bovenaan de brief terwijl het werkadres de reisafstand blijft sturen. Laat je het leeg dan is het werkadres meteen het adres op de offerte, precies zoals voorheen. In de tekst wijst {adres} naar het briefhoofd en {werkadres} naar de werklocatie. Geen SQL nodig.</p>
         <p><strong>🔢 Offertenummer verplicht voor de accordeerlink (v4.26.0).</strong> De app deelt geen eigen JJ-NNN-nummers meer uit. Het offertenummer komt voortaan altijd uit het Yoobi-verkoopnummer dat je invult bij Offerte-instellingen. Laat je dat veld leeg dan kun je geen accordeerlink aanmaken: je krijgt de melding dat het nummer eerst ingevuld moet worden. Het offertedocument mag je nog wel als concept zonder nummer maken. Oude offertes met een al toegekend nummer houden dat gewoon. De sectie Offertenummering onder Instellingen is vervallen. Geen SQL nodig.</p>
@@ -3416,7 +3417,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.26.1';
+const APP_VERSION = 'v4.27.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3812,6 +3813,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.27.0', d: '2026-07-21', h: 'Yoobi-import uitgebreid voor het briefadres uit v4.26.0. _yoobiVulIn vult bij een particulier het klantadres uit Yoobi nu ook in cfg.briefadres (straat/huisnummer/postcode/woonplaats), zodat het briefhoofd bovenaan de offerte staat zonder overtypen; het werkadres (calc-kop postcode/huisnummer) blijft ook gevuld zodat de reisafstand klopt, wijk je met het werk af dan pas je alleen dat aan en blijft het briefhoofd het klantadres. Zakelijk en VvE ongewijzigd (die vullen alleen cfg.adres). Daarnaast krijgt het Klant-veld bij een particulier de kale achternaam via de nieuwe helper _yoobiKlantAchternaam (_offNaamKaal strip voorvoegsels, daarna _yoobiSplitContact voor de voorletters, tussenvoegsel plus achternaam blijft over), zodat de aanspreekvorm zelf het voorvoegsel plaatst; zakelijk en VvE houden de volledige naam. _ktNieuw en _briefApart zijn naar boven in _yoobiVulIn verplaatst zodat ze voor beide takken bruikbaar zijn. Geen SQL, geen Edge Function.' },
   { v: '4.26.1', d: '2026-07-21', h: 'Opmaakfix: het Offertenummer-veld in offerteInstellingenBlok stond lager doordat de lange sub-muted hint in het label over drie regels brak. De hint (Yoobi-verkoopnummer, verplicht voor de accordeerlink) is uit het label gehaald en als kleine notitie onder het invoerveld gezet; het label is nu enkel Offertenummer, zodat het invoerveld weer op één lijn staat met de overige velden in het blok. Alleen opmaak, geen gedragswijziging. Geen SQL.' },
   { v: '4.26.0', d: '2026-07-21', h: 'Twee dingen. (1) Afwijkend briefadres bij particulier: nieuw veld cfg.briefadres (JSON, geen migratie) met setter _offCfgBriefadres en PDOK-zoek _offBriefadresZoek. _offAdresEffectief pakt in de particulier-tak het briefadres als dat gevuld is, anders terugval op het werkadres (geen regressie op bestaande offertes); {adres} volgt het briefhoofd, {werkadres} de werklocatie, de reisafstand blijft naar het werkadres rekenen. renderOfferteBlok toont bij particulier altijd een blok Adres op de offerte (briefhoofd) met straat/huisnummer/postcode/woonplaats plus zoekknop en een terugval-hint; de leescontrole meldt een deels ingevuld briefadres. Zakelijk en VvE briefhoofd ongewijzigd. (2) Offertenummer verplicht: de automatische JJ-NNN-teller is verwijderd (_offerteAutoNummer, _offerteVolgendeNummer, _offerteNummerInGebruik weg, _kenOfferteNummerToe is nu een lees-shim naar _offerteNummer), plus de Instellingen-sectie Offertenummering en de render/updSetting-tak. _accordNieuweLink en _accordBeheerRender blokkeren de accordeerlink met een duidelijke melding als _offerteNummer(c) leeg is; het offertedocument mag zonder nummer als concept. Bestaande offertes met een toegekend JJ-NNN houden hun nummer. Geen SQL, geen Edge Function.' },
   { v: '4.25.0', d: '2026-07-13', h: 'Aanspreekvorm stuurt de adresseringsnaam. Nieuwe helpers _offNaamKaal (stript voorvoegsels De heer en mevrouw/De heer/Dhr./Mevrouw/Mevr./Mw./Familie/Fam. case-insensitive van de klantnaam) en _offAdresNaam (zet per aanspreekvorm De heer/Mevrouw/De heer en mevrouw/Familie voor de kale naam; zakelijk of leeg = klantnaam ongewijzigd). _offAdresEffectief gebruikt _offAdresNaam in de particulier-tak; het briefhoofd bij zakelijk en VvE is onaangeraakt. _offAanhef stript de klantnaam-terugval nu ook met _offNaamKaal zodat Familie Weerts als klantnaam geen Geachte heer en mevrouw Familie Weerts meer geeft; het contactpersoon-pad is ongewijzigd. Hinttekst onder Klant en adres bijgewerkt. Werkt in HTML-voorbeeld en pdfmake-document omdat beide via _offAdresEffectief lopen; de bevroren aanhef in accord-snapshots pakt het automatisch mee bij nieuwe links. Geen SQL, geen Edge Function.' },
@@ -6339,22 +6341,36 @@ function _yoobiMapKlanttype(s) {
   return 'zakelijk';
 }
 
+// v4.27.0 — kale achternaam (met tussenvoegsel) uit een Yoobi-relatienaam voor een
+// particulier: eerst de voorvoegsels (Familie, De heer, Dhr., ...) via _offNaamKaal,
+// daarna de voorletters via de contact-splitser. Zo plaatst de aanspreekvorm zelf het
+// nette voorvoegsel op de offerte.
+function _yoobiKlantAchternaam(naam) {
+  const kaal = _offNaamKaal(naam || '');
+  const sp = _yoobiSplitContact(kaal);
+  const uit = [sp.tussenvoegsel, sp.achternaam].map(s => (s || '').trim()).filter(Boolean).join(' ');
+  return uit || kaal;
+}
+
 function _yoobiVulIn() {
   const r = _yoobiHuidig;
   if (!r) return;
   const c = data.calc;
   if (!c) { _toast('Geen actieve calculatie.'); return; }
   const split = _yoobiSplitAdres(r.adres || '');
+  const _ktNieuw = _yoobiMapKlanttype(r.klanttype);
+  const _briefApart = (_ktNieuw === 'zakelijk' || _ktNieuw === 'vve');
 
-  // 1. Klant-veld bovenin de calculatie.
-  c.klant = r.naam || c.klant || '';
+  // 1. Klant-veld bovenin de calculatie. v4.27.0 — bij een particulier alleen de kale
+  //    achternaam (met tussenvoegsel), zodat de aanspreekvorm zelf het voorvoegsel zet
+  //    (De heer en mevrouw Mordant). Zakelijk en VvE houden de volledige (bedrijfs)naam.
+  const _klantNaam = _briefApart ? (r.naam || '') : _yoobiKlantAchternaam(r.naam || '');
+  c.klant = _klantNaam || c.klant || '';
   const kl = document.getElementById('calcKlant'); if (kl) kl.value = c.klant || '';
 
   // 2. Werkadres: alleen vullen als het relatie-adres ook de werklocatie is (particulier).
   //    Bij zakelijk of VvE is het werkadres bij de klant van de klant; dat vul je zelf,
   //    zodat de reisafstand naar de werklocatie rekent en niet naar het kantooradres.
-  const _ktNieuw = _yoobiMapKlanttype(r.klanttype);
-  const _briefApart = (_ktNieuw === 'zakelijk' || _ktNieuw === 'vve');
   if (!_briefApart) {
     if (r.postcode) { c.postcode = r.postcode; const pc = document.getElementById('calcPostcode'); if (pc) pc.value = r.postcode; }
     if (split.huisnummer) { c.huisnummer = split.huisnummer; const hn = document.getElementById('calcHuisnummer'); if (hn) hn.value = split.huisnummer; }
@@ -6371,6 +6387,16 @@ function _yoobiVulIn() {
     cfg.adres.huisnummer = split.huisnummer || '';
     cfg.adres.postcode = r.postcode || '';
     cfg.adres.woonplaats = r.plaats || '';
+    // v4.27.0 — particulier: het klantadres uit Yoobi ook in het briefhoofd (cfg.briefadres)
+    //    zetten, zodat het bovenaan de offerte staat zonder overtypen. Werk je elders, dan
+    //    pas je alleen het werkadres aan en blijft het briefhoofd het klantadres.
+    if (!_briefApart) {
+      if (!cfg.briefadres || typeof cfg.briefadres !== 'object') cfg.briefadres = {};
+      cfg.briefadres.straat = split.straat || '';
+      cfg.briefadres.huisnummer = split.huisnummer || '';
+      cfg.briefadres.postcode = r.postcode || '';
+      cfg.briefadres.woonplaats = r.plaats || '';
+    }
     // v3.99.0 — gekozen contactpersoon stuurt zowel de t.a.v. als standaard het e-mailadres.
     const gekozenContact = document.querySelector('input[name="yoobiContactKeuze"]:checked');
     const contactNaam = gekozenContact ? (gekozenContact.dataset.naam || '') : (r.contactpersoon || '');

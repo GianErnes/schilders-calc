@@ -1,3 +1,13 @@
+## v4.27.0 — Klant uit Yoobi vult ook het briefhoofd
+Aansluitend op het afwijkende briefadres uit v4.26.0: de Yoobi-import vult dat nu vanzelf.
+
+### Wat er verandert
+- Haal je een particulier uit Yoobi, dan zet de app het klantadres nu ook in het briefhoofd (Adres op de offerte), niet alleen in het werkadres. Zo staat het klantadres meteen bovenaan de offerte zonder overtypen.
+- Het werkadres (postcode en huisnummer in de calc-kop) wordt zoals voorheen ook met het Yoobi-adres gevuld, zodat de reisafstand meteen klopt. Werk je ergens anders, zoals op een huurpand, dan pas je alleen het werkadres aan en blijft het briefhoofd het klantadres.
+- Bij een particulier komt voortaan alleen de kale achternaam in het Klant-veld te staan. De aanspreekvorm plaatst zelf het nette voorvoegsel op de offerte (De heer en mevrouw Mordant). Voorvoegsels als Familie of De heer en losse voorletters worden bij de import weggehaald.
+- Zakelijk en VvE zijn ongewijzigd: die houden hun volledige bedrijfsnaam en vullen alleen het losse briefhoofd.
+- Onder de motorkap: nieuwe helper _yoobiKlantAchternaam, cfg.briefadres wordt bij particulier in _yoobiVulIn gevuld. Geen SQL.
+
 ## v4.26.1 — Offertenummer-veld netjes in lijn
 Het veld Offertenummer stond in het Offerte-instellingen-blok wat lager dan de andere velden, doordat de uitleg in het label over drie regels brak.
 
