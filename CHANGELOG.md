@@ -1,3 +1,11 @@
+## v4.26.1 — Offertenummer-veld netjes in lijn
+Het veld Offertenummer stond in het Offerte-instellingen-blok wat lager dan de andere velden, doordat de uitleg in het label over drie regels brak.
+
+### Wat er verandert
+- De uitleg (Yoobi-verkoopnummer, verplicht voor de accordeerlink) staat nu als kleine notitie onder het invoerveld in plaats van in het label.
+- Het label is weer kort (Offertenummer), waardoor het invoerveld op één lijn staat met Offertedatum, Geldig tot, Versie en de rest.
+- Alleen opmaak, geen gedragswijziging. Geen SQL.
+
 ## v4.26.0 — Apart briefadres bij particulier en offertenummer verplicht
 Twee losse verbeteringen in één release. Geen SQL.
 
