@@ -1,3 +1,18 @@
+## v4.26.0 — Apart briefadres bij particulier en offertenummer verplicht
+Twee losse verbeteringen in één release. Geen SQL.
+
+### Afwijkend briefadres bij een particulier
+- Werk je op een ander adres dan waar de klant woont, bijvoorbeeld een echtpaar dat thuis woont terwijl we op hun huurpand schilderen, dan vul je bij Klant en adres onder "Adres op de offerte (briefhoofd)" hun woonadres in.
+- Dat adres komt bovenaan de brief; het werkadres blijft de reisafstand sturen. In de tekst wijst {adres} naar het briefhoofd en {werkadres} naar de werklocatie.
+- Laat je het briefadres leeg, dan is het werkadres meteen het adres op de offerte, precies zoals voorheen. Bestaande offertes veranderen dus niet.
+- Onder de motorkap: nieuw veld cfg.briefadres in offerteConfig (geen migratie), setter _offCfgBriefadres en PDOK-zoek _offBriefadresZoek. _offAdresEffectief pakt het bij particulier als het gevuld is met terugval op het werkadres. Zakelijk en VvE (briefhoofd) ongewijzigd. De leescontrole meldt een half ingevuld briefadres.
+
+### Offertenummer verplicht voor de accordeerlink
+- De app deelt geen eigen JJ-NNN-nummers meer uit. Het offertenummer komt voortaan altijd uit het Yoobi-verkoopnummer dat je invult bij Offerte-instellingen.
+- Laat je dat veld leeg, dan kun je geen accordeerlink aanmaken: de app meldt dat het nummer eerst ingevuld moet worden. Het offertedocument mag je nog wel als concept zonder nummer maken.
+- Oude offertes met een al toegekend JJ-NNN-nummer houden dat gewoon en blijven werken.
+- Onder de motorkap: de automatische teller is verwijderd (_offerteAutoNummer, _offerteVolgendeNummer, _offerteNummerInGebruik), _kenOfferteNummerToe leest alleen nog het bestaande nummer. De sectie Offertenummering onder Instellingen is vervallen. De blokkade zit in _accordNieuweLink en _accordBeheerRender.
+
 ## v4.25.0 — Aanspreekvorm stuurt de adressering
 Vul bij Klant alleen de achternaam in. De aanspreekvorm zet zelf het nette voorvoegsel in het adresblok van de offerte (De heer en mevrouw Weerts, Familie Weerts) en de aanhef blijft "Geachte heer en mevrouw Weerts,". Voorvoegsels die al in de klantnaam staan (Familie, De heer, Mevrouw) worden eerst weggestript, dus oude calculaties geven nooit een dubbeling. Zakelijk en VvE (briefhoofd) ongewijzigd. Geen SQL nodig.
 

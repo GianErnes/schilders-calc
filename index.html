@@ -2188,8 +2188,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.25.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.26.0</h2>
       <div class="intro-body">
+        <p><strong>🏠 Apart briefadres bij een particulier (v4.26.0).</strong> Werk je op een ander adres dan waar de klant woont, bijvoorbeeld een echtpaar dat thuis woont terwijl we op hun huurpand schilderen, dan vul je bij Klant en adres onder Adres op de offerte (briefhoofd) hun woonadres in. Dat komt bovenaan de brief terwijl het werkadres de reisafstand blijft sturen. Laat je het leeg dan is het werkadres meteen het adres op de offerte, precies zoals voorheen. In de tekst wijst {adres} naar het briefhoofd en {werkadres} naar de werklocatie. Geen SQL nodig.</p>
+        <p><strong>🔢 Offertenummer verplicht voor de accordeerlink (v4.26.0).</strong> De app deelt geen eigen JJ-NNN-nummers meer uit. Het offertenummer komt voortaan altijd uit het Yoobi-verkoopnummer dat je invult bij Offerte-instellingen. Laat je dat veld leeg dan kun je geen accordeerlink aanmaken: je krijgt de melding dat het nummer eerst ingevuld moet worden. Het offertedocument mag je nog wel als concept zonder nummer maken. Oude offertes met een al toegekend nummer houden dat gewoon. De sectie Offertenummering onder Instellingen is vervallen. Geen SQL nodig.</p>
         <p><strong>✉️ Aanspreekvorm stuurt nu ook de adressering (v4.25.0).</strong> Vul bij Klant alleen de achternaam in, bijvoorbeeld Weerts. De aanspreekvorm zet dan zelf het nette voorvoegsel in het adresblok van de offerte: De heer en mevrouw Weerts, Familie Weerts, De heer Weerts of Mevrouw Weerts. De aanhef blijft "Geachte heer en mevrouw Weerts,". Staat er in oude calculaties al Familie of De heer voor de naam, dan wordt dat eerst weggehaald zodat het nooit dubbel komt. Zonder aanspreekvorm verandert er niets. Geen SQL nodig.</p>
         <p><strong>🔧 Windroosletters altijd leesbaar (v4.24.1).</strong> De letters N, O, Z en W op de liggingsfoto stonden kaal op de luchtfoto en vielen weg op donkere daken en schaduw. Ze krijgen nu een witte rand eronder, zoals plaatsnamen op een topografische kaart, en blijven daardoor op elke ondergrond leesbaar. Bestaande liggingsfoto's veranderen niet vanzelf: genereer de foto opnieuw in de sectie Ligging. Geen SQL nodig.</p>
         <p><strong>🧭 Liggingsfoto als magazine-rij in de brochure (v4.24.0).</strong> De liggingsfoto stond als eerste blok op volle breedte bovenaan pagina 1 van de onderhoudsplan-bijlage. Omdat het blok erna vaak niet meer paste, bleef de foto alleen achter met veel wit eromheen. De foto staat nu links op 58% van de breedte met rechts ernaast een tekstkolom: een klein kopje Ligging met daaronder de uitleg over de noordoriëntatie en de weerzijde. De rij is nog maar zo'n 6 cm hoog, dus het volgende inhoudsblok past er vrijwel altijd onder en pagina 1 vult zich. Geldt voor de VvE- en de particulier-variant. Geen SQL nodig.</p>
@@ -2755,14 +2757,6 @@
       <div class="form-grid">
         <div><label>Jaarcapaciteit (€ incl. BTW)</label><input type="number" id="setJaarcapEuro" step="10000" min="0" onchange="updSetting('jaarcapaciteitEuro', this)"></div>
         <div><label>Jaarcapaciteit (manuren)</label><input type="number" id="setJaarcapUren" step="50" min="0" placeholder="optioneel" onchange="updSetting('jaarcapaciteitUren', this)"></div>
-      </div>
-    </div>
-    <div class="settings-section">
-      <h3>Offertenummering</h3>
-      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Het offertenummer heeft de vorm JJ-NNN, bijvoorbeeld 26-009. De teller telt per jaar op en begint elk nieuw jaar opnieuw. Een offerte krijgt zijn nummer pas wanneer je voor het eerst het offertedocument genereert. Het startnummer is de ondergrens voor dit jaar; zet het hoger als je aansluit op een bestaande nummering (bijvoorbeeld bij de overstap vanuit Yoobi).</em></p>
-      <div class="form-grid">
-        <div><label>Startnummer huidig jaar</label><input type="number" id="setOfferteStart" step="1" min="1" onchange="updSetting('offerteStartNr', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">Het eerstvolgende offertenummer wordt minimaal dit nummer.</div></div>
-        <div><label>Volgende nummer wordt</label><input type="text" id="setOfferteVolgende" disabled style="background:var(--bg); color:var(--muted);"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">Ter info, op basis van de huidige stand.</div></div>
       </div>
     </div>
     <div class="settings-section">
@@ -3421,7 +3415,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.25.0';
+const APP_VERSION = 'v4.26.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3817,6 +3811,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.26.0', d: '2026-07-21', h: 'Twee dingen. (1) Afwijkend briefadres bij particulier: nieuw veld cfg.briefadres (JSON, geen migratie) met setter _offCfgBriefadres en PDOK-zoek _offBriefadresZoek. _offAdresEffectief pakt in de particulier-tak het briefadres als dat gevuld is, anders terugval op het werkadres (geen regressie op bestaande offertes); {adres} volgt het briefhoofd, {werkadres} de werklocatie, de reisafstand blijft naar het werkadres rekenen. renderOfferteBlok toont bij particulier altijd een blok Adres op de offerte (briefhoofd) met straat/huisnummer/postcode/woonplaats plus zoekknop en een terugval-hint; de leescontrole meldt een deels ingevuld briefadres. Zakelijk en VvE briefhoofd ongewijzigd. (2) Offertenummer verplicht: de automatische JJ-NNN-teller is verwijderd (_offerteAutoNummer, _offerteVolgendeNummer, _offerteNummerInGebruik weg, _kenOfferteNummerToe is nu een lees-shim naar _offerteNummer), plus de Instellingen-sectie Offertenummering en de render/updSetting-tak. _accordNieuweLink en _accordBeheerRender blokkeren de accordeerlink met een duidelijke melding als _offerteNummer(c) leeg is; het offertedocument mag zonder nummer als concept. Bestaande offertes met een toegekend JJ-NNN houden hun nummer. Geen SQL, geen Edge Function.' },
   { v: '4.25.0', d: '2026-07-13', h: 'Aanspreekvorm stuurt de adresseringsnaam. Nieuwe helpers _offNaamKaal (stript voorvoegsels De heer en mevrouw/De heer/Dhr./Mevrouw/Mevr./Mw./Familie/Fam. case-insensitive van de klantnaam) en _offAdresNaam (zet per aanspreekvorm De heer/Mevrouw/De heer en mevrouw/Familie voor de kale naam; zakelijk of leeg = klantnaam ongewijzigd). _offAdresEffectief gebruikt _offAdresNaam in de particulier-tak; het briefhoofd bij zakelijk en VvE is onaangeraakt. _offAanhef stript de klantnaam-terugval nu ook met _offNaamKaal zodat Familie Weerts als klantnaam geen Geachte heer en mevrouw Familie Weerts meer geeft; het contactpersoon-pad is ongewijzigd. Hinttekst onder Klant en adres bijgewerkt. Werkt in HTML-voorbeeld en pdfmake-document omdat beide via _offAdresEffectief lopen; de bevroren aanhef in accord-snapshots pakt het automatisch mee bij nieuwe links. Geen SQL, geen Edge Function.' },
   { v: '4.24.1', d: '2026-07-12', h: 'Witte halo om de windroosletters op de liggingsfoto. In _ohpLiggingTeken werden N/Z/O/W buiten de schijf direct op de luchtfoto gezet met fillText in #1f2430, onleesbaar op donkere daken en schaduw. Nieuw: per letter eerst strokeText met rgba(255,255,255,0.9), lineWidth max(3, r*0.10) en lineJoin round, daaroverheen de bestaande donkere fillText; letters als array met forEach. Schijf, noordpijl, weerzijde-wig en schaalbalk (die had al een wit vlak) ongewijzigd. Werkt alleen op nieuw gegenereerde foto s; bestaande ligging.jpg in de bucket moet opnieuw gegenereerd worden via de sectie Ligging. Geen SQL, geen Edge Function.' },
   { v: '4.24.0', d: '2026-07-12', h: 'Liggingsfoto als magazine-rij in de onderhoudsplan-brochure. Het liggingblok (v4.22.0) stond als eerste ob-block op volle breedte (16:9, ~10 cm hoog); de greedy paginator van _ohpPaginate kreeg het forse vervolgblok (VvE: Wat het plan inhoudt met hero en benefits; particulier: aanhef plus Wat we aantroffen) er dan niet meer onder, waardoor pagina 1 alleen de foto met veel wit toonde. Nieuw: .ob .ligging is een grid van 58% foto links en een tekstkolom rechts (align-items center) met .ligging-kicker (8pt, uppercase, letter-spacing) en de bestaande bijschrifttekst als .ligging-bij op 9.5pt. De rij is ~6 cm hoog zodat het volgende blok vrijwel altijd op pagina 1 past. Blokvolgorde, sectienummering en de geruisloze terugval zonder foto ongewijzigd; beide takken. Alleen opmaak van het liggingblok. Geen SQL, geen Edge Function.' },
@@ -4875,6 +4870,7 @@ function _offCfg() {
   if (typeof cfg.aanspreekvorm !== 'string') cfg.aanspreekvorm = '';
   if (!cfg.adres || typeof cfg.adres !== 'object') cfg.adres = {};
   if (!cfg.werkadres || typeof cfg.werkadres !== 'object') cfg.werkadres = {};
+  if (!cfg.briefadres || typeof cfg.briefadres !== 'object') cfg.briefadres = {}; // v4.26.0 — afwijkend briefhoofd bij particulier
   if (!cfg.contactpersoon || typeof cfg.contactpersoon !== 'object') cfg.contactpersoon = { voorletters: '', tussenvoegsel: '', achternaam: '' };
   if (typeof cfg.email !== 'string') cfg.email = '';
   if (cfg.prijsWeergave !== 'regels') cfg.prijsWeergave = 'onderdeel';
@@ -4977,6 +4973,14 @@ function _controleerVerzamel() {
     if (!(ba.postcode || '').trim()) bOntbreekt.push('postcode');
     if (!(ba.woonplaats || '').trim()) bOntbreekt.push('woonplaats');
     if (bOntbreekt.length) check('Het briefhoofd-adres is onvolledig: ' + bOntbreekt.join(', ') + ' ontbreekt.');
+  } else {
+    // v4.26.0 — particulier met een afwijkend, deels ingevuld briefadres.
+    const pb = (cfg.briefadres && typeof cfg.briefadres === 'object') ? cfg.briefadres : {};
+    const pbVelden = ['straat', 'huisnummer', 'postcode', 'woonplaats'];
+    if (pbVelden.some(k => (pb[k] || '').trim())) {
+      const pbOntbreekt = pbVelden.filter(k => !(pb[k] || '').trim());
+      if (pbOntbreekt.length) check('Het afwijkende briefadres is onvolledig: ' + pbOntbreekt.join(', ') + ' ontbreekt.');
+    }
   }
 
   // 2. Klanttype-heuristiek op de klantnaam
@@ -5007,7 +5011,7 @@ function _controleerVerzamel() {
 
   // 5. Offertenummer volgens Yoobi-verkoop
   const nrVrij = (cfg.offerteNummerVrij || '').trim();
-  if (!nrVrij) check('Het offertenummer is de automatische reeks (' + _offerteAutoNummer(c) + '); er is geen Yoobi-verkoopnummer ingevuld.');
+  if (!nrVrij) check('Er is geen offertenummer ingevuld. Zonder Yoobi-verkoopnummer kan de accordeerlink niet gemaakt worden.');
   else if (!/^\d{6}$/.test(nrVrij)) overweeg('Het offertenummer "' + nrVrij + '" heeft niet de vorm van een Yoobi-verkoopnummer (zes cijfers).');
 
   // 6. Geldigheid passend bij het klanttype
@@ -5406,6 +5410,7 @@ function renderOfferteBlok() {
   const _adr = _offAdresEffectief(c, cfg);
   const _cp = (cfg.contactpersoon && typeof cfg.contactpersoon === 'object') ? cfg.contactpersoon : { voorletters: '', tussenvoegsel: '', achternaam: '' };
   const _wadr = _offWerkadresEffectief(c, cfg);
+  const _brf = (cfg.briefadres && typeof cfg.briefadres === 'object') ? cfg.briefadres : {}; // v4.26.0 — afwijkend briefhoofd bij particulier
 
   // ---- 1. KLANT EN ADRES ----
   if (kaBlok) {
@@ -5447,9 +5452,16 @@ function renderOfferteBlok() {
       <div><label>Huisnummer</label><input type="text" value="${_offEsc(_adr.huisnummer)}" placeholder="nr." onchange="_offCfgAdres('huisnummer', this.value)"></div>
       <div><label>Postcode</label><input type="text" value="${_offEsc(_adr.postcode)}" placeholder="0000 AA" onchange="_offCfgAdres('postcode', this.value)"></div>
       <div><label>Woonplaats</label><input type="text" value="${_offEsc(_adr.woonplaats)}" placeholder="Plaats" onchange="_offCfgAdres('woonplaats', this.value)"></div>`;
+    } else {
+      ka += `
+      <div class="subkop"><span>Adres op de offerte (briefhoofd)</span><span class="sub-muted">— leeg = gelijk aan het werkadres</span><span class="sub-knoppen"><button class="btn btn-secondary btn-sm" onclick="_offBriefadresZoek()">📍 Zoek straat en woonplaats</button></span></div>
+      <div><label>Straat</label><input type="text" value="${_offEsc(_brf.straat || '')}" placeholder="Straatnaam" onchange="_offCfgBriefadres('straat', this.value)"></div>
+      <div><label>Huisnummer</label><input type="text" value="${_offEsc(_brf.huisnummer || '')}" placeholder="nr." onchange="_offCfgBriefadres('huisnummer', this.value)"></div>
+      <div><label>Postcode</label><input type="text" value="${_offEsc(_brf.postcode || '')}" placeholder="0000 AA" onchange="_offCfgBriefadres('postcode', this.value)"></div>
+      <div><label>Woonplaats</label><input type="text" value="${_offEsc(_brf.woonplaats || '')}" placeholder="Plaats" onchange="_offCfgBriefadres('woonplaats', this.value)"></div>`;
     }
     ka += `</div>`;
-    ka += `<div id="offAdresStatus" style="margin-top:0.4rem; font-size:0.68rem; color:var(--muted);">${_briefApart ? 'Het briefhoofd komt bovenaan de brief. Het werkadres stuurt de reisafstand en toon je in de tekst met {werkadres}.' : 'Vul bij Klant alleen de achternaam in: de aanspreekvorm zet zelf De heer, Mevrouw of Familie voor de naam op de offerte. Het werkadres is meteen het adres op de offerte. Klik op Zoek om straat en woonplaats uit de postcode te halen.'}</div>`;
+    ka += `<div id="offAdresStatus" style="margin-top:0.4rem; font-size:0.68rem; color:var(--muted);">${_briefApart ? 'Het briefhoofd komt bovenaan de brief. Het werkadres stuurt de reisafstand en toon je in de tekst met {werkadres}.' : 'Vul bij Klant alleen de achternaam in: de aanspreekvorm zet zelf De heer, Mevrouw of Familie voor de naam op de offerte. Laat je het briefhoofd leeg dan is het werkadres meteen het adres op de offerte; vul je het in dan komt dat bovenaan de brief terwijl het werkadres de reisafstand blijft sturen. Klik op Zoek om straat en woonplaats uit de postcode te halen.'}</div>`;
     ka += `</div>`;
     kaBlok.innerHTML = ka;
   }
@@ -5461,7 +5473,7 @@ function renderOfferteBlok() {
     let inst = `<div class="kblok-kop">Offerte-instellingen</div><div class="kblok"><div class="kgrid">
       <div><label>Offertedatum</label><input type="date" value="${cfg.offertedatum}" onchange="_offCfgDatum(this.value)"></div>
       <div><label>Geldig tot</label><input type="date" value="${cfg.geldigTot}" onchange="_offCfgVeld('geldigTot', this.value)"></div>
-      <div><label>Offertenummer <span class="sub-muted">leeg = ${_offEsc(_offerteAutoNummer(c))}</span></label><input type="text" value="${_offEsc(cfg.offerteNummerVrij)}" placeholder="${_offEsc(_offerteAutoNummer(c))}" onchange="_offCfgVeld('offerteNummerVrij', this.value.trim())"></div>
+      <div><label>Offertenummer <span class="sub-muted">Yoobi-verkoopnummer, verplicht voor de accordeerlink</span></label><input type="text" value="${_offEsc(cfg.offerteNummerVrij)}" placeholder="bv. 260069" onchange="_offCfgVeld('offerteNummerVrij', this.value.trim())"></div>
       <div><label>Versie <span class="sub-muted">V-aanduiding vanaf 2</span></label><input type="number" min="1" step="1" value="${cfg.offerteVersie}" onchange="_offCfgVeld('offerteVersie', Math.max(1, parseInt(this.value, 10) || 1))"></div>
       <div><label>Garantiejaren</label><input type="number" min="0" step="1" value="${_offEsc(cfg.garantiejaren)}" onchange="_offCfgVeld('garantiejaren', this.value)"></div>
       <div><label>Prijsweergave in offerte</label>
@@ -5540,12 +5552,16 @@ function _offAdresEffectief(c, cfg) {
     };
   }
   const w = _offWerkadresEffectief(c, cfg);
+  // v4.26.0 — particulier kan een afwijkend briefhoofd hebben. Is cfg.briefadres gevuld,
+  // dan is dat het briefhoofd; leeg = terugval op het werkadres (gedrag van voorheen).
+  const b = (cfg && cfg.briefadres && typeof cfg.briefadres === 'object') ? cfg.briefadres : {};
+  const briefGevuld = !!((b.straat || '').trim() || (b.huisnummer || '').trim() || (b.postcode || '').trim() || (b.woonplaats || '').trim());
   return {
     naam:       _offAdresNaam(c, cfg), // v4.25.0 — aanspreekvorm stuurt het voorvoegsel
-    straat:     w.straat || '',
-    huisnummer: w.huisnummer || '',
-    postcode:   w.postcode || '',
-    woonplaats: w.woonplaats || ''
+    straat:     briefGevuld ? (b.straat || '') : (w.straat || ''),
+    huisnummer: briefGevuld ? (b.huisnummer || '') : (w.huisnummer || ''),
+    postcode:   briefGevuld ? (b.postcode || '') : (w.postcode || ''),
+    woonplaats: briefGevuld ? (b.woonplaats || '') : (w.woonplaats || '')
   };
 }
 // v3.98.0 — het werkadres: waar het werk wordt uitgevoerd. Postcode en huisnummer vallen
@@ -5574,6 +5590,13 @@ function _offCfgWerkadres(field, waarde) {
   const cfg = _offCfg(); if (!cfg) return;
   if (!cfg.werkadres || typeof cfg.werkadres !== 'object') cfg.werkadres = {};
   cfg.werkadres[field] = waarde;
+  _offCfgSave();
+}
+// v4.26.0 — afwijkend briefadres bij particulier (leeg = gelijk aan het werkadres).
+function _offCfgBriefadres(field, waarde) {
+  const cfg = _offCfg(); if (!cfg) return;
+  if (!cfg.briefadres || typeof cfg.briefadres !== 'object') cfg.briefadres = {};
+  cfg.briefadres[field] = waarde;
   _offCfgSave();
 }
 function _offCfgContact(field, waarde) {
@@ -6395,6 +6418,23 @@ async function _offWerkadresZoek() {
     if (!cfg.werkadres || typeof cfg.werkadres !== 'object') cfg.werkadres = {};
     cfg.werkadres.straat = a.straat;
     cfg.werkadres.woonplaats = a.woonplaats;
+    _offCfgSave();
+    renderOfferteBlok();
+  } catch (e) { set('Opzoeken mislukt: ' + (e.message || e)); }
+}
+// v4.26.0 — PDOK-zoek voor het afwijkende briefadres bij particulier.
+async function _offBriefadresZoek() {
+  const c = data.calc; const cfg = _offCfg(); if (!c || !cfg) return;
+  const set = (t) => { if (t) _toast(t); };
+  const b = (cfg.briefadres && typeof cfg.briefadres === 'object') ? cfg.briefadres : {};
+  if (!(b.postcode || '').trim()) { set('Vul eerst een postcode in bij het briefadres.'); return; }
+  set('Zoeken\u2026');
+  try {
+    const a = await _pdokAdres(b.postcode, b.huisnummer);
+    if (!a || (!a.straat && !a.woonplaats)) { set('Geen adres gevonden bij deze postcode.'); return; }
+    if (!cfg.briefadres || typeof cfg.briefadres !== 'object') cfg.briefadres = {};
+    cfg.briefadres.straat = a.straat;
+    cfg.briefadres.woonplaats = a.woonplaats;
     _offCfgSave();
     renderOfferteBlok();
   } catch (e) { set('Opzoeken mislukt: ' + (e.message || e)); }
@@ -12961,76 +13001,13 @@ function _offerteNummer(c) {
   return null;
 }
 
-// Het automatische nummer dat een calc al heeft of zou krijgen, los van een
-// eventueel handmatig vrij nummer. Voor de placeholder en uitleg in het offerte-blok.
-function _offerteAutoNummer(c) {
-  const cfg = (c && c.offerteConfig && typeof c.offerteConfig === 'object') ? c.offerteConfig : {};
-  if (cfg.offerteJaar && cfg.offerteNr) return _offerteNummerFormat(cfg.offerteJaar, cfg.offerteNr);
-  const jaar = parseInt(String(cfg.offertedatum || '').slice(0, 4), 10) || new Date().getFullYear();
-  return _offerteVolgendeNummer(jaar);
-}
-
-// Berekent welk nummer de volgende offerte van een bepaald jaar zou krijgen,
-// zonder iets toe te kennen of op te slaan. Voor de info-weergave in Instellingen.
-function _offerteVolgendeNummer(jaar) {
-  jaar = jaar || new Date().getFullYear();
-  const tellers = (data.settings.offerteTellers && typeof data.settings.offerteTellers === 'object') ? data.settings.offerteTellers : {};
-  const stand = tellers[jaar] || 0;
-  const start = parseInt(data.settings.offerteStartNr, 10) || 1;
-  const volg = Math.max(stand + 1, start);
-  return _offerteNummerFormat(jaar, volg);
-}
-
-// Controleert of een nummer (jaar+volg) al bij een ANDERE calc in gebruik is.
-function _offerteNummerInGebruik(jaar, volg, behalveId) {
-  return (data.calculaties || []).some(c => {
-    if (c.id === behalveId) return false;
-    const cfg = c.offerteConfig;
-    return cfg && cfg.offerteJaar === jaar && cfg.offerteNr === volg;
-  });
-}
-
-// Kent een offertenummer toe aan een calc als die er nog geen heeft.
-// Hoogt de jaarteller op, respecteert het startnummer en waarschuwt bij
-// een dubbel nummer. Slaat config + settings op. Retourneert het nummer.
+// v4.26.0 — De automatische JJ-NNN-nummering is verwijderd. Het offertenummer komt
+// voortaan uit het Yoobi-verkoopnummer (cfg.offerteNummerVrij). Deze functie kent niets
+// meer toe en hoogt geen teller op; hij leest alleen het bestaande nummer terug
+// (Yoobi-nummer, of een oud JJ-NNN bij bestaande offertes, of niets). De aanroepplekken
+// in de documentbouwers blijven zo werken zonder wijziging.
 function _kenOfferteNummerToe(c) {
-  if (!c) return null;
-  if (!c.offerteConfig || typeof c.offerteConfig !== 'object') c.offerteConfig = {};
-  const cfg = c.offerteConfig;
-
-  // Handmatig vrij nummer ingevuld? Dan geen auto-nummer toekennen en de
-  // jaarteller niet ophogen. Het vrije nummer is leidend.
-  const vrij = (cfg.offerteNummerVrij != null) ? String(cfg.offerteNummerVrij).trim() : '';
-  if (vrij) return vrij;
-
-  // Al een nummer? Dan laten staan.
-  if (cfg.offerteJaar && cfg.offerteNr) return _offerteNummerFormat(cfg.offerteJaar, cfg.offerteNr);
-
-  const jaarBron = cfg.offertedatum || _offIsoVandaag();
-  const jaar = parseInt(String(jaarBron).slice(0, 4), 10) || new Date().getFullYear();
-
-  if (!data.settings.offerteTellers || typeof data.settings.offerteTellers !== 'object') data.settings.offerteTellers = {};
-  const stand = data.settings.offerteTellers[jaar] || 0;
-  const start = parseInt(data.settings.offerteStartNr, 10) || 1;
-  let volg = Math.max(stand + 1, start);
-
-  // Achtervang: schuif door tot een vrij nummer als er onverhoopt al een
-  // calc met dit nummer bestaat (bv. twee apparaten tegelijk).
-  let botsing = false;
-  while (_offerteNummerInGebruik(jaar, volg, c.id)) { volg++; botsing = true; }
-
-  cfg.offerteJaar = jaar;
-  cfg.offerteNr = volg;
-  data.settings.offerteTellers[jaar] = volg;
-
-  saveData();
-  _offCfgSave();
-  _saveSettingsDB();
-
-  if (botsing) {
-    _toast('Let op: offertenummer was al in gebruik, het volgende vrije nummer is toegekend (' + _offerteNummerFormat(jaar, volg) + ')');
-  }
-  return _offerteNummerFormat(jaar, volg);
+  return _offerteNummer(c);
 }
 
 function printOfferteYoobi() {
@@ -18776,8 +18753,6 @@ function loadSettings() {
   { const _e = document.getElementById('setVertrekHuisnummer'); if (_e) _e.value = s.vertrekHuisnummer || ''; }
   { const _e = document.getElementById('setJaarcapEuro'); if (_e) _e.value = (s.jaarcapaciteitEuro != null) ? s.jaarcapaciteitEuro : 450000; }
   { const _e = document.getElementById('setJaarcapUren'); if (_e) _e.value = (s.jaarcapaciteitUren != null && s.jaarcapaciteitUren !== 0) ? s.jaarcapaciteitUren : ''; }
-  { const _e = document.getElementById('setOfferteStart'); if (_e) _e.value = (s.offerteStartNr != null && s.offerteStartNr !== 0) ? s.offerteStartNr : 1; }
-  { const _e = document.getElementById('setOfferteVolgende'); if (_e) _e.value = _offerteVolgendeNummer(new Date().getFullYear()); }
   { const b = (s.bedrijf && typeof s.bedrijf === 'object') ? s.bedrijf : {};
     const _sv = (id, v) => { const e = document.getElementById(id); if (e) e.value = (v != null) ? v : ''; };
     _sv('setBedrNaam', b.naam); _sv('setBedrAdres', b.adres); _sv('setBedrPc', b.pc); _sv('setBedrTel', b.tel); _sv('setBedrEmail', b.email); _sv('setBedrWeb', b.web); _sv('setBedrIban', b.iban); _sv('setBedrBic', b.bic); _sv('setBedrKvk', b.kvk); _sv('setBedrBtw', b.btw); }
@@ -18835,11 +18810,6 @@ function updSetting(field, inputEl) {
   renderMaterialen(); renderBewerkingen(); renderSystemen(); renderTotals(); renderDashboard();
   // Bij rayonDrempel-wijziging ook de indicator bij het reis-veld updaten
   if (field === 'rayonDrempel') _renderRayonIndicator();
-  // Bij startnummer-wijziging het info-veld 'volgende nummer' meteen bijwerken
-  if (field === 'offerteStartNr') {
-    const _e = document.getElementById('setOfferteVolgende');
-    if (_e) _e.value = _offerteVolgendeNummer(new Date().getFullYear());
-  }
   showSavedTick(inputEl);
 }
 
@@ -19937,6 +19907,12 @@ function _accordBeheerRender(body, c, rij) {
     + '<div class="acb-sub">' + _accordEsc(c.naam || '') + (c.klant ? ' \u2014 ' + _accordEsc(c.klant) : '') + '</div>';
 
   if (!rij) {
+    if (!_offerteNummer(c)) { // v4.26.0 — geen accordeerlink zonder Yoobi-verkoopnummer
+      h += '<p class="acb-fout">Er staat nog geen offertenummer.</p>'
+        + '<p class="acb-sub">Vul het Yoobi-verkoopnummer in bij Offerte-instellingen. Zonder nummer kan de accordeerlink niet gemaakt worden.</p>';
+      body.innerHTML = h;
+      return;
+    }
     h += '<p>Er is nog geen accordeerlink voor deze offerte.</p>'
       + '<p class="acb-sub">Aanmaken legt de offerte vast zoals die nu is. Wat de klant accordeert, kan daarna niet meer wijzigen.</p>'
       + '<button class="acb-btn" id="acbNieuw">Accordeerlink aanmaken</button>';
@@ -20269,6 +20245,13 @@ async function _accordToonGetekendInViewer(root, info) {
 }
 
 async function _accordNieuweLink(c, body, supersede) {
+  // v4.26.0 — harde stop: geen accordeerlink zonder offertenummer (Yoobi-verkoopnummer).
+  if (!_offerteNummer(c)) {
+    body.innerHTML = '<h3>\ud83d\udd17 Accordeerlink</h3>'
+      + '<p class="acb-fout">Er staat nog geen offertenummer.</p>'
+      + '<p class="acb-sub">Vul het Yoobi-verkoopnummer in bij Offerte-instellingen. Zonder nummer kan de accordeerlink niet gemaakt worden.</p>';
+    return;
+  }
   body.innerHTML = 'Bezig met aanmaken\u2026';
   // v3.91.0 — Herziening: heeft de klant op een eerdere accordeerlink gereageerd
   // (akkoord, afwijzing of een vraag), dan is deze nieuwe link een nieuwe versie.
