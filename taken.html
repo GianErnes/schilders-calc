@@ -565,7 +565,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.13.3';
+const APP_VERSION = 'v0.13.4';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -629,6 +629,15 @@ function parseTijdstip(s){
 function naarTimestamp(datumStr, tijdStr){
   if(!datumStr) return null;
   return datumStr + 'T' + (tijdStr || '00:00') + ':00';
+}
+/* Kale lokale tijdtekst omzetten naar een tijdstip met tijdzone, voor kolommen
+   van het type timestamptz (voltooid_op, piep_op). De kale tekst wordt als
+   lokale tijd gelezen en als UTC weggeschreven, zodat heen en terug klopt.
+   gepland_op is timestamp zonder tijdzone en gaat hier bewust NIET doorheen (v0.13.4). */
+function naarUTC(s){
+  if(!s) return null;
+  const d = new Date(String(s).replace(' ', 'T'));
+  return isNaN(d) ? null : d.toISOString();
 }
 function zelfdeDag(a, b){
   return a && b && a.getFullYear() === b.getFullYear() &&
@@ -1254,7 +1263,7 @@ function velWaarden(){
   const eenheid = document.getElementById('s_ritme_eenheid').value;
   const ts = naarTimestamp(datum, tijd);
   let piep_op = null;
-  if(piepAan && datum) piep_op = naarTimestamp(datum, tijd && tijd !== '00:00' ? tijd : '09:00');
+  if(piepAan && datum) piep_op = naarUTC(naarTimestamp(datum, tijd && tijd !== '00:00' ? tijd : '09:00'));
   return { titel, notitie, tel, ts, piepAan, piep_op, vandaagAan, n, eenheid };
 }
 
@@ -1336,7 +1345,7 @@ async function slaOp(){
 
 async function vinkAf(){
   const t = VEL.taak;
-  const nuTs = timestampVan(new Date());
+  const nuTs = new Date().toISOString();
 
   try{
     if(VEL.modus === 'klaar'){
@@ -1373,7 +1382,7 @@ async function vinkAf(){
       const volgendeTs = timestampVan(volgende);
       const herhalerUpdate = Object.assign({}, vers, {
         gepland_op: volgendeTs,
-        piep_op: w.piepAan ? volgendeTs : null,
+        piep_op: w.piepAan ? naarUTC(volgendeTs) : null,
         vandaag: false, vandaag_op: null,
         mail_op: null,
       });
@@ -1462,7 +1471,7 @@ async function schakelPiep(){
   let piep_op = null;
   if(aanNu && t._gepland){
     const u = tijdTekst(t._gepland);
-    piep_op = naarTimestamp(lokaalISO(t._gepland), u || '09:00');
+    piep_op = naarUTC(naarTimestamp(lokaalISO(t._gepland), u || '09:00'));
   }
   const { error } = await sb.from('taken').update({ piep: aanNu, piep_op: piep_op, mail_op: null }).eq('crmtaskid', t.crmtaskid);
   if(error){ toast('Melding opslaan lukt niet: ' + error.message); return; }
@@ -1484,7 +1493,7 @@ async function verzetMelding(hoe){
   } else {
     doel = new Date(nu); doel.setDate(doel.getDate() + 1); doel.setHours(9, 0, 0, 0);
   }
-  const doelTs = timestampVan(doel);
+  const doelTs = doel.toISOString();
   const { error } = await sb.from('taken').update({
     piep: true, piep_op: doelTs, melding_geleverd_op: null, mail_op: null,
   }).eq('crmtaskid', t.crmtaskid);
