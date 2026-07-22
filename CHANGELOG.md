@@ -1,3 +1,13 @@
+## v4.28.0 — Begeleidende tekst bij het mailen van een offerte
+Zoals vroeger in Yoobi kun je nu een eigen tekst bij de offertemail zetten voordat hij de deur uit gaat.
+
+### Wat er verandert
+- Mail je een offerte via "Offerte mailen naar klant", dan opent nu eerst een venster met een tekstvak in plaats van een kale ja/nee-vraag. Daar staat een standaardtekst klaar met de aanhef al ingevuld (Geachte heer Nacken), die je per keer kunt aanpassen.
+- Die tekst komt bovenaan in de mail te staan, boven de knop "Offerte bekijken en akkoord geven" en boven je handtekening. De vaste "Geachte {aanhef}, Hartelijk dank..." wordt erdoor vervangen, dus geen dubbele aanhef.
+- Laat je het tekstvak leeg, dan valt de mail terug op de vaste standaardaanhef zoals voorheen. Zo verandert er niets aan bestaande gewoontes als je het vak niet gebruikt.
+- Onder de motorkap: _offerteMailen opent het compose-venster (nieuwe helper _offerteMailStandaardtekst met de aanhef uit de link-snapshot), _offerteVerzendCall stuurt de vrije tekst mee als body.tekst. De Edge Function offerte-verzenden leest die tekst en zet hem als nette alinea's boven de knop.
+- Vereist eenmalig de bijgewerkte Edge Function offerte-verzenden. Geen SQL.
+
 ## v4.27.0 — Klant uit Yoobi vult ook het briefhoofd
 Aansluitend op het afwijkende briefadres uit v4.26.0: de Yoobi-import vult dat nu vanzelf.
 

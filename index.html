@@ -2188,8 +2188,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.27.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.28.0</h2>
       <div class="intro-body">
+        <p><strong>✉️ Begeleidende tekst bij het mailen van een offerte (v4.28.0).</strong> Mail je een offerte via de knop "Offerte mailen naar klant", dan krijg je nu eerst een venster met een tekstvak, net als vroeger in Yoobi. Daar staat een standaardtekst klaar met de aanhef al ingevuld (Geachte heer Nacken), die je per keer kunt aanpassen. Die tekst komt bovenaan in de mail, boven de knop en boven je handtekening. Laat je het vak leeg, dan valt de mail terug op de vaste standaardaanhef zoals voorheen. Vereist eenmalig de bijgewerkte Edge Function offerte-verzenden. Geen SQL.</p>
         <p><strong>📇 Klant uit Yoobi vult nu ook het briefhoofd (v4.27.0).</strong> Haal je een particulier uit Yoobi, dan zet de app het klantadres voortaan ook in het briefhoofd (Adres op de offerte), zodat het meteen bovenaan de offerte staat zonder overtypen. Werk je ergens anders, zoals op een huurpand, dan pas je alleen het werkadres aan en blijft het briefhoofd het klantadres. Bovendien komt bij een particulier alleen de kale achternaam in het Klant-veld te staan, zodat de aanspreekvorm zelf het nette voorvoegsel plaatst (De heer en mevrouw Mordant). Zakelijk en VvE houden hun volledige bedrijfsnaam. Geen SQL nodig.</p>
         <p><strong>🔧 Offertenummer-veld netjes in lijn (v4.26.1).</strong> Het veld Offertenummer stond in het Offerte-instellingen-blok wat lager dan de andere velden, doordat de uitleg in het label over drie regels brak. Die uitleg staat nu als kleine notitie onder het invulveld, zodat het vakje weer op één lijn staat met Offertedatum, Geldig tot en de rest. Alleen opmaak. Geen SQL nodig.</p>
         <p><strong>🏠 Apart briefadres bij een particulier (v4.26.0).</strong> Werk je op een ander adres dan waar de klant woont, bijvoorbeeld een echtpaar dat thuis woont terwijl we op hun huurpand schilderen, dan vul je bij Klant en adres onder Adres op de offerte (briefhoofd) hun woonadres in. Dat komt bovenaan de brief terwijl het werkadres de reisafstand blijft sturen. Laat je het leeg dan is het werkadres meteen het adres op de offerte, precies zoals voorheen. In de tekst wijst {adres} naar het briefhoofd en {werkadres} naar de werklocatie. Geen SQL nodig.</p>
@@ -3417,7 +3418,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.27.0';
+const APP_VERSION = 'v4.28.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3813,6 +3814,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.28.0', d: '2026-07-22', h: 'Begeleidende tekst bij het mailen van een offerte. De knop acbMail opent nu niet meer een kale confirm maar rendert via _offerteMailen een compose-venster in de acb-body: een "Naar {email}"-regel, een textarea voorgevuld met _offerteMailStandaardtekst(aanhef) waarin de aanhef uit rij.snapshot.aanhef al is opgelost (terugval heer, mevrouw), plus knoppen Versturen en Terug. Terug rendert via _accordBeheerRender terug naar het beheerscherm; Versturen roept _offerteVerzendCall(token, tekst) aan, zet bij succes de calc op verzonden (mits afspraak/concept/gereed) en ververst met accordLinkBeheer. _offerteVerzendCall stuurt de vrije tekst nu mee in de POST-body ({ token, tekst }). Leeg tekstvak = de Edge Function valt terug op de vaste intro, dus bestaand gedrag blijft. Vereist de bijgewerkte Edge Function offerte-verzenden (leest body.tekst, vervangt de vaste aanhef/intro). Geen SQL.' },
   { v: '4.27.0', d: '2026-07-21', h: 'Yoobi-import uitgebreid voor het briefadres uit v4.26.0. _yoobiVulIn vult bij een particulier het klantadres uit Yoobi nu ook in cfg.briefadres (straat/huisnummer/postcode/woonplaats), zodat het briefhoofd bovenaan de offerte staat zonder overtypen; het werkadres (calc-kop postcode/huisnummer) blijft ook gevuld zodat de reisafstand klopt, wijk je met het werk af dan pas je alleen dat aan en blijft het briefhoofd het klantadres. Zakelijk en VvE ongewijzigd (die vullen alleen cfg.adres). Daarnaast krijgt het Klant-veld bij een particulier de kale achternaam via de nieuwe helper _yoobiKlantAchternaam (_offNaamKaal strip voorvoegsels, daarna _yoobiSplitContact voor de voorletters, tussenvoegsel plus achternaam blijft over), zodat de aanspreekvorm zelf het voorvoegsel plaatst; zakelijk en VvE houden de volledige naam. _ktNieuw en _briefApart zijn naar boven in _yoobiVulIn verplaatst zodat ze voor beide takken bruikbaar zijn. Geen SQL, geen Edge Function.' },
   { v: '4.26.1', d: '2026-07-21', h: 'Opmaakfix: het Offertenummer-veld in offerteInstellingenBlok stond lager doordat de lange sub-muted hint in het label over drie regels brak. De hint (Yoobi-verkoopnummer, verplicht voor de accordeerlink) is uit het label gehaald en als kleine notitie onder het invoerveld gezet; het label is nu enkel Offertenummer, zodat het invoerveld weer op één lijn staat met de overige velden in het blok. Alleen opmaak, geen gedragswijziging. Geen SQL.' },
   { v: '4.26.0', d: '2026-07-21', h: 'Twee dingen. (1) Afwijkend briefadres bij particulier: nieuw veld cfg.briefadres (JSON, geen migratie) met setter _offCfgBriefadres en PDOK-zoek _offBriefadresZoek. _offAdresEffectief pakt in de particulier-tak het briefadres als dat gevuld is, anders terugval op het werkadres (geen regressie op bestaande offertes); {adres} volgt het briefhoofd, {werkadres} de werklocatie, de reisafstand blijft naar het werkadres rekenen. renderOfferteBlok toont bij particulier altijd een blok Adres op de offerte (briefhoofd) met straat/huisnummer/postcode/woonplaats plus zoekknop en een terugval-hint; de leescontrole meldt een deels ingevuld briefadres. Zakelijk en VvE briefhoofd ongewijzigd. (2) Offertenummer verplicht: de automatische JJ-NNN-teller is verwijderd (_offerteAutoNummer, _offerteVolgendeNummer, _offerteNummerInGebruik weg, _kenOfferteNummerToe is nu een lees-shim naar _offerteNummer), plus de Instellingen-sectie Offertenummering en de render/updSetting-tak. _accordNieuweLink en _accordBeheerRender blokkeren de accordeerlink met een duidelijke melding als _offerteNummer(c) leeg is; het offertedocument mag zonder nummer als concept. Bestaande offertes met een toegekend JJ-NNN houden hun nummer. Geen SQL, geen Edge Function.' },
@@ -20030,7 +20032,7 @@ function _accordBeheerRender(body, c, rij) {
 // v3.96.0 — Offerte mailen vanuit het accordeerlink-venster (deel 2).
 // Mailt de bestaande open link naar de klant via de Edge Function
 // offerte-verzenden en zet de calc daarna op Verzonden.
-async function _offerteVerzendCall(token) {
+async function _offerteVerzendCall(token, tekst) {
   let auth = SUPABASE_KEY;
   try {
     const { data: { session } } = await _sb.auth.getSession();
@@ -20039,7 +20041,7 @@ async function _offerteVerzendCall(token) {
   const res = await fetch(SUPABASE_URL + '/functions/v1/offerte-verzenden', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + auth, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token })
+    body: JSON.stringify({ token, tekst: (tekst || '') })  // v4.28.0 — begeleidende tekst mee
   });
   let js = null;
   try { js = await res.json(); } catch (e) {}
@@ -20049,25 +20051,57 @@ async function _offerteVerzendCall(token) {
   return js;
 }
 
-async function _offerteMailen(c, rij, body) {
+// v4.28.0 — standaard begeleidende tekst voor de offertemail, met de aanhef
+// alvast opgelost. Gian kan hem per keer aanpassen in het compose-venster.
+function _offerteMailStandaardtekst(aanhef) {
+  const a = (aanhef && String(aanhef).trim()) ? String(aanhef).trim() : 'heer, mevrouw';
+  return 'Geachte ' + a + ',\n\n'
+    + 'Hierbij ontvangt u onze offerte voor de besproken schilderwerkzaamheden. In het document vindt u de omschrijving van het werk en de prijs.\n\n'
+    + 'U kunt de offerte hieronder bekijken en meteen akkoord geven. Heeft u nog vragen, neem gerust contact met ons op.\n\n'
+    + 'Wij zien uw reactie graag tegemoet.';
+}
+
+// v3.96.0 / v4.28.0 — Offerte mailen: opent een compose-venster in de acb-body
+// met een tekstvak (begeleidende tekst), voorgevuld met de standaardtekst en de
+// aanhef. Verstuurt de bestaande open link via de Edge Function offerte-verzenden
+// en zet de calc daarna op Verzonden.
+function _offerteMailen(c, rij, body) {
   if (!rij || rij.status !== 'open') { _toast('Alleen een open link kun je mailen.'); return; }
   const email = (rij.snapshot && rij.snapshot.klantEmail) ? String(rij.snapshot.klantEmail).trim() : '';
   if (!email) { _toast('Geen e-mailadres in deze link. Vul het e-mailveld in en maak een nieuwe link.'); return; }
-  if (!confirm('Offerte mailen naar ' + email + '?')) return;
-  const btn = body ? body.querySelector('#acbMail') : null;
-  if (btn) { btn.disabled = true; btn.textContent = 'Versturen\u2026'; }
-  try {
-    await _offerteVerzendCall(rij.token);
-    // Calc op Verzonden, maar nooit een al verder gevorderde status terugzetten.
-    if (c && ['afspraak', 'concept', 'gereed'].includes(c.status)) {
-      try { await setCalcStatus(c.id, 'verzonden'); } catch (e) {}
+  if (!body) { _toast('Kan het mailvenster niet openen.'); return; }
+  const aanhef = (rij.snapshot && rij.snapshot.aanhef) ? String(rij.snapshot.aanhef).trim() : '';
+  const std = _offerteMailStandaardtekst(aanhef);
+  const h = '<h3>\u2709\ufe0f Offerte mailen</h3>'
+    + '<div class="acb-sub" style="margin:0 0 12px;">Naar ' + _accordEsc(email) + '</div>'
+    + '<label style="display:block; font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Begeleidende tekst (komt bovenaan in de mail)</label>'
+    + '<textarea id="acbMailTekst" style="width:100%; min-height:200px; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:6px; font:inherit; line-height:1.5; resize:vertical;">' + _accordEsc(std) + '</textarea>'
+    + '<div class="acb-sub" style="margin:6px 0 12px; font-size:0.72rem;">Laat je het leeg, dan gebruikt de mail de vaste standaardaanhef.</div>'
+    + '<button class="acb-btn" id="acbMailVerstuur">\ud83d\udce7 Versturen</button>'
+    + '<button class="acb-btn sec" id="acbMailTerug">Terug</button>';
+  body.innerHTML = h;
+  body.querySelector('#acbMailTerug').addEventListener('click', () => _accordBeheerRender(body, c, rij));
+  body.querySelector('#acbMailVerstuur').addEventListener('click', async () => {
+    const ta = body.querySelector('#acbMailTekst');
+    const tekst = ta ? ta.value : '';
+    const vbtn = body.querySelector('#acbMailVerstuur');
+    const tbtn = body.querySelector('#acbMailTerug');
+    if (vbtn) { vbtn.disabled = true; vbtn.textContent = 'Versturen\u2026'; }
+    if (tbtn) tbtn.disabled = true;
+    try {
+      await _offerteVerzendCall(rij.token, tekst);
+      // Calc op Verzonden, maar nooit een al verder gevorderde status terugzetten.
+      if (c && ['afspraak', 'concept', 'gereed'].includes(c.status)) {
+        try { await setCalcStatus(c.id, 'verzonden'); } catch (e) {}
+      }
+      _toast('Offerte gemaild naar ' + email, 'ok');
+      accordLinkBeheer(); // venster verversen met de nieuwe stand
+    } catch (e) {
+      if (vbtn) { vbtn.disabled = false; vbtn.textContent = '\ud83d\udce7 Versturen'; }
+      if (tbtn) tbtn.disabled = false;
+      _toast('Mailen mislukt: ' + (e.message || e));
     }
-    _toast('Offerte gemaild naar ' + email, 'ok');
-    accordLinkBeheer(); // venster verversen met de nieuwe stand
-  } catch (e) {
-    if (btn) { btn.disabled = false; btn.textContent = '\ud83d\udce7 Offerte mailen naar klant'; }
-    _toast('Mailen mislukt: ' + (e.message || e));
-  }
+  });
 }
 
 // v3.81.0 / v3.82.0 — Getekend exemplaar: de bevroren offerte-PDF ophalen en er een aparte
