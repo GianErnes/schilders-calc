@@ -1,3 +1,14 @@
+## v4.29.0 — Bewerkingsregel zonder percentage valt op
+Een leeg %-veld in een calc-regel liet de hele regel geruisloos op nul vallen. Nu zie je het.
+
+### Wat er verandert
+- Staat het %-veld van een bewerking leeg, dan kleurt die hele bewerkingsregel lichtrood: rode rand, lichte rode vulling en een donkerrode balk aan de linkerkant. Achter de bewerkingsnaam verschijnt de melding "percentage ontbreekt".
+- Je ziet het al tijdens het typen, op het moment dat het laatste cijfer weg is — niet pas nadat je het veld verlaten hebt. Na een herlaadbeurt of sync staat het er nog steeds.
+- Een percentage van 0 kleurt niet mee. Dat is een bewuste keuze om een stap over te slaan, geen fout.
+- Waarom dit nodig is: een leeg veld levert NaN op en niet 100. Die NaN loopt via de optelling door het hele regeltotaal, waarna de regel 0,00 uur en € 0,00 toont en stilletjes uit het onderdeel- en projecttotaal valt. Er verschijnt geen foutmelding, alleen een keurige nul.
+- Alleen in de Calculatie-tab. De beurt-modal van het onderhoudsplan en de verfsysteem-bibliotheek blijven ongemoeid.
+- Puur signalering: aan de berekening verandert niets. Geen SQL nodig.
+
 ## v4.28.0 — Begeleidende tekst bij het mailen van een offerte
 Zoals vroeger in Yoobi kun je nu een eigen tekst bij de offertemail zetten voordat hij de deur uit gaat.
 
