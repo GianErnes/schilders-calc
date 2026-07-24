@@ -1,3 +1,14 @@
+## v4.31.0 — Offerte-instellingen: velden op maat
+De vakjes in dat blok werden altijd over de volle breedte uitgerekt. Nu krijgt elk veld de ruimte die het nodig heeft.
+
+### Wat er verandert
+- Offertedatum, Geldig tot, Offertenummer, Versie, Garantiejaren en Prijsweergave hebben nu elk hun eigen breedte. De datums en het nummer smal, versie en garantiejaren kort, de prijsweergave iets breder omdat die keuzelijst een lange tekst heeft.
+- Past de rij niet, dan loopt hij vanzelf door naar de volgende regel. Er steekt dus nooit iets buiten het blok, ook niet op een smal scherm.
+- De uitleg “V-aanduiding vanaf 2” staat niet meer achter het woord Versie maar als klein regeltje onder het veld, net zoals bij het offertenummer. Zo blijven de invoervakken op één lijn staan.
+- Geldt op de iPad en op de iMac, want het is dezelfde opmaak.
+- De blokken Klant en adres en Project en planning blijven bewust zoals ze waren. Daar staan straatnamen en e-mailadressen in die de ruimte wel gebruiken.
+- Alleen opmaak. Aan de berekening, de opslag en de PDF’s verandert niets. Geen SQL nodig.
+
 ## v4.30.0 — Calculatie en Meetstaat groter op de iPad
 Op locatie werk je op de iPad. Die twee tabs staan daar nu een derde groter in beeld.
 
