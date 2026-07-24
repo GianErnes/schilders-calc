@@ -565,7 +565,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.13.4';
+const APP_VERSION = 'v0.13.5';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -1162,7 +1162,13 @@ function openNieuw(){
 
   zet('s_wanneer_lezen', false);
   zet('s_wanneer_invullen', true);
-  document.getElementById('s_datum_in').value = '';
+  /* v0.13.5: nieuwe taak begint standaard op vandaag 17:00. Is dat moment
+     vandaag al voorbij, dan pakken we morgen 17:00, zodat de melding nooit
+     in het verleden ligt en meteen zou mailen. */
+  const nuVel = new Date();
+  const startVel = new Date(nuVel.getFullYear(), nuVel.getMonth(), nuVel.getDate(), 17, 0, 0, 0);
+  if(startVel <= nuVel) startVel.setDate(startVel.getDate() + 1);
+  document.getElementById('s_datum_in').value = lokaalISO(startVel);
   document.getElementById('s_tijd_in').value = '17:00';
 
   zet('s_repwrap', false);
