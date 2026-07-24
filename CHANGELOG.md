@@ -1,3 +1,14 @@
+## v4.30.0 — Calculatie en Meetstaat groter op de iPad
+Op locatie werk je op de iPad. Die twee tabs staan daar nu een derde groter in beeld.
+
+### Wat er verandert
+- De tabs Calculatie en Meetstaat worden op de iPad 30% groter weergegeven. Alles groeit mee: invulvelden, regels, knoppen, koppen en de totalenkolom. Er valt dus niets buiten beeld en je hoeft niet zijwaarts te scrollen.
+- Op de iMac verandert er helemaal niets. De app kijkt of hij op een aanraakscherm draait en niet naar de vensterbreedte, dus ook een smal venster op de iMac blijft precies zoals het was.
+- De iPhone blijft ook ongewijzigd, staand en liggend. Op dat schermpje zou een derde groter juist averechts werken.
+- Het blok Notities, taken en foto’s krijgt op de iPad een rode rand met een lichtrode kop en een rode titel, zodat je het tijdens de opname meteen terugvindt tussen de andere blokken.
+- Alle andere tabs blijven op de iPad ongewijzigd. Wil je die later ook groter, dan is dat een kleine uitbreiding op hetzelfde blok.
+- Puur opmaak. Aan de berekening, de opslag en de PDF’s verandert niets. Geen SQL nodig.
+
 ## v4.29.0 — Bewerkingsregel zonder percentage valt op
 Een leeg %-veld in een calc-regel liet de hele regel geruisloos op nul vallen. Nu zie je het.
 
