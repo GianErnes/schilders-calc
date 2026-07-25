@@ -1,3 +1,16 @@
+## v4.38.0 — Het telefoonnummer komt mee uit Yoobi
+Het nummer stond al in het Yoobi-venster, maar alleen ter referentie. Het werd nergens bewaard, dus wie moest bellen zocht het opnieuw op.
+
+### Wat er verandert
+- Bij Velden invullen komt het nummer van de gekozen contactpersoon in de calculatie te staan. Heeft die er geen, dan het nummer van de relatie.
+- In het Offerte-blok staat Telefoon naast E-mail in een eigen veldje. Komt de klant niet uit Yoobi, dan tik je het er zelf in.
+- Bij de contactpersonen in het Yoobi-venster staat voortaan achter elke naam ook het nummer, zodat je ziet wie je kiest.
+- Vanaf daar loopt het door naar de nabeltaak van Maud. Het nummer staat bovenaan het belscript en in het telefoonveld van de taak, zodat ze het in de takenapp aantikt en meteen belt.
+- Weet Yoobi geen nummer, dan meldt het belscript dat het daar opgezocht moet worden.
+- Aan de takenapp zelf is niets gewijzigd, die kon dit al.
+- Op de offerte verandert niets, het nummer is puur intern.
+- Vereist de bijgewerkte Edge Function offerte-herinnering. Geen SQL.
+
 ## v4.37.0 — De kilometers lopen nu via je eigen server
 Het nieuwe adres van OpenRouteService laat aanroepen die rechtstreeks uit een webpagina komen niet door. Dat was aan onze kant niet te repareren, dus gaat de aanroep er voortaan omheen.
 
