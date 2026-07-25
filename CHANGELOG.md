@@ -1,3 +1,14 @@
+## v4.36.1 — Afstand ophalen praat tegen het nieuwe adres
+Afstand ophalen bleef falen, ook na de herkansingen uit v4.36.0. De oorzaak lag niet bij jou en niet bij je sleutel: OpenRouteService is verhuisd.
+
+### Wat er verandert
+- De app haalt de kilometers voortaan op bij het nieuwe adres van de dienst. Het oude adres is op 28 april afgeschaft en het tegoed daarop wordt afgeknepen om mensen tot overstappen te bewegen. Op 24 augustus gaat het oude adres helemaal dicht, dus dit moest sowieso gebeuren.
+- Dat verklaart ook waarom je nooit een nette foutcode te zien kreeg. Een geweigerd antwoord komt terug zonder de header die de browser nodig heeft, dus de browser gooit het weg en de app ziet alleen dat er niets aankwam.
+- Je bestaande sleutel blijft gewoon werken op het nieuwe adres. Daar hoef je niets voor te doen.
+- Het aanmaken en beheren van die sleutel is meeverhuisd naar account.heigit.org, want daar valt OpenRouteService sinds 2025 onder. Daarom kwam je op openrouteservice.org niet meer binnen. De hulptekst bij Instellingen wijst nu naar de goede plek.
+- Aan PDOK is niets veranderd. Die dienst deed het de hele diagnose door gewoon: vijftien van de vijftien pogingen goed, binnen veertig milliseconden.
+- Alleen een adreswijziging en een hulptekst. Aan de berekening, de opslag en de PDF's verandert niets. Geen SQL, geen Edge Function.
+
 ## v4.36.0 — Niet meer opgeven na één poging
 Op 25 juli viel het adres opzoeken uit met de melding "Failed to fetch". Daar kon niemand iets mee, en het bleek ook nog eens naar de verkeerde dienst te wijzen.
 
