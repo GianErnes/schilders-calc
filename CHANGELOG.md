@@ -1,3 +1,16 @@
+## v4.37.0 — De kilometers lopen nu via je eigen server
+Het nieuwe adres van OpenRouteService laat aanroepen die rechtstreeks uit een webpagina komen niet door. Dat was aan onze kant niet te repareren, dus gaat de aanroep er voortaan omheen.
+
+### Wat er verandert
+- Afstand ophalen vraagt de kilometers nu aan je eigen server bij Supabase, en die vraagt ze aan OpenRouteService. Voor een server gelden de browserregels niet die dit tegenhielden.
+- Waarom het misging: bij dit soort verzoeken stuurt je browser eerst een testvraag vooruit. Op het nieuwe adres komt daar geen antwoord op, dus bleef de app wachten tot hij het opgaf. Vandaar de melding dat de dienst te traag reageerde. Je was niet de enige, op het forum van OpenRouteService staat dezelfde melding.
+- Je sleutel staat niet meer in de app maar als secret op de server. Het invulveld bij Instellingen is daarom verdwenen, en een sleutel die daar nog stond wordt bij het openen van Instellingen vanzelf opgeruimd.
+- Gaat er iets mis, dan lees je voortaan wat OpenRouteService zelf antwoordt, met code en al. Vandaag kostte het een halve middag om daarachter te komen. Dat hoeft nooit meer.
+- Op 24 augustus gaat het oude adres van OpenRouteService helemaal dicht. Daar zitten we nu ruim voor.
+- Het opzoeken van straat en woonplaats blijft ongewijzigd rechtstreeks bij PDOK. Dat werkt en dat laat ik met rust.
+- Het kilometerveld blijft gewoon met de hand invulbaar, zoals altijd.
+- Vereist eenmalig de nieuwe Edge Function reisafstand met de secret ORS_KEY. Geen SQL.
+
 ## v4.36.1 — Afstand ophalen praat tegen het nieuwe adres
 Afstand ophalen bleef falen, ook na de herkansingen uit v4.36.0. De oorzaak lag niet bij jou en niet bij je sleutel: OpenRouteService is verhuisd.
 

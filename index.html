@@ -2255,8 +2255,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.36.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.37.0</h2>
       <div class="intro-body">
+        <p><strong>🌐 De kilometers lopen nu via je eigen server (v4.37.0).</strong> Het nieuwe adres van OpenRouteService laat aanroepen die rechtstreeks uit een webpagina komen niet door. Je browser stuurt bij zo n verzoek eerst een testvraag vooruit, en daar kwam geen antwoord op, dus bleef de app wachten tot hij het opgaf. Aan onze kant was dat niet te repareren, hoe lang we ook zouden wachten. De aanroep loopt daarom voortaan via een eigen Edge Function bij Supabase: de app vraagt het aan je eigen server en die vraagt het aan OpenRouteService. Voor een server gelden die browserregels niet. Drie dingen die je daarvan merkt. Je sleutel staat niet meer in de app maar als secret op de server, dus het invulveld bij Instellingen is verdwenen en een sleutel die daar nog stond wordt vanzelf opgeruimd. Gaat er iets mis, dan lees je voortaan wat OpenRouteService echt antwoordt in plaats van een vage melding. En 24 augustus, wanneer het oude adres helemaal dichtgaat, raakt ons niet meer. Vereist eenmalig de nieuwe Edge Function reisafstand met de secret ORS_KEY. Geen SQL.</p>
         <p><strong>🚚 Afstand ophalen praat tegen het nieuwe adres (v4.36.1).</strong> Afstand ophalen bleef falen, ook na de herkansingen uit v4.36.0. De oorzaak lag niet bij jou en niet bij je sleutel: OpenRouteService is verhuisd. Sinds 28 april is hun oude adres afgeschaft en wordt het tegoed daarop afgeknepen om mensen tot overstappen te bewegen, en op 24 augustus gaat het oude adres helemaal dicht. De app praat nu tegen het nieuwe adres. Je bestaande sleutel blijft gewoon werken, daar hoef je niets voor te doen. Wil je hem ooit opnieuw aanmaken, dan doe je dat voortaan op account.heigit.org en niet meer op openrouteservice.org, want ook het inloggen is meeverhuisd. Dat staat nu ook zo in de hulptekst bij Instellingen. Geen SQL, geen Edge Function.</p>
         <p><strong>📡 Adres opzoeken geeft niet meer op na één poging (v4.36.0).</strong> Op 25 juli viel PDOK, het Nederlandse adresregister, een middag weg. Zoek straat en woonplaats en Afstand ophalen gaven allebei de melding "Failed to fetch" en daar kon niemand iets mee. De app deed één poging en gaf het daarna op. Dat is nu anders: elke aanroep krijgt drie kansen met een korte pauze ertussen, en een aanroep die blijft hangen wordt na acht seconden afgekapt. Een hapering van een paar tellen merk je voortaan niet meer. Gaat het toch mis, dan staat er in gewone taal wat er aan de hand is en welke dienst het betreft, want de app praat met twee verschillende partijen: PDOK voor het adres en OpenRouteService voor de kilometers. Je leest nu of de dienst onbereikbaar is, te traag reageert, overbelast is of de vraag heeft afgewezen. En bij Afstand ophalen zie je apart of het misging bij het opzoeken of daarna bij het bijwerken van het scherm, want dat is niet hetzelfde probleem. Geldt ook voor de liggingsfoto op het onderhoudsplan, die het adres bij dezelfde dienst opvraagt. Geen SQL, geen Edge Function.</p>
         <p><strong>☎️ Nabellen op de eerstvolgende maandag (v4.35.1).</strong> De opvolging uit v4.35.0 wachtte eerst nog drie dagen voor hij een beltaak maakte. Dat is eruit: Maud belt voortaan gewoon de eerstvolgende maandag nadat de offerte de deur uit is, om te horen of hij goed aangekomen is. Mail je zelf op een maandag, dan wordt het de maandag erop. Daarbij hoort een tweede regel: de herinneringsmail vertrekt nooit vóór het telefoontje. Lag een offerte een tijdje op de plank voordat je hem verstuurde, dan kon die mail eerder uitgaan dan het belletje, en dat is een rare volgorde. Schuift de herinnering daardoor voorbij de vervaldatum, dan gaat hij helemaal niet en heeft Maud het telefonisch afgedekt. In het Accordeerlink-venster staat dat er dan ook zo bij. Vereist de bijgewerkte Edge Function offerte-herinnering. Geen SQL.</p>
@@ -2824,9 +2825,8 @@
     </div>
     <div class="settings-section">
       <h3>Automatische afstand</h3>
-      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Vul in de calculatie de postcode van het werkadres in en de app berekent de enkele reisafstand vanaf je vertrekadres. Adres-opzoeking via PDOK (gratis, geen sleutel), route-afstand via OpenRouteService.</em></p>
+      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Vul in de calculatie de postcode van het werkadres in en de app berekent de enkele reisafstand vanaf je vertrekadres. Adres-opzoeking via PDOK (gratis, geen sleutel). De kilometers komen van OpenRouteService, maar die aanroep loopt sinds v4.37.0 via de eigen server, dus de sleutel staat daar en niet meer hier.</em></p>
       <div class="form-grid">
-        <div style="grid-column: 1 / -1;"><label>OpenRouteService API-sleutel</label><input type="text" id="setOrsKey" placeholder="plak hier je gratis sleutel" autocomplete="off" onchange="updSettingText('orsKey', this)"><div style="font-size:0.7rem; color:var(--muted); margin-top:0.2rem;">Gratis aan te maken op account.heigit.org, het account waar OpenRouteService sinds 2025 onder valt. Wordt in Supabase bewaard, niet in de openbare code.</div></div>
         <div><label>Vertrek-postcode</label><input type="text" id="setVertrekPostcode" placeholder="bv. 6433 KE" autocomplete="off" onchange="updSettingText('vertrekPostcode', this)"></div>
         <div><label>Vertrek-huisnummer</label><input type="text" id="setVertrekHuisnummer" placeholder="bv. 2" autocomplete="off" onchange="updSettingText('vertrekHuisnummer', this)"></div>
       </div>
@@ -3495,7 +3495,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.36.1';
+const APP_VERSION = 'v4.37.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3891,6 +3891,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.37.0', d: '2026-07-25', h: 'Rijafstand via een eigen Edge Function in plaats van rechtstreeks uit de browser. Aanleiding: na de omzetting naar api.heigit.org in v4.36.1 bleef Afstand ophalen falen met AbortError na 8 s, ook bij herhaald drukken. Op het forum van openrouteservice staat dezelfde melding van een andere gebruiker: de preflight op api.heigit.org/openrouteservice/v2/directions/driving-car krijgt geen Access-Control-Allow-Origin terug, terwijl identieke verzoeken op het oude adres wel werkten; HeiGIT meldde op 19-05 een fix maar het gedrag is er nog. Een hangende preflight verklaart de AbortError in plaats van een snelle CORS-afwijzing, en daarmee is verhogen van de tijdslimiet zinloos. Nieuwe Edge Function reisafstand (Verify JWT uit, eigen logincontrole via /auth/v1/user, secret ORS_KEY, geen backticks): neemt { vertrek, bestemming } als [lon, lat], valideert beide punten, roept ORS twee keer aan met AbortController op 15 s, herkanst alleen bij 429 en 5xx, vertaalt 401 en 403 naar een melding over de secret, en geeft bij elke fout { fout, code, detail } terug met de eerste 300 tekens van het antwoord van ORS. App-kant: _orsAfstandMeters heeft geen key-parameter meer en doet een enkele POST naar REISAFSTAND_FN_URL met het sessietoken plus apikey (patroon van _yoobiCall), AbortController op 35 s omdat de functie zelf al tot circa 31 s kan doen, en leest bij een 502 de fout uit de body in plaats van via _extFetch te lopen, dat immers op een niet-ok antwoord gooit voordat de body gelezen is; detail gaat naar console.warn. ophaalAfstand controleert de sleutel niet meer, die zit nu op de server. Instellingen: het veld setOrsKey en de bijbehorende hulptekst zijn verwijderd, de introtekst van het blok bijgewerkt, en een eenmalige opruimer verwijdert data.settings.orsKey uit de instellingen zodat de sleutel niet meer met de app mee de browser in gaat. PDOK ongemoeid gelaten: dat opzoeken werkt aantoonbaar vanuit de browser en verplaatsen zou onnodig risico zijn. Vereist de Edge Function reisafstand en de secret ORS_KEY. Geen SQL.' },
   { v: '4.36.1', d: '2026-07-25', h: 'Rijafstand omgezet naar het nieuwe HeiGIT-adres. _orsAfstandMeters roept voortaan api.heigit.org/openrouteservice/v2/directions/driving-car aan in plaats van api.openrouteservice.org/v2/directions/driving-car. Aanleiding: na het uitrollen van v4.36.0 wees de nieuwe melding OpenRouteService aan als de falende dienst, terwijl PDOK aantoonbaar werkte (straat en woonplaats werden ingevuld) en drie herkansingen niets opleverden. HeiGIT heeft api.openrouteservice.org op 28-04-2026 gedeprecieerd ten gunste van api.heigit.org onder de structuur api.heigit.org/<dienst>/<versie>/, met de aantekening dat het quotum op het oude adres afgeknepen kan worden om de overstap af te dwingen en met een harde afsluitdatum van 24-08-2026; dat verklaart het aanhoudende falen zonder leesbare statuscode, want een geweigerd antwoord komt zonder de benodigde header terug en de browser gooit het weg. De sleutel is ongewijzigd geldig op het nieuwe adres en het quotum in het dashboard is al dat van api.heigit.org. Terzijde uit dezelfde draad: browsertoegang tot api.heigit.org was van 13 tot 19 mei kapot door ontbrekende CORS-headers en is daarna gerepareerd, dus de webpagina-route werkt weer. Hulptekst bij de sleutel in Instellingen verwijst niet meer naar openrouteservice.org maar naar account.heigit.org, waar sinds de migratie naar HeiGIT user management (25-02-2025) ook het inloggen en het quotumoverzicht zitten. PDOK ongemoeid: die aanroepen bleven de hele diagnose door foutloos, vijftien van de vijftien pogingen met code 200 binnen 40 ms vanaf de GitHub Pages-herkomst. Geen SQL, geen Edge Function.' },
   { v: '4.36.0', d: '2026-07-25', h: 'Herkansing en tijdslimiet op alle externe aanroepen, plus meldingen die de dienst bij naam noemen. Aanleiding: PDOK viel op 25-07 een middag weg met Failed to fetch in de app, terwijl vijftien pogingen vanuit een testpagina op dezelfde GitHub Pages-herkomst allemaal 200 gaven binnen 40 ms, ook met exact de zoekterm die de app bouwt (postcode plus huisnummer) en ook met de fl-parameters. Daarmee zijn de veldenregel uit locatieserver 3.1, de aangescherpte CORS-preflight en de herkomst alle drie uitgesloten; wat overbleef was tijdelijke onbereikbaarheid, wat aansluit op de PDOK-melding over incidentele performanceproblemen sinds eind mei. Nieuwe helper _extFetch(dienst, url, opties, pogingen, limietMs) met EXT_POGINGEN 3 en EXT_LIMIET_MS 8000: AbortController per poging, oplopende pauze van 400 ms maal het pogingnummer via _extPauze, herkansing alleen bij 429 en 5xx want een 4xx komt niet vanzelf goed, en een throw met een kant-en-klare Nederlandse tekst waarin de dienstnaam staat. Toegepast op _pdokAdres, _pdokGeocode en _ohpLiggingGeocodeRD; _orsAfstandMeters draait op twee pogingen wegens het gratis tegoed en vertaalt 401 en 403 naar een verwijzing naar Instellingen. Callers gesplitst: de drie zoekknoppen (_offAdresZoek, _offWerkadresZoek, _offBriefadresZoek) hebben nu een eigen catch om het opzoeken en een eigen catch om renderOfferteBlok, zodat de tekst niet meer Opzoeken mislukt zegt als het opzoeken juist lukte; ophaalAfstand is in twee blokken geknipt, ophalen bij de twee diensten en daarna invullen, opslaan en herberekenen. Onderzocht en verworpen: het vermoeden dat de databasefout in de melding belandde, want _offCfgSave (setTimeout 600 ms) en _updateCalcDB zijn vuren-en-vergeten en tonen hun eigen toast, en _sbQuery geeft de echte foutmelding al door, waarmee het backlog-punt uit v3.9.5 voor deze paden al afgedekt bleek. Geen SQL, geen Edge Function.' },
   { v: '4.35.1', d: '2026-07-25', h: 'Ritme van de opvolgautomaat bijgesteld. Edge Function offerte-herinnering: constante BEL_MIN_DAGEN (3) verwijderd, nieuwe helper eersteMaandagNa (ymdPlus +1 en dan eersteMaandagVanaf) bepaalt de beldatum, zodat het nabellen op de eerstvolgende maandag na het mailen valt en bij een maandagverzending een week opschuift in plaats van dezelfde middag. Tweede regel bij de herinneringsmail: het startmoment is voortaan het late van (geldigTot min HERINNER_VOOR) en (beldatum plus 1), zodat de mail nooit voor het telefoontje uitgaat; valt dat startmoment na geldigTot, dan sluit de bestaande vensterconditie de mail vanzelf uit. Aanleiding: het venster rekent met de bevroren geldigTot uit de accordeerlink, en bij een offerte die pas dagen na het opstellen verstuurd wordt kon de herinnering voor de beltaak landen. App-kant: _opvolgEersteMaandagNa erbij, _opvolgBlokHtml rekent beldatum en herinneringsdatum met dezelfde regels en toont bij een weggevallen herinnering de reden vervalt, het nabellen dekt dit af' },
@@ -18194,36 +18195,57 @@ async function _pdokGeocode(postcode, huisnummer) {
 }
 
 // OpenRouteService: rij-afstand in meters tussen twee [lon,lat]-punten (auto-profiel).
-async function _orsAfstandMeters(orig, dest, key) {
-  // Twee pogingen in plaats van drie: het gratis tegoed is beperkt.
+const REISAFSTAND_FN_URL = SUPABASE_URL + '/functions/v1/reisafstand';
+
+// v4.37.0 — de rijafstand loopt niet meer rechtstreeks naar OpenRouteService maar
+// via onze eigen Edge Function reisafstand.
+// Reden: HeiGIT heeft api.openrouteservice.org afgeschaft ten gunste van
+// api.heigit.org, en op dat nieuwe adres krijgt de voorvraag die de browser
+// vooruitstuurt geen antwoord. De aanroep bleef daardoor hangen tot hij afgekapt
+// werd (zie de melding "reageert te traag" uit v4.36.0). Vanaf een server bestaat
+// die voorvraag niet, dus daar speelt het niet.
+// Twee dingen erbij: de sleutel staat als secret op de server in plaats van in de
+// browser, en de functie stuurt de echte reden mee als er iets misgaat.
+// Geen herkansing hier: de functie probeert het zelf al twee keer met een limiet
+// van vijftien seconden, dus de browser wacht hooguit één keer en dan ruim.
+async function _orsAfstandMeters(orig, dest) {
+  let token = SUPABASE_KEY;
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    if (session && session.access_token) token = session.access_token;
+  } catch (e) { /* val terug op anon */ }
+
+  const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const klok = ctrl ? setTimeout(() => ctrl.abort(), 35000) : null;
   let res;
   try {
-    // v4.36.1 — nieuw adres. HeiGIT heeft api.openrouteservice.org op 28-04-2026
-    // afgeschaft ten gunste van api.heigit.org en knijpt het tegoed op het oude
-    // adres af; op 24-08-2026 gaat het helemaal dicht. De bestaande sleutel werkt
-    // ongewijzigd op het nieuwe adres.
-    res = await _extFetch('OpenRouteService', 'https://api.heigit.org/openrouteservice/v2/directions/driving-car', {
+    const opt = {
       method: 'POST',
-      headers: { 'Authorization': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ coordinates: [orig, dest] })
-    }, 2);
+      headers: { 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vertrek: orig, bestemming: dest })
+    };
+    if (ctrl) opt.signal = ctrl.signal;
+    res = await fetch(REISAFSTAND_FN_URL, opt);
   } catch (e) {
-    const m = (e && e.message) ? e.message : String(e);
-    if (m.indexOf('code 401') > -1 || m.indexOf('code 403') > -1) {
-      throw new Error('De OpenRouteService-sleutel wordt niet geaccepteerd. Controleer hem bij Instellingen.');
-    }
-    // Weigert ORS de sleutel of is het dagtegoed op, dan komt dat antwoord terug
-    // zonder de header die de browser nodig heeft. De browser gooit het weg en de
-    // app ziet alleen dat er niets aankwam. Vandaar deze extra aanwijzing.
-    if (m.indexOf('niet bereikbaar') > -1) {
-      throw new Error('OpenRouteService weigert het verzoek of is niet bereikbaar. Controleer je sleutel en je dagtegoed bij Instellingen, of vul de afstand met de hand in.');
-    }
-    throw e;
+    if (klok) clearTimeout(klok);
+    const naam = (e && e.name) ? e.name : '';
+    throw new Error(naam === 'AbortError'
+      ? 'De afstandsdienst reageert te traag. Probeer het zo nog eens of vul de afstand met de hand in.'
+      : 'De afstandsdienst is niet bereikbaar. Controleer je verbinding of vul de afstand met de hand in.');
   }
-  const json = await res.json();
-  const dist = json && json.routes && json.routes[0] && json.routes[0].summary && json.routes[0].summary.distance;
-  if (dist == null) throw new Error('geen route gevonden');
-  return dist;
+  if (klok) clearTimeout(klok);
+
+  let json = null;
+  try { json = await res.json(); } catch (e) { json = null; }
+
+  if (!res.ok) {
+    // De functie stuurt de echte reden mee, inclusief wat OpenRouteService antwoordde.
+    if (json && json.detail) console.warn('[reisafstand] detail:', json.detail);
+    throw new Error((json && json.fout) ? json.fout : ('De afstandsdienst gaf code ' + res.status + '.'));
+  }
+  const meters = json && json.meters;
+  if (meters == null || !isFinite(Number(meters))) throw new Error('Er kwam geen bruikbare afstand terug.');
+  return Number(meters);
 }
 
 async function ophaalAfstand() {
@@ -18233,8 +18255,8 @@ async function ophaalAfstand() {
   // vangnet verdwenen deze meldingen in het niets. Nu via toast als het er niet is.
   const setStatus = (txt, kleur) => { if (statusEl) { statusEl.textContent = txt; statusEl.style.color = kleur || 'var(--muted)'; } else if (txt) _toast(txt); };
   const s = data.settings || {};
-  const key = (s.orsKey || '').trim();
-  if (!key) { setStatus('Geen OpenRouteService-sleutel ingesteld (zie Instellingen).', 'var(--danger, #b00020)'); return; }
+  // v4.37.0 — de sleutel staat op de server, dus daar valt hier niets meer op te
+  // controleren. Ontbreekt hij daar, dan zegt de Edge Function dat zelf.
   if (!(s.vertrekPostcode || '').trim()) { setStatus('Geen vertrekadres ingesteld (zie Instellingen).', 'var(--danger, #b00020)'); return; }
   const pc = (document.getElementById('calcPostcode').value || '').trim();
   const hn = (document.getElementById('calcHuisnummer').value || '').trim();
@@ -18255,7 +18277,7 @@ async function ophaalAfstand() {
     const destCoords = await _pdokGeocode(pc, hn);
     if (!destCoords) { setStatus('Werkadres niet gevonden, controleer postcode en huisnummer.', rood); return; }
     // 3. Rij-afstand opvragen en afronden op 0,1 km.
-    const meters = await _orsAfstandMeters(_vertrekCoords, destCoords, key);
+    const meters = await _orsAfstandMeters(_vertrekCoords, destCoords);
     km = Math.round(meters / 100) / 10;
   } catch (err) {
     const msg = (err && err.message) ? err.message : 'De afstand kon niet opgehaald worden.';
@@ -18969,7 +18991,10 @@ function loadSettings() {
   document.getElementById('setKm').value = s.km;
   document.getElementById('setSnelheid').value = s.snelheid ?? 50;
   document.getElementById('setRayonDrempel').value = s.rayonDrempel ?? 15;
-  { const _e = document.getElementById('setOrsKey'); if (_e) _e.value = s.orsKey || ''; }
+  // v4.37.0 — de sleutel hoort nu als secret op de server. Stond hij nog in de
+  // instellingen, dan halen we hem hier eenmalig weg, zodat hij niet langer met
+  // de app meekomt naar de browser. Gebeurt vanzelf en maar één keer.
+  if (data.settings && data.settings.orsKey) { delete data.settings.orsKey; saveData(); _saveSettingsDB(); }
   { const _e = document.getElementById('setVertrekPostcode'); if (_e) _e.value = s.vertrekPostcode || ''; }
   { const _e = document.getElementById('setVertrekHuisnummer'); if (_e) _e.value = s.vertrekHuisnummer || ''; }
   { const _e = document.getElementById('setJaarcapEuro'); if (_e) _e.value = (s.jaarcapaciteitEuro != null) ? s.jaarcapaciteitEuro : 450000; }
