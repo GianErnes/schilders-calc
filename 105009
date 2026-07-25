@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Afstandtest · Schilders Calc</title>
+<style>
+  :root {
+    --inkt: #16202b; --grijs: #5c6b7a; --lijn: #d9e0e7; --papier: #f7f9fb;
+    --vlak: #fff; --blauw: #2563eb;
+    --goed: #16704a; --goedvlak: #e6f4ee;
+    --slecht: #a3222b; --slechtvlak: #fdecec;
+    --let: #8a5a00; --letvlak: #fdf3e0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 1.1rem 1rem 3rem; background: var(--papier); color: var(--inkt);
+    font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 1.3rem; margin: 0 0 .3rem; letter-spacing: -0.01em; }
+  .sub { color: var(--grijs); font-size: .9rem; margin: 0 0 1.1rem; }
+  .kaart { background: var(--vlak); border: 1px solid var(--lijn); border-radius: 10px; padding: .9rem 1rem; margin-bottom: .9rem; }
+  label { display: block; font-size: .78rem; color: var(--grijs); margin: .6rem 0 .25rem; }
+  input { width: 100%; padding: .55rem .6rem; font-size: 1rem; color: var(--inkt); border: 1px solid var(--lijn); border-radius: 7px; background: #fff; }
+  input:focus-visible { outline: 2px solid var(--blauw); outline-offset: 1px; }
+  button { font: 600 1rem/1 inherit; color: #fff; background: var(--blauw); border: 0; border-radius: 7px; padding: .7rem 1.1rem; cursor: pointer; margin-top: 1rem; }
+  button.stil { background: #fff; color: var(--inkt); border: 1px solid var(--lijn); }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible { outline: 2px solid var(--blauw); outline-offset: 2px; }
+  .proef { border-top: 1px solid var(--lijn); padding: .85rem 0 .3rem; }
+  .proef:first-of-type { border-top: 0; }
+  .proef h3 { font-size: .95rem; margin: 0 0 .15rem; }
+  .adres { font: 400 .74rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--grijs); word-break: break-all; margin: 0 0 .5rem; }
+  .stempel { display: inline-block; font-size: .8rem; font-weight: 600; padding: .3rem .6rem; border-radius: 6px; margin-bottom: .4rem; }
+  .s-goed { background: var(--goedvlak); color: var(--goed); }
+  .s-slecht { background: var(--slechtvlak); color: var(--slecht); }
+  .s-let { background: var(--letvlak); color: var(--let); }
+  .oordeel { font-size: .88rem; margin: 0 0 .35rem; }
+  .ruw { font: 400 .72rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; background: #f2f5f8; border-radius: 6px; padding: .45rem .55rem; color: var(--grijs); white-space: pre-wrap; word-break: break-all; margin: 0 0 .4rem; }
+  .slot { border-left: 3px solid var(--blauw); }
+  .slot h2 { font-size: 1rem; margin: 0 0 .4rem; }
+  .slot p { margin: 0 0 .5rem; font-size: .92rem; }
+  textarea { width: 100%; height: 150px; margin-top: .6rem; padding: .5rem; font: 400 .72rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; border: 1px solid var(--lijn); border-radius: 7px; color: var(--grijs); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Afstandtest</h1>
+  <p class="sub">Meet hoe lang OpenRouteService erover doet, met een limiet van dertig seconden in plaats van de acht uit de app. Zo zie je of het traag is of dat het blijft hangen.</p>
+
+  <div class="kaart">
+    <p class="sub" style="margin:0 0 .2rem;">Je sleutel staat in de app bij Instellingen, bij Automatische afstand. Kopieer hem hierheen. Deze pagina bewaart niets.</p>
+    <label for="key">OpenRouteService-sleutel</label>
+    <input id="key" type="text" placeholder="plak hier je sleutel" autocomplete="off">
+    <button id="start">Meten</button>
+  </div>
+
+  <div class="kaart" id="uitslag" hidden></div>
+  <div class="kaart" id="slotkaart" hidden></div>
+
+  <div class="kaart">
+    <button id="kopieer" class="stil" style="margin-top:0;">Uitslag kopiëren</button>
+    <textarea id="platte" readonly hidden></textarea>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var NIEUW = 'https://api.heigit.org/openrouteservice/v2/directions/driving-car';
+  var OUD   = 'https://api.openrouteservice.org/v2/directions/driving-car';
+  var LIMIET = 30000;
+  var verslag = [];
+
+  function el(t, k, x) { var e = document.createElement(t); if (k) e.className = k; if (x != null) e.textContent = x; return e; }
+  function wacht(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  function poging(url, sleutel) {
+    var t0 = Date.now();
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var klok = ctrl ? setTimeout(function () { ctrl.abort(); }, LIMIET) : null;
+    var opt = {
+      method: 'POST',
+      headers: { 'Authorization': sleutel, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coordinates: [[5.9797, 50.8882], [5.6909, 50.8514]] })
+    };
+    if (ctrl) opt.signal = ctrl.signal;
+    return fetch(url, opt).then(function (res) {
+      if (klok) clearTimeout(klok);
+      return res.text().catch(function () { return ''; }).then(function (tekst) {
+        return { ms: Date.now() - t0, status: res.status, goed: res.ok, body: (tekst || '').slice(0, 200) };
+      });
+    }).catch(function (e) {
+      if (klok) clearTimeout(klok);
+      var naam = (e && e.name) ? e.name : '';
+      return { ms: Date.now() - t0, goed: false,
+               fout: (naam === 'AbortError') ? 'afgekapt na ' + Math.round(LIMIET / 1000) + ' seconden' : ((e && e.message) || String(e)),
+               afgekapt: (naam === 'AbortError') };
+    });
+  }
+
+  function reeks(naam, url, sleutel, aantal) {
+    var uit = [];
+    var keten = Promise.resolve();
+    for (var i = 0; i < aantal; i++) {
+      keten = keten.then(function () {
+        return poging(url, sleutel).then(function (u) { uit.push(u); return wacht(800); });
+      });
+    }
+    return keten.then(function () { return { naam: naam, url: url, uit: uit }; });
+  }
+
+  function toon(vak, r) {
+    var goed = r.uit.filter(function (u) { return u.goed; }).length;
+    var klasse = goed === r.uit.length ? 's-goed' : (goed === 0 ? 's-slecht' : 's-let');
+    var kop = goed === r.uit.length ? 'Altijd gelukt' : (goed === 0 ? 'Altijd mislukt' : 'Wisselvallig');
+    var blok = el('div', 'proef');
+    blok.appendChild(el('h3', null, r.naam));
+    blok.appendChild(el('p', 'adres', r.url));
+    blok.appendChild(el('span', 'stempel ' + klasse, kop + ' · ' + goed + ' van ' + r.uit.length));
+    var regels = r.uit.map(function (u, i) {
+      var sec = (u.ms / 1000).toFixed(1) + ' s';
+      if (u.goed) return (i + 1) + '. gelukt, code ' + u.status + ' na ' + sec;
+      if (u.status) return (i + 1) + '. geweigerd, code ' + u.status + ' na ' + sec;
+      return (i + 1) + '. ' + u.fout + ' (' + sec + ')';
+    });
+    blok.appendChild(el('p', 'ruw', regels.join('\n')));
+    var metBody = r.uit.filter(function (u) { return u.body; })[0];
+    if (metBody) blok.appendChild(el('p', 'ruw', 'Antwoord: ' + metBody.body));
+    vak.appendChild(blok);
+  }
+
+  function slotsom() {
+    var kaart = document.getElementById('slotkaart');
+    kaart.className = 'kaart slot';
+    kaart.hidden = false;
+    kaart.innerHTML = '';
+    kaart.appendChild(el('h2', null, 'Wat dit betekent'));
+
+    var nieuw = verslag[0], oud = verslag[1];
+    var nGoed = nieuw.uit.filter(function (u) { return u.goed; });
+    var nAf = nieuw.uit.filter(function (u) { return u.afgekapt; }).length;
+    var nWeg = nieuw.uit.filter(function (u) { return !u.goed && !u.afgekapt && !u.status; }).length;
+    var tekst;
+
+    if (nGoed.length) {
+      var traagste = Math.max.apply(null, nGoed.map(function (u) { return u.ms; }));
+      tekst = 'Het nieuwe adres werkt, de traagste geslaagde poging duurde ' + (traagste / 1000).toFixed(1) + ' seconden. De limiet van acht seconden in de app is dus te krap. Geef dit getal door, dan zet ik de limiet ruim daarboven.';
+    } else if (nAf === nieuw.uit.length) {
+      tekst = 'Elke poging loopt vast tot de limiet van dertig seconden. Dan is het niet traag maar geblokkeerd: er komt helemaal geen antwoord. De limiet in de app verhogen heeft dan geen zin en moet de aanroep via een eigen tussenschakel bij Supabase lopen.';
+    } else if (nWeg) {
+      tekst = 'Het nieuwe adres weigert de aanroep meteen, zonder leesbaar antwoord. Dat wijst op een weigering die de browser niet mag doorgeven, bijvoorbeeld rond de sleutel. Ook dan is de tussenschakel het antwoord.';
+    } else {
+      tekst = 'Het nieuwe adres antwoordt met een foutcode. Kijk hierboven welke, dat vertelt precies wat er mis is.';
+    }
+    kaart.appendChild(el('p', null, tekst));
+
+    if (oud) {
+      var oGoed = oud.uit.filter(function (u) { return u.goed; }).length;
+      kaart.appendChild(el('p', null, oGoed
+        ? 'Het oude adres doet het nog wel. Dat gaat op 24 augustus dicht, dus daar kunnen we niet op terug.'
+        : 'Het oude adres doet het ook niet meer. Dat past bij de afbouw die per 24 augustus wordt afgerond.'));
+    }
+    kaart.appendChild(el('p', null, 'Druk onderaan op Uitslag kopiëren en plak het in de chat.'));
+  }
+
+  function platteTekst() {
+    var r = ['Afstandtest · ' + new Date().toLocaleString('nl-NL'), 'limiet: 30 s', ''];
+    verslag.forEach(function (x) {
+      r.push(x.naam);
+      r.push('  ' + x.url);
+      x.uit.forEach(function (u, i) {
+        var sec = (u.ms / 1000).toFixed(1) + ' s';
+        if (u.goed) r.push('  ' + (i + 1) + '. gelukt ' + u.status + ' na ' + sec);
+        else if (u.status) r.push('  ' + (i + 1) + '. geweigerd ' + u.status + ' na ' + sec);
+        else r.push('  ' + (i + 1) + '. ' + u.fout + ' (' + sec + ')');
+      });
+      var b = x.uit.filter(function (u) { return u.body; })[0];
+      if (b) r.push('  antwoord: ' + b.body.replace(/\s+/g, ' ').slice(0, 200));
+      r.push('');
+    });
+    return r.join('\n');
+  }
+
+  document.getElementById('start').addEventListener('click', function () {
+    var knop = this;
+    var sleutel = (document.getElementById('key').value || '').trim();
+    if (!sleutel) { alert('Plak eerst je sleutel.'); return; }
+    knop.disabled = true;
+    knop.textContent = 'Bezig, dit kan een minuut duren…';
+    verslag = [];
+    var vak = document.getElementById('uitslag');
+    vak.hidden = false;
+    vak.innerHTML = '';
+    document.getElementById('slotkaart').hidden = true;
+
+    reeks('Nieuw adres (api.heigit.org)', NIEUW, sleutel, 3).then(function (r) {
+      verslag.push(r); toon(vak, r);
+      return reeks('Oud adres (api.openrouteservice.org), alleen ter vergelijking', OUD, sleutel, 1);
+    }).then(function (r) {
+      verslag.push(r); toon(vak, r);
+      slotsom();
+      knop.disabled = false;
+      knop.textContent = 'Opnieuw meten';
+    });
+  });
+
+  document.getElementById('kopieer').addEventListener('click', function () {
+    var knop = this, tekst = platteTekst(), vak = document.getElementById('platte');
+    function terugval() { vak.hidden = false; vak.value = tekst; vak.select(); knop.textContent = 'Selecteer de tekst hieronder'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(tekst).then(function () {
+        knop.textContent = 'Gekopieerd';
+        setTimeout(function () { knop.textContent = 'Uitslag kopiëren'; }, 2000);
+      }).catch(terugval);
+    } else { terugval(); }
+  });
+
+})();
+</script>
+</body>
+</html>
