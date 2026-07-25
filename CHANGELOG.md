@@ -1,3 +1,19 @@
+## v4.35.0 — Offertes volgen zichzelf op
+Mail je een offerte vanuit de app, dan loopt er vanaf dat moment vanzelf een opvolging mee.
+
+### Wat er verandert
+- De eerste maandag na het mailen krijgt Maud een beltaak, gepland op 14:00. In de notitie staan klant, project, bedrag en geldig-tot-datum, met een kort belscript eronder. Er zit minstens drie dagen tussen het mailen en het bellen, dus mail je op vrijdag dan bel je maandag, en mail je op maandag dan is het de maandag erop.
+- Zeven dagen voordat de offerte verloopt gaat er een vriendelijke herinnering naar de klant, met dezelfde knop naar de accordeerlink.
+- Tien dagen na het verlopen volgt nog een mail: de offerte is verlopen, laat toch even weten hoe het ervoor staat.
+- Twintig dagen na het verlopen komt er een taak om de offerte op verloren te zetten, zodat je werkvoorraad schoon blijft.
+- Alles stopt vanzelf zodra de klant akkoord geeft, afwijst of een vraag stelt, en ook zodra jij de calculatie zelf op geaccepteerd of verloren zet.
+- In het Accordeerlink-venster zie je per offerte welke stappen gepland staan en wat er al gedaan is, met een knop om de hele automaat voor die ene offerte uit te zetten.
+- Bij een VvE gaan alleen de beltaken door. Een VvE beslist in een vergadering en daar past geen herinneringsmail in.
+- De opvolging start alleen bij offertes die je via de app mailt. Een link die je zelf via de app deelt of doorstuurt telt niet mee.
+- De geldigheidstermijn voor particulieren gaat van 14 naar 21 dagen. De urgentie komt nu uit het nabellen en de herinnering, niet meer uit een korte termijn. Zakelijk blijft 30 dagen, VvE 180.
+- Een verlopen offerte kan de klant nu wel afwijzen. Akkoord geven blijft dicht, want een prijs van weken geleden mag niet alsnog bindend worden; de klant krijgt de melding dat we een nieuwe offerte met actuele prijzen maken.
+- Vereist eenmalig de SQL, de nieuwe Edge Function offerte-herinnering met de secret OPVOLG_KEY en de cronregel, plus de bijgewerkte offerte-verzenden en offerte-accord.
+
 ## v4.34.0 — Datumvelden raken elkaar niet meer
 Bij Project en planning en bij Offerte-instellingen stonden twee datumvakjes tegen elkaar aan.
 

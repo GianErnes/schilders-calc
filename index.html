@@ -2255,8 +2255,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.34.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.35.0</h2>
       <div class="intro-body">
+        <p><strong>⏰ Offertes volgen zichzelf op (v4.35.0).</strong> Mail je een offerte vanuit de app, dan loopt er vanaf dat moment vanzelf een opvolging mee. De eerste maandag daarna krijgt Maud een beltaak met een kort belscript erin, klant, project en bedrag er al bij. Een week voordat de offerte verloopt gaat er een vriendelijke herinnering naar de klant met de knop naar de accordeerlink. Tien dagen na het verlopen volgt nog een mail met de vraag om alsnog te laten weten hoe het ervoor staat, en tien dagen daarna komt er een taak om de offerte op verloren te zetten zodat je werkvoorraad schoon blijft. Alles stopt zodra de klant reageert of een vraag stelt, of zodra jij de calculatie zelf op geaccepteerd of verloren zet. In het Accordeerlink-venster zie je per offerte welke stappen gepland staan en kun je de hele automaat met één knop uitzetten. Bij een VvE gaan alleen de beltaken door, geen mails. Twee dingen erbij: de geldigheidstermijn voor particulieren gaat van 14 naar 21 dagen, en een verlopen offerte kan de klant nu wél nog afwijzen, akkoord geven blijft dicht. Vereist eenmalig de SQL, de nieuwe Edge Function offerte-herinnering met een cronregel, en de bijgewerkte offerte-verzenden en offerte-accord.</p>
         <p><strong>📅 Datumvelden raken elkaar niet meer (v4.34.0).</strong> Bij Project en planning en bij Offerte-instellingen stonden twee datumvakjes tegen elkaar aan. De oorzaak zat in de datumvelden zelf: die hebben een eigen minimumbreedte voor de datum plus het kalendericoon, en die was groter dan het vakje dat ik ze had gegeven. Het veld puilde dus net buiten zijn plek en at precies de tussenruimte op. De datumvelden zijn nu ruimer en er zit overal wat meer lucht tussen de kolommen. Deadline offerte hoorde bij de gewone velden terwijl het ook een datum is; die is meeverhuisd. Op de iPad staand past er per rij wat minder naast elkaar, dus sommige velden zakken een regel lager. Dat is geen fout maar de app die zich aanpast aan de breedte. Alleen opmaak. Geen SQL nodig.</p>
         <p><strong>☀️ Donkerdere tekst op de iPad voor buitenopnames (v4.33.0).</strong> In fel zonlicht viel het grijs van de labels en de hulpteksten weg. Op de iPad staat alle tekst nu flink donkerder: de gewone tekst volledig zwart en het grijs eromheen ruim twee keer zo sterk als eerst. Het verschil tussen een label en een ingevulde waarde blijft wel bestaan, want dat verschil helpt je juist om snel het goede vakje te vinden. Groen, rood en oranje blijven hun eigen kleur houden, anders lees je ze wel maar zie je niet meer wat ze betekenen. Lege velden blijven lichtgrijs, zodat je in één oogopslag ziet wat nog ingevuld moet worden. Op de iMac verandert er niets. Alleen opmaak. Geen SQL nodig.</p>
         <p><strong>📧 Elk veld in de calc-kop op maat, e-mail en straat ruim (v4.32.0).</strong> Het e-mailadres van de klant kreeg evenveel ruimte als een tussenvoegsel en werd daardoor halverwege afgekapt. Dat veld is nu fors breder en groeit op een breed scherm mee, zodat je een adres van ruim veertig tekens in één oogopslag ziet. Hetzelfde geldt voor de projectnaam en voor Straat in zowel het werkadres als het briefhoofd, want lange straatnamen bestaan. Daar tegenover staan de velden die weinig nodig hebben: aantal schilders, uren per werkdag, huisnummer, postcode, voorletters en tussenvoegsel zijn kort geworden. De datums en het offertenummer in Offerte-instellingen zijn nog een tikje krapper dan in v4.31.0, waardoor dat blok op de liggende iPad weer op één rij past in plaats van twee. Geldt op de iPad en op de iMac. Alleen opmaak. Geen SQL nodig.</p>
@@ -3491,7 +3492,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.34.0';
+const APP_VERSION = 'v4.35.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3887,6 +3888,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.35.0', d: '2026-07-25', h: 'Automatische opvolging van verstuurde offertes. SQL: zes kolommen op offerte_accorderingen (gemaild_op, beltaak_op, herinnering_op, verlopen_mail_op, afsluittaak_op, automaat_uit) plus een partiele index. Edge Function offerte-verzenden zet na een geslaagde mail A het stempel gemaild_op en wist de vier opvolgstempels, zodat een tweede verzending de reeks vers laat beginnen. Nieuwe Edge Function offerte-herinnering draait via cron ma tot en met vr 06:30 UTC (jobnaam offerte-opvolging-werkdagen, beveiligd met de secret OPVOLG_KEY in de header x-opvolg-key, Verify JWT uit) en loopt per open link vier momenten af: beltaak voor Maud op de eerste maandag minstens drie dagen na het mailen (14:00, bron offerte, bron_kenmerk opvolg-bel, belscript in de notitie), herinneringsmail zeven dagen voor geldig tot, verlopen-mail tien dagen erna, afsluittaak twintig dagen erna (bron_kenmerk opvolg-afsluiten). Poorten: calculatiestatus moet verzonden zijn, vragen-array leeg, automaat_uit false, gemaild_op gevuld; bij klanttype vve alleen de beltaak. Datumrekenen via UTC-middernacht op kale yyyy-mm-dd zodat zomertijd niets verschuift, gepland_op als kale lokale tijd wegens timestamp zonder tijdzone. Testmodus via body droog true, intern seintje naar info@ als er iets gedaan is. Edge Function offerte-accord: akkoord blijft 410 na het verlopen maar afkeuren mag nu wel en zet de calc op verloren, GET geeft afwijzen_mogelijk terug, het seintje vermeldt een afwijzing na de vervaldatum. App: _accordRenderVerlopen toont voortaan de knoppen Afwijzen en Vraag stellen via _accordWireActies in plaats van alleen het vraagformulier, nieuw _opvolgBlokHtml met de vier momenten en de noodremknop acbOpvolg in _accordBeheerRender, en _offGeldigDagenNorm geeft voor particulier 21 in plaats van 14 dagen' },
   { v: '4.34.0', d: '2026-07-25', h: 'Overlappende datumvelden in de calc-kop verholpen. In Project en planning (opname-datum naast deadline) en in Offerte-instellingen (offertedatum naast geldig tot) sloten twee vakjes naadloos op elkaar aan. Oorzaak: input[type=date] heeft in WebKit een intrinsieke minimumbreedte uit de datumtekst plus de kalenderknop die width:100% met box-sizing:border-box niet kan onderschrijden; bij k-datum 135px liep de input circa 8 tot 10px buiten zijn cel, precies de column-gap van 0.55rem (7,7px), zodat het gat visueel verdween terwijl de flexbox-berekening zelf klopte. Twee maatregelen: k-datum van 135px naar 175px, ruim boven het minimum ook bij de zoom van 1.3 op de iPad, en column-gap op .kgrid-vrij van 0.55rem naar 0.7rem zodat een paar pixels speling nooit meer tot aanraken leidt. Deadline offerte stond op k-nummer (150px, bedoeld voor het offertenummer als tekstveld) terwijl het een date-input is en dus hetzelfde minimum heeft; die cel is naar k-datum verplaatst, waarmee ook het lange label met de sub-muted (+14 dgn) op één regel blijft. Gevolg voor de indeling: op een staande iPad is de werkbreedte circa 597 CSS-px (802pt gedeeld door de zoom, minus blokpadding), dus per rij passen er minder velden en wrapt er meer; liggend valt Deadline uit de eerste rij en zakt Prijsweergave een regel. Bewust geaccepteerd: correcte tussenruimte weegt zwaarder dan alles op één rij. Alleen CSS plus één class-wissel in de statische markup. Geen SQL, geen Edge Function.' },
   { v: '4.33.0', d: '2026-07-24', h: 'Hoger tekstcontrast op de iPad voor buitenopnames in zonlicht. Binnen het bestaande aanraakscherm-blok van v4.30.0 wordt :root opnieuw gedeclareerd met --ink #000000 (contrast op wit 16,9 naar 21,0), --ink-soft #1f2937 (7,6 naar 14,7) en --muted #374151 (4,8 naar 10,3). Die drie namen worden op ruim vierhonderd plaatsen gebruikt, 97 in de stylesheet en circa 314 als inline style in de render-code; omdat custom properties bij gebruik worden opgelost vangt deze ene declaratie ze allemaal, zonder !important en zonder een enkele render-functie aan te raken. Inventarisatie vooraf: naast de variabelen staan er 59 vaste grijstinten in de code, waarvan 45 in printCalc, printMeetstaat, printWerkbon, _ohpPrint en _bouwKozijnenHtml; dat is papier en speelt op het scherm geen rol, de resterende veertien zitten in de accordeerviewer en init. --accent, --green en --blue zijn bewust ongemoeid gelaten omdat kleur daar betekenis draagt (binnen rayon, waarschuwing, offertestatus, persoonskleuren). ::placeholder heeft in deze app geen eigen kleurregel en houdt dus de lichte Safari-standaard, zodat een leeg veld herkenbaar blijft van een gevuld veld; pikzwart maken zou daar juist foutkans opleveren. Neveneffecten gecontroleerd: --ink en --muted komen ook voor in border, border-color en box-shadow (21 plaatsen), die worden iets donkerder wat buiten meehelpt; als achtergrondkleur worden ze nergens in actieve CSS gebruikt. De dekking van 55% op velden in een vergrendelde calc (#calculatie.is-locked) is op verzoek ongewijzigd gelaten. Geen SQL, geen Edge Function.' },
   { v: '4.32.0', d: '2026-07-24', h: 'De flex-aanpak van v4.31.0 uitgerold over alle drie de blokken in de calc-kop. .kgrid-kort is hernoemd naar .kgrid-vrij en toegepast op Project en planning (statische markup), Klant en adres plus beide briefhoofd-varianten (renderOfferteBlok) en Offerte-instellingen. Breedteschaal: k-mini 95px (huisnummer, versie, garantiejaren), k-kort 120px (postcode, voorletters, tussenvoegsel, aantal schilders, uren per werkdag), k-datum 135px, k-nummer 150px (offertenummer, deadline offerte), k-mid 180px (klant, achternaam, woonplaats, naam briefhoofd, reisafstand), k-keuze 250px (klanttype, aanspreekvorm, prijsweergave). De twee tekstdragende klassen groeien wel mee: k-breed flex 1 1 300px met max-width 420px (e-mail en beide straatvelden) en k-ruim flex 1 1 340px met max-width 520px (projectnaam), zodat een lang e-mailadres of een lange straatnaam op de iMac de restruimte pakt zonder dat het veld absurd breed wordt. .subkop krijgt flex 0 0 100% omdat de grid-column 1/-1 in flex niet meer werkt. Sommen per rij blijven onder de circa 908 CSS-px die de iPad na de zoom van v4.30.0 overhoudt, dus Project en planning en Offerte-instellingen passen daar weer op één rij. Alle cel-classes zijn via unieke ankers gezet (werkadres op de id-velden, briefhoofd op _adr respectievelijk _brf), gedrag en opslag ongemoeid. Geen SQL, geen Edge Function.' },
@@ -6553,7 +6555,7 @@ async function _offBriefadresZoek() {
 function _offGeldigDagenNorm(klanttype) {
   if (klanttype === 'vve') return 180;
   if (klanttype === 'zakelijk') return 30;
-  return 14;
+  return 21; // v4.35.0 — particulier van 14 naar 21 dagen; de urgentie komt nu uit het nabellen en de herinneringsmail
 }
 function _offCfgDatum(iso) {
   const cfg = _offCfg(); if (!cfg) return;
@@ -19791,9 +19793,11 @@ function _accordRender(root, token, res) {
   if (!reedsAf) _accordWireActies(root, token, bedrag);
 }
 
-// v4.12.0 — pagina voor een verlopen, nog onbeantwoorde offerte: het document
-// blijft weg (de Edge Function stuurt de snapshot dan ook niet meer mee) en
-// alleen het vraagformulier staat open. Vragen komen gewoon binnen zoals altijd.
+// v4.12.0 / v4.35.0 — pagina voor een verlopen, nog onbeantwoorde offerte.
+// Het document blijft weg (de Edge Function stuurt de snapshot dan ook niet
+// meer mee) en akkoord geven kan niet meer: een prijs van weken geleden mag
+// niet alsnog bindend worden. Afwijzen en een vraag stellen kunnen wel, want
+// de verlopen-mail van de opvolgautomaat vraagt juist om die reactie.
 function _accordRenderVerlopen(root, token, res) {
   _accordVerlopenModus = true;
   const datum = res.geldig_tot ? _accordDatum(res.geldig_tot) : '';
@@ -19801,19 +19805,20 @@ function _accordRenderVerlopen(root, token, res) {
     '<div class="ac-wrap">'
     + '<div class="ac-kop"><div class="ac-kop-titel">Offerte verlopen</div>'
     + '<div class="ac-kop-sub">' + _accordEsc(res.project || '') + (res.klant ? ' \u2014 ' + _accordEsc(res.klant) : '') + '</div></div>'
-    + '<div class="ac-banner ac-nee">Deze offerte is verlopen' + (datum ? ' op ' + _accordEsc(datum) : '') + ' en kan niet meer worden geaccordeerd of afgewezen.</div>'
+    + '<div class="ac-banner ac-nee">Deze offerte is verlopen' + (datum ? ' op ' + _accordEsc(datum) : '') + ' en kan niet meer worden geaccordeerd.</div>'
     + '<div class="ac-kaart" id="acActies">'
-    + '<div class="ac-acties-titel">Heeft u een vraag of wilt u een nieuwe aanbieding?</div>'
-    + '<div style="margin:0 0 10px; color:#555;">Stel hieronder uw vraag, dan neemt Ernes schilders contact met u op.</div>'
-    + '<div id="acForm" class="ac-form">' + _accordFormHtml('vraag', null) + '</div>'
+    + '<div class="ac-acties-titel">Laat ons weten hoe het ervoor staat</div>'
+    + '<div style="margin:0 0 10px; color:#555;">Ziet u ervan af, geef dat dan hieronder door. Heeft u nog wel belangstelling, stel dan hier uw vraag, dan neemt Ernes schilders contact met u op voor een nieuwe aanbieding tegen de huidige prijzen.</div>'
+    + '<div class="ac-knoppen">'
+    + '<button class="ac-btn ac-btn-nee" data-mode="afkeuren">Offerte afwijzen</button>'
+    + '<button class="ac-btn ac-btn-vraag" data-mode="vraag">Vraag stellen</button>'
+    + '</div>'
+    + '<div id="acForm" class="ac-form" hidden></div>'
     + '<div id="acMelding" class="ac-melding" hidden></div>'
     + '</div>'
     + '<div class="ac-voet">Ernes schilders \u00b7 info@ernes.nl \u00b7 045 5321471</div>'
     + '</div>';
-  const form = root.querySelector('#acForm');
-  const melding = root.querySelector('#acMelding');
-  const submit = form.querySelector('.ac-submit');
-  submit.addEventListener('click', () => _accordVerstuur(root, token, 'vraag', form, melding, submit));
+  _accordWireActies(root, token, null);
 }
 
 function _accordActiesHtml() {
@@ -20028,6 +20033,84 @@ async function accordLinkBeheer() {
   _accordBeheerRender(body, c, rij);
 }
 
+// v4.35.0 — Opvolgautomaat: in het accordeerlink-venster tonen wat er
+// automatisch staat te gebeuren, plus een noodrem per offerte. Het echte werk
+// doet de nachtelijke Edge Function offerte-herinnering; hier rekenen wij
+// dezelfde momenten uit zodat je ze vooraf ziet staan.
+function _opvolgYmdPlus(ymd, dagen) {
+  const ms = Date.parse(ymd + 'T00:00:00Z');
+  if (isNaN(ms)) return '';
+  return new Date(ms + dagen * 86400000).toISOString().slice(0, 10);
+}
+function _opvolgEersteMaandag(ymd) {
+  let d = ymd;
+  for (let i = 0; i < 7; i++) {
+    const ms = Date.parse(d + 'T00:00:00Z');
+    if (isNaN(ms)) return ymd;
+    if (new Date(ms).getUTCDay() === 1) return d;
+    d = _opvolgYmdPlus(d, 1);
+    if (!d) return ymd;
+  }
+  return ymd;
+}
+function _opvolgDatumKort(ymd) {
+  if (!ymd) return '';
+  try {
+    return new Date(ymd + 'T00:00:00Z').toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+  } catch (e) { return ymd; }
+}
+function _opvolgIsYmd(v) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(v || '').trim());
+}
+// Zet een tijdstempel uit de database om naar de lokale kalenderdag.
+function _opvolgDagVan(ts) {
+  try { return new Date(ts).toLocaleDateString('en-CA'); } catch (e) { return ''; }
+}
+function _opvolgRegel(naam, gedaanTs, geplandYmd, reden) {
+  let rechts;
+  if (gedaanTs) rechts = 'gedaan op ' + _opvolgDatumKort(_opvolgDagVan(gedaanTs));
+  else if (reden) rechts = reden;
+  else if (geplandYmd) rechts = _opvolgDatumKort(geplandYmd);
+  else rechts = 'onbekend';
+  return '<div style="margin-top:4px;">' + _accordEsc(naam)
+    + '<span class="acb-sub"> \u2014 ' + _accordEsc(rechts) + '</span></div>';
+}
+function _opvolgBlokHtml(c, rij) {
+  if (rij.status !== 'open') return '';
+  let h = '<div class="acb-vragen" style="margin-top:10px;"><strong>Automatische opvolging</strong>';
+  if (rij.automaat_uit) {
+    h += '<div class="acb-sub" style="margin-top:6px;">Uit gezet voor deze offerte. Er gaat niets automatisch de deur uit.</div>'
+      + '<button class="acb-btn sec" id="acbOpvolg" style="margin-top:8px;">Opvolging weer aanzetten</button></div>';
+    return h;
+  }
+  if (!rij.gemaild_op) {
+    h += '<div class="acb-sub" style="margin-top:6px;">Start zodra je de offerte hieronder naar de klant mailt. Een link die je zelf deelt telt niet mee.</div></div>';
+    return h;
+  }
+  const cfg = (c && c.offerte_config) ? c.offerte_config : {};
+  const snap = rij.snapshot || {};
+  const gt = _opvolgIsYmd(snap.geldigTot) ? String(snap.geldigTot).trim()
+    : (_opvolgIsYmd(cfg.geldigTot) ? String(cfg.geldigTot).trim() : '');
+  const isVve = String(cfg.klanttype || '') === 'vve';
+  const gemaild = _opvolgDagVan(rij.gemaild_op);
+  const geenDatum = 'geen geldig-tot-datum bekend';
+  const nietVve = 'niet bij een VvE';
+
+  h += '<div class="acb-sub" style="margin-top:6px;">Gemaild op ' + _accordEsc(_opvolgDatumKort(gemaild)) + '.</div>';
+  h += _opvolgRegel('Nabellen door Maud', rij.beltaak_op,
+    gemaild ? _opvolgEersteMaandag(_opvolgYmdPlus(gemaild, 3)) : '', '');
+  h += _opvolgRegel('Herinneringsmail', rij.herinnering_op,
+    gt ? _opvolgYmdPlus(gt, -7) : '', isVve ? nietVve : (gt ? '' : geenDatum));
+  h += _opvolgRegel('Verlopen-mail', rij.verlopen_mail_op,
+    gt ? _opvolgYmdPlus(gt, 10) : '', isVve ? nietVve : (gt ? '' : geenDatum));
+  h += _opvolgRegel('Taak om af te sluiten', rij.afsluittaak_op,
+    gt ? _opvolgYmdPlus(gt, 20) : '', isVve ? nietVve : (gt ? '' : geenDatum));
+  h += '<div class="acb-sub" style="margin-top:6px;">Reageert de klant of zet je de calculatie zelf op geaccepteerd of verloren, dan stopt de opvolging vanzelf.</div>';
+  h += '<button class="acb-btn sec" id="acbOpvolg" style="margin-top:8px;">Opvolging uitzetten voor deze offerte</button>';
+  h += '</div>';
+  return h;
+}
+
 function _accordBeheerRender(body, c, rij) {
   let h = '<h3>\ud83d\udd17 Accordeerlink</h3>'
     + '<div class="acb-sub">' + _accordEsc(c.naam || '') + (c.klant ? ' \u2014 ' + _accordEsc(c.klant) : '') + '</div>';
@@ -20074,6 +20157,9 @@ function _accordBeheerRender(body, c, rij) {
   } else if (rij.status === 'open') {
     h += '<div class="acb-sub" style="margin-top:6px;">Nog niet door de klant geopend.</div>';
   }
+
+  // v4.35.0 — wat de opvolgautomaat met deze offerte gaat doen.
+  h += _opvolgBlokHtml(c, rij);
 
   // v3.81.0 — getekend archiefexemplaar: alleen bij akkoord en als er een bevroren PDF is.
   const _heeftPdf = !!(rij.pdf_path || (rij.snapshot && rij.snapshot.pdf));
@@ -20123,6 +20209,22 @@ function _accordBeheerRender(body, c, rij) {
   if (_btnGetekend) _btnGetekend.addEventListener('click', () => _accordDownloadGetekend(rij, c, _btnGetekend));
   const _btnMail = body.querySelector('#acbMail');
   if (_btnMail) _btnMail.addEventListener('click', () => _offerteMailen(c, rij, body));
+  // v4.35.0 — noodrem op de automatische opvolging, per offerte.
+  const _btnOpvolg = body.querySelector('#acbOpvolg');
+  if (_btnOpvolg) _btnOpvolg.addEventListener('click', async () => {
+    _btnOpvolg.disabled = true;
+    try {
+      const { error } = await _sb.from('offerte_accorderingen')
+        .update({ automaat_uit: !rij.automaat_uit }).eq('id', rij.id);
+      if (error) throw error;
+      rij.automaat_uit = !rij.automaat_uit;
+      _toast(rij.automaat_uit ? 'Automatische opvolging uit' : 'Automatische opvolging aan');
+      _accordBeheerRender(body, c, rij);
+    } catch (e) {
+      _btnOpvolg.disabled = false;
+      _toast('Wijzigen mislukt: ' + (e.message || e));
+    }
+  });
 }
 
 // v3.96.0 — Offerte mailen vanuit het accordeerlink-venster (deel 2).
