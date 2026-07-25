@@ -441,6 +441,14 @@
     <input class="titelinput" id="s_titelinput" placeholder="Wat moet er gebeuren?" style="display:none">
     <div class="who-row" id="s_whorow"></div>
 
+    <div class="fld" id="s_sjabwrap" style="display:none">
+      <div class="k">Sjabloon</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="chip" type="button" id="s_sjabkies" style="display:none">Sjabloon kiezen</button>
+        <button class="chip" type="button" id="s_sjabbewaar" style="display:none">Bewaar als sjabloon</button>
+      </div>
+    </div>
+
     <button class="klaarknop" id="s_klaar" style="display:none">✓ Afvinken</button>
 
     <div class="fld" id="s_soortwrap" style="display:none">
@@ -547,6 +555,13 @@
     <button class="bewaarknop" id="beheer_bewaar">Bewaren</button>
   </div>
 
+  <div class="sheet" id="sjabloonsheet" role="dialog" aria-label="Sjablonen">
+    <div class="grip"></div>
+    <h2>Sjablonen</h2>
+    <p style="margin:2px 0 4px;font-size:13px;color:var(--ink-faint);line-height:1.4">Tik een sjabloon aan om titel en notitie in te vullen. Daarna pas je alles gewoon aan.</p>
+    <div id="sjabloonlijst"></div>
+  </div>
+
   <!-- aanmeldscherm: eenmalig per toestel, daarna nooit meer -->
   <div class="login" id="login">
     <div class="kaart">
@@ -565,7 +580,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.13.5';
+const APP_VERSION = 'v0.14.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -1053,6 +1068,7 @@ function openTask(t){
   } else zet('s_klaar', false);
 
   /* soort en ritme */
+  zetSjabloonKnoppen(modus);
   zet('s_soortwrap', modus === 'eigen');
   if(modus === 'eigen'){
     setSoort(VEL.soort);
@@ -1143,6 +1159,7 @@ function openNieuw(){
     '<span style="font-size:13px;font-weight:600;color:var(--ink-faint)">Typ wat er moet gebeuren, kies eventueel datum en wie</span>';
 
   zet('s_klaar', false);
+  zetSjabloonKnoppen('nieuw');
   zet('s_soortwrap', true);
   setSoort('eenmalig');
   document.getElementById('s_ritme_n').value = 1;
@@ -1195,6 +1212,134 @@ function openNieuw(){
 
   toonVel();
   setTimeout(() => document.getElementById('s_titelinput').focus(), 350);
+}
+
+/* ════════════════════════════════════════════════════════
+   SJABLONEN (v0.14.0)
+   Eén gedeelde lijst in taak_sjablonen: naam, titelvoorstel
+   en notitietekst. Iedereen met een rol leest mee, alleen
+   rol 'alles' maakt aan of gooit weg. Dat wordt door de RLS
+   op de tabel afgedwongen, de knoppen hier zijn alleen de
+   nette vorm daarvan.
+   ════════════════════════════════════════════════════════ */
+let SJABLONEN = [];
+
+function magSjabloonBeheren(){ return !!(IK && IK.rol === 'alles'); }
+
+async function laadSjablonen(){
+  const res = await sb.from('taak_sjablonen')
+    .select('id,naam,titel,notitie,volgorde')
+    .order('volgorde', { ascending: true })
+    .order('naam', { ascending: true });
+  if(res.error) throw res.error;
+  SJABLONEN = res.data || [];
+}
+
+/* Welke van de twee knoppen zichtbaar is hangt af van waar je bent:
+   kiezen doe je bij een nieuwe taak, bewaren bij allebei. */
+function zetSjabloonKnoppen(modus){
+  const kies   = modus === 'nieuw';
+  const bewaar = magSjabloonBeheren() && (modus === 'nieuw' || modus === 'eigen');
+  zet('s_sjabkies', kies);
+  zet('s_sjabbewaar', bewaar);
+  zet('s_sjabwrap', kies || bewaar);
+}
+
+function sluitSjabloon(){
+  document.getElementById('scrim').classList.remove('show');
+  document.getElementById('sjabloonsheet').classList.remove('show');
+}
+
+async function openSjabloonKiezer(){
+  const lijst = document.getElementById('sjabloonlijst');
+  lijst.innerHTML = '<p style="font-size:13px;color:var(--ink-faint)">Bezig met laden…</p>';
+  document.getElementById('scrim').classList.add('show');
+  document.getElementById('sjabloonsheet').classList.add('show');
+  document.getElementById('sjabloonsheet').scrollTop = 0;
+  try{
+    await laadSjablonen();
+  }catch(e){
+    lijst.innerHTML = '<p style="font-size:13px;color:var(--ink-faint)">De sjablonen konden niet geladen worden: ' + esc(e.message || String(e)) + '</p>';
+    return;
+  }
+  toonSjabloonLijst();
+}
+
+function toonSjabloonLijst(){
+  const lijst = document.getElementById('sjabloonlijst');
+  if(!SJABLONEN.length){
+    lijst.innerHTML = '<p style="font-size:13px;color:var(--ink-faint);line-height:1.4">Er zijn nog geen sjablonen. Vul een taak in zoals je hem vaker gebruikt en tik daarna op "Bewaar als sjabloon".</p>';
+    return;
+  }
+  const mag = magSjabloonBeheren();
+  lijst.innerHTML = SJABLONEN.map(function(sj){
+    const onder = (sj.titel || '') || String(sj.notitie || '').split('\n')[0];
+    return '<div class="docrow">' +
+      '<button type="button" class="dnaam" data-kies="' + esc(sj.id) + '" style="border:0;background:none;padding:0;text-align:left;font-family:inherit;cursor:pointer">' +
+        esc(sj.naam) +
+        (onder ? '<span style="display:block;font-weight:600;font-size:11.5px;color:var(--ink-faint);overflow:hidden;text-overflow:ellipsis">' + esc(onder) + '</span>' : '') +
+      '</button>' +
+      (mag ? '<button type="button" class="dweg" data-weg="' + esc(sj.id) + '" title="Sjabloon verwijderen">✕</button>' : '') +
+    '</div>';
+  }).join('');
+}
+
+/* Een sjabloon vult aan, het gooit nooit iets weg wat je al
+   getypt hebt: een ingevulde titel blijft staan en een
+   bestaande notitie krijgt de sjabloontekst eronder. */
+function kiesSjabloon(id){
+  const sj = SJABLONEN.find(function(x){ return String(x.id) === String(id); });
+  if(!sj) return;
+  const tEl = document.getElementById('s_titelinput');
+  const nEl = document.getElementById('s_note');
+  if(sj.titel && !tEl.value.trim()) tEl.value = sj.titel;
+  if(sj.notitie){
+    const staand = nEl.value.replace(/\s+$/, '');
+    nEl.value = staand ? (staand + '\n\n' + sj.notitie) : sj.notitie;
+  }
+  groeiNotitie(nEl);
+  sluitSjabloon();
+  toast('Sjabloon ' + sj.naam + ' ingevuld');
+}
+
+async function bewaarAlsSjabloon(){
+  if(!magSjabloonBeheren()){ toast('Alleen Gian, Max en Maud kunnen sjablonen bewaren'); return; }
+  const titel   = document.getElementById('s_titelinput').value.trim();
+  const notitie = document.getElementById('s_note').value.trim();
+  if(!titel && !notitie){ toast('Er is nog niets om te bewaren'); return; }
+  const naam = (window.prompt('Hoe moet dit sjabloon heten?', titel || '') || '').trim();
+  if(!naam) return;
+  const knop = document.getElementById('s_sjabbewaar');
+  knop.disabled = true;
+  try{
+    const res = await sb.from('taak_sjablonen').insert({
+      naam: naam,
+      titel: titel || null,
+      notitie: notitie || null,
+      aangemaakt_door: IK ? IK.persoon : null
+    });
+    if(res.error) throw res.error;
+    toast('Sjabloon ' + naam + ' bewaard');
+  }catch(e){
+    toast('Bewaren lukt niet: ' + (e.message || e));
+  }finally{
+    knop.disabled = false;
+  }
+}
+
+async function verwijderSjabloon(id){
+  const sj = SJABLONEN.find(function(x){ return String(x.id) === String(id); });
+  if(!sj) return;
+  if(!window.confirm('Sjabloon "' + sj.naam + '" echt verwijderen?')) return;
+  try{
+    const res = await sb.from('taak_sjablonen').delete().eq('id', sj.id);
+    if(res.error) throw res.error;
+    await laadSjablonen();
+    toonSjabloonLijst();
+    toast('Sjabloon verwijderd');
+  }catch(e){
+    toast('Verwijderen lukt niet: ' + (e.message || e));
+  }
 }
 
 function toonVel(){
@@ -1900,9 +2045,9 @@ zoekWisEl.addEventListener('click', function(){
   render();
   zoekveldEl.focus();
 });
-document.getElementById('scrim').addEventListener('click', function(){ sluitVel(); sluitBeheer(); });
+document.getElementById('scrim').addEventListener('click', function(){ sluitVel(); sluitBeheer(); sluitSjabloon(); });
 document.getElementById('beheer_bewaar').addEventListener('click', bewaarBeheer);
-document.addEventListener('keydown', function(e){ if(e.key === 'Escape') sluitVel(); });
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ sluitSjabloon(); sluitVel(); } });
 
 document.getElementById('s_segment').addEventListener('click', function(e){
   const b = e.target.closest('button');
@@ -1945,6 +2090,14 @@ document.getElementById('s_fotoweg').addEventListener('click', function(e){
   e.stopPropagation();
   if(!VEL || VEL.modus === 'yoobi' || VEL.modus === 'klaar') return;
   fotoWeg();
+});
+document.getElementById('s_sjabkies').addEventListener('click', openSjabloonKiezer);
+document.getElementById('s_sjabbewaar').addEventListener('click', bewaarAlsSjabloon);
+document.getElementById('sjabloonlijst').addEventListener('click', function(e){
+  const kies = e.target.closest('[data-kies]');
+  if(kies){ kiesSjabloon(kies.dataset.kies); return; }
+  const weg = e.target.closest('[data-weg]');
+  if(weg) verwijderSjabloon(weg.dataset.weg);
 });
 document.getElementById('s_bewaar').addEventListener('click', slaOp);
 document.getElementById('s_klaar').addEventListener('click', vinkAf);
