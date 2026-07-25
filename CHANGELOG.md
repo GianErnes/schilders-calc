@@ -1,3 +1,15 @@
+## v4.33.0 — Donkerdere tekst op de iPad
+Voor buitenopnames in zonlicht. Alleen op de iPad, de iMac blijft zoals hij was.
+
+### Wat er verandert
+- Alle tekst op de iPad is flink donkerder geworden. De gewone tekst is volledig zwart en het grijs van de labels en hulpteksten is ruim twee keer zo sterk als eerst.
+- Het verschil tussen een label en een ingevulde waarde blijft wel bestaan. Dat verschil helpt je juist om buiten snel het goede vakje te vinden; alles even zwart zou het scherm één muur tekst maken.
+- Groen, rood en oranje houden hun eigen kleur. Binnen rayon, een waarschuwing of een offertestatus lees je anders wel beter, maar zie je niet meer wat ze betekenen.
+- Lege velden blijven lichtgrijs, zodat je in één oogopslag ziet wat nog ingevuld moet worden.
+- Randen en scheidingslijnen worden op de iPad iets donkerder mee, wat buiten ook helpt.
+- Vergrendelde calculaties blijven doorschijnend zoals ze waren. Dat is bewust zo gelaten.
+- Alleen opmaak. Aan de berekening, de opslag en de PDF’s verandert niets. Geen SQL nodig.
+
 ## v4.32.0 — Elk veld in de calc-kop op maat
 Het e-mailadres werd afgekapt terwijl een tussenvoegsel evenveel ruimte kreeg. Dat is nu overal rechtgezet.
 
