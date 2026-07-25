@@ -1,3 +1,13 @@
+## v4.34.0 — Datumvelden raken elkaar niet meer
+Bij Project en planning en bij Offerte-instellingen stonden twee datumvakjes tegen elkaar aan.
+
+### Wat er verandert
+- De datumvelden zijn ruimer geworden. Ze hebben een eigen minimumbreedte voor de datum plus het kalendericoon, en die was groter dan het vakje dat ze hadden. Het veld liep daardoor net buiten zijn plek en at precies de tussenruimte op.
+- Er zit overal wat meer lucht tussen de kolommen, zodat een paar pixels speling nooit meer tot aanraken leidt.
+- Deadline offerte stond bij de gewone velden terwijl het ook een datum is. Die is meeverhuisd en het label past nog steeds op één regel.
+- Houd je de iPad staand, dan past er per rij minder naast elkaar en zakken sommige velden een regel lager. Liggend geldt dat voor Deadline offerte en Prijsweergave. Dat is geen fout maar de app die zich aanpast aan de breedte.
+- Alleen opmaak. Aan de berekening, de opslag en de PDF’s verandert niets. Geen SQL nodig.
+
 ## v4.33.0 — Donkerdere tekst op de iPad
 Voor buitenopnames in zonlicht. Alleen op de iPad, de iMac blijft zoals hij was.
 
