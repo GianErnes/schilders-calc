@@ -1,3 +1,17 @@
+## v4.36.0 — Niet meer opgeven na één poging
+Op 25 juli viel het adres opzoeken uit met de melding "Failed to fetch". Daar kon niemand iets mee, en het bleek ook nog eens naar de verkeerde dienst te wijzen.
+
+### Wat er verandert
+- Elke aanroep naar buiten krijgt voortaan drie kansen met een korte pauze ertussen, in plaats van één. Een hapering van een paar tellen merk je niet meer.
+- Blijft een aanroep hangen, dan wordt hij na acht seconden afgekapt. Je zit niet meer te wachten op iets dat nooit komt.
+- Opnieuw proberen gebeurt alleen als dat zin heeft. Is de dienst overbelast of even weg, dan probeert hij het nog eens. Wijst de dienst de vraag inhoudelijk af, dan stopt hij meteen, want die komt ook bij de vierde poging niet goed.
+- De melding noemt voortaan de dienst bij naam. De app praat met twee partijen: PDOK voor het adres en OpenRouteService voor de kilometers. Je leest nu wie het liet afweten en of hij onbereikbaar was, te traag, overbelast, of de vraag afwees.
+- Bij Afstand ophalen zie je apart of het misging bij het ophalen of daarna bij het bijwerken van het scherm. Dat is niet hetzelfde probleem en verdient niet dezelfde tekst.
+- Bij de zoekknoppen stond "Opzoeken mislukt" ook als het opzoeken juist wél gelukt was en er verderop iets misging. Die twee zijn nu uit elkaar getrokken.
+- Weigert OpenRouteService je sleutel of is je dagtegoed op, dan komt dat antwoord terug op een manier die de browser wegooit. Je zag daardoor alleen "Failed to fetch" en nooit de echte reden. Daar staat nu een aanwijzing bij om je sleutel en je tegoed na te kijken.
+- Geldt ook voor de liggingsfoto op het onderhoudsplan, die het adres bij dezelfde dienst opvraagt.
+- Alleen foutafhandeling. Aan de berekening, de opslag en de PDF's verandert niets. Geen SQL, geen Edge Function.
+
 ## v4.35.1 — Nabellen op de eerstvolgende maandag
 Kleine bijstelling van het ritme uit v4.35.0.
 
