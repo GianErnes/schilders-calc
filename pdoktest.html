@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDOK-test · Schilders Calc</title>
+<style>
+  :root {
+    --inkt:      #16202b;
+    --grijs:     #5c6b7a;
+    --lijn:      #d9e0e7;
+    --papier:    #f7f9fb;
+    --vlak:      #ffffff;
+    --blauw:     #2563eb;
+    --goed:      #16704a;
+    --goedvlak:  #e6f4ee;
+    --slecht:    #a3222b;
+    --slechtvlak:#fdecec;
+    --let:       #8a5a00;
+    --letvlak:   #fdf3e0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 1.1rem 1rem 3rem;
+    background: var(--papier); color: var(--inkt);
+    font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 1.3rem; margin: 0 0 .3rem; letter-spacing: -0.01em; }
+  .sub { color: var(--grijs); font-size: .9rem; margin: 0 0 1.1rem; }
+  .kaart {
+    background: var(--vlak); border: 1px solid var(--lijn); border-radius: 10px;
+    padding: .9rem 1rem; margin-bottom: .9rem;
+  }
+  label { display: block; font-size: .78rem; color: var(--grijs); margin-bottom: .25rem; }
+  input {
+    width: 100%; padding: .55rem .6rem; font-size: 1rem; color: var(--inkt);
+    border: 1px solid var(--lijn); border-radius: 7px; background: #fff;
+  }
+  input:focus-visible { outline: 2px solid var(--blauw); outline-offset: 1px; }
+  .rij { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .rij > div { flex: 1 1 180px; }
+  button {
+    font: 600 1rem/1 inherit; color: #fff; background: var(--blauw);
+    border: 0; border-radius: 7px; padding: .7rem 1.1rem; cursor: pointer;
+    margin-top: .8rem;
+  }
+  button.stil { background: #fff; color: var(--inkt); border: 1px solid var(--lijn); }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible { outline: 2px solid var(--blauw); outline-offset: 2px; }
+  .proef { border-top: 1px solid var(--lijn); padding: .8rem 0 .2rem; }
+  .proef:first-of-type { border-top: 0; }
+  .proef h3 { font-size: .95rem; margin: 0 0 .2rem; }
+  .adres {
+    font: 400 .74rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--grijs); word-break: break-all; margin: 0 0 .5rem;
+  }
+  .stempel {
+    display: inline-block; font-size: .8rem; font-weight: 600;
+    padding: .3rem .6rem; border-radius: 6px; margin-bottom: .4rem;
+  }
+  .s-goed   { background: var(--goedvlak);   color: var(--goed); }
+  .s-slecht { background: var(--slechtvlak); color: var(--slecht); }
+  .s-let    { background: var(--letvlak);    color: var(--let); }
+  .s-bezig  { background: #eef2f6;           color: var(--grijs); }
+  .oordeel { font-size: .88rem; margin: 0 0 .35rem; }
+  .ruw {
+    font: 400 .72rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: #f2f5f8; border-radius: 6px; padding: .45rem .55rem;
+    color: var(--grijs); white-space: pre-wrap; word-break: break-all; margin: 0;
+  }
+  .slot { border-left: 3px solid var(--blauw); }
+  .slot h2 { font-size: 1rem; margin: 0 0 .4rem; }
+  .slot p { margin: 0 0 .5rem; font-size: .92rem; }
+  .herkomst { font-size: .78rem; color: var(--grijs); }
+  textarea {
+    width: 100%; height: 130px; margin-top: .6rem; padding: .5rem;
+    font: 400 .72rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    border: 1px solid var(--lijn); border-radius: 7px; color: var(--grijs);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>PDOK-test</h1>
+  <p class="sub">Meet na wat er precies gebeurt als de app een adres opzoekt. Deze pagina staat op dezelfde plek als de app, dus PDOK ziet exact dezelfde herkomst.</p>
+
+  <div class="kaart">
+    <p class="herkomst" id="herkomst">Herkomst wordt bepaald…</p>
+  </div>
+
+  <div class="kaart">
+    <label for="qveld">Adres om mee te testen</label>
+    <input id="qveld" type="text" value="Caumerboord 75 Heerlen" autocomplete="off">
+    <button id="start">Test starten</button>
+  </div>
+
+  <div class="kaart" id="uitslag" hidden></div>
+
+  <div class="kaart" id="slotkaart" hidden></div>
+
+  <div class="kaart">
+    <h3 style="margin:0 0 .5rem; font-size:.95rem;">Losse test: afstand via OpenRouteService</h3>
+    <p class="sub" style="margin-bottom:.6rem;">Alleen nodig als de PDOK-tests iets opleveren. Plak je sleutel, druk op testen en sluit daarna dit tabblad. De pagina bewaart niets en de sleutel komt nergens terecht.</p>
+    <label for="orskey">OpenRouteService-sleutel</label>
+    <input id="orskey" type="text" placeholder="plak hier je sleutel" autocomplete="off">
+    <button id="orsstart" class="stil">Afstand testen</button>
+    <div id="orsuitslag"></div>
+  </div>
+
+  <div class="kaart">
+    <button id="kopieer" class="stil">Uitslag kopiëren</button>
+    <textarea id="platte" readonly hidden></textarea>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var LS = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/';
+  var WMS = 'https://service.pdok.nl/hwh/luchtfotorgb/wms/v1_0';
+  var resultaten = [];
+
+  document.getElementById('herkomst').textContent = 'Herkomst van deze pagina: ' + location.origin;
+
+  function el(tag, klasse, tekst) {
+    var e = document.createElement(tag);
+    if (klasse) e.className = klasse;
+    if (tekst != null) e.textContent = tekst;
+    return e;
+  }
+
+  // Eén aanroep doen en precies vastleggen wat eruit komt.
+  // Faalt hij op netwerkniveau, dan volgt een tweede poging waarbij de browser
+  // het antwoord niet hoeft door te geven. Lukt die tweede wel, dan komt het
+  // verzoek dus gewoon aan en houdt alleen de CORS-regel het antwoord tegen.
+  function proef(naam, url, opties, magOpaak) {
+    var t0 = Date.now();
+    return fetch(url, opties || {}).then(function (res) {
+      return res.text().catch(function () { return ''; }).then(function (tekst) {
+        return {
+          naam: naam, url: url, ms: Date.now() - t0,
+          soort: res.ok ? 'goed' : 'status',
+          status: res.status,
+          body: (tekst || '').slice(0, 260)
+        };
+      });
+    }).catch(function (err) {
+      var basis = {
+        naam: naam, url: url, ms: Date.now() - t0,
+        soort: 'netwerk', fout: (err && err.message) ? err.message : String(err),
+        opaak: null
+      };
+      if (!magOpaak) return basis;
+      var stil = {};
+      for (var k in (opties || {})) stil[k] = opties[k];
+      stil.mode = 'no-cors';
+      return fetch(url, stil).then(function () {
+        basis.opaak = true; return basis;
+      }).catch(function () {
+        basis.opaak = false; return basis;
+      });
+    });
+  }
+
+  function oordeelVan(r) {
+    if (r.soort === 'goed') {
+      return ['s-goed', 'Gelukt', 'Deze aanroep werkt gewoon.'];
+    }
+    if (r.soort === 'status') {
+      return ['s-let', 'Geweigerd (code ' + r.status + ')',
+        'PDOK antwoordt wel, maar wijst dit verzoek af. Dan zit de fout in wat we meesturen, niet in de herkomst.'];
+    }
+    if (r.opaak === true) {
+      return ['s-slecht', 'Antwoord tegengehouden',
+        'Het verzoek komt aan bij PDOK, maar de browser mag het antwoord niet aan de app geven. Dat is de CORS-regel.'];
+    }
+    if (r.opaak === false) {
+      return ['s-slecht', 'Geen verbinding',
+        'Er komt helemaal geen verbinding tot stand met dit adres.'];
+    }
+    return ['s-slecht', 'Mislukt', 'De aanroep mislukte: ' + (r.fout || 'onbekend') + '.'];
+  }
+
+  function toon(vak, r) {
+    var o = oordeelVan(r);
+    var blok = el('div', 'proef');
+    blok.appendChild(el('h3', null, r.naam));
+    blok.appendChild(el('p', 'adres', r.url));
+    blok.appendChild(el('span', 'stempel ' + o[0], o[1]));
+    blok.appendChild(el('p', 'oordeel', o[2]));
+    var ruw = 'na ' + r.ms + ' ms · ';
+    if (r.soort === 'netwerk') ruw += 'melding: ' + (r.fout || '-');
+    else ruw += 'code ' + r.status + ' · ' + (r.body || '(leeg)');
+    blok.appendChild(el('p', 'ruw', ruw));
+    vak.appendChild(blok);
+  }
+
+  function slotsom() {
+    var kaart = document.getElementById('slotkaart');
+    kaart.className = 'kaart slot';
+    kaart.hidden = false;
+    kaart.innerHTML = '';
+    kaart.appendChild(el('h2', null, 'Wat dit betekent'));
+
+    var pdok = resultaten.filter(function (r) { return r.url.indexOf('api.pdok.nl') > -1; });
+    var geblokt = pdok.filter(function (r) { return r.soort === 'netwerk' && r.opaak === true; });
+    var geweigerd = pdok.filter(function (r) { return r.soort === 'status'; });
+    var gelukt = pdok.filter(function (r) { return r.soort === 'goed'; });
+    var stuk = pdok.filter(function (r) { return r.soort === 'netwerk' && r.opaak !== true; });
+
+    var tekst;
+    if (geblokt.length === pdok.length) {
+      tekst = 'Alle aanroepen komen aan bij PDOK, maar geen enkel antwoord komt terug in de app. Het ligt dus niet aan de velden die we opvragen en niet aan jouw apparaat. PDOK laat een webpagina er simpelweg niet meer bij. De eigen tussenschakel bij Supabase lost dit op.';
+    } else if (geblokt.length && gelukt.length) {
+      tekst = 'Een deel werkt en een deel wordt tegengehouden. Kijk hierboven welke wel lukken: het verschil tussen die twee zit in wat we meesturen. Dat is te repareren zonder tussenschakel, al blijft die tussenschakel wel verstandig.';
+    } else if (geweigerd.length) {
+      tekst = 'PDOK antwoordt gewoon, maar wijst een of meer verzoeken af. Dan zit de fout in wat we meesturen en niet in de herkomst. De foutcode hierboven vertelt precies wat.';
+    } else if (gelukt.length === pdok.length) {
+      tekst = 'Alles werkt op dit moment. Dan was het een tijdelijke storing bij PDOK en niet een blijvende wijziging. PDOK meldt zelf dat de Locatieserver de laatste tijd wisselvallig is. De tussenschakel blijft het overwegen waard, want dan merk je zo n storing eenmalig in plaats van bij elke knop.';
+    } else if (stuk.length) {
+      tekst = 'Er komt helemaal geen verbinding tot stand. Dat wijst op een storing bij PDOK zelf of op iets tussen jou en PDOK in. Probeer het over een uur nog eens.';
+    } else {
+      tekst = 'Gemengde uitslag. Stuur de gekopieerde tekst door, dan lees ik het na.';
+    }
+    kaart.appendChild(el('p', null, tekst));
+    kaart.appendChild(el('p', null, 'Druk onderaan op Uitslag kopiëren en plak het in de chat.'));
+  }
+
+  function platteTekst() {
+    var r = ['PDOK-test ' + new Date().toLocaleString('nl-NL'), 'herkomst: ' + location.origin, ''];
+    resultaten.forEach(function (x) {
+      var o = oordeelVan(x);
+      r.push(x.naam + ': ' + o[1]);
+      r.push('  ' + x.url);
+      if (x.soort === 'netwerk') r.push('  melding: ' + (x.fout || '-') + ' · doorgekomen: ' + (x.opaak === true ? 'ja' : x.opaak === false ? 'nee' : 'niet getest'));
+      else r.push('  code ' + x.status + ' · ' + (x.body || '').replace(/\s+/g, ' ').slice(0, 160));
+      r.push('');
+    });
+    return r.join('\n');
+  }
+
+  document.getElementById('start').addEventListener('click', function () {
+    var knop = this;
+    knop.disabled = true;
+    knop.textContent = 'Bezig…';
+    resultaten = [];
+    var vak = document.getElementById('uitslag');
+    vak.hidden = false;
+    vak.innerHTML = '';
+    document.getElementById('slotkaart').hidden = true;
+
+    var q = encodeURIComponent((document.getElementById('qveld').value || '').trim());
+    var lijst = [
+      ['1. Coördinaten ophalen, zoals de knop Afstand ophalen',
+       LS + 'free?q=' + q + '&fq=type:adres&rows=1'],
+      ['2. Straat en woonplaats, zoals de zoekknop bij het adres',
+       LS + 'free?q=' + q + '&fq=type:adres&rows=1&fl=straatnaam,woonplaatsnaam,postcode,huisnummer'],
+      ['3. Rijksdriehoek-coördinaten, zoals de liggingsfoto',
+       LS + 'free?q=' + q + '&fq=type:adres&rows=1&fl=weergavenaam,centroide_rd'],
+      ['4. Kaalste variant, alleen de zoekterm',
+       LS + 'free?q=' + q],
+      ['5. Ander eindpunt bij PDOK (suggest)',
+       LS + 'suggest?q=' + q],
+      ['6. Ander adres bij PDOK: de luchtfotodienst',
+       WMS + '?service=WMS&request=GetCapabilities']
+    ];
+
+    var keten = Promise.resolve();
+    lijst.forEach(function (paar) {
+      keten = keten.then(function () {
+        return proef(paar[0], paar[1], null, true).then(function (r) {
+          resultaten.push(r);
+          toon(vak, r);
+        });
+      });
+    });
+    keten.then(function () {
+      slotsom();
+      knop.disabled = false;
+      knop.textContent = 'Opnieuw testen';
+    });
+  });
+
+  document.getElementById('orsstart').addEventListener('click', function () {
+    var knop = this;
+    var sleutel = (document.getElementById('orskey').value || '').trim();
+    var vak = document.getElementById('orsuitslag');
+    vak.innerHTML = '';
+    if (!sleutel) {
+      vak.appendChild(el('p', 'oordeel', 'Vul eerst je sleutel in.'));
+      return;
+    }
+    knop.disabled = true;
+    knop.textContent = 'Bezig…';
+    // Vaste punten Heerlen naar Maastricht, zodat deze test niet van PDOK afhangt.
+    proef('7. Rijafstand via OpenRouteService',
+      'https://api.openrouteservice.org/v2/directions/driving-car',
+      { method: 'POST',
+        headers: { 'Authorization': sleutel, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coordinates: [[5.9797, 50.8882], [5.6909, 50.8514]] }) },
+      false
+    ).then(function (r) {
+      resultaten.push(r);
+      toon(vak, r);
+      knop.disabled = false;
+      knop.textContent = 'Opnieuw testen';
+    });
+  });
+
+  document.getElementById('kopieer').addEventListener('click', function () {
+    var knop = this;
+    var tekst = platteTekst();
+    var vak = document.getElementById('platte');
+    function terugval() {
+      vak.hidden = false;
+      vak.value = tekst;
+      vak.select();
+      knop.textContent = 'Selecteer de tekst hieronder';
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(tekst).then(function () {
+        knop.textContent = 'Gekopieerd';
+        setTimeout(function () { knop.textContent = 'Uitslag kopiëren'; }, 2000);
+      }).catch(terugval);
+    } else {
+      terugval();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
