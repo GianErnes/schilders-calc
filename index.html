@@ -324,17 +324,23 @@
   .kgrid .sub-muted { font-weight: 400; font-size: 0.7rem; color: var(--muted); letter-spacing: 0; }
   .kgrid .sub-knoppen { margin-left: auto; display: flex; gap: 0.35rem; flex-wrap: wrap; }
   .kgrid .sub-knoppen button { padding: 0.16rem 0.45rem; font-size: 0.7rem; }
-  /* v4.31.0 - Offerte-instellingen: velden op hun eigen breedte in plaats van uitgerekt.
+  /* v4.32.0 - Calc-kop: elk veld zijn eigen breedte in plaats van uitgerekte kolommen.
      Het gewone .kgrid rekt met auto-fit + 1fr elke kolom over de volle breedte uit, waardoor
-     een datumveld net zo breed werd als een straatnaam. Hier flex met wrap: elk veld krijgt de
-     breedte die het nodig heeft, de rij loopt vanzelf door op een smal scherm en op de iPad. */
-  .kgrid.kgrid-kort { display: flex; flex-wrap: wrap; align-items: flex-start; }
-  .kgrid.kgrid-kort > div { flex: 0 0 auto; max-width: 100%; }
-  .kgrid.kgrid-kort > div.k-datum { width: 155px; }
-  .kgrid.kgrid-kort > div.k-nummer { width: 165px; }
-  .kgrid.kgrid-kort > div.k-mini { width: 95px; }
-  .kgrid.kgrid-kort > div.k-keuze { width: 260px; }
-  .kgrid.kgrid-kort .k-hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+     een huisnummer net zoveel ruimte kreeg als een e-mailadres. Hier flex met wrap: korte velden
+     blijven kort, en de velden die tekst moeten tonen (projectnaam, straat, e-mail) mogen op een
+     breed scherm meegroeien tot een maximum. De rij loopt vanzelf door op de iPad. */
+  .kgrid.kgrid-vrij { display: flex; flex-wrap: wrap; align-items: flex-start; }
+  .kgrid.kgrid-vrij > div { flex: 0 0 auto; max-width: 100%; }
+  .kgrid.kgrid-vrij > .subkop { flex: 0 0 100%; width: 100%; }
+  .kgrid.kgrid-vrij > div.k-mini { width: 95px; }
+  .kgrid.kgrid-vrij > div.k-kort { width: 120px; }
+  .kgrid.kgrid-vrij > div.k-datum { width: 135px; }
+  .kgrid.kgrid-vrij > div.k-nummer { width: 150px; }
+  .kgrid.kgrid-vrij > div.k-mid { width: 180px; }
+  .kgrid.kgrid-vrij > div.k-keuze { width: 250px; }
+  .kgrid.kgrid-vrij > div.k-breed { flex: 1 1 300px; width: auto; max-width: 420px; }
+  .kgrid.kgrid-vrij > div.k-ruim { flex: 1 1 340px; width: auto; max-width: 520px; }
+  .kgrid.kgrid-vrij .k-hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
   label {
     display: block;
     font-size: 0.7rem;
@@ -2231,8 +2237,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.31.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.32.0</h2>
       <div class="intro-body">
+        <p><strong>📧 Elk veld in de calc-kop op maat, e-mail en straat ruim (v4.32.0).</strong> Het e-mailadres van de klant kreeg evenveel ruimte als een tussenvoegsel en werd daardoor halverwege afgekapt. Dat veld is nu fors breder en groeit op een breed scherm mee, zodat je een adres van ruim veertig tekens in één oogopslag ziet. Hetzelfde geldt voor de projectnaam en voor Straat in zowel het werkadres als het briefhoofd, want lange straatnamen bestaan. Daar tegenover staan de velden die weinig nodig hebben: aantal schilders, uren per werkdag, huisnummer, postcode, voorletters en tussenvoegsel zijn kort geworden. De datums en het offertenummer in Offerte-instellingen zijn nog een tikje krapper dan in v4.31.0, waardoor dat blok op de liggende iPad weer op één rij past in plaats van twee. Geldt op de iPad en op de iMac. Alleen opmaak. Geen SQL nodig.</p>
         <p><strong>📐 Offerte-instellingen: velden op maat (v4.31.0).</strong> De vakjes bij Offerte-instellingen werden over de volle breedte uitgerekt, waardoor een datum van elf tekens net zoveel ruimte kreeg als een straatnaam. Vooral op de iPad liepen die velden in elkaar over. Elk veld heeft nu de breedte die het nodig heeft: de twee datums en het offertenummer smal, versie en garantiejaren kort, en de prijsweergave iets breder omdat die keuzelijst een lange tekst heeft. Past het niet op één rij, dan loopt de rij vanzelf door naar de volgende. De uitleg “V-aanduiding vanaf 2” staat niet meer achter het woord Versie maar als klein regeltje onder het veld, net als bij het offertenummer, zodat de invoervakken op één lijn blijven staan. Geldt op de iPad en op de iMac. Alleen opmaak. Geen SQL nodig.</p>
         <p><strong>📱 Calculatie en Meetstaat groter op de iPad (v4.30.0).</strong> Werk je op de iPad, dan staan de tabs Calculatie en Meetstaat voortaan een derde groter in beeld. Alles groeit netjes mee: de invulvelden, de regels, de knoppen en de totalen, dus er valt niets weg en je hoeft niet zijwaarts te scrollen. Op de iMac verandert er niets, want de app kijkt naar het aanraakscherm en niet naar de vensterbreedte. De iPhone blijft ook zoals hij was, anders wordt dat schermpje onwerkbaar. Daarnaast staat het blok Notities, taken en foto’s op de iPad in een rode rand met een lichtrode kop, zodat je het tijdens de opname meteen terugvindt. Alleen opmaak, aan de berekening verandert niets. Geen SQL nodig.</p>
         <p><strong>🔴 Bewerkingsregel zonder percentage valt op (v4.29.0).</strong> Maak je in een calc-regel het %-veld van een bewerking leeg, dan kleurt die hele bewerkingsregel nu lichtrood met een rode rand en een donkerrode balk aan de linkerkant, en achter de bewerkingsnaam verschijnt de melding "percentage ontbreekt". Je ziet het al terwijl je typt, op het moment dat het laatste cijfer weg is. Dat is nodig omdat een leeg percentage niet als 100 rekent maar de hele regel onbruikbaar maakt: het regeltotaal komt dan op 0,00 uur en € 0,00 te staan en de regel valt stilletjes uit het onderdeel- en projecttotaal, zonder dat je iets ziet. Een percentage van 0 is een bewuste keuze en kleurt dus niet mee. Alleen in de Calculatie-tab en puur signalering: aan de berekening zelf verandert niets. Geen SQL nodig.</p>
@@ -2532,12 +2539,12 @@
     <div id="calcLockBanner"></div>
     <div class="kblok-kop">Project en planning</div>
     <div class="kblok">
-      <div class="kgrid">
-        <div><label>Projectnaam</label><input type="text" id="calcProject" placeholder="bv. Kerkstraat 12"></div>
-        <div><label>Aantal schilders</label><input type="number" id="calcSchilders" step="1" min="1"></div>
-        <div><label>Uren per werkdag</label><input type="number" id="calcUurDag" step="0.5" min="1"></div>
-        <div><label>Opname-datum</label><input type="date" id="calcOpname"></div>
-        <div><label>Deadline offerte <span class="sub-muted">(+14 dgn)</span></label><input type="date" id="calcDeadline"></div>
+      <div class="kgrid kgrid-vrij">
+        <div class="k-ruim"><label>Projectnaam</label><input type="text" id="calcProject" placeholder="bv. Kerkstraat 12"></div>
+        <div class="k-kort"><label>Aantal schilders</label><input type="number" id="calcSchilders" step="1" min="1"></div>
+        <div class="k-kort"><label>Uren per werkdag</label><input type="number" id="calcUurDag" step="0.5" min="1"></div>
+        <div class="k-datum"><label>Opname-datum</label><input type="date" id="calcOpname"></div>
+        <div class="k-nummer"><label>Deadline offerte <span class="sub-muted">(+14 dgn)</span></label><input type="date" id="calcDeadline"></div>
       </div>
     </div>
     <div id="klantAdresBlok"></div>
@@ -3464,7 +3471,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.31.0';
+const APP_VERSION = 'v4.32.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3860,6 +3867,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.32.0', d: '2026-07-24', h: 'De flex-aanpak van v4.31.0 uitgerold over alle drie de blokken in de calc-kop. .kgrid-kort is hernoemd naar .kgrid-vrij en toegepast op Project en planning (statische markup), Klant en adres plus beide briefhoofd-varianten (renderOfferteBlok) en Offerte-instellingen. Breedteschaal: k-mini 95px (huisnummer, versie, garantiejaren), k-kort 120px (postcode, voorletters, tussenvoegsel, aantal schilders, uren per werkdag), k-datum 135px, k-nummer 150px (offertenummer, deadline offerte), k-mid 180px (klant, achternaam, woonplaats, naam briefhoofd, reisafstand), k-keuze 250px (klanttype, aanspreekvorm, prijsweergave). De twee tekstdragende klassen groeien wel mee: k-breed flex 1 1 300px met max-width 420px (e-mail en beide straatvelden) en k-ruim flex 1 1 340px met max-width 520px (projectnaam), zodat een lang e-mailadres of een lange straatnaam op de iMac de restruimte pakt zonder dat het veld absurd breed wordt. .subkop krijgt flex 0 0 100% omdat de grid-column 1/-1 in flex niet meer werkt. Sommen per rij blijven onder de circa 908 CSS-px die de iPad na de zoom van v4.30.0 overhoudt, dus Project en planning en Offerte-instellingen passen daar weer op één rij. Alle cel-classes zijn via unieke ankers gezet (werkadres op de id-velden, briefhoofd op _adr respectievelijk _brf), gedrag en opslag ongemoeid. Geen SQL, geen Edge Function.' },
   { v: '4.31.0', d: '2026-07-24', h: 'Offerte-instellingen krijgt eigen veldbreedtes. Het blok gebruikte het gedeelde .kgrid met grid-template-columns repeat(auto-fit, minmax(135px, 1fr)); door de 1fr rekte elke kolom over de volle blokbreedte uit, wat bij zes korte velden (twee datums, nummer, versie, garantiejaren, keuzelijst) op een breed scherm vakken van ruim 300px opleverde en op de iPad na de zoom van v4.30.0 in elkaar overliep. Nieuwe modifier .kgrid.kgrid-kort schakelt datzelfde element om naar display:flex met flex-wrap:wrap en align-items:flex-start; de gap-declaratie van .kgrid blijft gelden. Cellen krijgen flex: 0 0 auto plus max-width 100% zodat ze op een smal scherm nooit buiten het blok steken, en per veld een breedteklasse: k-datum 155px (offertedatum, geldig tot), k-nummer 165px (offertenummer), k-mini 95px (versie, garantiejaren), k-keuze 260px (prijsweergave, breder vanwege de lange optietekst en de hoeveelheden-checkbox eronder). Totaal circa 963px inclusief gaps, dus op de iMac één rij en op de iPad wrapt de keuzelijst netjes naar rij twee in plaats van te overlopen; met vaste grid-template-columns zou dat een horizontale overflow zijn geworden, vandaar flex. De sub-muted V-aanduiding vanaf 2 is uit het Versie-label gehaald en staat nu als .k-hint onder het invoerveld, hetzelfde patroon als v4.26.1 bij Offertenummer, anders brak dat label in 95px over drie regels en zakte het invoervak uit de lijn; de bestaande inline-hint onder Offertenummer is op diezelfde class gezet. De blokken Klant en adres en Project en planning houden bewust het gewone uitrekkende .kgrid, want daar staan straatnamen en e-mailadressen in. Alleen CSS en render-markup in renderOfferteBlok, geen gedrag of opslag geraakt. Geen SQL, geen Edge Function.' },
   { v: '4.30.0', d: '2026-07-24', h: 'Grotere weergave van de Calculatie- en Meetstaat-tab op aanraakschermen. Nieuwe media query @media (hover: none) and (pointer: coarse) and (min-width: 700px) and (min-height: 700px) die zoom: 1.3 zet op #calculatie en #meetstaat. De combinatie hover:none + pointer:coarse selecteert het aanraakscherm zelf in plaats van de vensterbreedte, zodat de iMac ook bij een smal venster nooit meeschaalt; de dubbele 700px-eis sluit de iPhone in beide standen uit (staand 393x852, liggend 852x393). Zoom is gekozen boven het optrekken van de root font-size omdat de hele app rem-gebaseerd is (html/body 14px) en een root-verhoging elk paneel zou raken; zoom herberekent de layout binnen de twee sections, dus paddings, rasters en de meetstaat-tabel schalen proportioneel mee zonder horizontale overflow. Alle position:fixed-elementen (modals, controlePaneel, ohpVerPaneel, archiveerStatusBar, numpadBar, vraagbaakTab, authOverlay) staan buiten beide sections en blijven dus ongemoeid; de sticky .totals binnen #calculatie schaalt gewoon mee. In hetzelfde blok krijgt #calculatie .notities-paneel border 2px var(--accent) plus een box-shadow-ring, .notities-header achtergrond #fdecea met accent-onderrand, .notities-title kleur var(--accent-deep), en een eigen regel voor .collapsed zodat de ID-specificiteit de bestaande border-bottom:none niet omzeilt. Puur CSS, geen JS aangeraakt. Geen SQL, geen Edge Function.' },
   { v: '4.29.0', d: '2026-07-23', h: 'Visuele signalering van een leeg percentage in een calc-regel-stap. Nieuwe helper _pctIsLeeg(v) geeft false bij null/undefined (die vallen in calcSnapshotStep via ?? terug op 100 en het veld toont 100), true bij lege of witruimte-tekst (rekent stil als 0%) en verder !Number.isFinite(Number(v)), zodat de NaN uit parseFloat(\'\') wordt gevangen die via de som in calcRegelTotalen het hele regeltotaal vergiftigt. In de stappen-map van renderRegel zet pctLeeg de klasse is-pct-leeg op de .regel-stap. CSS: achtergrond #fdf3f2, border-color var(--accent) en inset 3px 0 0 var(--accent-deep) als balk links; de rand blijft 1px en de balk is een inset-schaduw, dus geen layout-shift in de grid. In het grijze monospace-regeltje staat nu altijd een span.pct-waarschuwing met de tekst percentage ontbreekt, display none tenzij de regel de klasse draagt. Het %-invoerveld kreeg oninput=_pctVeldCheck(this), dat via closest(.regel-stap) dezelfde klasse live omzet zonder te hertekenen, zodat de focus en het iPad-toetsenbord in het veld blijven en kleur plus tekst meteen meebewegen. Uitsluitend weergave in de Calculatie-tab: calcSnapshotStep, calcRegelTotalen en de fmt-maskering (n||0 toont NaN als 0,00) zijn bewust ongewijzigd, evenals de beurt-modal van het onderhoudsplan en de verfsysteem-bibliotheek. Geen SQL, geen Edge Function.' },
@@ -5469,16 +5477,16 @@ function renderOfferteBlok() {
 
   // ---- 1. KLANT EN ADRES ----
   if (kaBlok) {
-    let ka = `<div class="kblok-kop">Klant en adres</div><div class="kblok"><div class="kgrid">
-      <div><label>Klant</label><input type="text" id="calcKlant" value="${_offEsc(c.klant || '')}"></div>
-      <div><label>Klanttype</label>
+    let ka = `<div class="kblok-kop">Klant en adres</div><div class="kblok"><div class="kgrid kgrid-vrij">
+      <div class="k-mid"><label>Klant</label><input type="text" id="calcKlant" value="${_offEsc(c.klant || '')}"></div>
+      <div class="k-keuze"><label>Klanttype</label>
         <select onchange="_offCfgKlanttype(this.value)">
           <option value="consument" ${cfg.klanttype === 'consument' ? 'selected' : ''}>Particulier</option>
           <option value="vve" ${cfg.klanttype === 'vve' ? 'selected' : ''}>VVE</option>
           <option value="zakelijk" ${cfg.klanttype === 'zakelijk' ? 'selected' : ''}>Zakelijk</option>
         </select>
       </div>
-      <div><label>Aanspreekvorm</label>
+      <div class="k-keuze"><label>Aanspreekvorm</label>
         <select onchange="_offCfgVeld('aanspreekvorm', this.value)">
           <option value="" ${!cfg.aanspreekvorm ? 'selected' : ''}>— kies —</option>
           <option value="heer" ${cfg.aanspreekvorm === 'heer' ? 'selected' : ''}>Heer</option>
@@ -5489,31 +5497,31 @@ function renderOfferteBlok() {
         </select>
       </div>
       <div class="subkop"><span>Contactpersoon</span><span class="sub-muted">— vult t.a.v. in de kop en de aanhef (aanhef zonder voorletters)</span></div>
-      <div><label>Voorletters</label><input type="text" value="${_offEsc(_cp.voorletters)}" placeholder="J.A." onchange="_offCfgContact('voorletters', this.value)"></div>
-      <div><label>Tussenvoegsel</label><input type="text" value="${_offEsc(_cp.tussenvoegsel)}" placeholder="van der" onchange="_offCfgContact('tussenvoegsel', this.value)"></div>
-      <div><label>Achternaam</label><input type="text" value="${_offEsc(_cp.achternaam)}" placeholder="Beekman" onchange="_offCfgContact('achternaam', this.value)"></div>
-      <div><label>E-mail <span class="sub-muted">— voor het verzenden</span></label><input type="email" value="${_offEsc(cfg.email || '')}" placeholder="naam@voorbeeld.nl" onchange="_offCfgVeld('email', this.value.trim())"></div>
+      <div class="k-kort"><label>Voorletters</label><input type="text" value="${_offEsc(_cp.voorletters)}" placeholder="J.A." onchange="_offCfgContact('voorletters', this.value)"></div>
+      <div class="k-kort"><label>Tussenvoegsel</label><input type="text" value="${_offEsc(_cp.tussenvoegsel)}" placeholder="van der" onchange="_offCfgContact('tussenvoegsel', this.value)"></div>
+      <div class="k-mid"><label>Achternaam</label><input type="text" value="${_offEsc(_cp.achternaam)}" placeholder="Beekman" onchange="_offCfgContact('achternaam', this.value)"></div>
+      <div class="k-breed"><label>E-mail <span class="sub-muted">— voor het verzenden</span></label><input type="email" value="${_offEsc(cfg.email || '')}" placeholder="naam@voorbeeld.nl" onchange="_offCfgVeld('email', this.value.trim())"></div>
       <div class="subkop"><span>Werkadres</span><span class="sub-muted">— waar het werk is, stuurt de reisafstand</span><span class="sub-knoppen"><button class="btn btn-secondary btn-sm" onclick="ophaalAfstand()">📍 Afstand ophalen</button><button class="btn btn-secondary btn-sm" onclick="_offWerkadresZoek()">📍 Zoek straat en woonplaats</button></span></div>
-      <div><label>Postcode</label><input type="text" id="calcPostcode" value="${_offEsc(c.postcode || '')}" placeholder="6433 KE" autocomplete="off"></div>
-      <div><label>Huisnummer</label><input type="text" id="calcHuisnummer" value="${_offEsc(c.huisnummer || '')}" placeholder="nr." autocomplete="off"></div>
-      <div><label>Straat</label><input type="text" value="${_offEsc(_wadr.straat)}" placeholder="Straatnaam" onchange="_offCfgWerkadres('straat', this.value)"></div>
-      <div><label>Woonplaats</label><input type="text" value="${_offEsc(_wadr.woonplaats)}" placeholder="Plaats" onchange="_offCfgWerkadres('woonplaats', this.value)"></div>
-      <div><label>Reisafstand (km enkele reis)</label><input type="number" id="calcReis" step="0.1" min="0" value="${c.reis || 0}" onchange="_renderRayonIndicator()"><div id="reisRayonIndicator" style="margin-top:0.2rem; font-size:0.7rem;"></div></div>`;
+      <div class="k-kort"><label>Postcode</label><input type="text" id="calcPostcode" value="${_offEsc(c.postcode || '')}" placeholder="6433 KE" autocomplete="off"></div>
+      <div class="k-mini"><label>Huisnummer</label><input type="text" id="calcHuisnummer" value="${_offEsc(c.huisnummer || '')}" placeholder="nr." autocomplete="off"></div>
+      <div class="k-breed"><label>Straat</label><input type="text" value="${_offEsc(_wadr.straat)}" placeholder="Straatnaam" onchange="_offCfgWerkadres('straat', this.value)"></div>
+      <div class="k-mid"><label>Woonplaats</label><input type="text" value="${_offEsc(_wadr.woonplaats)}" placeholder="Plaats" onchange="_offCfgWerkadres('woonplaats', this.value)"></div>
+      <div class="k-mid"><label>Reisafstand (km enkele reis)</label><input type="number" id="calcReis" step="0.1" min="0" value="${c.reis || 0}" onchange="_renderRayonIndicator()"><div id="reisRayonIndicator" style="margin-top:0.2rem; font-size:0.7rem;"></div></div>`;
     if (_briefApart) {
       ka += `
       <div class="subkop"><span>Adres klant (briefhoofd)</span><span class="sub-muted">— kantooradres, bovenaan de brief</span><span class="sub-knoppen"><button class="btn btn-secondary btn-sm" onclick="_offAdresZoek()">📍 Zoek straat en woonplaats</button></span></div>
-      <div><label>Naam</label><input type="text" value="${_offEsc(_adr.naam)}" placeholder="Klantnaam" onchange="_offCfgAdres('naam', this.value)"></div>
-      <div><label>Straat</label><input type="text" value="${_offEsc(_adr.straat)}" placeholder="Straatnaam" onchange="_offCfgAdres('straat', this.value)"></div>
-      <div><label>Huisnummer</label><input type="text" value="${_offEsc(_adr.huisnummer)}" placeholder="nr." onchange="_offCfgAdres('huisnummer', this.value)"></div>
-      <div><label>Postcode</label><input type="text" value="${_offEsc(_adr.postcode)}" placeholder="0000 AA" onchange="_offCfgAdres('postcode', this.value)"></div>
-      <div><label>Woonplaats</label><input type="text" value="${_offEsc(_adr.woonplaats)}" placeholder="Plaats" onchange="_offCfgAdres('woonplaats', this.value)"></div>`;
+      <div class="k-mid"><label>Naam</label><input type="text" value="${_offEsc(_adr.naam)}" placeholder="Klantnaam" onchange="_offCfgAdres('naam', this.value)"></div>
+      <div class="k-breed"><label>Straat</label><input type="text" value="${_offEsc(_adr.straat)}" placeholder="Straatnaam" onchange="_offCfgAdres('straat', this.value)"></div>
+      <div class="k-mini"><label>Huisnummer</label><input type="text" value="${_offEsc(_adr.huisnummer)}" placeholder="nr." onchange="_offCfgAdres('huisnummer', this.value)"></div>
+      <div class="k-kort"><label>Postcode</label><input type="text" value="${_offEsc(_adr.postcode)}" placeholder="0000 AA" onchange="_offCfgAdres('postcode', this.value)"></div>
+      <div class="k-mid"><label>Woonplaats</label><input type="text" value="${_offEsc(_adr.woonplaats)}" placeholder="Plaats" onchange="_offCfgAdres('woonplaats', this.value)"></div>`;
     } else {
       ka += `
       <div class="subkop"><span>Adres op de offerte (briefhoofd)</span><span class="sub-muted">— leeg = gelijk aan het werkadres</span><span class="sub-knoppen"><button class="btn btn-secondary btn-sm" onclick="_offBriefadresZoek()">📍 Zoek straat en woonplaats</button></span></div>
-      <div><label>Straat</label><input type="text" value="${_offEsc(_brf.straat || '')}" placeholder="Straatnaam" onchange="_offCfgBriefadres('straat', this.value)"></div>
-      <div><label>Huisnummer</label><input type="text" value="${_offEsc(_brf.huisnummer || '')}" placeholder="nr." onchange="_offCfgBriefadres('huisnummer', this.value)"></div>
-      <div><label>Postcode</label><input type="text" value="${_offEsc(_brf.postcode || '')}" placeholder="0000 AA" onchange="_offCfgBriefadres('postcode', this.value)"></div>
-      <div><label>Woonplaats</label><input type="text" value="${_offEsc(_brf.woonplaats || '')}" placeholder="Plaats" onchange="_offCfgBriefadres('woonplaats', this.value)"></div>`;
+      <div class="k-breed"><label>Straat</label><input type="text" value="${_offEsc(_brf.straat || '')}" placeholder="Straatnaam" onchange="_offCfgBriefadres('straat', this.value)"></div>
+      <div class="k-mini"><label>Huisnummer</label><input type="text" value="${_offEsc(_brf.huisnummer || '')}" placeholder="nr." onchange="_offCfgBriefadres('huisnummer', this.value)"></div>
+      <div class="k-kort"><label>Postcode</label><input type="text" value="${_offEsc(_brf.postcode || '')}" placeholder="0000 AA" onchange="_offCfgBriefadres('postcode', this.value)"></div>
+      <div class="k-mid"><label>Woonplaats</label><input type="text" value="${_offEsc(_brf.woonplaats || '')}" placeholder="Plaats" onchange="_offCfgBriefadres('woonplaats', this.value)"></div>`;
     }
     ka += `</div>`;
     ka += `<div id="offAdresStatus" style="margin-top:0.4rem; font-size:0.68rem; color:var(--muted);">${_briefApart ? 'Het briefhoofd komt bovenaan de brief. Het werkadres stuurt de reisafstand en toon je in de tekst met {werkadres}.' : 'Vul bij Klant alleen de achternaam in: de aanspreekvorm zet zelf De heer, Mevrouw of Familie voor de naam op de offerte. Laat je het briefhoofd leeg dan is het werkadres meteen het adres op de offerte; vul je het in dan komt dat bovenaan de brief terwijl het werkadres de reisafstand blijft sturen. Klik op Zoek om straat en woonplaats uit de postcode te halen.'}</div>`;
@@ -5525,7 +5533,7 @@ function renderOfferteBlok() {
   if (instBlok) {
     const _kozAanwezig = (c.meetstaat || []).some(ms => ms.tekening && ms.tekening.vorm);
     const _fotoAanwezig = (c.fotos || []).length > 0;
-    let inst = `<div class="kblok-kop">Offerte-instellingen</div><div class="kblok"><div class="kgrid kgrid-kort">
+    let inst = `<div class="kblok-kop">Offerte-instellingen</div><div class="kblok"><div class="kgrid kgrid-vrij">
       <div class="k-datum"><label>Offertedatum</label><input type="date" value="${cfg.offertedatum}" onchange="_offCfgDatum(this.value)"></div>
       <div class="k-datum"><label>Geldig tot</label><input type="date" value="${cfg.geldigTot}" onchange="_offCfgVeld('geldigTot', this.value)"></div>
       <div class="k-nummer"><label>Offertenummer</label><input type="text" value="${_offEsc(cfg.offerteNummerVrij)}" placeholder="bv. 260069" onchange="_offCfgVeld('offerteNummerVrij', this.value.trim())"><div class="k-hint">Yoobi-verkoopnummer. Verplicht voor de accordeerlink.</div></div>

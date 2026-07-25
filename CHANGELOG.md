@@ -1,3 +1,15 @@
+## v4.32.0 — Elk veld in de calc-kop op maat
+Het e-mailadres werd afgekapt terwijl een tussenvoegsel evenveel ruimte kreeg. Dat is nu overal rechtgezet.
+
+### Wat er verandert
+- **E-mail** is fors breder geworden en groeit op een breed scherm mee. Een adres van ruim veertig tekens lees je nu in één oogopslag, op de iPad en op de iMac.
+- **Projectnaam** krijgt de meeste ruimte van het blok Project en planning, want daar staat vaak een omschrijving in en niet alleen een straatnaam.
+- **Straat** is breder gemaakt in zowel het werkadres als het briefhoofd. Lange straatnamen passen er nu in.
+- Daar tegenover staan de velden die weinig nodig hebben. Aantal schilders, uren per werkdag, huisnummer, postcode, voorletters en tussenvoegsel zijn kort geworden.
+- De datums en het offertenummer in Offerte-instellingen zijn nog een tikje krapper dan in v4.31.0. Dat blok past op de liggende iPad daardoor weer op één rij in plaats van twee, net als Project en planning.
+- Past een rij niet, dan loopt hij vanzelf door naar de volgende regel. Er steekt nooit iets buiten het blok.
+- Alleen opmaak. Aan de berekening, de opslag en de PDF’s verandert niets. Geen SQL nodig.
+
 ## v4.31.0 — Offerte-instellingen: velden op maat
 De vakjes in dat blok werden altijd over de volle breedte uitgerekt. Nu krijgt elk veld de ruimte die het nodig heeft.
 
