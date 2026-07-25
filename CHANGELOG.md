@@ -1,3 +1,14 @@
+## v4.35.1 — Nabellen op de eerstvolgende maandag
+Kleine bijstelling van het ritme uit v4.35.0.
+
+### Wat er verandert
+- De opvolging wachtte eerst nog drie dagen voor hij een beltaak maakte. Dat is eruit. Maud belt voortaan de eerstvolgende maandag nadat de offerte de deur uit is, om te horen of hij goed aangekomen is.
+- Mail je zelf op een maandag, dan wordt het de maandag erop. Dezelfde middag terugbellen over een mail van een uur eerder heeft geen zin.
+- De herinneringsmail vertrekt nooit vóór het telefoontje. Lag een offerte een tijdje op de plank voordat je hem verstuurde, dan kon die mail eerder uitgaan dan het belletje.
+- Schuift de herinnering daardoor voorbij de vervaldatum, dan gaat hij helemaal niet en heeft Maud het telefonisch afgedekt. In het Accordeerlink-venster staat dat er dan bij.
+- Het venster rekent bewust met de geldig-tot-datum die in de accordeerlink bevroren zit, niet met de datum die nu in de calculatie staat. De klant heeft die eerste in zijn mail gelezen en daar houdt de opvolging zich aan.
+- Vereist de bijgewerkte Edge Function offerte-herinnering. Geen SQL.
+
 ## v4.35.0 — Offertes volgen zichzelf op
 Mail je een offerte vanuit de app, dan loopt er vanaf dat moment vanzelf een opvolging mee.
 
