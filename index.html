@@ -2255,8 +2255,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.38.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.39.0</h2>
       <div class="intro-body">
+        <p><strong>📅 Afvinklijst voor de onderhoudsbeurten (v4.39.0).</strong> Begin januari plan je de onderhoudsbeurten van dat jaar in Yoobi, en tot nu toe was nergens te zien of je ze allemaal gehad had. Dat kan nu in het tabblad Planning. Tik een beurt aan en zet het vinkje Deze beurt staat in de Yoobi-planning. De cel wordt blauw, en boven elke jaarkolom vanaf dit jaar staat een tellertje in de trant van 12/18 ingepland. Staat de teller vol, dan is het jaar rond en kleurt hij groen. Reeds uitgevoerde beurten blijven grijs en tellen niet mee, want die hoef je niet meer in te plannen. Het werkt ook op de handmatige regels van de oude plannen. De stand is puur intern en komt nergens op de offerte. Vereist SQL (los geleverd).</p>
         <p><strong>☎ Het telefoonnummer komt mee uit Yoobi (v4.38.0).</strong> Het nummer stond al in het Yoobi-venster, maar alleen ter referentie: het werd nergens bewaard. Nu wel. Bij Velden invullen komt het nummer van de gekozen contactpersoon in de calculatie te staan, en heeft die er geen, dan het nummer van de relatie. In het Offerte-blok staat het naast E-mail in een eigen veldje, dus voor een klant die niet uit Yoobi komt tik je het er zelf in. Vanaf daar loopt het door naar de nabeltaak van Maud: het nummer staat bovenaan het belscript en in het telefoonveld van de taak, zodat ze het in de takenapp aantikt en meteen belt. Bij de contactpersonen in het Yoobi-venster zie je voortaan achter elke naam ook het nummer, zodat je ziet wie je kiest. Weet Yoobi geen nummer, dan meldt het belscript dat het daar opgezocht moet worden. Vereist de bijgewerkte Edge Function offerte-herinnering. Geen SQL.</p>
         <p><strong>🌐 De kilometers lopen nu via je eigen server (v4.37.0).</strong> Het nieuwe adres van OpenRouteService laat aanroepen die rechtstreeks uit een webpagina komen niet door. Je browser stuurt bij zo n verzoek eerst een testvraag vooruit, en daar kwam geen antwoord op, dus bleef de app wachten tot hij het opgaf. Aan onze kant was dat niet te repareren, hoe lang we ook zouden wachten. De aanroep loopt daarom voortaan via een eigen Edge Function bij Supabase: de app vraagt het aan je eigen server en die vraagt het aan OpenRouteService. Voor een server gelden die browserregels niet. Drie dingen die je daarvan merkt. Je sleutel staat niet meer in de app maar als secret op de server, dus het invulveld bij Instellingen is verdwenen en een sleutel die daar nog stond wordt vanzelf opgeruimd. Gaat er iets mis, dan lees je voortaan wat OpenRouteService echt antwoordt in plaats van een vage melding. En 24 augustus, wanneer het oude adres helemaal dichtgaat, raakt ons niet meer. Vereist eenmalig de nieuwe Edge Function reisafstand met de secret ORS_KEY. Geen SQL.</p>
         <p><strong>🚚 Afstand ophalen praat tegen het nieuwe adres (v4.36.1).</strong> Afstand ophalen bleef falen, ook na de herkansingen uit v4.36.0. De oorzaak lag niet bij jou en niet bij je sleutel: OpenRouteService is verhuisd. Sinds 28 april is hun oude adres afgeschaft en wordt het tegoed daarop afgeknepen om mensen tot overstappen te bewegen, en op 24 augustus gaat het oude adres helemaal dicht. De app praat nu tegen het nieuwe adres. Je bestaande sleutel blijft gewoon werken, daar hoef je niets voor te doen. Wil je hem ooit opnieuw aanmaken, dan doe je dat voortaan op account.heigit.org en niet meer op openrouteservice.org, want ook het inloggen is meeverhuisd. Dat staat nu ook zo in de hulptekst bij Instellingen. Geen SQL, geen Edge Function.</p>
@@ -3200,7 +3201,8 @@ Hout binnen;Gronden;m²;6;0,10</div>
       <div style="font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;">Een ander jaar invullen verschuift de beurt naar die kolom.</div>
       <label style="margin-top: 0.9rem;">Planning-notitie (intern)</label>
       <textarea id="planningEditNotitie" rows="3" placeholder="bv. Uitgesteld ivm verbouwing buren, te veel stof." style="width: 100%; resize: vertical; padding: 0.6rem; font-size: 0.95rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); box-sizing: border-box; font-family: inherit; line-height: 1.45;"></textarea>
-      <label style="margin-top: 0.9rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"><input type="checkbox" id="planningEditReeds"> Deze beurt is reeds uitgevoerd</label>
+      <label style="margin-top: 0.9rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"><input type="checkbox" id="planningEditIngepland"> Deze beurt staat in de Yoobi-planning</label>
+      <label style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"><input type="checkbox" id="planningEditReeds"> Deze beurt is reeds uitgevoerd</label>
     </div>
     <div class="modal-foot">
       <button class="btn-secondary btn" onclick="_planningCloseCelEdit()">Annuleren</button>
@@ -3233,7 +3235,8 @@ Hout binnen;Gronden;m²;6;0,10</div>
       </div>
       <label style="margin-top:0.9rem;">Omschrijving</label>
       <textarea id="phOmschrijving" rows="4" placeholder="bv. Herschilderbeurt, of: verplaatst ivm verbouwing" style="width:100%; padding:0.6rem; font-size:1rem; border:1px solid var(--paper-deep); border-radius:var(--radius); box-sizing:border-box; font-family:inherit; resize:vertical; line-height:1.4;"></textarea>
-      <label style="margin-top:0.9rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" id="phReeds"> Reeds uitgevoerd</label>
+      <label style="margin-top:0.9rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" id="phIngepland"> Staat in de Yoobi-planning</label>
+      <label style="margin-top:0.5rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;"><input type="checkbox" id="phReeds"> Reeds uitgevoerd</label>
     </div>
     <div class="modal-foot" style="justify-content: space-between;">
       <button class="btn btn-danger btn-sm" id="phDeleteBtn" onclick="_planningDeleteHandmatig()" style="display:none;">Verwijderen</button>
@@ -3496,7 +3499,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.38.0';
+const APP_VERSION = 'v4.39.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3892,6 +3895,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.39.0', d: '2026-07-26', h: 'Ingepland-stand per onderhoudsbeurt in de Planning-matrix, als afvinklijst voor de jaarlijkse ronde langs de Yoobi-planning. Gemodelleerd op het bestaande patroon van reeds_uitgevoerd (v3.24.5): SQL zet een boolean ingepland met default false op zowel onderhoudsplan_beurten als planning_handmatig, de app leest en schrijft hem via _mapBeurtFromDB en _mapBeurtToDB, en de handmatige regels lopen rechtstreeks via de rec in _planningSaveHandmatig. Bewust geen taak per beurt: veertig taken die op een ochtend worden afgevinkt zijn geen takenlijst, en ze zouden losstaan van de plandata dus verouderen bij elke planwijziging. Bewust ook geen koppeling met de Yoobi-planning, die geeft die informatie niet, dit is handwerk. UI: een tweede checkbox planningEditIngepland in de celbewerk-modal boven de bestaande reeds-checkbox, en phIngepland in de handmatige-regelmodal, meegenomen in de reset van de tak Opslaan en nog een. Matrix: cel-items dragen nu ingepland mee, tePlannen filtert de reeds uitgevoerde beurten eruit en alleIngepland vraagt every over de rest, zodat een cel met meerdere beurten pas blauw (#eaf1fd met een kalender-badge) wordt als de hele cel geregeld is; grijs wint bij een botsing want uitgevoerd is de eindstand. De teller per jaarkolom telt per beurt en niet per cel, en wordt in een voorloop over rijen berekend omdat de thead eerder wordt getekend dan de tbody; hij toont x/y ingepland, kleurt groen zodra de kolom vol is en verschijnt alleen vanaf het huidige jaar, want op oude jaren valt niets meer te plannen. Uitgevoerde beurten vallen uit teller en noemer, anders komt de lijst nooit rond. Legenda-regel boven de scrollbox. De beurt-modal in de Onderhoudsplan-tab is bewust ongemoeid gelaten: planning hoort in de Planning-tab, en omdat _ohpSaveBeurt via _updateBeurt door _mapBeurtToDB loopt blijft ingepland daar vanzelf staan. Komt nergens op de offerte of de bijlage. Vereist SQL (los geleverd), geen Edge Function.' },
   { v: '4.38.0', d: '2026-07-25', h: 'Telefoonnummer uit Yoobi wordt opgeslagen en reist mee naar de nabeltaak. Tot nu toe toonde _yoobiRenderDetail het nummer alleen onder de kop "wordt niet opgeslagen", terwijl de Edge Function yoobi-klant sinds v3.99.0 per contactpersoon al een telefoon meelevert; de keuzerondjes droegen alleen data-naam en data-email, dus het nummer viel op de grond. Nieuw veld offerte_config.telefoon met default in _offCfg (jsonb, dus geen SQL) en een invoerveld type tel in het adresblok van renderOfferteBlok, k-mid direct achter E-mail, zodat een klant buiten Yoobi om met de hand invulbaar blijft. _yoobiRenderDetail: de terugval-contact krijgt telefoon uit r.telefoon mee, beide takken (een contact en meerdere) zetten data-telefoon op de radio en tonen het nummer achter de naam, de regel Telefoon is uit het referentieblok gehaald en staat nu als Telefoon relatie bij de klantgegevens. _yoobiVulIn leest gekozenContact.dataset.telefoon en schrijft cfg.telefoon met terugval op r.telefoon. Bewust geen terugval op de relatie binnen contactTel zelf: de terugval gebeurt pas bij het toekennen, zodat een leeg contactnummer niet stil het relatienummer verbergt. Vervolg zit in de Edge Function offerte-herinnering, die het nummer uit offerte_config in de kolom tel van de beltaak zet; taken.html (v0.13.5) rendert daar al een pil en een tel-link op, dus daar was geen wijziging nodig. Geen SQL.' },
   { v: '4.37.0', d: '2026-07-25', h: 'Rijafstand via een eigen Edge Function in plaats van rechtstreeks uit de browser. Aanleiding: na de omzetting naar api.heigit.org in v4.36.1 bleef Afstand ophalen falen met AbortError na 8 s, ook bij herhaald drukken. Op het forum van openrouteservice staat dezelfde melding van een andere gebruiker: de preflight op api.heigit.org/openrouteservice/v2/directions/driving-car krijgt geen Access-Control-Allow-Origin terug, terwijl identieke verzoeken op het oude adres wel werkten; HeiGIT meldde op 19-05 een fix maar het gedrag is er nog. Een hangende preflight verklaart de AbortError in plaats van een snelle CORS-afwijzing, en daarmee is verhogen van de tijdslimiet zinloos. Nieuwe Edge Function reisafstand (Verify JWT uit, eigen logincontrole via /auth/v1/user, secret ORS_KEY, geen backticks): neemt { vertrek, bestemming } als [lon, lat], valideert beide punten, roept ORS twee keer aan met AbortController op 15 s, herkanst alleen bij 429 en 5xx, vertaalt 401 en 403 naar een melding over de secret, en geeft bij elke fout { fout, code, detail } terug met de eerste 300 tekens van het antwoord van ORS. App-kant: _orsAfstandMeters heeft geen key-parameter meer en doet een enkele POST naar REISAFSTAND_FN_URL met het sessietoken plus apikey (patroon van _yoobiCall), AbortController op 35 s omdat de functie zelf al tot circa 31 s kan doen, en leest bij een 502 de fout uit de body in plaats van via _extFetch te lopen, dat immers op een niet-ok antwoord gooit voordat de body gelezen is; detail gaat naar console.warn. ophaalAfstand controleert de sleutel niet meer, die zit nu op de server. Instellingen: het veld setOrsKey en de bijbehorende hulptekst zijn verwijderd, de introtekst van het blok bijgewerkt, en een eenmalige opruimer verwijdert data.settings.orsKey uit de instellingen zodat de sleutel niet meer met de app mee de browser in gaat. PDOK ongemoeid gelaten: dat opzoeken werkt aantoonbaar vanuit de browser en verplaatsen zou onnodig risico zijn. Vereist de Edge Function reisafstand en de secret ORS_KEY. Geen SQL.' },
   { v: '4.36.1', d: '2026-07-25', h: 'Rijafstand omgezet naar het nieuwe HeiGIT-adres. _orsAfstandMeters roept voortaan api.heigit.org/openrouteservice/v2/directions/driving-car aan in plaats van api.openrouteservice.org/v2/directions/driving-car. Aanleiding: na het uitrollen van v4.36.0 wees de nieuwe melding OpenRouteService aan als de falende dienst, terwijl PDOK aantoonbaar werkte (straat en woonplaats werden ingevuld) en drie herkansingen niets opleverden. HeiGIT heeft api.openrouteservice.org op 28-04-2026 gedeprecieerd ten gunste van api.heigit.org onder de structuur api.heigit.org/<dienst>/<versie>/, met de aantekening dat het quotum op het oude adres afgeknepen kan worden om de overstap af te dwingen en met een harde afsluitdatum van 24-08-2026; dat verklaart het aanhoudende falen zonder leesbare statuscode, want een geweigerd antwoord komt zonder de benodigde header terug en de browser gooit het weg. De sleutel is ongewijzigd geldig op het nieuwe adres en het quotum in het dashboard is al dat van api.heigit.org. Terzijde uit dezelfde draad: browsertoegang tot api.heigit.org was van 13 tot 19 mei kapot door ontbrekende CORS-headers en is daarna gerepareerd, dus de webpagina-route werkt weer. Hulptekst bij de sleutel in Instellingen verwijst niet meer naar openrouteservice.org maar naar account.heigit.org, waar sinds de migratie naar HeiGIT user management (25-02-2025) ook het inloggen en het quotumoverzicht zitten. PDOK ongemoeid: die aanroepen bleven de hele diagnose door foutloos, vijftien van de vijftien pogingen met code 200 binnen 40 ms vanaf de GitHub Pages-herkomst. Geen SQL, geen Edge Function.' },
@@ -7039,6 +7043,7 @@ function _mapBeurtFromDB(row) {
     offerteTekst: row.offerte_tekst || '', // v3.21.0 — vrije tekst per beurt voor de offerte-bijlage
     planningNotitie: row.planning_notitie || '', // v3.27.5 — interne planning-notitie, los van de offerte-tekst
     reedsUitgevoerd: row.reeds_uitgevoerd === true, // v3.24.5 — beurt is al uitgevoerd (visueel grijs in bijlage)
+    ingepland: row.ingepland === true, // v4.39.0 — beurt staat in de Yoobi-planning (intern, niet op de offerte)
     aangemaakt: row.aangemaakt || null,
     gewijzigd:  row.gewijzigd  || null
   };
@@ -7055,6 +7060,7 @@ function _mapBeurtToDB(b, planId) {
     offerte_tekst: b.offerteTekst || '', // v3.21.0
     planning_notitie: b.planningNotitie || '', // v3.27.5
     reeds_uitgevoerd: b.reedsUitgevoerd === true, // v3.24.5
+    ingepland: b.ingepland === true, // v4.39.0
     gewijzigd: new Date().toISOString()
   };
 }
@@ -9382,7 +9388,7 @@ async function _planningRekenPlan(plan) {
       const fac = _ohpIndexFactor(b.jaartal, plan.prijspeil, plan.indexeringPct);
       const bedrag = basis * fac * btwF;
       (out.cellen[b.jaartal] = out.cellen[b.jaartal] || []).push({
-        bedrag: bedrag, uren: uren, naam: b.naam || '', reeds: b.reedsUitgevoerd === true, notitie: b.planningNotitie || '', beurtId: b.id
+        bedrag: bedrag, uren: uren, naam: b.naam || '', reeds: b.reedsUitgevoerd === true, ingepland: b.ingepland === true, notitie: b.planningNotitie || '', beurtId: b.id
       });
     });
   } finally {
@@ -9413,7 +9419,7 @@ async function renderPlanningMatrix() {
     const key = row.klant || '(naamloos)';
     if (!hmPerKlant[key]) hmPerKlant[key] = { plan: null, klant: key, betaalmodel: row.betaalmodel || 'contant', heeftCalc: false, handmatig: true, cellen: {} };
     (hmPerKlant[key].cellen[row.jaartal] = hmPerKlant[key].cellen[row.jaartal] || []).push({
-      bedrag: row.bedrag || 0, uren: 0, naam: row.omschrijving || '', reeds: row.reeds_uitgevoerd === true, notitie: '', handmatigId: row.id
+      bedrag: row.bedrag || 0, uren: 0, naam: row.omschrijving || '', reeds: row.reeds_uitgevoerd === true, ingepland: row.ingepland === true, notitie: '', handmatigId: row.id
     });
   });
   Object.values(hmPerKlant).forEach(r => rijen.push(r));
@@ -9446,12 +9452,35 @@ async function renderPlanningMatrix() {
   const jaren = [];
   for (let y = minJ; y <= maxJ; y++) jaren.push(y);
 
+  // v4.39.0 — teller per jaarkolom: hoeveel van de nog uit te voeren beurten staan al in de
+  // Yoobi-planning. Vooraf uitrekenen, want de kopregel wordt eerder getekend dan de rijen.
+  // Reeds uitgevoerde beurten vallen uit de som, die hoeven niet meer gepland te worden.
+  const huidigJaar = new Date().getFullYear();
+  const planTeller = {};
+  jaren.forEach(y => planTeller[y] = { totaal: 0, gedaan: 0 });
+  rijen.forEach(r => jaren.forEach(y => (r.cellen[y] || []).forEach(it => {
+    if (it.reeds) return;
+    planTeller[y].totaal++;
+    if (it.ingepland) planTeller[y].gedaan++;
+  })));
+
   const stickyHead = 'position: sticky; left: 0; top: 0; background: var(--paper); z-index: 3; min-width: 170px; text-align: left;';
   const stickyCell = 'position: sticky; left: 0; background: var(--paper); z-index: 1;';
 
-  let html = '<div class="table-scroll" style="max-height: 70vh; overflow: auto;"><table class="planning-matrix"><thead><tr>';
+  // v4.39.0 — legenda boven de matrix, zodat de kleuren zonder uitleg te lezen zijn.
+  let html = '<div style="font-size: 0.78rem; color: var(--muted); margin-bottom: 0.5rem;">Blauw = staat in de Yoobi-planning \u00b7 Grijs = reeds uitgevoerd \u00b7 Tik op een beurt om de stand te zetten</div>';
+  html += '<div class="table-scroll" style="max-height: 70vh; overflow: auto;"><table class="planning-matrix"><thead><tr>';
   html += `<th style="${stickyHead}">Plan</th>`;
-  jaren.forEach(y => { html += `<th class="right" style="position: sticky; top: 0; background: var(--paper); z-index: 2; min-width: 120px;">${y}</th>`; });
+  jaren.forEach(y => {
+    // v4.39.0 — tellertje alleen op dit jaar en verder; op oude jaren valt niets meer te plannen.
+    const t = planTeller[y];
+    const toonTeller = (y >= huidigJaar && t.totaal > 0);
+    const vol = toonTeller && t.gedaan === t.totaal;
+    const tellerHtml = toonTeller
+      ? `<div style="font-size: 0.7rem; font-weight: normal; color: ${vol ? '#16a34a' : '#2563eb'};" title="Beurten die nog uitgevoerd moeten worden en al in de Yoobi-planning staan">${t.gedaan}/${t.totaal} ingepland</div>`
+      : '';
+    html += `<th class="right" style="position: sticky; top: 0; background: var(--paper); z-index: 2; min-width: 120px;">${y}${tellerHtml}</th>`;
+  });
   html += '</tr></thead><tbody>';
 
   const jaarTotaal = {}; jaren.forEach(y => jaarTotaal[y] = 0);
@@ -9469,10 +9498,18 @@ async function renderPlanningMatrix() {
       const celBedrag = items.reduce((s, it) => s + it.bedrag, 0);
       const celUren = items.reduce((s, it) => s + (it.uren || 0), 0);
       const alleReeds = items.every(it => it.reeds);
+      // v4.39.0 — blauw pas als alle beurten in deze cel die nog uitgevoerd moeten worden
+      // ook in de Yoobi-planning staan. Grijs wint, uitgevoerd is de eindstand.
+      const tePlannen = items.filter(it => !it.reeds);
+      const alleIngepland = tePlannen.length > 0 && tePlannen.every(it => it.ingepland);
       jaarTotaal[y] += celBedrag;
       urenTotaal[y] += celUren;
-      const grijs = alleReeds ? ' style="color: var(--muted); background: var(--bg-soft, #f5f5f5);"' : '';
-      const badge = alleReeds ? ' <span title="Reeds uitgevoerd" style="color: var(--muted); font-weight: normal;">✓</span>' : '';
+      const grijs = alleReeds
+        ? ' style="color: var(--muted); background: var(--bg-soft, #f5f5f5);"'
+        : (alleIngepland ? ' style="background: #eaf1fd;"' : '');
+      const badge = alleReeds
+        ? ' <span title="Reeds uitgevoerd" style="color: var(--muted); font-weight: normal;">✓</span>'
+        : (alleIngepland ? ' <span title="Staat in de Yoobi-planning" style="color: #2563eb; font-weight: normal;">📅</span>' : '');
       const links = items.map(it => {
         const label = it.naam || (it.handmatigId ? 'regel' : 'beurt');
         const fn = it.handmatigId ? `_planningOpenHandmatigEdit('${it.handmatigId}')` : `_planningOpenCelEdit('${it.beurtId}')`;
@@ -9586,6 +9623,7 @@ function _planningOpenCelEdit(beurtId) {
   document.getElementById('planningEditKop').textContent = `${ref.klant} · ${b.naam || 'beurt'}`;
   document.getElementById('planningEditJaar').value = b.jaartal;
   document.getElementById('planningEditNotitie').value = b.planningNotitie || '';
+  document.getElementById('planningEditIngepland').checked = b.ingepland === true; // v4.39.0
   document.getElementById('planningEditReeds').checked = b.reedsUitgevoerd === true;
   document.getElementById('planningEditModal').classList.add('active');
 }
@@ -9601,6 +9639,7 @@ async function _planningSaveCelEdit() {
   const b = ref.beurt;
   b.jaartal = parseInt(document.getElementById('planningEditJaar').value) || b.jaartal;
   b.planningNotitie = document.getElementById('planningEditNotitie').value || '';
+  b.ingepland = document.getElementById('planningEditIngepland').checked === true; // v4.39.0
   b.reedsUitgevoerd = document.getElementById('planningEditReeds').checked === true;
   const opgeslagen = await _updateBeurt(b);
   if (!opgeslagen) { _toast('Opslaan mislukt'); return; }
@@ -9628,6 +9667,7 @@ function _planningOpenHandmatigEdit(id) {
   document.getElementById('phJaar').value = row ? row.jaartal : new Date().getFullYear();
   document.getElementById('phBedrag').value = row ? row.bedrag : '';
   document.getElementById('phOmschrijving').value = row ? (row.omschrijving || '') : '';
+  document.getElementById('phIngepland').checked = row ? (row.ingepland === true) : false; // v4.39.0
   document.getElementById('phReeds').checked = row ? (row.reeds_uitgevoerd === true) : false;
   document.getElementById('phDeleteBtn').style.display = id ? '' : 'none';
   document.getElementById('phTitel').textContent = id ? 'Handmatige regel bewerken' : 'Handmatige regel toevoegen';
@@ -9646,7 +9686,8 @@ async function _planningSaveHandmatig(blijfOpen) {
     jaartal: parseInt(document.getElementById('phJaar').value) || new Date().getFullYear(),
     bedrag: parseFloat(String(document.getElementById('phBedrag').value || '0').replace(',', '.')) || 0,
     omschrijving: document.getElementById('phOmschrijving').value || '',
-    reeds_uitgevoerd: document.getElementById('phReeds').checked === true
+    reeds_uitgevoerd: document.getElementById('phReeds').checked === true,
+    ingepland: document.getElementById('phIngepland').checked === true // v4.39.0
   };
   if (!rec.klant) { _toast('Vul een klantnaam in'); return; }
   let ok;
@@ -9668,6 +9709,7 @@ async function _planningSaveHandmatig(blijfOpen) {
     document.getElementById('phBedrag').value = '';
     document.getElementById('phOmschrijving').value = '';
     document.getElementById('phReeds').checked = false;
+    document.getElementById('phIngepland').checked = false; // v4.39.0
     document.getElementById('phDeleteBtn').style.display = 'none';
     document.getElementById('phTitel').textContent = 'Handmatige regel toevoegen';
     renderPlanningMatrix();

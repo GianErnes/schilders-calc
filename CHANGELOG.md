@@ -1,3 +1,19 @@
+## v4.39.0 — Afvinklijst voor de onderhoudsbeurten
+Begin januari plan je de onderhoudsbeurten van dat jaar in Yoobi. Tot nu toe was nergens te zien of je ze allemaal gehad had. Dat kan nu in het tabblad Planning.
+
+### Wat er verandert
+- Tik een beurt in de matrix aan. Er staat een nieuw vinkje: Deze beurt staat in de Yoobi-planning.
+- Een cel wordt blauw zodra alles wat er nog uitgevoerd moet worden in de planning staat. Staan er twee beurten in dezelfde cel, dan kleurt hij pas als ze allebei geregeld zijn.
+- Boven elke jaarkolom vanaf dit jaar staat een tellertje: 12/18 ingepland. Is de kolom vol, dan wordt hij groen en is het jaar rond.
+- Reeds uitgevoerde beurten blijven grijs, vallen uit de teller en tellen ook niet mee in het totaal. Die hoef je niet meer in te plannen, anders kwam de lijst nooit rond.
+- Is een beurt allebei aangevinkt, dan wint grijs. Uitgevoerd is de eindstand.
+- De handmatige regels van de oude plannen zonder calculatie krijgen hetzelfde vinkje. Juist die klanten staan dit jaar op de rol.
+- Boven de matrix staat een regeltje dat de kleuren uitlegt.
+- De stand is puur intern. Hij komt nergens op de offerte of de bijlage.
+- Er is bewust geen koppeling met de Yoobi-planning gemaakt. Yoobi geeft die informatie niet, dus dit blijft handwerk.
+- Er komt ook bewust geen taak per beurt. Veertig taken die je op een ochtend afvinkt zijn geen takenlijst. Maak in de takenapp één jaarlijks herhalende taak die je hierheen stuurt.
+- Vereist SQL (los geleverd). Geen Edge Function.
+
 ## v4.38.0 — Het telefoonnummer komt mee uit Yoobi
 Het nummer stond al in het Yoobi-venster, maar alleen ter referentie. Het werd nergens bewaard, dus wie moest bellen zocht het opnieuw op.
 
