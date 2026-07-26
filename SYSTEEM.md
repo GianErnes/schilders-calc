@@ -332,6 +332,20 @@ Die geeft in één resultaat alle cronjobs met hun laatste run, alle
 triggers, alle opslagbakken en alle tabellen. Dit is het snelste
 totaalbeeld en het is puur lezen.
 
+> **Waar die query staat.** In de map `beheer/` van deze repo, naast dit
+> document. Drie bestanden, allemaal read-only, ze veranderen niets:
+>
+> - `inventarisatie_automatiek.sql` — het totaalbeeld, voor `schilders-calc`
+> - `inventarisatie_zonder_cron.sql` — dezelfde uitdraai zonder de
+>   cronblokken. Nodig voor `schilder-voorraad`, want daar staat pg_cron
+>   niet aan en dan breekt de eerste query af met een melding over
+>   `cron.job`
+> - `exacte_rijtelling.sql` — telt per tabel het werkelijke aantal rijen.
+>   Gebruikt om te controleren of een herstel geslaagd is
+>
+> Supabase Studio toont bij meerdere SELECT-opdrachten alleen het laatste
+> resultaat. Daarom geven deze query's alles in één antwoord terug.
+
 Waar je op let in blok 2, de laatste runs:
 
 - `taken-mail-melding` hoort op minuten te staan, niet op uren
@@ -370,8 +384,9 @@ altijd bovenaan, ook als je denkt te weten wat het is.
    systeem. Laat de pagina hard verversen met cmd-shift-R.
 2. **Staat Supabase zelf overeind?** Kijk op `status.supabase.com`. Ligt
    het daar, dan is er niets te repareren en wachten we.
-3. **Draai de uitdraai.** `inventarisatie_automatiek.sql`. Binnen een
-   minuut weet je of de achtergrondtaken nog lopen.
+3. **Draai de uitdraai.** `inventarisatie_automatiek.sql` uit de map
+   `beheer/` van deze repo. Binnen een minuut weet je of de
+   achtergrondtaken nog lopen.
 
 Pas daarna ga je zoeken.
 
