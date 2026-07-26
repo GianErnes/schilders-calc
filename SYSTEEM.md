@@ -7,8 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026.
-Hoofdstuk 3 en 4 volgen in een tweede sessie.
+Opgesteld 26 juli 2026. Alle zes hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
 >
@@ -209,6 +208,295 @@ Mordant. Zie hoofdstuk 6.
 
 ---
 
+## 3. Wat draait er automatisch
+
+Dit hoofdstuk beschrijft alles wat werk doet zonder dat iemand erop
+drukt. Vastgesteld door uitdraai op 26 juli 2026.
+
+Er zijn **drie soorten** automatiek, en dat onderscheid is belangrijk,
+want ze staan op drie verschillende plekken en gaan op drie verschillende
+manieren stuk.
+
+1. **Cronjobs.** Staan in de database. Roepen op vaste tijden een Edge
+   Function aan.
+2. **Edge Functions.** Los draaiende programmaatjes bij Supabase. Sommige
+   worden door cron aangeroepen, andere door de apps, een paar door niets.
+3. **Triggers.** Zitten vast aan een tabel en vuren op het moment dat er
+   een rij verandert.
+
+In het project `schilder-voorraad` bestaat **geen enkele** van de drie.
+Daar draait niets automatisch. Alles wat daar gebeurt komt uit de app.
+
+### 3.1 De zeven cronjobs
+
+Allemaal in `schilders-calc`, allemaal actief.
+
+| Naam | Wanneer | Roept aan | Wat het doet |
+|---|---|---|---|
+| `backup-nachtelijk` | elke nacht 02:00 | `backup-dump` | dump van de database naar de bak `backups`, plus kopie van foto's en documenten. Stuurt maandag een statusmail |
+| `yuki-vuller-dagelijks` | elke dag 05:00 | `smooth-function` | haalt de standen uit Yuki en vult het financiele dashboard |
+| `yuki-vuller-middag` | elke dag 10:00 | `smooth-function` | zelfde, tweede keer op de dag |
+| `offerte-opvolging-werkdagen` | ma t/m vr 06:30 | `offerte-herinnering` | herinnert aan openstaande offertes |
+| `taken-mail-melding` | elke 2 minuten | `taken-mail-melding` | stuurt mail bij nieuwe of gewijzigde taken |
+| `werkvoorraad-sync-wekelijks` | dinsdag 06:00 | `fin-werkvoorraad-sync` | haalt de werkvoorraad uit Yoobi |
+| `maandbericht-maandelijks` | de 7e, 07:00 | `maandbericht` | stelt het maandbericht op |
+
+**Twee dingen om te weten.**
+
+`smooth-function` staat in de lijst met Edge Functions als **`yuki-test`**.
+Dat is geen test. Die functie vult tweemaal daags het financiele
+dashboard. Wie ooit opruimt en een ding tegenkomt dat naar test heet,
+gooit dat weg, en dan valt financieel.html om zonder dat iemand snapt
+waarom. Zie de opruimlijst.
+
+`taken-mail-melding` draait elke twee minuten, ruim 700 keer per dag. Dat
+kost geen geld van betekenis, maar het laat de logtabellen hard vollopen.
+
+### 3.2 De achttien Edge Functions
+
+De broncode van alle achttien staat sinds 26 juli 2026 in de besloten
+repo `GianErnes/ernes-edge-functions`. Dat is nodig, want een backup van
+Supabase neemt Edge Functions **niet** mee.
+
+**Aangeroepen door cron** (zie de tabel hierboven): `backup-dump`,
+`smooth-function`, `offerte-herinnering`, `taken-mail-melding`,
+`fin-werkvoorraad-sync`, `maandbericht`.
+
+**Aangeroepen vanuit de apps:**
+
+| Functie | Vanuit | Wat het doet |
+|---|---|---|
+| `app-hulp` | Calc | vraagbaak in de app |
+| `craft-werkvoorbereiding` | Calc | werkvoorbereidingsdocument in Craft |
+| `offerte-accord` | Calc | akkoordverklaring en ondertekende PDF |
+| `offerte-leescontrole` | Calc | controleert de offerte op fouten |
+| `offerte-verzenden` | Calc | verstuurt de offerte |
+| `reisafstand` | Calc | rijafstand naar het werkadres |
+| `yoobi-klant` | Calc | klantgegevens uit Yoobi |
+| `yoobi-taken-sync` | Taken | taken uit Yoobi |
+
+`offerte-herinnering` wordt zowel door cron als vanuit de app aangeroepen.
+
+**Aangeroepen door niets.** Op 26 juli 2026 nagekeken in de
+aanroeplogboeken. Deze vier staan op de nominatie om te verdwijnen en
+staan bewaard in de archiefrepo.
+
+| Functie | Wat het was |
+|---|---|
+| `taken-agenda` | taken tonen via een agenda-abonnement, verlaten |
+| `taken-meldingen` | eerste poging tot taakmeldingen |
+| `yoobi-kijkglas` | overblijfsel van de Yoobi-verkenning |
+| `yoobi-project-probe` | overblijfsel van de Yoobi-verkenning |
+
+> **Meldingen over taken lopen via mail.** Er zijn drie generaties van
+> hetzelfde probleem geweest: `taken-meldingen`, toen `taken-agenda`, en
+> uiteindelijk `taken-mail-melding`. De eerste twee zijn verlaten. Niet
+> opnieuw bouwen.
+
+Bij alle vier staat de wachtwoordcontrole uit. Ze zijn dus zonder
+inloggegevens bereikbaar voor wie de naam raadt, en de twee Yoobi-functies
+kunnen bij de Yoobi-inloggegevens van het project, want alle functies in
+een project delen dezelfde geheimen. Dat is de reden om ze op te ruimen,
+niet de netheid.
+
+### 3.3 De elf triggers
+
+Allemaal op tabellen in `schilders-calc`, allemaal actief.
+
+| Trigger | Op tabel | Wat het doet |
+|---|---|---|
+| `trg_offerte_taken` | `calculaties` | maakt taken aan als een offerte van status wisselt |
+| `trg_todo_taken` | `todos` | spiegelt een todo uit de calculatie naar de takenapp |
+| `trg_taken_todo_terug` | `taken` | spiegelt terug van taak naar todo |
+| `bescherm_eigen` | `taken` | voorkomt dat iemand andermans taak aanpast |
+| `bevries_yoobi` | `taken` | beschermt velden die uit Yoobi komen |
+| `zet_bijgewerkt` | `taken` | zet de bijwerkdatum |
+| `trg_bewerkingen_upd` | `bewerkingen` | zet de bijwerkdatum |
+| `trg_materialen_upd` | `materialen` | zet de bijwerkdatum |
+| `trg_ondergronden_upd` | `ondergronden` | zet de bijwerkdatum |
+| `trg_settings_upd` | `settings` | zet de bijwerkdatum |
+| `trg_verfsystemen_upd` | `verfsystemen` | zet de bijwerkdatum |
+
+Triggers zijn het makkelijkst te vergeten onderdeel van dit systeem,
+omdat ze nergens zichtbaar zijn en geen logboek bijhouden. Ze doen werk
+waarvan iedereen denkt dat de app het doet.
+
+### 3.4 Hoe je ziet dat het nog draait
+
+Dit is het lastigste stuk, want een geschreven pagina kan niet vertellen
+of de backup vannacht gelopen heeft. Tot er een statusscherm is (punt 5
+van de opruimlijst) gaat het handmatig.
+
+**De uitdraai.** Draai `inventarisatie_automatiek.sql` in de SQL-editor.
+Die geeft in één resultaat alle cronjobs met hun laatste run, alle
+triggers, alle opslagbakken en alle tabellen. Dit is het snelste
+totaalbeeld en het is puur lezen.
+
+Waar je op let in blok 2, de laatste runs:
+
+- `taken-mail-melding` hoort op minuten te staan, niet op uren
+- `backup-nachtelijk` en de twee yuki-vullers op hoogstens een etmaal
+- `werkvoorraad-sync-wekelijks` op hoogstens acht dagen
+- `maandbericht-maandelijks` op hoogstens vijfendertig dagen
+
+**Ontbreekt een job helemaal in blok 2, dan heeft hij nog nooit
+gedraaid.** Dat is niet hetzelfde als een oude laatste run en het is
+ernstiger. Op 26 juli 2026 was dat het geval bij
+`offerte-opvolging-werkdagen`, en dat bleek te kloppen: die was dat
+weekend gebouwd en moest maandag voor het eerst vuren.
+
+**Per Edge Function.** In Supabase Studio, Edge Functions, functie
+aanklikken, tabblad **Invocations**. Zet het tijdvenster ruim. Daar zie je
+per aanroep de datum en of hij gelukt is. Dit is de enige plek waar je
+ziet of iets van buitenaf een functie aanroept, en dat is hoe op 26 juli
+bleek dat `taken-agenda` nog springlevend was terwijl hij in geen enkel
+bestand voorkwam.
+
+**Waar je niet naar moet kijken.** De tabel `net._http_response` lijkt
+bruikbaar maar is dat niet: alle functies staan er door elkaar op
+volgorde van tijd en je trekt er makkelijk de verkeerde conclusie uit.
+
+---
+
+## 4. Als het stukgaat
+
+De volgorde hieronder is de volgorde waarin je hem doorloopt. Begin
+altijd bovenaan, ook als je denkt te weten wat het is.
+
+### 4.0 Eerste handeling, altijd
+
+1. **Werkt het bij iemand anders ook niet?** Werkt het wel bij een
+   collega, dan zit het in de browser of het apparaat, en niet in het
+   systeem. Laat de pagina hard verversen met cmd-shift-R.
+2. **Staat Supabase zelf overeind?** Kijk op `status.supabase.com`. Ligt
+   het daar, dan is er niets te repareren en wachten we.
+3. **Draai de uitdraai.** `inventarisatie_automatiek.sql`. Binnen een
+   minuut weet je of de achtergrondtaken nog lopen.
+
+Pas daarna ga je zoeken.
+
+### 4.1 Yoobi geeft overal foutmeldingen
+
+**Beeld:** meerdere Yoobi-koppelingen geven tegelijk fout 500. Niet één,
+maar allemaal.
+
+**Eerste handeling:** niets zelf repareren. Als álle koppelingen tegelijk
+omvallen, ligt het niet aan ons. Dit is eerder gebeurd en de oorzaak was
+een kapotte API-gebruiker aan de kant van Yoobi.
+
+**Bellen:** Yoobi, en bij geen doorpakken Vincent Egt. Zie hoofdstuk 6.
+
+**Wat werkt intussen niet:** klantgegevens ophalen in Calc, taken uit
+Yoobi, en de wekelijkse werkvoorraad. De rest van het systeem draait door.
+
+### 4.2 Het financiele overzicht staat op nul
+
+**Beeld:** financieel.html toont nullen of een oude stand.
+
+**Eerste handeling:** kijk in de uitdraai wanneer `yuki-vuller-dagelijks`
+en `yuki-vuller-middag` voor het laatst gedraaid hebben. Staan die op
+vanmorgen, dan ligt het aan Yuki en niet aan ons.
+
+**Let op:** de tabel `fin_dashboard` bevat één regel die twee keer per dag
+overschreven wordt. Geeft Yuki een keer niets terug, dan staat er nul en
+is de goede stand van gisteren weg. De maandberichten blijven wel bewaard
+in `fin_berichten`.
+
+**Verschil met Yuki zelf is normaal.** De app maakt een momentopname om
+07:00. Yuki Monitor telt de boekingen van gedurende de dag mee, en
+afschrijvingen. Vergelijk alleen 's ochtends, dan kijken beide naar
+dezelfde stand.
+
+### 4.3 Een achtergrondtaak draait niet meer
+
+**Beeld:** geen mail meer bij nieuwe taken, geen maandbericht, geen
+werkvoorraad.
+
+**Eerste handeling:** uitdraai draaien en kijken naar blok 2. Staat de
+laatste run te ver terug, of ontbreekt de job helemaal, dan is dat de
+oorzaak.
+
+**Daarna:** open de betreffende Edge Function in Studio en kijk bij
+Invocations en Logs wat er misging. Meestal is het een sleutel die niet
+meer werkt of een dienst aan de andere kant die niet antwoordt.
+
+**Denk aan het tegoed.** De Anthropic-sleutel loopt op tegoed en
+waarschuwt niet netjes vooraf. Raakt dat op, dan stopt de leescontrole op
+offertes stilletjes.
+
+### 4.4 Bestanden zijn weg
+
+**Beeld:** foto's, documenten of getekende akkoorden zijn verdwenen.
+
+**Dit is het zwakste punt van het hele systeem en dat moet je weten
+voordat het gebeurt.**
+
+De platformbackup van Supabase bevat **uitsluitend de database**, geen
+bestanden. Dat staat letterlijk in het backupscherm. De eigen nachtelijke
+kopie pakt alleen `calculatie-fotos` en `calculatie-documenten`.
+
+Dat betekent dat `accord-pdf`, `taken-documenten` en `taken-fotos` op dit
+moment **geen enkele backup** hebben. De 66 getekende akkoorden zijn
+daarmee het enige onvervangbare in het systeem. Zie de opruimlijst,
+punt 1.
+
+### 4.5 De database is weg of kapot
+
+**Dit is geoefend op 26 juli 2026 en het werkt.** Doorlooptijd was een
+half uur.
+
+1. Supabase, het getroffen project, **Database**, onder PLATFORM
+   **Backups**.
+2. Tabblad **Restore to new project**. Niet de andere twee tabbladen,
+   want die schrijven over het bestaande project heen.
+3. Kies de gewenste dag en klik **Restore**.
+4. Geef het nieuwe project een naam. **Let op dat de browser dat veld niet
+   zelf invult met een e-mailadres**, dat gebeurde bij de oefening.
+5. Wachten. Reken op een half uur.
+
+**Het nieuwe project verschijnt niet meteen in de projectenlijst.** Die
+toont alleen projecten die al actief zijn. Wil je weten of hij bestaat,
+kijk dan bij de organisatie: daar staat het aantal projecten, en dat telt
+hem wel mee. Verversen met cmd-shift-R helpt.
+
+**Controleren of het gelukt is:** draai `exacte_rijtelling.sql` in het
+nieuwe project en leg de aantallen naast de laatst bekende telling.
+
+Bewaartermijn van de platformbackup is **zeven dagen**, voor beide
+projecten.
+
+### 4.6 Wat herstel niet terugbrengt
+
+Dit is het belangrijkste deel van dit hoofdstuk. Een herstel geeft je je
+gegevens terug, niet je systeem. Het volgende moet met de hand opnieuw:
+
+| Wat | Waar je het terugvindt |
+|---|---|
+| Edge Functions | de besloten repo `ernes-edge-functions` |
+| Cronjobs | hoofdstuk 3.1, opnieuw aanmaken |
+| Triggers | komen wel mee, die zitten in de database |
+| Bestanden in de opslagbakken | de bak `backups`, en voor accord-pdf: nergens |
+| Geheimen en sleutels | de kluis |
+| Instellingen van aanmelden | met de hand |
+
+Reken dus niet op één knop. Reken op een knop plus een dag werk met deze
+lijst ernaast.
+
+### 4.7 Wat nog niet getest is
+
+Eerlijk opgeschreven, zodat niemand er ten onrechte op vertrouwt.
+
+**De eigen nachtelijke dump is nooit teruggezet.** In de bak `backups`
+staan 156 bestanden en elke maandag gaat er een kopie per mail naar de
+gedeelde mailbox. Die maandagmail is **de enige kopie buiten Supabase**,
+en daarmee het enige dat je redt als je het Supabase-account zelf
+kwijtraakt. Of dat bestand werkelijk terug te zetten is, weet niemand.
+
+Dat is de eerstvolgende test die gedaan moet worden en de belangrijkste
+openstaande vraag van dit document.
+
+---
+
 ## 5. Releaseregels
 
 Deze regels zijn niet vrijblijvend. Ze zijn allemaal ontstaan uit een
@@ -328,6 +616,10 @@ hoofdstuk 4.
 Werk dat uit de inventarisatie van 26 juli naar voren kwam en nog open
 staat.
 
+**Afgerond op 26 juli:** de broncode van alle achttien Edge Functions
+staat nu in de besloten repo `ernes-edge-functions`, en het terugzetten
+van een backup is één keer echt geoefend en werkte.
+
 1. **`accord-pdf` opnemen in de nachtelijke backup.** De platformbackup
    van Supabase bevat uitdrukkelijk geen bestanden, alleen de database. De
    eigen nachtelijke spiegel pakt alleen `calculatie-fotos` en
@@ -357,11 +649,32 @@ staat.
 
 ## Wat er nog niet in staat
 
-- **Hoofdstuk 3, wat draait er automatisch.** De inventarisatie is gedaan
-  en compleet, maar nog niet uitgeschreven.
-- **Hoofdstuk 4, als het stukgaat.** Kan pas geschreven worden als het
-  terugzetten van een backup één keer echt geoefend is. Een backup die
-  nooit teruggezet is, is geen backup maar een verzameling bestanden.
+- **De negen plekken met [TE CONTROLEREN].** Vooral de kluis, het adres
+  van de gedeelde mailbox, wie welke rol heeft, en de contactgegevens van
+  Ed en Vincent.
+- **Een test van de eigen nachtelijke dump.** Zie 4.7. Dit is de
+  belangrijkste openstaande vraag van het hele document.
 - **De A4-noodkaart.** Eén vel om naast de iMac te hangen, met alleen de
-  eerste handelingen en de telefoonnummers. Volgt zodra hoofdstuk 4 klaar
-  is.
+  eerste handelingen uit 4.0 en de telefoonnummers uit hoofdstuk 6.
+- **Gevelscanner.** Bewust buiten beschouwing gelaten op 26 juli 2026.
+
+---
+
+## Wat er op 26 juli 2026 gedaan is
+
+Voor wie later wil weten waar dit document vandaan komt.
+
+- Volledige uitdraai van beide Supabase-projecten: cronjobs, triggers,
+  opslagbakken, tabellen met exacte rijaantallen
+- Alle achttien Edge Functions nagelopen op wie ze aanroept, via de
+  broncode van de apps en via de aanroeplogboeken
+- Alle achttien Edge Functions veiliggesteld in de besloten repo
+  `ernes-edge-functions`, met leeswijzer
+- Een herstel uit backup daadwerkelijk uitgevoerd op een apart
+  testproject, geverifieerd op rijaantallen, en daarna opgeruimd
+
+Vier dingen kwamen daarbij aan het licht die niemand wist: dat
+`smooth-function` doorgaat voor een test terwijl hij het dashboard vult,
+dat de getekende akkoorden geen enkele backup hebben, dat `taken-agenda`
+nog tientallen keren per dag werd aangeroepen terwijl hij als verlaten
+gold, en dat Edge Functions buiten elke backup vallen.
