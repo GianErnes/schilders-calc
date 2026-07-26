@@ -79,6 +79,7 @@
   .treffers-leeg{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;font-size:14px;color:var(--ink-soft);font-weight:600;text-align:center}
   .section{margin-bottom:9px;--balk:var(--card);--balkrand:var(--line);--vak:transparent}
   .section[data-key="vandaag"]{--balk:#f9e4e1;--balkrand:#f0cfc9;--vak:#fbeeec}
+  .section[data-key="oprol"]{--balk:#eef1f5;--balkrand:#dde2e9;--vak:#f5f7f9}
   .section[data-key="los"]{--balk:#f8f0d3;--balkrand:#ecdfae;--vak:#fbf6e2}
   .section[data-key="herhalend"]{--balk:#e2edfa;--balkrand:#c9dcf3;--vak:#eaf2fb}
   .section[data-key="klant"]{--balk:#f9e4e1;--balkrand:#f0cfc9;--vak:#fbeeec}
@@ -132,6 +133,16 @@
   .pill.klant{background:#f0f2f5;color:var(--ink-soft)}
   .pill.offerte{background:#fff1e8;color:#c2410c}
   .pill.foto{background:#f0f2f5;color:var(--ink-soft)}
+  .pill.laat{background:#fdeceb;color:#c0392b}
+  .pill.schuif{background:#f4f0fa;color:#6b4fa8}
+  .kies{
+    flex:none;width:30px;height:30px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);background:#fff;color:var(--ink-soft);
+    font-size:15px;line-height:1;cursor:pointer;margin-top:-2px;
+  }
+  .kies.aan{border-color:var(--gian);color:var(--gian);background:#eef3ff}
+  .kies:active{transform:scale(0.92)}
   .card .bell{flex:none;color:var(--ink-faint);font-size:15px;margin-top:1px}
   .card .bell.on{color:var(--gian)}
 
@@ -580,7 +591,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.14.0';
+const APP_VERSION = 'v0.15.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -588,6 +599,8 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { st
 const FOTO_BUCKET = 'taken-fotos';
 const DOC_BUCKET = 'taken-documenten';
 let DOCS_TELLING = {};    /* crmtaskid -> aantal PDF-bijlagen */
+let MIJN_VANDAAG = new Set();  /* crmtaskid dat ik vandaag zelf gekozen heb */
+let DOORSCHUIF = {};           /* crmtaskid -> aantal eerdere dagen dat ik hem koos */
 
 const PERSOON = {
   gian:   { naam:'Gian',   css:'var(--gian)'   },
@@ -726,12 +739,15 @@ function persoonVan(t){
   const p = String(ruw).toLowerCase().trim();
   return PERSOON[p] ? p : 'overig';
 }
+/* v0.15.0: Vandaag is voortaan uitsluitend wat jij zelf voor deze dag hebt
+   gekozen. Er wordt niets meer automatisch in gezet. Alles wat vandaag of
+   eerder speelt en niet gekozen is staat in Op de rol, ongeacht de bron.
+   Losse taken en Herhalend tonen daardoor alleen nog wat er nog aankomt. */
 function rubriekVan(t, nu, vandaagISO){
   if(t.status === 'vervallen') return 'vervallen';
   if(t.voltooid_op) return 'voltooid';
-  const dagkeuze = t.vandaag && t.vandaag_op === vandaagISO;
-  const eigenVandaag = t.bron !== 'yoobi' && t._gepland && zelfdeDag(t._gepland, nu);
-  if(dagkeuze || eigenVandaag) return 'vandaag';
+  if(MIJN_VANDAAG.has(String(t.crmtaskid))) return 'vandaag';
+  if(t._gepland && lokaalISO(t._gepland) <= vandaagISO) return 'oprol';
   if(t.bron === 'yoobi') return 'klant';
   if(t.soort === 'herhalend') return 'herhalend';
   return 'los';
@@ -745,9 +761,61 @@ function verrijk(rijen){
     t._voltooid = parseTijdstip(t.voltooid_op);
     t._persoon = persoonVan(t);
     t._rubriek = rubriekVan(t, nu, vandaagISO);
+    t._telaat = !!(t._gepland && lokaalISO(t._gepland) < vandaagISO) &&
+                !t.voltooid_op && t.status !== 'vervallen';
+    t._doorgeschoven = DOORSCHUIF[String(t.crmtaskid)] || 0;
     t._binnenWeek = !t._gepland || (t._gepland - nu) < 7 * 86400000;
     return t;
   });
+}
+
+/* ────────────────────────────────────────────────────────
+   Dagkeuze: mijn eigen regels uit taak_dagkeuze.
+   De regels van vandaag vullen Vandaag. De regels van eerdere
+   dagen zijn de doorschuifteller: elke dag dat ik hem koos en
+   niet afmaakte staat er als losse regel.
+   ──────────────────────────────────────────────────────── */
+async function haalDagkeuze(){
+  MIJN_VANDAAG = new Set();
+  DOORSCHUIF = {};
+  if(!IK) return;
+  const { data, error } = await sb.from('taak_dagkeuze')
+    .select('taak_id, dag').eq('persoon', IK.persoon);
+  if(error){ toast('Dagkeuze laden lukt niet: ' + error.message); return; }
+  const vandaagISO = lokaalISO(new Date());
+  (data || []).forEach(function(r){
+    const id = String(r.taak_id);
+    if(r.dag === vandaagISO) MIJN_VANDAAG.add(id);
+    else if(r.dag < vandaagISO) DOORSCHUIF[id] = (DOORSCHUIF[id] || 0) + 1;
+  });
+}
+
+/* Zetten of weghalen voor vandaag. Geeft null terug bij goed gevolg,
+   anders de fouttekst. Een dubbele insert is geen fout: dan stond hij
+   er al in. */
+async function zetDagkeuze(id, aan){
+  if(!IK) return 'Geen profiel geladen';
+  const vandaagISO = lokaalISO(new Date());
+  if(aan){
+    const { error } = await sb.from('taak_dagkeuze')
+      .insert({ taak_id: id, persoon: IK.persoon, dag: vandaagISO });
+    if(error && error.code !== '23505') return error.message;
+    MIJN_VANDAAG.add(String(id));
+  } else {
+    const { error } = await sb.from('taak_dagkeuze').delete()
+      .eq('taak_id', id).eq('persoon', IK.persoon).eq('dag', vandaagISO);
+    if(error) return error.message;
+    MIJN_VANDAAG.delete(String(id));
+  }
+  return null;
+}
+
+async function schakelDagkeuze(id){
+  const aan = !MIJN_VANDAAG.has(String(id));
+  const fout = await zetDagkeuze(id, aan);
+  if(fout){ toast('Dagkeuze opslaan lukt niet: ' + fout); return; }
+  toast(aan ? 'Naar Vandaag' : 'Uit Vandaag');
+  await laadTaken();
 }
 
 /* ────────────────────────────────────────────────────────
@@ -768,8 +836,9 @@ async function haalTaken(){
 const NA_VIER = new Date().getHours() >= 16;
 
 const RUBRIEKEN = [
-  { key:'vandaag',   titel:'Vandaag',        sub:'jouw keuze plus de meldingen van vandaag',        open:true,    klasse:'today' },
-  { key:'los',       titel:'Losse taken',    sub:'je eigen taken',                        open:false },
+  { key:'vandaag',   titel:'Vandaag',        sub:'wat jij vandaag oppakt',                   open:true,    klasse:'today' },
+  { key:'oprol',     titel:'Op de rol',      sub:'speelt vandaag, nog niet gekozen',         open:true,    klasse:'roll' },
+  { key:'los',       titel:'Losse taken',    sub:'wat er nog aankomt',                       open:false },
   { key:'herhalend', titel:'Herhalend ↻',    sub:'',                                         open:false },
   { key:'klant',     titel:'Klantopvolging', sub:'uit Yoobi · alleen bekijken',              open:false, klasse:'gated' },
   { key:'voltooid',  titel:'Voltooid',       sub:'je eigen afgevinkte taken',                open:false,   klasse:'done' },
@@ -802,6 +871,12 @@ function pillen(t){
     if(uTekst && dTekst === 'vandaag') p.push('<span class="pill time">◷ ' + uTekst + '</span>');
     else if(dTekst) p.push('<span class="pill time">◷ ' + esc(dTekst + (uTekst ? ' ' + uTekst : '')) + '</span>');
   }
+  if(t._telaat && t._rubriek !== 'voltooid' && t._rubriek !== 'vervallen'){
+    p.push('<span class="pill laat">te laat</span>');
+  }
+  if(t._doorgeschoven && t._rubriek !== 'voltooid' && t._rubriek !== 'vervallen'){
+    p.push('<span class="pill schuif">↷ ' + t._doorgeschoven + 'x doorgeschoven</span>');
+  }
   const rep = herhalingTekst(t.herhaling_n, t.herhaling_eenheid);
   if(rep) p.push('<span class="pill rep">↻ ' + esc(rep) + '</span>');
   if(t.bron === 'yoobi' && t._rubriek !== 'vervallen') p.push('<span class="pill yoobi">Yoobi</span>');
@@ -822,12 +897,21 @@ function kaart(t, hero){
   const meta = pillen(t);
   const bel = (t._rubriek === 'voltooid' || t._rubriek === 'vervallen') ? '' :
     '<span class="bell' + (t.piep ? ' on' : '') + '">' + (t.piep ? '🔔' : '🔕') + '</span>';
+  /* v0.15.0: met één tik naar Vandaag en er met één tik weer uit.
+     Alleen zichtbaar waar het iets betekent, dus in Vandaag en Op de rol. */
+  const inVandaag = t._rubriek === 'vandaag';
+  const kies = (inVandaag || t._rubriek === 'oprol')
+    ? '<span class="kies' + (inVandaag ? ' aan' : '') + '" data-kies="' + esc(t.crmtaskid) +
+      '" role="button" tabindex="0" aria-label="' + (inVandaag ? 'Uit Vandaag' : 'Naar Vandaag') +
+      '" title="' + (inVandaag ? 'Uit Vandaag' : 'Naar Vandaag') + '">' +
+      (inVandaag ? '↓' : '↑') + '</span>'
+    : '';
   return '<div class="card' + (hero ? ' hero' : '') + '" tabindex="0" data-id="' + esc(t.crmtaskid) + '">' +
     (hero ? '<span class="now">Nu</span>' : '') +
     '<span class="who" style="background:' + pInfo(t._persoon).css + '"></span>' +
     '<span class="body"><div class="ttl">' + titel + '</div>' +
     (meta ? '<div class="meta">' + meta + '</div>' : '') +
-    '</span>' + bel + '</div>';
+    '</span>' + kies + bel + '</div>';
 }
 
 /* De Nu-badge: de taak waarvan het tijdstip het dichtst bij dit
@@ -871,7 +955,11 @@ function zichtbareTaken(){
       (IK.ziet_klant && t.bron === 'yoobi'));
   }
   if(IK && IK.rol === 'alles' && FILTER_PERSOON !== 'alle'){
-    return TAKEN.filter(t => t._persoon === FILTER_PERSOON);
+    /* v0.15.0: filter je op jezelf, dan blijft ook zichtbaar wat je van een
+       ander hebt overgenomen voor vandaag. Anders zou je eigen keuze weg-
+       filteren omdat de taak de kleur van die ander draagt. */
+    return TAKEN.filter(t => t._persoon === FILTER_PERSOON ||
+      (FILTER_PERSOON === IK.persoon && MIJN_VANDAAG.has(String(t.crmtaskid))));
   }
   return TAKEN;
 }
@@ -896,6 +984,11 @@ function bouwRubriek(r){
   let zichtbaar = eigen;
   let sub = r.sub;
   let extraNoot = '';
+  if(r.key === 'oprol'){
+    const laat = eigen.filter(t => t._telaat).length;
+    sub = eigen.length === 0 ? 'niets meer open'
+        : (eigen.length - laat) + ' speelt vandaag' + (laat ? ' · ' + laat + ' te laat' : '');
+  }
   if(r.key === 'herhalend'){
     zichtbaar = eigen.filter(t => t._binnenWeek);
     const verborgen = eigen.length - zichtbaar.length;
@@ -911,9 +1004,12 @@ function bouwRubriek(r){
 
   const gatehint = '';
 
+  const leegTekst = r.key === 'oprol' ? 'Niets meer op de rol. Alles is gekozen of gedaan.'
+                  : r.key === 'vandaag' ? 'Nog niets gekozen. Pak hieronder op wat vandaag echt moet.'
+                  : 'niets hier';
   const kaarten = zichtbaar.length
     ? zichtbaar.map(t => kaart(t, t.crmtaskid === heroId)).join('')
-    : '<div class="hidnote">niets hier</div>';
+    : '<div class="hidnote">' + leegTekst + '</div>';
 
   return '<div class="section' + (open ? ' open' : '') + (r.klasse ? ' ' + r.klasse : '') + '" data-key="' + r.key + '">' +
     '<button class="head" aria-expanded="' + open + '">' +
@@ -1114,7 +1210,7 @@ function openTask(t){
 
   /* dagkeuze: eigen en yoobi, niet bij klaar */
   zet('s_vandaagwrap', modus === 'eigen' || modus === 'yoobi');
-  const vandaagAan = t.vandaag && t.vandaag_op === lokaalISO(new Date());
+  const vandaagAan = MIJN_VANDAAG.has(String(t.crmtaskid));
   document.getElementById('s_vandaag').classList.toggle('uit', !vandaagAan);
   document.getElementById('s_vandaagtekst').textContent = vandaagAan ? 'Staat in Vandaag' : 'Vandaag oppakken';
 
@@ -1437,8 +1533,6 @@ async function slaOp(){
     herhaling_n: VEL.soort === 'herhalend' ? w.n : null,
     herhaling_eenheid: VEL.soort === 'herhalend' ? w.eenheid : null,
     toegewezen_aan: VEL.persoon,
-    vandaag: w.vandaagAan,
-    vandaag_op: w.vandaagAan ? lokaalISO(new Date()) : null,
   };
 
   /* mailmelding opnieuw scherpstellen als de melding nog in de toekomst ligt */
@@ -1455,6 +1549,7 @@ async function slaOp(){
       const { data, error } = await sb.from('taken').insert(rij).select().single();
       if(error) throw error;
       taakId = data.crmtaskid;
+      if(w.vandaagAan) await zetDagkeuze(taakId, true);
       if(VEL.docFiles && VEL.docFiles.length){
         const uit = await uploadDocs(taakId, VEL.docFiles);
         if(uit.fout) toast(uit.fout);
@@ -1534,13 +1629,17 @@ async function vinkAf(){
       const herhalerUpdate = Object.assign({}, vers, {
         gepland_op: volgendeTs,
         piep_op: w.piepAan ? naarUTC(volgendeTs) : null,
-        vandaag: false, vandaag_op: null,
         mail_op: null,
       });
       const { error: e2 } = await sb.from('taken').update(herhalerUpdate).eq('crmtaskid', t.crmtaskid);
       if(e2) throw e2;
+      /* v0.15.0: de ronde is klaar, dus de doorschuifhistorie van deze taak
+         gaat op nul. Anders telt de volgende ronde door op de vorige. */
+      const stondInMijnVandaag = MIJN_VANDAAG.has(String(t.crmtaskid));
+      await sb.rpc('taken_dagkeuze_wis_taak', { p_taak: t.crmtaskid });
+      MIJN_VANDAAG.delete(String(t.crmtaskid));
       LAATSTE_AFVINK = { type:'herhaler', kopieId: nieuw.crmtaskid, taakId: t.crmtaskid,
-        oudeDatum: t.gepland_op, oudePiepOp: t.piep_op, oudVandaag: t.vandaag, oudVandaagOp: t.vandaag_op };
+        oudeDatum: t.gepland_op, oudePiepOp: t.piep_op, mijnKeuze: stondInMijnVandaag };
       sluitVel();
       toastMetActie('Afgevinkt, volgende keer ' + datumTekst(volgende), 'Ongedaan maken', maakOngedaan);
     } else {
@@ -1572,9 +1671,9 @@ async function maakOngedaan(){
       if(e1) throw e1;
       const { error: e2 } = await sb.from('taken').update({
         gepland_op: u.oudeDatum, piep_op: u.oudePiepOp,
-        vandaag: u.oudVandaag, vandaag_op: u.oudVandaagOp,
       }).eq('crmtaskid', u.taakId);
       if(e2) throw e2;
+      if(u.mijnKeuze) await zetDagkeuze(u.taakId, true);
     }
     toast('Teruggezet');
     await laadTaken();
@@ -1604,11 +1703,8 @@ async function schakelVandaag(){
   document.getElementById('s_vandaag').classList.toggle('uit', !aanNu);
   document.getElementById('s_vandaagtekst').textContent = aanNu ? 'Staat in Vandaag' : 'Vandaag oppakken';
   if(!VEL || VEL.modus === 'nieuw') return; /* bij nieuw gaat hij mee met Toevoegen */
-  const t = VEL.taak;
-  const { error } = await sb.from('taken').update({
-    vandaag: aanNu, vandaag_op: aanNu ? lokaalISO(new Date()) : null,
-  }).eq('crmtaskid', t.crmtaskid);
-  if(error){ toast('Dagkeuze opslaan lukt niet: ' + error.message); return; }
+  const fout = await zetDagkeuze(VEL.taak.crmtaskid, aanNu);
+  if(fout){ toast('Dagkeuze opslaan lukt niet: ' + fout); return; }
   toast(aanNu ? 'Naar Vandaag' : 'Uit Vandaag');
   await laadTaken();
 }
@@ -1872,6 +1968,7 @@ async function laadProfiel(){
 
 async function laadTaken(){
   try{
+    await haalDagkeuze();
     TAKEN = await haalTaken();
     DOCS_TELLING = {};
     const { data: docRijen } = await sb.from('taak_documenten').select('taak_id');
@@ -2007,6 +2104,12 @@ document.getElementById('lijst').addEventListener('click', async function(e){
     head.blur();
     return;
   }
+  const kiesKnop = e.target.closest('[data-kies]');
+  if(kiesKnop){
+    e.stopPropagation();
+    await schakelDagkeuze(kiesKnop.dataset.kies);
+    return;
+  }
   const kaartEl = e.target.closest('.card');
   if(kaartEl){
     const t = TAKEN.find(x => x.crmtaskid === kaartEl.dataset.id);
@@ -2014,8 +2117,15 @@ document.getElementById('lijst').addEventListener('click', async function(e){
   }
 });
 
-document.getElementById('lijst').addEventListener('keydown', function(e){
+document.getElementById('lijst').addEventListener('keydown', async function(e){
   if(e.key !== 'Enter' && e.key !== ' ') return;
+  const kiesKnop = e.target.closest('[data-kies]');
+  if(kiesKnop){
+    e.preventDefault();
+    e.stopPropagation();
+    await schakelDagkeuze(kiesKnop.dataset.kies);
+    return;
+  }
   const kaartEl = e.target.closest('.card');
   if(kaartEl){
     e.preventDefault();
