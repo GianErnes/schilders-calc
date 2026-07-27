@@ -7,7 +7,8 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026. Alle zes hoofdstukken zijn ingevuld.
+Opgesteld 26 juli 2026, bijgewerkt 27 juli 2026. Alle zes hoofdstukken
+zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
 >
@@ -180,15 +181,15 @@ Functions, Secrets, per project.
 ### 2.5 Waar meldingen binnenkomen
 
 Alle mail uit het systeem en alle waarschuwingen van leveranciers komen
-binnen op een **gedeelde mailbox** die Gian, Max en Maud alledrie lezen.
-Adres: **[TE CONTROLEREN, vermoedelijk info@ernes.nl]**.
+binnen op een **gedeelde mailbox** die Gian, Max en Maud alledrie lezen:
+`info@ernes.nl`. Het systeem verstuurt zelf vanaf `offerte@ernes.nl`.
 
 Dat is bewust zo. Kwam die post op een persoonlijk adres binnen, dan zou
 het systeem alleen werken zolang die ene persoon zijn mail leest.
 
 De nachtelijke backup stuurt elke maandag een statusbericht met bijlage
-naar dat adres. **Die mail is de enige kopie van de gegevens buiten
-Supabase.** Zie hoofdstuk 4.
+naar `info@ernes.nl`. **Die bijlage is de enige kopie van de gegevens
+buiten Supabase.** Zie 4.7, want er zitten drie haken aan.
 
 ### 2.6 Betalingen
 
@@ -231,15 +232,21 @@ Daar draait niets automatisch. Alles wat daar gebeurt komt uit de app.
 
 Allemaal in `schilders-calc`, allemaal actief.
 
-| Naam | Wanneer | Roept aan | Wat het doet |
-|---|---|---|---|
-| `backup-nachtelijk` | elke nacht 02:00 | `backup-dump` | dump van de database naar de bak `backups`, plus kopie van foto's en documenten. Stuurt maandag een statusmail |
-| `yuki-vuller-dagelijks` | elke dag 05:00 | `smooth-function` | haalt de standen uit Yuki en vult het financiele dashboard |
-| `yuki-vuller-middag` | elke dag 10:00 | `smooth-function` | zelfde, tweede keer op de dag |
-| `offerte-opvolging-werkdagen` | ma t/m vr 06:30 | `offerte-herinnering` | herinnert aan openstaande offertes |
-| `taken-mail-melding` | elke 2 minuten | `taken-mail-melding` | stuurt mail bij nieuwe of gewijzigde taken |
-| `werkvoorraad-sync-wekelijks` | dinsdag 06:00 | `fin-werkvoorraad-sync` | haalt de werkvoorraad uit Yoobi |
-| `maandbericht-maandelijks` | de 7e, 07:00 | `maandbericht` | stelt het maandbericht op |
+> **Alle tijden hieronder staan in UTC.** Dat is de tijd waarin cron
+> werkt en waarin de logboeken van Supabase de runs tonen. UTC schuift
+> niet mee met de zomertijd en onze klok wel, dus het verschil is 's
+> zomers twee uur en 's winters één uur. Reken altijd om voordat je
+> concludeert dat er iets niet gedraaid heeft.
+
+| Naam | UTC | Bij ons, zomer | Bij ons, winter | Roept aan | Wat het doet |
+|---|---|---|---|---|---|
+| `backup-nachtelijk` | 02:00 | 04:00 | 03:00 | `backup-dump` | dump van de database naar de bak `backups`, plus kopie van foto's en documenten. Stuurt maandag een statusmail |
+| `yuki-vuller-dagelijks` | 05:00 | 07:00 | 06:00 | `smooth-function` | haalt de standen uit Yuki en vult het financiele dashboard |
+| `yuki-vuller-middag` | 10:00 | 12:00 | 11:00 | `smooth-function` | zelfde, tweede keer op de dag |
+| `offerte-opvolging-werkdagen` | ma t/m vr 06:30 | 08:30 | 07:30 | `offerte-herinnering` | herinnert aan openstaande offertes |
+| `taken-mail-melding` | elke 2 minuten | | | `taken-mail-melding` | stuurt mail bij nieuwe of gewijzigde taken |
+| `werkvoorraad-sync-wekelijks` | dinsdag 06:00 | 08:00 | 07:00 | `fin-werkvoorraad-sync` | haalt de werkvoorraad uit Yoobi |
+| `maandbericht-maandelijks` | de 7e, 07:00 | 09:00 | 08:00 | `maandbericht` | stelt het maandbericht op |
 
 **Twee dingen om te weten.**
 
@@ -472,6 +479,17 @@ moment **geen enkele backup** hebben. De 66 getekende akkoorden zijn
 daarmee het enige onvervangbare in het systeem. Zie de opruimlijst,
 punt 1.
 
+**`taken-fotos` is in gebruik**, niet slapend. Op 27 juli kwam er een
+bestand bij. Er hoort alleen geen tabel bij die weet welke foto bij welke
+taak zit, en hij zit in geen enkele kopie. Twee dingen om uit te zoeken en
+allebei nog **[TE CONTROLEREN]**.
+
+**De maandagse statusmail meldt hierover ten onrechte groen.** Er staat
+"Spiegel fotobuckets: achterstand 0", en dat klopt voor de twee bakken die
+hij spiegelt. Over `accord-pdf` zwijgt hij. Je krijgt dus elke week een
+bericht dat vertrouwen wekt dat je niet hebt. Bij het oppakken van punt 1
+moet die mail vermelden wélke bakken hij meeneemt.
+
 ### 4.5 De database is weg of kapot
 
 **Dit is geoefend op 26 juli 2026 en het werkt.** Doorlooptijd was een
@@ -514,18 +532,45 @@ gegevens terug, niet je systeem. Het volgende moet met de hand opnieuw:
 Reken dus niet op één knop. Reken op een knop plus een dag werk met deze
 lijst ernaast.
 
-### 4.7 Wat nog niet getest is
+### 4.7 De eigen nachtelijke dump
 
-Eerlijk opgeschreven, zodat niemand er ten onrechte op vertrouwt.
+Bijgewerkt 27 juli 2026, na bestudering van de wekelijkse statusmail.
 
-**De eigen nachtelijke dump is nooit teruggezet.** In de bak `backups`
-staan 156 bestanden en elke maandag gaat er een kopie per mail naar de
-gedeelde mailbox. Die maandagmail is **de enige kopie buiten Supabase**,
-en daarmee het enige dat je redt als je het Supabase-account zelf
-kwijtraakt. Of dat bestand werkelijk terug te zetten is, weet niemand.
+**Wat hij doet.** Elke nacht om 02:00 UTC schrijft `backup-dump` één
+bestand weg naar de bak `backups`, met de naam `backup-JJJJ-MM-DD.json`.
+Op 27 juli was dat 8,32 MB met 37 tabellen erin, wat klopt met de
+werkelijkheid. Daarnaast spiegelt hij `calculatie-fotos` en
+`calculatie-documenten`, en die zijn bij: achterstand nul.
 
-Dat is de eerstvolgende test die gedaan moet worden en de belangrijkste
-openstaande vraag van dit document.
+Elke maandag om 04:00 onze tijd gaat er een statusmail naar
+`info@ernes.nl`, verstuurd vanaf `offerte@ernes.nl`, met **de nieuwste
+backup als bijlage**. Die bijlage is de enige kopie van de gegevens buiten
+Supabase.
+
+**Drie dingen die je moet weten voordat je hierop vertrouwt.**
+
+**1. Het is een JSON-export, geen volledige databasedump.** Je krijgt
+daarmee alle rijen terug, en **niet** de tabeldefinities, de policies, de
+triggers of de indexen. Zou je dit in een leeg project moeten
+terugzetten, dan heb je eerst een database nodig om het ín te gieten, en
+die structuur staat nergens vastgelegd.
+
+De platformbackup van Supabase heeft de structuur wél, maar zit ín
+Supabase. De maandagmail zit buiten de deur, maar heeft alleen de inhoud.
+**Los van elkaar is geen van beide compleet.** Een schemadump ontbreekt.
+
+**2. Die bijlage loopt vast, vermoedelijk begin december 2026.** Het
+bestand groeide van 7,03 MB op 17 juli naar 8,32 MB op 27 juli, ongeveer
+0,13 MB per dag. De grens voor een mailbijlage ligt rond de 25 MB. Bij dit
+tempo is dat over een kleine 130 dagen bereikt.
+
+En dan gebeurt er niets zichtbaars: de mail komt aan zonder bijlage, of
+komt helemaal niet aan, en niemand merkt dat de enige kopie buiten
+Supabase is opgehouden te bestaan. Zie de opruimlijst.
+
+**3. Hij is nog nooit teruggezet.** Of dat JSON-bestand werkelijk bruikbaar
+is om mee te herstellen weet niemand. Dat is de eerstvolgende test die
+gedaan moet worden en de belangrijkste openstaande vraag van dit document.
 
 ---
 
@@ -684,6 +729,17 @@ van een backup is één keer echt geoefend en werkte.
    verwijst ernaar als de manier om een nieuwe tabel aan te leggen, maar
    het bestand bestaat niet. Wie die instructie volgt loopt vast, en maakt
    dan een tabel zonder policies waar de app niet bij kan.
+9. **De maandagbijlage vervangen door iets dat blijft werken.** Het
+   backupbestand groeit met ongeveer 0,13 MB per dag en loopt naar
+   verwachting begin december tegen de grens van een mailbijlage aan.
+   Gebeurt dat, dan stopt de enige kopie buiten Supabase zonder dat
+   iemand het merkt. Alternatief: comprimeren, of wegschrijven naar een
+   plek buiten Supabase in plaats van meesturen. Zie 4.7.
+10. **Een schemadump toevoegen aan de nachtelijke backup.** Nu wordt
+    alleen de inhoud weggeschreven, niet de structuur van de database.
+    Zonder tabeldefinities, policies en triggers is die JSON alleen
+    bruikbaar als er al een werkende database staat om hem in te gieten.
+    Zie 4.7.
 
 ---
 
