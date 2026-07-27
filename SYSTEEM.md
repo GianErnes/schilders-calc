@@ -172,11 +172,38 @@ Welke sleutels bestaan (waarden staan in de kluis, niet hier):
 - Resend, sleutel voor het verzenden van mail
 - Anthropic, sleutel voor de leescontrole en de vraagbaak
 - Craft.do, koppelingsgegevens
-- AFTAP, geheim voor de backupfunctie
+- `AFTAP_SECRET`, waarmee de cronjobs de Edge Functions van binnenuit
+  mogen aanroepen
 
 De volledige lijst zoals die werkelijk in Supabase staat is
 **[TE CONTROLEREN]**. Die is te vinden in Supabase Studio onder Edge
 Functions, Secrets, per project.
+
+**Twee plekken waar geheimen staan.** Naast de Secrets bij Edge Functions
+heeft Supabase ook een eigen kluis, `vault`. De cronjob
+`maandbericht-maandelijks` haalt zijn sleutel daaruit op met de naam
+`maandbericht_key`. Bij een herbouw moet die kluis opnieuw gevuld worden,
+want hij zit niet in de backup. Zie 4.8.
+
+> **Geleerd op 27 juli 2026, op de harde manier.** Drie cronjobs droegen
+> de AFTAP-sleutel **letterlijk leesbaar** in hun opdrachttekst. Bij het
+> maken van een schema-uitdraai kwam die sleutel mee, en dat bestand is
+> even in de openbare repo terechtgekomen.
+>
+> Gevolg: de sleutel moest vervangen worden. Dat is dezelfde dag gedaan,
+> en het is te zien in de aanroepen van `taken-mail-melding`: twee
+> weigeringen om 08:32 en 08:34, daarna weer alles goed.
+>
+> **Twee regels die daaruit volgen:**
+>
+> 1. Een uitdraai van de database kan geheimen bevatten. Doorzoek zo'n
+>    bestand op sleutels **voordat** het ergens heen gaat, en zet het
+>    nooit ongezien in een openbare repo.
+> 2. Verwijderen uit een repo is niet genoeg, want de geschiedenis
+>    onthoudt het. Alleen de sleutel vervangen helpt echt.
+>
+> Drie cronjobs dragen die sleutel nog altijd letterlijk. Zie de
+> opruimlijst.
 
 ### 2.5 Waar meldingen binnenkomen
 
@@ -393,6 +420,22 @@ bestand voorkwam.
 **Waar je niet naar moet kijken.** De tabel `net._http_response` lijkt
 bruikbaar maar is dat niet: alle functies staan er door elkaar op
 volgorde van tijd en je trekt er makkelijk de verkeerde conclusie uit.
+
+> **De blinde vlek van cron.** Zes van de zeven cronjobs gebruiken
+> `net.http_post`. Dat stuurt het verzoek de deur uit en gaat meteen
+> door, zonder op antwoord te wachten. **Cron meldt daarom "succeeded"
+> zodra het verzoek verstuurd is, ook als de functie het daarna weigert.**
+>
+> Gezien op 27 juli 2026: cron meldde succeeded terwijl de functie
+> tweemaal 401 teruggaf omdat de sleutel niet klopte.
+>
+> Een groene laatste run betekent dus alleen dat cron het verzoek heeft
+> verstuurd. Wil je weten of het werk ook echt gedaan is, kijk dan bij
+> Invocations van de functie zelf. Daar staat 200 of een foutcode.
+>
+> Uitzondering: `werkvoorraad-sync-wekelijks` gebruikt `extensions.http`
+> en wacht wél op antwoord. Bij die ene job zegt een mislukte run
+> daadwerkelijk iets.
 
 ---
 
@@ -613,11 +656,23 @@ Supabase houdt op te bestaan.
 > Dit is de laatste stap van elk herstel en tegelijk de makkelijkst
 > vergeten stap.
 
-> **Waarschuwing bij de inlogaccounts.** Nieuwe accounts krijgen nieuwe
-> interne id's. Verwijst de rijbeveiliging of de tabel `taken_rollen` naar
-> die id's, dan klopt de koppeling na herbouw niet meer en ziet niemand
-> meer de goede taken. Of dat zo is, is **[TE CONTROLEREN]** en het moet
-> uitgezocht worden vóórdat het nodig is.
+> **Let op de inlogaccounts. Dit is uitgezocht op 27 juli 2026 en het
+> klopt: de rollen hangen aan de interne id's.** De functies `taken_rol()`,
+> `taken_persoon()`, `taken_mijn_rol()`, `taken_mijn_persoon()` en
+> `taken_yoobi_naam()` zoeken allemaal in `taken_rollen` op `user_id =
+> auth.uid()`.
+>
+> Nieuwe accounts krijgen nieuwe id's. De tabel `taken_rollen` komt uit de
+> backup met de **oude** id's. Die passen dan bij niemand. Gevolg:
+> `taken_rol()` geeft leeg terug voor iedereen, en dan ziet **niemand nog
+> één taak**, blijft het financiele dashboard leeg en werken de sjablonen
+> niet. Alles staat er wel, en niemand kan erbij.
+>
+> **De reparatie is zes regels SQL**, maar alleen als je weet dat het
+> nodig is: werk na het aanmaken van de accounts in `taken_rollen` de
+> kolom `user_id` bij met de nieuwe id's. Dat moet in de SQL-editor, want
+> `taken_rollen` heeft alleen een leespolicy en is dus niet via de app te
+> bewerken.
 
 **Eerlijke schatting met wat er vandaag ligt: één tot twee dagen werk, en
 `accord-pdf` komt niet terug.** Niet enkele uren.
@@ -654,17 +709,28 @@ Doe het in deze volgorde. Andersom werkt niet, want elke stap heeft de
 vorige nodig.
 
 1. Nieuw Supabase-project aanmaken, regio `eu-west-1`
-2. Schemadump draaien: tabellen, policies, triggers, rechten
+2. Schemadump draaien: tabellen, policies, triggers, rechten. Zie
+   `sql/schema_tabellen.sql` plus de aanvulling
 3. Extensies aanzetten, waaronder pg_cron en pg_net
-4. Geheimen invoeren uit de kluis
+4. Geheimen invoeren uit de kluis, op **twee** plekken: bij Edge Functions
+   onder Secrets, en in de kluis `vault` van Supabase zelf
 5. Edge Functions uitrollen vanuit `ernes-edge-functions`
 6. Cronjobs opnieuw aanmaken volgens hoofdstuk 3.1
 7. Opslagbakken aanmaken, met de goede openbaar-instelling per bak
 8. Data terugzetten uit de JSON
 9. Bestanden terugzetten voor zover die er zijn
 10. De zes inlogaccounts aanmaken
-11. **Adres en sleutels aanpassen in alle vier de HTML-bestanden**
-12. Aanmelden testen, een calculatie openen, een taak afvinken
+11. **In `taken_rollen` de kolom `user_id` bijwerken met de nieuwe id's.**
+    Sla je dit over, dan ziet niemand één taak en lijkt alles stuk
+12. **Adres en sleutels aanpassen in alle vier de HTML-bestanden**
+13. Aanmelden testen, een calculatie openen, een taak afvinken
+
+**De herbouwset staat in `sql/`**, behalve het deel met de extensies,
+rechten, functies, triggers, indexen, policies, bakken en cronjobs. Dat
+laatste bestand is op 27 juli tijdelijk in de openbare repo beland omdat
+er een sleutel in stond, en is daarom weggehaald. Het moet opnieuw
+gemaakt worden en dan in de **besloten** repo `ernes-edge-functions`. Zie
+de opruimlijst.
 
 #### Het alternatief: een tweede project dat klaarstaat
 
@@ -800,7 +866,7 @@ hoofdstuk 4.
 
 ---
 
-## Opruimlijst per 26 juli 2026
+## Opruimlijst per 27 juli 2026
 
 Werk dat uit de inventarisatie van 26 juli naar voren kwam en nog open
 staat.
@@ -852,15 +918,36 @@ van een backup is één keer echt geoefend en werkte.
     Zonder tabeldefinities, policies en triggers is die JSON alleen
     bruikbaar als er al een werkende database staat om hem in te gieten.
     Zie 4.7 en 4.8.
-11. **Nakijken of Database, Migrations gevuld is.** Staat daar de
-    opbouwgeschiedenis van de database, dan is punt 10 een uur werk. Is
-    hij leeg, dan een middag. Dit bepaalt de aanpak, dus dit eerst.
-12. **Uitzoeken of de rollen aan de interne id's van de inlogaccounts
-    hangen.** Zo ja, dan klopt na een herbouw de koppeling niet meer en
-    ziet niemand de goede taken. Zie de waarschuwing in 4.8.
+11. **Nakijken of Database, Migrations gevuld is.** ~~Staat daar de
+    opbouwgeschiedenis~~ **Gedaan op 27 juli: leeg.** Alle SQL is
+    rechtstreeks in de editor geplakt, dus er is geen opbouwgeschiedenis.
+    De schemadump moet daarom uit de database zelf gegenereerd worden.
+    `sql/schema_tabellen.sql` bevat inmiddels alle 37 tabellen.
+12. **Uitzoeken of de rollen aan de interne id's hangen.** **Gedaan op 27
+    juli: ja, dat is zo.** Opgenomen als stap 11 van de herbouwvolgorde in
+    4.8. Geen verder werk nodig, wel weten.
 13. **De opdrachtregel van Supabase inrichten voor het uitrollen van Edge
     Functions.** Nu gaat dat met achttien keer klikken in de browser. Bij
     een herbouw is dat uren. Dit moet ingericht zijn voordat het nodig is.
+14. **De drie cronjobs de sleutel uit de kluis laten halen.**
+    `backup-nachtelijk`, `taken-mail-melding` en
+    `werkvoorraad-sync-wekelijks` dragen `AFTAP_SECRET` nog letterlijk in
+    hun opdrachttekst. `maandbericht-maandelijks` doet het al goed via
+    `vault`. Zolang dat verschil bestaat kan het lek van 27 juli zich
+    herhalen. Half uur werk.
+15. **De schema-aanvulling opnieuw maken en veilig opslaan.** Het bestand
+    met extensies, rechten, functies, triggers, indexen, policies, bakken
+    en cronjobs is weggehaald omdat er een sleutel in stond. Opnieuw
+    genereren, controleren op sleutels, en dan in de **besloten** repo
+    `ernes-edge-functions` zetten. Pas daarna is de herbouwset compleet.
+16. **De namen van de oude policies opschonen.** Een stuk of tien policies
+    heten nog `anon alles ...` terwijl ze `TO authenticated` zijn. Dat is
+    een overblijfsel van vóór 13 mei 2026. Wie ooit de audit draait
+    schrikt zich rot van policies die naar anon vernoemd zijn.
+    Cosmetisch, maar het scheelt een valse alarmbel.
+17. **Dubbele policy op `offerte_controle_log` opruimen.** Er staan er
+    twee die precies hetzelfde doen: `Ingelogde gebruikers lezen
+    controle-log` en `offerte_controle_log_select`. Eén kan weg.
 
 ---
 
@@ -895,3 +982,26 @@ Vier dingen kwamen daarbij aan het licht die niemand wist: dat
 dat de getekende akkoorden geen enkele backup hebben, dat `taken-agenda`
 nog tientallen keren per dag werd aangeroepen terwijl hij als verlaten
 gold, en dat Edge Functions buiten elke backup vallen.
+
+---
+
+## Wat er op 27 juli 2026 gedaan is
+
+- De schemadump gemaakt. `sql/schema_tabellen.sql` bevat nu alle 37
+  tabellen. De aanvulling moet nog opnieuw, zie opruimlijst punt 15
+- Vastgesteld dat Migrations leeg is, dus dat er geen opbouwgeschiedenis
+  van de database bestaat
+- Vastgesteld dat de rollen aan de interne id's van de inlogaccounts
+  hangen, en wat dat betekent bij een herbouw
+- Hoofdstuk 4.8 geschreven, herbouwen vanaf nul
+- De AFTAP-sleutel vervangen nadat die in een uitdraai in de openbare repo
+  terecht was gekomen. Zie 2.4
+- Bevestigd dat `offerte-opvolging-werkdagen` draait. Eerste run 27 juli
+  06:30 UTC
+- Vastgesteld dat cron "succeeded" meldt ook als de functie het verzoek
+  weigert. Zie 3.4
+
+**De belangrijkste les van die dag:** een groene melding is geen bewijs
+dat het werk gedaan is, en een uitdraai van de database kan geheimen
+bevatten. Allebei staan ze nu opgeschreven op de plek waar iemand ze
+zoekt.
