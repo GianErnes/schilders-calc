@@ -465,6 +465,12 @@ totaalbeeld en het is puur lezen.
 >   `cron.job`
 > - `exacte_rijtelling.sql` — telt per tabel het werkelijke aantal rijen.
 >   Gebruikt om te controleren of een herstel geslaagd is
+> - `schema_sleutelscan.sql` — zoekt op patroon naar sleutels die
+>   letterlijk in de structuur staan. Toont nooit de gevonden waarde
+> - `schema_sleutelscan_2.sql` — meet de lengte van elke tekstwaarde.
+>   Vangt sleutelsoorten die het patroon niet kent
+> - `schema_sleutelscan_3.sql` — kijkt naar de vorm van de tekst. Een
+>   sleutel heeft geen spaties en mengt hoofd- en kleine letters
 > - `audit_query_periodiek.sql` — bestond al. Kijkt naar rechten en
 >   rijbeveiliging, eens per kwartaal. Zie de waarschuwing hieronder
 >
@@ -823,13 +829,37 @@ als bestand dat je opnieuw kunt afspelen. Drie dingen ontbreken.
 **1. Een schemadump.** Eén SQL-bestand dat alle tabellen, sleutels,
 indexen, triggers, functies, policies en rechten opnieuw aanlegt. Dit is
 het grootste gat. Zonder dat begin je met een leeg project en 37 tabellen
-die uit het hoofd gereconstrueerd moeten worden. Zie opruimlijst punt 10.
+die uit het hoofd gereconstrueerd moeten worden.
 
-Kijk eerst bij **Database, Migrations** in Supabase Studio. Staat daar een
-lijst, dan is een groot deel van die dump er al, want dat is de
-geschiedenis van hoe de database is opgebouwd. Is die lijst leeg, omdat
-alle SQL rechtstreeks in de editor is geplakt, dan moet de dump op een
-andere manier gemaakt worden. **[TE CONTROLEREN]**
+**Migrations is leeg.** Nagekeken op 27 juli 2026. Alle SQL is
+rechtstreeks in de editor geplakt, dus er bestaat geen opbouwgeschiedenis
+en de dump moet uit de database zelf gegenereerd worden.
+
+**Wat er wel en niet ligt, stand 27 juli 2026:**
+
+| Onderdeel | Ligt er | Uitvoerbaar |
+|---|---|---|
+| 37 tabellen | `sql/schema_tabellen.sql` | **nee**, leesdocument |
+| 69 policies | nee | — |
+| 29 indexen | nee | — |
+| 17 databasefuncties | nee | — |
+| 11 triggers | nee | — |
+| rechten en rijbeveiliging | nee | — |
+| 6 opslagbakken | nee | — |
+| 7 cronjobs | beschreven in 3.1 | met de hand |
+| views | n.v.t., er zijn er geen | — |
+
+**Punt 15 en punt 10 zijn één bouwsteen.** Punt 15 is de query die de
+structuur uitleest en omzet naar opdrachten waarmee je hem opnieuw
+aanlegt. Punt 10 is diezelfde query, elke nacht. Bouw punt 15 daarom als
+databasefunctie en niet als los bestand, dan is punt 10 daarna klein.
+
+**De uitvoer wordt schoon.** Op 27 juli 2026 is met drie onafhankelijke
+scans vastgesteld dat er nergens in de structuur een sleutel letterlijk
+staat: niet op patroon, niet op lengte, niet op vorm. De langste
+onschuldige tekstwaarde in de hele database is 45 tekens. De scans staan
+in `sql/` en horen herhaald te worden voordat een uitdraai ergens heen
+gaat. Zie 3.4.
 
 **2. Een manier om de functies snel uit te rollen.** ~~Achttien keer
 klikken in de browser-editor kost uren.~~ **Opgelost op 27 juli 2026.**
@@ -851,8 +881,23 @@ Doe het in deze volgorde. Andersom werkt niet, want elke stap heeft de
 vorige nodig.
 
 1. Nieuw Supabase-project aanmaken, regio `eu-west-1`
-2. Schemadump draaien: tabellen, policies, triggers, rechten. Zie
-   `sql/schema_tabellen.sql` plus de aanvulling
+2. Schemadump draaien: tabellen, policies, triggers, rechten.
+
+   > **Let op, dit werkt nog niet.** `sql/schema_tabellen.sql` is de
+   > schemaweergave van Studio en zegt bovenaan zelf dat hij niet
+   > bedoeld is om te draaien: de tabelvolgorde en de constraints
+   > kloppen niet voor uitvoering. Vastgesteld op 27 juli 2026.
+   >
+   > Er is op dit moment dus **geen uitvoerbare schemadump**. Wie hier
+   > komt voordat punt 15 af is, moet de 37 tabellen met de hand
+   > opbouwen met dat bestand als leidraad. Reken op een dag.
+   >
+   > Eén ding dat je dan zeker vergeet: `taak_dagkeuze.id` gebruikt de
+   > sequence `taak_dagkeuze_id_seq`. Die wordt in het bestand wel
+   > gebruikt en nergens aangemaakt, dus daar breekt hij af. En na het
+   > terugzetten van de data moet de teller met `setval` op de hoogste
+   > bestaande id gezet worden, anders botst de eerste nieuwe regel.
+   > Alle 36 andere tabellen gebruiken uuid en hebben dit niet.
 3. Extensies aanzetten, waaronder pg_cron en pg_net
 4. Geheimen invoeren, op **twee** plekken: bij Edge Functions onder
    Secrets, en in de kluis `vault` van Supabase zelf. In de kluis horen
@@ -924,6 +969,29 @@ Vlak voordat een nieuwe versie klaargezet wordt, wordt de live
 `APP_VERSION` nog eenmaal opgehaald. Is die inmiddels veranderd, dan wordt
 er opnieuw gebouwd op de nieuwe live versie en gaat het versienummer
 verder omhoog.
+
+> **Deze regel geldt ook voor dit document zelf. Toegevoegd 27 juli 2026,
+> na een bijna-misser.** SYSTEEM.md was tot dat moment het enige bestand
+> in de repo waarvoor geen versiecontrole gold, terwijl het het
+> botsingsgevoeligste bestand van allemaal is.
+>
+> Dat volgt uit de onderhoudsregel bovenaan: dit document wordt in
+> **elke** sessie aangeraakt, want elke wijziging aan het systeem hoort
+> er meteen in. `index.html` wordt niet elke sessie aangeraakt. Twee
+> gesprekken die tegelijk aan verschillende dingen werken, botsen dus
+> eerder hier dan in de app.
+>
+> Wat er gebeurde: SYSTEEM.md werd aan het begin van de sessie opgehaald
+> en uren later bewerkt. Intussen had een ander gesprek er een hele
+> sessie werk in gezet, waaronder vier afgeronde opruimpunten. De
+> bewerking klopte, de ondergrond niet. Bij uploaden was dat werk
+> teruggedraaid en had niemand het gemerkt, want het bestand zou er
+> compleet uitzien.
+>
+> **De regel: haal SYSTEEM.md opnieuw op vlak voordat je hem klaarzet,
+> niet aan het begin van de sessie.** Vergelijk het aantal tekens met wat
+> je ophaalde. Wijkt dat af, bouw de wijziging dan opnieuw op de verse
+> versie. Dit kostte nu niets omdat de vraag toevallig gesteld werd.
 
 ### 5.2 De vijf ankers
 
@@ -1159,11 +1227,31 @@ van een backup is één keer echt geoefend en werkte.
     cronjobs halen hun sleutel nu uit `vault`. Geen enkele opdrachttekst
     bevat nog een geheim, dus een uitdraai van `cron.job` is voortaan
     vanzelf schoon. Zie 2.4.
-15. **De schema-aanvulling opnieuw maken en veilig opslaan.** Het bestand
-    met extensies, rechten, functies, triggers, indexen, policies, bakken
-    en cronjobs is weggehaald omdat er een sleutel in stond. Opnieuw
-    genereren, controleren op sleutels, en dan in de **besloten** repo
-    `ernes-edge-functions` zetten. Pas daarna is de herbouwset compleet.
+15. **De schemadump maken.** Was bedoeld als aanvulling op
+    `sql/schema_tabellen.sql`. Op 27 juli 2026 bleek dat bestand niet
+    uitvoerbaar, dus het is geen aanvulling maar het geheel: tabellen,
+    extensies, rechten, rijbeveiliging, functies, triggers, indexen,
+    policies, bakken en cronjobs. Bouwen als databasefunctie
+    `public.schema_dump()`, want dan is punt 10 daarna klein.
+    **Reken op twee sessies, niet op een uur.**
+
+    *Stap 0 is gedaan op 27 juli 2026.* Drie scans, drie keer schoon: er
+    staat nergens een sleutel letterlijk in de structuur. De uitvoer kan
+    dus veilig gemaakt worden. De scans zelf staan in `sql/` en blijven
+    de poort voor elke uitdraai.
+
+    Vier eisen aan de bouw, alle vier uit het scanwerk:
+    - **Vaste sortering.** Anders lijkt elke nacht alles veranderd en is
+      de wijzigingsmelder ruis
+    - **Verwijssleutels helemaal onderaan** als losse `ALTER TABLE`. Dan
+      doet de tabelvolgorde er niet toe en vervalt een hele klasse fouten
+    - **De functie niet voor iedereen aanroepbaar.** Een functie in
+      `public` staat standaard open, en de publieke sleutel van de apps
+      staat openbaar in de repo
+    - **Het bestand draagt zijn eigen waarschuwingen**: de lege kluis, de
+      `user_id` in `taken_rollen`, de `setval` op `taak_dagkeuze_id_seq`
+      en de zeven cronjobs met het projectadres erin. Om twee uur 's
+      nachts leest niemand dit document, men draait het bestand
 16. **De namen van de oude policies opschonen.** Een stuk of tien policies
     heten nog `anon alles ...` terwijl ze `TO authenticated` zijn. Dat is
     een overblijfsel van vóór 13 mei 2026. Wie ooit de audit draait
@@ -1284,6 +1372,44 @@ Later diezelfde dag, in een tweede sessie:
   minder vaak draaien het probleem juist groter maakt. Beide zijn met de
   nieuwe redenering herschreven
 - Punt 18 toegevoegd: automatische taken rond offerte en akkoord
+
+In een derde sessie diezelfde dag, aan het eind van de middag:
+
+- Vastgesteld dat `sql/schema_tabellen.sql` **niet uitvoerbaar is.** Het
+  is de schemaweergave van Studio en zegt dat zelf bovenaan. De
+  herbouwset had daarmee geen enkele werkende schemadump, terwijl 4.8
+  stap 2 zei dat je hem moest draaien. Dat is rechtgezet
+- Punt 15 daardoor opnieuw afgebakend: geen aanvulling maar het geheel,
+  en twee sessies in plaats van een uur
+- Drie onafhankelijke sleutelscans gebouwd en gedraaid, alle drie schoon.
+  De vijf verdachte plekken uit de eerste bleken loze alarmen: de vier
+  omgezette cronjobs lezen aantoonbaar uit de kluis en
+  `taken_bescherm_eigen` noemt alleen de rolnaam
+- De aantallen uit de inventarisatie onafhankelijk bevestigd: 17
+  databasefuncties, 11 triggers, 69 policies, 7 cronjobs
+- Drie dingen gevonden die niemand wist. `taak_dagkeuze` gebruikt een
+  sequence die nergens aangemaakt wordt, er bestaat geen enkele view, en
+  alle zeven cronjobs dragen het projectadres letterlijk
+
+- **Bijna-misser met dit document.** De wijzigingen hierboven waren
+  gebouwd op de versie van 's ochtends, terwijl een ander gesprek er
+  intussen een hele sessie werk in had gezet: de punten 2, 7 en 8
+  afgerond, punt 3 grotendeels, de punten 1 en 6 herschreven en punt 18
+  toegevoegd. Aan het bestand was niets te zien. Ontdekt doordat Gian
+  vroeg op welk document de wijziging gebaseerd was. Zie 5.1, daar staat
+  nu de regel die dit voortaan vangt
+
+**Twee lessen van die derde sessie.**
+
+Een bestand dat er compleet uitziet is niet hetzelfde als een bestand dat
+draait. Dat verschil merk je pas op het moment dat je het nodig hebt, en
+dan is het te laat. Daarom is de proefdraai geen luxe.
+
+En: **de regel die de app beschermt beschermde dit document niet, terwijl
+dit document vaker verandert dan de app.** Bescherming die op de
+verkeerde plek zit voelt als bescherming en is het niet. Dat is hetzelfde
+patroon als het groene vinkje van cron uit 3.4, alleen dan bij het
+versiebeheer.
 
 **Open, morgenochtend controleren:** `offerte-opvolging-werkdagen` draait
 28 juli om 06:30 UTC, dat is 08:30 bij ons. Dat is de enige van de vier
