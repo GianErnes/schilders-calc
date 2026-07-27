@@ -7,8 +7,8 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, bijgewerkt 27 juli 2026. Alle zes hoofdstukken
-zijn ingevuld.
+Opgesteld 26 juli 2026, laatst bijgewerkt 27 juli 2026. Alle zes
+hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
 >
@@ -172,18 +172,34 @@ Welke sleutels bestaan (waarden staan in de kluis, niet hier):
 - Resend, sleutel voor het verzenden van mail
 - Anthropic, sleutel voor de leescontrole en de vraagbaak
 - Craft.do, koppelingsgegevens
-- `AFTAP_SECRET`, waarmee de cronjobs de Edge Functions van binnenuit
-  mogen aanroepen
+- `AFTAP_SECRET`, waarmee de cronjobs `backup-nachtelijk`,
+  `taken-mail-melding` en `werkvoorraad-sync-wekelijks` de Edge Functions
+  van binnenuit mogen aanroepen. Gaat mee in de header `x-aftap-key`
+- `OPVOLG_KEY`, hetzelfde maar dan voor `offerte-opvolging-werkdagen`.
+  Gaat mee in de header `x-opvolg-key`
 
 De volledige lijst zoals die werkelijk in Supabase staat is
 **[TE CONTROLEREN]**. Die is te vinden in Supabase Studio onder Edge
 Functions, Secrets, per project.
 
 **Twee plekken waar geheimen staan.** Naast de Secrets bij Edge Functions
-heeft Supabase ook een eigen kluis, `vault`. De cronjob
-`maandbericht-maandelijks` haalt zijn sleutel daaruit op met de naam
-`maandbericht_key`. Bij een herbouw moet die kluis opnieuw gevuld worden,
-want hij zit niet in de backup. Zie 4.8.
+heeft Supabase ook een eigen kluis, `vault`. Sinds 27 juli 2026 halen
+**alle zeven cronjobs** hun sleutel daaruit op. In de kluis staan drie
+geheimen:
+
+| Naam in de kluis | Hoort gelijk te zijn aan | Gebruikt door |
+|---|---|---|
+| `maandbericht_key` | **[TE CONTROLEREN]**, gaat mee als `Authorization: Bearer` | `maandbericht-maandelijks`, `yuki-vuller-dagelijks`, `yuki-vuller-middag` |
+| `aftap_secret` | de Edge Function secret `AFTAP_SECRET` | `backup-nachtelijk`, `taken-mail-melding`, `werkvoorraad-sync-wekelijks` |
+| `opvolg_key` | de Edge Function secret `OPVOLG_KEY` | `offerte-opvolging-werkdagen` |
+
+**Elk van deze drie staat op twee plekken en die moeten gelijk blijven.**
+Werk je er eentje bij, werk dan altijd allebei de plekken bij. Doe je dat
+niet, dan weigert de functie het verzoek van de cronjob met een 401 en
+merk je dat pas als het werk niet gedaan blijkt.
+
+Bij een herbouw moet die kluis met de hand opnieuw gevuld worden, want
+hij zit niet in de backup. Zie 4.8.
 
 > **Geleerd op 27 juli 2026, op de harde manier.** Drie cronjobs droegen
 > de AFTAP-sleutel **letterlijk leesbaar** in hun opdrachttekst. Bij het
@@ -202,8 +218,15 @@ want hij zit niet in de backup. Zie 4.8.
 > 2. Verwijderen uit een repo is niet genoeg, want de geschiedenis
 >    onthoudt het. Alleen de sleutel vervangen helpt echt.
 >
-> Drie cronjobs dragen die sleutel nog altijd letterlijk. Zie de
-> opruimlijst.
+> **Opgelost op 27 juli 2026, later diezelfde dag.** Het waren er geen
+> drie maar vier: ook `offerte-opvolging-werkdagen` droeg een sleutel
+> letterlijk, onder de naam `x-opvolg-key`. Dat was bij het opstellen van
+> de opruimlijst over het hoofd gezien omdat er alleen op het woord
+> `secret` gezocht was, en die heet `key`.
+>
+> Alle vier halen hem nu uit de kluis. Beide sleutels zijn daarbij
+> opnieuw vervangen, want de oude waarden waren nergens meer terug te
+> vinden en Supabase toont ze niet. Zie de opruimlijst, punt 14.
 
 ### 2.5 Waar meldingen binnenkomen
 
@@ -436,6 +459,44 @@ volgorde van tijd en je trekt er makkelijk de verkeerde conclusie uit.
 > Uitzondering: `werkvoorraad-sync-wekelijks` gebruikt `extensions.http`
 > en wacht wél op antwoord. Bij die ene job zegt een mislukte run
 > daadwerkelijk iets.
+
+> **Drie valse signalen bij de nachtelijke backup.** Van alle
+> achtergrondtaken is `backup-nachtelijk` de belangrijkste, en juist die
+> laat zich het slechtst controleren. Er zijn drie manieren om er de
+> verkeerde conclusie uit te trekken, en ze wijzen twee kanten op.
+>
+> 1. **Het groene vinkje bij de cronjob zegt niets.** Zie het blok
+>    hierboven. Groen betekent alleen dat het verzoek verstuurd is
+> 2. **De timeout van vijf seconden is normaal.** `net.http_post` wacht
+>    vijf seconden en kapt dan af. De dump duurt langer, dus in
+>    `net._http_response` staat bij deze job **altijd** `Timeout of 5000
+>    ms reached` met een lege statuscode. De functie draait aan de andere
+>    kant gewoon door. Wie dat niet weet, denkt dat de backup al maanden
+>    stuk is
+> 3. **`created_at` in `storage.objects` schuift niet mee.** De functie
+>    schrijft één bestand per dag, `backup-JJJJ-MM-DD.json`, en
+>    overschrijft dat bij een tweede run. Bij een overschrijving blijft
+>    `created_at` staan op het eerste moment. Sorteer je daarop, dan lijkt
+>    er niets gebeurd te zijn. **Kijk naar `updated_at`**
+>
+> Signaal 1 en 3 laten een werkende backup er stuk uitzien of andersom.
+> Dat is de reden dat punt 5 van de opruimlijst, het statusscherm, geen
+> luxe is.
+>
+> **De enige echte controle** is kijken of er een vers bestand in de bak
+> staat:
+>
+> ```sql
+> select name,
+>        round((metadata->>'size')::numeric / 1024 / 1024, 2) as mb,
+>        updated_at at time zone 'Europe/Amsterdam' as laatst_geschreven
+> from storage.objects
+> where bucket_id = 'backups' and name like 'backup-%'
+> order by updated_at desc
+> limit 5;
+> ```
+>
+> Het bestand is ongeveer 8,3 MB en groeit met zo'n 0,13 MB per dag.
 
 ---
 
@@ -712,8 +773,10 @@ vorige nodig.
 2. Schemadump draaien: tabellen, policies, triggers, rechten. Zie
    `sql/schema_tabellen.sql` plus de aanvulling
 3. Extensies aanzetten, waaronder pg_cron en pg_net
-4. Geheimen invoeren uit de kluis, op **twee** plekken: bij Edge Functions
-   onder Secrets, en in de kluis `vault` van Supabase zelf
+4. Geheimen invoeren, op **twee** plekken: bij Edge Functions onder
+   Secrets, en in de kluis `vault` van Supabase zelf. In de kluis horen
+   drie namen: `maandbericht_key`, `aftap_secret` en `opvolg_key`. Die
+   moeten gelijk zijn aan de gelijknamige Edge Function secrets. Zie 2.4
 5. Edge Functions uitrollen vanuit `ernes-edge-functions`
 6. Cronjobs opnieuw aanmaken volgens hoofdstuk 3.1
 7. Opslagbakken aanmaken, met de goede openbaar-instelling per bak
@@ -929,12 +992,12 @@ van een backup is één keer echt geoefend en werkte.
 13. **De opdrachtregel van Supabase inrichten voor het uitrollen van Edge
     Functions.** Nu gaat dat met achttien keer klikken in de browser. Bij
     een herbouw is dat uren. Dit moet ingericht zijn voordat het nodig is.
-14. **De drie cronjobs de sleutel uit de kluis laten halen.**
-    `backup-nachtelijk`, `taken-mail-melding` en
-    `werkvoorraad-sync-wekelijks` dragen `AFTAP_SECRET` nog letterlijk in
-    hun opdrachttekst. `maandbericht-maandelijks` doet het al goed via
-    `vault`. Zolang dat verschil bestaat kan het lek van 27 juli zich
-    herhalen. Half uur werk.
+14. ~~**De drie cronjobs de sleutel uit de kluis laten halen.**~~
+    **Gedaan op 27 juli 2026.** Het waren er vier, niet drie: ook
+    `offerte-opvolging-werkdagen` droeg een sleutel letterlijk. Alle zeven
+    cronjobs halen hun sleutel nu uit `vault`. Geen enkele opdrachttekst
+    bevat nog een geheim, dus een uitdraai van `cron.job` is voortaan
+    vanzelf schoon. Zie 2.4.
 15. **De schema-aanvulling opnieuw maken en veilig opslaan.** Het bestand
     met extensies, rechten, functies, triggers, indexen, policies, bakken
     en cronjobs is weggehaald omdat er een sleutel in stond. Opnieuw
@@ -1005,3 +1068,26 @@ gold, en dat Edge Functions buiten elke backup vallen.
 dat het werk gedaan is, en een uitdraai van de database kan geheimen
 bevatten. Allebei staan ze nu opgeschreven op de plek waar iemand ze
 zoekt.
+
+Later diezelfde dag, in een tweede sessie:
+
+- Opruimlijst punt 14 afgemaakt. Alle zeven cronjobs halen hun sleutel nu
+  uit de kluis. `AFTAP_SECRET` en `OPVOLG_KEY` zijn daarbij opnieuw
+  vervangen, want Supabase toont bestaande waarden niet meer
+- Ontdekt dat het er vier waren en niet drie. `offerte-opvolging-werkdagen`
+  stond niet op de lijst omdat er op het woord `secret` gezocht was en die
+  sleutel `key` heet
+- Bewezen met een echte aanroep dat `taken-mail-melding`, `backup-dump` en
+  `fin-werkvoorraad-sync` de nieuwe sleutel accepteren
+- Twee nieuwe valse signalen bij de nachtelijke backup gevonden: de
+  timeout van vijf seconden die er altijd is, en `created_at` dat bij een
+  overschreven bestand niet meeschuift. Zie 3.4
+
+**Open, morgenochtend controleren:** `offerte-opvolging-werkdagen` draait
+28 juli om 06:30 UTC, dat is 08:30 bij ons. Dat is de enige van de vier
+die niet vooraf getest kon worden, want die stuurt mail naar klanten en
+die trap je niet af om te kijken of het werkt. Kijk bij Edge Functions,
+`offerte-herinnering`, Invocations. Staat daar 401, dan klopt `opvolg_key`
+niet met de Edge Function secret `OPVOLG_KEY`. Er is dan niets ergs
+gebeurd, want een geweigerd verzoek verstuurt geen mail. Deze faalt de
+goede kant op en daarom is hij bewust niet vooraf getest.
