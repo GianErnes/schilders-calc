@@ -332,8 +332,8 @@ Die geeft in één resultaat alle cronjobs met hun laatste run, alle
 triggers, alle opslagbakken en alle tabellen. Dit is het snelste
 totaalbeeld en het is puur lezen.
 
-> **Waar die query staat.** In de map `beheer/` van deze repo, naast dit
-> document. Drie bestanden, allemaal read-only, ze veranderen niets:
+> **Waar die query staat.** In de map `sql/` van deze repo, onder de
+> herbruikbare scripts. Allemaal read-only, ze veranderen niets:
 >
 > - `inventarisatie_automatiek.sql` — het totaalbeeld, voor `schilders-calc`
 > - `inventarisatie_zonder_cron.sql` — dezelfde uitdraai zonder de
@@ -342,9 +342,26 @@ totaalbeeld en het is puur lezen.
 >   `cron.job`
 > - `exacte_rijtelling.sql` — telt per tabel het werkelijke aantal rijen.
 >   Gebruikt om te controleren of een herstel geslaagd is
+> - `audit_query_periodiek.sql` — bestond al. Kijkt naar rechten en
+>   rijbeveiliging, eens per kwartaal. Zie de waarschuwing hieronder
 >
 > Supabase Studio toont bij meerdere SELECT-opdrachten alleen het laatste
-> resultaat. Daarom geven deze query's alles in één antwoord terug.
+> resultaat. Daarom geven de eerste drie alles in één antwoord terug.
+
+> **Waarschuwing bij `audit_query_periodiek.sql`.** Dat bestand bestaat
+> uit vier losse SELECT-opdrachten. Supabase Studio toont daarvan alleen
+> de laatste. Wie hem draait ziet dus uitsluitend de tabellen met
+> rijbeveiliging zonder policy, en **niet** het rechtenoverzicht, niet de
+> controle op tabellen zonder rijbeveiliging, en niet de controle op
+> anon-rechten. Dat zijn juist de twee waarvoor de audit bedoeld was.
+> Moet nog samengevoegd worden tot één resultaat, zie de opruimlijst.
+
+**Twee bekende uitzonderingen.** De tabellen `sync_state` en
+`taken_melding_sleutels` hebben rijbeveiliging aan en **nul policies**.
+Volgens `sql/README.md` is dat een rode vlag. Hier is het bewust: die
+tabellen worden alleen door Edge Functions gevuld, en die werken met de
+servicesleutel en gaan langs de rijbeveiliging heen. **Zet er geen policy
+op om het te repareren.** Dan open je ze voor iedereen die is ingelogd.
 
 Waar je op let in blok 2, de laatste runs:
 
@@ -385,7 +402,7 @@ altijd bovenaan, ook als je denkt te weten wat het is.
 2. **Staat Supabase zelf overeind?** Kijk op `status.supabase.com`. Ligt
    het daar, dan is er niets te repareren en wachten we.
 3. **Draai de uitdraai.** `inventarisatie_automatiek.sql` uit de map
-   `beheer/` van deze repo. Binnen een minuut weet je of de
+   `sql/` van deze repo. Binnen een minuut weet je of de
    achtergrondtaken nog lopen.
 
 Pas daarna ga je zoeken.
@@ -659,6 +676,14 @@ van een backup is één keer echt geoefend en werkte.
 6. **`taken-mail-melding` heroverwegen.** Die draait nu elke twee minuten,
    ruim 700 keer per dag. De kosten zijn geen punt, de logtabellen groeien
    er wel hard van vol.
+7. **`sql/audit_query_periodiek.sql` samenvoegen tot één resultaat.** Nu
+   vier losse opdrachten, waarvan Supabase Studio er maar één toont. De
+   kwartaalcontrole meet dus drie van zijn vier dingen zonder ze te laten
+   zien.
+8. **`sql/template_nieuwe_tabel.sql` alsnog maken.** De README in die map
+   verwijst ernaar als de manier om een nieuwe tabel aan te leggen, maar
+   het bestand bestaat niet. Wie die instructie volgt loopt vast, en maakt
+   dan een tabel zonder policies waar de app niet bij kan.
 
 ---
 
