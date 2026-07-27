@@ -21,7 +21,7 @@ zie CHANGELOG.md v3.9.5.
 
 | Bestand | Wanneer gebruiken |
 |---|---|
-| `audit_query_periodiek.sql` | Eens per kwartaal: check RLS-status en anon-grants |
+| `audit_query_periodiek.sql` | Eens per kwartaal: check RLS-status en anon-grants. Geeft alles in één resultaat |
 | `template_nieuwe_tabel.sql` | Bij aanmaken nieuwe tabel — kopiëren en aanpassen |
 
 ## Het open model van Schilders Calc
@@ -40,7 +40,25 @@ policies werkt de app niet meer met die tabel.
 ## Auditeren
 
 Periodieke check: run `audit_query_periodiek.sql` in Supabase SQL Editor.
-Rode vlaggen die direct aandacht vragen:
-- Een tabel met RLS UIT
-- Een tabel waar `anon` weer grants heeft
-- Een tabel met RLS AAN maar zonder policies (= app kan er niet bij)
+Sinds 27 juli 2026 geeft die alles in **één** resultaat. Daarvoor waren
+het vier losse opdrachten, waarvan Supabase Studio er maar één toont, dus
+werden drie van de vier controles gemeten zonder ze te laten zien.
+
+Het resultaat staat in drie blokken, met de rode vlaggen bovenaan:
+
+- **1. RODE VLAG** — hier moet je op reageren:
+  - een tabel met RLS UIT
+  - een tabel waar `anon` weer grants heeft
+  - een tabel met RLS AAN maar zonder policies (= app kan er niet bij)
+  
+  Staat er alleen de regel *geen rode vlaggen gevonden*, dan is het goed.
+  Die regel bestaat met opzet: een leeg resultaat lijkt te veel op een
+  query die niet gelopen heeft.
+- **2. bekend en goed** — `sync_state` en `taken_melding_sleutels` hebben
+  RLS aan en nul policies. Dat is bewust: ze worden alleen door Edge
+  Functions gevuld en die werken met de servicesleutel, dus die gaan langs
+  de rijbeveiliging heen. **Zet er geen policy op om het te repareren.**
+  Dan open je ze voor iedereen die is ingelogd
+- **3. overzicht** — alle tabellen met hun stand, om doorheen te scrollen
+
+Laatste schone controle: 27 juli 2026, 37 tabellen, geen enkele vlag.

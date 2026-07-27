@@ -1,64 +1,91 @@
 -- ============================================================
--- AUDIT-QUERY — herhaalbaar
--- Draai eens per kwartaal in de Supabase SQL Editor om te checken
--- of er per ongeluk tabellen zonder RLS zijn ontstaan,
--- of dat anon ergens grants heeft gekregen.
+-- AUDIT-QUERY, herhaalbaar. Draai eens per kwartaal.
+--
+-- Kijkt of er per ongeluk tabellen zonder rijbeveiliging zijn
+-- ontstaan, of dat anon ergens rechten heeft gekregen.
+--
+-- Alles komt in EEN resultaat. Supabase Studio toont bij meerdere
+-- losse opdrachten namelijk alleen de laatste, en dan meet je drie
+-- van de vier dingen zonder ze te zien.
+--
+-- Leest alleen. Verandert niets.
+--
+-- HOE JE HET LEEST: bovenaan staan de rode vlaggen. Staat daar
+-- "geen rode vlaggen gevonden", dan is het goed en hoef je de rest
+-- niet te lezen.
 -- ============================================================
 
--- A. Per tabel: RLS-status, aantal policies, samenvatting grants per rol
-SELECT
-  t.tablename AS tabel,
-  CASE WHEN c.relrowsecurity THEN 'AAN' ELSE 'UIT  ⚠️' END AS rls,
-  COALESCE(
-    (SELECT count(*)
-     FROM pg_policies
-     WHERE schemaname = 'public' AND tablename = t.tablename), 0
-  ) AS aantal_policies,
-  COALESCE(
-    (SELECT string_agg(grantee || ':' || privilege_type, ', '
-            ORDER BY grantee, privilege_type)
-     FROM information_schema.role_table_grants
-     WHERE table_schema = 'public'
-       AND table_name = t.tablename
-       AND grantee = 'anon'),
-    '(geen)'
-  ) AS anon_rechten,
-  COALESCE(
-    (SELECT string_agg(DISTINCT privilege_type, ', '
-            ORDER BY privilege_type)
-     FROM information_schema.role_table_grants
-     WHERE table_schema = 'public'
-       AND table_name = t.tablename
-       AND grantee = 'authenticated'),
-    '(geen)'
-  ) AS authenticated_rechten
-FROM pg_tables t
-JOIN pg_class c     ON c.relname = t.tablename
-JOIN pg_namespace n ON n.oid = c.relnamespace AND n.nspname = t.schemaname
-WHERE t.schemaname = 'public'
-ORDER BY t.tablename;
+with tabellen as (
+  select
+    t.tablename::text as tabel,
+    c.relrowsecurity  as rls_aan,
+    (select count(*) from pg_policies
+      where schemaname = 'public' and tablename = t.tablename) as policies,
+    coalesce((select string_agg(privilege_type, ', ' order by privilege_type)
+                from information_schema.role_table_grants
+               where table_schema = 'public'
+                 and table_name = t.tablename
+                 and grantee = 'anon'), '') as anon
+  from pg_tables t
+  join pg_class c     on c.relname = t.tablename
+  join pg_namespace n on n.oid = c.relnamespace and n.nspname = t.schemaname
+  where t.schemaname = 'public'
+),
 
--- B. Rode vlaggen — direct ingrijpen indien resultaten teruggeven worden
--- B1. Tabellen zonder RLS
-SELECT 'RLS UIT' AS issue, t.tablename
-FROM pg_tables t
-JOIN pg_class c ON c.relname = t.tablename
-JOIN pg_namespace n ON n.oid = c.relnamespace AND n.nspname = t.schemaname
-WHERE t.schemaname = 'public' AND NOT c.relrowsecurity;
+-- de twee tabellen die met opzet geen policy hebben.
+-- Ze worden alleen door Edge Functions gevuld en die werken met de
+-- servicesleutel, dus die gaan langs de rijbeveiliging heen.
+-- ZET ER GEEN POLICY OP om het te repareren. Zie SYSTEEM.md 3.4.
+uitzonderingen as (
+  select unnest(array['sync_state', 'taken_melding_sleutels']) as tabel
+),
 
--- B2. Tabellen waar anon nog grants heeft
-SELECT DISTINCT 'ANON HEEFT GRANT' AS issue, table_name AS tabel
-FROM information_schema.role_table_grants
-WHERE table_schema = 'public' AND grantee = 'anon';
+vlaggen as (
+  select '1. RODE VLAG'::text as blok,
+         'RIJBEVEILIGING UIT'::text as oordeel,
+         tabel,
+         'zet rijbeveiliging aan en maak een policy'::text as toelichting
+  from tabellen where not rls_aan
 
--- B3. Tabellen met RLS aan, maar zonder policies (= onbereikbaar voor app)
-SELECT 'RLS AAN ZONDER POLICY' AS issue, t.tablename
-FROM pg_tables t
-JOIN pg_class c ON c.relname = t.tablename
-JOIN pg_namespace n ON n.oid = c.relnamespace AND n.nspname = t.schemaname
-WHERE t.schemaname = 'public'
-  AND c.relrowsecurity
-  AND NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = t.tablename
-  );
+  union all
+  select '1. RODE VLAG', 'ANON HEEFT RECHTEN', tabel,
+         'rechten: ' || anon
+  from tabellen where anon <> ''
+
+  union all
+  select '1. RODE VLAG', 'AAN ZONDER POLICY', tabel,
+         'de app kan hier niet bij'
+  from tabellen
+  where rls_aan and policies = 0
+    and tabel not in (select tabel from uitzonderingen)
+),
+
+geen_vlaggen as (
+  select '1. RODE VLAG'::text, 'geen rode vlaggen gevonden'::text,
+         ''::text, 'de audit is gelopen en alles staat goed'::text
+  where not exists (select 1 from vlaggen)
+),
+
+bekend as (
+  select '2. bekend en goed'::text, 'aan zonder policy, met opzet'::text,
+         t.tabel,
+         'alleen gevuld door Edge Functions. Geen policy op zetten'::text
+  from tabellen t
+  join uitzonderingen u on u.tabel = t.tabel
+  where t.rls_aan and t.policies = 0
+),
+
+overzicht as (
+  select '3. overzicht'::text,
+         case when rls_aan then 'beveiligd' else 'NIET beveiligd' end,
+         tabel,
+         'policies: ' || policies::text
+           || ' | anon: ' || case when anon = '' then 'geen' else anon end
+  from tabellen
+)
+
+select * from vlaggen
+union all select * from geen_vlaggen
+union all select * from bekend
+union all select * from overzicht
+order by 1, 2, 3;
