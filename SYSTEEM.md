@@ -572,6 +572,118 @@ Supabase is opgehouden te bestaan. Zie de opruimlijst.
 is om mee te herstellen weet niemand. Dat is de eerstvolgende test die
 gedaan moet worden en de belangrijkste openstaande vraag van dit document.
 
+### 4.8 Herbouwen vanaf nul
+
+Backup en herstel zijn twee verschillende dingen. De vorige paragrafen
+gaan over het terughalen van gegevens. Deze gaat over de vraag die
+daarachter zit: **hoe krijg je alles weer draaiend.**
+
+Er zijn drie soorten ramp en je staat er per soort heel anders voor.
+
+| Ramp | Wat er gebeurd is | Hoe je ervoor staat |
+|---|---|---|
+| **1** | iets stuk in de database | **gedekt**, zie 4.5, half uur, bewezen |
+| **2** | het Supabase-project is weg | half gedekt, de structuur zit nog in de platformbackup |
+| **3** | geen toegang meer tot Supabase | **niet gedekt**, alles moet opnieuw |
+
+Ramp 1 is verreweg de waarschijnlijkste en die is af. Ramp 3 is
+onwaarschijnlijk maar totaal: account geblokkeerd, betaalgeschil, of
+Supabase houdt op te bestaan.
+
+#### Wat er allemaal moet gebeuren bij ramp 2 en 3
+
+| Onderdeel | Staat het buiten Supabase? | Tijd |
+|---|---|---|
+| De vier appbestanden | ja, GitHub | minuten |
+| Broncode Edge Functions | ja, `ernes-edge-functions` | — |
+| **Structuur van de database** | **nee** | uren |
+| Inhoud van de database | ja, de JSON uit 4.7 | minuten |
+| **De achttien functies uitrollen** | n.v.t. | **uren klikwerk** |
+| De zeven cronjobs | ja, hoofdstuk 3.1 | half uur |
+| De geheimen | ja, de kluis | half uur |
+| De zes inlogaccounts | nee | half uur, zie waarschuwing |
+| Opslagbakken en hun rechten | nee | half uur |
+| **De bestanden zelf** | deels, `accord-pdf` niet | onmogelijk voor accord-pdf |
+| **Adres en sleutels in de apps** | — | **half uur, wordt altijd vergeten** |
+
+> **De stille moordenaar.** Een nieuw Supabase-project krijgt een **ander
+> adres en andere sleutels**. Die staan hard in alle vier de
+> HTML-bestanden. Pas je die niet aan, dan draaien je apps vrolijk door
+> tegen een database die niet meer bestaat, zonder duidelijke foutmelding.
+> Dit is de laatste stap van elk herstel en tegelijk de makkelijkst
+> vergeten stap.
+
+> **Waarschuwing bij de inlogaccounts.** Nieuwe accounts krijgen nieuwe
+> interne id's. Verwijst de rijbeveiliging of de tabel `taken_rollen` naar
+> die id's, dan klopt de koppeling na herbouw niet meer en ziet niemand
+> meer de goede taken. Of dat zo is, is **[TE CONTROLEREN]** en het moet
+> uitgezocht worden vóórdat het nodig is.
+
+**Eerlijke schatting met wat er vandaag ligt: één tot twee dagen werk, en
+`accord-pdf` komt niet terug.** Niet enkele uren.
+
+#### Wat er nodig is om het wél in uren te doen
+
+Het inzicht: **je herstelt niet snel door terug te zetten, je herstelt
+snel door te kunnen herbouwen.** Herbouwen kan alleen als alles bestaat
+als bestand dat je opnieuw kunt afspelen. Drie dingen ontbreken.
+
+**1. Een schemadump.** Eén SQL-bestand dat alle tabellen, sleutels,
+indexen, triggers, functies, policies en rechten opnieuw aanlegt. Dit is
+het grootste gat. Zonder dat begin je met een leeg project en 37 tabellen
+die uit het hoofd gereconstrueerd moeten worden. Zie opruimlijst punt 10.
+
+Kijk eerst bij **Database, Migrations** in Supabase Studio. Staat daar een
+lijst, dan is een groot deel van die dump er al, want dat is de
+geschiedenis van hoe de database is opgebouwd. Is die lijst leeg, omdat
+alle SQL rechtstreeks in de editor is geplakt, dan moet de dump op een
+andere manier gemaakt worden. **[TE CONTROLEREN]**
+
+**2. Een manier om de functies snel uit te rollen.** Achttien keer klikken
+in de browser-editor kost uren. Met de opdrachtregel van Supabase is het
+één opdracht voor alles. Dat moet nú ingericht worden, niet tijdens de
+ramp, want dan sta je iets te leren op het slechtst denkbare moment.
+
+**3. De bestanden echt buiten de deur.** De bak `backups` zit in hetzelfde
+project dat bij ramp 3 verdwenen is. Alleen de maandagbijlage staat er
+buiten, en daar zitten geen foto's of PDF's in.
+
+#### De volgorde bij een echte herbouw
+
+Doe het in deze volgorde. Andersom werkt niet, want elke stap heeft de
+vorige nodig.
+
+1. Nieuw Supabase-project aanmaken, regio `eu-west-1`
+2. Schemadump draaien: tabellen, policies, triggers, rechten
+3. Extensies aanzetten, waaronder pg_cron en pg_net
+4. Geheimen invoeren uit de kluis
+5. Edge Functions uitrollen vanuit `ernes-edge-functions`
+6. Cronjobs opnieuw aanmaken volgens hoofdstuk 3.1
+7. Opslagbakken aanmaken, met de goede openbaar-instelling per bak
+8. Data terugzetten uit de JSON
+9. Bestanden terugzetten voor zover die er zijn
+10. De zes inlogaccounts aanmaken
+11. **Adres en sleutels aanpassen in alle vier de HTML-bestanden**
+12. Aanmelden testen, een calculatie openen, een taak afvinken
+
+#### Het alternatief: een tweede project dat klaarstaat
+
+Alles hierboven is herbouwen. Er is een andere weg: een tweede Supabase-
+project dat structureel gelijk is en periodiek de data meekrijgt. Gaat er
+iets mis, dan pas je in vier bestanden het adres en de sleutel aan en je
+draait weer. **Dat is een uur in plaats van twee dagen.**
+
+Kosten: een tweede Nano-project, ordegrootte tien tot vijfentwintig dollar
+per maand. Extra werk: het synchroon houden, en dat is een cronjob.
+
+**Het eerlijke tegenargument:** dat tweede project hangt aan hetzelfde
+account, dus het dekt ramp 3 niet. Voor ramp 2 is het uitstekend, voor
+ramp 3 heb je alsnog de herbouwmap nodig.
+
+**Advies: eerst de herbouwmap.** Die dekt alle drie de rampen en kost geen
+abonnement. Een warm reserveproject is een luxe die je later kunt
+overwegen als een dag stilstand te veel blijkt.
+
 ---
 
 ## 5. Releaseregels
@@ -739,7 +851,16 @@ van een backup is één keer echt geoefend en werkte.
     alleen de inhoud weggeschreven, niet de structuur van de database.
     Zonder tabeldefinities, policies en triggers is die JSON alleen
     bruikbaar als er al een werkende database staat om hem in te gieten.
-    Zie 4.7.
+    Zie 4.7 en 4.8.
+11. **Nakijken of Database, Migrations gevuld is.** Staat daar de
+    opbouwgeschiedenis van de database, dan is punt 10 een uur werk. Is
+    hij leeg, dan een middag. Dit bepaalt de aanpak, dus dit eerst.
+12. **Uitzoeken of de rollen aan de interne id's van de inlogaccounts
+    hangen.** Zo ja, dan klopt na een herbouw de koppeling niet meer en
+    ziet niemand de goede taken. Zie de waarschuwing in 4.8.
+13. **De opdrachtregel van Supabase inrichten voor het uitrollen van Edge
+    Functions.** Nu gaat dat met achttien keer klikken in de browser. Bij
+    een herbouw is dat uren. Dit moet ingericht zijn voordat het nodig is.
 
 ---
 
