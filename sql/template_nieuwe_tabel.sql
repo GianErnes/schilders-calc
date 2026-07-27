@@ -72,9 +72,20 @@ revoke all                           on public.TABELNAAM from anon;
 --    Laat je dit weg, dan blijft updated_at op het moment van
 --    aanmaken staan en heb je een datum die liegt.
 -- ------------------------------------------------------------
+-- De functie zelf bestaat al en wordt door alle tabellen gedeeld.
+-- Hij staat hier alleen voor het geval hij ontbreekt, bijvoorbeeld na
+-- een herbouw vanaf nul.
+--
+-- >>> De regel `set search_path` MOET erbij blijven. <<<
+-- Die is er op 26 mei 2026 bij gekomen in v3.9.5, zie
+-- sql/02_fix_set_updated_at.sql. Zonder die regel kan de functie
+-- gekaapt worden via een tabel met dezelfde naam in een ander schema.
+-- Laat je hem weg, dan draai je die beveiliging terug voor ALLE
+-- tabellen tegelijk, want het is een gedeelde functie.
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+set search_path = public, pg_temp
 as $$
 begin
   new.updated_at = now();
@@ -102,7 +113,7 @@ create trigger TABELNAAM_set_updated_at
 
 -- ------------------------------------------------------------
 -- 7. Controle
---    Draai dit mee. Alle vier de regels horen op GOED te staan.
+--    Draai dit mee. Alle vijf de regels horen op GOED te staan.
 -- ------------------------------------------------------------
 with c as (
   select
@@ -127,4 +138,12 @@ select 'rechten voor authenticated',
        case when rechten_auth > 0 then 'GOED' else 'FOUT, app kan er niet bij' end from c
 union all
 select 'geen rechten voor anon',
-       case when rechten_anon = 0 then 'GOED' else 'FOUT, tabel ligt open' end from c;
+       case when rechten_anon = 0 then 'GOED' else 'FOUT, tabel ligt open' end from c
+union all
+select 'set_updated_at beveiligd',
+       case when exists (
+         select 1 from pg_proc p
+         join pg_namespace n on n.oid = p.pronamespace
+         where n.nspname = 'public' and p.proname = 'set_updated_at'
+           and p.proconfig::text like '%search_path%'
+       ) then 'GOED' else 'FOUT, zie sql/02_fix_set_updated_at.sql' end;
