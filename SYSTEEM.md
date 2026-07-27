@@ -352,11 +352,34 @@ waarom. Zie de opruimlijst.
 `taken-mail-melding` draait elke twee minuten, ruim 700 keer per dag. Dat
 kost geen geld van betekenis, maar het laat de logtabellen hard vollopen.
 
-### 3.2 De achttien Edge Functions
+### 3.2 De vijftien Edge Functions
 
-De broncode van alle achttien staat sinds 26 juli 2026 in de besloten
-repo `GianErnes/ernes-edge-functions`. Dat is nodig, want een backup van
-Supabase neemt Edge Functions **niet** mee.
+Het waren er achttien tot 27 juli 2026. Toen zijn `taken-meldingen`,
+`yoobi-kijkglas` en `yoobi-project-probe` verwijderd, alle drie na
+vaststelling dat ze zesentwintig dagen lang nul keer waren aangeroepen.
+`taken-agenda` stond ook op die lijst maar leeft nog, zie de opruimlijst.
+
+De broncode staat sinds 26 juli 2026 in de besloten repo
+`GianErnes/ernes-edge-functions`. Dat is nodig, want een backup van
+Supabase neemt Edge Functions **niet** mee. Sinds 27 juli houdt de
+ophaalknop die repo wekelijks vanzelf bij, zie 2.1.
+
+> **`smooth-function` heet in de lijst `fin-dashboard-sync`.** Een Edge
+> Function heeft twee namen: een adresnaam die in de URL staat en die
+> vastligt, en een weergavenaam die vrij te wijzigen is. Bij deze functie
+> zijn die verschillend:
+>
+> | Waar | Naam |
+> |---|---|
+> | in de lijst van Studio | `fin-dashboard-sync` |
+> | in de URL, in de cronjobs, in de repo | `smooth-function` |
+>
+> Tot 27 juli 2026 was de weergavenaam `yuki-test`. Dat was gevaarlijk,
+> want wie opruimt gooit iets dat naar test heet zonder aarzelen weg, en
+> dan valt financieel.html om. De adresnaam veranderen kan niet zonder
+> een nieuwe functie te maken en de cronjobs om te zetten, en dat is een
+> operatie van dagen voor een cosmetisch probleem. Vandaar deze twee
+> namen. **Zoek je hem in de cronjobs, zoek dan op `smooth-function`.**
 
 **Aangeroepen door cron** (zie de tabel hierboven): `backup-dump`,
 `smooth-function`, `offerte-herinnering`, `taken-mail-melding`,
@@ -750,7 +773,7 @@ Supabase houdt op te bestaan.
 | De geheimen | ja, de kluis | half uur |
 | De zes inlogaccounts | nee | half uur, zie waarschuwing |
 | Opslagbakken en hun rechten | nee | half uur |
-| **De bestanden zelf** | deels, `accord-pdf` niet | onmogelijk voor accord-pdf |
+| **De bestanden zelf** | deels, `accord-pdf` niet | zie de noot hieronder |
 | **Adres en sleutels in de apps** | — | **half uur, wordt altijd vergeten** |
 
 > **De stille moordenaar.** Een nieuw Supabase-project krijgt een **ander
@@ -778,8 +801,18 @@ Supabase houdt op te bestaan.
 > `taken_rollen` heeft alleen een leespolicy en is dus niet via de app te
 > bewerken.
 
-**Eerlijke schatting met wat er vandaag ligt: één tot twee dagen werk, en
-`accord-pdf` komt niet terug.** Niet enkele uren.
+> **Over `accord-pdf`, bijgesteld op 27 juli 2026.** Hier stond dat die
+> akkoorden bij een herbouw verloren zijn. Dat is te somber. De akkoorden
+> van gewonnen offertes gaan naar Yoobi bij het project, die van verloren
+> offertes naar Yoobi bij verkoop. Ze liggen dus buiten Supabase zodra
+> Maud ze verwerkt heeft.
+>
+> **Het gat zit in het wachtvenster.** Tussen tekenen en verwerken zit tot
+> een week, want Maud doet een halve dag. Alles wat in dat venster valt
+> bestaat op één plek en is bij een ramp weg. Zie opruimlijst punt 1.
+
+**Eerlijke schatting met wat er vandaag ligt: één tot twee dagen werk.**
+Niet enkele uren.
 
 #### Wat er nodig is om het wél in uren te doen
 
@@ -994,32 +1027,108 @@ van een backup is één keer echt geoefend en werkte.
    `calculatie-documenten`. De 66 getekende akkoorden hebben daarmee op
    dit moment geen enkele backup. Van alles in het systeem is dat het
    enige met juridische waarde.
-2. **`smooth-function` hernoemen.** Die functie staat in de lijst als
-   `yuki-test` maar draait tweemaal daags het financiele dashboard vol.
-   Wie ooit opruimt gooit een ding dat naar test heet zonder aarzelen weg.
-   Hernoemen, en de twee cronjobs meeverhuizen.
-3. **Vier ongebruikte Edge Functions verwijderen:** `taken-agenda`,
-   `taken-meldingen`, `yoobi-kijkglas` en `yoobi-project-probe`. Bij alle
-   vier staat de wachtwoordcontrole uit. Bij `taken-agenda` eerst de
-   agenda-abonnementen van de telefoons halen, anders blijft er een
-   kapotte koppeling achter.
+
+   **Het wachtvenster, vastgesteld op 27 juli 2026.** Een akkoord staat in
+   `accord-pdf` tot Maud het verwerkt, en zij doet een halve dag per week.
+   Er zit dus standaard tot een week tussen tekenen en veiligstellen,
+   langer bij vakantie of ziekte. In dat venster bestaat het akkoord op
+   precies één plek.
+
+   Uitvoering: `accord-pdf` toevoegen aan de spiegel in `backup-dump`.
+   Daarbij twee dingen anders regelen dan bij de andere bakken:
+   - **Niet mee in de rotatie van zestig dagen.** Een akkoord van maart is
+     over zestig dagen nog steeds het enige bewijs. Akkoorden blijven staan
+   - **Eigen ruimte binnen de limiet van honderd bestanden per nacht.** Die
+     limiet geldt nu over alle bakken samen. Bij veel foto's tegelijk
+     kunnen de akkoorden achteraan de rij komen en niet meegaan
+
+   Meenemen in dezelfde beweging: **`accord-pdf` is een openbare bak.** Wie
+   de link heeft komt zonder inlog bij een getekende offerte. Dat is
+   bewust zo gezet zodat de klant erbij kan, maar het verdient een aparte
+   afweging nu duidelijk is wat er in die bak staat.
+2. ~~**`smooth-function` hernoemen.**~~ **Gedaan op 27 juli 2026.** De
+   weergavenaam is nu `fin-dashboard-sync`. De cronjobs hoefden niet mee:
+   die roepen de URL aan en de adresnaam is niet gewijzigd. Zie 3.2.
+3. **Nog één ongebruikte Edge Function verwijderen: `taken-agenda`.**
+   Op 27 juli 2026 zijn `taken-meldingen`, `yoobi-kijkglas` en
+   `yoobi-project-probe` verwijderd, alle drie na vaststelling van nul
+   aanroepen over zesentwintig dagen. Ook uit de repo gehaald, want de
+   uitrolknop rolt alles uit wat daar staat en zou ze anders bij een
+   herbouw terugzetten. De code blijft bewaard in de zips in de hoofdmap
+   en in de geschiedenis van de repo.
+
+   `taken-agenda` staat er nog en dat is met opzet. Die werd op 26 juli
+   nog tientallen keren per dag aangeroepen, dus er staat ergens een
+   telefoon op te vragen. Eerst het agenda-abonnement van de toestellen
+   halen, anders blijft er een kapotte koppeling achter.
+
+   **Twee dingen die daarbij horen:**
+   - Kijk eerst opnieuw bij Invocations over een maand. Leeft hij nog
+   - De tabel `taken_melding_sleutels` hoorde bij `taken-meldingen` en is
+     nu mogelijk een wees. Mogelijk, want `taken-agenda` zit in dezelfde
+     familie en gebruikt hem misschien ook. Eerst de code van
+     `taken-agenda` lezen, dan pas opruimen. Zolang die tabel bestaat
+     blijft hij als bewuste uitzondering in de auditquery staan
 4. **`index.html` toevoegen aan de voorraad-repo**, zodat het korte adres
    werkt en de app vindbaar blijft zonder de exacte bestandsnaam.
 5. **Systeemstatus-scherm bouwen.** Een pagina die per achtergrondtaak
    toont wanneer die voor het laatst goed gelopen is. Geen geschreven
    pagina kan vertellen of de backup vannacht gedraaid heeft, een scherm
    wel.
-6. **`taken-mail-melding` heroverwegen.** Die draait nu elke twee minuten,
-   ruim 700 keer per dag. De kosten zijn geen punt, de logtabellen groeien
-   er wel hard van vol.
-7. **`sql/audit_query_periodiek.sql` samenvoegen tot één resultaat.** Nu
-   vier losse opdrachten, waarvan Supabase Studio er maar één toont. De
-   kwartaalcontrole meet dus drie van zijn vier dingen zonder ze te laten
-   zien.
-8. **`sql/template_nieuwe_tabel.sql` alsnog maken.** De README in die map
-   verwijst ernaar als de manier om een nieuwe tabel aan te leggen, maar
-   het bestand bestaat niet. Wie die instructie volgt loopt vast, en maakt
-   dan een tabel zonder policies waar de app niet bij kan.
+6. **`taken-mail-melding` van de klok halen.** Die draait nu elke twee
+   minuten, ruim 700 keer per dag.
+
+   **Op 27 juli 2026 wisselde dit punt van kant.** Het stond hier als
+   *minder vaak laten draaien*, maar dat maakt het erger. Het echte
+   bezwaar is namelijk niet de logboeken maar dat de gebruiker de
+   vertraging moet compenseren: zet je om 16:14 een taak en gaan Jens en
+   Bjorn om 16:15 naar huis, dan haalt de mail het niet. Je moet dus
+   terugrekenen en vroeger noteren dan je bedoelt, en dat werkt tot de dag
+   dat je haast hebt.
+
+   Vandaar de omgekeerde richting: een trigger op de tabel `taken` die de
+   functie aanroept op het moment dat er iets wordt opgeslagen. Dan is de
+   melding onderweg voordat je je telefoon weglegt.
+
+   Daarbij hoort een vangnet, want **polling is zelfherstellend en een
+   trigger niet.** Faalt de functie nu een keer, dan probeert hij het twee
+   minuten later opnieuw. Bij een trigger is die melding weg. Dus: de klok
+   blijft draaien, maar om het halfuur, om op te pakken wat de trigger
+   gemist heeft.
+
+   Lost drie dingen tegelijk op: de vertraging bij het noteren, de
+   volgelopen logboeken, en de Invocations-lijst die door 700 aanroepen
+   per dag onbruikbaar is als diagnosemiddel. Dat laatste is geen detail,
+   want op dat scherm hebben we op 27 juli drie keer moeten vertrouwen om
+   te bewijzen dat een functie werkte.
+
+   Eerst de code van `taken-mail-melding` lezen voor er iets gebouwd wordt.
+7. ~~**`sql/audit_query_periodiek.sql` samenvoegen tot één resultaat.**~~
+   **Gedaan op 27 juli 2026.** Alles komt nu in één resultaat, in drie
+   blokken met de rode vlaggen bovenaan. `sync_state` en
+   `taken_melding_sleutels` staan apart als bewuste uitzondering, zodat ze
+   niet elke keer als vlag opkomen en niemand ze per ongeluk repareert.
+   Er is een regel *geen rode vlaggen gevonden* toegevoegd, want een leeg
+   resultaat lijkt te veel op een query die niet gelopen heeft. De README
+   in `sql/` is meegewijzigd. **Eerste schone controle: 27 juli 2026, 37
+   tabellen, geen enkele vlag.**
+8. ~~**`sql/template_nieuwe_tabel.sql` alsnog maken.**~~ **Gedaan op 27
+   juli 2026.** Het sjabloon maakt de tabel, zet rijbeveiliging aan, legt
+   de policy en de rechten aan, trekt de rechten voor anon in, hangt de
+   trigger `set_updated_at` eronder en sluit af met vijf controleregels
+   die op GOED horen te staan.
+
+   > **Bij het bouwen ging het bijna mis en dat is het onthouden waard.**
+   > De eerste versie maakte `set_updated_at` opnieuw aan **zonder** de
+   > regel `set search_path = public, pg_temp`. Die is er op 26 mei 2026
+   > bij gekomen in v3.9.5, zie `sql/02_fix_set_updated_at.sql`. Het is
+   > één gedeelde functie, dus wie dat sjabloon had gedraaid, had die
+   > beveiliging voor **alle** tabellen tegelijk teruggedraaid, stilletjes.
+   > Gevonden doordat dat oude bestand toevallig in beeld kwam.
+   >
+   > Daarom staat er nu een vijfde controleregel in die kijkt of die
+   > beveiliging er nog op zit. Die vangt niet alleen deze fout maar elke
+   > toekomstige keer dat iemand die functie opnieuw aanmaakt.
 9. **De maandagbijlage vervangen door iets dat blijft werken.** Het
    backupbestand groeit met ongeveer 0,13 MB per dag en loopt naar
    verwachting begin december tegen de grens van een mailbijlage aan.
@@ -1063,6 +1172,26 @@ van een backup is één keer echt geoefend en werkte.
 17. **Dubbele policy op `offerte_controle_log` opruimen.** Er staan er
     twee die precies hetzelfde doen: `Ingelogde gebruikers lezen
     controle-log` en `offerte_controle_log_select`. Eén kan weg.
+    Bevestigd in de audit van 27 juli 2026: die tabel staat als enige met
+    `app_help_log` op twee policies.
+18. **Automatische taken rond offerte en akkoord.** Twee taken die vanzelf
+    ontstaan, naast de backup uit punt 1 en niet in plaats daarvan:
+    - **bij versturen van een offerte:** taak om alle stukken,
+      calculatiegegevens en de offerte zelf, in Yoobi bij verkoop te zetten
+    - **bij een akkoord:** taak om de getekende offerte er in verkoop bij
+      te zetten
+
+    Doel is **vindbaarheid**, niet bewaring. Een PDF in een backup-bak is
+    iets dat je terug kunt halen als je weet dat je het kwijt bent. Iets
+    in Yoobi is een archief waar je in kunt zoeken als een klant er over
+    twee jaar over belt.
+
+    Aandachtspunt bij de bouw: hoeveel offertes gaan er per week uit? Bij
+    meer dan een paar wordt de eerste taak ruis, en ruis vink je weg
+    zonder te kijken. Dan lijkt het geregeld terwijl het dat niet is.
+    Overweeg of die taak bij Gian hoort of bij Maud, die het
+    verwerkingswerk toch al doet. Uitbreiden van de bestaande trigger
+    `offerte_taken_sync`, geen nieuw bouwwerk.
 
 ---
 
@@ -1141,6 +1270,20 @@ Later diezelfde dag, in een tweede sessie:
   plaats van achttien zips die allemaal naar `source` uitpakken. Dat was
   handwerk dat hoe dan ook moest gebeuren en de ophaalknop deed het in
   eenentwintig seconden
+- Punt 7 afgemaakt: de auditquery geeft alles in één resultaat en de
+  README is mee. Eerste schone controle gedraaid, 37 tabellen, geen vlag
+- Punt 8 afgemaakt: `sql/template_nieuwe_tabel.sql` bestaat nu, met vijf
+  controleregels. Zie de noot bij punt 8, daar ging het bijna mis
+- Punt 2 afgemaakt: `yuki-test` heet nu `fin-dashboard-sync`. De cronjobs
+  hoefden niet mee, die roepen de adresnaam aan en die is niet gewijzigd
+- Punt 3 grotendeels afgemaakt: drie functies verwijderd na vaststelling
+  van nul aanroepen over zesentwintig dagen, in Supabase én in de repo.
+  `taken-agenda` blijft staan tot het agenda-abonnement van de telefoons is
+- Punt 1 en punt 6 zijn niet gebouwd maar wel van kant gewisseld. Bij
+  punt 1 kwam het wachtvenster van een week aan het licht, bij punt 6 dat
+  minder vaak draaien het probleem juist groter maakt. Beide zijn met de
+  nieuwe redenering herschreven
+- Punt 18 toegevoegd: automatische taken rond offerte en akkoord
 
 **Open, morgenochtend controleren:** `offerte-opvolging-werkdagen` draait
 28 juli om 06:30 UTC, dat is 08:30 bij ons. Dat is de enige van de vier
