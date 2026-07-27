@@ -121,10 +121,20 @@ bestaan en waar de echte waarde ligt.
 
 ### 2.1 GitHub
 
-Eén account: **GianErnes**. Daaronder hangen beide repositories. Er is
+Eén account: **GianErnes**. Daaronder hangen drie repositories. Er is
 geen tweede GitHub-account in gebruik.
 
-Beide repositories zijn **openbaar**. Dat betekent dat iedereen op
+| Repo | Zichtbaar | Wat erin staat |
+|---|---|---|
+| `schilders-calc` | **openbaar** | de vier appbestanden, `sql/`, dit document |
+| `schilder-voorraad` | **openbaar** | de voorraad-app |
+| `ernes-edge-functions` | **besloten** | de broncode van alle achttien Edge Functions, plus de twee knoppen |
+
+`ernes-edge-functions` is bewust besloten. Daar staat de herbouwset, en
+die kan onbedoeld geheimen bevatten. Alles wat op een uitdraai lijkt gaat
+naar deze repo en niet naar een openbare.
+
+De twee openbare repositories zijn **openbaar**. Dat betekent dat iedereen op
 internet het adres van je Supabase-projecten kan lezen en de publieke
 sleutel die de apps gebruiken. Bij Supabase is dat normaal en op zichzelf
 geen probleem, **maar alleen** omdat op alle tabellen in beide projecten
@@ -134,6 +144,39 @@ rijbeveiliging aanstaat en elke tabel een policy heeft.
 > administratie op straat, want de sleutel om binnen te komen staat
 > openbaar in de repo. Dit is de belangrijkste veiligheidsregel van het
 > hele systeem.
+
+**De twee knoppen in `ernes-edge-functions`.** Sinds 27 juli 2026 staan
+daar twee werkstromen onder `.github/workflows/`. Allebei te bedienen via
+het tabblad Actions, dus zonder Terminal en zonder installatie op de iMac.
+
+| Knop | Wanneer | Wat hij doet |
+|---|---|---|
+| **Functies ophalen uit Supabase** | elke zondag 03:00 UTC, en met de hand | haalt de broncode van alle achttien functies op en legt die vast in de repo, plus `functies-overzicht.json` met de instelling per functie |
+| **Functies uitrollen naar Supabase** | alleen met de hand, en alleen na `JA` intikken | rolt alle achttien functies in één keer uit naar een op te geven project |
+
+De ophaalknop is de belangrijkste van de twee, ook al is de andere de
+rampknop. Hij zorgt dat de repo nooit meer achterloopt op wat er
+werkelijk draait. Voorheen werd een functie in de Studio-editor gewijzigd
+en verouderde de kopie in de repo stilletjes.
+
+De uitrolknop leest `functies-overzicht.json` en zet daaruit per functie
+de wachtwoordcontrole terug. **Dat is geen detail.** Zonder dat bestand
+komt die controle overal op de standaardwaarde te staan, en bij de
+functies die met een eigen sleutel werken zoals `x-aftap-key` is dat fout.
+Die weigeren dan alles met een 401 zonder duidelijke reden.
+
+> **De toegangssleutel voor die knoppen.** In `ernes-edge-functions` staat
+> onder Settings, Secrets and variables, Actions een geheim met de naam
+> `SUPABASE_ACCESS_TOKEN`. Dat is een persoonlijke toegangssleutel van
+> Supabase en die **verloopt nooit**. Dat is bewust: een rampknop met een
+> verlopen sleutel is geen rampknop.
+>
+> Die sleutel geeft toegang tot het hele Supabase-account. Vermoed je een
+> lek, trek hem dan in op `supabase.com/dashboard/account/tokens` en maak
+> een nieuwe onder dezelfde naam. De knoppen werken daarna weer.
+>
+> Er is een kanarie: de ophaalknop draait elke zondag. Klopt de sleutel
+> niet meer, dan loopt die job rood en stuurt GitHub daarover een mail.
 
 ### 2.2 Supabase
 
@@ -755,10 +798,15 @@ geschiedenis van hoe de database is opgebouwd. Is die lijst leeg, omdat
 alle SQL rechtstreeks in de editor is geplakt, dan moet de dump op een
 andere manier gemaakt worden. **[TE CONTROLEREN]**
 
-**2. Een manier om de functies snel uit te rollen.** Achttien keer klikken
-in de browser-editor kost uren. Met de opdrachtregel van Supabase is het
-één opdracht voor alles. Dat moet nú ingericht worden, niet tijdens de
-ramp, want dan sta je iets te leren op het slechtst denkbare moment.
+**2. Een manier om de functies snel uit te rollen.** ~~Achttien keer
+klikken in de browser-editor kost uren.~~ **Opgelost op 27 juli 2026.**
+In `ernes-edge-functions` zit een knop die alle achttien functies in één
+keer uitrolt naar een op te geven project. Zie 2.1. Wat uren klikwerk was
+is nu één handeling van een halve minuut.
+
+De opdrachtregel van Supabase is daarmee **niet** nodig op de iMac. Die
+draait op de servers van GitHub. Er hoeft niets geïnstalleerd te worden
+en er valt niets te leren op het verkeerde moment.
 
 **3. De bestanden echt buiten de deur.** De bak `backups` zit in hetzelfde
 project dat bij ramp 3 verdwenen is. Alleen de maandagbijlage staat er
@@ -777,7 +825,9 @@ vorige nodig.
    Secrets, en in de kluis `vault` van Supabase zelf. In de kluis horen
    drie namen: `maandbericht_key`, `aftap_secret` en `opvolg_key`. Die
    moeten gelijk zijn aan de gelijknamige Edge Function secrets. Zie 2.4
-5. Edge Functions uitrollen vanuit `ernes-edge-functions`
+5. Edge Functions uitrollen: ga naar `ernes-edge-functions`, tabblad
+   Actions, **Functies uitrollen naar Supabase**, Run workflow. Vul bij
+   het project het **nieuwe** ref in en tik `JA`. Zie 2.1
 6. Cronjobs opnieuw aanmaken volgens hoofdstuk 3.1
 7. Opslagbakken aanmaken, met de goede openbaar-instelling per bak
 8. Data terugzetten uit de JSON
@@ -989,9 +1039,11 @@ van een backup is één keer echt geoefend en werkte.
 12. **Uitzoeken of de rollen aan de interne id's hangen.** **Gedaan op 27
     juli: ja, dat is zo.** Opgenomen als stap 11 van de herbouwvolgorde in
     4.8. Geen verder werk nodig, wel weten.
-13. **De opdrachtregel van Supabase inrichten voor het uitrollen van Edge
-    Functions.** Nu gaat dat met achttien keer klikken in de browser. Bij
-    een herbouw is dat uren. Dit moet ingericht zijn voordat het nodig is.
+13. ~~**De opdrachtregel van Supabase inrichten voor het uitrollen van
+    Edge Functions.**~~ **Gedaan op 27 juli 2026, maar anders dan bedacht.**
+    Niet met de opdrachtregel op de iMac, maar met twee knoppen in
+    `ernes-edge-functions` die op de servers van GitHub draaien. Geen
+    installatie, geen Docker, geen Terminal. Zie 2.1.
 14. ~~**De drie cronjobs de sleutel uit de kluis laten halen.**~~
     **Gedaan op 27 juli 2026.** Het waren er vier, niet drie: ook
     `offerte-opvolging-werkdagen` droeg een sleutel letterlijk. Alle zeven
@@ -1082,6 +1134,13 @@ Later diezelfde dag, in een tweede sessie:
 - Twee nieuwe valse signalen bij de nachtelijke backup gevonden: de
   timeout van vijf seconden die er altijd is, en `created_at` dat bij een
   overschreven bestand niet meeschuift. Zie 3.4
+- Opruimlijst punt 13 afgemaakt, langs een andere weg dan bedacht. Twee
+  knoppen in `ernes-edge-functions` in plaats van de opdrachtregel op de
+  iMac. Zie 2.1
+- De achttien functies staan nu per stuk in een eigen map in die repo, in
+  plaats van achttien zips die allemaal naar `source` uitpakken. Dat was
+  handwerk dat hoe dan ook moest gebeuren en de ophaalknop deed het in
+  eenentwintig seconden
 
 **Open, morgenochtend controleren:** `offerte-opvolging-werkdagen` draait
 28 juli om 06:30 UTC, dat is 08:30 bij ons. Dat is de enige van de vier
