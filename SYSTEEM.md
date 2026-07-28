@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 27 juli 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 28 juli 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -617,10 +617,43 @@ overschreven wordt. Geeft Yuki een keer niets terug, dan staat er nul en
 is de goede stand van gisteren weg. De maandberichten blijven wel bewaard
 in `fin_berichten`.
 
-**Verschil met Yuki zelf is normaal.** De app maakt een momentopname om
-07:00. Yuki Monitor telt de boekingen van gedurende de dag mee, en
-afschrijvingen. Vergelijk alleen 's ochtends, dan kijken beide naar
-dezelfde stand.
+**Verschil met Yuki zelf is normaal, behalve bij het banksaldo.** De app
+maakt een momentopname om 07:00 en om 12:00. Yuki Monitor telt de
+boekingen van gedurende de dag mee, en afschrijvingen. Voor omzet en
+resultaat vergelijk je daarom vlak na een verversing, dan kijken beide
+naar dezelfde stand.
+
+Het **banksaldo** hoort wél gelijk te zijn aan het Huidig saldo in Yuki,
+op de boekingen van na de verversing na. Wijkt dat structureel af, dan is
+er iets stuk. Sinds 28 juli 2026 rekent de vuller het zo:
+
+| Onderdeel | Grootboek |
+|---|---|
+| bankrekeningen en spaarrekeningen | alles dat begint met 11 of 12 |
+| creditcard | 15000 |
+| betalingen onderweg | 23000 |
+
+Die drie bij elkaar opgeteld is exact het Huidig saldo van Yuki. Rekening
+23000 heet in het grootboek Betalingen onderweg, maar Yuki toont het
+saldo in het banksaldo-scherm onder de kop Interne overboekingen
+onderweg. Dat is dezelfde post.
+
+> **Waarom dit een halve avond gekost heeft.** Tussen 21 en 28 juli 2026
+> stond het banksaldo bijna twintigduizend te hoog. De vuller berekende
+> het geagendeerde deel als saldo 16000 min de openstaande crediteuren.
+> Dat kan niet werken: zodra een factuur in een betaalbatch gaat verlaat
+> hij 16000 en komt hij op 23000 te staan, dus die twee bleven altijd
+> gelijk en het verschil was nul. Rekening 23000 viel buiten beeld omdat
+> de optelling alleen naar 11 en 12 keek en 23000 in de 2-reeks staat.
+>
+> **De les:** wil je weten hoe Yuki aan een getal komt, tel het dan na op
+> de proef- en saldibalans in plaats van het uit de schermen af te
+> leiden. De koppen in de schermen dekken de grootboeknamen niet.
+
+**Je bankapp staat altijd hoger.** Daar staat wat de bank verwerkt heeft,
+hier staat wat geboekt is. Loopt dat verschil op, kijk dan in Yuki bij de
+bankrekeningen naar de laatste transactiedatum per rekening. Staat er een
+week tussen twee banken, dan wordt er ergens niet ingelezen.
 
 ### 4.3 Een achtergrondtaak draait niet meer
 
@@ -1293,6 +1326,17 @@ van een backup is één keer echt geoefend en werkte.
 - **De A4-noodkaart.** Eén vel om naast de iMac te hangen, met alleen de
   eerste handelingen uit 4.0 en de telefoonnummers uit hoofdstuk 6.
 - **Gevelscanner.** Bewust buiten beschouwing gelaten op 26 juli 2026.
+- **Versdatum van de bankboekingen in financieel.html.** Yuki toont per
+  bankrekening een laatste transactiedatum. Stond die in de app, dan is
+  een verschil met de bankapp meteen verklaard in plaats van een raadsel.
+  De twee SOAP-aanroepen die de vuller nu doet leveren dat veld niet.
+  Uitzoeken of de Yuki-API er een ingang voor heeft, en het niet bouwen
+  zolang dat niet zeker is.
+- **Rekening 13691, vooruitbetalingen onderhoudsplan.** Stond op 28 juli
+  2026 op 7.175,16 credit. Dat is geld dat klanten vooruit betaald hebben
+  en dat nog omgezet moet worden in werk. Het zit nergens in het
+  werkkapitaal, dus dat cijfer staat met dat bedrag te gunstig. Geen
+  haast, wel een gat.
 
 ---
 
@@ -1419,3 +1463,34 @@ die trap je niet af om te kijken of het werkt. Kijk bij Edge Functions,
 niet met de Edge Function secret `OPVOLG_KEY`. Er is dan niets ergs
 gebeurd, want een geweigerd verzoek verstuurt geen mail. Deze faalt de
 goede kant op en daarom is hij bewust niet vooraf getest.
+
+---
+
+## Wat er op 28 juli 2026 gedaan is
+
+**Het banksaldo in financieel.html rechtgezet.** Het stond bijna
+twintigduizend te hoog. De vuller telde alleen de grootboeken 11 en 12 op
+en corrigeerde met een constructie die niets mat. Rekening 23000,
+Betalingen onderweg, viel buiten beeld. Vanaf v1.1.0 is de formule 11xxx
+plus 12xxx plus 15000 plus 23000, en dat is exact het Huidig saldo van
+Yuki. Nagerekend op twee momenten, tot op de cent. Zie 4.2.
+
+**Meegenomen opruiming.** De vuller haalde per maandeinde de openstaande
+crediteuren apart op om die oude constructie te voeden. Dat is vervallen
+en scheelt ruim twintig SOAP-aanroepen per run.
+
+**De opbouwstrook liegt niet meer.** Daar stond bank met een bedrag waar
+stilzwijgend een stuk leveranciersschuld in verwerkt zat. Het
+werkkapitaal kwam goed uit, maar de regel klopte niet met zijn eigen
+naam. Nu is bank echt bank.
+
+> **Vier keer misgezeten op één avond.** De diagnose is drie keer op een
+> aanname gebouwd en drie keer omgevallen: een dubbeltelling in het
+> werkkapitaal die er niet was, een hangende ING-koppeling terwijl ING
+> juist het verst bij was, en een profit-first-overboeking die in
+> werkelijkheid de betaalbatches waren. Pas de proef- en saldibalans
+> gaf uitsluitsel, en dat is één uitdraai uit Yuki.
+>
+> **De les:** bij een cijfer dat niet klopt, eerst de bron opvragen en
+> dan pas redeneren. Schermen en changelogteksten beschrijven wat iemand
+> dacht te bouwen, de saldibalans beschrijft wat er staat.
