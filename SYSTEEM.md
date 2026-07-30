@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 28 juli 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 30 juli 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -638,6 +638,15 @@ Die drie bij elkaar opgeteld is exact het Huidig saldo van Yuki. Rekening
 saldo in het banksaldo-scherm onder de kop Interne overboekingen
 onderweg. Dat is dezelfde post.
 
+**Rekening 23000 moet uit een saldibalans per 31 december komen,** niet
+per vandaag. Betaalbatches worden geboekt op hun uitvoerdatum en die
+ligt in de toekomst; een balans per vandaag ziet ze niet. Op 30 juli
+2026 miste de balans per vandaag daardoor 11.613 aan geagendeerde
+batches en stond de tegel met dat bedrag te hoog. De vuller haalt sinds
+v1.1.1 één extra saldibalans per jaareinde op, alleen voor deze
+rekening. Al het andere blijft per vandaag, anders lekt toekomstige
+omzet het dashboard in.
+
 > **Waarom dit een halve avond gekost heeft.** Tussen 21 en 28 juli 2026
 > stond het banksaldo bijna twintigduizend te hoog. De vuller berekende
 > het geagendeerde deel als saldo 16000 min de openstaande crediteuren.
@@ -649,6 +658,13 @@ onderweg. Dat is dezelfde post.
 > **De les:** wil je weten hoe Yuki aan een getal komt, tel het dan na op
 > de proef- en saldibalans in plaats van het uit de schermen af te
 > leiden. De koppen in de schermen dekken de grootboeknamen niet.
+>
+> **Tweede les, van 30 juli:** een saldibalans heeft een peildatum en
+> boekingen kunnen in de toekomst liggen. De jaaruitdraai waarop de
+> formule bewezen werd bevatte de augustusboekingen, de API-aanroep per
+> vandaag niet. Hetzelfde grootboek, twee getallen. Bij het narekenen
+> hoort dus ook: over welke periode kijkt deze uitdraai, en over welke
+> kijkt de code.
 
 **Je bankapp staat altijd hoger.** Daar staat wat de bank verwerkt heeft,
 hier staat wat geboekt is. Loopt dat verschil op, kijk dan in Yuki bij de
@@ -1494,3 +1510,23 @@ naam. Nu is bank echt bank.
 > **De les:** bij een cijfer dat niet klopt, eerst de bron opvragen en
 > dan pas redeneren. Schermen en changelogteksten beschrijven wat iemand
 > dacht te bouwen, de saldibalans beschrijft wat er staat.
+
+---
+
+## Wat er op 30 juli 2026 gedaan is
+
+**De naschok van het banksaldo.** Na de reparatie van 28 juli stond de
+tegel nog steeds ruim elfduizend te hoog. Oorzaak: de vuller vroeg de
+saldibalans per vandaag op, en betaalbatches staan geboekt op hun
+uitvoerdatum in de toekomst. Rekening 23000 stond daardoor op 1.915
+terwijl Yuki 13.529 liet zien, en het gat was tot op de cent de som van
+de drie augustusbatches. Sinds v1.1.1 leest de vuller rekening 23000
+uit een extra saldibalans per 31 december. Beide standen, per vandaag
+en per jaareinde, zijn zichtbaar in de debugstand.
+
+**Waarom het bewijs van 28 juli niet deugde.** De proef- en saldibalans
+waarop de formule werd nagerekend was een jaaruitdraai, inclusief de
+toekomstige boekingen. Daardoor klopte hij op papier en niet in de API.
+Er bleef toen al een onverklaard restje van 2.671,68 over dat is
+weggeredeneerd in plaats van uitgezocht. Een restverschil dat je niet
+kunt verklaren is een meetfout die je nog niet gevonden hebt.
