@@ -1160,31 +1160,38 @@ staat.
 staat nu in de besloten repo `ernes-edge-functions`, en het terugzetten
 van een backup is één keer echt geoefend en werkte.
 
-1. **`accord-pdf` opnemen in de nachtelijke backup.** De platformbackup
-   van Supabase bevat uitdrukkelijk geen bestanden, alleen de database. De
-   eigen nachtelijke spiegel pakt alleen `calculatie-fotos` en
-   `calculatie-documenten`. De 66 getekende akkoorden hebben daarmee op
-   dit moment geen enkele backup. Van alles in het systeem is dat het
-   enige met juridische waarde.
+1. ~~**`accord-pdf` opnemen in de nachtelijke backup.**~~ **Gedaan op 30
+   juli 2026**, en het bleek groter dan de titel zegt. Niet één bak zonder
+   backup maar **drie**: naast `accord-pdf` hadden ook `taken-fotos` en
+   `taken-documenten` er geen. Er werden er twee gespiegeld van de vijf
+   bronbakken. Alle vijf staan nu in `SPIEGEL_BRONNEN` in `backup-dump` v5.
+   Eerste run: 70 bestanden bijgekopieerd, achterstand 0.
 
-   **Het wachtvenster, vastgesteld op 27 juli 2026.** Een akkoord staat in
-   `accord-pdf` tot Maud het verwerkt, en zij doet een halve dag per week.
-   Er zit dus standaard tot een week tussen tekenen en veiligstellen,
-   langer bij vakantie of ziekte. In dat venster bestaat het akkoord op
-   precies één plek.
+   **Hoe de twee eisen uit de oorspronkelijke omschrijving zijn afgedekt.**
+   - *Niet mee in de rotatie van zestig dagen.* Was al geregeld en niet
+     door deze wijziging: de opruimer kijkt alleen naar `backup-*.json` in
+     de hoofdmap en raakt de map `bestanden/` nooit aan
+   - *Eigen ruimte binnen de limiet van honderd per nacht.* Opgelost met de
+     **volgorde** in plaats van met een aparte quotaregeling.
+     `accord-pdf` staat vooraan in de lijst, dus bij een drukke dag vallen
+     de foto's achteraan af en nooit de akkoorden. Een foto die een nacht
+     later meegaat is niet erg, een akkoord dat blijft liggen wel
 
-   Uitvoering: `accord-pdf` toevoegen aan de spiegel in `backup-dump`.
-   Daarbij twee dingen anders regelen dan bij de andere bakken:
-   - **Niet mee in de rotatie van zestig dagen.** Een akkoord van maart is
-     over zestig dagen nog steeds het enige bewijs. Akkoorden blijven staan
-   - **Eigen ruimte binnen de limiet van honderd bestanden per nacht.** Die
-     limiet geldt nu over alle bakken samen. Bij veel foto's tegelijk
-     kunnen de akkoorden achteraan de rij komen en niet meegaan
+   **Het wachtvenster, vastgesteld op 27 juli 2026**, is hiermee gedicht.
+   Een akkoord stond in `accord-pdf` tot Maud het verwerkte, en zij doet
+   een halve dag per week. Er zat dus tot een week tussen tekenen en
+   veiligstellen, langer bij vakantie of ziekte. In dat venster bestond
+   het akkoord op precies één plek. Nu op twee, vanaf de eerstvolgende
+   nacht.
 
-   Meenemen in dezelfde beweging: **`accord-pdf` is een openbare bak.** Wie
-   de link heeft komt zonder inlog bij een getekende offerte. Dat is
-   bewust zo gezet zodat de klant erbij kan, maar het verdient een aparte
-   afweging nu duidelijk is wat er in die bak staat.
+   **Komt er ooit een bak bij, dan hoort hij in `SPIEGEL_BRONNEN`**,
+   anders heeft hij stilzwijgend geen backup. Blok 5 van de kwartaalaudit
+   toont welke bakken er zijn; leg die lijst naast die regel in de code.
+   Dat deze drie bakken zo lang zijn gemist komt doordat niemand die twee
+   lijsten ooit naast elkaar had gelegd.
+
+   De openbare stand van `accord-pdf` is een apart punt geworden: zie
+   opruimpunt 19.
 2. ~~**`smooth-function` hernoemen.**~~ **Gedaan op 27 juli 2026.** De
    weergavenaam is nu `fin-dashboard-sync`. De cronjobs hoefden niet mee:
    die roepen de URL aan en de adresnaam is niet gewijzigd. Zie 3.2.
@@ -1369,6 +1376,25 @@ van een backup is één keer echt geoefend en werkte.
     controle-log` en `offerte_controle_log_select`. Eén kan weg.
     Bevestigd in de audit van 27 juli 2026: die tabel staat als enige met
     `app_help_log` op twee policies.
+18. **Automatische taken rond offerte en akkoord.** Twee taken die vanzelf
+    ontstaan, naast de backup uit punt 1 en niet in plaats daarvan:
+    - **bij versturen van een offerte:** taak om alle stukken,
+      calculatiegegevens en de offerte zelf, in Yoobi bij verkoop te zetten
+    - **bij een akkoord:** taak om de getekende offerte er in verkoop bij
+      te zetten
+
+    Doel is **vindbaarheid**, niet bewaring. Een PDF in een backup-bak is
+    iets dat je terug kunt halen als je weet dat je het kwijt bent. Iets
+    in Yoobi is een archief waar je in kunt zoeken als een klant er over
+    twee jaar over belt.
+
+    Aandachtspunt bij de bouw: hoeveel offertes gaan er per week uit? Bij
+    meer dan een paar wordt de eerste taak ruis, en ruis vink je weg
+    zonder te kijken. Dan lijkt het geregeld terwijl het dat niet is.
+    Overweeg of die taak bij Gian hoort of bij Maud, die het
+    verwerkingswerk toch al doet. Uitbreiden van de bestaande trigger
+    `offerte_taken_sync`, geen nieuw bouwwerk.
+
 19. **De accord-pdf's achter een verlopende link zetten.** De bak
     `accord-pdf` staat openbaar, en dat moet ook, want de klant die de
     accordeerlink opent is niet ingelogd en de drie policies op die bak
@@ -1401,25 +1427,6 @@ van een backup is één keer echt geoefend en werkte.
     accorderingen van na v3.79.0 (14 juni 2026) hebben er een; de oudere
     hebben alleen de HTML-momentopname. Dat is ook van belang voor
     opruimpunt 1.
-18. **Automatische taken rond offerte en akkoord.** Twee taken die vanzelf
-    ontstaan, naast de backup uit punt 1 en niet in plaats daarvan:
-    - **bij versturen van een offerte:** taak om alle stukken,
-      calculatiegegevens en de offerte zelf, in Yoobi bij verkoop te zetten
-    - **bij een akkoord:** taak om de getekende offerte er in verkoop bij
-      te zetten
-
-    Doel is **vindbaarheid**, niet bewaring. Een PDF in een backup-bak is
-    iets dat je terug kunt halen als je weet dat je het kwijt bent. Iets
-    in Yoobi is een archief waar je in kunt zoeken als een klant er over
-    twee jaar over belt.
-
-    Aandachtspunt bij de bouw: hoeveel offertes gaan er per week uit? Bij
-    meer dan een paar wordt de eerste taak ruis, en ruis vink je weg
-    zonder te kijken. Dan lijkt het geregeld terwijl het dat niet is.
-    Overweeg of die taak bij Gian hoort of bij Maud, die het
-    verwerkingswerk toch al doet. Uitbreiden van de bestaande trigger
-    `offerte_taken_sync`, geen nieuw bouwwerk.
-
 ---
 
 ## Wat er nog niet in staat
@@ -1702,6 +1709,24 @@ enkele controle te zien. Uitgebreid met:
 
 Getest door de vlaggen echt te laten afgaan en daarna weer te laten
 zakken, niet door te kijken of hij groen gaf.
+
+### Drie bakken zonder backup, niet één (opruimpunt 1)
+
+`backup-dump` naar v5. De spiegel pakte twee van de vijf bronbakken.
+`accord-pdf`, `taken-fotos` en `taken-documenten` hadden geen enkele
+kopie. Van die drie is de eerste het ergst: getekende overeenkomsten met
+naam, adres, bedrag en handtekening, het enige in het systeem met
+juridische waarde.
+
+Eerste run 70 bestanden, achterstand 0. De akkoorden staan vooraan in de
+lijst zodat ze bij een drukke dag nooit achter de foto's aansluiten.
+
+**Waarom dit zo lang gemist is.** De lijst `SPIEGEL_BRONNEN` in de code en
+de lijst met bakken in Supabase zijn nooit naast elkaar gelegd. Beide
+lijsten zagen er op zichzelf compleet uit. Dat is dezelfde soort fout als
+de zestien opslagpolicies hieronder: een lijstje dat klopt tot je het
+naast de werkelijkheid houdt. Blok 5 van de audit toont voortaan de
+bakken, juist om dit te kunnen naleggen.
 
 **En hij vond meteen iets.** Op zijn eerste echte run bleek `accord-pdf`
 openbaar te staan. Dat is geen ongeluk maar de manier waarop het
