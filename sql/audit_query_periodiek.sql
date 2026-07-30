@@ -48,6 +48,19 @@ uitzonderingen as (
   select unnest(array['sync_state', 'taken_melding_sleutels']) as tabel
 ),
 
+-- de bak die met opzet openbaar staat.
+-- accord-pdf moet openbaar zijn omdat de klant die de accordeerlink
+-- opent NIET ingelogd is. De drie policies op deze bak gelden alleen
+-- voor authenticated en helpen die klant dus niet. Zie v3.79.0.
+-- Het bestand heet {token}.pdf met een token van 40 tekens, dus raden
+-- of aftellen kan niet, en zonder leesregel voor anon kan niemand de
+-- bak opsommen. Wie het pad heeft, had de accordeerlink al.
+-- ZET HEM NIET DICHT om het te repareren: dan breekt het accorderen.
+-- Wat er wel aan schort staat in SYSTEEM.md bij opruimpunt 19.
+bak_uitzonderingen as (
+  select unnest(array['accord-pdf']) as bak
+),
+
 -- v2: de opslagbakken. Een bak die openbaar staat is voor iedereen
 -- met het adres leesbaar, ook zonder in te loggen.
 bakken as (
@@ -81,7 +94,9 @@ vlaggen as (
   union all
   select '1. RODE VLAG', 'BAK STAAT OPENBAAR', bak,
          'iedereen met het adres kan hier bestanden lezen zonder in te loggen'
-  from bakken where openbaar
+  from bakken
+  where openbaar
+    and bak not in (select bak from bak_uitzonderingen)
 
   union all
   select '1. RODE VLAG', 'GEEN OPSLAGPOLICIES', 'storage.objects',
@@ -104,6 +119,20 @@ bekend as (
   from tabellen t
   join uitzonderingen u on u.tabel = t.tabel
   where t.rls_aan and t.policies = 0
+
+  union all
+  select '2. bekend en goed', 'openbaar, met opzet', b.bak,
+         'moet openbaar voor de niet-ingelogde klant. Naam is een token van 40 tekens, opsommen kan niet. Niet dichtzetten, zie opruimpunt 19'
+  from bakken b
+  join bak_uitzonderingen u on u.bak = b.bak
+  where b.openbaar
+
+  union all
+  select '1. RODE VLAG', 'UITZONDERING NIET MEER NODIG', b.bak,
+         'deze bak staat als openbare uitzondering in de audit maar is inmiddels besloten. Haal hem uit bak_uitzonderingen'
+  from bakken b
+  join bak_uitzonderingen u on u.bak = b.bak
+  where not b.openbaar
 ),
 
 overzicht as (
