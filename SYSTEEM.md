@@ -1369,6 +1369,38 @@ van een backup is één keer echt geoefend en werkte.
     controle-log` en `offerte_controle_log_select`. Eén kan weg.
     Bevestigd in de audit van 27 juli 2026: die tabel staat als enige met
     `app_help_log` op twee policies.
+19. **De accord-pdf's achter een verlopende link zetten.** De bak
+    `accord-pdf` staat openbaar, en dat moet ook, want de klant die de
+    accordeerlink opent is niet ingelogd en de drie policies op die bak
+    gelden alleen voor `authenticated`. Zet je hem dicht, dan breekt het
+    accorderen onmiddellijk. Gevonden door de audit v2 op 30 juli 2026,
+    op zijn eerste echte run.
+
+    **Hoe erg het nu is: beperkt.** Het bestand heet `{token}.pdf` met een
+    token van veertig letters en cijfers, dus raden of aftellen kan niet.
+    Er staat geen leesregel voor `anon`, dus opsommen kan ook niet. En wie
+    het pad heeft, had de accordeerlink al, dus er komt niemand bij die
+    het niet toch al mocht zien.
+
+    **Wat er wel niet deugt.** De link verloopt nooit: een mail die over
+    drie jaar wordt doorgestuurd opent nog steeds een getekende
+    overeenkomst met naam, adres, bedrag en handtekening. En bij een
+    nieuwe link wist de app wel de rij uit `offerte_accorderingen` maar
+    niet het bestand in de bak, dus er staan openbare pdf's waarvan
+    nergens meer geregistreerd is dat ze bestaan.
+
+    **De oplossing.** `offerte-accord` serveert de pdf zelf uit met een
+    ondertekende link die na een week verloopt, waarna de bak dicht kan.
+    Raakt de Edge Function, `index.html` rond regel 20773
+    (`getPublicUrl`), en de bestaande links. Reken op een hele sessie.
+    Tot die tijd staat `accord-pdf` als bekende uitzondering in
+    `sql/audit_query_periodiek.sql`, zodat de vlag niet elk kwartaal
+    onterecht afgaat en daarmee zijn waarde verliest.
+
+    Op 30 juli 2026 stonden er 28 pdf's in de bak, niet 66. Alleen
+    accorderingen van na v3.79.0 (14 juni 2026) hebben er een; de oudere
+    hebben alleen de HTML-momentopname. Dat is ook van belang voor
+    opruimpunt 1.
 18. **Automatische taken rond offerte en akkoord.** Twee taken die vanzelf
     ontstaan, naast de backup uit punt 1 en niet in plaats daarvan:
     - **bij versturen van een offerte:** taak om alle stukken,
@@ -1670,6 +1702,13 @@ enkele controle te zien. Uitgebreid met:
 
 Getest door de vlaggen echt te laten afgaan en daarna weer te laten
 zakken, niet door te kijken of hij groen gaf.
+
+**En hij vond meteen iets.** Op zijn eerste echte run bleek `accord-pdf`
+openbaar te staan. Dat is geen ongeluk maar de manier waarop het
+accorderen werkt sinds v3.79.0, en dichtzetten zou het breken. Opgenomen
+als opruimpunt 19 en als bekende uitzondering in de audit, met een derde
+vlag erbij die afgaat zodra die uitzondering niet meer nodig is. Zo kan
+een tijdelijke ontheffing niet stilletjes blijven staan.
 
 
 **De naschok van het banksaldo.** Na de reparatie van 28 juli stond de
