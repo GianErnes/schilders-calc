@@ -233,6 +233,7 @@ geheimen:
 | Naam in de kluis | Hoort gelijk te zijn aan | Gebruikt door |
 |---|---|---|
 | `maandbericht_key` | **[TE CONTROLEREN]**, gaat mee als `Authorization: Bearer` | `maandbericht-maandelijks`, `yuki-vuller-dagelijks`, `yuki-vuller-middag` |
+| | **Let op:** die laatste twee roepen `smooth-function` aan, niet `maandbericht`. Eén sleutel doet hier dus twee verschillende functies. Vervang je `maandbericht_key`, dan stopt óók je financiele dashboard met bijwerken, en cron blijft gewoon `succeeded` melden. Bevestigd uit `cron.job` op 30 juli 2026. | |
 | `aftap_secret` | de Edge Function secret `AFTAP_SECRET` | `backup-nachtelijk`, `taken-mail-melding`, `werkvoorraad-sync-wekelijks` |
 | `opvolg_key` | de Edge Function secret `OPVOLG_KEY` | `offerte-opvolging-werkdagen` |
 
@@ -821,13 +822,13 @@ Supabase houdt op te bestaan.
 |---|---|---|
 | De vier appbestanden | ja, GitHub | minuten |
 | Broncode Edge Functions | ja, `ernes-edge-functions` | — |
-| **Structuur van de database** | **nee** | uren |
+| Structuur van de database | ja, `schema/` en de maandagbijlage | half uur |
 | Inhoud van de database | ja, de JSON uit 4.7 | minuten |
 | **De achttien functies uitrollen** | n.v.t. | **uren klikwerk** |
 | De zeven cronjobs | ja, hoofdstuk 3.1 | half uur |
 | De geheimen | ja, de kluis | half uur |
 | De zes inlogaccounts | nee | half uur, zie waarschuwing |
-| Opslagbakken en hun rechten | nee | half uur |
+| Opslagbakken en hun rechten | ja, zitten in de schemadump | minuten |
 | **De bestanden zelf** | deels, `accord-pdf` niet | zie de noot hieronder |
 | **Adres en sleutels in de apps** | — | **half uur, wordt altijd vergeten** |
 
@@ -875,28 +876,49 @@ Het inzicht: **je herstelt niet snel door terug te zetten, je herstelt
 snel door te kunnen herbouwen.** Herbouwen kan alleen als alles bestaat
 als bestand dat je opnieuw kunt afspelen. Drie dingen ontbreken.
 
-**1. Een schemadump.** Eén SQL-bestand dat alle tabellen, sleutels,
-indexen, triggers, functies, policies en rechten opnieuw aanlegt. Dit is
-het grootste gat. Zonder dat begin je met een leeg project en 37 tabellen
-die uit het hoofd gereconstrueerd moeten worden.
+**1. Een schemadump.** ~~Dit is het grootste gat.~~ **Gedicht op 30 juli
+2026.** Eén SQL-bestand dat alle tabellen, sleutels, indexen, triggers,
+functies, policies en rechten opnieuw aanlegt, elke nacht opnieuw gemaakt
+door `public.schema_dump()`. Wat blijft staan is de proef: het bestand is
+teruggezet in een nagebouwde database, nog niet in een echt leeg
+Supabase-project.
 
 **Migrations is leeg.** Nagekeken op 27 juli 2026. Alle SQL is
 rechtstreeks in de editor geplakt, dus er bestaat geen opbouwgeschiedenis
 en de dump moet uit de database zelf gegenereerd worden.
 
-**Wat er wel en niet ligt, stand 27 juli 2026:**
+**Wat er wel en niet ligt, stand 30 juli 2026.** Alles hieronder komt uit
+`public.schema_dump()`, elke nacht weggeschreven naar `schema/` en elke
+maandag meegestuurd als bijlage.
 
 | Onderdeel | Ligt er | Uitvoerbaar |
 |---|---|---|
-| 37 tabellen | `sql/schema_tabellen.sql` | **nee**, leesdocument |
-| 69 policies | nee | — |
-| 29 indexen | nee | — |
-| 17 databasefuncties | nee | — |
-| 11 triggers | nee | — |
-| rechten en rijbeveiliging | nee | — |
-| 6 opslagbakken | nee | — |
-| 7 cronjobs | beschreven in 3.1 | met de hand |
+| 37 tabellen | `schema_dump()` | ja |
+| 53 policies op `public` | `schema_dump()` | ja |
+| **16 policies op `storage.objects`** | `schema_dump()` | ja |
+| 29 indexen | `schema_dump()` | ja |
+| 17 databasefuncties | `schema_dump()` | ja |
+| 11 triggers | `schema_dump()` | ja |
+| rechten en rijbeveiliging | `schema_dump()` | ja |
+| 6 opslagbakken | `schema_dump()` | ja |
+| 25 verwijssleutels | `schema_dump()` | ja, onderaan als `ALTER TABLE` |
+| 1 reeks (`taak_dagkeuze_id_seq`) | `schema_dump()` | ja, plus `setval` |
+| 7 cronjobs | `schema_dump()` en 3.1 | ja, adres handmatig aanpassen |
 | views | n.v.t., er zijn er geen | — |
+| de drie kluissleutels | **nee, met opzet** | met de hand |
+
+> **Splits altijd per schema bij het tellen van policies.** Het getal 69
+> uit de inventarisatie van 27 juli is geen 69 policies op `public` maar
+> 53 op `public` plus 16 op `storage.objects`. Op 30 juli 2026 werd een
+> telling over alleen `public` bijna aangezien voor volledig, waarna de
+> zestien opslagregels stilzwijgend uit het herbouwbestand waren gevallen.
+> Gevolg zou zijn geweest: na een herbouw staan de zes bakken er wel, maar
+> komt de app er niet in. Een totaal waar twee soorten in zitten is geen
+> controle maar een dekmantel.
+
+> **`sql/schema_tabellen.sql` blijft staan als leesdocument.** Hij is niet
+> uitvoerbaar en wordt dat ook niet meer. Voor herbouw gebruik je het
+> bestand uit `schema/` of de maandagbijlage, nooit dit bestand.
 
 **Punt 15 en punt 10 zijn één bouwsteen.** Punt 15 is de query die de
 structuur uitleest en omzet naar opdrachten waarmee je hem opnieuw
@@ -1252,11 +1274,14 @@ van een backup is één keer echt geoefend en werkte.
    Gebeurt dat, dan stopt de enige kopie buiten Supabase zonder dat
    iemand het merkt. Alternatief: comprimeren, of wegschrijven naar een
    plek buiten Supabase in plaats van meesturen. Zie 4.7.
-10. **Een schemadump toevoegen aan de nachtelijke backup.** Nu wordt
-    alleen de inhoud weggeschreven, niet de structuur van de database.
-    Zonder tabeldefinities, policies en triggers is die JSON alleen
-    bruikbaar als er al een werkende database staat om hem in te gieten.
-    Zie 4.7 en 4.8.
+10. ~~**Een schemadump toevoegen aan de nachtelijke backup.**~~
+    **Gedaan op 30 juli 2026.** `backup-dump` v4 roept `public.schema_dump()`
+    aan en schrijft de uitvoer weg als `schema/schema-JJJJ-MM-DD.sql` in de
+    bak `backups`. Eén bestand per dag, dertig dagen bewaren. De dump gaat
+    ook als **tweede bijlage** mee met de maandagmail, want de bak zelf zit
+    in hetzelfde project dat bij ramp 3 verdwijnt. Mislukt de schemadump,
+    dan gaat er direct een mail uit, ook buiten maandag, en loopt de
+    gegevensbackup gewoon door. Zie 4.7 en 4.8.
 11. **Nakijken of Database, Migrations gevuld is.** ~~Staat daar de
     opbouwgeschiedenis~~ **Gedaan op 27 juli: leeg.** Alle SQL is
     rechtstreeks in de editor geplakt, dus er is geen opbouwgeschiedenis.
@@ -1276,7 +1301,19 @@ van een backup is één keer echt geoefend en werkte.
     cronjobs halen hun sleutel nu uit `vault`. Geen enkele opdrachttekst
     bevat nog een geheim, dus een uitdraai van `cron.job` is voortaan
     vanzelf schoon. Zie 2.4.
-15. **De schemadump maken.** Was bedoeld als aanvulling op
+15. ~~**De schemadump maken.**~~ **Gedaan op 30 juli 2026.** Gebouwd als
+    `public.schema_dump()`, in twee brokken plus een naderhand gevonden
+    derde. Bewezen door de uitvoer in een tweede lege database terug te
+    zetten en daarna de catalogus van allebei regel voor regel te
+    vergelijken: kolommen, types, standaardwaarden, beperkingen, indexen,
+    policies, rechten, reeksen, triggers en bakken alle gelijk. Op de
+    echte database daarna geteld: 37 tabellen, 69 policies, 25
+    verwijssleutels en 7 cronjobs, alle vier gelijk aan wat erin zit.
+    **Nog niet gedaan: de terugzettest in een echt leeg Supabase-project.**
+    Zolang die niet gedraaid is, is 4.8 stap 2 bewezen op een nabootsing
+    en niet op het echte werk.
+
+    *Oorspronkelijke omschrijving.* Was bedoeld als aanvulling op
     `sql/schema_tabellen.sql`. Op 27 juli 2026 bleek dat bestand niet
     uitvoerbaar, dus het is geen aanvulling maar het geheel: tabellen,
     extensies, rechten, rijbeveiliging, functies, triggers, indexen,
@@ -1301,6 +1338,27 @@ van een backup is één keer echt geoefend en werkte.
       `user_id` in `taken_rollen`, de `setval` op `taak_dagkeuze_id_seq`
       en de zeven cronjobs met het projectadres erin. Om twee uur 's
       nachts leest niemand dit document, men draait het bestand
+
+    **Vijfde eis, erbij gekomen op 30 juli 2026 na een bijna-misser.** Het
+    herbouwbestand begint met een leegtecontrole die afbreekt zodra schema
+    `public` al tabellen bevat. Aanleiding: een uitdraai uit een
+    testdatabase werd per ongeluk in de SQL Editor van de echte database
+    geplakt. Er is niets gebeurd, want de editor draait zo'n plak als één
+    transactie die bij de eerste fout helemaal terugdraait, maar had hij
+    doorgelopen dan had `cron.schedule` de nachtelijke backup en de
+    taakmeldingen overschreven met opdrachten naar een verkeerd adres.
+    Vertrouw niet op die terugdraai, vertrouw op de controle.
+
+    **De scan zit in de functie, niet ernaast.** `schema_dump()` kijkt naar
+    zijn eigen uitvoer voordat hij die teruggeeft en weigert alles zodra er
+    iets in staat dat op een sleutel lijkt. Daarmee is de scan een poort en
+    niet iets waar iemand aan moet denken.
+
+    **De reeks is geen open punt meer.** De dump haalt reeksen niet uit de
+    catalogus maar uit de standaardwaarden van de kolommen. Daardoor komt
+    `taak_dagkeuze_id_seq` er hoe dan ook in, ook al staat hij in geen
+    enkel opbouwscript, en staat de bijbehorende `setval` uitgecommentarieerd
+    onderaan het bestand klaar.
 16. **De namen van de oude policies opschonen.** Een stuk of tien policies
     heten nog `anon alles ...` terwijl ze `TO authenticated` zijn. Dat is
     een overblijfsel van vóór 13 mei 2026. Wie ooit de audit draait
@@ -1514,6 +1572,105 @@ naam. Nu is bank echt bank.
 ---
 
 ## Wat er op 30 juli 2026 gedaan is
+
+### Schemadump gebouwd en aan de nacht gehangen (opruimpunt 15 en 10)
+
+- **`public.schema_dump()` gebouwd.** Leest de inrichting van de database
+  en zet die om in SQL waarmee je hem opnieuw aanlegt. Vaste volgorde:
+  leegtecontrole, extensies, reeksen, tabellen, sleutels en beperkingen,
+  indexen, functies, triggers, rijbeveiliging, policies, rechten,
+  opslagbakken, opslagpolicies, cronjobs, en als laatste de
+  verwijssleutels
+- **Bewezen door terug te zetten, niet door te kijken.** De uitvoer is in
+  een tweede lege database gedraaid en daarna zijn beide catalogi regel
+  voor regel vergeleken. Kolommen, types, standaardwaarden, 22
+  beperkingen, indexen, policies, rechten, reeksen, triggers en bakken:
+  alle gelijk
+- **`backup-dump` naar v4.** Schrijft `schema/schema-JJJJ-MM-DD.sql` weg,
+  dertig dagen bewaren, en stuurt hem mee als tweede bijlage bij de
+  maandagmail. Dat laatste is het punt: de bak `backups` zit in hetzelfde
+  project dat bij ramp 3 verdwijnt, de mail niet
+- **Mislukking wordt meteen gemeld.** Een mislukte schemadump breekt de
+  gegevensbackup niet af maar stuurt direct een mail, ook op een dinsdag.
+  Een schemadump die een week stilletjes niet werkt is erger dan een mail
+  te veel
+
+### Drie dingen die niemand wist
+
+- **Zestien policies stonden op `storage.objects`, niet op `public`.** Het
+  getal 69 uit de inventarisatie van 27 juli is 53 plus 16. Bij een
+  telling over alleen `public` vielen de zestien opslagregels
+  stilzwijgend uit het herbouwbestand. Zonder die regels staan na een
+  herbouw de zes bakken er wel, maar komt de app er niet bij de foto's,
+  documenten en getekende akkoorden
+- **`smooth-function` draait op `maandbericht_key`.** De twee
+  yuki-vullers dragen de sleutel van het maandbericht. Werkt, maar
+  vervang je die sleutel dan ligt het financiele dashboard stil en meldt
+  cron gewoon `succeeded`
+- **Er lopen twee verschillende extensies.** Zes cronjobs gebruiken
+  `net.http_post` uit `pg_net`, `werkvoorraad-sync-wekelijks` gebruikt
+  `extensions.http()`. Bij een herbouw moeten allebei aan staan, anders
+  draaien er zes en ligt de zevende stil zonder foutmelding
+
+### Bijna-misser: een testuitdraai in de echte SQL Editor
+
+Een herbouwbestand uit een nagebouwde testdatabase is per ongeluk in de
+SQL Editor van de echte database geplakt en gedraaid. De tabelnamen in
+die nabootsing waren verzonnen zonder na te denken en botsten met echte
+namen, en de nagemaakte cronjobs heetten `backup-nachtelijk` en
+`taken-mail-melding`. Was het bestand doorgelopen, dan had `cron.schedule`
+allebei die jobs overschreven met opdrachten naar `https://x.supabase.co`.
+
+Er is niets gebeurd. Hij struikelde bij de tweede index en de SQL Editor
+draait zo'n plak als één transactie die bij een fout helemaal terugdraait.
+Nagekeken met een leesquery: geen index, geen policy, en beide cronjobs
+nog met het juiste adres.
+
+Sindsdien draagt elk gegenereerd herbouwbestand een leegtecontrole
+bovenaan die afbreekt zodra schema `public` al tabellen bevat. Dat is de
+vijfde eis bij opruimpunt 15.
+
+### Twee keer een vals groen licht bij het meten zelf
+
+Bij het vergelijken van bron en doel meldde de controle "beperkingen
+gelijk". Dat klopte, maar beide bestanden bevatten een foutmelding in
+plaats van gegevens omdat de vergelijkingsquery een schrijffout had. Twee
+lege uitkomsten zijn ook aan elkaar gelijk. Pas bij het tellen kwam er 22
+uit.
+
+Losstaand daarvan gaf de dekkingscontrole eerst 38 tabellen en 8
+cronjobs bij 37 en 7 in de database. Verklaring: `schema_dump()` is zelf
+een van de zeventien databasefuncties, dus zijn broncode staat in de
+uitvoer, en in die broncode staan de zinnetjes waarop geteld werd.
+
+**Les.** Vraag nooit "zijn ze gelijk", vraag "hoeveel zijn het er". Dit is
+3.4 maar dan toegepast op het meetgereedschap in plaats van op het
+systeem. Een controle die alleen "goed" kan zeggen kan ook zwijgen als er
+niets is.
+
+### Nog open
+
+- **De terugzettest in een echt leeg Supabase-project.** Wegwerpproject in
+  `eu-west-1`, de achttien functies uitrollen, het herbouwbestand draaien,
+  de drie kluissleutels opnieuw aanmaken, kijken of de app start, project
+  weg. Zolang die niet gedraaid is, is 4.8 stap 2 bewezen op een
+  nabootsing met elf tabellen en niet op de zevenendertig van het echte
+  werk
+### Auditquery naar v2
+
+De kwartaalaudit keek helemaal niet naar opslag. `storage.objects` en de
+zes bakken vielen er buiten, dus de zestien opslagregels waren met geen
+enkele controle te zien. Uitgebreid met:
+
+- **twee nieuwe rode vlaggen:** een bak die openbaar staat, en nul
+  policies op `storage.objects`
+- **blok 4 telt policies per schema** in plaats van als één totaal, met
+  het samengestelde getal eronder en de verwijzing naar 4.8
+- **blok 5 zet de bakken op een rij** met per bak besloten of openbaar
+
+Getest door de vlaggen echt te laten afgaan en daarna weer te laten
+zakken, niet door te kijken of hij groen gaf.
+
 
 **De naschok van het banksaldo.** Na de reparatie van 28 juli stond de
 tegel nog steeds ruim elfduizend te hoog. Oorzaak: de vuller vroeg de
