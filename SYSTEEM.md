@@ -1111,6 +1111,35 @@ Gian doet alle uitrol zelf, altijd handmatig:
   een opdrachtregel
 - Appbestanden: via de website van GitHub, bestand erin slepen
 
+### 5.6 De bewijsregel
+
+**Waarom deze bestaat:** op 30 juli 2026 stelde een gesprek vast dat er
+sleutels in de cronjobs stonden. Dat was onjuist. Het liep goed af omdat
+het een vermoeden werd genoemd met een query erbij. Was er meteen gebouwd,
+dan was er een oplossing gekomen voor een probleem dat niet bestond. Op 31
+juli 2026 werd in dit dossier een looptijd van een halve seconde per
+mailaanroep genoemd, twee berichten lang, zonder dat die ooit gemeten was.
+
+Bij elk getal, elke bestandsnaam, elk regelnummer en elke bewering over
+dit systeem hoort een bron. Drie soorten:
+
+- **gemeten:** uit een bestand dat is opgehaald, of uit een query die
+  gedraaid is. De vindplaats staat erbij
+- **vermoeden:** het woord staat er, plus de meting die het zou beslissen
+- **aanname:** die wordt zo genoemd
+
+Aannemelijke details zonder aanleiding zijn het gevaarlijkst. Een precies
+getal of een exact regelnummer dat klopt koopt vertrouwen, en dat
+vertrouwen wordt daarna uitgegeven aan iets wat niet klopt.
+
+Een vermoeden promoveert nooit tot feit door herhaling. Blijft het
+ongemeten, dan blijft het label staan, ook drie berichten later, ook als
+het intussen handig zou zijn dat het waar was. Wordt iets uit een eerder
+bericht teruggehaald, dan gaat het label mee.
+
+Nooit bouwen na een diagnose van een regel. Eerst meten. Bij twijfel komt
+er een query en geen oplossing.
+
 ---
 
 ## 6. Wie te bellen
