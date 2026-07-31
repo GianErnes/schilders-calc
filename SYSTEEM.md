@@ -1834,11 +1834,20 @@ datums. Dat de todo-spiegels ook werkelijk zijn aangemaakt en daarna
 verdwenen is **niet** bewezen. Er is geen logboek dat dat vasthoudt. Het
 is een verklaring die alles dekt, geen bewijs.
 
-**Nog open.** Er staan 4 openstaande todo's in Calc tegenover 0 taken met
-`bron_kenmerk = 'todo'`. De test die dat afmaakt is een todo in Calc aan-
-en weer uitvinken, waarna `todo_taken_sync` de spiegel opnieuw neerzet, en
-daarna tellen. Werkt dat, dan kunnen de vier met dezelfde handeling
-teruggezet worden.
+**De trigger is dezelfde avond nog getest.** Een nieuwe todo in een lopende
+calculatie leverde meteen een spiegel op: toegewezen aan `gian`, status
+actueel, niet voltooid. `todo_taken_sync` werkt dus. Daarmee valt de
+verklaring *die spiegels zijn er nooit geweest* af en blijft over dat ze
+er waren en zijn opgeruimd. Strikt open blijft het geval dat die vier
+todo's ouder zijn dan de trigger zelf. Niet te meten zonder de
+aanmaakdatum van de trigger, en zonder gevolg: alle vier horen bij
+verloren offertes en hadden volgens blok D van `offerte_taken_sync` toch
+op vervallen gestaan.
+
+**Tweede test loopt vanzelf.** Die nieuwe spiegel staat op 31 juli 18:33,
+ruim na de sweep van 22 juli. Bij de eerstvolgende voltooide Yoobi-ronde
+ligt hij onder de nieuwe marker. Staat hij er daarna nog, dan is de
+reparatie in productie bewezen en niet alleen teruggelezen.
 
 ### Wat er onderweg nog meer gemeten is
 
