@@ -1780,3 +1780,94 @@ toekomstige boekingen. Daardoor klopte hij op papier en niet in de API.
 Er bleef toen al een onverklaard restje van 2.671,68 over dat is
 weggeredeneerd in plaats van uitgezocht. Een restverschil dat je niet
 kunt verklaren is een meetfout die je nog niet gevonden hebt.
+
+
+## Wat er op 31 juli 2026 gedaan is
+
+De dag begon aan opruimpunt 6 en eindigde bij een lek dat daar niets mee
+te maken had. Punt 6 staat nog precies waar het stond. Er is niets aan
+gebouwd.
+
+### De bewijsregel vastgelegd
+
+Zie 5.6. Aanleiding waren twee gokken op een dag: het cronjobvermoeden van
+30 juli, en een verzonnen looptijd van een halve seconde per mailaanroep
+die twee berichten lang als feit meeliep zonder ooit gemeten te zijn.
+
+### De Yoobi-sync veegde offerte-taken weg
+
+**Het mechanisme.** `yoobi-taken-sync` sluit een voltooide ronde af met
+een opruimregel:
+
+    DELETE /taken?laatst_gezien=lt.{sweep_marker}
+
+Er staat geen filter op `bron` bij. De kolom `laatst_gezien` heeft als
+standaardwaarde `now()`, dus **elke** rij in `taken` krijgt bij aanmaak
+een stempel, ook rijen die niets met Yoobi te maken hebben. Bij elke
+voltooide ronde lagen alle oudere rijen dus onder de marker.
+
+Wat dat opving was de trigger `bescherm_eigen` op `taken`, BEFORE DELETE.
+Die blies de verwijdering af, maar keek alleen naar `old.bron = 'eigen'`.
+Rijen met `bron = 'offerte'` vielen er doorheen.
+
+**Wat er dus verdween.** Alle offerte-taken ouder dan de laatste ronde:
+uitbrengtaken, nabeltaken voor Maud, en de todo-spiegels die
+`todo_taken_sync` vanuit Calc aanmaakt. Vermoedelijk al maanden. Het viel
+niet op omdat een taak die verdwijnt voordat je hem mist, niet gemist
+wordt.
+
+**Hoe het aan het licht kwam.** Niet door een storing. Er werd gemeten of
+de Yoobi-bulk een trigger voor punt 6 zou kunnen laten overlopen. Daarbij
+kwam de kolom `laatst_gezien` in beeld, en de vraag waarom de eigen taken
+die verwijdering overleefden.
+
+**De reparatie.** `taken_bescherm_eigen()` kijkt sinds vandaag naar
+`old.bron <> 'yoobi'` in plaats van `= 'eigen'`. Bewust een uitsluiting en
+geen opsomming: een bron die er later bij komt is dan vanzelf beschermd.
+Precies de fout die hier gerepareerd werd. De trigger zelf is ongewijzigd,
+`create or replace` laat hem op zijn plek. Teruggelezen met
+`pg_get_functiondef` en niet afgegaan op *Success. No rows returned*.
+
+**Wat bewezen is en wat niet.** Het mechanisme is gemeten: de code van de
+sync, de oude triggerfunctie, de standaardwaarde van de kolom, en de
+datums. Dat de todo-spiegels ook werkelijk zijn aangemaakt en daarna
+verdwenen is **niet** bewezen. Er is geen logboek dat dat vasthoudt. Het
+is een verklaring die alles dekt, geen bewijs.
+
+**Nog open.** Er staan 4 openstaande todo's in Calc tegenover 0 taken met
+`bron_kenmerk = 'todo'`. De test die dat afmaakt is een todo in Calc aan-
+en weer uitvinken, waarna `todo_taken_sync` de spiegel opnieuw neerzet, en
+daarna tellen. Werkt dat, dan kunnen de vier met dezelfde handeling
+teruggezet worden.
+
+### Wat er onderweg nog meer gemeten is
+
+- **De standaardwaarde van `taken.bron` is `'yoobi'`.** Wie ergens een rij
+  in `taken` zet zonder `bron` mee te geven, maakt een Yoobi-taak die
+  onder de opruimregel valt. `taken.html` zet hem expliciet op `eigen`.
+  Voor elk nieuw stuk dat ooit in deze tabel schrijft is dit een valkuil
+- **Het ketenslot in `yoobi-taken-sync` werkt niet.** De kop belooft dat
+  een tweede aanroep weigert als er al een keten loopt. De controle staat
+  er, maar het blok erachter bevat alleen commentaar en geen `return`. Twee
+  keer op de knop drukken laat twee ketens door elkaar lopen
+- **Yoobi-taken kunnen geen meldingen krijgen, maar dat zit in het
+  scherm.** `taken.html` toont het meldingsblok alleen bij `modus ===
+  'eigen'` (regel 1218). De database houdt het niet tegen: `bevries_yoobi`
+  noemt `piep`, `piep_op` en `mail_op` niet. Verandert dat scherm ooit, dan
+  valt de afbakening voor punt 6 om zonder dat iemand aan de trigger denkt
+- **`taken.melding_geleverd_op` staat als `timestamp without time zone`**,
+  terwijl alle andere tijdkolommen in die tabel een zone hebben. Dat is de
+  vorm van de tijdzonefout die in taken v0.15.0 gerepareerd is
+- **Er staan vier triggers op `taken`.** Postgres vuurt triggers van
+  dezelfde soort in alfabetische naamvolgorde af. Een vijfde voor punt 6
+  komt dus op een plek die de naam bepaalt, ten opzichte van
+  `bevries_yoobi` en `zet_bijgewerkt`
+
+### Wat punt 6 hiervan meeneemt
+
+De voorwaarde op de trigger mag niet alleen `NEW.piep = true` zijn. De
+mailfunctie zet zelf `mail_op` met een PATCH, en dat is ook een UPDATE op
+`taken`. Zonder `NEW.mail_op is null` erbij trapt de functie zichzelf aan
+na elke verstuurde mail. Dat loopt niet oneindig door, maar het verdubbelt
+het werk zonder dat iemand het ziet. De voorwaarde moet de selectie van de
+functie spiegelen, niet alleen de piep.
