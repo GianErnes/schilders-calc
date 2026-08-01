@@ -63,7 +63,7 @@ computegrootte Nano.
 Adres van een project is altijd `https://<verwijzing>.supabase.co`.
 
 **schilders-calc** telt 37 tabellen, 6 opslagbakken, 11 triggers, 18 Edge
-Functions en 7 cronjobs. De grootste tabellen zijn `calc_regel_stappen`
+Functions en 8 cronjobs. De grootste tabellen zijn `calc_regel_stappen`
 (1959 rijen), `meetstaat` (747) en `bewerkingen` (548).
 
 **schilder-voorraad** telt 9 tabellen en verder niets. Geen opslagbakken,
@@ -227,13 +227,13 @@ Functions, Secrets, per project.
 
 **Twee plekken waar geheimen staan.** Naast de Secrets bij Edge Functions
 heeft Supabase ook een eigen kluis, `vault`. Sinds 27 juli 2026 halen
-**alle zeven cronjobs** hun sleutel daaruit op. In de kluis staan drie
+**alle acht cronjobs** hun sleutel daaruit op. In de kluis staan drie
 geheimen:
 
 | Naam in de kluis | Hoort gelijk te zijn aan | Gebruikt door |
 |---|---|---|
-| `maandbericht_key` | **[TE CONTROLEREN]**, gaat mee als `Authorization: Bearer` | `maandbericht-maandelijks`, `yuki-vuller-dagelijks`, `yuki-vuller-middag` |
-| | **Let op:** die laatste twee roepen `smooth-function` aan, niet `maandbericht`. Eén sleutel doet hier dus twee verschillende functies. Vervang je `maandbericht_key`, dan stopt óók je financiele dashboard met bijwerken, en cron blijft gewoon `succeeded` melden. Bevestigd uit `cron.job` op 30 juli 2026. | |
+| `maandbericht_key` | **[TE CONTROLEREN]**, gaat mee als `Authorization: Bearer` | `maandbericht-maandelijks`, `yuki-vuller-dagelijks`, `yuki-vuller-middag`, `yuki-vuller-avond` |
+| | **Let op:** die laatste drie roepen `smooth-function` aan, niet `maandbericht`. Eén sleutel doet hier dus twee verschillende functies. Vervang je `maandbericht_key`, dan stopt óók je financiele dashboard met bijwerken, en cron blijft gewoon `succeeded` melden. Bevestigd uit `cron.job` op 30 juli 2026. | |
 | `aftap_secret` | de Edge Function secret `AFTAP_SECRET` | `backup-nachtelijk`, `taken-mail-melding`, `werkvoorraad-sync-wekelijks` |
 | `opvolg_key` | de Edge Function secret `OPVOLG_KEY` | `offerte-opvolging-werkdagen` |
 
@@ -322,7 +322,7 @@ manieren stuk.
 In het project `schilder-voorraad` bestaat **geen enkele** van de drie.
 Daar draait niets automatisch. Alles wat daar gebeurt komt uit de app.
 
-### 3.1 De zeven cronjobs
+### 3.1 De acht cronjobs
 
 Allemaal in `schilders-calc`, allemaal actief.
 
@@ -337,6 +337,7 @@ Allemaal in `schilders-calc`, allemaal actief.
 | `backup-nachtelijk` | 02:00 | 04:00 | 03:00 | `backup-dump` | dump van de database naar de bak `backups`, plus kopie van foto's en documenten. Stuurt maandag een statusmail |
 | `yuki-vuller-dagelijks` | 05:00 | 07:00 | 06:00 | `smooth-function` | haalt de standen uit Yuki en vult het financiele dashboard |
 | `yuki-vuller-middag` | 10:00 | 12:00 | 11:00 | `smooth-function` | zelfde, tweede keer op de dag |
+| `yuki-vuller-avond` | 17:00 | 19:00 | 18:00 | `smooth-function` | zelfde, derde keer op de dag. Bijgekomen 1 augustus 2026 |
 | `offerte-opvolging-werkdagen` | ma t/m vr 06:30 | 08:30 | 07:30 | `offerte-herinnering` | herinnert aan openstaande offertes |
 | `taken-mail-melding` | elke 2 minuten | | | `taken-mail-melding` | stuurt mail bij nieuwe of gewijzigde taken |
 | `werkvoorraad-sync-wekelijks` | dinsdag 06:00 | 08:00 | 07:00 | `fin-werkvoorraad-sync` | haalt de werkvoorraad uit Yoobi |
@@ -517,7 +518,7 @@ bestand voorkwam.
 bruikbaar maar is dat niet: alle functies staan er door elkaar op
 volgorde van tijd en je trekt er makkelijk de verkeerde conclusie uit.
 
-> **De blinde vlek van cron.** Zes van de zeven cronjobs gebruiken
+> **De blinde vlek van cron.** Zeven van de acht cronjobs gebruiken
 > `net.http_post`. Dat stuurt het verzoek de deur uit en gaat meteen
 > door, zonder op antwoord te wachten. **Cron meldt daarom "succeeded"
 > zodra het verzoek verstuurd is, ook als de functie het daarna weigert.**
@@ -609,18 +610,31 @@ Yoobi, en de wekelijkse werkvoorraad. De rest van het systeem draait door.
 
 **Beeld:** financieel.html toont nullen of een oude stand.
 
-**Eerste handeling:** kijk in de uitdraai wanneer `yuki-vuller-dagelijks`
-en `yuki-vuller-middag` voor het laatst gedraaid hebben. Staan die op
-vanmorgen, dan ligt het aan Yuki en niet aan ons.
+**Eerste handeling:** kijk in de uitdraai wanneer `yuki-vuller-dagelijks`,
+`yuki-vuller-middag` en `yuki-vuller-avond` voor het laatst gedraaid
+hebben. Staan die op vandaag, dan ligt het aan Yuki en niet aan ons.
 
-**Let op:** de tabel `fin_dashboard` bevat één regel die twee keer per dag
-overschreven wordt. Geeft Yuki een keer niets terug, dan staat er nul en
-is de goede stand van gisteren weg. De maandberichten blijven wel bewaard
-in `fin_berichten`.
+**Let op:** de tabel `fin_dashboard` bevat één regel die drie keer per dag
+overschreven wordt. Er is geen geschiedenis: wat er gisteren stond is weg.
+De maandberichten blijven wel bewaard in `fin_berichten`.
+
+**Sinds 1 augustus 2026 overschrijft een mislukte run niets meer.** Geeft
+Yuki een foutcode, dan breekt de vuller af. Komt het banksaldo op precies
+0,00 uit, dan weigert hij te schrijven. In beide gevallen blijft de stand
+van de vorige run staan, inclusief de oude `bijgewerkt_op`. Daarvóór
+werden in dat geval nullen weggeschreven en was de goede stand weg.
+
+**Zie je een oude stand, kijk dan eerst naar de tijdstempel.**
+financieel.html toont bovenin Bijgewerkt met datum en tijd, rechtstreeks
+uit `fin_dashboard.bijgewerkt_op`. Staat die op een eerdere run, dan heeft
+de vuller bewust niets weggeschreven en staat de reden bij Invocations van
+`smooth-function`. Er gaat met opzet geen mail uit: die tijdstempel is het
+enige signaal, en die zie je vanzelf zodra je het dashboard opent.
 
 **Verschil met Yuki zelf is normaal, behalve bij het banksaldo.** De app
-maakt een momentopname om 07:00 en om 12:00. Yuki Monitor telt de
-boekingen van gedurende de dag mee, en afschrijvingen. Voor omzet en
+maakt een momentopname om 07:00, om 12:00 en om 19:00, 's winters telkens
+een uur eerder. Yuki Monitor telt de boekingen van gedurende de dag mee,
+en afschrijvingen. Voor omzet en
 resultaat vergelijk je daarom vlak na een verversing, dan kijken beide
 naar dezelfde stand.
 
@@ -825,7 +839,7 @@ Supabase houdt op te bestaan.
 | Structuur van de database | ja, `schema/` en de maandagbijlage | half uur |
 | Inhoud van de database | ja, de JSON uit 4.7 | minuten |
 | **De achttien functies uitrollen** | n.v.t. | **uren klikwerk** |
-| De zeven cronjobs | ja, hoofdstuk 3.1 | half uur |
+| De acht cronjobs | ja, hoofdstuk 3.1 | half uur |
 | De geheimen | ja, de kluis | half uur |
 | De zes inlogaccounts | nee | half uur, zie waarschuwing |
 | Opslagbakken en hun rechten | ja, zitten in de schemadump | minuten |
@@ -903,7 +917,7 @@ maandag meegestuurd als bijlage.
 | 6 opslagbakken | `schema_dump()` | ja |
 | 25 verwijssleutels | `schema_dump()` | ja, onderaan als `ALTER TABLE` |
 | 1 reeks (`taak_dagkeuze_id_seq`) | `schema_dump()` | ja, plus `setval` |
-| 7 cronjobs | `schema_dump()` en 3.1 | ja, adres handmatig aanpassen |
+| 8 cronjobs | `schema_dump()` en 3.1 | ja, adres handmatig aanpassen |
 | views | n.v.t., er zijn er geen | — |
 | de drie kluissleutels | **nee, met opzet** | met de hand |
 
@@ -1880,3 +1894,61 @@ mailfunctie zet zelf `mail_op` met een PATCH, en dat is ook een UPDATE op
 na elke verstuurde mail. Dat loopt niet oneindig door, maar het verdubbelt
 het werk zonder dat iemand het ziet. De voorwaarde moet de selectie van de
 functie spiegelen, niet alleen de piep.
+
+
+## Wat er op 1 augustus 2026 gedaan is
+
+Een kleine dag. Een derde vulling van het financiele dashboard erbij, en
+twee wachten in de vuller. Het begon als een vraag van tien seconden en
+werd onderweg tweemaal kleiner gemaakt.
+
+### Derde vulling per dag
+
+De cronjob `yuki-vuller-avond` draait sinds vandaag om 17:00 UTC, dat is
+19:00 bij ons in de zomer en 18:00 in de winter. Het is een letterlijke
+kopie van `yuki-vuller-middag`: dezelfde aanroep van `smooth-function`,
+dezelfde sleutel `maandbericht_key` uit de kluis. Bevestigd uit `cron.job`
+na afloop, jobid 22, `0 17 * * *`, actief.
+
+Reden: wat er 's middags in Yuki geboekt wordt stond tot nu toe pas de
+volgende ochtend in het dashboard. Vooral op maandag telt dat, want dan
+werkt Maud de administratie bij.
+
+### Twee wachten in `smooth-function`
+
+`soapCall` keek niet naar de statuscode van het antwoord van Yuki. Gaf
+Yuki een 500 terug, dan ging die foutpagina gewoon door de molen: het
+antwoordelement ontbrak, `parseAccounts` kreeg een lege string, elke som
+kwam op 0 uit en die nullen werden weggeschreven. De goede stand van de
+vorige run was dan weg.
+
+Wacht 1 zit nu in `soapCall` en breekt de run af bij een foutcode. Wacht 2
+zit vlak voor de upsert en weigert te schrijven bij een banksaldo van
+precies 0,00. Daarnaast meldt de functie voortaan eerlijk `ok: false`
+wanneer het wegschrijven in `fin_dashboard` zelf mislukt; tot nu toe kwam
+daar `ok: true` uit met `opgeslagen: false` ergens in het antwoord.
+
+### Wat er bewust niet gebouwd is
+
+Het eerste ontwerp legde de eis ook op de twintig maandeinde-saldibalansen
+die de vuller voor de grafieken ophaalt. Dat is geschrapt. Stond die eis te
+streng, dan zou hij elke dag de hele run blokkeren op een maand die
+terecht leeg is, en dan veroudert het dashboard stilletjes terwijl er niets
+stuk is. Een wacht die zelf een faalscenario toevoegt is geen winst.
+
+Daarmee blijft het halve geval onbeschermd: Yuki geeft netjes een 200 maar
+met een leeg antwoordelement voor een deel van de aanroepen. Dan lezen
+bijvoorbeeld de debiteuren op nul en leest het werkkapitaal te gunstig.
+Dat is aannemelijk en daarom lastig te zien. Bewust geaccepteerd tot het
+een keer waargenomen wordt.
+
+Er komt ook geen alarmmail. De tijdstempel bovenin financieel.html doet dat
+werk al: slaat de vuller een run over, dan staat daar een oud tijdstip.
+
+### Bewijsstand
+
+Het faalscenario waar deze wachten tegen beschermen is nooit waargenomen.
+`fin_dashboard` houdt geen geschiedenis bij, dus achteraf is niet vast te
+stellen of het ooit gebeurd is. Het staat hier als redenering, niet als
+meting. De wachten zijn gebouwd omdat ze klein zijn en niets kunnen
+blokkeren dat nu werkt, niet omdat er een incident aan ten grondslag ligt.
