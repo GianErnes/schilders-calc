@@ -908,7 +908,7 @@ maandag meegestuurd als bijlage.
 | Onderdeel | Ligt er | Uitvoerbaar |
 |---|---|---|
 | 37 tabellen | `schema_dump()` | ja |
-| 53 policies op `public` | `schema_dump()` | ja |
+| 52 policies op `public` | `schema_dump()` | ja |
 | **16 policies op `storage.objects`** | `schema_dump()` | ja |
 | 29 indexen | `schema_dump()` | ja |
 | 17 databasefuncties | `schema_dump()` | ja |
@@ -923,7 +923,8 @@ maandag meegestuurd als bijlage.
 
 > **Splits altijd per schema bij het tellen van policies.** Het getal 69
 > uit de inventarisatie van 27 juli is geen 69 policies op `public` maar
-> 53 op `public` plus 16 op `storage.objects`. Op 30 juli 2026 werd een
+> 53 op `public` plus 16 op `storage.objects`. Sinds 2 augustus 2026 zijn
+> het er 52 plus 16, samen 68: opruimpunt 17 haalde een dubbele weg. Op 30 juli 2026 werd een
 > telling over alleen `public` bijna aangezien voor volledig, waarna de
 > zestien opslagregels stilzwijgend uit het herbouwbestand waren gevallen.
 > Gevolg zou zijn geweest: na een herbouw staan de zes bakken er wel, maar
@@ -1077,6 +1078,23 @@ verder omhoog.
 > niet aan het begin van de sessie.** Vergelijk het aantal tekens met wat
 > je ophaalde. Wijkt dat af, bouw de wijziging dan opnieuw op de verse
 > versie. Dit kostte nu niets omdat de vraag toevallig gesteld werd.
+
+> **Verscherpt op 2 augustus 2026: het bleef niet bij een bijna-misser,
+> en het geldt voor elk bestand.** Diezelfde dag stond SYSTEEM.md live op
+> 95994 tekens tegenover 92302 in de kopie van eerder in dezelfde sessie.
+> Het verschil was werk van een ander gesprek op 1 augustus: een achtste
+> cronjob (`yuki-vuller-avond`) en een hele dagsectie. Patchen op de oude
+> kopie had dat stilzwijgend teruggedraaid.
+>
+> **Twee vaste momenten, voor elk bestand uit de repo:** bij sessiestart,
+> en opnieuw direct voordat er een wijziging op gemaakt wordt. Altijd met
+> cache-omzeiling (`?c=` plus een tijdstempel). Leg de tekens van de
+> verse ophaling naast de eerdere kopie en meld het verschil voordat je
+> patcht.
+>
+> Dit is werkpatroon en geen oplettendheid. Een regel die alleen werkt
+> als iemand er toevallig aan denkt, is geen regel. Wie hem toepast, hoeft
+> dat niet te melden als verdienste; het hoort er gewoon bij.
 
 ### 5.2 De vijf ankers
 
@@ -1409,16 +1427,23 @@ van een backup is één keer echt geoefend en werkte.
     `taak_dagkeuze_id_seq` er hoe dan ook in, ook al staat hij in geen
     enkel opbouwscript, en staat de bijbehorende `setval` uitgecommentarieerd
     onderaan het bestand klaar.
-16. **De namen van de oude policies opschonen.** Een stuk of tien policies
-    heten nog `anon alles ...` terwijl ze `TO authenticated` zijn. Dat is
-    een overblijfsel van vóór 13 mei 2026. Wie ooit de audit draait
-    schrikt zich rot van policies die naar anon vernoemd zijn.
-    Cosmetisch, maar het scheelt een valse alarmbel.
-17. **Dubbele policy op `offerte_controle_log` opruimen.** Er staan er
-    twee die precies hetzelfde doen: `Ingelogde gebruikers lezen
-    controle-log` en `offerte_controle_log_select`. Eén kan weg.
-    Bevestigd in de audit van 27 juli 2026: die tabel staat als enige met
-    `app_help_log` op twee policies.
+16. ~~**De namen van de oude policies opschonen.**~~ **Gedaan op 2 augustus
+    2026.** Het waren er vijftien, niet "een stuk of tien". Alle vijftien
+    heetten `anon alles <tabel>` terwijl ze `ALL TO authenticated` zijn,
+    een overblijfsel van vóór 13 mei 2026. Ze heten nu `ingelogd alles
+    <tabel>`. Die vorm was niet verzonnen: `offerte_accorderingen` had al
+    `ingelogd alles offerte_accorderingen`. Alleen de naam veranderde,
+    niet het commando, de rol of de voorwaarde. Zie `sql/policies_opschonen.sql`.
+17. ~~**Dubbele policy op `offerte_controle_log` opruimen.**~~ **Gedaan op
+    2 augustus 2026.** De twee waren op elk meetbaar punt gelijk: SELECT,
+    `TO authenticated`, permissive, voorwaarde `true`. `offerte_controle_log_select`
+    is gebleven, de zin in gewone taal is weg.
+
+    **De beschrijving hierboven klopte niet helemaal.** `app_help_log`
+    werd genoemd als tweede geval, maar die twee policies zijn een INSERT
+    en een SELECT en dus geen duplicaat. De audit telde aantallen en er is
+    een conclusie aan gehangen die er niet in zat. Een tabel met twee
+    policies is normaal zodra er twee verschillende commando's op staan.
 18. **Automatische taken rond offerte en akkoord.** Twee taken die vanzelf
     ontstaan, naast de backup uit punt 1 en niet in plaats daarvan:
     - **bij versturen van een offerte:** taak om alle stukken,
@@ -1453,6 +1478,28 @@ van een backup is één keer echt geoefend en werkte.
     rijen met een `pdf_path`, niet het aantal bestanden. In de bak stonden
     er 66. Het verschil van 38 zijn wezen: bestanden waar geen rij meer
     naar wijst. Zie de dagsectie van 2 augustus.
+20. **Zes policies staan op rol `public` in plaats van `authenticated`.**
+    Gevonden op 2 augustus 2026 bij het opschonen van punt 16. In Postgres
+    betekent `public` alle rollen, dus ook `anon`. De audit ziet dit niet:
+    die kijkt naar rechten (grants) en niet naar de rol in de policy zelf.
+
+    Het gaat om `onderhoudsplan_beurten` (`eigen beurten alles`),
+    `onderhoudsplannen` (`eigen plannen alles`) en alle vier op
+    `taak_sjablonen`.
+
+    **Nu geen lek.** Gemeten op 2 augustus: `anon` en `public` hebben nul
+    rechten op tabelniveau in `public`, dus het eerste slot zit dicht.
+
+    **Waarom het toch telt.** Deze zes hebben hun tweede slot open. Gaat
+    er ooit iets mis met die grants, bij een migratie of bij een herbouw
+    in een leeg project, dan zijn precies deze zes tabellen wel bereikbaar
+    en de rest niet. Bij de terugzettest uit 4.8 is dat een reëel geval.
+
+    **Voor de bouw:** de vier op `taak_sjablonen` kunnen zonder meer naar
+    `authenticated`. Van `eigen beurten alles` en `eigen plannen alles`
+    moet eerst de voorwaarde gelezen worden; die namen suggereren iets met
+    `auth.uid()`, en dan verandert `TO public` naar `TO authenticated`
+    mogelijk wél gedrag.
 ---
 
 ## Wat er nog niet in staat
@@ -2047,3 +2094,109 @@ maar 120 MB rommel.
 
 Bak terug op openbaar en de vorige versie van `offerte-accord` plakken.
 Aan de gegevens is niets veranderd.
+
+---
+
+## Ook op 2 augustus 2026: de auditquery, de policies en de mailfunctie
+
+### Auditquery naar v3
+
+De uitzondering voor `accord-pdf` is uit `bak_uitzonderingen` gehaald. Die
+stond er om te voorkomen dat de vlag elk kwartaal onterecht afging op een
+bak die met opzet openbaar was. Die bak is er niet meer.
+
+**Waarom dat niet kon blijven staan.** Zolang die naam in de lijst stond,
+zou de audit óók gezwegen hebben als iemand die bak per ongeluk weer
+openbaar zette. Een uitzondering die blijft staan nadat de reden verdwenen
+is, is geen uitzondering meer maar een blinde vlek.
+
+De lijst is leeg gelaten in plaats van weggehaald, met in het commentaar
+de eis dat een toekomstige uitzondering een reden én een
+herbeoordelingsdatum krijgt. De regel in blok 2 staat er ook nog, zodat een
+nieuwe uitzondering zichtbaar wordt in plaats van stilzwijgend uit blok 1
+te verdwijnen.
+
+Gedraaid na afloop: geen rode vlaggen, alle zes bakken besloten.
+
+> **De kwartaalaudit draait niet vanzelf.** Hij staat niet bij de acht
+> cronjobs van 3.1 en heeft nooit een planner gehad. De naam wekt de
+> indruk van wel. Sinds 2 augustus 2026 staat hij als terugkerende taak in
+> de takenapp bij Gian, met de uitleg erin waar hij voor dient.
+>
+> Bewust géén cronjob: een controle die vanzelf draait en die niemand
+> leest, geeft schijnzekerheid. Dat is hetzelfde patroon als het groene
+> vinkje in cron.
+>
+> Bij het lezen van de uitkomst is de belangrijkste vraag niet of er een
+> rode vlag staat, maar of het aantal policies uit blok 4 nog klopt met
+> 4.8. Wijkt dat af, dan is er iets veranderd dat niet is opgeschreven.
+
+### Opruimpunt 16 en 17
+
+Zie de opruimlijst. Vijftien policies hernoemd, één dubbele verwijderd,
+totaal in `public` van 53 naar 52. Bijvangst: opruimpunt 20, de zes
+policies op rol `public`.
+
+### Opruimpunt 6, brok 1: `taken-mail-melding` v2
+
+Punt 6 zelf staat nog open. Dit is de eerste van drie brokken en hij kan
+los: de functie is er beter van, ook als de trigger er nooit komt.
+
+**Wat er vooraf gemeten is.** De Yoobi-sync kan geen enkele rij door de
+poort `piep = true` duwen. Langs drie kanten bevestigd: de
+standaardwaarde van de kolom is `false`, `yoobi-taken-sync` schrijft het
+veld niet (de `rows.push` zet negen velden en `piep` zit er niet bij), en
+`taken.html` toont de meldingsschakelaar alleen bij `modus === 'eigen'`
+(regel 1218). Van de 94 Yoobi-taken heeft er nul een piep.
+
+> **Die derde bescherming zit in het scherm, niet in de database.**
+> `bevries_yoobi` noemt `piep`, `piep_op` en `mail_op` niet in zijn lijst
+> bevroren velden. Verandert dat scherm ooit, dan valt de afbakening voor
+> punt 6 om zonder dat iemand aan de trigger denkt.
+
+**Drie wijzigingen in v2.**
+
+1. **Claimen vóór mailen.** Oud: lezen, mailen, dán pas `mail_op` zetten.
+   In dat gat kon een tweede aanroeper dezelfde rij lezen en nog een keer
+   mailen. Nieuw: eerst claimen met een PATCH die alleen aanslaat als
+   `mail_op` nog leeg is, en alleen mailen als die claim echt een rij
+   oplevert. Faalt het versturen daarna, dan wordt de claim teruggedraaid
+   zodat de volgende ronde het opnieuw probeert.
+2. **Harde stop als de Resend-sleutel ontbreekt.** Dit was het ergste van
+   de oude versie. De voorwaarde om te mailen was `adres && RESEND`. Viel
+   de sleutel weg, dan ging élke taak door de tak "geen adres", kreeg
+   `mail_op` en was voorgoed weg. Geen mail, geen fout, geen herkansing,
+   en de cron bleef groen melden. Nu stopt de functie meteen met een 500
+   en raakt geen enkele rij aan.
+3. **Onderscheid tussen bewust en onbedoeld geen adres.** Maud heeft geen
+   mailadres, met opzet: zij werkt een halve dag per week en leest dan
+   haar taken. Iemand die per ongeluk ontbreekt in `taken_rollen` zag er
+   in de code precies hetzelfde uit. Nu twee lijsten: staat de persoon in
+   `taken_rollen` zonder adres, dan gebeurt er niets; staat de persoon er
+   niet in, dan komt er een logregel met de naam erbij.
+
+**Het restrisico van 1, bewust geaccepteerd (Gian, 31 juli 2026).** Gaat
+de functie zelf onderuit tussen de claim en het terugdraaien, dan is die
+ene melding weg. Een tweede kolom voor de claim zou dat oplossen, maar dat
+is meer machinerie dan het geval waard is bij deze aantallen.
+
+**Waar je op moet letten, en niet op wat je zou verwachten.** Wat v2
+voorkomt is een dubbele mail. Wat er in ruil voor terugkomt is het
+omgekeerde: een mail die stil niet aankomt. Het signaal is dus niet "te
+veel mail" maar "een taak in de app waar niemand bericht over kreeg".
+
+**Eerste meting na uitrol,** 2 augustus 12:38 uit de Logs:
+`{"gevonden":2,"verstuurd":1,"bewust_geen_adres":1,"onbekende_persoon":0,"overgeslagen":0,"mislukt":0}`.
+Die ene zonder adres was een taak voor Maud. De rapportregel staat nu in
+het logboek; de oude versie liet niets achter.
+
+**De teller `overgeslagen` is het bewijsmiddel.** Komt die ooit boven nul,
+dan heeft de claim iets tegengehouden dat vroeger een dubbele mail was
+geweest.
+
+**Nog te doen voor punt 6:** brok 2 is de trigger op `taken`, brok 3 is de
+cron van `*/2` naar `*/30`. Pas beginnen als v2 een dag stabiel draait.
+De voorwaarde op die trigger mag níet alleen `NEW.piep = true` zijn: de
+mailfunctie zet zelf `mail_op` met een PATCH, en dat is ook een UPDATE op
+`taken`. Zonder `NEW.mail_op is null` erbij trapt de functie zichzelf aan
+na elke verstuurde mail.
