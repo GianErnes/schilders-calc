@@ -413,10 +413,23 @@ niet aan een app, maar aan de database zelf.
 
 Die functie mailt altijd naar Gian, ongeacht wie de taak had. Het adres
 staat niet in de code maar wordt opgezocht in `taken_rollen` bij persoon
-`Gian`. Verandert dat adres, dan is dat de enige plek om aan te passen.
-Staat er geen adres, dan stopt de functie met een fout in het logboek.
-Dat is hier met opzet strenger dan bij `taken-mail-melding`, want daar is
-geen adres soms de bedoeling (Maud) en hier nooit.
+`gian`, met een kleine letter. Verandert dat adres, dan is dat de enige
+plek om aan te passen. Staat er geen adres, dan stopt de functie met een
+fout in het logboek. Dat is hier met opzet strenger dan bij
+`taken-mail-melding`, want daar is geen adres soms de bedoeling (Maud) en
+hier nooit.
+
+> **De schrijfwijze stond hier eerst met een hoofdletter.** Alle waarden in
+> `taken_rollen` zijn kleine letters; dat zijn ook de sleutels die
+> `taken.html` gebruikt. `taak-melding-mail` zoekt inmiddels
+> hoofdletteronafhankelijk (`ilike`), dus het gaat hoe dan ook goed, maar de
+> tekst wees naar een waarde die niet bestaat.
+>
+> Let op het verschil met `taken-mail-melding`: die zoekt wél
+> hoofdlettergevoelig, met een gewone opzoeking op `taken_rollen.persoon`.
+> Komt daar ooit een naam met een hoofdletter in, dan valt die persoon stil
+> in de tak `onbekende_persoon`. Sinds v2 van 2 augustus 2026 staat dat wel
+> in het logboek, met de naam erbij.
 
 **Bewust niet samengevoegd met `taken-mail-melding`.** Die functie is een
 poller die zoekt op verstreken piep-tijd en mailt naar de toegewezen
@@ -477,6 +490,12 @@ waarvan iedereen denkt dat de app het doet.
 > daarvoor de sleutel `aftap_secret` uit de kluis. Daarom staat hij op
 > `security definer` met een vast `search_path`: een gewone ingelogde
 > gebruiker mag niet bij die kluis.
+>
+> **Aflevertijd, gemeten op 2 augustus 2026:** taak afgevinkt om 23:23, mail
+> binnen om 23:24. Dus binnen een minuut. Dat is een meting en geen
+> schatting; eerder die dag is in een gesprek een looptijd van een halve
+> seconde per mailaanroep verzonnen die nooit gemeten was, en dat is de
+> aanleiding voor de bewijsregel in 5.6.
 >
 > Twee dingen om te weten als je hem ooit moet nakijken. Hij staat op
 > **insert én update**, want een herhalende taak wordt afgevinkt door een
