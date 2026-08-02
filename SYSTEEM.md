@@ -1256,28 +1256,47 @@ van een backup is één keer echt geoefend en werkte.
 2. ~~**`smooth-function` hernoemen.**~~ **Gedaan op 27 juli 2026.** De
    weergavenaam is nu `fin-dashboard-sync`. De cronjobs hoefden niet mee:
    die roepen de URL aan en de adresnaam is niet gewijzigd. Zie 3.2.
-3. **Nog één ongebruikte Edge Function verwijderen: `taken-agenda`.**
-   Op 27 juli 2026 zijn `taken-meldingen`, `yoobi-kijkglas` en
-   `yoobi-project-probe` verwijderd, alle drie na vaststelling van nul
-   aanroepen over zesentwintig dagen. Ook uit de repo gehaald, want de
-   uitrolknop rolt alles uit wat daar staat en zou ze anders bij een
-   herbouw terugzetten. De code blijft bewaard in de zips in de hoofdmap
-   en in de geschiedenis van de repo.
+3. ~~**Nog één ongebruikte Edge Function verwijderen: `taken-agenda`.**~~
+   **Gedaan op 2 augustus 2026.** Gian had de agenda-abonnementen van alle
+   toestellen gehaald. Invocations toonde daarna nul over een dag, en
+   sterker: nul sinds de laatste uitrol, vijfentwintig dagen eerder.
 
-   `taken-agenda` staat er nog en dat is met opzet. Die werd op 26 juli
-   nog tientallen keren per dag aangeroepen, dus er staat ergens een
-   telefoon op te vragen. Eerst het agenda-abonnement van de toestellen
-   halen, anders blijft er een kapotte koppeling achter.
+   Op 27 juli 2026 waren `taken-meldingen`, `yoobi-kijkglas` en
+   `yoobi-project-probe` al verwijderd, alle drie na vaststelling van nul
+   aanroepen over zesentwintig dagen. De code van alle vier blijft bewaard
+   in de zips in de hoofdmap en in de geschiedenis van de repo.
 
-   **Twee dingen die daarbij horen:**
-   - Kijk eerst opnieuw bij Invocations over een maand. Leeft hij nog
-   - De tabel `taken_melding_sleutels` hoorde bij `taken-meldingen` en is
-     nu mogelijk een wees. Mogelijk, want `taken-agenda` zit in dezelfde
-     familie en gebruikt hem misschien ook. Eerst de code van
-     `taken-agenda` lezen, dan pas opruimen. Zolang die tabel bestaat
-     blijft hij als bewuste uitzondering in de auditquery staan
-4. **`index.html` toevoegen aan de voorraad-repo**, zodat het korte adres
-   werkt en de app vindbaar blijft zonder de exacte bestandsnaam.
+   **Vier stappen, in deze volgorde:**
+   1. Functie verwijderen in Supabase Studio
+   2. Map `supabase/functions/<naam>` verwijderen in `ernes-edge-functions`.
+      Kan in één keer via het menu rechtsboven, "Delete directory"
+   3. Pas dán de bijbehorende tabel opruimen. Voor deze:
+      `sql/taken_melding_sleutels_opruimen.sql`, gedraaid en teruggelezen
+      met `bestaat_nog = false`
+   4. De uitzondering uit `sql/audit_query_periodiek.sql` halen
+
+   De tabel `taken_melding_sleutels` is weg. Hij hoorde bij
+   `taken-meldingen` én `taken-agenda`; dat laatste bleek uit de broncode,
+   die hem las om de sleutel uit de aanroep te controleren. Gemeten voor
+   het verwijderen: nul treffers op die tabelnaam in `index.html`,
+   `taken.html`, `financieel.html` en `voorraad-app_2.html`. Er stonden
+   vijf sleutels in, één per persoon.
+4. ~~**`index.html` toevoegen aan de voorraad-repo**, zodat het korte adres
+   werkt en de app vindbaar blijft zonder de exacte bestandsnaam.~~
+   **Gedaan op 2 augustus 2026.** Een doorstuurpagina van drie regels, geen
+   tweede exemplaar van de app. `gianernes.github.io/voorraad-app/` stuurt
+   nu door naar `voorraad-app_2.html`. Bestaande bladwijzers blijven werken.
+
+   Drie wegen naar de app zodat het niet van één ding afhangt: een
+   meta-refresh die ook zonder JavaScript werkt, een `location.replace()`
+   in het script, en een zichtbare knop als beide falen. `replace()` en
+   niet `href`, anders komt de terugknop in een lus.
+
+   **De bestandsnaam staat op drie plekken in dat bestand.** Komt er ooit
+   een `voorraad-app_3.html`, dan moeten ze alle drie mee. Een
+   doorstuurpagina die naar een verdwenen bestand wijst is erger dan geen:
+   dan lijkt het stuk in plaats van afwezig. Die waarschuwing staat als
+   kader in het bestand zelf, want daar leest iemand hem wel.
 5. **Systeemstatus-scherm bouwen.** Een pagina die per achtergrondtaak
    toont wanneer die voor het laatst goed gelopen is. Geen geschreven
    pagina kan vertellen of de backup vannacht gedraaid heeft, een scherm
@@ -1487,19 +1506,28 @@ van een backup is één keer echt geoefend en werkte.
     `onderhoudsplannen` (`eigen plannen alles`) en alle vier op
     `taak_sjablonen`.
 
-    **Nu geen lek.** Gemeten op 2 augustus: `anon` en `public` hebben nul
-    rechten op tabelniveau in `public`, dus het eerste slot zit dicht.
+    **Bekeken op 2 augustus 2026, bewust niets aan gedaan.** Dit punt is
+    afgesloten. Het staat hier zodat niemand het over drie maanden opnieuw
+    uitzoekt.
 
-    **Waarom het toch telt.** Deze zes hebben hun tweede slot open. Gaat
-    er ooit iets mis met die grants, bij een migratie of bij een herbouw
-    in een leeg project, dan zijn precies deze zes tabellen wel bereikbaar
-    en de rest niet. Bij de terugzettest uit 4.8 is dat een reëel geval.
+    **Twee sloten, allebei dicht.** Het eerste: `anon` en `public` hebben
+    nul rechten op tabelniveau in `public`. Het tweede: geen van de zes
+    heeft voorwaarde `true`. De twee onderhoudsplan-tabellen gebruiken
+    `user_id = auth.uid()`, de vier op `taak_sjablonen` gebruiken
+    `taken_rol()`. Die functie is wel `SECURITY DEFINER`, maar zoekt op
+    `user_id = auth.uid()` en geeft dus leeg terug zonder inlog.
 
-    **Voor de bouw:** de vier op `taak_sjablonen` kunnen zonder meer naar
-    `authenticated`. Van `eigen beurten alles` en `eigen plannen alles`
-    moet eerst de voorwaarde gelezen worden; die namen suggereren iets met
-    `auth.uid()`, en dan verandert `TO public` naar `TO authenticated`
-    mogelijk wél gedrag.
+    Een niet-ingelogde komt er dus niet in, ook niet als die grants ooit
+    per ongeluk opengaan.
+
+    **Wat mijn eerste redenering fout maakte.** Er stond hier eerst dat
+    deze zes bereikbaar zouden worden bij een fout in de grants. Dat klopt
+    niet: de voorwaarde houdt ze hoe dan ook tegen. De redenering was
+    gebouwd op de rol in de policy zonder de voorwaarde erbij te lezen.
+
+    Wat overblijft is dat `TO public` misleidend leest en dat iemand het
+    patroon zou kunnen kopiëren zonder de voorwaarde. Besluit van Gian:
+    geneuzel, niet aan beginnen.
 ---
 
 ## Wat er nog niet in staat
@@ -2200,3 +2228,53 @@ De voorwaarde op die trigger mag níet alleen `NEW.piep = true` zijn: de
 mailfunctie zet zelf `mail_op` met een PATCH, en dat is ook een UPDATE op
 `taken`. Zonder `NEW.mail_op is null` erbij trapt de functie zichzelf aan
 na elke verstuurde mail.
+
+### Opruimpunt 3 en 4
+
+Zie de opruimlijst. `taken-agenda` is verwijderd uit Supabase, uit de repo
+en zijn tabel is weg. De voorraad-app heeft een doorstuurpagina.
+
+### Wat we onderweg over `ernes-edge-functions` geleerd hebben
+
+Dit stond nergens en het is contra-intuïtief.
+
+> **`supabase/functies-overzicht.json` spiegelt Supabase. De mappen in
+> `supabase/functions/` doen dat niet.**
+>
+> De Action "Functies ophalen uit Supabase" haalt de actuele lijst op en
+> overschrijft dat JSON-bestand, dus daar staat precies wat er draait.
+> Maar mappen van functies die niet meer bestaan laat hij staan. Op 2
+> augustus is dat gemeten door de Action met de hand te starten nadat
+> `taken-agenda` uit Supabase was verwijderd: het overzicht telde daarna
+> veertien functies zonder `taken-agenda`, terwijl de map er nog stond.
+>
+> **Wie in nood die repo openslaat en op de mappen afgaat, ziet dus
+> functies die niet meer bestaan.** Kijk in het JSON-bestand.
+>
+> Gevolg voor het opruimen: een Edge Function verwijderen is twee
+> handelingen, Supabase én de map in de repo. Dat stond al zo in
+> opruimpunt 3 en is nu ook gemeten.
+
+**Drie lagen in die repo, en ze lopen uit elkaar:**
+
+| Laag | Wat het is | Loopt mee |
+|---|---|---|
+| `supabase/functies-overzicht.json` | de actuele lijst uit Supabase | ja, elke run |
+| `supabase/functions/<naam>/` | de broncode | alleen toevoegen en bijwerken |
+| `*.zip` in de hoofdmap | momentbeeld van 26 juli 2026 | nee, bevroren archief |
+
+De zips bevatten nog `taken-meldingen.zip`, `yoobi-kijkglas.zip` en
+`yoobi-project-probe.zip`, drie functies die op 27 juli verwijderd zijn.
+Dat is met opzet: het is archief.
+
+> **De Action draait op onderdelen die uitgefaseerd worden.** Bij elke run
+> komt de waarschuwing dat `actions/checkout@v4` en `supabase/setup-cli@v1`
+> voor Node.js 20 gebouwd zijn en nu gedwongen op Node.js 24 draaien. Het
+> werkt, maar op een dag stopt GitHub met dat opvangen en dan faalt deze
+> workflow.
+>
+> Dat is geen storing van vandaag, maar wel een die stil kan verlopen: de
+> backup van de Edge Functions stopt dan met bijwerken zonder dat er iets
+> misgaat aan de kant die je gebruikt. Merkbaar aan de commitdatum van
+> `functies-overzicht.json`: staat die er meer dan een week op, dan draait
+> hij niet meer.
