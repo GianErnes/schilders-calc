@@ -2405,8 +2405,99 @@ om 08:30 lokale tijd en drie minuten later klaar. De cron
 dat klopt, die cron draait alleen op werkdagen.
 
 Die looptijd van drie minuten is lang voor een functie die niets doet, wat
-suggereert dat er wel degelijk gewerkt wordt. **Dat is een vermoeden, geen
-meting.** Wat het zou beslissen is een rapportregel in de functie zelf, in
-de vorm die `taken-mail-melding` sinds vandaag heeft. Dat is een klein
-karwei en het maakt de vraag "verstuurt hij mails" voor het eerst
-beantwoordbaar.
+suggereert dat er wel degelijk gewerkt wordt. **Dat vermoeden is later op
+de dag weerlegd, zie hieronder.**
+
+### De opvolgautomaat had nog nooit iets te doen gehad
+
+**De uitkomst eerst.** Er was niets stuk. De automaat is gebouwd op 25 juli
+en 25 juli was de eerste vakantiedag. Sindsdien is er geen enkele offerte
+via de app verstuurd, dus `gemaild_op` was nergens gezet en de selectie van
+`offerte-herinnering` leverde elke ochtend nul rijen op.
+
+**Hoe het eruitzag onderweg.** Van de 31 accorderingen had er geen enkele
+een `gemaild_op`, en alle vier de opvolgstempels stonden op nul. Dat leest
+als een kapotte keten. De broncode van `offerte-verzenden` bleek in orde:
+het stempelblok staat erin, met foutafhandeling en een `stempel`-veld in
+het antwoord. Toen bleef alleen over dat de functie nooit was aangeroepen,
+en dat klopte.
+
+> **De verklaring stond niet in de database maar in de agenda.** Dit is de
+> tegenhanger van "nooit bouwen op een ongestelde diagnose": er was hier
+> bijna een reparatie gebouwd voor iets dat niet stuk was. Vraag bij een
+> keten die overal nul toont eerst of er ooit iets ingegaan is, voordat je
+> uitzoekt waar het blijft steken.
+
+### `offerte-herinnering` v4.40.0: rapport in de logs
+
+De functie gaf haar rapport alleen terug in het antwoord op de aanroep, en
+de cron gooit dat antwoord weg. In de Logs stond niets anders dan `booted`
+en `shutdown`. Een dag met nul mails en een dag met tien mails zagen er
+identiek uit.
+
+Nu gaat er aan het eind van elke ronde één regel naar de Logs, ook bij nul
+en ook bij een droogloop, plus elke handeling apart zodat achteraf te zien
+is wélke offerte het betrof. Het rapport telt ook per poort hoeveel er
+afvielen.
+
+**Het onderscheid dat ertoe doet:**
+
+| uitkomst | betekenis |
+|---|---|
+| `bekeken: 0` | geen offerte via de app verstuurd. Niets te doen, geen storing |
+| `bekeken: 9, gedaan: 0` | er staan er open, maar vandaag was niets aan de beurt |
+| `mislukt > 0` | hier moet naar gekeken worden |
+
+Zonder dat onderscheid lijkt een stilstaande automaat op een rustige dag.
+`maakTaak` geeft sindsdien ook terug of de taak al bestond, anders lijkt
+een ronde waarin niets nieuws ontstond op een geslaagde ronde.
+
+### De kale nabeltaak uit `offerte_taken_sync` gehaald
+
+Bij het testen bleek dat twee systemen allebei een nabeltaak maakten:
+
+| bron | `bron_kenmerk` | inhoud |
+|---|---|---|
+| trigger `offerte_taken_sync`, blok C | `nabellen` | kaal |
+| Edge Function `offerte-herinnering` | `opvolg-bel` | belscript, telefoonnummer, klantgegevens |
+
+Dubbel werk in de lijst van Maud. De kale is weggehaald uit blok C, zie
+`sql/offerte_taken_sync_v2.sql`.
+
+**Waarom dat kan zonder een gat te schieten.** `offerte-herinnering` maakt
+zijn taak alleen als `gemaild_op` gevuld is, en dat gebeurt uitsluitend bij
+mailen via de knop in de app. Gian bevestigde dat offertes altijd zo de
+deur uit gaan; met de hand op verzonden zetten gebeurt niet. **Verandert
+dat ooit, dan krijgt zo'n offerte geen nabeltaak meer en moet dit terug.**
+
+Gemeten dat de volgorde klopt: `index.html` regel 20471 wacht op
+`_offerteVerzendCall` en zet daarna pas de status op verzonden. Op het
+moment dat de trigger vuurt staat `gemaild_op` dus al in de database. Dat
+maakte een variant mogelijk waarin de trigger in `offerte_accorderingen`
+kijkt, maar die is niet gebouwd: bij "ik mail altijd via de app" is
+weghalen eenvoudiger en beter te begrijpen.
+
+De regels die een bestaande `nabellen`-taak laten vervallen bij een
+statuswisseling blijven staan; er lagen er nog vijf van vóór deze
+wijziging. `sql/nabeltaken_opruimen.sql` verwijdert een kale nabeltaak
+alléén als er voor dezelfde calculatie een `opvolg-bel`-taak bestaat: beter
+een taak zonder belscript dan helemaal geen nabellen.
+
+### De testofferte van 2 augustus
+
+Er staat een testofferte open, gemaild naar `gian@ernes.nl`. Die is het
+eerste echte geval voor de opvolgautomaat sinds hij bestaat.
+
+**Wat er op 3 augustus na 08:30 moet gebeuren:**
+
+1. `offerte-herinnering` maakt de `opvolg-bel`-taak met belscript
+2. In de Logs staat `bekeken: 1, gedaan: 1, beltaken: 1`
+3. Er komt een mail op `info@` met onderwerp "Offerte-opvolging 2026-08-03"
+4. Daarna kan blok B van `sql/nabeltaken_opruimen.sql` de dubbele opruimen
+
+Gebeurt dat niet, dan is er wél iets aan de hand en is dat voor het eerst
+vast te stellen.
+
+De vier overige kale nabeltaken horen bij offertes van vóór de vakantie die
+inmiddels verlopen zijn. Die moeten met de hand beoordeeld worden; er komt
+nooit een tegenhanger bij, want die offertes hebben geen `gemaild_op`.
