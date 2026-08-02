@@ -1438,38 +1438,21 @@ van een backup is één keer echt geoefend en werkte.
     verwerkingswerk toch al doet. Uitbreiden van de bestaande trigger
     `offerte_taken_sync`, geen nieuw bouwwerk.
 
-19. **De accord-pdf's achter een verlopende link zetten.** De bak
-    `accord-pdf` staat openbaar, en dat moet ook, want de klant die de
-    accordeerlink opent is niet ingelogd en de drie policies op die bak
-    gelden alleen voor `authenticated`. Zet je hem dicht, dan breekt het
-    accorderen onmiddellijk. Gevonden door de audit v2 op 30 juli 2026,
-    op zijn eerste echte run.
+19. ~~**De accord-pdf's achter een verlopende link zetten.**~~ **Gedaan op
+    2 augustus 2026.** De bak `accord-pdf` staat niet meer openbaar.
+    `offerte-accord` v4.40.0 maakt bij elke opening een ondertekende link
+    van zestig minuten. Zie de dagsectie van 2 augustus voor het verloop.
 
-    **Hoe erg het nu is: beperkt.** Het bestand heet `{token}.pdf` met een
-    token van veertig letters en cijfers, dus raden of aftellen kan niet.
-    Er staat geen leesregel voor `anon`, dus opsommen kan ook niet. En wie
-    het pad heeft, had de accordeerlink al, dus er komt niemand bij die
-    het niet toch al mocht zien.
+    **De uitzondering in `sql/audit_query_periodiek.sql` mag weg.** Die
+    stond er om te voorkomen dat de vlag elk kwartaal onterecht afging op
+    een openbare bak. Er is nu geen openbare bak meer, dus als de audit
+    er ooit weer een meldt, is dat echt nieuws. Nog niet uitgevoerd, dit
+    is het eerstvolgende kleine karweitje.
 
-    **Wat er wel niet deugt.** De link verloopt nooit: een mail die over
-    drie jaar wordt doorgestuurd opent nog steeds een getekende
-    overeenkomst met naam, adres, bedrag en handtekening. En bij een
-    nieuwe link wist de app wel de rij uit `offerte_accorderingen` maar
-    niet het bestand in de bak, dus er staan openbare pdf's waarvan
-    nergens meer geregistreerd is dat ze bestaan.
-
-    **De oplossing.** `offerte-accord` serveert de pdf zelf uit met een
-    ondertekende link die na een week verloopt, waarna de bak dicht kan.
-    Raakt de Edge Function, `index.html` rond regel 20773
-    (`getPublicUrl`), en de bestaande links. Reken op een hele sessie.
-    Tot die tijd staat `accord-pdf` als bekende uitzondering in
-    `sql/audit_query_periodiek.sql`, zodat de vlag niet elk kwartaal
-    onterecht afgaat en daarmee zijn waarde verliest.
-
-    Op 30 juli 2026 stonden er 28 pdf's in de bak, niet 66. Alleen
-    accorderingen van na v3.79.0 (14 juni 2026) hebben er een; de oudere
-    hebben alleen de HTML-momentopname. Dat is ook van belang voor
-    opruimpunt 1.
+    **De 28 uit de oorspronkelijke tekst was fout.** Dat was het aantal
+    rijen met een `pdf_path`, niet het aantal bestanden. In de bak stonden
+    er 66. Het verschil van 38 zijn wezen: bestanden waar geen rij meer
+    naar wijst. Zie de dagsectie van 2 augustus.
 ---
 
 ## Wat er nog niet in staat
@@ -1952,3 +1935,115 @@ Het faalscenario waar deze wachten tegen beschermen is nooit waargenomen.
 stellen of het ooit gebeurd is. Het staat hier als redenering, niet als
 meting. De wachten zijn gebouwd omdat ze klein zijn en niets kunnen
 blokkeren dat nu werkt, niet omdat er een incident aan ten grondslag ligt.
+
+
+## Wat er op 2 augustus 2026 gedaan is
+
+Opruimpunt 19 afgerond. De bak `accord-pdf` staat dicht en de klant krijgt
+zijn document via een link die na een uur vervalt.
+
+### Wat er mis was, en waarom de oude beschrijving niet klopte
+
+De verloopcontrole van v4.12.0 werkt: een verlopen offerte kan niet meer
+geopend worden via de accordeerpagina. Maar de PDF stond in een openbare
+bak onder de naam `{token}.pdf`, en die token staat in de accordeerlink
+die de klant per mail kreeg. Wie die mail had, kon het bestand dus
+rechtstreeks bij de opslag opvragen, buiten de functie om. **De controle
+zat op de deur, het document lag ernaast op straat.**
+
+Gemeten en bevestigd door een token van een verlopen offerte in een
+incognitovenster te plakken: de offerte kwam gewoon tevoorschijn. Na het
+dichtzetten geeft datzelfde adres `NoSuchBucket`.
+
+**Twee dingen in de oude tekst van punt 19 waren onjuist.**
+
+- *"een getekende overeenkomst met naam, adres, bedrag en handtekening"*.
+  De PDF wordt gebouwd bij het **aanmaken** van de link, dus vóór het
+  tekenen. Er staat geen handtekening in. De changelog bij v3.79.0 zegt
+  het met zoveel woorden: het akkoordstempel vervalt voor PDF-links omdat
+  een PDF vastligt; het akkoord leeft in `offerte_accorderingen`
+- *"28 pdf's in de bak"*. Dat was het aantal rijen met een `pdf_path`. In
+  de bak stonden er 66
+
+Het tweede getal was overgenomen zonder te meten aan de bak zelf. Het
+eerste is drie sessies lang meegereisd als feit.
+
+### De metingen
+
+| | |
+|---|---|
+| Bestanden in de bak | 66 |
+| Rijen met een `pdf_path` | 28 |
+| Rijen zonder `pdf_path` (van vóór v3.79.0) | 3 |
+| Wezen: bestanden zonder rij | 38, samen 120,7 MB |
+| Rijen die naar een verdwenen bestand wijzen | 0 |
+
+De wezen ontstaan doordat een nieuwe link voor dezelfde offerte de rij
+overschrijft maar het oude bestand laat staan. Zichtbaar in de data:
+zeven bestandsgroottes komen meerdere keren voor, steeds binnen enkele
+minuten van elkaar. Op 4 juli staan er drie van precies 4707332 bytes
+binnen 55 seconden.
+
+Dat `rijen_zonder_bestand` op nul staat is het belangrijkste getal: elke
+levende rij heeft zijn bestand nog, dus opruimen raakt niets.
+
+De query staat als `sql/wezen_accord_pdf.sql`. Leest alleen, mag altijd
+opnieuw.
+
+### Wat er gebouwd is
+
+**`offerte-accord` v4.40.0.** Twee nieuwe functies: `magDocumentZien()`
+houdt de regel op één plek, `versePdfLink()` maakt een ondertekende link
+van zestig minuten. `pdf_path` is aan de select toegevoegd, die stond er
+niet in. Het antwoord bevat nu ook `document_beschikbaar`.
+
+De regel:
+
+| toestand | document |
+|---|---|
+| open, niet verlopen | ja |
+| akkoord, binnen 30 dagen na de reactie | ja |
+| akkoord, ouder dan 30 dagen | nee |
+| afgekeurd | nee |
+| open en verlopen | nee (bestond al) |
+
+De dertig dagen zijn een besluit van Gian, geen techniek. Mail B noemt de
+termijn nu en raadt de klant aan het bestand zelf te bewaren.
+
+**Twee bewuste gedragsveranderingen.** Een afgekeurde link toonde de
+offerte tot nu toe onbeperkt; die is dicht. En bij "dicht" gaat de hele
+snapshot niet mee, ook de HTML-terugval niet, anders zou de oude weg de
+offerte alsnog tonen en zat de afscherming alleen op de PDF geplakt.
+
+### Wat er bewust NIET gebouwd is
+
+**`index.html` is niet gewijzigd.** Regel 20773 slaat nog een publieke URL
+op in `snapshot.pdf`. Die waarde is dood: `offerte-accord` overschrijft
+het veld bij elke opening. Een release van `index.html` alleen hiervoor is
+veel beweging voor nul verschil, dus dit lift mee op de eerstvolgende
+release. **Zolang dat niet gebeurd is, staat er in de database een kolom
+vol adressen die nergens meer heen gaan.** Dat is geen storing, maar wel
+een valstrik voor wie er over een half jaar naar kijkt.
+
+**De 38 wezen staan er nog.** Sinds de bak dicht is, zijn ze geen lek meer
+maar 120 MB rommel.
+
+> **Wezen verwijderen mag NIET met SQL.** `delete from storage.objects`
+> haalt alleen de registratie weg; het echte bestand blijft bij Amazon
+> staan. Dan is het onzichtbaar én aanwezig, en dat is erger dan nu. Het
+> moet via de Storage-API: met de hand in Studio, of met een functie die
+> eerst een droogloop doet.
+
+### Wat er gemeten is na afloop
+
+- openbare URL van een bestaand bestand, incognito: `NoSuchBucket`
+- lopende offerte via de accordeerlink: PDF verschijnt, link is
+  `/object/sign/` met `exp` een uur later
+- knop "Getekend exemplaar (PDF)" in het beheervenster: werkt. Die gaat
+  via `storage.download` met de eigen inlog en de bestaande policies voor
+  `authenticated`, dus die raakte het dichtzetten niet
+
+### Terugdraaien
+
+Bak terug op openbaar en de vorige versie van `offerte-accord` plakken.
+Aan de gegevens is niets veranderd.
