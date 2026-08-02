@@ -1355,12 +1355,56 @@ van een backup is één keer echt geoefend en werkte.
    > Daarom staat er nu een vijfde controleregel in die kijkt of die
    > beveiliging er nog op zit. Die vangt niet alleen deze fout maar elke
    > toekomstige keer dat iemand die functie opnieuw aanmaakt.
-9. **De maandagbijlage vervangen door iets dat blijft werken.** Het
-   backupbestand groeit met ongeveer 0,13 MB per dag en loopt naar
-   verwachting begin december tegen de grens van een mailbijlage aan.
-   Gebeurt dat, dan stopt de enige kopie buiten Supabase zonder dat
-   iemand het merkt. Alternatief: comprimeren, of wegschrijven naar een
-   plek buiten Supabase in plaats van meesturen. Zie 4.7.
+9. **De maandagbijlage vervangen door iets dat blijft werken.**
+   **Opnieuw gemeten op 2 augustus 2026: dit speelt niet dit jaar en de
+   oude schatting zat er een factor acht naast.**
+
+   Hier stond dat het bestand met 0,13 MB per dag groeit en begin
+   december tegen de grens loopt. Die 0,13 was correct gemeten, maar over
+   vijf dagen (17 t/m 21 juli). Over de laatste zeven dagen is het
+   **0,018 MB per dag**.
+
+   | periode | groei per dag |
+   |---|---|
+   | 17 t/m 23 juli | 0,05 tot 0,86, schokkerig |
+   | 24 juli t/m 2 augustus | 0,00 tot 0,05 |
+   | laatste drie dagen | vrijwel nul |
+
+   Op 22 juli sprong het 0,86 omhoog en op 24 juli **0,35 omlaag**. Een
+   backup die krimpt betekent dat er iets uit de database verdwenen is.
+   Dat was de Yoobi-sync die zijn opruimregel draaide, dezelfde die op 2
+   augustus als lek werd ontdekt (zie opruimpunt 19 en de dagsectie).
+
+   > **De les zit niet in het getal maar in de vorm.** Deze reeks groeit
+   > niet gelijkmatig maar met sprongen die horen bij wat er in het bedrijf
+   > gebeurt. Vijf dagen meten en doortrekken geeft een voorspelling die er
+   > compleet naast zit, in welke richting dan ook. Meet opnieuw voordat je
+   > hierop bouwt.
+
+   **De grenzen, opgezocht op 2 augustus 2026.** Resend staat 40 MB per
+   mail toe, inclusief bijlagen ná Base64-codering. Die codering maakt een
+   bestand ongeveer een derde groter, dus 40 MB gecodeerd is een echt
+   bestand van ongeveer 30 MB. Maar de ontvangende mailbox is de kleinste
+   schakel, niet Resend: gangbare grenzen liggen op 20 tot 25 MB
+   gecodeerd.
+
+   Het bestand is nu 8,44 MB, oftewel ongeveer 11,2 MB gecodeerd. Bij de
+   huidige groei:
+
+   | grens (gecodeerd) | echt bestand | bereikt over |
+   |---|---|---|
+   | 20 MB (strengste gangbare) | 15,0 MB | ongeveer 1 jaar |
+   | 25 MB (ruimste gangbare) | 18,8 MB | ongeveer 1,6 jaar |
+   | 40 MB (Resend zelf) | 30,1 MB | ongeveer 3,3 jaar |
+
+   **[TE CONTROLEREN] Welke mailprovider draait achter `info@ernes.nl`?**
+   Dat bepaalt welke van de drie regels geldt. Vraag het aan Ed Mordant.
+   Zonder dat antwoord is de veilige aanname een jaar.
+
+   **Wat er niet verandert.** Loopt hij ooit tegen de grens, dan stopt de
+   enige kopie buiten Supabase zonder dat iemand het merkt. Dat blijft de
+   reden dat dit punt bestaat. Alternatief: comprimeren, of wegschrijven
+   naar een plek buiten Supabase in plaats van meesturen. Zie 4.7.
 10. ~~**Een schemadump toevoegen aan de nachtelijke backup.**~~
     **Gedaan op 30 juli 2026.** `backup-dump` v4 roept `public.schema_dump()`
     aan en schrijft de uitvoer weg als `schema/schema-JJJJ-MM-DD.sql` in de
@@ -1463,24 +1507,63 @@ van een backup is één keer echt geoefend en werkte.
     en een SELECT en dus geen duplicaat. De audit telde aantallen en er is
     een conclusie aan gehangen die er niet in zat. Een tabel met twee
     policies is normaal zodra er twee verschillende commando's op staan.
-18. **Automatische taken rond offerte en akkoord.** Twee taken die vanzelf
-    ontstaan, naast de backup uit punt 1 en niet in plaats daarvan:
-    - **bij versturen van een offerte:** taak om alle stukken,
-      calculatiegegevens en de offerte zelf, in Yoobi bij verkoop te zetten
-    - **bij een akkoord:** taak om de getekende offerte er in verkoop bij
-      te zetten
+18. ~~**Automatische taken rond offerte en akkoord.**~~ **Gedaan op 2
+    augustus 2026.** Twee taken die vanzelf ontstaan, beide voor Maud,
+    beide gepland op de eerstvolgende maandag 13:30 net als de bestaande
+    nabeltaak. Maud verwerkt op maandagmiddag, dus het moment van ontstaan
+    doet er niet toe.
 
-    Doel is **vindbaarheid**, niet bewaring. Een PDF in een backup-bak is
+    | `bron_kenmerk` | ontstaat bij | onderwerp |
+    |---|---|---|
+    | `yoobi-verkoop` | status naar `verzonden` | Stukken in Yoobi bij verkoop zetten |
+    | `yoobi-akkoord` | status naar `geaccepteerd` | Getekende offerte in Yoobi zetten |
+
+    Doel is **vindbaarheid**, niet bewaring. Een PDF in een backupbak is
     iets dat je terug kunt halen als je weet dat je het kwijt bent. Iets
     in Yoobi is een archief waar je in kunt zoeken als een klant er over
-    twee jaar over belt.
+    twee jaar over belt. Gian voegde daaraan toe: daarmee is Yoobi ook een
+    tweede plek waar de gegevens staan.
 
-    Aandachtspunt bij de bouw: hoeveel offertes gaan er per week uit? Bij
-    meer dan een paar wordt de eerste taak ruis, en ruis vink je weg
-    zonder te kijken. Dan lijkt het geregeld terwijl het dat niet is.
-    Overweeg of die taak bij Gian hoort of bij Maud, die het
-    verwerkingswerk toch al doet. Uitbreiden van de bestaande trigger
-    `offerte_taken_sync`, geen nieuw bouwwerk.
+    **Het ruis-argument uit de oude tekst was onjuist.** Daar stond dat de
+    eerste taak ruis wordt bij meer dan een paar offertes per week.
+    Weerlegd door Gian op 2 augustus: bij deze taak moet Maud werk
+    verrichten dat anders niet gebeurt, en die stukken komen niet vanzelf
+    in Yoobi. Vier per week is dan gewoon vier keer werk. Het ruis-argument
+    telt bij een taak die alleen bevestigt dat er iets gebeurd is, niet bij
+    een taak die werk aanstuurt.
+
+    **Drie ontwerpbesluiten, alle drie in de kop van
+    `sql/offerte_taken_sync_yoobi.sql`:**
+    1. `ON CONFLICT DO NOTHING` in plaats van `DO UPDATE`. Opnieuw
+       versturen van dezelfde offerte levert geen nieuw werk op. Bij
+       `nabellen` is dat andersom en met opzet: opnieuw versturen is een
+       reden om opnieuw te bellen, niet om dezelfde stukken nog een keer
+       klaar te zetten
+    2. Deze twee vervallen nooit bij een statuswisseling. Ook een verloren
+       offerte hoort in het archief
+    3. Bij het verwijderen van de calculatie vervallen ze wel, via het
+       bestaande DELETE-blok. Is de calculatie weg, dan zijn de stukken er
+       ook niet meer
+
+    **Hoe het bewezen is.** Een testcalculatie doorlopen: verzonden gaf
+    twee taken voor Maud, geaccepteerd liet `nabellen` vervallen en gaf de
+    derde. Voor het `DO NOTHING`-gedrag was het scherm géén bewijs: alle
+    drie de taken stonden op dezelfde dag gepland, dus `DO UPDATE` had er
+    identiek uitgezien. Beslist op de kolom `bijgewerkt`, die door de
+    trigger `zet_bijgewerkt` bij elke UPDATE wordt gezet:
+
+    | kenmerk | aangemaakt | bijgewerkt | aangeraakt |
+    |---|---|---|---|
+    | `nabellen` | 14:41:03 | 14:44:01 | ja, heropend |
+    | `yoobi-verkoop` | 14:41:03 | 14:41:03 | nee |
+    | `yoobi-akkoord` | 14:42:23 | 14:42:23 | nee |
+
+    Op de microseconde gelijk, terwijl blok C er in die drie minuten twee
+    keer overheen ging.
+
+    **Niet met terugwerkende kracht.** Alleen nieuwe gevallen. De 31
+    bestaande accorderingen krijgen niets; dat zou 31 taken ineens op
+    Maud's maandag opleveren.
 
 19. ~~**De accord-pdf's achter een verlopende link zetten.**~~ **Gedaan op
     2 augustus 2026.** De bak `accord-pdf` staat niet meer openbaar.
@@ -2278,3 +2361,52 @@ Dat is met opzet: het is archief.
 > misgaat aan de kant die je gebruikt. Merkbaar aan de commitdatum van
 > `functies-overzicht.json`: staat die er meer dan een week op, dan draait
 > hij niet meer.
+
+### Opruimpunt 18 en de hermeting van punt 9
+
+Zie de opruimlijst. Punt 18 is gebouwd en bewezen, punt 9 is herschreven
+omdat de oude schatting er een factor acht naast zat.
+
+### Twee correcties op eerdere metingen van vandaag
+
+**Punt 11 stond al afgestreept.** Bij het opsommen van de openstaande
+punten is die ten onrechte als open geteld. Oorzaak: er staan twee
+genummerde lijsten in dit document met allebei een punt 11, de opruimlijst
+en het herbouwdraaiboek in 4.8. Een zoekopdracht op regelbegin pakt ze
+allebei.
+
+**De Action in `ernes-edge-functions` ruimt niet op.** Eerder op de dag
+was de conclusie dat hij dat wel deed, op grond van drie ontbrekende
+mappen. Dat was te snel: die drie waren op 27 juli met de hand verwijderd.
+Rechtgezet door de Action met de hand te starten; de map bleef staan.
+
+### Een testvorm die vandaag twee keer nodig was
+
+> **Een test die alleen bevestigend kan uitvallen, bewijst niets.**
+>
+> Bij punt 18 stonden na de statuswisseling alle drie de taken op dezelfde
+> dag gepland. Dat is precies wat `DO UPDATE` óók zou opleveren, dus het
+> scherm kon het verschil niet tonen. Beslist op de kolom `bijgewerkt`.
+>
+> Bij `offerte-herinnering` staat in de logs alleen `booted` en
+> `shutdown`. Nul mails en tien mails zien er identiek uit. Die functie
+> heeft geen rapportregel zoals `taken-mail-melding` er sinds vandaag een
+> heeft, en daarom is "testen of hij werkt" met de huidige code niet te
+> beantwoorden.
+>
+> Vraag bij elke controle: **welke uitkomst zou deze test laten mislukken?**
+> Is daar geen antwoord op, dan meet de test niets.
+
+### Wat `offerte-herinnering` wel doet
+
+Gemeten op 2 augustus uit de Logs: gedraaid op 29, 30 en 31 juli, steeds
+om 08:30 lokale tijd en drie minuten later klaar. De cron
+`offerte-opvolging-werkdagen` komt dus aan. 1 en 2 augustus ontbreken en
+dat klopt, die cron draait alleen op werkdagen.
+
+Die looptijd van drie minuten is lang voor een functie die niets doet, wat
+suggereert dat er wel degelijk gewerkt wordt. **Dat is een vermoeden, geen
+meting.** Wat het zou beslissen is een rapportregel in de functie zelf, in
+de vorm die `taken-mail-melding` sinds vandaag heeft. Dat is een klein
+karwei en het maakt de vraag "verstuurt hij mails" voor het eerst
+beantwoordbaar.
