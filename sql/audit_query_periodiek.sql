@@ -40,25 +40,37 @@ with tabellen as (
   where t.schemaname = 'public'
 ),
 
--- de twee tabellen die met opzet geen policy hebben.
--- Ze worden alleen door Edge Functions gevuld en die werken met de
--- servicesleutel, dus die gaan langs de rijbeveiliging heen.
+-- de tabel die met opzet geen policy heeft.
+-- sync_state wordt alleen door Edge Functions gevuld en die werken met de
+-- servicesleutel, dus die gaat langs de rijbeveiliging heen.
 -- ZET ER GEEN POLICY OP om het te repareren. Zie SYSTEEM.md 3.4.
+--
+-- v3 (2 augustus 2026): taken_melding_sleutels is hier weggehaald. Die
+-- tabel hoorde bij taken-meldingen en taken-agenda, allebei verwijderd,
+-- en is samen met taken-agenda opgeruimd. Staat hij ooit weer in de
+-- database, dan is dat echt nieuws en hoort de audit erover te piepen.
 uitzonderingen as (
-  select unnest(array['sync_state', 'taken_melding_sleutels']) as tabel
+  select unnest(array['sync_state']) as tabel
 ),
 
--- de bak die met opzet openbaar staat.
--- accord-pdf moet openbaar zijn omdat de klant die de accordeerlink
--- opent NIET ingelogd is. De drie policies op deze bak gelden alleen
--- voor authenticated en helpen die klant dus niet. Zie v3.79.0.
--- Het bestand heet {token}.pdf met een token van 40 tekens, dus raden
--- of aftellen kan niet, en zonder leesregel voor anon kan niemand de
--- bak opsommen. Wie het pad heeft, had de accordeerlink al.
--- ZET HEM NIET DICHT om het te repareren: dan breekt het accorderen.
--- Wat er wel aan schort staat in SYSTEEM.md bij opruimpunt 19.
+-- v3 (2 augustus 2026): DEZE LIJST IS LEEG EN HOORT LEEG TE BLIJVEN.
+--
+-- Hier stond 'accord-pdf' in. Die bak moest openbaar zijn omdat de klant
+-- die de accordeerlink opent niet is ingelogd, en de policies op die bak
+-- alleen voor authenticated gelden. Sinds offerte-accord v4.40.0 maakt
+-- die functie zelf een ondertekende link van zestig minuten, dus de bak
+-- kon dicht. Gemeten na afloop: de openbare URL geeft NoSuchBucket, de
+-- accordeerpagina toont de PDF gewoon.
+--
+-- Zolang die uitzondering hier stond, zou de audit OOK gezwegen hebben
+-- als iemand die bak per ongeluk weer openbaar zette. Een uitzondering
+-- die blijft staan nadat de reden verdwenen is, is een blinde vlek.
+--
+-- Komt er ooit een naam bij: schrijf er dan bij WAAROM, en zet er een
+-- datum bij waarop hij opnieuw beoordeeld wordt. Een openbare bak hoort
+-- de uitzondering te zijn en niet de gewoonte.
 bak_uitzonderingen as (
-  select unnest(array['accord-pdf']) as bak
+  select null::text as bak where false
 ),
 
 -- v2: de opslagbakken. Een bak die openbaar staat is voor iedereen
@@ -121,8 +133,11 @@ bekend as (
   where t.rls_aan and t.policies = 0
 
   union all
+  -- v3: de lijst is leeg, dus deze regel levert niets op zolang dat zo
+  -- blijft. Hij staat er nog zodat een toekomstige uitzondering meteen
+  -- zichtbaar is in blok 2 en niet stilzwijgend verdwijnt uit blok 1.
   select '2. bekend en goed', 'openbaar, met opzet', b.bak,
-         'moet openbaar voor de niet-ingelogde klant. Naam is een token van 40 tekens, opsommen kan niet. Niet dichtzetten, zie opruimpunt 19'
+         'staat als uitzondering in deze query. Kijk na of de reden nog geldt'
   from bakken b
   join bak_uitzonderingen u on u.bak = b.bak
   where b.openbaar
