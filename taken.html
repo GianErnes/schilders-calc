@@ -460,6 +460,11 @@
       </div>
     </div>
 
+    <div class="fld" id="s_meldwrap" style="display:none">
+      <div class="k">Iets te melden?</div>
+      <textarea class="veldinput" id="s_melding" rows="2" placeholder="Leeg laten mag. Wat je hier typt gaat naar Gian." style="resize:vertical;min-height:44px;font-family:inherit"></textarea>
+    </div>
+
     <button class="klaarknop" id="s_klaar" style="display:none">✓ Afvinken</button>
 
     <div class="fld" id="s_soortwrap" style="display:none">
@@ -591,7 +596,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.15.0';
+const APP_VERSION = 'v0.16.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -1163,6 +1168,16 @@ function openTask(t){
     klaarKnop.classList.add('terug');
   } else zet('s_klaar', false);
 
+  /* v0.16.0: melding bij afvinken.
+     Bij een open eigen taak is het een leeg vak om iets kwijt te kunnen.
+     Bij een al afgevinkte taak staat er wat er destijds gemeld is, en
+     dan alleen als er iets staat: een leeg vak bij een afgeronde taak
+     is ruis. Bij een Yoobi-taak nooit, die wordt hier niet afgevinkt. */
+  const meldEl = document.getElementById('s_melding');
+  meldEl.value = t.afvink_melding || '';
+  meldEl.readOnly = (modus !== 'eigen');
+  zet('s_meldwrap', modus === 'eigen' || (modus === 'klaar' && !!meldEl.value));
+
   /* soort en ritme */
   zetSjabloonKnoppen(modus);
   zet('s_soortwrap', modus === 'eigen');
@@ -1255,6 +1270,8 @@ function openNieuw(){
     '<span style="font-size:13px;font-weight:600;color:var(--ink-faint)">Typ wat er moet gebeuren, kies eventueel datum en wie</span>';
 
   zet('s_klaar', false);
+  zet('s_meldwrap', false);
+  document.getElementById('s_melding').value = '';
   zetSjabloonKnoppen('nieuw');
   zet('s_soortwrap', true);
   setSoort('eenmalig');
@@ -1504,6 +1521,7 @@ function velWaarden(){
   const tel = document.getElementById('s_telinput').value.trim();
   const datum = document.getElementById('s_datum_in').value;
   const tijd = document.getElementById('s_tijd_in').value;
+  const melding = document.getElementById('s_melding').value.trim();
   const piepAan = !document.getElementById('s_toggle').classList.contains('uit');
   const vandaagAan = !document.getElementById('s_vandaag').classList.contains('uit');
   const n = parseInt(document.getElementById('s_ritme_n').value, 10) || 1;
@@ -1511,7 +1529,7 @@ function velWaarden(){
   const ts = naarTimestamp(datum, tijd);
   let piep_op = null;
   if(piepAan && datum) piep_op = naarUTC(naarTimestamp(datum, tijd && tijd !== '00:00' ? tijd : '09:00'));
-  return { titel, notitie, tel, ts, piepAan, piep_op, vandaagAan, n, eenheid };
+  return { titel, notitie, tel, melding, ts, piepAan, piep_op, vandaagAan, n, eenheid };
 }
 
 async function slaOp(){
@@ -1620,6 +1638,7 @@ async function vinkAf(){
         onderwerp: w.titel || t.onderwerp, notitie: vers.notitie, tel: vers.tel,
         gepland_op: w.ts || t.gepland_op, toegewezen_aan: t.toegewezen_aan,
         piep:false, voltooid_op: nuTs, voltooid_door: IK ? IK.persoon : null, aangemaakt_door: UID,
+        afvink_melding: w.melding || null,
       };
       const { data: nieuw, error: e1 } = await sb.from('taken').insert(kopie).select().single();
       if(e1) throw e1;
@@ -1627,6 +1646,7 @@ async function vinkAf(){
       const volgende = volgendeDatum(anker, t.herhaling_n, t.herhaling_eenheid);
       const volgendeTs = timestampVan(volgende);
       const herhalerUpdate = Object.assign({}, vers, {
+        afvink_melding: null,
         gepland_op: volgendeTs,
         piep_op: w.piepAan ? naarUTC(volgendeTs) : null,
         mail_op: null,
@@ -1645,6 +1665,7 @@ async function vinkAf(){
     } else {
       const upd = Object.assign({}, vers, {
         gepland_op: w.ts, piep_op: w.piep_op, voltooid_op: nuTs, voltooid_door: IK ? IK.persoon : null,
+        afvink_melding: w.melding || null,
       });
       const { error } = await sb.from('taken').update(upd).eq('crmtaskid', t.crmtaskid);
       if(error) throw error;
