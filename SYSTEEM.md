@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 30 juli 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 2 augustus 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -35,8 +35,8 @@ rechtstreeks met Supabase.
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
 | Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.39.0 |
-| Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.15.0 |
-| Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.0.3 |
+| Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.16.0 |
+| Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -62,9 +62,11 @@ computegrootte Nano.
 
 Adres van een project is altijd `https://<verwijzing>.supabase.co`.
 
-**schilders-calc** telt 37 tabellen, 6 opslagbakken, 11 triggers, 18 Edge
+**schilders-calc** telt 36 tabellen, 6 opslagbakken, 12 triggers, 19 Edge
 Functions en 8 cronjobs. De grootste tabellen zijn `calc_regel_stappen`
-(1959 rijen), `meetstaat` (747) en `bewerkingen` (548).
+(1959 rijen), `meetstaat` (747) en `bewerkingen` (548). De tabellen zijn
+geteld op 2 augustus 2026 met `information_schema.tables` op schema
+`public`, type `BASE TABLE`.
 
 **schilder-voorraad** telt 9 tabellen en verder niets. Geen opslagbakken,
 geen triggers, geen cronjobs, geen enkele achtergrondtaak. De tabellen
@@ -234,7 +236,7 @@ geheimen:
 |---|---|---|
 | `maandbericht_key` | **[TE CONTROLEREN]**, gaat mee als `Authorization: Bearer` | `maandbericht-maandelijks`, `yuki-vuller-dagelijks`, `yuki-vuller-middag`, `yuki-vuller-avond` |
 | | **Let op:** die laatste drie roepen `smooth-function` aan, niet `maandbericht`. Eén sleutel doet hier dus twee verschillende functies. Vervang je `maandbericht_key`, dan stopt óók je financiele dashboard met bijwerken, en cron blijft gewoon `succeeded` melden. Bevestigd uit `cron.job` op 30 juli 2026. | |
-| `aftap_secret` | de Edge Function secret `AFTAP_SECRET` | `backup-nachtelijk`, `taken-mail-melding`, `werkvoorraad-sync-wekelijks` |
+| `aftap_secret` | de Edge Function secret `AFTAP_SECRET` | `backup-nachtelijk`, `taken-mail-melding`, `werkvoorraad-sync-wekelijks`, en de trigger `trg_taak_melding_signaal` |
 | `opvolg_key` | de Edge Function secret `OPVOLG_KEY` | `offerte-opvolging-werkdagen` |
 
 **Elk van deze drie staat op twee plekken en die moeten gelijk blijven.**
@@ -402,6 +404,28 @@ ophaalknop die repo wekelijks vanzelf bij, zie 2.1.
 
 `offerte-herinnering` wordt zowel door cron als vanuit de app aangeroepen.
 
+**Aangeroepen door een trigger.** Eén functie hangt niet aan de klok en
+niet aan een app, maar aan de database zelf.
+
+| Functie | Vanuit | Wat het doet |
+|---|---|---|
+| `taak-melding-mail` | trigger `trg_taak_melding_signaal` op `taken` | mailt Gian de melding die iemand achterliet bij het afvinken |
+
+Die functie mailt altijd naar Gian, ongeacht wie de taak had. Het adres
+staat niet in de code maar wordt opgezocht in `taken_rollen` bij persoon
+`Gian`. Verandert dat adres, dan is dat de enige plek om aan te passen.
+Staat er geen adres, dan stopt de functie met een fout in het logboek.
+Dat is hier met opzet strenger dan bij `taken-mail-melding`, want daar is
+geen adres soms de bedoeling (Maud) en hier nooit.
+
+**Bewust niet samengevoegd met `taken-mail-melding`.** Die functie is een
+poller die zoekt op verstreken piep-tijd en mailt naar de toegewezen
+persoon. Deze is het omgekeerde: aangeroepen op het moment zelf, altijd
+naar Gian, andere tekst. Samenvoegen zou één functie opleveren die twee
+dingen doet. Bijkomend: `taken-mail-melding` staat op de nominatie om van
+de klok naar een trigger te gaan (opruimlijst punt 6), en bouwen in iets
+dat gaat verschuiven is dubbel werk.
+
 **Aangeroepen door niets.** Op 26 juli 2026 nagekeken in de
 aanroeplogboeken. Deze vier staan op de nominatie om te verdwijnen en
 staan bewaard in de archiefrepo.
@@ -424,7 +448,7 @@ kunnen bij de Yoobi-inloggegevens van het project, want alle functies in
 een project delen dezelfde geheimen. Dat is de reden om ze op te ruimen,
 niet de netheid.
 
-### 3.3 De elf triggers
+### 3.3 De twaalf triggers
 
 Allemaal op tabellen in `schilders-calc`, allemaal actief.
 
@@ -436,6 +460,7 @@ Allemaal op tabellen in `schilders-calc`, allemaal actief.
 | `bescherm_eigen` | `taken` | voorkomt dat iemand andermans taak aanpast |
 | `bevries_yoobi` | `taken` | beschermt velden die uit Yoobi komen |
 | `zet_bijgewerkt` | `taken` | zet de bijwerkdatum |
+| `trg_taak_melding_signaal` | `taken` | mailt Gian als iemand een taak afvinkt met een melding erbij |
 | `trg_bewerkingen_upd` | `bewerkingen` | zet de bijwerkdatum |
 | `trg_materialen_upd` | `materialen` | zet de bijwerkdatum |
 | `trg_ondergronden_upd` | `ondergronden` | zet de bijwerkdatum |
@@ -445,6 +470,21 @@ Allemaal op tabellen in `schilders-calc`, allemaal actief.
 Triggers zijn het makkelijkst te vergeten onderdeel van dit systeem,
 omdat ze nergens zichtbaar zijn en geen logboek bijhouden. Ze doen werk
 waarvan iedereen denkt dat de app het doet.
+
+> **`trg_taak_melding_signaal` is de eerste trigger die de deur uit
+> belt.** Alle andere blijven binnen de database. Deze roept via
+> `net.http_post` de Edge Function `taak-melding-mail` aan, en haalt
+> daarvoor de sleutel `aftap_secret` uit de kluis. Daarom staat hij op
+> `security definer` met een vast `search_path`: een gewone ingelogde
+> gebruiker mag niet bij die kluis.
+>
+> Twee dingen om te weten als je hem ooit moet nakijken. Hij staat op
+> **insert én update**, want een herhalende taak wordt afgevinkt door een
+> historiekopie aan te maken die meteen voltooid is; zonder insert zou
+> juist daar de mail uitblijven. En hij is **after**, zodat een storing
+> in het mailen het afvinken zelf nooit tegenhoudt. Ontbreekt de sleutel,
+> dan komt er een waarschuwing in het logboek en gaat het afvinken
+> gewoon door: de tekst staat dan bij de taak, alleen ongelezen.
 
 ### 3.4 Hoe je ziet dat het nog draait
 
@@ -487,12 +527,21 @@ totaalbeeld en het is puur lezen.
 > anon-rechten. Dat zijn juist de twee waarvoor de audit bedoeld was.
 > Moet nog samengevoegd worden tot één resultaat, zie de opruimlijst.
 
-**Twee bekende uitzonderingen.** De tabellen `sync_state` en
-`taken_melding_sleutels` hebben rijbeveiliging aan en **nul policies**.
-Volgens `sql/README.md` is dat een rode vlag. Hier is het bewust: die
-tabellen worden alleen door Edge Functions gevuld, en die werken met de
-servicesleutel en gaan langs de rijbeveiliging heen. **Zet er geen policy
-op om het te repareren.** Dan open je ze voor iedereen die is ingelogd.
+**Een bekende uitzondering.** De tabel `sync_state` heeft rijbeveiliging
+aan en **nul policies**. Volgens `sql/README.md` is dat een rode vlag.
+Hier is het bewust: die tabel wordt alleen door Edge Functions gevuld, en
+die werken met de servicesleutel en gaan langs de rijbeveiliging heen.
+**Zet er geen policy op om het te repareren.** Dan open je hem voor
+iedereen die is ingelogd.
+
+> **Bijgewerkt op 2 augustus 2026.** Hier stond `taken_melding_sleutels`
+> als tweede uitzondering. Die tabel is op 27 juli verwijderd, wat
+> verderop in de opruimlijst ook staat, maar deze passage was niet
+> meegegaan: twee plekken in hetzelfde bestand die elkaar tegenspraken.
+> Gevonden door de lijst met tabelnamen uit de database naast dit
+> document te leggen. Dat is een controle die zichzelf terugverdient, en
+> die verder geen enkele andere afwijking opleverde: elke tabel die dit
+> document bij naam noemt, bestaat.
 
 Waar je op let in blok 2, de laatste runs:
 
@@ -1329,6 +1378,18 @@ van een backup is één keer echt geoefend en werkte.
    te bewijzen dat een functie werkte.
 
    Eerst de code van `taken-mail-melding` lezen voor er iets gebouwd wordt.
+
+   **Stand 2 augustus 2026: de constructie is beproefd.** Voor de
+   afvinkmelding is `trg_taak_melding_signaal` gebouwd, een trigger op
+   `taken` die via `net.http_post` een Edge Function aanroept met de
+   sleutel uit de kluis. Dat is exact het patroon dat dit punt nodig
+   heeft, en het draait nu op iets kleins: een paar meldingen per week in
+   plaats van de hele dagelijkse werking. Gaat er iets mis, dan merk je
+   het zonder dat de mailbox volloopt. Wie dit punt oppakt kan die
+   triggerfunctie als voorbeeld nemen in plaats van vanaf nul te
+   beginnen. Het vangnet blijft wel nodig: bij de afvinkmelding is er met
+   opzet geen, omdat de tekst dan bij de taak blijft staan en er dus
+   niets verloren gaat, maar een gemiste taakmelding is wél weg.
 7. ~~**`sql/audit_query_periodiek.sql` samenvoegen tot één resultaat.**~~
    **Gedaan op 27 juli 2026.** Alles komt nu in één resultaat, in drie
    blokken met de rode vlaggen bovenaan. `sync_state` en
@@ -1607,6 +1668,28 @@ van een backup is één keer echt geoefend en werkte.
     deze zes bereikbaar zouden worden bij een fout in de grants. Dat klopt
     niet: de voorwaarde houdt ze hoe dan ook tegen. De redenering was
     gebouwd op de rol in de policy zonder de voorwaarde erbij te lezen.
+
+21. **`taak-melding-mail` en `taken-mail-melding` uit elkaar halen.**
+    Twee Edge Functions met dezelfde drie woorden in een andere volgorde,
+    die in de lijst ook nog pal onder elkaar staan. Ze doen iets
+    verschillends: de een gaat af op een verstreken piep-tijd en mailt de
+    toegewezen persoon, de ander gaat af bij het afvinken en mailt Gian.
+
+    Het gevaar zit hem er juist in dat ze verwant klinken. Bij twee
+    functies die niets met elkaar te maken hebben valt een verwisseling
+    meteen op. Hier ziet iemand die de verkeerde openslaat een functie die
+    mail verstuurt over taken, en denkt dat hij goed zit.
+
+    Betere namen verwijzen naar de aanleiding en niet naar het onderwerp,
+    bijvoorbeeld `taak-piep-mail` en `taak-afvinkmelding`. Hernoemen kan
+    niet: je maakt een nieuwe functie en verwijdert de oude. Bij de eerste
+    moet de cronjob mee, bij de tweede de triggerfunctie
+    `taak_melding_signaal`, en dit bestand op vier plekken.
+
+    **Het beste moment is samen met punt 6**, want dan gaat
+    `taken-mail-melding` toch op de schop. Vastgelegd 2 augustus 2026,
+    dezelfde dag dat de tweede functie gemaakt werd, omdat de naam toen al
+    niet deugde.
 
     Wat overblijft is dat `TO public` misleidend leest en dat iemand het
     patroon zou kunnen kopiëren zonder de voorwaarde. Besluit van Gian:
