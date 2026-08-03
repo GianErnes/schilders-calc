@@ -130,7 +130,7 @@ geen tweede GitHub-account in gebruik.
 |---|---|---|
 | `schilders-calc` | **openbaar** | de vier appbestanden, `sql/`, dit document |
 | `schilder-voorraad` | **openbaar** | de voorraad-app |
-| `ernes-edge-functions` | **besloten** | de broncode van alle achttien Edge Functions, plus de twee knoppen |
+| `ernes-edge-functions` | **besloten** | de broncode van alle vijftien Edge Functions, plus de twee knoppen |
 
 `ernes-edge-functions` is bewust besloten. Daar staat de herbouwset, en
 die kan onbedoeld geheimen bevatten. Alles wat op een uitdraai lijkt gaat
@@ -153,8 +153,8 @@ het tabblad Actions, dus zonder Terminal en zonder installatie op de iMac.
 
 | Knop | Wanneer | Wat hij doet |
 |---|---|---|
-| **Functies ophalen uit Supabase** | elke zondag 03:00 UTC, en met de hand | haalt de broncode van alle achttien functies op en legt die vast in de repo, plus `functies-overzicht.json` met de instelling per functie |
-| **Functies uitrollen naar Supabase** | alleen met de hand, en alleen na `JA` intikken | rolt alle achttien functies in één keer uit naar een op te geven project |
+| **Functies ophalen uit Supabase** | elke zondag 03:00 UTC, en met de hand | haalt de broncode van alle functies op en legt die vast in de repo, plus `functies-overzicht.json` met de instelling per functie |
+| **Functies uitrollen naar Supabase** | alleen met de hand, en alleen na `JA` kiezen | rolt de functies uit deze repo uit naar een op te geven project, alles tegelijk of een enkele als proef |
 
 De ophaalknop is de belangrijkste van de twee, ook al is de andere de
 rampknop. Hij zorgt dat de repo nooit meer achterloopt op wat er
@@ -179,6 +179,69 @@ Die weigeren dan alles met een 401 zonder duidelijke reden.
 >
 > Er is een kanarie: de ophaalknop draait elke zondag. Klopt de sleutel
 > niet meer, dan loopt die job rood en stuurt GitHub daarover een mail.
+
+> **De rampknop heeft nog nooit gedraaid.** GEMETEN op 3 augustus 2026:
+> onder Actions staat bij **Functies uitrollen naar Supabase** nul runs.
+> Hij is op 27 juli geschreven en staat sindsdien in 4.8 als stap 5, op
+> de plek waar anders uren klikwerk stond. Dat is de gevaarlijkste soort
+> geruststelling: in het draaiboek is gerekend met een knop waarvan niet
+> bewezen is dat hij werkt.
+>
+> Wat wel bewezen is, is de helft die hij deelt met de ophaalknop: de
+> sleutel, `actions/checkout` en `supabase/setup-cli`. Die draaien elke
+> zondag. Onbewezen is het eigen deel: of `functions deploy` zonder
+> functienaam werkelijk alles pakt, en vooral of de wachtwoordcontrole
+> goed terugkomt op de functies die op `false` staan. Gaat dat mis, dan
+> stáán de functies er wel maar weigeren ze alles met een 401.
+>
+> **Zo test je hem zonder iets te breken.** Draai eerst de ophaalknop met
+> de hand. Dan is de repo gelijk aan Supabase en is uitrollen inhoudloos:
+> dezelfde code, alleen een nieuw versienummer. Vul daarna bij de
+> uitrolknop bij **alleen deze functie** een naam in, bijvoorbeeld
+> `reisafstand`, want die is klein en heeft geen cronjob. Kijk in de
+> laatste stap of de wachtwoordcontrole klopt met wat je verwachtte.
+
+**Wat de knoppen controleren sinds 3 augustus 2026.** Allebei de
+werkstromen zijn die dag herschreven nadat gemeten was dat ze fouten
+stilzwijgend konden doorlaten.
+
+De **ophaalknop** schrijft het overzicht eerst naar een tijdelijk bestand
+en zet het pas over als het een bruikbare lijst is. Daarvoor ging de
+uitvoer van `curl` rechtstreeks het bestand in, en omdat `>` een bestand
+leegmaakt vóór het commando draait, maakte één hikje van de API het goede
+overzicht leeg. De stap stond bovendien op `continue-on-error`, dus dat
+gebeurde groen. Nu blijft bij een fout het oude bestand staan en loopt de
+job aan het eind alsnog rood.
+
+Daarnaast legt de ophaalknop na afloop de mappen naast het overzicht. Loopt
+dat uiteen, dan loopt de job rood. Dat is met opzet luidruchtig: een
+archief dat stilletjes scheef staat merk je pas bij een ramp. Loopt de
+zondagsjob rood, lees dan eerst welke stap het is. Gaat het om **Archief
+naast het overzicht leggen**, dan is er niets mis met de sleutel.
+
+De **uitrolknop** stopt nu waar hij eerst doorrolde:
+
+| Wat er mis is | Wat er nu gebeurt |
+|---|---|
+| `functies-overzicht.json` ontbreekt | stopt, want anders komt de wachtwoordcontrole overal op de standaardwaarde |
+| het overzicht is geen leesbare JSON | stopt |
+| het overzicht is wel JSON maar geen functielijst | stopt |
+| het overzicht bevat nul functies | stopt |
+| er staat een map die niet in het overzicht staat | stopt, tenzij **toch doorgaan** op `JA` |
+| er staat een functie in het overzicht zonder map | stopt, tenzij **toch doorgaan** op `JA` |
+| bij **alleen deze functie** staat een naam zonder map | stopt |
+
+Die eerste vier zijn geen keuze. `toch doorgaan` en de proefstand komen er
+niet omheen, want een leeg overzicht is nooit een reden om door te rollen.
+
+Na afloop meldt de uitrolknop welke functies er in het doelproject draaien
+zonder broncode in de repo. Draai je hem tegen het gewone project, dan lees
+je daar dus meteen af of het archief compleet is.
+
+Wat bewust **niet** dichtgezet is: het projectveld blijft vrije tekst. Een
+keuzelijst met de twee bekende projecten zou precies het scenario
+blokkeren waarvoor de knop bestaat, want bij een echte herbouw is het
+project nieuw. Besluit van Gian, 3 augustus 2026.
 
 ### 2.2 Supabase
 
@@ -361,7 +424,19 @@ kost geen geld van betekenis, maar het laat de logtabellen hard vollopen.
 Het waren er achttien tot 27 juli 2026. Toen zijn `taken-meldingen`,
 `yoobi-kijkglas` en `yoobi-project-probe` verwijderd, alle drie na
 vaststelling dat ze zesentwintig dagen lang nul keer waren aangeroepen.
-`taken-agenda` stond ook op die lijst maar leeft nog, zie de opruimlijst.
+Op 2 augustus is `taken-agenda` gevolgd, waarmee het er veertien werden.
+Op 3 augustus kwam `taak-afvinkmelding` erbij, zie opruimpunt 21. Daarmee
+staat de teller weer op vijftien.
+
+> **Het getal in dit document klopte niet.** GEMETEN op 3 augustus 2026:
+> het woord "achttien" stond er twaalf keer, waarvan zes keer over de
+> stand van vandaag. Die zes zijn gecorrigeerd, waaronder de knoppentabel
+> van 2.1 en het herbouwdraaiboek van 4.8.
+>
+> Dat is een verraderlijke fout. Je rolt bij een herbouw uit, telt na,
+> komt op vijftien, en gaat op je knieën zoeken naar drie functies die
+> niet bestaan. Waar "achttien" nu nog staat gaat het over de situatie
+> van juli 2026 en is dat met opzet.
 
 De broncode staat sinds 26 juli 2026 in de besloten repo
 `GianErnes/ernes-edge-functions`. Dat is nodig, want een backup van
@@ -912,7 +987,7 @@ Supabase houdt op te bestaan.
 | Broncode Edge Functions | ja, `ernes-edge-functions` | — |
 | Structuur van de database | ja, `schema/` en de maandagbijlage | half uur |
 | Inhoud van de database | ja, de JSON uit 4.7 | minuten |
-| **De achttien functies uitrollen** | n.v.t. | **uren klikwerk** |
+| **De vijftien functies uitrollen** | n.v.t. | **uren klikwerk** |
 | De acht cronjobs | ja, hoofdstuk 3.1 | half uur |
 | De geheimen | ja, de kluis | half uur |
 | De zes inlogaccounts | nee | half uur, zie waarschuwing |
@@ -1023,9 +1098,10 @@ gaat. Zie 3.4.
 
 **2. Een manier om de functies snel uit te rollen.** ~~Achttien keer
 klikken in de browser-editor kost uren.~~ **Opgelost op 27 juli 2026.**
-In `ernes-edge-functions` zit een knop die alle achttien functies in één
-keer uitrolt naar een op te geven project. Zie 2.1. Wat uren klikwerk was
-is nu één handeling van een halve minuut.
+In `ernes-edge-functions` zit een knop die alle functies in één keer
+uitrolt naar een op te geven project. Zie 2.1. Wat uren klikwerk was is nu
+één handeling van een halve minuut. Let op de waarschuwing in 2.1: die
+knop heeft nog nooit gedraaid.
 
 De opdrachtregel van Supabase is daarmee **niet** nodig op de iMac. Die
 draait op de servers van GitHub. Er hoeft niets geïnstalleerd te worden
@@ -1065,7 +1141,9 @@ vorige nodig.
    moeten gelijk zijn aan de gelijknamige Edge Function secrets. Zie 2.4
 5. Edge Functions uitrollen: ga naar `ernes-edge-functions`, tabblad
    Actions, **Functies uitrollen naar Supabase**, Run workflow. Vul bij
-   het project het **nieuwe** ref in en tik `JA`. Zie 2.1
+   het project het **nieuwe** ref in, kies bij bevestiging `JA`, laat
+   "alleen deze functie" leeg en laat "toch doorgaan" op `nee`. Klaagt hij
+   over het archief, lees dan wat er staat voordat je `JA` kiest. Zie 2.1
 6. Cronjobs opnieuw aanmaken volgens hoofdstuk 3.1
 7. Opslagbakken aanmaken, met de goede openbaar-instelling per bak
 8. Data terugzetten uit de JSON
@@ -1816,13 +1894,24 @@ van een backup is één keer echt geoefend en werkte.
     erbij en zonder de nieuwste. Niemand die dan aan het herstellen is gaat
     eerst de lijst nalopen.
 
-    **Wat het waarschijnlijk oplost.** De ophaalknop draait wekelijks; dat
-    is een venster van zeven dagen. Een ophaalactie na elke wijziging aan
-    een Edge Function sluit dat venster, maar dat is handwerk dat vergeten
-    wordt. Beter is het om te meten in plaats van te onthouden: iets dat
-    `functies-overzicht.json` naast de werkelijke lijst legt en zich meldt
-    als ze uiteenlopen. Nog niet ontworpen. **Eerst meten hoe groot het
-    verschil vandaag is, dan pas bouwen.**
+    **Gemeten op 3 augustus 2026.** Het overzicht telde veertien functies,
+    de mappenlijst vijftien. Het verschil is precies `taken-agenda`. De
+    download werkt dus goed en het archief loopt niet leeg; het gat is
+    alleen het venster van zeven dagen plus mappen die blijven staan.
+
+    **Half gebouwd op 3 augustus 2026.** Allebei de knoppen leggen nu de
+    mappen naast het overzicht. De ophaalknop loopt rood als ze uiteenlopen
+    en de uitrolknop weigert dan uit te rollen. Zie 2.1. Daarmee is
+    "meten in plaats van onthouden" er, en wordt een scheef archief
+    zichtbaar op de zondag erna in plaats van bij een ramp.
+
+    **Wat er nog open staat.** Het venster van zeven dagen zelf. Een
+    functie die op maandag gemaakt wordt en op dinsdag stukgaat, staat die
+    hele week nergens. De ophaalknop vaker laten draaien is een oplossing
+    zonder meting: eerst weten hoe vaak Edge Functions werkelijk wijzigen.
+    Uit de wijzigingsdatums van 2 augustus blijkt dat de meeste functies
+    weken tot maanden onaangeraakt blijven en dat er af en toe een dag is
+    waarop er twee wijzigen.
 ---
 
 ## Wat er nog niet in staat
@@ -2086,7 +2175,7 @@ niets is.
 ### Nog open
 
 - **De terugzettest in een echt leeg Supabase-project.** Wegwerpproject in
-  `eu-west-1`, de achttien functies uitrollen, het herbouwbestand draaien,
+  `eu-west-1`, de vijftien functies uitrollen, het herbouwbestand draaien,
   de drie kluissleutels opnieuw aanmaken, kijken of de app start, project
   weg. Zolang die niet gedraaid is, is 4.8 stap 2 bewezen op een
   nabootsing met elf tabellen en niet op de zevenendertig van het echte
