@@ -1369,8 +1369,11 @@ van een backup is één keer echt geoefend en werkte.
    toont wanneer die voor het laatst goed gelopen is. Geen geschreven
    pagina kan vertellen of de backup vannacht gedraaid heeft, een scherm
    wel.
-6. **`taken-mail-melding` van de klok halen.** Die draait nu elke twee
-   minuten, ruim 700 keer per dag.
+6. ~~**`taken-mail-melding` van de klok halen.**~~ **Gesloten op 3
+   augustus 2026 na meting. De afronding staat onderaan dit punt; de
+   redenering hieronder is bewaard omdat hij twee keer van kant
+   gewisseld is.** Die draait nu elke twee minuten, ruim 700 keer per
+   dag.
 
    **Op 27 juli 2026 wisselde dit punt van kant.** Het stond hier als
    *minder vaak laten draaien*, maar dat maakt het erger. Het echte
@@ -1409,6 +1412,46 @@ van een backup is één keer echt geoefend en werkte.
    beginnen. Het vangnet blijft wel nodig: bij de afvinkmelding is er met
    opzet geen, omdat de tekst dan bij de taak blijft staan en er dus
    niets verloren gaat, maar een gemiste taakmelding is wél weg.
+
+   **Gesloten op 3 augustus 2026. Het probleem bestaat niet.** Gemeten
+   over alle 120 piep-taken in de tabel:
+
+   | piep-tijd staat | aantal |
+   |---|---|
+   | direct bij opslaan | 6 |
+   | binnen het uur | 1 |
+   | binnen een dag | 55 |
+   | binnen een week | 17 |
+   | verder weg | 41 |
+
+   Vijf procent piept direct. Alleen die zes zou een trigger sneller
+   maken. De cron van `*/30` zou de overige 114 tot achtentwintig
+   minuten trager maken. Dat is de omgekeerde ruil van wat hierboven
+   staat.
+
+   **De gemeten vertraging nu is 1 tot 6 seconden** na het gekozen
+   tijdstip, over zestien echte meldingen. De twee uitschieters van 62
+   seconden hadden een `piep_op` op een oneven minuut terwijl de cron op
+   even minuten draait. Dat is ontwerp en geen storing.
+
+   Gians maatstaf, in zijn eigen woorden op 3 augustus: er moet een
+   melding komen op of nabij het tijdstip dat hij gekozen heeft, de rest
+   is ballast. Dat gebeurt al.
+
+   > **Het voorbehoud hoort erbij.** Die vijf procent kan onderdrukte
+   > vraag zijn: misschien zet Gian zelden een taak die meteen moet
+   > piepen juist omdát het nu traag voelt, en verzet hij hem uit
+   > gewoonte naar een rond tijdstip. Dat is uit deze data niet uit te
+   > sluiten. Komt het gevoel terug dat een melding te laat is, meet dan
+   > opnieuw en kijk of die zes gegroeid zijn.
+
+   **Wat er in plaats hiervan kán, als het logboek ooit stoort.** De
+   echte klacht was dat de Invocations-lijst onbruikbaar is als
+   diagnosemiddel. Laat de rapportregel alleen wegschrijven als er iets
+   gebeurd is. Dat raakt de klok niet. Valkuil: stuur daarbij op
+   `verstuurd`, `mislukt` of `onbekende_persoon` en **niet** op
+   `gevonden`, want die teller staat permanent boven nul (zie 3
+   augustus, de taken van Maud).
 7. ~~**`sql/audit_query_periodiek.sql` samenvoegen tot één resultaat.**~~
    **Gedaan op 27 juli 2026.** Alles komt nu in één resultaat, in drie
    blokken met de rode vlaggen bovenaan. `sync_state` en
@@ -1709,6 +1752,18 @@ van een backup is één keer echt geoefend en werkte.
     `taken-mail-melding` toch op de schop. Vastgelegd 2 augustus 2026,
     dezelfde dag dat de tweede functie gemaakt werd, omdat de naam toen al
     niet deugde.
+
+    **Bijgesteld op 3 augustus 2026: dat moment komt niet, want punt 6 is
+    gesloten.** Punt 21 staat dus alleen. Besluit van Gian: hernoem er
+    één en niet allebei. De verwarring komt niet van de namen op zichzelf
+    maar van de gelijkenis, dus één naam wijzigen is genoeg.
+
+    Het wordt `taak-melding-mail` naar `taak-afvinkmelding`.
+    `taken-mail-melding` houdt zijn naam, want die staat op de meeste
+    plekken genoemd. Daarmee blijft de cronjob ongemoeid, hoeft alleen de
+    triggerfunctie `taak_melding_signaal` mee, en beperkt het risico zich
+    tot de afvinkmelding van een paar keer per week in plaats van tot de
+    dagelijkse werking.
 
     Wat overblijft is dat `TO public` misleidend leest en dat iemand het
     patroon zou kunnen kopiëren zonder de voorwaarde. Besluit van Gian:
@@ -2510,6 +2565,12 @@ Die looptijd van drie minuten is lang voor een functie die niets doet, wat
 suggereert dat er wel degelijk gewerkt wordt. **Dat vermoeden is later op
 de dag weerlegd, zie hieronder.**
 
+> **En de aflezing zelf deugde ook niet. Gemeten op 3 augustus 2026:** de
+> afstand tussen `booted` en `shutdown` is niet de looptijd maar de
+> leegloop-afsluiting, en die is min of meer vast op ruim drie minuten. Het
+> werk duurde 941 ms. Uit die drie minuten viel dus niets af te leiden, niet
+> in de ene en niet in de andere richting. Zie 3 augustus 2026.
+
 ### De opvolgautomaat had nog nooit iets te doen gehad
 
 **De uitkomst eerst.** Er was niets stuk. De automaat is gebouwd op 25 juli
@@ -2581,9 +2642,16 @@ weghalen eenvoudiger en beter te begrijpen.
 
 De regels die een bestaande `nabellen`-taak laten vervallen bij een
 statuswisseling blijven staan; er lagen er nog vijf van vóór deze
-wijziging. `sql/nabeltaken_opruimen.sql` verwijdert een kale nabeltaak
+wijziging. Er komt een opruimbestand dat een kale nabeltaak aanpakt
 alléén als er voor dezelfde calculatie een `opvolg-bel`-taak bestaat: beter
 een taak zonder belscript dan helemaal geen nabellen.
+
+> **Op 3 augustus 2026 is dat `sql/nabeltaken_dubbel_opruimen.sql`
+> geworden, en het zet de rij op `vervallen` in plaats van hem te
+> verwijderen.** Reden: `offerte_taken_sync` gebruikt nergens een DELETE,
+> alles gaat via `status = 'vervallen'`. Weggooien zou hier de enige
+> uitzondering zijn. Het eerder genoemde `sql/nabeltaken_opruimen.sql`
+> bestaat niet en moet niet gezocht worden.
 
 ### De testofferte van 2 augustus
 
@@ -2603,3 +2671,152 @@ vast te stellen.
 De vier overige kale nabeltaken horen bij offertes van vóór de vakantie die
 inmiddels verlopen zijn. Die moeten met de hand beoordeeld worden; er komt
 nooit een tegenhanger bij, want die offertes hebben geen `gemaild_op`.
+
+## Wat er op 3 augustus 2026 gedaan is
+
+Een dag van meten. Er is één ding gebouwd en één ding gesloten, en dat
+laatste was de belangrijkste uitkomst.
+
+### De opvolgautomaat werkt, voor het eerst bewezen
+
+De testofferte van 2 augustus is om 06:30 UTC opgepakt. Alle vier de
+verwachtingen van gisteren zijn uitgekomen.
+
+| wat | uitkomst |
+|---|---|
+| Logs | `bekeken: 1, gedaan: 1, beltaken: 1, beltaak_bestond_al: 0, mislukt: 0, duur_ms: 941` |
+| mail op `info@` | 08:30, onderwerp "Offerte-opvolging 2026-08-03" |
+| `gemaild_op` | 2026-08-02 15:16:26 |
+| `beltaak_op` | 2026-08-03 06:30:03.925 |
+| de taak | `opvolg-bel` bij Maud, met belscript, telefoon 045321471, geldig tot 16 augustus |
+
+`herinnering_op`, `verlopen_mail_op` en `afsluittaak_op` staan leeg en dat
+klopt: die stappen komen op 9 en 26 augustus en 5 september. De keten loopt
+dus van de knop in de app tot de stempel terug in de database.
+
+`offerte-herinnering` v4.40.0 stond al gedeployed. De rapportregel is
+precies waarvoor hij gebouwd is: zonder die regel was deze ochtend niet van
+een lege ochtend te onderscheiden geweest.
+
+### Vals signaal: `booted` tot `shutdown` is niet de looptijd
+
+| moment | tijd |
+|---|---|
+| booted | 06:30:03.255 |
+| rapportregel | 06:30:04.318 |
+| shutdown | 06:33:23.265 |
+
+Het werk duurde 941 ms. Daarna stond de functie 199 seconden niets te doen
+tot Supabase hem afsloot. **Die afstand is min of meer vast.** Op 29 tot 31
+juli deed de functie helemaal niets en zag dat er in de Logs identiek uit.
+
+Dit hoort in het rijtje naast de groene cron-indicator en de `net.http_post`
+die altijd na vijf seconden afbreekt: **een aflezing die er betekenisvol
+uitziet en het niet is.** De passage bij 2 augustus is hierop gecorrigeerd.
+
+### `offerte_taken_sync` v3: het gat dat v2 achterliet
+
+v2 haalde op 2 augustus de kale nabeltaak uit blok C, omdat
+`offerte-herinnering` diezelfde taak al maakt met bron_kenmerk
+`opvolg-bel`. Wat daarbij is blijven liggen: de plekken die een nabeltaak
+laten **vervallen** noemden alleen `nabellen`. De nieuwe taak heet anders en
+bleef dus staan.
+
+**Gevolg:** zet je een calculatie op geaccepteerd of verloren, dan bleef de
+beltaak met belscript in de lijst van Maud staan. Zij zou een klant nabellen
+over een offerte die al binnen was. In Gians woorden: dat mag nooit
+gebeuren, dat is slecht voor het zelfvertrouwen van Maud en de klant vindt
+het gegarandeerd slordig.
+
+v3 voegt `opvolg-bel` toe op twee plekken: het terugweg-blok en blok D.
+`sql/offerte_taken_sync_v3.sql`. De DELETE-tak hoefde niet: die gaat op
+`bron` en `bron_ref` zonder kenmerk en pakte `opvolg-bel` al mee.
+
+> **Dit raakt ook het geval waarin de klant zelf op akkoord klikt.**
+> Aanvankelijk was onzeker of `offerte-accord` de status van de calculatie
+> meezet of alleen die van de accordering. Beslist zonder de Edge Function
+> te lezen: het dashboard groepeert op `c.status`, dus op het statusveld van
+> de calculatie zelf (`index.html` regel 19370 en 19676). Ziet Gian hem
+> onder Geaccepteerd staan, dan stáát `calculaties.status` op geaccepteerd
+> en vuurt de trigger. Een waarneming uit het gebruik werd zo een meting.
+
+### De dubbele nabeltaak opgeruimd
+
+Uit de overgang stond één dubbele: de testofferte kreeg op 2 augustus nog
+een kale `nabellen` van de oude trigger en op 3 augustus een `opvolg-bel`
+van de Edge Function. Eerst een droogloop (één rij, zoals voorspeld), toen
+de wijziging.
+
+`sql/nabeltaken_dubbel_opruimen.sql` zet zo'n rij op `vervallen` en
+verwijdert hem niet. Reden: `offerte_taken_sync` gebruikt nergens een
+DELETE.
+
+Stand na afloop: `nabellen` vier vervallen en één afgevinkt, nul open.
+`opvolg-bel` één open. Maud heeft nog exact één nabeltaak en dat is die met
+het belscript.
+
+De controle op zwevende beltaken bij offertes die al binnen of verloren zijn
+gaf nul rijen. v3 is dus zuiver preventief.
+
+### `taken-mail-melding` v2 na een etmaal
+
+`mislukt` en `overgeslagen` staan op nul. Iedereen met een mailadres heeft
+alles ontvangen: bjorn 9, jens 4, max 9, geen enkele lege `mail_op`.
+
+Twee dingen die de meting opleverde en die geen storing zijn:
+
+**De acht piep-taken van Gian zonder `mail_op` zijn allemaal vóór hun
+piep-tijd afgevinkt.** Acht van acht, allemaal van vóór de uitrol van v2.
+Bijvoorbeeld "accord-pdf opnemen in de nachtelijke backup": piep stond op 31
+juli 06:50, afgevinkt op 30 juli 22:01.
+
+> **Leesregel die daaruit volgt: afvinken zet `voltooid_op` en laat
+> `status` op `actueel` staan.** Wie op `status` afgaat om te zien of een
+> taak nog openstaat, leest het verkeerd. Dat raakt elke toekomstige trigger
+> op `taken`: die moet `NEW.voltooid_op is null` in zijn voorwaarde krijgen.
+
+**De teller `gevonden` is bedorven.** Maud heeft met opzet geen mailadres.
+v2 zet dan geen `mail_op`, dus haar taken worden elke twee minuten opnieuw
+gevonden, voor altijd. De oude versie stempelde ze wel af, vandaar dat er
+twaalf taken van Maud **met** `mail_op` staan en twee zonder. Die teller
+loopt dus op met elke taak die Maud ooit krijgt en is geen maat meer voor
+werk.
+
+### Nog een vals signaal: de bulkactie van 15 juli
+
+Bij het analyseren van de meldingsgeschiedenis leken vijftien taken een
+enorme vertraging te hebben. Ze hebben alle vijftien exact dezelfde
+`mail_op`: `2026-07-15 09:49:32.756111`. Dat is één keer een stapel oude
+rijen afstempelen, geen vijftien verzendingen. **Wie de
+meldingsgeschiedenis analyseert moet die groep apart zetten.**
+
+### Vier tegenstrijdige accorderingen, verklaard
+
+Er stonden vier gevallen waar de accordeer-status niet strookte met de
+status van de calculatie: drie keer akkoord bij een verloren calculatie, één
+keer afgekeurd bij een geaccepteerde. Dat zou betekenen dat er een pad is
+waarlangs een echt akkoord op verloren eindigt, en dan zou v3 een beltaak
+laten vervallen die je wilde houden.
+
+Het waren testritten van Gian zelf uit juni, met klantnamen Gian, Gian Ernes
+en Gian Nacken. Drie ervan op dezelfde calculatie binnen anderhalf uur op 13
+juni, de dag dat de accordeerlink live ging. Geen probleem, en het bezwaar
+tegen v3 verviel daarmee.
+
+### Opruimpunt 6 gesloten, punt 21 gehalveerd
+
+Zie de opruimlijst voor beide. Kort: punt 6 loste een probleem op dat niet
+bestaat, en punt 21 verliest daarmee zijn beste moment en wordt tot één
+hernoeming teruggebracht.
+
+### Werkwijze, twee dingen om te onthouden
+
+**Een voorspelling is geen meting.** De controleregel onder v3 zou "3" geven
+en gaf "7". `pg_get_functiondef` telt ook commentaar mee, en er stond vijf
+keer `opvolg-bel` in de toelichting naast twee keer in de code. Het getal 3
+was opgeschreven zonder te tellen. De vervangende controle zoekt de exacte
+codetekst van beide regels en geeft twee keer "ja".
+
+**Punt 21 is naar een verse chat gegaan.** Deze chat had al gebouwd en
+geleverd, en punt 21 is een nieuw bouwwerk in een ander deel van het
+systeem. Er is een overdrachtsbriefing meegegeven.
