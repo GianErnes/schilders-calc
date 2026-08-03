@@ -409,7 +409,7 @@ niet aan een app, maar aan de database zelf.
 
 | Functie | Vanuit | Wat het doet |
 |---|---|---|
-| `taak-melding-mail` | trigger `trg_taak_melding_signaal` op `taken` | mailt Gian de melding die iemand achterliet bij het afvinken |
+| `taak-afvinkmelding` | trigger `trg_taak_melding_signaal` op `taken` | mailt Gian de melding die iemand achterliet bij het afvinken |
 
 Die functie mailt altijd naar Gian, ongeacht wie de taak had. Het adres
 staat niet in de code maar wordt opgezocht in `taken_rollen` bij persoon
@@ -419,9 +419,15 @@ fout in het logboek. Dat is hier met opzet strenger dan bij
 `taken-mail-melding`, want daar is geen adres soms de bedoeling (Maud) en
 hier nooit.
 
+> **Hij heette tot 3 augustus 2026 `taak-melding-mail`.** Hernoemd bij
+> opruimpunt 21, omdat die naam dezelfde drie woorden bevatte als
+> `taken-mail-melding` in een andere volgorde en de twee in de lijst pal
+> onder elkaar stonden. De werking is geen letter gewijzigd. Kom je de
+> oude naam ergens tegen, dan is dat een plek die is blijven staan.
+
 > **De schrijfwijze stond hier eerst met een hoofdletter.** Alle waarden in
 > `taken_rollen` zijn kleine letters; dat zijn ook de sleutels die
-> `taken.html` gebruikt. `taak-melding-mail` zoekt inmiddels
+> `taken.html` gebruikt. `taak-afvinkmelding` zoekt inmiddels
 > hoofdletteronafhankelijk (`ilike`), dus het gaat hoe dan ook goed, maar de
 > tekst wees naar een waarde die niet bestaat.
 >
@@ -486,7 +492,7 @@ waarvan iedereen denkt dat de app het doet.
 
 > **`trg_taak_melding_signaal` is de eerste trigger die de deur uit
 > belt.** Alle andere blijven binnen de database. Deze roept via
-> `net.http_post` de Edge Function `taak-melding-mail` aan, en haalt
+> `net.http_post` de Edge Function `taak-afvinkmelding` aan, en haalt
 > daarvoor de sleutel `aftap_secret` uit de kluis. Daarom staat hij op
 > `security definer` met een vast `search_path`: een gewone ingelogde
 > gebruiker mag niet bij die kluis.
@@ -1731,7 +1737,10 @@ van een backup is één keer echt geoefend en werkte.
     niet: de voorwaarde houdt ze hoe dan ook tegen. De redenering was
     gebouwd op de rol in de policy zonder de voorwaarde erbij te lezen.
 
-21. **`taak-melding-mail` en `taken-mail-melding` uit elkaar halen.**
+21. ~~**`taak-melding-mail` en `taken-mail-melding` uit elkaar halen.**~~
+    **Gedaan op 3 augustus 2026.** De afronding staat onderaan dit punt;
+    de redenering hieronder is bewaard omdat het punt onderweg van omvang
+    veranderd is.
     Twee Edge Functions met dezelfde drie woorden in een andere volgorde,
     die in de lijst ook nog pal onder elkaar staan. Ze doen iets
     verschillends: de een gaat af op een verstreken piep-tijd en mailt de
@@ -1764,6 +1773,22 @@ van een backup is één keer echt geoefend en werkte.
     triggerfunctie `taak_melding_signaal` mee, en beperkt het risico zich
     tot de afvinkmelding van een paar keer per week in plaats van tot de
     dagelijkse werking.
+
+    **Uitgevoerd op 3 augustus 2026.** De volgorde was: nieuwe Edge
+    Function `taak-afvinkmelding` aanmaken met dezelfde code en Verify JWT
+    uit, die los aanroepen vanuit de SQL-editor met `net.http_post`
+    terwijl de trigger nog naar de oude wees, pas daarna
+    `taak_melding_signaal` omzetten, dan een echte afvinktest, en pas
+    daarna de oude functie verwijderen. Die volgorde is bewust: zo test je
+    één wijziging tegelijk en blijft de terugweg tot het laatst open. De
+    SQL staat in `sql/taak_afvinkmelding_omzetten.sql`.
+
+    Gemeten die dag: de losse testaanroep gaf status 200 met
+    `{"verstuurd":1}`, en de afvinktest was om 13:17 afgevinkt met de mail
+    om 13:17 binnen. In de besloten repo stond geen map
+    `supabase/functions/taak-melding-mail/`, want de wekelijkse
+    ophaalactie van 2 augustus draaide voordat die functie bestond. Daar
+    viel dus niets te verwijderen.
 
     Wat overblijft is dat `TO public` misleidend leest en dat iemand het
     patroon zou kunnen kopiëren zonder de voorwaarde. Besluit van Gian:
@@ -2820,3 +2845,29 @@ codetekst van beide regels en geeft twee keer "ja".
 **Punt 21 is naar een verse chat gegaan.** Deze chat had al gebouwd en
 geleverd, en punt 21 is een nieuw bouwwerk in een ander deel van het
 systeem. Er is een overdrachtsbriefing meegegeven.
+
+### Punt 21 uitgevoerd: `taak-melding-mail` heet nu `taak-afvinkmelding`
+
+Gedaan in een verse chat, dezelfde dag. De volgorde en de metingen staan
+bij opruimpunt 21. Wat hier hoort is wat het opleverde buiten de naam om.
+
+**Het archief dekt minder dan het lijkt.** De besloten repo
+`ernes-edge-functions` heeft nooit een map voor `taak-melding-mail`
+gehad: de wekelijkse ophaalactie van 2 augustus draaide voordat die
+functie bestond. Hetzelfde geldt nu voor `taak-afvinkmelding`, tot de
+eerstvolgende actie. In de hoofdmap van die repo staan bovendien nog
+zips van vier functies die allang uit Supabase weg zijn: `taken-agenda`,
+`taken-meldingen`, `yoobi-kijkglas` en `yoobi-project-probe`. Het archief
+mist dus nieuwe functies en bewaart oude die niet meer bestaan. Wie erop
+vertrouwt bij een herbouw krijgt een systeem van vorige week.
+
+**Dezelfde meetfout twee keer op een dag.** De controlequery van blok D
+zocht op de kale tekst `taak-melding-mail` in `prosrc`, en vond daarmee
+de commentaarregel die diezelfde SQL er zelf in had gezet. Uitkomst: twee
+keer `true`, wat eruitzag als een halve omzetting terwijl er niets mis
+was. Dat is precies de fout die die ochtend al was opgeschreven onder
+"Een voorspelling is geen meting", toen met `pg_get_functiondef`. De les
+is niet dat er beter opgelet moet worden maar dit: **een controle die
+tekst zoekt moet zoeken op iets dat alleen in de code kan voorkomen en
+niet in de toelichting.** Hier werd dat `functions/v1/taak-afvinkmelding`,
+met het pad ervoor.
