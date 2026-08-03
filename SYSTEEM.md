@@ -1793,6 +1793,36 @@ van een backup is één keer echt geoefend en werkte.
     Wat overblijft is dat `TO public` misleidend leest en dat iemand het
     patroon zou kunnen kopiëren zonder de voorwaarde. Besluit van Gian:
     geneuzel, niet aan beginnen.
+
+22. **Het archief in `ernes-edge-functions` klopt niet meer met Supabase.**
+    Vastgelegd 3 augustus 2026, gevonden bij het afronden van punt 21.
+    Het loopt twee kanten op tegelijk.
+
+    **Het mist wat er wel draait.** De map
+    `supabase/functions/taak-melding-mail/` heeft nooit bestaan: de
+    ophaalknop draaide op 2 augustus voordat die functie gemaakt werd, en
+    daarna is er geen ophaalactie meer geweest. Voor `taak-afvinkmelding`
+    geldt hetzelfde tot de eerstvolgende zondag. Een functie die op maandag
+    gemaakt wordt en op dinsdag stukgaat, staat die hele week nergens.
+
+    **Het bewaart wat er niet meer is.** In de hoofdmap staan zips van
+    `taken-agenda`, `taken-meldingen`, `yoobi-kijkglas` en
+    `yoobi-project-probe`, alle vier verwijderd uit Supabase. Ze dragen de
+    datum 26-07-2026 en zien er dus even geldig uit als de rest.
+
+    **Waarom dat erger is dan het lijkt.** De uitrolknop rolt uit wat er in
+    de repo staat. Wie na een ramp op die knop drukt krijgt het systeem
+    terug zoals het bij de laatste ophaalactie was, met de dode functies
+    erbij en zonder de nieuwste. Niemand die dan aan het herstellen is gaat
+    eerst de lijst nalopen.
+
+    **Wat het waarschijnlijk oplost.** De ophaalknop draait wekelijks; dat
+    is een venster van zeven dagen. Een ophaalactie na elke wijziging aan
+    een Edge Function sluit dat venster, maar dat is handwerk dat vergeten
+    wordt. Beter is het om te meten in plaats van te onthouden: iets dat
+    `functies-overzicht.json` naast de werkelijke lijst legt en zich meldt
+    als ze uiteenlopen. Nog niet ontworpen. **Eerst meten hoe groot het
+    verschil vandaag is, dan pas bouwen.**
 ---
 
 ## Wat er nog niet in staat
@@ -2859,7 +2889,8 @@ eerstvolgende actie. In de hoofdmap van die repo staan bovendien nog
 zips van vier functies die allang uit Supabase weg zijn: `taken-agenda`,
 `taken-meldingen`, `yoobi-kijkglas` en `yoobi-project-probe`. Het archief
 mist dus nieuwe functies en bewaart oude die niet meer bestaan. Wie erop
-vertrouwt bij een herbouw krijgt een systeem van vorige week.
+vertrouwt bij een herbouw krijgt een systeem van vorige week. Opgenomen
+als opruimpunt 22.
 
 **Dezelfde meetfout twee keer op een dag.** De controlequery van blok D
 zocht op de kale tekst `taak-melding-mail` in `prosrc`, en vond daarmee
