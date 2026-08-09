@@ -2255,8 +2255,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.40.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.40.2</h2>
       <div class="intro-body">
+        <p><strong>🔧 Projectnaam en klant volgen nu jouw naamregel (v4.40.2).</strong> De boekingsknop zet voortaan alleen de achternaam in het veld Klant en bouwt de projectnaam als Achternaam | werksoort. De werksoort komt uit het boekingsformulier zelf, want daar beantwoordt de klant de vraag over binnen- of buitenschilderwerk al: dat antwoord wordt Binnenwerk, Buitenwerk of Binnen- en buitenwerk achter de streep. Staat er bij een boeking geen herkenbaar antwoord, dan verschijnt dezelfde naamvraag als bij een gewone nieuwe calculatie, vooringevuld met de achternaam.</p>
+        <p><strong>🔧 Deadline offerte vult zich nu ook bij de boekingsknop (v4.40.1).</strong> Maak je vanuit het blok Opnameboekingen een calculatie, dan staat Deadline offerte er direct in: opnamedatum plus veertien dagen, dezelfde regel die het veld al volgde wanneer je de opnamedatum met de hand invult. Handmatig aanpassen blijft gewoon mogelijk.</p>
         <p><strong>📋 Opnameboekingen op het dashboard (v4.40.0).</strong> Boekt een klant een opname via het formulier, dan staat die vanaf nu vanzelf op het dashboard in het nieuwe blok Opnameboekingen: datum, naam, plaats, status en wat er nog mist. De knop Calculatie aanmaken zet er in een klik een calculatie van klaar met naam, klant, postcode, huisnummer, opnamedatum, e-mail, telefoon, werkadres en de aanvraagtekst van de klant in de notities. De knop Wegtikken is voor boekingen die geen calculatie hoeven te worden; weggetikte boekingen blijven onderin terug te vinden en zijn met een klik terug te zetten. Wordt een opname geannuleerd waarvoor al een calculatie bestaat, dan meldt het dashboard dat met een knop Gezien, die een waarschuwingsregel bovenaan de notities van die calculatie zet. De agenda leest zichzelf elke nacht vanzelf in.</p>
         <p><strong>📅 Afvinklijst voor de onderhoudsbeurten (v4.39.0).</strong> Begin januari plan je de onderhoudsbeurten van dat jaar in Yoobi, en tot nu toe was nergens te zien of je ze allemaal gehad had. Dat kan nu in het tabblad Planning. Tik een beurt aan en zet het vinkje Deze beurt staat in de Yoobi-planning. De cel wordt blauw, en boven elke jaarkolom vanaf dit jaar staat een tellertje in de trant van 12/18 ingepland. Staat de teller vol, dan is het jaar rond en kleurt hij groen. Reeds uitgevoerde beurten blijven grijs en tellen niet mee, want die hoef je niet meer in te plannen. Het werkt ook op de handmatige regels van de oude plannen. De stand is puur intern en komt nergens op de offerte. Vereist SQL (los geleverd).</p>
         <p><strong>☎ Het telefoonnummer komt mee uit Yoobi (v4.38.0).</strong> Het nummer stond al in het Yoobi-venster, maar alleen ter referentie: het werd nergens bewaard. Nu wel. Bij Velden invullen komt het nummer van de gekozen contactpersoon in de calculatie te staan, en heeft die er geen, dan het nummer van de relatie. In het Offerte-blok staat het naast E-mail in een eigen veldje, dus voor een klant die niet uit Yoobi komt tik je het er zelf in. Vanaf daar loopt het door naar de nabeltaak van Maud: het nummer staat bovenaan het belscript en in het telefoonveld van de taak, zodat ze het in de takenapp aantikt en meteen belt. Bij de contactpersonen in het Yoobi-venster zie je voortaan achter elke naam ook het nummer, zodat je ziet wie je kiest. Weet Yoobi geen nummer, dan meldt het belscript dat het daar opgezocht moet worden. Vereist de bijgewerkte Edge Function offerte-herinnering. Geen SQL.</p>
@@ -3509,7 +3511,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.40.0';
+const APP_VERSION = 'v4.40.2';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3905,6 +3907,8 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.40.2', d: '2026-08-09', h: 'Boekingsknop volgt de naamconventie: alleen de achternaam in klant en Achternaam | werksoort als projectnaam. Nieuwe helper _opnameAchternaam laat het eerste woord van de boekingsnaam vallen (Silka Duvekot wordt Duvekot, J.C. Toebermann wordt Toebermann, tussenvoegsels blijven staan). Nieuwe helper _opnameWerksoort leest het antwoord op de formuliervraag over binnen- of buitenschilderwerk uit de notities van de boeking: het kopje begint met binnen en bevat schilderwerk (GEMETEN 9 augustus, oude vorm Binnen of buitenschilderwerk 2027 met 28 stuks, nieuwe vorm Binnen- en/of buitenschilderwerk met 2 stuks, samen alle 30) en het antwoord normaliseert naar Binnenwerk, Buitenwerk of Binnen- en buitenwerk. Geen herkenbaar antwoord, dan een naamvraag zoals bij newCalc, vooringevuld met de achternaam plus pipe; annuleren maakt niets aan. Het veld klant volgt het deel voor de pipe van de uiteindelijke naam, de regel van v3.25.6. De aanvraagtekst blijft integraal in de notities staan, ook de werksoortvraag zelf. Geen SQL' },
+  { v: '4.40.1', d: '2026-08-09', h: 'Deadline offerte gevuld bij Calculatie aanmaken vanuit het boekingenblok. De veldentabel van de overdracht kende deadline_datum niet, dus _opnameMaakCalc liet hem leeg terwijl de change-handler op calcOpname hem bij handmatige invoer wel afleidt (opname plus 14 dagen, alleen bij leeg veld of de vorige autowaarde). De insert geeft nu deadlineDatum mee als _addDays(opname_datum, 14), exact de bestaande autovulregel; _mapCalcHeaderToDB nam deadline_datum al mee. Boekingen zonder opnamedatum houden een lege deadline. Gemeld bij de eerste praktijktest. Geen SQL' },
   { v: '4.40.0', d: '2026-08-09', h: 'Opnameboekingen op het dashboard. Nieuw blok opnameBoekingenBlok tussen de tegels en Calculaties, getekend door _opnameTeken en gevuld door _opnameVerversen vanuit renderDashboard: een select op opname_boekingen via _sbQuery (throttle 15 s, geforceerd na elke actie) die client-side splitst in open (zonder verwerkt_op en zonder calculatie_id, oplopend op opname_datum), annuleringsmeldingen (cancelled met calculatie_id zonder annulering_gemeld_op) en weggetikt (verwerkt_op zonder calculatie_id, inklapbare lijst met knop Terugzetten die verwerkt_op leegmaakt). Knop Calculatie aanmaken hergebruikt _insertCalcDB met status afspraak, naam Klant | Straat Huisnummer met terugval Opname datum, klant, postcode, huisnummer, opname_datum en de aanvraagtekst onder een kopregel in notities; daarna een gerichte update van alleen offerte_config met email, telefoon en werkadres (straat plus woonplaats uit plaats), conform de regel bij _mapCalcHeaderToDB, en van adres en briefadres blijft de knop af; tot slot krijgt de boeking calculatie_id plus verwerkt_op. Je blijft op het dashboard en de verse calc staat bovenaan het archief. Knop Gezien schrijft AFSPRAAK GEANNULEERD (agenda, datum) bovenaan calculaties.notities via _updateCalcDB en zet annulering_gemeld_op. Rechten en policies stonden al goed (RLS-meting 9 augustus), dus geen SQL. De vulling komt van Edge Function opname-boekingen v4 met de dagelijkse cron om 03:45 UTC' },
   { v: '4.39.0', d: '2026-07-26', h: 'Ingepland-stand per onderhoudsbeurt in de Planning-matrix, als afvinklijst voor de jaarlijkse ronde langs de Yoobi-planning. Gemodelleerd op het bestaande patroon van reeds_uitgevoerd (v3.24.5): SQL zet een boolean ingepland met default false op zowel onderhoudsplan_beurten als planning_handmatig, de app leest en schrijft hem via _mapBeurtFromDB en _mapBeurtToDB, en de handmatige regels lopen rechtstreeks via de rec in _planningSaveHandmatig. Bewust geen taak per beurt: veertig taken die op een ochtend worden afgevinkt zijn geen takenlijst, en ze zouden losstaan van de plandata dus verouderen bij elke planwijziging. Bewust ook geen koppeling met de Yoobi-planning, die geeft die informatie niet, dit is handwerk. UI: een tweede checkbox planningEditIngepland in de celbewerk-modal boven de bestaande reeds-checkbox, en phIngepland in de handmatige-regelmodal, meegenomen in de reset van de tak Opslaan en nog een. Matrix: cel-items dragen nu ingepland mee, tePlannen filtert de reeds uitgevoerde beurten eruit en alleIngepland vraagt every over de rest, zodat een cel met meerdere beurten pas blauw (#eaf1fd met een kalender-badge) wordt als de hele cel geregeld is; grijs wint bij een botsing want uitgevoerd is de eindstand. De teller per jaarkolom telt per beurt en niet per cel, en wordt in een voorloop over rijen berekend omdat de thead eerder wordt getekend dan de tbody; hij toont x/y ingepland, kleurt groen zodra de kolom vol is en verschijnt alleen vanaf het huidige jaar, want op oude jaren valt niets meer te plannen. Uitgevoerde beurten vallen uit teller en noemer, anders komt de lijst nooit rond. Legenda-regel boven de scrollbox. De beurt-modal in de Onderhoudsplan-tab is bewust ongemoeid gelaten: planning hoort in de Planning-tab, en omdat _ohpSaveBeurt via _updateBeurt door _mapBeurtToDB loopt blijft ingepland daar vanzelf staan. Komt nergens op de offerte of de bijlage. Vereist SQL (los geleverd), geen Edge Function.' },
   { v: '4.38.0', d: '2026-07-25', h: 'Telefoonnummer uit Yoobi wordt opgeslagen en reist mee naar de nabeltaak. Tot nu toe toonde _yoobiRenderDetail het nummer alleen onder de kop "wordt niet opgeslagen", terwijl de Edge Function yoobi-klant sinds v3.99.0 per contactpersoon al een telefoon meelevert; de keuzerondjes droegen alleen data-naam en data-email, dus het nummer viel op de grond. Nieuw veld offerte_config.telefoon met default in _offCfg (jsonb, dus geen SQL) en een invoerveld type tel in het adresblok van renderOfferteBlok, k-mid direct achter E-mail, zodat een klant buiten Yoobi om met de hand invulbaar blijft. _yoobiRenderDetail: de terugval-contact krijgt telefoon uit r.telefoon mee, beide takken (een contact en meerdere) zetten data-telefoon op de radio en tonen het nummer achter de naam, de regel Telefoon is uit het referentieblok gehaald en staat nu als Telefoon relatie bij de klantgegevens. _yoobiVulIn leest gekozenContact.dataset.telefoon en schrijft cfg.telefoon met terugval op r.telefoon. Bewust geen terugval op de relatie binnen contactTel zelf: de terugval gebeurt pas bij het toekennen, zodat een leeg contactnummer niet stil het relatienummer verbergt. Vervolg zit in de Edge Function offerte-herinnering, die het nummer uit offerte_config in de kolom tel van de beltaak zet; taken.html (v0.13.5) rendert daar al een pil en een tel-link op, dus daar was geen wijziging nodig. Geen SQL.' },
@@ -19817,22 +19821,74 @@ async function _opnameAnnulGezien(id) {
   await _opnameVerversen(true);
 }
 
+// Achternaam uit de boekingsnaam: het eerste woord valt eraf, de rest
+// blijft staan zodat tussenvoegsels en dubbele namen heel blijven.
+// Silka Duvekot wordt Duvekot, Hans de Vries wordt de Vries.
+function _opnameAchternaam(volledig) {
+  const s = String(volledig || '').trim();
+  if (!s) return '';
+  const delen = s.split(/\s+/);
+  return delen.length > 1 ? delen.slice(1).join(' ') : s;
+}
+
+// Werksoort uit de aanvraagtekst. Het formulier vraagt de klant zelf
+// naar binnen- of buitenschilderwerk; het kopje begint met "binnen" en
+// bevat "schilderwerk" (oude vorm Binnen of buitenschilderwerk 2027,
+// nieuwe vorm Binnen- en/of buitenschilderwerk, GEMETEN 9 aug 2026).
+// Het antwoord normaliseert naar de naamconventie van de app. Geen
+// herkenbaar antwoord geeft null en dan valt de knop terug op de
+// naamvraag.
+function _opnameWerksoort(notities) {
+  const regels = String(notities || '').split('\n');
+  for (let i = 0; i < regels.length; i++) {
+    const kop = regels[i].trim().toLowerCase();
+    if (kop.endsWith(':') && kop.indexOf('binnen') === 0 && kop.indexOf('schilderwerk') >= 0) {
+      for (let j = i + 1; j < regels.length; j++) {
+        const antwoord = regels[j].trim();
+        if (!antwoord) continue;
+        if (antwoord.endsWith(':')) return null;
+        const a = antwoord.toLowerCase();
+        const binnen = a.indexOf('binnen') >= 0;
+        const buiten = a.indexOf('buiten') >= 0;
+        if (binnen && buiten) return 'Binnen- en buitenwerk';
+        if (buiten) return 'Buitenwerk';
+        if (binnen) return 'Binnenwerk';
+        return null;
+      }
+      return null;
+    }
+  }
+  return null;
+}
+
 async function _opnameMaakCalc(id) {
   const r = _opnameRijen.find(x => x.id === id);
   if (!r) return;
-  const straatDeel = (r.straat ? r.straat : '') + (r.straat && r.huisnummer ? ' ' + r.huisnummer : '');
-  const naam = (r.klant || 'Onbekend') + ' | ' + (straatDeel || ('Opname ' + (r.opname_datum || '')));
+  const achternaam = _opnameAchternaam(r.klant) || 'Onbekend';
+  const werksoort = _opnameWerksoort(r.notities);
+  let naam;
+  if (werksoort) {
+    naam = achternaam + ' | ' + werksoort;
+  } else {
+    const invoer = prompt('Naam voor de calculatie:', achternaam + ' | ');
+    if (!invoer) return;
+    naam = invoer.replace(/\|\s*$/, '').trim();
+    if (!naam) return;
+  }
+  const _pipeIdx = naam.indexOf('|');
+  const klantNaam = _pipeIdx >= 0 ? naam.slice(0, _pipeIdx).trim() : naam.trim();
   const g = (r.gegevens && typeof r.gegevens === 'object') ? r.gegevens : {};
   const aanvraag = r.eerste_created || g.google_created || null;
   const notities = 'Aanvraag via boekingsformulier' + (aanvraag ? ' (' + _opnameDatumKort(aanvraag) + ')' : '') + ':\n'
     + (r.notities || '(geen aanvraagtekst)');
   const fresh = await _insertCalcDB({
     naam: naam,
-    klant: r.klant || '',
+    klant: klantNaam,
     status: 'afspraak',
     postcode: r.postcode || '',
     huisnummer: r.huisnummer || '',
     opnameDatum: r.opname_datum || null,
+    deadlineDatum: r.opname_datum ? _addDays(r.opname_datum, 14) : null,
     notities: notities
   });
   if (!fresh) return;

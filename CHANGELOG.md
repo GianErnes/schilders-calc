@@ -1,3 +1,22 @@
+## v4.40.2 — Boekingsknop volgt de naamregel
+De projectnaam werd Klant | Straat Huisnummer, maar de eigen conventie is de achternaam met daarachter de werksoort. En het veld Klant hoort alleen de achternaam te bevatten, zoals de uitleg onder het briefhoofd al zei.
+
+### Wat er verandert
+- De boekingsknop bouwt de projectnaam als Achternaam | werksoort en zet alleen de achternaam in het veld Klant.
+- De werksoort komt uit het boekingsformulier zelf: de klant beantwoordt daar al de vraag over binnen- of buitenschilderwerk. Het antwoord wordt Binnenwerk, Buitenwerk of Binnen- en buitenwerk. Alle 30 huidige boekingen hebben dat antwoord.
+- De achternaam is de boekingsnaam zonder het eerste woord, dus tussenvoegsels en dubbele namen blijven heel.
+- Staat er bij een boeking geen herkenbaar antwoord, dan verschijnt de bekende naamvraag, vooringevuld met de achternaam. Annuleren maakt niets aan.
+- De aanvraagtekst blijft volledig in de notities staan, ook de werksoortvraag zelf.
+- Geen SQL.
+
+## v4.40.1 — Deadline vult zich ook bij de boekingsknop
+Gemeld bij de eerste praktijktest: Calculatie aanmaken vanuit het blok Opnameboekingen liet Deadline offerte leeg.
+
+### Wat er verandert
+- De knop vult Deadline offerte direct met opnamedatum plus veertien dagen, dezelfde regel die het veld al volgde bij het handmatig invullen van de opnamedatum.
+- Handmatig aanpassen blijft mogelijk en een boeking zonder opnamedatum houdt een lege deadline.
+- Geen SQL.
+
 ## v4.40.0 — Opnameboekingen op het dashboard
 De klantboekingen uit de Google agenda staan sinds vandaag elke nacht vers in de database (Edge Function opname-boekingen v4, cron 03:45 UTC). Dit is de app-kant: zien, verwerken en opruimen vanaf het dashboard.
 
