@@ -1,3 +1,15 @@
+## v4.40.0 — Opnameboekingen op het dashboard
+De klantboekingen uit de Google agenda staan sinds vandaag elke nacht vers in de database (Edge Function opname-boekingen v4, cron 03:45 UTC). Dit is de app-kant: zien, verwerken en opruimen vanaf het dashboard.
+
+### Wat er verandert
+- Nieuw blok Opnameboekingen op het dashboard, tussen de tegels en Calculaties. Het verschijnt alleen als er iets te tonen is. Per regel: datum, klant, plaats, status en wat er nog mist.
+- Knop Calculatie aanmaken zet in een klik een calculatie klaar: naam Klant | Straat Huisnummer, status afspraak, klant, postcode, huisnummer, opnamedatum, e-mail, telefoon, werkadres en de aanvraagtekst van de klant onder een kopregel in de notities. Je blijft op het dashboard en de calculatie staat bovenaan de lijst.
+- Van het aparte briefhoofd (adres en briefadres) blijft de knop af.
+- Knop Wegtikken is voor boekingen die geen calculatie hoeven te worden. Weggetikte boekingen blijven terug te vinden via de regel toon weggetikte onderin en zijn met Terugzetten terug te halen. Niets raakt onvindbaar.
+- Wordt een opname geannuleerd waarvoor al een calculatie bestaat, dan staat er een melding met de knop Gezien. Die zet de regel AFSPRAAK GEANNULEERD (agenda, datum) bovenaan de notities van die calculatie en vinkt de melding af.
+- Let op: die regel komt daarmee onder Bevindingen op de offerte te staan tot je hem weghaalt. Dat is het bewuste besluit van 9 augustus.
+- Geen SQL. De rechten op de tabel stonden al goed (meting 9 augustus 2026).
+
 ## v4.39.0 — Afvinklijst voor de onderhoudsbeurten
 Begin januari plan je de onderhoudsbeurten van dat jaar in Yoobi. Tot nu toe was nergens te zien of je ze allemaal gehad had. Dat kan nu in het tabblad Planning.
 

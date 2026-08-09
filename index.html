@@ -2255,8 +2255,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.39.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.40.0</h2>
       <div class="intro-body">
+        <p><strong>📋 Opnameboekingen op het dashboard (v4.40.0).</strong> Boekt een klant een opname via het formulier, dan staat die vanaf nu vanzelf op het dashboard in het nieuwe blok Opnameboekingen: datum, naam, plaats, status en wat er nog mist. De knop Calculatie aanmaken zet er in een klik een calculatie van klaar met naam, klant, postcode, huisnummer, opnamedatum, e-mail, telefoon, werkadres en de aanvraagtekst van de klant in de notities. De knop Wegtikken is voor boekingen die geen calculatie hoeven te worden; weggetikte boekingen blijven onderin terug te vinden en zijn met een klik terug te zetten. Wordt een opname geannuleerd waarvoor al een calculatie bestaat, dan meldt het dashboard dat met een knop Gezien, die een waarschuwingsregel bovenaan de notities van die calculatie zet. De agenda leest zichzelf elke nacht vanzelf in.</p>
         <p><strong>📅 Afvinklijst voor de onderhoudsbeurten (v4.39.0).</strong> Begin januari plan je de onderhoudsbeurten van dat jaar in Yoobi, en tot nu toe was nergens te zien of je ze allemaal gehad had. Dat kan nu in het tabblad Planning. Tik een beurt aan en zet het vinkje Deze beurt staat in de Yoobi-planning. De cel wordt blauw, en boven elke jaarkolom vanaf dit jaar staat een tellertje in de trant van 12/18 ingepland. Staat de teller vol, dan is het jaar rond en kleurt hij groen. Reeds uitgevoerde beurten blijven grijs en tellen niet mee, want die hoef je niet meer in te plannen. Het werkt ook op de handmatige regels van de oude plannen. De stand is puur intern en komt nergens op de offerte. Vereist SQL (los geleverd).</p>
         <p><strong>☎ Het telefoonnummer komt mee uit Yoobi (v4.38.0).</strong> Het nummer stond al in het Yoobi-venster, maar alleen ter referentie: het werd nergens bewaard. Nu wel. Bij Velden invullen komt het nummer van de gekozen contactpersoon in de calculatie te staan, en heeft die er geen, dan het nummer van de relatie. In het Offerte-blok staat het naast E-mail in een eigen veldje, dus voor een klant die niet uit Yoobi komt tik je het er zelf in. Vanaf daar loopt het door naar de nabeltaak van Maud: het nummer staat bovenaan het belscript en in het telefoonveld van de taak, zodat ze het in de takenapp aantikt en meteen belt. Bij de contactpersonen in het Yoobi-venster zie je voortaan achter elke naam ook het nummer, zodat je ziet wie je kiest. Weet Yoobi geen nummer, dan meldt het belscript dat het daar opgezocht moet worden. Vereist de bijgewerkte Edge Function offerte-herinnering. Geen SQL.</p>
         <p><strong>🌐 De kilometers lopen nu via je eigen server (v4.37.0).</strong> Het nieuwe adres van OpenRouteService laat aanroepen die rechtstreeks uit een webpagina komen niet door. Je browser stuurt bij zo n verzoek eerst een testvraag vooruit, en daar kwam geen antwoord op, dus bleef de app wachten tot hij het opgaf. Aan onze kant was dat niet te repareren, hoe lang we ook zouden wachten. De aanroep loopt daarom voortaan via een eigen Edge Function bij Supabase: de app vraagt het aan je eigen server en die vraagt het aan OpenRouteService. Voor een server gelden die browserregels niet. Drie dingen die je daarvan merkt. Je sleutel staat niet meer in de app maar als secret op de server, dus het invulveld bij Instellingen is verdwenen en een sleutel die daar nog stond wordt vanzelf opgeruimd. Gaat er iets mis, dan lees je voortaan wat OpenRouteService echt antwoordt in plaats van een vage melding. En 24 augustus, wanneer het oude adres helemaal dichtgaat, raakt ons niet meer. Vereist eenmalig de nieuwe Edge Function reisafstand met de secret ORS_KEY. Geen SQL.</p>
@@ -2522,6 +2523,15 @@
       <div class="settings-section" style="text-align: center; padding: 0.3rem 0.55rem;"><div class="mono" style="font-size: 0.55rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Calculaties</div><div style="font-size: 0.95rem; font-weight: 700; color: var(--accent); line-height: 1.1;" id="statCalc">—</div></div>
       <div class="settings-section" style="text-align: center; padding: 0.3rem 0.55rem;"><div class="mono" style="font-size: 0.55rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Onderhoudsplannen</div><div style="font-size: 0.95rem; font-weight: 700; color: var(--accent); line-height: 1.1;" id="statPlannen">—</div></div>
       <div class="settings-section" style="text-align: center; padding: 0.3rem 0.55rem;" title="Geaccepteerde offertes ten opzichte van het totaal uitgebrachte offertes (verzonden + geaccepteerd + verloren)."><div class="mono" style="font-size: 0.55rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Win-ratio</div><div style="font-size: 0.95rem; font-weight: 700; color: var(--accent); line-height: 1.1;" id="statWin">—</div></div>
+    </div>
+    <div class="settings-section" id="opnameBoekingenBlok" style="display:none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+        <h3 style="margin: 0;">Opnameboekingen</h3>
+        <span class="mono" id="opnameTeller" style="color: var(--muted); font-size: 0.8rem;"></span>
+      </div>
+      <div id="opnameAnnuleringen"></div>
+      <div id="opnameLijst"></div>
+      <div id="opnameWeggetiktRegel" style="margin-top: 0.5rem;"></div>
     </div>
     <div class="settings-section">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -3499,7 +3509,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.39.0';
+const APP_VERSION = 'v4.40.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3895,6 +3905,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.40.0', d: '2026-08-09', h: 'Opnameboekingen op het dashboard. Nieuw blok opnameBoekingenBlok tussen de tegels en Calculaties, getekend door _opnameTeken en gevuld door _opnameVerversen vanuit renderDashboard: een select op opname_boekingen via _sbQuery (throttle 15 s, geforceerd na elke actie) die client-side splitst in open (zonder verwerkt_op en zonder calculatie_id, oplopend op opname_datum), annuleringsmeldingen (cancelled met calculatie_id zonder annulering_gemeld_op) en weggetikt (verwerkt_op zonder calculatie_id, inklapbare lijst met knop Terugzetten die verwerkt_op leegmaakt). Knop Calculatie aanmaken hergebruikt _insertCalcDB met status afspraak, naam Klant | Straat Huisnummer met terugval Opname datum, klant, postcode, huisnummer, opname_datum en de aanvraagtekst onder een kopregel in notities; daarna een gerichte update van alleen offerte_config met email, telefoon en werkadres (straat plus woonplaats uit plaats), conform de regel bij _mapCalcHeaderToDB, en van adres en briefadres blijft de knop af; tot slot krijgt de boeking calculatie_id plus verwerkt_op. Je blijft op het dashboard en de verse calc staat bovenaan het archief. Knop Gezien schrijft AFSPRAAK GEANNULEERD (agenda, datum) bovenaan calculaties.notities via _updateCalcDB en zet annulering_gemeld_op. Rechten en policies stonden al goed (RLS-meting 9 augustus), dus geen SQL. De vulling komt van Edge Function opname-boekingen v4 met de dagelijkse cron om 03:45 UTC' },
   { v: '4.39.0', d: '2026-07-26', h: 'Ingepland-stand per onderhoudsbeurt in de Planning-matrix, als afvinklijst voor de jaarlijkse ronde langs de Yoobi-planning. Gemodelleerd op het bestaande patroon van reeds_uitgevoerd (v3.24.5): SQL zet een boolean ingepland met default false op zowel onderhoudsplan_beurten als planning_handmatig, de app leest en schrijft hem via _mapBeurtFromDB en _mapBeurtToDB, en de handmatige regels lopen rechtstreeks via de rec in _planningSaveHandmatig. Bewust geen taak per beurt: veertig taken die op een ochtend worden afgevinkt zijn geen takenlijst, en ze zouden losstaan van de plandata dus verouderen bij elke planwijziging. Bewust ook geen koppeling met de Yoobi-planning, die geeft die informatie niet, dit is handwerk. UI: een tweede checkbox planningEditIngepland in de celbewerk-modal boven de bestaande reeds-checkbox, en phIngepland in de handmatige-regelmodal, meegenomen in de reset van de tak Opslaan en nog een. Matrix: cel-items dragen nu ingepland mee, tePlannen filtert de reeds uitgevoerde beurten eruit en alleIngepland vraagt every over de rest, zodat een cel met meerdere beurten pas blauw (#eaf1fd met een kalender-badge) wordt als de hele cel geregeld is; grijs wint bij een botsing want uitgevoerd is de eindstand. De teller per jaarkolom telt per beurt en niet per cel, en wordt in een voorloop over rijen berekend omdat de thead eerder wordt getekend dan de tbody; hij toont x/y ingepland, kleurt groen zodra de kolom vol is en verschijnt alleen vanaf het huidige jaar, want op oude jaren valt niets meer te plannen. Uitgevoerde beurten vallen uit teller en noemer, anders komt de lijst nooit rond. Legenda-regel boven de scrollbox. De beurt-modal in de Onderhoudsplan-tab is bewust ongemoeid gelaten: planning hoort in de Planning-tab, en omdat _ohpSaveBeurt via _updateBeurt door _mapBeurtToDB loopt blijft ingepland daar vanzelf staan. Komt nergens op de offerte of de bijlage. Vereist SQL (los geleverd), geen Edge Function.' },
   { v: '4.38.0', d: '2026-07-25', h: 'Telefoonnummer uit Yoobi wordt opgeslagen en reist mee naar de nabeltaak. Tot nu toe toonde _yoobiRenderDetail het nummer alleen onder de kop "wordt niet opgeslagen", terwijl de Edge Function yoobi-klant sinds v3.99.0 per contactpersoon al een telefoon meelevert; de keuzerondjes droegen alleen data-naam en data-email, dus het nummer viel op de grond. Nieuw veld offerte_config.telefoon met default in _offCfg (jsonb, dus geen SQL) en een invoerveld type tel in het adresblok van renderOfferteBlok, k-mid direct achter E-mail, zodat een klant buiten Yoobi om met de hand invulbaar blijft. _yoobiRenderDetail: de terugval-contact krijgt telefoon uit r.telefoon mee, beide takken (een contact en meerdere) zetten data-telefoon op de radio en tonen het nummer achter de naam, de regel Telefoon is uit het referentieblok gehaald en staat nu als Telefoon relatie bij de klantgegevens. _yoobiVulIn leest gekozenContact.dataset.telefoon en schrijft cfg.telefoon met terugval op r.telefoon. Bewust geen terugval op de relatie binnen contactTel zelf: de terugval gebeurt pas bij het toekennen, zodat een leeg contactnummer niet stil het relatienummer verbergt. Vervolg zit in de Edge Function offerte-herinnering, die het nummer uit offerte_config in de kolom tel van de beltaak zet; taken.html (v0.13.5) rendert daar al een pil en een tel-link op, dus daar was geen wijziging nodig. Geen SQL.' },
   { v: '4.37.0', d: '2026-07-25', h: 'Rijafstand via een eigen Edge Function in plaats van rechtstreeks uit de browser. Aanleiding: na de omzetting naar api.heigit.org in v4.36.1 bleef Afstand ophalen falen met AbortError na 8 s, ook bij herhaald drukken. Op het forum van openrouteservice staat dezelfde melding van een andere gebruiker: de preflight op api.heigit.org/openrouteservice/v2/directions/driving-car krijgt geen Access-Control-Allow-Origin terug, terwijl identieke verzoeken op het oude adres wel werkten; HeiGIT meldde op 19-05 een fix maar het gedrag is er nog. Een hangende preflight verklaart de AbortError in plaats van een snelle CORS-afwijzing, en daarmee is verhogen van de tijdslimiet zinloos. Nieuwe Edge Function reisafstand (Verify JWT uit, eigen logincontrole via /auth/v1/user, secret ORS_KEY, geen backticks): neemt { vertrek, bestemming } als [lon, lat], valideert beide punten, roept ORS twee keer aan met AbortController op 15 s, herkanst alleen bij 429 en 5xx, vertaalt 401 en 403 naar een melding over de secret, en geeft bij elke fout { fout, code, detail } terug met de eerste 300 tekens van het antwoord van ORS. App-kant: _orsAfstandMeters heeft geen key-parameter meer en doet een enkele POST naar REISAFSTAND_FN_URL met het sessietoken plus apikey (patroon van _yoobiCall), AbortController op 35 s omdat de functie zelf al tot circa 31 s kan doen, en leest bij een 502 de fout uit de body in plaats van via _extFetch te lopen, dat immers op een niet-ok antwoord gooit voordat de body gelezen is; detail gaat naar console.warn. ophaalAfstand controleert de sleutel niet meer, die zit nu op de server. Instellingen: het veld setOrsKey en de bijbehorende hulptekst zijn verwijderd, de introtekst van het blok bijgewerkt, en een eenmalige opruimer verwijdert data.settings.orsKey uit de instellingen zodat de sleutel niet meer met de app mee de browser in gaat. PDOK ongemoeid gelaten: dat opzoeken werkt aantoonbaar vanuit de browser en verplaatsen zou onnodig risico zijn. Vereist de Edge Function reisafstand en de secret ORS_KEY. Geen SQL.' },
@@ -19664,6 +19675,200 @@ function _renderPlannenArchiefUit() {
   c.innerHTML = html;
 }
 
+// ============================================================
+// OPNAMEBOEKINGEN OP HET DASHBOARD (v4.40.0)
+// Toont de klantboekingen die Edge Function opname-boekingen elke
+// nacht in de tabel opname_boekingen zet. Open = zonder verwerkt_op
+// en zonder calculatie_id, ongeacht status. Wegtikken zet alleen
+// verwerkt_op en is terug te draaien via de inklapbare lijst onderin.
+// Een geannuleerde boeking die al een calculatie heeft en nog niet
+// gemeld is, staat erboven als melding met de knop Gezien.
+// ============================================================
+let _opnameRijen = [];
+let _opnameToonWeggetikt = false;
+let _opnameLaatsteFetch = 0;
+let _opnameFetchBezig = false;
+
+async function _opnameVerversen(force) {
+  if (typeof _sb === 'undefined' || !_sb || !_sb.from) return;
+  const nu = Date.now();
+  if (!force && nu - _opnameLaatsteFetch < 15000) { _opnameTeken(); return; }
+  if (_opnameFetchBezig) return;
+  _opnameFetchBezig = true;
+  try {
+    const { data: rijen, error } = await _sbQuery(
+      _sb.from('opname_boekingen')
+        .select('id, status, opname_datum, klant, email, telefoon, postcode, huisnummer, straat, plaats, zelf_geboekt, notities, gegevens, calculatie_id, verwerkt_op, annulering_gemeld_op, eerste_created, begint')
+        .order('opname_datum', { ascending: true, nullsFirst: false }),
+      'Opnameboekingen laden'
+    );
+    if (!error && Array.isArray(rijen)) {
+      _opnameRijen = rijen;
+      _opnameLaatsteFetch = Date.now();
+    }
+  } finally {
+    _opnameFetchBezig = false;
+  }
+  _opnameTeken();
+}
+
+function _opnameDatumKort(iso) {
+  if (!iso) return '';
+  const d = new Date(String(iso).length === 10 ? iso + 'T12:00:00' : iso);
+  if (isNaN(d)) return String(iso);
+  return d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function _opnameTeken() {
+  const blok = document.getElementById('opnameBoekingenBlok');
+  if (!blok) return;
+  const open = _opnameRijen.filter(r => !r.verwerkt_op && !r.calculatie_id);
+  const annul = _opnameRijen.filter(r => r.status === 'cancelled' && r.calculatie_id && !r.annulering_gemeld_op);
+  const weg = _opnameRijen.filter(r => r.verwerkt_op && !r.calculatie_id);
+
+  if (!open.length && !annul.length && !weg.length) { blok.style.display = 'none'; return; }
+  blok.style.display = '';
+
+  document.getElementById('opnameTeller').textContent = open.length + ' open';
+
+  const annulEl = document.getElementById('opnameAnnuleringen');
+  annulEl.innerHTML = annul.map(r => {
+    const c = data.calculaties.find(x => x.id === r.calculatie_id);
+    const calcNaam = c ? c.naam : 'calculatie onbekend';
+    return '<div style="display:flex; justify-content:space-between; align-items:center; gap:0.6rem; padding:0.45rem 0.6rem; margin-bottom:0.4rem; border:1px solid #e0a800; border-radius:6px; background:rgba(224,168,0,0.08);">'
+      + '<div><strong>Opname geannuleerd:</strong> ' + _escapeHtml(r.klant || 'onbekend')
+      + ', ' + _escapeHtml(_opnameDatumKort(r.opname_datum))
+      + ' <span class="mono" style="color:var(--muted); font-size:0.78rem;">(' + _escapeHtml(calcNaam) + ')</span></div>'
+      + '<button class="btn" onclick="_opnameAnnulGezien(\'' + r.id + '\')">Gezien</button>'
+      + '</div>';
+  }).join('');
+
+  const lijstEl = document.getElementById('opnameLijst');
+  lijstEl.innerHTML = open.map(r => {
+    const g = (r.gegevens && typeof r.gegevens === 'object') ? r.gegevens : {};
+    const mist = Array.isArray(g.ontbreekt) && g.ontbreekt.length ? g.ontbreekt.join(', ') : '';
+    const statusHtml = r.status === 'cancelled'
+      ? '<span class="mono" style="color:#c0392b; font-size:0.75rem;">geannuleerd</span>'
+      : '<span class="mono" style="color:var(--muted); font-size:0.75rem;">bevestigd</span>';
+    return '<div style="display:flex; justify-content:space-between; align-items:center; gap:0.6rem; padding:0.4rem 0; border-bottom:1px solid rgba(128,128,128,0.15);">'
+      + '<div style="min-width:0;">'
+      + '<div><span class="mono" style="font-size:0.8rem;">' + _escapeHtml(_opnameDatumKort(r.opname_datum)) + '</span> '
+      + '<strong>' + _escapeHtml(r.klant || (g.titel || 'onbekend')) + '</strong>'
+      + (r.plaats ? ' <span style="color:var(--muted);">' + _escapeHtml(r.plaats) + '</span>' : '')
+      + ' ' + statusHtml + '</div>'
+      + (mist ? '<div style="color:var(--muted); font-size:0.75rem;">mist: ' + _escapeHtml(mist) + '</div>' : '')
+      + '</div>'
+      + '<div style="display:flex; gap:0.4rem; flex-shrink:0;">'
+      + '<button class="btn" onclick="_opnameMaakCalc(\'' + r.id + '\')">Calculatie aanmaken</button>'
+      + '<button class="btn" style="opacity:0.75;" onclick="_opnameWegtik(\'' + r.id + '\')">Wegtikken</button>'
+      + '</div></div>';
+  }).join('');
+
+  const wegEl = document.getElementById('opnameWeggetiktRegel');
+  if (!weg.length) { wegEl.innerHTML = ''; }
+  else {
+    let html = '<a href="#" style="font-size:0.8rem; color:var(--muted);" onclick="_opnameToonWeggetikt = !_opnameToonWeggetikt; _opnameTeken(); return false;">'
+      + (_opnameToonWeggetikt ? 'verberg weggetikte' : 'toon weggetikte') + ' (' + weg.length + ')</a>';
+    if (_opnameToonWeggetikt) {
+      html += weg.map(r =>
+        '<div style="display:flex; justify-content:space-between; align-items:center; gap:0.6rem; padding:0.3rem 0; color:var(--muted); font-size:0.85rem; border-bottom:1px solid rgba(128,128,128,0.12);">'
+        + '<div>' + _escapeHtml(_opnameDatumKort(r.opname_datum)) + ' ' + _escapeHtml(r.klant || 'onbekend')
+        + (r.plaats ? ', ' + _escapeHtml(r.plaats) : '') + '</div>'
+        + '<button class="btn" style="opacity:0.75;" onclick="_opnameTerugzet(\'' + r.id + '\')">Terugzetten</button>'
+        + '</div>').join('');
+    }
+    wegEl.innerHTML = html;
+  }
+}
+
+async function _opnameWegtik(id) {
+  const { error } = await _sbQuery(
+    _sb.from('opname_boekingen').update({ verwerkt_op: new Date().toISOString() }).eq('id', id),
+    'Boeking wegtikken'
+  );
+  if (error) { _toast('Wegtikken mislukt: ' + (error.message || error)); return; }
+  await _opnameVerversen(true);
+}
+
+async function _opnameTerugzet(id) {
+  const { error } = await _sbQuery(
+    _sb.from('opname_boekingen').update({ verwerkt_op: null }).eq('id', id),
+    'Boeking terugzetten'
+  );
+  if (error) { _toast('Terugzetten mislukt: ' + (error.message || error)); return; }
+  await _opnameVerversen(true);
+}
+
+async function _opnameAnnulGezien(id) {
+  const r = _opnameRijen.find(x => x.id === id);
+  if (!r) return;
+  const c = data.calculaties.find(x => x.id === r.calculatie_id);
+  if (c) {
+    c.notities = 'AFSPRAAK GEANNULEERD (agenda, ' + _opnameDatumKort(r.opname_datum) + ')\n\n' + (c.notities || '');
+    _updateCalcDB(c);
+  } else {
+    _toast('Calculatie niet gevonden, alleen de melding wordt afgevinkt.');
+  }
+  const { error } = await _sbQuery(
+    _sb.from('opname_boekingen').update({ annulering_gemeld_op: new Date().toISOString() }).eq('id', id),
+    'Annulering afvinken'
+  );
+  if (error) { _toast('Afvinken mislukt: ' + (error.message || error)); return; }
+  await _opnameVerversen(true);
+}
+
+async function _opnameMaakCalc(id) {
+  const r = _opnameRijen.find(x => x.id === id);
+  if (!r) return;
+  const straatDeel = (r.straat ? r.straat : '') + (r.straat && r.huisnummer ? ' ' + r.huisnummer : '');
+  const naam = (r.klant || 'Onbekend') + ' | ' + (straatDeel || ('Opname ' + (r.opname_datum || '')));
+  const g = (r.gegevens && typeof r.gegevens === 'object') ? r.gegevens : {};
+  const aanvraag = r.eerste_created || g.google_created || null;
+  const notities = 'Aanvraag via boekingsformulier' + (aanvraag ? ' (' + _opnameDatumKort(aanvraag) + ')' : '') + ':\n'
+    + (r.notities || '(geen aanvraagtekst)');
+  const fresh = await _insertCalcDB({
+    naam: naam,
+    klant: r.klant || '',
+    status: 'afspraak',
+    postcode: r.postcode || '',
+    huisnummer: r.huisnummer || '',
+    opnameDatum: r.opname_datum || null,
+    notities: notities
+  });
+  if (!fresh) return;
+
+  // offerte_config gericht bijschrijven: alleen dit veld, nooit via de
+  // header-save (zie de regel bij _mapCalcHeaderToDB). _offCfg vult
+  // later de ontbrekende sleutels aan en laat deze staan. Van adres en
+  // briefadres blijft de knop af, dat is het aparte briefhoofd.
+  const cfg = {};
+  if (r.email) cfg.email = r.email;
+  if (r.telefoon) cfg.telefoon = r.telefoon;
+  if (r.straat || r.plaats) cfg.werkadres = { straat: r.straat || '', woonplaats: r.plaats || '' };
+  if (Object.keys(cfg).length) {
+    fresh.offerteConfig = cfg;
+    const { error: cfgFout } = await _sbQuery(
+      _sb.from('calculaties').update({ offerte_config: cfg }).eq('id', fresh.id),
+      'Offertegegevens opslaan'
+    );
+    if (cfgFout) _toast('Offertegegevens niet opgeslagen: ' + (cfgFout.message || cfgFout));
+  }
+
+  const { error: koppelFout } = await _sbQuery(
+    _sb.from('opname_boekingen').update({ calculatie_id: fresh.id, verwerkt_op: new Date().toISOString() }).eq('id', r.id),
+    'Boeking koppelen'
+  );
+  if (koppelFout) _toast('Boeking niet gekoppeld: ' + (koppelFout.message || koppelFout));
+
+  fresh.__loaded = true; // verse calc, niets te laden
+  data.calculaties.unshift(fresh); // voorop want gewijzigd-desc
+  data.activeCalcId = fresh.id;
+  try { localStorage.setItem('verfcalc_v3_activeCalcId', fresh.id); } catch(e) {}
+  _toast('Calculatie aangemaakt: ' + naam);
+  await _opnameVerversen(true);
+  renderCalcStructuur(); renderDashboard();
+}
+
 function renderDashboard() {
   document.getElementById('statMat').textContent = data.materialen.length;
   document.getElementById('statBew').textContent = data.bewerkingen.length;
@@ -19696,6 +19901,7 @@ function renderDashboard() {
   renderPlannenArchief();  // v3.25.9 — plannen-archief onder calc-archief
   renderVersieGeschiedenis();  // v3.18.0
   _accordMeldingenRender();  // v3.63.0 — reacties-melding op het dashboard
+  _opnameVerversen(false);  // v4.40.0 — opnameboekingen-blok
 }
 // ============================================================
 // INIT
