@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 2 augustus 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 9 augustus 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -62,11 +62,18 @@ computegrootte Nano.
 
 Adres van een project is altijd `https://<verwijzing>.supabase.co`.
 
-**schilders-calc** telt 36 tabellen, 6 opslagbakken, 12 triggers, 19 Edge
-Functions en 8 cronjobs. De grootste tabellen zijn `calc_regel_stappen`
-(1959 rijen), `meetstaat` (747) en `bewerkingen` (548). De tabellen zijn
-geteld op 2 augustus 2026 met `information_schema.tables` op schema
-`public`, type `BASE TABLE`.
+**schilders-calc** telt 37 tabellen, 6 opslagbakken, 12 triggers, 16 Edge
+Functions en 9 cronjobs. De grootste tabellen zijn `calc_regel_stappen`
+(1959 rijen), `meetstaat` (747) en `bewerkingen` (548). De 36 tabellen
+van toen zijn geteld op 2 augustus 2026 met `information_schema.tables`
+op schema `public`, type `BASE TABLE`; `opname_boekingen` is er op
+8 augustus bijgekomen en de negende cronjob op 9 augustus, zie 3.1.
+
+Hier stond tot 9 augustus "19 Edge Functions, geteld op 2 augustus". Dat
+getal spoort niet met de vijftien waar 3.2 diezelfde week op uitkwam en
+het verschil is nooit verklaard. Welke telling klopt is
+**[TE CONTROLEREN]** door de functielijst in Studio na te tellen; de 16
+hierboven volgt de administratie van 3.2.
 
 **schilder-voorraad** telt 9 tabellen en verder niets. Geen opslagbakken,
 geen triggers, geen cronjobs, geen enkele achtergrondtaak. De tabellen
@@ -111,6 +118,7 @@ doen is **[TE CONTROLEREN]**.
 | Craft.do | werkvoorbereidingsdocumenten |
 | Resend | verzenden van alle e-mail uit het systeem |
 | Anthropic | leescontrole op offertes en de vraagbaak in de app |
+| Google Agenda | klantboekingen voor de opnames lezen, via een serviceaccount, alleen-lezen |
 | PDOK Locatieserver | adressen opzoeken, gratis |
 | OpenRouteService | rijafstand berekenen |
 
@@ -130,7 +138,7 @@ geen tweede GitHub-account in gebruik.
 |---|---|---|
 | `schilders-calc` | **openbaar** | de vier appbestanden, `sql/`, dit document |
 | `schilder-voorraad` | **openbaar** | de voorraad-app |
-| `ernes-edge-functions` | **besloten** | de broncode van alle vijftien Edge Functions, plus de twee knoppen |
+| `ernes-edge-functions` | **besloten** | de broncode van de zestien Edge Functions, plus de twee knoppen |
 
 `ernes-edge-functions` is bewust besloten. Daar staat de herbouwset, en
 die kan onbedoeld geheimen bevatten. Alles wat op een uitdraai lijkt gaat
@@ -280,6 +288,10 @@ Welke sleutels bestaan (waarden staan in de kluis, niet hier):
 - Resend, sleutel voor het verzenden van mail
 - Anthropic, sleutel voor de leescontrole en de vraagbaak
 - Craft.do, koppelingsgegevens
+- Google, het serviceaccount voor de agendakoppeling: `GOOGLE_SA_JSON`
+  (het complete sleutelbestand) en `GOOGLE_AGENDA_GEBRUIKER`
+  (`administratie@ernes.nl`), als Edge Function secrets in
+  `schilders-calc`
 - `AFTAP_SECRET`, waarmee de cronjobs `backup-nachtelijk`,
   `taken-mail-melding` en `werkvoorraad-sync-wekelijks` de Edge Functions
   van binnenuit mogen aanroepen. Gaat mee in de header `x-aftap-key`
@@ -292,8 +304,12 @@ Functions, Secrets, per project.
 
 **Twee plekken waar geheimen staan.** Naast de Secrets bij Edge Functions
 heeft Supabase ook een eigen kluis, `vault`. Sinds 27 juli 2026 halen
-**alle acht cronjobs** hun sleutel daaruit op. In de kluis staan drie
-geheimen:
+**de acht cronjobs van dat moment** hun sleutel daaruit op. De negende,
+`opname-boekingen-dagelijks` van 9 augustus 2026, draagt zijn sleutel
+bewust leesbaar in de opdrachttekst: dat is de publieke publishable key
+die toch al op regel 3541 van de openbare `index.html` staat. De
+kluisregel geldt voor geheime sleutels en dit is er geen. In de kluis
+staan drie geheimen:
 
 | Naam in de kluis | Hoort gelijk te zijn aan | Gebruikt door |
 |---|---|---|
@@ -387,7 +403,7 @@ manieren stuk.
 In het project `schilder-voorraad` bestaat **geen enkele** van de drie.
 Daar draait niets automatisch. Alles wat daar gebeurt komt uit de app.
 
-### 3.1 De acht cronjobs
+### 3.1 De negen cronjobs
 
 Allemaal in `schilders-calc`, allemaal actief.
 
@@ -400,6 +416,7 @@ Allemaal in `schilders-calc`, allemaal actief.
 | Naam | UTC | Bij ons, zomer | Bij ons, winter | Roept aan | Wat het doet |
 |---|---|---|---|---|---|
 | `backup-nachtelijk` | 02:00 | 04:00 | 03:00 | `backup-dump` | dump van de database naar de bak `backups`, plus kopie van foto's en documenten. Stuurt maandag een statusmail |
+| `opname-boekingen-dagelijks` | 03:45 | 05:45 | 04:45 | `opname-boekingen` | leest de klantboekingen uit de Google agenda en werkt de tabel `opname_boekingen` bij. Bijgekomen 9 augustus 2026 |
 | `yuki-vuller-dagelijks` | 05:00 | 07:00 | 06:00 | `smooth-function` | haalt de standen uit Yuki en vult het financiele dashboard |
 | `yuki-vuller-middag` | 10:00 | 12:00 | 11:00 | `smooth-function` | zelfde, tweede keer op de dag |
 | `yuki-vuller-avond` | 17:00 | 19:00 | 18:00 | `smooth-function` | zelfde, derde keer op de dag. Bijgekomen 1 augustus 2026 |
@@ -419,14 +436,16 @@ waarom. Zie de opruimlijst.
 `taken-mail-melding` draait elke twee minuten, ruim 700 keer per dag. Dat
 kost geen geld van betekenis, maar het laat de logtabellen hard vollopen.
 
-### 3.2 De vijftien Edge Functions
+### 3.2 De zestien Edge Functions
 
 Het waren er achttien tot 27 juli 2026. Toen zijn `taken-meldingen`,
 `yoobi-kijkglas` en `yoobi-project-probe` verwijderd, alle drie na
 vaststelling dat ze zesentwintig dagen lang nul keer waren aangeroepen.
 Op 2 augustus is `taken-agenda` gevolgd, waarmee het er veertien werden.
 Op 3 augustus kwam `taak-afvinkmelding` erbij, zie opruimpunt 21. Daarmee
-staat de teller weer op vijftien.
+stond de teller weer op vijftien. Op 9 augustus 2026 is
+`opname-boekingen` aan dit overzicht toegevoegd, zie verderop, en staat
+de teller op zestien.
 
 > **Het getal in dit document klopte niet.** GEMETEN op 3 augustus 2026:
 > het woord "achttien" stond er twaalf keer, waarvan zes keer over de
@@ -462,7 +481,54 @@ ophaalknop die repo wekelijks vanzelf bij, zie 2.1.
 
 **Aangeroepen door cron** (zie de tabel hierboven): `backup-dump`,
 `smooth-function`, `offerte-herinnering`, `taken-mail-melding`,
-`fin-werkvoorraad-sync`, `maandbericht`.
+`fin-werkvoorraad-sync`, `maandbericht`, `opname-boekingen`.
+
+**`opname-boekingen`, de agendakoppeling.** Versie 4 sinds 9 augustus
+2026. Leest de primaire agenda van `administratie@ernes.nl` via een
+Google-serviceaccount: cloudproject `ernes-agenda`, serviceaccount
+`schilders-calc-agenda@ernes-agenda.iam.gserviceaccount.com`,
+domeinbrede machtiging met alleen `calendar.readonly`. De sleutels staan
+als secrets in Supabase, zie 2.4. De functie herkent klantboekingen aan
+"geboekt door" in de omschrijving, kijkt 180 dagen terug, zet postcode
+plus huisnummer via PDOK om naar straat en woonplaats en groepeert
+boekingen per e-mailadres, zodat `eerste_created` het echte
+aanvraagmoment vasthoudt, ook na een verzetting.
+
+Zonder parameter is elke aanroep een droogloop: de functie leest de
+tabel, vergelijkt en meldt wat hij zou doen (nieuw, bijgewerkt,
+ongewijzigd), maar verandert niets. Alleen met `?schrijf=1` schrijft hij
+naar de tabel `opname_boekingen`, en die parameter geeft alleen de
+cronjob mee.
+
+Mengregels bij het bijwerken van een bestaande rij:
+
+- de vier appkolommen `calculatie_id`, `verwerkt_op`,
+  `annulering_gemeld_op` en `created_at` worden door de sync nooit
+  aangeraakt, die zijn van de app
+- `eerste_created`: de oudste waarde wint, zodat het aanvraagmoment niet
+  meeschuift wanneer een oudere boeking uit het venster van 180 dagen
+  valt
+- klant-, adres- en notitievelden: gevuld wint en een lege nieuwe waarde
+  laat de oude staan. Vangnet tegen een PDOK-storing, want bij de nieuwe
+  formuliervorm komen straat en woonplaats alleen uit PDOK
+- status- en tijdvelden: de laatste run wint
+- een rij waar niets aan verandert wordt niet geschreven, dus
+  `updated_at` betekent laatst inhoudelijk gewijzigd door de sync
+- de kolom `gegevens` (jsonb) bevat het complete boekingsobject zoals de
+  laatst schrijvende run het zag
+
+De tabel `opname_boekingen` is aangemaakt op 8 augustus 2026, telt 24
+kolommen, heeft een unieke sleutel op `google_event_id` en verwijst met
+`calculatie_id` naar `calculaties`, on delete set null. Op 9 augustus
+gevuld met de eerste 30 boekingen. Het blokje in de app dat deze
+boekingen toont en er met een knop calculaties van maakt bestaat nog
+niet; dat is de volgende stap.
+
+**Bewust besluit van 9 augustus 2026.** Zodra die knop er is komt de
+aanvraagtekst van de klant in `calculaties.notities` en daarmee
+standaard onder het kopje Bevindingen op de offerte. Er komt geen
+waarschuwing bij het aanmaken van de accordeerlink; Gian schrijft de
+notitie tijdens de opname over. Dit is gekozen en geen vergeten risico.
 
 **Aangeroepen vanuit de apps:**
 
@@ -667,7 +733,7 @@ bestand voorkwam.
 bruikbaar maar is dat niet: alle functies staan er door elkaar op
 volgorde van tijd en je trekt er makkelijk de verkeerde conclusie uit.
 
-> **De blinde vlek van cron.** Zeven van de acht cronjobs gebruiken
+> **De blinde vlek van cron.** Acht van de negen cronjobs gebruiken
 > `net.http_post`. Dat stuurt het verzoek de deur uit en gaat meteen
 > door, zonder op antwoord te wachten. **Cron meldt daarom "succeeded"
 > zodra het verzoek verstuurd is, ook als de functie het daarna weigert.**
@@ -987,8 +1053,8 @@ Supabase houdt op te bestaan.
 | Broncode Edge Functions | ja, `ernes-edge-functions` | — |
 | Structuur van de database | ja, `schema/` en de maandagbijlage | half uur |
 | Inhoud van de database | ja, de JSON uit 4.7 | minuten |
-| **De vijftien functies uitrollen** | n.v.t. | **uren klikwerk** |
-| De acht cronjobs | ja, hoofdstuk 3.1 | half uur |
+| **De zestien functies uitrollen** | n.v.t. | **uren klikwerk** |
+| De negen cronjobs | ja, hoofdstuk 3.1 | half uur |
 | De geheimen | ja, de kluis | half uur |
 | De zes inlogaccounts | nee | half uur, zie waarschuwing |
 | Opslagbakken en hun rechten | ja, zitten in de schemadump | minuten |
@@ -1066,7 +1132,7 @@ maandag meegestuurd als bijlage.
 | 6 opslagbakken | `schema_dump()` | ja |
 | 25 verwijssleutels | `schema_dump()` | ja, onderaan als `ALTER TABLE` |
 | 1 reeks (`taak_dagkeuze_id_seq`) | `schema_dump()` | ja, plus `setval` |
-| 8 cronjobs | `schema_dump()` en 3.1 | ja, adres handmatig aanpassen |
+| 9 cronjobs | `schema_dump()` en 3.1 | ja, adres handmatig aanpassen |
 | views | n.v.t., er zijn er geen | — |
 | de drie kluissleutels | **nee, met opzet** | met de hand |
 
@@ -1916,9 +1982,9 @@ van een backup is één keer echt geoefend en werkte.
 
 ## Wat er nog niet in staat
 
-- **De negen plekken met [TE CONTROLEREN].** Vooral de kluis, het adres
-  van de gedeelde mailbox, wie welke rol heeft, en de contactgegevens van
-  Ed en Vincent.
+- **De zestien plekken met [TE CONTROLEREN]**, geteld op 9 augustus
+  2026. Vooral de kluis, het adres van de gedeelde mailbox, wie welke
+  rol heeft, en de contactgegevens van Ed en Vincent.
 - **Een test van de eigen nachtelijke dump.** Zie 4.7. Dit is de
   belangrijkste openstaande vraag van het hele document.
 - **De A4-noodkaart.** Eén vel om naast de iMac te hangen, met alleen de
@@ -2991,3 +3057,56 @@ is niet dat er beter opgelet moet worden maar dit: **een controle die
 tekst zoekt moet zoeken op iets dat alleen in de code kan voorkomen en
 niet in de toelichting.** Hier werd dat `functions/v1/taak-afvinkmelding`,
 met het pad ervoor.
+
+---
+
+## Wat er op 9 augustus 2026 gedaan is
+
+### Agendakoppeling: v4 schrijft naar de database
+
+`opname-boekingen` is van v3 (alleen lezen) naar v4 gegaan en schrijft
+nu op verzoek naar de tabel `opname_boekingen`. Gedrag en mengregels
+staan in 3.2. Het bewijs is in drie stappen geleverd: een droogloop
+meldde 30 nieuw bij een lege tabel, de schrijfrun schreef er 30, en een
+tweede droogloop meldde 30 ongewijzigd en 0 te schrijven. Die laatste
+stap bewijst ook de tijdvergelijking: Google levert tijden met
+milliseconden en een Z, de database geeft ze terug als +00, en de
+vergelijking kijkt daarom naar het tijdstip en niet naar de tekst.
+
+Stand van de tabel na de eerste vulling: 30 rijen, 26 confirmed, 4
+cancelled, 2 zelf geboekt, alle vier de appkolommen leeg en geen enkele
+rij zonder `eerste_created`.
+
+Twee mengregels zijn op 9 augustus bewust aangescherpt ten opzichte van
+het plan van de dag ervoor: de oudste `eerste_created` wint (anders
+schuift het aanvraagmoment mee met het venster van 180 dagen) en
+gevulde klant- en adresvelden worden nooit leeggemaakt door een lege
+nieuwe waarde (anders wist een PDOK-storing goede adressen).
+
+Bestanden van vandaag: `opname-boekingen-v4.ts` (39.153 bytes),
+`2026-08-09_test_v4_sync.sql` en `2026-08-09_cron_opname_boekingen.sql`.
+
+### Cronjob erbij: `opname-boekingen-dagelijks`
+
+Elke dag om 03:45 UTC, dus 05:45 zomertijd en 04:45 wintertijd, roept
+hij de functie aan met `?schrijf=1`. Aangemaakt met
+`2026-08-09_cron_opname_boekingen.sql`. De sleutel staat bewust leesbaar
+in de opdracht, zie de toelichting in 2.4.
+
+### Getallen die niet sporen
+
+In 1.2 stond 19 Edge Functions, geteld op 2 augustus, terwijl 3.2 op 3
+augustus op vijftien uitkwam. Dat verschil van vier is nooit verklaard
+en staat nu in 1.2 als controleerpunt: de functielijst in Studio
+natellen beslist het. Verder telde dit bestand vandaag vijftien
+markeringen, zestien met het nieuwe punt erbij, terwijl de lijst
+achterin negen zei; dat getal is bijgewerkt naar de telling van vandaag.
+
+### Nog te doen op dit spoor
+
+- het boekingenblokje in de app, met vooraf een meting van de
+  rijbeveiliging op `opname_boekingen`
+- ongeveer 20 van de 30 rijen horen bij opnames die al geweest zijn en
+  moeten in dat blokje eenmalig weggewerkt kunnen worden
+- v4 archiveren in `ernes-edge-functions`; de wekelijkse ophaalactie
+  neemt hem bij de eerstvolgende run ook vanzelf mee, zie opruimpunt 22
