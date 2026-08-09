@@ -521,8 +521,12 @@ De tabel `opname_boekingen` is aangemaakt op 8 augustus 2026, telt 24
 kolommen, heeft een unieke sleutel op `google_event_id` en verwijst met
 `calculatie_id` naar `calculaties`, on delete set null. Op 9 augustus
 gevuld met de eerste 30 boekingen. Het blokje in de app dat deze
-boekingen toont en er met een knop calculaties van maakt bestaat nog
-niet; dat is de volgende stap.
+boekingen toont bestaat sinds v4.40.0 van diezelfde dag: knop
+Calculatie aanmaken (naam Achternaam | werksoort uit het formulier,
+alleen de achternaam in klant, deadline op opname plus veertien dagen,
+adres, e-mail, telefoon en de aanvraagtekst in de notities) en knop
+Wegtikken met een terugzetlijst. Zie de CHANGELOG bij v4.40.0 tot en
+met v4.40.2.
 
 **Bewust besluit van 9 augustus 2026.** Zodra die knop er is komt de
 aanvraagtekst van de klant in `calculaties.notities` en daarmee
@@ -3102,11 +3106,22 @@ natellen beslist het. Verder telde dit bestand vandaag vijftien
 markeringen, zestien met het nieuwe punt erbij, terwijl de lijst
 achterin negen zei; dat getal is bijgewerkt naar de telling van vandaag.
 
+### Het boekingenblokje is dezelfde dag gebouwd: v4.40.0 tot en met v4.40.2
+
+De rijbeveiliging op `opname_boekingen` is eerst gemeten: huispatroon,
+identiek aan `calculaties`, dus geen policywerk nodig. Daarna is het
+blokje op het dashboard gebouwd met de knoppen Calculatie aanmaken en
+Wegtikken, zie de CHANGELOG. Twee praktijkrondes dezelfde avond:
+v4.40.1 vult de deadline (opname plus veertien dagen, de bestaande
+autovulregel) en v4.40.2 volgt de naamconventie met de werksoort uit
+het boekingsformulier zelf, gemeten uit de notities van alle dertig
+boekingen.
+
 ### Nog te doen op dit spoor
 
-- het boekingenblokje in de app, met vooraf een meting van de
-  rijbeveiliging op `opname_boekingen`
-- ongeveer 20 van de 30 rijen horen bij opnames die al geweest zijn en
-  moeten in dat blokje eenmalig weggewerkt kunnen worden
+- de eenmalige opruimronde: de oude boekingen in het blokje wegtikken
 - v4 archiveren in `ernes-edge-functions`; de wekelijkse ophaalactie
   neemt hem bij de eerstvolgende run ook vanzelf mee, zie opruimpunt 22
+- morgenochtend na 05:45 blok 5 van
+  `2026-08-09_cron_opname_boekingen.sql` draaien om de eerste
+  nachtelijke run te controleren
