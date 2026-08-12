@@ -3125,3 +3125,69 @@ boekingen.
 - morgenochtend na 05:45 blok 5 van
   `2026-08-09_cron_opname_boekingen.sql` draaien om de eerste
   nachtelijke run te controleren
+
+## Wat er op 12 augustus 2026 gedaan is
+
+### De eerste echte herinnering is verstuurd, en de zin erin was fout
+
+Op maandag 10 augustus om 08:30 stuurde `offerte-herinnering` voor het
+eerst uit zichzelf een herinneringsmail, op de testofferte die op 2
+augustus was gemaild (beide tijdstippen gemeten in
+`offerte_accorderingen`). De automaat werkt dus van kop tot staart:
+cron, poorten, venster, mail, stempel. De reparatie hieronder is twee
+dagen later, op 12 augustus, gebouwd.
+
+De zin in die mail was alleen niet goed: "Enige tijd geleden stuurden
+wij u onze offerte voor Testen taken als gevolg van uitbrengen
+offerte ." De functie plakte `calculaties.naam` letterlijk in de
+lopende zin. De spatie voor de punt kwam niet uit het sjabloon maar uit
+een naspatie in de opgeslagen naam, gemeten in de broncode: daar staat
+geen spatie. De testquery van 12 augustus toonde de naspatie daarna
+tussen haken in de opgeslagen naam. Het echte probleem is groter dan de testnaam: de
+projectnaam volgt de conventie Achternaam | werksoort, dus een echte
+klant zou "onze offerte voor Duvekot | Buitenwerk" lezen, met de eigen
+achternaam erin. De projectnaam stond bovendien ook in de
+onderwerpregels van beide klantmails en in de gesproken openingszin van
+het belscript.
+
+### `offerte-herinnering` v4.41.0: werksoort in de klantmails
+
+Nieuwe helper `werksoortKlanttaal` leest het deel achter de streep van
+de projectnaam en vertaalt naar klanttaal: Buitenwerk wordt "het
+buitenschilderwerk", Binnenwerk "het binnenschilderwerk", Binnen- en
+buitenwerk "het binnen- en buitenschilderwerk". Herkenning op de
+woorden binnen en buiten, hetzelfde principe als `_opnameWerksoort` in
+de app. Geen streep of niets herkenbaars, dan valt de zin terug op kaal
+"onze offerte" en klopt hij nog steeds. Er wordt bewust niet vóór de
+streep gezocht: daar staat de achternaam, en een naam als Buitenhuis
+zou anders vals als buitenwerk herkend worden.
+
+De onderwerpregels gebruiken nu het offertenummer: "Herinnering offerte
+26-012" en "Offerte 26-012 is verlopen", met een nette kale variant als
+het nummer ontbreekt. De gesproken zin van het belscript zegt "voor het
+buitenschilderwerk" met terugval "uw schilderwerk". Intern verandert er
+niets: taakonderwerpen, de regel Project: in de notitie, logregels en
+het interne seintje behouden de volledige projectnaam, want daar moet
+je hem juist wél zien.
+
+Getest buiten de echte omgeving: esbuild-transpilatie plus node-parse,
+en logische tests op `werksoortKlanttaal`, beide mails en het belscript
+(zestien gevallen, waaronder de testnaam zonder streep, een achternaam
+met buiten erin en naspaties). De echte-omgevingstest is dezelfde avond gedaan met
+`2026-08-12_test_herinnering_v4.41.0.sql`: na deploy van v4.41.0 de
+stempel `herinnering_op` teruggezet en de ronde met de hand gedraaid
+via de cronopdracht uit `cron.job`. De mail van 22:38 had de kale
+terugvalzin zonder projectnaam en zonder spatie voor de punt, als
+onderwerp "Herinnering offerte 1111-11" met het nummer uit de
+snapshot, en het interne seintje behield de projectnaam. Precies het
+ontworpen gedrag, op alle drie de paden.
+
+Bestanden van vandaag: `offerte-herinnering-v4.41.0.ts` en
+`2026-08-12_test_herinnering_v4.41.0.sql`.
+
+### Nog te doen op dit spoor
+
+- blok 3 van het testbestand draaien: `herinnering_op` moet weer
+  gevuld zijn. De functie controleert die update zelf niet op fouten
+  en de stempel is de rem tegen een herhaalmail de volgende ochtend
+- `offerte-herinnering-v4.41.0.ts` archiveren in `ernes-edge-functions`
