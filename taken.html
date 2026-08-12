@@ -596,7 +596,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.16.0';
+const APP_VERSION = 'v0.16.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -845,7 +845,7 @@ const RUBRIEKEN = [
   { key:'oprol',     titel:'Op de rol',      sub:'speelt vandaag, nog niet gekozen',         open:true,    klasse:'roll' },
   { key:'los',       titel:'Losse taken',    sub:'wat er nog aankomt',                       open:false },
   { key:'herhalend', titel:'Herhalend ↻',    sub:'',                                         open:false },
-  { key:'klant',     titel:'Klantopvolging', sub:'uit Yoobi · alleen bekijken',              open:false, klasse:'gated' },
+  { key:'klant',     titel:'Klantopvolging', sub:'uit Yoobi · bijwerken met ↻',             open:false, klasse:'gated' },
   { key:'voltooid',  titel:'Voltooid',       sub:'je eigen afgevinkte taken',                open:false,   klasse:'done' },
   { key:'vervallen', titel:'Vervallen',      sub:'niet meer nodig, blijft als historie',     open:false,   klasse:'lapsed' },
 ];
@@ -989,10 +989,16 @@ function bouwRubriek(r){
   let zichtbaar = eigen;
   let sub = r.sub;
   let extraNoot = '';
+  let voorNoot = '';
   if(r.key === 'oprol'){
     const laat = eigen.filter(t => t._telaat).length;
     sub = eigen.length === 0 ? 'niets meer open'
         : (eigen.length - laat) + ' speelt vandaag' + (laat ? ' · ' + laat + ' te laat' : '');
+  }
+  /* v0.16.1: de Yoobi-lijst ververst zichzelf niet, dus staat de regel
+     erbij die zegt wanneer je hem zelf bijwerkt. */
+  if(r.key === 'klant'){
+    voorNoot = '<div class="hidnote">Deze lijst haalt zichzelf niet op. Klaar met verwerken in Yoobi? Tik dan \u21bb hierboven.</div>';
   }
   if(r.key === 'herhalend'){
     zichtbaar = eigen.filter(t => t._binnenWeek);
@@ -1023,7 +1029,7 @@ function bouwRubriek(r){
     (r.key === 'klant' ? '<span class="ophaal-knop" data-ophaal="1" role="button" tabindex="0" aria-label="Yoobi ophalen" title="Yoobi ophalen">\u21bb</span>' : '') +
     '<span class="count">' + eigen.length + '</span><span class="chev"></span>' +
     '</button>' + gatehint +
-    '<div class="cards"><div class="inner">' + kaarten + extraNoot + '</div></div></div>';
+    '<div class="cards"><div class="inner">' + voorNoot + kaarten + extraNoot + '</div></div></div>';
 }
 
 function bouwMeetstrook(){
@@ -2022,9 +2028,17 @@ function ophaalStand(draait, subtekst){
   if(!sec) return;
   const knop = sec.querySelector('[data-ophaal]');
   if(knop) knop.classList.toggle('draait', draait);
-  if(subtekst != null){
+  /* v0.16.1: stopt het ophalen zonder dat het scherm opnieuw wordt
+     opgebouwd, dan bleef hier 'bezig met ophalen' staan. Zonder eigen
+     tekst valt hij nu terug op de vaste ondertitel van de rubriek. */
+  var tekst = subtekst;
+  if(tekst == null && !draait){
+    var rub = RUBRIEKEN.filter(function(r){ return r.key === 'klant'; })[0];
+    tekst = rub ? rub.sub : '';
+  }
+  if(tekst != null){
     const sub = sec.querySelector('.title .sub');
-    if(sub) sub.textContent = subtekst;
+    if(sub) sub.textContent = tekst;
   }
 }
 
