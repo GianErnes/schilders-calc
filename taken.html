@@ -596,7 +596,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.16.1';
+const APP_VERSION = 'v0.16.2';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -2066,7 +2066,11 @@ async function haalYoobiOp(){
       body:'{}',
     });
     if(resp.status !== 202 && !resp.ok){
-      if(resp.status === 401){ toast('Geen rechten om op te halen, meld opnieuw aan'); }
+      /* v0.16.2: de function weigert sinds 13 augustus een tweede ronde
+         met een 409 zolang er al een keten loopt. Dat is geen storing,
+         dus geen foutmelding maar een uitleg. */
+      if(resp.status === 409){ toast('Er loopt al een ronde, even geduld'); }
+      else if(resp.status === 401){ toast('Geen rechten om op te halen, meld opnieuw aan'); }
       else { toast('Ophalen start niet (' + resp.status + ')'); }
       YOOBI_BEZIG=false; ophaalStand(false); await laadTaken(); return;
     }
@@ -2081,6 +2085,17 @@ async function haalYoobiOp(){
         if(rp.data && rp.data[0]){ fase=rp.data[0].fase; nog=rp.data[0].nog_te_gaan; stamp=rp.data[0].bijgewerkt; }
       }catch(e){}
       if(fase === 'bezig' && nog != null) ophaalStand(true, 'bezig met ophalen\u2026 nog ' + nog);
+      /* v0.16.2: de function zet de stand op mislukt zodra Yoobi weigert
+         of iets anders stukloopt. Zonder deze tak bleef het scherm drie
+         minuten draaien op een idle die nooit kwam. Dat was de vastloper
+         van 13 augustus. */
+      if(fase === 'mislukt'){
+        YOOBI_BEZIG=false;
+        ophaalStand(false);
+        await laadTaken();
+        toast('Ophalen is gestopt, Yoobi antwoordde niet. De lijst is niet gewijzigd.');
+        return;
+      }
       if(fase === 'idle' && stamp && stamp !== startStamp){
         YOOBI_BEZIG=false;
         await laadTaken();
