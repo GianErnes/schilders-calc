@@ -596,7 +596,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.16.2';
+const APP_VERSION = 'v0.16.3';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -2075,15 +2075,36 @@ async function haalYoobiOp(){
       YOOBI_BEZIG=false; ophaalStand(false); await laadTaken(); return;
     }
 
-    // Volgen tot klaar: fase idle met een verse tijdstempel.
-    const maxPogingen = 60;
-    for(let i=0;i<maxPogingen;i++){
+    /* Volgen tot klaar: fase idle met een verse tijdstempel.
+       v0.16.3: een volle ronde duurt in de praktijk ruim zes minuten.
+       GEMETEN op 13 augustus 2026: 812 klanten, zes brokken, van 11:09:30
+       tot 11:15:46. Het scherm gaf het na drie minuten op en meldde dan
+       onterecht dat het nog doorliep, terwijl de lijst niet meer werd
+       ververst op het moment dat hij wel klaar was.
+       Nu volgt hij tot twintig minuten, maar haakt af zodra er vier
+       minuten lang niets meer verandert. Vier minuten, want een enkel
+       brok duurt ongeveer anderhalve minuut en dan mag hij niet
+       voortijdig concluderen dat het stilstaat. */
+    const MAX_POGINGEN = 400;       // 400 keer 3 seconden is twintig minuten
+    const STIL_GRENS_MS = 240000;   // vier minuten zonder enige verandering
+    let laatsteNog = null;
+    let laatsteStamp = startStamp;
+    let stilSinds = Date.now();
+
+    for(let i=0;i<MAX_POGINGEN;i++){
       await new Promise(r => setTimeout(r, 3000));
       let fase=null, nog=null, stamp=null;
       try{
         const rp = await sb.rpc('taken_sync_status');
         if(rp.data && rp.data[0]){ fase=rp.data[0].fase; nog=rp.data[0].nog_te_gaan; stamp=rp.data[0].bijgewerkt; }
       }catch(e){}
+      /* Elke verandering, in het aantal of in de tijdstempel, telt als
+         teken van leven en zet de stilstandsklok terug op nul. */
+      if(nog !== laatsteNog || stamp !== laatsteStamp){
+        laatsteNog = nog;
+        laatsteStamp = stamp;
+        stilSinds = Date.now();
+      }
       if(fase === 'bezig' && nog != null) ophaalStand(true, 'bezig met ophalen\u2026 nog ' + nog);
       /* v0.16.2: de function zet de stand op mislukt zodra Yoobi weigert
          of iets anders stukloopt. Zonder deze tak bleef het scherm drie
@@ -2102,11 +2123,23 @@ async function haalYoobiOp(){
         toast('Klantopvolging bijgewerkt');
         return;
       }
+      /* v0.16.3: staat alles vier minuten lang stil, dan is de keten weg
+         zonder dat de stand op mislukt kwam. Dat gebeurt als het platform
+         de function afkapt. Niet blijven wachten, wel de lijst verversen
+         want het werk dat af was staat er gewoon. */
+      if(Date.now() - stilSinds > STIL_GRENS_MS){
+        YOOBI_BEZIG=false;
+        ophaalStand(false);
+        await laadTaken();
+        toast('Ophalen reageert niet meer, lijst is alvast ververst');
+        return;
+      }
     }
-    // Duurt langer dan verwacht: toch verversen, hij loopt door.
+    // Twintig minuten voorbij zonder afronding. Ongewoon, dus melden.
     YOOBI_BEZIG=false;
+    ophaalStand(false);
     await laadTaken();
-    toast('Ophalen loopt nog door, lijst is alvast ververst');
+    toast('Ophalen duurt ongewoon lang, lijst is alvast ververst');
   }catch(e){
     YOOBI_BEZIG=false;
     ophaalStand(false);
