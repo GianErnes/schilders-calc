@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 12 augustus 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 13 augustus 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -545,7 +545,7 @@ notitie tijdens de opname over. Dit is gekozen en geen vergeten risico.
 | `offerte-verzenden` | Calc | verstuurt de offerte |
 | `reisafstand` | Calc | rijafstand naar het werkadres |
 | `yoobi-klant` | Calc | klantgegevens uit Yoobi |
-| `yoobi-taken-sync` | Taken | taken uit Yoobi |
+| `yoobi-taken-sync` | Taken | taken en projectnamen uit Yoobi |
 
 `offerte-herinnering` wordt zowel door cron als vanuit de app aangeroepen.
 
@@ -2375,6 +2375,11 @@ ruim na de sweep van 22 juli. Bij de eerstvolgende voltooide Yoobi-ronde
 ligt hij onder de nieuwe marker. Staat hij er daarna nog, dan is de
 reparatie in productie bewezen en niet alleen teruggelezen.
 
+> **Bijgewerkt op 13 augustus 2026.** Die ronde is er geweest: de
+> eerste voltooide ronde van de herbouwde sync, met opruimbeurt. De
+> spiegel en de offerte-taken staan er nog. Daarmee is de reparatie in
+> productie bewezen, zie de sectie van 13 augustus.
+
 ### Wat er onderweg nog meer gemeten is
 
 - **De standaardwaarde van `taken.bron` is `'yoobi'`.** Wie ergens een rij
@@ -2397,6 +2402,9 @@ reparatie in productie bewezen en niet alleen teruggelezen.
   dezelfde soort in alfabetische naamvolgorde af. Een vijfde voor punt 6
   komt dus op een plek die de naam bepaalt, ten opzichte van
   `bevries_yoobi` en `zet_bijgewerkt`
+
+> **Bijgewerkt op 13 augustus 2026.** Het ketenslot is herbouwd en
+> weigert nu echt, met een 409. Zie de sectie van 13 augustus.
 
 ### Wat punt 6 hiervan meeneemt
 
@@ -3191,3 +3199,121 @@ Bestanden van vandaag: `offerte-herinnering-v4.41.0.ts` en
   gevuld zijn. De functie controleert die update zelf niet op fouten
   en de stempel is de rem tegen een herhaalmail de volgende ochtend
 - `offerte-herinnering-v4.41.0.ts` archiveren in `ernes-edge-functions`
+
+
+## Wat er op 13 augustus 2026 gedaan is
+
+Twee sporen op een dag. In de ochtend is de vastgelopen takensync
+herbouwd, in de middag hebben de Yoobi-taken in de app een tweede regel
+gekregen met de naam van het project waar ze bij horen. Vier
+functieversies passeerden: `2026-08-13` (de herbouw), `b` en `c` (twee
+meetversies die samen een paar uur geleefd hebben) en `d` (de
+blijvende). De takenapp ging van v0.16.1 naar v0.16.4.
+
+### De takensync liep vast en is herbouwd
+
+**De storing.** De knop deed niets meer en de stand bleef op `bezig`
+hangen. Twee oorzaken, beide gemeten in het logboek. Yoobi gaf een 429
+op de token-endpoint: de functie vroeg per brok een nieuw token, zes
+binnen een minuut, in de nasleep van een DDoS-aanval die Yoobi zelf
+gemeld heeft. En de functie kende geen weg terug uit fase `bezig`, dus
+een fout liet de app eeuwig wachten op een `idle` die niet kwam. De
+stilte sinds 22 juli had een simpeler verklaring: vakantie. De sync
+heeft geen cronjob en draait alleen op de knop.
+
+**Uitgerold.** `sync_state` kreeg de kolommen `fouten_ronde` en
+`geschreven_ronde` en de controle `sync_state_fase_geldig` (idle,
+bezig, mislukt). De functie werd versie `2026-08-13`, met acht
+wijzigingen: een token per ronde in plaats van per brok; fouten per
+klant worden geteld en gelogd met statuscode, de eerste vijf volledige
+teksten en de snelheidskoppen van Yoobi; vier tellers voor wat er
+afvalt (uitgevoerd, geannuleerd, ruis, zonder id); de opruimregel
+kreeg vier sloten, waaronder een filter `bron=eq.yoobi` dat los staat
+van de trigger `bescherm_eigen`; een fout zet de stand op `mislukt`;
+het ketenslot weigert nu echt, met een 409, en interne aanroepen gaan
+er met `?intern=1` langs; bij een 429 stopt hij zonder aan te dringen;
+en `BATCH` ging van 5 naar 2 met `PAUZE_MS` op 300, beide AANNAME want
+Yoobi heeft geen limieten opgegeven. `taken.html` v0.16.2 en v0.16.3
+herkennen de fase `mislukt`, tonen een 409 als uitleg in plaats van
+als storing, en volgen een ronde tot twintig minuten met een
+stilstandsmelder na vier minuten zonder beweging.
+
+**De eerste geslaagde ronde, gemeten.** 11:09:30 tot 11:15:46 lokale
+tijd, een druk op de knop: 812 klanten in zes brokken, nul fouten, 91
+taken weggeschreven, opruimen liep met alle vier de sloten open en
+verwijderde er drie. Daarmee is ook het losse eindje van 31 juli
+dicht: de offerte-taken en de todo-spiegel hebben een volledige ronde
+met opruimbeurt overleefd. De reparatie van `bescherm_eigen` is in
+productie bewezen, niet alleen teruggelezen.
+
+**Wat niet bewezen is.** Of de nul fouten aan de rustiger instellingen
+ligt of aan herstel bij Yoobi: beide veranderden tegelijk. Het strenge
+pad van de opruimregel, een ronde met fouten, is alleen in de code
+gelezen. En de vraag aan Vincent Egt over de snelheidslimieten is
+bewust uitgesteld tot Yoobi op adem is.
+
+### Taken tonen nu het werk: de projectnaam uit Yoobi
+
+**De aanleiding.** Een Yoobi-taak toonde wel de klant maar niet het
+werk. Bij een klant met meerdere werken zegt "Francot laten weten
+wanneer we het werk hebben ingepland" te weinig.
+
+**De metingen die de richting omgooiden.** Het oorspronkelijke plan
+was een kolom verkoopnaam, op basis van een enkele gemeten taak waarin
+`crmsalename` gevuld was en `projectid` leeg. De telling over alle 86
+weggeschreven open taken (meetversie `b`) draaide dat om: 1 met
+verkoopnaam, 1 met verkoopcode, 78 met `projectid`. Die ene taak bleek
+een uitgevoerde offertemailtaak uit 2021 en daarmee de uitzondering.
+De projectmeting (meetversie `c`) maakte de rest hard: de ongefilterde
+projectenlijst werkt, 1703 projecten over negen pagina's van
+tweehonderd waarvan maar 180 actief, gesloten projecten doen mee, elk
+project draagt zowel de GUID `projectid` als `name`, en alle 64 unieke
+taak-ids werden in `projectAllCodes` teruggevonden. De acht taken
+zonder `projectid` zijn werk dat nog geen project is: offertes
+uitbrengen, onderhoudsplannen opstellen. Daar zegt het onderwerp zelf
+al waar het over gaat.
+
+**De bouw, drie lagen.**
+
+1. Kolom `projectnaam` (text, nullable) op `taken`, met kolomcommentaar
+   (`laag1_projectnaam_taken.sql`).
+2. De bevriezing `taken_bevries_yoobi` telt nu dertien velden:
+   `projectnaam` erbij, zodat het veld in de app alleen-lezen is zoals
+   alle andere Yoobi-velden (`laag1b_bevriezing_projectnaam.sql`).
+3. Functieversie `2026-08-13d`: bij de start van elke ronde haalt de
+   sync de negen pagina's van de ongefilterde projectenlijst op, met
+   de gewone adempauze ertussen, en bouwt een kaart van projectid naar
+   naam. Elke weggeschreven taak krijgt `projectnaam` mee. Mislukt de
+   kaart, dan draait de ronde door en wordt de kolom die ronde niet
+   meegestuurd, zodat eerder gevulde namen nooit door leegte
+   overschreven worden. Alleen een 429 op de kaart stopt de ronde, net
+   als bij de klanten. Het rapport kreeg de velden `projectkaart` en
+   `metProjectnaamDitBrok`, en beide tijdelijke metingen zijn eruit.
+   `taken.html` v0.16.4 toont de volledige projectnaam als grijze
+   tweede regel onder de titel, alleen als hij gevuld is. Het
+   detailscherm is bewust nog niet meegegaan.
+
+**Bewezen.** De leesquery na de eerste ronde met `d`: 86 open
+Yoobi-taken, 78 met projectnaam, exact de meting. De schermfoto toont
+de regels live, en twee taken van dezelfde klant laten nu in een
+oogopslag zien dat ze over hetzelfde balkon gaan.
+
+**Bijvangst.**
+
+- In de voorbeeldenlijst van de telling stonden drie vrijwel gelijke
+  Schiffelers-taken "inplannen + laten weten". Dat oogt als dubbel
+  aangemaakt in Yoobi en is met de hand op te ruimen.
+- Studio toont bij meerdere statements in een run alleen de laatste
+  uitkomst. SQL-bestanden krijgen voortaan een statement per blok.
+- De aanname dat pagina 2 tot en met 9 van de projectenlijst dezelfde
+  vorm hebben als de gemeten pagina 1 is uitgekomen, anders had de
+  leesquery geen 78 laten zien.
+
+### Nog open op dit spoor
+
+- De snelheidsinstellingen staan mogelijk te voorzichtig: een ronde
+  duurt ruim zes minuten waar hij eerder anderhalve deed. Pas
+  bijstellen op de snelheidskoppen uit het rapport, niet op gevoel.
+- Het detailscherm van een taak toont de projectnaam nog niet.
+- `yoobi-taken-sync` versie `2026-08-13d` gaat dinsdag met de
+  wekelijkse ronde mee naar `ernes-edge-functions`.
