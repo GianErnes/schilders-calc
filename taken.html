@@ -597,7 +597,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.16.4';
+const APP_VERSION = 'v0.17.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -606,7 +606,6 @@ const FOTO_BUCKET = 'taken-fotos';
 const DOC_BUCKET = 'taken-documenten';
 let DOCS_TELLING = {};    /* crmtaskid -> aantal PDF-bijlagen */
 let MIJN_VANDAAG = new Set();  /* crmtaskid dat ik vandaag zelf gekozen heb */
-let DOORSCHUIF = {};           /* crmtaskid -> aantal eerdere dagen dat ik hem koos */
 
 const PERSOON = {
   gian:   { naam:'Gian',   css:'var(--gian)'   },
@@ -745,13 +744,18 @@ function persoonVan(t){
   const p = String(ruw).toLowerCase().trim();
   return PERSOON[p] ? p : 'overig';
 }
-/* v0.15.0: Vandaag is voortaan uitsluitend wat jij zelf voor deze dag hebt
-   gekozen. Er wordt niets meer automatisch in gezet. Alles wat vandaag of
-   eerder speelt en niet gekozen is staat in Op de rol, ongeacht de bron.
-   Losse taken en Herhalend tonen daardoor alleen nog wat er nog aankomt. */
+/* v0.17.0: wat op jouw naam staat en vandaag gepland is, landt vanzelf in
+   Vandaag. Dat is _vandaagVast en daar kun je niet uit tikken; wil je het
+   niet vandaag, dan verzet je de datum. Daarnaast blijft de handmatige
+   keuze bestaan: alles uit Op de rol of van later kun je met de pijl zelf
+   naar Vandaag halen. Wat vóór vandaag gepland stond is achterstand en
+   blijft in Op de rol staan, ongeacht de bron. Zo kan de achterstand het
+   werk van vandaag niet meer onderspitten.
+   Vervangt de regel van v0.15.0 waarin Vandaag uitsluitend handwerk was. */
 function rubriekVan(t, nu, vandaagISO){
   if(t.status === 'vervallen') return 'vervallen';
   if(t.voltooid_op) return 'voltooid';
+  if(t._vandaagVast) return 'vandaag';
   if(MIJN_VANDAAG.has(String(t.crmtaskid))) return 'vandaag';
   if(t._gepland && lokaalISO(t._gepland) <= vandaagISO) return 'oprol';
   if(t.bron === 'yoobi') return 'klant';
@@ -766,10 +770,19 @@ function verrijk(rijen){
     t._gepland = parseTijdstip(t.gepland_op);
     t._voltooid = parseTijdstip(t.voltooid_op);
     t._persoon = persoonVan(t);
+    /* v0.17.0: staat hij op mijn naam en is hij voor vandaag gepland, dan
+       hoort hij vast in Vandaag. Moet vóór rubriekVan gezet worden. */
+    t._vandaagVast = !!(IK && t._persoon === IK.persoon && t._gepland &&
+                        lokaalISO(t._gepland) === vandaagISO &&
+                        !t.voltooid_op && t.status !== 'vervallen');
     t._rubriek = rubriekVan(t, nu, vandaagISO);
     t._telaat = !!(t._gepland && lokaalISO(t._gepland) < vandaagISO) &&
                 !t.voltooid_op && t.status !== 'vervallen';
-    t._doorgeschoven = DOORSCHUIF[String(t.crmtaskid)] || 0;
+    /* v0.17.0: ouderdom uit gepland_op zelf, geen tabel voor nodig. Beide
+       datums worden als kale dag gelezen, dus zomertijd telt niet mee. */
+    t._dagenTeLaat = t._telaat
+      ? Math.round((new Date(vandaagISO) - new Date(lokaalISO(t._gepland))) / 86400000)
+      : 0;
     t._binnenWeek = !t._gepland || (t._gepland - nu) < 7 * 86400000;
     return t;
   });
@@ -777,22 +790,19 @@ function verrijk(rijen){
 
 /* ────────────────────────────────────────────────────────
    Dagkeuze: mijn eigen regels uit taak_dagkeuze.
-   De regels van vandaag vullen Vandaag. De regels van eerdere
-   dagen zijn de doorschuifteller: elke dag dat ik hem koos en
-   niet afmaakte staat er als losse regel.
+   De regels van vandaag vullen Vandaag. Regels van eerdere dagen
+   blijven in de tabel als historie staan maar sturen sinds v0.17.0
+   niets meer aan; de ouderdom van een taak komt uit gepland_op.
    ──────────────────────────────────────────────────────── */
 async function haalDagkeuze(){
   MIJN_VANDAAG = new Set();
-  DOORSCHUIF = {};
   if(!IK) return;
   const { data, error } = await sb.from('taak_dagkeuze')
     .select('taak_id, dag').eq('persoon', IK.persoon);
   if(error){ toast('Dagkeuze laden lukt niet: ' + error.message); return; }
   const vandaagISO = lokaalISO(new Date());
   (data || []).forEach(function(r){
-    const id = String(r.taak_id);
-    if(r.dag === vandaagISO) MIJN_VANDAAG.add(id);
-    else if(r.dag < vandaagISO) DOORSCHUIF[id] = (DOORSCHUIF[id] || 0) + 1;
+    if(r.dag === vandaagISO) MIJN_VANDAAG.add(String(r.taak_id));
   });
 }
 
@@ -842,8 +852,8 @@ async function haalTaken(){
 const NA_VIER = new Date().getHours() >= 16;
 
 const RUBRIEKEN = [
-  { key:'vandaag',   titel:'Vandaag',        sub:'wat jij vandaag oppakt',                   open:true,    klasse:'today' },
-  { key:'oprol',     titel:'Op de rol',      sub:'speelt vandaag, nog niet gekozen',         open:true,    klasse:'roll' },
+  { key:'vandaag',   titel:'Vandaag',        sub:'wat vandaag op jouw naam staat',           open:true,    klasse:'today' },
+  { key:'oprol',     titel:'Op de rol',      sub:'blijven liggen en nog op te pakken',       open:true,    klasse:'roll' },
   { key:'los',       titel:'Losse taken',    sub:'wat er nog aankomt',                       open:false },
   { key:'herhalend', titel:'Herhalend ↻',    sub:'',                                         open:false },
   { key:'klant',     titel:'Klantopvolging', sub:'uit Yoobi · bijwerken met ↻',             open:false, klasse:'gated' },
@@ -877,11 +887,11 @@ function pillen(t){
     if(uTekst && dTekst === 'vandaag') p.push('<span class="pill time">◷ ' + uTekst + '</span>');
     else if(dTekst) p.push('<span class="pill time">◷ ' + esc(dTekst + (uTekst ? ' ' + uTekst : '')) + '</span>');
   }
+  /* v0.17.0: te laat zegt er meteen bij hoe lang al. Vervangt de losse
+     doorschuifpil, die alleen telde hoe vaak je hem zelf had aangetikt. */
   if(t._telaat && t._rubriek !== 'voltooid' && t._rubriek !== 'vervallen'){
-    p.push('<span class="pill laat">te laat</span>');
-  }
-  if(t._doorgeschoven && t._rubriek !== 'voltooid' && t._rubriek !== 'vervallen'){
-    p.push('<span class="pill schuif">↷ ' + t._doorgeschoven + 'x doorgeschoven</span>');
+    const dg = t._dagenTeLaat || 1;
+    p.push('<span class="pill laat">' + dg + (dg === 1 ? ' dag' : ' dagen') + ' te laat</span>');
   }
   const rep = herhalingTekst(t.herhaling_n, t.herhaling_eenheid);
   if(rep) p.push('<span class="pill rep">↻ ' + esc(rep) + '</span>');
@@ -907,9 +917,12 @@ function kaart(t, hero){
   const bel = (t._rubriek === 'voltooid' || t._rubriek === 'vervallen') ? '' :
     '<span class="bell' + (t.piep ? ' on' : '') + '">' + (t.piep ? '🔔' : '🔕') + '</span>';
   /* v0.15.0: met één tik naar Vandaag en er met één tik weer uit.
-     Alleen zichtbaar waar het iets betekent, dus in Vandaag en Op de rol. */
+     Alleen zichtbaar waar het iets betekent, dus in Vandaag en Op de rol.
+     v0.17.0: staat hij vast in Vandaag omdat hij vandaag gepland is, dan
+     verschijnt de pijl niet. Eruit gaat via de datum, niet via een tik. */
   const inVandaag = t._rubriek === 'vandaag';
-  const kies = (inVandaag || t._rubriek === 'oprol')
+  const kies = t._vandaagVast ? ''
+    : (inVandaag || t._rubriek === 'oprol')
     ? '<span class="kies' + (inVandaag ? ' aan' : '') + '" data-kies="' + esc(t.crmtaskid) +
       '" role="button" tabindex="0" aria-label="' + (inVandaag ? 'Uit Vandaag' : 'Naar Vandaag') +
       '" title="' + (inVandaag ? 'Uit Vandaag' : 'Naar Vandaag') + '">' +
@@ -1021,7 +1034,7 @@ function bouwRubriek(r){
   const gatehint = '';
 
   const leegTekst = r.key === 'oprol' ? 'Niets meer op de rol. Alles is gekozen of gedaan.'
-                  : r.key === 'vandaag' ? 'Nog niets gekozen. Pak hieronder op wat vandaag echt moet.'
+                  : r.key === 'vandaag' ? 'Niets voor vandaag gepland. Pak hieronder op wat er nog ligt.'
                   : 'niets hier';
   const kaarten = zichtbaar.length
     ? zichtbaar.map(t => kaart(t, t.crmtaskid === heroId)).join('')
@@ -1234,8 +1247,11 @@ function openTask(t){
   zet('s_repwrap', modus !== 'eigen' && !!rep);
   if(rep) document.getElementById('s_rep').textContent = rep;
 
-  /* dagkeuze: eigen en yoobi, niet bij klaar */
-  zet('s_vandaagwrap', modus === 'eigen' || modus === 'yoobi');
+  /* dagkeuze: eigen en yoobi, niet bij klaar.
+     v0.17.0: staat de taak vandaag gepland op jouw naam, dan is Vandaag
+     geen keuze maar een gevolg. De schakelaar zou dan niets doen en
+     blijft daarom weg. */
+  zet('s_vandaagwrap', (modus === 'eigen' || modus === 'yoobi') && !t._vandaagVast);
   const vandaagAan = MIJN_VANDAAG.has(String(t.crmtaskid));
   document.getElementById('s_vandaag').classList.toggle('uit', !vandaagAan);
   document.getElementById('s_vandaagtekst').textContent = vandaagAan ? 'Staat in Vandaag' : 'Vandaag oppakken';
