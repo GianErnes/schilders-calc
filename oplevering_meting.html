@@ -1176,48 +1176,93 @@ document.getElementById('fotoVervang').addEventListener('change', function(){
 start();
 </script>
 
-<!-- ══ MEETSTROOK, alleen voor het opsporen van de verdwijnende balk ══ -->
+<!-- ══ MEETSTROOK 2: onthoudt de slechtste toestand, ook als het scherm wegloopt ══ -->
 <style>
   #meet{position:fixed;left:0;right:0;bottom:0;z-index:9999;pointer-events:none;
-    background:rgba(0,0,0,.82);color:#0f0;font:600 10px/1.35 ui-monospace,Menlo,monospace;
+    background:rgba(0,0,0,.85);color:#0f0;font:600 10px/1.35 ui-monospace,Menlo,monospace;
     padding:4px 6px calc(4px + env(safe-area-inset-bottom));white-space:pre;letter-spacing:-.2px}
   #meet b{color:#ff0}
+  #meet u{color:#f66;text-decoration:none}
 </style>
-<div id="meet">meting start</div>
+<div id="meet">meting-2 start</div>
 <script>
 (function(){
+  var SLEUTEL = 'oplever_meting2';
   var d = document.getElementById('meet');
-  function rec(el){
-    if (!el) return 'GEEN';
+  var ergst = null;
+  try { ergst = JSON.parse(localStorage.getItem(SLEUTEL) || 'null'); } catch (e) { ergst = null; }
+
+  function rect(el){
+    if (!el) return null;
     var r = el.getBoundingClientRect();
-    return Math.round(r.top) + '/' + Math.round(r.height);
+    return { t: Math.round(r.top), h: Math.round(r.height) };
+  }
+  function meet(){
+    var vv = window.visualViewport;
+    var sc = document.scrollingElement || document.documentElement;
+    var bar = rect(document.getElementById('mkbar'));
+    return {
+      w: window.innerWidth, h: window.innerHeight,
+      rol: Math.round(sc.scrollTop),
+      vh: vv ? Math.round(vv.height) : -1,
+      vt: vv ? Math.round(vv.offsetTop) : -1,
+      vl: vv ? Math.round(vv.offsetLeft) : -1,
+      pt: vv ? Math.round(vv.pageTop) : -1,
+      z: vv ? +(vv.scale || 1).toFixed(2) : -1,
+      ov: !!document.getElementById('mkov'),
+      bt: bar ? bar.t : null, bh: bar ? bar.h : null,
+      tijd: new Date().toTimeString().slice(0, 8)
+    };
+  }
+  /* Slecht is: de editor staat open, maar de balk staat boven de rand,
+     of de pagina is door de browser zelf ingezoomd of opzij geschoven. */
+  function score(m){
+    var s = 0;
+    if (m.z > 1.02) s += 100 * m.z;
+    if (m.vt !== 0 && m.vt !== -1) s += Math.abs(m.vt);
+    if (m.vl !== 0 && m.vl !== -1) s += Math.abs(m.vl);
+    if (m.rol) s += m.rol;
+    if (m.ov && m.bt !== null && m.bt < 0) s += Math.abs(m.bt);
+    if (m.ov && m.bt === null) s += 500;
+    return s;
+  }
+  function regel(m){
+    if (!m) return 'nog niets vastgelegd';
+    return m.tijd + '  venster ' + m.w + 'x' + m.h + ' rol' + m.rol +
+      '  zichtvak ' + m.vh + ' top' + m.vt + ' links' + m.vl + ' z' + m.z +
+      '  editor ' + (m.ov ? 'open' : 'dicht') +
+      '  bar ' + (m.bt === null ? 'GEEN' : m.bt + '/' + m.bh);
   }
   function toon(){
-    var vv = window.visualViewport;
-    var ov = document.getElementById('mkov');
-    var bar = document.getElementById('mkbar');
-    var hint = document.getElementById('mkhint');
-    var stg = document.getElementById('mkstage');
-    var sc = document.scrollingElement || document.documentElement;
-    var st = bar ? getComputedStyle(bar) : null;
-    d.innerHTML =
-      '<b>meting-1</b>  venster ' + window.innerWidth + 'x' + window.innerHeight +
-        '  rol ' + Math.round(sc.scrollTop) + '\n' +
-      'zichtvak ' + (vv ? Math.round(vv.height) + ' top' + Math.round(vv.offsetTop) +
-        ' pag' + Math.round(vv.pageTop) + ' z' + (vv.scale||1).toFixed(2) : 'geen') + '\n' +
-      'ov ' + rec(ov) + '  bar ' + rec(bar) + '  hint ' + rec(hint) + '  stage ' + rec(stg) + '\n' +
-      'bar-opmaak ' + (st ? st.display + ' h' + st.height + ' fx' + st.flexShrink : '-') +
-        '  inhoud ' + (bar ? bar.innerHTML.length : '-');
+    var nu = meet();
+    if (score(nu) > 0 && (!ergst || score(nu) > score(ergst))) {
+      ergst = nu;
+      try { localStorage.setItem(SLEUTEL, JSON.stringify(nu)); } catch (e) {}
+    }
+    d.innerHTML = '<b>meting-2 nu</b>  ' + regel(nu) + '\n' +
+      '<u>ERGST</u> ' + regel(ergst) + '\n' +
+      'zesmaal op deze strook tikt hem leeg';
   }
-  ['scroll','resize','pointerdown','pointermove','pointerup','touchmove'].forEach(function(n){
-    window.addEventListener(n, toon, true);
-  });
+  ['scroll','resize','pointerdown','pointermove','pointerup','touchmove','gesturechange','gestureend']
+    .forEach(function(n){ window.addEventListener(n, toon, true); });
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', toon);
     window.visualViewport.addEventListener('scroll', toon);
   }
-  setInterval(toon, 300);
+  setInterval(toon, 200);
   toon();
+
+  /* leegmaken zonder knop, want een knop kan ook wegvallen */
+  var tel = 0, laatst = 0;
+  window.addEventListener('pointerdown', function(e){
+    var nu = Date.now();
+    tel = (nu - laatst < 700) ? tel + 1 : 1;
+    laatst = nu;
+    if (tel >= 6 && e.clientY > window.innerHeight - 70) {
+      try { localStorage.removeItem(SLEUTEL); } catch (_) {}
+      ergst = null; tel = 0; toon();
+    }
+  }, true);
 })();
 </script>
 </body>
