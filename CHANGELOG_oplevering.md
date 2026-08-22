@@ -1,5 +1,19 @@
 # Changelog Oplevering
 
+## v0.2.0 — Elke ring zijn eigen maat
+Een ring was altijd 7 procent van de fotobreedte. Een haarscheur en een hele muur kregen dus dezelfde cirkel. Vanaf nu stel je de maat per ring in.
+
+### Wat er verandert
+- Tik een ring aan en knijp om hem groter of kleiner te maken. De hintregel bovenin zegt dat ook zodra er een ring gekozen is. Tik naast de ring en knijpen zoomt weer gewoon.
+- De maat zit vast aan de foto. Zoom je in, dan groeit de ring mee, want hij hoort bij dat stukje van de foto.
+- De lijn van de ring en het nummerbolletje blijven wel even groot op het scherm. Anders wordt de lijn bij inzoomen een dikke worst die verbergt wat je wilt zien.
+- Het bolletje zit nu op de lijn zelf, schuin rechtsboven, in plaats van op een vast aantal pixels van de hoek. Dat blijft kloppen bij elke maat.
+- Kleinste ring is een middellijn van 2,4 procent, grootste is 90 procent.
+- Aantikken houdt rekening met de eigen maat van elke ring, met een ondergrens zodat een kleine ring aantikbaar blijft. Liggen er ringen over elkaar, dan wint de dichtstbijzijnde.
+- Ringen van voor deze versie hebben geen maat opgeslagen en blijven precies zoals ze waren.
+- Het punteroverzicht tekent dezelfde maten als de editor.
+- Geen SQL. De markeringen staan in een jsonb-kolom, dus het veld mag er zonder migratie bij.
+
 ## v0.1.0 — De eerste versie
 Een losse app voor de opleverlijst op locatie. Naast Schilders Calc en Taken, in dezelfde repo en hetzelfde Supabase-project, maar met eigen tabellen en een eigen opslagbak. Geen koppeling met Taken, geen koppeling met een calculatie. Dat is een bewust besluit van 22 augustus 2026.
 

@@ -145,14 +145,27 @@
   .fotoknop{width:100%;padding:22px;border:1px dashed var(--line);border-radius:12px;
     background:#fbfcfd;color:var(--ink-soft);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 
-  /* markering: open ring met nummer */
+  /* markering: open ring met nummer.
+     De maat zit vast aan de foto: zoom je in, dan groeit de ring mee.
+     Breedte en hoogte worden per ring vanuit JavaScript gezet, de 7% hier
+     is alleen de terugval als dat om wat voor reden dan ook niet lukt. */
   .mk{position:absolute;width:7%;padding-bottom:7%;height:0;
-    transform:translate(-50%,-50%) scale(var(--mkscale,1));
+    transform:translate(-50%,-50%);
     border-radius:50%;border:3px solid var(--ring);
     box-shadow:0 0 0 1.5px rgba(255,255,255,.95), inset 0 0 0 1.5px rgba(255,255,255,.95);
     cursor:pointer}
+  /* Rand en witrand gaan juist tegen de zoom in, zodat de lijn dun blijft
+     als de ring groot wordt. Rekent een browser calc() in border-width niet,
+     dan blijft de gewone rand van 3px hierboven staan. */
+  .mk{border-width:calc(3px * var(--mkscale,1));
+    box-shadow:0 0 0 calc(1.5px * var(--mkscale,1)) rgba(255,255,255,.95),
+      inset 0 0 0 calc(1.5px * var(--mkscale,1)) rgba(255,255,255,.95)}
   .mk.sel{border-style:dashed}
-  .mk .n{position:absolute;right:-7px;top:-11px;min-width:19px;height:19px;border-radius:10px;
+  /* Nummerbolletje op de lijn zelf, schuin rechtsboven op vijfenveertig graden,
+     en constant van maat op het scherm. 85.36% en 14.64% is het midden plus
+     of min de halve maat maal de wortel van een half. */
+  .mk .n{position:absolute;left:85.36%;top:14.64%;min-width:19px;height:19px;border-radius:10px;
+    transform:translate(-50%,-50%) scale(var(--mkscale,1));
     background:var(--ring);color:#fff;font-size:11px;font-weight:800;line-height:19px;
     text-align:center;padding:0 4px;box-shadow:0 0 0 1.5px rgba(255,255,255,.95)}
 
@@ -286,7 +299,7 @@
    (opleveringen, oplever_punten) en een eigen opslagbak
    (oplever-fotos) in hetzelfde Supabase-project.
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.1.0';
+const APP_VERSION = 'v0.2.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -728,7 +741,7 @@ function tekenPuntFoto(){
   if (p._url) {
     const mk = Array.isArray(p.markeringen) ? p.markeringen : [];
     const ringen = mk.map((m, i) =>
-      '<div class="mk" style="left:' + (m.fx * 100).toFixed(2) + '%;top:' + (m.fy * 100).toFixed(2) + '%">' +
+      '<div class="mk" style="' + ringStijl(m) + '">' +
       '<span class="n">' + (i + 1) + '</span></div>').join('');
     vak.innerHTML = '<div class="k">Foto</div>' +
       '<div class="fotovak" onclick="opendMarkeer(\'' + p.id + '\')">' +
@@ -815,6 +828,27 @@ let MK_W0 = 0, MK_H0 = 0;
 let MK_GEWIJZIGD = false;
 const MK_PTR = new Map();
 let MK_KNIJP = null, MK_SLEEP = null, MK_NEER = null;
+
+/* Ringmaat per markering, als straal in deel van de fotobreedte.
+   0.035 is precies de oude vaste maat: een middellijn van 7 procent.
+   Ringen van voor v0.2.0 hebben geen r en vallen daar dus op terug. */
+const MK_R_STANDAARD = 0.035;
+const MK_R_MIN = 0.012;
+const MK_R_MAX = 0.45;
+const MK_TREF_MIN = 22;         /* trefstraal in schermpixels, ondergrens */
+
+function ringStraal(m){
+  const r = (m && typeof m.r === 'number' && isFinite(m.r)) ? m.r : MK_R_STANDAARD;
+  return Math.min(MK_R_MAX, Math.max(MK_R_MIN, r));
+}
+
+/* Stijlregel voor een ring. Middellijn is tweemaal de straal, en omdat
+   padding in procenten altijd van de breedte rekent blijft hij rond. */
+function ringStijl(m){
+  const d = (ringStraal(m) * 200).toFixed(2);
+  return 'left:' + (m.fx * 100).toFixed(2) + '%;top:' + (m.fy * 100).toFixed(2) +
+    '%;width:' + d + '%;padding-bottom:' + d + '%';
+}
 
 function opendMarkeer(id){
   const p = puntBijId(id);
@@ -922,7 +956,17 @@ function mkNeer(e){
     const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
     const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
     const v = MK_VIEW;
-    MK_KNIJP = { dist: dist, s0: v.scale, C: { x: (mid.x - v.tx) / v.scale, y: (mid.y - v.ty) / v.scale } };
+    MK_KNIJP = { dist: dist, s0: v.scale, C: { x: (mid.x - v.tx) / v.scale, y: (mid.y - v.ty) / v.scale },
+      modus: 'zoom', idx: -1, r0: 0 };
+    /* Staat er een ring gekozen, dan verstelt knijpen de maat van die ring
+       in plaats van te zoomen, waar de vingers ook liggen. De maat bij het
+       neerkomen wordt vastgelegd, anders loopt hij weg tijdens het gebaar. */
+    const mkl = (MK_PUNT && MK_PUNT.markeringen) || [];
+    if (MK_SEL != null && mkl[MK_SEL]) {
+      MK_KNIJP.modus = 'maat';
+      MK_KNIJP.idx = MK_SEL;
+      MK_KNIJP.r0 = ringStraal(mkl[MK_SEL]);
+    }
   }
 }
 
@@ -931,7 +975,11 @@ function mkBeweeg(e){
   e.preventDefault();
   const p = mkPunt(e);
   MK_PTR.set(e.pointerId, p);
-  if (MK_PTR.size >= 2 && MK_KNIJP) {
+  if (MK_PTR.size >= 2 && MK_KNIJP && MK_KNIJP.modus === 'maat') {
+    const pts = Array.from(MK_PTR.values());
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    mkMaat(MK_KNIJP.idx, MK_KNIJP.r0 * (dist / MK_KNIJP.dist));
+  } else if (MK_PTR.size >= 2 && MK_KNIJP) {
     const pts = Array.from(MK_PTR.values());
     const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
     const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
@@ -947,6 +995,26 @@ function mkBeweeg(e){
     MK_VIEW.tx += dx; MK_VIEW.ty += dy;
     MK_SLEEP = { x: p.x, y: p.y };
     mkPas();
+  }
+}
+
+/* Zet de maat van een ring, binnen de grenzen, en werk alleen die ene
+   ring in het scherm bij. Volledig opnieuw tekenen kan ook, maar dat is
+   bij elke vingerbeweging onnodig werk. */
+function mkMaat(i, r){
+  const mk = (MK_PUNT && MK_PUNT.markeringen) || [];
+  const m = mk[i]; if (!m) return;
+  const nieuw = +Math.min(MK_R_MAX, Math.max(MK_R_MIN, r)).toFixed(4);
+  if (nieuw === ringStraal(m)) return;
+  m.r = nieuw;
+  MK_GEWIJZIGD = true;
+  const wrap = document.getElementById('mkringen');
+  const el = wrap && wrap.children ? wrap.children[i] : null;
+  if (el && el.style) {
+    const d = (nieuw * 200).toFixed(2) + '%';
+    el.style.width = d; el.style.paddingBottom = d;
+  } else {
+    mkTekenRingen();
   }
 }
 
@@ -970,22 +1038,25 @@ function mkOp(e){
       const fr = mkNaarFractie(tikPt);
       mkPlaats(fr.fx, fr.fy);
     } else if (MK_SEL != null) {
-      MK_SEL = null; mkTekenRingen(); mkTekenNotitie();
+      MK_SEL = null; mkTekenBalk(); mkTekenRingen(); mkTekenNotitie();
     }
   }
   MK_NEER = null;
 }
 
 function mkRaak(pt){
+  /* Elke ring heeft zijn eigen trefstraal, met een ondergrens in schermpixels
+     zodat een kleine ring aantikbaar blijft. Bij ringen over elkaar heen wint
+     de dichtstbijzijnde, zoals altijd. */
   const mk = (MK_PUNT && MK_PUNT.markeringen) || [];
   const v = MK_VIEW;
-  const straal = Math.max(22, MK_W0 * 0.04);
-  let best = -1, bestD = straal;
+  let best = -1, bestD = Infinity;
   for (let i = 0; i < mk.length; i++) {
     const sx = v.tx + (mk[i].fx * MK_W0) * v.scale;
     const sy = v.ty + (mk[i].fy * MK_H0) * v.scale;
+    const straal = Math.max(MK_TREF_MIN, ringStraal(mk[i]) * MK_W0 * v.scale);
     const d = Math.hypot(pt.x - sx, pt.y - sy);
-    if (d <= bestD) { bestD = d; best = i; }
+    if (d <= straal && d < bestD) { bestD = d; best = i; }
   }
   return best;
 }
@@ -998,15 +1069,17 @@ function mkTekenBalk(){
   const hint = document.getElementById('mkhint');
   if (hint) hint.textContent = MK_AAN
     ? 'Tik op de foto om een ring te zetten. Knijp om te zoomen, sleep om te schuiven.'
-    : 'Tik een ring aan voor een notitie of om hem weg te halen. Knijp om te zoomen.';
+    : (MK_SEL != null
+      ? 'Knijp om de ring groter of kleiner te maken. Tik naast de ring om weer te zoomen.'
+      : 'Tik een ring aan voor een notitie of om hem weg te halen. Knijp om te zoomen.');
 }
 
 function mkTekenRingen(){
   const wrap = document.getElementById('mkringen'); if (!wrap) return;
   const mk = (MK_PUNT && MK_PUNT.markeringen) || [];
   wrap.innerHTML = mk.map((m, i) =>
-    '<div class="mk' + (MK_SEL === i ? ' sel' : '') + '" style="left:' + (m.fx * 100).toFixed(2) +
-    '%;top:' + (m.fy * 100).toFixed(2) + '%"><span class="n">' + (i + 1) + '</span></div>').join('');
+    '<div class="mk' + (MK_SEL === i ? ' sel' : '') + '" style="' + ringStijl(m) + '">' +
+    '<span class="n">' + (i + 1) + '</span></div>').join('');
 }
 
 function mkTekenNotitie(){
@@ -1029,7 +1102,7 @@ function mkWissel(){
 function mkPlaats(fx, fy){
   if (!MK_PUNT) return;
   if (!Array.isArray(MK_PUNT.markeringen)) MK_PUNT.markeringen = [];
-  MK_PUNT.markeringen.push({ fx: +fx.toFixed(4), fy: +fy.toFixed(4), notitie: '' });
+  MK_PUNT.markeringen.push({ fx: +fx.toFixed(4), fy: +fy.toFixed(4), r: MK_R_STANDAARD, notitie: '' });
   MK_SEL = MK_PUNT.markeringen.length - 1;
   MK_GEWIJZIGD = true;
   mkTekenRingen(); mkTekenNotitie();
@@ -1045,7 +1118,7 @@ function mkWeg(){
   if (MK_SEL == null || !mk[MK_SEL]) return;
   mk.splice(MK_SEL, 1);
   MK_SEL = null; MK_GEWIJZIGD = true;
-  mkTekenRingen(); mkTekenNotitie();
+  mkTekenBalk(); mkTekenRingen(); mkTekenNotitie();
 }
 
 /* ────────────────────────────────────────────────────────
