@@ -34,9 +34,10 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.39.0 |
-| Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.16.0 |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.40.2 |
+| Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
+| Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -44,6 +45,13 @@ adres `gianernes.github.io/voorraad-app/` werkt daarom niet. Je moet de
 volledige bestandsnaam kennen, inclusief de `_2`. Zolang dat zo is, is de
 app alleen te vinden door wie het adres nog heeft. Op de opruimlijst staat
 dit als punt 4.
+
+**Oplevering** is er op 22 augustus 2026 bij gekomen. Een losse app voor
+de opleverlijst op locatie: per project een lijst met punten, elk punt een
+foto met open genummerde ringen, een omschrijving en een vinkje. Bewust
+zonder koppeling met Taken en zonder koppeling met een calculatie. De
+klantgegevens tik je met de hand in. Richting de klant gaat het lijstje
+via Yoobi, dus er zit geen PDF-uitvoer in.
 
 **Gevelscanner** is op 26 juli 2026 bewust buiten dit document gelaten.
 Dat is een besluit en geen vergissing. Bestaat die app nog en raakt hij
@@ -57,17 +65,28 @@ computegrootte Nano.
 
 | Project | Verwijzing | Gebruikt door |
 |---|---|---|
-| `schilders-calc` | `gjcjpigirqbpkjkymbio` | Calc, Taken, Financieel |
+| `schilders-calc` | `gjcjpigirqbpkjkymbio` | Calc, Taken, Financieel, Oplevering |
 | `schilder-voorraad` | `rcwlbcfuvfprnnkypbba` | Voorraad |
 
 Adres van een project is altijd `https://<verwijzing>.supabase.co`.
 
-**schilders-calc** telt 37 tabellen, 6 opslagbakken, 12 triggers, 16 Edge
+**schilders-calc** telt 39 tabellen, 7 opslagbakken, 14 triggers, 16 Edge
 Functions en 9 cronjobs. De grootste tabellen zijn `calc_regel_stappen`
 (1959 rijen), `meetstaat` (747) en `bewerkingen` (548). De 36 tabellen
 van toen zijn geteld op 2 augustus 2026 met `information_schema.tables`
 op schema `public`, type `BASE TABLE`; `opname_boekingen` is er op
 8 augustus bijgekomen en de negende cronjob op 9 augustus, zie 3.1.
+Op 22 augustus 2026 kwamen `opleveringen` en `oplever_punten` erbij voor de
+opleverapp, met de bak `oplever-fotos` en twee `set_updated_at`-triggers,
+aangelegd met `sql/oplever_tabellen.sql`. Die getallen zijn opgeteld bij de
+meting van 2 augustus en niet opnieuw geteld.
+
+> **Twee triggertellingen spreken elkaar tegen.** Hier staat 14, de
+> herbouwtabel in 4.8 komt op 13. Dat verschil bestond al voor de
+> opleverapp (12 tegen 11) en is nooit verklaard. Bij beide is dezelfde
+> twee opgeteld, dus het gat is niet groter geworden. Welke van de twee
+> klopt is **[TE CONTROLEREN]** met een telling over `pg_trigger` zonder
+> de interne triggers.
 
 Hier stond tot 9 augustus "19 Edge Functions, geteld op 2 augustus". Dat
 getal spoort niet met de vijftien waar 3.2 diezelfde week op uitkwam en
@@ -98,6 +117,7 @@ Alleen in schilders-calc.
 | `calculatie-documenten` | nee | 32 bestanden |
 | `taken-documenten` | nee | 1 bestand |
 | `taken-fotos` | nee | 2 bestanden |
+| `oplever-fotos` | nee | foto's bij de opleverpunten, leeg bij aanleg |
 | `backups` | nee | nachtelijke dumps, 156 bestanden |
 
 `accord-pdf` staat openbaar omdat de klant er met een link bij moet
@@ -136,7 +156,7 @@ geen tweede GitHub-account in gebruik.
 
 | Repo | Zichtbaar | Wat erin staat |
 |---|---|---|
-| `schilders-calc` | **openbaar** | de vier appbestanden, `sql/`, dit document |
+| `schilders-calc` | **openbaar** | de vijf appbestanden, `sql/`, dit document |
 | `schilder-voorraad` | **openbaar** | de voorraad-app |
 | `ernes-edge-functions` | **besloten** | de broncode van de zestien Edge Functions, plus de twee knoppen |
 
@@ -1126,14 +1146,14 @@ maandag meegestuurd als bijlage.
 
 | Onderdeel | Ligt er | Uitvoerbaar |
 |---|---|---|
-| 37 tabellen | `schema_dump()` | ja |
-| 52 policies op `public` | `schema_dump()` | ja |
-| **16 policies op `storage.objects`** | `schema_dump()` | ja |
+| 39 tabellen | `schema_dump()` | ja |
+| 54 policies op `public` | `schema_dump()` | ja |
+| **17 policies op `storage.objects`** | `schema_dump()` | ja |
 | 29 indexen | `schema_dump()` | ja |
 | 17 databasefuncties | `schema_dump()` | ja |
-| 11 triggers | `schema_dump()` | ja |
+| 13 triggers | `schema_dump()` | ja |
 | rechten en rijbeveiliging | `schema_dump()` | ja |
-| 6 opslagbakken | `schema_dump()` | ja |
+| 7 opslagbakken | `schema_dump()` | ja |
 | 25 verwijssleutels | `schema_dump()` | ja, onderaan als `ALTER TABLE` |
 | 1 reeks (`taak_dagkeuze_id_seq`) | `schema_dump()` | ja, plus `setval` |
 | 9 cronjobs | `schema_dump()` en 3.1 | ja, adres handmatig aanpassen |
@@ -1143,7 +1163,9 @@ maandag meegestuurd als bijlage.
 > **Splits altijd per schema bij het tellen van policies.** Het getal 69
 > uit de inventarisatie van 27 juli is geen 69 policies op `public` maar
 > 53 op `public` plus 16 op `storage.objects`. Sinds 2 augustus 2026 zijn
-> het er 52 plus 16, samen 68: opruimpunt 17 haalde een dubbele weg. Op 30 juli 2026 werd een
+> het er 52 plus 16, samen 68: opruimpunt 17 haalde een dubbele weg. Sinds
+> 22 augustus 2026 zijn het er 54 plus 17, samen 71, door de twee tabellen
+> en de bak van de opleverapp. Op 30 juli 2026 werd een
 > telling over alleen `public` bijna aangezien voor volledig, waarna de
 > zestien opslagregels stilzwijgend uit het herbouwbestand waren gevallen.
 > Gevolg zou zijn geweest: na een herbouw staan de zes bakken er wel, maar

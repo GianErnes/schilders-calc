@@ -1,0 +1,28 @@
+# Changelog Oplevering
+
+## v0.1.0 — De eerste versie
+Een losse app voor de opleverlijst op locatie. Naast Schilders Calc en Taken, in dezelfde repo en hetzelfde Supabase-project, maar met eigen tabellen en een eigen opslagbak. Geen koppeling met Taken, geen koppeling met een calculatie. Dat is een bewust besluit van 22 augustus 2026.
+
+### Wat de app doet
+- Een lijst per project. Klantgegevens tik je zelf in: project, klant, adres, postcode, plaats en een notitie. Niets wordt ergens vandaan gehaald.
+- Twee statussen met het bekende gekleurde bolletje: lopend (oranje) en afgerond (groen). Afgeronde lijsten verdwijnen uit het hoofdscherm en staan onder de regel *toon afgeronde*. Niets wordt weggegooid.
+- Per lijst een reeks punten. Elk punt is een foto, een omschrijving en een vinkje. Iedereen die is ingelogd mag afvinken, er staat geen naam bij een punt.
+- Een voortgangsbalk in de kop: 3 van 7 klaar.
+
+### De foto met ringen
+- Op elke foto kun je open ringen zetten. Open, dus je ziet door het midden heen wat er aan de hand is. Eén kleur, genummerd 1, 2, 3, zodat de omschrijving naar een nummer kan verwijzen.
+- Knijpen zoomt in, slepen schuift, tikken zet een ring. Tik een ring aan voor een notitie of om hem weg te halen.
+- De posities worden bewaard als een fractie van nul tot een van de fotomaat, dezelfde rekenwijze als de foto-markeringen in Schilders Calc. Daardoor staat een ring op elk scherm op de goede plek.
+- De foto is optioneel. Een punt zonder foto mag, voor dingen als *sleutel nalopen*.
+- Foto's worden voor het uploaden verkleind naar hoogstens 1600 px, JPEG kwaliteit 0,8. Ongeveer 300 KB per stuk.
+
+### Onder de motorkap
+- Twee nieuwe tabellen: `opleveringen` en `oplever_punten`. Een nieuwe besloten opslagbak: `oplever-fotos`. Aan te leggen met `sql/oplever_tabellen.sql`.
+- Bij het verwijderen van een oplevering wordt eerst de fotomap in Storage leeggeruimd en pas daarna de rij, zodat er geen bestanden achterblijven zonder eigenaar. Dezelfde volgorde als bij calculatiefoto's.
+- Elke databaseaanroep loopt langs één functie die de werkelijke Supabase-fout in beeld brengt in plaats van een algemeen *mislukt*. Dat is het openstaande verbeterpunt uit Schilders Calc v3.9.5, hier meteen goed gedaan.
+- Afvinken draait zichzelf terug als de database het weigert, dus het scherm liegt niet.
+
+### Wat er nog niet is
+- Geen PDF-export. Richting de klant gaat het lijstje via Yoobi.
+- Geen offline werken. Zonder bereik lukt het uploaden van een foto niet. Dat is bekend en aanvaard.
+- Geen volgorde verslepen van punten.
