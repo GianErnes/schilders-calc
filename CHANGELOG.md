@@ -1,3 +1,24 @@
+## v4.42.0 — Jaarlaag in het calculatie-archief
+
+Geaccepteerd en Verloren worden alleen maar langer. Alles wat ouder is dan dit jaar stond gewoon mee in de lijst, en daar wordt het overzicht niet beter van. Die twee groepen krijgen er een laag bij.
+
+### Wat er verandert
+- Klap je op het dashboard Geaccepteerd of Verloren open, dan zie je eerst jaarkoppen in plaats van meteen alle rijen: 2026, 2025, 2024, nieuwste bovenaan. Elke jaarkop toont het aantal calculaties en het bedrag van dat jaar, net zoals de statuskop dat doet.
+- Elk jaar klapt apart open en dicht. Standaard staat alles dicht.
+- Heeft een groep maar één jaar, dan staat die jaarkop meteen open. Er valt dan immers niets te kiezen, dus een extra klik zou onzin zijn. Dichtklappen kan alsnog.
+- De vier andere groepen, Afspraak, Concept, Gereed en Verzonden, blijven precies zoals ze waren. Die lopen niet over de jaren heen, dus daar heeft een jaarlaag geen nut.
+- Zoek je op naam of klant, dan valt de jaarlaag weg en krijg je de platte lijst met alle treffers, zoals je gewend bent.
+- De jaarvolgorde staat vast op nieuwste bovenaan en beweegt niet mee als je oplopend op een datumkolom sorteert. De jaarkoppen zijn navigatie, de sortering geldt binnen een jaar.
+- De stand wordt niet bewaard. Ververs je de pagina, dan staat alles weer op de beginstand.
+
+### Wat je moet weten
+- Het jaartal is het jaar waarin de calculatie is **aangemaakt**, niet het jaar waarin de klant akkoord gaf. Een offerte die je in november maakt en die in januari getekend wordt valt dus onder het oude jaar. Dat is een bewuste keuze: de lijst is er voor overzicht, niet voor de boekhouding. De echte jaarcijfers staan in Financieel en komen uit Yuki.
+- De jaarbedragen zijn even betrouwbaar als de statusbedragen dat al waren: een calculatie die nog nooit is geopend en waarvan het totaal niet in de databank staat telt als nul. Dat was zo en dat blijft zo, alleen zie je het nu per jaar in plaats van in één groot statusbedrag.
+- Zou een calculatie geen leesbare aanmaakdatum hebben, dan valt hij onder een kop Zonder datum onderaan in plaats van stilletjes in het huidige jaar. Dat hoort niet voor te komen, maar het valt nu op als het gebeurt.
+
+### Onder de motorkap
+Twee Sets in het geheugen naast het bestaande `_dashCollapsed`: `_jaarCollapsed` met sleutels als `geaccepteerd:2025` voor de ingeklapte jaren, en `_jaarGezien` voor de startstand per jaar. Geen kolom, geen migratie, geen Edge Function. `toggleDashJaar` spiegelt `toggleDashSection`. In `renderCalculatiesArchief` twee nieuwe lokale helpers na `_renderRow`: `_jaarVan` leest het jaar met `getFullYear()` op een echte `Date` en niet met een tekstknip op de ISO-string, want `aangemaakt` is een `timestamptz` die in UTC terugkomt: een calculatie die hier op 1 januari om 00:30 wordt gemaakt staat als 31 december 23:30 in die tekst en zou met een tekstknip onder het vorige jaar belanden. `getFullYear()` rekent om naar de tijdzone van het apparaat. `_renderJaarLaag` bundelt per jaar en tekent de jaarkop in hetzelfde `<tr>`-patroon als de statuskop, ingesprongen en zonder statusbolletje. Het plannen-archief met `_planCollapsed` is niet aangeraakt. Alleen weergave, niets aan de rekenkern, de meetstaat, de prints of de PDFs.
+
 ## v4.41.0 — Verfsystemen klappen dicht
 
 Bij een opname op de iPad ging het meeste scherm op aan bewerkingsregels die je op dat moment niet nodig hebt. Een verfsysteem toont voortaan alleen de kop en de twee getallen die tellen.
