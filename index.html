@@ -888,6 +888,52 @@
   }
   .regel-stappen-footer .ft-value.accent { color: var(--accent-deep); }
 
+  /* v4.41.0 — Bewerkingsregels per verfsysteem in- en uitklappen.
+     Standaard dicht: alleen de kop en de footer met min/eenheid en verkoop
+     blijven in beeld. De stand leeft in het geheugen (_regelOpen), niet in de
+     database, dus na herladen staat alles weer dicht. Dat is precies de
+     beginstand die je bij een opname wil. */
+  .regel-kop-naam { display: flex; align-items: center; gap: 0.15rem; min-width: 0; }
+  .regel-kop-naam input { flex: 1 1 auto; min-width: 0; }
+  .regel-caret {
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+    padding: 0.3rem 0.35rem;
+    flex-shrink: 0;
+    display: inline-block;
+    transform: rotate(-90deg);
+    transition: transform 0.2s;
+  }
+  .calc-regel-wrap.stappen-open .regel-caret { transform: rotate(0deg); }
+  .calc-regel-wrap:not(.stappen-open) .regel-stappen-titel,
+  .calc-regel-wrap:not(.stappen-open) .regel-stap,
+  .calc-regel-wrap:not(.stappen-open) .regel-stap-add { display: none; }
+  .calc-regel-wrap:not(.stappen-open) .regel-stappen {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+  }
+  .calc-regel-wrap:not(.stappen-open) .regel-stappen-footer {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+  .calc-klap-bar {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+  .calc-klap-bar .klap-tel {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
   /* NOTITIES & TODOS */
   .notities-paneel {
     margin-top: 0.5rem;
@@ -2255,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.40.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.41.0</h2>
       <div class="intro-body">
+        <p><strong>📐 Verfsystemen klappen dicht (v4.41.0).</strong> Een verfsysteem in de calculatie toont voortaan alleen de kop en onderaan Totaal min per eenheid en Verkoop excl. BTW per eenheid. De bewerkingsregels zitten eronder verstopt tot je ze nodig hebt. Tik het driehoekje voor de omschrijving aan om er een open te klappen, of gebruik de knoppen Alle bewerkingen open en Alle bewerkingen dicht boven de calculatie. De stand is puur weergave en wordt niet bewaard: open je de calculatie opnieuw, dan staat alles weer dicht. Dat scheelt op de iPad tijdens een opname flink scrollen. Een regel waar nog geen enkele bewerking in zit blijft altijd open, anders kwam je niet meer bij het plus-stap-veld. Geen SQL.</p>
         <p><strong>🔧 Projectnaam en klant volgen nu jouw naamregel (v4.40.2).</strong> De boekingsknop zet voortaan alleen de achternaam in het veld Klant en bouwt de projectnaam als Achternaam | werksoort. De werksoort komt uit het boekingsformulier zelf, want daar beantwoordt de klant de vraag over binnen- of buitenschilderwerk al: dat antwoord wordt Binnenwerk, Buitenwerk of Binnen- en buitenwerk achter de streep. Staat er bij een boeking geen herkenbaar antwoord, dan verschijnt dezelfde naamvraag als bij een gewone nieuwe calculatie, vooringevuld met de achternaam.</p>
         <p><strong>🔧 Deadline offerte vult zich nu ook bij de boekingsknop (v4.40.1).</strong> Maak je vanuit het blok Opnameboekingen een calculatie, dan staat Deadline offerte er direct in: opnamedatum plus veertien dagen, dezelfde regel die het veld al volgde wanneer je de opnamedatum met de hand invult. Handmatig aanpassen blijft gewoon mogelijk.</p>
         <p><strong>📋 Opnameboekingen op het dashboard (v4.40.0).</strong> Boekt een klant een opname via het formulier, dan staat die vanaf nu vanzelf op het dashboard in het nieuwe blok Opnameboekingen: datum, naam, plaats, status en wat er nog mist. De knop Calculatie aanmaken zet er in een klik een calculatie van klaar met naam, klant, postcode, huisnummer, opnamedatum, e-mail, telefoon, werkadres en de aanvraagtekst van de klant in de notities. De knop Wegtikken is voor boekingen die geen calculatie hoeven te worden; weggetikte boekingen blijven onderin terug te vinden en zijn met een klik terug te zetten. Wordt een opname geannuleerd waarvoor al een calculatie bestaat, dan meldt het dashboard dat met een knop Gezien, die een waarschuwingsregel bovenaan de notities van die calculatie zet. De agenda leest zichzelf elke nacht vanzelf in.</p>
@@ -2591,6 +2638,7 @@
     <div id="notitiesPaneel"></div>
     <div class="calc-layout">
       <div>
+        <div id="calcKlapBar" class="calc-klap-bar"></div>
         <div id="calcStructuur"></div>
         <button class="btn" onclick="addHoofdgroep()" style="margin-top: 0.5rem;">+ Hoofdgroep toevoegen</button>
         <h3 style="margin-top: 2rem; margin-bottom: 0.75rem;">Staartkosten</h3>
@@ -3511,7 +3559,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.40.2';
+const APP_VERSION = 'v4.41.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3907,6 +3955,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.41.0', d: '2026-08-24', h: 'Bewerkingsregels per calc-regel in- en uitklappen, standaard dicht. Nieuwe Set _regelOpen naast het bestaande _matFilterOffRegelStap-patroon houdt bij welke regel-IDs open staan; leeg betekent alles dicht, dus zowel een verse calculatie als een herlaad geeft overzicht. renderRegel zet id rw_REGELID plus de klasse stappen-open op de .calc-regel-wrap en plaatst een span.regel-caret in de eerste kolom van de kop, in een nieuwe flex-wrapper .regel-kop-naam zodat het naamveld met flex 1 1 auto en min-width 0 blijft krimpen. CSS verbergt bij :not(.stappen-open) de titelregel, de .regel-stap-rijen en .regel-stap-add, en haalt marge, padding en bovenrand van de .regel-stappen-footer weg zodat kop en totalen tegen elkaar aan komen te staan; de footer met Totaal min per eenheid en Verkoop excl. BTW per eenheid blijft dus staan. Bewust een eigen klasse regel-caret in plaats van de generieke .caret, want .hoofdgroep.collapsed .caret is een afstammelingsselector die anders ook op regelniveau zou landen. toggleRegelStappen zet de klasse rechtstreeks op het element in plaats van renderCalcStructuur aan te roepen: sneller op de iPad en het haalt geen focus uit een veld, met terugval op een hertekening als het element ontbreekt. alleRegelsKlappen vult of leegt de Set en loopt daarna de DOM langs. Nieuwe balk calcKlapBar boven calcStructuur met twee knoppen en een teller open van totaal, getekend door _tekenKlapBar vanuit renderCalcStructuur en na elke toggle; de knoppen dragen lock-allowed zodat ze ook op een vergrendelde calculatie werken, want inklappen raakt geen data. Een regel zonder bewerkingen krijgt geen caret en staat altijd open, anders zou het plus-stap-veld onbereikbaar worden. renderRegel wordt alleen vanuit renderOnderdeel aangeroepen, dus print, PDF en meetstaat blijven ongemoeid. Alleen weergave, niets aan de rekenkern. Geen SQL, geen Edge Function.' },
   { v: '4.40.2', d: '2026-08-09', h: 'Boekingsknop volgt de naamconventie: alleen de achternaam in klant en Achternaam | werksoort als projectnaam. Nieuwe helper _opnameAchternaam laat het eerste woord van de boekingsnaam vallen (Silka Duvekot wordt Duvekot, J.C. Toebermann wordt Toebermann, tussenvoegsels blijven staan). Nieuwe helper _opnameWerksoort leest het antwoord op de formuliervraag over binnen- of buitenschilderwerk uit de notities van de boeking: het kopje begint met binnen en bevat schilderwerk (GEMETEN 9 augustus, oude vorm Binnen of buitenschilderwerk 2027 met 28 stuks, nieuwe vorm Binnen- en/of buitenschilderwerk met 2 stuks, samen alle 30) en het antwoord normaliseert naar Binnenwerk, Buitenwerk of Binnen- en buitenwerk. Geen herkenbaar antwoord, dan een naamvraag zoals bij newCalc, vooringevuld met de achternaam plus pipe; annuleren maakt niets aan. Het veld klant volgt het deel voor de pipe van de uiteindelijke naam, de regel van v3.25.6. De aanvraagtekst blijft integraal in de notities staan, ook de werksoortvraag zelf. Geen SQL' },
   { v: '4.40.1', d: '2026-08-09', h: 'Deadline offerte gevuld bij Calculatie aanmaken vanuit het boekingenblok. De veldentabel van de overdracht kende deadline_datum niet, dus _opnameMaakCalc liet hem leeg terwijl de change-handler op calcOpname hem bij handmatige invoer wel afleidt (opname plus 14 dagen, alleen bij leeg veld of de vorige autowaarde). De insert geeft nu deadlineDatum mee als _addDays(opname_datum, 14), exact de bestaande autovulregel; _mapCalcHeaderToDB nam deadline_datum al mee. Boekingen zonder opnamedatum houden een lege deadline. Gemeld bij de eerste praktijktest. Geen SQL' },
   { v: '4.40.0', d: '2026-08-09', h: 'Opnameboekingen op het dashboard. Nieuw blok opnameBoekingenBlok tussen de tegels en Calculaties, getekend door _opnameTeken en gevuld door _opnameVerversen vanuit renderDashboard: een select op opname_boekingen via _sbQuery (throttle 15 s, geforceerd na elke actie) die client-side splitst in open (zonder verwerkt_op en zonder calculatie_id, oplopend op opname_datum), annuleringsmeldingen (cancelled met calculatie_id zonder annulering_gemeld_op) en weggetikt (verwerkt_op zonder calculatie_id, inklapbare lijst met knop Terugzetten die verwerkt_op leegmaakt). Knop Calculatie aanmaken hergebruikt _insertCalcDB met status afspraak, naam Klant | Straat Huisnummer met terugval Opname datum, klant, postcode, huisnummer, opname_datum en de aanvraagtekst onder een kopregel in notities; daarna een gerichte update van alleen offerte_config met email, telefoon en werkadres (straat plus woonplaats uit plaats), conform de regel bij _mapCalcHeaderToDB, en van adres en briefadres blijft de knop af; tot slot krijgt de boeking calculatie_id plus verwerkt_op. Je blijft op het dashboard en de verse calc staat bovenaan het archief. Knop Gezien schrijft AFSPRAAK GEANNULEERD (agenda, datum) bovenaan calculaties.notities via _updateCalcDB en zet annulering_gemeld_op. Rechten en policies stonden al goed (RLS-meting 9 augustus), dus geen SQL. De vulling komt van Edge Function opname-boekingen v4 met de dagelijkse cron om 03:45 UTC' },
@@ -11576,6 +11625,14 @@ function toggleMatFilter(bewId) {
 // Sleutel = stap.id (uniek per regel-stap, niet conflicterend met bewerking-IDs).
 // Hetzelfde patroon als _matFilterOff maar gescoopt op calc-context met eigen render-trigger.
 const _matFilterOffRegelStap = new Set();
+
+// v4.41.0 — Welke calc-regels hun bewerkingen open hebben staan.
+// Sleutel = regel.id. Leeg = alles dicht, en dat is de beginstand: een verse
+// calculatie of een herlaad geeft dus overzicht in plaats van alle stappen.
+// Bewust alleen in het geheugen. calc_regels heeft geen collapsed-kolom en die
+// is hier ook niet nodig, want de gewenste stand na herladen is toch dicht.
+const _regelOpen = new Set();
+
 function toggleMatFilterRegelStap(stapId) {
   if (_matFilterOffRegelStap.has(stapId)) _matFilterOffRegelStap.delete(stapId);
   else _matFilterOffRegelStap.add(stapId);
@@ -17155,6 +17212,7 @@ function renderCalcStructuur() {
   } else {
     c.innerHTML = data.calc.hoofdgroepen.map(hg => renderHoofdgroep(hg)).join('');
   }
+  _tekenKlapBar(); // v4.41.0
   renderStaartList();
   renderTotals();
   renderOfferteBlok();
@@ -17313,9 +17371,17 @@ function renderRegel(hgId, odId, r) {
     : `<input type="number" step="0.1" value="${r.hoeveelheid||0}" onchange="updReg('${hgId}','${odId}','${r.id}','hoeveelheid',parseFloat(this.value))"> <span style="color:var(--muted); font-size:0.7rem;">${eenheid}</span>`;
 
   const actiefR = _isActief(r);
-  return `<div class="calc-regel-wrap ${actiefR?'':'is-inactief'}">
+  // v4.41.0 — Inklapstand. Een regel zonder bewerkingen staat altijd open,
+  // anders zou het plus-stap-veld onbereikbaar worden en kun je er nooit meer
+  // een bewerking in krijgen.
+  const heeftStappen = !!(r.stappen && r.stappen.length);
+  const stappenOpen = !heeftStappen || _regelOpen.has(r.id);
+  const caretHtml = heeftStappen
+    ? `<span class="regel-caret" onclick="toggleRegelStappen('${r.id}')" title="${(r.stappen||[]).length} bewerking${(r.stappen||[]).length===1?'':'en'} tonen of verbergen">&#9660;</span>`
+    : '';
+  return `<div class="calc-regel-wrap ${actiefR?'':'is-inactief'} ${stappenOpen?'stappen-open':''}" id="rw_${r.id}">
     <div class="calc-regel">
-      <div><input value="${r.naam||''}" placeholder="Locatie/omschrijving" onchange="updReg('${hgId}','${odId}','${r.id}','naam',this.value)"></div>
+      <div class="regel-kop-naam">${caretHtml}<input value="${r.naam||''}" placeholder="Locatie/omschrijving" onchange="updReg('${hgId}','${odId}','${r.id}','naam',this.value)"></div>
       <div class="systeem-naam"><input type="checkbox" class="actief-toggle" ${actiefR?'checked':''} onchange="toggleRegelActief('${hgId}','${odId}','${r.id}')" title="Aan/uit voor offerte" style="margin-right:0.4rem; vertical-align:middle;"><strong>${sysNaam}</strong> <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span></div>
       <div>${hoeveelHtml}</div>
       <div><input type="number" step="5" value="${r.toeslag||0}" onchange="updReg('${hgId}','${odId}','${r.id}','toeslag',parseFloat(this.value))" title="Toeslag voor staat (matig=15, slecht=30)"> <span style="color:var(--muted); font-size:0.7rem;">% staat</span></div>
@@ -17340,6 +17406,68 @@ function renderRegel(hgId, odId, r) {
     </div>
   </div>`;
 }
+// v4.41.0 — Bewerkingen van een enkele calc-regel open- of dichtklappen.
+// Zet de klasse rechtstreeks op het element in plaats van de hele boom te
+// hertekenen: dat is merkbaar sneller op de iPad en het haalt geen focus uit
+// een veld waar je net in typt. Staat het element er onverhoopt niet, dan valt
+// hij terug op een gewone hertekening.
+function toggleRegelStappen(rId) {
+  if (_regelOpen.has(rId)) _regelOpen.delete(rId);
+  else _regelOpen.add(rId);
+  const el = document.getElementById('rw_' + rId);
+  if (el) {
+    el.classList.toggle('stappen-open', _regelOpen.has(rId));
+    _tekenKlapBar();
+  } else {
+    renderCalcStructuur();
+  }
+}
+
+// v4.41.0 — Alles in een keer open of dicht. Regels zonder bewerkingen laten we
+// met rust; die staan altijd open en horen niet in de teller thuis.
+function alleRegelsKlappen(open) {
+  _regelOpen.clear();
+  if (open) {
+    ((data.calc && data.calc.hoofdgroepen) || []).forEach(function(hg) {
+      (hg.onderdelen || []).forEach(function(od) {
+        (od.regels || []).forEach(function(r) {
+          if (r.stappen && r.stappen.length) _regelOpen.add(r.id);
+        });
+      });
+    });
+  }
+  document.querySelectorAll('#calcStructuur .calc-regel-wrap').forEach(function(el) {
+    const rId = (el.id || '').replace(/^rw_/, '');
+    if (!rId) return;
+    // Een regel zonder bewerkingen heeft geen caret en blijft altijd open.
+    const heeftCaret = !!el.querySelector('.regel-caret');
+    el.classList.toggle('stappen-open', heeftCaret ? _regelOpen.has(rId) : true);
+  });
+  _tekenKlapBar();
+}
+
+// v4.41.0 — Balk boven de calculatiestructuur. Verschijnt alleen als er iets te
+// klappen valt, met een tellertje zodat je ziet hoeveel er openstaat.
+function _tekenKlapBar() {
+  const bar = document.getElementById('calcKlapBar');
+  if (!bar) return;
+  let totaal = 0, open = 0;
+  ((data.calc && data.calc.hoofdgroepen) || []).forEach(function(hg) {
+    (hg.onderdelen || []).forEach(function(od) {
+      (od.regels || []).forEach(function(r) {
+        if (r.stappen && r.stappen.length) {
+          totaal++;
+          if (_regelOpen.has(r.id)) open++;
+        }
+      });
+    });
+  });
+  if (!totaal) { bar.innerHTML = ''; return; }
+  bar.innerHTML = '<button class="btn-secondary btn btn-sm lock-allowed" onclick="alleRegelsKlappen(true)">Alle bewerkingen open</button>' +
+    '<button class="btn-secondary btn btn-sm lock-allowed" onclick="alleRegelsKlappen(false)">Alle bewerkingen dicht</button>' +
+    '<span class="klap-tel">' + open + ' van ' + totaal + ' open</span>';
+}
+
 // updRegelStap, moveRegelStap, delRegelStap, addRegelStap
 function _findRegel(hgId, odId, rId) {
   const hg = data.calc.hoofdgroepen.find(x => x.id === hgId); if (!hg) return null;

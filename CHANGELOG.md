@@ -1,3 +1,17 @@
+## v4.41.0 — Verfsystemen klappen dicht
+
+Bij een opname op de iPad ging het meeste scherm op aan bewerkingsregels die je op dat moment niet nodig hebt. Een verfsysteem toont voortaan alleen de kop en de twee getallen die tellen.
+
+### Wat er verandert
+- Een verfsysteem in de calculatie staat standaard dicht. Je ziet de kop met omschrijving, systeemnaam, hoeveelheid, procent staat en de uren en het bedrag rechts, en daaronder Totaal min per eenheid en Verkoop excl. BTW per eenheid. De bewerkingsregels zelf zitten eronder verstopt.
+- Het driehoekje voor de omschrijving klapt een enkel systeem open of dicht.
+- Boven de calculatiestructuur staan twee knoppen, Alle bewerkingen open en Alle bewerkingen dicht, met een teller erachter die laat zien hoeveel er openstaan.
+- De stand wordt niet bewaard. Open je de calculatie opnieuw of ververs je de pagina, dan staat alles weer dicht. Dat is bewust: dicht is de stand die je bij een opname wil.
+- Een regel waar nog geen enkele bewerking in zit heeft geen driehoekje en blijft altijd open, anders zou je niet meer bij het veld komen om er een bewerking aan toe te voegen.
+- Werkt ook op een vergrendelde calculatie, want inklappen raakt geen gegevens.
+- Alleen weergave. Aan de rekenkern, de meetstaat, de prints en de PDFs is niets veranderd.
+- Geen SQL.
+
 ## v4.40.2 — Boekingsknop volgt de naamregel
 De projectnaam werd Klant | Straat Huisnummer, maar de eigen conventie is de achternaam met daarachter de werksoort. En het veld Klant hoort alleen de achternaam te bevatten, zoals de uitleg onder het briefhoofd al zei.
 
