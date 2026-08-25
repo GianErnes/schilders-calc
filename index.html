@@ -2301,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.42.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.43.0</h2>
       <div class="intro-body">
+        <p><strong>📄 Archiefmarkeringen op het dashboard (v4.43.0).</strong> Het calculatie-archief heeft er een smalle kolom Archief bij, tussen Status en Totaal, met twee tekens per rij: 📄 voor de documenten en ✍️ voor de getekende offerte. Rond je een archiveer-reeks helemaal af, dan kleuren ze vanzelf groen. Zat alleen de geaccordeerde offerte in de reeks, dan alleen ✍️. Zat die er niet bij, dan alleen 📄. Stop je halverwege, dan valt er niets. Aantikken kan ook met de hand, in beide richtingen, en er komt altijd eerst een bevestiging met de datum erin. Wees eerlijk over wat je ziet: de app legt vast dat de PDF is aangemaakt, niet dat het bestand in de projectmap staat. Dat verplaatsen blijft jouw werk. Vereist SQL (los geleverd).</p>
         <p><strong>🗂️ Geaccepteerd en Verloren per jaar (v4.42.0).</strong> Die twee groepen worden alleen maar langer, en alles wat ouder is dan dit jaar stond gewoon mee in de lijst. Klap je Geaccepteerd of Verloren nu open, dan zie je eerst jaarkoppen: 2026, 2025, 2024, nieuwste bovenaan, elk met het aantal en het bedrag van dat jaar. Elk jaar klapt apart open. Is er maar één jaar, dan staat dat meteen open, want dan valt er niets te kiezen. De vier andere groepen blijven precies zoals ze waren. Zoek je op naam of klant, dan valt de jaarlaag weg en krijg je de platte lijst met alle treffers. Let op: het jaartal is het jaar waarin je de calculatie hebt aangemaakt, niet waarin de klant tekende. Een offerte van november die in januari getekend wordt staat dus onder het oude jaar. Voor overzicht prima, voor de boekhouding blijven de cijfers in Financieel leidend. Alleen weergave, geen SQL.</p>
         <p><strong>📐 Verfsystemen klappen dicht (v4.41.0).</strong> Een verfsysteem in de calculatie toont voortaan alleen de kop en onderaan Totaal min per eenheid en Verkoop excl. BTW per eenheid. De bewerkingsregels zitten eronder verstopt tot je ze nodig hebt. Tik het driehoekje voor de omschrijving aan om er een open te klappen, of gebruik de knoppen Alle bewerkingen open en Alle bewerkingen dicht boven de calculatie. De stand is puur weergave en wordt niet bewaard: open je de calculatie opnieuw, dan staat alles weer dicht. Dat scheelt op de iPad tijdens een opname flink scrollen. Een regel waar nog geen enkele bewerking in zit blijft altijd open, anders kwam je niet meer bij het plus-stap-veld. Geen SQL.</p>
         <p><strong>🔧 Projectnaam en klant volgen nu jouw naamregel (v4.40.2).</strong> De boekingsknop zet voortaan alleen de achternaam in het veld Klant en bouwt de projectnaam als Achternaam | werksoort. De werksoort komt uit het boekingsformulier zelf, want daar beantwoordt de klant de vraag over binnen- of buitenschilderwerk al: dat antwoord wordt Binnenwerk, Buitenwerk of Binnen- en buitenwerk achter de streep. Staat er bij een boeking geen herkenbaar antwoord, dan verschijnt dezelfde naamvraag als bij een gewone nieuwe calculatie, vooringevuld met de achternaam.</p>
@@ -3560,7 +3561,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.42.0';
+const APP_VERSION = 'v4.43.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3956,6 +3957,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.43.0', d: '2026-08-25', h: 'Archiveer-markeringen per calculatie. Twee nieuwe kolommen op public.calculaties, arch_documenten_op en arch_getekend_op, beide timestamptz null, gezet via een gerichte update van alleen dat ene veld en bewust NIET opgenomen in _mapCalcHeaderToDB, om dezelfde reden als craft_geexporteerd_op en offerte_config: een gewone header-save zou in een tweede tabblad met een oud clientobject een verse markering wissen. _archiveerCtx kreeg calcId, vastgelegd in startArchiveerSequentie uit data.calc; een reeks duurt circa tien seconden en zonder dat veld viel de markering op de calculatie waar je toevallig naartoe was gewisseld, wat een reparatie is en geen keuze. In de uitloop-tak van _archiveerVolgende roept _archStempelNaReeks() de markering aan op basis van de queue: bevat die uitsluitend geaccordeerd dan alleen arch_getekend_op, bevat die uitsluitend andere types dan alleen arch_documenten_op, bevat die allebei dan beide. stopArchiveerSequentie haakt bewust niet aan, dus halverwege stoppen stempelt niet. Op het dashboard een achtste kolom Archief tussen Status en Totaal met twee knoppen van 2,4rem via de lokale helper _archCel, gezet in dcfce7 met rand 16a34a, leeg gestippeld in muted; colspan van zowel de statuskop als de jaarkop van 6 naar 7. toggleArchMarkering vraagt in beide richtingen bevestiging via de native confirm, met de datum in de tekst omdat title op de iPad niet bestaat. Bewust geaccepteerd: zeven van de negen types lopen via window.print() en afterprint vuurt daar ook af bij annuleren, dus de markering bewijst dat de PDF is aangeboden en niet dat er een bestand staat. Vereist SQL.' },
   { v: '4.42.0', d: '2026-08-24', h: 'Jaarlaag binnen de statusgroepen Geaccepteerd en Verloren van het calculatie-archief. Twee nieuwe Sets naast het bestaande _dashCollapsed-patroon: _jaarCollapsed houdt de ingeklapte jaarkoppen bij met sleutel status:jaar (afwezigheid is open) en _jaarGezien onthoudt welke sleutels al een startstand kregen, zodat een groep met precies één jaar open begint, een groep met meer jaren dicht, en een jaar dat er later bij komt via een statuswissel zijn eigen startstand krijgt zonder de al gezette jaren te raken. Beide alleen in het geheugen, geen kolom en geen migratie. toggleDashJaar spiegelt toggleDashSection. In renderCalculatiesArchief twee nieuwe lokale helpers na _renderRow, want _renderJaarLaag heeft zowel _renderRow als _calcBedrag nodig: _jaarVan leest het jaar met getFullYear() op een echte Date in plaats van de eerste vier tekens van de ISO-tekst, omdat aangemaakt een timestamptz is die in UTC terugkomt: een calculatie die hier op 1 januari 00:30 wordt gemaakt staat als 31 december 23:30 UTC in de tekst en zou met een tekstknip in het vorige jaar belanden, terwijl getFullYear() omrekent naar de tijdzone van het apparaat en het jaar geeft zoals de gebruiker het beleefde, met 0 als vangnetsleutel voor een onleesbare datum die vanzelf onderaan sorteert onder de kop Zonder datum. _renderJaarLaag bundelt de groep in een Map per jaar, sorteert aflopend zodat het nieuwste jaar bovenaan staat en beweegt bewust niet mee met _dashSort.dir, want jaarvolgorde is navigatie en geen sortering, en tekent per jaar een tr met colspan 6 plus bedragcel in hetzelfde patroon als de statuskop maar ingesprongen tot 1.75rem, kleiner, in ink-soft en zonder statusbolletje. De uitklap-tak roept de jaarlaag alleen aan voor de statussen in de nieuwe constante JAAR_STATUSSEN en alleen als er niet gezocht wordt; de vier andere statussen en elke zoekopdracht houden de platte lijst van hiervoor. Bewust geaccepteerd: het jaartal is het jaar van aanmaak en niet van akkoord, want er is geen status_datum en die komt er ook niet. Het plannen-archief met _planCollapsed is ongemoeid gebleven. Alleen weergave, niets aan de rekenkern, geen SQL en geen Edge Function.' },
   { v: '4.41.0', d: '2026-08-24', h: 'Bewerkingsregels per calc-regel in- en uitklappen, standaard dicht. Nieuwe Set _regelOpen naast het bestaande _matFilterOffRegelStap-patroon houdt bij welke regel-IDs open staan; leeg betekent alles dicht, dus zowel een verse calculatie als een herlaad geeft overzicht. renderRegel zet id rw_REGELID plus de klasse stappen-open op de .calc-regel-wrap en plaatst een span.regel-caret in de eerste kolom van de kop, in een nieuwe flex-wrapper .regel-kop-naam zodat het naamveld met flex 1 1 auto en min-width 0 blijft krimpen. CSS verbergt bij :not(.stappen-open) de titelregel, de .regel-stap-rijen en .regel-stap-add, en haalt marge, padding en bovenrand van de .regel-stappen-footer weg zodat kop en totalen tegen elkaar aan komen te staan; de footer met Totaal min per eenheid en Verkoop excl. BTW per eenheid blijft dus staan. Bewust een eigen klasse regel-caret in plaats van de generieke .caret, want .hoofdgroep.collapsed .caret is een afstammelingsselector die anders ook op regelniveau zou landen. toggleRegelStappen zet de klasse rechtstreeks op het element in plaats van renderCalcStructuur aan te roepen: sneller op de iPad en het haalt geen focus uit een veld, met terugval op een hertekening als het element ontbreekt. alleRegelsKlappen vult of leegt de Set en loopt daarna de DOM langs. Nieuwe balk calcKlapBar boven calcStructuur met twee knoppen en een teller open van totaal, getekend door _tekenKlapBar vanuit renderCalcStructuur en na elke toggle; de knoppen dragen lock-allowed zodat ze ook op een vergrendelde calculatie werken, want inklappen raakt geen data. Een regel zonder bewerkingen krijgt geen caret en staat altijd open, anders zou het plus-stap-veld onbereikbaar worden. renderRegel wordt alleen vanuit renderOnderdeel aangeroepen, dus print, PDF en meetstaat blijven ongemoeid. Alleen weergave, niets aan de rekenkern. Geen SQL, geen Edge Function.' },
   { v: '4.40.2', d: '2026-08-09', h: 'Boekingsknop volgt de naamconventie: alleen de achternaam in klant en Achternaam | werksoort als projectnaam. Nieuwe helper _opnameAchternaam laat het eerste woord van de boekingsnaam vallen (Silka Duvekot wordt Duvekot, J.C. Toebermann wordt Toebermann, tussenvoegsels blijven staan). Nieuwe helper _opnameWerksoort leest het antwoord op de formuliervraag over binnen- of buitenschilderwerk uit de notities van de boeking: het kopje begint met binnen en bevat schilderwerk (GEMETEN 9 augustus, oude vorm Binnen of buitenschilderwerk 2027 met 28 stuks, nieuwe vorm Binnen- en/of buitenschilderwerk met 2 stuks, samen alle 30) en het antwoord normaliseert naar Binnenwerk, Buitenwerk of Binnen- en buitenwerk. Geen herkenbaar antwoord, dan een naamvraag zoals bij newCalc, vooringevuld met de achternaam plus pipe; annuleren maakt niets aan. Het veld klant volgt het deel voor de pipe van de uiteindelijke naam, de regel van v3.25.6. De aanvraagtekst blijft integraal in de notities staan, ook de werksoortvraag zelf. Geen SQL' },
@@ -6974,6 +6976,10 @@ function _mapCalcHeaderFromDB(row) {
     opnameDatum:         row.opname_datum || null,
     deadlineDatum:       row.deadline_datum || null,
     craftGeexporteerdOp: row.craft_geexporteerd_op || null,
+    // v4.43.0 — archiveer-markeringen. Bewust NIET in _mapCalcHeaderToDB, om
+    // dezelfde reden als craft_geexporteerd_op en offerte_config hieronder.
+    archDocumentenOp:    row.arch_documenten_op || null,
+    archGetekendOp:      row.arch_getekend_op   || null,
     // v3.58.0 — offerte-instellingen (brok A3). Bewust NIET in _mapCalcHeaderToDB:
     // wordt uitsluitend via een gerichte update van alleen dit veld weggeschreven
     // (_offCfgSave), zodat een header-save nooit een verse config overschrijft.
@@ -12198,8 +12204,97 @@ let _archiveerCtx = {
   cancelled: false,
   queue: [],     // array van { type: 'calculatie'|..., label: 'Calculatie als PDF' }
   current: 0,    // index van huidige PDF (1-based bij display)
-  total: 0
+  total: 0,
+  calcId: null   // v4.43.0 — vastgelegd bij de start; een reeks duurt circa tien
+                 // seconden en in die tijd kun je van calculatie wisselen. Zonder
+                 // dit zou de markering op de verkeerde calculatie vallen.
 };
+
+// ============================================================
+// v4.43.0 — ARCHIVEER-MARKERINGEN
+// ============================================================
+// Twee kolommen op public.calculaties: arch_documenten_op en arch_getekend_op.
+// Ze vallen automatisch aan het einde van een voltooide archiveer-reeks en zijn
+// met de hand aan en uit te tikken vanuit de kolom Archief op het dashboard.
+//
+// Eerlijk over wat dit WEL en NIET weet: de app weet alleen dat de PDF is
+// aangemaakt en aan de browser is aangeboden. Zeven van de negen types lopen via
+// window.print(), en afterprint vuurt daar ook af als je het printvenster
+// annuleert. Negen keer Annuleren geeft dus evengoed een markering. Dat is
+// bewust geaccepteerd; het woord "Gearchiveerd" slaat op de handeling, niet op
+// een verificatie dat het bestand ergens staat.
+//
+// Bewust NIET in _mapCalcHeaderToDB, net als craft_geexporteerd_op en
+// offerte_config: een gewone header-save schrijft alle gemapte velden terug, en
+// in een tweede tabblad zou een oud clientobject een verse markering wissen.
+
+// dd-mm-jjjj uu:mm voor de title en het bevestigingsvenster.
+function _archStempelTekst(stamp) {
+  if (!stamp) return '';
+  const d = new Date(stamp);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return dd + '-' + mm + '-' + d.getFullYear() + ' ' + hh + ':' + mi;
+}
+
+// Zet of wist een markering. Lokaal eerst: data.calc is een getter op
+// data.calculaties, dus het is dezelfde objectverwijzing en de dashboardrij is
+// meteen bij. Daarna een gerichte update van alleen dit ene veld.
+async function _archMarkeerSchrijf(calcId, veld, waarde) {
+  if (!calcId) return;
+  const sleutel = (veld === 'arch_getekend_op') ? 'archGetekendOp' : 'archDocumentenOp';
+  const cl = data.calculaties.find(x => x.id === calcId);
+  if (cl) cl[sleutel] = waarde;
+  const payload = {};
+  payload[veld] = waarde;
+  try {
+    await _sb.from('calculaties').update(payload).eq('id', calcId);
+  } catch (e) { /* een volgende load herstelt zo nodig */ }
+}
+
+// Aan het einde van een voltooide reeks. Welke markering valt hangt af van wat
+// er in de queue zat: alleen de geaccordeerde offerte geeft alleen Getekend,
+// alleen andere types geven alleen Documenten, allebei geeft allebei.
+// stopArchiveerSequentie() haakt hier bewust NIET op aan: halverwege stoppen
+// geeft geen markering.
+function _archStempelNaReeks() {
+  const calcId = _archiveerCtx.calcId;
+  if (!calcId) return;
+  const types = (_archiveerCtx.queue || []).map(q => q.type);
+  if (!types.length) return;
+  const nu = new Date().toISOString();
+  if (types.indexOf('geaccordeerd') !== -1) _archMarkeerSchrijf(calcId, 'arch_getekend_op', nu);
+  if (types.some(t => t !== 'geaccordeerd')) _archMarkeerSchrijf(calcId, 'arch_documenten_op', nu);
+}
+
+// Met de hand aan- of uittikken vanuit de kolom Archief. Altijd bevestigen, in
+// beide richtingen. Native confirm(), zoals de rest van de app.
+function toggleArchMarkering(calcId, welke) {
+  const cl = data.calculaties.find(x => x.id === calcId);
+  if (!cl) return;
+  const isGetekend = (welke === 'getekend');
+  const veld = isGetekend ? 'arch_getekend_op' : 'arch_documenten_op';
+  const sleutel = isGetekend ? 'archGetekendOp' : 'archDocumentenOp';
+  const wat = isGetekend ? 'De getekende offerte' : 'De documenten';
+  const naam = cl.naam || 'deze calculatie';
+  const huidig = cl[sleutel];
+  if (huidig) {
+    const vraag = 'Markering weghalen?\n\n' + wat + ' van "' + naam +
+      '" staat nu gemarkeerd als gearchiveerd op ' + _archStempelTekst(huidig) +
+      '.\n\nDie datum gaat verloren.';
+    if (!confirm(vraag)) return;
+    _archMarkeerSchrijf(calcId, veld, null);
+  } else {
+    const vraag = 'Markeren als gearchiveerd?\n\n' + wat + ' van "' + naam +
+      '" krijgt de markering Gearchiveerd met de datum van nu.\n\n' +
+      'Let op: dit legt alleen vast dat de PDF is aangemaakt. Verplaatsen naar de projectmap doe je zelf.';
+    if (!confirm(vraag)) return;
+    _archMarkeerSchrijf(calcId, veld, new Date().toISOString());
+  }
+  renderCalculatiesArchief();
+}
 
 async function openArchiveerModal() {
   if (!data.calc) return;
@@ -12307,7 +12402,8 @@ function startArchiveerSequentie() {
     cancelled: false,
     queue,
     current: 0,
-    total: queue.length
+    total: queue.length,
+    calcId: data.calc ? data.calc.id : null  // v4.43.0 — vastleggen bij de start
   };
 
   closeArchiveerModal();
@@ -12324,6 +12420,7 @@ function _archiveerVolgende() {
   if (_archiveerCtx.current >= _archiveerCtx.queue.length) {
     _verbergArchiveerStatusBar();
     _archiveerCtx.running = false;
+    _archStempelNaReeks();  // v4.43.0 — markering op de calculatie waarmee de reeks begon
     _toast(`✓ ${_archiveerCtx.total} PDF${_archiveerCtx.total === 1 ? '' : 's'} aangeboden voor opslag`);
     return;
   }
@@ -19603,6 +19700,24 @@ function renderCalculatiesArchief() {
     return `<th class="${extraClass}" style="cursor:pointer; user-select:none;" onclick="setDashSort('${key}')" title="Sorteer op ${label}">${label}${_arrow(key)}</th>`;
   };
 
+  // v4.43.0 — Kolom Archief: twee markeringen per rij, altijd zichtbaar bij elke
+  // status. Alleen het teken; de datum staat in de title en in het
+  // bevestigingsvenster dat elke tik oplevert. Tikvlak 2,4rem, ruimer dan de
+  // btn-sm-knoppen ernaast, want een misklik opent hier een venster.
+  const _archCel = (cl) => {
+    const _mrk = (welke, teken, wat) => {
+      const stamp = (welke === 'getekend') ? cl.archGetekendOp : cl.archDocumentenOp;
+      const titel = stamp
+        ? `Gearchiveerd op ${_archStempelTekst(stamp)}. De app weet dat de PDF is aangemaakt, verplaatsen naar de projectmap doe je zelf. Tik om de markering weg te halen.`
+        : `${wat} nog niet gemarkeerd als gearchiveerd. Tik om te markeren.`;
+      const stijl = stamp
+        ? 'background:#dcfce7; border:1px solid #16a34a; color:#15803d;'
+        : 'background:transparent; border:1px dashed var(--paper-deep); color:var(--muted); opacity:0.4;';
+      return `<button onclick="toggleArchMarkering('${cl.id}', '${welke}')" title="${titel}" style="${stijl} min-width:2.4rem; min-height:2.4rem; padding:0; border-radius:var(--radius); font-size:0.95rem; line-height:1; cursor:pointer; font-family:inherit;">${teken}</button>`;
+    };
+    return `<div style="display:flex; gap:0.25rem; justify-content:center;">${_mrk('documenten', '📄', 'Documenten')}${_mrk('getekend', '✍️', 'Getekende offerte')}</div>`;
+  };
+
   // Bouw één rij
   const _renderRow = (cl) => {
     const _dash = '<span style="color:var(--muted);" title="Open en sla op om te berekenen">—</span>';
@@ -19644,6 +19759,7 @@ function renderCalculatiesArchief() {
       <td class="num">${deadlineHtml}</td>
       <td class="num">${datumHtml}</td>
       <td><select onchange="setCalcStatus('${cl.id}', this.value)" style="background: ${STATUS_COLORS[cl.status]}; color: var(--paper); border: none; padding: 0.25rem 0.4rem; font-size: 0.7rem;">${statusOpts}</select></td>
+      <td style="text-align:center;">${_archCel(cl)}</td>
       <td class="num right" style="color: var(--accent-deep); font-weight: 600;">${bedragHtml}</td>
       <td class="right">
         <button class="btn-secondary btn btn-sm" onclick="openCalc('${cl.id}')">Openen</button>
@@ -19697,7 +19813,7 @@ function renderCalculatiesArchief() {
       const jCaret = jDicht ? '▸' : '▾';
       const jLabel = (j === 0) ? 'Zonder datum' : String(j);
       uit += `<tr style="background: var(--paper-warm); cursor:pointer; user-select:none;" onclick="toggleDashJaar('${s}', ${j})" title="Klik om in/uit te klappen">
-        <td colspan="6" style="padding:0.55rem 0.7rem 0.55rem 1.75rem; font-weight:600; font-size:0.78rem; color:var(--ink-soft);">
+        <td colspan="7" style="padding:0.55rem 0.7rem 0.55rem 1.75rem; font-weight:600; font-size:0.78rem; color:var(--ink-soft);">
           <span style="display:inline-block; width:0.9rem; color:var(--muted);">${jCaret}</span>${jLabel} <span style="color:var(--muted); font-weight:400; margin-left:0.4rem;">(${rijen.length})</span>
         </td>
         <td class="num right" style="padding:0.55rem 0.7rem; font-weight:600; font-size:0.78rem; color:var(--accent-deep);">${jTotaal > 0 ? eur(jTotaal) : ''}</td>
@@ -19714,6 +19830,7 @@ function renderCalculatiesArchief() {
   html += _sortableTh('deadline', 'Deadline',        'num');
   html += _sortableTh('gewijzigd','Gewijzigd',       'num');
   html += '<th>Status</th>';
+  html += '<th style="text-align:center;" title="Gearchiveerd: documenten en getekende offerte">Archief</th>';
   html += _sortableTh('totaal',   'Totaal incl. BTW','right');
   html += '<th></th>';
   html += '</tr></thead><tbody>';
@@ -19730,9 +19847,9 @@ function renderCalculatiesArchief() {
     }, 0);
     const caret = collapsed ? '▸' : '▾';
     const bolletje = `<span style="display:inline-block; width:0.55rem; height:0.55rem; border-radius:50%; background:${STATUS_COLORS[s]}; margin-right:0.5rem; vertical-align:middle;"></span>`;
-    // Sectiekop is een <tr> die de hele breedte (7 cellen) overspant
+    // Sectiekop is een <tr> die de hele breedte (8 cellen) overspant
     html += `<tr style="background: var(--paper-warm); cursor:pointer; user-select:none;" onclick="toggleDashSection('${s}')" title="Klik om in/uit te klappen">
-      <td colspan="6" style="padding:0.55rem 0.7rem; font-weight:600; font-size:0.82rem;">
+      <td colspan="7" style="padding:0.55rem 0.7rem; font-weight:600; font-size:0.82rem;">
         <span style="display:inline-block; width:0.9rem; color:var(--muted);">${caret}</span>${bolletje}${STATUS_LABELS[s]} <span style="color:var(--muted); font-weight:400; margin-left:0.4rem;">(${groep.length})</span>
       </td>
       <td class="num right" style="padding:0.55rem 0.7rem; font-weight:600; font-size:0.82rem; color:var(--accent-deep);">${sectieTotaal > 0 ? eur(sectieTotaal) : ''}</td>

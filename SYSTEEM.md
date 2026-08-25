@@ -3339,3 +3339,68 @@ oogopslag zien dat ze over hetzelfde balkon gaan.
 - Het detailscherm van een taak toont de projectnaam nog niet.
 - `yoobi-taken-sync` versie `2026-08-13d` gaat dinsdag met de
   wekelijkse ronde mee naar `ernes-edge-functions`.
+
+## Wat er op 25 augustus 2026 gedaan is
+
+Schilders Calc ging van v4.42.0 naar **v4.43.0**. Eén wijziging aan de
+databank, twee kolommen op een bestaande tabel. Geen nieuwe tabel, geen
+opslagbak, geen Edge Function, geen cronjob, geen policywerk.
+
+### Twee kolommen op `calculaties`
+
+| Kolom | Type | Leeg toegestaan | Waarvoor |
+|---|---|---|---|
+| `arch_documenten_op` | `timestamptz` | ja | wanneer de documenten van deze calculatie als gearchiveerd zijn gemarkeerd |
+| `arch_getekend_op` | `timestamptz` | ja | wanneer de getekende offerte als gearchiveerd is gemarkeerd |
+
+Aangelegd met `2026-08-24_v4.43.0_archiveer_markeringen.sql`, idempotent
+via `add column if not exists`, gevalideerd met pglast v8.4 (5
+statements, geen destructieve operatie) en door Gian gedraaid en
+bevestigd op 25 augustus.
+
+**Rechten.** Er is geen policy- of grantwijziging gedaan. Dat het zonder
+kan is bevestigd doordat een gezette markering een herlaadslag overleeft;
+was dat niet zo geweest, dan waren het kolom-grants in plaats van
+tabel-grants.
+
+### Hoe ze gevuld worden
+
+Uitsluitend met een gerichte update van alleen het betreffende veld,
+nooit via `_mapCalcHeaderToDB`. Dat is dezelfde afspraak als bij
+`craft_geexporteerd_op` en `offerte_config`, en om dezelfde reden: een
+gewone header-save schrijft alle gemapte velden terug, dus een oud
+clientobject in een tweede tabblad zou een verse markering wissen.
+
+Twee wegen naar binnen. Automatisch aan het einde van een **voltooide**
+archiveer-reeks, waarbij de inhoud van de wachtrij bepaalt welke van de
+twee valt: alleen `geaccordeerd` geeft alleen `arch_getekend_op`, alleen
+andere types geven alleen `arch_documenten_op`, allebei geeft beide.
+Halverwege stoppen stempelt niet. En met de hand vanuit de kolom
+`Archief` op het dashboard, in beide richtingen, altijd achter een
+bevestiging.
+
+### Wat deze kolommen niet zijn
+
+**Ze bewijzen niet dat er een bestand in de projectmap staat.** De app
+weet alleen dat de PDF is aangemaakt en aan de browser is aangeboden.
+Zeven van de negen documenttypes lopen via `window.print()`, en
+`afterprint` vuurt daar ook af wanneer het printvenster wordt
+geannuleerd. Negen keer Annuleren levert dus evengoed een markering op.
+Dat is gemeten in v4.42.0 op regel 12365, waar dat gedrag ook letterlijk
+in het commentaar staat, en het is bewust geaccepteerd. Wie deze
+kolommen ooit voor een controle of een rapportage wil gebruiken moet dat
+weten: het is een geheugensteun, geen registratie.
+
+Daar komt bij dat elke markering met de hand weg te halen is. Er is geen
+logboek van wie hem gezet of gewist heeft.
+
+### Nog open op dit spoor
+
+- De markeringen zijn niet sorteerbaar en er is geen filter "toon alleen
+  nog niet gearchiveerd". Bewust buiten deze bouw gehouden om de
+  comparator niet met de `colspan`-wijziging te mengen.
+- Een teller in de statuskop, in de trant van "3 van de 10 nog niet
+  gearchiveerd", is nu bijna gratis en waarschijnlijk nuttiger dan de
+  losse tekens scannen. Niet gebouwd.
+- Of de kolom op de iPad in staande stand niet te veel ruimte van Totaal
+  afsnoept is **[TE CONTROLEREN]** op het apparaat zelf.

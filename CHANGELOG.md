@@ -1,3 +1,27 @@
+## v4.43.0 — Archiefmarkeringen op het dashboard
+
+Je maakt de PDF's aan, je sleept ze naar de projectmap, en twee weken later weet je van geen enkele calculatie meer of je dat gedaan hebt. Het archief geeft daar nu een teken voor.
+
+### Wat er verandert
+- Het calculatie-archief heeft er een smalle kolom **Archief** bij, tussen Status en Totaal. Twee tekens per rij: 📄 voor de documenten en ✍️ voor de getekende offerte.
+- Rond je een archiveer-reeks helemaal af, dan kleuren de bijbehorende tekens vanzelf groen. Zat er alleen de geaccordeerde offerte in de reeks, dan alleen ✍️. Zat die er niet bij, dan alleen 📄. Zaten ze allebei in de reeks, dan allebei.
+- Druk je halverwege op Stop, dan valt er niets. Een halve reeks is geen archief.
+- Aantikken kan ook met de hand, in beide richtingen. Er komt altijd eerst een venster met de vraag, en bij het weghalen staat de datum erin die je kwijtraakt.
+- De tekens staan er bij elke status, ook bij Concept en Afspraak. Dat je een concept al eens gearchiveerd hebt is net zo goed iets om te zien.
+
+### Wat je moet weten
+- **Dit teken bewijst niet dat het bestand ergens staat.** De app weet alleen dat de PDF is aangemaakt en aan de browser is aangeboden. Zeven van de negen types lopen via het printvenster van de browser, en de app krijgt precies hetzelfde seintje of je nu op Opslaan of op Annuleren drukt. Negen keer Annuleren geeft dus evengoed een groen teken. Het verplaatsen naar de projectmap blijft jouw werk en jouw geheugen.
+- Op de iPad zie je de datum niet door op het teken te blijven staan, want daar bestaat hover niet. Tik het teken aan en de datum staat in het venster; druk dan op Annuleren en er is niets veranderd.
+- De twee tekens hebben elk hun eigen datum. Documenten op 10 mei en de getekende offerte op 1 juni is een normale gang van zaken en dat blijft ook zo staan.
+- De markering is met de hand weg te halen, dus hij is niet waterdicht. Hij is bedoeld als geheugensteun, niet als bewijsstuk.
+
+### Onder de motorkap
+Twee kolommen op `public.calculaties`: `arch_documenten_op` en `arch_getekend_op`, beide `timestamptz null`. Ze worden weggeschreven met een gerichte update van alleen dat ene veld en staan bewust **niet** in `_mapCalcHeaderToDB`, om dezelfde reden als `craft_geexporteerd_op` en `offerte_config`: een gewone header-save schrijft alle gemapte velden terug, en in een tweede tabblad zou een oud clientobject een verse markering wissen.
+
+`_archiveerCtx` kreeg `calcId`, vastgelegd in `startArchiveerSequentie` uit `data.calc`. Dat is een reparatie en geen keuze: een reeks van negen documenten duurt circa tien seconden, en wisselde je in die tijd van calculatie, dan viel de markering op de verkeerde. In de uitloop-tak van `_archiveerVolgende` bepaalt `_archStempelNaReeks()` uit de `queue` welke van de twee valt. `stopArchiveerSequentie` haakt er bewust niet op aan.
+
+Op het dashboard een achtste kolom via de lokale helper `_archCel` in `renderCalculatiesArchief`, met knoppen van 2,4rem, ruimer dan de `btn-sm`-knoppen ernaast omdat een misklik hier een venster opent. De `colspan` van zowel de statuskop als de jaarkop ging van 6 naar 7. `toggleArchMarkering` gebruikt de native `confirm()`, net als de vijfentwintig andere bevestigingen in de app. Vereist SQL (los geleverd). Niets aan de rekenkern, de meetstaat, de prints of de PDF's.
+
 ## v4.42.0 — Jaarlaag in het calculatie-archief
 
 Geaccepteerd en Verloren worden alleen maar langer. Alles wat ouder is dan dit jaar stond gewoon mee in de lijst, en daar wordt het overzicht niet beter van. Die twee groepen krijgen er een laag bij.
