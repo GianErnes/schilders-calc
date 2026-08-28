@@ -3526,7 +3526,75 @@ grafiek niet vertrouwen.**
   doorrekenen van het plan van 2026 bleek dat de klant op het diepste punt
   euro 10.348,08 vooruitstaat en Ernes dus niets voorfinanciert. Standaard
   uit, want in de gangbare planvorm werkt dat beeld tegen Ernes.
-- Het plan loopt over `looptijd + 1` kalenderjaren (prijspeil tot en met
-  eindjaar) terwijl het gemiddelde door `looptijd` deelt. Bij prijspeil 2026
-  en looptijd 8 staan er negen jaartallen in de tabel. **[TE CONTROLEREN]**
-  of dat ergens tot een verschil van een jaarbedrag leidt.
+- ~~Het plan loopt over `looptijd + 1` kalenderjaren terwijl het gemiddelde
+  door `looptijd` deelt.~~ **Uitgezocht op 28 augustus, zie hieronder.**
+
+### Het jaartalverschil, uitgezocht en gerepareerd (v4.45.1)
+
+Het punt hierboven is nagemeten. Uitkomst in het kort: **het venster en de
+deler zijn samen goed, maar de VvE-liquiditeitsgrafiek reserveerde een jaar
+te veel.**
+
+**Wat goed is en dus niet is aangeraakt.** `eindJaar = prijspeil +
+looptijdJaren` en de deler `looptijdJaren` horen bij elkaar. Gian heeft de
+telling op 28 augustus vastgelegd: van 2026 naar 2034 is acht jaar, want dat
+is de afstand tussen de jaartallen en niet het aantal kalenderjaren. De
+afsluitende herschilderbeurt valt in het eindjaar; dat is bij Ernes bijna
+altijd zo. De klant betaalt looptijd jaren; met startdatum september 2026 en
+96 maanden loopt de laatste betaling in augustus 2034 naast een beurt in
+2034. Venster, deler en betaalperiode sluiten dus aan.
+
+**Wat fout was.** In `_ohpBuildOfferteHTML` liep de reserveringslus over
+`jaren`, dat zijn `looptijd + 1` elementen, met `_cr = R * (i + 1)` terwijl
+`R = totaalGemiddelde / looptijdJaren`. De cumulatieve reservering kwam
+daardoor uit op `R * (looptijd + 1)` en het eindsaldo stond structureel
+precies `gemPerJaar` te hoog. Gemeten met een testharnas: vier proeven, in
+alle vier was de afwijking exact een jaarreservering. Ook een plan zonder
+uitgevinkte beurt sloot niet op nul maar op plus een heel jaar.
+
+Gerepareerd in v4.45.1: `const _lpj = plan.looptijdJaren`, reservering is `R`
+zolang `i < _lpj` en anders nul, `_cr` telt op. Zes proeven met de
+uitgesneden code, alle zes groen.
+
+**Twee bijlagen zijn met de oude grafiek verzonden**: Chateau Geerlingshof en
+Nieuw Welten VIII, beide op 28 augustus op status `verzonden`.
+
+### De looptijd wordt niet consequent ingevuld [TE CONTROLEREN]
+
+Uit de meting van 28 augustus, per plan het eindjaar naast het laatste
+beurtjaar:
+
+| Plan | Looptijd | Eindjaar | Laatste beurt | Sluit aan |
+|---|---|---|---|---|
+| Trilsbeek-God Buitenwerk | 8 | 2034 | 2034 | ja |
+| VvE Einderstraat Galerijen | 11 | 2037 | 2037 | ja |
+| VvE Chateau Geerlingshof | 15 | 2041 | 2040 | **nee** |
+| VvE Nieuw Welten VIII | 14 | 2040 | 2039 | **nee** |
+
+Bij de onderste twee is de looptijd ingevuld als het aantal kalenderjaren
+tot en met de laatste beurt (2026 tot en met 2040 is vijftien), bij de
+bovenste twee als de afstand tussen de jaartallen. De app kan niet zien
+welke van de twee bedoeld is.
+
+**Dit heeft een prijsstaart.** Zou Chateau Geerlingshof looptijd 14 moeten
+zijn, dan deelt de app door 14 in plaats van 15 en gaat de jaarreservering
+omhoog, op een offerte die al verzonden is.
+
+**Besluit Gian, 28 augustus 2026: verzonden stukken en bestaande
+onderhoudsplannen blijven ongemoeid.** De looptijd van Chateau Geerlingshof
+en Nieuw Welten VIII wordt niet gecorrigeerd, de twee bijlagen worden niet
+opnieuw verstuurd. Dit is een genomen besluit en geen vergeten punt.
+**Niemand corrigeert deze plannen zonder dat Gian er zelf over begint.**
+
+Twee gevolgen om te kennen:
+
+1. **De app toont nu iets anders dan wat de klant in handen heeft.** Chateau
+   Geerlingshof en Nieuw Welten VIII zijn verstuurd met de oude grafiek,
+   waarin het eindsaldo een jaarreservering te hoog stond. Print je zo'n plan
+   vandaag opnieuw, dan komt er een ander beeld uit. Belt een bestuur over een
+   getal uit hun stuk, kijk dan eerst welke versie zij hebben.
+2. **De invulvraag blijft open voor nieuwe plannen.** Er is geen afspraak
+   vastgelegd of `looptijd_jaren` het aantal kalenderjaren is of de afstand
+   tussen prijspeil en de laatste beurt. Zolang die er niet is, blijft het per
+   plan wisselen. Dat is geen fout in de code maar wel een bron van verschil.
+   Vraag het Gian bij het eerstvolgende nieuwe onderhoudsplan.
