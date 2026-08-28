@@ -3405,6 +3405,139 @@ logboek van wie hem gezet of gewist heeft.
 - Of de kolom op de iPad in staande stand niet te veel ruimte van Totaal
   afsnoept is **[TE CONTROLEREN]** op het apparaat zelf.
 
+## Wat er op 28 augustus 2026 laat in de middag gedaan is (v4.46.0)
+
+Schilders Calc ging van v4.45.1 naar **v4.46.0**. **Geen SQL.** De kolom
+`toon_voorfinanciering` bestond al sinds de migratie van eerder die dag.
+
+### Het voorfinancieringsbeeld
+
+`_ohpVoorfinanciering(plan)` zet cumulatief betaald door de klant tegenover
+cumulatief geleverd door Ernes. Negatief saldo betekent dat Ernes voorstaat,
+positief dat de klant voorstaat. Bij opzegging is dat saldo exact het bedrag
+dat verrekend wordt, en dat is waar het beeld op de bijlage voor dient.
+
+**De uitvoeringsmaand staat vast op juli**, constante `_OHP_UITVOERINGSMAAND`.
+Dat is een besluit en geen tussenoplossing. Op 28 augustus is voorgesteld om
+hem instelbaar per plan te maken; de gevoeligheidsmeting op Trilsbeek-God gaf
+toen dit beeld:
+
+| Maand | Diepste punt (variant B) |
+|---|---|
+| januari | euro 3.128,62 |
+| juli | euro 1.916,71 |
+| december | euro 906,79 |
+
+Het verkoopargument verdrievoudigt dus door alleen de maandkeuze, op dezelfde
+bijlage waar de 100%-garantie en de opzegbelofte staan. **Gian heeft daarop
+besloten de maand vast te zetten en geen kolom aan te leggen.** Niet opnieuw
+aankaarten als instelbaar veld.
+
+**Peilmomenten** zijn juli van elk jaar, plus de laatste betaaltermijn en het
+sluitmoment. Die laatste twee zijn geen franje: zonder het termijnpunt knikt
+de betaallijn op de verkeerde plek en zonder het slotpunt sluit de reeks niet
+op nul. Een uitgevinkte beurt telt bij betaald en bij geleverd mee op hetzelfde
+moment, want die rekent de klant apart af na uitvoering.
+
+De functie geeft `null` bij VvE, bij contant en bij een plan zonder beurten.
+
+### De betaallijn moet recht zijn
+
+**Fout in de eerste bouw van v4.46.0, gevonden door Gian bij het bekijken van
+het beeld.** Een beurt buiten het gemiddelde telde bij *betaald* mee op het
+moment van uitvoering. Inhoudelijk klopt dat, want de klant betaalt die beurt
+dan werkelijk, maar het maakt van de betaallijn een mengsel van maandtermijnen
+en een losse factuur. Bij een vast maandbedrag hoort die lijn een constante
+helling te houden en dat deed hij niet: in variant A sprong hij in 2028 met
+euro 8.178,24 omhoog.
+
+**Opgelost door de eenmalige beurt uit BEIDE lijnen te laten.** Nagerekend op
+elk peilmoment: het saldo blijft tot op de cent identiek, want de beurt komt op
+hetzelfde tijdstip aan beide kanten binnen en heft zichzelf op. Bijkomend
+voordeel: de schaal wordt kleiner en de lijnen vullen het beeld beter.
+
+Op de bijlage staat er nu een zin bij als het plan zo'n beurt kent, zodat de
+klant niet denkt dat er iets ontbreekt.
+
+**Les over de testharnas:** er was wel getest of het saldo klopte en of de trap
+horizontale segmenten had, maar niet of de betaallijn een constante helling
+hield. Een proef die het saldo bewaakt zegt niets over de leesbaarheid van de
+lijnen. De hellingsproef staat er nu in en meet het verschil tussen de steilste
+en de vlakste sectie.
+
+### Rekenfouten die op 28 augustus zijn rechtgezet
+
+De overdracht van die ochtend bevatte drie getallen die niet klopten. Alle drie
+kwamen uit hetzelfde: er werd `jaren sinds prijspeil maal twaalf` gerekend in
+plaats van kalendermaanden sinds `abo_startdatum`.
+
+| Bewering in de overdracht | Werkelijk (GEMETEN, peilmoment juli) |
+|---|---|
+| Variant C: Ernes euro 1.714,73 voor | euro 4.048,78, plus een tweede duik van euro 2.334,05 in 2034 |
+| Variant A: diepste punt euro 10.348,08 | dat is het **hoogste** punt (december 2033); het diepste is euro 0,00 |
+| Variant B bij jaareinde: euro 906,79 | klopt, maar bij juli is het euro 1.916,71 |
+
+Les: een getal dat plausibel oogt is nog geen gemeten getal. Elke variant is nu
+vastgelegd in een testharnas met de code uit `index.html` gesneden.
+
+### De opzegtekst splitst nu op betaalmodel
+
+`zekItemsHtml` was tot v4.46.0 **één vaste string voor beide takken**, VvE en
+particulier. De opzegzin komt nu uit `_opzegTekst`, die op `_ohpIsAbo` splitst:
+
+- **Abonnement:** bij opzegging wordt het uitgevoerde werk verrekend met de
+  betaalde termijnen, in beide richtingen.
+- **Contant:** er valt niets te verrekenen, want elke beurt wordt na uitvoering
+  afgerekend.
+
+**De opzegbaarheid zelf blijft voor elk plan staan, ook bij een VvE.** Op
+28 augustus is voorgesteld om de zin bij contant helemaal weg te laten; Gian
+heeft dat gecorrigeerd. Een VvE zegt niet een maandtermijn op maar de
+meerjarenafspraak: de vastgelegde prijzen, de planning en de garantie. Dat is
+wel degelijk iets.
+
+**Aanname die getoetst moet worden:** dit is een beding in een
+consumentenovereenkomst. De verrekening werkt bewust twee kanten op, wat hem
+een stuk steviger maakt dan een eenzijdige verplichting, maar dat is geen
+juridisch oordeel. Laat de tekst nakijken.
+
+### Geld op de onderhoudsplanrekening
+
+**Vastgelegd door Gian op 28 augustus:** de maandtermijnen van
+onderhoudsplannen staan op een aparte onderhoudsplanrekening en gaan daar
+alleen af voor rekeningen van lopende onderhoudsplannen. Een terugbetaling bij
+opzegging is dus geen liquiditeitsprobleem. Redeneer daar niet omheen.
+
+### Meelifter: het uitgrijzen werkte niet live
+
+**GEMETEN in v4.45.1:** `_ohpFlushSave` roept `_ohpRenderParams` niet aan. Die
+functie draait alleen in laad-flows. Daardoor bleven `ohpAboStart` en
+`ohpAboMaanden` na een wissel naar contant gewoon bedienbaar tot het plan
+opnieuw geladen werd. Verplaatst naar `_ohpToggleAboVelden`, met eigen
+change-listeners op `ohpBetaalmodel` en `ohpOntvangerType`.
+
+### Tekenwerk
+
+`_ohpVoorfinSvg` tekent de betaallijn als rechte polyline en de geleverde lijn
+als **trap**: het werk komt in klappen en juist die klap maakt het gat. De x-as
+schaalt op **maandindex en niet op rij-index**, want het slotpunt ligt soms een
+maand en soms een half jaar na het vorige; op rij-index zou dat als een vol
+jaar getekend worden.
+
+Vlakdekking is bewust ongelijk: oranje 0,17 waar Ernes voorstaat, blauw 0,05
+waar de klant voorstaat. Bij gelijke dekking overstemt het blauw het oranje,
+want de klant staat meestal het grootste deel van de looptijd voor en dan
+verdrinkt juist het moment dat telt.
+
+Vaste hex-kleuren, want `var()` werkt niet in SVG-presentatieattributen bij het
+printen. Op de bijlage drie losse blokken met `data-split="table"` op de tabel,
+zoals in v4.7.4 voor het VvE-blok is opgelost.
+
+### Wat er niet is aangeraakt
+
+De VvE-tak, op de opzegzin na. Het liquiditeitsblok, `perMaandPerApp`, de
+jaartabellen, het interne print en het maandbedrag blijven op de cent gelijk.
+
 ## Wat er op 28 augustus 2026 gedaan is
 
 Schilders Calc ging van v4.43.0 naar **v4.45.0**, in twee stappen. Eén

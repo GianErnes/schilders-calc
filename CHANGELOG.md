@@ -1,3 +1,40 @@
+## v4.46.0 — Betaald tegenover geleverd
+
+Bij een plan op abonnement betaalt de klant elke maand hetzelfde, terwijl het onderhoud in beurten komt. Het een loopt dus altijd voor op het ander. Tot nu toe was nergens te zien welke kant dat op wees.
+
+### Wat er verandert
+
+- **In het Resultaat-blok van de Onderhoudsplan-tab staat een nieuw beeld** bij elk particulier plan op abonnement. Twee lijnen: wat de klant tot dan toe betaald heeft, en wat wij tot dan toe hebben uitgevoerd. Eronder een regel die zegt welke kant het op valt en om hoeveel euro het gaat.
+- **Dat beeld staat er altijd**, ook als het vinkje uit staat. Anders zou je moeten aanvinken, printen, kijken en weer uitvinken om te weten of het gunstig uitpakt.
+- **Nieuw vinkje in het parameterblok**: "Toon het voorfinancieringsbeeld op de klantbijlage". Dat vinkje bepaalt uitsluitend of het beeld meegaat naar de klant, niet of het op je scherm staat. Standaard uit.
+- **Op de bijlage** komt bij een aangevinkt plan de sectie *Wat u betaalt en wat wij leveren* te staan, tussen De planning en Uw zekerheid: het beeld, een tabel per peilmoment en een conclusiezin.
+- **De opzegbelofte zegt er nu bij wat er gebeurt.** Bij een abonnement: bij stoppen wordt het uitgevoerde werk verrekend met de betaalde termijnen, in beide richtingen. Heb je meer geleverd dan er betaald is, dan rekent de klant bij. Heeft hij meer betaald dan er geleverd is, dan krijgt hij het terug. Bij contant staat er dat er niets te verrekenen valt, want daar rekent de klant elke beurt af na uitvoering.
+- **De opzegbaarheid zelf blijft voor elk plan staan, ook bij een VvE.** Die zegt niet een maandtermijn op maar de meerjarenafspraak: de vastgelegde prijzen, de planning en de garantie.
+
+### Wat je moet weten
+
+- **Uitvoering wordt in juli aangehouden.** Buitenwerk gebeurt in de zomer en niet op oudejaarsavond. Die maand staat vast in de code en is bewust geen invoerveld: op het enige particuliere abonnementsplan loopt het diepste punt van € 906,79 bij december naar € 3.128,62 bij januari. Zo'n knop hoort niet onder een getal dat op een klantstuk komt.
+- **Het beeld wijst niet in elk plan dezelfde kant op.** Staat de dure beurt aan het eind en is de eerste beurt uit het gemiddelde gehaald, dan staat de klant vooruit en financier je niets voor. Het scherm zegt dat er dan bij, zodat je zelf kunt beslissen of je het meestuurt.
+- **Een beurt die buiten het gemiddelde valt staat niet in het beeld.** Die rekent de klant apart af nadat wij hem hebben uitgevoerd, dus daar loopt niets op vooruit. Het saldo verandert er geen cent van, nagerekend op elk peilmoment. Als er zo'n beurt in het plan zit, zegt de tekst onder het beeld dat erbij.
+- **Raakt alleen particuliere plannen op abonnement.** Bij een VvE en bij contant verschijnt er geen beeld en is het vinkje niet bruikbaar. De VvE-bijlage en het liquiditeitsblok daar zijn niet aangeraakt, op de opzegzin na.
+- **Meelifter:** wisselde je van abonnement naar contant, dan bleven Startdatum maandbedrag en Aantal maanden gewoon bedienbaar tot je het plan opnieuw laadde. Dat grijst nu meteen uit.
+
+### Onder de motorkap
+
+`_ohpVoorfinanciering(plan)` zet cumulatief betaald tegenover cumulatief geleverd. Peilmomenten zijn de uitvoeringsmaand van elk jaar, plus de laatste betaaltermijn en het sluitmoment. Die laatste twee zijn nodig: zonder het termijnpunt knikt de betaallijn op de verkeerde plek, zonder het slotpunt sluit de reeks niet op nul. De functie geeft `null` terug bij een VvE, bij contant en bij een plan zonder beurten.
+
+De betaallijn moet bij een vast maandbedrag een constante helling houden. In de eerste bouw telde een eenmalige beurt bij *betaald* mee op het moment van uitvoering, waardoor die lijn een sprong maakte: inhoudelijk waar, want de klant betaalt die beurt dan werkelijk, maar een lijn die het maandbedrag hoort te volgen kan niet springen. De eenmalige beurt valt nu buiten beide lijnen. Er is een proef bijgekomen die de helling van de betaallijn meet en die eist dat het verschil tussen de steilste en de vlakste sectie onder 0,005 blijft.
+
+`_ohpVoorfinSvg` tekent de betaallijn als rechte polyline en de geleverde lijn als trap. Het werk komt in klappen en juist die klap maakt het gat; een schuine lijn zou suggereren dat het werk geleidelijk ontstaat. De x-as schaalt op maandindex en niet op rij-index, want het slotpunt ligt soms een maand en soms een half jaar na het vorige. Het vlak tussen de lijnen is oranje op dekking 0,17 waar Ernes voorstaat en blauw op 0,05 waar de klant voorstaat: bij gelijke dekking overstemt het blauw het oranje, want de klant staat meestal het grootste deel van de looptijd voor. Vaste hex-kleuren, want `var()` werkt niet in SVG-presentatieattributen bij het printen.
+
+De kolom `toon_voorfinanciering` bestond sinds 28 augustus maar was nog nergens gemapt. Dat gebeurt nu tegelijk met het invoerveld, precies zoals het toen bedoeld was: `_ohpReadParamsFromUI` geeft altijd een boolean terug, nooit `undefined`, zodat een gewone opslag een gezette waarde niet kan wissen.
+
+`zekItemsHtml` was één vaste string voor de VvE- en de particulier-tak. De opzegzin komt nu uit `_opzegTekst`, die op `_ohpIsAbo` splitst.
+
+Het uitgrijzen van de abo-velden zat alleen in `_ohpRenderParams`, en die wordt door `_ohpFlushSave` niet aangeroepen. Verplaatst naar `_ohpToggleAboVelden`, met eigen change-listeners op `ohpBetaalmodel` en `ohpOntvangerType`.
+
+Veertig proeven groen, gedraaid op code die met `slice()` uit `index.html` is gesneden. Geen SQL, geen Edge Function.
+
 ## v4.45.1 — De reserveringslijn liep een jaar te lang door
 
 Op de VvE-bijlage staat een beeld met de pot die de vereniging opbouwt tegenover wat er volgens de planning uitgaat. Dat beeld zette een jaarreservering te veel neer.
