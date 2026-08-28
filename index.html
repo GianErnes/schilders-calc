@@ -9629,7 +9629,10 @@ function _ohpVoorfinSvg(vf, breed) {
       '" r="2" fill="' + C_BRUSHD + '"/><text x="' + dx.toFixed(1) + '" y="' + (Y(d.geleverd) - 4).toFixed(1) +
       '" text-anchor="middle" font-size="6.5" fill="' + C_BRUSHD + '" font-weight="700">' + eur(Math.abs(d.saldo)) + '</text>';
   }
-  return '<svg viewBox="0 0 ' + VW + ' ' + VH + '" style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">' +
+  // class liq-svg geeft binnen de .ob-scope van de bijlage margin 10px 0 4px,
+  // net als het VvE-blok. Op het scherm doet de class niets, want die CSS-regel
+  // staat als .ob .liq-svg en de printscope geldt daar niet.
+  return '<svg viewBox="0 0 ' + VW + ' ' + VH + '" class="liq-svg" style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">' +
     '<line x1="' + x0 + '" y1="' + yBot + '" x2="' + x1 + '" y2="' + yBot + '" stroke="' + C_INK + '" stroke-width="0.8"/>' +
     grid + vlakken + mark +
     '<polyline points="' + gelPts.join(' ') + '" fill="none" stroke="' + C_INK + '" stroke-width="1.6"/>' +
