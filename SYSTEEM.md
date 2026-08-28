@@ -3404,3 +3404,129 @@ logboek van wie hem gezet of gewist heeft.
   losse tekens scannen. Niet gebouwd.
 - Of de kolom op de iPad in staande stand niet te veel ruimte van Totaal
   afsnoept is **[TE CONTROLEREN]** op het apparaat zelf.
+
+## Wat er op 28 augustus 2026 gedaan is
+
+Schilders Calc ging van v4.43.0 naar **v4.45.0**, in twee stappen. Eén
+wijziging aan de databank, drie kolommen op een bestaande tabel. Geen
+nieuwe tabel, geen opslagbak, geen Edge Function, geen cronjob, geen
+policywerk.
+
+### Drie kolommen op `onderhoudsplannen`
+
+| Kolom | Type | Leeg toegestaan | Waarvoor |
+|---|---|---|---|
+| `abo_startdatum` | `date` | ja | eerste maand waarin de klant het maandbedrag betaalt |
+| `abo_aantal_maanden` | `integer` | ja | hoeveel maanden dat maandbedrag loopt |
+| `toon_voorfinanciering` | `boolean` | nee, `default false` | vinkje per plan of het voorfinancieringsbeeld op de bijlage komt |
+
+Aangelegd met `2026-08-28_v4.45.0_abo_looptijd_en_grafiek.sql`, idempotent
+via `add column if not exists`, gevalideerd met pglast (9 statements, geen
+destructieve operatie) en door Gian gedraaid en bevestigd op 28 augustus.
+Er zit een `check`-constraint op `abo_aantal_maanden` die nul en negatief
+weigert, want dat zou in de app een deling door nul geven.
+
+**Rechten.** Geen policy- of grantwijziging. De twee bestaande policies op
+deze tabel werken op `user_id = auth.uid()` en die kolom is niet aangeraakt.
+
+**`toon_voorfinanciering` staat nog niet in de mapping.** De kolom bestaat
+wel maar `_mapOhpFromDB` en `_mapOhpToDB` kennen hem niet. Dat is bewust:
+zonder invoerveld zou `_ohpReadParamsFromUI` er `undefined` in schrijven en
+dan wist een gewone opslag een gezette waarde. Hij komt erin op het moment
+dat het vinkje er ook komt, in v4.46.0.
+
+### v4.44.0 - de eenmalige beurt op de Offerte OHP
+
+Een beurt die uit het gemiddelde is gehaald wordt eenmalig afgerekend na
+uitvoering. Het scherm en het interne print toonden dat al, de bijlage voor
+particulieren zweeg erover. Die heeft nu een blok onder het maandbedrag, een
+tag op de tijdlijn en een label in het jaarblok. Alles achter `toonEenmalig`,
+dat `!isVve` eist. Knop en tooltip heten voortaan **Offerte OHP**.
+
+### v4.45.0 - het maandbedrag over een instelbaar aantal maanden
+
+`gemPerMaand` komt niet meer uit `gemPerJaar / 12` maar uit
+`totaalGemiddelde / _ohpAboMaanden(plan)`, met terugval op `looptijd * 12`.
+Op **twee** plekken aangepast, `_ohpBuildPrintHTML` en `_ohpBuildOfferteHTML`,
+want anders zouden het interne print en de klantbijlage een ander bedrag
+tonen. De hero-ondertitel noemt de echte periode in plaats van het aantal
+jaren.
+
+`_ohpAboStart` leest de datum met een reguliere expressie en bewust **niet**
+met `new Date()`. Een `date`-kolom komt als `YYYY-MM-DD` terug en de
+constructor leest dat als UTC-middernacht, wat in een westelijke tijdzone een
+dag terugschuift en dus in de verkeerde maand kan vallen.
+
+### Wat hier al die tijd fout stond: `betaalmodel`
+
+`betaalmodel` bestaat sinds v3.29.0 met waarden `contant` en `abo`. Gemeten
+op 28 augustus met een grep over het hele bestand: hij werd **uitsluitend**
+in de Planning-tab gelezen, om de matrix in contante en abo-rijen te
+splitsen. Niet in `_ohpBuildOfferteHTML`, niet in `_ohpBuildPrintHTML`, niet
+in `_ohpRenderResultaat`.
+
+Gevolg: een plan op `contant` kreeg een Offerte OHP met bovenaan een hero
+van euro zoveel per maand, terwijl die klant per beurt afrekent. Gian
+bevestigde op 28 augustus dat hij die bijlage ook voor contante klanten
+gebruikt, dus dat is de deur uit geweest. De particulier-hero heeft nu een
+derde tak die de totale investering toont, en `toonEenmalig` eist er `isAbo`
+bij omdat op een contant plan alles eenmalig is.
+
+Dit is een **afvang, geen contante variant**. De leadteksten, de
+verkooppunten en de jaarblokken zijn nog steeds geschreven vanuit het
+abonnementsmodel.
+
+### Vaste regel: VvE is altijd per beurt
+
+Vastgelegd door Gian op 28 augustus 2026, na het tellen van de plannen in
+de databank (vier stuks: drie contant en alledrie VvE, een abo en die is
+particulier).
+
+**Een VvE rekent altijd per beurt af.** De vereniging reserveert in haar
+eigen MJOP-pot en betaalt Ernes op het moment van uitvoering. Er bestaat
+geen abonnementsmodel voor een VvE.
+
+Daaruit volgt:
+
+- Het veld `betaalmodel` stuurt bij een VvE uitsluitend de splitsing in de
+  Planning-matrix (regel 9615). Het heeft met het klantdocument niets te
+  maken en hoeft daar ook nooit iets te sturen.
+- De VvE-tak van `_ohpBuildOfferteHTML` is al in de juiste taal geschreven:
+  gemiddeld per jaar te reserveren, de eigen reservepot in het
+  liquiditeitsblok, en een ALV-besluit dat de jaarlijkse reservering in de
+  begroting opneemt. Dat is het contante model.
+- **De VvE-tak wordt niet aangeraakt.** Niet voor de eenmalig-melding, niet
+  voor het maandenveld, niet voor het voorfinancieringsbeeld. Alle
+  toekomstige werk aan de bijlage is particulier tenzij Gian uitdrukkelijk
+  anders zegt.
+
+De contante afvang van v4.45.0 vuurt daarom alleen bij particulier plus
+contant, een combinatie die per 28 augustus nul keer voorkomt. Dat is
+bewust een vangnet en geen reparatie.
+
+### Bewust niet aangeraakt
+
+**De VvE-tak, volledig.** Geen markering in de jaartabel, niets aan het
+liquiditeitsblok, `perMaandPerApp` ongewijzigd. Op verzoek van Gian, die bij
+VvE geen beurten uit het gemiddelde haalt.
+
+**Het liquiditeitsblok klopt niet bij een uitgevinkte beurt.** De
+reserveringslijn gebruikt `R = gemPerJaar` en telt dus alleen de aangevinkte
+beurten, de uitgavenlijn gebruikt `bedragMee + bedragBuiten` en telt ze
+allemaal. Het eindsaldo komt daardoor uit op precies min `totaalEenmalig`,
+terwijl de slotzin eronder volledige dekking belooft. Gemeld op 28 augustus,
+op verzoek blijven staan. **Wie ooit bij een VvE een beurt uitvinkt, moet die
+grafiek niet vertrouwen.**
+
+### Nog open op dit spoor
+
+- De contante variant zelf: eigen leadteksten en verkooppunten in plaats van
+  het abonnementsverhaal. Alleen de hero is nu afgevangen.
+- v4.46.0, het voorfinancieringsbeeld achter `toon_voorfinanciering`. Bij het
+  doorrekenen van het plan van 2026 bleek dat de klant op het diepste punt
+  euro 10.348,08 vooruitstaat en Ernes dus niets voorfinanciert. Standaard
+  uit, want in de gangbare planvorm werkt dat beeld tegen Ernes.
+- Het plan loopt over `looptijd + 1` kalenderjaren (prijspeil tot en met
+  eindjaar) terwijl het gemiddelde door `looptijd` deelt. Bij prijspeil 2026
+  en looptijd 8 staan er negen jaartallen in de tabel. **[TE CONTROLEREN]**
+  of dat ergens tot een verschil van een jaarbedrag leidt.
