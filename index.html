@@ -2301,8 +2301,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.43.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.45.0</h2>
       <div class="intro-body">
+        <p><strong>📅 Zelf bepalen hoeveel maanden het maandbedrag loopt (v4.45.0).</strong> In het plan staan twee velden bij: een startdatum en een aantal maanden. Het maandbedrag is voortaan het gemiddelde gedeeld door dat aantal, in plaats van automatisch door looptijd maal twaalf. Laat je ze leeg, dan verandert er niets aan bestaande plannen. Zo kun je rekening houden met een jaar dat al half om is en kun je met het bedrag spelen. Het Resultaat-blok toont nu ook het maandbedrag met de periode eronder, plus een seintje wanneer de betalingen doorlopen na de laatste beurt (die staart is onverzekerd want het plan is opzegbaar) of juist eerder stoppen (dan betaalt de klant vooruit). Op de Offerte OHP staat onder het maandbedrag nu de echte periode in plaats van het aantal jaren. Daarnaast een reparatie: staat een plan op betaalmodel <em>contant</em>, dan toonde de bijlage tot nu toe gewoon een maandbedrag terwijl die klant per beurt betaalt. Die drukt nu de totale investering af en laat de eenmalig-melding weg. Vereist de SQL die je al gedraaid hebt.</p>
+        <p><strong>📄 Een eenmalige beurt staat nu duidelijk op de Offerte OHP (v4.44.0).</strong> Haal je een beurt uit het gemiddelde, dan zit hij niet in het maandbedrag maar reken je hem apart af na uitvoering. De bijlage voor particulieren zweeg daarover, terwijl het scherm en het interne print het al wel lieten zien. Nu staat er onder het maandbedrag een blok met het bedrag van die beurt en de mededeling dat het maandbedrag hem niet bevat. Op de tijdlijn krijgt het jaar de tag eenmalig, en in “Voor uw huis specifiek” staat het bij de kop van dat jaar. Meerdere uitgevinkte beurten worden netjes opgesomd met een totaal. Valt er in één jaar zowel een aangevinkte als een uitgevinkte beurt, dan blijft de tijdlijn onbeschreven, want daar staat een opgeteld bedrag op. De knop heet voortaan Offerte OHP. De VvE-variant is bewust ongemoeid gebleven. Geen SQL.</p>
         <p><strong>📄 Archiefmarkeringen op het dashboard (v4.43.0).</strong> Het calculatie-archief heeft er een smalle kolom Archief bij, tussen Status en Totaal, met twee tekens per rij: 📄 voor de documenten en ✍️ voor de getekende offerte. Rond je een archiveer-reeks helemaal af, dan kleuren ze vanzelf groen. Zat alleen de geaccordeerde offerte in de reeks, dan alleen ✍️. Zat die er niet bij, dan alleen 📄. Stop je halverwege, dan valt er niets. Aantikken kan ook met de hand, in beide richtingen, en er komt altijd eerst een bevestiging met de datum erin. Wees eerlijk over wat je ziet: de app legt vast dat de PDF is aangemaakt, niet dat het bestand in de projectmap staat. Dat verplaatsen blijft jouw werk. Vereist SQL (los geleverd).</p>
         <p><strong>🗂️ Geaccepteerd en Verloren per jaar (v4.42.0).</strong> Die twee groepen worden alleen maar langer, en alles wat ouder is dan dit jaar stond gewoon mee in de lijst. Klap je Geaccepteerd of Verloren nu open, dan zie je eerst jaarkoppen: 2026, 2025, 2024, nieuwste bovenaan, elk met het aantal en het bedrag van dat jaar. Elk jaar klapt apart open. Is er maar één jaar, dan staat dat meteen open, want dan valt er niets te kiezen. De vier andere groepen blijven precies zoals ze waren. Zoek je op naam of klant, dan valt de jaarlaag weg en krijg je de platte lijst met alle treffers. Let op: het jaartal is het jaar waarin je de calculatie hebt aangemaakt, niet waarin de klant tekende. Een offerte van november die in januari getekend wordt staat dus onder het oude jaar. Voor overzicht prima, voor de boekhouding blijven de cijfers in Financieel leidend. Alleen weergave, geen SQL.</p>
         <p><strong>📐 Verfsystemen klappen dicht (v4.41.0).</strong> Een verfsysteem in de calculatie toont voortaan alleen de kop en onderaan Totaal min per eenheid en Verkoop excl. BTW per eenheid. De bewerkingsregels zitten eronder verstopt tot je ze nodig hebt. Tik het driehoekje voor de omschrijving aan om er een open te klappen, of gebruik de knoppen Alle bewerkingen open en Alle bewerkingen dicht boven de calculatie. De stand is puur weergave en wordt niet bewaard: open je de calculatie opnieuw, dan staat alles weer dicht. Dat scheelt op de iPad tijdens een opname flink scrollen. Een regel waar nog geen enkele bewerking in zit blijft altijd open, anders kwam je niet meer bij het plus-stap-veld. Geen SQL.</p>
@@ -2791,6 +2793,12 @@
         <label>Looptijd (jaren)
           <input type="number" id="ohpLooptijd" min="1" max="50" step="1" placeholder="bv. 15">
         </label>
+        <label>Startdatum maandbedrag
+          <input type="date" id="ohpAboStart">
+        </label>
+        <label>Aantal maanden
+          <input type="number" id="ohpAboMaanden" min="1" max="600" step="1">
+        </label>
         <label>Indexering per jaar (%)
           <input type="number" id="ohpIndex" min="0" max="20" step="0.1" value="6.5">
         </label>
@@ -2849,7 +2857,7 @@
             <h3 style="margin: 0;">Beurten</h3>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
               <button class="btn btn-secondary" onclick="_ohpPrint()" title="Print het onderhoudsplan voor de klant">🖨 Print onderhoudsplan</button>
-              <button class="btn" onclick="_ohpPrintOfferte()" title="Genereer de vormgegeven offerte-bijlage (PDF) voor bij de Yoobi-offerte">📄 Offerte-bijlage</button>
+              <button class="btn" onclick="_ohpPrintOfferte()" title="Genereer het vormgegeven Onderhoudsgarantie+ plan (PDF) voor bij de offerte">📄 Offerte OHP</button>
               <button class="btn" onclick="_ohpAddBeurt()">+ Beurt toevoegen</button>
             </div>
           </div>
@@ -3561,7 +3569,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.43.0';
+const APP_VERSION = 'v4.45.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3957,6 +3965,8 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.45.0', d: '2026-08-28', h: 'Instelbare looptijd van het maandbedrag plus de contante afvang op de bijlage. Twee kolommen abo_startdatum (date null) en abo_aantal_maanden (integer null, check groter dan nul) op onderhoudsplannen, meegenomen in _mapOhpFromDB, _mapOhpToDB, _ohpSaveParams, _ohpReadParamsFromUI en _ohpRenderParams. Vijf nieuwe helpers: _ohpAboMaanden valt terug op looptijd maal twaalf zodat bestaande plannen geen cent veranderen, _ohpAboStart leest de datum met een reguliere expressie en bewust niet met new Date() omdat een date-kolom als YYYY-MM-DD terugkomt en de constructor daarvan in een westelijke tijdzone een dag terugschuift, _ohpAboEind rekent start plus n min een met modulo over de jaargrens, _ohpMaandLabel geeft de Nederlandse maandnaam en _ohpIsAbo leest betaalmodel. Dat laatste bestond sinds v3.29.0 maar werd uitsluitend in de Planning-tab gelezen, waardoor een contant plan een bijlage kreeg met een hero van euro zoveel per maand terwijl die klant per beurt afrekent; de particulier-hero heeft nu een derde tak met de totale investering en toonEenmalig eist er isAbo bij, want op een contant plan is alles eenmalig. gemPerMaand wordt op beide plekken uit totaalGemiddelde gedeeld door aboMaanden gehaald, dus het interne print en de Offerte OHP blijven hetzelfde bedrag tonen. De hero-ondertitel noemt de echte periode in plaats van het aantal jaren. Op het scherm een blok Per maand met de periode plus twee seintjes: oranje als de laatste betaalmaand voorbij het jaar van de laatste beurt valt (onverzekerde staart bij een opzegbaar plan) en blauw als hij ervoor valt (klant betaalt vooruit). Bij contant zijn de twee velden uitgegrijsd en toont het scherm het betaalmodel in plaats van een maandbedrag. VvE volledig ongemoeid, ook perMaandPerApp. Vereist SQL (los geleverd, al uitgevoerd).' },
+  { v: '4.44.0', d: '2026-08-28', h: 'Eenmalige beurten zichtbaar op de particulier-bijlage. _ohpBuildOfferteHTML rekende totaalEenmalig al uit sinds v3.23.2 maar zette het nergens in de HTML; van de drie weergaven was uitgerekend het klantdocument de enige die zweeg, terwijl _ohpRenderResultaat en _ohpBuildPrintHTML het wel tonen. Nieuwe array eenmRegels wordt gevuld in de bestaande beurten-lus, zodat het bedrag niet opnieuw wordt uitgerekend en niet uit elkaar kan lopen met totaalEenmalig. Daaruit bouwt een blok na _labelVoor de tekst op: enkelvoud en meervoud met telwoord, een opsomming met bedrag per beurt plus een totaal, en een aparte tak wanneer alle uitgevinkte beurten op reeds uitgevoerd staan (is apart afgerekend in plaats van rekenen wij eenmalig af). De naam komt uit _labelVoor, dus de chronologisch eerste beurt heet startonderhoudsbeurt ongeacht zijn echte naam. Het blok .eenm staat binnen hetzelfde ob-block als de hero en niet als eigen blok, anders kan _ohpPaginate het van het maandbedrag scheiden. Tijdlijn: isEenmJaar tagt alleen als bedragMee nul is en bedragBuiten positief, want bij een gemengd jaar telt het kaartje beide bedragen op en zou de tag misleiden; de tag staat in brush-deep en niet in muted, want grijs is bezet door reeds uitgevoerd en betekent iets anders. Jaarblok: eenm-badge naast doneBadge, beide kunnen tegelijk staan. Alles achter toonEenmalig, dat !isVve eist, dus de VvE-tak is byte voor byte ongemoeid: geen markering in de jaartabel en niets aan het liquiditeitsblok. Bewust blijven staan: bij een VvE-plan met een uitgevinkte beurt loopt de reserveringsstroom (R = gemPerJaar, alleen de aangevinkte) achter op de uitgavenstroom (bedragMee plus bedragBuiten), waardoor het eindsaldo exact min totaalEenmalig wordt terwijl de slotzin volledige dekking belooft. Gemeld en op verzoek niet aangeraakt. Knop en tooltip van Offerte-bijlage naar Offerte OHP. Geen SQL, geen Edge Function.' },
   { v: '4.43.0', d: '2026-08-25', h: 'Archiveer-markeringen per calculatie. Twee nieuwe kolommen op public.calculaties, arch_documenten_op en arch_getekend_op, beide timestamptz null, gezet via een gerichte update van alleen dat ene veld en bewust NIET opgenomen in _mapCalcHeaderToDB, om dezelfde reden als craft_geexporteerd_op en offerte_config: een gewone header-save zou in een tweede tabblad met een oud clientobject een verse markering wissen. _archiveerCtx kreeg calcId, vastgelegd in startArchiveerSequentie uit data.calc; een reeks duurt circa tien seconden en zonder dat veld viel de markering op de calculatie waar je toevallig naartoe was gewisseld, wat een reparatie is en geen keuze. In de uitloop-tak van _archiveerVolgende roept _archStempelNaReeks() de markering aan op basis van de queue: bevat die uitsluitend geaccordeerd dan alleen arch_getekend_op, bevat die uitsluitend andere types dan alleen arch_documenten_op, bevat die allebei dan beide. stopArchiveerSequentie haakt bewust niet aan, dus halverwege stoppen stempelt niet. Op het dashboard een achtste kolom Archief tussen Status en Totaal met twee knoppen van 2,4rem via de lokale helper _archCel, gezet in dcfce7 met rand 16a34a, leeg gestippeld in muted; colspan van zowel de statuskop als de jaarkop van 6 naar 7. toggleArchMarkering vraagt in beide richtingen bevestiging via de native confirm, met de datum in de tekst omdat title op de iPad niet bestaat. Bewust geaccepteerd: zeven van de negen types lopen via window.print() en afterprint vuurt daar ook af bij annuleren, dus de markering bewijst dat de PDF is aangeboden en niet dat er een bestand staat. Vereist SQL.' },
   { v: '4.42.0', d: '2026-08-24', h: 'Jaarlaag binnen de statusgroepen Geaccepteerd en Verloren van het calculatie-archief. Twee nieuwe Sets naast het bestaande _dashCollapsed-patroon: _jaarCollapsed houdt de ingeklapte jaarkoppen bij met sleutel status:jaar (afwezigheid is open) en _jaarGezien onthoudt welke sleutels al een startstand kregen, zodat een groep met precies één jaar open begint, een groep met meer jaren dicht, en een jaar dat er later bij komt via een statuswissel zijn eigen startstand krijgt zonder de al gezette jaren te raken. Beide alleen in het geheugen, geen kolom en geen migratie. toggleDashJaar spiegelt toggleDashSection. In renderCalculatiesArchief twee nieuwe lokale helpers na _renderRow, want _renderJaarLaag heeft zowel _renderRow als _calcBedrag nodig: _jaarVan leest het jaar met getFullYear() op een echte Date in plaats van de eerste vier tekens van de ISO-tekst, omdat aangemaakt een timestamptz is die in UTC terugkomt: een calculatie die hier op 1 januari 00:30 wordt gemaakt staat als 31 december 23:30 UTC in de tekst en zou met een tekstknip in het vorige jaar belanden, terwijl getFullYear() omrekent naar de tijdzone van het apparaat en het jaar geeft zoals de gebruiker het beleefde, met 0 als vangnetsleutel voor een onleesbare datum die vanzelf onderaan sorteert onder de kop Zonder datum. _renderJaarLaag bundelt de groep in een Map per jaar, sorteert aflopend zodat het nieuwste jaar bovenaan staat en beweegt bewust niet mee met _dashSort.dir, want jaarvolgorde is navigatie en geen sortering, en tekent per jaar een tr met colspan 6 plus bedragcel in hetzelfde patroon als de statuskop maar ingesprongen tot 1.75rem, kleiner, in ink-soft en zonder statusbolletje. De uitklap-tak roept de jaarlaag alleen aan voor de statussen in de nieuwe constante JAAR_STATUSSEN en alleen als er niet gezocht wordt; de vier andere statussen en elke zoekopdracht houden de platte lijst van hiervoor. Bewust geaccepteerd: het jaartal is het jaar van aanmaak en niet van akkoord, want er is geen status_datum en die komt er ook niet. Het plannen-archief met _planCollapsed is ongemoeid gebleven. Alleen weergave, niets aan de rekenkern, geen SQL en geen Edge Function.' },
   { v: '4.41.0', d: '2026-08-24', h: 'Bewerkingsregels per calc-regel in- en uitklappen, standaard dicht. Nieuwe Set _regelOpen naast het bestaande _matFilterOffRegelStap-patroon houdt bij welke regel-IDs open staan; leeg betekent alles dicht, dus zowel een verse calculatie als een herlaad geeft overzicht. renderRegel zet id rw_REGELID plus de klasse stappen-open op de .calc-regel-wrap en plaatst een span.regel-caret in de eerste kolom van de kop, in een nieuwe flex-wrapper .regel-kop-naam zodat het naamveld met flex 1 1 auto en min-width 0 blijft krimpen. CSS verbergt bij :not(.stappen-open) de titelregel, de .regel-stap-rijen en .regel-stap-add, en haalt marge, padding en bovenrand van de .regel-stappen-footer weg zodat kop en totalen tegen elkaar aan komen te staan; de footer met Totaal min per eenheid en Verkoop excl. BTW per eenheid blijft dus staan. Bewust een eigen klasse regel-caret in plaats van de generieke .caret, want .hoofdgroep.collapsed .caret is een afstammelingsselector die anders ook op regelniveau zou landen. toggleRegelStappen zet de klasse rechtstreeks op het element in plaats van renderCalcStructuur aan te roepen: sneller op de iPad en het haalt geen focus uit een veld, met terugval op een hertekening als het element ontbreekt. alleRegelsKlappen vult of leegt de Set en loopt daarna de DOM langs. Nieuwe balk calcKlapBar boven calcStructuur met twee knoppen en een teller open van totaal, getekend door _tekenKlapBar vanuit renderCalcStructuur en na elke toggle; de knoppen dragen lock-allowed zodat ze ook op een vergrendelde calculatie werken, want inklappen raakt geen data. Een regel zonder bewerkingen krijgt geen caret en staat altijd open, anders zou het plus-stap-veld onbereikbaar worden. renderRegel wordt alleen vanuit renderOnderdeel aangeroepen, dus print, PDF en meetstaat blijven ongemoeid. Alleen weergave, niets aan de rekenkern. Geen SQL, geen Edge Function.' },
@@ -7078,6 +7088,8 @@ function _mapOhpFromDB(row) {
     betaalmodel: row.betaalmodel || 'abo', // v3.29.0 — 'contant' | 'abo', voor de planning-splitsing
     scopeOmschrijving: row.scope_omschrijving || '',      // v3.23.0 — VvE: wat valt onder het plan
     aantalAppartementen: row.aantal_appartementen != null ? row.aantal_appartementen : null, // v4.7.2 — VvE: voor maandbijdrage per eigenaar
+    aboStartdatum:    row.abo_startdatum || null,                                    // v4.45.0
+    aboAantalMaanden: row.abo_aantal_maanden != null ? row.abo_aantal_maanden : null, // v4.45.0
     status:        row.status || 'concept',               // v3.25.10 — los van calc-status; 5 waarden
     ligging:       row.ligging || null,                   // v4.22.0 - { pad, rdX, rdY, span, laag, weerzijde, gemaakt }
     aangemaakt:    row.aangemaakt || null,
@@ -7097,6 +7109,8 @@ function _mapOhpToDB(p) {
     betaalmodel: p.betaalmodel || 'abo', // v3.29.0
     scope_omschrijving: p.scopeOmschrijving || '',      // v3.23.0
     aantal_appartementen: p.aantalAppartementen != null ? p.aantalAppartementen : null, // v4.7.2
+    abo_startdatum:    p.aboStartdatum || null,                                        // v4.45.0
+    abo_aantal_maanden: p.aboAantalMaanden != null ? p.aboAantalMaanden : null,        // v4.45.0
     status:         p.status || 'concept',              // v3.25.10
     ligging:        p.ligging || null,                  // v4.22.0 - liggingsfoto: pad + parameters
     gewijzigd:      new Date().toISOString()
@@ -7304,6 +7318,8 @@ async function _ohpSaveParams(params) {
     betaalmodel:   params.betaalmodel || 'abo',
     scopeOmschrijving: params.scopeOmschrijving || '',
     aantalAppartementen: params.aantalAppartementen != null ? params.aantalAppartementen : null, // v4.7.2
+    aboStartdatum:    params.aboStartdatum || null,                                          // v4.45.0
+    aboAantalMaanden: params.aboAantalMaanden != null ? params.aboAantalMaanden : null,      // v4.45.0
     status:        params.status || 'concept'   // v3.27.2 — werd niet meegenomen, statuswijziging in editor ging verloren
   };
   const saved = await _saveOhpParams(planObj);
@@ -8223,6 +8239,8 @@ function _ohpReadParamsFromUI() {
   const appEl = document.getElementById('ohpAantalApp'); // v4.7.2
   const statusEl = document.getElementById('ohpStatus'); // v3.25.10
   const betaalEl = document.getElementById('ohpBetaalmodel'); // v3.29.0
+  const aboStartEl = document.getElementById('ohpAboStart');   // v4.45.0
+  const aboMndEl   = document.getElementById('ohpAboMaanden'); // v4.45.0
   return {
     prijspeil:     parseInt(document.getElementById('ohpPrijspeil').value) || null,
     looptijdJaren: parseInt(document.getElementById('ohpLooptijd').value)  || null,
@@ -8233,7 +8251,9 @@ function _ohpReadParamsFromUI() {
     scopeOmschrijving: scopeEl ? (scopeEl.value || '') : '',
     aantalAppartementen: appEl ? (parseInt(appEl.value) || null) : null, // v4.7.2
     status: statusEl ? (statusEl.value || 'concept') : 'concept', // v3.25.10
-    betaalmodel: betaalEl ? (betaalEl.value || 'abo') : 'abo' // v3.29.0
+    betaalmodel: betaalEl ? (betaalEl.value || 'abo') : 'abo', // v3.29.0
+    aboStartdatum: (aboStartEl && aboStartEl.value) ? aboStartEl.value : null,      // v4.45.0
+    aboAantalMaanden: aboMndEl ? (parseInt(aboMndEl.value, 10) || null) : null      // v4.45.0
   };
 }
 
@@ -8356,6 +8376,8 @@ function _ohpRenderParams() {
   const elAantalApp = document.getElementById('ohpAantalApp'); // v4.7.2
   const elStatus    = document.getElementById('ohpStatus'); // v3.25.10
   const elBetaalmodel = document.getElementById('ohpBetaalmodel'); // v3.29.0
+  const elAboStart    = document.getElementById('ohpAboStart');    // v4.45.0
+  const elAboMaanden  = document.getElementById('ohpAboMaanden');  // v4.45.0
   const bronBtw     = _ohpBronCalcBtw();
   if (p) {
     elPrijspeil.value = p.prijspeil || '';
@@ -8368,6 +8390,15 @@ function _ohpRenderParams() {
     if (elAantalApp) elAantalApp.value = p.aantalAppartementen || '';
     if (elStatus) elStatus.value = p.status || 'concept';
     if (elBetaalmodel) elBetaalmodel.value = p.betaalmodel || 'abo';
+    if (elAboStart) elAboStart.value = p.aboStartdatum || '';
+    if (elAboMaanden) {
+      elAboMaanden.value = (p.aboAantalMaanden != null) ? p.aboAantalMaanden : '';
+      // Voorstel in de grijze tekst: tot en met december van het eindjaar.
+      const _st = _ohpAboStart(p);
+      const _eind = (p.prijspeil || 0) + (p.looptijdJaren || 0);
+      const _voorstel = (_st.jaar && _eind) ? ((_eind - _st.jaar) * 12 + (12 - _st.maand)) : 0;
+      elAboMaanden.placeholder = _voorstel > 0 ? ('leeg = ' + ((p.looptijdJaren || 0) * 12) + ', voorstel ' + _voorstel) : '';
+    }
   } else {
     elPrijspeil.value = '';
     elLooptijd.value  = '';
@@ -8379,7 +8410,17 @@ function _ohpRenderParams() {
     if (elAantalApp) elAantalApp.value = '';
     if (elStatus) elStatus.value = 'concept';
     if (elBetaalmodel) elBetaalmodel.value = 'abo';
+    if (elAboStart) elAboStart.value = '';
+    if (elAboMaanden) { elAboMaanden.value = ''; elAboMaanden.placeholder = ''; }
   }
+  // v4.45.0 - Bij contant zeggen maanden niets, dus die twee velden uit.
+  const _isAboNu = ((elBetaalmodel && elBetaalmodel.value) || 'abo') !== 'contant';
+  [elAboStart, elAboMaanden].forEach(el => {
+    if (!el) return;
+    el.disabled = !_isAboNu;
+    const lab = el.closest('label');
+    if (lab) lab.style.opacity = _isAboNu ? '' : '0.45';
+  });
   // Hint: toon altijd wat de bron-calc als BTW heeft, zodat afwijking zichtbaar is.
   if (elBtwHint) {
     if (_ohpState.calcId) {
@@ -9339,6 +9380,45 @@ function _ohpRenderExternLijst() {
   }).join('');
 }
 
+// ---------------------------------------------------------------
+// v4.45.0 - Het maandbedrag loopt over een instelbaar aantal maanden vanaf
+// een instelbare startdatum. Beide velden mogen leeg blijven; dan valt de
+// app terug op het oude gedrag (looptijd x 12, startend 1 januari van het
+// prijspeiljaar), zodat bestaande plannen geen cent veranderen.
+// ---------------------------------------------------------------
+function _ohpAboMaanden(plan) {
+  const n = plan ? plan.aboAantalMaanden : null;
+  if (n != null && n > 0) return n;
+  return (plan && plan.looptijdJaren > 0) ? plan.looptijdJaren * 12 : 0;
+}
+// Startmaand als { jaar, maand } met maand 0-11. Bewust met een reguliere
+// expressie en niet met new Date(): een date-kolom komt als YYYY-MM-DD terug
+// en new Date() daarvan schuift in een westelijke tijdzone een dag terug.
+function _ohpAboStart(plan) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String((plan && plan.aboStartdatum) || ''));
+  if (m) return { jaar: parseInt(m[1], 10), maand: parseInt(m[2], 10) - 1 };
+  return { jaar: (plan && plan.prijspeil) || 0, maand: 0 };
+}
+// Laatste betaalmaand = start + n - 1.
+function _ohpAboEind(plan) {
+  const st = _ohpAboStart(plan);
+  const n = _ohpAboMaanden(plan);
+  if (!n) return st;
+  const tot = st.maand + n - 1;
+  return { jaar: st.jaar + Math.floor(tot / 12), maand: ((tot % 12) + 12) % 12 };
+}
+function _ohpMaandLabel(mj) {
+  const NAMEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni',
+                 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+  if (!mj || !mj.jaar) return '';
+  return NAMEN[mj.maand] + ' ' + mj.jaar;
+}
+// Betaalt de klant per maand of per beurt? Sinds v3.29.0 staat dat in
+// betaalmodel, maar tot v4.45.0 werd het alleen in de Planning-tab gelezen.
+function _ohpIsAbo(plan) {
+  return ((plan && plan.betaalmodel) || 'abo') !== 'contant';
+}
+
 function _ohpRenderResultaat() {
   const c = document.getElementById('ohpResultaat');
   if (!c) return;
@@ -9379,6 +9459,25 @@ function _ohpRenderResultaat() {
   html += `<div style="margin-bottom: 0.6rem;"><span style="color: var(--muted); font-size: 0.85rem;">Gemiddeld per jaar (incl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(gemPerJaar)}</strong></div>`;
   if (totaalEenmalig > 0) {
     html += `<div style="margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border);"><span style="color: var(--muted); font-size: 0.85rem;">Eenmalig, buiten gemiddelde (incl. BTW)</span><br><strong style="font-size: 1.1rem; color: var(--muted);">${eur(totaalEenmalig)}</strong></div>`;
+  }
+  // v4.45.0 - Het maandbedrag hoort op het scherm, want daar draai je eraan.
+  if (_ohpIsAbo(plan)) {
+    const _mnd = _ohpAboMaanden(plan);
+    const _pm = _mnd > 0 ? (totaalGemiddelde / _mnd) : 0;
+    const _st = _ohpAboStart(plan), _ei = _ohpAboEind(plan);
+    html += `<div style="margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border);"><span style="color: var(--muted); font-size: 0.85rem;">Per maand (incl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(_pm)}</strong><br><span style="color: var(--muted); font-size: 0.8rem;">van ${_escapeHtml(_ohpMaandLabel(_st))} tot en met ${_escapeHtml(_ohpMaandLabel(_ei))} &middot; ${_mnd} maanden</span></div>`;
+    // Seintje als de betalingen niet gelijk lopen met het werk.
+    const _beurtJaren = beurten.filter(b => b.jaartal >= pp && b.jaartal <= eindJaar).map(b => b.jaartal);
+    const _laatsteBeurt = _beurtJaren.length ? Math.max.apply(null, _beurtJaren) : null;
+    if (_laatsteBeurt != null && _mnd > 0) {
+      if (_ei.jaar > _laatsteBeurt) {
+        html += `<div style="margin-top: 0.5rem; padding: 0.5rem 0.6rem; background: #fff4e5; border-left: 3px solid #f1491c; border-radius: 3px; font-size: 0.8rem; line-height: 1.4;"><strong>Let op:</strong> de betalingen lopen door tot ${_escapeHtml(_ohpMaandLabel(_ei))}, terwijl de laatste beurt in ${_laatsteBeurt} valt. Die staart is onverzekerd, want het plan is op elk moment opzegbaar.</div>`;
+      } else if (_ei.jaar < _laatsteBeurt) {
+        html += `<div style="margin-top: 0.5rem; padding: 0.5rem 0.6rem; background: #eef4ff; border-left: 3px solid #3b6fd4; border-radius: 3px; font-size: 0.8rem; line-height: 1.4;"><strong>Ter info:</strong> de klant is in ${_escapeHtml(_ohpMaandLabel(_ei))} uitbetaald, terwijl de laatste beurt pas in ${_laatsteBeurt} valt. Hij betaalt die beurt dus vooruit.</div>`;
+      }
+    }
+  } else {
+    html += `<div style="margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border);"><span style="color: var(--muted); font-size: 0.85rem;">Betaalmodel</span><br><strong style="font-size: 1.1rem;">Contant</strong><br><span style="color: var(--muted); font-size: 0.8rem;">per beurt afgerekend, geen maandbedrag</span></div>`;
   }
   html += '</div>';
 
@@ -10430,7 +10529,7 @@ function _ohpBindUIEvents() {
     });
     cb._ohpBound = true;
   });
-  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope', 'ohpAantalApp', 'ohpStatus', 'ohpBetaalmodel'].forEach(id => {
+  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope', 'ohpAantalApp', 'ohpStatus', 'ohpBetaalmodel', 'ohpAboStart', 'ohpAboMaanden'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el._ohpBound) {
       el.addEventListener('input', _ohpScheduleSave);
@@ -10488,7 +10587,9 @@ function _ohpPrint() {
     else perJaar[b.jaartal].bedragBuiten += bedrag;
   });
   const gemPerJaar  = plan.looptijdJaren > 0 ? (totaalGemiddelde / plan.looptijdJaren) : 0;
-  const gemPerMaand = gemPerJaar / 12;
+  // v4.45.0 - over het ingestelde aantal maanden, niet automatisch looptijd x 12.
+  const _prMnd = _ohpAboMaanden(plan);
+  const gemPerMaand = _prMnd > 0 ? (totaalGemiddelde / _prMnd) : 0;
 
   let html = '';
 
@@ -10630,13 +10731,15 @@ function _ohpBuildOfferteHTML(plan, calc) {
   // Cijfers per jaar
   const perJaar = {}; // jaar -> { bedragMee, bedragBuiten, beurten:[] }
   let totaalGemiddelde = 0, totaalEenmalig = 0, totaalAlles = 0, totaalExcl = 0;
+  // v4.44.0 - beurten buiten het gemiddelde, met hun bedrag inclusief btw.
+  const eenmRegels = [];
   beurten.forEach(b => {
     const basis = _ohpBeurtBasisBedrag(b);
     const fac = _ohpIndexFactor(b.jaartal, pp, idx);
     const bedragExcl = basis * fac;          // v3.23.2 chunk C — excl. btw
     const bedrag = bedragExcl * btwF;        // incl. btw
     const mee = (b.meeInGemiddelde !== false);
-    if (mee) totaalGemiddelde += bedrag; else totaalEenmalig += bedrag;
+    if (mee) totaalGemiddelde += bedrag; else { totaalEenmalig += bedrag; eenmRegels.push({ b: b, bedrag: bedrag }); }
     totaalAlles += bedrag;
     totaalExcl += bedragExcl;
     if (!perJaar[b.jaartal]) perJaar[b.jaartal] = { bedragMee: 0, bedragBuiten: 0, beurten: [] };
@@ -10644,13 +10747,16 @@ function _ohpBuildOfferteHTML(plan, calc) {
     perJaar[b.jaartal].beurten.push({ b, bedrag, bedragExcl, mee });
   });
   const gemPerJaar = plan.looptijdJaren > 0 ? (totaalGemiddelde / plan.looptijdJaren) : 0;
-  const gemPerMaand = gemPerJaar / 12;
+  // v4.45.0 - het maandbedrag loopt over het ingestelde aantal maanden.
+  const aboMaanden = _ohpAboMaanden(plan);
+  const gemPerMaand = aboMaanden > 0 ? (totaalGemiddelde / aboMaanden) : 0;
   // v4.7.2 — gemiddelde maandbijdrage per appartement (alleen bij VvE met aantal ingevuld)
   const aantalApp = (plan.aantalAppartementen != null && plan.aantalAppartementen > 0) ? plan.aantalAppartementen : null;
   const perMaandPerApp = aantalApp ? (gemPerJaar / aantalApp / 12) : null;
 
   // --- §1 hero ---
   const isVve = (plan.ontvangerType === 'vve'); // v3.23.0 chunk B
+  const isAbo = _ohpIsAbo(plan); // v4.45.0 - contant kent geen maandbedrag
   const heroMaand = eur(gemPerMaand);
   const heroJaar = eur(gemPerJaar);
   const heroTotaal = eur(totaalAlles);
@@ -10668,6 +10774,36 @@ function _ohpBuildOfferteHTML(plan, calc) {
   const startBeurtId = beurten.length ? beurten[0].id : null;
   const _labelVoor = (b) => (b.id === startBeurtId) ? 'Startonderhoudsbeurt' : _ohpTypeLabel(b.naam);
 
+  // v4.44.0 - Een uitgevinkte beurt valt buiten het gemiddelde en wordt eenmalig
+  // afgerekend. Het maandbedrag in de hero bevat hem dus niet, en dat moet de klant
+  // kunnen lezen. Alleen particulier; de VvE-tak is bewust ongemoeid gelaten.
+  // v4.45.0 - op een contant plan is alles eenmalig, dus dan zegt de melding niets.
+  const toonEenmalig = !isVve && isAbo && eenmRegels.length > 0;
+  let eenmHeroHtml = '';
+  if (toonEenmalig) {
+    const _omschr = eenmRegels.map(r => {
+      const lab = _labelVoor(r.b);
+      return 'de ' + lab.charAt(0).toLowerCase() + lab.slice(1) + ' van ' + r.b.jaartal;
+    });
+    const _alDone = eenmRegels.every(r => r.b.reedsUitgevoerd === true);
+    let _kop, _body;
+    if (eenmRegels.length === 1) {
+      _kop = 'Niet in dit maandbedrag: ' + _omschr[0] + '.';
+      _body = 'Deze beurt bedraagt ' + eur(eenmRegels[0].bedrag) + ' inclusief btw'
+        + (_alDone ? ' en is apart afgerekend.' : '. Die rekenen wij eenmalig af, direct na uitvoering.')
+        + ' Het maandbedrag hierboven bevat deze beurt niet.';
+    } else {
+      const _tel = ['', '', 'twee', 'drie', 'vier', 'vijf', 'zes'][eenmRegels.length] || String(eenmRegels.length);
+      _kop = 'Niet in dit maandbedrag: ' + _tel + ' beurten die u apart afrekent.';
+      const _lijst = _omschr.map((d, i) => d + ' (' + eur(eenmRegels[i].bedrag) + ')');
+      const _zin = _lijst.slice(0, -1).join(', ') + ' en ' + _lijst[_lijst.length - 1];
+      _body = _zin.charAt(0).toUpperCase() + _zin.slice(1) + ', samen ' + eur(totaalEenmalig) + ' inclusief btw.'
+        + (_alDone ? ' Die zijn apart afgerekend.' : ' Die rekenen wij eenmalig af, direct na uitvoering.')
+        + ' Het maandbedrag hierboven bevat deze beurten niet.';
+    }
+    eenmHeroHtml = '<div class="eenm"><b>' + _escapeHtml(_kop) + '</b> ' + _escapeHtml(_body) + '</div>';
+  }
+
   let tlNodes = '';
   let werkIdx = 0;
   jaren.forEach((j, i) => {
@@ -10683,8 +10819,11 @@ function _ohpBuildOfferteHTML(plan, calc) {
       werkIdx++;
       const isDone = eersteBeurt.reedsUitgevoerd === true;
       const doneCls = isDone ? ' done' : '';
+      // v4.44.0 - alleen taggen als het hele jaar buiten het gemiddelde valt. Bij een
+      // gemengd jaar staat er een opgeteld bedrag op het kaartje en zou de tag misleiden.
+      const isEenmJaar = toonEenmalig && entry.bedragMee <= 0 && entry.bedragBuiten > 0;
       tlNodes += `
-        <div class="tl-card ${lvl}${doneCls}" style="left:${left}%;"><div class="amt">${eur(totBedrag)}</div><div class="type">${_escapeHtml(typeLabel)}${isDone ? ' <span class="done-tag">· reeds uitgevoerd</span>' : ''}</div><div class="stem"></div></div>
+        <div class="tl-card ${lvl}${doneCls}" style="left:${left}%;"><div class="amt">${eur(totBedrag)}</div><div class="type">${_escapeHtml(typeLabel)}${isDone ? ' <span class="done-tag">· reeds uitgevoerd</span>' : ''}${isEenmJaar ? ' <span class="eenm-tag">· eenmalig</span>' : ''}</div><div class="stem"></div></div>
         <div class="tl-node" style="left:${left}%;"><div class="tl-dot${doneCls}"></div></div>
         <div class="tl-year${doneCls}" style="left:${left}%;">${j}</div>`;
     } else {
@@ -10702,6 +10841,9 @@ function _ohpBuildOfferteHTML(plan, calc) {
     const isDone = b.reedsUitgevoerd === true;
     const doneCls = isDone ? ' done' : '';
     const doneBadge = isDone ? '<span class="done-badge">reeds uitgevoerd</span>' : '';
+    // v4.44.0
+    const eenmBadge = (toonEenmalig && b.meeInGemiddelde === false)
+      ? '<span class="eenm-badge">eenmalig, buiten het maandbedrag</span>' : '';
     const tekst = (b.offerteTekst || '').trim();
     let body = '';
     if (tekst) {
@@ -10716,7 +10858,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
       }).join('');
     }
     const _yb = `<div class="yearblock${doneCls}">
-        <div class="yhead"><span class="yr">${b.jaartal}</span> &middot; ${_escapeHtml(typeLabel)}${doneBadge}</div>
+        <div class="yhead"><span class="yr">${b.jaartal}</span> &middot; ${_escapeHtml(typeLabel)}${doneBadge}${eenmBadge}</div>
         ${body}
       </div>`;
     jaarBlokkenArr.push(_yb);
@@ -10761,7 +10903,10 @@ function _ohpBuildOfferteHTML(plan, calc) {
   const heroInner = isVve
     ? `<div><div class="big">${heroJaar}<span> / jaar</span></div><div class="sub">gemiddeld per jaar te reserveren, inclusief btw</div>${_appMaandHero}</div>
         <div class="right"><b>${heroTotaal}</b>totale investering<br>${pp} – ${eindJaar} &middot; ${plan.looptijdJaren} jaar</div>`
-    : `<div><div class="big">${heroMaand}<span> / maand</span></div><div class="sub">gemiddeld over ${plan.looptijdJaren} jaar &middot; ${pp}–${eindJaar} &middot; inclusief btw</div></div>`;
+    : (isAbo
+      ? `<div><div class="big">${heroMaand}<span> / maand</span></div><div class="sub">van ${_escapeHtml(_ohpMaandLabel(_ohpAboStart(plan)))} tot en met ${_escapeHtml(_ohpMaandLabel(_ohpAboEind(plan)))} &middot; inclusief btw</div></div>`
+      : `<div><div class="big">${heroTotaal}</div><div class="sub">totale investering &middot; ${pp}–${eindJaar} &middot; inclusief btw</div></div>
+        <div class="right"><b>Per beurt</b>afgerekend na uitvoering<br>${plan.looptijdJaren} jaar plan</div>`);
 
   const _benefits = isVve
     ? [
@@ -11046,6 +11191,10 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .tl-card.done .type{color:var(--muted);}
 .ob .tl-card.done .stem{background:var(--line);}
 .ob .tl-card.done .done-tag{color:var(--muted);font-weight:500;}
+.ob .tl-card .eenm-tag{color:var(--brush-deep);font-weight:700;}
+.ob .eenm{margin-top:11px;border:1.4px solid var(--brush);border-left-width:4px;border-radius:3px;background:var(--soft);padding:9px 13px;font-size:9.2pt;line-height:1.5;color:#3a352e;}
+.ob .eenm b{color:var(--brush-deep);}
+.ob .yearblock .eenm-badge{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:9px;background:var(--soft);color:var(--brush-deep);font-size:7.6pt;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;vertical-align:middle;}
 .ob .tl-dot.done{background:#fff;border-color:var(--muted);box-shadow:0 0 0 2px var(--muted);}
 .ob .tl-year.done{color:var(--muted);}
 .ob table.ptable{width:100%;border-collapse:collapse;margin:0;font-size:10pt;}
@@ -11264,6 +11413,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
       <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat het plan u biedt</span></div>
       ${leadHtml}
       <div class="hero">${heroInner}</div>
+      ${eenmHeroHtml}
       <div class="benefits">${benefitsHtml}</div>
     </div>`));
     blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Welke beurten zitten in het plan</span></div><div class="defs">${defsCardsHtml}</div></div>`));

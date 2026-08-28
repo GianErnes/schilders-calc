@@ -1,3 +1,73 @@
+## v4.45.0 — Zelf bepalen hoe lang het maandbedrag loopt
+
+Januari is al lang voorbij als je in september een plan verkoopt. En je klant is gewend dat hij langer doorbetaalt dan het plan loopt. Tot nu toe rekende de app star met looptijd maal twaalf en kon je daar niets aan draaien.
+
+### Wat er verandert
+- Twee velden erbij in het plan: **Startdatum maandbedrag** en **Aantal maanden**. Het maandbedrag is voortaan het gemiddelde gedeeld door dat aantal.
+- Laat je ze allebei leeg, dan verandert er niets. De app valt dan terug op looptijd maal twaalf, startend 1 januari van het prijspeiljaar. Bestaande plannen wijzigen geen cent.
+- In het veld Aantal maanden staat een grijs voorstel: wat de terugval zou zijn, en wat het aantal maanden is tot en met december van je eindjaar.
+- Het **Resultaat-blok toont nu ook het maandbedrag**, met de periode en het aantal maanden eronder. Daar draai je immers aan, dus daar hoort het te staan.
+- Op de Offerte OHP staat onder het maandbedrag de echte periode, bijvoorbeeld "van september 2026 tot en met augustus 2035", in plaats van "gemiddeld over 8 jaar".
+
+### Twee seintjes in het plan
+- **Oranje** als de betalingen doorlopen na de laatste beurt. Die staart is onverzekerd, want op de bijlage staat dat het plan op elk moment opzegbaar is.
+- **Blauw** als ze juist eerder stoppen. Dan betaalt de klant de laatste beurt vooruit. Bij prijspeil 2026 met looptijd 8 gebeurt dat standaard: de laatste betaling valt in december 2033 terwijl de laatste beurt in 2034 staat.
+
+### Reparatie: het betaalmodel werd nergens gelezen
+`betaalmodel` bestaat sinds v3.29.0 met de waarden contant en abo. Gemeten met een grep over het hele bestand: hij werd uitsluitend in de Planning-tab gebruikt om de matrix te splitsen. Niet in de bijlage, niet in het interne print, niet op het scherm.
+
+Daardoor kreeg een klant met een **contant** plan een Offerte OHP met bovenaan een maandbedrag, terwijl hij per beurt afrekent. Dat is nu afgevangen:
+- De hero toont bij contant de totale investering met de tekst dat er per beurt wordt afgerekend na uitvoering.
+- De eenmalig-melding van v4.44.0 valt weg, want op een contant plan is alles eenmalig.
+- De twee nieuwe velden staan uitgegrijsd en het Resultaat-blok toont het betaalmodel in plaats van een maandbedrag.
+
+**Dit is een afvang en geen contante variant.** De leadteksten en de verkooppunten zijn nog steeds geschreven vanuit het abonnement. Dat is een apart traject.
+
+### Wat je moet weten
+- De VvE-tak is opnieuw volledig ongemoeid gebleven, inclusief de maandbijdrage per appartement.
+- Het probleem uit v4.44.0 blijft staan: bij een VvE-plan met een uitgevinkte beurt klopt de liquiditeitsgrafiek niet.
+- `toon_voorfinanciering` bestaat als kolom maar wordt nog niet gelezen of geschreven. Dat vinkje komt in v4.46.0.
+
+### Onder de motorkap
+Twee kolommen `abo_startdatum` (date null) en `abo_aantal_maanden` (integer null, met een check op groter dan nul) op `onderhoudsplannen`, meegenomen in `_mapOhpFromDB`, `_mapOhpToDB`, `_ohpSaveParams`, `_ohpReadParamsFromUI` en `_ohpRenderParams`.
+
+Vijf nieuwe helpers. `_ohpAboMaanden` valt terug op looptijd maal twaalf. `_ohpAboStart` leest de datum met een reguliere expressie en bewust **niet** met `new Date()`: een `date`-kolom komt als `YYYY-MM-DD` terug en de constructor leest dat als UTC-middernacht, wat in een westelijke tijdzone een dag terugschuift en dus in de verkeerde maand kan landen. `_ohpAboEind` rekent start plus n min een, met modulo over de jaargrens. `_ohpMaandLabel` geeft de Nederlandse maandnaam. `_ohpIsAbo` leest het betaalmodel.
+
+`gemPerMaand` is op beide plekken aangepast, `_ohpBuildPrintHTML` en `_ohpBuildOfferteHTML`. Was ik er maar een van vergeten, dan zouden je twee documenten een verschillend bedrag tonen.
+
+Geverifieerd met een tweede testharnas: dertig controles over de helpers (terugval, tijdzone, jaargrenzen), de bijlage bij standaard en bij 108 maanden vanaf september 2026, de contante tak, en de eis dat de VvE-uitvoer byte voor byte gelijk blijft als je het maandenveld invult. Daarnaast zijn de dertig controles van v4.44.0 opnieuw gedraaid tegen dit bestand. Alle groen.
+
+Vereist de SQL uit `2026-08-28_v4.45.0_abo_looptijd_en_grafiek.sql`.
+
+## v4.44.0 — De eenmalige beurt staat nu op de Offerte OHP
+
+Haal je een beurt uit het gemiddelde, dan zit hij niet in het maandbedrag maar reken je hem apart af na uitvoering. Het scherm liet dat al zien en het interne print ook. De bijlage voor particulieren, het enige stuk dat de klant onder ogen krijgt, zweeg erover.
+
+### Wat er verandert
+- Onder het maandbedrag staat een omkaderd blok: welke beurt buiten het gemiddelde valt, wat die kost inclusief btw, dat je hem eenmalig afrekent direct na uitvoering, en dat het maandbedrag hem niet bevat.
+- Op de tijdlijn krijgt dat jaar de tag **eenmalig** achter het type, in dezelfde vorm als de bestaande tag reeds uitgevoerd maar in de oranje huiskleur. Grijs betekent al gedaan en dat is iets anders.
+- In "Voor uw huis specifiek" komt bij de kop van dat jaar het label **eenmalig, buiten het maandbedrag**.
+- Zijn er meerdere beurten uitgevinkt, dan worden ze opgesomd met per beurt het bedrag en daarachter het totaal.
+- Staat een uitgevinkte beurt op reeds uitgevoerd, dan leest de zin als "is apart afgerekend" in plaats van de toekomende tijd.
+- De knop heet niet langer Offerte-bijlage maar **Offerte OHP**.
+
+### Wat je moet weten
+- **De VvE-variant is bewust niet aangeraakt.** Geen markering in de jaartabel en niets aan het liquiditeitsblok.
+- Bij een VvE-plan met een uitgevinkte beurt klopt de liquiditeitsgrafiek niet. De reserveringslijn telt alleen de aangevinkte beurten mee, de uitgavenlijn telt ze allemaal, dus het eindsaldo komt uit op precies min het eenmalige bedrag terwijl de slotzin volledige dekking belooft. Dit is gemeld en op verzoek blijven staan omdat je bij VvE niet uitvinkt. Ga je dat ooit wel doen, lees die grafiek dan niet.
+- Valt er in één jaar zowel een aangevinkte als een uitgevinkte beurt, dan blijft de tijdlijn onbeschreven. Daar staat immers één opgeteld bedrag op het kaartje en een tag zou dan de verkeerde indruk wekken. Het jaarblok markeert wel gewoon per beurt.
+- De naamgeving volgt de bestaande regel: de chronologisch eerste beurt van het plan heet startonderhoudsbeurt, ongeacht hoe je hem zelf genoemd hebt.
+
+### Onder de motorkap
+Nieuwe array `eenmRegels`, gevuld in de bestaande beurten-lus van `_ohpBuildOfferteHTML` op het punt waar `totaalEenmalig` toch al werd opgeteld. Bewust daar en niet in een tweede lus, want dan zou het bedrag opnieuw uitgerekend worden en op termijn uit de pas kunnen lopen met `totaalEenmalig`.
+
+De tekstopbouw staat direct na `_labelVoor`, want die helper is nodig voor de naam en `isVve` moet al bekend zijn. Alles hangt aan `toonEenmalig`, dat `!isVve` eist. Enkelvoud en meervoud hebben eigen zinnen met telwoord, en een aparte tak vangt af dat alle uitgevinkte beurten al uitgevoerd zijn.
+
+Het blok `.eenm` staat binnen hetzelfde `ob-block` als de hero en niet als eigen blok. Als los blok zou `_ohpPaginate` het van het maandbedrag kunnen scheiden en dan staat de mededeling op de volgende bladzijde.
+
+`isEenmJaar` op de tijdlijn eist `bedragMee <= 0 && bedragBuiten > 0`. `eenm-badge` in het jaarblok staat naast `doneBadge` en beide kunnen tegelijk verschijnen. Knop en tooltip op regel 2852 aangepast. Geen SQL, geen Edge Function, niets aan de rekenkern.
+
+Geverifieerd met een testharnas op het plan uit de praktijk (prijspeil 2026, looptijd 8 jaar, beurten 2028 / 2031 / 2034 met de eerste uitgevinkt): dertig controles over de rekenkern, de melding, de tijdlijn, het jaarblok, de terugval zonder uitgevinkte beurt, de VvE-tak, het meervoud, reeds uitgevoerd en het gemengde jaar. Alle groen.
+
 ## v4.43.0 — Archiefmarkeringen op het dashboard
 
 Je maakt de PDF's aan, je sleept ze naar de projectmap, en twee weken later weet je van geen enkele calculatie meer of je dat gedaan hebt. Het archief geeft daar nu een teken voor.
