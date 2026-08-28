@@ -1,3 +1,33 @@
+## v4.47.0 — De tijdlijn is weer een tijdlijn
+
+### De balken op de planning
+
+Op de tijdlijn in de bijlage stonden brede oranje balken. De hoogte daarvan had niets met het bedrag te maken: een beurt van € 775,61 kon een hogere balk krijgen dan een van € 7.651,25. Voor een klant leest dat als een staafdiagram, en dan liegt het.
+
+De oorzaak was een naamconflict in de opmaak. Twee verschillende dingen heetten allebei `.stem`: het steeltje onder een tijdlijn-label, en het stemmingsblok op de VvE-besluitpagina uit v4.7.7. Het steeltje van anderhalve pixel breed kreeg daardoor de binnenmarge en de rand van het stemvak en groeide uit tot een blok van 35 bij 138 pixels, met afgeronde hoeken en een oranje vulling.
+
+De hoogte zelf was nooit als bedrag bedoeld. Hoog en laag wisselen elkaar af zodat labels niet over elkaar vallen. Bij een dun lijntje valt dat niemand op, bij een blok wel. Dus geen euroschaal erop, maar het lijntje terug, met een bolletje aan het uiteinde.
+
+Dit raakte **beide** varianten van de bijlage, VvE en particulier, en zat er sinds eind juni in.
+
+### De tabel onder het voorfinancieringsbeeld
+
+Die toonde elk jaar een regel. In een jaar zonder beurt stond bij *uitgevoerd* hetzelfde bedrag als het jaar ervoor, want die kolom is cumulatief. Voor een klant leest dat alsof er dat jaar ook iets gedaan is.
+
+Nu staan er alleen nog regels voor de jaren waarin werkelijk een beurt valt, plus de slotregel. Op een plan met vier beurten over tien jaar gaat de tabel van tien regels naar vijf. De verschilkolom is vervallen: dat lees je aan het beeld af en het staat in de conclusiezin.
+
+### Klusjes
+
+Het woord stond twee keer in de klanttekst van de bijlage, in beide varianten. Het is vervangen door *handelingen*, zoals de garantietekst het al noemde. Wij leveren schilderwerk.
+
+### Onder de motorkap
+
+De tijdlijn-steel heet nu `tl-stem`, met een nieuwe `tl-pin` van 7 pixels als bolletje. De hoogtes zijn 101 en 45 in plaats van 108 en 52, zodat bolletje plus steel dezelfde totale lengte houden als voorheen. Het stemmingsblok op de besluitpagina is niet aangeraakt.
+
+`_ohpVoorfinanciering` geeft per meetrij een nieuw veld `beurt` terug: wat er op dat peilmoment wordt uitgevoerd, nul in een jaar zonder beurt. Daarop filtert de tabel.
+
+Tweeentwintig proeven groen, gedraaid op code die met `slice()` uit `index.html` is gesneden. Geen SQL, geen Edge Function.
+
 ## v4.46.0 — Betaald tegenover geleverd
 
 Bij een plan op abonnement betaalt de klant elke maand hetzelfde, terwijl het onderhoud in beurten komt. Het een loopt dus altijd voor op het ander. Tot nu toe was nergens te zien welke kant dat op wees.

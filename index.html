@@ -2301,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.46.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.47.0</h2>
       <div class="intro-body">
+        <p><strong>📍 De tijdlijn is weer een tijdlijn (v4.47.0).</strong> Op de planning-tijdlijn van de bijlage stonden brede oranje balken waarvan de hoogte niets met het bedrag te maken had. Oorzaak: twee verschillende dingen heetten allebei <code>.stem</code>, het tijdlijn-steeltje en het stemmingsblok van de VvE-besluitpagina. Het steeltje van anderhalve pixel kreeg daardoor de padding en de rand van het stemvak en werd een blok van 35 bij 138 pixels. Nu een dun lijntje met een bolletje aan het uiteinde, zoals een tijdlijn hoort te zijn. Raakt de VvE- en de particuliere bijlage. Verder: de tabel onder het voorfinancieringsbeeld toont alleen nog de jaren waarin werkelijk een beurt valt plus de slotregel, want in een jaar zonder beurt stond hetzelfde bedrag als het jaar ervoor en dat leest alsof er toch iets gedaan is. De verschilkolom is eruit, dat zie je aan het beeld. En het woord klusjes staat niet meer in de klanttekst: wij leveren schilderwerk.</p>
         <p><strong>📈 Betaald tegenover geleverd, op het scherm en op de bijlage (v4.46.0).</strong> Bij een particulier plan op abonnement loopt de betaling gelijkmatig door terwijl het onderhoud in beurten komt. Het Resultaat-blok toont nu wat de klant in de loop van het plan betaalt naast wat wij in diezelfde periode uitvoeren, met het diepste punt in euro erbij. Dat beeld staat er altijd, ook zonder vinkje, want om te beslissen of het gunstig uitpakt moet je het eerst kunnen zien. Een nieuw vinkje bepaalt uitsluitend of het beeld meegaat naar de klant. De uitvoeringsmaand staat vast op juli en is bewust geen invoerveld: het diepste punt verdrievoudigt tussen december en januari en zo'n knop hoort niet onder een getal op een klantstuk. De opzegbelofte op de bijlage zegt er nu bij dat er bij stoppen verrekend wordt: te weinig betaald reken je bij, te veel betaald krijg je terug. Bij contant staat er dat er niets te verrekenen valt. Meelifter: wisselde je van abonnement naar contant, dan grepen de twee abo-velden pas uit na herladen. Nu meteen. Geen SQL.</p>
         <p><strong>💧 Reparatie in het liquiditeitsbeeld van de VvE-bijlage (v4.45.1).</strong> De reserveringslijn liep een jaar langer door dan het bedrag waarop hij berekend is. Een plan met prijspeil 2026 en looptijd 15 beslaat in de tabel de jaren 2026 tot en met 2041, dat zijn zestien regels, terwijl de jaarreservering door vijftien gedeeld wordt. De grafiek zette er dus zestien keer een reservering neer en het saldo aan het eind stond daardoor altijd precies één jaarreservering te hoog. Een plan dat op nul hoort te sluiten sloot op plus een jaar. De reservering stopt nu na het aantal jaren van de looptijd; in een eventueel staartjaar staat een streepje in plaats van een bedrag. De uitgaven lopen wel het hele venster door, want de afsluitende herschilderbeurt valt in het eindjaar. Raakt alleen de VvE-bijlage. Het maandbedrag van een particulier plan, de jaartabellen en het interne print blijven op de cent gelijk. Geen SQL.</p>
         <p><strong>📅 Zelf bepalen hoeveel maanden het maandbedrag loopt (v4.45.0).</strong> In het plan staan twee velden bij: een startdatum en een aantal maanden. Het maandbedrag is voortaan het gemiddelde gedeeld door dat aantal, in plaats van automatisch door looptijd maal twaalf. Laat je ze leeg, dan verandert er niets aan bestaande plannen. Zo kun je rekening houden met een jaar dat al half om is en kun je met het bedrag spelen. Het Resultaat-blok toont nu ook het maandbedrag met de periode eronder, plus een seintje wanneer de betalingen doorlopen na de laatste beurt (die staart is onverzekerd want het plan is opzegbaar) of juist eerder stoppen (dan betaalt de klant vooruit). Op de Offerte OHP staat onder het maandbedrag nu de echte periode in plaats van het aantal jaren. Daarnaast een reparatie: staat een plan op betaalmodel <em>contant</em>, dan toonde de bijlage tot nu toe gewoon een maandbedrag terwijl die klant per beurt betaalt. Die drukt nu de totale investering af en laat de eenmalig-melding weg. Vereist de SQL die je al gedraaid hebt.</p>
@@ -3574,7 +3575,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.46.0';
+const APP_VERSION = 'v4.47.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3970,6 +3971,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.47.0', d: '2026-08-28', h: 'Tijdlijn-steel hersteld, tabel volgt de beurten, klusjes uit de klanttekst. (1) CSS-naamconflict: .ob .stem (stemmingsblok VvE-besluitpagina, v4.7.7) en .ob .tl-card .stem (tijdlijn-steel) heetten allebei .stem. Specificiteit beslist per eigenschap, dus de tl-regel won op width en height, maar padding 14px 16px, border 1px en border-radius 4px stonden alleen in de besluitpagina-regel en werden wel toegepast. Het steeltje van 1,5 bij 108 pixels werd zo een oranje blok van 35,5 bij 138 met afgeronde hoeken, dat als staafdiagram las terwijl hi en lo alleen bestaan om labels uit elkaar te houden. Steel hernoemd naar tl-stem, plus een nieuwe tl-pin van 7 pixels als bolletje op het uiteinde; hoogtes 101 en 45 zodat pin plus steel dezelfde totale lengte houdt als voorheen. Zat er sinds v4.7.7 in en raakte beide bijlagevarianten. (2) De tabel onder het voorfinancieringsbeeld toont alleen nog rijen waarin een beurt valt, plus de slotrij: in een jaar zonder beurt stond hetzelfde cumulatieve bedrag als het jaar ervoor en dat leest voor een klant alsof er dat jaar ook iets is uitgevoerd. Nieuw veld beurt op elke meetrij uit _ohpVoorfinanciering. Op een plan met vier beurten over tien jaar gaat de tabel van tien rijen naar vijf. Verschilkolom vervallen, die informatie staat in het beeld en in de conclusiezin. (3) Klusjes vervangen door handelingen in leadHtml, beide takken; de vermelding in de versiegeschiedenis blijft staan als historische tekst. Tweeentwintig proeven groen. Geen SQL, geen Edge Function.' },
   { v: '4.46.0', d: '2026-08-28', h: 'Voorfinancieringsbeeld bij particuliere abonnementsplannen plus verrekening bij opzegging. Nieuwe functie _ohpVoorfinanciering(plan) zet cumulatief betaald door de klant tegenover cumulatief geleverd door Ernes; negatief saldo is voorfinanciering door Ernes, positief is voorsprong van de klant, en bij opzegging is dat saldo exact het verrekenbedrag. Peilmomenten zijn de uitvoeringsmaand van elk jaar plus de laatste betaaltermijn en het sluitmoment: zonder die laatste twee knikt de betaallijn op de verkeerde plek en sluit de reeks niet op nul. Constante _OHP_UITVOERINGSMAAND staat op 7. Bewust geen invoerveld: gemeten op het enige particuliere abonnementsplan gaat het diepste punt van 906,79 in december naar 3.128,62 in januari, en zo een knop hoort niet onder een getal op een klantstuk. Een uitgevinkte beurt telt bij betaald en bij geleverd mee op hetzelfde moment, want die rekent de klant apart af. De functie geeft null bij VvE, bij contant en bij een plan zonder beurten. Nieuwe _ohpVoorfinSvg tekent de betaallijn als rechte polyline en de geleverde lijn als trap, want het werk komt in klappen en juist die klap maakt het gat; de x-as schaalt op maandindex en niet op rij-index omdat het slotpunt soms een maand en soms een half jaar na het vorige ligt. Vlakken tussen de lijnen in twee dekkingen: oranje 0.17 waar Ernes voorstaat, blauw 0.05 waar de klant voorstaat, omdat de klant meestal het grootste deel voorstaat en gelijke dekking het oranje zou overstemmen. Vaste hex-kleuren, want var() werkt niet in SVG-presentatieattributen bij print. Het beeld staat altijd in het Resultaat-blok bij particulier plus abo, ongeacht het vinkje. Kolom toon_voorfinanciering (bestaat sinds 28 augustus) nu gemapt in _mapOhpFromDB, _mapOhpToDB, _ohpSaveParams, _ohpReadParamsFromUI en _ohpRenderParams, tegelijk met het invoervinkje ohpToonVoorfin in het nieuwe blok ohpVoorfinWrap; _ohpReadParamsFromUI geeft altijd een boolean terug zodat een gezette waarde niet door een gewone opslag gewist wordt. Op de bijlage komt bij aangevinkt vinkje de sectie Wat u betaalt en wat wij leveren als drie blokken tussen De planning en Uw zekerheid, met data-split table op de tabel zodat _ohpPaginate hem per rij mag breken. zekItemsHtml was een vaste string voor beide takken en heeft nu een _opzegTekst die op _ohpIsAbo splitst: bij abonnement wordt bij opzegging het uitgevoerde werk tegen de betaalde termijnen verrekend, in beide richtingen, bij contant valt er niets te verrekenen. De opzegbaarheid zelf blijft voor elk plan staan, ook VvE, want die zegt de meerjarenafspraak op. Meelifter: het uitgrijzen van ohpAboStart en ohpAboMaanden zat alleen in _ohpRenderParams en die wordt niet door _ohpFlushSave aangeroepen, waardoor een wissel naar contant pas na herladen effect had; verplaatst naar _ohpToggleAboVelden met eigen change-listeners op ohpBetaalmodel en ohpOntvangerType. Zesendertig proeven groen met code die uit index.html gesneden is. Geen SQL, geen Edge Function.' },
   { v: '4.45.1', d: '2026-08-28', h: 'Reparatie van de reserveringslijn in het VvE-liquiditeitsblok van _ohpBuildOfferteHTML. De lus liep over jaren, dat is prijspeil tot en met eindJaar en dus looptijdJaren plus een elementen, terwijl R gelijk is aan gemPerJaar en dat is totaalGemiddelde gedeeld door looptijdJaren. Met _cr = R * (i + 1) kwam de cumulatieve reservering daardoor uit op R maal (looptijd plus een) en stond het eindsaldo structureel precies gemPerJaar te hoog; gemeten met een testharnas op vier plannen en in alle vier gevallen was de afwijking exact een jaarreservering. Een VvE-plan zonder uitgevinkte beurt sloot dus niet op nul maar op plus een hele jaarreservering, en met een uitgevinkte beurt op gemPerJaar min totaalEenmalig in plaats van min totaalEenmalig. Nieuwe lokale constante _lpj is plan.looptijdJaren, de reservering per rij is R zolang i kleiner is dan _lpj en anders nul, en _cr telt op in plaats van te herberekenen, waardoor ook maxv op de juiste schaal uitkomt en de grafiek beter vult. De uitgavenstroom blijft het hele venster doorlopen omdat de afsluitende herschilderbeurt in het eindjaar valt. De kolom Reservering toont in een jaar zonder reservering een liggend streepje, gelijk aan wat de kolom Uitgave al deed. De conclusiezin bij een niet-negatief laagste saldo zegt op of boven de uitgaven in plaats van boven de uitgaven, want bij een sluitend plan is het eindsaldo voortaan exact nul. Het venster prijspeil tot en met prijspeil plus looptijd en de deler looptijdJaren zijn bewust ongemoeid gelaten: die twee zijn samen correct omdat de klant looptijd jaren betaalt en de afsluitende beurt in het eindjaar valt, wat op het echte particuliere plan met startdatum september 2026 en 96 maanden uitkomt op een laatste betaling in augustus 2034 naast een herschilderbeurt in 2034. Alleen de VvE-tak; het particuliere maandbedrag uit totaalGemiddelde gedeeld door aboMaanden, de jaartabellen op scherm en print en het interne print blijven op de cent gelijk. Blijft open en niet aangeraakt: bij een uitgevinkte beurt op een VvE-plan belooft de eerste tak van de conclusiezin nog steeds volledige dekking terwijl het eindsaldo min totaalEenmalig is; per meting op 28 augustus staat uitgevinkt op nul bij alle drie de VvE-plannen. Geen SQL, geen Edge Function.' },
   { v: '4.45.0', d: '2026-08-28', h: 'Instelbare looptijd van het maandbedrag plus de contante afvang op de bijlage. Twee kolommen abo_startdatum (date null) en abo_aantal_maanden (integer null, check groter dan nul) op onderhoudsplannen, meegenomen in _mapOhpFromDB, _mapOhpToDB, _ohpSaveParams, _ohpReadParamsFromUI en _ohpRenderParams. Vijf nieuwe helpers: _ohpAboMaanden valt terug op looptijd maal twaalf zodat bestaande plannen geen cent veranderen, _ohpAboStart leest de datum met een reguliere expressie en bewust niet met new Date() omdat een date-kolom als YYYY-MM-DD terugkomt en de constructor daarvan in een westelijke tijdzone een dag terugschuift, _ohpAboEind rekent start plus n min een met modulo over de jaargrens, _ohpMaandLabel geeft de Nederlandse maandnaam en _ohpIsAbo leest betaalmodel. Dat laatste bestond sinds v3.29.0 maar werd uitsluitend in de Planning-tab gelezen, waardoor een contant plan een bijlage kreeg met een hero van euro zoveel per maand terwijl die klant per beurt afrekent; de particulier-hero heeft nu een derde tak met de totale investering en toonEenmalig eist er isAbo bij, want op een contant plan is alles eenmalig. gemPerMaand wordt op beide plekken uit totaalGemiddelde gedeeld door aboMaanden gehaald, dus het interne print en de Offerte OHP blijven hetzelfde bedrag tonen. De hero-ondertitel noemt de echte periode in plaats van het aantal jaren. Op het scherm een blok Per maand met de periode plus twee seintjes: oranje als de laatste betaalmaand voorbij het jaar van de laatste beurt valt (onverzekerde staart bij een opzegbaar plan) en blauw als hij ervoor valt (klant betaalt vooruit). Bij contant zijn de twee velden uitgegrijsd en toont het scherm het betaalmodel in plaats van een maandbedrag. VvE volledig ongemoeid, ook perMaandPerApp. Vereist SQL (los geleverd, al uitgevoerd).' },
@@ -9511,7 +9513,7 @@ function _ohpVoorfinanciering(plan) {
 
   const meet = t => {
     const termijnen = Math.max(0, Math.min(t - st + 1, nMnd));
-    let betaald = termijnen * perMaand, geleverd = 0;
+    let betaald = termijnen * perMaand, geleverd = 0, beurt = 0;
     posten.forEach(q => {
       // Een beurt buiten het gemiddelde valt buiten BEIDE lijnen. De klant
       // rekent die apart af op het moment van uitvoering, dus hij komt op
@@ -9522,9 +9524,10 @@ function _ohpVoorfinanciering(plan) {
       // volgen ineens omhoog. Dat kan niet.
       if (q.t > t || !q.mee) return;
       geleverd += q.bedrag;
+      if (q.t === t) beurt += q.bedrag;   // wat er OP dit peilmoment wordt uitgevoerd
     });
     return { t: t, label: _ohpMaandLabel({ jaar: Math.floor(t / 12), maand: t % 12 }),
-             jaar: Math.floor(t / 12), termijnen: termijnen,
+             jaar: Math.floor(t / 12), termijnen: termijnen, beurt: beurt,
              betaald: betaald, geleverd: geleverd, saldo: betaald - geleverd };
   };
 
@@ -11090,7 +11093,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
       // gemengd jaar staat er een opgeteld bedrag op het kaartje en zou de tag misleiden.
       const isEenmJaar = toonEenmalig && entry.bedragMee <= 0 && entry.bedragBuiten > 0;
       tlNodes += `
-        <div class="tl-card ${lvl}${doneCls}" style="left:${left}%;"><div class="amt">${eur(totBedrag)}</div><div class="type">${_escapeHtml(typeLabel)}${isDone ? ' <span class="done-tag">· reeds uitgevoerd</span>' : ''}${isEenmJaar ? ' <span class="eenm-tag">· eenmalig</span>' : ''}</div><div class="stem"></div></div>
+        <div class="tl-card ${lvl}${doneCls}" style="left:${left}%;"><div class="amt">${eur(totBedrag)}</div><div class="type">${_escapeHtml(typeLabel)}${isDone ? ' <span class="done-tag">· reeds uitgevoerd</span>' : ''}${isEenmJaar ? ' <span class="eenm-tag">· eenmalig</span>' : ''}</div><div class="tl-pin"></div><div class="tl-stem"></div></div>
         <div class="tl-node" style="left:${left}%;"><div class="tl-dot${doneCls}"></div></div>
         <div class="tl-year${doneCls}" style="left:${left}%;">${j}</div>`;
     } else {
@@ -11157,10 +11160,10 @@ function _ohpBuildOfferteHTML(plan, calc) {
   const nextSec = () => String(++_secN).padStart(2, '0');
 
   const leadHtml = isVve
-    ? `<p class="lead"><b>Wij beloven u geen lijst met losse klusjes maar een resultaat.</b> Voor de genoemde bedragen houden wij uw complex ${plan.looptijdJaren} jaar in goede staat, met 100% garantie. Wanneer wij controleren, waar wij bijwerken en wanneer wij volledig overschilderen bepalen wij vakkundig en op het juiste moment. U hoeft niet bij te houden of elk klusje is gedaan, u beoordeelt het eindresultaat. Blijkt het onderhoud onvoldoende, dan is dat onze zorg en niet de uwe.</p>
+    ? `<p class="lead"><b>Wij beloven u geen lijst met losse handelingen maar een resultaat.</b> Voor de genoemde bedragen houden wij uw complex ${plan.looptijdJaren} jaar in goede staat, met 100% garantie. Wanneer wij controleren, waar wij bijwerken en wanneer wij volledig overschilderen bepalen wij vakkundig en op het juiste moment. U hoeft niet bij te houden of elke handeling is uitgevoerd, u beoordeelt het eindresultaat. Blijkt het onderhoud onvoldoende, dan is dat onze zorg en niet de uwe.</p>
       <p class="lead">Wij plannen het schilderonderhoud aan uw complex voor de komende jaren, voeren het op tijd uit en garanderen het resultaat. Het bestuur hoeft de planning niet zelf te bewaken. Dat doen wij.</p>
       <p class="lead">Door tijdig onderhoud voorkomt u groot herstel later. Dat houdt het complex in goede staat en is op lange termijn voordeliger voor de vereniging.</p>`
-    : `<p class="lead"><b>Wij beloven u geen lijst met losse klusjes maar een resultaat.</b> Voor de genoemde bedragen houden wij uw woning ${plan.looptijdJaren} jaar in goede staat, met 100% garantie. Wanneer wij controleren, waar wij bijwerken en wanneer wij volledig overschilderen bepalen wij vakkundig en op het juiste moment. U hoeft niet bij te houden of elk klusje is gedaan, u beoordeelt het eindresultaat. Blijkt het onderhoud onvoldoende, dan is dat onze zorg en niet de uwe.</p>
+    : `<p class="lead"><b>Wij beloven u geen lijst met losse handelingen maar een resultaat.</b> Voor de genoemde bedragen houden wij uw woning ${plan.looptijdJaren} jaar in goede staat, met 100% garantie. Wanneer wij controleren, waar wij bijwerken en wanneer wij volledig overschilderen bepalen wij vakkundig en op het juiste moment. U hoeft niet bij te houden of elke handeling is uitgevoerd, u beoordeelt het eindresultaat. Blijkt het onderhoud onvoldoende, dan is dat onze zorg en niet de uwe.</p>
       <p class="lead">Wij plannen het schilderonderhoud aan uw woning voor de komende jaren, voeren het op tijd uit en garanderen het resultaat. U hoeft niet meer zelf bij te houden wanneer wat moet. Dat doen wij.</p>
       <p class="lead">Door tijdig onderhoud voorkomen we groot herstel later. Dat houdt uw woning mooier én is op lange termijn voordeliger.</p>`;
 
@@ -11461,12 +11464,14 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .tl-card.lo{top:64px;}
 .ob .tl-card .amt{font-weight:900;font-size:12.5pt;color:var(--ink);line-height:1.05;}
 .ob .tl-card .type{font-size:6.8pt;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--brush);margin-top:2px;line-height:1.15;}
-.ob .tl-card .stem{width:1.5px;background:var(--brush);margin:4px auto 0;}
-.ob .tl-card.hi .stem{height:108px;}
-.ob .tl-card.lo .stem{height:52px;}
+.ob .tl-card .tl-pin{width:7px;height:7px;border-radius:50%;background:var(--brush);margin:4px auto 0;}
+.ob .tl-card .tl-stem{width:1.5px;background:var(--brush);margin:0 auto;}
+.ob .tl-card.hi .tl-stem{height:101px;}
+.ob .tl-card.lo .tl-stem{height:45px;}
 .ob .tl-card.done .amt{color:var(--muted);}
 .ob .tl-card.done .type{color:var(--muted);}
-.ob .tl-card.done .stem{background:var(--line);}
+.ob .tl-card.done .tl-stem{background:var(--line);}
+.ob .tl-card.done .tl-pin{background:var(--line);}
 .ob .tl-card.done .done-tag{color:var(--muted);font-weight:500;}
 .ob .tl-card .eenm-tag{color:var(--brush-deep);font-weight:700;}
 .ob .eenm{margin-top:11px;border:1.4px solid var(--brush);border-left-width:4px;border-radius:3px;background:var(--soft);padding:9px 13px;font-size:9.2pt;line-height:1.5;color:#3a352e;}
@@ -11673,15 +11678,15 @@ function _ohpBuildOfferteHTML(plan, calc) {
   if (_vfB) {
     const _eurS = v => (v < 0 ? '\u2212' + eur(Math.abs(v)) : eur(v));
     let _tr = '';
-    _vfB.rijen.forEach(r => {
-      const neg = r.saldo < -0.005 ? ' style="color:#c93914;font-weight:700;"' : '';
+    const _laatste = _vfB.rijen.length - 1;
+    _vfB.rijen.forEach((r, i) => {
+      if (r.beurt <= 0.005 && i !== _laatste) return;
       _tr += '<tr><td>' + _escapeHtml(r.label) + '</td><td class="amt">' + eur(r.betaald) +
-        '</td><td class="amt">' + eur(r.geleverd) + '</td><td class="amt"' + neg + '>' + _eurS(r.saldo) + '</td></tr>';
+        '</td><td class="amt">' + eur(r.geleverd) + '</td></tr>';
     });
     vfTable = '<table class="ptable liq-table"><thead><tr><th>Peilmoment</th>' +
-      '<th class="amt">Betaalde termijnen<span class="ex">(incl. btw)</span></th>' +
-      '<th class="amt">Door ons uitgevoerd<span class="ex">(incl. btw)</span></th>' +
-      '<th class="amt">Verschil<span class="ex">(incl. btw)</span></th></tr></thead><tbody>' + _tr + '</tbody></table>';
+      '<th class="amt">Door u betaald<span class="ex">(incl. btw)</span></th>' +
+      '<th class="amt">Door ons uitgevoerd<span class="ex">(incl. btw)</span></th></tr></thead><tbody>' + _tr + '</tbody></table>';
     const _leg = '<div class="liq-legend"><span><i class="ln brush"></i>Wat u aan maandtermijnen betaald heeft</span>' +
       '<span><i class="ln ink"></i>Wat wij uit het plan hebben uitgevoerd</span></div>';
     const _heeftEenm = (plan.beurten || []).some(b => b.meeInGemiddelde === false && b.jaartal >= pp && b.jaartal <= eindJaar);

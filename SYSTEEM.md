@@ -3405,6 +3405,60 @@ logboek van wie hem gezet of gewist heeft.
 - Of de kolom op de iPad in staande stand niet te veel ruimte van Totaal
   afsnoept is **[TE CONTROLEREN]** op het apparaat zelf.
 
+## Wat er op 28 augustus 2026 aan het eind van de dag gedaan is (v4.47.0)
+
+Drie correcties op de bijlage. **Geen SQL.**
+
+### Het naamconflict op .stem
+
+**GEMETEN in v4.46.0.** Twee CSS-regels binnen de `.ob`-scope gebruiken
+dezelfde klassenaam:
+
+| Regel | Selector | Waarvoor |
+|---|---|---|
+| 11464 | `.ob .tl-card .stem` | steeltje onder een tijdlijn-label |
+| 11513 | `.ob .stem` | stemmingsblok op de VvE-besluitpagina (v4.7.7) |
+
+Specificiteit beslist **per eigenschap**, niet per regel. De tl-regel wint op
+`width` en `height`, maar `padding:14px 16px`, `border:1px` en
+`border-radius:4px` staan alleen in de besluitpagina-regel en worden dus
+toegepast. Uitkomst: 1,5 + 32 + 2 = **35,5 pixels breed** en 108 + 28 + 2 =
+**138 pixels hoog**, met oranje vulling over de hele padding-box.
+
+Het steeltje zag er daardoor uit als een staaf, en dan verwacht een lezer dat
+de hoogte iets betekent. Dat doet ze niet: `hi` en `lo` wisselen elkaar af om
+labels uit elkaar te houden. **Geen euroschaal aangelegd** maar het lijntje
+teruggebracht, met een bolletje op het uiteinde. Steel hernoemd naar
+`tl-stem`, bolletje `tl-pin` van 7 pixels, hoogtes 101 en 45 zodat de totale
+lengte gelijk blijft aan de oude 108 en 52.
+
+**Zat er sinds v4.7.7 in en raakte beide bijlagevarianten.** Verzonden stukken
+blijven ongemoeid, conform het besluit van deze ochtend.
+
+**Les:** een klassenaam als `.stem` binnen een gedeelde scope is een valstrik.
+Bij nieuwe opmaak in `.ob` altijd prefixen naar het blok waar hij bij hoort.
+
+### De tabel onder het voorfinancieringsbeeld
+
+De kolom *uitgevoerd* is cumulatief. In een jaar zonder beurt stond daardoor
+hetzelfde bedrag als het jaar ervoor, en dat leest voor een klant alsof er dat
+jaar ook iets is gedaan. Per-jaar tonen is overwogen maar breekt het
+narekenen, want dan sluit geen enkele rij meer op het verschil.
+
+**Opgelost door de tabel de beurten te laten volgen in plaats van de jaren:**
+alleen rijen waarin een beurt valt, plus de slotrij. Cumulatief blijft het,
+maar de herhaling is weg omdat elk beurtjaar een ander bedrag heeft. Op een
+plan met vier beurten over tien jaar gaat de tabel van tien rijen naar vijf.
+Verschilkolom vervallen; dat lees je aan het beeld af.
+
+Nieuw veld `beurt` per meetrij uit `_ohpVoorfinanciering`.
+
+### Klusjes
+
+Verboden woord in klantteksten. Stond twee keer in `leadHtml`, in beide
+takken. Vervangen door *handelingen*, wat de garantietekst al gebruikte. De
+vermelding in de versiegeschiedenis blijft staan als historische tekst.
+
 ## Wat er op 28 augustus 2026 laat in de middag gedaan is (v4.46.0)
 
 Schilders Calc ging van v4.45.1 naar **v4.46.0**. **Geen SQL.** De kolom
