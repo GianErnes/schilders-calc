@@ -1,3 +1,29 @@
+## v4.45.1 — De reserveringslijn liep een jaar te lang door
+
+Op de VvE-bijlage staat een beeld met de pot die de vereniging opbouwt tegenover wat er volgens de planning uitgaat. Dat beeld zette een jaarreservering te veel neer.
+
+### Wat er verandert
+- In de tabel onder het liquiditeitsbeeld stopt de kolom **Reservering** na het aantal jaren van de looptijd. Staat er daarna nog een jaar in de tabel, dan komt daar een liggend streepje te staan, net zoals in de kolom Uitgave bij een jaar zonder beurt.
+- Het **saldo-opbouw** aan het eind komt daardoor op nul uit bij een plan waarin alle beurten meetellen in het gemiddelde. Tot nu toe stond daar altijd precies één jaarreservering te veel.
+- De uitgaven blijven het hele venster doorlopen. De afsluitende herschilderbeurt valt in het eindjaar en die hoort er gewoon in.
+- De slotzin bij een plan dat nooit onder water gaat zegt voortaan dat de pot **op of boven** de uitgaven blijft, want bij een sluitend plan is het eindsaldo nu exact gelijk.
+
+### Wat je moet weten
+- **Dit raakt alleen de VvE-bijlage.** Het liquiditeitsbeeld staat nergens anders. Het maandbedrag van een particulier plan, de jaartabellen op het scherm en in het interne print, en de bijlage voor particulieren blijven op de cent gelijk.
+- **De bedragen in de tabel veranderen niet, alleen het verloop.** De jaarreservering blijft hetzelfde bedrag, de uitgaven blijven dezelfde bedragen. Wat verandert is de cumulatieve reservering en dus het saldo van elk jaar na het laatste reserveringsjaar.
+- Twee VvE-bijlagen zijn eerder verzonden met de oude grafiek: Chateau Geerlingshof en Nieuw Welten VIII. Op beide stond het eindsaldo een jaarreservering te hoog. Of dat een nieuwe versturing waard is beoordeel je zelf.
+- Waarom het venster niet is aangepast: bij prijspeil 2026 en looptijd 8 loopt het plan tot en met 2034, want de afsluitende herschilderbeurt ligt acht jaar verderop. Dat venster is goed. De klant betaalt acht jaar, met een startdatum in september 2026 en 96 maanden is de laatste betaling in augustus 2034, naast een beurt in 2034. Venster en deler kloppen samen. Alleen de grafiek reserveerde één keer te vaak.
+- **Wat blijft staan:** vink je bij een VvE een beurt uit het gemiddelde, dan telt de reserveringslijn die beurt niet mee maar de uitgavenlijn wel. Het eindsaldo komt dan op min het eenmalige bedrag terwijl de slotzin volledige dekking belooft. Per 28 augustus vink je bij geen van de drie VvE-plannen iets uit, dus dit speelt niet. Doe je het ooit wel, vertrouw die grafiek dan niet.
+
+### Onder de motorkap
+In `_ohpBuildOfferteHTML` liep de reserveringslus over `jaren`, dat is `prijspeil` tot en met `eindJaar` en dus `looptijdJaren + 1` elementen, terwijl `R` gelijk is aan `gemPerJaar` en dat is `totaalGemiddelde / looptijdJaren`. Met `_cr = R * (i + 1)` kwam de cumulatieve reservering daardoor uit op `R * (looptijd + 1)`. Gemeten met een testharnas op vier plannen: de afwijking was in alle vier de gevallen exact `gemPerJaar`.
+
+Nieuwe lokale constante `_lpj` is `plan.looptijdJaren`. De reservering per rij is `R` zolang `i < _lpj` en anders nul, en `_cr` telt op in plaats van te herberekenen. Daardoor komt ook `maxv` op de juiste schaal uit en vult de grafiek beter. De uitgavenstroom is niet aangeraakt.
+
+Het venster `prijspeil` tot en met `prijspeil + looptijdJaren` en de deler `looptijdJaren` zijn bewust ongemoeid gelaten. Die twee zijn samen correct.
+
+Zes proeven met de uitgesneden code uit `index.html`, alle zes groen, waaronder de drie echte VvE-plannen met hun gemeten jaartallen en de randgevallen looptijd 1 en een beurt in het prijspeiljaar zelf. Geen SQL, geen Edge Function.
+
 ## v4.45.0 — Zelf bepalen hoe lang het maandbedrag loopt
 
 Januari is al lang voorbij als je in september een plan verkoopt. En je klant is gewend dat hij langer doorbetaalt dan het plan loopt. Tot nu toe rekende de app star met looptijd maal twaalf en kon je daar niets aan draaien.
