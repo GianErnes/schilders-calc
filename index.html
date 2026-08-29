@@ -2301,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.48.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.49.0</h2>
       <div class="intro-body">
+        <p><strong>🔀 De klant kiest zelf hoe hij betaalt (v4.49.0).</strong> Op de particuliere bijlage stond tot nu toe één betaalweg, en welke dat was hing af van het veld <strong>Betaalmodel</strong> in het plan. Stond dat op contant, dan kreeg de klant het totaalbedrag als eerste ding in beeld. Voortaan staan de twee wegen naast elkaar in de kop: links het maandbedrag met het aantal termijnen, rechts het aantal beurten dat nog komt met de mededeling dat elke beurt na uitvoering wordt afgerekend. <strong>Het totaalbedrag staat niet meer in de kop.</strong> Dat blijft wel in de slotregel van de planningstabel staan, want anders lijkt het alsof je iets verstopt. Reeds uitgevoerde beurten tellen niet mee in het aantal rechts. De VvE-bijlage is volledig ongemoeid gebleven. Twee dingen liften mee. De uitleg over beurten die buiten het maandbedrag vallen verscheen alleen bij een abonnementsplan; nu de kop altijd een maandbedrag toont zou die uitleg op een contant plan wegvallen en zou de klant denken dat hij met het maandbedrag alles heeft. En de grafiek Betaald tegenover geleverd wordt voortaan bij elk particulier plan berekend, ook op je eigen scherm, zodat je de weg die je aanbiedt zelf hebt gezien voor je hem aanbiedt. De tekst bij <strong>Altijd opzegbaar</strong> is herschreven: die dekt bij een particulier nu beide wegen, en bij een VvE is de verkeerde belofte over verrekening van maandtermijnen eruit.</p>
         <p><strong>⎘ Dupliceren neemt de offerte-instellingen mee (v4.48.0).</strong> Druk je op het kopieer-knopje ⎘ in de lijst, dan vraagt de app voortaan eerst of de kopie voor <strong>dezelfde klant</strong> of voor een <strong>andere klant</strong> is. Bij dezelfde klant gaan het adres, het werkadres, het briefadres, de contactpersoon, de aanspreekvorm, het e-mailadres, het telefoonnummer, de postcode en het huisnummer mee. Bij een andere klant blijven die leeg, en ook de klantnaam, zodat er nooit een naam van de vorige klant op je nieuwe offerte blijft staan. In beide gevallen gaan de <strong>offerte-instellingen</strong> wel mee: het klanttype, de garantiejaren, de prijsweergave, de bijlagevinkjes en alle sectiekeuzes met de teksten die je zelf had aangepast. Die moest je tot nu toe elke keer opnieuw instellen. Het offertenummer, de offertedatum, de geldigheidsdatum en het versienummer komen altijd vers, want dat hoort bij een nieuwe offerte. Gaan bewust niet mee, net als voorheen: foto’s, documenten, opnamedatum en deadline.</p>
         <p><strong>📍 De tijdlijn is weer een tijdlijn (v4.47.0).</strong> Op de planning-tijdlijn van de bijlage stonden brede oranje balken waarvan de hoogte niets met het bedrag te maken had. Oorzaak: twee verschillende dingen heetten allebei <code>.stem</code>, het tijdlijn-steeltje en het stemmingsblok van de VvE-besluitpagina. Het steeltje van anderhalve pixel kreeg daardoor de padding en de rand van het stemvak en werd een blok van 35 bij 138 pixels. Nu een dun lijntje met een bolletje aan het uiteinde, zoals een tijdlijn hoort te zijn. Raakt de VvE- en de particuliere bijlage. Verder: de tabel onder het voorfinancieringsbeeld toont alleen nog de jaren waarin werkelijk een beurt valt plus de slotregel, want in een jaar zonder beurt stond hetzelfde bedrag als het jaar ervoor en dat leest alsof er toch iets gedaan is. De verschilkolom is eruit, dat zie je aan het beeld. En het woord klusjes staat niet meer in de klanttekst: wij leveren schilderwerk.</p>
         <p><strong>📈 Betaald tegenover geleverd, op het scherm en op de bijlage (v4.46.0).</strong> Bij een particulier plan op abonnement loopt de betaling gelijkmatig door terwijl het onderhoud in beurten komt. Het Resultaat-blok toont nu wat de klant in de loop van het plan betaalt naast wat wij in diezelfde periode uitvoeren, met het diepste punt in euro erbij. Dat beeld staat er altijd, ook zonder vinkje, want om te beslissen of het gunstig uitpakt moet je het eerst kunnen zien. Een nieuw vinkje bepaalt uitsluitend of het beeld meegaat naar de klant. De uitvoeringsmaand staat vast op juli en is bewust geen invoerveld: het diepste punt verdrievoudigt tussen december en januari en zo'n knop hoort niet onder een getal op een klantstuk. De opzegbelofte op de bijlage zegt er nu bij dat er bij stoppen verrekend wordt: te weinig betaald reken je bij, te veel betaald krijg je terug. Bij contant staat er dat er niets te verrekenen valt. Meelifter: wisselde je van abonnement naar contant, dan grepen de twee abo-velden pas uit na herladen. Nu meteen. Geen SQL.</p>
@@ -3597,7 +3598,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.48.0';
+const APP_VERSION = 'v4.49.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3993,6 +3994,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.49.0', d: '2026-08-29', h: 'Particuliere hero van _ohpBuildOfferteHTML toont beide betaalwegen; VvE byte voor byte ongemoeid. Aanleiding: de hero splitste op _ohpIsAbo, dus het veld betaalmodel koos voor de klant. Bij contant was het grote getal de totale investering, en dat is een afhaakmoment; het totaal staat nu alleen nog in de slotregel van de planningstabel, waar het moet blijven staan omdat de klant de jaarbedragen anders zelf optelt en het verstoppen als ontwijkend leest. Nieuw tweekolomsblok achter de modifier hk-duo op de bestaande .hero, met eigen klassen hk-kol, hk-l, hk-r, hk-lab, hk-val en hk-sub; alle zeven vooraf op nul treffers gecontroleerd in het hele bestand, want in v4.47.0 kostte de naambotsing tussen .ob .stem en .ob .tl-card .stem een halve bijlage. Links het maandbedrag met aantal termijnen en periode, rechts het aantal komende beurten met de looptijd. De rechterkolom beschrijft uitsluitend de eigen weg: de eerdere formulering nooit vooruit betalen is bewust geschrapt omdat die naast een maandbedrag als verwijt aan de linkerkolom leest en het document dan tegen zichzelf in praat. nogBeurten filtert reedsUitgevoerd eruit (besluit 29-08-2026). Bekend en bewust blijven staan: reeds uitgevoerde beurten zitten wel in totaalGemiddelde en dus in het maandbedrag links, dus op een plan met een gedane beurt telt links een beurt meer dan rechts; per opgave van Gian speelt dat niet omdat een bijlage bij een nieuw plan hoort. Bij nul komende beurten valt de hero terug op de enkele kolom met het maandbedrag. Eenmalige beurten tellen wel mee in nogBeurten, want op de per-beurt-weg bestaat het onderscheid mee-in-het-gemiddelde niet: dat is uitsluitend een gevolg van het middelen. Twee meelifters die geen keuze maar noodzaak zijn. toonEenmalig eiste isAbo, dus op een contant plan verdween het blok dat uitlegt welke beurt buiten het maandbedrag valt terwijl de nieuwe hero dat maandbedrag wel toont; de klant zou 96 keer het maandbedrag optellen en denken dat hij het hele plan heeft. Eis vervallen, nu alleen niet-VvE plus eenmRegels. En _ohpVoorfinanciering gaf null bij contant; die uitsluiting is weg omdat de bijlage de maandweg aan elke particulier aanbiedt. Dat raakt bewust ook _ohpRenderResultaat, want je hoort het beeld van de weg die je aanbiedt zelf gezien te hebben. _opzegTekst splitst voortaan op isVve in plaats van op _ohpIsAbo: een VvE betaalt nooit maandelijks maar betaalmodel staat standaard op abo, dus een VvE-plan waar dat veld nooit is aangeraakt kreeg de abonnementstekst met een belofte over verrekening van betaalde termijnen die bij een VvE niet bestaat. VvE krijgt de contant-tekst, particulier een nieuwe tekst die beide wegen dekt omdat de klant bij het lezen nog niet gekozen heeft. isAbo is daarmee ongebruikt in _ohpBuildOfferteHTML en verwijderd; _ohpIsAbo blijft bestaan voor het schermblok Resultaat. Jaartallen op alle zes plekken van de bijlage ongemoeid gelaten (besluit 29-08-2026), en de administratiekosten blijven in de brief en komen niet op de bijlage. Geen SQL, geen Edge Function.' },
   { v: '4.48.0', d: '2026-08-29', h: 'dupCalc neemt offerte_config mee via een witte lijst, met een keuzevenster voor de klantgegevens. Aanleiding: offerte_config stond niet in dupCalc, dus na elke duplicatie moesten adres, contactpersoon, e-mail, telefoon, klanttype, garantiejaren, prijsweergave, bijlagevinkjes en alle sectiekeuzes opnieuw ingevuld worden; volgens v4.10.6 stapelde de praktijk acht kopieen op een dag. Het veld kon niet in headerCopy omdat _insertCalcDB door _mapCalcHeaderToDB gaat en offerte_config daar sinds v3.58.0 bewust ontbreekt, zodat een header-save nooit een verse config overschrijft. Daarom een tweede gerichte update op de verse rij, na de insert en voor de body-kopie; mislukt die, dan bestaat de kopie gewoon met een lege config en dat is exact het gedrag van voor deze versie, met een eigen toast. dupCalc(id) opent nu het nieuwe dupCalcModal en het echte werk zit in _dupCalcUitvoeren(id, metKlant); de onclick op de dashboardrij is ongewijzigd. Twee knoppen: Zelfde klant neemt aanspreekvorm, adres, werkadres, briefadres, contactpersoon, email en telefoon mee plus postcode en huisnummer op de header, Andere klant laat die leeg en laat ook klant leeg omdat een achtergebleven klantnaam bij een leeggemaakt adres precies de fout is die dit moet voorkomen. Altijd mee, want instellingen en geen klantgegevens: klanttype, garantiejaren, prijsWeergave, prijsRegelsHoeveelheden, bijlageKozijnen, bijlageFotos en secties. Nooit mee: offerteNummerVrij, offertedatum, geldigTot en offerteVersie, die zet _offCfg vers bij het eerste openen. Opgezet als witte lijst en niet als zwarte, zodat een onbekend of later toegevoegd veld nooit kan meeliften. Diep gekopieerd via JSON-rondgang omdat adres, werkadres, briefadres, contactpersoon en secties geneste objecten zijn en een ondiepe kopie origineel en kopie in het geheugen dezelfde objecten zou laten delen. postcode en huisnummer zaten al niet in headerCopy terwijl reis er wel in zat, dus een kopie had een reisafstand zonder adres; dat gat is meteen gedicht. fresh.offerteConfig wordt ook in het geheugen gezet zodat het dashboard niet op een herlaadbeurt hoeft te wachten. Zestien proeven groen op code die met slice() uit index.html is gesneden. Geen SQL, geen Edge Function.' },
   { v: '4.47.0', d: '2026-08-28', h: 'Tijdlijn-steel hersteld, tabel volgt de beurten, klusjes uit de klanttekst. (1) CSS-naamconflict: .ob .stem (stemmingsblok VvE-besluitpagina, v4.7.7) en .ob .tl-card .stem (tijdlijn-steel) heetten allebei .stem. Specificiteit beslist per eigenschap, dus de tl-regel won op width en height, maar padding 14px 16px, border 1px en border-radius 4px stonden alleen in de besluitpagina-regel en werden wel toegepast. Het steeltje van 1,5 bij 108 pixels werd zo een oranje blok van 35,5 bij 138 met afgeronde hoeken, dat als staafdiagram las terwijl hi en lo alleen bestaan om labels uit elkaar te houden. Steel hernoemd naar tl-stem, plus een nieuwe tl-pin van 7 pixels als bolletje op het uiteinde; hoogtes 101 en 45 zodat pin plus steel dezelfde totale lengte houdt als voorheen. Zat er sinds v4.7.7 in en raakte beide bijlagevarianten. (2) De tabel onder het voorfinancieringsbeeld toont alleen nog rijen waarin een beurt valt, plus de slotrij: in een jaar zonder beurt stond hetzelfde cumulatieve bedrag als het jaar ervoor en dat leest voor een klant alsof er dat jaar ook iets is uitgevoerd. Nieuw veld beurt op elke meetrij uit _ohpVoorfinanciering. Op een plan met vier beurten over tien jaar gaat de tabel van tien rijen naar vijf. Verschilkolom vervallen, die informatie staat in het beeld en in de conclusiezin. (3) Klusjes vervangen door handelingen in leadHtml, beide takken; de vermelding in de versiegeschiedenis blijft staan als historische tekst. Tweeentwintig proeven groen. Geen SQL, geen Edge Function.' },
   { v: '4.46.0', d: '2026-08-28', h: 'Voorfinancieringsbeeld bij particuliere abonnementsplannen plus verrekening bij opzegging. Nieuwe functie _ohpVoorfinanciering(plan) zet cumulatief betaald door de klant tegenover cumulatief geleverd door Ernes; negatief saldo is voorfinanciering door Ernes, positief is voorsprong van de klant, en bij opzegging is dat saldo exact het verrekenbedrag. Peilmomenten zijn de uitvoeringsmaand van elk jaar plus de laatste betaaltermijn en het sluitmoment: zonder die laatste twee knikt de betaallijn op de verkeerde plek en sluit de reeks niet op nul. Constante _OHP_UITVOERINGSMAAND staat op 7. Bewust geen invoerveld: gemeten op het enige particuliere abonnementsplan gaat het diepste punt van 906,79 in december naar 3.128,62 in januari, en zo een knop hoort niet onder een getal op een klantstuk. Een uitgevinkte beurt telt bij betaald en bij geleverd mee op hetzelfde moment, want die rekent de klant apart af. De functie geeft null bij VvE, bij contant en bij een plan zonder beurten. Nieuwe _ohpVoorfinSvg tekent de betaallijn als rechte polyline en de geleverde lijn als trap, want het werk komt in klappen en juist die klap maakt het gat; de x-as schaalt op maandindex en niet op rij-index omdat het slotpunt soms een maand en soms een half jaar na het vorige ligt. Vlakken tussen de lijnen in twee dekkingen: oranje 0.17 waar Ernes voorstaat, blauw 0.05 waar de klant voorstaat, omdat de klant meestal het grootste deel voorstaat en gelijke dekking het oranje zou overstemmen. Vaste hex-kleuren, want var() werkt niet in SVG-presentatieattributen bij print. Het beeld staat altijd in het Resultaat-blok bij particulier plus abo, ongeacht het vinkje. Kolom toon_voorfinanciering (bestaat sinds 28 augustus) nu gemapt in _mapOhpFromDB, _mapOhpToDB, _ohpSaveParams, _ohpReadParamsFromUI en _ohpRenderParams, tegelijk met het invoervinkje ohpToonVoorfin in het nieuwe blok ohpVoorfinWrap; _ohpReadParamsFromUI geeft altijd een boolean terug zodat een gezette waarde niet door een gewone opslag gewist wordt. Op de bijlage komt bij aangevinkt vinkje de sectie Wat u betaalt en wat wij leveren als drie blokken tussen De planning en Uw zekerheid, met data-split table op de tabel zodat _ohpPaginate hem per rij mag breken. zekItemsHtml was een vaste string voor beide takken en heeft nu een _opzegTekst die op _ohpIsAbo splitst: bij abonnement wordt bij opzegging het uitgevoerde werk tegen de betaalde termijnen verrekend, in beide richtingen, bij contant valt er niets te verrekenen. De opzegbaarheid zelf blijft voor elk plan staan, ook VvE, want die zegt de meerjarenafspraak op. Meelifter: het uitgrijzen van ohpAboStart en ohpAboMaanden zat alleen in _ohpRenderParams en die wordt niet door _ohpFlushSave aangeroepen, waardoor een wissel naar contant pas na herladen effect had; verplaatst naar _ohpToggleAboVelden met eigen change-listeners op ohpBetaalmodel en ohpOntvangerType. Zesendertig proeven groen met code die uit index.html gesneden is. Geen SQL, geen Edge Function.' },
@@ -9500,7 +9502,10 @@ const _OHP_UITVOERINGSMAAND = 7; // 1-12, juli
 function _ohpVoorfinanciering(plan) {
   if (!plan || !plan.prijspeil || !plan.looptijdJaren) return null;
   if ((plan.ontvangerType || 'particulier') === 'vve') return null;
-  if (!_ohpIsAbo(plan)) return null;
+  // v4.49.0 - de contant-uitsluiting is hier weggehaald. De bijlage biedt de
+  // maandweg voortaan aan elke particulier aan, dus het beeld moet er ook zijn
+  // bij een plan dat in het veld nog op contant staat. Geldt voor scherm en
+  // bijlage, want beide lezen dezelfde functie.
 
   const pp = plan.prijspeil;
   const eindJaar = pp + plan.looptijdJaren;
@@ -11049,10 +11054,15 @@ function _ohpBuildOfferteHTML(plan, calc) {
 
   // --- §1 hero ---
   const isVve = (plan.ontvangerType === 'vve'); // v3.23.0 chunk B
-  const isAbo = _ohpIsAbo(plan); // v4.45.0 - contant kent geen maandbedrag
+  // v4.49.0 - isAbo is hier vervallen. De particuliere hero toont beide
+  // betaalwegen, dus het veld betaalmodel bepaalt niet langer wat de klant ziet.
   const heroMaand = eur(gemPerMaand);
   const heroJaar = eur(gemPerJaar);
   const heroTotaal = eur(totaalAlles);
+  // v4.49.0 - aantal beurten dat nog komt, voor de rechterkolom van de hero.
+  // Reeds uitgevoerde beurten tellen niet mee (besluit Gian 29-08-2026). Let op:
+  // ze zitten wel in totaalGemiddelde en dus in het maandbedrag links.
+  const nogBeurten = beurten.filter(b => b.reedsUitgevoerd !== true).length;
 
   // --- Tijdlijn: alle jaren pp..eindJaar ---
   const jaren = [];
@@ -11070,8 +11080,10 @@ function _ohpBuildOfferteHTML(plan, calc) {
   // v4.44.0 - Een uitgevinkte beurt valt buiten het gemiddelde en wordt eenmalig
   // afgerekend. Het maandbedrag in de hero bevat hem dus niet, en dat moet de klant
   // kunnen lezen. Alleen particulier; de VvE-tak is bewust ongemoeid gelaten.
-  // v4.45.0 - op een contant plan is alles eenmalig, dus dan zegt de melding niets.
-  const toonEenmalig = !isVve && isAbo && eenmRegels.length > 0;
+  // v4.49.0 - de eis isAbo is vervallen. De hero toont het maandbedrag voortaan
+  // altijd, dus zonder dit blok zou op een contant plan een maandbedrag staan
+  // zonder de uitleg welke beurt daarbuiten valt.
+  const toonEenmalig = !isVve && eenmRegels.length > 0;
   let eenmHeroHtml = '';
   if (toonEenmalig) {
     const _omschr = eenmRegels.map(r => {
@@ -11193,13 +11205,24 @@ function _ohpBuildOfferteHTML(plan, calc) {
   const _appMaandHero = (perMaandPerApp != null)
     ? `<div class="appmaand">&asymp; ${eur(perMaandPerApp)} per appartement per maand</div>`
     : '';
+  // v4.49.0 - de particuliere hero toont beide betaalwegen naast elkaar, zodat
+  // de klant kiest in plaats van dat het veld betaalmodel voor hem kiest. Het
+  // totaalbedrag staat er bewust niet meer in: dat is een afhaakmoment en het
+  // staat verderop al in de slotregel van de planningstabel. De rechterkolom
+  // beschrijft alleen de eigen weg en zegt niets over de linker; naast elkaar
+  // zou een zin als "nooit vooruit betalen" het maandbedrag verdacht maken.
+  // Terugval op een enkele kolom als er geen komende beurt is, want dan valt er
+  // rechts niets te tellen.
+  const heroDuo = !isVve && nogBeurten > 0;
+  const heroCls = heroDuo ? 'hero hk-duo' : 'hero';
+  const _hkPeriode = `${aboMaanden} termijnen, van ${_escapeHtml(_ohpMaandLabel(_ohpAboStart(plan)))} tot en met ${_escapeHtml(_ohpMaandLabel(_ohpAboEind(plan)))}`;
   const heroInner = isVve
     ? `<div><div class="big">${heroJaar}<span> / jaar</span></div><div class="sub">gemiddeld per jaar te reserveren, inclusief btw</div>${_appMaandHero}</div>
         <div class="right"><b>${heroTotaal}</b>totale investering<br>${pp} – ${eindJaar} &middot; ${plan.looptijdJaren} jaar</div>`
-    : (isAbo
-      ? `<div><div class="big">${heroMaand}<span> / maand</span></div><div class="sub">van ${_escapeHtml(_ohpMaandLabel(_ohpAboStart(plan)))} tot en met ${_escapeHtml(_ohpMaandLabel(_ohpAboEind(plan)))} &middot; inclusief btw</div></div>`
-      : `<div><div class="big">${heroTotaal}</div><div class="sub">totale investering &middot; ${pp}–${eindJaar} &middot; inclusief btw</div></div>
-        <div class="right"><b>Per beurt</b>afgerekend na uitvoering<br>${plan.looptijdJaren} jaar plan</div>`);
+    : (heroDuo
+      ? `<div class="hk-kol hk-l"><div class="hk-lab">Per maand</div><div class="hk-val">${heroMaand}<span> / mnd</span></div><div class="hk-sub">${_hkPeriode} &middot; inclusief btw</div></div>
+        <div class="hk-kol hk-r"><div class="hk-lab">Per beurt</div><div class="hk-val">${nogBeurten} ${nogBeurten === 1 ? 'beurt' : 'beurten'}</div><div class="hk-sub">verdeeld over ${plan.looptijdJaren} jaar, elke beurt na uitvoering afgerekend</div></div>`
+      : `<div><div class="big">${heroMaand}<span> / maand</span></div><div class="sub">van ${_escapeHtml(_ohpMaandLabel(_ohpAboStart(plan)))} tot en met ${_escapeHtml(_ohpMaandLabel(_ohpAboEind(plan)))} &middot; inclusief btw</div></div>`);
 
   const _benefits = isVve
     ? [
@@ -11423,6 +11446,14 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .hero .appmaand{font-size:11.5pt;font-weight:800;color:var(--brush-deep);margin-top:9px;letter-spacing:-0.2px;}
 .ob .hero .right{text-align:right;font-size:8.5pt;color:var(--muted);line-height:1.5;}
 .ob .hero .right b{color:var(--ink);font-weight:700;font-size:11pt;display:block;}
+.ob .hero.hk-duo{display:grid;grid-template-columns:1fr 1fr;align-items:start;}
+.ob .hk-kol{min-width:0;}
+.ob .hk-l{padding-right:22px;}
+.ob .hk-r{padding-left:22px;border-left:1px solid var(--line);}
+.ob .hk-lab{font-size:7.5pt;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:5px;}
+.ob .hk-val{font-weight:900;font-size:22pt;line-height:1;letter-spacing:-0.5px;}
+.ob .hk-val span{color:var(--brush);}
+.ob .hk-sub{font-size:8.5pt;color:var(--muted);margin-top:6px;line-height:1.45;}
 .ob .benefits{display:grid;grid-template-columns:1fr 1fr;gap:9px 26px;margin-top:16px;}
 .ob .benefit{display:flex;gap:10px;align-items:flex-start;}
 .ob .benefit .tick{flex:0 0 auto;width:19px;height:19px;border-radius:50%;background:var(--brush);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-top:1px;}
@@ -11604,9 +11635,15 @@ function _ohpBuildOfferteHTML(plan, calc) {
   // Wat er te verrekenen valt hangt wel af van het betaalmodel. Op een
   // abonnement loopt de betaling niet gelijk met het werk, dus dan is er een
   // saldo. Bij contant is er per definitie niets te verrekenen.
-  const _opzegTekst = _ohpIsAbo(plan)
-    ? 'Wilt u op enig moment stoppen met het plan, dan kan dat, om welke reden dan ook. Wij maken dan de balans op: het werk dat wij tot dat moment hebben uitgevoerd tegenover de termijnen die u heeft betaald. Hebben wij meer geleverd dan u betaald heeft, dan rekent u het verschil af. Heeft u meer betaald dan wij geleverd hebben, dan krijgt u het verschil terug.'
-    : 'Wilt u op enig moment stoppen met het plan, dan kan dat, om welke reden dan ook. Er valt niets te verrekenen: u rekent elke beurt af nadat wij hem hebben uitgevoerd, dus u betaalt nooit vooruit voor werk dat nog moet komen.';
+  // v4.49.0 - splitst op VvE en niet meer op betaalmodel. Een VvE betaalt nooit
+  // maandelijks (domeinregel Gian 29-08-2026), maar betaalmodel staat standaard
+  // op abo, dus een VvE-plan waar dat veld nooit is aangeraakt kreeg de
+  // abonnementstekst met een belofte over verrekening van termijnen die bij een
+  // VvE niet bestaat. De particuliere tekst dekt beide wegen, want de klant
+  // heeft op het moment van lezen nog niet gekozen.
+  const _opzegTekst = isVve
+    ? 'Wilt u op enig moment stoppen met het plan, dan kan dat, om welke reden dan ook. Er valt niets te verrekenen: u rekent elke beurt af nadat wij hem hebben uitgevoerd, dus u betaalt nooit vooruit voor werk dat nog moet komen.'
+    : 'Wilt u op enig moment stoppen met het plan, dan kan dat, om welke reden dan ook. Betaalt u per beurt, dan valt er niets te verrekenen: het werk is dan al afgerekend. Betaalt u per maand, dan maken wij de balans op tussen het werk dat wij hebben uitgevoerd en de termijnen die u heeft betaald. Hebben wij meer geleverd, dan rekent u het verschil af. Heeft u meer betaald, dan krijgt u het verschil terug.';
 
   const zekItemsHtml = `<div class="item"><div class="zh"><span class="dot"></span>Wat de garantie inhoudt</div><p>Dit plan is een resultaatverplichting: wij staan niet in voor losse handelingen maar voor het resultaat, schilderwerk dat volgens goed schildersvakmanschap zijn beschermende functie behoudt. Blijkt er na oplevering iets niet goed met het uitgevoerde werk, dan herstellen wij dat kosteloos binnen de garantietermijn. Dit geldt voor de juiste keuze van materialen, de manier waarop wij die hebben aangebracht en de bescherming tegen weersinvloeden.</p></div>
         <div class="item"><div class="zh"><span class="dot"></span>Wat valt buiten de garantie</div><p>Scheuren in hout en bouwscheuren in muren komen vanuit de ondergrond, niet vanuit het schilderwerk.</p></div>
@@ -11732,7 +11769,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
     blocks.push(_blk(`<div class="sec">
       <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat het plan inhoudt</span></div>
       ${leadHtml}
-      <div class="hero">${heroInner}</div>
+      <div class="${heroCls}">${heroInner}</div>
       <div class="benefits">${benefitsHtml}</div>
     </div>`));
     if (garantieVoorinHtml) blocks.push(_blk(garantieVoorinHtml));
@@ -11761,7 +11798,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
     blocks.push(_blk(`<div class="sec">
       <div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat het plan u biedt</span></div>
       ${leadHtml}
-      <div class="hero">${heroInner}</div>
+      <div class="${heroCls}">${heroInner}</div>
       ${eenmHeroHtml}
       <div class="benefits">${benefitsHtml}</div>
     </div>`));

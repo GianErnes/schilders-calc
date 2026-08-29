@@ -1,3 +1,41 @@
+## v4.49.0 — De klant kiest zelf hoe hij betaalt
+
+### Wat er misging
+
+Op de particuliere bijlage stond één betaalweg, en welke dat was bepaalde jij met het veld **Betaalmodel** in het plan. Stond dat op abonnement, dan zag de klant een maandbedrag. Stond het op contant, dan zag hij als eerste ding in beeld de **totale investering**. Dat laatste is een afhaakmoment: een bedrag van vijf cijfers bovenaan een offerte laat mensen stoppen met lezen voordat ze weten wat ze ervoor krijgen.
+
+Erger was wat er bij een VvE gebeurde. Betaalmodel staat standaard op abonnement, ook als je dat veld nooit hebt aangeraakt. De tekst bij **Altijd opzegbaar** keek naar dat veld en niet naar het klanttype. Een VvE-plan waarvan het betaalmodel op de standaardwaarde stond kreeg daardoor de belofte dat bij opzegging het uitgevoerde werk tegen de **betaalde maandtermijnen** wordt verrekend. Een VvE betaalt nooit maandelijks, dus die belofte sloeg nergens op en stond wel op papier.
+
+### Wat er nu gebeurt
+
+**De kop van de particuliere bijlage toont beide wegen naast elkaar.** Links het maandbedrag met het aantal termijnen en de periode. Rechts het aantal beurten dat nog komt, met de looptijd en de mededeling dat elke beurt na uitvoering wordt afgerekend. De klant kiest zelf in plaats van dat het veld voor hem kiest.
+
+**Het totaalbedrag staat niet meer in de kop.** Het blijft wel staan in de slotregel van de planningstabel. Helemaal weghalen kan niet: de tabel noemt per jaar het bedrag, dus de klant telt het in een halve minuut zelf op en dan lijkt het alsof je iets verstopt. Wat wel is veranderd is waar het oog als eerste landt.
+
+**Reeds uitgevoerde beurten tellen niet mee** in het aantal rechts. Eenmalige beurten tellen wel mee, want op de per-beurt-weg bestaat het onderscheid tussen wel of niet in het gemiddelde helemaal niet. Dat onderscheid komt alleen doordat het maandbedrag een gemiddelde is.
+
+**De VvE-bijlage is volledig ongemoeid.** De kop, de jaartabel, het liquiditeitsblok en de besluitpagina zijn geen byte veranderd.
+
+**De tekst bij Altijd opzegbaar is herschreven.** Die kijkt nu naar het klanttype in plaats van naar het betaalmodel. Een VvE krijgt de tekst dat er niets te verrekenen valt. Een particulier krijgt een tekst die beide wegen dekt, want op het moment dat hij het leest heeft hij nog niet gekozen.
+
+### Twee dingen die meeliften
+
+Ze moesten mee, anders was de bijlage inconsistent geworden.
+
+**De uitleg over eenmalige beurten** verscheen alleen bij een abonnementsplan. Nu de kop altijd een maandbedrag toont zou die uitleg op een contant plan wegvallen, en dan telt de klant 96 keer het maandbedrag op en denkt dat hij het hele plan heeft terwijl de startonderhoudsbeurt er nog los bij komt.
+
+**De grafiek Betaald tegenover geleverd** werd niet berekend bij een contant plan. Dat is losgekoppeld, ook op je eigen scherm. Je biedt de maandweg voortaan aan elke particulier aan, dus je hoort het beeld van die weg gezien te hebben voordat je hem aanbiedt.
+
+### Bewust blijven staan
+
+Reeds uitgevoerde beurten zitten wél in het maandbedrag links maar niet in de telling rechts. Op een plan waar al een beurt gedaan is telt links dus een beurt meer dan rechts. Gemeld en op verzoek zo gelaten, omdat een bijlage bij een nieuw plan hoort en er dan nog niets is uitgevoerd. Komt dat toch voor, dan is dit de plek om terug te kijken.
+
+De jaartallen blijven op alle zes plekken van de bijlage staan, inclusief de kop en de voettekst op elke pagina. De administratiekosten blijven in de brief en komen niet op de bijlage.
+
+Geen SQL, geen Edge Function.
+
+---
+
 ## v4.48.0 — Dupliceren onthoudt je offerte-instellingen
 
 ### Wat er misging
