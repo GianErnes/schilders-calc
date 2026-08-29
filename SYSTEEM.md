@@ -3785,6 +3785,12 @@ Twee gevolgen om te kennen:
    tussen prijspeil en de laatste beurt. Zolang die er niet is, blijft het per
    plan wisselen. Dat is geen fout in de code maar wel een bron van verschil.
    Vraag het Gian bij het eerstvolgende nieuwe onderhoudsplan.
+3. **De planbrief omzeilt deze vraag bewust.** Het invulveld `{eindjaar}` van
+   de planbrief (v4.52.0) is gedefinieerd als het jaar van de laatste
+   geplande beurt binnen het venster, niet als prijspeil plus
+   `looptijd_jaren` (besluit 29-08-2026). Dat is per definitie waar,
+   ongeacht hoe de looptijd is ingevuld, en beslecht de invulvraag hierboven
+   dus níet. Die blijft open.
 
 
 ---
@@ -3856,4 +3862,60 @@ toont de HTML-momentopname) en geen bedrag (`bedrag` leeg, besluit
 29-08-2026: geen bedrag in de akkoordzin). De stempel op het document wordt
 bij een plan overgeslagen omdat de bijlage geen ondertekenvak heeft; de
 banner op de klantpagina is daar het bewijs van het akkoord.
+
+---
+
+## De planbrief (29 augustus 2026, v4.52.0)
+
+Brok 4 van de planbriefroadmap. Een particulier onderhoudsplan kan een
+offertebrief meekrijgen die vóór de brochure-bijlage staat en meeprint en
+meebevriest met Offerte OHP en de accordeerlink; beide lopen door
+`_ohpBuildOfferteHTML`, dus er is één bron. De brochure begint na de brief
+op een verse pagina via `data-break="after"` op het laatste briefblok, een
+additieve uitbreiding van `_ohpPaginate`. **Alleen particulier**: de
+VvE-tak van de documentbouwer is byte voor byte ongemoeid en de knop
+Planbrief weigert een VvE-plan (besluit 29-08-2026).
+
+**Waar de teksten vandaan komen.** Uit `offerte_teksten`, met het vierde
+standaardvinkje `std_plan` (kolom uit brok 1, sinds v4.52.0 gemapt en als
+vinkje **Plan** in het bibliotheekbeheer). Vier nieuwe secties bestaan
+alleen op de brief (`alleenPlan: true` in `OFFERTE_SECTIES`): duurzaamheid,
+veiligheid, planresultaten en klantquotes. `_offCfg` zet die op een gewone
+offerte standaard uit, de offerte-UI verbergt ze en beide documentbouwers
+slaan ze als borg over. Betaling en garantie zijn stapelbaar geworden.
+
+**Variantkeuze.** `_ohpBriefVariantId` pakt per sectie de bovenste
+`std_plan`-variant en valt bewust níet terug op de bovenste variant (zoals
+`_offStandaardVariantId` op de offerte doet): zonder Plan-vinkjes is de
+brief leeg en is het plandocument exact de brochure van voorheen. Dat is
+het veilige uitrolpad: eerst uploaden kan, de brief verschijnt pas zodra
+Gian teksten typt en vinkjes zet.
+
+**Per plan.** De knop ✉️ Planbrief in het Beurten-blok opent
+`ohpBriefConfig` (zelfde overlay als het accordeervenster): per tekstsectie
+aan/uit en een variantkeuze, bij stapelbare secties meerdere blokken.
+Opslag onder `onderhoudsplannen.offerte_config.brief` met dezelfde
+lees-samenvoeg-schrijfronde als het plannummer (v4.51.0); de kolom zit nog
+steeds niet in `_mapOhpToDB`. Sinds v4.52.0 mapt `_mapOhpFromDB` de kolom
+wél alleen-lezen naar `plan.offerteConfig`, en zet `_ohpAccordNieuweLink`
+na zijn schrijfronde het geheugen gelijk aan de server zodat `{geldig_tot}`
+vers in het bevroren snapshot komt. Plannen zonder opgeslagen keuze volgen
+dynamisch de Plan-vinkjes.
+
+**Invulvelden.** Zeven nieuwe velden voor de brief: `{aantal_jaar}`,
+`{startjaar}`, `{eindjaar}`, `{gemiddeld_per_maand}`, `{aantal_incassos}`,
+`{incasso_periode}` en `{totale_investering}`, gevuld door
+`_ohpPlanCijfers` met exact de rekenweg van de bijlage (basisbedrag maal
+indexfactor maal btw, splitsing op mee-in-het-gemiddelde). Verandert de
+bijlagerekensom, dan moet `_ohpPlanCijfers` mee; beide plekken dragen een
+verwijsopmerking. Op een gewone offerte blijven deze velden ongevuld staan.
+
+**Nog open op dit spoor (brok 5).** De accordeerlink van een plan toont de
+brief nu automatisch mee (zelfde snapshot), maar de resterende
+planbriefwensen uit het ontwerp — waaronder de akkoordafhandeling die
+specifiek op de briefinhoud reageert — staan nog open. De correcties op de
+brontekst (typefouten, de administratiekostenzin die beide betaalwegen
+dekt, de indexeringszin in de inleiding, geen dubbele groet) zitten níet in
+de code: Gian typt de teksten zelf in het beheer en past ze daar toe
+(besluit 29-08-2026, checklist in de bouwchat van brok 4).
 

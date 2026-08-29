@@ -2301,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.51.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.52.0</h2>
       <div class="intro-body">
+        <p><strong>✉️ De planbrief: een offertebrief voor de plan-bijlage (v4.52.0).</strong> Een particulier onderhoudsplan kan nu een echte brief meekrijgen die vóór de brochure-bijlage staat en meeprint en meebevriest met <strong>Offerte OHP</strong> en de accordeerlink. De teksten komen uit de tekstenbibliotheek: elke variant heeft er een vierde vinkje <strong>Plan</strong> bij, en er zijn vier nieuwe secties (Duurzaamheid, Veiligheid, Resultaten van het plan en Klantquotes) die alleen op de brief bestaan en dus nooit op een gewone schilderofferte verschijnen. Met de nieuwe knop <strong>Planbrief</strong> in het Beurten-blok kies je per plan welke secties aanstaan en welke variant erin komt; sla je niets op, dan volgt de brief vanzelf de Plan-vinkjes. Zolang er geen enkele Plan-variant bestaat, is de brief leeg en is het document precies de brochure van voorheen. Nieuw zijn ook zeven invulvelden voor de brief, zoals {gemiddeld_per_maand}, {totale_investering}, {startjaar} en {eindjaar}; dat laatste veld is het jaar van de laatste geplande beurt, zodat de brief altijd klopt met de jaarblokken die de klant ernaast ziet. De VvE-bijlage is bewust ongemoeid gelaten. Geen SQL nodig: de kolommen van brok 1 doen het werk.</p>
         <p><strong>🔗 Accordeerlink voor onderhoudsplannen (v4.51.0).</strong> De Onderhoudsplan-tab heeft naast <strong>Offerte OHP</strong> een knop <strong>Accordeerlink</strong> gekregen, met een eigen venster. Bij het aanmaken vul je het <strong>Yoobi-plannummer</strong> in (het eigen verkoopnummer van het plan, niet dat van de schilderbeurt; zonder nummer geen link), het e-mailadres (voorgevuld uit het Offerte-blok van de calculatie) en de geldigheid: particulier standaard 21 dagen, VvE 180, met een waarschuwing als je een VvE-plan korter zet. Aanmaken bevriest de bijlage precies zoals hij nu print. Mailen gaat via dezelfde weg als de offerte en zet het plan op <strong>Verzonden</strong>. De klant ziet de bijlage op zijn eigen pagina; op een plan met betaalmodel <strong>Beide</strong> moet hij eerst kiezen tussen per beurt en maandelijks voordat hij akkoord kan geven, en die keuze komt in de akkoordzin, in de bevestiging en in jouw venster te staan. De offerte-accordeerlinks merken hier niets van, en het dashboardblok heet nu <strong>Reacties op offertes en plannen</strong> met een grijze pil bij planreacties.</p>
         <p><strong>🤝 Drie klantdocumenten in plaats van één (v4.50.0).</strong> Het veld <strong>Betaalmodel</strong> in het plan heeft er een derde stand bij: <strong>Beide</strong>. Op Contant krijgt de klant alleen de beurtweg, met het aantal beurten in de kop en nergens een totaalbedrag. Op Maandelijks alleen de maandweg. Op Beide krijgt hij het keuzedocument: op pagina 1 leest hij meteen dat hij zelf bepaalt hoe hij betaalt, in de kop staat het woordje <strong>of</strong> tussen de twee bedragen, en na het blok Wat u betaalt en wat wij leveren staat een nieuwe sectie waarin de twee wegen naast elkaar staan met de beurtbedragen links en het maandbedrag rechts. Daaronder staat dat hij zijn keuze doorgeeft bij het akkoord. <strong>Let op:</strong> die accordeerlink voor onderhoudsplannen bestaat nog niet, dus een plan op Beide kan pas de deur uit als dat er is. Verder verdwijnt het voorfinancieringsbeeld en de uitleg over eenmalige beurten voortaan van een zuiver contant document, want daar lopen geen maandtermijnen. Vereist de SQL die je hebt gedraaid.</p>
         <p><strong>🔀 De klant kiest zelf hoe hij betaalt (v4.49.0).</strong> Op de particuliere bijlage stond tot nu toe één betaalweg, en welke dat was hing af van het veld <strong>Betaalmodel</strong> in het plan. Stond dat op contant, dan kreeg de klant het totaalbedrag als eerste ding in beeld. Voortaan staan de twee wegen naast elkaar in de kop: links het maandbedrag met het aantal termijnen, rechts het aantal beurten dat nog komt met de mededeling dat elke beurt na uitvoering wordt afgerekend. <strong>Het totaalbedrag staat niet meer in de kop.</strong> Dat blijft wel in de slotregel van de planningstabel staan, want anders lijkt het alsof je iets verstopt. Reeds uitgevoerde beurten tellen niet mee in het aantal rechts. De VvE-bijlage is volledig ongemoeid gebleven. Twee dingen liften mee. De uitleg over beurten die buiten het maandbedrag vallen verscheen alleen bij een abonnementsplan; nu de kop altijd een maandbedrag toont zou die uitleg op een contant plan wegvallen en zou de klant denken dat hij met het maandbedrag alles heeft. En de grafiek Betaald tegenover geleverd wordt voortaan bij elk particulier plan berekend, ook op je eigen scherm, zodat je de weg die je aanbiedt zelf hebt gezien voor je hem aanbiedt. De tekst bij <strong>Altijd opzegbaar</strong> is herschreven: die dekt bij een particulier nu beide wegen, en bij een VvE is de verkeerde belofte over verrekening van maandtermijnen eruit.</p>
@@ -2870,6 +2871,7 @@
               <button class="btn btn-secondary" onclick="_ohpPrint()" title="Print het onderhoudsplan voor de klant">🖨 Print onderhoudsplan</button>
               <button class="btn" onclick="_ohpPrintOfferte()" title="Genereer het vormgegeven Onderhoudsgarantie+ plan (PDF) voor bij de offerte">📄 Offerte OHP</button>
               <button class="btn" onclick="ohpAccordLinkBeheer()" title="Maak of beheer de accordeerlink van dit onderhoudsplan">🔗 Accordeerlink</button>
+              <button class="btn" onclick="ohpBriefConfig()" title="Stel de brief samen die voor de bijlage komt (alleen particulier)">✉️ Planbrief</button>
               <button class="btn" onclick="_ohpAddBeurt()">+ Beurt toevoegen</button>
             </div>
           </div>
@@ -3602,7 +3604,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.51.0';
+const APP_VERSION = 'v4.52.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3998,6 +4000,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.52.0', d: '2026-08-29', h: 'De planbrief (brok 4 van de planbriefroadmap). Vier nieuwe secties in OFFERTE_SECTIES direct na inleiding (duurzaamheid, veiligheid, planresultaten, klantquotes) met de nieuwe vlag alleenPlan: true; _offCfg zet zulke secties op een gewone offerte standaard op aan: false, de offerte-blok-UI en het voorbeeldvenster verbergen ze, en de twee documentbouwers (HTML en pdfmake) slaan ze als borg over. betaling en garantie gaan naar stapelbaar: true zodat de brief meerdere blokken per sectie kan dragen (mechanica plus startbeurtvariant; Vakwerk, aansprakelijkheid, AV); bestaande offertes met een blok gedragen zich onveranderd. Op offerte_teksten wordt std_plan nu in- en uitgelezen (_mapOffTekstFromDB/_mapOffTekstToDB) met een vierde vinkje Plan in _offVariantKaart; de kolom bestaat sinds brok 1, geen SQL. Nieuwe helper _ohpBriefVariantId kiest per sectie de bovenste std_plan-variant en valt bewust NIET terug op de bovenste variant zoals _offStandaardVariantId: een calculatie-tekst hoort nooit ongevraagd in een klantbrief, dus zonder Plan-vinkjes is de brief leeg en het document byte voor byte de brochure van voorheen. _ohpBriefCfg resolveert de sectiestanden: opgeslagen keuzes uit onderhoudsplannen.offerte_config.brief.secties gaan voor, al het overige volgt dynamisch de Plan-vinkjes met een vaste aan-lijst (_OHP_BRIEF_AAN_STD). _ohpBriefBlokken bouwt de briefblokken als kinderen van #obBlocks: briefhoofd met klantadres via _offAdresEffectief plus t.a.v. via _offContactVol en een Betreft-regel (bedrijfsgegevens, kenmerk en datum staan al in de masthead die elke pagina meeloopt), daarna de tekstsecties in lijstvolgorde met de kop aan de eerste alinea geplakt en elke alinea als eigen blok zodat _ohpPaginate binnen de brief kan breken, dan een vast ondertekenblok met HANDTEKENING_ERNES en als laatste de slotzin-sectie. Het laatste briefblok krijgt data-break=after; _ohpPaginate flusht daarop zodat de brochure op een verse pagina begint (additief, bestaande blokken hebben het attribuut niet). Ingehangen boven liggingBlok in de particuliere tak van _ohpBuildOfferteHTML; de VvE-tak is byte voor byte ongemoeid en ohpBriefConfig weigert een VvE-plan met een nette melding. Omdat print en accordeersnapshot dezelfde bouwer delen, bevriest en pagineert de brief automatisch mee. OFFERTE_VELDEN telt zeven briefvelden erbij ({aantal_jaar}, {startjaar}, {eindjaar}, {gemiddeld_per_maand}, {aantal_incassos}, {incasso_periode}, {totale_investering}); _offVulVelden kreeg optionele parameters plan en calcArg, leest bij een expliciete calc de offerteConfig rechtstreeks in plaats van via _offCfg (dat aan data.calc hangt) en zet dagen bij een plan op null omdat _calcDaysFactureerbaar zonder argument de open calculatie leest. De cijfers komen uit de nieuwe _ohpPlanCijfers, dezelfde rekenweg als de bijlage (basisbedrag maal _ohpIndexFactor maal _ohpBtwFactor, splitsing op meeInGemiddelde) met een wederzijdse verwijsopmerking tegen stille drift; {eindjaar} is het jaar van de laatste geplande beurt (besluit 29-08-2026), per definitie waar en altijd gelijk aan de jaarblokken, en beslist bewust niets over de open invulvraag van looptijd_jaren in SYSTEEM.md. {geldig_tot} komt bij een plan uit offerte_config.geldigTot; daarvoor mapt _mapOhpFromDB de kolom nu alleen-lezen naar plan.offerteConfig (bewust niet in _mapOhpToDB) en zet _ohpAccordNieuweLink na de geslaagde schrijfronde het geheugen gelijk aan de server zodat het bevroren snapshot de verse geldigheid draagt. Nieuwe knop Planbrief in het Beurten-blok opent ohpBriefConfig op dezelfde overlay-id accordBeheerOverlay: per tekstsectie een vinkje en een variantkeuze, bij stapelbare secties plus- en wegknoppen, het teken voor de Plan-standaard, en opslaan via dezelfde gerichte lees-samenvoeg-schrijfronde als v4.51.0 onder de sleutel brief, waarna plan.offerteConfig meeloopt. Elf nieuwe CSS-klassen en namen (brief, brief-hoofd, brief-klant, brief-betreft, brief-kop, brief-p, brief-onder, brief-sign plus de vier sectiecodes) vooraf op nul treffers gecontroleerd. _ohpBriefBlokken zit in try/catch met lege terugval: de brief mag de bijlage nooit blokkeren. Geen SQL, geen Edge Function.' },
   { v: '4.51.0', d: '2026-08-29', h: 'Accordeerlink voor onderhoudsplannen, stap 3: de app-kant. Nieuwe knop Accordeerlink in het Beurten-blok van de Onderhoudsplan-tab opent ohpAccordLinkBeheer, een eigen venster op dezelfde overlay-id accordBeheerOverlay omdat de hele acb-opmaak in _ACCORD_UI_CSS aan die id hangt en er nooit twee modals tegelijk staan. Het venster leest de nieuwste rij op onderhoudsplan_id; de vier bestaande lezers (accordLinkBeheer, de _prevAcc-select en de delete in _accordNieuweLink, de archiveer-lezer en het dashboardblok) zijn gescheiden: de eerste vier kregen .is onderhoudsplan_id null, het dashboardblok selecteert de kolom erbij, heet nu Reacties op offertes en plannen en toont een grijze pil plan bij planreacties. Aanmaken: harde stop zonder Yoobi-plannummer (eigen verkoopnummer van het plan, besluit 29-08-2026, zelfde regel als v4.26.0), e-mail voorgevuld uit offerte_config.email van de calculatie, geldig-tot met norm uit de nieuwe _ohpPlanGeldigNorm (particulier 21, VvE 180, gelijk aan _offGeldigDagenNorm) en een confirm-waarschuwing bij een VvE-datum korter dan 180 dagen. Nummer, geldigTot en offertedatum gaan met een gerichte lees-samenvoeg-schrijfronde naar onderhoudsplannen.offerte_config; de kolom zit bewust niet in _mapOhpToDB, dus een gewone plan-save kan dit nooit overschrijven, hetzelfde patroon als offerte_config op calculaties sinds v3.58.0. De momentopname volgt exact de printroute van _ohpPrintOfferte: _ohpLiggingPrintUrl vullen, _ohpBuildOfferteHTML in printArea, wachten op de vier Libre Franklin-gewichten omdat _ohpPaginate op gemeten hoogtes verdeelt en een fallback-font andere paginagrenzen geeft, _ohpPreloadImages, _ohpPaginate, innerHTML uitlezen en printArea leegmaken. Insert met calculatie_id en onderhoudsplan_id allebei gevuld, bedrag null (geen bedrag in de akkoordzin, besluit 29-08-2026) en pdf_path null; oude open planlinks van hetzelfde plan gaan eerst weg. Klantpagina: _accordRender en _accordRenderVerlopen vertakken op res.soort met eigen titel en teksten; _accordWireActies, _accordFormHtml en _accordVerstuur kregen een opts-parameter met isPlan en keuzeNodig, default leeg zodat het offertepad byte voor byte hetzelfde blijft. Bij keuze_nodig twee verplichte keuzerondjes per beurt of maandelijks in ac-check-opmaak (geen nieuwe CSS-klassen); de akkoordzin draait live mee via span acAkkWeg en de nieuwe helper _accordBetaalWoord, die ook de banner bij heropening en de bevestiging na akkoord voedt en het beheervenster. Ontbreekt de keuze dan stopt de client met exact de serverzin Kies eerst hoe u wilt betalen: per beurt of per maand. betaalkeuze gaat alleen mee in de POST als hij bestaat. De stempel op het document wordt bij een plan overgeslagen, want de bijlage heeft geen ondertekenvak en de terugval zou een losse regel onder de brochure hangen; de banner is daar het bewijs. _accordOfferteSrcdoc kreeg een optionele extraHead waarmee de planweergave de Libre Franklin-fontlink laadt; die staat als link in de app-head en zit dus niet in de print-CSS die _accordPrintCss uitpakt. Mailen via _offerteVerzendCall (de gedeployde functie kiest zelf de planwoorden); na succes een gerichte statusupdate naar verzonden, alleen vanaf concept of gereed zodat geaccepteerd en verloren nooit terugvallen, met _ohpState.plan en de dropdown ohpStatus synchroon. In het planvenster staat de noodrem op de opvolgautomaat (automaat_uit) zonder het rooster van _opvolgBlokHtml: dat rooster leest calc-offertevelden en zou voor plannen een eigen rekenlijn vragen; de herinnering-functie doet het echte werk (bewuste keuze). Geen SQL en geen Edge Function: stap 1 en 2 draaien sinds 29-08-2026.' },
   { v: '4.50.0', d: '2026-08-29', h: 'Drie klantdocumenten op de OHP-bijlage plus een keuzeblok. Nieuwe helper _ohpDocModel(plan) geeft contant, abo of beide en valt bij een onbekende waarde terug op abo, gelijk aan _ohpIsAbo; _docModel wordt eenmaal boven in _ohpBuildOfferteHTML gezet, direct achter isVve. Aanleiding: v4.49.0 haalde de contant-uitsluiting uit _ohpVoorfinanciering, waardoor de bijlage van Trilsbeek-God (betaalmodel contant, toon_voorfinanciering true) een sectie Wat u betaalt en wat wij leveren kreeg met een rood kader over verrekening van maandtermijnen die op dat plan niet lopen; dat kader sprak bovendien de tekst bij Altijd opzegbaar op dezelfde pagina tegen. Vier plekken luisteren nu naar _docModel. _vfB eist naast het vinkje ook _docModel niet contant. toonEenmalig eist hetzelfde, want op een zuiver contant document rekent de klant elke beurt apart af en verwijst de uitleg naar een maandbedrag dat er niet staat. heroDuo eist _docModel is beide, met een nieuwe heroSolo voor contant die het aantal beurten toont en bewust geen totaalbedrag, want dat was het afhaakmoment (besluit 29-08-2026). _opzegTekst gaat van twee naar drie takken: VvE en contant delen dezelfde beurttekst, abo krijgt alleen de balansbelofte en alleen beide noemt de twee wegen naast elkaar. Nieuw op het keuzedocument: een zin achter de aanhef, bewust daar omdat _ohpPaginate naar hoogte verdeelt en de kop op Trilsbeek-God op pagina 2 viel terwijl de aanhef gegarandeerd op pagina 1 staat; het woordje of als eigen gridkolom tussen de twee herokolommen, waarvoor hk-duo van 1fr 1fr naar 1fr auto 1fr gaat en de border-left van hk-r naar de nieuwe hk-of verhuist zodat er geen dubbele lijn ontstaat; en een sectie Hoe u betaalt, kiest u zelf, ingehangen na de drie vf-blokken en voor Uw zekerheid, met links de niet-uitgevoerde beurten uit perJaar en rechts maandbedrag, termijnen en periode. De verrekenregel in dat blok is bewust kort omdat de volle uitleg pal eronder in Uw zekerheid staat. keuzeBody bevat alleen de body: de sec-label met nextSec() wordt bij het inhangen gezet, anders loopt de sectienummering mis. Staat het voorfinancieringsvinkje uit, dan schuift het keuzeblok vanzelf omhoog naar de plek direct na De planning. Bewust geen bedrag bij de zin dat beide wegen op hetzelfde uitkomen: op Trilsbeek-God tellen de beurten op tot 21.957,73 en 120 maal 182,98 is 21.957,60, dertien cent verschil door afronding. Zes nieuwe CSS-klassen (hk-of, kz-intro, kz-grid, kz-kol, kz-kop, kz-rij, kz-slot, kz-wrap) vooraf op nul treffers gecontroleerd in het hele bestand. De VvE-tak is byte voor byte ongemoeid. Openstaand en bewust zo: de tekst belooft dat de klant zijn keuze doorgeeft bij het akkoord, maar er is geen accordeerlink voor onderhoudsplannen; offerte_accorderingen hangt aan calculatie_id en zou botsen met de accordering van de al afgerekende schilderbeurt. Per opgave Gian 29-08-2026 gaat er geen plan de deur uit voor dat is opgelost. Vereist SQL (los geleverd): de check-constraint onderhoudsplannen_betaalmodel_chk laat nu ook beide toe.' },
   { v: '4.49.0', d: '2026-08-29', h: 'Particuliere hero van _ohpBuildOfferteHTML toont beide betaalwegen; VvE byte voor byte ongemoeid. Aanleiding: de hero splitste op _ohpIsAbo, dus het veld betaalmodel koos voor de klant. Bij contant was het grote getal de totale investering, en dat is een afhaakmoment; het totaal staat nu alleen nog in de slotregel van de planningstabel, waar het moet blijven staan omdat de klant de jaarbedragen anders zelf optelt en het verstoppen als ontwijkend leest. Nieuw tweekolomsblok achter de modifier hk-duo op de bestaande .hero, met eigen klassen hk-kol, hk-l, hk-r, hk-lab, hk-val en hk-sub; alle zeven vooraf op nul treffers gecontroleerd in het hele bestand, want in v4.47.0 kostte de naambotsing tussen .ob .stem en .ob .tl-card .stem een halve bijlage. Links het maandbedrag met aantal termijnen en periode, rechts het aantal komende beurten met de looptijd. De rechterkolom beschrijft uitsluitend de eigen weg: de eerdere formulering nooit vooruit betalen is bewust geschrapt omdat die naast een maandbedrag als verwijt aan de linkerkolom leest en het document dan tegen zichzelf in praat. nogBeurten filtert reedsUitgevoerd eruit (besluit 29-08-2026). Bekend en bewust blijven staan: reeds uitgevoerde beurten zitten wel in totaalGemiddelde en dus in het maandbedrag links, dus op een plan met een gedane beurt telt links een beurt meer dan rechts; per opgave van Gian speelt dat niet omdat een bijlage bij een nieuw plan hoort. Bij nul komende beurten valt de hero terug op de enkele kolom met het maandbedrag. Eenmalige beurten tellen wel mee in nogBeurten, want op de per-beurt-weg bestaat het onderscheid mee-in-het-gemiddelde niet: dat is uitsluitend een gevolg van het middelen. Twee meelifters die geen keuze maar noodzaak zijn. toonEenmalig eiste isAbo, dus op een contant plan verdween het blok dat uitlegt welke beurt buiten het maandbedrag valt terwijl de nieuwe hero dat maandbedrag wel toont; de klant zou 96 keer het maandbedrag optellen en denken dat hij het hele plan heeft. Eis vervallen, nu alleen niet-VvE plus eenmRegels. En _ohpVoorfinanciering gaf null bij contant; die uitsluiting is weg omdat de bijlage de maandweg aan elke particulier aanbiedt. Dat raakt bewust ook _ohpRenderResultaat, want je hoort het beeld van de weg die je aanbiedt zelf gezien te hebben. _opzegTekst splitst voortaan op isVve in plaats van op _ohpIsAbo: een VvE betaalt nooit maandelijks maar betaalmodel staat standaard op abo, dus een VvE-plan waar dat veld nooit is aangeraakt kreeg de abonnementstekst met een belofte over verrekening van betaalde termijnen die bij een VvE niet bestaat. VvE krijgt de contant-tekst, particulier een nieuwe tekst die beide wegen dekt omdat de klant bij het lezen nog niet gekozen heeft. isAbo is daarmee ongebruikt in _ohpBuildOfferteHTML en verwijderd; _ohpIsAbo blijft bestaan voor het schermblok Resultaat. Jaartallen op alle zes plekken van de bijlage ongemoeid gelaten (besluit 29-08-2026), en de administratiekosten blijven in de brief en komen niet op de bijlage. Geen SQL, geen Edge Function.' },
@@ -4810,12 +4813,19 @@ async function _deleteStaartDB(id) {
 const OFFERTE_SECTIES = [
   { code: 'briefhoofd',       naam: 'Briefhoofd en klantgegevens',   kop: '',                                        type: 'auto' },
   { code: 'inleiding',        naam: 'Inleiding (aanhef)',            kop: '',                                        type: 'tekst', stapelbaar: false },
+  // v4.52.0 - vier briefsecties (brok 4). alleenPlan: true betekent: alleen op de
+  // planbrief; _offCfg zet ze op een gewone offerte standaard uit en de offerte-UI
+  // verbergt ze, zodat geen bestaande schilderofferte er klantquotes bij krijgt.
+  { code: 'duurzaamheid',     naam: 'Duurzaamheid',                  kop: 'Duurzaamheid',                            type: 'tekst', stapelbaar: false, alleenPlan: true },
+  { code: 'veiligheid',       naam: 'Veiligheid',                    kop: 'Veiligheid',                              type: 'tekst', stapelbaar: false, alleenPlan: true },
+  { code: 'planresultaten',   naam: 'Resultaten van het plan',       kop: 'De resultaten van het plan',              type: 'tekst', stapelbaar: false, alleenPlan: true },
+  { code: 'klantquotes',      naam: 'Klantquotes',                   kop: 'Wat klanten over ons zeggen',             type: 'tekst', stapelbaar: true,  alleenPlan: true },
   { code: 'bevindingen',      naam: 'Bevindingen',                   kop: 'Wat zijn onze bevindingen?',              type: 'tekst', stapelbaar: false },
   { code: 'onderdelen',       naam: 'Onderdelen',                    kop: 'Welke onderdelen worden behandeld?',      type: 'tekst', stapelbaar: false },
   { code: 'werkzaamheden',    naam: 'Werkzaamheden',                 kop: 'Welke werkzaamheden voeren wij uit?',     type: 'tekst', stapelbaar: true },
   { code: 'prijsopgave',      naam: 'Prijsopgave',                   kop: 'Wat zijn de kosten?',                     type: 'auto' },
   { code: 'prijsopmerkingen', naam: 'Opmerkingen onder de prijs',    kop: '',                                        type: 'tekst', stapelbaar: true },
-  { code: 'betaling',         naam: 'Betaling',                      kop: 'Hoe en wanneer kunt u betalen?',          type: 'tekst', stapelbaar: false },
+  { code: 'betaling',         naam: 'Betaling',                      kop: 'Hoe en wanneer kunt u betalen?',          type: 'tekst', stapelbaar: true },  // v4.52.0 - stapelbaar voor de planbrief (mechanica + startbeurtvariant)
   { code: 'planning',         naam: 'Planning',                      kop: 'Wanneer kunt u ons verwachten?',          type: 'tekst', stapelbaar: false },
   { code: 'geldigheid',       naam: 'Geldigheid',                    kop: 'Geldigheid van deze offerte',             type: 'tekst', stapelbaar: false },
   { code: 'verwachtingen',    naam: 'Verwachtingen van de klant',    kop: 'Wat verwachten wij van u?',               type: 'tekst', stapelbaar: false },
@@ -4823,7 +4833,7 @@ const OFFERTE_SECTIES = [
   { code: 'houtrot',          naam: 'Houtrot-opmerking',             kop: 'Belangrijke opmerking over houtrot',      type: 'tekst', stapelbaar: false },
   { code: 'prijsbepalingen',  naam: 'Prijsbepalingen',               kop: 'Prijzen',                                 type: 'tekst', stapelbaar: false },
   { code: 'meerminderwerk',   naam: 'Meer- en minderwerk',           kop: 'Meer- en minderwerk',                     type: 'tekst', stapelbaar: false },
-  { code: 'garantie',         naam: 'Garantie en aansprakelijkheid', kop: 'Garantiebepalingen en aansprakelijkheid', type: 'tekst', stapelbaar: false },
+  { code: 'garantie',         naam: 'Garantie en aansprakelijkheid', kop: 'Garantiebepalingen en aansprakelijkheid', type: 'tekst', stapelbaar: true },  // v4.52.0 - stapelbaar voor de planbrief (Vakwerk / aansprakelijkheid / AV)
   { code: 'afsluiting',       naam: 'Afsluiting',                    kop: 'Zeg ja tegen deze offerte',               type: 'tekst', stapelbaar: false },
   { code: 'ondertekening',    naam: 'Ondertekenblok',                kop: 'Ondertekening',                           type: 'auto' },
   { code: 'slotzin',          naam: 'Slotzin (onder ondertekening)', kop: '',                                        type: 'tekst', stapelbaar: false },
@@ -4842,7 +4852,15 @@ const OFFERTE_VELDEN = [
   { veld: '{geldig_tot}',    uitleg: 'vervaldatum van de offerte' },
   { veld: '{opnamedatum}',   uitleg: 'datum van de opname' },
   { veld: '{garantiejaren}', uitleg: 'garantietermijn in jaren' },
-  { veld: '{bevindingen}',   uitleg: 'de notitie boven in de calculatie' }
+  { veld: '{bevindingen}',   uitleg: 'de notitie boven in de calculatie' },
+  // v4.52.0 - velden van de planbrief; op een gewone offerte blijven ze ongevuld staan.
+  { veld: '{aantal_jaar}',         uitleg: 'looptijd van het onderhoudsplan in jaren (alleen planbrief)' },
+  { veld: '{startjaar}',           uitleg: 'prijspeiljaar van het plan (alleen planbrief)' },
+  { veld: '{eindjaar}',            uitleg: 'jaar van de laatste geplande beurt (alleen planbrief)' },
+  { veld: '{gemiddeld_per_maand}', uitleg: 'maandbedrag van het plan, incl. btw (alleen planbrief)' },
+  { veld: '{aantal_incassos}',     uitleg: 'aantal maandtermijnen (alleen planbrief)' },
+  { veld: '{incasso_periode}',     uitleg: 'periode van de maandtermijnen, bv. januari 2027 tot en met december 2036 (alleen planbrief)' },
+  { veld: '{totale_investering}',  uitleg: 'som van alle beurten incl. btw (alleen planbrief)' }
 ];
 
 // HTML-escape voor namen en teksten in het beheerscherm.
@@ -4880,11 +4898,11 @@ function _offTekstNaarHtml(tekst) {
 // --- DB-laag (zelfde patroon als staart_lib) ---
 function _mapOffTekstFromDB(r) {
   return { id: r.id, sectie: r.sectie, naam: r.naam || '', inhoud: r.inhoud || '', volgorde: r.volgorde || 0,
-           std_consument: !!r.std_consument, std_vve: !!r.std_vve, std_zakelijk: !!r.std_zakelijk };
+           std_consument: !!r.std_consument, std_vve: !!r.std_vve, std_zakelijk: !!r.std_zakelijk, std_plan: !!r.std_plan };
 }
 function _mapOffTekstToDB(t) {
   return { sectie: t.sectie, naam: t.naam, inhoud: t.inhoud, volgorde: t.volgorde || 0,
-           std_consument: !!t.std_consument, std_vve: !!t.std_vve, std_zakelijk: !!t.std_zakelijk };
+           std_consument: !!t.std_consument, std_vve: !!t.std_vve, std_zakelijk: !!t.std_zakelijk, std_plan: !!t.std_plan };
 }
 async function _fetchOffTekstenFromDB() {
   if (!_sb) return null;
@@ -4949,6 +4967,7 @@ function _offVariantKaart(t, i, n) {
       <label style="display:flex; gap:0.3rem; align-items:center; cursor:pointer;"><input type="checkbox" ${t.std_consument ? 'checked' : ''} onchange="updOffTekst('${t.id}','std_consument',this.checked)"> Particulier</label>
       <label style="display:flex; gap:0.3rem; align-items:center; cursor:pointer;"><input type="checkbox" ${t.std_vve ? 'checked' : ''} onchange="updOffTekst('${t.id}','std_vve',this.checked)"> VVE</label>
       <label style="display:flex; gap:0.3rem; align-items:center; cursor:pointer;"><input type="checkbox" ${t.std_zakelijk ? 'checked' : ''} onchange="updOffTekst('${t.id}','std_zakelijk',this.checked)"> Zakelijk</label>
+      <label style="display:flex; gap:0.3rem; align-items:center; cursor:pointer;"><input type="checkbox" ${t.std_plan ? 'checked' : ''} onchange="updOffTekst('${t.id}','std_plan',this.checked)"> Plan</label>
     </div>
     <textarea rows="${rows}" onchange="updOffTekst('${t.id}','inhoud',this.value)" style="width:100%; font-size:0.85rem; line-height:1.45;" placeholder="Tekst van deze variant…">${_offEsc(t.inhoud)}</textarea>
   </div>`;
@@ -5105,7 +5124,8 @@ function _offCfg() {
       if (s.code === 'bevindingen') {
         cfg.secties[s.code] = { aan: true, blokken: [{ variantId: null, tekst: '{bevindingen}' }] };
       } else {
-        cfg.secties[s.code] = { aan: true, blokken: [{ variantId: _offStandaardVariantId(s.code, cfg.klanttype), tekst: null }] };
+        // v4.52.0 - alleenPlan-secties (planbrief) staan op een gewone offerte standaard uit.
+        cfg.secties[s.code] = { aan: s.alleenPlan ? false : true, blokken: [{ variantId: _offStandaardVariantId(s.code, cfg.klanttype), tekst: null }] };
       }
     }
     const sec = cfg.secties[s.code];
@@ -5549,14 +5569,18 @@ function _offBlokTekst(blok) {
 }
 
 // Invulvelden vullen vanuit de actieve calculatie.
-function _offVulVelden(tekst) {
-  const c = data.calc;
+function _offVulVelden(tekst, plan, calcArg) {
+  // v4.52.0 - optioneel een plan en een expliciete calc voor de planbrief. Zonder
+  // die twee gedraagt de functie zich exact als voorheen (gewone offerte).
+  const c = calcArg || data.calc;
   if (!c) return String(tekst || '');
-  const cfg = _offCfg();
+  const cfg = (calcArg && calcArg !== data.calc)
+    ? ((calcArg.offerteConfig && typeof calcArg.offerteConfig === 'object') ? calcArg.offerteConfig : {})
+    : _offCfg();
   let totaal = null;
   try { totaal = _calcTotalForArchive(c); } catch (e) { totaal = null; }
   let dagen = null;
-  try { dagen = _calcDaysFactureerbaar(); } catch (e) { dagen = null; }
+  try { dagen = plan ? null : _calcDaysFactureerbaar(); } catch (e) { dagen = null; }
   const eur = (n) => '€ ' + (n || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // v3.85.0 — adres zonder postcode voor het invulveld {adres}
   const _adr = _offAdresEffectief(c, cfg);
@@ -5579,6 +5603,20 @@ function _offVulVelden(tekst) {
     '{garantiejaren}': (cfg && cfg.garantiejaren !== '') ? String(cfg.garantiejaren) : '…',
     '{bevindingen}':   (c.notities || '').trim()
   };
+  // v4.52.0 - de invulvelden van de planbrief, alleen gevuld als er een plan meekomt.
+  if (plan) {
+    const pc = _ohpPlanCijfers(plan);
+    map['{aantal_jaar}'] = (pc.looptijd > 0) ? String(pc.looptijd) : '\u2026';
+    map['{startjaar}'] = pc.startjaar ? String(pc.startjaar) : '\u2026';
+    map['{eindjaar}'] = pc.eindjaar ? String(pc.eindjaar) : '\u2026';
+    map['{gemiddeld_per_maand}'] = (pc.aboMaanden > 0) ? eur(pc.gemPerMaand) : '\u2026';
+    map['{aantal_incassos}'] = (pc.aboMaanden > 0) ? String(pc.aboMaanden) : '\u2026';
+    map['{incasso_periode}'] = pc.incassoPeriode || '\u2026';
+    map['{totale_investering}'] = eur(pc.totaalAlles);
+    if (plan.offerteConfig && plan.offerteConfig.geldigTot) {
+      map['{geldig_tot}'] = _offDatumLang(plan.offerteConfig.geldigTot);
+    }
+  }
   return Object.keys(map).reduce((s, k) => s.split(k).join(map[k]), String(tekst || ''));
 }
 
@@ -5720,6 +5758,7 @@ function renderOfferteBlok() {
   if (body) {
     let html = '';
     OFFERTE_SECTIES.forEach(sec => {
+      if (sec.alleenPlan) return; // v4.52.0 - briefsecties horen niet in de offerte-UI
       if (sec.type === 'auto') {
         html += `<div style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.8rem; margin-bottom:0.35rem; border:1px dashed #d1d5db; border-radius:8px; color:var(--muted); font-size:0.82rem;">
           <span>⚙️</span><span><strong>${_offEsc(sec.naam)}</strong> — automatisch gegenereerd</span></div>`;
@@ -6824,6 +6863,7 @@ function openOffertePreview() {
     <div style="font-size:0.82rem; color:var(--muted);">${_offEsc(c.klant || '')} · offertedatum ${_offEsc(_offDatumLang(cfg.offertedatum))} · geldig tot ${_offEsc(_offDatumLang(cfg.geldigTot))} · ${_offKlanttypeLabel(cfg.klanttype)}</div>
   </div>`;
   OFFERTE_SECTIES.forEach(sec => {
+    if (sec.alleenPlan) return; // v4.52.0 - briefsecties horen niet in het offerte-voorbeeld
     if (sec.type === 'auto') {
       html += `<div style="margin:0.8rem 0; padding:0.5rem 0.7rem; border:1px dashed #d1d5db; border-radius:8px; color:var(--muted); font-size:0.82rem;">⚙️ ${_offEsc(sec.naam)} — wordt gegenereerd in het document</div>`;
       return;
@@ -7131,6 +7171,7 @@ function _mapOhpFromDB(row) {
     aboStartdatum:    row.abo_startdatum || null,                                    // v4.45.0
     aboAantalMaanden: row.abo_aantal_maanden != null ? row.abo_aantal_maanden : null, // v4.45.0
     toonVoorfinanciering: row.toon_voorfinanciering === true, // v4.46.0 - kolom bestaat sinds 28-08, nu pas gemapt
+    offerteConfig: (row.offerte_config && typeof row.offerte_config === 'object') ? row.offerte_config : {}, // v4.52.0 - alleen-lezen; bewust NIET in _mapOhpToDB (schrijven gaat gericht via lees-samenvoeg-schrijfrondes)
     status:        row.status || 'concept',               // v3.25.10 — los van calc-status; 5 waarden
     ligging:       row.ligging || null,                   // v4.22.0 - { pad, rdX, rdY, span, laag, weerzijde, gemaakt }
     aangemaakt:    row.aangemaakt || null,
@@ -9488,6 +9529,35 @@ function _ohpMaandLabel(mj) {
 // het keuzedocument. Alleen betekenisvol bij een particulier plan; een VvE
 // krijgt altijd de VvE-tak, want een VvE betaalt nooit maandelijks.
 // Onbekende waarden vallen terug op 'abo', gelijk aan _ohpIsAbo.
+// v4.52.0 - Kerncijfers van een plan voor de invulvelden van de planbrief.
+// Zelfde rekenweg als _ohpBuildOfferteHTML (basisbedrag maal indexfactor maal
+// btw, splitsing op meeInGemiddelde); verandert daar iets, dan hier ook.
+// {eindjaar} is het jaar van de laatste geplande beurt (besluit Gian
+// 29-08-2026), niet prijspeil plus looptijd: dat is per definitie waar en
+// klopt altijd met de jaarblokken die de klant ernaast ziet.
+function _ohpPlanCijfers(plan) {
+  const pp = (plan && plan.prijspeil) || 0;
+  const looptijd = (plan && plan.looptijdJaren) || 0;
+  const eindTl = pp + looptijd;
+  const idx = (plan && plan.indexeringPct) || 0;
+  const btwF = _ohpBtwFactor();
+  let totaalGemiddelde = 0, totaalAlles = 0, laatste = 0;
+  ((plan && plan.beurten) || []).forEach(b => {
+    if (!(b.jaartal >= pp && b.jaartal <= eindTl)) return;
+    const bedrag = _ohpBeurtBasisBedrag(b) * _ohpIndexFactor(b.jaartal, pp, idx) * btwF;
+    if (b.meeInGemiddelde !== false) totaalGemiddelde += bedrag;
+    totaalAlles += bedrag;
+    if (b.jaartal > laatste) laatste = b.jaartal;
+  });
+  const aboMaanden = _ohpAboMaanden(plan);
+  const gemPerMaand = (aboMaanden > 0) ? (totaalGemiddelde / aboMaanden) : 0;
+  const periode = (aboMaanden > 0)
+    ? (_ohpMaandLabel(_ohpAboStart(plan)) + ' tot en met ' + _ohpMaandLabel(_ohpAboEind(plan)))
+    : '';
+  return { startjaar: pp || null, looptijd: looptijd, eindjaar: laatste || null,
+           totaalGemiddelde: totaalGemiddelde, totaalAlles: totaalAlles,
+           aboMaanden: aboMaanden, gemPerMaand: gemPerMaand, incassoPeriode: periode };
+}
 function _ohpDocModel(plan) {
   const v = (plan && plan.betaalmodel) || 'abo';
   return (v === 'beide' || v === 'contant') ? v : 'abo';
@@ -11030,6 +11100,104 @@ function _ohpTypeLabel(naam) {
   return naam.length > 22 ? naam.slice(0, 22) + '…' : naam;
 }
 
+// ============================================================
+// PLANBRIEF (v4.52.0, brok 4) - de offertebrief die voor de
+// brochure-bijlage komt, alleen op de particuliere tak (besluit
+// 29-08-2026; de VvE-bijlage met besluitpagina blijft ongemoeid).
+// Teksten komen uit de bibliotheek (offerte_teksten): per sectie
+// de variant met het Plan-vinkje (std_plan), of de keuze die per
+// plan is vastgelegd onder offerte_config.brief. Zonder
+// Plan-varianten is de brief leeg en is het document byte voor
+// byte de brochure van voorheen; een sectie zonder gekozen of
+// gevulde tekst blijft altijd weg.
+// ============================================================
+const _OHP_BRIEF_AAN_STD = ['inleiding', 'duurzaamheid', 'veiligheid', 'planresultaten', 'klantquotes',
+  'prijsbepalingen', 'meerminderwerk', 'planning', 'betaling', 'garantie', 'afsluiting', 'slotzin'];
+// Variant met het Plan-vinkje voor deze sectie, of null. Bewust geen terugval
+// op de bovenste variant (zoals _offStandaardVariantId doet): een
+// calculatie-tekst hoort nooit ongevraagd in een klantbrief.
+function _ohpBriefVariantId(sectieCode) {
+  const vars = (data.offerteTeksten || [])
+    .filter(t => t.sectie === sectieCode && t.std_plan)
+    .sort((a, b) => (a.volgorde - b.volgorde) || (a.naam || '').localeCompare(b.naam || ''));
+  return vars.length ? vars[0].id : null;
+}
+// Sectiestanden van de brief: opgeslagen keuzes per plan, met terugval op de
+// Plan-vinkjes uit de bibliotheek voor alles wat niet is vastgelegd.
+function _ohpBriefCfg(plan) {
+  const oc = (plan && plan.offerteConfig && typeof plan.offerteConfig === 'object') ? plan.offerteConfig : {};
+  const saved = (oc.brief && typeof oc.brief === 'object' && oc.brief.secties && typeof oc.brief.secties === 'object') ? oc.brief.secties : null;
+  const secties = {};
+  OFFERTE_SECTIES.filter(s => s.type === 'tekst').forEach(s => {
+    const sv = saved ? saved[s.code] : null;
+    if (sv && typeof sv === 'object') {
+      const blokken = Array.isArray(sv.blokken) ? sv.blokken.filter(b => b && b.variantId).map(b => ({ variantId: b.variantId })) : [];
+      secties[s.code] = { aan: sv.aan !== false && blokken.length > 0, blokken: blokken };
+    } else {
+      const vid = _ohpBriefVariantId(s.code);
+      secties[s.code] = { aan: _OHP_BRIEF_AAN_STD.indexOf(s.code) !== -1 && !!vid, blokken: vid ? [{ variantId: vid }] : [] };
+    }
+  });
+  return { secties: secties };
+}
+// Bouwt de briefblokken (elk een kind van #obBlocks, zodat _ohpPaginate per
+// alinea kan breken). Leeg bij VvE, zonder inhoud of bij een fout: de brief
+// mag de bijlage nooit blokkeren.
+function _ohpBriefBlokken(plan, calc) {
+  try {
+    if (!plan || plan.ontvangerType === 'vve' || !calc) return [];
+    const cfg = _ohpBriefCfg(plan);
+    const calcCfg = (calc.offerteConfig && typeof calc.offerteConfig === 'object') ? calc.offerteConfig : {};
+    const sectieBlokken = (sdef) => {
+      const sec = cfg.secties[sdef.code];
+      if (!sec || !sec.aan) return [];
+      const stukken = [];
+      (sec.blokken || []).forEach(b => {
+        const ruw = _offBlokTekst(b);
+        if (!ruw || !String(ruw).trim()) return;
+        String(_offVulVelden(ruw, plan, calc)).split(/\n\s*\n/).forEach(al => {
+          const t = al.trim();
+          if (t) stukken.push('<div class="brief-p">' + _offTekstNaarHtml(t) + '</div>');
+        });
+      });
+      if (!stukken.length) return [];
+      const uit = [];
+      const kop = sdef.kop ? '<div class="brief-kop">' + _offEsc(sdef.kop) + '</div>' : '';
+      // De kop plakt aan de eerste alinea, zodat hij nooit los onderaan een pagina valt.
+      uit.push('<div class="ob-block brief">' + kop + stukken[0] + '</div>');
+      for (let i = 1; i < stukken.length; i++) uit.push('<div class="ob-block brief">' + stukken[i] + '</div>');
+      return uit;
+    };
+    const tekstSecs = OFFERTE_SECTIES.filter(x => x.type === 'tekst' && x.code !== 'slotzin');
+    let secHtml = [];
+    tekstSecs.forEach(x => { secHtml = secHtml.concat(sectieBlokken(x)); });
+    if (!secHtml.length) return [];
+    // Briefhoofd: klantadres plus betreft-regel; de bedrijfsgegevens, het
+    // kenmerk en de datum staan al in de masthead die op elke pagina meeloopt.
+    const _oa = _offAdresEffectief(calc, calcCfg);
+    const _tav = _offContactVol(calcCfg);
+    const adres1 = ((_oa.straat || '') + ' ' + (_oa.huisnummer || '')).trim();
+    const adres2 = ((_oa.postcode || '') + ' ' + (_oa.woonplaats || '')).trim();
+    const kopBlok = '<div class="ob-block brief brief-hoofd"><div class="brief-klant"><strong>' + _offEsc(_oa.naam || (calc.klant || '')) + '</strong>'
+      + (_tav ? '<br>t.a.v. ' + _offEsc(_tav) : '')
+      + (adres1 ? '<br>' + _offEsc(adres1) : '')
+      + (adres2 ? '<br>' + _offEsc(adres2) : '')
+      + '</div><div class="brief-betreft"><strong>Betreft: Onderhouds garantie+ plan' + (calc.naam ? ' | ' + _offEsc(calc.naam) : '') + '</strong></div></div>';
+    // Ondertekening als vast blok, daarna de slotzin-sectie, net als op de offerte.
+    const onderBlok = '<div class="ob-block brief brief-onder"><div class="brief-p">Met vriendelijke groet,</div>'
+      + '<img class="brief-sign" src="' + HANDTEKENING_ERNES + '" alt="">'
+      + '<div class="brief-p">' + _offEsc(BEDRIJF.naam) + '<br>Gian Ernes</div></div>';
+    const slotSec = OFFERTE_SECTIES.find(x => x.code === 'slotzin');
+    const slotHtml = slotSec ? sectieBlokken(slotSec) : [];
+    const alle = [kopBlok].concat(secHtml, [onderBlok], slotHtml);
+    // Het laatste briefblok sluit zijn pagina af: de brochure begint vers.
+    const n = alle.length - 1;
+    alle[n] = alle[n].replace('<div class="ob-block', '<div data-break="after" class="ob-block');
+    return alle;
+  } catch (e) {
+    return [];
+  }
+}
 function _ohpBuildOfferteHTML(plan, calc) {
   const LOGO_OGP = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAQDAwMDAgQDAwMEBAQFBgoGBgUFBgwICQcKDgwPDg4MDQ0PERYTDxAVEQ0NExoTFRcYGRkZDxIbHRsYHRYYGRj/2wBDAQQEBAYFBgsGBgsYEA0QGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBj/wAARCAB5AUADASIAAhEBAxEB/8QAHQABAAICAwEBAAAAAAAAAAAAAAYIBQcBAwQCCf/EAEwQAAEDAwIDAwgGBgcIAAcAAAECAwQABQYHEQgSIRMx0xQWGCIyQVFXFVZhk5SVCRcjQnGBM1J0kaGxsyQ1NkdiZHOjcoKEorLR4f/EABoBAQADAQEBAAAAAAAAAAAAAAABBQYEAwL/xAAlEQEAAgICAQQCAwEAAAAAAAAAAQMCEQQFMQYSIUFRkRMisfH/2gAMAwEAAhEDEQA/AL/UpSgUpSgUpSgUpSgUpSgUpSgUpSgUpSgUpSgUpSgUpSgUpSgUpSgUpSgUpSgV8laRt1HwrrlSWIcN2VJcS0y0guOOLOwQkDckn4AbmqV6nakT86zVc2LJkR7XFUUQGUrUnZIP9IQD7au/7BsPdXFzebhxcfdl8z+Fp1XVWdjZOGE6iPMrshST3GudxVLbFrhqPYojcRF7TOZQoEJntB5XKP3eforY/wAd/tqzeludP6gYP9Nybb5C6h9UdaEq5kLKQDzIJ67de49xBr44nZVcnL2YeXr2XRcngY/yWanHetxKb0pSrBTFKUoFKUoFKUoFKUoFKUoFKUoFKUoFKUoFKUoFKUoFKUoFKUoFKUoFKUoFKUoFKUoI/lmZ49hVpRcciniKy4vs2wEFa3Fd+yUjqeg3rXz3Elp20spQ3eXx/WREAH/3KBqE8UN1Yeu+P2dp5CnWG3pDrYPVHOUpTuPt5VbVoCs9z+2tpumuuI1Da9L6c4/L42N90zud+P8AjfOq2uVoyvBDYMXRPZMtwCYuS0GyGh15Rso78x23+wH41oalKo+VyrOTl77Gv6/rqeBXNdPiZ38svi2Ozsry6Dj9uGz8twI59ujae9Sz9gG5q9WO2C3Y1jUOyWpns4sVsNoHvPxUfiSdyT8TVF8Wym+Yhfk3ewSkx5XKWyVtpcStJPVJB9x2HdtVl8D1vcvSURcisym3thvJtu7yf4qZ/pE/xAUKtultor37p/tLM+q+Ny7vbOEbrx/e/wA6bmpXW04l1pLiDulQ3B+IrsrTsCUpSgUpSg4J2G9Uw1g45ZGNZ5OxnTbHrbdGre8qPIulyWstuuJOyg0hBBKQQRzFXUg7DbqblSyRAeIOxCFEH4dDX4kPKKpLq1ElRWokn3nc0TELUen3q39V8O+5keLXHp96t/VfDvuZHi1X3F9NdQs1iuSsRwm+3qO2eVb8KItxsH4c+3Lv9m+9Yi92C+41eXLRkdmn2me0N1xZzCmXEj3HlUAdvt7qGlmfT71b+q+HfcyPFp6ferf1Xw77mR4tVVpQ0tV6ferf1Xw77mR4tPT71b+q+HfcyPFrQenemOa6q5K/YcHtSLhNYY8peS5IQwltvmCeYqWR7yBsNz17qweQ2KfjGW3TG7qGhOtkpyHIDK+dAcbUUq5Ve8bjvoaWY9PvVv6r4d9zI8Wnp96t/VfDvuZHi1VWuCQlJUTsANyaGlq/T71b+q+HfcyPFp6ferf1Xw77mR4taYzTRDUfT3ArdmGX2iNb7bcXkMRgJjbrqyttTiSUIJ2HKknqf5Vryhpar0+9W/qvh33Mjxaen3q39V8O+5keLVVaUNLVen3q39V8O+5keLT0+9W/qvh33MjxaqrX2y05IkNsMp5nHFpbQnfvUTsB/eRQ0tP6ferf1Xw77mR4tPT71b+q+HfcyPFrSWo+jWoGk8S0vZ3a41uXde18mZblofX+z5ebmCCQn207dTv1+FQKhpar0+9W/qvh33Mjxaen3q39V8O+5keLVVaUNLVen3q39V8O+5keLT0+9W/qvh33MjxaqrShpar0+9W/qvh33Mjxaen3q39V8O+5keLVVaUNLVen3q39V8O+5keLT0+9W/qvh33MjxaqrShpar0+9W/qvh33Mjxaen3q39V8O+4keLVXGYU2RDflx4cl2PHALzzbSlIaBIAKlAbJ3JA6nvNTK76Pah2HSeFqVd7EmLjc4siLLVKaUp7tQS2Q2FFQBA94FDTaF14hGNQLo5kWaiLbroUpZLMFhwtFCd+Up3Kjv1O+5rptuoGL3a6sW2DLfXIfVyNpMdaQT1Pee7uqvlTLS9lCs+RJc9mNHdd3+3YJH/5VSc3q6ZjO+Znflrep7/kxlVxMYjXxH34/bfFO/urqVJZRsFK2J32H+FRfUO7qt2nkl2M8pDslSWG1pPKRudyQf4JNZmqnKzOMI+29v5GFNWVuXjGNpS9IMVHahoObH2Skkfz2qLXnU+4WRztIcGDytnflQ4sH+QJOx+0bGtV27UTLLegN/SSpTY7kyRzn+Su//GpfjVoz3XKdIxbEMaiXC4MsiU846822WGwsJ5gtZBA3IGw37+731e8fqbKs9ZxEwyPL9SUX1TNWU45fiYbNjceeq8SG1FZxjES20gISXGpClEAbDc9r1PTvrt9PvVv6r4d9zI8Wq05Jj9yxTMLpjF5Q0i4WySuJJS0vnQHEHZQCveN/fWLrRxGvhhJ+Z2tV6ferf1Xw77mR4td8Tj+1RbmIXNw/E32AfXbaEhpSh9ii4rY/yNVOpUo0/YHR7VnH9ZNNmMtsLbsb1zHlwXiC5EfSAVNqI6EbEEKHeCD06ip/VMP0eilHD87RzHlFwikJ9wJZVuf8B/dVz6IdMv8A3e//AONX+VfjLhmOKzDVKxYmhwtm7XRmCVp70hx0JUofaASa/ZqX/u9//wAav8q/HPTPIYuJ644rk85XLFtt5jyX1f1W0ujnP8kkn+VEx4XW4pNXL7oJYMN0+0mMOwpWw46VJjIdDMdopQhtKVgj1lFRUojc7d/UmvLrgxA1r/R9WrV64QGGL/boTVxDzadinZzspLYPfyE8ygk9xSn4VjOOjT7JsluGIZni9lnXuI2w7Af+jWFSFN8y0uNK5UAnlV6w37t9viKzOo0dzSj9Fk1h2R8sa8S7W3bhFURzCQ+6XVo/ihJXv/8ACaCDO8DNpgxrA7ddYYcNNyfQ0tciIhnnK0boajpU5+0dUr3E92/QmtXamcMeR4dxB2PS/GLh9PuX9kP2+S832BSkFQd7YDcAI5SoqH7u3TfpVleJ3c4xobI2HMMmt/X4Etp//VbEyUw08euDmVy9qvE7qmMT/XD7JO328nP/AC3ohEeHPh/smiurFxLupcG+ZJIsoRKsrEdLSo7SnkKD3tlfLzJ5QSBvvVe7ZoBI1d1x1Uyq9ZI1jOJWW/T/AC26ONdopSkuLWpKASAAlOxUonpuOh36WD0usWSQ/wBI7qteLrbJyIMi1seTTHGVBlxBLHIlK9uU9EL6A9OU/CvZpW7Cn6Law2tnHY+TSmMsvgkWFxfJ5cVL50NE7HbnSAkdD3UFXs/4W2MfYw3I8Nz1jIsQyi4Rbe3dlRuVUVUhXK24UpOy0Hr3cpBGxHXeptknA0xjNou90uWoT7lrt1kkTnH0QkNrekIStQaQkqOyQhBKiST1G23Ujtn66z8nxTGNOrdoXNwqxRMmtLaJCluBmItM1DgaCVNJAUohfTfcdTXP6QmZMTmGGQ0yXUx02+a6ltKyE85cQkq2+PL03+BI99Etyap6aRtXeHLTOz3XMLbi8QKgPvTJik8zilw+zQ00lRAU4pSxsCfj391VV1O4V8gw3XfGdOcYu4vnnKhSoUqS0GS12Z/bdqE7jlQnZfMO8dNt+/fvEk3twvaNq2HqXmzfyPk9bRzyVDicbulAlrQhUi03uOwVdN3SlhQA+0pSqiFdF8E+LSZ8/DrNrOzJzqBCbmv2t2CEtISvokqAUVpSTsN9yRuCR1FQHS/hdfzrBs2vN/yaTYLjik2RBk21MJL3O4yz2it1lY267juPTr76sfhtlvjX6UbPbm7FkJgLsDbgkKQezWlaIyUAK7j6zaxt/wBJ+FSHThbF7f4hWLIBIU/kMphtDPXnc+j22yB8SXEqH8aJU/x7h3i3vg5uGuq8ueZdix5DwtCYaSklp3s9i6V77Hv9npUm034TVT9ObbqTqRqFBwi2SnGH4bUhgLWtKlgtFalrSlJX05Ujc7EfwrZ2MWO9WD9Enk1syC0TrXLTBnrMaayplwIMjcEpUARuN+8VIuLKyXjINGdM/NG2S7jbm71DWpqCyp3ZCmdmVcqQfV67b9w3HxoHFnptd9WtY9McHs8pmG4+zcn35bySpEdlHYFaykdVHuAHTckdR31XPV3RDSXTqwXuNZNaBecusqmkybC9DS0pZUtCVBKgduZIXzFIKiAOu1WT4pM7yfTbXDTfM8WtC7u7ChXPyuElClB2KVMBzmKQSkD1Tz7HYgb7jeoxrtimnGs3CpK4hbPYZWPX9mMJKlyGuxckhDoaU28B6rnv5HB1Pq9djtQhTDDMRvWeZ7a8Px5lDtyub4YZDh2QnoSpaj7kpSCon4CrSWfgpxG45ZccNVrgh3J7VGak3G2xLPzFhDg3QQVODmB/v6jcDcVXvRXK7vhOv+LZDY7Ou8zmpyWG7c2dlyg6C0W0n3KIWdj3A7b9N6vXqFkmFaDauZRq9MxbNrhe77bY8dYjxOe2pUgDoZG3K2SUI5ionbb1Qd6EqpY5ono/LuWQSMp1/ttlstvuq7ZBfVGSl+4BDaFKe5FK9RIUso7j1QetZjUbhMcw/UDBrZZ83audhy+4It0e5uRhzxnFp5klSUq5XEqT1BSR3fwJ2FgGJ2HG+Em6cRqtPIGd5xeJL85qHKjqksxeeWpvZDQBPKnqpRA5j3bgVtbWeVNl+j7KnQ0w5T2XW1x+MhstpZWWCVICT1SASRt7ttqIaMzTgqi4RimS5Jcc+kv26zWJy4NFMJDbkuUhLii0lJUdmwEN7nqolfu2rw4Zwt6TZROjYwOISDIy+RGD5tVtjNOBtXIFqT1WSspB6gEHoegqQ8bEGTkHFDp9ihuLkaPOhNRgvmPK0X5haWvbu35dv47AVumx2Cx6Q8ROE6XafaVQWbNOt8iVccrcirekBSEOAJL+2yVFSUlXMdj2gASKCsWnnCFPyvV7NcEyHMUWp3FXY6XHYkPtjMbfSpaFo5lDk9UDod+p291Zm9cGEeForkGX2HU2FfrtZW5LrsGE0hccljdS2C6FFQdCR13AHN02A61ZHTVSjx0a1Ajp5LZf9BVa84akFPDPrNH26JvN3AG3/b//AMoJRG08wyV+jth4S7qRbYNhfisuOZQUNhncyg7sRzhJPP8Asuqu8fHpWgNR9N82g8D2O5ZddWLtfLM43bhbcZRDQ1HZS76rYJBKlrSDsD7zWw02+fdP0PNthWqFImyTDZV2MZsuLITcd1EJSCTsBv0rN5a/Ht/6PPS+bc08sWHMx56QFjblQmQgq3/gAd/4UGsrLwXWVmLY7JnmrDFizS/MLeg2RiKl0AoTzLQSpQKykH1tuUbggb7VpV7GLjpPrLesHyd1hudFdbjqfQdmnG9w6HEk9yVpCdgevrbVefiHzePpvmuL5unRFObPstuIi35lxXaW5zm3DY5W1lIUFEg9N+oqiuveb3PUPXCfk95xOTi8x2LGactcpRU42Et+qpXMlJ9ZKgdiB02rztrizCcJ+3Rxb5otxtj6Zm45MPOl6FHdC1NckdPKd91nYH/EmsbmaxkOaWHDW5YjNuzWopeKecNFa0tBZG/XbmJ2rV7bjjLiXGlqQtJCkqSdikjuI+2stjUh1WoFlkOurcc+k4qitZJJPbI7ya4KetxqzxyifC35Pe2X02VzGvd/i27/AAM4xa8otFlvetDMaRckOpYjGG23Ilup2PKyhTh3SE7lR6nu22rL8M+l930d42spwq6S0TUDGzJizW0FCZLCpDXKvlO/KQQoEbnYg9SNq2Hr5jF/yHix0PfslulPtwLjIly5DTZLcdltxlalLXtsncJIG56k7Cs/Fu8G4/pFpUCI4hb1swTsZXL+4tcxLiUn7eVST/8AMKs1AqRfNNsGzbiT1ZuuoGqdvwe223I3Wkl9tLjstTi3Ds2CodEhHU7H2hXxqvwuQcKxLG81w7Pmsjxi9TosLyxbCQpoSFbNvJKDyuNn39xB2+PTd9p0yxGLP1o1su2FNZtfrfkNyTbrPIbLraex5T0b2PMpRWSTsSEgbDc17taLxdr5wJ4Xe7vZWLLPmXWzPPW6PHVHbjKMgHkS2rqkDp0NBBJHAjZbfktmtVz1hjseXB1PZuRW2pElxIBCIzalnm2TzlRJJGw2HfVcNadLJej2rs3CpFyFyaQy3KjTA32ZdZcB5SpO52UClQOx26b++rwcQKeXjE0CdG2/0pKTv/Nvf/Oq78daduJ2Idu+wRf9V+iYbX/R5/8ACWef2+J/pLq6FUv/AEef/CWef2+J/pLq6FB0y/8Ad7//AI1f5GvxHc/pnB/1H/M1+3qhunavzz1i4KtQIef3C66YQo16sU19chqIqShh+GVKJLZDhAWgE+qoHfbYEdNyIa1wDiq1l07xhnHbRfIk+2x0dnGYu0Xygx0+5KFhSVco9ySSB7tqhOpGq+e6s3dq4ZzfFzuwSpEeK0gMsRwr2uRtPQE7DdR3J2HXpU69EXiF+XyvzGL4lPRF4hfl8r8xi+JQYPLuITU/OIVhiZFc7a81YZrVwgJZgIa5Hmhsgq29obd4PfXxlPEFqpl+d2DM7rfmGb1YCs2+VBiIYLXOQVBQG4WDtsQehBI99Z/0ReIX5fK/MYviU9EXiF+XyvzGL4lDbIO8Zuvjt0bmpyG1tcjJZEdu2t9kdyCVlJJ3X6u2++wBOw6moNimuWpeF6jXjNsdvyItxvT65FyZLCVRpS1KKiVMnoNipWxGxG52NSn0ReIX5fK/MYviU9EXiF+XyvzGL4lD4ebOeKHVvUL6Jbv9wtSI9quDN0jR4sEIQZDRJbWvdSioDc+ruAd6imp2r2cavT4EzOZsOU7AacZYMWKmOEpWQVA8vf1SKmnoi8Qvy+V+YxfEp6IvEL8vlfmMXxKCP5Vr9qZmeH2XF7/cre9bbLIjyoTbUFDakOMJ5WyVDqoAHqPfXTnmu+puo19sd6yS+MpuFicW7bpVvjJiuMLUUqKgU9Sd0J2+G32mpN6IvEL8vlfmMXxKeiLxC/L5X5jF8Sg903jJ16nYuqynJIEdS0dmq4RoCG5RBGxIUDypV/1BIPw2qEaYa36iaRS7k9h10jpRcuVUticwJDbi077ObEghfrHrv13671KfRF4hfl8r8xi+JT0ReIX5fK/MYviUHhvvE9rLk2D3jEr/AJHFn227hxEsOwW+0KVncpQoewkdwAHQD+dfeOcUWtOK6cs4TZsnabt8dvsIz7kVDkmO0O5tDp7gO4bgkDoCNht6/RF4hfl8r8xi+JT0ReIX5fK/MYviUHVM4qdZZ+c2jLpN5tarlaWX48UptjaUdm/ydolSf3gezR7wRt07zWN1L4jNVNV8fbsOU3eI3aUrS4qDbowjtuqT1SXOpKgD1AJ2B67b7Vl/RF4hfl8r8xi+JT0ReIX5fK/MYviUGF4cIGJXHiXxiPmlzVb7cl5TzbokGOFSEJKmUFwEFIKwO4jfoN+tfoZjd61aY1SzgapW7G4Om7YUu03JT7aSWtwAlzdXVJRzKUVgbHoNwaoYeETiFI2OnyiD7jcIviV6HeFLiTfjJjP4ZMdYT7LLl3YUgfwSXdqDtPElmWnOV5dYNH7xEi4bKu0p+1MPw0uiK2tZ9Zjm6oSfaCTuBuOnfWCv/Exq9k68ecvl6t8tzH57VzgOKt7YUJDaSlK1ke30Udx0BNZH0ReIX5fK/MYviU9EXiF+XyvzGL4lBCNRtWc31UyaDkGY3CO9cIDAjx3YkdMbkSFlY6J94Ud962GnjI19TDgxxlED/ZO9w25srk+qU/tj+9379AncgE91eP0ReIX5fK/MYviU9EXiF+XyvzGL4lB4rXxO6v2fUC/ZpAu1rRd763HbnPKtrakrSwkpb5U9ydgo77d9Y3FNf9TMLxq/WGwXG3Mwr7KfmTkOwUOKW48nlc5SfZBHcB3Vn/RF4hfl8r8xi+JT0ReIX5fK/MYviUGN054ldWtLcLTieK3mH9FNqUthidDTIMcqO6uzUSCAT12O43J+JrHZBr1qTk2kLGmV3uNvdx1htltDCIKEObNEFG7g6k7gbn39fjUj9EXiF+XyvzGL4lPRF4hfl8r8xi+JQ27MN4t9bcKxRjHYF9g3CHFbDMZV0hh91lAGwSHApJUANgObfYVqnL8tvudZtcMtyaWmVdbg4HJDyG0tpJCQkAJT0ACUgfyraXoi8Qvy+V+YxfEp6IvEL8vlfmMXxKDSVZXGElecWRA7zcYw/wDcitseiLxC/L5X5jF8Sg4RuIZJBTp+sEdQRcYvT/2UNrTcYmtGoulLuMxcEvEe3N3ZqWJLiorby+Zst8pQV7hJAWfcapRhOsuoWAZ5dM1sN6Q5fbq0pmZNuLIlreClpWonn/eJSOv8qmrvCZxGvkF/BpDu3d2l0jK2/vdrr9EXiF+XyvzGL4lB4cW4nNYMQyLIbzZ73C7W/wAsz5zD8JK2fKCAkuto3HIrYAHY7HYbg7V05TxJ6u5rh7WM5PfYdwhNSmZgUuA2l0utOBxCisd4CgOm223Ssp6IvEL8vlfmMXxKeiLxC/L5X5jF8SgxOS8RuquW5ljWVXy6W16540+5JtrjdvQ2ltawArmSPbHqp6GovqNqZl2quVM5HmkuLJuDMZMRC48ZLCezSpSgClPed1q61PvRF4hfl8r8xi+JXdE4PeISVMQwrCGoyVHYvP3KMEIHxPKsn+4E0Nt+/o8/+Es8/t8T/SXV0K1Lw86LR9EtLTYHZjc+7zXzMuUxtJShbpSEhCAevIlIAG/U9T032rbVEOFHZJNaU9I7H/1iKwoWwm7DKncaMXy5rteVEcveV9n7XZEjk/j763WRukitOHh+tPngrI/pt/yo5e7lnN5I1zcy4xY8m5+/sx7W/fv7qCMROJ6fP0ha1Gg6dok25cqNFVHZyGKt9gvrDbfaoA3bUVqSOU9QPW7hWzrvqK9YsnwPHbrjzrNwytx9laG5KFpgOMxi+pKlAftB6pTunb41BbPw4/RmiS9MZGayJVuRKgyY0hFrjsOteTPh7lUUf0pUUgFS9yB3VOdRtN383nY7ebXkkjH75j8t2VBnNRm5KR2rSmXEraX0UClXQ7jYgGghFm4il5Bjky42XBpciRFxiLlCorlwabJZeddQpHOU7cyEsqVv+90ArHyOJ027Eze7rp/Njc+K+drLCbk04XIqpDTLaSoJ2StQeCiD7OxB61k4HDomxTWhjuc3GDb1Yyzi8uI5CZfMqO0l4BZcVsULKn1KPLt3bd1dd64abbecYj2VzLLgyhnC2sNDiYzZKmkPNOh8jfbnJaA5e7qaD7e4kLbbMixe1X3H22EXyFMmqnQLqxOjRgx2vKkutjlWVllQHKeiuh7qx1j4oGr+MNREwsxH8lbkudlc7zHiCL2EsRloKljZxwlQUEJ6nqPdXsv3DXEyyDHbyfLZEt5mMxGS5EtrENKUtTvKt0tt7JTzJKmjt3hRPfX1G4cRbMks16suaPRHrXIuLqEP2qPKQpEyaJS0AObhBSQEpUOoHWgzupOtXmHkkqyW/Ep+RP22yuZDdTHktMCJBQso5hz/ANI4SlZDY23CT17qwqeJrGHczvGNx7RLckQn7UmKsupSmexOWwjtm9x07LyloqQeuxFZrUjRNOe5LJvcHLbjjr9ysy8euwisNPCbBUsr5Bzj9m4CpYDg32Cj0rD3bhnxa53ePcW7nLiPQr/BvcEtNJJjojR2GPJdyfWbWmM2ST1CgD7qDHMcUEZLU6RdMEuUKIGLy5bJImsupnuWsq8oaIHrNKIQSnmBBFeW8cU6bNhNnyJ7CWZKLlGnTuziZBFdDTMVtpxYKwOUvEO7Bn2txt7xXui8MMAN3Jm55tdZ8dyPeGbbHMVltFuVcyoyXRy+s6vZXKnmOwHurpufC3AyHErPYcky9+c3Z4kyLCcYtcaKWi820ht0BHTtWlMpWF96iSCdqDISOJjHI+bLxY2h0Tze7VaGY70ttt51E5lLokBo+sEN84Ssdevvrzo4moHkjl2ewu5M2SZCu0uxXFUpo/Sn0clSnkFsdWeYIUUFW+4HXavfK4e4E/KpOR3DJpUi5Sb/AGq/uv8AkTQJchMpb7MbdyHSnmV16E9K8sDhqszDibfccqu0/HYMa6RbPaCy039HJuAUl89qBzOkJWpKOb2QffQfd04i0Q2mEQMKmTpclqxKjx/Lmmgtd17UNIK1DZPIWtlE9DzD4VxbuI+Peb5jFgt2Hym7xd5s2BKiXG4MRRCehvIafaS4d0vuevzJQjqpIJ6d1eRvhreGOCO/qNc3ruzJtDsW6G2sDsG7Zz+TN9l7K+q1FSj7XwAr2SeHGFJw+1YqvMLg5bWbsb7dFvQWVyrjNMkSFPJf2BjkqHL+zHsdPtoOWeIxpyw5DkqsPeRj9hvaLRNlm4tGRHT5SWHJD0bbmaQn1XNid1IO/Tau61cQC79m9hxuy4a64u9xZFyiPTLkzFD8NuQplt1kKG7qlhHa9mOqW1JJPXavQ/oQ3c7ln11veVvzLhl9oVZFvM25mMmPHJcKVFCOjzqe0A7RfXZIHSvXedFxfZWCMS8nfTaMQVDfYhtwGg68/GGyViR7baVAJC0J6EDbcbmgiL/E1dYVgkXO56aGClnIvNcmRf4yGxMSlanOdwpCUNp5B656Hm+ysx6QyU5lkNgdxiMj6AtIukt0XyOVugwfK+VhvbmeTt6hcT6o9rur6vXD4xc8elW6NlkqK87mL2Yofct7MhKHnEqT2JbX6q2xze/qa6ZfD7Ll3/J7kc9fT5zWpNsuLabNGCt0wvJA40vbdr+uUJ2T7u6gYPxKWjNs1wvGouMT4snJIEmW6p19ChbnGS8Cw4AN1LPYLPTbpsay0zXe22/JrpYp1hlMSbbkKrM+FPpO0dMFU5U3bbfswyhXq9+/TevFjPDtYMV1Oi5pbb1ND8e8P3UsKZTyq7WGIpa37wkHnc6fvLIrM3LRLG7vrhcNRbhNluC4WZVqftYADKlKQWlSObv5+xUW/wCBoInG4oLZHx2beMnwq72ZBsDeS2pryhqQu5RHHUstgBJAadK3GhyK3ACwd+hrsunEdJsjUm13bAXomTxL1Es8i0vXZhLTflUdchl7ykjk5CltQO4GygR9tdcbhhtD+OTrPk2aXq9JFhbxu1Olhphy2w23kvNkco/aOhbbRK1d4QBt1Nd87hstmRJkSs3yiXkNxn3qLdbpJegtNNzG48ZyO3GDSfVbRyOKJUNzzHegyd119gQeH7F9U4uOyXWMhkxYrMKZLaiFhT6lJCnHV+olAKequ7Y791eNHEGVZxMxtWLwwuBZmrxJdTfoyudLkVyQER07byAA0QVo6AEK7qyN50UdvOheMacycxmLdx6VEkxrq9BaeW95KT2SXGleoocvKDv38vUdTXgToNL887jkLmcLWu62dq0XFoWSKO0S3GcYC2lAbsb9qVFKNgdgO6gymlmu1l1Un2uNaLTKiqmWZd0eD7qSqI43IDC4y0gb8wKgrm7ikg7dawV/4l7VYcYn3hzFLjIVCySbYnozL6CpLMQcz8wnbo2lJBKe/qOtZ3ANDLHp/qY9mdpuktcmVYotmlMLaSlt5xkIT5T07lrDSOYDoSN6jC+FXHbnDlM5XklxvplJurzhcaTHAmT1oU5JSlsgbpS2lKUHdPeTvv0DKyuIWJE1wlaeOYtIWhmf9GouDU5pRceMHyxJ7D2w0UDlLnUA7b1gbfxW2hzBMazC8Yx5Dar5dGbf2ke6sTFwUOMl0vSEtjdvlAHMg7KA3PurJ2bhshWjN2MxGWzpF9QttLs1cNoKfYFvTCcYVsfZX2aHd9/VWOlc4zw2wrRiNgxa95Ou92iyurLUVdrjx+3ZXCdiLbdU31WSl7m5zurdIoJFh2tMTLtQbfirOPyYzkyHc5aZCpCFpSIU8wynYDrzkc4PuHSo7dOJa1W5rUJacUuL/mkgOsBL6B9LtiSqK4tnp0CHkqR133IrjEuHOTg03FZeMah3KM9YIUq3Fci3sPmXHkS/KVpXzeyrcBPMOuw37zXgRwoY9Ftzbdtye5xJr9udg3Sd2SXFXFS5TcrtlJUrlQpLjRICenrHegybnErY5URS8cx2fe5EuTbIdnjsPtoNwemsLeCSVdGQ2ltwLKt9ik9KlWV6mXXC9FBnF+w9xq4CRHirszdwaXyuPSUsI/bgchTutKt9ugPXYiokrhksMS532549kVxs02bkLGS25xhltabXLbQ4lQQhXRxpfbO7oOw2VsO6sodBIb3Dp+qa4ZJKlsOXEXGRcFRWwp5Rm+VrR2e/KEKVunb3JNBhbdxLMXXIsbscTEkszLu5LZe8uvUaO3HcizREdQ24d0yCVHmQEdVjfYbg1jU8WVvFtyWY/g81KbPAmXFpLVwZdVIbjThDcCwBuworPMkLHrJB2qaX3RGHL1CxnKcWukbGUWCGuCxbY1ojPxy0t9DyglKxs2rdAAUkbjcnvNRL0UrI1Y8itsHK7hETkUCVCua0RGiZBdmqlNOnr7bXOtsE77pPXuFBmYmvsp/UPG8PdxS3NS71GEztxkkRbCG/KjH2bWBs+5uObs0de8d4rx2LiRcyrAr3lWMYFLnsWGCqXc0LuLTXYLS66CyFFOynAy0XiOmwWhPeakdz0WZd1bsOc4/embF9FQEW76OZtMZ1lxoSO3UU8w/ZLUenMgAjckGsDiXDZb8Ost8tVqyy4CNfrHIs9ybMZsJfW448puVsD0dbQ+pv4KSE791Bs7T/ACe4Zlp9bMouFiVZjcWUyWYipSJBDSwFNqKkgDcpIO3u7qk9YjFLEjGMFs2NNyFyW7XBYgpfcSEqcDTYQFEDoCeXfYfGsvQKUO+3SoxMyTJI1wfjx9PLzMabWUoktS4SUuj+sAt4KAP2gGgk9KiPnVlfyxvv42B49POrK/ljffxsDx6CXUqI+dWV/LG+/jYHj086sr+WN9/GwPHoJdSoj51ZX8sb7+NgePTzqyv5Y338bA8egl1KiPnVlfyxvv42B49POrK/ljffxsDx6CXUqI+dWV/LG+/jYHj086sr+WN9/GwPHoK78SN0nRdTMgbu92v0DscQS/haLa/IaS9eO3WFcgaOzj/Rgcqt/UJ6bb1Hpl11Mtes8l2bKucizXrO7LbZjTbrgTbJbKYb5KdjsGXkuPtqA9XdAq05yjKSeumN+/HQPHrjznyn5Y378dA8egpTa7xfVYRfF4xfMnfnpxzKF5ODLluNsLRJULeRznlbe29ns9iU99c5xOub+nGJuYnPckhmyXiVMfsl4uSkxHULic0rdau0dfZClL7InkPrAfbdbzoynbb9WN+/HQPHp50ZV8sb9+OgePQVdl3bOl62SPI725Kx39ZtlaDvayA89zQEEbAHsxHXuVKT/WNRu23DLbjij7NhueUy81k4pkhzaKqRJUtiWgnyX1CeVpwL9VoN7Eo7txVxhk+Uj/ljfvx0Dx6DJ8pBJ/Vjftz/AN9A8egqPd8qj36I1fJGQ3hzElXnEoE6YzKlNN8iYj/lqOdBCgRzJ7Tl677b9RXVYLvdxmOmAy+9TEWZwXRUFWRz58dT0VN0aEJS+yIU48WieQO9FJ9r3Vb0ZPlI7tML9+NgePTzoyoHf9WN+3/t0Dx6CselNz1Aha4YTZb3Mu02xXe/325wpbrrhDPZiXHdhu7nqkKQy6jfoOc7dwrM5he79hvEHlNofdu7tlgPq1ESrtnSgstW9bPkoIPsqmBs9mOh+FWD86Mp+WN+/HQPHp50ZTvv+rG/fjoHj0FPUTsss2ieS4fm1+n2e5Wi427I0wsguDxF6aeiqU9BMiOoqSlbzLqkJSdwShJFS++Qb05qDd79g9pyS33k6YIv9ttci4SnlRritSmhuhSylTqW9k8pGxIB25utWS858pP/ACxv342B49cjKMqB3/Vjfvx0Dx6CqjOVYu7p6mzYa/k6cbjXfH1Zhf3LpMeckRnkumQF8x52ClxKEvchHRXXbasPIvExNzwpNwvj4w3zgyBu0SL1cZ7DL9uQ4x5MVOMntVgKLgaK9wRsO6rhjJ8pAIGmF92Pf/tsDr/76DJ8pHdpjfh/9dA8egq5hmSSbdxFuzod9v3bxMsyF3I0PSJLkRiyttqU0t1CiW0ALA5OUAnqBvVy4E2NcrXHuEJ5L0aQ0l5pxO+y0KAUkjf4gg1F/OjKh3aY378dA8euRlWVD/ljffx0Dx6CX0qI+dWV/LG+/jYHj086sr+WN9/GwPHoJdSoj51ZX8sb7+NgePTzqyv5Y338bA8egl1KiPnVlfyxvv42B49POrK/ljffxsDx6CXUqI+dWV/LG+/jYHj086sr+WN9/GwPHoJdSoj51ZX8sb7+NgePTzqyv5Y338dA8egl1K8ttkyplrZkzbc9bn1p3XFfWha2zv3EoUpJ+PQnvr1UClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUClKUH//Z';
   const pp = plan.prijspeil;
@@ -11635,6 +11803,17 @@ function _ohpBuildOfferteHTML(plan, calc) {
 .ob .foot{position:absolute;left:19mm;right:19mm;bottom:9mm;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:8px;font-size:7.6pt;color:var(--muted);}
 .ob .foot .f-left{display:flex;align-items:center;gap:10px;}
 .ob .foot .f-ernes{height:20px;width:auto;}
+/* v4.52.0 - planbrief voor de bijlage (alleen particulier) */
+.ob .brief{width:150mm;}
+.ob .brief-hoofd{margin-top:6mm;}
+.ob .brief-klant{font-size:9.5pt;line-height:1.5;color:#3a352e;}
+.ob .brief-betreft{margin-top:9mm;font-size:10pt;color:#3a352e;}
+.ob .brief-kop{font-weight:700;font-size:10.5pt;color:var(--ink);margin:14px 0 4px;}
+.ob .brief-p{font-size:9.5pt;line-height:1.55;color:#3a352e;margin:0 0 8px;}
+.ob .brief-p ul{margin:2px 0 4px 16px;padding:0;}
+.ob .brief-p li{margin:0 0 3px;}
+.ob .brief-onder{margin-top:14px;}
+.ob .brief-sign{max-height:52px;width:auto;display:block;margin:6px 0 4px;}
 </style>`;
   // ---------------------------------------------------------------
   // v4.3.0 — Blok-gebaseerde opbouw t.b.v. automatische paginering.
@@ -11878,6 +12057,10 @@ function _ohpBuildOfferteHTML(plan, calc) {
     blocks.push(_blk(`<div class="sec besluit-sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Besluit van de vergadering van eigenaren</span></div>${_besluitBody}</div>`));
   } else {
     blocks = [];
+    // v4.52.0 - Planbrief voor de bijlage (alleen particulier, brok 4). Zolang er
+    // geen varianten met het Plan-vinkje zijn, is dit leeg en is het document
+    // byte voor byte de brochure van voorheen.
+    _ohpBriefBlokken(plan, calc).forEach(b => blocks.push(b));
     if (liggingBlok) blocks.push(liggingBlok);
     if (aanhefHtml) blocks.push(_blk(aanhefHtml));
     if (aangetroffenHtml) blocks.push(_blk(`<div class="sec"><div class="sec-label"><span class="num">${nextSec()}</span><span class="h">Wat we aantroffen</span></div>${aangetroffenHtml}</div>`));
@@ -12012,6 +12195,7 @@ function _ohpPaginate() {
         if (run > 0 && (run + it.consumed) > budget) flush();
         cur.push(it.el.outerHTML);
         run += it.consumed;
+        if (it.el.getAttribute('data-break') === 'after') flush(); // v4.52.0 - de planbrief sluit zijn pagina af
         continue;
       }
       // Splitsbare planningstabel: per rij verdelen, koprij per stuk herhalen.
@@ -14448,6 +14632,7 @@ function _bouwOfferteDocHtml() {
   // Secties in documentvolgorde
   OFFERTE_SECTIES.forEach(sec => {
     if (sec.code === 'briefhoofd' || sec.code === 'ondertekening') return; // apart afgehandeld
+    if (sec.alleenPlan) return; // v4.52.0 - briefsecties bestaan alleen op de planbrief
 
     if (sec.code === 'prijsopgave') {
       html += `<div class="section kosten-blok"><h2>${sec.kop}</h2>`;
@@ -14703,6 +14888,7 @@ function _bouwOfferteDocDef() {
   // Secties in documentvolgorde
   OFFERTE_SECTIES.forEach(sec => {
     if (sec.code === 'briefhoofd' || sec.code === 'ondertekening') return;
+    if (sec.alleenPlan) return; // v4.52.0 - briefsecties bestaan alleen op de planbrief
 
     if (sec.code === 'prijsopgave') {
       content.push({ text: sec.kop, bold: true, fontSize: 10, margin: [0, 12, 0, 3], id: 'offKostenKop', headlineLevel: 1 });
@@ -22431,6 +22617,7 @@ async function _ohpAccordNieuweLink(plan, calc, body, invoer) {
     const { error: e1 } = await _sb.from('onderhoudsplannen')
       .update({ offerte_config: cfg }).eq('id', plan.id);
     if (e1) throw e1;
+    plan.offerteConfig = cfg; // v4.52.0 - geheugen gelijk aan de server; de brief leest {geldig_tot} hieruit voor het snapshot
   } catch (e) {
     body.innerHTML = '<p class="acb-fout">Plannummer vastleggen mislukt: ' + _accordEsc(e.message || e) + '</p>';
     return;
@@ -22476,6 +22663,128 @@ async function _ohpAccordNieuweLink(plan, calc, body, invoer) {
 // Mailen via de bestaande Edge Function offerte-verzenden; die kiest zelf de
 // planwoorden op basis van de rij. Na succes gaat de planstatus op verzonden
 // (nooit terug vanaf geaccepteerd of verloren) en lopen dropdown en geheugen mee.
+// ============================================================
+// PLANBRIEF-CONFIG (v4.52.0, brok 4) - venster om per plan te
+// kiezen welke briefsecties aanstaan en welke bibliotheekvariant
+// erin komt. Opslag onder onderhoudsplannen.offerte_config.brief
+// met dezelfde lees-samenvoeg-schrijfronde als
+// _ohpAccordNieuweLink; de kolom zit bewust niet in _mapOhpToDB.
+// Plannen zonder opgeslagen keuze volgen automatisch de
+// Plan-vinkjes (std_plan) uit de bibliotheek.
+// ============================================================
+let _ohpBriefCfgState = null;
+function _ohpBriefVariantenVan(code) {
+  return (data.offerteTeksten || [])
+    .filter(t => t.sectie === code)
+    .sort((a, b) => (a.volgorde - b.volgorde) || (a.naam || '').localeCompare(b.naam || ''));
+}
+function _ohpBriefCfgHtml() {
+  const st = _ohpBriefCfgState;
+  const rijen = OFFERTE_SECTIES.filter(x => x.type === 'tekst').map(sec => {
+    const c = st.secties[sec.code] || { aan: false, blokken: [] };
+    const varianten = _ohpBriefVariantenVan(sec.code);
+    const kies = (blok, i) => {
+      const opts = varianten.map(v => '<option value="' + v.id + '"' + (blok && blok.variantId === v.id ? ' selected' : '') + '>' + _offEsc(v.naam || '(zonder naam)') + (v.std_plan ? ' \u2713' : '') + '</option>').join('');
+      const weg = (sec.stapelbaar && (c.blokken || []).length > 1)
+        ? ' <button class="btn-icon" onclick="_ohpBriefBlokDel(\'' + sec.code + '\',' + i + ')" title="Blok weg">\u00d7</button>' : '';
+      return '<div style="display:flex; gap:0.35rem; align-items:center; margin:0.2rem 0;">'
+        + '<select onchange="_ohpBriefVar(\'' + sec.code + '\',' + i + ', this.value)" style="flex:1; min-width:180px;"><option value="">\u2014 kies een variant \u2014</option>' + opts + '</select>' + weg + '</div>';
+    };
+    const blokken = ((c.blokken && c.blokken.length) ? c.blokken : [{ variantId: null }]).map(kies).join('');
+    const plus = sec.stapelbaar ? '<button class="btn-icon" onclick="_ohpBriefBlokAdd(\'' + sec.code + '\')" title="Blok erbij">+</button>' : '';
+    const leeg = varianten.length ? '' : '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.25rem;">Nog geen varianten in de bibliotheek voor deze sectie.</div>';
+    return '<div style="border:1px solid #eef0f3; border-radius:8px; padding:0.5rem 0.6rem; margin-bottom:0.45rem;' + (c.aan ? '' : ' opacity:0.55;') + '">'
+      + '<label style="display:flex; gap:0.45rem; align-items:center; cursor:pointer; font-weight:600;">'
+      + '<input type="checkbox" ' + (c.aan ? 'checked' : '') + (varianten.length ? '' : ' disabled') + ' onchange="_ohpBriefAan(\'' + sec.code + '\', this.checked)"> '
+      + _offEsc(sec.naam) + (sec.alleenPlan ? ' <span style="font-size:0.68rem; color:var(--muted); font-weight:400;">(alleen brief)</span>' : '')
+      + '</label>'
+      + (c.aan ? '<div style="margin-top:0.35rem;">' + blokken + plus + '</div>' : '')
+      + leeg + '</div>';
+  }).join('');
+  return '<h3>\u2709\ufe0f Planbrief samenstellen</h3>'
+    + '<div class="acb-sub" style="margin:0 0 10px;">De brief komt voor de bijlage en print en bevriest mee met Offerte OHP en de accordeerlink. Een sectie zonder gekozen variant blijft weg. Het teken \u2713 markeert de Plan-standaard uit de bibliotheek; teksten wijzig je in het bibliotheekbeheer.</div>'
+    + rijen
+    + '<div style="display:flex; gap:0.5rem; margin-top:0.7rem;"><button class="acb-btn" id="ohpBriefOpslaanKnop" onclick="_ohpBriefOpslaan()">\ud83d\udcbe Opslaan</button></div>';
+}
+function _ohpBriefRender() {
+  const ov = document.getElementById('accordBeheerOverlay');
+  if (ov) ov.querySelector('.acb-body').innerHTML = _ohpBriefCfgHtml();
+}
+function _ohpBriefAan(code, aan) {
+  const st = _ohpBriefCfgState;
+  if (!st) return;
+  if (!st.secties[code]) st.secties[code] = { aan: false, blokken: [] };
+  st.secties[code].aan = !!aan;
+  if (aan && !(st.secties[code].blokken || []).length) {
+    const vid = _ohpBriefVariantId(code);
+    st.secties[code].blokken = [{ variantId: vid }];
+  }
+  _ohpBriefRender();
+}
+function _ohpBriefVar(code, i, variantId) {
+  const st = _ohpBriefCfgState;
+  if (!st || !st.secties[code]) return;
+  if (!Array.isArray(st.secties[code].blokken)) st.secties[code].blokken = [];
+  while (st.secties[code].blokken.length <= i) st.secties[code].blokken.push({ variantId: null });
+  st.secties[code].blokken[i].variantId = variantId || null;
+}
+function _ohpBriefBlokAdd(code) {
+  const st = _ohpBriefCfgState;
+  if (!st || !st.secties[code]) return;
+  if (!Array.isArray(st.secties[code].blokken)) st.secties[code].blokken = [];
+  st.secties[code].blokken.push({ variantId: null });
+  _ohpBriefRender();
+}
+function _ohpBriefBlokDel(code, i) {
+  const st = _ohpBriefCfgState;
+  if (!st || !st.secties[code] || !Array.isArray(st.secties[code].blokken)) return;
+  st.secties[code].blokken.splice(i, 1);
+  _ohpBriefRender();
+}
+async function _ohpBriefOpslaan() {
+  const plan = _ohpState.plan;
+  if (!plan || !plan.id || !_ohpBriefCfgState) return;
+  const uit = {};
+  OFFERTE_SECTIES.filter(x => x.type === 'tekst').forEach(x => {
+    const sec = _ohpBriefCfgState.secties[x.code] || { aan: false, blokken: [] };
+    uit[x.code] = { aan: !!sec.aan, blokken: (sec.blokken || []).filter(b => b && b.variantId).map(b => ({ variantId: b.variantId })) };
+  });
+  try {
+    const { data: rij0, error: e0 } = await _sb.from('onderhoudsplannen')
+      .select('offerte_config').eq('id', plan.id).single();
+    if (e0) throw e0;
+    const cfg = (rij0 && rij0.offerte_config && typeof rij0.offerte_config === 'object') ? rij0.offerte_config : {};
+    cfg.brief = { secties: uit };
+    const { error: e1 } = await _sb.from('onderhoudsplannen')
+      .update({ offerte_config: cfg }).eq('id', plan.id);
+    if (e1) throw e1;
+    plan.offerteConfig = cfg; // geheugen gelijk aan de server
+    _toast('Planbrief opgeslagen');
+    const ov = document.getElementById('accordBeheerOverlay');
+    if (ov) ov.remove();
+  } catch (e) {
+    _toast('Opslaan mislukt: ' + ((e && e.message) ? e.message : e));
+  }
+}
+function ohpBriefConfig() {
+  const plan = _ohpState.plan;
+  if (!plan || !plan.id) { _toast('Kies eerst een bron-calculatie en vul het plan in'); return; }
+  if (plan.ontvangerType === 'vve') { _toast('De planbrief bestaat alleen voor particuliere plannen; de VvE-bijlage houdt zijn eigen opbouw.'); return; }
+  _accordInjectStyles();
+  let ov = document.getElementById('accordBeheerOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'accordBeheerOverlay';
+    ov.innerHTML = '<div class="acb-modal">'
+      + '<button class="acb-close" title="Sluiten">\u2715</button>'
+      + '<div class="acb-body">Laden\u2026</div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    ov.querySelector('.acb-close').addEventListener('click', () => ov.remove());
+  }
+  _ohpBriefCfgState = _ohpBriefCfg(plan);
+  _ohpBriefRender();
+}
 function _ohpPlanStandaardtekst(aanhef) {
   const a = (aanhef && String(aanhef).trim()) ? String(aanhef).trim() : 'heer, mevrouw';
   return 'Geachte ' + a + ',\n\n'

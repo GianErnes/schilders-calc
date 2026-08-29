@@ -1,3 +1,33 @@
+## v4.52.0 — De planbrief (brok 4 van de planbriefroadmap)
+
+### Wat er nu kan
+
+Een particulier onderhoudsplan kan voortaan een echte offertebrief meekrijgen die **vóór de brochure-bijlage** staat. De brief print mee met **Offerte OHP** en bevriest mee in de accordeerlink, want beide lopen door dezelfde documentbouwer. De brochure begint na de brief altijd op een verse pagina.
+
+De teksten komen uit de bestaande tekstenbibliotheek. Elke variant heeft er een vierde vinkje **Plan** bij (naast Consument, VvE en Zakelijk), en er zijn vier nieuwe secties die alleen op de brief bestaan: **Duurzaamheid**, **Veiligheid**, **Resultaten van het plan** en **Klantquotes**. Die vier verschijnen nooit op een gewone schilderofferte: het Offerte-blok en het voorbeeldvenster verbergen ze, en de twee documentbouwers slaan ze als borg over. De secties **Betaling** en **Garantie** zijn stapelbaar geworden, zodat de brief er meerdere blokken in kan dragen (bijvoorbeeld de betaalmechanica plus een startbeurtvariant, of Vakwerk, aansprakelijkheid en algemene voorwaarden apart).
+
+Met de nieuwe knop **✉️ Planbrief** in het Beurten-blok kies je per plan welke secties aanstaan en welke variant erin komt; bij stapelbare secties kun je blokken toevoegen en weghalen. Sla je niets op, dan volgt de brief vanzelf de Plan-vinkjes uit de bibliotheek. Een sectie zonder gekozen of gevulde tekst blijft altijd weg, en zolang er nog geen enkele Plan-variant bestaat is de brief leeg en is het document byte voor byte de brochure van voorheen. Je kunt dus veilig uploaden voordat je ook maar één tekst getypt hebt.
+
+Er zijn zeven nieuwe invulvelden voor in de brieftekst: `{aantal_jaar}`, `{startjaar}`, `{eindjaar}`, `{gemiddeld_per_maand}`, `{aantal_incassos}`, `{incasso_periode}` en `{totale_investering}`. `{eindjaar}` is het jaar van de **laatste geplande beurt** (besluit 29-08-2026), zodat de brief per definitie klopt met de jaarblokken die de klant ernaast ziet. `{geldig_tot}` werkt in de brief ook en pakt de geldigheid van het plan zelf. De VvE-bijlage is bewust ongemoeid: de knop weigert een VvE-plan met een nette melding.
+
+### Hoe het onder de kap zit
+
+De vier briefsecties staan in `OFFERTE_SECTIES` direct na de inleiding met de nieuwe vlag `alleenPlan: true`. `_offCfg` zet zulke secties op een gewone offerte standaard op `aan: false`, de offerte-UI en het voorbeeldvenster slaan ze over, en de HTML- en pdfmake-bouwer doen dat als dubbele borg ook. Op `offerte_teksten` wordt `std_plan` nu in- en uitgelezen (de kolom bestaat sinds brok 1).
+
+De briefbouwer `_ohpBriefBlokken(plan, calc)` hangt zijn blokken als eerste kinderen in `#obBlocks` van de particuliere tak van `_ohpBuildOfferteHTML`; de VvE-tak is byte voor byte onaangeraakt. Opbouw: een briefhoofd met het klantadres (via `_offAdresEffectief` en `_offContactVol`) en een Betreft-regel — bedrijfsgegevens, kenmerk en datum staan al in de masthead die elke pagina meeloopt — dan de tekstsecties in lijstvolgorde met de kop aan de eerste alinea geplakt en **elke alinea als eigen blok**, zodat `_ohpPaginate` binnen de brief per alinea kan breken. Daarna een vast ondertekenblok met de ingebakken handtekening en als laatste de slotzin. Het laatste briefblok draagt `data-break="after"`; de paginator flusht daarop, een additieve uitbreiding waar bestaande blokken niets van merken. De hele bouwer zit in try/catch met lege terugval: de brief mag de bijlage nooit blokkeren.
+
+De variantkeuze loopt via `_ohpBriefVariantId`: de bovenste variant met het Plan-vinkje, en bewust **geen** terugval op de bovenste variant zoals `_offStandaardVariantId` dat doet, want een calculatie-tekst hoort nooit ongevraagd in een klantbrief. `_ohpBriefCfg` legt de sectiestanden vast: opgeslagen keuzes uit `onderhoudsplannen.offerte_config.brief.secties` gaan voor, al het overige volgt dynamisch de Plan-vinkjes met een vaste aan-lijst.
+
+De cijfers komen uit de nieuwe `_ohpPlanCijfers`, exact de rekenweg van de bijlage (basisbedrag × indexfactor × btw, splitsing op mee-in-het-gemiddelde), met een wederzijdse verwijsopmerking tegen stille drift. `_offVulVelden` kreeg twee optionele parameters (plan en een expliciete calc) en leest bij een expliciete calc de offerte-instellingen rechtstreeks in plaats van via `_offCfg`, dat aan de open calculatie hangt. `_mapOhpFromDB` mapt `offerte_config` nu **alleen-lezen** naar `plan.offerteConfig`; de kolom blijft bewust buiten `_mapOhpToDB` en alle schrijfwerk gaat via dezelfde gerichte lees-samenvoeg-schrijfronde als v4.51.0. `_ohpAccordNieuweLink` zet na de geslaagde schrijfronde het geheugen gelijk aan de server, zodat het bevroren snapshot de verse geldigheid in `{geldig_tot}` draagt.
+
+Het venster `ohpBriefConfig` gebruikt dezelfde overlay als het accordeervenster. Opslaan schrijft alleen de sleutel `brief` en laat nummer, geldigheid en offertedatum met rust. Alle nieuwe namen en CSS-klassen zijn vooraf op nul treffers gecontroleerd; 33 slice-tests op code uit het gepatchte bestand slagen.
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Meer niet: geen SQL, geen Edge Function (de kolommen van brok 1 doen het werk).
+2. In het bibliotheekbeheer de briefteksten typen en per variant het **Plan**-vinkje zetten. Zolang je dat niet doet, verandert er niets aan de documenten.
+3. Testen op een particulier proefplan: knop **Planbrief** openen, secties nalopen, dan **Offerte OHP** printen en controleren dat de brief voorop staat en de brochure op een nieuwe pagina begint. Een VvE-plan moet de knop weigeren, en een gewone offerte mag nergens de vier nieuwe secties tonen.
+
 ## v4.51.0 — Accordeerlink voor onderhoudsplannen (stap 3, de app-kant)
 
 ### Wat er nu kan
