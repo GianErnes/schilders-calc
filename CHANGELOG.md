@@ -1,3 +1,39 @@
+## v4.50.0 — Drie klantdocumenten in plaats van één
+
+### Wat er misging
+
+In v4.49.0 kreeg de particuliere bijlage een kop met beide betaalwegen naast elkaar. Daarbij is de contant-uitsluiting uit het voorfinancieringsbeeld gehaald, met als gedachte dat de bijlage de maandweg voortaan aan elke particulier aanbiedt. Op de bijlage van Trilsbeek-God, een plan met **Betaalmodel contant** en het voorfinancieringsvinkje aan, leverde dat een sectie **Wat u betaalt en wat wij leveren** op met een rood kader waarin staat dat bij stoppen het verschil met de betaalde maandtermijnen wordt verrekend. Op dat plan lopen geen maandtermijnen. Erger nog: twee alinea's verder, bij **Altijd opzegbaar** op dezelfde pagina, stond dat er bij betaling per beurt niets te verrekenen valt. Het document sprak zichzelf tegen.
+
+De onderliggende fout zat dieper. De kop bood twee wegen aan zonder ergens het woord *of* te gebruiken, dus een klant las dat als twee feiten en niet als een keuze. Hij wist niet dat er wat te kiezen viel, en al helemaal niet waartussen.
+
+### Wat er nu gebeurt
+
+**Het veld Betaalmodel krijgt een derde stand en bepaalt voortaan welk klantdocument eruit komt.**
+
+| Betaalmodel | Kop | Zin op pagina 1 | Keuzeblok | Sectie voorfinanciering |
+|---|---|---|---|---|
+| Contant | aantal beurten, geen totaalbedrag | nee | nee | nooit |
+| Maandelijks | het maandbedrag | nee | nee | als het vinkje aan staat |
+| Beide | twee kolommen met **of** ertussen | ja | ja | als het vinkje aan staat |
+
+**Op het keuzedocument ziet de klant de keuze in drie stappen.** Op pagina 1 leest hij direct achter de aanhef dat hij zelf bepaalt hoe hij betaalt. In de kop staat het woordje **of** tussen de twee bedragen. En na het blok over wat hij betaalt en wat wij leveren staat een nieuwe sectie **Hoe u betaalt, kiest u zelf**, met links de beurten met hun bedragen en rechts het maandbedrag met de termijnen en de periode. Daaronder staat dat hij zijn keuze doorgeeft bij het akkoord.
+
+Die plek is bewust gekozen. Pas na de sectie over de maandweg heeft de klant beide wegen gezien, dus pas dan is een vergelijking eerlijk. Staat het voorfinancieringsvinkje uit, dan schuift het keuzeblok vanzelf omhoog naar de plek direct na De planning en klopt de volgorde ook dan.
+
+**Op een zuiver contant document valt nu weg wat er niet hoort.** Geen voorfinancieringsbeeld en geen uitleg over beurten die buiten het maandbedrag vallen, want daar rekent de klant elke beurt apart af en verwijst die uitleg naar een maandbedrag dat nergens staat. De kop toont het aantal beurten en bewust geen totaalbedrag: dat was het afhaakmoment waar v4.49.0 juist vanaf wilde.
+
+**De tekst bij Altijd opzegbaar gaat van twee naar drie takken.** Een VvE en een contant particulier plan krijgen dezelfde tekst, want beide rekenen per beurt af. Op maandelijks staat alleen de balansbelofte. Alleen op het keuzedocument staan beide wegen naast elkaar, want alleen daar heeft de klant nog niet gekozen.
+
+### Wat je moet weten
+
+**Het document belooft iets dat nog niet bestaat.** Er staat dat de klant zijn keuze doorgeeft bij het akkoord, maar er is geen accordeerlink voor onderhoudsplannen. `offerte_accorderingen` hangt aan `calculatie_id` en een plan hangt aan diezelfde calculatie, dus een plan-accordering zou botsen met de accordering van de schilderbeurt die al is afgerekend. Per afspraak van 29 augustus 2026 gaat er geen plan de deur uit voordat dat is opgelost.
+
+**Er staat bewust geen bedrag bij de zin dat beide wegen op hetzelfde uitkomen.** Op Trilsbeek-God tellen de beurten op tot € 21.957,73 terwijl 120 × € 182,98 uitkomt op € 21.957,60. Dertien cent verschil door afronding van het maandbedrag, en dat rekent een klant een keer na.
+
+**De VvE-tak is byte voor byte ongemoeid gebleven.** Zesentwintig proeven groen op code die met `slice()` uit `index.html` is gesneden, waaronder een vergelijking van de hele VvE-blokkenreeks met de vorige versie.
+
+**Vereist SQL, los geleverd:** de check-constraint `onderhoudsplannen_betaalmodel_chk` laat naast `contant` en `abo` nu ook `beide` toe.
+
 ## v4.49.0 — De klant kiest zelf hoe hij betaalt
 
 ### Wat er misging
