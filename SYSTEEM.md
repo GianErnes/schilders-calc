@@ -34,7 +34,7 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.40.2 |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.51.0 |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
@@ -560,9 +560,9 @@ notitie tijdens de opname over. Dit is gekozen en geen vergeten risico.
 |---|---|---|
 | `app-hulp` | Calc | vraagbaak in de app |
 | `craft-werkvoorbereiding` | Calc | werkvoorbereidingsdocument in Craft |
-| `offerte-accord` | Calc | akkoordverklaring en ondertekende PDF |
+| `offerte-accord` | Calc | akkoordverklaring en ondertekende PDF; sinds 29-08-2026 ook planakkoorden |
 | `offerte-leescontrole` | Calc | controleert de offerte op fouten |
-| `offerte-verzenden` | Calc | verstuurt de offerte |
+| `offerte-verzenden` | Calc | verstuurt de offerte of het onderhoudsplan |
 | `reisafstand` | Calc | rijafstand naar het werkadres |
 | `yoobi-klant` | Calc | klantgegevens uit Yoobi |
 | `yoobi-taken-sync` | Taken | taken en projectnamen uit Yoobi |
@@ -3785,3 +3785,75 @@ Twee gevolgen om te kennen:
    tussen prijspeil en de laatste beurt. Zolang die er niet is, blijft het per
    plan wisselen. Dat is geen fout in de code maar wel een bron van verschil.
    Vraag het Gian bij het eerstvolgende nieuwe onderhoudsplan.
+
+
+---
+
+## Accordeerlink voor onderhoudsplannen (29 augustus 2026, v4.51.0)
+
+Sinds 29 augustus 2026 kan een onderhoudsplan zelfstandig ter goedkeuring
+naar de klant, los van de offerte van de schilderbeurt. Aanleiding: v4.50.0
+introduceerde betaalmodel *beide*, waarbij de klant zijn betaalweg doorgeeft
+bij het akkoord, maar er bestond geen akkoordweg voor plannen. Per opgave
+van Gian (29-08-2026) ging er geen plan met dat betaalmodel de deur uit
+voordat dit er was. Het is in drie stappen gebouwd en alle drie draaien ze.
+
+**Stap 1, de database (gedraaid door Gian in Supabase Studio, 29-08-2026).**
+`offerte_accorderingen` heeft er twee kolommen bij: `onderhoudsplan_id`
+(verwijst naar `onderhoudsplannen`; leeg bij een gewone offerte-link) en
+`betaalkeuze` (de keuze van de klant, `contant` of `abo`, alleen gevuld bij
+een akkoord op een plan met betaalmodel beide). Een planlink heeft
+`calculatie_id` **en** `onderhoudsplan_id` allebei gevuld (besluit
+29-08-2026): de calculatie blijft de kapstok voor klant en project.
+
+> **Open punt (GEMETEN 29-08-2026):** het SQL-bestand van stap 1 staat niet
+> in de map `sql/` van de repo. De migratie is wel gedraaid; alleen het
+> archiefbestand ontbreekt. Uploaden zodra het langskomt.
+
+**Stap 2, de Edge Functions (gedeployed 29-08-2026, alle drie gearchiveerd
+in `ernes-edge-functions`, bevestigd door Gian).** `offerte-accord`,
+`offerte-verzenden` en `offerte-herinnering` kregen een plan-tak. Wat je
+moet weten:
+
+- De GET van `offerte-accord` geeft bij een planlink `soort: 'plan'`, het
+  **live** `betaalmodel` van het plan, `keuze_nodig` (waar bij betaalmodel
+  beide, status open, niet verlopen) en een eventuele eerdere `betaalkeuze`.
+- **Gedragsregel:** omdat `keuze_nodig` het live betaalmodel leest, wijzig
+  je het betaalmodel van een plan niet zolang er een link open staat. Het
+  bevroren document zou dan iets anders zeggen dan het formulier vraagt.
+- De POST eist bij `keuze_nodig` een betaalkeuze en weigert anders met
+  exact *"Kies eerst hoe u wilt betalen: per beurt of per maand."* De app
+  toont dezelfde zin, zodat de klant nooit twee teksten ziet.
+- `offerte-verzenden` kiest zelf de planwoorden op basis van de rij; de app
+  levert alleen token en begeleidende tekst aan, net als bij offertes.
+- `offerte-herinnering` volgt planlinks met eigen taakkenmerken
+  `opvolg-bel-plan` en `opvolg-afsluiten-plan` en rapporteert in de logs
+  een regel met `waarvan_plannen`. Eerste controle op maandag 31-08-2026:
+  Supabase Studio, Edge Functions, offerte-herinnering, Logs; de
+  rapportregel moet `waarvan_plannen: 0` en `mislukt: 0` tonen zolang er
+  nog geen planlink verstuurd is.
+
+**Stap 3, de app (v4.51.0, 29-08-2026).** Knop **Accordeerlink** in het
+Beurten-blok van de Onderhoudsplan-tab. Aanmaken eist een eigen
+Yoobi-plannummer (het verkoopnummer van het plan, niet dat van de
+schilderbeurt; harde stop zonder), vult het e-mailadres voor uit het
+Offerte-blok van de bron-calculatie en zet de geldigheid standaard op 21
+dagen (particulier) of 180 (VvE, met een waarschuwing bij korter, want een
+VvE beslist traag). Nummer, geldigTot en offertedatum gaan met een gerichte
+lees-samenvoeg-schrijfronde naar `onderhoudsplannen.offerte_config`; die
+kolom zit bewust niet in `_mapOhpToDB`, dus een gewone plan-opslag
+overschrijft dit nooit (zelfde patroon als `offerte_config` op calculaties
+sinds v3.58.0). De bevroren bijlage volgt exact de printroute, inclusief
+wachten op de Libre Franklin-fonts omdat de paginering op gemeten hoogtes
+verdeelt. Mailen zet de planstatus op verzonden, alleen vanaf concept of
+gereed; geaccepteerd en verloren vallen nooit terug. De vier bestaande
+lezers van `offerte_accorderingen` in de app filteren voortaan op
+`onderhoudsplan_id` leeg; het dashboardblok heet **Reacties op offertes en
+plannen** en labelt planreacties met een pil.
+
+**Wat een planlink niet heeft.** Geen PDF (`pdf_path` leeg; de klantpagina
+toont de HTML-momentopname) en geen bedrag (`bedrag` leeg, besluit
+29-08-2026: geen bedrag in de akkoordzin). De stempel op het document wordt
+bij een plan overgeslagen omdat de bijlage geen ondertekenvak heeft; de
+banner op de klantpagina is daar het bewijs van het akkoord.
+

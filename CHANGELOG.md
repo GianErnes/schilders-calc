@@ -1,3 +1,29 @@
+## v4.51.0 — Accordeerlink voor onderhoudsplannen (stap 3, de app-kant)
+
+### Wat er nu kan
+
+Een onderhoudsplan kan voortaan zelf ter goedkeuring naar de klant, los van de offerte van de schilderbeurt. In het Beurten-blok van de Onderhoudsplan-tab staat naast **Offerte OHP** een nieuwe knop **Accordeerlink**. Die opent een eigen venster: plannummer invullen (het eigen Yoobi-verkoopnummer van het plan, verplicht, zonder nummer geen link), e-mailadres (voorgevuld uit het Offerte-blok van de calculatie) en de geldigheid, standaard 21 dagen bij particulier en 180 bij een VvE, met een waarschuwing als een VvE-plan korter gezet wordt. Aanmaken bevriest de klantbijlage precies zoals hij op dat moment print. Mailen gaat via dezelfde Edge Function als de offerte en zet de planstatus op Verzonden; geaccepteerd en verloren vallen nooit terug.
+
+De klant ziet de bevroren bijlage op zijn eigen pagina met de kop **Onderhoudsplan ter goedkeuring**. Op een plan met betaalmodel Beide moet hij eerst kiezen tussen per beurt en maandelijks voordat hij akkoord kan geven; de akkoordzin draait live mee met die keuze, de keuze komt terug in de bevestiging, in de banner bij heropening en in het beheervenster. Een bedrag staat er bewust niet in de akkoordzin (besluit 29-08-2026).
+
+### Hoe het onder de kap zit
+
+De planlink hangt aan de nieuwe kolom `onderhoudsplan_id` uit stap 1; `calculatie_id` blijft gevuld. De vier bestaande lezers van `offerte_accorderingen` zijn gescheiden zodat plan- en offertelinks elkaar nooit raken: `accordLinkBeheer`, de herzieningsdetectie en de opruim-delete in `_accordNieuweLink` en de archiveer-lezer filteren voortaan op `onderhoudsplan_id` leeg, en het dashboardblok selecteert de kolom erbij, heet **Reacties op offertes en plannen** en toont een grijze pil *plan* bij planreacties.
+
+Het plannummer, de geldigheid en de offertedatum gaan met een gerichte lees-samenvoeg-schrijfronde naar `onderhoudsplannen.offerte_config`. Die kolom zit bewust niet in `_mapOhpToDB`, dus een gewone plan-opslag kan deze velden nooit overschrijven, hetzelfde patroon als `offerte_config` op calculaties sinds v3.58.0.
+
+De momentopname volgt exact de printroute: liggingsfoto klaarzetten, `_ohpBuildOfferteHTML` in printArea, wachten op de vier Libre Franklin-gewichten (de paginering meet hoogtes en een fallback-font geeft andere paginagrenzen dan de print), afbeeldingen decoderen, `_ohpPaginate`, de gepagineerde HTML uitlezen en printArea leegmaken. De klantpagina rendert die HTML in het bestaande iframe; omdat de fontlink in de app-head staat en dus niet in de print-CSS zit, kreeg `_accordOfferteSrcdoc` een optionele extra head waarmee de planweergave Libre Franklin laadt. De stempel op het document wordt bij een plan overgeslagen: de bijlage heeft geen ondertekenvak en de terugval zou een losse regel onder de brochure hangen. De banner is daar het bewijs.
+
+`_accordWireActies`, `_accordFormHtml` en `_accordVerstuur` kregen een opts-parameter (isPlan, keuzeNodig) met leeg als standaard, zodat het offertepad zich byte voor byte gedraagt als voorheen. De verplichte betaalkeuze gebruikt de bestaande ac-check-opmaak, dus geen nieuwe CSS-klassen. De client meldt bij een ontbrekende keuze exact de serverzin, zodat de klant nooit twee verschillende teksten ziet.
+
+In het planvenster staat de noodrem op de opvolgautomaat, zonder het vooruitrekenrooster van het offertevenster: dat rooster leest offertevelden van de calculatie en zou voor plannen een eigen rekenlijn vragen, terwijl de gedeployde herinnering-functie het echte werk al doet (bewuste keuze, kan later alsnog).
+
+### Wat je moet doen
+
+Niets aan de database of de Edge Functions: stap 1 (SQL) en stap 2 (drie functies) draaien sinds 29 augustus. Uploaden van dit bestand volstaat. Oogcontrole gevraagd op iPad en telefoon: opent de bevroren planbijlage netjes op de klantpagina, zowel bij een particulier plan als bij een VvE-plan.
+
+Geen SQL, geen Edge Function.
+
 ## v4.50.0 — Drie klantdocumenten in plaats van één
 
 ### Wat er misging

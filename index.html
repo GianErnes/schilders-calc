@@ -2301,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.50.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.51.0</h2>
       <div class="intro-body">
+        <p><strong>🔗 Accordeerlink voor onderhoudsplannen (v4.51.0).</strong> De Onderhoudsplan-tab heeft naast <strong>Offerte OHP</strong> een knop <strong>Accordeerlink</strong> gekregen, met een eigen venster. Bij het aanmaken vul je het <strong>Yoobi-plannummer</strong> in (het eigen verkoopnummer van het plan, niet dat van de schilderbeurt; zonder nummer geen link), het e-mailadres (voorgevuld uit het Offerte-blok van de calculatie) en de geldigheid: particulier standaard 21 dagen, VvE 180, met een waarschuwing als je een VvE-plan korter zet. Aanmaken bevriest de bijlage precies zoals hij nu print. Mailen gaat via dezelfde weg als de offerte en zet het plan op <strong>Verzonden</strong>. De klant ziet de bijlage op zijn eigen pagina; op een plan met betaalmodel <strong>Beide</strong> moet hij eerst kiezen tussen per beurt en maandelijks voordat hij akkoord kan geven, en die keuze komt in de akkoordzin, in de bevestiging en in jouw venster te staan. De offerte-accordeerlinks merken hier niets van, en het dashboardblok heet nu <strong>Reacties op offertes en plannen</strong> met een grijze pil bij planreacties.</p>
         <p><strong>🤝 Drie klantdocumenten in plaats van één (v4.50.0).</strong> Het veld <strong>Betaalmodel</strong> in het plan heeft er een derde stand bij: <strong>Beide</strong>. Op Contant krijgt de klant alleen de beurtweg, met het aantal beurten in de kop en nergens een totaalbedrag. Op Maandelijks alleen de maandweg. Op Beide krijgt hij het keuzedocument: op pagina 1 leest hij meteen dat hij zelf bepaalt hoe hij betaalt, in de kop staat het woordje <strong>of</strong> tussen de twee bedragen, en na het blok Wat u betaalt en wat wij leveren staat een nieuwe sectie waarin de twee wegen naast elkaar staan met de beurtbedragen links en het maandbedrag rechts. Daaronder staat dat hij zijn keuze doorgeeft bij het akkoord. <strong>Let op:</strong> die accordeerlink voor onderhoudsplannen bestaat nog niet, dus een plan op Beide kan pas de deur uit als dat er is. Verder verdwijnt het voorfinancieringsbeeld en de uitleg over eenmalige beurten voortaan van een zuiver contant document, want daar lopen geen maandtermijnen. Vereist de SQL die je hebt gedraaid.</p>
         <p><strong>🔀 De klant kiest zelf hoe hij betaalt (v4.49.0).</strong> Op de particuliere bijlage stond tot nu toe één betaalweg, en welke dat was hing af van het veld <strong>Betaalmodel</strong> in het plan. Stond dat op contant, dan kreeg de klant het totaalbedrag als eerste ding in beeld. Voortaan staan de twee wegen naast elkaar in de kop: links het maandbedrag met het aantal termijnen, rechts het aantal beurten dat nog komt met de mededeling dat elke beurt na uitvoering wordt afgerekend. <strong>Het totaalbedrag staat niet meer in de kop.</strong> Dat blijft wel in de slotregel van de planningstabel staan, want anders lijkt het alsof je iets verstopt. Reeds uitgevoerde beurten tellen niet mee in het aantal rechts. De VvE-bijlage is volledig ongemoeid gebleven. Twee dingen liften mee. De uitleg over beurten die buiten het maandbedrag vallen verscheen alleen bij een abonnementsplan; nu de kop altijd een maandbedrag toont zou die uitleg op een contant plan wegvallen en zou de klant denken dat hij met het maandbedrag alles heeft. En de grafiek Betaald tegenover geleverd wordt voortaan bij elk particulier plan berekend, ook op je eigen scherm, zodat je de weg die je aanbiedt zelf hebt gezien voor je hem aanbiedt. De tekst bij <strong>Altijd opzegbaar</strong> is herschreven: die dekt bij een particulier nu beide wegen, en bij een VvE is de verkeerde belofte over verrekening van maandtermijnen eruit.</p>
         <p><strong>⎘ Dupliceren neemt de offerte-instellingen mee (v4.48.0).</strong> Druk je op het kopieer-knopje ⎘ in de lijst, dan vraagt de app voortaan eerst of de kopie voor <strong>dezelfde klant</strong> of voor een <strong>andere klant</strong> is. Bij dezelfde klant gaan het adres, het werkadres, het briefadres, de contactpersoon, de aanspreekvorm, het e-mailadres, het telefoonnummer, de postcode en het huisnummer mee. Bij een andere klant blijven die leeg, en ook de klantnaam, zodat er nooit een naam van de vorige klant op je nieuwe offerte blijft staan. In beide gevallen gaan de <strong>offerte-instellingen</strong> wel mee: het klanttype, de garantiejaren, de prijsweergave, de bijlagevinkjes en alle sectiekeuzes met de teksten die je zelf had aangepast. Die moest je tot nu toe elke keer opnieuw instellen. Het offertenummer, de offertedatum, de geldigheidsdatum en het versienummer komen altijd vers, want dat hoort bij een nieuwe offerte. Gaan bewust niet mee, net als voorheen: foto’s, documenten, opnamedatum en deadline.</p>
@@ -2868,6 +2869,7 @@
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
               <button class="btn btn-secondary" onclick="_ohpPrint()" title="Print het onderhoudsplan voor de klant">🖨 Print onderhoudsplan</button>
               <button class="btn" onclick="_ohpPrintOfferte()" title="Genereer het vormgegeven Onderhoudsgarantie+ plan (PDF) voor bij de offerte">📄 Offerte OHP</button>
+              <button class="btn" onclick="ohpAccordLinkBeheer()" title="Maak of beheer de accordeerlink van dit onderhoudsplan">🔗 Accordeerlink</button>
               <button class="btn" onclick="_ohpAddBeurt()">+ Beurt toevoegen</button>
             </div>
           </div>
@@ -3600,7 +3602,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.50.0';
+const APP_VERSION = 'v4.51.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3996,6 +3998,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.51.0', d: '2026-08-29', h: 'Accordeerlink voor onderhoudsplannen, stap 3: de app-kant. Nieuwe knop Accordeerlink in het Beurten-blok van de Onderhoudsplan-tab opent ohpAccordLinkBeheer, een eigen venster op dezelfde overlay-id accordBeheerOverlay omdat de hele acb-opmaak in _ACCORD_UI_CSS aan die id hangt en er nooit twee modals tegelijk staan. Het venster leest de nieuwste rij op onderhoudsplan_id; de vier bestaande lezers (accordLinkBeheer, de _prevAcc-select en de delete in _accordNieuweLink, de archiveer-lezer en het dashboardblok) zijn gescheiden: de eerste vier kregen .is onderhoudsplan_id null, het dashboardblok selecteert de kolom erbij, heet nu Reacties op offertes en plannen en toont een grijze pil plan bij planreacties. Aanmaken: harde stop zonder Yoobi-plannummer (eigen verkoopnummer van het plan, besluit 29-08-2026, zelfde regel als v4.26.0), e-mail voorgevuld uit offerte_config.email van de calculatie, geldig-tot met norm uit de nieuwe _ohpPlanGeldigNorm (particulier 21, VvE 180, gelijk aan _offGeldigDagenNorm) en een confirm-waarschuwing bij een VvE-datum korter dan 180 dagen. Nummer, geldigTot en offertedatum gaan met een gerichte lees-samenvoeg-schrijfronde naar onderhoudsplannen.offerte_config; de kolom zit bewust niet in _mapOhpToDB, dus een gewone plan-save kan dit nooit overschrijven, hetzelfde patroon als offerte_config op calculaties sinds v3.58.0. De momentopname volgt exact de printroute van _ohpPrintOfferte: _ohpLiggingPrintUrl vullen, _ohpBuildOfferteHTML in printArea, wachten op de vier Libre Franklin-gewichten omdat _ohpPaginate op gemeten hoogtes verdeelt en een fallback-font andere paginagrenzen geeft, _ohpPreloadImages, _ohpPaginate, innerHTML uitlezen en printArea leegmaken. Insert met calculatie_id en onderhoudsplan_id allebei gevuld, bedrag null (geen bedrag in de akkoordzin, besluit 29-08-2026) en pdf_path null; oude open planlinks van hetzelfde plan gaan eerst weg. Klantpagina: _accordRender en _accordRenderVerlopen vertakken op res.soort met eigen titel en teksten; _accordWireActies, _accordFormHtml en _accordVerstuur kregen een opts-parameter met isPlan en keuzeNodig, default leeg zodat het offertepad byte voor byte hetzelfde blijft. Bij keuze_nodig twee verplichte keuzerondjes per beurt of maandelijks in ac-check-opmaak (geen nieuwe CSS-klassen); de akkoordzin draait live mee via span acAkkWeg en de nieuwe helper _accordBetaalWoord, die ook de banner bij heropening en de bevestiging na akkoord voedt en het beheervenster. Ontbreekt de keuze dan stopt de client met exact de serverzin Kies eerst hoe u wilt betalen: per beurt of per maand. betaalkeuze gaat alleen mee in de POST als hij bestaat. De stempel op het document wordt bij een plan overgeslagen, want de bijlage heeft geen ondertekenvak en de terugval zou een losse regel onder de brochure hangen; de banner is daar het bewijs. _accordOfferteSrcdoc kreeg een optionele extraHead waarmee de planweergave de Libre Franklin-fontlink laadt; die staat als link in de app-head en zit dus niet in de print-CSS die _accordPrintCss uitpakt. Mailen via _offerteVerzendCall (de gedeployde functie kiest zelf de planwoorden); na succes een gerichte statusupdate naar verzonden, alleen vanaf concept of gereed zodat geaccepteerd en verloren nooit terugvallen, met _ohpState.plan en de dropdown ohpStatus synchroon. In het planvenster staat de noodrem op de opvolgautomaat (automaat_uit) zonder het rooster van _opvolgBlokHtml: dat rooster leest calc-offertevelden en zou voor plannen een eigen rekenlijn vragen; de herinnering-functie doet het echte werk (bewuste keuze). Geen SQL en geen Edge Function: stap 1 en 2 draaien sinds 29-08-2026.' },
   { v: '4.50.0', d: '2026-08-29', h: 'Drie klantdocumenten op de OHP-bijlage plus een keuzeblok. Nieuwe helper _ohpDocModel(plan) geeft contant, abo of beide en valt bij een onbekende waarde terug op abo, gelijk aan _ohpIsAbo; _docModel wordt eenmaal boven in _ohpBuildOfferteHTML gezet, direct achter isVve. Aanleiding: v4.49.0 haalde de contant-uitsluiting uit _ohpVoorfinanciering, waardoor de bijlage van Trilsbeek-God (betaalmodel contant, toon_voorfinanciering true) een sectie Wat u betaalt en wat wij leveren kreeg met een rood kader over verrekening van maandtermijnen die op dat plan niet lopen; dat kader sprak bovendien de tekst bij Altijd opzegbaar op dezelfde pagina tegen. Vier plekken luisteren nu naar _docModel. _vfB eist naast het vinkje ook _docModel niet contant. toonEenmalig eist hetzelfde, want op een zuiver contant document rekent de klant elke beurt apart af en verwijst de uitleg naar een maandbedrag dat er niet staat. heroDuo eist _docModel is beide, met een nieuwe heroSolo voor contant die het aantal beurten toont en bewust geen totaalbedrag, want dat was het afhaakmoment (besluit 29-08-2026). _opzegTekst gaat van twee naar drie takken: VvE en contant delen dezelfde beurttekst, abo krijgt alleen de balansbelofte en alleen beide noemt de twee wegen naast elkaar. Nieuw op het keuzedocument: een zin achter de aanhef, bewust daar omdat _ohpPaginate naar hoogte verdeelt en de kop op Trilsbeek-God op pagina 2 viel terwijl de aanhef gegarandeerd op pagina 1 staat; het woordje of als eigen gridkolom tussen de twee herokolommen, waarvoor hk-duo van 1fr 1fr naar 1fr auto 1fr gaat en de border-left van hk-r naar de nieuwe hk-of verhuist zodat er geen dubbele lijn ontstaat; en een sectie Hoe u betaalt, kiest u zelf, ingehangen na de drie vf-blokken en voor Uw zekerheid, met links de niet-uitgevoerde beurten uit perJaar en rechts maandbedrag, termijnen en periode. De verrekenregel in dat blok is bewust kort omdat de volle uitleg pal eronder in Uw zekerheid staat. keuzeBody bevat alleen de body: de sec-label met nextSec() wordt bij het inhangen gezet, anders loopt de sectienummering mis. Staat het voorfinancieringsvinkje uit, dan schuift het keuzeblok vanzelf omhoog naar de plek direct na De planning. Bewust geen bedrag bij de zin dat beide wegen op hetzelfde uitkomen: op Trilsbeek-God tellen de beurten op tot 21.957,73 en 120 maal 182,98 is 21.957,60, dertien cent verschil door afronding. Zes nieuwe CSS-klassen (hk-of, kz-intro, kz-grid, kz-kol, kz-kop, kz-rij, kz-slot, kz-wrap) vooraf op nul treffers gecontroleerd in het hele bestand. De VvE-tak is byte voor byte ongemoeid. Openstaand en bewust zo: de tekst belooft dat de klant zijn keuze doorgeeft bij het akkoord, maar er is geen accordeerlink voor onderhoudsplannen; offerte_accorderingen hangt aan calculatie_id en zou botsen met de accordering van de al afgerekende schilderbeurt. Per opgave Gian 29-08-2026 gaat er geen plan de deur uit voor dat is opgelost. Vereist SQL (los geleverd): de check-constraint onderhoudsplannen_betaalmodel_chk laat nu ook beide toe.' },
   { v: '4.49.0', d: '2026-08-29', h: 'Particuliere hero van _ohpBuildOfferteHTML toont beide betaalwegen; VvE byte voor byte ongemoeid. Aanleiding: de hero splitste op _ohpIsAbo, dus het veld betaalmodel koos voor de klant. Bij contant was het grote getal de totale investering, en dat is een afhaakmoment; het totaal staat nu alleen nog in de slotregel van de planningstabel, waar het moet blijven staan omdat de klant de jaarbedragen anders zelf optelt en het verstoppen als ontwijkend leest. Nieuw tweekolomsblok achter de modifier hk-duo op de bestaande .hero, met eigen klassen hk-kol, hk-l, hk-r, hk-lab, hk-val en hk-sub; alle zeven vooraf op nul treffers gecontroleerd in het hele bestand, want in v4.47.0 kostte de naambotsing tussen .ob .stem en .ob .tl-card .stem een halve bijlage. Links het maandbedrag met aantal termijnen en periode, rechts het aantal komende beurten met de looptijd. De rechterkolom beschrijft uitsluitend de eigen weg: de eerdere formulering nooit vooruit betalen is bewust geschrapt omdat die naast een maandbedrag als verwijt aan de linkerkolom leest en het document dan tegen zichzelf in praat. nogBeurten filtert reedsUitgevoerd eruit (besluit 29-08-2026). Bekend en bewust blijven staan: reeds uitgevoerde beurten zitten wel in totaalGemiddelde en dus in het maandbedrag links, dus op een plan met een gedane beurt telt links een beurt meer dan rechts; per opgave van Gian speelt dat niet omdat een bijlage bij een nieuw plan hoort. Bij nul komende beurten valt de hero terug op de enkele kolom met het maandbedrag. Eenmalige beurten tellen wel mee in nogBeurten, want op de per-beurt-weg bestaat het onderscheid mee-in-het-gemiddelde niet: dat is uitsluitend een gevolg van het middelen. Twee meelifters die geen keuze maar noodzaak zijn. toonEenmalig eiste isAbo, dus op een contant plan verdween het blok dat uitlegt welke beurt buiten het maandbedrag valt terwijl de nieuwe hero dat maandbedrag wel toont; de klant zou 96 keer het maandbedrag optellen en denken dat hij het hele plan heeft. Eis vervallen, nu alleen niet-VvE plus eenmRegels. En _ohpVoorfinanciering gaf null bij contant; die uitsluiting is weg omdat de bijlage de maandweg aan elke particulier aanbiedt. Dat raakt bewust ook _ohpRenderResultaat, want je hoort het beeld van de weg die je aanbiedt zelf gezien te hebben. _opzegTekst splitst voortaan op isVve in plaats van op _ohpIsAbo: een VvE betaalt nooit maandelijks maar betaalmodel staat standaard op abo, dus een VvE-plan waar dat veld nooit is aangeraakt kreeg de abonnementstekst met een belofte over verrekening van betaalde termijnen die bij een VvE niet bestaat. VvE krijgt de contant-tekst, particulier een nieuwe tekst die beide wegen dekt omdat de klant bij het lezen nog niet gekozen heeft. isAbo is daarmee ongebruikt in _ohpBuildOfferteHTML en verwijderd; _ohpIsAbo blijft bestaan voor het schermblok Resultaat. Jaartallen op alle zes plekken van de bijlage ongemoeid gelaten (besluit 29-08-2026), en de administratiekosten blijven in de brief en komen niet op de bijlage. Geen SQL, geen Edge Function.' },
   { v: '4.48.0', d: '2026-08-29', h: 'dupCalc neemt offerte_config mee via een witte lijst, met een keuzevenster voor de klantgegevens. Aanleiding: offerte_config stond niet in dupCalc, dus na elke duplicatie moesten adres, contactpersoon, e-mail, telefoon, klanttype, garantiejaren, prijsweergave, bijlagevinkjes en alle sectiekeuzes opnieuw ingevuld worden; volgens v4.10.6 stapelde de praktijk acht kopieen op een dag. Het veld kon niet in headerCopy omdat _insertCalcDB door _mapCalcHeaderToDB gaat en offerte_config daar sinds v3.58.0 bewust ontbreekt, zodat een header-save nooit een verse config overschrijft. Daarom een tweede gerichte update op de verse rij, na de insert en voor de body-kopie; mislukt die, dan bestaat de kopie gewoon met een lege config en dat is exact het gedrag van voor deze versie, met een eigen toast. dupCalc(id) opent nu het nieuwe dupCalcModal en het echte werk zit in _dupCalcUitvoeren(id, metKlant); de onclick op de dashboardrij is ongewijzigd. Twee knoppen: Zelfde klant neemt aanspreekvorm, adres, werkadres, briefadres, contactpersoon, email en telefoon mee plus postcode en huisnummer op de header, Andere klant laat die leeg en laat ook klant leeg omdat een achtergebleven klantnaam bij een leeggemaakt adres precies de fout is die dit moet voorkomen. Altijd mee, want instellingen en geen klantgegevens: klanttype, garantiejaren, prijsWeergave, prijsRegelsHoeveelheden, bijlageKozijnen, bijlageFotos en secties. Nooit mee: offerteNummerVrij, offertedatum, geldigTot en offerteVersie, die zet _offCfg vers bij het eerste openen. Opgezet als witte lijst en niet als zwarte, zodat een onbekend of later toegevoegd veld nooit kan meeliften. Diep gekopieerd via JSON-rondgang omdat adres, werkadres, briefadres, contactpersoon en secties geneste objecten zijn en een ondiepe kopie origineel en kopie in het geheugen dezelfde objecten zou laten delen. postcode en huisnummer zaten al niet in headerCopy terwijl reis er wel in zat, dus een kopie had een reisafstand zonder adres; dat gat is meteen gedicht. fresh.offerteConfig wordt ook in het geheugen gezet zodat het dashboard niet op een herlaadbeurt hoeft te wachten. Zestien proeven groen op code die met slice() uit index.html is gesneden. Geen SQL, geen Edge Function.' },
@@ -12948,6 +12951,7 @@ async function openArchiveerModal() {
     const { data: accRows } = await _sb.from('offerte_accorderingen')
       .select('pdf_path, snapshot->>pdf, klant_naam, gereageerd_op, bedrag, notitie')
       .eq('calculatie_id', data.calc.id)
+      .is('onderhoudsplan_id', null) // v4.51.0 — planlinks hebben geen PDF en horen hier niet
       .eq('status', 'akkoord')
       .order('gereageerd_op', { ascending: false });
     const acc = (accRows || []).find(r => r.pdf_path || r.pdf);
@@ -21165,6 +21169,13 @@ function _accordDatum(iso) {
   try { return new Date(iso).toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' }); }
   catch (e) { return iso; }
 }
+// v4.51.0 — de gekozen betaalweg van een onderhoudsplan in woorden, voor de
+// akkoordzin, de banner en de bevestiging. Lege of onbekende keuze geeft ''.
+function _accordBetaalWoord(keuze) {
+  if (keuze === 'contant') return ', met betaling per beurt';
+  if (keuze === 'abo') return ', met maandelijkse betaling';
+  return '';
+}
 function _accordLinkVoor(token) {
   return location.origin + location.pathname + '?accord=' + token;
 }
@@ -21196,13 +21207,19 @@ async function _accordPaginaTonen(token) {
       + '<p>De offerte kon niet worden geladen. Controleer of je de volledige link hebt geopend, of neem contact op met Ernes schilders.</p></div>';
     return;
   }
+  if (res.soort === 'plan') document.title = 'Onderhoudsplan ter goedkeuring \u2014 Ernes schilders'; // v4.51.0
   _accordRender(root, token, res);
 }
 
 function _accordRender(root, token, res) {
-  const offHtml = (res.snapshot && res.snapshot.html) ? res.snapshot.html : '<p>Offerte niet beschikbaar.</p>';
+  // v4.51.0 — planlinks: eigen titel en teksten, verplichte betaalkeuze als de
+  // Edge Function dat aangeeft (betaalmodel beide, status open, niet verlopen).
+  const isPlan = res.soort === 'plan';
+  const docWoord = isPlan ? 'Onderhoudsplan' : 'Offerte';
+  const offHtml = (res.snapshot && res.snapshot.html) ? res.snapshot.html : ('<p>' + docWoord + ' niet beschikbaar.</p>');
   // v3.79.0 — nieuwe links hebben een bevroren PDF in de snapshot; toon die. Oude links
-  // hebben alleen html en blijven via de oude iframe-weg renderen.
+  // hebben alleen html en blijven via de oude iframe-weg renderen. Planlinks hebben
+  // nooit een PDF en renderen dus altijd via het iframe.
   const pdfUrl = (res.snapshot && res.snapshot.pdf) ? res.snapshot.pdf : null;
   const bedrag = res.bedrag;
   const reedsAf = res.status === 'akkoord' || res.status === 'afgekeurd';
@@ -21213,12 +21230,14 @@ function _accordRender(root, token, res) {
   if (!reedsAf && res.verlopen) { _accordRenderVerlopen(root, token, res); return; }
 
   let banner = '';
+  const _docLidwoord = isPlan ? 'Dit onderhoudsplan' : 'Deze offerte'; // v4.51.0
   if (res.status === 'akkoord') {
-    banner = '<div class="ac-banner ac-ok">Deze offerte is geaccordeerd'
+    banner = '<div class="ac-banner ac-ok">' + _docLidwoord + ' is geaccordeerd'
       + (res.klant_naam ? ' door ' + _accordEsc(res.klant_naam) : '')
-      + (res.gereageerd_op ? ' op ' + _accordDatum(res.gereageerd_op) : '') + '.</div>';
+      + (res.gereageerd_op ? ' op ' + _accordDatum(res.gereageerd_op) : '')
+      + (isPlan ? _accordBetaalWoord(res.betaalkeuze) : '') + '.</div>'; // v4.51.0 — de gekozen weg in woorden
   } else if (res.status === 'afgekeurd') {
-    banner = '<div class="ac-banner ac-nee">Deze offerte is afgewezen'
+    banner = '<div class="ac-banner ac-nee">' + _docLidwoord + ' is afgewezen'
       + (res.klant_naam ? ' door ' + _accordEsc(res.klant_naam) : '')
       + (res.gereageerd_op ? ' op ' + _accordDatum(res.gereageerd_op) : '') + '.</div>';
   }
@@ -21235,7 +21254,7 @@ function _accordRender(root, token, res) {
 
   root.innerHTML =
     '<div class="ac-wrap">'
-    + '<div class="ac-kop"><div class="ac-kop-titel">Offerte ter goedkeuring</div>'
+    + '<div class="ac-kop"><div class="ac-kop-titel">' + docWoord + ' ter goedkeuring</div>'
     + '<div class="ac-kop-sub">' + _accordEsc(res.project || '') + (res.klant ? ' \u2014 ' + _accordEsc(res.klant) : '') + '</div></div>'
     + banner
     + docHtml
@@ -21245,11 +21264,17 @@ function _accordRender(root, token, res) {
 
   if (!pdfUrl) {
     const ifr = root.querySelector('#acOfferte');
-    ifr.srcdoc = _accordOfferteSrcdoc(offHtml);
+    // v4.51.0 — de planbijlage rendert met Libre Franklin; die fontlink zit niet in
+    // de print-CSS (hij staat als link in de head van de app) en gaat daarom apart mee.
+    ifr.srcdoc = _accordOfferteSrcdoc(offHtml, isPlan
+      ? '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">'
+      : '');
     ifr.addEventListener('load', () => {
       const fix = () => { try { ifr.style.height = (ifr.contentWindow.document.body.scrollHeight + 40) + 'px'; } catch (e) {} };
       fix();
-      if (res.status === 'akkoord') _accordStempel(ifr, res.klant_naam, res.gereageerd_op);
+      // v4.51.0 — de planbijlage heeft geen ondertekenvak; de stempel-terugval zou
+      // een losse regel onder de brochure hangen. De banner is daar het bewijs.
+      if (res.status === 'akkoord' && !isPlan) _accordStempel(ifr, res.klant_naam, res.gereageerd_op);
       try { ifr.contentWindow.document.querySelectorAll('img').forEach(im => { if (!im.complete) im.addEventListener('load', fix); }); } catch (e) {}
       setTimeout(fix, 800); setTimeout(fix, 2000);
     });
@@ -21265,7 +21290,7 @@ function _accordRender(root, token, res) {
     }
   }
 
-  if (!reedsAf) _accordWireActies(root, token, bedrag);
+  if (!reedsAf) _accordWireActies(root, token, bedrag, { isPlan: isPlan, keuzeNodig: !!res.keuze_nodig }); // v4.51.0
 }
 
 // v4.12.0 / v4.35.0 — pagina voor een verlopen, nog onbeantwoorde offerte.
@@ -21275,17 +21300,19 @@ function _accordRender(root, token, res) {
 // de verlopen-mail van de opvolgautomaat vraagt juist om die reactie.
 function _accordRenderVerlopen(root, token, res) {
   _accordVerlopenModus = true;
+  const isPlan = res.soort === 'plan'; // v4.51.0
   const datum = res.geldig_tot ? _accordDatum(res.geldig_tot) : '';
   root.innerHTML =
     '<div class="ac-wrap">'
-    + '<div class="ac-kop"><div class="ac-kop-titel">Offerte verlopen</div>'
+    + '<div class="ac-kop"><div class="ac-kop-titel">' + (isPlan ? 'Onderhoudsplan' : 'Offerte') + ' verlopen</div>'
     + '<div class="ac-kop-sub">' + _accordEsc(res.project || '') + (res.klant ? ' \u2014 ' + _accordEsc(res.klant) : '') + '</div></div>'
-    + '<div class="ac-banner ac-nee">Deze offerte is verlopen' + (datum ? ' op ' + _accordEsc(datum) : '') + ' en kan niet meer worden geaccordeerd.</div>'
+    + '<div class="ac-banner ac-nee">' + (isPlan ? 'Dit onderhoudsplan' : 'Deze offerte') + ' is verlopen' + (datum ? ' op ' + _accordEsc(datum) : '') + ' en kan niet meer worden geaccordeerd.</div>'
     + '<div class="ac-kaart" id="acActies">'
     + '<div class="ac-acties-titel">Laat ons weten hoe het ervoor staat</div>'
-    + '<div style="margin:0 0 10px; color:#555;">Ziet u ervan af, geef dat dan hieronder door. Heeft u nog wel belangstelling, stel dan hier uw vraag, dan neemt Ernes schilders contact met u op voor een nieuwe aanbieding tegen de huidige prijzen.</div>'
+    + '<div style="margin:0 0 10px; color:#555;">Ziet u ervan af, geef dat dan hieronder door. Heeft u nog wel belangstelling, stel dan hier uw vraag, dan neemt Ernes schilders contact met u op voor '
+    + (isPlan ? 'een actueel voorstel.' : 'een nieuwe aanbieding tegen de huidige prijzen.') + '</div>'
     + '<div class="ac-knoppen">'
-    + '<button class="ac-btn ac-btn-nee" data-mode="afkeuren">Offerte afwijzen</button>'
+    + '<button class="ac-btn ac-btn-nee" data-mode="afkeuren">' + (isPlan ? 'Plan afwijzen' : 'Offerte afwijzen') + '</button>'
     + '<button class="ac-btn ac-btn-vraag" data-mode="vraag">Vraag stellen</button>'
     + '</div>'
     + '<div id="acForm" class="ac-form" hidden></div>'
@@ -21293,7 +21320,7 @@ function _accordRenderVerlopen(root, token, res) {
     + '</div>'
     + '<div class="ac-voet">Ernes schilders \u00b7 info@ernes.nl \u00b7 045 5321471</div>'
     + '</div>';
-  _accordWireActies(root, token, null);
+  _accordWireActies(root, token, null, { isPlan: isPlan, keuzeNodig: false }); // v4.51.0 — verlopen kent geen akkoord, dus geen keuze
 }
 
 function _accordActiesHtml() {
@@ -21309,7 +21336,8 @@ function _accordActiesHtml() {
     + '</div>';
 }
 
-function _accordWireActies(root, token, bedrag) {
+function _accordWireActies(root, token, bedrag, opts) {
+  const _o = opts || {}; // v4.51.0 — { isPlan, keuzeNodig }; leeg = offertegedrag van altijd
   const form = root.querySelector('#acForm');
   const melding = root.querySelector('#acMelding');
   const acties = root.querySelector('#acActies');
@@ -21319,23 +21347,45 @@ function _accordWireActies(root, token, bedrag) {
       root.querySelectorAll('.ac-knoppen .ac-btn').forEach(b => b.classList.toggle('actief', b === btn));
       melding.hidden = true;
       form.hidden = false;
-      form.innerHTML = _accordFormHtml(mode, bedrag);
+      form.innerHTML = _accordFormHtml(mode, bedrag, _o);
       if (acties) acties.classList.add('ac-expanded');
+      // v4.51.0 — kiest de klant een betaalweg, dan draait de akkoordzin mee.
+      if (mode === 'akkoord' && _o.keuzeNodig) {
+        form.querySelectorAll('input[name="acBetaalkeuze"]').forEach(r => {
+          r.addEventListener('change', () => {
+            const w = form.querySelector('#acAkkWeg');
+            if (w) w.textContent = _accordBetaalWoord(r.value);
+          });
+        });
+      }
       const submit = form.querySelector('.ac-submit');
-      submit.addEventListener('click', () => _accordVerstuur(root, token, mode, form, melding, submit));
+      submit.addEventListener('click', () => _accordVerstuur(root, token, mode, form, melding, submit, _o));
       setTimeout(() => { try { form.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }, 50);
     });
   });
 }
 
-function _accordFormHtml(mode, bedrag) {
+function _accordFormHtml(mode, bedrag, opts) {
+  const _o = opts || {}; // v4.51.0 — { isPlan, keuzeNodig }
   if (mode === 'akkoord') {
+    // v4.51.0 — bij betaalmodel beide is de keuze verplicht; de server dwingt dat
+    // ook af. De akkoordzin noemt de gekozen weg (span acAkkWeg, gevuld door de
+    // radio-listener in _accordWireActies) en bij een plan nooit een bedrag,
+    // want bedrag is daar altijd null (besluit 29-08-2026).
+    const keuzeHtml = _o.keuzeNodig
+      ? ('<label class="ac-lbl">Hoe wilt u betalen? <span class="ac-ster">*</span></label>'
+        + '<label class="ac-check"><input type="radio" name="acBetaalkeuze" value="contant"> Per beurt (u betaalt elke onderhoudsbeurt apart)</label>'
+        + '<label class="ac-check"><input type="radio" name="acBetaalkeuze" value="abo"> Maandelijks (vast maandbedrag)</label>')
+      : '';
     return '<label class="ac-lbl">Uw naam <span class="ac-ster">*</span></label>'
       + '<input type="text" class="ac-input" id="acNaam" placeholder="Voor- en achternaam" autocomplete="name">'
       + '<label class="ac-lbl">Opmerking (optioneel)</label>'
       + '<textarea class="ac-input" id="acNotitie" rows="2" placeholder="Eventuele opmerking"></textarea>'
-      + '<label class="ac-check"><input type="checkbox" id="acAkkVink"> Ik ga akkoord met deze offerte van Ernes schilders'
+      + keuzeHtml
+      + '<label class="ac-check"><input type="checkbox" id="acAkkVink"> Ik ga akkoord met '
+      + (_o.isPlan ? 'dit onderhoudsplan' : 'deze offerte') + ' van Ernes schilders'
       + (bedrag != null ? ', bedrag ' + _accordEur(bedrag) + ' incl. btw' : '')
+      + (_o.isPlan ? '<span id="acAkkWeg"></span>' : '')
       + ', inclusief de algemene voorwaarden.</label>'
       + '<button class="ac-submit ac-submit-ok">Akkoord bevestigen</button>';
   }
@@ -21343,7 +21393,7 @@ function _accordFormHtml(mode, bedrag) {
     return '<label class="ac-lbl">Uw naam <span class="ac-ster">*</span></label>'
       + '<input type="text" class="ac-input" id="acNaam" placeholder="Voor- en achternaam" autocomplete="name">'
       + '<label class="ac-lbl">Reden van afwijzing</label>'
-      + '<textarea class="ac-input" id="acNotitie" rows="3" placeholder="Waarom wijst u de offerte af?"></textarea>'
+      + '<textarea class="ac-input" id="acNotitie" rows="3" placeholder="Waarom wijst u ' + (_o.isPlan ? 'het onderhoudsplan' : 'de offerte') + ' af?"></textarea>'
       + '<button class="ac-submit ac-submit-nee">Afwijzing bevestigen</button>';
   }
   return '<label class="ac-lbl">Uw naam (optioneel)</label>'
@@ -21353,10 +21403,19 @@ function _accordFormHtml(mode, bedrag) {
     + '<button class="ac-submit ac-submit-vraag">Vraag versturen</button>';
 }
 
-async function _accordVerstuur(root, token, mode, form, melding, submit) {
+async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
+  const _o = opts || {}; // v4.51.0 — { isPlan, keuzeNodig }
   const naam = (form.querySelector('#acNaam') ? form.querySelector('#acNaam').value : '').trim();
   const notitie = (form.querySelector('#acNotitie') ? form.querySelector('#acNotitie').value : '').trim();
   if ((mode === 'akkoord' || mode === 'afkeuren') && !naam) { alert('Vul uw naam in.'); return; }
+  // v4.51.0 — verplichte betaalkeuze op een plan met betaalmodel beide; dezelfde
+  // zin als de servermelding zodat de klant nooit twee verschillende teksten ziet.
+  let betaalkeuze = null;
+  if (mode === 'akkoord' && _o.keuzeNodig) {
+    const gekozen = form.querySelector('input[name="acBetaalkeuze"]:checked');
+    betaalkeuze = gekozen ? gekozen.value : null;
+    if (!betaalkeuze) { alert('Kies eerst hoe u wilt betalen: per beurt of per maand.'); return; }
+  }
   if (mode === 'akkoord' && !(form.querySelector('#acAkkVink') && form.querySelector('#acAkkVink').checked)) {
     alert('Vink het akkoord aan om te bevestigen.'); return;
   }
@@ -21367,9 +21426,11 @@ async function _accordVerstuur(root, token, mode, form, melding, submit) {
   submit.disabled = true; submit.textContent = 'Bezig\u2026';
   let res;
   try {
+    const _body = { token: token, actie: mode, naam: naam, notitie: notitie };
+    if (betaalkeuze) _body.betaalkeuze = betaalkeuze; // v4.51.0
     const r = await fetch(ACCORD_FN_URL, {
       method: 'POST', headers: _accordHeaders(),
-      body: JSON.stringify({ token: token, actie: mode, naam: naam, notitie: notitie })
+      body: JSON.stringify(_body)
     });
     res = await r.json();
     if (!r.ok || res.error) throw new Error(res.error || ('HTTP ' + r.status));
@@ -21394,7 +21455,7 @@ async function _accordVerstuur(root, token, mode, form, melding, submit) {
   }
   if (mode === 'akkoord') {
     const ifr = root.querySelector('#acOfferte');
-    if (ifr) _accordStempel(ifr, naam, new Date().toISOString());
+    if (ifr && !_o.isPlan) _accordStempel(ifr, naam, new Date().toISOString()); // v4.51.0 — de planbijlage heeft geen ondertekenvak
     // Bij een PDF-link nu de getekende offerte aanbieden om te downloaden.
     if (_accordCtx && _accordCtx.pdfUrl) {
       const _info = { naam: naam, datumIso: new Date().toISOString(), notitie: notitie };
@@ -21406,7 +21467,9 @@ async function _accordVerstuur(root, token, mode, form, melding, submit) {
   const acties = root.querySelector('#acActies');
   const heeftPdfDl = !!(mode === 'akkoord' && _accordCtx && _accordCtx.pdfUrl);
   acties.innerHTML = '<div class="ac-banner ' + (mode === 'akkoord' ? 'ac-ok' : 'ac-nee') + '">'
-    + (mode === 'akkoord' ? 'Bedankt. Uw akkoord is vastgelegd.' + (heeftPdfDl ? ' U kunt hierboven uw getekende offerte downloaden.' : '') : 'Bedankt. Uw reactie is vastgelegd.')
+    + (mode === 'akkoord'
+        ? 'Bedankt. Uw akkoord is vastgelegd' + _accordBetaalWoord(betaalkeuze) + '.' + (heeftPdfDl ? ' U kunt hierboven uw getekende offerte downloaden.' : '')
+        : 'Bedankt. Uw reactie is vastgelegd.')
     + '</div>';
 }
 
@@ -21428,12 +21491,13 @@ function _accordStempel(ifr, naam, isoDatum) {
   } catch (e) {}
 }
 
-function _accordOfferteSrcdoc(bodyHtml) {
+function _accordOfferteSrcdoc(bodyHtml, extraHead) {
   const overrides = '.print-only .dpv-vw{margin-left:0 !important;margin-right:0 !important;}'
     + '.print-only .dpv-pagebreak{border-top:2px dashed #ccc;}'
     + 'img{max-width:100%;height:auto;}';
   return '<!doctype html><html lang="nl"><head><meta charset="utf-8">'
     + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + (extraHead || '') // v4.51.0 — planlinks laden hier de Libre Franklin-fontlink
     + '<style>' + _ACCORD_OFFERTE_CSS + _accordPrintCss() + overrides + '</style></head>'
     + '<body><div class="print-only">' + bodyHtml + '</div></body></html>';
 }
@@ -21498,6 +21562,7 @@ async function accordLinkBeheer() {
   try {
     const { data: rows, error } = await _sb.from('offerte_accorderingen')
       .select('*').eq('calculatie_id', c.id)
+      .is('onderhoudsplan_id', null) // v4.51.0 — planlinks hebben een eigen venster
       .order('aangemaakt_op', { ascending: false }).limit(1);
     if (error) throw error;
     rij = rows && rows[0] ? rows[0] : null;
@@ -22007,7 +22072,8 @@ async function _accordNieuweLink(c, body, supersede) {
   // exemplaar de nieuwe versie en datum toont.
   try {
     const { data: _prevAcc } = await _sb.from('offerte_accorderingen')
-      .select('status, gereageerd_op, vragen').eq('calculatie_id', c.id);
+      .select('status, gereageerd_op, vragen').eq('calculatie_id', c.id)
+      .is('onderhoudsplan_id', null); // v4.51.0 — een planreactie is geen offerteherziening
     const _gereageerd = Array.isArray(_prevAcc) && _prevAcc.some(r =>
       r.gereageerd_op != null || r.status === 'akkoord' || r.status === 'afgekeurd' ||
       (Array.isArray(r.vragen) && r.vragen.length > 0));
@@ -22088,7 +22154,7 @@ async function _accordNieuweLink(c, body, supersede) {
 
   try {
     // Oude, nog niet beantwoorde link(s) opruimen zodat er maar e\u00e9n actieve link is.
-    await _sb.from('offerte_accorderingen').delete().eq('calculatie_id', c.id).eq('status', 'open');
+    await _sb.from('offerte_accorderingen').delete().eq('calculatie_id', c.id).eq('status', 'open').is('onderhoudsplan_id', null); // v4.51.0 — een open planlink blijft staan
     const { error } = await _sb.from('offerte_accorderingen').insert({
       calculatie_id: c.id,
       token: token,
@@ -22111,6 +22177,361 @@ async function _accordNieuweLink(c, body, supersede) {
   // Verse status ophalen en tonen.
   accordLinkBeheer();
 }
+
+/* ---------- v4.51.0 \u2014 Accordeerlink voor onderhoudsplannen ---------- */
+// Eigen venster naast het offerte-linkbeheer. Een planlink hangt aan
+// onderhoudsplan_id (calculatie_id blijft gevuld, besluit 29-08-2026), heeft
+// geen PDF en geen bedrag, en de klantpagina rendert de bevroren bijlage-HTML.
+
+// Geldigheidsnorm voor de planbrief: particulier 21 dagen, VvE 180 (minimaal
+// een half jaar, besluit 29-08-2026). Valt samen met _offGeldigDagenNorm.
+function _ohpPlanGeldigNorm(plan) {
+  return (plan && plan.ontvangerType === 'vve') ? 180 : 21;
+}
+
+async function ohpAccordLinkBeheer() {
+  const plan = _ohpState.plan;
+  const calc = _ohpBronCalc();
+  if (!plan || !plan.id) { _toast('Kies eerst een bron-calculatie en vul het plan in'); return; }
+  if (!calc) { _toast('Bron-calculatie niet gevonden'); return; }
+  _accordInjectStyles();
+  // Zelfde overlay-id als het offertevenster: de hele acb-opmaak hangt aan
+  // #accordBeheerOverlay (GEMETEN in _ACCORD_UI_CSS) en er is nooit meer dan
+  // eén modal tegelijk open.
+  let ov = document.getElementById('accordBeheerOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'accordBeheerOverlay';
+    ov.innerHTML = '<div class="acb-modal">'
+      + '<button class="acb-close" title="Sluiten">\u2715</button>'
+      + '<div class="acb-body">Laden\u2026</div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    ov.querySelector('.acb-close').addEventListener('click', () => ov.remove());
+  }
+  const body = ov.querySelector('.acb-body');
+  body.innerHTML = 'Laden\u2026';
+  let rij = null;
+  try {
+    const { data: rows, error } = await _sb.from('offerte_accorderingen')
+      .select('*').eq('onderhoudsplan_id', plan.id)
+      .order('aangemaakt_op', { ascending: false }).limit(1);
+    if (error) throw error;
+    rij = rows && rows[0] ? rows[0] : null;
+  } catch (e) {
+    body.innerHTML = '<p class="acb-fout">Kon de status niet ophalen: ' + _accordEsc(e.message || e) + '</p>';
+    return;
+  }
+  _ohpAccordBeheerRender(body, plan, calc, rij);
+}
+
+function _ohpAccordBeheerRender(body, plan, calc, rij) {
+  let h = '<h3>\ud83d\udd17 Accordeerlink onderhoudsplan</h3>'
+    + '<div class="acb-sub">' + _accordEsc(calc.naam || '') + (calc.klant ? ' \u2014 ' + _accordEsc(calc.klant) : '') + '</div>';
+
+  if (!rij) {
+    body.innerHTML = h;
+    _ohpAccordMaakFormulier(body, plan, calc, null);
+    return;
+  }
+
+  const link = _accordLinkVoor(rij.token);
+  if (rij.status === 'open') {
+    h += '<div class="acb-status open">Actief. Wacht op reactie van de klant.</div>';
+  } else if (rij.status === 'akkoord') {
+    h += '<div class="acb-status akkoord">Geaccordeerd'
+      + (rij.klant_naam ? ' door ' + _accordEsc(rij.klant_naam) : '')
+      + (rij.gereageerd_op ? ' op ' + _accordDatum(rij.gereageerd_op) : '')
+      + _accordBetaalWoord(rij.betaalkeuze) + '.'
+      + (rij.notitie ? '<br><span style="font-weight:400;">Opmerking: ' + _accordEsc(rij.notitie) + '</span>' : '')
+      + '</div>';
+  } else if (rij.status === 'afgekeurd') {
+    h += '<div class="acb-status afgekeurd">Afgewezen'
+      + (rij.klant_naam ? ' door ' + _accordEsc(rij.klant_naam) : '')
+      + (rij.gereageerd_op ? ' op ' + _accordDatum(rij.gereageerd_op) : '') + '.'
+      + (rij.notitie ? '<br><span style="font-weight:400;">Reden: ' + _accordEsc(rij.notitie) + '</span>' : '')
+      + '</div>';
+  }
+
+  const _geopend = rij.geopend_aantal || 0;
+  if (_geopend > 0) {
+    h += '<div class="acb-sub" style="margin-top:6px;">Geopend: ' + _geopend + '\u00d7'
+      + (rij.eerste_geopend_op ? ', eerste keer ' + _accordDatum(rij.eerste_geopend_op) : '')
+      + (_geopend > 1 && rij.laatst_geopend_op ? ', laatst ' + _accordDatum(rij.laatst_geopend_op) : '')
+      + '.</div>';
+  } else if (rij.status === 'open') {
+    h += '<div class="acb-sub" style="margin-top:6px;">Nog niet door de klant geopend.</div>';
+  }
+
+  // Opvolgautomaat: het rooster rekent de herinnering-functie zelf uit; hier
+  // alleen de noodrem per link, net als bij offertes.
+  if (rij.status === 'open') {
+    h += '<div class="acb-vragen" style="margin-top:10px;"><strong>Automatische opvolging</strong>'
+      + '<div class="acb-sub" style="margin-top:6px;">'
+      + (rij.automaat_uit
+          ? 'Uit gezet voor dit plan. Er gaat niets automatisch de deur uit.'
+          : 'De opvolgautomaat volgt dit plan zodra je het hieronder naar de klant mailt. Reageert de klant of zet je de planstatus zelf op geaccepteerd of verloren, dan stopt de opvolging vanzelf.')
+      + '</div>'
+      + '<button class="acb-btn sec" id="ohpAcOpvolg" style="margin-top:8px;">'
+      + (rij.automaat_uit ? 'Opvolging weer aanzetten' : 'Opvolging uitzetten voor dit plan')
+      + '</button></div>';
+  }
+
+  if (Array.isArray(rij.vragen) && rij.vragen.length) {
+    h += '<div class="acb-vragen"><strong>Vragen van de klant</strong>';
+    rij.vragen.forEach(v => {
+      h += '<div style="margin-top:6px;">' + _accordEsc(v.tekst || '')
+        + '<span class="acb-sub"> \u2014 ' + (v.naam ? _accordEsc(v.naam) + ', ' : '') + _accordDatum(v.op) + '</span></div>';
+    });
+    h += '</div>';
+  }
+
+  h += '<label class="acb-sub">Link voor de klant</label>'
+    + '<div class="acb-linkrow"><input type="text" id="ohpAcLink" readonly value="' + _accordEsc(link) + '">'
+    + '<button class="acb-btn" id="ohpAcKopieer">Kopieer</button></div>';
+  h += '<button class="acb-btn sec" id="ohpAcBekijk" style="margin-bottom:4px;" title="Opent de klantpagina zonder de openingsteller te verhogen">\ud83d\udc41 Zelf bekijken (telt niet mee)</button>';
+  if (rij.status === 'open') {
+    const _email = (rij.snapshot && rij.snapshot.klantEmail) ? String(rij.snapshot.klantEmail).trim() : '';
+    h += '<button class="acb-btn" id="ohpAcMail" style="margin-bottom:4px;">\ud83d\udce7 Onderhoudsplan mailen naar klant</button>'
+      + (_email
+          ? '<div class="acb-sub" style="margin:0 0 12px;">Naar ' + _accordEsc(_email) + '</div>'
+          : '<div class="acb-sub" style="margin:0 0 12px;color:#b00020;">Geen e-mailadres in deze link. Maak een nieuwe link met e-mailadres.</div>');
+  }
+  h += '<button class="acb-btn sec" id="ohpAcNieuw">Nieuwe link maken</button>';
+  body.innerHTML = h;
+
+  body.querySelector('#ohpAcKopieer').addEventListener('click', () => {
+    const inp = body.querySelector('#ohpAcLink');
+    inp.select();
+    if (navigator.clipboard) navigator.clipboard.writeText(inp.value);
+    else document.execCommand('copy');
+    _toast('Link gekopieerd');
+  });
+  body.querySelector('#ohpAcBekijk').addEventListener('click', () => {
+    window.open(link + '&intern=1', '_blank', 'noopener');
+  });
+  body.querySelector('#ohpAcNieuw').addEventListener('click', () => {
+    const beslist = (rij.status === 'akkoord' || rij.status === 'afgekeurd');
+    if (beslist && !confirm('De klant heeft al gereageerd. Toch een nieuwe link maken? De oude reactie blijft in het overzicht staan.')) return;
+    body.innerHTML = '<h3>\ud83d\udd17 Accordeerlink onderhoudsplan</h3>'
+      + '<div class="acb-sub">' + _accordEsc(calc.naam || '') + (calc.klant ? ' \u2014 ' + _accordEsc(calc.klant) : '') + '</div>';
+    _ohpAccordMaakFormulier(body, plan, calc, rij);
+  });
+  const _btnMail = body.querySelector('#ohpAcMail');
+  if (_btnMail) _btnMail.addEventListener('click', () => _ohpPlanMailen(plan, calc, rij, body));
+  const _btnOpvolg = body.querySelector('#ohpAcOpvolg');
+  if (_btnOpvolg) _btnOpvolg.addEventListener('click', async () => {
+    _btnOpvolg.disabled = true;
+    try {
+      const { error } = await _sb.from('offerte_accorderingen')
+        .update({ automaat_uit: !rij.automaat_uit }).eq('id', rij.id);
+      if (error) throw error;
+      rij.automaat_uit = !rij.automaat_uit;
+      _toast(rij.automaat_uit ? 'Automatische opvolging uit' : 'Automatische opvolging aan');
+      _ohpAccordBeheerRender(body, plan, calc, rij);
+    } catch (e) {
+      _btnOpvolg.disabled = false;
+      _toast('Wijzigen mislukt: ' + (e.message || e));
+    }
+  });
+}
+
+// Invulformulier voor een nieuwe planlink: Yoobi-plannummer (verplicht, eigen
+// nummer los van de schilderbeurt, besluit 29-08-2026), e-mail (voorgevuld uit
+// het Offerte-blok van de calculatie) en geldig tot (norm per ontvangertype).
+function _ohpAccordMaakFormulier(body, plan, calc, rij) {
+  const calcCfg = (calc.offerteConfig && typeof calc.offerteConfig === 'object') ? calc.offerteConfig : {};
+  const vorigNummer = (rij && rij.snapshot && rij.snapshot.offertenummer) ? String(rij.snapshot.offertenummer) : '';
+  const email = (calcCfg.email || '').trim();
+  const norm = _ohpPlanGeldigNorm(plan);
+  const geldigDefault = _offIsoPlusDagen(_offIsoVandaag(), norm);
+  const isVve = plan.ontvangerType === 'vve';
+  let h = '<p>' + (rij ? 'Nieuwe link maken. De oude open link vervalt hierbij.' : 'Er is nog geen accordeerlink voor dit onderhoudsplan.') + '</p>'
+    + '<p class="acb-sub">Aanmaken legt de bijlage vast zoals die nu is. Wat de klant accordeert, kan daarna niet meer wijzigen.</p>'
+    + '<label class="acb-sub">Yoobi-plannummer (eigen verkoopnummer van het plan, niet dat van de schilderbeurt)</label>'
+    + '<input type="text" id="ohpAcNummer" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #ccc; border-radius:6px; font:inherit; margin-bottom:8px;" value="' + _accordEsc(vorigNummer) + '" placeholder="bv. 260123">'
+    + '<label class="acb-sub">E-mailadres van de klant</label>'
+    + '<input type="email" id="ohpAcEmail" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #ccc; border-radius:6px; font:inherit; margin-bottom:8px;" value="' + _accordEsc(email) + '" placeholder="naam@voorbeeld.nl">'
+    + '<label class="acb-sub">Geldig tot</label>'
+    + '<input type="date" id="ohpAcGeldig" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #ccc; border-radius:6px; font:inherit; margin-bottom:4px;" value="' + geldigDefault + '">'
+    + '<div class="acb-sub" style="margin:0 0 12px;">'
+    + (isVve ? 'VvE-planbrieven horen minimaal een half jaar geldig te zijn; de standaard staat op 180 dagen.'
+             : 'Standaard ' + norm + ' dagen, per plan aanpasbaar.')
+    + '</div>'
+    + '<button class="acb-btn" id="ohpAcMaak">Accordeerlink aanmaken</button>'
+    + (rij ? '<button class="acb-btn sec" id="ohpAcTerug">Terug</button>' : '');
+  const wrap = document.createElement('div');
+  wrap.innerHTML = h;
+  body.appendChild(wrap);
+  body.querySelector('#ohpAcMaak').addEventListener('click', () => {
+    const invoer = {
+      nummer: (body.querySelector('#ohpAcNummer').value || '').trim(),
+      email: (body.querySelector('#ohpAcEmail').value || '').trim(),
+      geldig: body.querySelector('#ohpAcGeldig').value || ''
+    };
+    _ohpAccordNieuweLink(plan, calc, body, invoer);
+  });
+  const _terug = body.querySelector('#ohpAcTerug');
+  if (_terug) _terug.addEventListener('click', () => _ohpAccordBeheerRender(body, plan, calc, rij));
+}
+
+// De bevroren momentopname van de klantbijlage: exact de printroute, alleen
+// zonder window.print(). Fonts eerst, want _ohpPaginate verdeelt op gemeten
+// hoogtes en een fallback-font geeft andere paginagrenzen dan de print.
+async function _ohpAccordSnapshotHtml(plan, calc) {
+  _ohpLiggingPrintUrl = await _ohpLiggingDataUrl(plan);
+  const pa = document.getElementById('printArea');
+  pa.innerHTML = _ohpBuildOfferteHTML(plan, calc);
+  if (document.fonts && document.fonts.load) {
+    try {
+      await Promise.all([
+        document.fonts.load('400 16px "Libre Franklin"'),
+        document.fonts.load('600 16px "Libre Franklin"'),
+        document.fonts.load('700 16px "Libre Franklin"'),
+        document.fonts.load('900 16px "Libre Franklin"')
+      ]);
+    } catch (e) { /* fallback-font, paginering wijkt hooguit iets af */ }
+  }
+  try { await _ohpPreloadImages(); } catch (e) { /* logo's laden dan in het iframe na */ }
+  _ohpPaginate();
+  const html = pa.innerHTML;
+  pa.innerHTML = '';
+  return html;
+}
+
+async function _ohpAccordNieuweLink(plan, calc, body, invoer) {
+  // Harde stop: geen planlink zonder eigen Yoobi-plannummer (besluit 29-08-2026,
+  // zelfde regel als v4.26.0 bij offertes).
+  if (!invoer.nummer) {
+    _toast('Vul eerst het Yoobi-plannummer in. Zonder nummer kan de link niet gemaakt worden.');
+    return;
+  }
+  if (!plan.prijspeil || !plan.looptijdJaren) { _toast('Plan eerst compleet invullen (prijspeil en looptijd)'); return; }
+  const _pp = plan.prijspeil, _eind = _pp + plan.looptijdJaren;
+  const _beurten = (plan.beurten || []).filter(b => b.jaartal >= _pp && b.jaartal <= _eind);
+  if (!_beurten.length) { _toast('Voeg eerst minstens \u00e9\u00e9n beurt toe'); return; }
+  // Zachte waarschuwing: een VvE-planbrief korter dan een half jaar (besluit 29-08-2026).
+  if (plan.ontvangerType === 'vve' && invoer.geldig) {
+    const _min = _offIsoPlusDagen(_offIsoVandaag(), 180);
+    if (invoer.geldig < _min && !confirm('Een VvE beslist traag: de afspraak is dat een VvE-planbrief minimaal een half jaar geldig blijft. Deze datum ligt daarbinnen.\n\nToch doorgaan met deze kortere geldigheid?')) return;
+  }
+  body.innerHTML = 'Bezig met aanmaken\u2026';
+
+  // Plannummer, geldigheid en offertedatum vastleggen in onderhoudsplannen.offerte_config.
+  // Gericht en samenvoegend: eerst de live config lezen, dan alleen deze velden zetten.
+  // De kolom zit bewust niet in _mapOhpToDB, dus een gewone plan-save raakt dit nooit aan.
+  try {
+    const { data: rij0, error: e0 } = await _sb.from('onderhoudsplannen')
+      .select('offerte_config').eq('id', plan.id).single();
+    if (e0) throw e0;
+    const cfg = (rij0 && rij0.offerte_config && typeof rij0.offerte_config === 'object') ? rij0.offerte_config : {};
+    cfg.nummer = invoer.nummer;
+    cfg.geldigTot = invoer.geldig || '';
+    cfg.offertedatum = _offIsoVandaag();
+    const { error: e1 } = await _sb.from('onderhoudsplannen')
+      .update({ offerte_config: cfg }).eq('id', plan.id);
+    if (e1) throw e1;
+  } catch (e) {
+    body.innerHTML = '<p class="acb-fout">Plannummer vastleggen mislukt: ' + _accordEsc(e.message || e) + '</p>';
+    return;
+  }
+
+  let snapHtml;
+  try {
+    snapHtml = await _ohpAccordSnapshotHtml(plan, calc);
+  } catch (e) {
+    body.innerHTML = '<p class="acb-fout">Bijlage bevriezen mislukt: ' + _accordEsc(e.message || e) + '</p>';
+    return;
+  }
+
+  let token;
+  if (window.crypto && crypto.randomUUID) token = crypto.randomUUID().replace(/-/g, '') + Date.now().toString(36);
+  else token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+  const calcCfg = (calc.offerteConfig && typeof calc.offerteConfig === 'object') ? calc.offerteConfig : {};
+  try {
+    await _sb.from('offerte_accorderingen').delete().eq('onderhoudsplan_id', plan.id).eq('status', 'open');
+    const { error } = await _sb.from('offerte_accorderingen').insert({
+      calculatie_id: plan.calculatieId,
+      onderhoudsplan_id: plan.id,
+      token: token,
+      snapshot: {
+        html: snapHtml, v: APP_VERSION, op: new Date().toISOString(),
+        offertenummer: invoer.nummer,
+        aanhef: _offAanhef(calc, calcCfg),
+        klantEmail: invoer.email,
+        geldigTot: invoer.geldig || ''
+      },
+      pdf_path: null, // planlinks hebben geen PDF; de klantpagina toont de HTML-momentopname
+      bedrag: null    // geen bedrag in de akkoordzin (besluit 29-08-2026)
+    });
+    if (error) throw error;
+  } catch (e) {
+    body.innerHTML = '<p class="acb-fout">Aanmaken mislukt: ' + _accordEsc(e.message || e) + '</p>';
+    return;
+  }
+  ohpAccordLinkBeheer();
+}
+
+// Mailen via de bestaande Edge Function offerte-verzenden; die kiest zelf de
+// planwoorden op basis van de rij. Na succes gaat de planstatus op verzonden
+// (nooit terug vanaf geaccepteerd of verloren) en lopen dropdown en geheugen mee.
+function _ohpPlanStandaardtekst(aanhef) {
+  const a = (aanhef && String(aanhef).trim()) ? String(aanhef).trim() : 'heer, mevrouw';
+  return 'Geachte ' + a + ',\n\n'
+    + 'Hierbij ontvangt u ons voorstel voor het Onderhoudsgarantie+ plan. In het document vindt u de geplande onderhoudsbeurten en de bijbehorende bedragen.\n\n'
+    + 'U kunt het plan hieronder bekijken en meteen akkoord geven. Heeft u nog vragen, neem gerust contact met ons op.\n\n'
+    + 'Wij zien uw reactie graag tegemoet.';
+}
+function _ohpPlanMailen(plan, calc, rij, body) {
+  if (!rij || rij.status !== 'open') { _toast('Alleen een open link kun je mailen.'); return; }
+  const email = (rij.snapshot && rij.snapshot.klantEmail) ? String(rij.snapshot.klantEmail).trim() : '';
+  if (!email) { _toast('Geen e-mailadres in deze link. Maak een nieuwe link met e-mailadres.'); return; }
+  const aanhef = (rij.snapshot && rij.snapshot.aanhef) ? String(rij.snapshot.aanhef).trim() : '';
+  const std = _ohpPlanStandaardtekst(aanhef);
+  const h = '<h3>\u2709\ufe0f Onderhoudsplan mailen</h3>'
+    + '<div class="acb-sub" style="margin:0 0 12px;">Naar ' + _accordEsc(email) + '</div>'
+    + '<label style="display:block; font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Begeleidende tekst (komt bovenaan in de mail)</label>'
+    + '<textarea id="ohpAcMailTekst" style="width:100%; min-height:200px; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:6px; font:inherit; line-height:1.5; resize:vertical;">' + _accordEsc(std) + '</textarea>'
+    + '<div class="acb-sub" style="margin:6px 0 12px; font-size:0.72rem;">Laat je het leeg, dan gebruikt de mail de vaste standaardaanhef.</div>'
+    + '<button class="acb-btn" id="ohpAcMailVerstuur">\ud83d\udce7 Versturen</button>'
+    + '<button class="acb-btn sec" id="ohpAcMailTerug">Terug</button>';
+  body.innerHTML = h;
+  body.querySelector('#ohpAcMailTerug').addEventListener('click', () => _ohpAccordBeheerRender(body, plan, calc, rij));
+  body.querySelector('#ohpAcMailVerstuur').addEventListener('click', async () => {
+    const ta = body.querySelector('#ohpAcMailTekst');
+    const tekst = ta ? ta.value : '';
+    const vbtn = body.querySelector('#ohpAcMailVerstuur');
+    const tbtn = body.querySelector('#ohpAcMailTerug');
+    if (vbtn) { vbtn.disabled = true; vbtn.textContent = 'Versturen\u2026'; }
+    if (tbtn) tbtn.disabled = true;
+    try {
+      await _offerteVerzendCall(rij.token, tekst);
+      if (['concept', 'gereed'].includes(plan.status)) {
+        try {
+          const { error } = await _sb.from('onderhoudsplannen')
+            .update({ status: 'verzonden', gewijzigd: new Date().toISOString() }).eq('id', plan.id);
+          if (error) throw error;
+          plan.status = 'verzonden';
+          if (_ohpState.plan && _ohpState.plan.id === plan.id) {
+            _ohpState.plan.status = 'verzonden';
+            const el = document.getElementById('ohpStatus');
+            if (el) el.value = 'verzonden';
+          }
+        } catch (e2) {
+          _toast('Gemaild, maar de planstatus kon niet op Verzonden gezet worden: ' + (e2.message || e2));
+        }
+      }
+      _toast('Onderhoudsplan gemaild naar ' + email, 'ok');
+      ohpAccordLinkBeheer();
+    } catch (e) {
+      if (vbtn) { vbtn.disabled = false; vbtn.textContent = '\ud83d\udce7 Versturen'; }
+      if (tbtn) tbtn.disabled = false;
+      _toast('Mailen mislukt: ' + (e.message || e));
+    }
+  });
+}
+
 
 /* ===== v3.63.0 aanhef + reacties-melding ===== */
 /* =====================================================================
@@ -22188,7 +22609,7 @@ async function _accordMeldingenRender() {
   let rows;
   try {
     const { data: r, error } = await _sb.from('offerte_accorderingen')
-      .select('id, calculatie_id, status, klant_naam, notitie, vragen, gereageerd_op, gezien_op, aangemaakt_op, calculaties(naam, klant)')
+      .select('id, calculatie_id, onderhoudsplan_id, status, klant_naam, notitie, vragen, gereageerd_op, gezien_op, aangemaakt_op, calculaties(naam, klant)')
       .order('aangemaakt_op', { ascending: false });
     if (error) throw error;
     rows = r || [];
@@ -22216,6 +22637,7 @@ async function _accordMeldingenRender() {
     }
     items.push({
       accId: row.id, calcId: row.calculatie_id,
+      plan: !!row.onderhoudsplan_id, // v4.51.0 — reactie op een onderhoudsplan-link
       project: (row.calculaties && row.calculaties.naam) || '(naamloos)',
       klant: (row.calculaties && row.calculaties.klant) || '',
       type: type, tekst: tekst, tEvent: tEvent
@@ -22238,7 +22660,7 @@ async function _accordMeldingenRender() {
   const ico = { akkoord: '\u2705', afgekeurd: '\u274c', vraag: '\u2753' };
   let h = '<div style="border:1px solid var(--border); border-radius:8px; margin:0 0 1rem; background:var(--paper); overflow:hidden;">'
     + '<div style="padding:0.6rem 0.8rem; font-weight:700; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.5rem;">'
-    + '\ud83d\udd14 Reacties op offertes '
+    + '\ud83d\udd14 Reacties op offertes en plannen '
     + '<span style="background:var(--accent); color:#fff; border-radius:10px; padding:0 0.5rem; font-size:0.8rem;">' + items.length + '</span>'
     + '<button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="accordMarkAllesGezien()">Alles gezien</button>'
     + '</div>';
@@ -22246,7 +22668,9 @@ async function _accordMeldingenRender() {
     h += '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.55rem 0.8rem; border-top:1px solid var(--border);">'
       + '<span style="font-size:1.1rem;">' + ico[it.type] + '</span>'
       + '<div style="flex:1; min-width:0;">'
-      + '<div style="font-weight:600;">' + _accordEsc(it.project) + (it.klant ? ' <span style="color:var(--muted); font-weight:400;">\u00b7 ' + _accordEsc(it.klant) + '</span>' : '') + '</div>'
+      + '<div style="font-weight:600;">' + _accordEsc(it.project)
+      + (it.plan ? ' <span style="background:#4b5563; color:#fff; border-radius:8px; padding:0 0.45rem; font-size:0.7rem; vertical-align:middle;">plan</span>' : '') // v4.51.0
+      + (it.klant ? ' <span style="color:var(--muted); font-weight:400;">\u00b7 ' + _accordEsc(it.klant) + '</span>' : '') + '</div>'
       + '<div style="font-size:0.78rem; color:var(--muted);">' + _accordEsc(it.tekst) + '</div>'
       + '</div>'
       + '<button class="btn btn-sm" onclick="accordMeldingOpen(\'' + it.calcId + '\')">Openen</button>'
