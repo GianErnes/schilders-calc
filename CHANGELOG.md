@@ -1,3 +1,41 @@
+## v4.48.0 — Dupliceren onthoudt je offerte-instellingen
+
+### Wat er misging
+
+Druk je in de lijst op ⎘, dan kwam er een kopie met de hoofdgroepen, de onderdelen, de regels, de verfsystemen, de stappen, de todo's, de staart en de meetstaat erin. Alles wat het rekenwerk is.
+
+Wat niet meekwam was het hele offerteblok: klanttype, adres, werkadres, briefadres, contactpersoon, aanspreekvorm, e-mailadres, telefoonnummer, garantiejaren, prijsweergave, de bijlagevinkjes en alle sectiekeuzes met de teksten die je zelf had bijgesteld. Dat vulde je bij elke kopie opnieuw in. Volgens de aantekening bij v4.10.6 stapelden er in de praktijk acht kopieën op één dag.
+
+Postcode en huisnummer kwamen ook niet mee, terwijl de reisafstand er wel in zat. Een kopie had dus een reisafstand zonder adres dat hem verklaarde.
+
+### Wat er nu gebeurt
+
+Het ⎘-knopje opent eerst een klein venster met de vraag voor wie de kopie is.
+
+**Zelfde klant** neemt het adres, het werkadres, het briefadres, de contactpersoon, de aanspreekvorm, het e-mailadres, het telefoonnummer, de postcode en het huisnummer mee.
+
+**Andere klant** laat die leeg. Ook de klantnaam. Anders staat de naam van de vorige klant nog op je sjabloon terwijl het adres al weg is, en dat is precies hoe een verkeerde naam op een offerte belandt.
+
+In beide gevallen gaan de instellingen mee: klanttype, garantiejaren, prijsweergave, regels-met-hoeveelheden, bijlage kozijnen, bijlage foto's en alle sectiekeuzes.
+
+Het offertenummer, de offertedatum, de geldigheidsdatum en het versienummer komen altijd vers. Dat hoort bij een nieuwe offerte, niet bij een kopie van een oude.
+
+Onveranderd, net als voorheen: foto's, documenten, opnamedatum en deadline gaan niet mee.
+
+### Onder de motorkap
+
+`offerte_config` kon niet in `headerCopy`. `_insertCalcDB` gaat door `_mapCalcHeaderToDB` en dat veld staat daar sinds v3.58.0 bewust niet in, zodat een gewone header-opslag nooit een verse config overschrijft. Er komt daarom een tweede, gerichte update op alleen dat veld, direct na de insert. Mislukt die, dan bestaat de kopie gewoon en is de config leeg, en dat is precies het gedrag van voor deze versie. Je krijgt dan een eigen melding.
+
+`dupCalc(id)` opent alleen nog het venster. Het echte werk zit in `_dupCalcUitvoeren(id, metKlant)`. De onclick op de dashboardrij is ongewijzigd.
+
+De keuze van velden is opgezet als **witte lijst en niet als zwarte**: `_DUP_CFG_ALTIJD` met zeven velden en `_DUP_CFG_KLANT` met zeven velden. Een veld dat daar niet in staat gaat niet mee, ook niet als het later wordt toegevoegd. Zo kan een oud of onbekend veld nooit meeliften.
+
+Diep gekopieerd via een JSON-rondgang, want `adres`, `werkadres`, `briefadres`, `contactpersoon` en `secties` zijn geneste objecten. Bij een ondiepe kopie delen origineel en kopie in het geheugen dezelfde objecten en verandert het adres van het origineel mee tot de volgende herlaadbeurt. Een veld dat niet door de rondgang komt wordt overgeslagen in plaats van de hele duplicatie te laten klappen.
+
+`fresh.offerteConfig` wordt ook in het geheugen gezet, zodat het dashboard niet op een herlaadbeurt hoeft te wachten.
+
+Zeventien proeven groen, gedraaid op code die met `slice()` uit `index.html` is gesneden. Geen SQL, geen Edge Function.
+
 ## v4.47.0 — De tijdlijn is weer een tijdlijn
 
 ### De balken op de planning

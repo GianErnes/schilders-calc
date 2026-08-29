@@ -2301,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.47.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.48.0</h2>
       <div class="intro-body">
+        <p><strong>⎘ Dupliceren neemt de offerte-instellingen mee (v4.48.0).</strong> Druk je op het kopieer-knopje ⎘ in de lijst, dan vraagt de app voortaan eerst of de kopie voor <strong>dezelfde klant</strong> of voor een <strong>andere klant</strong> is. Bij dezelfde klant gaan het adres, het werkadres, het briefadres, de contactpersoon, de aanspreekvorm, het e-mailadres, het telefoonnummer, de postcode en het huisnummer mee. Bij een andere klant blijven die leeg, en ook de klantnaam, zodat er nooit een naam van de vorige klant op je nieuwe offerte blijft staan. In beide gevallen gaan de <strong>offerte-instellingen</strong> wel mee: het klanttype, de garantiejaren, de prijsweergave, de bijlagevinkjes en alle sectiekeuzes met de teksten die je zelf had aangepast. Die moest je tot nu toe elke keer opnieuw instellen. Het offertenummer, de offertedatum, de geldigheidsdatum en het versienummer komen altijd vers, want dat hoort bij een nieuwe offerte. Gaan bewust niet mee, net als voorheen: foto’s, documenten, opnamedatum en deadline.</p>
         <p><strong>📍 De tijdlijn is weer een tijdlijn (v4.47.0).</strong> Op de planning-tijdlijn van de bijlage stonden brede oranje balken waarvan de hoogte niets met het bedrag te maken had. Oorzaak: twee verschillende dingen heetten allebei <code>.stem</code>, het tijdlijn-steeltje en het stemmingsblok van de VvE-besluitpagina. Het steeltje van anderhalve pixel kreeg daardoor de padding en de rand van het stemvak en werd een blok van 35 bij 138 pixels. Nu een dun lijntje met een bolletje aan het uiteinde, zoals een tijdlijn hoort te zijn. Raakt de VvE- en de particuliere bijlage. Verder: de tabel onder het voorfinancieringsbeeld toont alleen nog de jaren waarin werkelijk een beurt valt plus de slotregel, want in een jaar zonder beurt stond hetzelfde bedrag als het jaar ervoor en dat leest alsof er toch iets gedaan is. De verschilkolom is eruit, dat zie je aan het beeld. En het woord klusjes staat niet meer in de klanttekst: wij leveren schilderwerk.</p>
         <p><strong>📈 Betaald tegenover geleverd, op het scherm en op de bijlage (v4.46.0).</strong> Bij een particulier plan op abonnement loopt de betaling gelijkmatig door terwijl het onderhoud in beurten komt. Het Resultaat-blok toont nu wat de klant in de loop van het plan betaalt naast wat wij in diezelfde periode uitvoeren, met het diepste punt in euro erbij. Dat beeld staat er altijd, ook zonder vinkje, want om te beslissen of het gunstig uitpakt moet je het eerst kunnen zien. Een nieuw vinkje bepaalt uitsluitend of het beeld meegaat naar de klant. De uitvoeringsmaand staat vast op juli en is bewust geen invoerveld: het diepste punt verdrievoudigt tussen december en januari en zo'n knop hoort niet onder een getal op een klantstuk. De opzegbelofte op de bijlage zegt er nu bij dat er bij stoppen verrekend wordt: te weinig betaald reken je bij, te veel betaald krijg je terug. Bij contant staat er dat er niets te verrekenen valt. Meelifter: wisselde je van abonnement naar contant, dan grepen de twee abo-velden pas uit na herladen. Nu meteen. Geen SQL.</p>
         <p><strong>💧 Reparatie in het liquiditeitsbeeld van de VvE-bijlage (v4.45.1).</strong> De reserveringslijn liep een jaar langer door dan het bedrag waarop hij berekend is. Een plan met prijspeil 2026 en looptijd 15 beslaat in de tabel de jaren 2026 tot en met 2041, dat zijn zestien regels, terwijl de jaarreservering door vijftien gedeeld wordt. De grafiek zette er dus zestien keer een reservering neer en het saldo aan het eind stond daardoor altijd precies één jaarreservering te hoog. Een plan dat op nul hoort te sluiten sloot op plus een jaar. De reservering stopt nu na het aantal jaren van de looptijd; in een eventueel staartjaar staat een streepje in plaats van een bedrag. De uitgaven lopen wel het hele venster door, want de afsluitende herschilderbeurt valt in het eindjaar. Raakt alleen de VvE-bijlage. Het maandbedrag van een particulier plan, de jaartabellen en het interne print blijven op de cent gelijk. Geen SQL.</p>
@@ -3390,6 +3391,27 @@ Hout binnen;Gronden;m²;6;0,10</div>
   <button class="stop-btn" onclick="stopArchiveerSequentie()">Stop sequentie</button>
 </div>
 
+<!-- DUPLICEER-KEUZE MODAL — v4.48.0 -->
+<div class="modal-overlay" id="dupCalcModal">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-head">
+      <h3>⎘ Calculatie dupliceren</h3>
+      <button class="close-x" onclick="_dupCalcSluit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin: 0 0 0.85rem 0; font-size: 0.85rem;">Kopie van: <strong id="dupCalcBron"></strong></p>
+      <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem;"><strong>Zelfde klant</strong> neemt het adres, de contactpersoon, het e-mailadres en het telefoonnummer mee.</p>
+      <p style="margin: 0 0 0.85rem 0; font-size: 0.85rem;"><strong>Andere klant</strong> laat die leeg, en ook de klantnaam.</p>
+      <p style="margin: 0; font-size: 0.75rem; color: var(--muted); font-style: italic;">In beide gevallen gaan het klanttype, de garantiejaren, de prijsweergave, de bijlagevinkjes en de sectiekeuzes mee. Het offertenummer en de datums komen vers.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="_dupCalcSluit()">Annuleren</button>
+      <button class="btn-secondary btn" onclick="_dupCalcStart(false)">Andere klant</button>
+      <button class="btn" onclick="_dupCalcStart(true)">Zelfde klant</button>
+    </div>
+  </div>
+</div>
+
 <!-- STAART POST MODAL -->
 <div class="modal-overlay" id="staartModal">
   <div class="modal" style="max-width: 640px;">
@@ -3575,7 +3597,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.47.0';
+const APP_VERSION = 'v4.48.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -3971,6 +3993,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.48.0', d: '2026-08-29', h: 'dupCalc neemt offerte_config mee via een witte lijst, met een keuzevenster voor de klantgegevens. Aanleiding: offerte_config stond niet in dupCalc, dus na elke duplicatie moesten adres, contactpersoon, e-mail, telefoon, klanttype, garantiejaren, prijsweergave, bijlagevinkjes en alle sectiekeuzes opnieuw ingevuld worden; volgens v4.10.6 stapelde de praktijk acht kopieen op een dag. Het veld kon niet in headerCopy omdat _insertCalcDB door _mapCalcHeaderToDB gaat en offerte_config daar sinds v3.58.0 bewust ontbreekt, zodat een header-save nooit een verse config overschrijft. Daarom een tweede gerichte update op de verse rij, na de insert en voor de body-kopie; mislukt die, dan bestaat de kopie gewoon met een lege config en dat is exact het gedrag van voor deze versie, met een eigen toast. dupCalc(id) opent nu het nieuwe dupCalcModal en het echte werk zit in _dupCalcUitvoeren(id, metKlant); de onclick op de dashboardrij is ongewijzigd. Twee knoppen: Zelfde klant neemt aanspreekvorm, adres, werkadres, briefadres, contactpersoon, email en telefoon mee plus postcode en huisnummer op de header, Andere klant laat die leeg en laat ook klant leeg omdat een achtergebleven klantnaam bij een leeggemaakt adres precies de fout is die dit moet voorkomen. Altijd mee, want instellingen en geen klantgegevens: klanttype, garantiejaren, prijsWeergave, prijsRegelsHoeveelheden, bijlageKozijnen, bijlageFotos en secties. Nooit mee: offerteNummerVrij, offertedatum, geldigTot en offerteVersie, die zet _offCfg vers bij het eerste openen. Opgezet als witte lijst en niet als zwarte, zodat een onbekend of later toegevoegd veld nooit kan meeliften. Diep gekopieerd via JSON-rondgang omdat adres, werkadres, briefadres, contactpersoon en secties geneste objecten zijn en een ondiepe kopie origineel en kopie in het geheugen dezelfde objecten zou laten delen. postcode en huisnummer zaten al niet in headerCopy terwijl reis er wel in zat, dus een kopie had een reisafstand zonder adres; dat gat is meteen gedicht. fresh.offerteConfig wordt ook in het geheugen gezet zodat het dashboard niet op een herlaadbeurt hoeft te wachten. Zestien proeven groen op code die met slice() uit index.html is gesneden. Geen SQL, geen Edge Function.' },
   { v: '4.47.0', d: '2026-08-28', h: 'Tijdlijn-steel hersteld, tabel volgt de beurten, klusjes uit de klanttekst. (1) CSS-naamconflict: .ob .stem (stemmingsblok VvE-besluitpagina, v4.7.7) en .ob .tl-card .stem (tijdlijn-steel) heetten allebei .stem. Specificiteit beslist per eigenschap, dus de tl-regel won op width en height, maar padding 14px 16px, border 1px en border-radius 4px stonden alleen in de besluitpagina-regel en werden wel toegepast. Het steeltje van 1,5 bij 108 pixels werd zo een oranje blok van 35,5 bij 138 met afgeronde hoeken, dat als staafdiagram las terwijl hi en lo alleen bestaan om labels uit elkaar te houden. Steel hernoemd naar tl-stem, plus een nieuwe tl-pin van 7 pixels als bolletje op het uiteinde; hoogtes 101 en 45 zodat pin plus steel dezelfde totale lengte houdt als voorheen. Zat er sinds v4.7.7 in en raakte beide bijlagevarianten. (2) De tabel onder het voorfinancieringsbeeld toont alleen nog rijen waarin een beurt valt, plus de slotrij: in een jaar zonder beurt stond hetzelfde cumulatieve bedrag als het jaar ervoor en dat leest voor een klant alsof er dat jaar ook iets is uitgevoerd. Nieuw veld beurt op elke meetrij uit _ohpVoorfinanciering. Op een plan met vier beurten over tien jaar gaat de tabel van tien rijen naar vijf. Verschilkolom vervallen, die informatie staat in het beeld en in de conclusiezin. (3) Klusjes vervangen door handelingen in leadHtml, beide takken; de vermelding in de versiegeschiedenis blijft staan als historische tekst. Tweeentwintig proeven groen. Geen SQL, geen Edge Function.' },
   { v: '4.46.0', d: '2026-08-28', h: 'Voorfinancieringsbeeld bij particuliere abonnementsplannen plus verrekening bij opzegging. Nieuwe functie _ohpVoorfinanciering(plan) zet cumulatief betaald door de klant tegenover cumulatief geleverd door Ernes; negatief saldo is voorfinanciering door Ernes, positief is voorsprong van de klant, en bij opzegging is dat saldo exact het verrekenbedrag. Peilmomenten zijn de uitvoeringsmaand van elk jaar plus de laatste betaaltermijn en het sluitmoment: zonder die laatste twee knikt de betaallijn op de verkeerde plek en sluit de reeks niet op nul. Constante _OHP_UITVOERINGSMAAND staat op 7. Bewust geen invoerveld: gemeten op het enige particuliere abonnementsplan gaat het diepste punt van 906,79 in december naar 3.128,62 in januari, en zo een knop hoort niet onder een getal op een klantstuk. Een uitgevinkte beurt telt bij betaald en bij geleverd mee op hetzelfde moment, want die rekent de klant apart af. De functie geeft null bij VvE, bij contant en bij een plan zonder beurten. Nieuwe _ohpVoorfinSvg tekent de betaallijn als rechte polyline en de geleverde lijn als trap, want het werk komt in klappen en juist die klap maakt het gat; de x-as schaalt op maandindex en niet op rij-index omdat het slotpunt soms een maand en soms een half jaar na het vorige ligt. Vlakken tussen de lijnen in twee dekkingen: oranje 0.17 waar Ernes voorstaat, blauw 0.05 waar de klant voorstaat, omdat de klant meestal het grootste deel voorstaat en gelijke dekking het oranje zou overstemmen. Vaste hex-kleuren, want var() werkt niet in SVG-presentatieattributen bij print. Het beeld staat altijd in het Resultaat-blok bij particulier plus abo, ongeacht het vinkje. Kolom toon_voorfinanciering (bestaat sinds 28 augustus) nu gemapt in _mapOhpFromDB, _mapOhpToDB, _ohpSaveParams, _ohpReadParamsFromUI en _ohpRenderParams, tegelijk met het invoervinkje ohpToonVoorfin in het nieuwe blok ohpVoorfinWrap; _ohpReadParamsFromUI geeft altijd een boolean terug zodat een gezette waarde niet door een gewone opslag gewist wordt. Op de bijlage komt bij aangevinkt vinkje de sectie Wat u betaalt en wat wij leveren als drie blokken tussen De planning en Uw zekerheid, met data-split table op de tabel zodat _ohpPaginate hem per rij mag breken. zekItemsHtml was een vaste string voor beide takken en heeft nu een _opzegTekst die op _ohpIsAbo splitst: bij abonnement wordt bij opzegging het uitgevoerde werk tegen de betaalde termijnen verrekend, in beide richtingen, bij contant valt er niets te verrekenen. De opzegbaarheid zelf blijft voor elk plan staan, ook VvE, want die zegt de meerjarenafspraak op. Meelifter: het uitgrijzen van ohpAboStart en ohpAboMaanden zat alleen in _ohpRenderParams en die wordt niet door _ohpFlushSave aangeroepen, waardoor een wissel naar contant pas na herladen effect had; verplaatst naar _ohpToggleAboVelden met eigen change-listeners op ohpBetaalmodel en ohpOntvangerType. Zesendertig proeven groen met code die uit index.html gesneden is. Geen SQL, geen Edge Function.' },
   { v: '4.45.1', d: '2026-08-28', h: 'Reparatie van de reserveringslijn in het VvE-liquiditeitsblok van _ohpBuildOfferteHTML. De lus liep over jaren, dat is prijspeil tot en met eindJaar en dus looptijdJaren plus een elementen, terwijl R gelijk is aan gemPerJaar en dat is totaalGemiddelde gedeeld door looptijdJaren. Met _cr = R * (i + 1) kwam de cumulatieve reservering daardoor uit op R maal (looptijd plus een) en stond het eindsaldo structureel precies gemPerJaar te hoog; gemeten met een testharnas op vier plannen en in alle vier gevallen was de afwijking exact een jaarreservering. Een VvE-plan zonder uitgevinkte beurt sloot dus niet op nul maar op plus een hele jaarreservering, en met een uitgevinkte beurt op gemPerJaar min totaalEenmalig in plaats van min totaalEenmalig. Nieuwe lokale constante _lpj is plan.looptijdJaren, de reservering per rij is R zolang i kleiner is dan _lpj en anders nul, en _cr telt op in plaats van te herberekenen, waardoor ook maxv op de juiste schaal uitkomt en de grafiek beter vult. De uitgavenstroom blijft het hele venster doorlopen omdat de afsluitende herschilderbeurt in het eindjaar valt. De kolom Reservering toont in een jaar zonder reservering een liggend streepje, gelijk aan wat de kolom Uitgave al deed. De conclusiezin bij een niet-negatief laagste saldo zegt op of boven de uitgaven in plaats van boven de uitgaven, want bij een sluitend plan is het eindsaldo voortaan exact nul. Het venster prijspeil tot en met prijspeil plus looptijd en de deler looptijdJaren zijn bewust ongemoeid gelaten: die twee zijn samen correct omdat de klant looptijd jaren betaalt en de afsluitende beurt in het eindjaar valt, wat op het echte particuliere plan met startdatum september 2026 en 96 maanden uitkomt op een laatste betaling in augustus 2034 naast een herschilderbeurt in 2034. Alleen de VvE-tak; het particuliere maandbedrag uit totaalGemiddelde gedeeld door aboMaanden, de jaartabellen op scherm en print en het interne print blijven op de cent gelijk. Blijft open en niet aangeraakt: bij een uitgevinkte beurt op een VvE-plan belooft de eerste tak van de conclusiezin nog steeds volledige dekking terwijl het eindsaldo min totaalEenmalig is; per meting op 28 augustus staat uitgevinkt op nul bij alle drie de VvE-plannen. Geen SQL, geen Edge Function.' },
@@ -18692,7 +18715,73 @@ async function delCalc(id) {
   }
   renderCalcStructuur(); renderDashboard();
 }
-async function dupCalc(id) {
+// ============================================================
+// DUPLICEREN — v4.48.0
+// dupCalc opent alleen nog het keuzevenster; het echte werk zit in
+// _dupCalcUitvoeren. De onclick op de dashboardrij blijft dus ongewijzigd.
+//
+// De keuze gaat uitsluitend over de klantgegevens. Alles wat een
+// instelling is (klanttype, prijsweergave, sectiekeuzes) gaat altijd mee,
+// want dat is precies het werk dat je anders elke keer opnieuw doet.
+// ============================================================
+let _dupCalcBronId = null;
+
+function dupCalc(id) {
+  const orig = data.calculaties.find(x => x.id === id);
+  if (!orig) return;
+  _dupCalcBronId = id;
+  const el = document.getElementById('dupCalcBron');
+  if (el) el.textContent = orig.naam || '(zonder naam)';
+  document.getElementById('dupCalcModal').classList.add('active');
+}
+
+function _dupCalcSluit() {
+  document.getElementById('dupCalcModal').classList.remove('active');
+  _dupCalcBronId = null;
+}
+
+function _dupCalcStart(metKlant) {
+  const id = _dupCalcBronId;
+  document.getElementById('dupCalcModal').classList.remove('active');
+  _dupCalcBronId = null;
+  if (id) _dupCalcUitvoeren(id, metKlant === true);
+}
+
+// Witte lijst voor offerte_config. Bewust geen zwarte lijst: een veld dat
+// hier niet staat gaat niet mee, ook niet als het later wordt toegevoegd.
+//
+// ALTIJD  = instellingen, geen klantgegevens.
+// KLANT   = alleen bij de keuze Zelfde klant.
+// NOOIT   = offerteNummerVrij, offertedatum, geldigTot, offerteVersie.
+//           Die zet _offCfg vers bij het eerste openen van de kopie.
+const _DUP_CFG_ALTIJD = ['klanttype', 'garantiejaren', 'prijsWeergave',
+                         'prijsRegelsHoeveelheden', 'bijlageKozijnen',
+                         'bijlageFotos', 'secties'];
+const _DUP_CFG_KLANT  = ['aanspreekvorm', 'adres', 'werkadres', 'briefadres',
+                         'contactpersoon', 'email', 'telefoon'];
+
+// Diep kopieren via een JSON-rondgang. Nodig omdat adres, werkadres,
+// briefadres, contactpersoon en secties geneste objecten zijn: bij een
+// ondiepe kopie delen origineel en kopie in het geheugen dezelfde objecten
+// en verandert het adres van het origineel mee tot de volgende herlaadbeurt.
+// De inhoud is zuivere JSON, want hij gaat als jsonb de database in.
+function _dupCfgWitteLijst(bron, metKlant) {
+  const uit = {};
+  if (!bron || typeof bron !== 'object') return uit;
+  const velden = metKlant ? _DUP_CFG_ALTIJD.concat(_DUP_CFG_KLANT) : _DUP_CFG_ALTIJD;
+  velden.forEach(k => {
+    if (bron[k] === undefined || bron[k] === null) return;
+    try {
+      uit[k] = JSON.parse(JSON.stringify(bron[k]));
+    } catch (e) {
+      // Niet-serialiseerbaar veld slaan we over in plaats van de hele
+      // duplicatie te laten klappen.
+    }
+  });
+  return uit;
+}
+
+async function _dupCalcUitvoeren(id, metKlant) {
   const orig = data.calculaties.find(x => x.id === id);
   if (!orig) return;
   // Zorg dat origineel volledig geladen is
@@ -18701,13 +18790,37 @@ async function dupCalc(id) {
   // 1. Insert nieuwe calc-header
   const headerCopy = {
     naam: orig.naam + ' (kopie)',
-    klant: orig.klant, status: 'concept',
+    klant: metKlant ? orig.klant : '', status: 'concept',
     schilders: orig.schilders, uurDag: orig.uurDag, reis: orig.reis,
     volleDagenOverride: orig.volleDagenOverride,
-    notities: orig.notities
+    notities: orig.notities,
+    // v4.48.0 — postcode en huisnummer zaten hier niet in terwijl reis er
+    // wel in zat, dus een kopie had een reisafstand zonder adres erbij.
+    postcode:   metKlant ? (orig.postcode || '')   : '',
+    huisnummer: metKlant ? (orig.huisnummer || '') : ''
   };
   const fresh = await _insertCalcDB(headerCopy);
   if (!fresh) return;
+
+  // 1b. Offerte-instellingen meenemen. Dit kan niet via headerCopy: die gaat
+  // door _mapCalcHeaderToDB en offerte_config staat daar sinds v3.58.0 bewust
+  // niet in, zodat een gewone header-save nooit een verse config overschrijft.
+  // Daarom een eigen, gerichte update op alleen dit veld.
+  //
+  // Mislukt deze stap, dan bestaat de kopie gewoon en is de config leeg. Dat
+  // is exact het gedrag van voor v4.48.0, dus de terugval is veilig.
+  const _cfgKopie = _dupCfgWitteLijst(orig.offerteConfig, metKlant);
+  if (Object.keys(_cfgKopie).length) {
+    const { error: _cfgErr } = await _sbQuery(
+      _sb.from('calculaties').update({ offerte_config: _cfgKopie }).eq('id', fresh.id),
+      'Offerte-instellingen kopieren'
+    );
+    if (_cfgErr) {
+      _toast('Kopie gemaakt, maar de offerte-instellingen zijn niet meegegaan: ' + _cfgErr.message);
+    } else {
+      fresh.offerteConfig = _cfgKopie;
+    }
+  }
 
   // 2. Kopieer hg → od → regels → stappen via DB
   // En tegelijk: bouw oude→nieuwe regel-id mapping voor meetstaat-koppeling
@@ -18769,7 +18882,9 @@ async function dupCalc(id) {
 
   data.calculaties.unshift(fresh);
   renderDashboard();
-  _toast('Kopie gemaakt, staat nu bij Concept.', 'ok');
+  _toast(metKlant
+    ? 'Kopie met klantgegevens gemaakt, staat nu bij Concept.'
+    : 'Kopie zonder klantgegevens gemaakt, staat nu bij Concept.', 'ok');
 }
 // ============================================================
 // LOCK / SETTINGS-SNAPSHOT — gereed/verzonden/etc. bevriezen instellingen
