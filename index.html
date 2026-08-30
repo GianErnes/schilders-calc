@@ -2301,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.52.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.53.0</h2>
       <div class="intro-body">
+        <p><strong>✏️ Eigen tekst per plan in de planbrief (v4.53.0).</strong> Het Planbrief-venster toont onder elke variantkeuze voortaan de tekst zelf, in een tekstvak dat je direct bewerkt, precies zoals de offerteteksten op de Calculatie-tab. Wijzig je iets, dan geldt die tekst alleen voor dit ene plan: het blok krijgt het teken ✎ aangepast en een knop terug naar de bibliotheektekst. Kies je een andere variant, dan volgt het blok weer de bibliotheek. Je kunt ook een blok schrijven zónder variant te kiezen, bijvoorbeeld een persoonlijke alinea op een verlengingsplan. De invulvelden zoals {klant} en {aantal_jaar} werken in eigen tekst net zo. Twee dingen om te weten: eigen tekst is niet nagelezen zoals de bibliotheekteksten, dus lees hem zelf na voordat de brief de deur uitgaat. En wijzig je de brief op een plan met een openstaande accordeerlink, dan verandert het bevroren document niet mee; maak dan een nieuwe link.</p>
         <p><strong>🔧 Reparatie: de planbrief stond stil op een onzichtbare fout (v4.52.1).</strong> De briefbouwer verwees naar een bedrijfsnaam-constante die alleen bìnnen het gewone offertedocument bestaat. Die fout werd door het vangnet ingeslikt, waardoor elke planbrief sinds v4.52.0 stilletjes leeg bleef, hoe vol de bibliotheek ook stond. De naam komt nu uit de bedrijfsgegevens in de Instellingen, met dezelfde terugval als de gewone offerte, en het vangnet meldt een fout voortaan hardop in de browserconsole.</p>
         <p><strong>✉️ De planbrief: een offertebrief voor de plan-bijlage (v4.52.0).</strong> Een particulier onderhoudsplan kan nu een echte brief meekrijgen die vóór de brochure-bijlage staat en meeprint en meebevriest met <strong>Offerte OHP</strong> en de accordeerlink. De teksten komen uit de tekstenbibliotheek: elke variant heeft er een vierde vinkje <strong>Plan</strong> bij, en er zijn vier nieuwe secties (Duurzaamheid, Veiligheid, Resultaten van het plan en Klantquotes) die alleen op de brief bestaan en dus nooit op een gewone schilderofferte verschijnen. Met de nieuwe knop <strong>Planbrief</strong> in het Beurten-blok kies je per plan welke secties aanstaan en welke variant erin komt; sla je niets op, dan volgt de brief vanzelf de Plan-vinkjes. Zolang er geen enkele Plan-variant bestaat, is de brief leeg en is het document precies de brochure van voorheen. Nieuw zijn ook zeven invulvelden voor de brief, zoals {gemiddeld_per_maand}, {totale_investering}, {startjaar} en {eindjaar}; dat laatste veld is het jaar van de laatste geplande beurt, zodat de brief altijd klopt met de jaarblokken die de klant ernaast ziet. De VvE-bijlage is bewust ongemoeid gelaten. Geen SQL nodig: de kolommen van brok 1 doen het werk.</p>
         <p><strong>🔗 Accordeerlink voor onderhoudsplannen (v4.51.0).</strong> De Onderhoudsplan-tab heeft naast <strong>Offerte OHP</strong> een knop <strong>Accordeerlink</strong> gekregen, met een eigen venster. Bij het aanmaken vul je het <strong>Yoobi-plannummer</strong> in (het eigen verkoopnummer van het plan, niet dat van de schilderbeurt; zonder nummer geen link), het e-mailadres (voorgevuld uit het Offerte-blok van de calculatie) en de geldigheid: particulier standaard 21 dagen, VvE 180, met een waarschuwing als je een VvE-plan korter zet. Aanmaken bevriest de bijlage precies zoals hij nu print. Mailen gaat via dezelfde weg als de offerte en zet het plan op <strong>Verzonden</strong>. De klant ziet de bijlage op zijn eigen pagina; op een plan met betaalmodel <strong>Beide</strong> moet hij eerst kiezen tussen per beurt en maandelijks voordat hij akkoord kan geven, en die keuze komt in de akkoordzin, in de bevestiging en in jouw venster te staan. De offerte-accordeerlinks merken hier niets van, en het dashboardblok heet nu <strong>Reacties op offertes en plannen</strong> met een grijze pil bij planreacties.</p>
@@ -3605,7 +3606,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.52.1';
+const APP_VERSION = 'v4.53.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -4001,6 +4002,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.53.0', d: '2026-08-30', h: 'Eigen tekst per plan in de planbrief (brok 5a van de planbriefroadmap). De twee plekken die blok.tekst wegstripten doen dat niet meer: _ohpBriefCfg en _ohpBriefOpslaan filteren voortaan op variantId of niet-lege tekst en nemen tekst mee wanneer die bestaat, waardoor de bestaande leesvolgorde van _offBlokTekst (eigen tekst gaat voor de bibliotheek, het model van de Calculatie-tab) meteen voor de briefbouwer, de paginering en het bevroren accordeersnapshot werkt; aan de bouwer _ohpBriefBlokken is niets veranderd en de invulvelden lopen via _offVulVelden ook door eigen tekst. Het venster _ohpBriefCfgHtml toont per blok onder de variantkeuze een textarea met de effectieve tekst (3 tot 12 rijen op het aantal regels, model _offCfgBlokHtml), bij aangepaste tekst de badge aangepast plus een herstelknop, en de plaatshouder nodigt uit tot tekst zonder variant; dat mag nu, zelfde vrijheid als de offerte, en zulke blokken overleven het opslaan omdat het filter ze meetelt. Drie gedragingen exact gespiegeld van de Calculatie-tab: variantwissel wist de eigen tekst en de nieuwe keuze volgt de bibliotheek (_ohpBriefVar rendert daarvoor nu ook opnieuw), exact de bibliotheektekst terugtypen telt niet als aangepast (slimme nulzetting in de nieuwe _ohpBriefTekst) en de herstelknop _ohpBriefReset zet het blok terug op de bibliotheek. _ohpBriefRender houdt de schuifpositie van de modal (.acb-modal, overflow:auto) vast bij het hertekenen, want met twaalf tekstvakken zou elke wijziging anders naar boven springen. De tekst reist in de bestaande jsonb-vorm brief.secties[code].blokken[i].tekst; de opslag raakt alleen de sleutel brief via de gerichte lees-samenvoeg-schrijfronde van v4.52.0 en de kolom zit onveranderd niet in _mapOhpToDB. Namen _ohpBriefTekst en _ohpBriefReset vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
   { v: '4.52.1', d: '2026-08-30', h: 'Reparatie planbrief: _ohpBriefBlokken verwees naar BEDRIJF.naam, maar BEDRIJF is een constante lokaal aan _bouwOfferteDocHtml (v3.73.0) en bestaat op paginaniveau niet. De ReferenceError werd door de vangnet-try ingeslikt waardoor elke planbrief sinds v4.52.0 stilletjes leeg bleef, op beide routes (opgeslagen planconfig en dynamische Plan-vinkjes), terwijl bibliotheek, planconfig en bron-calc gezond waren; gevonden door de draaiende browserfunctie te herdraaien met opengezette catch. Het ondertekenblok leest de bedrijfsnaam nu uit data.settings.bedrijf.naam met terugval Ernes schilders, exact de bron en terugval van de gewone offerte, dus een aangepaste naam in de Instellingen werkt op beide documenten door. De catch logt voortaan console.warn met de fout: de brief blijft de bijlage beschermen maar faalt nooit meer geluidloos. Nieuwe vaste kwaliteitspoort: elke kale globale naam die een gewijzigde functie gebruikt moet aantoonbaar in het bestand gedefinieerd zijn (spiegel van de naamkolonisatiecheck), en slice-tests draaien zonder stubs voor paginaconstanten. Geen SQL, geen Edge Function.' },
   { v: '4.52.0', d: '2026-08-29', h: 'De planbrief (brok 4 van de planbriefroadmap). Vier nieuwe secties in OFFERTE_SECTIES direct na inleiding (duurzaamheid, veiligheid, planresultaten, klantquotes) met de nieuwe vlag alleenPlan: true; _offCfg zet zulke secties op een gewone offerte standaard op aan: false, de offerte-blok-UI en het voorbeeldvenster verbergen ze, en de twee documentbouwers (HTML en pdfmake) slaan ze als borg over. betaling en garantie gaan naar stapelbaar: true zodat de brief meerdere blokken per sectie kan dragen (mechanica plus startbeurtvariant; Vakwerk, aansprakelijkheid, AV); bestaande offertes met een blok gedragen zich onveranderd. Op offerte_teksten wordt std_plan nu in- en uitgelezen (_mapOffTekstFromDB/_mapOffTekstToDB) met een vierde vinkje Plan in _offVariantKaart; de kolom bestaat sinds brok 1, geen SQL. Nieuwe helper _ohpBriefVariantId kiest per sectie de bovenste std_plan-variant en valt bewust NIET terug op de bovenste variant zoals _offStandaardVariantId: een calculatie-tekst hoort nooit ongevraagd in een klantbrief, dus zonder Plan-vinkjes is de brief leeg en het document byte voor byte de brochure van voorheen. _ohpBriefCfg resolveert de sectiestanden: opgeslagen keuzes uit onderhoudsplannen.offerte_config.brief.secties gaan voor, al het overige volgt dynamisch de Plan-vinkjes met een vaste aan-lijst (_OHP_BRIEF_AAN_STD). _ohpBriefBlokken bouwt de briefblokken als kinderen van #obBlocks: briefhoofd met klantadres via _offAdresEffectief plus t.a.v. via _offContactVol en een Betreft-regel (bedrijfsgegevens, kenmerk en datum staan al in de masthead die elke pagina meeloopt), daarna de tekstsecties in lijstvolgorde met de kop aan de eerste alinea geplakt en elke alinea als eigen blok zodat _ohpPaginate binnen de brief kan breken, dan een vast ondertekenblok met HANDTEKENING_ERNES en als laatste de slotzin-sectie. Het laatste briefblok krijgt data-break=after; _ohpPaginate flusht daarop zodat de brochure op een verse pagina begint (additief, bestaande blokken hebben het attribuut niet). Ingehangen boven liggingBlok in de particuliere tak van _ohpBuildOfferteHTML; de VvE-tak is byte voor byte ongemoeid en ohpBriefConfig weigert een VvE-plan met een nette melding. Omdat print en accordeersnapshot dezelfde bouwer delen, bevriest en pagineert de brief automatisch mee. OFFERTE_VELDEN telt zeven briefvelden erbij ({aantal_jaar}, {startjaar}, {eindjaar}, {gemiddeld_per_maand}, {aantal_incassos}, {incasso_periode}, {totale_investering}); _offVulVelden kreeg optionele parameters plan en calcArg, leest bij een expliciete calc de offerteConfig rechtstreeks in plaats van via _offCfg (dat aan data.calc hangt) en zet dagen bij een plan op null omdat _calcDaysFactureerbaar zonder argument de open calculatie leest. De cijfers komen uit de nieuwe _ohpPlanCijfers, dezelfde rekenweg als de bijlage (basisbedrag maal _ohpIndexFactor maal _ohpBtwFactor, splitsing op meeInGemiddelde) met een wederzijdse verwijsopmerking tegen stille drift; {eindjaar} is het jaar van de laatste geplande beurt (besluit 29-08-2026), per definitie waar en altijd gelijk aan de jaarblokken, en beslist bewust niets over de open invulvraag van looptijd_jaren in SYSTEEM.md. {geldig_tot} komt bij een plan uit offerte_config.geldigTot; daarvoor mapt _mapOhpFromDB de kolom nu alleen-lezen naar plan.offerteConfig (bewust niet in _mapOhpToDB) en zet _ohpAccordNieuweLink na de geslaagde schrijfronde het geheugen gelijk aan de server zodat het bevroren snapshot de verse geldigheid draagt. Nieuwe knop Planbrief in het Beurten-blok opent ohpBriefConfig op dezelfde overlay-id accordBeheerOverlay: per tekstsectie een vinkje en een variantkeuze, bij stapelbare secties plus- en wegknoppen, het teken voor de Plan-standaard, en opslaan via dezelfde gerichte lees-samenvoeg-schrijfronde als v4.51.0 onder de sleutel brief, waarna plan.offerteConfig meeloopt. Elf nieuwe CSS-klassen en namen (brief, brief-hoofd, brief-klant, brief-betreft, brief-kop, brief-p, brief-onder, brief-sign plus de vier sectiecodes) vooraf op nul treffers gecontroleerd. _ohpBriefBlokken zit in try/catch met lege terugval: de brief mag de bijlage nooit blokkeren. Geen SQL, geen Edge Function.' },
   { v: '4.51.0', d: '2026-08-29', h: 'Accordeerlink voor onderhoudsplannen, stap 3: de app-kant. Nieuwe knop Accordeerlink in het Beurten-blok van de Onderhoudsplan-tab opent ohpAccordLinkBeheer, een eigen venster op dezelfde overlay-id accordBeheerOverlay omdat de hele acb-opmaak in _ACCORD_UI_CSS aan die id hangt en er nooit twee modals tegelijk staan. Het venster leest de nieuwste rij op onderhoudsplan_id; de vier bestaande lezers (accordLinkBeheer, de _prevAcc-select en de delete in _accordNieuweLink, de archiveer-lezer en het dashboardblok) zijn gescheiden: de eerste vier kregen .is onderhoudsplan_id null, het dashboardblok selecteert de kolom erbij, heet nu Reacties op offertes en plannen en toont een grijze pil plan bij planreacties. Aanmaken: harde stop zonder Yoobi-plannummer (eigen verkoopnummer van het plan, besluit 29-08-2026, zelfde regel als v4.26.0), e-mail voorgevuld uit offerte_config.email van de calculatie, geldig-tot met norm uit de nieuwe _ohpPlanGeldigNorm (particulier 21, VvE 180, gelijk aan _offGeldigDagenNorm) en een confirm-waarschuwing bij een VvE-datum korter dan 180 dagen. Nummer, geldigTot en offertedatum gaan met een gerichte lees-samenvoeg-schrijfronde naar onderhoudsplannen.offerte_config; de kolom zit bewust niet in _mapOhpToDB, dus een gewone plan-save kan dit nooit overschrijven, hetzelfde patroon als offerte_config op calculaties sinds v3.58.0. De momentopname volgt exact de printroute van _ohpPrintOfferte: _ohpLiggingPrintUrl vullen, _ohpBuildOfferteHTML in printArea, wachten op de vier Libre Franklin-gewichten omdat _ohpPaginate op gemeten hoogtes verdeelt en een fallback-font andere paginagrenzen geeft, _ohpPreloadImages, _ohpPaginate, innerHTML uitlezen en printArea leegmaken. Insert met calculatie_id en onderhoudsplan_id allebei gevuld, bedrag null (geen bedrag in de akkoordzin, besluit 29-08-2026) en pdf_path null; oude open planlinks van hetzelfde plan gaan eerst weg. Klantpagina: _accordRender en _accordRenderVerlopen vertakken op res.soort met eigen titel en teksten; _accordWireActies, _accordFormHtml en _accordVerstuur kregen een opts-parameter met isPlan en keuzeNodig, default leeg zodat het offertepad byte voor byte hetzelfde blijft. Bij keuze_nodig twee verplichte keuzerondjes per beurt of maandelijks in ac-check-opmaak (geen nieuwe CSS-klassen); de akkoordzin draait live mee via span acAkkWeg en de nieuwe helper _accordBetaalWoord, die ook de banner bij heropening en de bevestiging na akkoord voedt en het beheervenster. Ontbreekt de keuze dan stopt de client met exact de serverzin Kies eerst hoe u wilt betalen: per beurt of per maand. betaalkeuze gaat alleen mee in de POST als hij bestaat. De stempel op het document wordt bij een plan overgeslagen, want de bijlage heeft geen ondertekenvak en de terugval zou een losse regel onder de brochure hangen; de banner is daar het bewijs. _accordOfferteSrcdoc kreeg een optionele extraHead waarmee de planweergave de Libre Franklin-fontlink laadt; die staat als link in de app-head en zit dus niet in de print-CSS die _accordPrintCss uitpakt. Mailen via _offerteVerzendCall (de gedeployde functie kiest zelf de planwoorden); na succes een gerichte statusupdate naar verzonden, alleen vanaf concept of gereed zodat geaccepteerd en verloren nooit terugvallen, met _ohpState.plan en de dropdown ohpStatus synchroon. In het planvenster staat de noodrem op de opvolgautomaat (automaat_uit) zonder het rooster van _opvolgBlokHtml: dat rooster leest calc-offertevelden en zou voor plannen een eigen rekenlijn vragen; de herinnering-functie doet het echte werk (bewuste keuze). Geen SQL en geen Edge Function: stap 1 en 2 draaien sinds 29-08-2026.' },
@@ -11133,7 +11135,8 @@ function _ohpBriefCfg(plan) {
   OFFERTE_SECTIES.filter(s => s.type === 'tekst').forEach(s => {
     const sv = saved ? saved[s.code] : null;
     if (sv && typeof sv === 'object') {
-      const blokken = Array.isArray(sv.blokken) ? sv.blokken.filter(b => b && b.variantId).map(b => ({ variantId: b.variantId })) : [];
+      // v4.53.0 - eigen tekst reist mee: een blok telt met variantId of met niet-lege tekst.
+      const blokken = Array.isArray(sv.blokken) ? sv.blokken.filter(b => b && (b.variantId || (b.tekst != null && String(b.tekst).trim()))).map(b => { const o = { variantId: b.variantId || null }; if (b.tekst != null) o.tekst = b.tekst; return o; }) : [];
       secties[s.code] = { aan: sv.aan !== false && blokken.length > 0, blokken: blokken };
     } else {
       const vid = _ohpBriefVariantId(s.code);
@@ -22698,8 +22701,19 @@ function _ohpBriefCfgHtml() {
       const opts = varianten.map(v => '<option value="' + v.id + '"' + (blok && blok.variantId === v.id ? ' selected' : '') + '>' + _offEsc(v.naam || '(zonder naam)') + (v.std_plan ? ' \u2713' : '') + '</option>').join('');
       const weg = (sec.stapelbaar && (c.blokken || []).length > 1)
         ? ' <button class="btn-icon" onclick="_ohpBriefBlokDel(\'' + sec.code + '\',' + i + ')" title="Blok weg">\u00d7</button>' : '';
-      return '<div style="display:flex; gap:0.35rem; align-items:center; margin:0.2rem 0;">'
-        + '<select onchange="_ohpBriefVar(\'' + sec.code + '\',' + i + ', this.value)" style="flex:1; min-width:180px;"><option value="">\u2014 kies een variant \u2014</option>' + opts + '</select>' + weg + '</div>';
+      // v4.53.0 - eigen tekst per plan: tekstvak onder de variantkeuze, model _offCfgBlokHtml.
+      const aangepast = !!(blok && blok.tekst != null);
+      const tekst = blok ? _offBlokTekst(blok) : '';
+      const rows = Math.min(12, Math.max(3, (String(tekst).match(/\n/g) || []).length + 2));
+      const badge = aangepast
+        ? ' <span style="font-size:0.72rem; color:#92400e; background:#fef3c7; border:1px solid #fde68a; border-radius:999px; padding:0.1rem 0.5rem; white-space:nowrap;">\u270e aangepast</span>'
+          + ' <button class="btn-icon" onclick="_ohpBriefReset(\'' + sec.code + '\',' + i + ')" title="Terug naar de bibliotheektekst">\u21ba</button>'
+        : '';
+      return '<div style="margin:0.2rem 0 0.5rem;">'
+        + '<div style="display:flex; gap:0.35rem; align-items:center;">'
+        + '<select onchange="_ohpBriefVar(\'' + sec.code + '\',' + i + ', this.value)" style="flex:1; min-width:180px;"><option value="">\u2014 kies een variant \u2014</option>' + opts + '</select>' + badge + weg + '</div>'
+        + '<textarea rows="' + rows + '" onchange="_ohpBriefTekst(\'' + sec.code + '\',' + i + ', this.value)" style="width:100%; margin-top:0.3rem; font-size:0.82rem; line-height:1.45; box-sizing:border-box;" placeholder="Kies een variant of typ hier de tekst voor deze brief\u2026">' + _offEsc(tekst) + '</textarea>'
+        + '</div>';
     };
     const blokken = ((c.blokken && c.blokken.length) ? c.blokken : [{ variantId: null }]).map(kies).join('');
     const plus = sec.stapelbaar ? '<button class="btn-icon" onclick="_ohpBriefBlokAdd(\'' + sec.code + '\')" title="Blok erbij">+</button>' : '';
@@ -22713,13 +22727,17 @@ function _ohpBriefCfgHtml() {
       + leeg + '</div>';
   }).join('');
   return '<h3>\u2709\ufe0f Planbrief samenstellen</h3>'
-    + '<div class="acb-sub" style="margin:0 0 10px;">De brief komt voor de bijlage en print en bevriest mee met Offerte OHP en de accordeerlink. Een sectie zonder gekozen variant blijft weg. Het teken \u2713 markeert de Plan-standaard uit de bibliotheek; teksten wijzig je in het bibliotheekbeheer.</div>'
+    + '<div class="acb-sub" style="margin:0 0 10px;">De brief komt voor de bijlage en print en bevriest mee met Offerte OHP en de accordeerlink. Een sectie zonder variant en zonder eigen tekst blijft weg. Het teken \u2713 markeert de Plan-standaard uit de bibliotheek. Een aangepaste tekst geldt alleen voor dit plan; de bibliotheekteksten zelf wijzig je in het bibliotheekbeheer.</div>'
     + rijen
     + '<div style="display:flex; gap:0.5rem; margin-top:0.7rem;"><button class="acb-btn" id="ohpBriefOpslaanKnop" onclick="_ohpBriefOpslaan()">\ud83d\udcbe Opslaan</button></div>';
 }
 function _ohpBriefRender() {
   const ov = document.getElementById('accordBeheerOverlay');
-  if (ov) ov.querySelector('.acb-body').innerHTML = _ohpBriefCfgHtml();
+  if (!ov) return;
+  const modal = ov.querySelector('.acb-modal');
+  const scroll = modal ? modal.scrollTop : 0; // v4.53.0 - schuifpositie vasthouden bij hertekenen
+  ov.querySelector('.acb-body').innerHTML = _ohpBriefCfgHtml();
+  if (modal) modal.scrollTop = scroll;
 }
 function _ohpBriefAan(code, aan) {
   const st = _ohpBriefCfgState;
@@ -22738,6 +22756,8 @@ function _ohpBriefVar(code, i, variantId) {
   if (!Array.isArray(st.secties[code].blokken)) st.secties[code].blokken = [];
   while (st.secties[code].blokken.length <= i) st.secties[code].blokken.push({ variantId: null });
   st.secties[code].blokken[i].variantId = variantId || null;
+  st.secties[code].blokken[i].tekst = null; // v4.53.0 - nieuwe keuze volgt de bibliotheek
+  _ohpBriefRender();
 }
 function _ohpBriefBlokAdd(code) {
   const st = _ohpBriefCfgState;
@@ -22752,13 +22772,31 @@ function _ohpBriefBlokDel(code, i) {
   st.secties[code].blokken.splice(i, 1);
   _ohpBriefRender();
 }
+function _ohpBriefTekst(code, i, val) {
+  // v4.53.0 - eigen tekst per plan; exact de bibliotheektekst telt niet als aangepast.
+  const st = _ohpBriefCfgState;
+  if (!st || !st.secties[code]) return;
+  if (!Array.isArray(st.secties[code].blokken)) st.secties[code].blokken = [];
+  while (st.secties[code].blokken.length <= i) st.secties[code].blokken.push({ variantId: null });
+  const blok = st.secties[code].blokken[i];
+  const v = blok.variantId ? (data.offerteTeksten || []).find(t => t.id === blok.variantId) : null;
+  blok.tekst = (v && val === v.inhoud) ? null : val;
+  _ohpBriefRender();
+}
+function _ohpBriefReset(code, i) {
+  // v4.53.0 - terug naar de bibliotheektekst van de gekozen variant.
+  const st = _ohpBriefCfgState;
+  if (!st || !st.secties[code] || !Array.isArray(st.secties[code].blokken) || !st.secties[code].blokken[i]) return;
+  st.secties[code].blokken[i].tekst = null;
+  _ohpBriefRender();
+}
 async function _ohpBriefOpslaan() {
   const plan = _ohpState.plan;
   if (!plan || !plan.id || !_ohpBriefCfgState) return;
   const uit = {};
   OFFERTE_SECTIES.filter(x => x.type === 'tekst').forEach(x => {
     const sec = _ohpBriefCfgState.secties[x.code] || { aan: false, blokken: [] };
-    uit[x.code] = { aan: !!sec.aan, blokken: (sec.blokken || []).filter(b => b && b.variantId).map(b => ({ variantId: b.variantId })) };
+    uit[x.code] = { aan: !!sec.aan, blokken: (sec.blokken || []).filter(b => b && (b.variantId || (b.tekst != null && String(b.tekst).trim()))).map(b => { const o = { variantId: b.variantId || null }; if (b.tekst != null) o.tekst = b.tekst; return o; }) };
   });
   try {
     const { data: rij0, error: e0 } = await _sb.from('onderhoudsplannen')

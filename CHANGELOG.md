@@ -1,3 +1,21 @@
+## v4.53.0 — Eigen tekst per plan in de planbrief (brok 5a)
+
+### Wat er nu kan
+
+Het Planbrief-venster toont onder elke variantkeuze voortaan de tekst zelf, in een tekstvak dat je direct bewerkt. Het is precies het model van de offerteteksten op de Calculatie-tab, met precies hetzelfde gedrag. Wijzig je iets, dan geldt die tekst alleen voor dit ene plan: het blok krijgt de badge ✎ aangepast en een knop ↺ die teruggaat naar de bibliotheektekst. Kies je een andere variant, dan volgt het blok weer de bibliotheek en is de eigen tekst weg. Typ je exact de bibliotheektekst terug, dan telt het blok niet als aangepast. Nieuw is ook dat een blok zonder gekozen variant mag bestaan zolang er tekst in staat, dezelfde vrijheid als op de offerte. Daarmee kan een verlengingsplan een persoonlijke alinea krijgen, bijvoorbeeld met het oude maandbedrag van die ene klant of een Bijzonderheden-zin uit de oude brieven, zonder dat daarvoor een bibliotheekvariant hoeft te bestaan. De invulvelden zoals {klant}, {aantal_jaar} en {gemiddeld_per_maand} werken in eigen tekst net zo als in bibliotheektekst.
+
+Twee dingen om te blijven weten. Eigen tekst is niet nagelezen zoals de bibliotheekteksten destijds; lees hem zelf na voordat de brief de deur uitgaat. En wijzig je de brief op een plan met een openstaande accordeerlink, dan verandert het bevroren document niet mee; maak dan een nieuwe link aan.
+
+### Hoe het onder de kap zit
+
+De leesvolgorde bestond al: `_offBlokTekst` pakt `blok.tekst` vóór de bibliotheek, sinds de Calculatie-tab. Er waren precies twee plekken die de tekst wegstripten, allebei met dezelfde map op alleen variantId: `_ohpBriefCfg` bij het lezen en `_ohpBriefOpslaan` bij het schrijven. Die twee filteren nu op variantId of niet-lege tekst en nemen `tekst` mee wanneer die bestaat. Aan de briefbouwer `_ohpBriefBlokken` is niets veranderd; omdat print en accordeersnapshot dezelfde bouwer delen, pagineert en bevriest eigen tekst vanzelf mee. De invulvelden lopen via `_offVulVelden` ook door eigen tekst. Het venster `_ohpBriefCfgHtml` kreeg per blok een textarea met de effectieve tekst (3 tot 12 rijen op het aantal regels, model `_offCfgBlokHtml`), bij aangepaste tekst de badge plus de herstelknop `_ohpBriefReset`. `_ohpBriefVar` zet bij een variantwissel de tekst op null en hertekent, wat hij eerder niet hoefde. De nieuwe `_ohpBriefTekst` doet de slimme nulzetting: exact de bibliotheektekst terugtypen levert geen aangepast blok op. `_ohpBriefRender` houdt de schuifpositie van de modal vast bij het hertekenen, anders sprong het venster met twaalf tekstvakken na elke wijziging naar boven. De tekst reist in de bestaande jsonb-vorm `brief.secties[code].blokken[i].tekst`; de opslag raakt alleen de sleutel `brief` via de gerichte lees-samenvoeg-schrijfronde van v4.52.0 en de kolom zit onveranderd niet in `_mapOhpToDB`. Tien proeven groen op code die string-bewust uit het gepatchte bestand is gesneden, zonder stubs voor paginaconstanten, waaronder de volledige opslagronde met behoud van de andere sleutels in `offerte_config`. Geen SQL, geen Edge Function.
+
+### Wat je moet doen
+
+1. `index.html`, `CHANGELOG.md` en `SYSTEEM.md` uploaden.
+2. Hard verversen (Cmd+Shift+R) en op een particulier plan **Planbrief** openen: onder elke variantkeuze hoort een tekstvak te staan. Pas ergens een woord aan, sla op, open het venster opnieuw en controleer de badge en de herstelknop.
+3. Print **Offerte OHP** en controleer dat de aangepaste tekst in de brief staat.
+
 ## v4.52.1 — Reparatie: de planbrief bleef stilletjes leeg
 
 ### Wat er mis was
