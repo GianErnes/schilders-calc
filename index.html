@@ -2301,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.54.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.55.0</h2>
       <div class="intro-body">
+        <p><strong>✉️ De mail kent het verschil tussen nieuw en verlenging (v4.55.0).</strong> Staat in de planbrief een inleiding-variant met verlenging in de naam, dan vult het mailvenster van de accordeerlink voortaan automatisch een verlengingstekst voor: dank voor de jaren, het voorstel voor de verlenging en de verwijzing naar de brief voorin het document. Op elk ander plan blijft de generieke tekst staan. Het venster meldt waarom de tekst is voorgevuld en blijft volledig bewerkbaar. De brief is de bron van waarheid: kies je de verlengingsbrief, dan stelt de mail zich vanzelf goed voor. Geen wijziging aan de Edge Function nodig.</p>
         <p><strong>👁 Voorbeeldknop voor de planbrief (v4.54.0).</strong> Het Planbrief-venster heeft naast Opslaan een knop Voorbeeld gekregen die de brief als leestekst toont, met alle invulvelden ingevuld. Het voorbeeld toont de actuele stand van het venster, dus ook eigen tekst die je nog niet hebt opgeslagen: typen, bekijken, bijschaven en dan pas opslaan. De volgorde en de inhoud komen uit dezelfde bouwer als de echte brief, dus wat je leest is wat er komt. Met Terug sta je weer in het venster waar je was. Het is een leesweergave: op papier komt de brief in het briefpapier met de vaste paginakop.</p>
         <p><strong>🎨 Twee beeldcorrecties op de bijlage (v4.53.1).</strong> De aanhefalinea onder de liggingsfoto stond op 13pt en dat is sinds de betaalkeuzezin van v4.50.0 een alinea van vier regels geworden; die staat nu op de gewone documentletter van 10,5pt met een iets steviger gewicht, zodat hij als opening voelt zonder te schreeuwen. En de oranje weerzijde-waaier bij het kompas was met 28 procent dekking zonder rand nauwelijks te zien op een drukke luchtfoto; hij heeft nu een stevigere vulling en een strakke oranje randlijn. Het liggingsbeeld wordt één keer gemaakt en opgeslagen: druk op een bestaand plan bij de ligging op Vernieuwen om de nieuwe waaier te krijgen.</p>
         <p><strong>✏️ Eigen tekst per plan in de planbrief (v4.53.0).</strong> Het Planbrief-venster toont onder elke variantkeuze voortaan de tekst zelf, in een tekstvak dat je direct bewerkt, precies zoals de offerteteksten op de Calculatie-tab. Wijzig je iets, dan geldt die tekst alleen voor dit ene plan: het blok krijgt het teken ✎ aangepast en een knop terug naar de bibliotheektekst. Kies je een andere variant, dan volgt het blok weer de bibliotheek. Je kunt ook een blok schrijven zónder variant te kiezen, bijvoorbeeld een persoonlijke alinea op een verlengingsplan. De invulvelden zoals {klant} en {aantal_jaar} werken in eigen tekst net zo. Twee dingen om te weten: eigen tekst is niet nagelezen zoals de bibliotheekteksten, dus lees hem zelf na voordat de brief de deur uitgaat. En wijzig je de brief op een plan met een openstaande accordeerlink, dan verandert het bevroren document niet mee; maak dan een nieuwe link.</p>
@@ -3608,7 +3609,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.54.0';
+const APP_VERSION = 'v4.55.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -4004,6 +4005,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.55.0', d: '2026-08-30', h: 'Mail-inleiding voor verlengingsplannen (brok 5c, het slot van de planbriefroadmap). Nieuwe helper _ohpPlanIsVerlenging(plan): leest de briefconfiguratie via _ohpBriefCfg en geeft true wanneer een gekozen inleiding-variant het woord verlenging in de naam draagt (hoofdletterongevoelig). De terugvaltak van _ohpBriefCfg kan dit nooit per ongeluk worden, want die kiest alleen std_plan-varianten en de verlengingsvariant heeft bewust geen Plan-vinkje; een inleiding die alleen uit eigen tekst bestaat wordt niet herkend, het venster blijft bewerkbaar als vangnet, en de hele helper zit in try/catch met false als terugval. _ohpPlanStandaardtekst kreeg een tweede parameter isVerlenging met een eigen teksttak: dank voor het vertrouwen van de afgelopen jaren, het voorstel voor de verlenging en de verwijzing naar de brief voorin het document, kort en zonder bedragen omdat de brief het volledige verhaal draagt (spelling Onderhouds garantie+ plan, gelijk aan het document dat de klant leest). Zonder tweede argument is de functie byte voor byte de oude. _ohpPlanMailen bepaalt de vlag een keer, geeft hem door aan de voorvultekst en toont bij een verlengingsplan een regel die uitlegt waarom deze tekst is voorgevuld. De verzendweg is ongewijzigd: de tekst gaat als body.tekst naar offerte-verzenden en vervangt daar de vaste intro, precies het mechanisme dat de functie sinds v4.28.0 draagt en waarvoor de plan-tak van v4.51.0 al de haak had geslagen; geen functiewijziging en geen deploy nodig. Naam _ohpPlanIsVerlenging vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
   { v: '4.54.0', d: '2026-08-30', h: 'Voorbeeldknop voor de planbrief (brok 5b van de planbriefroadmap). _ohpBriefBlokken kreeg een optionele derde parameter cfgArg; zonder argument valt hij op _ohpBriefCfg(plan) terug en gedraagt hij zich byte voor byte als voorheen, dus de printroute en het accordeersnapshot merken niets. De nieuwe _ohpBriefVoorbeeld draait die echte bouwer op de actuele venster-stand (_ohpBriefCfgState, inclusief nog niet opgeslagen eigen tekst) met de bron-calc uit _ohpBronCalc en toont de blokken als leestekst in dezelfde overlay, met een klein eigen stijlblok onder de nieuwe klasse brief-vb omdat de echte briefopmaak in de scoped style van de documentbouwer zit; nul gedupliceerde volgorde- of filterlogica, dus het voorbeeld kan nooit stilletjes van de brief gaan afwijken. Zonder bron-calc of bij een lege brief komt een eerlijke melding in plaats van een leeg vlak, exact de gevallen waarin de echte brief ook wegblijft. De knop staat naast Opslaan in het venster; Terug gaat via _ohpBriefVbTerug dat eerst de bewaarde schuifpositie terugzet (nieuwe module-let _ohpBriefVbScroll) en dan _ohpBriefRender aanroept, dat die positie vasthoudt over het hertekenen heen. Het voorbeeld opent altijd bovenaan. Namen _ohpBriefVoorbeeld, _ohpBriefVbTerug, _ohpBriefVbScroll en brief-vb vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
   { v: '4.53.1', d: '2026-08-30', h: 'Twee beeldcorrecties op de particuliere bijlage. (1) .ob .aanhef p van 13pt naar 10,5pt met regelafstand 1,55, gelijk aan de basisletter van .ob; gewicht 500 en het scheidingslijntje blijven staan. Het blok was ooit een welkomstzin en een maat groter werkte toen als opening, maar sinds de betaalkeuzezin van v4.50.0 eraan hangt is het op een keuzedocument een alinea van vier regels en las 13pt medium als schreeuwen, zeker nu de planbrief van v4.52.0 ervoor zit en de echte opening draagt. Raakt alleen particulier: de VvE-tak heeft geen aanhefblok. (2) De weerzijde-waaier in _ohpLiggingTeken: vulling van rgba 249,115,22 op 0.28 naar 0.32 en een nieuwe randlijn over hetzelfde pad (strokeStyle op 0.92, lineWidth max 2 of afgerond 0.07 maal r, lineJoin round), want een vlak zonder rand vervloeit op het grijs van een luchtfoto. Gekozen uit een proefbeeld op de echte foto van het plan; de variant met de waaier vanuit het pand is daarbij bewust afgewezen, de waaier blijft de richtingslegenda bij het kompas en de schijf tekent er na de waaier schoon overheen. Het liggingsbeeld wordt eenmalig gegenereerd en opgeslagen, dus bestaande plannen tonen de nieuwe waaier pas na Vernieuwen bij de ligging; bevroren accordeersnapshots veranderen nooit mee. Geen SQL, geen Edge Function.' },
   { v: '4.53.0', d: '2026-08-30', h: 'Eigen tekst per plan in de planbrief (brok 5a van de planbriefroadmap). De twee plekken die blok.tekst wegstripten doen dat niet meer: _ohpBriefCfg en _ohpBriefOpslaan filteren voortaan op variantId of niet-lege tekst en nemen tekst mee wanneer die bestaat, waardoor de bestaande leesvolgorde van _offBlokTekst (eigen tekst gaat voor de bibliotheek, het model van de Calculatie-tab) meteen voor de briefbouwer, de paginering en het bevroren accordeersnapshot werkt; aan de bouwer _ohpBriefBlokken is niets veranderd en de invulvelden lopen via _offVulVelden ook door eigen tekst. Het venster _ohpBriefCfgHtml toont per blok onder de variantkeuze een textarea met de effectieve tekst (3 tot 12 rijen op het aantal regels, model _offCfgBlokHtml), bij aangepaste tekst de badge aangepast plus een herstelknop, en de plaatshouder nodigt uit tot tekst zonder variant; dat mag nu, zelfde vrijheid als de offerte, en zulke blokken overleven het opslaan omdat het filter ze meetelt. Drie gedragingen exact gespiegeld van de Calculatie-tab: variantwissel wist de eigen tekst en de nieuwe keuze volgt de bibliotheek (_ohpBriefVar rendert daarvoor nu ook opnieuw), exact de bibliotheektekst terugtypen telt niet als aangepast (slimme nulzetting in de nieuwe _ohpBriefTekst) en de herstelknop _ohpBriefReset zet het blok terug op de bibliotheek. _ohpBriefRender houdt de schuifpositie van de modal (.acb-modal, overflow:auto) vast bij het hertekenen, want met twaalf tekstvakken zou elke wijziging anders naar boven springen. De tekst reist in de bestaande jsonb-vorm brief.secties[code].blokken[i].tekst; de opslag raakt alleen de sleutel brief via de gerichte lees-samenvoeg-schrijfronde van v4.52.0 en de kolom zit onveranderd niet in _mapOhpToDB. Namen _ohpBriefTekst en _ohpBriefReset vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
@@ -22883,8 +22885,32 @@ function ohpBriefConfig() {
   _ohpBriefCfgState = _ohpBriefCfg(plan);
   _ohpBriefRender();
 }
-function _ohpPlanStandaardtekst(aanhef) {
+// v4.55.0 - verlengingsplan herkennen aan de briefconfiguratie: een gekozen
+// inleiding-variant met verlenging in de naam. De terugvaltak van _ohpBriefCfg
+// kan dit nooit per ongeluk kiezen, want die pakt alleen std_plan-varianten en
+// de verlengingsvariant heeft bewust geen Plan-vinkje. Eigen tekst zonder
+// variant wordt niet herkend; het mailvenster blijft bewerkbaar als vangnet.
+function _ohpPlanIsVerlenging(plan) {
+  try {
+    const cfg = _ohpBriefCfg(plan);
+    const sec = cfg.secties && cfg.secties.inleiding;
+    if (!sec || !sec.aan) return false;
+    return (sec.blokken || []).some(b => {
+      if (!b || !b.variantId) return false;
+      const v = (data.offerteTeksten || []).find(t => t.id === b.variantId);
+      return !!(v && /verlenging/i.test(v.naam || ''));
+    });
+  } catch (e) { return false; }
+}
+function _ohpPlanStandaardtekst(aanhef, isVerlenging) {
   const a = (aanhef && String(aanhef).trim()) ? String(aanhef).trim() : 'heer, mevrouw';
+  // v4.55.0 - verlengingstak: kort en zonder bedragen, de brief draagt het verhaal.
+  if (isVerlenging) {
+    return 'Geachte ' + a + ',\n\n'
+      + 'Hartelijk dank voor het vertrouwen van de afgelopen jaren. Uw Onderhouds garantie+ plan loopt af; hierbij ontvangt u ons voorstel voor de verlenging. In de brief voorin het document leest u wat hetzelfde blijft en wat er verandert.\n\n'
+      + 'U kunt het plan hieronder bekijken en meteen akkoord geven. Heeft u nog vragen, neem gerust contact met ons op.\n\n'
+      + 'Wij zien uw reactie graag tegemoet.';
+  }
   return 'Geachte ' + a + ',\n\n'
     + 'Hierbij ontvangt u ons voorstel voor het Onderhoudsgarantie+ plan. In het document vindt u de geplande onderhoudsbeurten en de bijbehorende bedragen.\n\n'
     + 'U kunt het plan hieronder bekijken en meteen akkoord geven. Heeft u nog vragen, neem gerust contact met ons op.\n\n'
@@ -22895,9 +22921,11 @@ function _ohpPlanMailen(plan, calc, rij, body) {
   const email = (rij.snapshot && rij.snapshot.klantEmail) ? String(rij.snapshot.klantEmail).trim() : '';
   if (!email) { _toast('Geen e-mailadres in deze link. Maak een nieuwe link met e-mailadres.'); return; }
   const aanhef = (rij.snapshot && rij.snapshot.aanhef) ? String(rij.snapshot.aanhef).trim() : '';
-  const std = _ohpPlanStandaardtekst(aanhef);
+  const isVerlenging = _ohpPlanIsVerlenging(plan); // v4.55.0 - de brief stuurt de voorvultekst
+  const std = _ohpPlanStandaardtekst(aanhef, isVerlenging);
   const h = '<h3>\u2709\ufe0f Onderhoudsplan mailen</h3>'
     + '<div class="acb-sub" style="margin:0 0 12px;">Naar ' + _accordEsc(email) + '</div>'
+    + (isVerlenging ? '<div class="acb-sub" style="margin:0 0 12px;">\u21bb Verlengingstekst voorgevuld: de brief-inleiding van dit plan staat op verlenging.</div>' : '')
     + '<label style="display:block; font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Begeleidende tekst (komt bovenaan in de mail)</label>'
     + '<textarea id="ohpAcMailTekst" style="width:100%; min-height:200px; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:6px; font:inherit; line-height:1.5; resize:vertical;">' + _accordEsc(std) + '</textarea>'
     + '<div class="acb-sub" style="margin:6px 0 12px; font-size:0.72rem;">Laat je het leeg, dan gebruikt de mail de vaste standaardaanhef.</div>'

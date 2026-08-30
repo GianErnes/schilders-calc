@@ -1,3 +1,20 @@
+## v4.55.0 — De mail kent het verschil tussen nieuw en verlenging (brok 5c)
+
+### Wat er nu kan
+
+Verstuur je de accordeerlink van een verlengingsplan, dan vult het mailvenster voortaan automatisch een verlengingstekst voor: dank voor het vertrouwen van de afgelopen jaren, het voorstel voor de verlenging en de verwijzing naar de brief voorin het document. Kort en zonder bedragen, want de brief draagt het volledige verhaal. Op elk ander plan blijft de vertrouwde generieke tekst staan. Het venster meldt met een regeltje waarom de tekst is voorgevuld en blijft volledig bewerkbaar, dus je kunt per klant altijd nog schaven voordat je op Versturen drukt.
+
+De herkenning volgt de brief: staat in de briefconfiguratie van het plan een inleiding-variant met verlenging in de naam, dan is het een verlengingsplan. Eén bron van waarheid; kies je de verlengingsbrief, dan stelt de mail zich vanzelf goed voor. Twee grenzen om te kennen: een inleiding die alleen uit eigen tekst bestaat wordt niet herkend (pas de mail dan handmatig aan in het venster) en hernoem je de verlengingsvariant in de bibliotheek zó dat het woord verlenging eruit verdwijnt, dan stopt de herkenning.
+
+### Hoe het onder de kap zit
+
+Nieuwe helper `_ohpPlanIsVerlenging(plan)`: leest de briefconfiguratie via `_ohpBriefCfg` en geeft true wanneer een gekozen inleiding-variant het woord verlenging in de naam draagt, hoofdletterongevoelig. De terugvaltak van `_ohpBriefCfg` kan dit nooit per ongeluk worden, want die kiest alleen std_plan-varianten en de verlengingsvariant heeft bewust geen Plan-vinkje; de hele helper zit in try/catch met false als terugval. `_ohpPlanStandaardtekst` kreeg een tweede parameter isVerlenging met een eigen teksttak in de spelling van het klantdocument (Onderhouds garantie+ plan); zonder tweede argument is de functie byte voor byte de oude, bewezen in de proeven. `_ohpPlanMailen` bepaalt de vlag één keer, geeft hem door aan de voorvultekst en toont bij een verlengingsplan de meldingsregel. De verzendweg is ongewijzigd: de tekst gaat als body.tekst naar `offerte-verzenden` en vervangt daar de vaste intro, precies het mechanisme dat de functie sinds v4.28.0 draagt en waarvoor de plan-tak van v4.51.0 de haak al had geslagen. Geen functiewijziging en geen deploy dus. Vier proefgroepen groen op gesneden code: herkenning met en zonder stapel, vijf gevallen zonder valse treffer (standaardplan, terugvaltak, eigen tekst, uitgezette sectie, null), de twee teksttakken en het mailvenster op beide plansoorten. Bijvangst voor de gereedschapskist: de string-bewuste snijder struikelde over regex-literals met aanhalingstekens erin (zoals in `_accordEsc`); zulke functies snijden voortaan op regelpatroon. Geen SQL, geen Edge Function.
+
+### Wat je moet doen
+
+1. `index.html`, `CHANGELOG.md` en `SYSTEEM.md` uploaden. Er hoeft niets gedeployd: de Edge Function `offerte-verzenden` is ongemoeid.
+2. Hard verversen (Cmd+Shift+R), open op het verlengingsplan Accordeerlink en dan Mailen: de verlengingstekst hoort voorgevuld te staan met het regeltje erboven. Open hetzelfde venster op een gewoon plan en controleer dat daar de generieke tekst staat.
+
 ## v4.54.0 — Voorbeeldknop voor de planbrief (brok 5b)
 
 ### Wat er nu kan
