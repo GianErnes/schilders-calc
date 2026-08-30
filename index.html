@@ -2301,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.55.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.56.0</h2>
       <div class="intro-body">
+        <p><strong>🏷️ Het plan heeft nu een eigen naam (v4.56.0).</strong> Op de Onderhoudsplan-tab staat bovenin een veld <strong>Plannaam</strong> met een knop die de naam van de bron-calculatie aanvult met het start- en eindjaar van het plan. Laat je het veld leeg, dan toont alles gewoon de calculatienaam, dus bestaande plannen merken niets. De eigen naam staat op het interne print, in de Betreft-regel van de planbrief, in de kop van de bijlage als er geen klantnaam is, in de bestandsnaam bij het printen, in het accordeervenster en in de twee dashboardlijsten. Bevroren accordeersnapshots veranderen zoals altijd niet mee. Het mailonderwerp, de opvolgmails en de klantpagina volgen zodra de drie Edge Functions zijn bijgewerkt.</p>
         <p><strong>✉️ De mail kent het verschil tussen nieuw en verlenging (v4.55.0).</strong> Staat in de planbrief een inleiding-variant met verlenging in de naam, dan vult het mailvenster van de accordeerlink voortaan automatisch een verlengingstekst voor: dank voor de jaren, het voorstel voor de verlenging en de verwijzing naar de brief voorin het document. Op elk ander plan blijft de generieke tekst staan. Het venster meldt waarom de tekst is voorgevuld en blijft volledig bewerkbaar. De brief is de bron van waarheid: kies je de verlengingsbrief, dan stelt de mail zich vanzelf goed voor. Geen wijziging aan de Edge Function nodig.</p>
         <p><strong>👁 Voorbeeldknop voor de planbrief (v4.54.0).</strong> Het Planbrief-venster heeft naast Opslaan een knop Voorbeeld gekregen die de brief als leestekst toont, met alle invulvelden ingevuld. Het voorbeeld toont de actuele stand van het venster, dus ook eigen tekst die je nog niet hebt opgeslagen: typen, bekijken, bijschaven en dan pas opslaan. De volgorde en de inhoud komen uit dezelfde bouwer als de echte brief, dus wat je leest is wat er komt. Met Terug sta je weer in het venster waar je was. Het is een leesweergave: op papier komt de brief in het briefpapier met de vaste paginakop.</p>
         <p><strong>🎨 Twee beeldcorrecties op de bijlage (v4.53.1).</strong> De aanhefalinea onder de liggingsfoto stond op 13pt en dat is sinds de betaalkeuzezin van v4.50.0 een alinea van vier regels geworden; die staat nu op de gewone documentletter van 10,5pt met een iets steviger gewicht, zodat hij als opening voelt zonder te schreeuwen. En de oranje weerzijde-waaier bij het kompas was met 28 procent dekking zonder rand nauwelijks te zien op een drukke luchtfoto; hij heeft nu een stevigere vulling en een strakke oranje randlijn. Het liggingsbeeld wordt één keer gemaakt en opgeslagen: druk op een bestaand plan bij de ligging op Vernieuwen om de nieuwe waaier te krijgen.</p>
@@ -2800,6 +2801,12 @@
         <div id="ohpBronLijst" style="margin-top: 0.5rem; max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px;"></div>
       </div>
       <div class="form-grid" id="ohpParamGrid">
+        <label style="grid-column: 1 / -1;">Plannaam <span style="font-weight: normal; font-size: 0.75rem; color: var(--muted);">— leeg = de naam van de bron-calculatie</span>
+          <span style="display: flex; gap: 0.4rem; align-items: center;">
+            <input type="text" id="ohpNaam" placeholder="bv. Woonhuis 2027-2041" style="flex: 1; min-width: 0;">
+            <button type="button" class="btn btn-secondary btn-sm" id="ohpNaamSuggestie" style="white-space: nowrap;" title="Naam van de bron-calculatie plus start- en eindjaar van het plan">Vul jaartallen in</button>
+          </span>
+        </label>
         <label>Prijspeil calculatie (jaar)
           <input type="number" id="ohpPrijspeil" min="2000" max="2100" step="1" placeholder="bv. 2026">
         </label>
@@ -3609,7 +3616,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.55.0';
+const APP_VERSION = 'v4.56.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -4005,6 +4012,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.56.0', d: '2026-08-30', h: 'Eigen plannaam (brok plannaam). Kolom naam (text null) op onderhoudsplannen via een los idempotent SQL-bestand, gemapt in _mapOhpFromDB en _mapOhpToDB en de hele parameterketen (_ohpSaveParams, _ohpReadParamsFromUI, _ohpRenderParams, eventbinding). Nieuwe helper _ohpPlanNaam(plan, calc): de eigen naam gaat voor en een leeg veld valt terug op de naam van de bron-calculatie, dus bestaande plannen gedragen zich exact als voorheen. Toegepast op zeven plekken: de koptitel van het interne print, de Betreft-regel van de planbrief (lokale const _planNm), de masthead-projectnaam van de bijlage met dezelfde pipe-scope-splitsing, de printbestandsnaam via _setPrintTitle, de twee subregels van het accordeervenster en de twee dashboardlijsten. Het plannenarchief selecteert de kolom mee, toont planNaam voor de calc-naam en zoekt op allebei plus klant; het Reacties-blok haalt eigen plannamen op met een losse .in()-query (bewust geen PostgREST-embed omdat een foreign key van offerte_accorderingen.onderhoudsplan_id naar onderhoudsplannen niet gegarandeerd is) met console.warn-vangnet en terugval op de calc-naam. Invoerveld ohpNaam bovenin het parametergrid over de volle breedte; de placeholder toont waarop wordt teruggevallen. Knop Vul jaartallen in: _ohpNaamVoorstel bouwt calc-naam plus startjaar-eindjaar uit _ohpPlanCijfers (eindjaar is het jaar van de laatste geplande beurt, besluit 29-08-2026; zonder prijspeil of beurt geeft hij bewust null en de knop een toast) en _ohpNaamSuggestie schrijft het veld en flusht de save. Bevroren accordeersnapshots veranderen niet mee; mailonderwerp, opvolgmails en klantpagina volgen in de functieronde (offerte-verzenden, offerte-herinnering, offerte-accord). Namen _ohpPlanNaam, _ohpNaamVoorstel, _ohpNaamSuggestie, ohpNaam, ohpNaamSuggestie, _planNm, _planNamen en planNaam vooraf op nul treffers gecontroleerd. Vereist SQL (los geleverd, al uitgevoerd).' },
   { v: '4.55.0', d: '2026-08-30', h: 'Mail-inleiding voor verlengingsplannen (brok 5c, het slot van de planbriefroadmap). Nieuwe helper _ohpPlanIsVerlenging(plan): leest de briefconfiguratie via _ohpBriefCfg en geeft true wanneer een gekozen inleiding-variant het woord verlenging in de naam draagt (hoofdletterongevoelig). De terugvaltak van _ohpBriefCfg kan dit nooit per ongeluk worden, want die kiest alleen std_plan-varianten en de verlengingsvariant heeft bewust geen Plan-vinkje; een inleiding die alleen uit eigen tekst bestaat wordt niet herkend, het venster blijft bewerkbaar als vangnet, en de hele helper zit in try/catch met false als terugval. _ohpPlanStandaardtekst kreeg een tweede parameter isVerlenging met een eigen teksttak: dank voor het vertrouwen van de afgelopen jaren, het voorstel voor de verlenging en de verwijzing naar de brief voorin het document, kort en zonder bedragen omdat de brief het volledige verhaal draagt (spelling Onderhouds garantie+ plan, gelijk aan het document dat de klant leest). Zonder tweede argument is de functie byte voor byte de oude. _ohpPlanMailen bepaalt de vlag een keer, geeft hem door aan de voorvultekst en toont bij een verlengingsplan een regel die uitlegt waarom deze tekst is voorgevuld. De verzendweg is ongewijzigd: de tekst gaat als body.tekst naar offerte-verzenden en vervangt daar de vaste intro, precies het mechanisme dat de functie sinds v4.28.0 draagt en waarvoor de plan-tak van v4.51.0 al de haak had geslagen; geen functiewijziging en geen deploy nodig. Naam _ohpPlanIsVerlenging vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
   { v: '4.54.0', d: '2026-08-30', h: 'Voorbeeldknop voor de planbrief (brok 5b van de planbriefroadmap). _ohpBriefBlokken kreeg een optionele derde parameter cfgArg; zonder argument valt hij op _ohpBriefCfg(plan) terug en gedraagt hij zich byte voor byte als voorheen, dus de printroute en het accordeersnapshot merken niets. De nieuwe _ohpBriefVoorbeeld draait die echte bouwer op de actuele venster-stand (_ohpBriefCfgState, inclusief nog niet opgeslagen eigen tekst) met de bron-calc uit _ohpBronCalc en toont de blokken als leestekst in dezelfde overlay, met een klein eigen stijlblok onder de nieuwe klasse brief-vb omdat de echte briefopmaak in de scoped style van de documentbouwer zit; nul gedupliceerde volgorde- of filterlogica, dus het voorbeeld kan nooit stilletjes van de brief gaan afwijken. Zonder bron-calc of bij een lege brief komt een eerlijke melding in plaats van een leeg vlak, exact de gevallen waarin de echte brief ook wegblijft. De knop staat naast Opslaan in het venster; Terug gaat via _ohpBriefVbTerug dat eerst de bewaarde schuifpositie terugzet (nieuwe module-let _ohpBriefVbScroll) en dan _ohpBriefRender aanroept, dat die positie vasthoudt over het hertekenen heen. Het voorbeeld opent altijd bovenaan. Namen _ohpBriefVoorbeeld, _ohpBriefVbTerug, _ohpBriefVbScroll en brief-vb vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
   { v: '4.53.1', d: '2026-08-30', h: 'Twee beeldcorrecties op de particuliere bijlage. (1) .ob .aanhef p van 13pt naar 10,5pt met regelafstand 1,55, gelijk aan de basisletter van .ob; gewicht 500 en het scheidingslijntje blijven staan. Het blok was ooit een welkomstzin en een maat groter werkte toen als opening, maar sinds de betaalkeuzezin van v4.50.0 eraan hangt is het op een keuzedocument een alinea van vier regels en las 13pt medium als schreeuwen, zeker nu de planbrief van v4.52.0 ervoor zit en de echte opening draagt. Raakt alleen particulier: de VvE-tak heeft geen aanhefblok. (2) De weerzijde-waaier in _ohpLiggingTeken: vulling van rgba 249,115,22 op 0.28 naar 0.32 en een nieuwe randlijn over hetzelfde pad (strokeStyle op 0.92, lineWidth max 2 of afgerond 0.07 maal r, lineJoin round), want een vlak zonder rand vervloeit op het grijs van een luchtfoto. Gekozen uit een proefbeeld op de echte foto van het plan; de variant met de waaier vanuit het pand is daarbij bewust afgewezen, de waaier blijft de richtingslegenda bij het kompas en de schijf tekent er na de waaier schoon overheen. Het liggingsbeeld wordt eenmalig gegenereerd en opgeslagen, dus bestaande plannen tonen de nieuwe waaier pas na Vernieuwen bij de ligging; bevroren accordeersnapshots veranderen nooit mee. Geen SQL, geen Edge Function.' },
@@ -7174,6 +7182,7 @@ function _mapOhpFromDB(row) {
     indexeringPct: parseFloat(row.indexering_pct) || 0,
     btwPctOverride: row.btw_pct_override != null ? parseFloat(row.btw_pct_override) : null,
     notities:      row.notities || '',
+    naam:          row.naam || null,                      // v4.56.0 - eigen plannaam; leeg = terugval op calc-naam
     ontvangerType: row.ontvanger_type || 'particulier', // v3.23.0 — 'particulier' | 'vve'
     betaalmodel: row.betaalmodel || 'abo', // v3.29.0 — 'contant' | 'abo', voor de planning-splitsing
     scopeOmschrijving: row.scope_omschrijving || '',      // v3.23.0 — VvE: wat valt onder het plan
@@ -7197,6 +7206,7 @@ function _mapOhpToDB(p) {
     indexering_pct: p.indexeringPct,
     btw_pct_override: p.btwPctOverride != null ? p.btwPctOverride : null,
     notities:       p.notities || '',
+    naam:           (p.naam && String(p.naam).trim()) ? String(p.naam).trim() : null, // v4.56.0
     ontvanger_type: p.ontvangerType || 'particulier', // v3.23.0
     betaalmodel: p.betaalmodel || 'abo', // v3.29.0
     scope_omschrijving: p.scopeOmschrijving || '',      // v3.23.0
@@ -7414,6 +7424,7 @@ async function _ohpSaveParams(params) {
     aboStartdatum:    params.aboStartdatum || null,                                          // v4.45.0
     aboAantalMaanden: params.aboAantalMaanden != null ? params.aboAantalMaanden : null,      // v4.45.0
     toonVoorfinanciering: params.toonVoorfinanciering === true,                             // v4.46.0
+    naam:          (params.naam != null && String(params.naam).trim() !== '') ? String(params.naam).trim() : null, // v4.56.0 - leeg = terugval op calc-naam
     status:        params.status || 'concept'   // v3.27.2 — werd niet meegenomen, statuswijziging in editor ging verloren
   };
   const saved = await _saveOhpParams(planObj);
@@ -8336,6 +8347,7 @@ function _ohpReadParamsFromUI() {
   const aboStartEl = document.getElementById('ohpAboStart');   // v4.45.0
   const aboMndEl   = document.getElementById('ohpAboMaanden'); // v4.45.0
   const voorfinEl  = document.getElementById('ohpToonVoorfin'); // v4.46.0
+  const naamEl     = document.getElementById('ohpNaam');        // v4.56.0
   return {
     prijspeil:     parseInt(document.getElementById('ohpPrijspeil').value) || null,
     looptijdJaren: parseInt(document.getElementById('ohpLooptijd').value)  || null,
@@ -8349,7 +8361,8 @@ function _ohpReadParamsFromUI() {
     betaalmodel: betaalEl ? (betaalEl.value || 'abo') : 'abo', // v3.29.0
     aboStartdatum: (aboStartEl && aboStartEl.value) ? aboStartEl.value : null,      // v4.45.0
     aboAantalMaanden: aboMndEl ? (parseInt(aboMndEl.value, 10) || null) : null,     // v4.45.0
-    toonVoorfinanciering: voorfinEl ? voorfinEl.checked === true : false             // v4.46.0
+    toonVoorfinanciering: voorfinEl ? voorfinEl.checked === true : false,            // v4.46.0
+    naam: naamEl ? (naamEl.value || '') : ''                                         // v4.56.0
   };
 }
 
@@ -8475,6 +8488,7 @@ function _ohpRenderParams() {
   const elAboStart    = document.getElementById('ohpAboStart');    // v4.45.0
   const elAboMaanden  = document.getElementById('ohpAboMaanden');  // v4.45.0
   const elVoorfin     = document.getElementById('ohpToonVoorfin'); // v4.46.0
+  const elNaam        = document.getElementById('ohpNaam');        // v4.56.0
   const bronBtw     = _ohpBronCalcBtw();
   if (p) {
     elPrijspeil.value = p.prijspeil || '';
@@ -8497,6 +8511,11 @@ function _ohpRenderParams() {
       elAboMaanden.placeholder = _voorstel > 0 ? ('leeg = ' + ((p.looptijdJaren || 0) * 12) + ', voorstel ' + _voorstel) : '';
     }
     if (elVoorfin) elVoorfin.checked = (p.toonVoorfinanciering === true); // v4.46.0
+    if (elNaam) { // v4.56.0 - eigen naam; de grijze tekst toont waarop de app terugvalt
+      elNaam.value = p.naam || '';
+      const _bron = _ohpBronCalc();
+      elNaam.placeholder = (_bron && _bron.naam) ? ('leeg = ' + _bron.naam) : 'bv. Woonhuis 2027-2041';
+    }
   } else {
     elPrijspeil.value = '';
     elLooptijd.value  = '';
@@ -8511,6 +8530,7 @@ function _ohpRenderParams() {
     if (elAboStart) elAboStart.value = '';
     if (elAboMaanden) { elAboMaanden.value = ''; elAboMaanden.placeholder = ''; }
     if (elVoorfin) elVoorfin.checked = false; // v4.46.0
+    if (elNaam) { elNaam.value = ''; elNaam.placeholder = ''; } // v4.56.0
   }
   // v4.46.0 - Verplaatst naar _ohpToggleAboVelden, zodat een wissel van
   // betaalmodel of ontvangertype meteen effect heeft en niet pas na herladen.
@@ -8537,6 +8557,9 @@ function _ohpRenderParams() {
   if (elAantalApp) elAantalApp.disabled = !hasCalc; // v4.7.2
   if (elStatus) elStatus.disabled = !hasCalc; // v3.25.10
   if (elBetaalmodel) elBetaalmodel.disabled = !hasCalc; // v3.29.0
+  if (elNaam) elNaam.disabled = !hasCalc; // v4.56.0
+  const _elNaamSugBtn = document.getElementById('ohpNaamSuggestie'); // v4.56.0
+  if (_elNaamSugBtn) _elNaamSugBtn.disabled = !hasCalc;
   _ohpToggleScopeVisibility();
 }
 
@@ -9228,6 +9251,41 @@ async function _ohpEnsureBronLoaded() {
   if (calc.__loaded) return true;
   await _loadCalcBody(calc);
   return !!calc.__loaded;
+}
+
+// v4.56.0 - Effectieve plannaam: de eigen naam van het plan gaat voor, anders
+// de naam van de bron-calculatie. Een leeg naamveld is dus een bewuste terugval
+// en bestaande plannen zonder eigen naam gedragen zich exact als voorheen.
+function _ohpPlanNaam(plan, calc) {
+  const eigen = (plan && plan.naam != null) ? String(plan.naam).trim() : '';
+  if (eigen) return eigen;
+  return (calc && calc.naam) ? String(calc.naam) : '';
+}
+
+// v4.56.0 - Naamvoorstel voor de suggestieknop: bron-calc-naam plus startjaar
+// en eindjaar uit _ohpPlanCijfers. Het eindjaar is het jaar van de laatste
+// geplande beurt (besluit 29-08-2026); zonder prijspeil of zonder beurt is er
+// geen eerlijk eindjaar en geeft de functie bewust null terug.
+function _ohpNaamVoorstel(plan, calc) {
+  if (!plan || !calc) return null;
+  const cf = _ohpPlanCijfers(plan);
+  if (!cf.startjaar || !cf.eindjaar) return null;
+  return (((calc.naam || '').trim()) + ' ' + cf.startjaar + '-' + cf.eindjaar).trim();
+}
+
+// v4.56.0 - Klikhandler van de knop Vul jaartallen in.
+function _ohpNaamSuggestie() {
+  const plan = _ohpState.plan;
+  const calc = _ohpBronCalc();
+  const voorstel = _ohpNaamVoorstel(plan, calc);
+  if (!voorstel) {
+    _toast((!plan || !calc) ? 'Kies eerst een bron-calculatie' : 'Zet eerst het prijspeil en minstens \u00e9\u00e9n beurt');
+    return;
+  }
+  const el = document.getElementById('ohpNaam');
+  if (!el) return;
+  el.value = voorstel;
+  _ohpFlushSave();
 }
 
 // BTW-percentage uit de bron-calc (snapshot indien aanwezig, anders live settings).
@@ -10920,7 +10978,7 @@ function _ohpBindUIEvents() {
     });
     cb._ohpBound = true;
   });
-  ['ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope', 'ohpAantalApp', 'ohpStatus', 'ohpBetaalmodel', 'ohpAboStart', 'ohpAboMaanden', 'ohpToonVoorfin'].forEach(id => {
+  ['ohpNaam', 'ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope', 'ohpAantalApp', 'ohpStatus', 'ohpBetaalmodel', 'ohpAboStart', 'ohpAboMaanden', 'ohpToonVoorfin'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el._ohpBound) {
       el.addEventListener('input', _ohpScheduleSave);
@@ -10928,6 +10986,12 @@ function _ohpBindUIEvents() {
       el._ohpBound = true;
     }
   });
+  // v4.56.0 - Suggestieknop naast het naamveld: bron-calc-naam plus start- en eindjaar.
+  const elNaamSug = document.getElementById('ohpNaamSuggestie');
+  if (elNaamSug && !elNaamSug._ohpBound) {
+    elNaamSug.addEventListener('click', _ohpNaamSuggestie);
+    elNaamSug._ohpBound = true;
+  }
   // v3.23.0 — Type-wissel toont/verbergt het scope-veld direct (los van de save-debounce).
   const elType = document.getElementById('ohpOntvangerType');
   if (elType && !elType._ohpToggleBound) {
@@ -11005,7 +11069,7 @@ function _ohpPrint() {
 
   // Project / klant info
   html += `<div class="section">
-    <h2>${_escapeHtml(calc.naam || 'Onderhoudsplan')}</h2>
+    <h2>${_escapeHtml(_ohpPlanNaam(plan, calc) || 'Onderhoudsplan')}</h2>
     <div class="summary-grid">
       <div><span class="label">Klant: </span>${_escapeHtml(calc.klant || '—')}</div>
       <div><span class="label">Prijspeil: </span>${pp}</div>
@@ -11196,11 +11260,12 @@ function _ohpBriefBlokken(plan, calc, cfgArg) {
     const _tav = _offContactVol(calcCfg);
     const adres1 = ((_oa.straat || '') + ' ' + (_oa.huisnummer || '')).trim();
     const adres2 = ((_oa.postcode || '') + ' ' + (_oa.woonplaats || '')).trim();
+    const _planNm = _ohpPlanNaam(plan, calc); // v4.56.0 - eigen plannaam gaat voor de calc-naam
     const kopBlok = '<div class="ob-block brief brief-hoofd"><div class="brief-klant"><strong>' + _offEsc(_oa.naam || (calc.klant || '')) + '</strong>'
       + (_tav ? '<br>t.a.v. ' + _offEsc(_tav) : '')
       + (adres1 ? '<br>' + _offEsc(adres1) : '')
       + (adres2 ? '<br>' + _offEsc(adres2) : '')
-      + '</div><div class="brief-betreft"><strong>Betreft: Onderhouds garantie+ plan' + (calc.naam ? ' | ' + _offEsc(calc.naam) : '') + '</strong></div></div>';
+      + '</div><div class="brief-betreft"><strong>Betreft: Onderhouds garantie+ plan' + (_planNm ? ' | ' + _offEsc(_planNm) : '') + '</strong></div></div>';
     // Ondertekening als vast blok, daarna de slotzin-sectie, net als op de offerte.
     // v4.52.1 - bedrijfsnaam uit de instellingen, zelfde bron en terugval als de
     // gewone offerte (v3.73.0). De oude verwijzing BEDRIJF.naam wees naar een
@@ -11852,7 +11917,7 @@ function _ohpBuildOfferteHTML(plan, calc) {
   // volgende pagina in plaats van afgekapt te worden.
   // ---------------------------------------------------------------
   // v4.7.6 — kop-titel: plantype, complex (calc.klant) en scope (deel na "|" in de projectnaam).
-  const _projNaam = (calc && calc.naam) ? String(calc.naam) : '';
+  const _projNaam = _ohpPlanNaam(plan, calc); // v4.56.0 - eigen plannaam gaat voor; de "|"-scope-splitsing blijft gelijk
   const _pipeIdx = _projNaam.indexOf('|');
   const _klantNaam = (calc && calc.klant) ? String(calc.klant).trim() : '';
   const _complexNaam = _klantNaam || (_pipeIdx >= 0 ? _projNaam.slice(0, _pipeIdx).trim() : _projNaam.trim());
@@ -12289,7 +12354,7 @@ async function _ohpPrintOfferte() {
   _ohpLiggingPrintUrl = await _ohpLiggingDataUrl(plan);
   document.getElementById('printArea').innerHTML = _ohpBuildOfferteHTML(plan, calc);
   // Bestandsnaam in de print-dialoog: "{projectnaam}-onderhoudsplan", net als de offerte.
-  _setPrintTitle('onderhoudsplan', calc.naam);
+  _setPrintTitle('onderhoudsplan', _ohpPlanNaam(plan, calc)); // v4.56.0
   // Wacht tot Libre Franklin én de data-URI-logo's klaar zijn — anders print de
   // browser met een fallback-font of zonder logo's (Safari maakt het printbeeld
   // anders voordat de afbeeldingen gedecodeerd zijn).
@@ -20844,7 +20909,7 @@ async function renderPlannenArchief() {
     return;
   }
   // Haal alle plannen op — alleen de velden die we nodig hebben voor het archief.
-  const { data: rows, error } = await _sb.from('onderhoudsplannen').select('id, calculatie_id, gewijzigd, status');
+  const { data: rows, error } = await _sb.from('onderhoudsplannen').select('id, calculatie_id, naam, gewijzigd, status'); // v4.56.0 - eigen plannaam erbij
   if (error || !rows) {
     c.innerHTML = '<div style="color: var(--muted); padding: 0.5rem;">Plannen kon niet geladen worden.</div>';
     return;
@@ -20860,6 +20925,7 @@ async function renderPlannenArchief() {
       planId: r.id,
       calcId: r.calculatie_id,
       naam: calc.naam || '',
+      planNaam: (r.naam && String(r.naam).trim()) ? String(r.naam).trim() : '', // v4.56.0 - gaat in weergave en zoeken voor
       klant: calc.klant || '',
       opnameDatum: calc.opnameDatum,
       deadlineDatum: calc.deadlineDatum,
@@ -20892,7 +20958,7 @@ function _renderPlannenArchiefUit() {
   STATUS_ORDER_P.forEach(s => grouped[s] = []);
   planInfos.forEach(p => {
     if (zoek) {
-      const hay = ((p.naam || '') + ' ' + (p.klant || '')).toLowerCase();
+      const hay = ((p.planNaam || '') + ' ' + (p.naam || '') + ' ' + (p.klant || '')).toLowerCase(); // v4.56.0 - zoekt op plannaam en calc-naam en klant
       if (!hay.includes(zoek)) return;
     }
     if (grouped[p.status]) grouped[p.status].push(p);
@@ -20924,7 +20990,7 @@ function _renderPlannenArchiefUit() {
     </tr>`;
     if (!collapsed) {
       groep.forEach(p => {
-        const naamHtml = _escapeHtml(p.naam || '(zonder naam)');
+        const naamHtml = _escapeHtml(p.planNaam || p.naam || '(zonder naam)'); // v4.56.0
         const klantHtml = p.klant ? `<br><span style="color: var(--muted); font-size: 0.78rem;">${_escapeHtml(p.klant)}</span>` : '';
         html += `<tr style="cursor: pointer;" onclick="openPlan('${p.calcId}')" title="Open dit plan in de Onderhoudsplan-tab">
           <td><strong style="color: var(--accent-deep);">${naamHtml}</strong>${klantHtml}</td>
@@ -22440,7 +22506,7 @@ async function ohpAccordLinkBeheer() {
 
 function _ohpAccordBeheerRender(body, plan, calc, rij) {
   let h = '<h3>\ud83d\udd17 Accordeerlink onderhoudsplan</h3>'
-    + '<div class="acb-sub">' + _accordEsc(calc.naam || '') + (calc.klant ? ' \u2014 ' + _accordEsc(calc.klant) : '') + '</div>';
+    + '<div class="acb-sub">' + _accordEsc(_ohpPlanNaam(plan, calc) || '') + (calc.klant ? ' \u2014 ' + _accordEsc(calc.klant) : '') + '</div>'; // v4.56.0
 
   if (!rij) {
     body.innerHTML = h;
@@ -22527,7 +22593,7 @@ function _ohpAccordBeheerRender(body, plan, calc, rij) {
     const beslist = (rij.status === 'akkoord' || rij.status === 'afgekeurd');
     if (beslist && !confirm('De klant heeft al gereageerd. Toch een nieuwe link maken? De oude reactie blijft in het overzicht staan.')) return;
     body.innerHTML = '<h3>\ud83d\udd17 Accordeerlink onderhoudsplan</h3>'
-      + '<div class="acb-sub">' + _accordEsc(calc.naam || '') + (calc.klant ? ' \u2014 ' + _accordEsc(calc.klant) : '') + '</div>';
+      + '<div class="acb-sub">' + _accordEsc(_ohpPlanNaam(plan, calc) || '') + (calc.klant ? ' \u2014 ' + _accordEsc(calc.klant) : '') + '</div>'; // v4.56.0
     _ohpAccordMaakFormulier(body, plan, calc, rij);
   });
   const _btnMail = body.querySelector('#ohpAcMail');
@@ -23052,6 +23118,19 @@ async function _accordMeldingenRender() {
     return; // stil; bij een fout simpelweg geen blok
   }
 
+  // v4.56.0 - Eigen plannamen erbij halen voor planreacties. Bewust een losse
+  // .in()-query en geen PostgREST-embed: een foreign key van
+  // offerte_accorderingen.onderhoudsplan_id naar onderhoudsplannen is niet
+  // gegarandeerd aanwezig en de terugval op de calc-naam blijft altijd staan.
+  const _planNamen = {};
+  try {
+    const _pids = rows.map(r => r.onderhoudsplan_id).filter(Boolean);
+    if (_pids.length) {
+      const { data: _pn, error: _pe } = await _sb.from('onderhoudsplannen').select('id, naam').in('id', _pids);
+      if (!_pe && Array.isArray(_pn)) _pn.forEach(p => { if (p.naam && String(p.naam).trim()) _planNamen[p.id] = String(p.naam).trim(); });
+    }
+  } catch (e2) { console.warn('Plannamen voor meldingen niet geladen:', e2); }
+
   const items = [];
   rows.forEach(row => {
     const vragen = Array.isArray(row.vragen) ? row.vragen : [];
@@ -23073,7 +23152,7 @@ async function _accordMeldingenRender() {
     items.push({
       accId: row.id, calcId: row.calculatie_id,
       plan: !!row.onderhoudsplan_id, // v4.51.0 — reactie op een onderhoudsplan-link
-      project: (row.calculaties && row.calculaties.naam) || '(naamloos)',
+      project: (row.onderhoudsplan_id && _planNamen[row.onderhoudsplan_id]) || (row.calculaties && row.calculaties.naam) || '(naamloos)', // v4.56.0
       klant: (row.calculaties && row.calculaties.klant) || '',
       type: type, tekst: tekst, tEvent: tEvent
     });

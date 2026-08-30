@@ -34,7 +34,7 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.55.0 |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.56.0 |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
@@ -3910,14 +3910,30 @@ indexfactor maal btw, splitsing op mee-in-het-gemiddelde). Verandert de
 bijlagerekensom, dan moet `_ohpPlanCijfers` mee; beide plekken dragen een
 verwijsopmerking. Op een gewone offerte blijven deze velden ongevuld staan.
 
-**Nog open op dit spoor (brok 5).** De accordeerlink van een plan toont de
-brief nu automatisch mee (zelfde snapshot), maar de resterende
-planbriefwensen uit het ontwerp — waaronder de akkoordafhandeling die
-specifiek op de briefinhoud reageert — staan nog open. De correcties op de
-brontekst (typefouten, de administratiekostenzin die beide betaalwegen
-dekt, de indexeringszin in de inleiding, geen dubbele groet) zitten níet in
-de code: Gian typt de teksten zelf in het beheer en past ze daar toe
-(besluit 29-08-2026, checklist in de bouwchat van brok 4).
+**Brok 5 afgerond (30 augustus 2026).** Drie stappen sloten de roadmap:
+eigen tekst per blok in het Planbrief-venster (v4.53.0, opslag in
+`brief.secties[code].blokken[i].tekst`; de leesvolgorde van `_offBlokTekst`
+laat eigen tekst voor de bibliotheek gaan), de knop Voorbeeld die de brief
+als leestekst van de actuele venster-stand toont (v4.54.0,
+`_ohpBriefBlokken` met optionele derde parameter `cfgArg`, zonder argument
+byte voor byte als voorheen) en de verlengingsmail (v4.55.0, hieronder).
+De correcties op de brontekst (typefouten, de administratiekostenzin die
+beide betaalwegen dekt, de indexeringszin in de inleiding, geen dubbele
+groet) zitten níet in de code: Gian typt de teksten zelf in het beheer en
+past ze daar toe (besluit 29-08-2026, checklist in de bouwchat van brok 4).
+
+**Verlengingsherkenning (v4.55.0).** `_ohpPlanIsVerlenging(plan)` leest de
+briefconfiguratie via `_ohpBriefCfg` en geeft true wanneer een gekozen
+inleiding-variant het woord verlenging in de naam draagt,
+hoofdletterongevoelig. Het mailvenster van de accordeerlink vult dan een
+verlengingstekst voor (`_ohpPlanStandaardtekst` met tweede parameter
+isVerlenging; zonder tweede argument byte voor byte de oude tekst). Twee
+grenzen om te kennen: een inleiding die alleen uit eigen tekst bestaat
+wordt niet herkend, en de verlengingsvariant in de bibliotheek hernoemen
+zonder het woord verlenging breekt de herkenning stilletjes. De variant
+staat in sectie inleiding op volgorde 95 met alle vier de vlaggen uit
+(bewust geen Plan-vinkje, zodat de terugvaltak van `_ohpBriefCfg` hem
+nooit vanzelf kiest).
 
 **Reparatie v4.52.1 (30 augustus 2026).** De bouwer verwees naar `BEDRIJF.naam`,
 een constante die lokaal aan `_bouwOfferteDocHtml` hangt en op paginaniveau niet
@@ -3927,3 +3943,32 @@ stilletjes leeg. Sinds v4.52.1 leest het ondertekenblok de bedrijfsnaam uit
 gewone offerte) en logt de catch een `console.warn`. Vaste les: kale globale
 namen in gewijzigde functies altijd op bestaan controleren en slice-tests zonder
 stubs voor paginaconstanten draaien.
+
+## Eigen plannaam op onderhoudsplannen (30 augustus 2026, v4.56.0)
+
+Een onderhoudsplan draagt een eigen naam in de kolom `naam` (text null) op
+`onderhoudsplannen`; de kolom is met een los idempotent SQL-bestand gezet
+en zit in `_mapOhpFromDB`, `_mapOhpToDB` en de hele parameterketen. De
+regel staat in `_ohpPlanNaam(plan, calc)`: de getrimde eigen naam gaat
+voor en een leeg veld valt terug op de naam van de bron-calculatie, dus
+plannen zonder eigen naam gedragen zich exact als voorheen. Toegepast op
+het interne print, de Betreft-regel van de planbrief, de
+masthead-projectnaam van de bijlage (de scope-splitsing op de pijp
+blijft), de printbestandsnaam, de twee subregels van het accordeervenster,
+het plannenarchief (toont en zoekt op beide namen plus de klant) en het
+Reacties-blok (eigen plannamen via een losse `.in()`-query omdat een
+foreign key van `offerte_accorderingen.onderhoudsplan_id` naar
+`onderhoudsplannen` niet gegarandeerd aanwezig is; terugval op de
+calc-naam blijft staan). De knop Vul jaartallen in bouwt de calc-naam plus
+startjaar-eindjaar uit `_ohpPlanCijfers`; het eindjaar is daar het jaar
+van de laatste geplande beurt. Bevroren accordeersnapshots veranderen
+nooit mee. De Planning-tab en de bronkiezer blijven bewust op klant en
+calculatie staan.
+
+**Nog niet mee: de drie Edge Functions.** Het mailonderwerp
+(`offerte-verzenden`), de opvolgmails (`offerte-herinnering`) en de
+kopregel van de klantpagina (`offerte-accord`) lezen de naam uit de join
+op `calculaties` en tonen dus de calculatienaam tot hun eigen ronde. De
+afspraak (30-08-2026): plannaam voortrekken met terugval op de join, Gian
+plakt de actuele bronnen en deployt zelf. Zodra dat gebeurd is hoort deze
+alinea mee te veranderen.

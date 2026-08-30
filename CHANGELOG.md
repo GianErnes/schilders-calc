@@ -1,3 +1,27 @@
+## v4.56.0 — De eigen plannaam (brok plannaam)
+
+### Wat er nu kan
+
+Een onderhoudsplan draagt voortaan zijn eigen naam. Op de Onderhoudsplan-tab staat bovenin het parameterblok een veld Plannaam met daarnaast de knop Vul jaartallen in: die zet de naam van de bron-calculatie neer met het startjaar en het eindjaar van het plan erachter, bijvoorbeeld Woonhuis Prick 2027-2041. Het eindjaar is het jaar van de laatste geplande beurt, dezelfde definitie als het invulveld {eindjaar} op de planbrief. De voorgestelde naam kun je daarna gewoon aanpassen.
+
+Laat je het veld leeg, dan verandert er niets: overal blijft de naam van de bron-calculatie staan, precies zoals voorheen. De grijze tekst in het veld toont op welke naam wordt teruggevallen. Vul je wel een naam in, dan staat die op het interne print, in de Betreft-regel van de planbrief, in de kop van de bijlage wanneer er geen klantnaam is, in de voorgestelde bestandsnaam bij het printen, in het accordeervenster en in de twee lijsten op het dashboard. Het zoekveld van het plannenarchief vindt een plan op de eigen naam en op de calculatienaam en op de klant, dus zoeken op de oude naam blijft werken.
+
+Wat bewust niet meebeweegt: bevroren accordeersnapshots (die veranderen nooit), de Planning-tab (die groepeert op klant) en de bronkiezer (die kiest een calculatie, geen plan). Het onderwerp van de mails, de opvolgmails en de kopregel van de klantpagina komen uit drie Edge Functions en tonen de calculatienaam tot de functieronde die hierna komt.
+
+### Hoe het onder de kap zit
+
+Kolom naam (text null) op onderhoudsplannen via een los idempotent SQL-bestand, al uitgevoerd. Gemapt in _mapOhpFromDB en _mapOhpToDB en meegenomen in de hele parameterketen: _ohpSaveParams, _ohpReadParamsFromUI, _ohpRenderParams en de eventbinding (veld ohpNaam met input naar _ohpScheduleSave en change naar _ohpFlushSave, gelijk aan de andere velden; veld en knop grijzen mee uit zonder gekozen bron-calculatie). Nieuwe helper _ohpPlanNaam(plan, calc): de getrimde eigen naam gaat voor en anders de calc-naam, dus een leeg veld of alleen spaties is een bewuste terugval. Toegepast op de koptitel van het interne print, de Betreft-regel in _ohpBriefBlokken via een lokale const _planNm, de masthead-projectnaam in _ohpBuildOfferteHTML waar de bestaande scope-splitsing op de pijp gewoon doorwerkt, de printbestandsnaam via _setPrintTitle en de twee subregels van _ohpAccordBeheerRender.
+
+Het plannenarchief selecteert de kolom naam mee, zet planNaam naast de calc-naam in planInfos, toont planNaam voor de calc-naam en zoekt op allebei plus de klant. Het Reacties-blok haalt eigen plannamen op met een losse .in()-query op onderhoudsplannen en bewust niet met een PostgREST-embed: een foreign key van offerte_accorderingen.onderhoudsplan_id naar onderhoudsplannen is niet gegarandeerd aanwezig en de losse query heeft die niet nodig. Die ophaalronde zit in try/catch met console.warn en de terugval op de calc-naam blijft altijd staan. De suggestieknop loopt via twee functies: _ohpNaamVoorstel(plan, calc) bouwt de tekst met de echte cijfers uit _ohpPlanCijfers en geeft null zonder prijspeil of zonder beurt, en _ohpNaamSuggestie schrijft het veld en flusht de save.
+
+Zestien functies uit het gepatchte bestand gesneden en vier proefgroepen groen: de terugvalregels van _ohpPlanNaam, de rondrit door de twee mapfuncties met trim en null, het naamvoorstel op de echte cijferketen en de routering van de knop inclusief de twee wachttoasten. Namen _ohpPlanNaam, _ohpNaamVoorstel, _ohpNaamSuggestie, ohpNaam, ohpNaamSuggestie, _planNm, _planNamen en planNaam vooraf op nul treffers gecontroleerd. Vereist SQL (los geleverd, al uitgevoerd). Edge Functions in deze release ongemoeid; de functieronde volgt apart.
+
+### Wat je moet doen
+
+1. `index.html`, `CHANGELOG.md` en `SYSTEEM.md` uploaden.
+2. Hard verversen (Cmd+Shift+R). Open een plan, druk op Vul jaartallen in en controleer de Betreft-regel via de knop Voorbeeld in het Planbrief-venster en de koptitel op het interne print. Maak het veld leeg en zie dat de calculatienaam terugkomt.
+3. Voor de functieronde: plak de actuele bron van offerte-verzenden, offerte-herinnering en offerte-accord.
+
 ## v4.55.0 — De mail kent het verschil tussen nieuw en verlenging (brok 5c)
 
 ### Wat er nu kan
