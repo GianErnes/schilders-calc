@@ -1,3 +1,17 @@
+## v4.53.1 — Twee beeldcorrecties: aanhefletter en weerzijde-waaier
+
+### Wat er anders is
+
+De aanhefalinea van de particuliere bijlage, het blok onder de liggingsfoto, stond op 13pt in gewicht 500 tegenover 10,5pt lopende tekst. Dat was ooit één welkomstzin en dan werkt een grotere letter als opening, maar sinds de betaalkeuzezin van v4.50.0 eraan vastzit is het op een keuzedocument een alinea van vier regels en leest dat als schreeuwen, zeker nu de planbrief van v4.52.0 ervoor zit en de echte opening al draagt. De alinea staat nu op de gewone documentletter van 10,5pt met regelafstand 1,55, gelijk aan de lopende tekst; het gewicht 500 en het scheidingslijntje eronder blijven staan zodat het blok nog net als opening voelt. Raakt alleen de particuliere bijlage, de VvE-tak heeft geen aanhefblok.
+
+De oranje weerzijde-waaier bij het kompas was met 28 procent dekking zonder rand nauwelijks te onderscheiden op het grijs van een luchtfoto. De vulling gaat naar 32 procent en over hetzelfde pad komt een strakke oranje randlijn, want juist de rand geeft het vlak zijn vorm op een drukke ondergrond. De keuze is gemaakt op een proefbeeld op de echte foto van het plan; de variant met de waaier over het pand zelf is daarbij bewust afgewezen, de waaier blijft de richtingslegenda bij het kompas. De kompasschijf tekent na de waaier en blijft dus schoon wit. Twee proeven groen op de gesneden tekenfunctie met een registrerende canvas-stub: waaier met rand zodra de weerzijde aanstaat, helemaal niets zodra hij uitstaat.
+
+### Wat je moet doen
+
+1. `index.html`, `CHANGELOG.md` en `SYSTEEM.md` uploaden.
+2. Hard verversen (Cmd+Shift+R). De aanhefletter staat meteen goed op elke volgende print.
+3. Het liggingsbeeld wordt eenmalig gemaakt en opgeslagen: druk op het plan bij de ligging op **Vernieuwen** om de nieuwe waaier te krijgen. Bevroren accordeerlinks veranderen niet mee.
+
 ## v4.53.0 — Eigen tekst per plan in de planbrief (brok 5a)
 
 ### Wat er nu kan
