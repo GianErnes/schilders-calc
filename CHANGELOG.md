@@ -1,3 +1,22 @@
+## v4.52.1 — Reparatie: de planbrief bleef stilletjes leeg
+
+### Wat er mis was
+
+De briefbouwer `_ohpBriefBlokken` verwees in het ondertekenblok naar `BEDRIJF.naam`. Die constante bestaat wél, maar lokaal bìnnen `_bouwOfferteDocHtml`, de documentbouwer van de gewone offerte (v3.73.0). Op paginaniveau bestaat hij niet, dus elke opbouw van de brief eindigde in een `ReferenceError: BEDRIJF is not defined`. Het vangnet van de bouwer ving die fout op en gaf een lege brief terug, precies zoals ontworpen (de brief mag de bijlage nooit blokkeren), maar zonder iets te melden. Het gevolg: elke planbrief bleef sinds v4.52.0 leeg, op beide routes (opgeslagen planconfig én dynamische Plan-vinkjes), hoe vol de bibliotheek ook stond. Dezelfde valkuil als de LOGO_ERNES-fout van v3.59.2: een constante die lokaal aan de ene bouwer hangt en vanuit een andere wordt aangeroepen.
+
+De fout is gevonden door de draaiende browserfunctie zelf te herdraaien met een opengezette catch. De 33 slice-tests van v4.52.0 misten hem omdat ze BEDRIJF als stub meegaven.
+
+### De reparatie
+
+Het ondertekenblok leest de bedrijfsnaam nu rechtstreeks uit `data.settings.bedrijf.naam`, met terugval Ernes schilders: exact dezelfde bron en terugval als de gewone offerte, zodat een aangepaste bedrijfsnaam in de Instellingen op beide documenten doorwerkt. Verder is de bouwer ongemoeid. De vangnet-catch logt voortaan `console.warn` met de fout: de brief blijft de bijlage beschermen, maar faalt nooit meer geluidloos.
+
+Nieuwe vaste kwaliteitspoort naast de bestaande: elke kale globale naam die een gewijzigde functie gebruikt moet aantoonbaar in het bestand gedefinieerd zijn, de spiegel van de naamkolonisatiecheck. De slice-tests van deze release draaien zonder stubs voor paginaconstanten en bewijzen beide briefroutes, de terugvalnaam, een eigen bedrijfsnaam uit de instellingen en de nieuwe console-melding.
+
+### Wat je moet doen
+
+1. `index.html`, `CHANGELOG.md` en `SYSTEEM.md` uploaden.
+2. Hard verversen (Cmd+Shift+R) en op een particulier plan **Offerte OHP** printen: de brief hoort nu vóór de brochure te staan en de brochure begint op een verse pagina.
+
 ## v4.52.0 — De planbrief (brok 4 van de planbriefroadmap)
 
 ### Wat er nu kan

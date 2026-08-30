@@ -34,7 +34,7 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.51.0 |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.52.1 |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
@@ -3919,3 +3919,11 @@ dekt, de indexeringszin in de inleiding, geen dubbele groet) zitten níet in
 de code: Gian typt de teksten zelf in het beheer en past ze daar toe
 (besluit 29-08-2026, checklist in de bouwchat van brok 4).
 
+**Reparatie v4.52.1 (30 augustus 2026).** De bouwer verwees naar `BEDRIJF.naam`,
+een constante die lokaal aan `_bouwOfferteDocHtml` hangt en op paginaniveau niet
+bestaat; de ReferenceError werd door de vangnet-try ingeslikt en hield elke brief
+stilletjes leeg. Sinds v4.52.1 leest het ondertekenblok de bedrijfsnaam uit
+`data.settings.bedrijf.naam` met terugval Ernes schilders (zelfde bron als de
+gewone offerte) en logt de catch een `console.warn`. Vaste les: kale globale
+namen in gewijzigde functies altijd op bestaan controleren en slice-tests zonder
+stubs voor paginaconstanten draaien.
