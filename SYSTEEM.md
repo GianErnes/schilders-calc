@@ -3965,10 +3965,16 @@ van de laatste geplande beurt. Bevroren accordeersnapshots veranderen
 nooit mee. De Planning-tab en de bronkiezer blijven bewust op klant en
 calculatie staan.
 
-**Nog niet mee: de drie Edge Functions.** Het mailonderwerp
-(`offerte-verzenden`), de opvolgmails (`offerte-herinnering`) en de
-kopregel van de klantpagina (`offerte-accord`) lezen de naam uit de join
-op `calculaties` en tonen dus de calculatienaam tot hun eigen ronde. De
-afspraak (30-08-2026): plannaam voortrekken met terugval op de join, Gian
-plakt de actuele bronnen en deployt zelf. Zodra dat gebeurd is hoort deze
-alinea mee te veranderen.
+**De drie Edge Functions doen mee (gedeployd 30-08-2026).**
+`offerte-verzenden` leest de plannaam met een losse query in try/catch,
+bewust geen embed: mislukt het lezen, dan valt de mail terug op de
+calc-naam en gaat hij gewoon uit. De naam staat in het onderwerp en in de
+vaste intro. `offerte-herinnering` en `offerte-accord` lezen de kolom
+`naam` mee in hun bestaande embed op `onderhoudsplannen`. Bij de
+herinnering gaat de plannaam voor in de taakonderwerpen, de regel Project
+in belscript en afsluitnotitie, de logregels en het interne seintje; bij
+accord in de kopregel van de klantpagina (veld `project` in het
+GET-antwoord), mail B en de seintjes C en D. Overal terugval op de
+calc-naam; offerte-rijen en offerte-links veranderen niet. Vijftien
+gedragsgevallen groen op regels die letterlijk uit de geleverde bestanden
+geknipt zijn.
