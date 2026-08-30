@@ -1,3 +1,18 @@
+## v4.54.0 — Voorbeeldknop voor de planbrief (brok 5b)
+
+### Wat er nu kan
+
+Het Planbrief-venster heeft naast Opslaan een knop **Voorbeeld** gekregen. Die toont de brief als leestekst: alle secties in briefvolgorde, de invulvelden ingevuld, het briefhoofd met klantadres en Betreft-regel erboven en de ondertekening met de slotzin eronder. Het voorbeeld toont de actuele stand van het venster, dus ook eigen tekst die je nog niet hebt opgeslagen: typen, bekijken, bijschaven en dan pas opslaan. Met **Terug** sta je weer in het venster op de plek waar je was, met alles wat je had ingevuld. Zonder bron-calculatie of bij een lege brief zegt het voorbeeld dat eerlijk in plaats van een leeg vlak te tonen; dat zijn exact de gevallen waarin de echte brief ook wegblijft. Het is een leesweergave: op papier komt de brief in het briefpapier met de vaste paginakop.
+
+### Hoe het onder de kap zit
+
+`_ohpBriefBlokken` kreeg een optionele derde parameter `cfgArg`; zonder argument valt hij terug op `_ohpBriefCfg(plan)` en gedraagt hij zich byte voor byte als voorheen, dus de printroute en het accordeersnapshot merken niets. De nieuwe `_ohpBriefVoorbeeld` draait die echte bouwer op de venster-stand met de bron-calc uit `_ohpBronCalc` en zet de blokken in dezelfde overlay, onder een klein eigen stijlblok met de nieuwe klasse `brief-vb`, omdat de echte briefopmaak in de scoped style van de documentbouwer zit. Nul gedupliceerde volgorde- of filterlogica: het voorbeeld kan nooit stilletjes van de brief gaan afwijken. `_ohpBriefVbTerug` zet eerst de bewaarde schuifpositie terug (nieuwe module-let `_ohpBriefVbScroll`) en roept dan `_ohpBriefRender` aan, dat die positie over het hertekenen heen vasthoudt; het voorbeeld zelf opent altijd bovenaan. Vijf proefgroepen groen op een snede van 36 echte functies uit het gepatchte bestand, zonder stubs voor paginaconstanten: de bouwer met en zonder cfgArg, de invulveldketen tot en met `_ohpPlanCijfers`, de terugweg met behoud van stand en schuifpositie en de twee eerlijke meldingen. Geen SQL, geen Edge Function.
+
+### Wat je moet doen
+
+1. `index.html`, `CHANGELOG.md` en `SYSTEEM.md` uploaden.
+2. Hard verversen (Cmd+Shift+R), Planbrief openen op een particulier plan en op **Voorbeeld** drukken. Controleer dat je eigen tekst en de invulvelden kloppen en dat Terug je op dezelfde plek in het venster terugzet.
+
 ## v4.53.1 — Twee beeldcorrecties: aanhefletter en weerzijde-waaier
 
 ### Wat er anders is
