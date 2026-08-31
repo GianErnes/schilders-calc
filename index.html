@@ -2301,8 +2301,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.56.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.57.0</h2>
       <div class="intro-body">
+        <p><strong>🏗️ Staartkosten per beurt in de hand (v4.57.0).</strong> In het bewerkvenster van een beurt staan nu alle staartposten van de bron-calculatie, elk met het automatische bedrag voor die beurt erbij. Per post kies je: automatisch mee laten schalen zoals voorheen, een eigen aantal of bedrag zetten, of de post uitzetten. Een hoogwerker huur je per dag en niet per percentage: zet er gewoon 1 dag neer, of 0. Het eigen aantal rekent met het tarief uit de bron, dus een latere tariefwijziging loopt door. De Σ-verantwoording toont bij elke ingreep wat het automatisch geweest zou zijn. Beurten zonder ingreep rekenen tot op de cent hetzelfde als voorheen.</p>
         <p><strong>🏷️ Het plan heeft nu een eigen naam (v4.56.0).</strong> Op de Onderhoudsplan-tab staat bovenin een veld <strong>Plannaam</strong> met een knop die de naam van de bron-calculatie aanvult met het start- en eindjaar van het plan. Laat je het veld leeg, dan toont alles gewoon de calculatienaam, dus bestaande plannen merken niets. De eigen naam staat op het interne print, in de Betreft-regel van de planbrief, in de kop van de bijlage als er geen klantnaam is, in de bestandsnaam bij het printen, in het accordeervenster en in de twee dashboardlijsten. Bevroren accordeersnapshots veranderen zoals altijd niet mee. Het mailonderwerp, de opvolgmails en de klantpagina volgen zodra de drie Edge Functions zijn bijgewerkt.</p>
         <p><strong>✉️ De mail kent het verschil tussen nieuw en verlenging (v4.55.0).</strong> Staat in de planbrief een inleiding-variant met verlenging in de naam, dan vult het mailvenster van de accordeerlink voortaan automatisch een verlengingstekst voor: dank voor de jaren, het voorstel voor de verlenging en de verwijzing naar de brief voorin het document. Op elk ander plan blijft de generieke tekst staan. Het venster meldt waarom de tekst is voorgevuld en blijft volledig bewerkbaar. De brief is de bron van waarheid: kies je de verlengingsbrief, dan stelt de mail zich vanzelf goed voor. Geen wijziging aan de Edge Function nodig.</p>
         <p><strong>👁 Voorbeeldknop voor de planbrief (v4.54.0).</strong> Het Planbrief-venster heeft naast Opslaan een knop Voorbeeld gekregen die de brief als leestekst toont, met alle invulvelden ingevuld. Het voorbeeld toont de actuele stand van het venster, dus ook eigen tekst die je nog niet hebt opgeslagen: typen, bekijken, bijschaven en dan pas opslaan. De volgorde en de inhoud komen uit dezelfde bouwer als de echte brief, dus wat je leest is wat er komt. Met Terug sta je weer in het venster waar je was. Het is een leesweergave: op papier komt de brief in het briefpapier met de vaste paginakop.</p>
@@ -3224,6 +3225,11 @@ Hout binnen;Gronden;m²;6;0,10</div>
       <div id="ohpMbScalingBlok" style="border: 1px solid var(--border); border-radius: 4px; padding: 0.8rem; max-height: 50vh; overflow-y: auto;">
         <em style="color: var(--muted);">Kies een modus om te beginnen.</em>
       </div>
+      <div style="margin-top: 1rem;">
+        <label style="margin-bottom: 0.4rem;">Staartkosten uit de bron-calculatie</label>
+        <div style="font-size: 0.8rem; color: var(--muted); margin-bottom: 0.4rem;">Standaard schalen deze automatisch mee met de beurt. Materieel zoals een hoogwerker huur je per dag en niet per percentage: zet dan een eigen aantal neer, of zet de post uit voor deze beurt. Het eigen aantal rekent met het tarief uit de bron-calculatie.</div>
+        <div id="ohpMbStaartBlok" style="border: 1px solid var(--border); border-radius: 4px; padding: 0.8rem; max-height: 34vh; overflow-y: auto;"></div>
+      </div>
       <div style="margin-top: 1rem; padding: 0.6rem 0.8rem; background: var(--bg-soft, #f5f5f5); border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
         <span style="color: var(--muted); font-size: 0.85rem;">Basisbedrag van deze beurt (excl. BTW)</span>
         <strong id="ohpMbBasis" style="font-size: 1.15rem;">€ 0,00</strong>
@@ -3616,7 +3622,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.56.0';
+const APP_VERSION = 'v4.57.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -4012,6 +4018,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.57.0', d: '2026-08-31', h: 'Staartingreep per beurt (brok staartingreep). Nieuw blok in de beurt-bewerkmodal met alle staartposten van de bron-calculatie, per post de keuze automatisch, eigen of uit. Eigen betekent bij dag/week/eenheid een eigen aantal keer het brontarief (een tariefwijziging in de bron loopt door) en bij vast/percent een eigen bedrag. Opslag als sleutel staart in de bestaande jsonb scaling, per staartpost-id; geen SQL. Afwezige sleutel of een vorm die niet bij het (inmiddels gewijzigde) type past valt terug op automatisch, dus bestaande beurten rekenen byte voor byte hetzelfde. In de rekenkern (_ohpBeurtBasisBedrag stap 7) krijgt een ingreep bewust geen extraFactor en geen dagen-schaling; de trace draagt per post id, eenheid, tarief (bedragPerEenheid) en de automatische waarde (autoNetto) mee. De Σ-verantwoording labelt elke ingreep (uitgezet, eigen aantal met eenheidswoord, eigen bedrag) en toont de automatische waarde als spiegel. De modal leest de automatische bedragen uit dezelfde trace, geen tweede rekenmachine: _ohpMbUpdateBasisBedrag rekent nu met trace en het nieuwe _ohpMbStWaarden ververst alleen de bedragteksten zodat de focus in een invoerveld blijft staan. Moduswissel bewaart de staartingrepen (besluit 31-08-2026, staan los van de regelkeuze); Kopieer uit andere beurt neemt ze mee en het kopieermenu telt ze in de samenvatting. Bewuste beperking: posten met telt-in-werkdagen voeden de urenberekening met hun automatische waarde, de ingreep raakt alleen het eurobedrag in de staart. Namen _ohpMbRenderStaart, _ohpMbStWaarden, ohpMbStaartBlok, ohp-mb-st-rij, ohp-mb-st-n, ohp-mb-st-auto, ohp-mb-st-eenh en data-stid vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
   { v: '4.56.0', d: '2026-08-30', h: 'Eigen plannaam (brok plannaam). Kolom naam (text null) op onderhoudsplannen via een los idempotent SQL-bestand, gemapt in _mapOhpFromDB en _mapOhpToDB en de hele parameterketen (_ohpSaveParams, _ohpReadParamsFromUI, _ohpRenderParams, eventbinding). Nieuwe helper _ohpPlanNaam(plan, calc): de eigen naam gaat voor en een leeg veld valt terug op de naam van de bron-calculatie, dus bestaande plannen gedragen zich exact als voorheen. Toegepast op zeven plekken: de koptitel van het interne print, de Betreft-regel van de planbrief (lokale const _planNm), de masthead-projectnaam van de bijlage met dezelfde pipe-scope-splitsing, de printbestandsnaam via _setPrintTitle, de twee subregels van het accordeervenster en de twee dashboardlijsten. Het plannenarchief selecteert de kolom mee, toont planNaam voor de calc-naam en zoekt op allebei plus klant; het Reacties-blok haalt eigen plannamen op met een losse .in()-query (bewust geen PostgREST-embed omdat een foreign key van offerte_accorderingen.onderhoudsplan_id naar onderhoudsplannen niet gegarandeerd is) met console.warn-vangnet en terugval op de calc-naam. Invoerveld ohpNaam bovenin het parametergrid over de volle breedte; de placeholder toont waarop wordt teruggevallen. Knop Vul jaartallen in: _ohpNaamVoorstel bouwt calc-naam plus startjaar-eindjaar uit _ohpPlanCijfers (eindjaar is het jaar van de laatste geplande beurt, besluit 29-08-2026; zonder prijspeil of beurt geeft hij bewust null en de knop een toast) en _ohpNaamSuggestie schrijft het veld en flusht de save. Bevroren accordeersnapshots veranderen niet mee; mailonderwerp, opvolgmails en klantpagina volgen in de functieronde (offerte-verzenden, offerte-herinnering, offerte-accord). Namen _ohpPlanNaam, _ohpNaamVoorstel, _ohpNaamSuggestie, ohpNaam, ohpNaamSuggestie, _planNm, _planNamen en planNaam vooraf op nul treffers gecontroleerd. Vereist SQL (los geleverd, al uitgevoerd).' },
   { v: '4.55.0', d: '2026-08-30', h: 'Mail-inleiding voor verlengingsplannen (brok 5c, het slot van de planbriefroadmap). Nieuwe helper _ohpPlanIsVerlenging(plan): leest de briefconfiguratie via _ohpBriefCfg en geeft true wanneer een gekozen inleiding-variant het woord verlenging in de naam draagt (hoofdletterongevoelig). De terugvaltak van _ohpBriefCfg kan dit nooit per ongeluk worden, want die kiest alleen std_plan-varianten en de verlengingsvariant heeft bewust geen Plan-vinkje; een inleiding die alleen uit eigen tekst bestaat wordt niet herkend, het venster blijft bewerkbaar als vangnet, en de hele helper zit in try/catch met false als terugval. _ohpPlanStandaardtekst kreeg een tweede parameter isVerlenging met een eigen teksttak: dank voor het vertrouwen van de afgelopen jaren, het voorstel voor de verlenging en de verwijzing naar de brief voorin het document, kort en zonder bedragen omdat de brief het volledige verhaal draagt (spelling Onderhouds garantie+ plan, gelijk aan het document dat de klant leest). Zonder tweede argument is de functie byte voor byte de oude. _ohpPlanMailen bepaalt de vlag een keer, geeft hem door aan de voorvultekst en toont bij een verlengingsplan een regel die uitlegt waarom deze tekst is voorgevuld. De verzendweg is ongewijzigd: de tekst gaat als body.tekst naar offerte-verzenden en vervangt daar de vaste intro, precies het mechanisme dat de functie sinds v4.28.0 draagt en waarvoor de plan-tak van v4.51.0 al de haak had geslagen; geen functiewijziging en geen deploy nodig. Naam _ohpPlanIsVerlenging vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
   { v: '4.54.0', d: '2026-08-30', h: 'Voorbeeldknop voor de planbrief (brok 5b van de planbriefroadmap). _ohpBriefBlokken kreeg een optionele derde parameter cfgArg; zonder argument valt hij op _ohpBriefCfg(plan) terug en gedraagt hij zich byte voor byte als voorheen, dus de printroute en het accordeersnapshot merken niets. De nieuwe _ohpBriefVoorbeeld draait die echte bouwer op de actuele venster-stand (_ohpBriefCfgState, inclusief nog niet opgeslagen eigen tekst) met de bron-calc uit _ohpBronCalc en toont de blokken als leestekst in dezelfde overlay, met een klein eigen stijlblok onder de nieuwe klasse brief-vb omdat de echte briefopmaak in de scoped style van de documentbouwer zit; nul gedupliceerde volgorde- of filterlogica, dus het voorbeeld kan nooit stilletjes van de brief gaan afwijken. Zonder bron-calc of bij een lege brief komt een eerlijke melding in plaats van een leeg vlak, exact de gevallen waarin de echte brief ook wegblijft. De knop staat naast Opslaan in het venster; Terug gaat via _ohpBriefVbTerug dat eerst de bewaarde schuifpositie terugzet (nieuwe module-let _ohpBriefVbScroll) en dan _ohpBriefRender aanroept, dat die positie vasthoudt over het hertekenen heen. Het voorbeeld opent altijd bovenaan. Namen _ohpBriefVoorbeeld, _ohpBriefVbTerug, _ohpBriefVbScroll en brief-vb vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
@@ -8864,12 +8871,31 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
   //    Voor type 'dag'/'week' werkt de scaling al deels via dg (minder uren = minder dagen).
   //    De extraFactor is voor 'vast' en 'eenheid' nog nodig.
   let staartTotaal = 0;
+  // v4.57.0 — staartingreep per beurt (scaling.staart, sleutel = staartpost-id):
+  //   { m: 'aantal', n: 2 }   eigen aantal keer het brontarief (alleen dag/week/eenheid)
+  //   { m: 'bedrag', b: 500 } eigen bedrag voor deze beurt (alleen vast/percent)
+  //   { m: 'uit' }            post telt niet mee in deze beurt
+  // Afwezige sleutel, of een vorm die niet bij het type past (type in de bron
+  // gewijzigd na de ingreep), valt terug op automatisch. Een ingreep krijgt
+  // bewust GEEN extraFactor en GEEN dagen-schaling: het ingevulde getal is het
+  // oordeel. De trace draagt de automatische waarde altijd mee als spiegel.
+  const stIngrepen = (beurt.scaling && beurt.scaling.staart) || {};
   (calc.staart || []).forEach(p => {
     const post = _ohpStaartPost(p, calc, sett, t, dg.factureerbaar, dg.weken);
     const geschaald = (p.type === 'vast' || p.type === 'eenheid');
-    const netto = geschaald ? post * extraFactor : post;
+    const autoNetto = geschaald ? post * extraFactor : post;
+    const ing = (p.id != null) ? stIngrepen[p.id] : null;
+    let netto = autoNetto, ingreep = null, ingreepN = null;
+    if (ing && ing.m === 'uit') {
+      netto = 0; ingreep = 'uit';
+    } else if (ing && ing.m === 'aantal' && (p.type === 'dag' || p.type === 'week' || p.type === 'eenheid')) {
+      ingreepN = Number(ing.n) || 0;
+      netto = (p.bedrag || 0) * ingreepN; ingreep = 'aantal';
+    } else if (ing && ing.m === 'bedrag' && (p.type === 'vast' || p.type === 'percent')) {
+      netto = Number(ing.b) || 0; ingreep = 'bedrag';
+    }
     staartTotaal += netto;
-    if (tr) tr.staart.push({ naam: p.naam || '(zonder naam)', type: p.type, bruto: post, geschaald: geschaald, netto: netto });
+    if (tr) tr.staart.push({ id: p.id || null, naam: p.naam || '(zonder naam)', type: p.type, eenheid: p.eenheid || '', bedragPerEenheid: p.bedrag || 0, bruto: post, geschaald: geschaald, autoNetto: autoNetto, netto: netto, ingreep: ingreep, aantal: ingreepN });
   });
 
   // 8. Directe kosten en risico.
@@ -9438,7 +9464,19 @@ function _ohpVerHtml(b, tr, basis, plan) {
   if (tr.staart.length) {
     h += '<table class="ver-tab">';
     tr.staart.forEach(p => {
-      const uitleg = p.geschaald ? (eur(p.bruto) + ' \u00d7 ' + _ohpVerPct(tr.extraFactor)) : eur(p.bruto) + ' (schaalt via dagen/grondslag)';
+      // v4.57.0 — een staartingreep toont altijd de automatische waarde als spiegel.
+      let uitleg;
+      if (p.ingreep === 'uit') {
+        uitleg = 'uitgezet in deze beurt \u00b7 automatisch: ' + eur(p.autoNetto);
+      } else if (p.ingreep === 'aantal') {
+        const n = (p.aantal != null) ? p.aantal : 0;
+        const w = p.type === 'dag' ? (n === 1 ? 'dag' : 'dagen') : p.type === 'week' ? (n === 1 ? 'week' : 'weken') : (p.eenheid || 'stuks');
+        uitleg = 'eigen aantal: ' + n.toLocaleString('nl-NL') + ' ' + w + ' \u00d7 ' + eur(p.bedragPerEenheid) + ' \u00b7 automatisch: ' + eur(p.autoNetto);
+      } else if (p.ingreep === 'bedrag') {
+        uitleg = 'eigen bedrag \u00b7 automatisch: ' + eur(p.autoNetto);
+      } else {
+        uitleg = p.geschaald ? (eur(p.bruto) + ' \u00d7 ' + _ohpVerPct(tr.extraFactor)) : eur(p.bruto) + ' (schaalt via dagen/grondslag)';
+      }
       h += rij(_escapeHtml(p.naam) + ' <span style="color:var(--muted); font-size:0.75rem;">' + uitleg + '</span>', eur(p.netto));
     });
     h += rij('Staart totaal', eur(tr.staartTotaal), true);
@@ -10491,6 +10529,7 @@ function _ohpOpenBeurtModal(beurtId) {
     r.checked = (r.value === _ohpMb.modus);
   });
   _ohpMbRenderModusBlok();
+  _ohpMbRenderStaart();      // v4.57.0 — staartingrepen
   _ohpMbUpdateBasisBedrag();
   _ohpMbUpdateKopieerKnop();
   // Toon modal
@@ -10523,9 +10562,12 @@ function _ohpMbZetModus(nieuweModus) {
     }
   }
   _ohpMb.modus = nieuweModus;
+  // v4.57.0 — staartingrepen staan los van de regelkeuze en blijven staan bij moduswissel.
+  const _stBehoud = (_ohpMb.scaling && _ohpMb.scaling.staart && Object.keys(_ohpMb.scaling.staart).length) ? _ohpMb.scaling.staart : null;
   _ohpMb.scaling = (nieuweModus === 'algemeen') ? { pct: 100 }
                  : (nieuweModus === 'per_regel') ? { regels: {} }
                  : { stappen: {} };
+  if (_stBehoud) _ohpMb.scaling.staart = _stBehoud;
   _ohpMbRenderModusBlok();
   _ohpMbUpdateBasisBedrag();
 }
@@ -10769,8 +10811,113 @@ function _ohpMbUpdateBasisBedrag() {
     modus:   _ohpMb.modus,
     scaling: _ohpMb.scaling
   };
-  const basis = _ohpBeurtBasisBedrag(pseudo);
+  const basis = _ohpBeurtBasisBedrag(pseudo, true);   // v4.57.0 — met trace, voor de automatische staartwaarden
   el.textContent = eur(basis);
+  _ohpMbStWaarden();
+}
+
+// ----- Staartingreep per beurt (v4.57.0) -----
+// Rendert de staartposten van de bron-calculatie met per post de keuze
+// automatisch / eigen / uit. De structuur wordt gezet bij openen en bij
+// kopiëren uit een andere beurt; de automatische bedragen verversen los
+// via _ohpMbStWaarden zodat de focus in een invoerveld nooit verspringt.
+function _ohpMbRenderStaart() {
+  const blok = document.getElementById('ohpMbStaartBlok');
+  if (!blok) return;
+  const calc = _ohpBronCalc();
+  if (!calc || !calc.__loaded) {
+    blok.innerHTML = '<em style="color: var(--muted);">Bron-calculatie niet geladen.</em>';
+    return;
+  }
+  const posten = calc.staart || [];
+  if (!posten.length) {
+    blok.innerHTML = '<em style="color: var(--muted);">Geen staartkosten in de bron-calculatie.</em>';
+    return;
+  }
+  const st = (_ohpMb.scaling && _ohpMb.scaling.staart) || {};
+  const typeLabel = { vast: 'vast', dag: 'per dag', week: 'per week', eenheid: 'per eenheid', percent: 'percentage' };
+  let html = '';
+  posten.forEach(p => {
+    const ing = (p.id != null) ? st[p.id] : null;
+    const isAantal = (p.type === 'dag' || p.type === 'week' || p.type === 'eenheid');
+    let m = (ing && ing.m) ? ing.m : 'auto';
+    // Vorm die niet bij het type past (type in de bron gewijzigd) → toon als
+    // automatisch, precies zoals de rekenkern hem behandelt.
+    if ((m === 'aantal' && !isAantal) || (m === 'bedrag' && isAantal)) m = 'auto';
+    const eigen = (m === 'aantal' || m === 'bedrag');
+    const eigenLabel = isAantal ? 'Eigen aantal' : 'Eigen bedrag';
+    const eigenWaarde = (m === 'aantal') ? (ing.n != null ? ing.n : '') : (m === 'bedrag') ? (ing.b != null ? ing.b : '') : '';
+    const eenh = p.type === 'dag' ? 'dagen' : p.type === 'week' ? 'weken' : p.type === 'eenheid' ? (p.eenheid || 'stuks') : '\u20ac';
+    const tarief = (p.type === 'percent') ? ((p.bedrag || 0) + '%') : eur(p.bedrag || 0);
+    html += '<div class="ohp-mb-st-rij" style="display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; padding: 0.35rem 0; border-bottom: 1px solid var(--border);">' +
+      '<div style="flex: 1; min-width: 180px;">' +
+        '<div style="font-weight: 500;">' + _escapeHtml(p.naam || '(zonder naam)') + '</div>' +
+        '<div style="font-size: 0.75rem; color: var(--muted);">' + (typeLabel[p.type] || _escapeHtml(p.type)) + ' \u00b7 ' + tarief + ' \u00b7 automatisch: <span class="ohp-mb-st-auto" data-stid="' + p.id + '">\u2026</span></div>' +
+      '</div>' +
+      '<label style="font-weight: normal; font-size: 0.85rem;"><input type="radio" name="ohpMbSt_' + p.id + '" value="auto"' + (m === 'auto' ? ' checked' : '') + '> Automatisch</label>' +
+      '<label style="font-weight: normal; font-size: 0.85rem;"><input type="radio" name="ohpMbSt_' + p.id + '" value="eigen"' + (eigen ? ' checked' : '') + '> ' + eigenLabel + '</label>' +
+      '<input type="number" class="ohp-mb-st-n" data-stid="' + p.id + '" min="0" step="0.01" value="' + eigenWaarde + '" style="width: 90px;' + (eigen ? '' : ' display: none;') + '">' +
+      '<span class="ohp-mb-st-eenh" data-stid="' + p.id + '" style="font-size: 0.8rem; color: var(--muted);' + (eigen ? '' : ' display: none;') + '">' + _escapeHtml(eenh) + '</span>' +
+      '<label style="font-weight: normal; font-size: 0.85rem;"><input type="radio" name="ohpMbSt_' + p.id + '" value="uit"' + (m === 'uit' ? ' checked' : '') + '> Uit</label>' +
+    '</div>';
+  });
+  blok.innerHTML = html;
+  // Events: radio en aantal-veld schrijven naar _ohpMb.scaling.staart.
+  posten.forEach(p => {
+    if (p.id == null) return;
+    const isAantal = (p.type === 'dag' || p.type === 'week' || p.type === 'eenheid');
+    const inp = blok.querySelector('.ohp-mb-st-n[data-stid="' + p.id + '"]');
+    const eenhEl = blok.querySelector('.ohp-mb-st-eenh[data-stid="' + p.id + '"]');
+    const schrijf = () => {
+      if (!_ohpMb.scaling) _ohpMb.scaling = {};
+      if (!_ohpMb.scaling.staart) _ohpMb.scaling.staart = {};
+      const v = inp ? parseFloat(inp.value) : NaN;
+      _ohpMb.scaling.staart[p.id] = isAantal ? { m: 'aantal', n: isNaN(v) ? 0 : v } : { m: 'bedrag', b: isNaN(v) ? 0 : v };
+    };
+    blok.querySelectorAll('input[name="ohpMbSt_' + p.id + '"]').forEach(r => {
+      r.addEventListener('change', () => {
+        if (!_ohpMb.scaling) _ohpMb.scaling = {};
+        if (r.value === 'auto') {
+          if (_ohpMb.scaling.staart) {
+            delete _ohpMb.scaling.staart[p.id];
+            if (!Object.keys(_ohpMb.scaling.staart).length) delete _ohpMb.scaling.staart;
+          }
+          if (inp) inp.style.display = 'none';
+          if (eenhEl) eenhEl.style.display = 'none';
+        } else if (r.value === 'eigen') {
+          schrijf();
+          if (inp) { inp.style.display = ''; inp.focus(); }
+          if (eenhEl) eenhEl.style.display = '';
+        } else if (r.value === 'uit') {
+          if (!_ohpMb.scaling.staart) _ohpMb.scaling.staart = {};
+          _ohpMb.scaling.staart[p.id] = { m: 'uit' };
+          if (inp) inp.style.display = 'none';
+          if (eenhEl) eenhEl.style.display = 'none';
+        }
+        _ohpMbUpdateBasisBedrag();
+      });
+    });
+    if (inp) {
+      inp.addEventListener('input', () => {
+        schrijf();
+        _ohpMbUpdateBasisBedrag();
+      });
+    }
+  });
+  _ohpMbStWaarden();
+}
+
+// Ververst alleen de teksten "automatisch: € …" uit de verse trace van
+// _ohpBeurtBasisBedrag. Geen herrender, dus de focus blijft staan.
+function _ohpMbStWaarden() {
+  const blok = document.getElementById('ohpMbStaartBlok');
+  if (!blok) return;
+  const map = {};
+  if (_ohpLastTrace && _ohpLastTrace.staart) _ohpLastTrace.staart.forEach(p => { if (p.id != null) map[p.id] = p.autoNetto; });
+  blok.querySelectorAll('.ohp-mb-st-auto').forEach(el => {
+    const v = map[el.dataset.stid];
+    el.textContent = (v != null) ? eur(v) : '\u2013';
+  });
 }
 
 // Activeer of deactiveer de 'Kopieer uit andere beurt'-knop. Disabled als er geen andere beurten zijn.
@@ -10834,6 +10981,8 @@ function _ohpMbRenderKopieerMenu() {
       const aantal = sc.stappen ? Object.keys(sc.stappen).length : 0;
       samen = `per stap (${aantal} aangepast)`;
     }
+    const stN = sc.staart ? Object.keys(sc.staart).length : 0;      // v4.57.0
+    if (stN) samen += ' + ' + stN + ' staartingre' + (stN === 1 ? 'ep' : 'pen');
     html += `<div class="ohp-mb-kop-rij" data-beurtid="${b.id}" style="padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); cursor: pointer;">
       <div style="font-weight: 500;">${_escapeHtml(b.naam || '(zonder naam)')} <span style="color: var(--muted); font-weight: normal;">— ${b.jaartal}</span></div>
       <div style="font-size: 0.8rem; color: var(--muted);">${_escapeHtml(samen)}</div>
@@ -10878,6 +11027,7 @@ function _ohpMbKopieerUitBeurt(bronBeurtId) {
     r.checked = (r.value === _ohpMb.modus);
   });
   _ohpMbRenderModusBlok();
+  _ohpMbRenderStaart();      // v4.57.0 — gekopieerde staartingrepen tonen
   _ohpMbUpdateBasisBedrag();
 }
 
