@@ -1,3 +1,21 @@
+## v4.59.0 — De algemene voorwaarden zitten bij het plan (brok planvoorwaarden)
+
+### Wat er nu kan
+
+De klantprint van de onderhoudsplan-bijlage en elk nieuw accordsnapshot eindigen voortaan op de twee pagina's algemene voorwaarden, in de variant die bij de klant hoort. De aanleiding was pijnlijk concreet: de planbrief zegt letterlijk dat de voorwaarden bijgevoegd zijn en de akkoordvink op de klantpagina laat de klant bevestigen inclusief de algemene voorwaarden, maar het document sloot niets bij. De gewone offerte doet dat sinds v3.61.0 wel. Vanaf nu kloppen belofte, akkoordzin en document met elkaar.
+
+De variantregel is een besluit van 31-08-2026: een plan met ontvangertype VvE krijgt altijd de zakelijke set, in lijn met de alias van v3.88.0 waar VvE als zakelijk telt. In alle andere gevallen volgt de variant het klanttype van de bron-calculatie, zodat dezelfde klant bij offerte en plan nooit twee verschillende sets voorwaarden krijgt. Zakelijke opdrachtgevers met een particulier vormgegeven plan komen voor of kunnen komen, dus dit is geen theoretische robuustheid. Het interne Print onderhoudsplan blijft bewust zonder voorwaarden, dat is een werkdocument. Bestaande bevroren snapshots veranderen nooit mee (vaste regel); voor lopende open links is op 31-08-2026 besloten ze te laten lopen.
+
+### Hoe het onder de kap zit
+
+Nieuwe helper _ohpAvKlanttype(plan, calc): vve op het plan wint, anders het klanttype uit calc.offerteConfig met dezelfde normalisatie als _offCfg, waarbij alles behalve zakelijk en vve consument wordt. Die normalisatie is de borg tegen een addertje in _bouwVoorwaardenHtml, dat elke niet-consument als zakelijk behandelt: een leeg of nooit gezet klanttype zou zonder deze stap stilzwijgend de zakelijke set krijgen.
+
+De twee dpv-vw-blokken komen uit het ongewijzigde _bouwVoorwaardenHtml en staan in de return van _ohpBuildOfferteHTML na de sluitdiv van #obBlocks, binnen #obRoot. Daardoor valt alles vanzelf goed: _ohpPaginate loopt alleen over de kinderen van #obBlocks en laat de voorwaarden staan, _ohpPreloadImages verzamelt alle beelden in #printArea en laadt ze dus mee voor, en de laatste planpagina verliest zijn :last-child-status waardoor page-break-after:always de voorwaarden op een vers vel zet, met de dpv-pagebreak van de blokken zelf als tweede borg. Omdat klantprint en accordsnapshot dezelfde bouwer delen dekt dit ene invoegpunt beide paden.
+
+Twee scoped CSS-regels in de plan-cssHtml, want de dpv-marges van min 1,5 cm horen bij de 1,5 cm-printmarge van de gewone offerte terwijl dit document met @page margin 0 print: .print-only .ob .dpv-vw zet de marges op nul en .print-only .ob .dpv-vw-img begrenst het beeld op 296 mm hoogte. De vier paginabeelden zijn exact A4-verhouding (1241 bij 1754 pixels gemeten), dus de breedte valt daarmee op ruim 209 mm en de bestaande text-align centreert. De hogere specificiteit wint van de algemene dpv-regels ongeacht bronvolgorde, en buiten .ob verandert er niets, dus de gewone offerte blijft byte voor byte ongemoeid.
+
+_ohpAccordSnapshotHtml herschrijft na de paginering src="av- naar een absolute URL met _base, letterlijk het patroon van v3.63.1 op de gewone offerte. De AV-beelden zijn de enige relatieve paden in het snapshot, alle logo's zijn data-URI en de liggingsfoto een data-URL; de beelden als data-URI inbakken zou elk bevroren snapshot ruim een halve megabyte zwaarder maken in de database, dus dat is bewust niet gedaan. Drie proefgroepen groen op code gesneden uit het gepatchte bestand. Geen SQL, geen Edge Function.
+
 ## v4.58.0 — Het per-stap-label zegt hoeveel (brok staplabel)
 
 ### Wat er nu kan
