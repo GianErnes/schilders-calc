@@ -1,3 +1,19 @@
+## v4.58.0 — Het per-stap-label zegt hoeveel (brok staplabel)
+
+### Wat er nu kan
+
+In de per-stap-modus van het beurtvenster vertelt een dichtgeklapte regel nu echt wat er staat. Staan alle stappen van de regel op hetzelfde percentage, dan staat er dat getal: alles 70%. Lopen ze uiteen, dan staat er het bereik: 40 tot 100%. Uit blijft het woord voor een regel die helemaal op nul staat. Het oude label variabel, dat niets zei over de zwaarte van de schaling, is daarmee weg.
+
+Het snelveld Zet alle stappen op per hoofdgroep toont voortaan de waarde die er feitelijk staat. Staan alle stappen van de hoofdgroep gelijk, dan staat dat getal in het veld, ook wanneer je het venster later opnieuw opent. Zet je daarna één losse stap anders, dan loopt het veld leeg en vertellen de regellabels met hun bereik het verhaal. Het veld is geen geheugen maar een meting: het kan nooit een waarde tonen die niet meer klopt.
+
+De aanleiding was de melding dat het snelveld het percentage leek te vergeten. De waarden stonden aantoonbaar goed, alleen de weergave zei het niet. Dat is hiermee opgelost.
+
+### Hoe het onder de kap zit
+
+Puur weergave, de rekenkern en de handlers zijn niet geraakt. _ohpMbStapSamenvatting bepaalt nu min en max over de stappen van de regel, waarbij een afwezige sleutel als 100 telt: gelijk wordt alles X%, alles nul blijft uit met gedimde stijl en gemengd wordt het bereik. Het nieuwe _ohpMbPctTekst formatteert het getal in nl-notatie, dus 12,5 met komma als er ooit een decimaal wordt ingevuld. Het nieuwe _ohpMbPsSnelWaarde loopt alle stappen van de hoofdgroep langs en levert het gedeelde getal als tekst voor het value-attribuut van het snelveld, met punt omdat het een number-input is, of leeg bij ongelijke waarden. Besluiten van 31-08-2026: het bereik gekozen boven een telling zoals 3 van 5 aangepast en de afgeleide waarde boven letterlijk onthouden, omdat een onthouden waarde kan liegen zodra losse cellen daarna anders staan en het sluiten van het venster niet overleeft zonder opslag in het plan.
+
+Drie proefgroepen groen op functies gesneden uit het gepatchte bestand, achtentwintig onderdelen: het regellabel in alle standen inclusief decimalen, afwezige sleutels en het niet-gedimde bereik met een nul erin; de snelveldafleiding inclusief de hoofdgroep zonder stappen, expliciete 100 naast afwezig en alles nul; en het venster onder jsdom met render, een celwijziging die het veld leeg laat lopen en het bereik toont, snelveldinvoer die overal doorwerkt en na de herrender zichtbaar blijft, de uit-stijl, decimalen en het parseFloat-vangnet bij lege invoer. Namen _ohpMbPctTekst en _ohpMbPsSnelWaarde vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function, SYSTEEM.md ongemoeid.
+
 ## v4.57.0 — Staartkosten per beurt in de hand (brok staartingreep)
 
 ### Wat er nu kan
