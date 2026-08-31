@@ -1,3 +1,17 @@
+## v4.59.1 — Geen lege vellen meer achter de planvoorwaarden
+
+### Wat er nu kan
+
+Reparatie op v4.59.0. In de eerste echte print van een plan met voorwaarden bleek achter elk voorwaardenvel een leeg vel door te schuiven: een plan van acht pagina's kwam op twaalf uit in plaats van tien. Vanaf nu klopt het aantal en staan de twee voorwaardenvellen strak achter het plan.
+
+### Hoe het onder de kap zit
+
+Gemeten in de echte print: pagina 9 en 11 dragen elk een voorwaardenbeeld van 1241 bij 1754 pixels, pagina 10 en 12 zijn volledig leeg, paginaformaat 841,92 punten. De oorzaak zit in de globale regel .print-only .dpv-vw-img, die het beeld op display:inline-block zet. Een inline-block staat op de tekstbasislijn van zijn regel en daaronder reserveert de browser ruimte voor staartletters. Die regelruimte erft van .ob met 10,5pt en regelafstand 1,55, dus ruwweg anderhalf tot twee millimeter onder het beeld. Beeld van 296 mm plus die strook is meer dan de 297 mm van het vel, dus schoof de lege rest telkens door naar een vers vel. Dat het lege vel ook achter het laatste beeld staat sluit botsende paginabreuken uit als verklaring: verticale marges staan niet op het blok, alleen links, rechts en centrering.
+
+De twee scoped regels van v4.59.0 zijn vervangen. Het beeld krijgt display:block en margin 0 auto, waarmee het van de basislijn af is en gecentreerd blijft, want text-align doet dat bij een blok niet meer. De wikkel krijgt line-height 0 als borg dat er nooit meer regelruimte bij kan komen, en de maximale hoogte gaat van 296 naar 295 mm voor speling tegen afrondingen in de printmotor. Op het oog is dat niet te zien, de beelden hebben zelf ruime witranden. Beide regels blijven binnen .print-only .ob, dus de gewone offerte is opnieuw byte voor byte ongemoeid.
+
+De CSS reist mee in het bevroren snapshot, dus elke accordeerlink die na deze release wordt gemaakt is goed. Onder v4.59.0 was er nog geen planlink aangemaakt (bevestigd 31-08-2026), dus er hoeft niets opnieuw te worden uitgegeven.
+
 ## v4.59.0 — De algemene voorwaarden zitten bij het plan (brok planvoorwaarden)
 
 ### Wat er nu kan
