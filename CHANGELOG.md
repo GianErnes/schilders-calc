@@ -1,3 +1,29 @@
+## v4.57.0 — Staartkosten per beurt in de hand (brok staartingreep)
+
+### Wat er nu kan
+
+In het bewerkvenster van een onderhoudsbeurt staat voortaan een blok Staartkosten uit de bron-calculatie. Elke staartpost staat erin met zijn type, zijn tarief en het automatische bedrag voor precies deze beurt. Per post kies je uit drie standen. Automatisch is het bestaande gedrag: vast en per eenheid schalen met het beurtpercentage mee en per dag en per week volgen de factureerbare beurtdagen. Eigen zet bij een dag-, week- of eenheidspost een eigen aantal neer dat rekent met het tarief uit de bron, en bij een vaste of percentagepost een eigen bedrag. Uit haalt de post voor deze beurt uit de som.
+
+Dit lost het hoogwerkerprobleem op. Een hoogwerker huur je per dag en niet per percentage: bij een beurt van vijftien procent wil je niet vijftien procent van een hoogwerker, je wilt er één dag, of geen. Zet het aantal op 1 of op 0 en klaar. Omdat het eigen aantal met het brontarief rekent, loopt een latere tariefwijziging in de calculatie gewoon door in alle beurten met een eigen aantal.
+
+De Σ-verantwoording benoemt elke ingreep en zet er altijd de automatische waarde als spiegel naast, dus je ziet per beurt wat de app zelf gerekend zou hebben. Moduswissel in het venster bewaart de ingrepen: wissel je van algemeen percentage naar per regel, dan blijven de staartkeuzes staan. De knop Kopieer uit andere beurt neemt ze mee en het kopieermenu telt ze in de samenvatting. Beurten zonder ingreep rekenen tot op de cent hetzelfde als voorheen.
+
+Eén grens om te kennen: een staartpost met telt mee in werkdagen voedt de urenberekening ook bij een ingreep met zijn automatische waarde. De ingreep raakt het eurobedrag in de staart, niet de dagen en weken die eruit volgen.
+
+### Hoe het onder de kap zit
+
+De ingreep leeft als sleutel staart in de bestaande jsonb-kolom scaling van onderhoudsplan_beurten, per staartpost-id: { m: 'aantal', n: 2 } voor een eigen aantal, { m: 'bedrag', b: 500 } voor een eigen bedrag en { m: 'uit' } voor uitgezet. Geen SQL dus. Een afwezige sleutel of een vorm die niet bij het type past, bijvoorbeeld na een typewijziging in de bron, valt in de rekenkern én in het venster terug op automatisch. In stap 7 van _ohpBeurtBasisBedrag krijgt een ingreep bewust geen extraFactor en geen dagen-schaling: het ingevulde getal is het oordeel. De trace draagt per post voortaan id, eenheid, tarief (bedragPerEenheid) en de automatische waarde (autoNetto) mee, plus het ingreeplabel en het aantal.
+
+Het venster rekent niet zelf: _ohpMbUpdateBasisBedrag draait de rekenkern nu met trace en het nieuwe _ohpMbStWaarden schrijft alleen de automatisch-teksten bij, zodat de focus in een invoerveld blijft staan terwijl het basisbedrag live meebeweegt. _ohpMbRenderStaart bouwt de rijen met per post drie radioknoppen en een aantal- of bedragveld, schrijft rechtstreeks in _ohpMb.scaling.staart en ruimt op: alles terug op automatisch wist de sleutel, dus onaangeraakte beurten blijven byte voor byte gelijk in de database. _ohpMbZetModus tilt de staartsleutel over de scaling-reset heen (besluit 31-08-2026, de ingrepen staan los van de regelkeuze) en _ohpMbKopieerUitBeurt rendert het blok mee na kopiëren; het kopieermenu telt de ingrepen in de samenvatting. De Σ-verantwoording kreeg per ingreepsoort een eigen regel met eenheidswoord in enkelvoud en meervoud.
+
+Vijf proefgroepen groen op functies gesneden uit het gepatchte bestand, zevenentwintig onderdelen: de rekenkern met baseline byte-gelijk aan v4.56.0 op honderd en op vijftig procent, de drie ingreepvormen, de terugval bij vorm-mismatch, de bewuste nul, het per-regelgeval waar het automatische aantal nul dagen zou zijn en de telt-in-werkdagen-grens; het moduswisselbehoud met en zonder bevestigingsvraag; de kopieersamenvatting in enkelvoud en meervoud; de verantwoordingslabels met spiegel; en het venster zelf onder jsdom met render, invoerflow, opruiming en de nette meldingen zonder bron of posten. Namen _ohpMbRenderStaart, _ohpMbStWaarden, ohpMbStaartBlok, ohp-mb-st-rij, ohp-mb-st-n, ohp-mb-st-auto, ohp-mb-st-eenh en data-stid vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function, SYSTEEM.md ongemoeid.
+
+### Wat je moet doen
+
+1. `index.html` en `CHANGELOG.md` uploaden.
+2. Hard verversen (Cmd+Shift+R). Open een plan met een hoogwerker in de bron, open een beurt en zet bij de hoogwerker Eigen aantal op 1: het basisbedrag hoort live te verspringen met het dagtarief en de Σ-verantwoording toont de regel eigen aantal met de automatische waarde erachter.
+3. Wissel in hetzelfde venster van modus en zie dat de staartkeuze blijft staan. Sla op, heropen de beurt en controleer dat de keuze terugkomt.
+
 ## v4.56.0 — De eigen plannaam (brok plannaam)
 
 ### Wat er nu kan
