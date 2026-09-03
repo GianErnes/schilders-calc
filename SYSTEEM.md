@@ -4108,3 +4108,15 @@ slot, waardoor de tab vastliep op een verzonden plan; gemeld na de eerste
 dag gebruik. Les voor volgende slotbrokken: navigatie-elementen binnen de
 sectie eerst apart benoemen voordat een sectiebrede CSS-regel eroverheen
 gaat.
+
+
+**Aanvulling 3 september 2026 (v4.62.0).** De rasteraar is gesplitst in
+`_ohpPdfVanPrintArea` (rastert wat in `printArea` staat) en de bouwstap uit
+het live plan. Daardoor kan `_ohpAccordPdfAlsnog` een PDF maken uit de
+bevroren `snapshot.html` van een bestaande planlink en die aan dezelfde rij
+hangen (`pdf_path` via update op `id`; token, teller en opvolging blijven).
+Dat is de weg voor links van vóór v4.61.0 en voor het geval het maken bij
+het aanmaken mislukte. De momentopname is al gepagineerd, dus daar draait
+bewust geen `_ohpPaginate` overheen: wat de klant kreeg is wat er in de PDF
+komt, ook als het live plan inmiddels anders is. Route 3 vervangt later
+alleen `_ohpPdfVanPrintArea` en `_ohpPlanPdfBlob`.

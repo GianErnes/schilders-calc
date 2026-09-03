@@ -1,3 +1,22 @@
+## v4.62.0 — PDF alsnog maken uit de momentopname
+
+### Wat er nu kan
+
+Heeft een planlink nog geen PDF (gemaakt vóór v4.61.0, of het maken mislukte), dan staat in het linkbeheer onder de rode melding de knop **PDF alsnog maken uit de momentopname**. Die gebruikt uitsluitend de bevroren bijlage die de klant heeft gekregen (`snapshot.html`), niet het huidige plan, en hangt de PDF aan de **bestaande** link. Dezelfde link, dezelfde openingsteller, dezelfde opvolging; daarna verschijnt de knop Bevroren PDF downloaden.
+
+Aanleiding: een plan dat onder v4.51.0 verzonden was en daarna per ongeluk gewijzigd. Een nieuwe link zou de gewijzigde versie bevriezen; de schone verzonden versie zit in de momentopname.
+
+### Hoe het onder de kap zit
+
+- `_ohpPlanPdfBlob` is gesplitst in `_ohpPdfVanPrintArea(voortgang)` (rastert wat in `printArea` staat) en de bouwstap uit het live plan; `_ohpWachtOpFonts` is de gedeelde fontwacht. Route 3 vervangt later alleen deze twee rasterfuncties.
+- `_ohpAccordPdfAlsnog`: momentopname in `printArea`, fonts en beelden afwachten, **geen** `_ohpPaginate` (de momentopname is al gepagineerd), rasteren, upload onder `{token}.pdf`, `pdf_path` op de bestaande rij, venster verversen. Weigert netjes zonder momentopname of als er al een PDF is; bij een fout blijft de rij ongewijzigd.
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Geen SQL.
+2. Op het verzonden plan: linkbeheer openen, **PDF alsnog maken uit de momentopname**, wachten op de paginateller, dan **Bevroren PDF downloaden**. Controleren dat dit de verzonden versie is (dus zonder de latere wijziging) en dat de link in het veld niet veranderd is.
+3. Daarna de testronde van v4.61.0 op een proefplan.
+
 ## v4.61.1 — Op een vergrendeld plan kun je weer een ander plan kiezen
 
 Reparatie op v4.60.0, gemeld na de eerste dag gebruik. Het planslot zette ook de **bronkiezer** vast: het zoekveld, de statusvinkjes en de knop **Wijzig** naast de bron-calculatie. Met een verzonden plan open kwam je zo niet meer bij een ander plan en zat de hele tab vast.
