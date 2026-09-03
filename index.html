@@ -215,6 +215,17 @@
     cursor: pointer !important;
   }
   #onderhoud.is-locked select#ohpStatus { background: #fff !important; }
+  /* v4.61.1 — De bronkiezer is navigatie, geen wijziging: zoekveld, statusvinkjes en de
+     knop Wijzig blijven werken op een vergrendeld plan, anders kom je niet bij een ander plan. */
+  #onderhoud.is-locked #ohpBronWrap input,
+  #onderhoud.is-locked #ohpBronWrap button,
+  #onderhoud.is-locked #ohpBronCompact button {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    background: #fff !important;
+    cursor: pointer !important;
+  }
+  #onderhoud.is-locked #ohpBronWrap input[type="text"] { cursor: text !important; }
 
   /* BUTTONS */
   .btn {
@@ -2289,6 +2300,7 @@
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/pdfmake.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/vfs_fonts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script><!-- v4.61.0 — raster-PDF van de planbijlage (route 2, brok A) -->
 </head>
 <body>
 
@@ -2325,8 +2337,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.60.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.61.1</h2>
       <div class="intro-body">
+        <p><strong>🔓 Op een vergrendeld plan kun je weer een ander plan kiezen (v4.61.1).</strong> Reparatie op v4.60.0: het slot zette ook de bronkiezer vast (zoekveld, statusvinkjes en de knop Wijzig), waardoor je vanaf een verzonden plan niet meer naar een ander plan kon. Een ander plan kiezen is navigatie, geen wijziging aan het bevroren plan; die knoppen werken nu altijd. Verder niets veranderd.</p>
+        <p><strong>📄 De planlink heeft nu een PDF (v4.61.0, route 2 brok A).</strong> Bij het aanmaken van een accordeerlink voor een onderhoudsplan wordt de bijlage voortaan ook als PDF bevroren en in dezelfde besloten bak gezet als de offerte-PDF. De klantpagina toont die PDF met een knop "Onderhoudsplan openen of downloaden (PDF)", zodat de klant het plan kan bewaren. In het linkbeheer zie je of er een PDF bevroren is en kun je hem zelf downloaden: precies wat de klant ontvangen heeft, voor in Yoobi. Onder de kap is het een rasterweergave van de gepagineerde brochure (tekst is niet selecteerbaar); de algemene voorwaarden gaan wel scherp mee. Mislukt het maken, dan gaat de link toch de deur uit met alleen de HTML-versie en krijg jij een melding. Nog niet in deze brok: stempel, akkoordbevestiging, mail en Archiveren; dat is brok B. Geen SQL. Of de klantpagina de PDF toont hangt af van de Edge Function offerte-accord: dat wordt met een proeflink vastgesteld.</p>
         <p><strong>🔒 Onderhoudsplannen gaan op slot na verzenden (v4.60.0).</strong> Een onderhoudsplan met status Gereed, Verzonden, Geaccepteerd of Verloren is voortaan bevroren, precies zoals een calculatie dat al sinds v3.7.0 is. Bovenaan de Onderhoudsplan-tab verschijnt de bekende gele slotbanner; prijspeil, looptijd, indexering, beurten, percentages, externe posten, ligging en planbrief zijn dan niet meer aan te raken. Printen, Offerte OHP, de accordeerlink en de Σ-verantwoording blijven gewoon werken. Bij het vergrendelen legt het plan nu ook zijn eigen bevroren instellingen vast (tarieven, opslagen, BTW), zodat een latere tariefwijziging een verzonden plan niet meer stil verandert. Mailen via het accordeervenster zet de status op Verzonden en laat het slot dus vanzelf dichtvallen; wijzigen kan alleen nog na bewust terugzetten naar Concept. Het afvinken van uitgevoerde beurten in de Planning-tab blijft mogelijk. Let op: de regels van de bron-calculatie zelf vallen niet onder dit slot; vergrendel de calculatie dus ook. Eenmalige SQL nodig (kolom settings_snapshot).</p>
         <p><strong>📄 Geen lege vellen meer achter de planvoorwaarden (v4.59.1).</strong> De voorwaardenpagina's achter het plandocument sleepten elk een leeg vel mee, dus een plan van acht pagina's kwam op twaalf uit in plaats van tien. Het beeld stond op de tekstbasislijn en daar reserveert de browser ruimte onder voor staartletters, net genoeg om het blok over de paginahoogte te duwen. Het beeld staat nu als blok op het vel. Alleen weergave bij printen, aan de inhoud verandert niets.</p>
         <p><strong>📜 De algemene voorwaarden zitten nu bij het plan (v4.59.0).</strong> De klantprint van de plan-bijlage en elk nieuw accordsnapshot eindigen voortaan op de twee pagina's algemene voorwaarden, precies zoals de gewone offerte dat sinds v3.61.0 doet. De planbrief beloofde bijsluiting en de akkoordzin op de klantpagina noemde ze al; nu kloppen belofte en document met elkaar. Een VvE-plan krijgt de zakelijke set en anders volgt de variant het klanttype van de calculatie. Bestaande bevroren snapshots veranderen niet mee; het interne Print onderhoudsplan blijft bewust zonder.</p>
@@ -2812,7 +2826,7 @@
       <div style="padding: 0 1rem 1rem 1rem;">
       <div id="ohpBronCompact" style="display:none; margin-bottom: 1rem; padding: 0.55rem 0.8rem; background: var(--bg-soft, #f5f5f5); border-radius: 4px; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap;">
         <span style="font-size: 0.92rem;"><strong>Bron-calculatie:</strong> <span id="ohpBronCompactNaam" style="color: var(--ink);"></span></span>
-        <button class="btn btn-sm btn-secondary" onclick="_ohpWijzigBron()" title="Een andere bron-calculatie kiezen (start een ander onderhoudsplan)">Wijzig</button>
+        <button class="btn btn-sm btn-secondary lock-allowed" onclick="_ohpWijzigBron()" title="Een andere bron-calculatie kiezen (start een ander onderhoudsplan)">Wijzig</button>
       </div>
       <div id="ohpBronWrap" style="margin-bottom: 1rem;">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
@@ -3651,7 +3665,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.60.0';
+const APP_VERSION = 'v4.61.1';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -4047,6 +4061,8 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.61.1', d: '2026-09-03', h: 'Reparatie op v4.60.0: het planslot zette ook de bronkiezer vast. De CSS op #onderhoud.is-locked raakte het zoekveld ohpBronZoek en de statusvinkjes in #ohpBronWrap, en de knop Wijzig in #ohpBronCompact had bovendien een JS-borg in _ohpWijzigBron; met een geopend vergrendeld plan kwam je zo niet meer bij een ander plan (gemeld 03-09-2026 na de eerste dag gebruik). Een ander plan kiezen is navigatie en geen wijziging aan het bevroren plan. Fix: JS-borg uit _ohpWijzigBron, lock-allowed op de knop Wijzig, en een CSS-uitzondering voor input en button binnen #ohpBronWrap en #ohpBronCompact (pointer-events auto, opacity 1). Het wisselen zelf loopt via _ohpSetBronCalc naar _ohpRenderInhoud, dat het slot per plan opnieuw bepaalt. Bannertekst noemt nu ook het kiezen van een ander plan. Geen SQL, geen Edge Function.' },
+  { v: '4.61.0', d: '2026-09-03', h: 'PDF bij de plan-accordeerlink (route 2, brok A van de plan-PDF-keten). Aanleiding: planlinks hadden pdf_path null (besluit v4.51.0), waardoor de klant niets kon downloaden, er geen getekend exemplaar was en Gian het verzonden document niet voor Yoobi kon opslaan. Nieuwe _ohpPlanPdfBlob(plan, calc, voortgang): bouwt de bijlage via exact de weg van _ohpAccordSnapshotHtml (ligging, _ohpBuildOfferteHTML in printArea, vier Libre Franklin-gewichten, _ohpPreloadImages, _ohpPaginate; dus dezelfde paginering als de HTML-momentopname), zet printArea tijdelijk zichtbaar maar buiten beeld (fixed, left -30000px; visibility:hidden zou lege beelden geven), rastert elke .ob .page met html2canvas 1.4.1 (nieuw geladen van jsdelivr, na pdf-lib) op scale 2 met useCORS naar JPEG 0.85 en zet die met pdf-lib als A4-pagina van 595,28 bij 841,89 pt; de AV-vellen (.dpv-vw img) gaan als scherpe PNG rechtstreeks mee via embedPng, niet gerasterd. Geeft een Blob of null en gooit nooit; finally herstelt de printArea-stijlen en leegt hem. Dit is bewust de ENIGE plek die weet hoe de PDF ontstaat: route 3 (herbouw in pdfmake) vervangt alleen deze functie. _ohpAccordNieuweLink roept hem aan na het snapshot met voortgangstekst per pagina, haalt eerst via de Storage-API (storage.remove, nooit SQL) de PDF van de vorige open planlink van dit plan weg zodat de bak geen wezen kweekt zoals bij offertes, uploadt naar ACCORD_PDF_BUCKET onder token.pdf met upsert en zet pdf_path; bij elke fout pdf_path null, console.warn en een toast dat de link zonder PDF is aangemaakt (besluit 03-09-2026: niet blokkeren). snapshot.pdf wordt bewust niet gezet, offerte-accord vult die met een ondertekende link. Klantpagina _accordRender: de bestaande vertakking pdfUrl-aanwezig kiest vanzelf de PDF-viewer; alleen de woorden Offerte openen of downloaden en de terugvaltekst volgen nu docWoord en isPlan. Linkbeheer _ohpAccordBeheerRender toont PDF bevroren met knop Bevroren PDF downloaden (nieuwe _ohpAccordPdfDownload via storage.download met eigen inlog, bestandsnaam plannaam - verzonden.pdf) of een rode melding zonder PDF. Niet in deze brok: stempel, akkoordbevestiging, mail B, Archiveren (brok B). Niet testbaar in de sandbox: html2canvas zelf (bibliotheek niet bereikbaar) en of offerte-accord voor planlinks snapshot.pdf vult. Zestien slice-tests met echte pdf-lib en mock html2canvas groen (paginatelling, A4-maat, voortgang, stijlherstel, terugval zonder bibliotheek, zonder pagina, bij AV-fout en bij canvas-fout). Namen _ohpPlanPdfBlob, _ohpAccordPdfDownload en ohpAcPdf vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function in deze brok.' },
   { v: '4.60.0', d: '2026-09-03', h: 'Vergrendeling van onderhoudsplannen (brok planslot), spiegel van het calc-slot uit v3.7.0. Aanleiding: na het mailen van een plan sprong de status wel naar Verzonden (v4.51.0) maar dat was een kaal label; alle velden bleven bewerkbaar en een plan werd na verzending per ongeluk aangepast (03-09-2026). Nieuwe helper _isOhpLocked(plan): status ≠ concept (een plan kent geen Afspraak). _applyOhpLockUI zet de klasse is-locked op #onderhoud en vult #ohpLockBanner met dezelfde .calc-lock-banner-opmaak plus knop Naar concept; aangeroepen op alle drie uitgangen van _ohpRenderInhoud. CSS: kopie van de #calculatie.is-locked-regels voor #onderhoud, met lock-allowed op Print onderhoudsplan, Offerte OHP, Accordeerlink en de Σ-knop per beurt, en een uitzondering voor select#ohpStatus zelf zodat ontgrendelen kan. De beurt-modal, het planbriefvenster en het Σ-paneel staan buiten de sectie, dus JS-borgen met toast in _ohpOpenBeurtModal, _ohpAddBeurt, _ohpAddExtern, _ohpDeletePlan, _ohpWijzigBron, _ohpLiggingVernieuw, _ohpLiggingVerwijder en ohpBriefConfig (patroon r.17792 bij de calc). Laag 2, eigen bevroren instellingen: kolom settings_snapshot jsonb null op onderhoudsplannen (idempotente SQL in sql/), gemapt in _mapOhpFromDB en _mapOhpToDB. Nieuwe _ohpEffectieveSettings(plan, calc): plan-snapshot, dan calc-snapshot, dan live; vervangt de vier losse lezers (_ohpBeurtBasisBedrag, _ohpBronCalcBtw, _ohpMbRenderPerRegel, _ohpMbRenderPerStap). De Σ-trace kent een derde bron plan-snapshot met eigen tekst in het paneel. Centrale statusroute _ohpSetStatus(status): bij vergrendelen snapshot = diepe kopie van _ohpEffectieveSettings(null, calc), bij terug naar concept null; gerichte update van status, settings_snapshot en gewijzigd (bewust niet via _ohpFlushSave, die bij leeg prijspeil niets opslaat); bij een DB-fout geheugen en dropdown terugdraaien met toast (patroon v4.11.1); daarna slot, beurtenlijst en resultaat hertekenen. ohpStatus is uit de generieke input/change-lijst gehaald en heeft een eigen change-handler _ohpStatusWissel die zonder opgeslagen plan terugvalt op _ohpFlushSave. De mailroute in het planvenster gebruikt voor het geopende plan nu _ohpSetStatus in plaats van een losse update; voor een niet-geopend plan blijft de oude kale update staan. Gewone plan-saves via _mapOhpToDB dragen de snapshot mee (zelfde patroon als calc); een vergrendeld plan zonder snapshot (vergrendeld vóór deze versie) krijgt dat in de banner gemeld en rekent zoals voorheen met de bron-calc. Bewust buiten deze brok: bevroren totaalbedrag per plan voor het dashboard, en de regels van de bron-calc zelf. Namen _isOhpLocked, _applyOhpLockUI, _ohpSetStatus, _ohpStatusWissel, _ohpEffectieveSettings en ohpLockBanner vooraf op nul treffers gecontroleerd. Vereist SQL (los geleverd). Geen Edge Function.' },
   { v: '4.59.1', d: '2026-08-31', h: 'Reparatie op v4.59.0: achter elk voorwaardenvel van het plandocument schoof een leeg vel door, een plan van acht pagina\u0027s werd twaalf in plaats van tien (GEMETEN in een echte print: pagina 9 en 11 dragen het beeld, 10 en 12 zijn leeg, paginaformaat 841,92pt). Oorzaak: de globale regel .print-only .dpv-vw-img zet het beeld op display:inline-block, waardoor het op de tekstbasislijn staat en de browser eronder ruimte reserveert voor staartletters; die regelruimte erft van .ob met 10,5pt en regelafstand 1,55, dus ruwweg 1,5 tot 2mm onder het beeld. Beeld 296mm plus die strook is meer dan de 297mm van het vel, dus schoof de lege rest door. Dat het lege vel ook achter het laatste beeld staat sluit botsende paginabreuken uit als verklaring, want verticale marges staan niet op het blok. Opgelost met display:block en margin 0 auto op het beeld (van de basislijn af, en auto centreert wat text-align bij een blok niet meer doet), line-height 0 op de wikkel als borg tegen nieuwe regelruimte, en max-height van 296 naar 295mm voor speling tegen afrondingen in de printmotor. Onzichtbaar op het oog, de beelden hebben zelf ruime witranden. Beide regels blijven binnen .print-only .ob, dus de gewone offerte is opnieuw niet geraakt. De CSS reist mee in het snapshot, dus elke accordeerlink die na deze release wordt gemaakt is goed; onder v4.59.0 was er nog geen planlink aangemaakt (bevestigd 31-08-2026).' },
   { v: '4.59.0', d: '2026-08-31', h: 'Algemene voorwaarden achterin het plandocument (brok planvoorwaarden). Aanleiding: de planbrief belooft bijgevoegde voorwaarden en de akkoordvink op de klantpagina zegt bij een plan al inclusief de algemene voorwaarden, maar het plandocument sloot niets bij terwijl de gewone offerte dat sinds v3.61.0 doet. Nieuwe helper _ohpAvKlanttype(plan, calc): ontvangertype vve wint altijd (zakelijke beelden via de alias van v3.88.0), anders volgt de variant het klanttype van de bron-calculatie met dezelfde normalisatie als _offCfg, alles behalve zakelijk en vve wordt consument, want _bouwVoorwaardenHtml behandelt elke niet-consument als zakelijk en een leeg klanttype zou anders stil de verkeerde set geven. In de return van _ohpBuildOfferteHTML staan de twee dpv-vw-blokken uit het ongewijzigde _bouwVoorwaardenHtml na de sluitdiv van #obBlocks binnen #obRoot: _ohpPaginate loopt alleen over de kinderen van #obBlocks en laat ze staan, _ohpPreloadImages pakt alle beelden in #printArea dus ook deze, en de laatste planpagina verliest zijn :last-child waardoor page-break-after:always de voorwaarden op een vers vel zet met de dpv-pagebreak als tweede borg. Twee scoped CSS-regels in de plan-cssHtml (.print-only .ob .dpv-vw en .print-only .ob .dpv-vw-img): de dpv-marges van min 1,5cm horen bij de printmarge van de gewone offerte terwijl dit document met @page margin 0 print, dus hier marge nul en het beeld op maximaal 296mm hoogte; de vier beelden zijn exact A4-verhouding (1241 bij 1754 gemeten) dus de breedte valt op ruim 209mm en de bestaande text-align centreert. _ohpAccordSnapshotHtml herschrijft src=av- naar absolute URLs met _base, letterlijk het patroon van v3.63.1, omdat de AV-beelden de enige relatieve paden in het snapshot zijn (alle logo\u0027s data-URI, ligging data-URL); data-URI inbakken zou elk snapshot ruim een halve MB zwaarder maken. Klantprint (_ohpPrintOfferte) en accordsnapshot delen de bouwer, dus \u00e9\u00e9n invoegpunt dekt beide; de interne print (_ohpPrint, eigen bouwer) blijft bewust zonder voorwaarden. Besluiten 31-08-2026: variantregel VvE-wint-anders-klanttype en lopende open links laten lopen. Gewone offerte en _bouwVoorwaardenHtml byte voor byte ongemoeid. Geen SQL, geen Edge Function.' },
@@ -8420,7 +8436,6 @@ let _ohpFilter = {
 // andere bron in de lijst zet 'm automatisch terug op false.
 let _ohpBronEditing = false;
 function _ohpWijzigBron() {
-  if (_isOhpLocked(_ohpState.plan)) { _toast('Dit onderhoudsplan is vergrendeld. Zet de status op Concept om aan te passen.'); return; }
   _ohpBronEditing = true;
   _ohpRenderHuidigeBron();
 }
@@ -8675,7 +8690,7 @@ function _applyOhpLockUI() {
     <div style="flex:1;">
       <strong>Vergrendeld — status is ${lbl}.</strong>
       ${bronZin}
-      Beurten, percentages, looptijd en planbrief zijn op slot; printen, Offerte OHP, de accordeerlink en de Σ-verantwoording blijven werken.
+      Beurten, percentages, looptijd en planbrief zijn op slot; printen, Offerte OHP, de accordeerlink, de Σ-verantwoording en het kiezen van een ander plan blijven werken.
       Zet status op <em>Concept</em> om aan te passen.
     </div>
     <button class="btn-secondary btn lock-allowed" style="font-size:0.8rem;" onclick="_ohpSetStatus('concept')">Naar concept</button>
@@ -21843,8 +21858,8 @@ function _accordRender(root, token, res) {
   const docWoord = isPlan ? 'Onderhoudsplan' : 'Offerte';
   const offHtml = (res.snapshot && res.snapshot.html) ? res.snapshot.html : ('<p>' + docWoord + ' niet beschikbaar.</p>');
   // v3.79.0 — nieuwe links hebben een bevroren PDF in de snapshot; toon die. Oude links
-  // hebben alleen html en blijven via de oude iframe-weg renderen. Planlinks hebben
-  // nooit een PDF en renderen dus altijd via het iframe.
+  // hebben alleen html en blijven via de oude iframe-weg renderen. Planlinks hebben sinds
+  // v4.61.0 ook een PDF (raster); oudere planlinks renderen nog via het iframe.
   const pdfUrl = (res.snapshot && res.snapshot.pdf) ? res.snapshot.pdf : null;
   const bedrag = res.bedrag;
   const reedsAf = res.status === 'akkoord' || res.status === 'afgekeurd';
@@ -21869,11 +21884,11 @@ function _accordRender(root, token, res) {
 
   const docHtml = pdfUrl
     ? ('<div id="acPdfDl" style="margin:0 0 12px;text-align:center;">'
-        + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Offerte openen of downloaden (PDF)</a>'
+        + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">' + docWoord + ' openen of downloaden (PDF)</a>'
         + '</div>'
         + '<object id="acOffertePdf" class="ac-offerte" data="' + _accordEsc(pdfUrl) + '#view=FitH" type="application/pdf" style="width:100%;height:70vh;border:0;background:#fff;">'
-        + '<div style="padding:24px;text-align:center;color:#555;">De offerte kan hier niet in beeld getoond worden op dit toestel. '
-        + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener">Open de offerte (PDF)</a>.</div>'
+        + '<div style="padding:24px;text-align:center;color:#555;">' + (isPlan ? 'Het onderhoudsplan' : 'De offerte') + ' kan hier niet in beeld getoond worden op dit toestel. '
+        + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener">Open ' + (isPlan ? 'het onderhoudsplan' : 'de offerte') + ' (PDF)</a>.</div>'
         + '</object>')
     : '<iframe id="acOfferte" class="ac-offerte" title="Offerte"></iframe>';
 
@@ -22911,6 +22926,13 @@ function _ohpAccordBeheerRender(body, plan, calc, rij) {
     h += '</div>';
   }
 
+  // v4.61.0 — bevroren PDF: status en downloadknop (exact wat de klant ziet, voor Yoobi).
+  if (rij.pdf_path) {
+    h += '<div class="acb-sub" style="margin-top:6px;">PDF bevroren bij het aanmaken van de link.</div>'
+      + '<button class="acb-btn sec" id="ohpAcPdf" style="margin:6px 0 4px;">\ud83d\udcc4 Bevroren PDF downloaden</button>';
+  } else {
+    h += '<div class="acb-sub" style="margin-top:6px;color:#b00020;">Geen PDF bij deze link (gemaakt v\u00f3\u00f3r v4.61.0 of het maken mislukte). De klant ziet de HTML-versie. Een nieuwe link maakt wel een PDF.</div>';
+  }
   h += '<label class="acb-sub">Link voor de klant</label>'
     + '<div class="acb-linkrow"><input type="text" id="ohpAcLink" readonly value="' + _accordEsc(link) + '">'
     + '<button class="acb-btn" id="ohpAcKopieer">Kopieer</button></div>';
@@ -22942,6 +22964,8 @@ function _ohpAccordBeheerRender(body, plan, calc, rij) {
       + '<div class="acb-sub">' + _accordEsc(_ohpPlanNaam(plan, calc) || '') + (calc.klant ? ' \u2014 ' + _accordEsc(calc.klant) : '') + '</div>'; // v4.56.0
     _ohpAccordMaakFormulier(body, plan, calc, rij);
   });
+  const _btnPdf = body.querySelector('#ohpAcPdf'); // v4.61.0
+  if (_btnPdf) _btnPdf.addEventListener('click', () => _ohpAccordPdfDownload(rij, plan, calc, _btnPdf));
   const _btnMail = body.querySelector('#ohpAcMail');
   if (_btnMail) _btnMail.addEventListener('click', () => _ohpPlanMailen(plan, calc, rij, body));
   const _btnOpvolg = body.querySelector('#ohpAcOpvolg');
@@ -23003,6 +23027,26 @@ function _ohpAccordMaakFormulier(body, plan, calc, rij) {
 // De bevroren momentopname van de klantbijlage: exact de printroute, alleen
 // zonder window.print(). Fonts eerst, want _ohpPaginate verdeelt op gemeten
 // hoogtes en een fallback-font geeft andere paginagrenzen dan de print.
+// v4.61.0 — Jouw kant: de bevroren plan-PDF ophalen via de eigen inlog (storage.download,
+// zoals _accordDownloadGetekend). Zonder stempel: dat is brok B.
+async function _ohpAccordPdfDownload(rij, plan, calc, btn) {
+  if (!rij || !rij.pdf_path) { _toast('Geen bevroren PDF bij deze link'); return; }
+  const oud = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Bezig\u2026'; }
+  try {
+    const { data, error } = await _sb.storage.from(ACCORD_PDF_BUCKET).download(rij.pdf_path);
+    if (error) throw error;
+    const bytes = await data.arrayBuffer();
+    const naam = String(_ohpPlanNaam(plan, calc) || 'onderhoudsplan').replace(/[\\/:*?"<>|]+/g, '-');
+    _pdfBytesDownload(bytes, naam + ' - verzonden.pdf');
+    _toast('Bevroren PDF gedownload', 'ok');
+  } catch (e) {
+    _toast('Downloaden mislukt: ' + (e.message || e));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = oud; }
+  }
+}
+
 async function _ohpAccordSnapshotHtml(plan, calc) {
   _ohpLiggingPrintUrl = await _ohpLiggingDataUrl(plan);
   const pa = document.getElementById('printArea');
@@ -23026,6 +23070,73 @@ async function _ohpAccordSnapshotHtml(plan, calc) {
   const html = pa.innerHTML.split('src="av-').join('src="' + _base + 'av-');
   pa.innerHTML = '';
   return html;
+}
+
+// v4.61.0 — Raster-PDF van de planbijlage (route 2, brok A). Dit is de ENIGE plek die
+// weet hoe de PDF ontstaat; route 3 (herbouw in pdfmake) vervangt alleen deze functie.
+// Bouwt het document via dezelfde weg als _ohpAccordSnapshotHtml (dus dezelfde paginering),
+// rastert elke .page met html2canvas op schaal 2 naar JPEG en bundelt die met pdf-lib tot
+// A4-pagina's. De AV-vellen gaan als scherpe PNG rechtstreeks mee, niet gerasterd.
+// Geeft een Blob of null. Gooit nooit: de link mag niet blokkeren op de PDF (besluit 03-09-2026).
+async function _ohpPlanPdfBlob(plan, calc, voortgang) {
+  const pa = document.getElementById('printArea');
+  if (!pa) return null;
+  if (typeof html2canvas !== 'function') { console.warn('Plan-PDF: html2canvas niet geladen'); return null; }
+  if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) { console.warn('Plan-PDF: pdf-lib niet geladen'); return null; }
+  const prev = { display: pa.style.display, position: pa.style.position, left: pa.style.left, top: pa.style.top,
+                 visibility: pa.style.visibility, width: pa.style.width, zIndex: pa.style.zIndex };
+  try {
+    _ohpLiggingPrintUrl = await _ohpLiggingDataUrl(plan);
+    pa.innerHTML = _ohpBuildOfferteHTML(plan, calc);
+    if (document.fonts && document.fonts.load) {
+      try {
+        await Promise.all([
+          document.fonts.load('400 16px "Libre Franklin"'),
+          document.fonts.load('600 16px "Libre Franklin"'),
+          document.fonts.load('700 16px "Libre Franklin"'),
+          document.fonts.load('900 16px "Libre Franklin"')
+        ]);
+      } catch (e) { /* fallback-font */ }
+    }
+    try { await _ohpPreloadImages(); } catch (e) { /* beelden laden dan later */ }
+    _ohpPaginate();
+    // Zichtbaar voor de rasteraar, maar buiten beeld. visibility:hidden zou lege beelden geven.
+    pa.style.display = 'block'; pa.style.position = 'fixed'; pa.style.left = '-30000px'; pa.style.top = '0';
+    pa.style.visibility = 'visible'; pa.style.width = '210mm'; pa.style.zIndex = '-1';
+    const pages = Array.from(pa.querySelectorAll('.ob .page'));
+    if (!pages.length) { console.warn('Plan-PDF: geen pagina\u0027s gevonden'); return null; }
+    const avImgs = Array.from(pa.querySelectorAll('.dpv-vw img'));
+    const totaal = pages.length + avImgs.length;
+    const { PDFDocument } = PDFLib;
+    const doc = await PDFDocument.create();
+    const W = 595.28, H = 841.89; // A4 in pt
+    for (let i = 0; i < pages.length; i++) {
+      if (typeof voortgang === 'function') { try { voortgang(i + 1, totaal); } catch (e) {} }
+      const cv = await html2canvas(pages[i], { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
+      const jpg = cv.toDataURL('image/jpeg', 0.85); // pdf-lib accepteert een data-URI rechtstreeks
+      const img = await doc.embedJpg(jpg);
+      const pg = doc.addPage([W, H]);
+      pg.drawImage(img, { x: 0, y: 0, width: W, height: H });
+    }
+    for (let j = 0; j < avImgs.length; j++) {
+      if (typeof voortgang === 'function') { try { voortgang(pages.length + j + 1, totaal); } catch (e) {} }
+      try {
+        const r = await fetch(avImgs[j].getAttribute('src'));
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const png = await doc.embedPng(await r.arrayBuffer());
+        const pg = doc.addPage([W, H]);
+        pg.drawImage(png, { x: 0, y: 0, width: W, height: H });
+      } catch (e) { console.warn('Plan-PDF: AV-vel overgeslagen:', e); }
+    }
+    const bytes = await doc.save();
+    return new Blob([bytes], { type: 'application/pdf' });
+  } catch (e) {
+    console.warn('Plan-PDF maken mislukt:', e);
+    return null;
+  } finally {
+    Object.keys(prev).forEach(k => { pa.style[k] = prev[k] || ''; });
+    pa.innerHTML = '';
+  }
 }
 
 async function _ohpAccordNieuweLink(plan, calc, body, invoer) {
@@ -23078,6 +23189,35 @@ async function _ohpAccordNieuweLink(plan, calc, body, invoer) {
   if (window.crypto && crypto.randomUUID) token = crypto.randomUUID().replace(/-/g, '') + Date.now().toString(36);
   else token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36);
 
+  // v4.61.0 — raster-PDF maken en in de besloten bak zetten (zelfde route als de offerte,
+  // r. _accordNieuweLink). Mislukt het, dan gaat de link toch de deur uit met alleen de
+  // HTML-momentopname en krijg jij een melding (besluit 03-09-2026).
+  let pdfPath = null;
+  try {
+    body.innerHTML = 'Bezig met aanmaken\u2026 PDF opbouwen';
+    const blob = await _ohpPlanPdfBlob(plan, calc, (i, n) => { body.innerHTML = 'Bezig met aanmaken\u2026 PDF-pagina ' + i + ' van ' + n; });
+    if (blob) {
+      // De PDF van de vorige open planlink van dit plan weghalen via de Storage-API (nooit
+      // via SQL, zie SYSTEEM.md), zodat de bak niet volloopt met wezen zoals bij de offerte.
+      try {
+        const { data: oud } = await _sb.from('offerte_accorderingen').select('pdf_path')
+          .eq('onderhoudsplan_id', plan.id).eq('status', 'open').not('pdf_path', 'is', null);
+        const paden = (oud || []).map(r => r.pdf_path).filter(Boolean);
+        if (paden.length) await _sb.storage.from(ACCORD_PDF_BUCKET).remove(paden);
+      } catch (e) { console.warn('Oude plan-PDF opruimen mislukt:', e); }
+      const path = token + '.pdf';
+      const { error: upErr } = await _sb.storage.from(ACCORD_PDF_BUCKET)
+        .upload(path, blob, { contentType: 'application/pdf', upsert: true });
+      if (upErr) throw upErr;
+      pdfPath = path;
+    }
+  } catch (e) {
+    console.warn('Plan-PDF uploaden mislukt, val terug op HTML-momentopname:', e);
+    pdfPath = null;
+  }
+  if (!pdfPath) _toast('Link aangemaakt zonder PDF: de klant ziet de HTML-versie en kan niet downloaden. Maak de link opnieuw voor een PDF.');
+  body.innerHTML = 'Bezig met aanmaken\u2026';
+
   const calcCfg = (calc.offerteConfig && typeof calc.offerteConfig === 'object') ? calc.offerteConfig : {};
   try {
     await _sb.from('offerte_accorderingen').delete().eq('onderhoudsplan_id', plan.id).eq('status', 'open');
@@ -23092,7 +23232,7 @@ async function _ohpAccordNieuweLink(plan, calc, body, invoer) {
         klantEmail: invoer.email,
         geldigTot: invoer.geldig || ''
       },
-      pdf_path: null, // planlinks hebben geen PDF; de klantpagina toont de HTML-momentopname
+      pdf_path: pdfPath, // v4.61.0 — raster-PDF in accord-pdf; null als het maken mislukte (klantpagina valt dan terug op de HTML)
       bedrag: null    // geen bedrag in de akkoordzin (besluit 29-08-2026)
     });
     if (error) throw error;

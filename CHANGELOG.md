@@ -1,3 +1,41 @@
+## v4.61.1 — Op een vergrendeld plan kun je weer een ander plan kiezen
+
+Reparatie op v4.60.0, gemeld na de eerste dag gebruik. Het planslot zette ook de **bronkiezer** vast: het zoekveld, de statusvinkjes en de knop **Wijzig** naast de bron-calculatie. Met een verzonden plan open kwam je zo niet meer bij een ander plan en zat de hele tab vast.
+
+Een ander plan kiezen is navigatie, geen wijziging aan het bevroren plan. Die drie werken nu altijd; het gekozen plan bepaalt daarna zelf of het slot aan- of uitgaat. Verder niets veranderd.
+
+Onder de kap: JS-borg uit `_ohpWijzigBron`, `lock-allowed` op de knop Wijzig, en een CSS-uitzondering voor `input` en `button` binnen `#ohpBronWrap` en `#ohpBronCompact`. Geen SQL.
+
+## v4.61.0 — De planlink heeft nu een PDF (route 2, brok A)
+
+### Wat er nu kan
+
+Bij het aanmaken van een accordeerlink voor een onderhoudsplan wordt de bijlage voortaan ook als **PDF bevroren** en in dezelfde besloten bak `accord-pdf` gezet als de offerte-PDF. De klantpagina toont die PDF met de knop **Onderhoudsplan openen of downloaden (PDF)**. In het linkbeheer zie je of er een PDF bevroren is en kun je hem met **Bevroren PDF downloaden** zelf ophalen: exact wat de klant heeft ontvangen, voor in Yoobi.
+
+De PDF is een **rasterweergave** van de gepagineerde brochure: tekst is niet selecteerbaar of doorzoekbaar. De twee vellen algemene voorwaarden gaan wel scherp mee. Mislukt het maken (bibliotheek niet geladen, upload mislukt), dan gaat de link **toch** de deur uit met alleen de HTML-versie en krijg jij een melding; een nieuwe link maakt dan alsnog een PDF.
+
+Nog niet in deze brok: GEACCORDEERD-stempel, akkoordbevestiging, mail B met knop en de regel in Archiveren. Dat is brok B, na goedkeuring van de rasterkwaliteit op een echt plan.
+
+### Hoe het onder de kap zit
+
+- Nieuwe `_ohpPlanPdfBlob(plan, calc, voortgang)`: dezelfde bouwroute als `_ohpAccordSnapshotHtml` (dus dezelfde paginering), `printArea` tijdelijk zichtbaar buiten beeld, per `.ob .page` html2canvas op schaal 2 naar JPEG 0,85, met pdf-lib als A4-pagina gebundeld; AV-vellen als PNG rechtstreeks. Geeft een Blob of null, gooit nooit, herstelt `printArea` altijd. **Dit is de enige plek die weet hoe de PDF ontstaat**; route 3 vervangt alleen deze functie.
+- `html2canvas@1.4.1` wordt van jsdelivr geladen, na pdf-lib.
+- `_ohpAccordNieuweLink`: PDF maken met voortgang per pagina, oude PDF van de vorige open planlink van dit plan weg via de Storage-API (niet SQL), upload onder `{token}.pdf`, `pdf_path` gezet; bij fout `null` plus toast. `snapshot.pdf` bewust niet gezet: `offerte-accord` vult die met een ondertekende link.
+- Klantpagina: de bestaande vertakking op `pdfUrl` doet het werk; alleen de woorden volgen nu `docWoord`/`isPlan`.
+- Linkbeheer: PDF-status en knop; nieuwe `_ohpAccordPdfDownload` via `storage.download` met eigen inlog, bestandsnaam `{plannaam} - verzonden.pdf`.
+
+### Wat niet in de sandbox getest kon worden
+
+html2canvas zelf (niet bereikbaar in de bouwomgeving) en of `offerte-accord` voor planlinks met `pdf_path` een ondertekende link teruggeeft. Zestien slice-tests met echte pdf-lib en mock html2canvas zijn groen.
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Geen SQL.
+2. Proefplan (particulier, met planbrief, ligging en voorfinancieringsgrafiek): link aanmaken, op de voortgangstekst letten, in het linkbeheer **Bevroren PDF downloaden** en de pagina's vergelijken met Offerte OHP. Bestandsgrootte en duur noteren.
+3. Klantpagina openen via **Zelf bekijken**: toont hij de PDF met downloadknop? Zo niet, dan moet `offerte-accord` aangepast worden (zie ontwerpmemo A5) en heb ik de GET-afhandeling rond `pdf_path` nodig.
+4. Hetzelfde met een VvE-proefplan.
+5. Een gewone offerte-link openen: die moet er precies zo uitzien als voorheen.
+
 ## v4.60.0 — Onderhoudsplannen gaan op slot na verzenden (brok planslot)
 
 ### Wat er nu kan

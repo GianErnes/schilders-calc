@@ -4053,3 +4053,58 @@ bannertekst voor oude plannen). Niet getest in de sandbox en dus aan Gian:
 de vergrendeling op het scherm en op de iPad, de mailroute tegen de echte
 Edge Function, en gelijke Σ-bedragen voor en na vergrendelen op een echt
 plan.
+
+
+## PDF bij de plan-accordeerlink, route 2 brok A (3 september 2026, v4.61.0)
+
+Planlinks hadden sinds v4.51.0 `pdf_path` leeg: de klantpagina toonde de
+HTML-momentopname, er was niets te downloaden en Gian kon het verzonden
+document niet voor Yoobi opslaan. Gekozen route (ontwerpmemo 3 september,
+`Ontwerpmemo_plan_pdf_route2.md`): een rasterweergave van de gepagineerde
+brochure als PDF, via dezelfde keten als de offerte-PDF, in twee brokken.
+Later kan route 3 (herbouw van de brochure in pdfmake) alleen de bron van
+de PDF vervangen; de keten blijft.
+
+**De scheidingslijn.** `_ohpPlanPdfBlob(plan, calc, voortgang)` is de enige
+functie die weet hoe de PDF ontstaat. Hij bouwt het document via exact de
+weg van `_ohpAccordSnapshotHtml` (dus dezelfde paginering als de
+HTML-momentopname), zet `printArea` tijdelijk zichtbaar buiten beeld,
+rastert elke pagina met html2canvas 1.4.1 (nieuw geladen van jsdelivr) op
+schaal 2 naar JPEG en bundelt die met pdf-lib tot A4-pagina's; de twee
+AV-vellen gaan als PNG scherp mee. Geeft een Blob of null en gooit nooit.
+
+**De keten.** `_ohpAccordNieuweLink` uploadt de blob naar `accord-pdf`
+onder `{token}.pdf` en zet `pdf_path`; de PDF van de vorige open planlink
+van hetzelfde plan gaat eerst weg via de Storage-API (nooit via SQL, zie
+de wezen-les van 27 juli). Mislukt het maken of uploaden, dan gaat de link
+toch de deur uit met alleen HTML en krijgt Gian een toast (besluit
+03-09-2026: de klant niet laten wachten op een PDF). `snapshot.pdf` wordt
+niet door de app gezet: `offerte-accord` vult die bij elke opening met een
+ondertekende link van zestig minuten, zoals bij offertes sinds v4.40.0.
+De klantpagina kiest op `pdfUrl` al vanzelf de PDF-viewer; alleen de
+woorden volgen nu het documenttype. In het linkbeheer staat de knop
+Bevroren PDF downloaden (`storage.download` met eigen inlog).
+
+**Open punt: `offerte-accord`.** Of de functie voor een planlink met
+`pdf_path` de ondertekende link teruggeeft, hangt ervan af of de PDF-tak
+op `soort` vertakt. De code is niet gezien. Wordt vastgesteld met een
+proeflink; zo nodig is het een kleine, gerichte wijziging die Gian plakt.
+
+**Brok B (nog niet gebouwd):** GEACCORDEERD-stempel op planpagina's
+(besluit 03-09-2026: ja), akkoordbevestiging met de betaalkeuze in plaats
+van het bedrag, knop Getekend exemplaar in het linkbeheer, regel
+Geaccordeerd onderhoudsplan in Archiveren, mail B met knop. Voorwaarde:
+de rasterkwaliteit van brok A is op een echt plan goedgekeurd.
+
+Niet in de sandbox te testen: html2canvas zelf en de Edge Function.
+Zestien slice-tests met echte pdf-lib en een mock-html2canvas groen.
+
+
+**Correctie 3 september 2026 (v4.61.1) op het planslot van v4.60.0.** De
+bronkiezer (zoekveld, statusvinkjes, knop Wijzig) valt bewust **buiten**
+het slot: een ander plan kiezen is navigatie. Het slot wordt per geopend
+plan opnieuw bepaald in `_ohpRenderInhoud`. In v4.60.0 zat de kiezer wel op
+slot, waardoor de tab vastliep op een verzonden plan; gemeld na de eerste
+dag gebruik. Les voor volgende slotbrokken: navigatie-elementen binnen de
+sectie eerst apart benoemen voordat een sectiebrede CSS-regel eroverheen
+gaat.
