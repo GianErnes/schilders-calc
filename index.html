@@ -191,6 +191,30 @@
     background: transparent !important;
     cursor: pointer !important;
   }
+  /* v4.60.0 — Zelfde slot op de Onderhoudsplan-tab: status ≠ concept bevriest het plan.
+     Knoppen met lock-allowed (status, print, Offerte OHP, accordeerlink, Σ) blijven werken.
+     De beurt-modal, het planbriefvenster en het Σ-paneel staan buiten #onderhoud en hebben
+     een eigen JS-borg (_isOhpLocked) in hun openfunctie. */
+  #onderhoud.is-locked input,
+  #onderhoud.is-locked select,
+  #onderhoud.is-locked textarea,
+  #onderhoud.is-locked button:not(.lock-allowed) {
+    pointer-events: none;
+    opacity: 0.55;
+    background: var(--bg) !important;
+    cursor: not-allowed;
+  }
+  #onderhoud.is-locked input[type="number"],
+  #onderhoud.is-locked input[type="text"] {
+    border-color: var(--border) !important;
+  }
+  #onderhoud.is-locked .calc-lock-banner button,
+  #onderhoud.is-locked select#ohpStatus {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+  }
+  #onderhoud.is-locked select#ohpStatus { background: #fff !important; }
 
   /* BUTTONS */
   .btn {
@@ -2301,8 +2325,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.59.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.60.0</h2>
       <div class="intro-body">
+        <p><strong>🔒 Onderhoudsplannen gaan op slot na verzenden (v4.60.0).</strong> Een onderhoudsplan met status Gereed, Verzonden, Geaccepteerd of Verloren is voortaan bevroren, precies zoals een calculatie dat al sinds v3.7.0 is. Bovenaan de Onderhoudsplan-tab verschijnt de bekende gele slotbanner; prijspeil, looptijd, indexering, beurten, percentages, externe posten, ligging en planbrief zijn dan niet meer aan te raken. Printen, Offerte OHP, de accordeerlink en de Σ-verantwoording blijven gewoon werken. Bij het vergrendelen legt het plan nu ook zijn eigen bevroren instellingen vast (tarieven, opslagen, BTW), zodat een latere tariefwijziging een verzonden plan niet meer stil verandert. Mailen via het accordeervenster zet de status op Verzonden en laat het slot dus vanzelf dichtvallen; wijzigen kan alleen nog na bewust terugzetten naar Concept. Het afvinken van uitgevoerde beurten in de Planning-tab blijft mogelijk. Let op: de regels van de bron-calculatie zelf vallen niet onder dit slot; vergrendel de calculatie dus ook. Eenmalige SQL nodig (kolom settings_snapshot).</p>
         <p><strong>📄 Geen lege vellen meer achter de planvoorwaarden (v4.59.1).</strong> De voorwaardenpagina's achter het plandocument sleepten elk een leeg vel mee, dus een plan van acht pagina's kwam op twaalf uit in plaats van tien. Het beeld stond op de tekstbasislijn en daar reserveert de browser ruimte onder voor staartletters, net genoeg om het blok over de paginahoogte te duwen. Het beeld staat nu als blok op het vel. Alleen weergave bij printen, aan de inhoud verandert niets.</p>
         <p><strong>📜 De algemene voorwaarden zitten nu bij het plan (v4.59.0).</strong> De klantprint van de plan-bijlage en elk nieuw accordsnapshot eindigen voortaan op de twee pagina's algemene voorwaarden, precies zoals de gewone offerte dat sinds v3.61.0 doet. De planbrief beloofde bijsluiting en de akkoordzin op de klantpagina noemde ze al; nu kloppen belofte en document met elkaar. Een VvE-plan krijgt de zakelijke set en anders volgt de variant het klanttype van de calculatie. Bestaande bevroren snapshots veranderen niet mee; het interne Print onderhoudsplan blijft bewust zonder.</p>
         <p><strong>🔢 Het per-stap-label zegt hoeveel (v4.58.0).</strong> In de per-stap-modus van het beurtvenster toont een dichtgeklapte regel nu het echte percentage: alles 70% als alle stappen gelijk staan en het bereik zoals 40 tot 100% als ze uiteenlopen. Uit blijft het woord voor een regel die helemaal op nul staat. Het snelveld Zet alle stappen op toont voortaan de waarde die er feitelijk staat: staan alle stappen van de hoofdgroep gelijk dan staat dat getal in het veld, ook na het opnieuw openen van het venster. Wijkt er daarna één stap af, dan loopt het veld leeg en vertellen de regellabels het verhaal. Puur weergave, de berekening is niet geraakt.</p>
@@ -2775,6 +2800,7 @@
     </div>
     <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.85rem;"><em>Onderhoudsplan op basis van een opgeslagen calculatie. Per beurt schalen op algemeen, per regel of per stap. Bedragen geïndexeerd vanaf prijspeil, incl. BTW.</em></p>
 
+    <div id="ohpLockBanner"></div><!-- v4.60.0 — slotbanner, gevuld door _applyOhpLockUI -->
     <details class="settings-section" id="ohpParamsToggle" open style="padding: 0;">
       <summary style="cursor: pointer; padding: 1rem; list-style: none; user-select: none;">
         <span style="display: inline-flex; align-items: center; gap: 0.5rem;">
@@ -2884,9 +2910,9 @@
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
             <h3 style="margin: 0;">Beurten</h3>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-              <button class="btn btn-secondary" onclick="_ohpPrint()" title="Print het onderhoudsplan voor de klant">🖨 Print onderhoudsplan</button>
-              <button class="btn" onclick="_ohpPrintOfferte()" title="Genereer het vormgegeven Onderhoudsgarantie+ plan (PDF) voor bij de offerte">📄 Offerte OHP</button>
-              <button class="btn" onclick="ohpAccordLinkBeheer()" title="Maak of beheer de accordeerlink van dit onderhoudsplan">🔗 Accordeerlink</button>
+              <button class="btn btn-secondary lock-allowed" onclick="_ohpPrint()" title="Print het onderhoudsplan voor de klant">🖨 Print onderhoudsplan</button>
+              <button class="btn lock-allowed" onclick="_ohpPrintOfferte()" title="Genereer het vormgegeven Onderhoudsgarantie+ plan (PDF) voor bij de offerte">📄 Offerte OHP</button>
+              <button class="btn lock-allowed" onclick="ohpAccordLinkBeheer()" title="Maak of beheer de accordeerlink van dit onderhoudsplan">🔗 Accordeerlink</button>
               <button class="btn" onclick="ohpBriefConfig()" title="Stel de brief samen die voor de bijlage komt (alleen particulier)">✉️ Planbrief</button>
               <button class="btn" onclick="_ohpAddBeurt()">+ Beurt toevoegen</button>
             </div>
@@ -3625,7 +3651,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.59.1';
+const APP_VERSION = 'v4.60.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -4021,6 +4047,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.60.0', d: '2026-09-03', h: 'Vergrendeling van onderhoudsplannen (brok planslot), spiegel van het calc-slot uit v3.7.0. Aanleiding: na het mailen van een plan sprong de status wel naar Verzonden (v4.51.0) maar dat was een kaal label; alle velden bleven bewerkbaar en een plan werd na verzending per ongeluk aangepast (03-09-2026). Nieuwe helper _isOhpLocked(plan): status ≠ concept (een plan kent geen Afspraak). _applyOhpLockUI zet de klasse is-locked op #onderhoud en vult #ohpLockBanner met dezelfde .calc-lock-banner-opmaak plus knop Naar concept; aangeroepen op alle drie uitgangen van _ohpRenderInhoud. CSS: kopie van de #calculatie.is-locked-regels voor #onderhoud, met lock-allowed op Print onderhoudsplan, Offerte OHP, Accordeerlink en de Σ-knop per beurt, en een uitzondering voor select#ohpStatus zelf zodat ontgrendelen kan. De beurt-modal, het planbriefvenster en het Σ-paneel staan buiten de sectie, dus JS-borgen met toast in _ohpOpenBeurtModal, _ohpAddBeurt, _ohpAddExtern, _ohpDeletePlan, _ohpWijzigBron, _ohpLiggingVernieuw, _ohpLiggingVerwijder en ohpBriefConfig (patroon r.17792 bij de calc). Laag 2, eigen bevroren instellingen: kolom settings_snapshot jsonb null op onderhoudsplannen (idempotente SQL in sql/), gemapt in _mapOhpFromDB en _mapOhpToDB. Nieuwe _ohpEffectieveSettings(plan, calc): plan-snapshot, dan calc-snapshot, dan live; vervangt de vier losse lezers (_ohpBeurtBasisBedrag, _ohpBronCalcBtw, _ohpMbRenderPerRegel, _ohpMbRenderPerStap). De Σ-trace kent een derde bron plan-snapshot met eigen tekst in het paneel. Centrale statusroute _ohpSetStatus(status): bij vergrendelen snapshot = diepe kopie van _ohpEffectieveSettings(null, calc), bij terug naar concept null; gerichte update van status, settings_snapshot en gewijzigd (bewust niet via _ohpFlushSave, die bij leeg prijspeil niets opslaat); bij een DB-fout geheugen en dropdown terugdraaien met toast (patroon v4.11.1); daarna slot, beurtenlijst en resultaat hertekenen. ohpStatus is uit de generieke input/change-lijst gehaald en heeft een eigen change-handler _ohpStatusWissel die zonder opgeslagen plan terugvalt op _ohpFlushSave. De mailroute in het planvenster gebruikt voor het geopende plan nu _ohpSetStatus in plaats van een losse update; voor een niet-geopend plan blijft de oude kale update staan. Gewone plan-saves via _mapOhpToDB dragen de snapshot mee (zelfde patroon als calc); een vergrendeld plan zonder snapshot (vergrendeld vóór deze versie) krijgt dat in de banner gemeld en rekent zoals voorheen met de bron-calc. Bewust buiten deze brok: bevroren totaalbedrag per plan voor het dashboard, en de regels van de bron-calc zelf. Namen _isOhpLocked, _applyOhpLockUI, _ohpSetStatus, _ohpStatusWissel, _ohpEffectieveSettings en ohpLockBanner vooraf op nul treffers gecontroleerd. Vereist SQL (los geleverd). Geen Edge Function.' },
   { v: '4.59.1', d: '2026-08-31', h: 'Reparatie op v4.59.0: achter elk voorwaardenvel van het plandocument schoof een leeg vel door, een plan van acht pagina\u0027s werd twaalf in plaats van tien (GEMETEN in een echte print: pagina 9 en 11 dragen het beeld, 10 en 12 zijn leeg, paginaformaat 841,92pt). Oorzaak: de globale regel .print-only .dpv-vw-img zet het beeld op display:inline-block, waardoor het op de tekstbasislijn staat en de browser eronder ruimte reserveert voor staartletters; die regelruimte erft van .ob met 10,5pt en regelafstand 1,55, dus ruwweg 1,5 tot 2mm onder het beeld. Beeld 296mm plus die strook is meer dan de 297mm van het vel, dus schoof de lege rest door. Dat het lege vel ook achter het laatste beeld staat sluit botsende paginabreuken uit als verklaring, want verticale marges staan niet op het blok. Opgelost met display:block en margin 0 auto op het beeld (van de basislijn af, en auto centreert wat text-align bij een blok niet meer doet), line-height 0 op de wikkel als borg tegen nieuwe regelruimte, en max-height van 296 naar 295mm voor speling tegen afrondingen in de printmotor. Onzichtbaar op het oog, de beelden hebben zelf ruime witranden. Beide regels blijven binnen .print-only .ob, dus de gewone offerte is opnieuw niet geraakt. De CSS reist mee in het snapshot, dus elke accordeerlink die na deze release wordt gemaakt is goed; onder v4.59.0 was er nog geen planlink aangemaakt (bevestigd 31-08-2026).' },
   { v: '4.59.0', d: '2026-08-31', h: 'Algemene voorwaarden achterin het plandocument (brok planvoorwaarden). Aanleiding: de planbrief belooft bijgevoegde voorwaarden en de akkoordvink op de klantpagina zegt bij een plan al inclusief de algemene voorwaarden, maar het plandocument sloot niets bij terwijl de gewone offerte dat sinds v3.61.0 doet. Nieuwe helper _ohpAvKlanttype(plan, calc): ontvangertype vve wint altijd (zakelijke beelden via de alias van v3.88.0), anders volgt de variant het klanttype van de bron-calculatie met dezelfde normalisatie als _offCfg, alles behalve zakelijk en vve wordt consument, want _bouwVoorwaardenHtml behandelt elke niet-consument als zakelijk en een leeg klanttype zou anders stil de verkeerde set geven. In de return van _ohpBuildOfferteHTML staan de twee dpv-vw-blokken uit het ongewijzigde _bouwVoorwaardenHtml na de sluitdiv van #obBlocks binnen #obRoot: _ohpPaginate loopt alleen over de kinderen van #obBlocks en laat ze staan, _ohpPreloadImages pakt alle beelden in #printArea dus ook deze, en de laatste planpagina verliest zijn :last-child waardoor page-break-after:always de voorwaarden op een vers vel zet met de dpv-pagebreak als tweede borg. Twee scoped CSS-regels in de plan-cssHtml (.print-only .ob .dpv-vw en .print-only .ob .dpv-vw-img): de dpv-marges van min 1,5cm horen bij de printmarge van de gewone offerte terwijl dit document met @page margin 0 print, dus hier marge nul en het beeld op maximaal 296mm hoogte; de vier beelden zijn exact A4-verhouding (1241 bij 1754 gemeten) dus de breedte valt op ruim 209mm en de bestaande text-align centreert. _ohpAccordSnapshotHtml herschrijft src=av- naar absolute URLs met _base, letterlijk het patroon van v3.63.1, omdat de AV-beelden de enige relatieve paden in het snapshot zijn (alle logo\u0027s data-URI, ligging data-URL); data-URI inbakken zou elk snapshot ruim een halve MB zwaarder maken. Klantprint (_ohpPrintOfferte) en accordsnapshot delen de bouwer, dus \u00e9\u00e9n invoegpunt dekt beide; de interne print (_ohpPrint, eigen bouwer) blijft bewust zonder voorwaarden. Besluiten 31-08-2026: variantregel VvE-wint-anders-klanttype en lopende open links laten lopen. Gewone offerte en _bouwVoorwaardenHtml byte voor byte ongemoeid. Geen SQL, geen Edge Function.' },
   { v: '4.58.0', d: '2026-08-31', h: 'Per-stap-label zegt hoeveel (brok staplabel). Puur weergave in de per-stap-modus van de beurt-bewerkmodal; aanleiding was een melding dat het snelveld het percentage leek te vergeten terwijl de waarden aantoonbaar goed stonden. _ohpMbStapSamenvatting bepaalt nu min en max over de stappen van de regel (afwezige sleutel telt als 100): gelijk wordt alles X%, alles nul blijft uit en gemengd wordt het bereik min tot max%, geformatteerd via het nieuwe _ohpMbPctTekst met nl-notatie (12,5 met komma). Het label variabel is daarmee weg. Het snelveld Zet alle stappen op krijgt zijn waarde uit het nieuwe _ohpMbPsSnelWaarde: staan alle stappen van de hoofdgroep gelijk dan staat dat getal in het veld (als value-attribuut met punt, het is een number-input), anders leeg. Geen geheugen maar een meting, dus het veld kan nooit een waarde tonen die niet meer klopt en het overleeft het opnieuw openen van het venster. Besluiten 31-08-2026: bereik boven aantal-aangepast, afgeleid boven letterlijk onthouden. Rekenkern, handlers en kopieermenu onaangeraakt. Namen _ohpMbPctTekst en _ohpMbPsSnelWaarde vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
@@ -7205,6 +7232,7 @@ function _mapOhpFromDB(row) {
     toonVoorfinanciering: row.toon_voorfinanciering === true, // v4.46.0 - kolom bestaat sinds 28-08, nu pas gemapt
     offerteConfig: (row.offerte_config && typeof row.offerte_config === 'object') ? row.offerte_config : {}, // v4.52.0 - alleen-lezen; bewust NIET in _mapOhpToDB (schrijven gaat gericht via lees-samenvoeg-schrijfrondes)
     status:        row.status || 'concept',               // v3.25.10 — los van calc-status; 5 waarden
+    settingsSnapshot: row.settings_snapshot || null,      // v4.60.0 — bevroren instellingen zodra het plan vergrendeld is (status ≠ concept)
     ligging:       row.ligging || null,                   // v4.22.0 - { pad, rdX, rdY, span, laag, weerzijde, gemaakt }
     aangemaakt:    row.aangemaakt || null,
     gewijzigd:     row.gewijzigd  || null,
@@ -7228,6 +7256,7 @@ function _mapOhpToDB(p) {
     abo_aantal_maanden: p.aboAantalMaanden != null ? p.aboAantalMaanden : null,        // v4.45.0
     toon_voorfinanciering: p.toonVoorfinanciering === true,                            // v4.46.0
     status:         p.status || 'concept',              // v3.25.10
+    settings_snapshot: p.settingsSnapshot || null,      // v4.60.0
     ligging:        p.ligging || null,                  // v4.22.0 - liggingsfoto: pad + parameters
     gewijzigd:      new Date().toISOString()
   };
@@ -8391,6 +8420,7 @@ let _ohpFilter = {
 // andere bron in de lijst zet 'm automatisch terug op false.
 let _ohpBronEditing = false;
 function _ohpWijzigBron() {
+  if (_isOhpLocked(_ohpState.plan)) { _toast('Dit onderhoudsplan is vergrendeld. Zet de status op Concept om aan te passen.'); return; }
   _ohpBronEditing = true;
   _ohpRenderHuidigeBron();
 }
@@ -8610,6 +8640,101 @@ function _ohpToggleAboVelden() {
 }
 
 // Toont/verbergt het plan-blok (beurten + resultaat) op basis van state.
+// ============================================================
+// v4.60.0 — VERGRENDELING ONDERHOUDSPLAN (spiegel van _isCalcLocked / setCalcStatus)
+// ============================================================
+// Een plan is vergrendeld zodra zijn eigen status ≠ concept. Het plan heeft geen
+// status Afspraak (ontstaat per definitie na opname), dus alleen concept is open.
+function _isOhpLocked(plan) {
+  if (!plan) return false;
+  return !!plan.status && plan.status !== 'concept';
+}
+// Instellingen waarmee het plan rekent: eigen bevroren set gaat voor, daarna de
+// bevroren set van de bron-calculatie, daarna live. Eén plek, vier lezers.
+function _ohpEffectieveSettings(plan, calc) {
+  if (plan && plan.settingsSnapshot) return plan.settingsSnapshot;
+  if (calc && calc.settingsSnapshot) return calc.settingsSnapshot;
+  return data.settings;
+}
+// Banner + read-only-klasse op #onderhoud. Aanroepen bij openen, statuswissel en na mailen.
+function _applyOhpLockUI() {
+  const panel = document.getElementById('onderhoud');
+  const banner = document.getElementById('ohpLockBanner');
+  if (!panel || !banner) return;
+  const plan = _ohpState.plan;
+  const locked = _isOhpLocked(plan);
+  panel.classList.toggle('is-locked', locked);
+  if (!locked) { banner.innerHTML = ''; return; }
+  const STATUS_LABELS = { gereed:'Gereed', verzonden:'Verzonden', geaccepteerd:'Geaccepteerd', verloren:'Verloren' };
+  const lbl = STATUS_LABELS[plan.status] || plan.status;
+  const bronZin = plan.settingsSnapshot
+    ? 'Dit plan is bevroren met de instellingen die golden op het moment van vergrendelen.'
+    : 'Let op: dit plan is vergrendeld maar heeft nog geen eigen bevroren instellingen (vergrendeld vóór v4.60.0); het rekent met de bron-calculatie.';
+  banner.innerHTML = `<div class="calc-lock-banner" style="margin-bottom: 1rem;">
+    <span style="font-size:1.3rem;">🔒</span>
+    <div style="flex:1;">
+      <strong>Vergrendeld — status is ${lbl}.</strong>
+      ${bronZin}
+      Beurten, percentages, looptijd en planbrief zijn op slot; printen, Offerte OHP, de accordeerlink en de Σ-verantwoording blijven werken.
+      Zet status op <em>Concept</em> om aan te passen.
+    </div>
+    <button class="btn-secondary btn lock-allowed" style="font-size:0.8rem;" onclick="_ohpSetStatus('concept')">Naar concept</button>
+  </div>`;
+}
+// Centrale statusroute. Bij vergrendelen: snapshot = diepe kopie van wat het plan op dat
+// moment effectief gebruikt (calc-snapshot als de calc al vast staat, anders live). Bij
+// terug naar concept: snapshot weg. Gerichte update van status + snapshot + gewijzigd, zodat
+// dit ook werkt als prijspeil/looptijd leeg zijn (dan slaat _ohpFlushSave namelijk niets op).
+async function _ohpSetStatus(status) {
+  const plan = _ohpState.plan;
+  if (!plan || !plan.id) { _toast('Geen opgeslagen plan geladen'); return false; }
+  const oudeStatus = plan.status;
+  const oudSnapshot = plan.settingsSnapshot;
+  const wasLocked = _isOhpLocked(plan);
+  plan.status = status || 'concept';
+  const isNowLocked = _isOhpLocked(plan);
+  if (isNowLocked && !plan.settingsSnapshot) {
+    const calc = _ohpBronCalc();
+    plan.settingsSnapshot = JSON.parse(JSON.stringify(_ohpEffectieveSettings(null, calc)));
+  } else if (!isNowLocked && wasLocked) {
+    plan.settingsSnapshot = null;
+  }
+  try {
+    const { error } = await _sb.from('onderhoudsplannen')
+      .update({ status: plan.status, settings_snapshot: plan.settingsSnapshot || null, gewijzigd: new Date().toISOString() })
+      .eq('id', plan.id);
+    if (error) throw error;
+  } catch (e) {
+    // Niet stil doorvergrendelen (patroon v4.11.1): geheugen terugdraaien en melden.
+    plan.status = oudeStatus;
+    plan.settingsSnapshot = oudSnapshot;
+    const el = document.getElementById('ohpStatus');
+    if (el) el.value = oudeStatus || 'concept';
+    _toast('Statuswissel mislukt: ' + (e.message || e));
+    _applyOhpLockUI();
+    return false;
+  }
+  const el = document.getElementById('ohpStatus');
+  if (el) el.value = plan.status;
+  _applyOhpLockUI();
+  // Bedragen kunnen anders zijn na (ont)bevriezen: beurtenlijst en resultaat opnieuw.
+  _ohpRenderBeurtenLijst();
+  _ohpRenderResultaat();
+  return true;
+}
+// Dropdown-handler: vervangt de generieke input/change-binding op ohpStatus.
+function _ohpStatusWissel(ev) {
+  const el = ev && ev.target ? ev.target : document.getElementById('ohpStatus');
+  if (!el) return;
+  const plan = _ohpState.plan;
+  if (!plan || !plan.id) {
+    // Nog geen plan: de status gaat gewoon mee in de eerste opslag via _ohpFlushSave.
+    _ohpFlushSave();
+    return;
+  }
+  _ohpSetStatus(el.value || 'concept');
+}
+
 function _ohpRenderInhoud() {
   const leeg = document.getElementById('ohpLeeg');
   const blok = document.getElementById('ohpPlanBlok');
@@ -8618,12 +8743,14 @@ function _ohpRenderInhoud() {
     leeg.style.display = '';
     leeg.innerHTML = '<em>Kies een bron-calculatie om te beginnen.</em>';
     blok.style.display = 'none';
+    _applyOhpLockUI(); // v4.60.0
     return;
   }
   if (!_ohpState.plan) {
     leeg.style.display = '';
     leeg.innerHTML = '<em>Vul prijspeil en looptijd in. Het plan wordt aangemaakt zodra beide velden zijn ingevuld.</em>';
     blok.style.display = 'none';
+    _applyOhpLockUI(); // v4.60.0
     return;
   }
   leeg.style.display = 'none';
@@ -8632,6 +8759,7 @@ function _ohpRenderInhoud() {
   _ohpRenderBeurtenLijst();
   _ohpRenderExternLijst();
   _ohpRenderResultaat();
+  _applyOhpLockUI(); // v4.60.0
 }
 
 // Indexering-factor: prijs op jaar X t.o.v. prijspeil-jaar.
@@ -8788,8 +8916,8 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
   if (!plan) return 0;
   const calc = _ohpBronCalc();
   if (!calc || !calc.__loaded) return 0;
-  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
-  const tr = metTrace ? { bron: (calc.settingsSnapshot ? 'snapshot' : 'live'), modus: beurt.modus, regels: [], staart: [] } : null;
+  const sett = _ohpEffectieveSettings(plan, calc); // v4.60.0 — plan-snapshot, dan calc-snapshot, dan live
+  const tr = metTrace ? { bron: (plan.settingsSnapshot ? 'plan-snapshot' : (calc.settingsSnapshot ? 'snapshot' : 'live')), modus: beurt.modus, regels: [], staart: [] } : null;
 
   // 1. Bouw scaling-maps op basis van modus.
   let regelScaling = null;
@@ -9158,6 +9286,7 @@ async function _ohpLiggingOphalen() {
 }
 
 async function _ohpLiggingVerwijder() {
+  if (_isOhpLocked(_ohpState.plan)) { _toast('Dit onderhoudsplan is vergrendeld.'); return; }
   const plan = _ohpState.plan;
   if (!plan || !plan.ligging || !plan.ligging.pad || !_sb) return;
   if (!confirm('De liggingsfoto verwijderen? Hij verdwijnt dan ook van de brochure.')) return;
@@ -9170,7 +9299,7 @@ async function _ohpLiggingVerwijder() {
   _toast('Liggingsfoto verwijderd');
 }
 
-function _ohpLiggingVernieuw()  { _ohpLiggingInstellen = true;  _ohpRenderLigging(); }
+function _ohpLiggingVernieuw()  { if (_isOhpLocked(_ohpState.plan)) { _toast('Dit onderhoudsplan is vergrendeld.'); return; } _ohpLiggingInstellen = true;  _ohpRenderLigging(); }
 function _ohpLiggingAnnuleer()  { _ohpLiggingInstellen = false; _ohpRenderLigging(); }
 
 // Zet de foto uit Storage in het img-element van de sectie.
@@ -9324,7 +9453,7 @@ function _ohpNaamSuggestie() {
 function _ohpBronCalcBtw() {
   const calc = _ohpBronCalc();
   if (!calc) return 21;
-  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+  const sett = _ohpEffectieveSettings(_ohpState.plan, calc); // v4.60.0
   return sett.btw != null ? parseFloat(sett.btw) : 21;
 }
 
@@ -9381,9 +9510,11 @@ function _ohpVerHtml(b, tr, basis, plan) {
   let h = '';
 
   // 0. Bron van de instellingen
-  const bronTekst = tr.bron === 'snapshot'
-    ? 'Vergrendelde momentopname (settingsSnapshot) \u2014 live tariefwijzigingen tellen niet mee.'
-    : 'Live instellingen \u2014 de calculatie is niet vergrendeld.';
+  const bronTekst = tr.bron === 'plan-snapshot'
+    ? 'Bevroren met het plan (settingsSnapshot van het onderhoudsplan) \u2014 live tariefwijzigingen tellen niet mee.' // v4.60.0
+    : tr.bron === 'snapshot'
+    ? 'Vergrendelde momentopname (settingsSnapshot van de bron-calculatie) \u2014 live tariefwijzigingen tellen niet mee.'
+    : 'Live instellingen \u2014 plan en calculatie zijn niet vergrendeld.';
   h += `<div style="font-size:0.75rem; color:var(--muted); margin-bottom:0.6rem;">Instellingen: ${bronTekst}</div>`;
 
   // 1. Schaal-modus
@@ -9570,7 +9701,7 @@ function _ohpRenderBeurtenLijst() {
       <td class="right"><strong>${eur(geindIncBtw)}</strong></td>
       <td style="text-align: center;"><input type="checkbox" ${mee ? 'checked' : ''} onchange="_ohpUpdBeurtVeld('${b.id}','meeInGemiddelde',this.checked)"></td>
       <td class="right">
-        <button class="btn btn-sm" title="Rekenverantwoording" onclick="_ohpOpenVerantwoording('${b.id}')">Σ</button>
+        <button class="btn btn-sm lock-allowed" title="Rekenverantwoording" onclick="_ohpOpenVerantwoording('${b.id}')">Σ</button>
         <button class="btn btn-sm" onclick="_ohpOpenBeurtModal('${b.id}')">Bewerken</button>
         <button class="btn btn-danger btn-sm" onclick="_ohpDeleteBeurt('${b.id}')">×</button>
       </td>
@@ -10396,6 +10527,7 @@ async function _planningDeleteHandmatig() {
 
 // Voeg een lege beurt toe. Default-jaar = laatste beurtjaar+1, of prijspeil.
 async function _ohpAddBeurt() {
+  if (_isOhpLocked(_ohpState.plan)) { _toast('Dit onderhoudsplan is vergrendeld. Zet de status op Concept om aan te passen.'); return; }
   const plan = _ohpState.plan;
   if (!plan) return;
   const huidige = (plan.beurten || []);
@@ -10447,6 +10579,7 @@ async function _ohpDeleteBeurt(beurtId) {
 
 // ----- Externe posten: handlers — v4.6.0 -----
 async function _ohpAddExtern() {
+  if (_isOhpLocked(_ohpState.plan)) { _toast('Dit onderhoudsplan is vergrendeld. Zet de status op Concept om aan te passen.'); return; }
   const plan = _ohpState.plan;
   if (!plan) return;
   const huidige = (plan.externPosten || []);
@@ -10484,6 +10617,7 @@ async function _ohpDeleteExtern(postId) {
 
 // Verwijder het hele plan (met bevestiging). De bron-calculatie blijft bestaan.
 async function _ohpDeletePlan() {
+  if (_isOhpLocked(_ohpState.plan)) { _toast('Dit onderhoudsplan is vergrendeld. Zet de status op Concept om aan te passen.'); return; }
   const plan = _ohpState.plan;
   if (!plan || !plan.id) { _toast('Geen plan om te verwijderen'); return; }
   const n = (plan.beurten || []).length;
@@ -10512,6 +10646,7 @@ let _ohpMbOpenRegels = new Set();
 
 // Open de bewerk-modal voor een beurt.
 function _ohpOpenBeurtModal(beurtId) {
+  if (_isOhpLocked(_ohpState.plan)) { _toast('Dit onderhoudsplan is vergrendeld. Zet de status op Concept om aan te passen.'); return; }
   const plan = _ohpState.plan;
   if (!plan) return;
   const b = (plan.beurten || []).find(x => x.id === beurtId);
@@ -10618,7 +10753,7 @@ function _ohpMbRenderPerRegel(container) {
     container.innerHTML = '<em style="color: var(--muted);">Bron-calculatie nog niet geladen.</em>';
     return;
   }
-  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+  const sett = _ohpEffectieveSettings(_ohpState.plan, calc); // v4.60.0
   const sc = _ohpMb.scaling || {};
   const regelsMap = sc.regels || {};
 
@@ -10732,7 +10867,7 @@ function _ohpMbRenderPerStap(container) {
     container.innerHTML = '<em style="color: var(--muted);">Bron-calculatie nog niet geladen.</em>';
     return;
   }
-  const sett = (calc.settingsSnapshot) ? calc.settingsSnapshot : data.settings;
+  const sett = _ohpEffectieveSettings(_ohpState.plan, calc); // v4.60.0
   const sc = _ohpMb.scaling || {};
   const stappenMap = sc.stappen || {};
 
@@ -11156,7 +11291,7 @@ function _ohpBindUIEvents() {
     });
     cb._ohpBound = true;
   });
-  ['ohpNaam', 'ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope', 'ohpAantalApp', 'ohpStatus', 'ohpBetaalmodel', 'ohpAboStart', 'ohpAboMaanden', 'ohpToonVoorfin'].forEach(id => {
+  ['ohpNaam', 'ohpPrijspeil', 'ohpLooptijd', 'ohpIndex', 'ohpBtw', 'ohpNotities', 'ohpOntvangerType', 'ohpScope', 'ohpAantalApp', 'ohpBetaalmodel', 'ohpAboStart', 'ohpAboMaanden', 'ohpToonVoorfin'].forEach(id => { // v4.60.0 - ohpStatus eruit: eigen handler _ohpStatusWissel
     const el = document.getElementById(id);
     if (el && !el._ohpBound) {
       el.addEventListener('input', _ohpScheduleSave);
@@ -11164,6 +11299,12 @@ function _ohpBindUIEvents() {
       el._ohpBound = true;
     }
   });
+  // v4.60.0 - Statuswissel via de centrale route (snapshot bevriezen/loslaten + slot).
+  const elStat = document.getElementById('ohpStatus');
+  if (elStat && !elStat._ohpBound) {
+    elStat.addEventListener('change', _ohpStatusWissel);
+    elStat._ohpBound = true;
+  }
   // v4.56.0 - Suggestieknop naast het naamveld: bron-calc-naam plus start- en eindjaar.
   const elNaamSug = document.getElementById('ohpNaamSuggestie');
   if (elNaamSug && !elNaamSug._ohpBound) {
@@ -23144,6 +23285,7 @@ async function _ohpBriefOpslaan() {
 function ohpBriefConfig() {
   const plan = _ohpState.plan;
   if (!plan || !plan.id) { _toast('Kies eerst een bron-calculatie en vul het plan in'); return; }
+  if (_isOhpLocked(plan)) { _toast('Dit onderhoudsplan is vergrendeld; de planbrief is mee bevroren. Zet de status op Concept om aan te passen.'); return; }
   if (plan.ontvangerType === 'vve') { _toast('De planbrief bestaat alleen voor particuliere plannen; de VvE-bijlage houdt zijn eigen opbouw.'); return; }
   _accordInjectStyles();
   let ov = document.getElementById('accordBeheerOverlay');
@@ -23218,18 +23360,19 @@ function _ohpPlanMailen(plan, calc, rij, body) {
     try {
       await _offerteVerzendCall(rij.token, tekst);
       if (['concept', 'gereed'].includes(plan.status)) {
-        try {
-          const { error } = await _sb.from('onderhoudsplannen')
-            .update({ status: 'verzonden', gewijzigd: new Date().toISOString() }).eq('id', plan.id);
-          if (error) throw error;
-          plan.status = 'verzonden';
-          if (_ohpState.plan && _ohpState.plan.id === plan.id) {
-            _ohpState.plan.status = 'verzonden';
-            const el = document.getElementById('ohpStatus');
-            if (el) el.value = 'verzonden';
+        // v4.60.0 - via de centrale route: status + bevroren instellingen + slot in één keer.
+        if (_ohpState.plan && _ohpState.plan.id === plan.id) {
+          const ok = await _ohpSetStatus('verzonden');
+          if (!ok) _toast('Gemaild, maar de planstatus kon niet op Verzonden gezet worden.');
+        } else {
+          try {
+            const { error } = await _sb.from('onderhoudsplannen')
+              .update({ status: 'verzonden', gewijzigd: new Date().toISOString() }).eq('id', plan.id);
+            if (error) throw error;
+            plan.status = 'verzonden';
+          } catch (e2) {
+            _toast('Gemaild, maar de planstatus kon niet op Verzonden gezet worden: ' + (e2.message || e2));
           }
-        } catch (e2) {
-          _toast('Gemaild, maar de planstatus kon niet op Verzonden gezet worden: ' + (e2.message || e2));
         }
       }
       _toast('Onderhoudsplan gemaild naar ' + email, 'ok');

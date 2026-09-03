@@ -1,3 +1,32 @@
+## v4.60.0 — Onderhoudsplannen gaan op slot na verzenden (brok planslot)
+
+### Wat er nu kan
+
+Een onderhoudsplan met status **Gereed, Verzonden, Geaccepteerd of Verloren** is voortaan bevroren, precies zoals een calculatie dat al sinds v3.7.0 is. Aanleiding: op 3 september 2026 werd een zojuist gemaild plan per ongeluk nog aangepast. De status sprong sinds v4.51.0 wel naar Verzonden, maar dat was een kaal label zonder gevolg.
+
+Bovenaan de Onderhoudsplan-tab staat nu dezelfde gele slotbanner als bij de calculatie. Prijspeil, looptijd, indexering, BTW, abonnementsvelden, beurten, percentages, externe posten, ligging en planbrief zijn op slot. **Printen, Offerte OHP, de accordeerlink en de Σ-verantwoording blijven werken.** De knop **Naar concept** in de banner (of de status-dropdown) ontgrendelt bewust.
+
+Bij het vergrendelen legt het plan nu ook zijn **eigen bevroren instellingen** vast (tarieven, opslagen, BTW). Een latere tariefwijziging verandert een verzonden plan dus niet meer stil, ook niet als de bron-calculatie zelf nog op Concept staat. Mailen via het accordeervenster zet de status op Verzonden en laat het slot vanzelf dichtvallen.
+
+Wat bewust wél blijft werken: het afvinken van uitgevoerde en ingeplande beurten in de **Planning-tab**. Die tab valt buiten het slot, zodat een geaccepteerd plan in de jaren erna gewoon bijgehouden kan worden.
+
+Eerlijke kanttekening: de **regels van de bron-calculatie** (uren, hoeveelheden) vallen niet onder dit slot. Wijzig je die in een nog niet vergrendelde calculatie, dan rekent het plan mee. Vergrendel de calculatie dus vóór of samen met het plan.
+
+### Hoe het onder de kap zit
+
+- `_isOhpLocked(plan)`: status ≠ concept. `_applyOhpLockUI()` zet `is-locked` op `#onderhoud` en vult `#ohpLockBanner`; aangeroepen op alle uitgangen van `_ohpRenderInhoud`.
+- CSS: kopie van de `#calculatie.is-locked`-regels voor `#onderhoud`; `lock-allowed` op Print, Offerte OHP, Accordeerlink en de Σ-knop; `select#ohpStatus` uitgezonderd zodat ontgrendelen kan.
+- De beurt-modal, het planbriefvenster en het Σ-paneel staan buiten de sectie; daarom JS-borgen met toast in `_ohpOpenBeurtModal`, `_ohpAddBeurt`, `_ohpAddExtern`, `_ohpDeletePlan`, `_ohpWijzigBron`, `_ohpLiggingVernieuw`, `_ohpLiggingVerwijder` en `ohpBriefConfig`.
+- Kolom `settings_snapshot jsonb null` op `onderhoudsplannen`, gemapt in `_mapOhpFromDB`/`_mapOhpToDB`. Nieuwe `_ohpEffectieveSettings(plan, calc)` (plan-snapshot → calc-snapshot → live) vervangt de vier losse lezers in de rekenkern. De Σ-trace kent een derde bron `plan-snapshot`.
+- Centrale statusroute `_ohpSetStatus(status)`: snapshot bevriezen of loslaten, gerichte update van status + snapshot + gewijzigd (niet via `_ohpFlushSave`, die bij leeg prijspeil niets opslaat), terugdraaien met toast bij een DB-fout. `ohpStatus` heeft een eigen handler `_ohpStatusWissel` en zit niet meer in de generieke bindlijst. De mailroute gebruikt voor het geopende plan `_ohpSetStatus`.
+- Plannen die vóór deze versie al vergrendeld waren hebben geen snapshot; de banner meldt dat en ze rekenen zoals voorheen met de bron-calc. Even naar Concept en terug maakt een snapshot.
+
+### Wat je moet doen
+
+1. SQL uitvoeren: `sql/2026-09-03_v4.60.0_onderhoudsplannen_settings_snapshot.sql` (idempotent).
+2. `index.html` uploaden.
+3. Testen: open het plan dat je hebt verzonden (status Verzonden) — de banner moet er staan en de velden grijs. Zet op een proefplan de status concept → verzonden → concept; controleer dat de Σ-verantwoording bij verzonden "Bevroren met het plan" toont en dat de beurtbedragen niet veranderen. Mail een proeflink en controleer dat het slot dichtvalt. Planning-tab: afvinken van een beurt moet blijven werken.
+
 ## v4.59.1 — Geen lege vellen meer achter de planvoorwaarden
 
 ### Wat er nu kan
