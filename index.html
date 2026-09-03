@@ -2337,8 +2337,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.62.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.63.0</h2>
       <div class="intro-body">
+        <p><strong>✅ Getekend exemplaar van een geaccordeerd onderhoudsplan (v4.63.0, route 2 brok B).</strong> Geeft een klant akkoord op een planlink met PDF, dan krijgt hij op de klantpagina hetzelfde als bij een offerte: het exemplaar met GEACCORDEERD-stempel op elke pagina en achteraan een akkoordbevestiging, hier met de gekozen betaalwijze (per beurt of per maand) in plaats van een bedrag. Hij kan het downloaden en ziet het in beeld. Jij hebt in het linkbeheer van het plan de knop Getekend exemplaar (PDF), en het Archiveren-venster heeft een nieuwe regel Geaccordeerd onderhoudsplan (getekend), standaard aangevinkt zodra er een planakkoord met PDF ligt, zodat het met de projectmap naar Yoobi gaat. De offerte-kant is niet veranderd. Nog open: de knop in de bevestigingsmail na een planakkoord zit in de Edge Function offerte-accord en volgt apart. Geen SQL.</p>
         <p><strong>📄 PDF alsnog maken uit de momentopname (v4.62.0).</strong> Heeft een planlink nog geen PDF (gemaakt vóór v4.61.0, of het maken mislukte), dan staat er in het linkbeheer nu de knop <strong>PDF alsnog maken uit de momentopname</strong>. Die gebruikt uitsluitend de bevroren bijlage die de klant heeft gekregen, niet het huidige plan, en hangt de PDF aan de bestaande link: dezelfde link, dezelfde openingsteller, dezelfde opvolging. Zo krijg je ook van een al verzonden plan een schone PDF voor Yoobi, ook als het plan daarna per ongeluk is aangepast. Geen SQL.</p>
         <p><strong>🔓 Op een vergrendeld plan kun je weer een ander plan kiezen (v4.61.1).</strong> Reparatie op v4.60.0: het slot zette ook de bronkiezer vast (zoekveld, statusvinkjes en de knop Wijzig), waardoor je vanaf een verzonden plan niet meer naar een ander plan kon. Een ander plan kiezen is navigatie, geen wijziging aan het bevroren plan; die knoppen werken nu altijd. Verder niets veranderd.</p>
         <p><strong>📄 De planlink heeft nu een PDF (v4.61.0, route 2 brok A).</strong> Bij het aanmaken van een accordeerlink voor een onderhoudsplan wordt de bijlage voortaan ook als PDF bevroren en in dezelfde besloten bak gezet als de offerte-PDF. De klantpagina toont die PDF met een knop "Onderhoudsplan openen of downloaden (PDF)", zodat de klant het plan kan bewaren. In het linkbeheer zie je of er een PDF bevroren is en kun je hem zelf downloaden: precies wat de klant ontvangen heeft, voor in Yoobi. Onder de kap is het een rasterweergave van de gepagineerde brochure (tekst is niet selecteerbaar); de algemene voorwaarden gaan wel scherp mee. Mislukt het maken, dan gaat de link toch de deur uit met alleen de HTML-versie en krijg jij een melding. Nog niet in deze brok: stempel, akkoordbevestiging, mail en Archiveren; dat is brok B. Geen SQL. Of de klantpagina de PDF toont hangt af van de Edge Function offerte-accord: dat wordt met een proeflink vastgesteld.</p>
@@ -3666,7 +3667,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.62.0';
+const APP_VERSION = 'v4.63.0';
 
 // ============================================================
 // GETALVELDEN — hele waarde selecteren bij aanklikken (spreadsheet-gevoel)
@@ -4062,6 +4063,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.63.0', d: '2026-09-03', h: 'Getekend exemplaar voor planakkoorden (route 2, brok B). _bouwGetekendePdfBytes kent nu info.isPlan en info.betaalkeuze: titel Akkoordbevestiging onderhoudsplan, de zin Dit onderhoudsplan is digitaal geaccordeerd, en een regel Betaling met de nieuwe _accordBetaalLabel (per beurt / per maand, kort label naast de bestaande zinvariant _accordBetaalWoord) in plaats van het bedrag, dat bij plannen null is; de GEACCORDEERD-stempel per pagina (v4.2.0) werkt ongewijzigd op de rasterpagina\u0027s, besluit 03-09-2026 dat de stempel ook op planpagina\u0027s komt. Klantpagina: _accordCtx draagt isPlan en betaalkeuze (uit res.betaalkeuze, na een vers akkoord uit het formulier), _accordToonGetekendInViewer en _accordKlantDownloadGetekend geven die door, en knoptekst, banner, meldingen en bestandsnaam volgen het documenttype. _accordDownloadGetekend kreeg een vierde parameter opts { isPlan, betaalkeuze, naam }; leeg betekent het offertegedrag van altijd. Planlinkbeheer toont bij status akkoord en aanwezige pdf_path de knop Getekend exemplaar (PDF) met _ohpPlanNaam als bestandsnaam. Archiveren: nieuwe _archAccordPlanRij, gevuld met een gerichte select op onderhoudsplan_id van _ohpState.plan (alleen als die bij de open calc hoort), nieuwe optie geaccordeerdplan met vooraf: true en een eigen tak in _archiveerVolgende; de bestaande offerte-select filtert nog steeds op onderhoudsplan_id leeg. Buiten deze brok: mail B na een planakkoord zit in offerte-accord (niet gezien). Zeven inhoudstests met echte pdf-lib en pdftotext groen: plan-titel, plan-zin, regel Betaling per maand, geen regel Bedrag, stempel op pagina 1, en het offertepad ongewijzigd. Namen _accordBetaalLabel, _archAccordPlanRij, geaccordeerdplan en ohpAcGetekend vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function in deze brok.' },
   { v: '4.62.0', d: '2026-09-03', h: 'PDF alsnog maken uit de momentopname van een bestaande planlink. Aanleiding: het Trilsbeek-Gid-plan was verzonden onder v4.51.0 (pdf_path null) en daarna per ongeluk gewijzigd; een nieuwe link zou de gewijzigde versie bevriezen, terwijl de schone verzonden versie in offerte_accorderingen.snapshot.html staat. _ohpPlanPdfBlob is gesplitst: nieuwe _ohpPdfVanPrintArea(voortgang) rastert wat er in printArea staat (html2canvas, pdf-lib, AV als PNG, stijlherstel, gooit nooit) en nieuwe _ohpWachtOpFonts wacht de vier Libre Franklin-gewichten af; _ohpPlanPdfBlob bouwt eerst uit het live plan (ligging, _ohpBuildOfferteHTML, fonts, _ohpPreloadImages, _ohpPaginate) en roept dan de rasteraar aan. Nieuwe _ohpAccordPdfAlsnog(rij, plan, calc, body, btn): zet rij.snapshot.html in printArea (al gepagineerd, dus bewust GEEN _ohpPaginate en niets uit het live plan), wacht fonts en beelden af, rastert, uploadt naar ACCORD_PDF_BUCKET onder token.pdf en zet pdf_path op de bestaande rij via update op id; daarna ohpAccordLinkBeheer() zodat de knop Bevroren PDF downloaden verschijnt. Weigert met toast zonder snapshot.html of als er al een pdf_path is; bij een fout printArea leeg, toast en knop hersteld, geen update. In _ohpAccordBeheerRender staat de knop ohpAcPdfAlsnog onder de rode geen-PDF-melding wanneer snapshot.html bestaat, met de uitleg dat de link dezelfde blijft. Route 3 vervangt later alleen _ohpPdfVanPrintArea en _ohpPlanPdfBlob. Dertien nieuwe slice-tests groen (momentopname gebruikt, niet opnieuw gepagineerd, pad token.pdf, update op de juiste rij, venster ververst, de twee weigeringen, uploadfout met herstel) plus de zestien van v4.61.0. Namen _ohpPdfVanPrintArea, _ohpWachtOpFonts, _ohpAccordPdfAlsnog en ohpAcPdfAlsnog vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
   { v: '4.61.1', d: '2026-09-03', h: 'Reparatie op v4.60.0: het planslot zette ook de bronkiezer vast. De CSS op #onderhoud.is-locked raakte het zoekveld ohpBronZoek en de statusvinkjes in #ohpBronWrap, en de knop Wijzig in #ohpBronCompact had bovendien een JS-borg in _ohpWijzigBron; met een geopend vergrendeld plan kwam je zo niet meer bij een ander plan (gemeld 03-09-2026 na de eerste dag gebruik). Een ander plan kiezen is navigatie en geen wijziging aan het bevroren plan. Fix: JS-borg uit _ohpWijzigBron, lock-allowed op de knop Wijzig, en een CSS-uitzondering voor input en button binnen #ohpBronWrap en #ohpBronCompact (pointer-events auto, opacity 1). Het wisselen zelf loopt via _ohpSetBronCalc naar _ohpRenderInhoud, dat het slot per plan opnieuw bepaalt. Bannertekst noemt nu ook het kiezen van een ander plan. Geen SQL, geen Edge Function.' },
   { v: '4.61.0', d: '2026-09-03', h: 'PDF bij de plan-accordeerlink (route 2, brok A van de plan-PDF-keten). Aanleiding: planlinks hadden pdf_path null (besluit v4.51.0), waardoor de klant niets kon downloaden, er geen getekend exemplaar was en Gian het verzonden document niet voor Yoobi kon opslaan. Nieuwe _ohpPlanPdfBlob(plan, calc, voortgang): bouwt de bijlage via exact de weg van _ohpAccordSnapshotHtml (ligging, _ohpBuildOfferteHTML in printArea, vier Libre Franklin-gewichten, _ohpPreloadImages, _ohpPaginate; dus dezelfde paginering als de HTML-momentopname), zet printArea tijdelijk zichtbaar maar buiten beeld (fixed, left -30000px; visibility:hidden zou lege beelden geven), rastert elke .ob .page met html2canvas 1.4.1 (nieuw geladen van jsdelivr, na pdf-lib) op scale 2 met useCORS naar JPEG 0.85 en zet die met pdf-lib als A4-pagina van 595,28 bij 841,89 pt; de AV-vellen (.dpv-vw img) gaan als scherpe PNG rechtstreeks mee via embedPng, niet gerasterd. Geeft een Blob of null en gooit nooit; finally herstelt de printArea-stijlen en leegt hem. Dit is bewust de ENIGE plek die weet hoe de PDF ontstaat: route 3 (herbouw in pdfmake) vervangt alleen deze functie. _ohpAccordNieuweLink roept hem aan na het snapshot met voortgangstekst per pagina, haalt eerst via de Storage-API (storage.remove, nooit SQL) de PDF van de vorige open planlink van dit plan weg zodat de bak geen wezen kweekt zoals bij offertes, uploadt naar ACCORD_PDF_BUCKET onder token.pdf met upsert en zet pdf_path; bij elke fout pdf_path null, console.warn en een toast dat de link zonder PDF is aangemaakt (besluit 03-09-2026: niet blokkeren). snapshot.pdf wordt bewust niet gezet, offerte-accord vult die met een ondertekende link. Klantpagina _accordRender: de bestaande vertakking pdfUrl-aanwezig kiest vanzelf de PDF-viewer; alleen de woorden Offerte openen of downloaden en de terugvaltekst volgen nu docWoord en isPlan. Linkbeheer _ohpAccordBeheerRender toont PDF bevroren met knop Bevroren PDF downloaden (nieuwe _ohpAccordPdfDownload via storage.download met eigen inlog, bestandsnaam plannaam - verzonden.pdf) of een rode melding zonder PDF. Niet in deze brok: stempel, akkoordbevestiging, mail B, Archiveren (brok B). Niet testbaar in de sandbox: html2canvas zelf (bibliotheek niet bereikbaar) en of offerte-accord voor planlinks snapshot.pdf vult. Zestien slice-tests met echte pdf-lib en mock html2canvas groen (paginatelling, A4-maat, voortgang, stijlherstel, terugval zonder bibliotheek, zonder pagina, bij AV-fout en bij canvas-fout). Namen _ohpPlanPdfBlob, _ohpAccordPdfDownload en ohpAcPdf vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function in deze brok.' },
@@ -13466,6 +13468,7 @@ async function _doImportBew() {
 // en bestandsnamen + map blijven onthouden door de browser.
 //
 // Status-bar bovenin de pagina toont voortgang en heeft een Stop-knop.
+let _archAccordPlanRij = null; // v4.63.0 — nieuwste planakkoord met bevroren PDF voor de huidige calc
 let _archAccordRij = null; // v4.19.0 — nieuwste akkoord met bevroren PDF, gevuld bij openen van het Archiveren-venster
 let _archiveerCtx = {
   running: false,
@@ -13581,6 +13584,22 @@ async function openArchiveerModal() {
   } catch (e) {
     heeftOhp = false;
   }
+  // v4.63.0 — Geaccordeerd onderhoudsplan: nieuwste planakkoord met bevroren PDF.
+  _archAccordPlanRij = null;
+  try {
+    const _pl = _ohpState.plan;
+    if (_pl && _pl.id && _pl.calculatieId === data.calc.id) {
+      const { data: plRows } = await _sb.from('offerte_accorderingen')
+        .select('pdf_path, klant_naam, gereageerd_op, bedrag, notitie, betaalkeuze')
+        .eq('onderhoudsplan_id', _pl.id)
+        .eq('status', 'akkoord')
+        .order('gereageerd_op', { ascending: false });
+      const pr = (plRows || []).find(r => r.pdf_path);
+      if (pr) _archAccordPlanRij = { pdf_path: pr.pdf_path, snapshot: {}, klant_naam: pr.klant_naam, gereageerd_op: pr.gereageerd_op, bedrag: pr.bedrag, notitie: pr.notitie, betaalkeuze: pr.betaalkeuze || null, planNaam: _ohpPlanNaam(_pl, data.calc) };
+    }
+  } catch (e) {
+    _archAccordPlanRij = null;
+  }
 
   // v4.19.0 — Geaccordeerde offerte: ligt er voor deze calc een akkoord met bevroren PDF?
   // Nieuwste eerst; het snapshot zelf blijft bewust buiten de select (kan groot zijn),
@@ -13590,7 +13609,7 @@ async function openArchiveerModal() {
     const { data: accRows } = await _sb.from('offerte_accorderingen')
       .select('pdf_path, snapshot->>pdf, klant_naam, gereageerd_op, bedrag, notitie')
       .eq('calculatie_id', data.calc.id)
-      .is('onderhoudsplan_id', null) // v4.51.0 — planlinks hebben geen PDF en horen hier niet
+      .is('onderhoudsplan_id', null) // planakkoorden hebben sinds v4.63.0 hun eigen regel (geaccordeerdplan)
       .eq('status', 'akkoord')
       .order('gereageerd_op', { ascending: false });
     const acc = (accRows || []).find(r => r.pdf_path || r.pdf);
@@ -13618,6 +13637,7 @@ async function openArchiveerModal() {
     { type: 'offerteyoobi',   label: 'Offerte (Yoobi-export)', beschikbaar: true,          toelichting: 'regels met eenheidsprijzen voor de facturatie' },
     { type: 'werkbon',        label: 'Werkbon',             beschikbaar: true,             toelichting: '' },
     { type: 'onderhoudsplan', label: 'Onderhoudsplan',      beschikbaar: heeftOhp,         toelichting: heeftOhp ? '' : 'geen (compleet) onderhoudsplan voor deze calc' },
+    { type: 'geaccordeerdplan', label: 'Geaccordeerd onderhoudsplan (getekend)', beschikbaar: !!_archAccordPlanRij, vooraf: true, toelichting: _archAccordPlanRij ? 'met GEACCORDEERD-stempels en akkoordbevestiging' : 'geen planakkoord met bevroren PDF' }, // v4.63.0
     { type: 'fotobijlage',    label: 'Foto-bijlage als PDF', beschikbaar: heeftFotos,      toelichting: heeftFotos ? '' : 'geen foto\u2019s in deze calc' },
   ];
 
@@ -13715,6 +13735,18 @@ function _archiveerVolgende() {
   // v4.19.0 — het getekend exemplaar is een pdf-lib-download zonder printdialoog:
   // direct opslaan zoals het offertedocument en na een korte pauze door met de reeks.
   // Hergebruikt letterlijk de linkbeheer-route (_accordDownloadGetekend, btn-loos).
+  if (item.type === 'geaccordeerdplan') { // v4.63.0
+    const klaar = () => setTimeout(() => _archiveerVolgende(), 1000);
+    if (!_archAccordPlanRij || !data.calc) {
+      _toast('Geen geaccordeerd onderhoudsplan met bevroren PDF gevonden');
+      klaar();
+      return;
+    }
+    Promise.resolve(_accordDownloadGetekend(_archAccordPlanRij, data.calc, null, { isPlan: true, betaalkeuze: _archAccordPlanRij.betaalkeuze, naam: _archAccordPlanRij.planNaam }))
+      .catch(e => console.error('Archiveer-fout geaccordeerd plan:', e))
+      .finally(klaar);
+    return;
+  }
   if (item.type === 'geaccordeerd') {
     const klaar = () => setTimeout(() => _archiveerVolgende(), 1000);
     if (!_archAccordRij || !data.calc) {
@@ -21813,6 +21845,12 @@ function _accordDatum(iso) {
 }
 // v4.51.0 — de gekozen betaalweg van een onderhoudsplan in woorden, voor de
 // akkoordzin, de banner en de bevestiging. Lege of onbekende keuze geeft ''.
+// v4.63.0 — kort label voor tabelregels (akkoordbevestiging); _accordBetaalWoord blijft de zinvariant.
+function _accordBetaalLabel(keuze) {
+  if (keuze === 'contant') return 'per beurt';
+  if (keuze === 'abo') return 'per maand';
+  return '';
+}
 function _accordBetaalWoord(keuze) {
   if (keuze === 'contant') return ', met betaling per beurt';
   if (keuze === 'abo') return ', met maandelijkse betaling';
@@ -21923,7 +21961,7 @@ function _accordRender(root, token, res) {
   }
 
   if (pdfUrl) {
-    _accordCtx = { pdfUrl: pdfUrl, project: res.project, klant: res.klant, bedrag: res.bedrag };
+    _accordCtx = { pdfUrl: pdfUrl, project: res.project, klant: res.klant, bedrag: res.bedrag, isPlan: isPlan, betaalkeuze: res.betaalkeuze || null }; // v4.63.0 — plan-velden voor het getekende exemplaar
     // Heropent de klant een al geaccordeerde link, dan meteen de getekende offerte aanbieden.
     if (res.status === 'akkoord') {
       _accordZetGetekendKnop(root.querySelector('#acPdfDl'), { naam: res.klant_naam, datumIso: res.gereageerd_op, notitie: res.notitie });
@@ -22100,6 +22138,7 @@ async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
     if (ifr && !_o.isPlan) _accordStempel(ifr, naam, new Date().toISOString()); // v4.51.0 — de planbijlage heeft geen ondertekenvak
     // Bij een PDF-link nu de getekende offerte aanbieden om te downloaden.
     if (_accordCtx && _accordCtx.pdfUrl) {
+      if (_o.isPlan) _accordCtx.betaalkeuze = betaalkeuze || _accordCtx.betaalkeuze || null; // v4.63.0
       const _info = { naam: naam, datumIso: new Date().toISOString(), notitie: notitie };
       _accordZetGetekendKnop(root.querySelector('#acPdfDl'), _info);
       // v4.11.0 — en het gestempelde exemplaar ook in beeld zetten.
@@ -22110,7 +22149,7 @@ async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
   const heeftPdfDl = !!(mode === 'akkoord' && _accordCtx && _accordCtx.pdfUrl);
   acties.innerHTML = '<div class="ac-banner ' + (mode === 'akkoord' ? 'ac-ok' : 'ac-nee') + '">'
     + (mode === 'akkoord'
-        ? 'Bedankt. Uw akkoord is vastgelegd' + _accordBetaalWoord(betaalkeuze) + '.' + (heeftPdfDl ? ' U kunt hierboven uw getekende offerte downloaden.' : '')
+        ? 'Bedankt. Uw akkoord is vastgelegd' + _accordBetaalWoord(betaalkeuze) + '.' + (heeftPdfDl ? ' U kunt hierboven uw getekende ' + (_o.isPlan ? 'onderhoudsplan' : 'offerte') + ' downloaden.' : '')
         : 'Bedankt. Uw reactie is vastgelegd.')
     + '</div>';
 }
@@ -22514,16 +22553,18 @@ async function _bouwGetekendePdfBytes(frozenBytes, info) {
   const enc = (s) => String(s == null ? '' : s).replace(/[^\x00-\xFF\u20AC\u2018\u2019\u201C\u201D\u2013\u2014\u2022\u2026\u2122]/g, '?');
   const ink = rgb(0.10, 0.10, 0.10), muted = rgb(0.45, 0.45, 0.45), groen = rgb(0.10, 0.48, 0.23);
   let y = 770;
-  page.drawText(enc('Akkoordbevestiging'), { x: ml, y: y, size: 22, font: fontB, color: ink });
+  const _isPlan = !!info.isPlan; // v4.63.0 — planakkoord: eigen woorden en de betaalkeuze in plaats van het bedrag
+  page.drawText(enc(_isPlan ? 'Akkoordbevestiging onderhoudsplan' : 'Akkoordbevestiging'), { x: ml, y: y, size: 22, font: fontB, color: ink });
   y -= 18;
   page.drawText(enc((info.project || '') + (info.klant ? ' \u00b7 ' + info.klant : '')), { x: ml, y: y, size: 10, font: font, color: muted });
   y -= 40;
-  page.drawText(enc('Deze offerte is digitaal geaccordeerd door de klant.'), { x: ml, y: y, size: 12, font: font, color: groen });
+  page.drawText(enc(_isPlan ? 'Dit onderhoudsplan is digitaal geaccordeerd door de klant.' : 'Deze offerte is digitaal geaccordeerd door de klant.'), { x: ml, y: y, size: 12, font: font, color: groen });
   y -= 32;
   let datum = '';
   if (info.datumIso) { try { datum = new Date(info.datumIso).toLocaleString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { datum = String(info.datumIso); } }
   const regels = [['Geaccordeerd door', info.naam || ''], ['Datum en tijd', datum], ['Project', info.project || ''], ['Klant', info.klant || '']];
   if (info.bedrag != null) regels.push(['Bedrag', _accordEur(info.bedrag) + ' incl. btw']);
+  if (_isPlan && _accordBetaalLabel(info.betaalkeuze)) regels.push(['Betaling', _accordBetaalLabel(info.betaalkeuze)]); // v4.63.0
   regels.forEach(function (kv) {
     page.drawText(enc(kv[0]), { x: ml, y: y, size: 11, font: fontB, color: ink });
     page.drawText(enc(kv[1]), { x: ml + 130, y: y, size: 11, font: font, color: ink });
@@ -22586,11 +22627,12 @@ function _pdfBytesDownload(bytes, filename) {
 }
 
 // Jouw kant: archiefexemplaar vanuit het linkbeheer.
-async function _accordDownloadGetekend(rij, c, btn) {
+async function _accordDownloadGetekend(rij, c, btn, opts) {
+  const _o = opts || {}; // v4.63.0 — { isPlan, betaalkeuze, naam }; leeg = offertegedrag van altijd
   if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) { _toast('PDF-bibliotheek nog niet geladen, probeer het zo opnieuw'); return; }
   const path = rij.pdf_path || null;
   const pdfUrl = (rij.snapshot && rij.snapshot.pdf) ? rij.snapshot.pdf : null;
-  if (!path && !pdfUrl) { _toast('Geen bevroren PDF beschikbaar voor deze offerte'); return; }
+  if (!path && !pdfUrl) { _toast('Geen bevroren PDF beschikbaar voor ' + (_o.isPlan ? 'dit onderhoudsplan' : 'deze offerte')); return; }
   const oud = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = 'Bezig\u2026'; }
   try {
@@ -22605,8 +22647,8 @@ async function _accordDownloadGetekend(rij, c, btn) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       bytes = await r.arrayBuffer();
     }
-    const uit = await _bouwGetekendePdfBytes(bytes, { naam: rij.klant_naam, datumIso: rij.gereageerd_op, project: c.naam, klant: c.klant, bedrag: rij.bedrag, notitie: rij.notitie });
-    _pdfBytesDownload(uit, String(c.naam || 'offerte').replace(/[\\/:*?"<>|]+/g, '-') + ' - getekend.pdf');
+    const uit = await _bouwGetekendePdfBytes(bytes, { naam: rij.klant_naam, datumIso: rij.gereageerd_op, project: _o.naam || c.naam, klant: c.klant, bedrag: rij.bedrag, notitie: rij.notitie, isPlan: !!_o.isPlan, betaalkeuze: _o.betaalkeuze || rij.betaalkeuze || null });
+    _pdfBytesDownload(uit, String(_o.naam || c.naam || (_o.isPlan ? 'onderhoudsplan' : 'offerte')).replace(/[\\/:*?"<>|]+/g, '-') + ' - getekend.pdf');
     _toast('Getekend exemplaar gedownload');
   } catch (e) {
     _toast('Maken van het getekende exemplaar mislukt: ' + (e.message || e));
@@ -22624,7 +22666,7 @@ let _accordGetekendBytes = null;  // v4.11.0 — één keer gebouwd, gedeeld doo
 async function _accordKlantDownloadGetekend(info, btn) {
   if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) { alert('De PDF-bibliotheek is nog niet geladen. Probeer het over een paar seconden opnieuw.'); return; }
   const pdfUrl = _accordCtx && _accordCtx.pdfUrl;
-  if (!pdfUrl) { alert('De offerte-PDF is niet beschikbaar.'); return; }
+  if (!pdfUrl) { alert((_accordCtx && _accordCtx.isPlan ? 'De PDF van het onderhoudsplan' : 'De offerte-PDF') + ' is niet beschikbaar.'); return; }
   const oud = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = 'Bezig\u2026'; }
   try {
@@ -22634,13 +22676,13 @@ async function _accordKlantDownloadGetekend(info, btn) {
       const r = await fetch(pdfUrl);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const bytes = await r.arrayBuffer();
-      const volledig = Object.assign({ project: _accordCtx.project, klant: _accordCtx.klant, bedrag: _accordCtx.bedrag }, info);
+      const volledig = Object.assign({ project: _accordCtx.project, klant: _accordCtx.klant, bedrag: _accordCtx.bedrag, isPlan: !!_accordCtx.isPlan, betaalkeuze: _accordCtx.betaalkeuze || null }, info); // v4.63.0
       uit = await _bouwGetekendePdfBytes(bytes, volledig);
       _accordGetekendBytes = uit;
     }
-    _pdfBytesDownload(uit, String(_accordCtx.project || 'offerte').replace(/[\\/:*?"<>|]+/g, '-') + ' - getekend.pdf');
+    _pdfBytesDownload(uit, String(_accordCtx.project || (_accordCtx.isPlan ? 'onderhoudsplan' : 'offerte')).replace(/[\\/:*?"<>|]+/g, '-') + ' - getekend.pdf');
   } catch (e) {
-    alert('Downloaden van de getekende offerte mislukt: ' + (e.message || e));
+    alert('Downloaden van ' + (_accordCtx && _accordCtx.isPlan ? 'het getekende onderhoudsplan' : 'de getekende offerte') + ' mislukt: ' + (e.message || e));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = oud; }
   }
@@ -22650,7 +22692,7 @@ async function _accordKlantDownloadGetekend(info, btn) {
 // hem met de meegegeven akkoord-gegevens.
 function _accordZetGetekendKnop(container, info) {
   if (!container) return;
-  container.innerHTML = '<button id="acPdfGetekend" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border:0;border-radius:8px;font-weight:600;cursor:pointer;">Download uw getekende offerte (PDF)</button>';
+  container.innerHTML = '<button id="acPdfGetekend" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border:0;border-radius:8px;font-weight:600;cursor:pointer;">Download uw getekende ' + ((_accordCtx && _accordCtx.isPlan) ? 'onderhoudsplan' : 'offerte') + ' (PDF)</button>';
   const b = container.querySelector('#acPdfGetekend');
   b.addEventListener('click', function () { _accordKlantDownloadGetekend(info, b); });
 }
@@ -22676,7 +22718,7 @@ async function _accordToonGetekendInViewer(root, info) {
       const r = await fetch(_accordCtx.pdfUrl);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const bytes = await r.arrayBuffer();
-      const volledig = Object.assign({ project: _accordCtx.project, klant: _accordCtx.klant, bedrag: _accordCtx.bedrag }, info);
+      const volledig = Object.assign({ project: _accordCtx.project, klant: _accordCtx.klant, bedrag: _accordCtx.bedrag, isPlan: !!_accordCtx.isPlan, betaalkeuze: _accordCtx.betaalkeuze || null }, info); // v4.63.0
       _accordGetekendBytes = await _bouwGetekendePdfBytes(bytes, volledig);
     }
     const blob = new Blob([_accordGetekendBytes], { type: 'application/pdf' });
@@ -22930,8 +22972,12 @@ function _ohpAccordBeheerRender(body, plan, calc, rij) {
 
   // v4.61.0 — bevroren PDF: status en downloadknop (exact wat de klant ziet, voor Yoobi).
   if (rij.pdf_path) {
-    h += '<div class="acb-sub" style="margin-top:6px;">PDF bevroren bij het aanmaken van de link.</div>'
+    h += '<div class="acb-sub" style="margin-top:6px;">PDF bevroren: exact wat de klant heeft gekregen.</div>'
       + '<button class="acb-btn sec" id="ohpAcPdf" style="margin:6px 0 4px;">\ud83d\udcc4 Bevroren PDF downloaden</button>';
+    if (rij.status === 'akkoord') { // v4.63.0 — getekend exemplaar, zoals bij de offerte sinds v3.81.0
+      h += '<button class="acb-btn sec" id="ohpAcGetekend" style="margin:0 0 4px;">\u2b07\ufe0f Getekend exemplaar (PDF)</button>'
+        + '<div class="acb-sub" style="margin:0 0 6px;">Met GEACCORDEERD-stempels en de akkoordbevestiging (naam, datum, betaalkeuze).</div>';
+    }
   } else {
     const _heeftSnap = !!(rij.snapshot && rij.snapshot.html);
     h += '<div class="acb-sub" style="margin-top:6px;color:#b00020;">Geen PDF bij deze link (gemaakt v\u00f3\u00f3r v4.61.0 of het maken mislukte). De klant ziet de HTML-versie.</div>'
@@ -22973,6 +23019,8 @@ function _ohpAccordBeheerRender(body, plan, calc, rij) {
   });
   const _btnPdf = body.querySelector('#ohpAcPdf'); // v4.61.0
   if (_btnPdf) _btnPdf.addEventListener('click', () => _ohpAccordPdfDownload(rij, plan, calc, _btnPdf));
+  const _btnGet = body.querySelector('#ohpAcGetekend'); // v4.63.0
+  if (_btnGet) _btnGet.addEventListener('click', () => _accordDownloadGetekend(rij, calc, _btnGet, { isPlan: true, betaalkeuze: rij.betaalkeuze || null, naam: _ohpPlanNaam(plan, calc) }));
   const _btnPdfAlsnog = body.querySelector('#ohpAcPdfAlsnog'); // v4.62.0
   if (_btnPdfAlsnog) _btnPdfAlsnog.addEventListener('click', () => _ohpAccordPdfAlsnog(rij, plan, calc, body, _btnPdfAlsnog));
   const _btnMail = body.querySelector('#ohpAcMail');

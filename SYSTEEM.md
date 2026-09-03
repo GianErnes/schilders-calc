@@ -4120,3 +4120,26 @@ het aanmaken mislukte. De momentopname is al gepagineerd, dus daar draait
 bewust geen `_ohpPaginate` overheen: wat de klant kreeg is wat er in de PDF
 komt, ook als het live plan inmiddels anders is. Route 3 vervangt later
 alleen `_ohpPdfVanPrintArea` en `_ohpPlanPdfBlob`.
+
+
+## Getekend exemplaar voor planakkoorden, route 2 brok B (3 september 2026, v4.63.0)
+
+De keten achter de plan-PDF is nu gelijk aan die van de offerte. Na een
+akkoord bouwt de klantpagina met pdf-lib het getekende exemplaar: de
+GEACCORDEERD-stempel van v4.2.0 op elke pagina (besluit 03-09-2026: ook op
+planpagina's; het argument van v4.51.0 tegen de stempel gold de
+HTML-weergave zonder ondertekenvak) en de akkoordbevestiging achteraan,
+bij een plan met de regel Betaling (per beurt of per maand) in plaats van
+Bedrag, want een planlink draagt geen bedrag. `_bouwGetekendePdfBytes`
+leest daarvoor `info.isPlan` en `info.betaalkeuze`; `_accordCtx` op de
+klantpagina draagt beide mee. Gian haalt hetzelfde exemplaar op met de
+knop Getekend exemplaar (PDF) in het planlinkbeheer, en Archiveren heeft
+de regel Geaccordeerd onderhoudsplan (getekend), gevuld uit een gerichte
+select op `onderhoudsplan_id`. `_accordDownloadGetekend` kreeg een
+`opts`-parameter; zonder opts is het offertepad byte voor byte hetzelfde.
+
+**Open: mail B.** De bevestigingsmail na een akkoord met de knop naar het
+getekende exemplaar wordt door `offerte-accord` verstuurd. Of die knop bij
+een planakkoord meegaat is niet gezien; volgt zodra Gian de code van mail B
+plakt. Zelfde voorbehoud als bij brok A: of de klantpagina voor planlinks
+de PDF toont hangt af van de `pdf_path`-tak in dezelfde functie.

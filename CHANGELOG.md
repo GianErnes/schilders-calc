@@ -1,3 +1,27 @@
+## v4.63.0 — Getekend exemplaar van een geaccordeerd onderhoudsplan (route 2, brok B)
+
+### Wat er nu kan
+
+Geeft een klant akkoord op een planlink met PDF, dan krijgt hij hetzelfde als bij een offerte: het exemplaar met **GEACCORDEERD-stempel** op elke pagina en achteraan een **akkoordbevestiging onderhoudsplan** met naam, datum en tijd, project, klant en de gekozen **betaalwijze** (per beurt of per maand) in plaats van een bedrag. Hij ziet het in beeld en kan het downloaden; heropent hij de link later, dan staat het er weer.
+
+Jij hebt in het linkbeheer van het plan de knop **Getekend exemplaar (PDF)**. Het Archiveren-venster heeft een nieuwe regel **Geaccordeerd onderhoudsplan (getekend)**, standaard aangevinkt zodra er een planakkoord met PDF ligt, zodat het met de projectmap naar Yoobi gaat.
+
+De offerte-kant is niet veranderd. **Nog open:** de knop in de bevestigingsmail na een planakkoord (mail B) zit in de Edge Function `offerte-accord` en volgt apart zodra die code beschikbaar is.
+
+### Hoe het onder de kap zit
+
+- `_bouwGetekendePdfBytes` kent `info.isPlan` en `info.betaalkeuze`; nieuwe `_accordBetaalLabel` geeft het korte label. De stempelroutine van v4.2.0 is ongewijzigd en stempelt ook rasterpagina\'s.
+- Klantpagina: `_accordCtx` draagt `isPlan` en `betaalkeuze`; viewer, downloadknop, banner en bestandsnaam volgen het documenttype.
+- `_accordDownloadGetekend(rij, c, btn, opts)`: vierde parameter, leeg = offertegedrag.
+- Archiveren: `_archAccordPlanRij` via een gerichte select op `onderhoudsplan_id`; optie `geaccordeerdplan` met eigen tak in `_archiveerVolgende`.
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Geen SQL.
+2. Vooraf: controleer via **Zelf bekijken** dat de klantpagina van een planlink met PDF de **PDF** toont (en niet de HTML). Zo niet, dan is `offerte-accord` aan de beurt en werkt de klantkant van deze brok nog niet; jouw knop en Archiveren werken dan wel.
+3. Proeflink als klant accorderen (kies een betaalwijze): stempels, bevestigingspagina met Betaling, downloadknop. Daarna in het linkbeheer **Getekend exemplaar (PDF)** en in Archiveren de nieuwe regel.
+4. Een offerte-akkoord doorlopen als bewijs dat dat pad ongewijzigd is.
+
 ## v4.62.0 — PDF alsnog maken uit de momentopname
 
 ### Wat er nu kan
