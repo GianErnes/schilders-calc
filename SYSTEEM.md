@@ -3978,3 +3978,78 @@ GET-antwoord), mail B en de seintjes C en D. Overal terugval op de
 calc-naam; offerte-rijen en offerte-links veranderen niet. Vijftien
 gedragsgevallen groen op regels die letterlijk uit de geleverde bestanden
 geknipt zijn.
+
+## Vergrendeling van onderhoudsplannen (3 september 2026, v4.60.0)
+
+Een onderhoudsplan is vergrendeld zodra zijn eigen status niet `concept` is
+(gereed, verzonden, geaccepteerd, verloren; een plan kent geen afspraak).
+Dat is de spiegel van het calc-slot uit v3.7.0. Aanleiding: sinds v4.51.0
+zette mailen de planstatus wel op verzonden, maar dat was een kaal label;
+alle velden bleven bewerkbaar en op 3 september werd een zojuist gemaild
+plan per ongeluk nog aangepast. De regel staat in `_isOhpLocked(plan)`.
+`_applyOhpLockUI` zet de klasse `is-locked` op `#onderhoud` en vult
+`#ohpLockBanner` met dezelfde gele banner als bij de calculatie, met een
+knop Naar concept; hij draait op alle uitgangen van `_ohpRenderInhoud`.
+De CSS is een kopie van de `#calculatie.is-locked`-regels. Op slot: alle
+parametervelden, bron wijzigen, beurten toevoegen, bewerken en verwijderen,
+externe posten, ligging vernieuwen of verwijderen, planbrief en het plan
+verwijderen. Blijven werken (`lock-allowed`): de status-dropdown zelf,
+Print onderhoudsplan, Offerte OHP, Accordeerlink en de Σ-verantwoording.
+De beurt-modal, het planbriefvenster en het Σ-paneel staan buiten de
+sectie, dus die hebben een eigen JS-borg met toast in hun openfunctie
+(zelfde patroon als de meetstaat-borg bij de calc). De Planning-tab valt
+bewust buiten het slot: uitgevoerde en ingeplande beurten afvinken moet in
+de jaren na acceptatie gewoon kunnen.
+
+### Eén kolom op `onderhoudsplannen`
+
+| Kolom | Type | Leeg toegestaan | Waarvoor |
+|---|---|---|---|
+| `settings_snapshot` | `jsonb` | ja | diepe kopie van de instellingen (tarieven, opslagen, btw) op het moment van vergrendelen; leeg zolang het plan concept is |
+
+Aangelegd met `2026-09-03_v4.60.0_onderhoudsplannen_settings_snapshot.sql`,
+idempotent via `add column if not exists`, gevalideerd met pglast (3
+statements: alter, comment, controle-select; geen destructieve operatie).
+Geen policy- of grantwijziging: de policies op deze tabel werken op
+`user_id = auth.uid()` en die kolom is niet aangeraakt. De kolom zit in
+`_mapOhpFromDB` en `_mapOhpToDB`, dus een gewone plan-opslag draagt de
+gezette waarde mee (zelfde patroon als `settings_snapshot` op
+`calculaties`).
+
+**Waarmee een plan rekent.** `_ohpEffectieveSettings(plan, calc)` is de
+enige lezer: eigen snapshot van het plan gaat voor, dan de snapshot van de
+bron-calculatie, dan de live instellingen. De vier plekken die dat eerst
+elk apart deden (beurtbedrag, btw uit de bron, en de twee modal-weergaven
+per regel en per stap) lopen er nu allemaal door. De Σ-verantwoording
+noemt de bron: bevroren met het plan, bevroren met de calculatie, of live.
+
+**De statusroute.** `_ohpSetStatus(status)` is de enige weg voor een
+statuswissel van een geopend plan: bij vergrendelen wordt de snapshot een
+diepe kopie van wat het plan op dat moment effectief gebruikt (dus de
+calc-snapshot als de calc al vast staat), bij terug naar concept gaat hij
+weg. Gerichte update van `status`, `settings_snapshot` en `gewijzigd`,
+bewust niet via `_ohpFlushSave`, want die slaat bij een leeg prijspeil
+niets op. Mislukt de update, dan gaan geheugen en dropdown terug en komt
+er een melding (patroon v4.11.1). De dropdown `ohpStatus` heeft daarvoor
+een eigen handler `_ohpStatusWissel` en zit niet meer in de generieke
+bindlijst; de mailroute in het planvenster gebruikt voor het geopende plan
+dezelfde `_ohpSetStatus`, zodat mailen status, snapshot en slot in één
+keer zet.
+
+**Wat dit slot niet dekt.** De regels van de bron-calculatie (uren,
+hoeveelheden). Staat de calc nog op concept en wijzig je daar iets, dan
+rekent een vergrendeld plan mee. De afspraak is daarom: calculatie
+vergrendelen vóór of samen met het plan. Ook niet in deze brok: een
+bevroren totaalbedrag per plan voor het dashboard (bij de calc bestaat
+`totaal_offerte_origineel`; bij plannen is er geen tegenhanger). Plannen
+die vóór v4.60.0 al vergrendeld waren hebben geen snapshot; de banner
+meldt dat en even naar concept en terug maakt er een.
+
+Getest met 31 gedragsgevallen op code die letterlijk uit het opgeleverde
+`index.html` gesneden is (slotregel, voorrang van de drie bronnen, mapping
+heen en terug, diepe kopie, erven van de calc-snapshot, snapshot blijft
+bij verzonden naar geaccepteerd, terugdraaien bij een databankfout,
+bannertekst voor oude plannen). Niet getest in de sandbox en dus aan Gian:
+de vergrendeling op het scherm en op de iPad, de mailroute tegen de echte
+Edge Function, en gelijke Σ-bedragen voor en na vergrendelen op een echt
+plan.
