@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ernes Schilders — Planning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1d21;
+    --ink-soft: #4b5563;
+    --paper: #ffffff;
+    --paper-warm: #f9fafb;
+    --paper-deep: #e5e7eb;
+    --page: #f5f6f7;
+    --accent: #e63329;
+    --accent-deep: #c62828;
+    --muted: #6b7280;
+    --green: #16a34a;
+    --amber: #ea580c;
+    --blue: #2196f3;
+    --blue-deep: #1769aa;
+    --blue-soft: #cfe3f7;
+    --blue-cell: #e3f0fb;
+    --weekend: #eef0f2;
+    --gesloten: #d9dce0;
+    --radius: 6px;
+    --radius-lg: 8px;
+    --dag: 34px;        /* breedte van een dagkolom */
+    --label: 300px;     /* breedte van de vaste linkerkolom */
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased;
+  }
+  .num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  #app-loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:14px;background:#f5f6f7;z-index:90}
+  #login{position:fixed;inset:0;background:#f5f6f7;display:none;align-items:center;justify-content:center;z-index:100}
+  #login .box{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:30px;width:320px;box-shadow:0 6px 28px rgba(0,0,0,.07)}
+  #login h2{margin:0 0 4px;font-size:18px;color:#1a1d21}
+  #login p{margin:0 0 18px;font-size:13px;color:#6b7280}
+  #login input{width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:10px;border:1px solid #e5e7eb;border-radius:6px;font-size:14px}
+  #login button{width:100%;padding:11px;background:#e63329;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+  #login .err{color:#e63329;font-size:12px;margin-top:8px;min-height:16px}
+
+  .wrap { padding: 1rem 1.2rem 2rem; }
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+  header h1 { margin: 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; }
+  header .sub { color: var(--muted); font-size: 0.83rem; margin-top: 0.1rem; }
+  .header-right { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .jaarkiezer { display: inline-flex; align-items: center; border: 1px solid var(--paper-deep); border-radius: var(--radius); background: var(--paper); overflow: hidden; }
+  .jaarkiezer button { border: none; background: none; padding: 0.35rem 0.6rem; font-size: 1rem; cursor: pointer; color: var(--ink-soft); }
+  .jaarkiezer button:hover { background: var(--paper-warm); }
+  .jaarkiezer .jaar { padding: 0.35rem 0.5rem; font-weight: 700; min-width: 3.4rem; text-align: center; }
+  .knop { border: 1px solid var(--paper-deep); background: var(--paper); border-radius: var(--radius); padding: 0.4rem 0.75rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--ink-soft); }
+  .knop:hover { background: var(--paper-warm); }
+  .status { color: var(--muted); font-size: 0.8rem; min-width: 8rem; text-align: right; }
+  .status.fout { color: var(--accent); font-weight: 600; }
+
+  /* Lay-out: bord links, paneel rechts */
+  .hoofd { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0.9rem; align-items: start; }
+  @media (max-width: 1100px) { .hoofd { grid-template-columns: 1fr; } .paneel { order: -1; } }
+
+  /* Het bord */
+  .bord-kaart { background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); overflow: hidden; }
+  .bord-scroll { overflow: auto; max-height: calc(100vh - 150px); position: relative; }
+  table.bord { border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 0.8rem; }
+  table.bord th, table.bord td { padding: 0; border-bottom: 1px solid var(--paper-deep); border-right: 1px solid #f1f2f4; height: 30px; }
+  table.bord col.c-label { width: var(--label); }
+  table.bord col.c-dag { width: var(--dag); }
+
+  /* vaste rijen en kolommen */
+  table.bord thead th { position: sticky; background: var(--paper); z-index: 3; font-weight: 600; color: var(--ink-soft); }
+  table.bord thead tr.weken th { top: 0; height: 24px; font-size: 0.72rem; text-align: left; padding-left: 4px; border-right: 1px solid var(--paper-deep); }
+  table.bord thead tr.dagen th { top: 24px; height: 34px; font-size: 0.68rem; line-height: 1.1; text-align: center; }
+  table.bord thead tr.dagen th .d { display: block; color: var(--muted); font-weight: 500; }
+  table.bord thead tr.dagen th .n { display: block; font-weight: 700; }
+  table.bord .label { position: sticky; left: 0; background: var(--paper); z-index: 2; text-align: left; padding: 0 8px; border-right: 2px solid var(--paper-deep); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  table.bord thead .label { z-index: 4; }
+  table.bord tfoot td { position: sticky; background: var(--paper-warm); z-index: 3; border-top: 1px solid var(--paper-deep); }
+  table.bord tfoot .label { z-index: 4; background: var(--paper-warm); }
+
+  /* dagcellen */
+  td.dag, th.dag { text-align: center; }
+  .weekend { background: var(--weekend); }
+  .gesloten { background: var(--gesloten) !important; background-image: repeating-linear-gradient(135deg, transparent 0 4px, rgba(0,0,0,0.06) 4px 6px); }
+  .vandaag { box-shadow: inset 2px 0 0 var(--accent), inset -2px 0 0 var(--accent); }
+  thead th.vandaag .n { color: var(--accent); }
+
+  /* projectrij */
+  tr.project { cursor: pointer; }
+  tr.project:hover .label { background: var(--paper-warm); }
+  tr.project .label { font-weight: 600; }
+  tr.project .label .klant { color: var(--muted); font-weight: 500; font-size: 0.72rem; display: block; line-height: 1.1; }
+  tr.project .label .naam { display: block; line-height: 1.2; }
+  tr.project.actief .label { background: var(--blue-cell); }
+  tr.project td { height: 40px; }
+  td.balk { background: var(--blue); position: relative; }
+  td.balk.start { border-radius: 8px 0 0 8px; }
+  td.balk.eind { border-radius: 0 8px 8px 0; }
+  td.balk.start.eind { border-radius: 8px; }
+  td.balk.onbemand { background: repeating-linear-gradient(135deg, var(--blue-soft) 0 6px, var(--paper) 6px 12px); border-top: 1px solid var(--blue); border-bottom: 1px solid var(--blue); }
+  td.balk.afwijkend { box-shadow: inset 0 -3px 0 var(--amber); }
+  .notitie { position: absolute; left: 6px; top: 0; height: 100%; display: flex; align-items: center; white-space: nowrap; font-size: 0.74rem; font-weight: 600; color: #fff; pointer-events: auto; z-index: 1; max-width: 700px; overflow: hidden; }
+  td.balk.onbemand .notitie { color: var(--blue-deep); }
+  .notitie.leeg { color: rgba(255,255,255,0.75); font-weight: 500; font-style: italic; }
+  td.balk.onbemand .notitie.leeg { color: var(--blue-deep); opacity: 0.7; }
+  .notitie input { font: inherit; font-size: 0.74rem; padding: 2px 6px; border: 1px solid var(--blue-deep); border-radius: 4px; width: 260px; color: var(--ink); }
+
+  /* medewerkerrij */
+  tr.mw .label { padding-left: 22px; font-style: italic; color: var(--ink-soft); }
+  tr.mw td.dag { background: var(--blue-cell); }
+  tr.mw td.dag.weekend, tr.mw td.dag.gesloten { background: var(--weekend); }
+  tr.mw td.dag.gesloten { background: var(--gesloten); }
+  tr.mw td.dag.buiten { background: var(--paper); }
+  tr.mw input { width: 100%; height: 100%; border: none; background: transparent; text-align: center; font: inherit; font-size: 0.78rem; padding: 0; color: var(--ink); }
+  tr.mw input:focus { outline: 2px solid var(--blue); outline-offset: -2px; background: #fff; }
+  tr.mw td.dag.gevuld input { font-weight: 700; }
+  tr.mw td.dag.over { position: relative; }
+  tr.mw td.dag.over::after { content: ''; position: absolute; right: 0; top: 0; border-style: solid; border-width: 0 9px 9px 0; border-color: transparent var(--accent) transparent transparent; }
+  tr.mw td.dag.over input { color: var(--accent-deep); }
+
+  /* totaaltelling onderaan */
+  tfoot td.dag { font-size: 0.74rem; font-weight: 600; }
+  tfoot td.dag.vol { color: var(--green); }
+  tfoot td.dag.deels { color: var(--amber); }
+  tfoot td.dag.teveel { color: #fff; background: var(--accent); }
+  tfoot td.dag.leeg { color: #b9bec5; font-weight: 500; }
+  tfoot .label { font-weight: 600; color: var(--ink-soft); }
+  tfoot tr.kop td { height: 22px; font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+
+  /* paneel rechts */
+  .paneel { position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 0.9rem; }
+  .kaart { background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); padding: 0.9rem 1rem; }
+  .kaart h2 { margin: 0 0 0.6rem; font-size: 0.95rem; }
+  .kaart .leeg-tekst { color: var(--muted); font-size: 0.82rem; }
+  .kaart .pnaam { font-weight: 700; line-height: 1.25; }
+  .kaart .pklant { color: var(--muted); font-size: 0.8rem; margin-bottom: 0.7rem; }
+  .cijfers { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem 0.8rem; }
+  .cijfers .c .t { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+  .cijfers .c .v { font-size: 1.05rem; font-weight: 700; margin-top: 0.05rem; }
+  .cijfers .c .v small { font-size: 0.7rem; color: var(--muted); font-weight: 500; }
+  .cijfers .c.waarschuw .v { color: var(--accent); }
+  .pdatums { margin-top: 0.7rem; font-size: 0.78rem; color: var(--ink-soft); }
+  .pdatums .afw { color: var(--amber); font-weight: 600; }
+  .kaart ul.zonder { margin: 0; padding: 0; list-style: none; font-size: 0.8rem; }
+  .kaart ul.zonder li { padding: 0.3rem 0; border-top: 1px solid var(--paper-deep); }
+  .kaart ul.zonder li:first-child { border-top: none; }
+  .kaart ul.zonder .k { color: var(--muted); font-size: 0.72rem; display: block; }
+  .voetnoot { color: var(--muted); font-size: 0.74rem; margin-top: 0.6rem; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.74rem; color: var(--ink-soft); margin-top: 0.6rem; }
+  .legenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="app-loading">Planning laden…</div>
+<div id="login">
+  <div class="box">
+    <h2>Planning</h2>
+    <p>Log in met je Schilders Calc account.</p>
+    <input id="email" type="email" placeholder="E-mailadres" autocomplete="username">
+    <input id="wachtwoord" type="password" placeholder="Wachtwoord" autocomplete="current-password">
+    <button id="loginBtn">Inloggen</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="wrap" style="display:none">
+  <header>
+    <div>
+      <h1>Ernes Schilders — Planning</h1>
+      <div class="sub">Projecten uit Yoobi, uren en afspraken van ons · <span id="peildatum"></span> · <span id="appVersie"></span></div>
+    </div>
+    <div class="header-right">
+      <span class="status" id="status"></span>
+      <button class="knop" id="naarVandaag">Vandaag</button>
+      <div class="jaarkiezer">
+        <button id="jaarMin" title="Vorig jaar">‹</button>
+        <span class="jaar num" id="jaarLabel"></span>
+        <button id="jaarPlus" title="Volgend jaar">›</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="hoofd">
+    <div>
+      <div class="bord-kaart">
+        <div class="bord-scroll" id="bordScroll">
+          <table class="bord" id="bord"></table>
+        </div>
+      </div>
+      <div class="legenda">
+        <span><i style="background:var(--blue)"></i> gepland, met uren</span>
+        <span><i style="background:repeating-linear-gradient(135deg,var(--blue-soft) 0 3px,#fff 3px 6px);border:1px solid var(--blue)"></i> nog niemand op gepland</span>
+        <span><i style="background:var(--weekend)"></i> weekend</span>
+        <span><i style="background:var(--gesloten)"></i> gesloten dag</span>
+        <span><i style="background:var(--accent)"></i> te veel uren op een dag</span>
+      </div>
+    </div>
+
+    <aside class="paneel">
+      <div class="kaart" id="projectKaart">
+        <h2>Project</h2>
+        <div class="leeg-tekst">Klik op een project in de linkerkolom om de cijfers te zien en de uren uit te klappen.</div>
+      </div>
+      <div class="kaart" id="zonderKaart" style="display:none">
+        <h2>Nog geen datum in Yoobi</h2>
+        <ul class="zonder" id="zonderLijst"></ul>
+        <div class="voetnoot">Deze projecten komen op het bord zodra ze in Yoobi een startdatum hebben.</div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// planning.html — brok 2: het bord in zijn kern
+// Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
+// Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
+// =====================================================================
+const APP_VERSION = '0.1.0';
+
+const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ---------- toestand ----------
+let jaar = new Date().getFullYear();
+let stand = null;            // data-object uit fin_werkvoorraad
+let peildatum = null;
+let medewerkers = [];        // actieve rijen uit plan_medewerkers, op volgorde
+let planProjecten = {};      // yoobi_code -> rij uit plan_projecten
+let uren = {};               // sleutel code|mwId|datum -> getal (alleen geladen jaar)
+let gesloten = {};           // 'YYYY-MM-DD' -> {soort, omschrijving}
+let uitgeklapt = new Set();  // codes waarvan de medewerkerrijen open staan
+let actiefCode = null;       // project in het paneel
+let dagen = [];              // alle dagen van het jaar als 'YYYY-MM-DD'
+let dagIndex = {};           // 'YYYY-MM-DD' -> kolomindex
+
+// ---------- helpers ----------
+const DAGNAMEN = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
+const MAANDEN = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
+function yoobiDatum(s) {
+  if (!s) return null;
+  const m = String(s).match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!m) return null;
+  const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  return isNaN(d.getTime()) ? null : d;
+}
+function vanIso(s) {
+  if (!s) return null;
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+function naarIso(d) {
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dag = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - dag);
+  const jaarStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil((((t - jaarStart) / 86400000) + 1) / 7);
+}
+function fmtUur(n) {
+  if (n === null || n === undefined || n === '') return '';
+  return Number(n).toLocaleString('nl-NL', { maximumFractionDigits: 2 });
+}
+function parseUur(s) {
+  const t = String(s).trim().replace(',', '.');
+  if (t === '') return 0;
+  const n = Number(t);
+  return isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : NaN;
+}
+function eur(n) {
+  return Number(n || 0).toLocaleString('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+}
+function fmtDatum(d) {
+  return d ? d.getDate() + ' ' + MAANDEN[d.getMonth()] + ' ' + d.getFullYear() : '—';
+}
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function sleutel(code, mwId, datum) { return code + '|' + mwId + '|' + datum; }
+
+let statusTimer = null;
+function toonStatus(tekst, fout) {
+  const el = document.getElementById('status');
+  el.textContent = tekst;
+  el.className = 'status' + (fout ? ' fout' : '');
+  clearTimeout(statusTimer);
+  if (!fout) statusTimer = setTimeout(() => { el.textContent = ''; }, 4000);
+}
+
+// ---------- afgeleide gegevens ----------
+// De datums die op het bord gelden: onze planning als die er is, anders Yoobi.
+function projDatums(p) {
+  const pl = planProjecten[p.code] || {};
+  const yStart = yoobiDatum(p.startdatum);
+  const yEind = yoobiDatum(p.einddatum);
+  const start = vanIso(pl.plan_start) || yStart;
+  let eind = vanIso(pl.plan_eind) || yEind;
+  if (start && (!eind || eind < start)) eind = start;
+  const afwijkend = !!(pl.plan_start || pl.plan_eind);
+  return { start, eind, yStart, yEind, afwijkend };
+}
+function urenVanProject(code) {
+  let som = 0;
+  for (const k in uren) if (k.startsWith(code + '|')) som += uren[k];
+  return Math.round(som * 100) / 100;
+}
+function dagTotaal(mwId, datum) {
+  let som = 0;
+  for (const k in uren) {
+    const d = k.split('|');
+    if (d[1] === mwId && d[2] === datum) som += uren[k];
+  }
+  return Math.round(som * 100) / 100;
+}
+function isWeekend(iso) { const d = vanIso(iso).getDay(); return d === 0 || d === 6; }
+function isGesloten(iso) { return !!gesloten[iso]; }
+
+// Projecten die dit jaar op het bord horen.
+function projectenOpBord() {
+  if (!stand) return [];
+  const j1 = new Date(jaar, 0, 1), j2 = new Date(jaar, 11, 31);
+  return stand.projecten
+    .filter(p => p.code)
+    .map(p => ({ p, d: projDatums(p) }))
+    .filter(x => {
+      const pl = planProjecten[x.p.code];
+      if (pl && pl.zichtbaar === false) return false;
+      if (x.d.start && x.d.start <= j2 && x.d.eind >= j1) return true;
+      // Zonder datum in dit jaar, maar wel uren gepland: toch tonen.
+      return urenVanProject(x.p.code) > 0;
+    })
+    .sort((a, b) => {
+      const sa = a.d.start ? a.d.start.getTime() : Infinity;
+      const sbb = b.d.start ? b.d.start.getTime() : Infinity;
+      return sa - sbb || String(a.p.klant).localeCompare(String(b.p.klant), 'nl');
+    });
+}
+function projectenZonderDatum() {
+  if (!stand) return [];
+  return stand.projecten.filter(p => p.code && !projDatums(p).start);
+}
+function vindProject(code) {
+  return stand ? stand.projecten.find(p => p.code === code) : null;
+}
+
+// ---------- laden ----------
+async function laadAlles() {
+  const j1 = jaar + '-01-01', j2 = jaar + '-12-31';
+  const [wv, mw, pp, pu, gd] = await Promise.all([
+    sb.from('fin_werkvoorraad').select('peildatum,data').order('peildatum', { ascending: false }).limit(1),
+    sb.from('plan_medewerkers').select('*').eq('actief', true).order('volgorde'),
+    sb.from('plan_projecten').select('*'),
+    sb.from('plan_uren').select('yoobi_code,medewerker_id,datum,uren').gte('datum', j1).lte('datum', j2),
+    sb.from('plan_gesloten_dagen').select('*').gte('datum', j1).lte('datum', j2),
+  ]);
+  for (const r of [wv, mw, pp, pu, gd]) if (r.error) throw r.error;
+
+  if (wv.data && wv.data.length) {
+    stand = wv.data[0].data || { projecten: [] };
+    peildatum = wv.data[0].peildatum;
+  } else {
+    stand = { projecten: [] };
+    peildatum = null;
+  }
+  medewerkers = (mw.data || []).map(m => ({ ...m, norm_uren: Number(m.norm_uren) }));
+  planProjecten = {};
+  for (const r of (pp.data || [])) planProjecten[r.yoobi_code] = r;
+  uren = {};
+  for (const r of (pu.data || [])) {
+    const n = Number(r.uren);
+    if (n > 0) uren[sleutel(r.yoobi_code, r.medewerker_id, r.datum)] = n;
+  }
+  gesloten = {};
+  for (const r of (gd.data || [])) gesloten[r.datum] = r;
+}
+
+// ---------- tekenen ----------
+function bouwDagen() {
+  dagen = []; dagIndex = {};
+  const d = new Date(jaar, 0, 1);
+  while (d.getFullYear() === jaar) {
+    const iso = naarIso(d);
+    dagIndex[iso] = dagen.length;
+    dagen.push(iso);
+    d.setDate(d.getDate() + 1);
+  }
+}
+
+function celKlassen(iso) {
+  let k = 'dag';
+  if (isWeekend(iso)) k += ' weekend';
+  if (isGesloten(iso)) k += ' gesloten';
+  if (iso === naarIso(new Date())) k += ' vandaag';
+  return k;
+}
+
+function tekenBord() {
+  bouwDagen();
+  const projecten = projectenOpBord();
+  const vandaag = naarIso(new Date());
+  let h = '';
+
+  // kolommen
+  h += '<colgroup><col class="c-label">' + dagen.map(() => '<col class="c-dag">').join('') + '</colgroup>';
+
+  // kop: weken en dagen
+  h += '<thead><tr class="weken"><th class="label">' + esc(String(jaar)) + '</th>';
+  let i = 0;
+  while (i < dagen.length) {
+    const d0 = vanIso(dagen[i]);
+    const wk = isoWeek(d0);
+    let span = 1;
+    while (i + span < dagen.length && isoWeek(vanIso(dagen[i + span])) === wk) span++;
+    h += '<th colspan="' + span + '">wk ' + wk + ' <span style="color:var(--muted);font-weight:500">' + MAANDEN[d0.getMonth()] + '</span></th>';
+    i += span;
+  }
+  h += '</tr><tr class="dagen"><th class="label">Project</th>';
+  for (const iso of dagen) {
+    const d = vanIso(iso);
+    const t = isGesloten(iso) ? ' title="' + esc(gesloten[iso].omschrijving || gesloten[iso].soort) + '"' : '';
+    h += '<th class="' + celKlassen(iso) + '"' + t + '><span class="d">' + DAGNAMEN[d.getDay()] + '</span><span class="n">' + d.getDate() + '</span></th>';
+  }
+  h += '</tr></thead>';
+
+  // projectrijen
+  h += '<tbody>';
+  if (!projecten.length) {
+    h += '<tr><td class="label" style="color:var(--muted);font-weight:500">Geen projecten in ' + jaar + '</td><td colspan="' + dagen.length + '"></td></tr>';
+  }
+  for (const { p, d } of projecten) {
+    h += tekenProjectRij(p, d);
+    if (uitgeklapt.has(p.code)) for (const m of medewerkers) h += tekenMwRij(p, d, m);
+  }
+  h += '</tbody>';
+
+  // totaaltelling
+  h += '<tfoot><tr class="kop"><td class="label">Nog te plannen per dag</td>' + dagen.map(() => '<td></td>').join('') + '</tr>';
+  for (const m of medewerkers) {
+    h += '<tr data-mw="' + esc(m.id) + '"><td class="label">' + esc(m.naam) + ' <span class="num" style="color:var(--muted);font-weight:500">(' + fmtUur(m.norm_uren) + ')</span></td>';
+    for (const iso of dagen) h += '<td class="' + celKlassen(iso) + ' num" data-mw="' + esc(m.id) + '" data-datum="' + iso + '">' + restantInhoud(m, iso) + '</td>';
+    h += '</tr>';
+  }
+  h += '</tfoot>';
+
+  document.getElementById('bord').innerHTML = h;
+  // rijen onderaan vastzetten: elke tfoot-rij zijn eigen bottom
+  const rijen = Array.from(document.querySelectorAll('#bord tfoot tr'));
+  let bottom = 0;
+  for (let r = rijen.length - 1; r >= 0; r--) {
+    rijen[r].querySelectorAll('td').forEach(td => td.style.bottom = bottom + 'px');
+    bottom += rijen[r].offsetHeight;
+  }
+  zetOverKlassen();
+  tekenZonderDatum();
+  tekenPaneel();
+  document.getElementById('jaarLabel').textContent = jaar;
+}
+
+function tekenProjectRij(p, d) {
+  const j1 = dagen[0], j2 = dagen[dagen.length - 1];
+  const sIso = d.start ? naarIso(d.start) : null;
+  const eIso = d.eind ? naarIso(d.eind) : null;
+  const bemand = urenVanProject(p.code) > 0;
+  const pl = planProjecten[p.code] || {};
+  let h = '<tr class="project' + (p.code === actiefCode ? ' actief' : '') + '" data-code="' + esc(p.code) + '">';
+  h += '<td class="label" title="' + esc(p.klant + ' — ' + p.naam) + '"><span class="klant">' + esc(p.klant) + '</span><span class="naam">' + esc(p.naam) + '</span></td>';
+  const eersteZichtbaar = sIso && sIso >= j1 ? sIso : j1;
+  for (const iso of dagen) {
+    let k = celKlassen(iso);
+    const inBalk = sIso && iso >= sIso && iso <= eIso;
+    let inhoud = '';
+    if (inBalk) {
+      k += ' balk';
+      if (iso === sIso) k += ' start';
+      if (iso === eIso) k += ' eind';
+      if (!bemand) k += ' onbemand';
+      if (d.afwijkend) k += ' afwijkend';
+      if (iso === eersteZichtbaar) {
+        const n = pl.klantnotitie || '';
+        inhoud = '<div class="notitie' + (n ? '' : ' leeg') + '" data-code="' + esc(p.code) + '" title="Klik om de afspraak met de klant te noteren">' + (n ? esc(n) : 'afspraak klant…') + '</div>';
+      }
+    }
+    h += '<td class="' + k + '">' + inhoud + '</td>';
+  }
+  return h + '</tr>';
+}
+
+function tekenMwRij(p, d, m) {
+  const sIso = d.start ? naarIso(d.start) : null;
+  const eIso = d.eind ? naarIso(d.eind) : null;
+  let h = '<tr class="mw" data-code="' + esc(p.code) + '" data-mw="' + esc(m.id) + '"><td class="label">' + esc(m.naam) + '</td>';
+  for (const iso of dagen) {
+    let k = celKlassen(iso);
+    const blok = isWeekend(iso) || isGesloten(iso);
+    const inBalk = sIso && iso >= sIso && iso <= eIso;
+    if (!inBalk && !blok) k += ' buiten';
+    const w = uren[sleutel(p.code, m.id, iso)];
+    if (w) k += ' gevuld';
+    h += '<td class="' + k + '" data-code="' + esc(p.code) + '" data-mw="' + esc(m.id) + '" data-datum="' + iso + '">';
+    if (!blok) h += '<input type="text" inputmode="decimal" value="' + (w ? fmtUur(w) : '') + '" aria-label="' + esc(m.naam + ' ' + iso) + '">';
+    h += '</td>';
+  }
+  return h + '</tr>';
+}
+
+// Inhoud en kleur van een cel in de totaaltelling.
+function restantInhoud(m, iso) {
+  if (isWeekend(iso) || isGesloten(iso)) return '';
+  const t = dagTotaal(m.id, iso);
+  const r = Math.round((m.norm_uren - t) * 100) / 100;
+  return fmtUur(r);
+}
+function restantKlasse(m, iso) {
+  if (isWeekend(iso) || isGesloten(iso)) return '';
+  const t = dagTotaal(m.id, iso);
+  if (t === 0) return 'leeg';
+  if (t > m.norm_uren) return 'teveel';
+  if (t === m.norm_uren) return 'vol';
+  return 'deels';
+}
+function werkTotaalCel(mwId, iso) {
+  const m = medewerkers.find(x => x.id === mwId);
+  const td = document.querySelector('#bord tfoot td[data-mw="' + mwId + '"][data-datum="' + iso + '"]');
+  if (!m || !td) return;
+  td.textContent = restantInhoud(m, iso);
+  td.className = celKlassen(iso) + ' num ' + restantKlasse(m, iso);
+  const t = dagTotaal(mwId, iso);
+  td.title = t ? m.naam + ': ' + fmtUur(t) + ' van ' + fmtUur(m.norm_uren) + ' uur gepland' : '';
+}
+
+// Rode hoekjes: alle cellen met uren van deze medewerker op deze dag,
+// als het dagtotaal boven de norm zit.
+function zetOverKlassen() {
+  for (const m of medewerkers) for (const iso of dagen) werkOverCellen(m.id, iso);
+}
+function werkOverCellen(mwId, iso) {
+  const m = medewerkers.find(x => x.id === mwId);
+  if (!m) return;
+  const t = dagTotaal(mwId, iso);
+  const over = t > m.norm_uren;
+  document.querySelectorAll('#bord tr.mw td[data-mw="' + mwId + '"][data-datum="' + iso + '"]').forEach(td => {
+    const w = uren[sleutel(td.dataset.code, mwId, iso)] || 0;
+    td.classList.toggle('over', over && w > 0);
+    td.classList.toggle('gevuld', w > 0);
+    if (over && w > 0) {
+      const andere = [];
+      for (const k in uren) {
+        const d = k.split('|');
+        if (d[1] === mwId && d[2] === iso && d[0] !== td.dataset.code) {
+          const q = vindProject(d[0]);
+          andere.push(fmtUur(uren[k]) + ' op ' + (q ? q.naam : d[0]));
+        }
+      }
+      td.title = fmtUur(t - m.norm_uren) + ' uur te veel' + (andere.length ? ': al ' + andere.join(', ') : '');
+    } else td.title = '';
+  });
+  werkTotaalCel(mwId, iso);
+}
+
+function werkBalk(code) {
+  const bemand = urenVanProject(code) > 0;
+  document.querySelectorAll('#bord tr.project[data-code="' + code + '"] td.balk').forEach(td => td.classList.toggle('onbemand', !bemand));
+}
+
+function tekenZonderDatum() {
+  const lijst = projectenZonderDatum();
+  const kaart = document.getElementById('zonderKaart');
+  kaart.style.display = lijst.length ? '' : 'none';
+  document.getElementById('zonderLijst').innerHTML = lijst.map(p =>
+    '<li><span class="k">' + esc(p.klant) + '</span>' + esc(p.naam) + ' <span class="num" style="color:var(--muted)">' + fmtUur(p.begrote_uren) + ' u</span></li>').join('');
+}
+
+function tekenPaneel() {
+  const el = document.getElementById('projectKaart');
+  const p = actiefCode ? vindProject(actiefCode) : null;
+  if (!p) {
+    el.innerHTML = '<h2>Project</h2><div class="leeg-tekst">Klik op een project in de linkerkolom om de cijfers te zien en de uren uit te klappen.</div>';
+    return;
+  }
+  const d = projDatums(p);
+  const ingepland = urenVanProject(p.code);
+  const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
+  const rest = Math.round((budget - geboekt - ingepland) * 100) / 100;
+  el.innerHTML =
+    '<h2>Project</h2>' +
+    '<div class="pnaam">' + esc(p.naam) + '</div>' +
+    '<div class="pklant">' + esc(p.klant) + ' · Yoobi ' + esc(p.code) + '</div>' +
+    '<div class="cijfers">' +
+    '<div class="c"><div class="t">Aanneemsom</div><div class="v num">' + eur(p.aanneemsom) + '</div></div>' +
+    '<div class="c"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div></div>' +
+    '<div class="c"><div class="t">Ingepland ' + jaar + '</div><div class="v num">' + fmtUur(ingepland) + ' <small>uur</small></div></div>' +
+    '<div class="c"><div class="t">Geboekt</div><div class="v num">' + fmtUur(geboekt) + ' <small>uur</small></div></div>' +
+    '<div class="c' + (rest < 0 ? ' waarschuw' : '') + '"><div class="t">Resterend</div><div class="v num">' + fmtUur(rest) + ' <small>uur</small></div></div>' +
+    '</div>' +
+    '<div class="pdatums">Yoobi: ' + fmtDatum(d.yStart) + ' – ' + fmtDatum(d.yEind) +
+    (d.afwijkend ? '<br><span class="afw">Onze planning: ' + fmtDatum(d.start) + ' – ' + fmtDatum(d.eind) + '</span>' : '') + '</div>' +
+    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Resterend = budget − geboekt − ingepland.</div>';
+}
+
+// ---------- opslaan ----------
+async function slaUrenOp(code, mwId, iso, waarde) {
+  const oud = uren[sleutel(code, mwId, iso)] || 0;
+  if (waarde === oud) return;
+  if (waarde > 0) uren[sleutel(code, mwId, iso)] = waarde; else delete uren[sleutel(code, mwId, iso)];
+  werkOverCellen(mwId, iso);
+  werkBalk(code);
+  if (code === actiefCode) tekenPaneel();
+  try {
+    let r;
+    if (waarde > 0) {
+      r = await sb.from('plan_uren').upsert(
+        { yoobi_code: code, medewerker_id: mwId, datum: iso, uren: waarde },
+        { onConflict: 'yoobi_code,medewerker_id,datum' });
+    } else {
+      r = await sb.from('plan_uren').delete().match({ yoobi_code: code, medewerker_id: mwId, datum: iso });
+    }
+    if (r.error) throw r.error;
+    toonStatus('Opgeslagen ' + new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
+  } catch (e) {
+    // terugdraaien in het geheugen, zodat het bord niet liegt
+    if (oud > 0) uren[sleutel(code, mwId, iso)] = oud; else delete uren[sleutel(code, mwId, iso)];
+    werkOverCellen(mwId, iso);
+    werkBalk(code);
+    const inp = document.querySelector('#bord td[data-code="' + code + '"][data-mw="' + mwId + '"][data-datum="' + iso + '"] input');
+    if (inp) inp.value = oud ? fmtUur(oud) : '';
+    toonStatus('Opslaan mislukt: ' + (e.message || e), true);
+  }
+}
+
+async function slaNotitieOp(code, tekst) {
+  const oud = (planProjecten[code] || {}).klantnotitie || '';
+  if (tekst === oud) return;
+  try {
+    const r = await sb.from('plan_projecten').upsert({ yoobi_code: code, klantnotitie: tekst || null }, { onConflict: 'yoobi_code' }).select();
+    if (r.error) throw r.error;
+    planProjecten[code] = (r.data && r.data[0]) || { ...(planProjecten[code] || {}), yoobi_code: code, klantnotitie: tekst };
+    toonStatus('Notitie opgeslagen');
+  } catch (e) {
+    toonStatus('Notitie opslaan mislukt: ' + (e.message || e), true);
+  }
+}
+
+// ---------- gebeurtenissen ----------
+const bordEl = document.getElementById('bord');
+
+bordEl.addEventListener('click', e => {
+  const notitie = e.target.closest('.notitie');
+  if (notitie) { e.stopPropagation(); bewerkNotitie(notitie); return; }
+  if (e.target.closest('input')) return;
+  const rij = e.target.closest('tr.project');
+  if (!rij) return;
+  const code = rij.dataset.code;
+  if (uitgeklapt.has(code) && actiefCode === code) uitgeklapt.delete(code);
+  else uitgeklapt.add(code);
+  actiefCode = code;
+  const links = document.getElementById('bordScroll').scrollLeft;
+  tekenBord();
+  document.getElementById('bordScroll').scrollLeft = links;
+});
+
+function bewerkNotitie(el) {
+  if (el.querySelector('input')) return;
+  const code = el.dataset.code;
+  const oud = (planProjecten[code] || {}).klantnotitie || '';
+  el.classList.remove('leeg');
+  el.innerHTML = '<input type="text" value="' + esc(oud) + '" placeholder="bv. vast doorgegeven: week 37" maxlength="120">';
+  const inp = el.querySelector('input');
+  inp.focus(); inp.select();
+  let klaar = false;
+  const sluit = async (opslaan) => {
+    if (klaar) return; klaar = true;
+    const nieuw = inp.value.trim();
+    if (opslaan) await slaNotitieOp(code, nieuw);
+    const n = (planProjecten[code] || {}).klantnotitie || '';
+    el.classList.toggle('leeg', !n);
+    el.textContent = n || 'afspraak klant…';
+  };
+  inp.addEventListener('blur', () => sluit(true));
+  inp.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') { ev.preventDefault(); inp.blur(); }
+    if (ev.key === 'Escape') { ev.preventDefault(); sluit(false); }
+  });
+}
+
+bordEl.addEventListener('focusout', e => {
+  const inp = e.target;
+  if (!(inp instanceof HTMLInputElement) || !inp.closest('tr.mw')) return;
+  const td = inp.closest('td');
+  const w = parseUur(inp.value);
+  if (isNaN(w)) {
+    toonStatus('Ongeldig getal, gebruik bv. 7,5', true);
+    const oud = uren[sleutel(td.dataset.code, td.dataset.mw, td.dataset.datum)] || 0;
+    inp.value = oud ? fmtUur(oud) : '';
+    return;
+  }
+  inp.value = w ? fmtUur(w) : '';
+  slaUrenOp(td.dataset.code, td.dataset.mw, td.dataset.datum, w);
+});
+
+bordEl.addEventListener('keydown', e => {
+  const inp = e.target;
+  if (!(inp instanceof HTMLInputElement) || !inp.closest('tr.mw')) return;
+  if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    const td = inp.closest('td');
+    let buur = e.key === 'ArrowRight' ? td.nextElementSibling : td.previousElementSibling;
+    while (buur && !buur.querySelector('input')) buur = e.key === 'ArrowRight' ? buur.nextElementSibling : buur.previousElementSibling;
+    if (buur) { e.preventDefault(); buur.querySelector('input').focus(); }
+  }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    const td = inp.closest('td');
+    const rij = e.key === 'ArrowDown' ? td.parentElement.nextElementSibling : td.parentElement.previousElementSibling;
+    if (rij && rij.classList.contains('mw')) {
+      const doel = rij.querySelector('td[data-datum="' + td.dataset.datum + '"] input');
+      if (doel) { e.preventDefault(); doel.focus(); }
+    }
+  }
+});
+
+function scrollNaarVandaag() {
+  const sc = document.getElementById('bordScroll');
+  const iso = naarIso(new Date());
+  const i = dagIndex[iso];
+  const breedte = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dag')) || 34;
+  sc.scrollLeft = i === undefined ? 0 : Math.max(0, i * breedte - 2 * breedte);
+}
+
+document.getElementById('naarVandaag').addEventListener('click', () => {
+  if (jaar !== new Date().getFullYear()) { jaar = new Date().getFullYear(); herlaad().then(scrollNaarVandaag); }
+  else scrollNaarVandaag();
+});
+document.getElementById('jaarMin').addEventListener('click', () => { jaar--; herlaad(); });
+document.getElementById('jaarPlus').addEventListener('click', () => { jaar++; herlaad(); });
+
+async function herlaad() {
+  toonStatus('Laden…');
+  try {
+    await laadAlles();
+    tekenBord();
+    document.getElementById('bordScroll').scrollLeft = 0;
+    toonStatus('');
+  } catch (e) {
+    toonStatus('Laden mislukt: ' + (e.message || e), true);
+  }
+}
+
+// ---------- start ----------
+async function laadData() {
+  const loading = document.getElementById('app-loading');
+  loading.style.display = 'flex';
+  try {
+    await laadAlles();
+    document.getElementById('peildatum').textContent = 'Yoobi-stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : 'onbekend');
+    tekenBord();
+    document.getElementById('login').style.display = 'none';
+    loading.style.display = 'none';
+    document.querySelector('.wrap').style.display = '';
+    scrollNaarVandaag();
+  } catch (e) {
+    loading.textContent = 'De planning kon niet geladen worden: ' + (e.message || e);
+  }
+}
+
+function toonLogin() {
+  document.getElementById('app-loading').style.display = 'none';
+  document.getElementById('login').style.display = 'flex';
+}
+
+async function inloggen() {
+  const email = document.getElementById('email').value.trim();
+  const wachtwoord = document.getElementById('wachtwoord').value;
+  const err = document.getElementById('loginErr');
+  err.textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email, password: wachtwoord });
+  if (error) { err.textContent = 'Inloggen mislukt. Controleer je e-mailadres en wachtwoord.'; return; }
+  document.getElementById('login').style.display = 'none';
+  laadData();
+}
+
+document.getElementById('loginBtn').addEventListener('click', inloggen);
+document.getElementById('wachtwoord').addEventListener('keydown', e => { if (e.key === 'Enter') inloggen(); });
+document.getElementById('appVersie').textContent = 'v' + APP_VERSION;
+
+(async function start() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) laadData(); else toonLogin();
+})();
+</script>
+</body>
+</html>
