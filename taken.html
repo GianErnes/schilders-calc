@@ -530,8 +530,8 @@
     </div>
 
     <div class="fld" id="s_vandaagwrap" style="display:none">
-      <div class="k">Dagkeuze</div>
-      <div class="toggle" id="s_vandaag"><span id="s_vandaagtekst">Vandaag oppakken</span><span class="sw"></span></div>
+      <div class="k">Actueel</div>
+      <div class="toggle" id="s_vandaag"><span id="s_vandaagtekst">Naar Actueel</span><span class="sw"></span></div>
     </div>
 
     <div class="fld" id="s_piepwrap">
@@ -597,7 +597,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.17.0';
+const APP_VERSION = 'v0.18.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -605,7 +605,8 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { st
 const FOTO_BUCKET = 'taken-fotos';
 const DOC_BUCKET = 'taken-documenten';
 let DOCS_TELLING = {};    /* crmtaskid -> aantal PDF-bijlagen */
-let MIJN_VANDAAG = new Set();  /* crmtaskid dat ik vandaag zelf gekozen heb */
+let MIJN_VANDAAG = new Set();  /* v0.18.0: crmtaskid met stand 'gehaald' in taak_dagkeuze, blijvend tot je hem wegzet of afvinkt */
+let MIJN_WEGGEZET_VANDAAG = new Set();  /* v0.18.0: crmtaskid dat ik vandaag met de pijl heb weggezet; onderdrukt vandaag de automatische plaatsing */
 
 const PERSOON = {
   gian:   { naam:'Gian',   css:'var(--gian)'   },
@@ -755,7 +756,10 @@ function persoonVan(t){
 function rubriekVan(t, nu, vandaagISO){
   if(t.status === 'vervallen') return 'vervallen';
   if(t.voltooid_op) return 'voltooid';
-  if(t._vandaagVast) return 'vandaag';
+  /* v0.18.0: vast in Actueel door de planning, tenzij je hem vandaag hebt
+     weggezet. Dan valt hij door naar Op de rol (gepland <= vandaag). Morgen
+     is de weggezet-set leeg en wint de planning weer. */
+  if(t._vandaagVast && !MIJN_WEGGEZET_VANDAAG.has(String(t.crmtaskid))) return 'vandaag';
   if(MIJN_VANDAAG.has(String(t.crmtaskid))) return 'vandaag';
   if(t._gepland && lokaalISO(t._gepland) <= vandaagISO) return 'oprol';
   if(t.bron === 'yoobi') return 'klant';
@@ -789,48 +793,54 @@ function verrijk(rijen){
 }
 
 /* ────────────────────────────────────────────────────────
-   Dagkeuze: mijn eigen regels uit taak_dagkeuze.
-   De regels van vandaag vullen Vandaag. Regels van eerdere dagen
-   blijven in de tabel als historie staan maar sturen sinds v0.17.0
-   niets meer aan; de ouderdom van een taak komt uit gepland_op.
+   Keuze voor Actueel: mijn eigen regels uit taak_dagkeuze.
+   v0.18.0: één regel per persoon per taak (uniek op persoon, taak_id).
+   stand 'gehaald'  = blijvend in Actueel, ongeacht de dag.
+   stand 'weggezet' = niet in Actueel. Staat de taak vandaag op jouw
+                      naam gepland, dan geldt het wegzetten alleen voor
+                      de dag in kolom dag; morgen wint de planning weer.
+   Vervangt het dagmodel van v0.15.0-v0.17.0 waarin alleen regels met
+   dag = vandaag telden.
    ──────────────────────────────────────────────────────── */
 async function haalDagkeuze(){
   MIJN_VANDAAG = new Set();
+  MIJN_WEGGEZET_VANDAAG = new Set();
   if(!IK) return;
   const { data, error } = await sb.from('taak_dagkeuze')
-    .select('taak_id, dag').eq('persoon', IK.persoon);
-  if(error){ toast('Dagkeuze laden lukt niet: ' + error.message); return; }
+    .select('taak_id, stand, dag').eq('persoon', IK.persoon);
+  if(error){ toast('Keuze laden lukt niet: ' + error.message); return; }
   const vandaagISO = lokaalISO(new Date());
   (data || []).forEach(function(r){
-    if(r.dag === vandaagISO) MIJN_VANDAAG.add(String(r.taak_id));
+    if(r.stand === 'gehaald') MIJN_VANDAAG.add(String(r.taak_id));
+    else if(r.stand === 'weggezet' && r.dag === vandaagISO) MIJN_WEGGEZET_VANDAAG.add(String(r.taak_id));
   });
 }
 
-/* Zetten of weghalen voor vandaag. Geeft null terug bij goed gevolg,
-   anders de fouttekst. Een dubbele insert is geen fout: dan stond hij
-   er al in. */
+/* Naar Actueel halen (aan) of wegzetten (uit). Geeft null terug bij goed
+   gevolg, anders de fouttekst. Eén upsert op (persoon, taak_id); dag en
+   gezet_op gaan expliciet mee, want bij een bestaande regel vult de
+   database die niet opnieuw. */
 async function zetDagkeuze(id, aan){
   if(!IK) return 'Geen profiel geladen';
   const vandaagISO = lokaalISO(new Date());
-  if(aan){
-    const { error } = await sb.from('taak_dagkeuze')
-      .insert({ taak_id: id, persoon: IK.persoon, dag: vandaagISO });
-    if(error && error.code !== '23505') return error.message;
-    MIJN_VANDAAG.add(String(id));
-  } else {
-    const { error } = await sb.from('taak_dagkeuze').delete()
-      .eq('taak_id', id).eq('persoon', IK.persoon).eq('dag', vandaagISO);
-    if(error) return error.message;
-    MIJN_VANDAAG.delete(String(id));
-  }
+  const { error } = await sb.from('taak_dagkeuze')
+    .upsert({ taak_id: id, persoon: IK.persoon, stand: aan ? 'gehaald' : 'weggezet',
+              dag: vandaagISO, gezet_op: new Date().toISOString() },
+            { onConflict: 'persoon,taak_id' });
+  if(error) return error.message;
+  if(aan){ MIJN_VANDAAG.add(String(id)); MIJN_WEGGEZET_VANDAAG.delete(String(id)); }
+  else   { MIJN_VANDAAG.delete(String(id)); MIJN_WEGGEZET_VANDAAG.add(String(id)); }
   return null;
 }
 
 async function schakelDagkeuze(id){
-  const aan = !MIJN_VANDAAG.has(String(id));
+  /* v0.18.0: een vaste taak (vandaag gepland op jouw naam) zit niet in
+     MIJN_VANDAAG maar staat wel in Actueel; de pijl moet hem dan wegzetten. */
+  const t = TAKEN.find(function(x){ return String(x.crmtaskid) === String(id); });
+  const aan = t ? t._rubriek !== 'vandaag' : !MIJN_VANDAAG.has(String(id));
   const fout = await zetDagkeuze(id, aan);
-  if(fout){ toast('Dagkeuze opslaan lukt niet: ' + fout); return; }
-  toast(aan ? 'Naar Vandaag' : 'Uit Vandaag');
+  if(fout){ toast('Keuze opslaan lukt niet: ' + fout); return; }
+  toast(aan ? 'Naar Actueel' : 'Uit Actueel');
   await laadTaken();
 }
 
@@ -852,7 +862,7 @@ async function haalTaken(){
 const NA_VIER = new Date().getHours() >= 16;
 
 const RUBRIEKEN = [
-  { key:'vandaag',   titel:'Vandaag',        sub:'wat vandaag op jouw naam staat',           open:true,    klasse:'today' },
+  { key:'vandaag',   titel:'Actueel',        sub:'op jouw naam vandaag, plus wat je zelf hebt gehaald', open:true, klasse:'today' }, /* v0.18.0: was Vandaag */
   { key:'oprol',     titel:'Op de rol',      sub:'blijven liggen en nog op te pakken',       open:true,    klasse:'roll' },
   { key:'los',       titel:'Losse taken',    sub:'wat er nog aankomt',                       open:false },
   { key:'herhalend', titel:'Herhalend ↻',    sub:'',                                         open:false },
@@ -920,12 +930,13 @@ function kaart(t, hero){
      Alleen zichtbaar waar het iets betekent, dus in Vandaag en Op de rol.
      v0.17.0: staat hij vast in Vandaag omdat hij vandaag gepland is, dan
      verschijnt de pijl niet. Eruit gaat via de datum, niet via een tik. */
+  /* v0.18.0: ook bij een vaste taak staat de pijl er, om hem voor vandaag
+     weg te zetten. Morgen komt hij door de planning vanzelf terug. */
   const inVandaag = t._rubriek === 'vandaag';
-  const kies = t._vandaagVast ? ''
-    : (inVandaag || t._rubriek === 'oprol')
+  const kies = (inVandaag || t._rubriek === 'oprol')
     ? '<span class="kies' + (inVandaag ? ' aan' : '') + '" data-kies="' + esc(t.crmtaskid) +
-      '" role="button" tabindex="0" aria-label="' + (inVandaag ? 'Uit Vandaag' : 'Naar Vandaag') +
-      '" title="' + (inVandaag ? 'Uit Vandaag' : 'Naar Vandaag') + '">' +
+      '" role="button" tabindex="0" aria-label="' + (inVandaag ? 'Uit Actueel' : 'Naar Actueel') +
+      '" title="' + (inVandaag ? 'Uit Actueel' : 'Naar Actueel') + '">' +
       (inVandaag ? '↓' : '↑') + '</span>'
     : '';
   return '<div class="card' + (hero ? ' hero' : '') + '" tabindex="0" data-id="' + esc(t.crmtaskid) + '">' +
@@ -1251,10 +1262,12 @@ function openTask(t){
      v0.17.0: staat de taak vandaag gepland op jouw naam, dan is Vandaag
      geen keuze maar een gevolg. De schakelaar zou dan niets doen en
      blijft daarom weg. */
-  zet('s_vandaagwrap', (modus === 'eigen' || modus === 'yoobi') && !t._vandaagVast);
-  const vandaagAan = MIJN_VANDAAG.has(String(t.crmtaskid));
+  /* v0.18.0: ook bij een vaste taak zichtbaar; uitzetten = voor vandaag
+     wegzetten. Aan/uit volgt de rubriek, niet alleen de eigen keuze. */
+  zet('s_vandaagwrap', (modus === 'eigen' || modus === 'yoobi'));
+  const vandaagAan = t._rubriek === 'vandaag' || MIJN_VANDAAG.has(String(t.crmtaskid));
   document.getElementById('s_vandaag').classList.toggle('uit', !vandaagAan);
-  document.getElementById('s_vandaagtekst').textContent = vandaagAan ? 'Staat in Vandaag' : 'Vandaag oppakken';
+  document.getElementById('s_vandaagtekst').textContent = vandaagAan ? 'Staat in Actueel' : 'Naar Actueel';
 
   /* melding */
   zet('s_piepwrap', modus === 'eigen');
@@ -1331,7 +1344,7 @@ function openNieuw(){
   zet('s_repwrap', false);
   zet('s_vandaagwrap', true);
   document.getElementById('s_vandaag').classList.add('uit');
-  document.getElementById('s_vandaagtekst').textContent = 'Vandaag oppakken';
+  document.getElementById('s_vandaagtekst').textContent = 'Naar Actueel';
 
   zet('s_piepwrap', true);
   zet('s_snooze', false);
@@ -1749,11 +1762,11 @@ async function verwijderTaak(){
 async function schakelVandaag(){
   const aanNu = document.getElementById('s_vandaag').classList.contains('uit'); /* wordt aan */
   document.getElementById('s_vandaag').classList.toggle('uit', !aanNu);
-  document.getElementById('s_vandaagtekst').textContent = aanNu ? 'Staat in Vandaag' : 'Vandaag oppakken';
+  document.getElementById('s_vandaagtekst').textContent = aanNu ? 'Staat in Actueel' : 'Naar Actueel';
   if(!VEL || VEL.modus === 'nieuw') return; /* bij nieuw gaat hij mee met Toevoegen */
   const fout = await zetDagkeuze(VEL.taak.crmtaskid, aanNu);
-  if(fout){ toast('Dagkeuze opslaan lukt niet: ' + fout); return; }
-  toast(aanNu ? 'Naar Vandaag' : 'Uit Vandaag');
+  if(fout){ toast('Keuze opslaan lukt niet: ' + fout); return; }
+  toast(aanNu ? 'Naar Actueel' : 'Uit Actueel');
   await laadTaken();
 }
 
