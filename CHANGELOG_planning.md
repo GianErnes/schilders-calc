@@ -1,5 +1,13 @@
 # CHANGELOG planning.html
 
+## v0.1.2 — Kolombreedtes afgedwongen, 06-09-2026
+
+In de browser rekte de linkerkolom mee met de langste projectnaam, stond de scroll op maart en liepen de getallen onderaan in elkaar. Eén oorzaak: `table-layout: fixed` werkt alleen met een tabelbreedte, en die ontbrak. De tabel krijgt nu 300 + 365 × 34 px, de linkerkolom knipt lange namen af met "…" (volledige naam in de zweeftekst), en "Vandaag" scrolt op de echte kolompositie. Rijhoogte ongewijzigd. 23/23 controles in jsdom; het beeld zelf is niet in een echte browser getest.
+
+## v0.1.1 — Projectnaam in de balk, 06-09-2026
+
+Na eerste blik in de browser: als je naar de huidige week scrolt zegt een balk niets meer. De projectnaam staat nu vooraan in de balk, de klantnotitie erachter. De tekst heeft de balkkleur als achtergrond en loopt bij een korte balk leesbaar over het einde heen. Getest: 23/23 controles in jsdom.
+
 ## v0.1.0 — Het bord in zijn kern (brok 2), 06-09-2026
 
 Eigen pagina naast financieel.html en taken.html, zelfde login en stijl.

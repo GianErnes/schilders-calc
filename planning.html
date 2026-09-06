@@ -80,7 +80,8 @@
   table.bord thead tr.dagen th { top: 24px; height: 34px; font-size: 0.68rem; line-height: 1.1; text-align: center; }
   table.bord thead tr.dagen th .d { display: block; color: var(--muted); font-weight: 500; }
   table.bord thead tr.dagen th .n { display: block; font-weight: 700; }
-  table.bord .label { position: sticky; left: 0; background: var(--paper); z-index: 2; text-align: left; padding: 0 8px; border-right: 2px solid var(--paper-deep); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  table.bord .label { position: sticky; left: 0; background: var(--paper); z-index: 2; text-align: left; padding: 0 8px; border-right: 2px solid var(--paper-deep); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: var(--label); }
+  tr.project .label .klant, tr.project .label .naam { overflow: hidden; text-overflow: ellipsis; }
   table.bord thead .label { z-index: 4; }
   table.bord tfoot td { position: sticky; background: var(--paper-warm); z-index: 3; border-top: 1px solid var(--paper-deep); }
   table.bord tfoot .label { z-index: 4; background: var(--paper-warm); }
@@ -106,10 +107,11 @@
   td.balk.start.eind { border-radius: 8px; }
   td.balk.onbemand { background: repeating-linear-gradient(135deg, var(--blue-soft) 0 6px, var(--paper) 6px 12px); border-top: 1px solid var(--blue); border-bottom: 1px solid var(--blue); }
   td.balk.afwijkend { box-shadow: inset 0 -3px 0 var(--amber); }
-  .notitie { position: absolute; left: 6px; top: 0; height: 100%; display: flex; align-items: center; white-space: nowrap; font-size: 0.74rem; font-weight: 600; color: #fff; pointer-events: auto; z-index: 1; max-width: 700px; overflow: hidden; }
-  td.balk.onbemand .notitie { color: var(--blue-deep); }
-  .notitie.leeg { color: rgba(255,255,255,0.75); font-weight: 500; font-style: italic; }
-  td.balk.onbemand .notitie.leeg { color: var(--blue-deep); opacity: 0.7; }
+  .balktekst { position: absolute; left: 0; top: 5px; height: 30px; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; font-size: 0.74rem; color: #fff; z-index: 1; background: var(--blue); border-radius: 0 6px 6px 0; padding: 0 8px 0 6px; max-width: 900px; overflow: hidden; }
+  td.balk.onbemand .balktekst { background: var(--blue-soft); color: var(--blue-deep); }
+  .balktekst .bnaam { font-weight: 700; }
+  .notitie { font-weight: 600; cursor: text; }
+  .notitie.leeg { opacity: 0.75; font-weight: 500; font-style: italic; }
   .notitie input { font: inherit; font-size: 0.74rem; padding: 2px 6px; border: 1px solid var(--blue-deep); border-radius: 4px; width: 260px; color: var(--ink); }
 
   /* medewerkerrij */
@@ -224,7 +226,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.1.2';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -456,7 +458,9 @@ function tekenBord() {
   }
   h += '</tfoot>';
 
-  document.getElementById('bord').innerHTML = h;
+  const bordEl0 = document.getElementById('bord');
+  bordEl0.style.width = (300 + dagen.length * 34) + 'px';
+  bordEl0.innerHTML = h;
   // rijen onderaan vastzetten: elke tfoot-rij zijn eigen bottom
   const rijen = Array.from(document.querySelectorAll('#bord tfoot tr'));
   let bottom = 0;
@@ -491,7 +495,8 @@ function tekenProjectRij(p, d) {
       if (d.afwijkend) k += ' afwijkend';
       if (iso === eersteZichtbaar) {
         const n = pl.klantnotitie || '';
-        inhoud = '<div class="notitie' + (n ? '' : ' leeg') + '" data-code="' + esc(p.code) + '" title="Klik om de afspraak met de klant te noteren">' + (n ? esc(n) : 'afspraak klant…') + '</div>';
+        inhoud = '<div class="balktekst"><span class="bnaam">' + esc(p.naam) + '</span>'
+          + '<span class="notitie' + (n ? '' : ' leeg') + '" data-code="' + esc(p.code) + '" title="Klik om de afspraak met de klant te noteren">' + (n ? esc(n) : 'afspraak klant…') + '</span></div>';
       }
     }
     h += '<td class="' + k + '">' + inhoud + '</td>';
@@ -734,9 +739,10 @@ bordEl.addEventListener('keydown', e => {
 function scrollNaarVandaag() {
   const sc = document.getElementById('bordScroll');
   const iso = naarIso(new Date());
-  const i = dagIndex[iso];
-  const breedte = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dag')) || 34;
-  sc.scrollLeft = i === undefined ? 0 : Math.max(0, i * breedte - 2 * breedte);
+  const th = document.querySelector('#bord thead tr.dagen th.vandaag');
+  if (!th) { sc.scrollLeft = 0; return; }
+  const label = document.querySelector('#bord thead tr.dagen th.label');
+  sc.scrollLeft = Math.max(0, th.offsetLeft - (label ? label.offsetWidth : 300) - 2 * th.offsetWidth);
 }
 
 document.getElementById('naarVandaag').addEventListener('click', () => {
