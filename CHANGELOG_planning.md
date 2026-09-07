@@ -1,5 +1,9 @@
 # CHANGELOG planning.html
 
+## v0.2.1 — Slepen werkte niet in de browser, 07-09-2026
+
+Slepen en trekken deden niets. Vermoedelijke oorzaak (niet na te bootsen in jsdom): de browser begon zelf tekst te selecteren of te slepen en stuurde `pointercancel`. Drie maatregelen: balktekst niet selecteerbaar, browsergedrag bij muis-omlaag op de balk uitgeschakeld, native slepen binnen het bord geblokkeerd. Als dit het niet is, is de volgende stap een kijkje in de browserconsole.
+
 ## v0.2.0 — Datums aanpassen (brok 3a), 07-09-2026
 
 ### Wat er kan
