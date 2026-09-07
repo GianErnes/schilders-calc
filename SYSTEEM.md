@@ -38,6 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.1.2 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -52,6 +53,18 @@ foto met open genummerde ringen, een omschrijving en een vinkje. Bewust
 zonder koppeling met Taken en zonder koppeling met een calculatie. De
 klantgegevens tik je met de hand in. Richting de klant gaat het lijstje
 via Yoobi, dus er zit geen PDF-uitvoer in.
+
+**Planning** is er op 6 september 2026 bij gekomen, nadat Yoobi zijn
+planningsmodule vernieuwde en het overzicht daar verloren ging. Een
+jaarbord met dagkolommen: projecten uit de laatste stand in
+`fin_werkvoorraad` (Yoobi), daaronder per medewerker de geplande uren per
+dag, onderaan per medewerker het restant per dag. Yoobi blijft de bron
+voor projecten, aanneemsom, budget en geboekte uren; wie wanneer werkt en
+wat de klant is beloofd staat bij ons, in de vier `plan_`-tabellen van 1.2.
+Yoobi's eigen planning wordt niet meer gebruikt en er wordt niets naar
+Yoobi teruggeschreven: een verschoven datum zet Gian zelf in Yoobi.
+Eigen changelog: `CHANGELOG_planning.md`. Zie het dagverslag van
+6 september onderaan.
 
 **Gevelscanner** is op 26 juli 2026 bewust buiten dit document gelaten.
 Dat is een besluit en geen vergissing. Bestaat die app nog en raakt hij
@@ -70,7 +83,7 @@ computegrootte Nano.
 
 Adres van een project is altijd `https://<verwijzing>.supabase.co`.
 
-**schilders-calc** telt 39 tabellen, 7 opslagbakken, 14 triggers, 16 Edge
+**schilders-calc** telt 43 tabellen, 7 opslagbakken, 18 triggers, 16 Edge
 Functions en 9 cronjobs. De grootste tabellen zijn `calc_regel_stappen`
 (1959 rijen), `meetstaat` (747) en `bewerkingen` (548). De 36 tabellen
 van toen zijn geteld op 2 augustus 2026 met `information_schema.tables`
@@ -78,8 +91,12 @@ op schema `public`, type `BASE TABLE`; `opname_boekingen` is er op
 8 augustus bijgekomen en de negende cronjob op 9 augustus, zie 3.1.
 Op 22 augustus 2026 kwamen `opleveringen` en `oplever_punten` erbij voor de
 opleverapp, met de bak `oplever-fotos` en twee `set_updated_at`-triggers,
-aangelegd met `sql/oplever_tabellen.sql`. Die getallen zijn opgeteld bij de
-meting van 2 augustus en niet opnieuw geteld.
+aangelegd met `sql/oplever_tabellen.sql`. Op 6 september 2026 kwamen
+`plan_medewerkers`, `plan_projecten`, `plan_uren` en `plan_gesloten_dagen`
+erbij voor de planningsapp, elk met een `set_updated_at`-trigger,
+aangelegd met `planning_01_tabellen.sql` (twintig controleregels, alle
+GOED). Die getallen zijn opgeteld bij de meting van 2 augustus en niet
+opnieuw geteld.
 
 > **Twee triggertellingen spreken elkaar tegen.** Hier staat 14, de
 > herbouwtabel in 4.8 komt op 13. Dat verschil bestond al voor de
@@ -502,6 +519,21 @@ ophaalknop die repo wekelijks vanzelf bij, zie 2.1.
 **Aangeroepen door cron** (zie de tabel hierboven): `backup-dump`,
 `smooth-function`, `offerte-herinnering`, `taken-mail-melding`,
 `fin-werkvoorraad-sync`, `maandbericht`, `opname-boekingen`.
+
+**`fin-werkvoorraad-sync`, versie 5 sinds 6 september 2026.** Twee
+toegangswegen: de cron komt binnen met `x-aftap-key` zoals altijd, en een
+ingelogde gebruiker komt binnen met zijn Supabase-sessietoken, dat de
+functie zelf controleert via `/auth/v1/user`. Zo kan planning.html straks
+een knop "Yoobi verversen" krijgen zonder dat de aftap-sleutel in een
+openbaar bestand staat. Verify JWT blijft UIT, anders weigert de cron. De
+stand kreeg twee velden: `gestart_door` (`cron` of `gebruiker:<mail>`) en
+`zonder_code`. Dat laatste telt projecten waarvan Yoobi een lege code
+levert; die krijgen nu een noodsleutel `yoobi-id-<projectid>` in plaats
+van `""` (in de stand van 1 september waren dat er twee: Simons 2029 en
+Wilpshaar 2032). Of Yoobi werkelijk een `projectid` meegeeft is een
+aanname tot de eerste run van v5; verwacht `zonder_code` = 0. Broncode:
+`fin-werkvoorraad-sync_v5_index.ts` in de projectkennis en in
+`ernes-edge-functions`.
 
 **`opname-boekingen`, de agendakoppeling.** Versie 4 sinds 9 augustus
 2026. Leest de primaire agenda van `administratie@ernes.nl` via een
@@ -4143,3 +4175,63 @@ getekende exemplaar wordt door `offerte-accord` verstuurd. Of die knop bij
 een planakkoord meegaat is niet gezien; volgt zodra Gian de code van mail B
 plakt. Zelfde voorbehoud als bij brok A: of de klantpagina voor planlinks
 de PDF toont hangt af van de `pdf_path`-tak in dezelfde functie.
+
+## Wat er op 6 september 2026 gedaan is
+
+### Planning: een eigen bord in plaats van Yoobi's planningsmodule
+
+Yoobi vernieuwde zijn planning en het overzicht ging verloren. Besluit
+van Gian: zelf plannen in een eigen app, Yoobi alleen als kader. Yoobi's
+planning mag vervangen worden; er wordt niets naar Yoobi teruggeschreven.
+
+**Onderzocht en niet gevonden.** Of de Yoobi-API planningsuren per
+medewerker teruggeeft is onbekend: de bevindingen van 13 juli noemen geen
+planningsendpoint, de API-documentatie is niet openbaar en alleen via
+Yoobi-support op te vragen. Daarom niet route A (Yoobi blijft bron) maar
+route B (wij plannen zelf).
+
+**Wat er wel bleek te zijn.** De stand in `fin_werkvoorraad` bevat per
+project al alles wat het bord nodig heeft: code, naam, klant, klantcode,
+startdatum, einddatum, aanneemsom, begrote en geboekte uren. Geen
+uitbreiding van de sync nodig voor het bord.
+
+**Gebouwd, in drie stukken.**
+
+1. `planning_01_tabellen.sql`: vier tabellen volgens
+   `sql/template_nieuwe_tabel.sql`. `plan_medewerkers` (voorgevuld met
+   Gian, Max, Bjorn, Jens, norm 7,5 uur), `plan_projecten` (sleutel
+   `yoobi_code`; `plan_start`, `plan_eind`, `klantnotitie`, `zichtbaar`),
+   `plan_uren` (uniek op code + medewerker + datum), `plan_gesloten_dagen`
+   (feestdag of bedrijfsvakantie). Uitgevoerd door Gian, twintig
+   controleregels GOED, vier medewerkers geteld.
+2. `fin-werkvoorraad-sync` v5, zie 3.2. Gedeployd door Gian; de cron-weg
+   is nog niet gedraaid (dinsdag 8 september 06:00 UTC is de eerste).
+3. `planning.html` v0.1.0 → v0.1.2, zie `CHANGELOG_planning.md`. Getest
+   met 23 controles in jsdom en daarna door Gian in de browser.
+
+**Drie dingen die de echte browser leerde.**
+
+- Een balk zonder tekst zegt niets zodra je naar de huidige week scrolt:
+  projectnaam in de balk gezet (v0.1.1).
+- `table-layout: fixed` doet niets zonder tabelbreedte. Daardoor rekte de
+  linkerkolom mee met de langste naam, stond de scroll verkeerd en liepen
+  de getallen onderaan in elkaar. Eén oorzaak, drie symptomen (v0.1.2).
+- **Yoobi's `startdate` is niet de geplande start.** Lopende projecten
+  (Ficq, Jeuring, twee keer Engelshove) hebben in Yoobi een startdatum in
+  2023–2025: de projectperiode vanaf opdracht, niet de uitvoering. De
+  datum uit Yoobi's planningsmodule is precies wat we niet kunnen
+  uitlezen. Gevolg: overloopwerk begint op het bord op 1 januari. Dat is
+  geen fout in het bord maar in de betekenis van de bron. Oplossing is
+  `plan_start` (brok 3): Gian zet eenmalig de echte start.
+
+**Besluiten voor brok 3** (nog niet gebouwd): start en eind van een balk
+slepen en aan beide uiteinden trekken, plus datumvelden in het paneel met
+"Terug naar Yoobi-datum". Uren verschuiven mee, na bevestiging met het
+aantal, en springen over weekend en gesloten dagen. Overloopwerk zonder
+eigen datum begint voorlopig op vandaag met een oranje rand als teken van
+aanname. Daarna: project verbergen, knop Yoobi verversen, beheer van
+gesloten dagen (met voorstel Nederlandse feestdagen per jaar) en van
+medewerkers, verlof per medewerker.
+
+**Bewaard in de projectkennis:** `planning.html`, `CHANGELOG_planning.md`,
+`planning_01_tabellen.sql`, `fin-werkvoorraad-sync_v5_index.ts`.
