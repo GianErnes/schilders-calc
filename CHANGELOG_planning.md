@@ -1,5 +1,21 @@
 # CHANGELOG planning.html
 
+## v0.5.0 — Reservering: een deel van een dag niet beschikbaar, 07-09-2026
+
+Vereist eerst `planning_03_verlof_uren.sql` (kolom `plan_verlof.uren`).
+
+Aanleiding: bureau-uren en ziekenhuisbezoeken stonden nergens en werden zo overgepland. Yoobi's "Indirecte uren" wordt bewust weggefilterd, en verlof was alleen een hele dag.
+
+### Wat er kan
+- Verlof heeft nu een veld **uren**. Leeg = hele dag vrij (✕, zoals voorheen). Ingevuld = reservering: die uren gaan van de dag af in de totaaltelling (7,5 wordt 4,5 bij 3 uur ziekenhuis), de rest blijft planbaar, en plan je er overheen dan komt het rode hoekje met de reservering in de uitleg. De cel onderaan krijgt een grijs randje; aanwijzen toont de reservering.
+- **Wekelijks herhalen t/m** in het verlofformulier: "elke vrijdag 4 uur bureau tot 9 oktober" is één handeling.
+- Het popover onderaan het bord vraagt nu ook om uren (leeg = hele dag) en toont bij een bestaande regel wat er staat, met "Opheffen".
+- Uurvelden in beheer en popover accepteren een komma (waren getalvelden, die weigeren "2,5").
+
+### Onder de kap
+- `plan_verlof.uren` numeric, null = hele dag. Een reservering blokkeert de dag niet voor meeverschuiven; een hele dag wel.
+- Getest: 84 controles in jsdom.
+
 ## v0.4.0 — Medewerkers, Yoobi verversen, verbergen (brok 3b, deel 2), 07-09-2026
 
 ### Wat er kan

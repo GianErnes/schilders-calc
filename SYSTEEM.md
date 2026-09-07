@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.4.0 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.5.0 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -4273,6 +4273,28 @@ van, tot, notitie), dunne regel onder de projectbalk per soort,
 waarschuwing als de hoogwerker op twee projecten tegelijk staat, en later
 een kostenlijn (huurdagen × dagtarief). Bij een hele verschuiving apart
 vragen of de hulpmiddelen mee moeten; bij een bestelde steiger vaak niet.
+
+**v0.5.0, reservering.** Uit het eerste echte gebruik: bureau-uren en
+ziekenhuisbezoeken stonden nergens. `plan_verlof` kreeg een kolom `uren`
+(`planning_03_verlof_uren.sql`): leeg is een hele dag vrij, een getal is
+een reservering die van de dag afgaat in de totaaltelling zonder de dag
+te blokkeren. Met wekelijkse herhaling. Bewust niet gekozen: interne
+"projecten" op het bord, omdat die uren toch in Yoobi op Indirecte uren
+geboekt worden en het bord er drukker van wordt.
+
+**Les: verkeerd Supabase-project.** `planning_03_verlof_uren.sql` gaf
+`relation "public.plan_verlof" does not exist` terwijl de tabel een dag
+eerder met vijf keer GOED was aangelegd. Oorzaak: de SQL Editor stond op
+een ander project. Afspraak vanaf nu: elk SQL-bestand voor schilders-calc
+begint met een controle die stopt als `fin_werkvoorraad` ontbreekt:
+
+```sql
+do $$ begin
+  if not exists (select 1 from pg_tables where schemaname = 'public' and tablename = 'fin_werkvoorraad') then
+    raise exception 'Verkeerd Supabase-project: dit is niet schilders-calc';
+  end if;
+end $$;
+```
 
 De cron-weg van v5 draait voor het eerst op dinsdag 8 september 06:00
 UTC; verwacht `gestart_door` = `cron` en `zonder_code` = 0 in de nieuwste

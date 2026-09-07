@@ -146,6 +146,7 @@
   tfoot td.dag.deels { color: var(--amber); }
   tfoot td.dag.teveel { color: #fff; background: var(--accent); }
   tfoot td.dag.leeg { color: #b9bec5; font-weight: 500; }
+  tfoot td.dag.res { background-image: linear-gradient(to top, var(--gesloten) 0 4px, transparent 4px); }
   tfoot .label { font-weight: 600; color: var(--ink-soft); }
   tfoot tr.kop td { height: 22px; font-size: 0.7rem; color: var(--muted); font-weight: 600; }
 
@@ -299,10 +300,12 @@
       <div class="rij">
         <select id="vlMw"></select>
         <input type="date" id="vlVan" title="Van"> <span>t/m</span> <input type="date" id="vlTot" title="Tot en met">
-        <input type="text" id="vlOmschr" placeholder="omschrijving, bv. vakantie">
+        <input type="text" inputmode="decimal" id="vlUren" placeholder="uren" style="width:5.5rem" title="Leeg = hele dag vrij. Een getal = zoveel uur niet beschikbaar (bureau, ziekenhuis).">
+        <input type="text" id="vlOmschr" placeholder="omschrijving, bv. vakantie / bureau">
         <button class="knop primair" id="vlToevoegen">Toevoegen</button>
       </div>
-      <div class="hint">Sneller voor één dag: klik onderaan het bord op de dag bij de medewerker.</div>
+      <div class="rij" style="margin-top:0.4rem"><label class="hint" style="margin:0"><input type="checkbox" id="vlHerhaal"> wekelijks herhalen t/m</label> <input type="date" id="vlHerhaalTot"></div>
+      <div class="hint">Uren leeg = hele dag vrij (✕). Uren ingevuld = reservering: die uren gaan van de dag af in de totaaltelling, de rest blijft planbaar. Sneller voor één dag: klik onderaan het bord op de dag bij de medewerker.</div>
       <ul class="lijst" id="vlLijst"></ul>
     </section>
     <section>
@@ -310,7 +313,7 @@
       <ul class="lijst" id="mwLijst"></ul>
       <div class="rij" style="margin-top:0.7rem">
         <input type="text" id="mwNaam" placeholder="naam" style="flex:1">
-        <input type="number" id="mwNorm" value="7.5" step="0.25" min="0" max="24" style="width:5rem" title="uren per dag">
+        <input type="text" inputmode="decimal" id="mwNorm" value="7,5" style="width:5rem" title="uren per dag">
         <button class="knop primair" id="mwToevoegen">Toevoegen</button>
       </div>
       <div class="hint">Niet actief = verdwijnt van het bord, uren blijven bewaard. De norm is de werkdag in uren voor de totaaltelling.</div>
@@ -325,7 +328,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.4.0';
+const APP_VERSION = '0.5.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -428,7 +431,11 @@ function projDatums(p) {
 }
 
 // ---------- werkdagen ----------
-function isVerlof(mwId, iso) { return !!verlof[mwId + '|' + iso]; }
+// Hele dag vrij (uren leeg). Een reservering met uren blokkeert de dag niet.
+function isVerlof(mwId, iso) { const v = verlof[mwId + '|' + iso]; return !!v && (v.uren === null || v.uren === undefined || v.uren === ''); }
+// Gereserveerde uren op een dag (bureau, ziekenhuis); 0 als er niets of een hele dag staat.
+function reservering(mwId, iso) { const v = verlof[mwId + '|' + iso]; return v && v.uren ? Number(v.uren) : 0; }
+function verlofTekst(mwId, iso) { const v = verlof[mwId + '|' + iso]; if (!v) return ''; return (v.uren ? fmtUur(v.uren) + ' uur' : 'vrij') + (v.omschrijving ? ': ' + v.omschrijving : ''); }
 // Werkdag: zonder medewerker alleen weekend/gesloten; met medewerker ook zijn verlof.
 function isWerkdag(iso, mwId) { return !isWeekend(iso) && !isGesloten(iso) && !(mwId && isVerlof(mwId, iso)); }
 function plusDagen(iso, n) { const d = vanIso(iso); d.setDate(d.getDate() + n); return naarIso(d); }
@@ -673,18 +680,19 @@ function tekenMwRij(p, d, m) {
 function restantInhoud(m, iso) {
   if (isVerlof(m.id, iso)) return '✕';
   if (isWeekend(iso) || isGesloten(iso)) return '';
-  const t = dagTotaal(m.id, iso);
+  const t = dagTotaal(m.id, iso) + reservering(m.id, iso);
   const r = Math.round((m.norm_uren - t) * 100) / 100;
   return fmtUur(r);
 }
 function restantKlasse(m, iso) {
   if (isVerlof(m.id, iso)) return 'verlof klik';
   if (isWeekend(iso) || isGesloten(iso)) return '';
-  const t = dagTotaal(m.id, iso);
+  const res = reservering(m.id, iso);
+  const t = dagTotaal(m.id, iso) + res;
   if (t === 0) return 'leeg klik';
   if (t > m.norm_uren) return 'teveel klik';
   if (t === m.norm_uren) return 'vol klik';
-  return 'deels klik';
+  return 'deels klik' + (res ? ' res' : '');
 }
 function werkTotaalCel(mwId, iso) {
   const m = medewerkers.find(x => x.id === mwId);
@@ -692,8 +700,8 @@ function werkTotaalCel(mwId, iso) {
   if (!m || !td) return;
   td.textContent = restantInhoud(m, iso);
   td.className = celKlassen(iso) + ' num ' + restantKlasse(m, iso);
-  const t = dagTotaal(mwId, iso);
-  td.title = t ? m.naam + ': ' + fmtUur(t) + ' van ' + fmtUur(m.norm_uren) + ' uur gepland' : '';
+  const t = dagTotaal(mwId, iso), res = reservering(mwId, iso);
+  td.title = (t || res) ? m.naam + ': ' + fmtUur(t) + ' van ' + fmtUur(m.norm_uren) + ' uur gepland' + (res ? ', ' + verlofTekst(mwId, iso) + ' gereserveerd' : '') : (isVerlof(mwId, iso) ? m.naam + ' ' + verlofTekst(mwId, iso) : '');
 }
 
 // Rode hoekjes: alle cellen met uren van deze medewerker op deze dag,
@@ -708,11 +716,13 @@ function zetOverKlassen() {
     gezien.add(mk);
     werkOverCellen(d[1], d[2]);
   }
+  for (const k in verlof) if (verlof[k].uren && !gezien.has(k)) { const d = k.split('|'); werkOverCellen(d[0], d[1]); }
 }
 function werkOverCellen(mwId, iso) {
   const m = medewerkers.find(x => x.id === mwId);
   if (!m) return;
-  const t = dagTotaal(mwId, iso);
+  const res = reservering(mwId, iso);
+  const t = dagTotaal(mwId, iso) + res;
   const over = t > m.norm_uren;
   document.querySelectorAll('#bord tr.mw td[data-mw="' + mwId + '"][data-datum="' + iso + '"]').forEach(td => {
     const w = uren[sleutel(td.dataset.code, mwId, iso)] || 0;
@@ -727,6 +737,7 @@ function werkOverCellen(mwId, iso) {
           andere.push(fmtUur(uren[k]) + ' op ' + (q ? q.naam : d[0]));
         }
       }
+      if (res) andere.unshift(fmtUur(res) + ' gereserveerd (' + (verlof[mwId + '|' + iso].omschrijving || 'niet beschikbaar') + ')');
       td.title = fmtUur(t - m.norm_uren) + ' uur te veel' + (andere.length ? ': al ' + andere.join(', ') : '');
     } else td.title = '';
   });
@@ -1001,7 +1012,7 @@ function tekenBeheer() {
   const vls = Object.values(verlof).sort((a, b) => a.datum.localeCompare(b.datum) || a.medewerker_id.localeCompare(b.medewerker_id));
   document.getElementById('vlLijst').innerHTML = vls.length ? vls.map(v => {
     const m = medewerkers.find(x => x.id === v.medewerker_id);
-    return '<li><span><span class="num">' + fmtDatum(vanIso(v.datum)) + '</span> <span class="m">' + DAGNAMEN[vanIso(v.datum).getDay()] + '</span> <b>' + esc(m ? m.naam : '?') + '</b> ' + esc(v.omschrijving || '') + '</span><button class="knop klein" data-vl="' + esc(v.medewerker_id) + '|' + v.datum + '">verwijder</button></li>';
+    return '<li><span><span class="num">' + fmtDatum(vanIso(v.datum)) + '</span> <span class="m">' + DAGNAMEN[vanIso(v.datum).getDay()] + '</span> <b>' + esc(m ? m.naam : '?') + '</b> ' + (v.uren ? '<span class="num">' + fmtUur(v.uren) + ' uur</span> ' : '<span class="m">hele dag</span> ') + esc(v.omschrijving || '') + '</span><button class="knop klein" data-vl="' + esc(v.medewerker_id) + '|' + v.datum + '">verwijder</button></li>';
   }).join('') : '<li class="m">Nog geen verlof in ' + jaar + '.</li>';
 }
 
@@ -1053,8 +1064,9 @@ document.getElementById('gsLijst').addEventListener('click', async e => {
   tekenBeheer(); hertekenMetScroll();
 });
 
-async function zetVerlof(mwId, dagenLijst, omschrijving) {
-  const rijen = dagenLijst.map(d => ({ medewerker_id: mwId, datum: d, omschrijving: omschrijving || null }));
+async function zetVerlof(mwId, dagenLijst, omschrijving, urenPerDag) {
+  const u = urenPerDag ? Number(urenPerDag) : null;
+  const rijen = dagenLijst.map(d => ({ medewerker_id: mwId, datum: d, omschrijving: omschrijving || null, uren: u }));
   if (!rijen.length) return;
   try {
     const r = await sb.from('plan_verlof').upsert(rijen, { onConflict: 'medewerker_id,datum' }).select();
@@ -1076,10 +1088,23 @@ async function wisVerlof(mwId, iso) {
 document.getElementById('vlToevoegen').addEventListener('click', async () => {
   const mw = document.getElementById('vlMw').value;
   const van = document.getElementById('vlVan').value, tot = document.getElementById('vlTot').value || van;
-  const ds = dagenInPeriode(van, tot);
+  let ds = dagenInPeriode(van, tot);
   if (!mw || !ds.length) { toonStatus('Kies medewerker en periode', true); return; }
-  await zetVerlof(mw, ds, document.getElementById('vlOmschr').value.trim());
-  document.getElementById('vlOmschr').value = '';
+  const urenV = document.getElementById('vlUren').value.trim();
+  if (urenV !== '' && (isNaN(parseUur(urenV)) || parseUur(urenV) <= 0)) { toonStatus('Ongeldig aantal uren', true); return; }
+  if (document.getElementById('vlHerhaal').checked) {
+    const totH = document.getElementById('vlHerhaalTot').value;
+    if (!totH || totH < tot) { toonStatus('Kies een einddatum voor de herhaling', true); return; }
+    const alle = new Set(ds);
+    for (let w = 7; w < 400; w += 7) {
+      let iets = false;
+      for (const d of ds) { const n = plusDagen(d, w); if (n <= totH) { if (!isWeekend(n)) alle.add(n); iets = true; } }
+      if (!iets) break;
+    }
+    ds = [...alle].sort();
+  }
+  await zetVerlof(mw, ds, document.getElementById('vlOmschr').value.trim(), urenV !== '' ? parseUur(urenV) : null);
+  document.getElementById('vlOmschr').value = ''; document.getElementById('vlUren').value = '';
 });
 document.getElementById('vlLijst').addEventListener('click', e => {
   const b = e.target.closest('button[data-vl]'); if (!b) return;
@@ -1117,7 +1142,7 @@ function tekenMedewerkersBeheer() {
     '<button class="knop klein" data-mwop="op" title="Hoger op het bord"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
     '<button class="knop klein" data-mwop="neer" title="Lager op het bord"' + (i === alleMedewerkers.length - 1 ? ' disabled' : '') + '>↓</button>' +
     '<b>' + esc(m.naam) + '</b></span><span class="rij">' +
-    '<input class="mwnorm num" type="number" step="0.25" min="0" max="24" value="' + m.norm_uren + '" title="uren per dag"> uur' +
+    '<input class="mwnorm num" type="text" inputmode="decimal" value="' + fmtUur(m.norm_uren) + '" title="uren per dag"> uur' +
     '<label><input type="checkbox" class="mwactief"' + (m.actief ? ' checked' : '') + '> actief</label></span></li>').join('');
 }
 async function slaMedewerkerOp(m) {
@@ -1220,18 +1245,26 @@ bordEl.addEventListener('click', e => {
   const m = medewerkers.find(x => x.id === mwId); if (!m) return;
   const d = vanIso(iso);
   const r = td.getBoundingClientRect();
-  const vrij = isVerlof(mwId, iso);
+  const bestaand = verlof[mwId + '|' + iso];
   const geplandHier = dagTotaal(mwId, iso);
   popover.innerHTML = '<b>' + esc(m.naam) + '</b> · ' + DAGNAMEN[d.getDay()] + ' ' + fmtDatum(d) +
-    (vrij ? '<div class="hint">Vrij' + (verlof[mwId + '|' + iso].omschrijving ? ': ' + esc(verlof[mwId + '|' + iso].omschrijving) : '') + '</div><div class="rij"><button class="knop primair" id="poWis">Verlof opheffen</button></div>'
+    (bestaand ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + '</div><div class="rij"><button class="knop primair" id="poWis">Opheffen</button></div>'
           : (geplandHier ? '<div class="hint" style="color:var(--amber)">Let op: er staat al ' + fmtUur(geplandHier) + ' uur gepland op deze dag.</div>' : '') +
-            '<div class="rij"><input type="text" id="poOm" placeholder="omschrijving (mag leeg)" style="flex:1"><button class="knop primair" id="poZet">Vrij zetten</button></div>');
+            '<div class="rij"><input type="text" inputmode="decimal" id="poUren" placeholder="uren" style="width:5rem" title="leeg = hele dag"><input type="text" id="poOm" placeholder="omschrijving (mag leeg)" style="flex:1"></div>' +
+            '<div class="rij"><button class="knop primair" id="poZet">Opslaan</button><span class="hint" style="margin:0">uren leeg = hele dag vrij</span></div>');
   popover.style.display = 'block';
   popover.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 260) + 'px';
   popover.style.top = (r.top + window.scrollY - popover.offsetHeight - 8) + 'px';
   const wis = document.getElementById('poWis'), zet = document.getElementById('poZet');
   if (wis) wis.addEventListener('click', () => { sluitPopover(); wisVerlof(mwId, iso); });
-  if (zet) { zet.addEventListener('click', () => { const om = document.getElementById('poOm').value.trim(); sluitPopover(); zetVerlof(mwId, [iso], om); }); document.getElementById('poOm').focus(); }
+  if (zet) {
+    zet.addEventListener('click', () => {
+      const om = document.getElementById('poOm').value.trim(), uv = document.getElementById('poUren').value.trim();
+      if (uv !== '' && (isNaN(parseUur(uv)) || parseUur(uv) <= 0)) { toonStatus('Ongeldig aantal uren', true); return; }
+      sluitPopover(); zetVerlof(mwId, [iso], om, uv !== '' ? parseUur(uv) : null);
+    });
+    document.getElementById('poUren').focus();
+  }
 });
 
 // ---------- gebeurtenissen ----------
