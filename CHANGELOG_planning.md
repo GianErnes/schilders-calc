@@ -1,5 +1,18 @@
 # CHANGELOG planning.html
 
+## v0.6.0 — Periode als lijn, geplande dagen als blokken, 07-09-2026
+
+Uit het plannen zelf: een project als Massop (periode september–november, werk op vijf dagen) vulde de hele tijdlijn met een dik blok, en de tekst erop dekte de cellen af zodat je de geplande dagen alleen aan de randjes zag.
+
+### Wat er anders is
+- De **periode** (start tot eind) is een dunne lijn met de grepen aan de uiteinden. Gestreept zolang er niemand op gepland is, oranje als onze datum van Yoobi afwijkt, oranje gestippeld bij een aanname.
+- Alleen **dagen met geplande uren** krijgen een vol blok. Zo zie je het werk en niet de contractperiode.
+- De **projectnaam staat niet meer in de balk**; de vaste linkerkolom toont hem al.
+- De **klantnotitie** is een klein label direct achter het einde van de lijn, buiten de cellen (of ervoor, als de lijn het jaar uitloopt). Leeg = "+ afspraak".
+- Legenda aangepast.
+
+Getest: 88 controles in jsdom. Het beeld zelf beoordeelt Gian.
+
 ## v0.5.0 — Reservering: een deel van een dag niet beschikbaar, 07-09-2026
 
 Vereist eerst `planning_03_verlof_uren.sql` (kolom `plan_verlof.uren`).

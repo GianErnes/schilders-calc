@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.5.0 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.6.0 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -4281,6 +4281,12 @@ een reservering die van de dag afgaat in de totaaltelling zonder de dag
 te blokkeren. Met wekelijkse herhaling. Bewust niet gekozen: interne
 "projecten" op het bord, omdat die uren toch in Yoobi op Indirecte uren
 geboekt worden en het bord er drukker van wordt.
+
+**v0.6.0, lijn en blokken.** Uit het plannen: de dikke balk over de hele
+Yoobi-periode maskeerde de geplande dagen. Nu een dunne periode-lijn met
+volle blokken alleen op dagen met uren, projectnaam uit de balk (de vaste
+linkerkolom toont hem al), klantnotitie als label achter het einde van de
+lijn. Zie `CHANGELOG_planning.md`.
 
 **Les: verkeerd Supabase-project.** `planning_03_verlof_uren.sql` gaf
 `relation "public.plan_verlof" does not exist` terwijl de tabel een dag
