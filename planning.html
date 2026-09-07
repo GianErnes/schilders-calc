@@ -170,6 +170,37 @@
   .voetnoot { color: var(--muted); font-size: 0.74rem; margin-top: 0.6rem; }
   .legenda { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.74rem; color: var(--ink-soft); margin-top: 0.6rem; }
   .legenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+
+  /* verlof */
+  td.dag.verlof { background: var(--gesloten) !important; color: var(--muted); font-weight: 600; }
+  tr.mw td.dag.verlof, tr.mw td.dag.gesloten { text-align: center; font-size: 0.78rem; }
+  tr.mw td.dag .fout-uren { color: var(--accent-deep); font-weight: 700; }
+  tfoot td.dag.klik { cursor: pointer; }
+  tfoot td.dag.klik:hover { outline: 2px solid var(--blue); outline-offset: -2px; }
+
+  /* modaal beheer */
+  .overlay { position: fixed; inset: 0; background: rgba(26,29,33,0.35); display: none; align-items: flex-start; justify-content: center; padding: 3rem 1rem; z-index: 50; overflow: auto; }
+  .overlay.open { display: flex; }
+  .modaal { background: var(--paper); border-radius: var(--radius-lg); width: 100%; max-width: 620px; box-shadow: 0 10px 40px rgba(0,0,0,0.18); }
+  .modaal header { padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--paper-deep); margin: 0; align-items: center; }
+  .modaal header h2 { margin: 0; font-size: 1rem; }
+  .modaal .sluit { border: none; background: none; font-size: 1.3rem; cursor: pointer; color: var(--muted); }
+  .modaal section { padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--paper-deep); }
+  .modaal section:last-child { border-bottom: none; }
+  .modaal h3 { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--ink-soft); }
+  .rij { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+  .rij input, .rij select { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.5rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); }
+  .rij input[type=text] { flex: 1; min-width: 120px; }
+  .knop.primair { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .knop.klein { padding: 0.15rem 0.45rem; font-size: 0.75rem; }
+  ul.lijst { list-style: none; margin: 0.5rem 0 0; padding: 0; font-size: 0.82rem; max-height: 260px; overflow: auto; }
+  ul.lijst li { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.3rem 0; border-top: 1px solid var(--paper-deep); }
+  ul.lijst li:first-child { border-top: none; }
+  ul.lijst .m { color: var(--muted); }
+  ul.lijst label { display: flex; align-items: center; gap: 0.5rem; }
+  .hint { color: var(--muted); font-size: 0.76rem; margin-top: 0.4rem; }
+  .popover { position: absolute; background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); box-shadow: 0 6px 24px rgba(0,0,0,0.14); padding: 0.7rem 0.8rem; z-index: 60; font-size: 0.82rem; min-width: 220px; }
+  .popover .rij { margin-top: 0.5rem; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -194,6 +225,7 @@
     </div>
     <div class="header-right">
       <span class="status" id="status"></span>
+      <button class="knop" id="beheerKnop">Vrije dagen</button>
       <button class="knop" id="naarVandaag">Vandaag</button>
       <div class="jaarkiezer">
         <button id="jaarMin" title="Vorig jaar">‹</button>
@@ -214,7 +246,7 @@
         <span><i style="background:var(--blue)"></i> gepland, met uren</span>
         <span><i style="background:repeating-linear-gradient(135deg,var(--blue-soft) 0 3px,#fff 3px 6px);border:1px solid var(--blue)"></i> nog niemand op gepland</span>
         <span><i style="background:var(--weekend)"></i> weekend</span>
-        <span><i style="background:var(--gesloten)"></i> gesloten dag</span>
+        <span><i style="background:var(--gesloten)"></i> gesloten dag / verlof (✕)</span>
         <span><i style="background:var(--accent)"></i> te veel uren op een dag</span>
       </div>
     </div>
@@ -233,13 +265,46 @@
   </div>
 </div>
 
+<div class="overlay" id="beheerOverlay">
+  <div class="modaal">
+    <header><h2>Vrije dagen <span id="beheerJaar" class="num"></span></h2><button class="sluit" id="beheerSluit" title="Sluiten">×</button></header>
+    <section>
+      <h3>Gesloten dagen (voor iedereen)</h3>
+      <div class="rij">
+        <button class="knop" id="feestVoorstel">Nederlandse feestdagen voorstellen</button>
+      </div>
+      <div id="feestLijst"></div>
+      <div class="rij" style="margin-top:0.7rem">
+        <input type="date" id="gsVan" title="Van"> <span>t/m</span> <input type="date" id="gsTot" title="Tot en met">
+        <select id="gsSoort"><option value="bedrijfsvakantie">bedrijfsvakantie</option><option value="feestdag">feestdag</option></select>
+        <input type="text" id="gsOmschr" placeholder="omschrijving, bv. Bouwvak">
+        <button class="knop primair" id="gsToevoegen">Toevoegen</button>
+      </div>
+      <div class="hint">Weekenddagen in een periode worden overgeslagen; die zijn al niet boekbaar.</div>
+      <ul class="lijst" id="gsLijst"></ul>
+    </section>
+    <section>
+      <h3>Verlof per medewerker</h3>
+      <div class="rij">
+        <select id="vlMw"></select>
+        <input type="date" id="vlVan" title="Van"> <span>t/m</span> <input type="date" id="vlTot" title="Tot en met">
+        <input type="text" id="vlOmschr" placeholder="omschrijving, bv. vakantie">
+        <button class="knop primair" id="vlToevoegen">Toevoegen</button>
+      </div>
+      <div class="hint">Sneller voor één dag: klik onderaan het bord op de dag bij de medewerker.</div>
+      <ul class="lijst" id="vlLijst"></ul>
+    </section>
+  </div>
+</div>
+<div class="popover" id="popover" style="display:none"></div>
+
 <script>
 // =====================================================================
 // planning.html — brok 2: het bord in zijn kern
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.2.1';
+const APP_VERSION = '0.3.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -253,6 +318,7 @@ let medewerkers = [];        // actieve rijen uit plan_medewerkers, op volgorde
 let planProjecten = {};      // yoobi_code -> rij uit plan_projecten
 let uren = {};               // sleutel code|mwId|datum -> getal (alleen geladen jaar)
 let gesloten = {};           // 'YYYY-MM-DD' -> {soort, omschrijving}
+let verlof = {};             // mwId|datum -> {id, omschrijving}
 let uitgeklapt = new Set();  // codes waarvan de medewerkerrijen open staan
 let actiefCode = null;       // project in het paneel
 let dagen = [];              // alle dagen van het jaar als 'YYYY-MM-DD'
@@ -340,13 +406,15 @@ function projDatums(p) {
 }
 
 // ---------- werkdagen ----------
-function isWerkdag(iso) { return !isWeekend(iso) && !isGesloten(iso); }
+function isVerlof(mwId, iso) { return !!verlof[mwId + '|' + iso]; }
+// Werkdag: zonder medewerker alleen weekend/gesloten; met medewerker ook zijn verlof.
+function isWerkdag(iso, mwId) { return !isWeekend(iso) && !isGesloten(iso) && !(mwId && isVerlof(mwId, iso)); }
 function plusDagen(iso, n) { const d = vanIso(iso); d.setDate(d.getDate() + n); return naarIso(d); }
 // n werkdagen verder (n<0 = terug); weekend en gesloten dagen tellen niet.
-function schuifWerkdagen(iso, n) {
+function schuifWerkdagen(iso, n, mwId) {
   let d = iso, stap = n > 0 ? 1 : -1, over = Math.abs(n);
   let rem = 0;
-  while (over > 0 && rem < 1000) { d = plusDagen(d, stap); rem++; if (isWerkdag(d)) over--; }
+  while (over > 0 && rem < 1000) { d = plusDagen(d, stap); rem++; if (isWerkdag(d, mwId)) over--; }
   return d;
 }
 // Aantal werkdagen van a naar b (negatief als b voor a ligt).
@@ -404,14 +472,16 @@ function vindProject(code) {
 // ---------- laden ----------
 async function laadAlles() {
   const j1 = jaar + '-01-01', j2 = jaar + '-12-31';
-  const [wv, mw, pp, pu, gd] = await Promise.all([
+  const [wv, mw, pp, pu, gd, vlRes] = await Promise.all([
     sb.from('fin_werkvoorraad').select('peildatum,data').order('peildatum', { ascending: false }).limit(1),
     sb.from('plan_medewerkers').select('*').eq('actief', true).order('volgorde'),
     sb.from('plan_projecten').select('*'),
     sb.from('plan_uren').select('yoobi_code,medewerker_id,datum,uren').gte('datum', j1).lte('datum', j2),
     sb.from('plan_gesloten_dagen').select('*').gte('datum', j1).lte('datum', j2),
+    sb.from('plan_verlof').select('*').gte('datum', j1).lte('datum', j2),
   ]);
   for (const r of [wv, mw, pp, pu, gd]) if (r.error) throw r.error;
+  // plan_verlof kan ontbreken zolang planning_02_verlof.sql niet is gedraaid: dan zonder verlof verder.
 
   if (wv.data && wv.data.length) {
     stand = wv.data[0].data || { projecten: [] };
@@ -430,6 +500,9 @@ async function laadAlles() {
   }
   gesloten = {};
   for (const r of (gd.data || [])) gesloten[r.datum] = r;
+  verlof = {};
+  if (vlRes.error) { console.warn('plan_verlof niet leesbaar (tabel nog niet aangemaakt?): ' + vlRes.error.message); }
+  else for (const r of (vlRes.data || [])) verlof[r.medewerker_id + '|' + r.datum] = r;
 }
 
 // ---------- tekenen ----------
@@ -555,13 +628,18 @@ function tekenMwRij(p, d, m) {
   let h = '<tr class="mw" data-code="' + esc(p.code) + '" data-mw="' + esc(m.id) + '"><td class="label">' + esc(m.naam) + '</td>';
   for (const iso of dagen) {
     let k = celKlassen(iso);
-    const blok = isWeekend(iso) || isGesloten(iso);
+    const vrij = isVerlof(m.id, iso);
+    if (vrij) k += ' verlof';
+    const blok = isWeekend(iso) || isGesloten(iso) || vrij;
     const inBalk = sIso && iso >= sIso && iso <= eIso;
     if (!inBalk && !blok) k += ' buiten';
     const w = uren[sleutel(p.code, m.id, iso)];
     if (w) k += ' gevuld';
-    h += '<td class="' + k + '" data-code="' + esc(p.code) + '" data-mw="' + esc(m.id) + '" data-datum="' + iso + '">';
+    const t = vrij ? ' title="' + esc(m.naam + ' vrij' + (verlof[m.id + '|' + iso].omschrijving ? ': ' + verlof[m.id + '|' + iso].omschrijving : '')) + '"' : '';
+    h += '<td class="' + k + '" data-code="' + esc(p.code) + '" data-mw="' + esc(m.id) + '" data-datum="' + iso + '"' + t + '>';
     if (!blok) h += '<input type="text" inputmode="decimal" value="' + (w ? fmtUur(w) : '') + '" aria-label="' + esc(m.naam + ' ' + iso) + '">';
+    else if (w) h += '<span class="fout-uren" title="Uren gepland op een vrije dag">' + fmtUur(w) + '</span>';
+    else if (vrij) h += '✕';
     h += '</td>';
   }
   return h + '</tr>';
@@ -569,18 +647,20 @@ function tekenMwRij(p, d, m) {
 
 // Inhoud en kleur van een cel in de totaaltelling.
 function restantInhoud(m, iso) {
+  if (isVerlof(m.id, iso)) return '✕';
   if (isWeekend(iso) || isGesloten(iso)) return '';
   const t = dagTotaal(m.id, iso);
   const r = Math.round((m.norm_uren - t) * 100) / 100;
   return fmtUur(r);
 }
 function restantKlasse(m, iso) {
+  if (isVerlof(m.id, iso)) return 'verlof klik';
   if (isWeekend(iso) || isGesloten(iso)) return '';
   const t = dagTotaal(m.id, iso);
-  if (t === 0) return 'leeg';
-  if (t > m.norm_uren) return 'teveel';
-  if (t === m.norm_uren) return 'vol';
-  return 'deels';
+  if (t === 0) return 'leeg klik';
+  if (t > m.norm_uren) return 'teveel klik';
+  if (t === m.norm_uren) return 'vol klik';
+  return 'deels klik';
 }
 function werkTotaalCel(mwId, iso) {
   const m = medewerkers.find(x => x.id === mwId);
@@ -758,7 +838,7 @@ async function slaDatumsOp(code, sIso, eIso, oudStart) {
     planProjecten[code] = (r.data && r.data[0]) || { ...(planProjecten[code] || {}), yoobi_code: code, plan_start: sIso, plan_eind: eIso };
     if (verplaats) {
       const oud = verplaats.keys.map(k => { const d = k.split('|'); return { medewerker_id: d[1], datum: d[2], uren: uren[k] }; });
-      const nieuw = oud.map(o => ({ yoobi_code: code, medewerker_id: o.medewerker_id, datum: schuifWerkdagen(o.datum, verplaats.n), uren: o.uren }));
+      const nieuw = oud.map(o => ({ yoobi_code: code, medewerker_id: o.medewerker_id, datum: schuifWerkdagen(o.datum, verplaats.n, o.medewerker_id), uren: o.uren }));
       // Eerst weg, dan nieuw, zodat een dag die zowel oud als nieuw is niet dubbel telt.
       r = await sb.from('plan_uren').delete().eq('yoobi_code', code).in('datum', [...new Set(oud.map(o => o.datum))]);
       if (r.error) throw r.error;
@@ -851,6 +931,165 @@ function sleepLos(e) {
   actiefCode = was.code;
   slaDatumsOp(was.code, s, ei, was.mode === 'heel' ? was.sIso : null);
 }
+
+// ---------- feestdagen ----------
+function paasdatum(j) {   // Meeus/Jones/Butcher, Gregoriaans
+  const a = j % 19, b = Math.floor(j / 100), c = j % 100, d = Math.floor(b / 4), e = b % 4;
+  const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const maand = Math.floor((h + l - 7 * m + 114) / 31), dag = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(j, maand - 1, dag);
+}
+function feestdagen(j) {
+  const p = paasdatum(j), pl = (n) => { const d = new Date(p); d.setDate(d.getDate() + n); return d; };
+  let kd = new Date(j, 3, 27); if (kd.getDay() === 0) kd = new Date(j, 3, 26);   // Koningsdag: zondag -> zaterdag
+  return [
+    { datum: new Date(j, 0, 1), naam: 'Nieuwjaarsdag' },
+    { datum: pl(-2), naam: 'Goede Vrijdag' },
+    { datum: pl(1), naam: 'Tweede Paasdag' },
+    { datum: kd, naam: 'Koningsdag' },
+    { datum: new Date(j, 4, 5), naam: 'Bevrijdingsdag' },
+    { datum: pl(39), naam: 'Hemelvaartsdag' },
+    { datum: pl(50), naam: 'Tweede Pinksterdag' },
+    { datum: new Date(j, 11, 25), naam: 'Eerste Kerstdag' },
+    { datum: new Date(j, 11, 26), naam: 'Tweede Kerstdag' },
+  ].map(f => ({ iso: naarIso(f.datum), naam: f.naam }));
+}
+
+// ---------- beheer: gesloten dagen en verlof ----------
+const overlay = document.getElementById('beheerOverlay');
+document.getElementById('beheerKnop').addEventListener('click', () => { tekenBeheer(); overlay.classList.add('open'); });
+document.getElementById('beheerSluit').addEventListener('click', () => overlay.classList.remove('open'));
+overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+function tekenBeheer() {
+  document.getElementById('beheerJaar').textContent = jaar;
+  document.getElementById('feestLijst').innerHTML = '';
+  const gs = Object.values(gesloten).sort((a, b) => a.datum.localeCompare(b.datum));
+  document.getElementById('gsLijst').innerHTML = gs.length ? gs.map(g =>
+    '<li><span><span class="num">' + fmtDatum(vanIso(g.datum)) + '</span> <span class="m">' + DAGNAMEN[vanIso(g.datum).getDay()] + ' · ' + esc(g.soort) + '</span> ' + esc(g.omschrijving || '') + '</span><button class="knop klein" data-gs="' + g.datum + '">verwijder</button></li>').join('')
+    : '<li class="m">Nog geen gesloten dagen in ' + jaar + '.</li>';
+  const sel = document.getElementById('vlMw');
+  sel.innerHTML = medewerkers.map(m => '<option value="' + esc(m.id) + '">' + esc(m.naam) + '</option>').join('');
+  const vls = Object.values(verlof).sort((a, b) => a.datum.localeCompare(b.datum) || a.medewerker_id.localeCompare(b.medewerker_id));
+  document.getElementById('vlLijst').innerHTML = vls.length ? vls.map(v => {
+    const m = medewerkers.find(x => x.id === v.medewerker_id);
+    return '<li><span><span class="num">' + fmtDatum(vanIso(v.datum)) + '</span> <span class="m">' + DAGNAMEN[vanIso(v.datum).getDay()] + '</span> <b>' + esc(m ? m.naam : '?') + '</b> ' + esc(v.omschrijving || '') + '</span><button class="knop klein" data-vl="' + esc(v.medewerker_id) + '|' + v.datum + '">verwijder</button></li>';
+  }).join('') : '<li class="m">Nog geen verlof in ' + jaar + '.</li>';
+}
+
+document.getElementById('feestVoorstel').addEventListener('click', () => {
+  const lijst = feestdagen(jaar);
+  document.getElementById('feestLijst').innerHTML = '<ul class="lijst">' + lijst.map(f => {
+    const al = !!gesloten[f.iso], wknd = isWeekend(f.iso);
+    return '<li><label><input type="checkbox" data-iso="' + f.iso + '" data-naam="' + esc(f.naam) + '"' + (al || wknd ? ' disabled' : ' checked') + '> <span class="num">' + fmtDatum(vanIso(f.iso)) + '</span> <span class="m">' + DAGNAMEN[vanIso(f.iso).getDay()] + '</span> ' + esc(f.naam) + (al ? ' <span class="m">(staat er al)</span>' : wknd ? ' <span class="m">(weekend)</span>' : '') + '</label></li>';
+  }).join('') + '</ul><div class="rij" style="margin-top:0.5rem"><button class="knop primair" id="feestToevoegen">Aangevinkte dagen toevoegen</button></div>';
+  document.getElementById('feestToevoegen').addEventListener('click', async () => {
+    const rijen = [...document.querySelectorAll('#feestLijst input:checked')].map(c => ({ datum: c.dataset.iso, soort: 'feestdag', omschrijving: c.dataset.naam }));
+    await voegGeslotenToe(rijen);
+  });
+});
+
+async function voegGeslotenToe(rijen) {
+  if (!rijen.length) return;
+  try {
+    const r = await sb.from('plan_gesloten_dagen').upsert(rijen, { onConflict: 'datum' });
+    if (r.error) throw r.error;
+    for (const x of rijen) gesloten[x.datum] = x;
+    toonStatus(rijen.length + ' gesloten dag' + (rijen.length === 1 ? '' : 'en') + ' opgeslagen');
+  } catch (e) { toonStatus('Opslaan mislukt: ' + (e.message || e), true); }
+  tekenBeheer(); hertekenMetScroll();
+}
+function dagenInPeriode(van, tot) {
+  const uit = [];
+  if (!van || !tot || tot < van) return uit;
+  let d = van, rem = 0;
+  while (d <= tot && rem < 400) { if (!isWeekend(d)) uit.push(d); d = plusDagen(d, 1); rem++; }
+  return uit;
+}
+document.getElementById('gsToevoegen').addEventListener('click', async () => {
+  const van = document.getElementById('gsVan').value, tot = document.getElementById('gsTot').value || van;
+  const soort = document.getElementById('gsSoort').value, om = document.getElementById('gsOmschr').value.trim();
+  const ds = dagenInPeriode(van, tot);
+  if (!ds.length) { toonStatus('Kies een geldige periode', true); return; }
+  await voegGeslotenToe(ds.map(d => ({ datum: d, soort, omschrijving: om || null })));
+  document.getElementById('gsOmschr').value = '';
+});
+document.getElementById('gsLijst').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-gs]'); if (!b) return;
+  try {
+    const r = await sb.from('plan_gesloten_dagen').delete().eq('datum', b.dataset.gs);
+    if (r.error) throw r.error;
+    delete gesloten[b.dataset.gs];
+    toonStatus('Gesloten dag verwijderd');
+  } catch (err) { toonStatus('Verwijderen mislukt: ' + (err.message || err), true); }
+  tekenBeheer(); hertekenMetScroll();
+});
+
+async function zetVerlof(mwId, dagenLijst, omschrijving) {
+  const rijen = dagenLijst.map(d => ({ medewerker_id: mwId, datum: d, omschrijving: omschrijving || null }));
+  if (!rijen.length) return;
+  try {
+    const r = await sb.from('plan_verlof').upsert(rijen, { onConflict: 'medewerker_id,datum' }).select();
+    if (r.error) throw r.error;
+    for (const x of (r.data && r.data.length ? r.data : rijen)) verlof[x.medewerker_id + '|' + x.datum] = x;
+    toonStatus('Verlof opgeslagen');
+  } catch (e) { toonStatus('Verlof opslaan mislukt: ' + (e.message || e), true); }
+  tekenBeheer(); hertekenMetScroll();
+}
+async function wisVerlof(mwId, iso) {
+  try {
+    const r = await sb.from('plan_verlof').delete().match({ medewerker_id: mwId, datum: iso });
+    if (r.error) throw r.error;
+    delete verlof[mwId + '|' + iso];
+    toonStatus('Verlof opgeheven');
+  } catch (e) { toonStatus('Opheffen mislukt: ' + (e.message || e), true); }
+  tekenBeheer(); hertekenMetScroll();
+}
+document.getElementById('vlToevoegen').addEventListener('click', async () => {
+  const mw = document.getElementById('vlMw').value;
+  const van = document.getElementById('vlVan').value, tot = document.getElementById('vlTot').value || van;
+  const ds = dagenInPeriode(van, tot);
+  if (!mw || !ds.length) { toonStatus('Kies medewerker en periode', true); return; }
+  await zetVerlof(mw, ds, document.getElementById('vlOmschr').value.trim());
+  document.getElementById('vlOmschr').value = '';
+});
+document.getElementById('vlLijst').addEventListener('click', e => {
+  const b = e.target.closest('button[data-vl]'); if (!b) return;
+  const [mw, iso] = b.dataset.vl.split('|');
+  wisVerlof(mw, iso);
+});
+
+function hertekenMetScroll() {
+  const links = document.getElementById('bordScroll').scrollLeft;
+  tekenBord();
+  document.getElementById('bordScroll').scrollLeft = links;
+}
+
+// Klik op een dag in de totaaltelling: verlof zetten of opheffen.
+const popover = document.getElementById('popover');
+function sluitPopover() { popover.style.display = 'none'; popover.innerHTML = ''; }
+document.addEventListener('click', e => { if (popover.style.display !== 'none' && !popover.contains(e.target) && !e.target.closest('tfoot td.klik')) sluitPopover(); });
+
+bordEl.addEventListener('click', e => {
+  const td = e.target.closest('tfoot td.klik'); if (!td) return;
+  const mwId = td.dataset.mw, iso = td.dataset.datum;
+  const m = medewerkers.find(x => x.id === mwId); if (!m) return;
+  const d = vanIso(iso);
+  const r = td.getBoundingClientRect();
+  const vrij = isVerlof(mwId, iso);
+  const geplandHier = dagTotaal(mwId, iso);
+  popover.innerHTML = '<b>' + esc(m.naam) + '</b> · ' + DAGNAMEN[d.getDay()] + ' ' + fmtDatum(d) +
+    (vrij ? '<div class="hint">Vrij' + (verlof[mwId + '|' + iso].omschrijving ? ': ' + esc(verlof[mwId + '|' + iso].omschrijving) : '') + '</div><div class="rij"><button class="knop primair" id="poWis">Verlof opheffen</button></div>'
+          : (geplandHier ? '<div class="hint" style="color:var(--amber)">Let op: er staat al ' + fmtUur(geplandHier) + ' uur gepland op deze dag.</div>' : '') +
+            '<div class="rij"><input type="text" id="poOm" placeholder="omschrijving (mag leeg)" style="flex:1"><button class="knop primair" id="poZet">Vrij zetten</button></div>');
+  popover.style.display = 'block';
+  popover.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 260) + 'px';
+  popover.style.top = (r.top + window.scrollY - popover.offsetHeight - 8) + 'px';
+  const wis = document.getElementById('poWis'), zet = document.getElementById('poZet');
+  if (wis) wis.addEventListener('click', () => { sluitPopover(); wisVerlof(mwId, iso); });
+  if (zet) { zet.addEventListener('click', () => { const om = document.getElementById('poOm').value.trim(); sluitPopover(); zetVerlof(mwId, [iso], om); }); document.getElementById('poOm').focus(); }
+});
 
 // ---------- gebeurtenissen ----------
 bordEl.addEventListener('dragstart', e => e.preventDefault());

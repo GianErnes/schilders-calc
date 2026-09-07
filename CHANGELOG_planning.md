@@ -1,5 +1,20 @@
 # CHANGELOG planning.html
 
+## v0.3.0 — Vrije dagen: gesloten dagen en verlof (brok 3b, deel 1), 07-09-2026
+
+Vereist eerst `planning_02_verlof.sql` (tabel `plan_verlof`). Zonder die tabel werkt het bord gewoon, maar zonder verlof (melding in de browserconsole).
+
+### Wat er kan
+- Knop **Vrije dagen** bovenaan opent het beheer voor het gekozen jaar.
+- **Gesloten dagen** (voor iedereen): "Nederlandse feestdagen voorstellen" toont de negen feestdagen van het jaar (Paasdatum berekend, Koningsdag op zaterdag als 27 april een zondag is), alle aangevinkt behalve wat er al staat of in het weekend valt; met één knop toevoegen. Periode toevoegen (van t/m, soort, omschrijving) slaat elke weekdag op. Verwijderen per regel.
+- **Verlof per medewerker**: periode via het beheer, of één dag door onderaan het bord op de dag bij de medewerker te klikken (popover met "Vrij zetten" / "Verlof opheffen", waarschuwt als er al uren staan).
+- Verlofcel: grijs met ✕, geen invoer, telt niet in het restant. Staan er tóch uren op een dag die later vrij werd, dan blijven ze rood zichtbaar zodat je ze kunt verplaatsen.
+- Meeverschuiven van uren springt per medewerker over zijn eigen verlof heen.
+
+### Onder de kap
+- Leest en schrijft `plan_verlof` (upsert op medewerker_id+datum), `plan_gesloten_dagen` (upsert op datum).
+- Getest: 63 controles in jsdom, waaronder feestdagen 2025/2026/2027, periodes zonder weekend, verlof via beheer en via popover, verschuiven over verlof.
+
 ## v0.2.1 — Slepen werkte niet in de browser, 07-09-2026
 
 Slepen en trekken deden niets. Vermoedelijke oorzaak (niet na te bootsen in jsdom): de browser begon zelf tekst te selecteren of te slepen en stuurde `pointercancel`. Drie maatregelen: balktekst niet selecteerbaar, browsergedrag bij muis-omlaag op de balk uitgeschakeld, native slepen binnen het bord geblokkeerd. Als dit het niet is, is de volgende stap een kijkje in de browserconsole.
