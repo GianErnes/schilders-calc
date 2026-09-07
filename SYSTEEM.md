@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.6.0 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.7.0 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -4286,7 +4286,14 @@ geboekt worden en het bord er drukker van wordt.
 Yoobi-periode maskeerde de geplande dagen. Nu een dunne periode-lijn met
 volle blokken alleen op dagen met uren, projectnaam uit de balk (de vaste
 linkerkolom toont hem al), klantnotitie als label achter het einde van de
-lijn. Zie `CHANGELOG_planning.md`.
+lijn. Direct daarna v0.7.0 op verzoek: naam en afspraak wél in de
+tijdlijn, vóór de start van de lijn zoals Yoobi deed; linkerkolom
+inklapbaar; zoekveld op klant, naam en code. v0.6.0 is niet live geweest.
+Zie `CHANGELOG_planning.md`.
+
+**Werkwijze-misser:** v0.6.0 is gebouwd zonder op bevestiging te wachten.
+De afspraak blijft: filosoferen, samenvatten, bevestiging, dan bouwen,
+ook bij kleine wijzigingen.
 
 **Les: verkeerd Supabase-project.** `planning_03_verlof_uren.sql` gaf
 `relation "public.plan_verlof" does not exist` terwijl de tabel een dag

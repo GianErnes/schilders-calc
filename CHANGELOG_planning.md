@@ -1,5 +1,16 @@
 # CHANGELOG planning.html
 
+## v0.7.0 — Naam vóór de lijn, inklapbare kolom, zoeken, 07-09-2026
+
+Op verzoek na v0.6.0: de projectnaam hoort wel in de tijdlijn.
+
+### Wat er anders is
+- **Projectnaam + afspraak staan vóór de start van de lijn**, tegen het beginpunt aan (zoals Yoobi). Klik op de naam klapt het project open; klik op de afspraak bewerkt hem. Geen ruimte links (start in de eerste week, of overloopwerk vanaf 1 januari): dan achter het einde van de lijn.
+- **Linkerkolom inklapbaar** met het knopje ‹ › in de kop. Ingeklapt blijft 40 px over en krijgt het bord de breedte; de keuze wordt in de browser onthouden.
+- **Zoekveld** boven de linkerkolom (bij ingeklapte kolom in de kopbalk): filtert op klant, projectnaam of Yoobi-code terwijl je typt. De totaaltelling onderaan blijft over alle projecten rekenen. Geen treffer geeft een melding.
+
+Getest: 97 controles in jsdom. v0.6.0 is niet live geweest; v0.7.0 bevat die wijzigingen ook (lijn met blokken).
+
 ## v0.6.0 — Periode als lijn, geplande dagen als blokken, 07-09-2026
 
 Uit het plannen zelf: een project als Massop (periode september–november, werk op vijf dagen) vulde de hele tijdlijn met een dik blok, en de tekst erop dekte de cellen af zodat je de geplande dagen alleen aan de randjes zag.

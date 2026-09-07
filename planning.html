@@ -114,7 +114,7 @@
   td.balk.afwijkend.gepland::after { background: var(--blue); }
   tr.project.actief td.balk.gepland::after { background: var(--blue-deep); }
   tr.project td.balk { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
-  tr.project td.balk .notitie, tr.project td.balk .greep { user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
+  tr.project td.balk .projtekst, tr.project td.balk .greep { user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
   tr.project.sleept td.balk { cursor: grabbing; }
   .greep { position: absolute; top: 4px; bottom: 4px; width: 10px; cursor: ew-resize; z-index: 3; border-radius: 3px; }
   .greep.links { left: 0; }
@@ -124,11 +124,28 @@
   .pdatums input[type=date] { font: inherit; font-size: 0.82rem; padding: 0.25rem 0.4rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); width: 100%; color: var(--ink); }
   .pdatums .knop { margin-top: 0.5rem; width: 100%; }
   .pdatums .aann { color: var(--amber); font-size: 0.74rem; margin-top: 0.4rem; }
-  /* klantnotitie: label naast het einde van de lijn, buiten de cellen */
-  .notitie { position: absolute; top: 50%; transform: translateY(-50%); left: calc(100% + 4px); white-space: nowrap; font-size: 0.72rem; font-weight: 600; color: var(--blue-deep); background: var(--blue-cell); border: 1px solid var(--blue-soft); border-radius: 10px; padding: 1px 8px; cursor: text; z-index: 2; max-width: 420px; overflow: hidden; text-overflow: ellipsis; }
-  .notitie.links { left: auto; right: calc(100% + 4px); }
-  .notitie.leeg { color: var(--muted); background: transparent; border-color: transparent; font-weight: 500; opacity: 0.6; }
+  /* projecttekst: naam + afspraak vóór de lijn (of erachter als er links geen ruimte is) */
+  .projtekst { position: absolute; top: 50%; transform: translateY(-50%); right: calc(100% + 8px); white-space: nowrap; font-size: 0.76rem; z-index: 2; display: flex; align-items: center; gap: 0.45rem; pointer-events: auto; }
+  .projtekst.rechts { right: auto; left: calc(100% + 8px); }
+  .projtekst .pnaam { font-weight: 700; color: var(--ink); cursor: pointer; }
+  .projtekst .pnaam:hover { color: var(--blue-deep); }
+  .notitie { font-weight: 600; color: var(--blue-deep); background: var(--blue-cell); border: 1px solid var(--blue-soft); border-radius: 10px; padding: 0 8px; cursor: text; max-width: 420px; overflow: hidden; text-overflow: ellipsis; }
+  .notitie.leeg { color: var(--muted); background: transparent; border-color: transparent; font-weight: 500; opacity: 0.55; }
   .notitie.leeg:hover { opacity: 1; border-color: var(--paper-deep); }
+  tr.project.verborgen-zoek { display: none; }
+
+  /* inklapbare linkerkolom */
+  table.bord.ingeklapt col.c-label { width: 40px; }
+  table.bord.ingeklapt .label { max-width: 40px; padding: 0 4px; }
+  table.bord.ingeklapt .label .klant, table.bord.ingeklapt .label .naam, table.bord.ingeklapt .label .mwnaam, table.bord.ingeklapt .label .zoekwrap, table.bord.ingeklapt .label .voettekst { display: none; }
+  .kolomknop { border: 1px solid var(--paper-deep); background: var(--paper); border-radius: 4px; width: 22px; height: 22px; cursor: pointer; color: var(--ink-soft); font-size: 0.9rem; line-height: 1; padding: 0; vertical-align: middle; }
+  .kolomknop:hover { background: var(--paper-warm); }
+  .zoekwrap { display: inline-flex; align-items: center; gap: 4px; width: calc(100% - 30px); }
+  .zoekwrap input { width: 100%; font: inherit; font-size: 0.8rem; padding: 3px 8px; border: 1px solid var(--paper-deep); border-radius: 12px; }
+  .zoekwrap input:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
+  #zoekKop { display: none; }
+  #zoekKop input { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.7rem; border: 1px solid var(--paper-deep); border-radius: 14px; width: 220px; }
+  .zoekmelding { color: var(--muted); font-size: 0.78rem; padding: 8px; }
   .notitie input { font: inherit; font-size: 0.74rem; padding: 2px 6px; border: 1px solid var(--blue-deep); border-radius: 4px; width: 260px; color: var(--ink); }
   .notitie input { font: inherit; font-size: 0.74rem; padding: 2px 6px; border: 1px solid var(--blue-deep); border-radius: 4px; width: 260px; color: var(--ink); }
 
@@ -235,6 +252,7 @@
       <div class="sub">Projecten uit Yoobi, uren en afspraken van ons · <span id="peildatum"></span> · <span id="appVersie"></span></div>
     </div>
     <div class="header-right">
+      <span id="zoekKop"><input type="search" placeholder="Zoek project…" aria-label="Zoek project"></span>
       <span class="status" id="status"></span>
       <button class="knop" id="verversKnop" title="Projecten opnieuw uit Yoobi halen">Yoobi verversen</button>
       <button class="knop" id="beheerKnop">Vrije dagen &amp; medewerkers</button>
@@ -335,7 +353,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.6.0';
+const APP_VERSION = '0.7.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -355,6 +373,10 @@ let uitgeklapt = new Set();  // codes waarvan de medewerkerrijen open staan
 let actiefCode = null;       // project in het paneel
 let dagen = [];              // alle dagen van het jaar als 'YYYY-MM-DD'
 let dagIndex = {};           // 'YYYY-MM-DD' -> kolomindex
+let zoekTekst = '';          // filter op klant, naam of code
+let kolomIngeklapt = false;
+try { kolomIngeklapt = localStorage.getItem('plan_kolom_ingeklapt') === '1'; } catch (_e) {}
+const LABEL_BREEDTE = 300, LABEL_SMAL = 40;
 
 // ---------- helpers ----------
 const DAGNAMEN = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
@@ -572,7 +594,7 @@ function tekenBord() {
   h += '<colgroup><col class="c-label">' + dagen.map(() => '<col class="c-dag">').join('') + '</colgroup>';
 
   // kop: weken en dagen
-  h += '<thead><tr class="weken"><th class="label">' + esc(String(jaar)) + '</th>';
+  h += '<thead><tr class="weken"><th class="label"><button class="kolomknop" id="kolomToggle" title="' + (kolomIngeklapt ? 'Kolom uitklappen' : 'Kolom inklappen') + '">' + (kolomIngeklapt ? '›' : '‹') + '</button> <span class="klant" style="font-weight:600">' + esc(String(jaar)) + '</span></th>';
   let i = 0;
   while (i < dagen.length) {
     const d0 = vanIso(dagen[i]);
@@ -582,7 +604,7 @@ function tekenBord() {
     h += '<th colspan="' + span + '">wk ' + wk + ' <span style="color:var(--muted);font-weight:500">' + MAANDEN[d0.getMonth()] + '</span></th>';
     i += span;
   }
-  h += '</tr><tr class="dagen"><th class="label">Project</th>';
+  h += '</tr><tr class="dagen"><th class="label"><span class="zoekwrap"><input type="search" id="zoekVeld" placeholder="Zoek project…" value="' + esc(zoekTekst) + '" aria-label="Zoek project"></span></th>';
   for (const iso of dagen) {
     const d = vanIso(iso);
     const t = isGesloten(iso) ? ' title="' + esc(gesloten[iso].omschrijving || gesloten[iso].soort) + '"' : '';
@@ -602,17 +624,23 @@ function tekenBord() {
   h += '</tbody>';
 
   // totaaltelling
-  h += '<tfoot><tr class="kop"><td class="label">Nog te plannen per dag</td>' + dagen.map(() => '<td></td>').join('') + '</tr>';
+  h += '<tfoot><tr class="kop"><td class="label"><span class="voettekst">Nog te plannen per dag</span></td>' + dagen.map(() => '<td></td>').join('') + '</tr>';
   for (const m of medewerkers) {
-    h += '<tr data-mw="' + esc(m.id) + '"><td class="label">' + esc(m.naam) + ' <span class="num" style="color:var(--muted);font-weight:500">(' + fmtUur(m.norm_uren) + ')</span></td>';
+    h += '<tr data-mw="' + esc(m.id) + '"><td class="label"><span class="mwnaam">' + esc(m.naam) + ' <span class="num" style="color:var(--muted);font-weight:500">(' + fmtUur(m.norm_uren) + ')</span></span></td>';
     for (const iso of dagen) h += '<td class="' + celKlassen(iso) + ' num ' + restantKlasse(m, iso) + '" data-mw="' + esc(m.id) + '" data-datum="' + iso + '">' + restantInhoud(m, iso) + '</td>';
     h += '</tr>';
   }
   h += '</tfoot>';
 
   const bordEl0 = document.getElementById('bord');
-  bordEl0.style.width = (300 + dagen.length * 34) + 'px';
+  bordEl0.classList.toggle('ingeklapt', kolomIngeklapt);
+  bordEl0.style.width = ((kolomIngeklapt ? LABEL_SMAL : LABEL_BREEDTE) + dagen.length * 34) + 'px';
   bordEl0.innerHTML = h;
+  document.getElementById('zoekKop').style.display = kolomIngeklapt ? 'inline-block' : 'none';
+  document.getElementById('zoekKop').querySelector('input').value = zoekTekst;
+  document.getElementById('kolomToggle').addEventListener('click', e => { e.stopPropagation(); kolomIngeklapt = !kolomIngeklapt; try { localStorage.setItem('plan_kolom_ingeklapt', kolomIngeklapt ? '1' : '0'); } catch (_e) {} hertekenMetScroll(); });
+  document.getElementById('zoekVeld').addEventListener('input', e => { zoekTekst = e.target.value; pasZoekToe(); });
+  pasZoekToe();
   // rijen onderaan vastzetten: elke tfoot-rij zijn eigen bottom
   const rijen = Array.from(document.querySelectorAll('#bord tfoot tr'));
   let bottom = 0;
@@ -637,10 +665,14 @@ function tekenProjectRij(p, d) {
   const pl = planProjecten[p.code] || {};
   let h = '<tr class="project' + (p.code === actiefCode ? ' actief' : '') + '" data-code="' + esc(p.code) + '">';
   h += '<td class="label" title="' + esc(p.klant + ' — ' + p.naam) + '"><span class="klant">' + esc(p.klant) + '</span><span class="naam">' + esc(p.naam) + '</span></td>';
-  // Notitie hangt achter het einde van de lijn; loopt de lijn het jaar uit,
-  // dan vóór het eerste zichtbare stuk.
+  // Naam + afspraak vóór de start van de lijn. Geen ruimte links (start in
+  // de eerste week, of overloopwerk vanaf 1 januari): dan achter het eind,
+  // en loopt ook dat het jaar uit, dan rechts van het eerste zichtbare stuk.
+  const RUIMTE_LINKS = 9;   // dagkolommen ≈ 300 px
+  const linksPast = sIso && sIso >= j1 && (dagIndex[sIso] || 0) >= RUIMTE_LINKS;
   const eindZichtbaar = eIso && eIso <= j2;
-  const notitieCel = eindZichtbaar ? eIso : (sIso && sIso >= j1 ? sIso : j1);
+  const tekstCel = linksPast ? sIso : (eindZichtbaar ? eIso : j1);
+  const tekstRechts = !linksPast;
   for (const iso of dagen) {
     let k = celKlassen(iso);
     const inBalk = sIso && iso >= sIso && iso <= eIso;
@@ -655,9 +687,10 @@ function tekenProjectRij(p, d) {
       if (geplandeDagen.has(iso)) k += ' gepland';
       if (iso === sIso) inhoud += '<span class="greep links" title="Startdatum verschuiven"></span>';
       if (iso === eIso) inhoud += '<span class="greep rechts" title="Einddatum verschuiven"></span>';
-      if (iso === notitieCel) {
+      if (iso === tekstCel) {
         const n = pl.klantnotitie || '';
-        inhoud += '<span class="notitie' + (n ? '' : ' leeg') + (eindZichtbaar ? '' : ' links') + '" data-code="' + esc(p.code) + '" title="' + esc(n ? n + ' — klik om te wijzigen' : 'Klik om de afspraak met de klant te noteren') + '">' + (n ? esc(n) : '+ afspraak') + '</span>';
+        inhoud += '<span class="projtekst' + (tekstRechts ? ' rechts' : '') + '"><span class="pnaam" title="' + esc(p.klant + ' — ' + p.naam) + '">' + esc(p.naam) + '</span>'
+          + '<span class="notitie' + (n ? '' : ' leeg') + '" data-code="' + esc(p.code) + '" title="' + esc(n ? n + ' — klik om te wijzigen' : 'Klik om de afspraak met de klant te noteren') + '">' + (n ? esc(n) : '+ afspraak') + '</span></span>';
       }
     }
     h += '<td class="' + k + '">' + inhoud + '</td>';
@@ -925,7 +958,7 @@ const DAGBREEDTE = 34;
 
 bordEl.addEventListener('pointerdown', e => {
   if (e.button !== undefined && e.button !== 0) return;
-  if (e.target.closest('.notitie') || e.target.closest('input')) return;
+  if (e.target.closest('.projtekst') || e.target.closest('input')) return;
   const td = e.target.closest('tr.project td.balk');
   if (!td) return;
   // Voorkom dat de browser zelf tekst gaat selecteren of slepen; dan
@@ -1251,6 +1284,27 @@ document.getElementById('verversKnop').addEventListener('click', async () => {
   verversBezig = false;
 });
 
+// ---------- zoeken ----------
+function pasZoekToe() {
+  const z = zoekTekst.trim().toLowerCase();
+  let getoond = 0;
+  document.querySelectorAll('#bord tbody tr.project').forEach(tr => {
+    const p = vindProject(tr.dataset.code);
+    const past = !z || !p || (p.klant + ' ' + p.naam + ' ' + p.code).toLowerCase().includes(z);
+    tr.classList.toggle('verborgen-zoek', !past);
+    document.querySelectorAll('#bord tbody tr.mw[data-code="' + tr.dataset.code + '"]').forEach(r => r.style.display = past ? '' : 'none');
+    if (past) getoond++;
+  });
+  const oud = document.getElementById('zoekMelding'); if (oud) oud.remove();
+  if (z && getoond === 0) {
+    const tb = document.querySelector('#bord tbody');
+    const tr = document.createElement('tr'); tr.id = 'zoekMelding';
+    tr.innerHTML = '<td class="label zoekmelding">Geen project past bij "' + esc(zoekTekst) + '"</td><td colspan="' + dagen.length + '"></td>';
+    tb.appendChild(tr);
+  }
+}
+document.getElementById('zoekKop').querySelector('input').addEventListener('input', e => { zoekTekst = e.target.value; pasZoekToe(); });
+
 function hertekenMetScroll() {
   const links = document.getElementById('bordScroll').scrollLeft;
   tekenBord();
@@ -1376,7 +1430,7 @@ function scrollNaarVandaag() {
   const th = document.querySelector('#bord thead tr.dagen th.vandaag');
   if (!th) { sc.scrollLeft = 0; return; }
   const label = document.querySelector('#bord thead tr.dagen th.label');
-  sc.scrollLeft = Math.max(0, th.offsetLeft - (label ? label.offsetWidth : 300) - 2 * th.offsetWidth);
+  sc.scrollLeft = Math.max(0, th.offsetLeft - (label ? label.offsetWidth : LABEL_BREEDTE) - 2 * th.offsetWidth);
 }
 
 document.getElementById('naarVandaag').addEventListener('click', () => {
