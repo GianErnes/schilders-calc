@@ -119,8 +119,7 @@
   td.balk.start::before { left: 3px; border-radius: 3px 0 0 3px; }
   td.balk.eind::before { right: 3px; border-radius: 0 3px 3px 0; }
   td.balk.onbemand::before { background: repeating-linear-gradient(90deg, var(--blue) 0 6px, var(--blue-soft) 6px 10px); }
-  td.balk.afwijkend::before { background: var(--amber); }
-  td.balk.afwijkend.onbemand::before { background: repeating-linear-gradient(90deg, var(--amber) 0 6px, #fde4cf 6px 10px); }
+  /* een bewuste afwijking van Yoobi blijft blauw; alleen de aanname is oranje (besluit 07-09-2026) */
   td.balk.aanname::before { background: repeating-linear-gradient(90deg, var(--amber) 0 3px, transparent 3px 7px); }
   td.balk.gepland::after { content: ''; position: absolute; left: 1px; right: 1px; top: 6px; bottom: 6px; background: var(--blue); border-radius: 4px; }
   td.balk.afwijkend.gepland::after { background: var(--blue); }
@@ -142,6 +141,26 @@
   .fase .rij input[type=date] { flex: 1; min-width: 0; font-size: 0.78rem; padding: 0.2rem 0.3rem; }
   .fase .rij { gap: 0.35rem; }
   tr.mw td.dag.anderefase { background: var(--paper) !important; }
+
+  /* hulpmiddelen: smalle strook onderin de projectrij */
+  :root { --m-hoogwerker: #f59e0b; --m-rolsteiger: #0ea5e9; --m-vaste_steiger: #dc2626; --m-mobiel_toilet: #facc15; --m-overig: #9ca3af; }
+  tr.project td.dag { position: relative; }
+  .middel { position: absolute; left: 0; right: 0; bottom: 3px; height: 6px; background: var(--m-kleur); opacity: 0.9; }
+  .middel.mstart { left: 2px; border-radius: 3px 0 0 3px; }
+  .middel.meind { right: 2px; border-radius: 0 3px 3px 0; }
+  .middeltekst { position: absolute; bottom: 9px; left: 2px; white-space: nowrap; font-size: 0.62rem; font-weight: 700; color: var(--m-kleur); z-index: 1; line-height: 1; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
+  .middeltekst .mo { font-weight: 500; color: var(--ink-soft); }
+  .middelen { margin-top: 0.7rem; }
+  .middelen h3 { margin: 0 0 0.4rem; font-size: 0.8rem; color: var(--ink-soft); }
+  .middelen ul { list-style: none; margin: 0; padding: 0; font-size: 0.78rem; }
+  .middelen li { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.4rem 0; border-top: 1px solid var(--paper-deep); }
+  .middelen li:first-child { border-top: none; }
+  .middelen .rij { gap: 0.35rem; }
+  .middelen .rij input[type=date] { flex: 1; min-width: 0; font-size: 0.76rem; padding: 0.2rem 0.3rem; }
+  .middelen .rij input[type=text] { flex: 1; min-width: 0; font-size: 0.78rem; }
+  .middelen .rij select { font: inherit; font-size: 0.78rem; padding: 0.25rem 0.3rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); }
+  .mkleur { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--m-kleur); vertical-align: -1px; margin-right: 4px; }
+  .legenda .mi { display: inline-block; width: 14px; height: 5px; border-radius: 2px; vertical-align: 1px; margin-right: 4px; }
   /* projecttekst: naam + afspraak vóór de lijn (of erachter als er links geen ruimte is) */
   /* z-index 1: onder de vaste linkerkolom (2), zodat de tekst er net als de blokken achter schuift */
   .projtekst { position: absolute; top: 50%; transform: translateY(-50%); right: calc(100% + 8px); white-space: nowrap; font-size: 0.76rem; z-index: 1; display: flex; align-items: center; gap: 0.45rem; pointer-events: auto; }
@@ -295,7 +314,12 @@
         <span><i style="background:var(--blue);height:4px;vertical-align:2px"></i> periode van het project</span>
         <span><i style="background:var(--blue)"></i> dag met geplande uren</span>
         <span><i style="background:repeating-linear-gradient(90deg,var(--blue) 0 3px,var(--blue-soft) 3px 5px);height:4px;vertical-align:2px"></i> nog niemand op gepland</span>
-        <span><i style="background:var(--amber);height:4px;vertical-align:2px"></i> onze datum wijkt af van Yoobi</span>
+        <span><i style="background:repeating-linear-gradient(90deg,var(--amber) 0 3px,transparent 3px 7px);height:4px;vertical-align:2px"></i> aanname: echte start nog zetten</span>
+        <span><i class="mi" style="background:#f59e0b"></i> hoogwerker</span>
+        <span><i class="mi" style="background:#0ea5e9"></i> rolsteiger</span>
+        <span><i class="mi" style="background:#dc2626"></i> vaste steiger</span>
+        <span><i class="mi" style="background:#facc15"></i> mobiel toilet</span>
+        <span><i class="mi" style="background:#9ca3af"></i> overig</span>
         <span><i style="background:var(--weekend)"></i> weekend</span>
         <span><i style="background:var(--gesloten)"></i> gesloten dag / verlof (✕)</span>
         <span><i style="background:var(--accent)"></i> te veel uren op een dag</span>
@@ -372,7 +396,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.8.1';
+const APP_VERSION = '0.9.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -389,6 +413,8 @@ let uren = {};               // sleutel code|mwId|datum -> getal (alleen geladen
 let gesloten = {};           // 'YYYY-MM-DD' -> {soort, omschrijving}
 let verlof = {};             // mwId|datum -> {id, omschrijving}
 let fasen = {};              // yoobi_code -> [fase-rijen op volgnr]
+let middelen = {};           // yoobi_code -> [hulpmiddel-rijen]
+const MIDDEL_SOORTEN = { hoogwerker: 'hoogwerker', rolsteiger: 'rolsteiger', vaste_steiger: 'vaste steiger', mobiel_toilet: 'mobiel toilet', overig: 'overig' };
 let actiefFase = null;       // fase-id van de rij in het paneel (null = project zonder fasen)
 let uitgeklapt = new Set();  // codes waarvan de medewerkerrijen open staan
 let actiefCode = null;       // project in het paneel
@@ -588,7 +614,7 @@ function vindProject(code) {
 // ---------- laden ----------
 async function laadAlles() {
   const j1 = jaar + '-01-01', j2 = jaar + '-12-31';
-  const [wv, mw, pp, pu, gd, vlRes, fsRes] = await Promise.all([
+  const [wv, mw, pp, pu, gd, vlRes, fsRes, mdRes] = await Promise.all([
     sb.from('fin_werkvoorraad').select('peildatum,data').order('peildatum', { ascending: false }).limit(1),
     sb.from('plan_medewerkers').select('*').order('volgorde'),
     sb.from('plan_projecten').select('*'),
@@ -596,6 +622,7 @@ async function laadAlles() {
     sb.from('plan_gesloten_dagen').select('*').gte('datum', j1).lte('datum', j2),
     sb.from('plan_verlof').select('*').gte('datum', j1).lte('datum', j2),
     sb.from('plan_fasen').select('*').order('volgnr'),
+    sb.from('plan_middelen').select('*').order('van'),
   ]);
   for (const r of [wv, mw, pp, pu, gd]) if (r.error) throw r.error;
   // plan_verlof kan ontbreken zolang planning_02_verlof.sql niet is gedraaid: dan zonder verlof verder.
@@ -625,7 +652,18 @@ async function laadAlles() {
   if (fsRes.error) { console.warn('plan_fasen niet leesbaar (tabel nog niet aangemaakt?): ' + fsRes.error.message); }
   else for (const r of (fsRes.data || [])) { (fasen[r.yoobi_code] = fasen[r.yoobi_code] || []).push(r); }
   for (const c in fasen) fasen[c].sort((a, b) => a.volgnr - b.volgnr);
+  middelen = {};
+  if (mdRes.error) { console.warn('plan_middelen niet leesbaar (tabel nog niet aangemaakt?): ' + mdRes.error.message); }
+  else for (const r of (mdRes.data || [])) { (middelen[r.yoobi_code] = middelen[r.yoobi_code] || []).push(r); }
 }
+function middelenVan(code, f) {
+  // Bij fasen: middelen met deze fase, plus middelen zonder fase bij de eerste fase.
+  const alle = middelen[code] || [];
+  if (!f) return alle;
+  const fs = fasenVan(code);
+  return alle.filter(m => m.fase_id === f.id || (!m.fase_id && fs.length && fs[0].id === f.id));
+}
+function middelNaam(m) { return m.soort === 'overig' ? (m.omschrijving || 'overig') : MIDDEL_SOORTEN[m.soort] || m.soort; }
 
 // ---------- tekenen ----------
 function bouwDagen() {
@@ -728,6 +766,7 @@ function tekenProjectRij(p, d, f) {
   const pl = planProjecten[p.code] || {};
   const isActief = p.code === actiefCode && ((f && f.id === actiefFase) || (!f && !actiefFase));
   const naamTekst = p.naam + (f ? ' · ' + f.naam : '');
+  const mds = middelenVan(p.code, f);
   let h = '<tr class="project' + (isActief ? ' actief' : '') + '" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + '>';
   h += '<td class="label" title="' + esc(p.klant + ' — ' + naamTekst) + '"><span class="klant">' + esc(p.klant) + '</span><span class="naam">' + esc(naamTekst) + '</span></td>';
   // Naam + afspraak vóór de start van de lijn. Geen ruimte links (start in
@@ -756,6 +795,15 @@ function tekenProjectRij(p, d, f) {
         const n = (f ? f.notitie : pl.klantnotitie) || '';
         inhoud += '<span class="projtekst' + (tekstRechts ? ' rechts' : '') + '"><span class="pnaam" title="' + esc(p.klant + ' — ' + naamTekst) + '">' + esc(naamTekst) + '</span>'
           + '<span class="notitie' + (n ? '' : ' leeg') + '" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + ' title="' + esc(n ? n + ' — klik om te wijzigen' : 'Klik om de afspraak met de klant te noteren') + '">' + (n ? esc(n) : '+ afspraak') + '</span></span>';
+      }
+    }
+    // hulpmiddelen: strook onderin, met naam bij de eerste zichtbare dag
+    for (const md of mds) {
+      if (iso < md.van || iso > md.tot) continue;
+      const kl = 'var(--m-' + md.soort + ')';
+      inhoud += '<span class="middel' + (iso === md.van ? ' mstart' : '') + (iso === md.tot ? ' meind' : '') + '" style="--m-kleur:' + kl + '" title="' + esc(middelNaam(md) + ' ' + fmtDatum(vanIso(md.van)) + ' – ' + fmtDatum(vanIso(md.tot)) + (md.omschrijving && md.soort !== 'overig' ? ' · ' + md.omschrijving : '')) + '"></span>';
+      if (iso === md.van || (md.van < j1 && iso === j1)) {
+        inhoud += '<span class="middeltekst" style="--m-kleur:' + kl + '">' + esc(middelNaam(md)) + (md.omschrijving && md.soort !== 'overig' ? ' <span class="mo">' + esc(md.omschrijving) + '</span>' : '') + '</span>';
       }
     }
     h += '<td class="' + k + '">' + inhoud + '</td>';
@@ -913,8 +961,10 @@ function tekenPaneel() {
     '<label>Knip in fasen op</label><div class="rij"><input type="date" id="pKnipDatum" style="flex:1"><button class="knop" id="pKnip" title="Alles vóór deze datum wordt fase 1, vanaf deze datum fase 2">Knip</button></div>' +
     '</div>' +
     '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Resterend = budget − geboekt − ingepland. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
+    middelenHtml(p, null, d) +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
+  koppelMiddelen(el, p, null, d);
   const inS = document.getElementById('pStart'), inE = document.getElementById('pEind');
   inS.addEventListener('change', () => datumsUitPaneel(p, d));
   inE.addEventListener('change', () => datumsUitPaneel(p, d));
@@ -950,10 +1000,13 @@ function tekenFasePaneel(el, p) {
       (i > 0 ? '<button class="knop klein fsamen" title="Voeg samen met de fase hierboven">Samenvoegen met vorige</button>' : '') + '</div>' +
       '</div>';
   });
-  h += '<div class="voetnoot">Budget, geboekt en resterend gelden voor het hele project; per fase zie je wat erop staat. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde.</div>' +
+  const fAct = fs.find(f => f.id === actiefFase) || fs[0];
+  h += middelenHtml(p, fAct, faseDatums(p, fAct)) +
+    '<div class="voetnoot">Budget, geboekt en resterend gelden voor het hele project; per fase zie je wat erop staat. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg">Verbergen</button></div>';
   el.innerHTML = h;
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
+  koppelMiddelen(el, p, fAct, faseDatums(p, fAct));
   el.querySelectorAll('.fase').forEach(div => {
     const f = vindFase(p.code, div.dataset.fase); if (!f) return;
     div.querySelector('.fnaam').addEventListener('change', e => hernoemFase(f, e.target.value.trim()));
@@ -970,6 +1023,76 @@ function tekenFasePaneel(el, p) {
     const sam = div.querySelector('.fsamen');
     if (sam) sam.addEventListener('click', () => voegFaseSamen(p.code, f.id));
   });
+}
+
+// ---------- hulpmiddelen ----------
+function middelenHtml(p, f, d) {
+  const mds = middelenVan(p.code, f);
+  const opties = Object.keys(MIDDEL_SOORTEN).map(k => '<option value="' + k + '">' + MIDDEL_SOORTEN[k] + '</option>').join('');
+  let h = '<div class="middelen"><h3>Hulpmiddelen' + (f ? ' · ' + esc(f.naam) : '') + '</h3><ul>';
+  for (const m of mds) {
+    h += '<li data-middel="' + esc(m.id) + '"><div class="rij"><span class="mkleur" style="--m-kleur:var(--m-' + m.soort + ')"></span><b style="flex:1">' + esc(middelNaam(m)) + '</b><button class="knop klein mwis" title="Verwijderen">✕</button></div>' +
+      '<div class="rij"><input type="date" class="mvan" value="' + esc(m.van) + '"><span>–</span><input type="date" class="mtot" value="' + esc(m.tot) + '"></div>' +
+      '<div class="rij"><input type="text" class="moms" value="' + esc(m.omschrijving || '') + '" placeholder="' + (m.soort === 'overig' ? 'naam van het middel' : 'notitie, bv. leverancier of tijd') + '"></div></li>';
+  }
+  if (!mds.length) h += '<li class="m" style="color:var(--muted)">Nog geen hulpmiddelen.</li>';
+  const sv = d.start ? naarIso(d.start) : '', se = d.eind ? naarIso(d.eind) : '';
+  h += '</ul><div class="rij" style="margin-top:0.5rem"><select id="mNieuwSoort">' + opties + '</select><input type="date" id="mNieuwVan" value="' + sv + '"><input type="date" id="mNieuwTot" value="' + se + '"></div>' +
+    '<div class="rij"><input type="text" id="mNieuwOms" placeholder="notitie of naam (bij overig)"><button class="knop primair klein" id="mNieuw">Toevoegen</button></div></div>';
+  return h;
+}
+function koppelMiddelen(el, p, f, d) {
+  const nieuw = el.querySelector('#mNieuw'); if (!nieuw) return;
+  nieuw.addEventListener('click', async () => {
+    const soort = el.querySelector('#mNieuwSoort').value, van = el.querySelector('#mNieuwVan').value, tot = el.querySelector('#mNieuwTot').value || van;
+    const oms = el.querySelector('#mNieuwOms').value.trim();
+    if (!van) { toonStatus('Kies een begindatum', true); return; }
+    if (soort === 'overig' && !oms) { toonStatus('Geef het middel een naam', true); return; }
+    await naMiddelWijziging(async () => {
+      const r = await sb.from('plan_middelen').insert({ yoobi_code: p.code, fase_id: f ? f.id : null, soort, omschrijving: oms || null, van, tot: tot < van ? van : tot });
+      if (r.error) throw r.error;
+    }, middelNaam({ soort, omschrijving: oms }) + ' toegevoegd');
+  });
+  el.querySelectorAll('li[data-middel]').forEach(li => {
+    const id = li.dataset.middel;
+    const m = (middelen[p.code] || []).find(x => x.id === id); if (!m) return;
+    const zet = () => {
+      const van = li.querySelector('.mvan').value, tot = li.querySelector('.mtot').value, oms = li.querySelector('.moms').value.trim();
+      if (!van || !tot) return;
+      naMiddelWijziging(async () => {
+        const r = await sb.from('plan_middelen').update({ van, tot: tot < van ? van : tot, omschrijving: oms || null }).eq('id', id);
+        if (r.error) throw r.error;
+      }, 'Hulpmiddel bijgewerkt');
+    };
+    li.querySelector('.mvan').addEventListener('change', zet);
+    li.querySelector('.mtot').addEventListener('change', zet);
+    li.querySelector('.moms').addEventListener('change', zet);
+    li.querySelector('.mwis').addEventListener('click', () => {
+      if (!confirm(middelNaam(m) + ' (' + fmtDatum(vanIso(m.van)) + ' – ' + fmtDatum(vanIso(m.tot)) + ') verwijderen?')) return;
+      naMiddelWijziging(async () => {
+        const r = await sb.from('plan_middelen').delete().eq('id', id);
+        if (r && r.error) throw r.error;
+      }, 'Hulpmiddel verwijderd');
+    });
+  });
+}
+async function naMiddelWijziging(fn, melding) {
+  try { await fn(); toonStatus(melding); }
+  catch (e) { toonStatus('Hulpmiddel opslaan mislukt: ' + (e.message || e), true); }
+  await laadAlles().catch(() => {});
+  hertekenMetScroll();
+}
+// Bij een hele verschuiving: de hulpmiddelen van dit project/deze fase mee?
+async function verschuifMiddelen(code, f, dagenDelta) {
+  const mds = middelenVan(code, f);
+  if (!mds.length || !dagenDelta) return;
+  if (!confirm(mds.length + ' hulpmiddel' + (mds.length === 1 ? '' : 'en') + ' (' + mds.map(middelNaam).join(', ') + ') ook ' + Math.abs(dagenDelta) + ' dag' + (Math.abs(dagenDelta) === 1 ? '' : 'en') + ' ' + (dagenDelta > 0 ? 'later' : 'eerder') + ' zetten? Een bestelde steiger schuift meestal niet mee.')) return;
+  for (const m of mds) {
+    const nv = plusDagen(m.van, dagenDelta), nt = plusDagen(m.tot, dagenDelta);
+    const r = await sb.from('plan_middelen').update({ van: nv, tot: nt }).eq('id', m.id);
+    if (r.error) throw r.error;
+    m.van = nv; m.tot = nt;
+  }
 }
 
 // Alle fasen van een project in één keer wegschrijven (renummerd).
@@ -1147,6 +1270,9 @@ async function slaDatumsOp(code, sIso, eIso, oudStart, faseId) {
       if (r.error) throw r.error;
       for (const k of verplaats.keys) delete uren[k];
       for (const w of nieuw) if (w.datum.startsWith(String(jaar))) uren[sleutel(code, w.medewerker_id, w.datum)] = w.uren;
+    }
+    if (oudStart && sIso && sIso !== oudStart) {
+      await verschuifMiddelen(code, fase, Math.round((vanIso(sIso) - vanIso(oudStart)) / 86400000));
     }
     toonStatus('Datums opgeslagen');
   } catch (e) {

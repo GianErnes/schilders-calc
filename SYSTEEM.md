@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.8.1 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.9.0 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -83,7 +83,7 @@ computegrootte Nano.
 
 Adres van een project is altijd `https://<verwijzing>.supabase.co`.
 
-**schilders-calc** telt 45 tabellen, 7 opslagbakken, 20 triggers, 16 Edge
+**schilders-calc** telt 46 tabellen, 7 opslagbakken, 21 triggers, 16 Edge
 Functions en 9 cronjobs. De grootste tabellen zijn `calc_regel_stappen`
 (1959 rijen), `meetstaat` (747) en `bewerkingen` (548). De 36 tabellen
 van toen zijn geteld op 2 augustus 2026 met `information_schema.tables`
@@ -97,7 +97,8 @@ erbij voor de planningsapp, elk met een `set_updated_at`-trigger,
 aangelegd met `planning_01_tabellen.sql` (twintig controleregels, alle
 GOED). Op 7 september kwam `plan_verlof` erbij (verlof per medewerker per
 dag, `planning_02_verlof.sql`, vijf controleregels GOED) en `plan_fasen`
-(project in fasen knippen, `planning_04_fasen.sql`). Die getallen zijn opgeteld bij de meting van 2 augustus en niet
+(project in fasen knippen, `planning_04_fasen.sql`) en `plan_middelen`
+(hulpmiddelen per project of fase, `planning_05_middelen.sql`). Die getallen zijn opgeteld bij de meting van 2 augustus en niet
 opnieuw geteld.
 
 > **Twee triggertellingen spreken elkaar tegen.** Hier staat 14, de
@@ -4307,6 +4308,19 @@ hoogwerker als hulpmiddelenlaag, die op de fasen voortbouwt.
 
 Gian meldt dat de planning voor 2026 zo goed als volledig in het eigen
 bord staat en Yoobi's planning daarmee geschiedenis is.
+
+### Planning brok 4b: hulpmiddelen (v0.9.0)
+
+Hoogwerker, rolsteiger, vaste steiger, mobiel toilet en "overig" als
+smalle gekleurde strook onderin de projectrij, met periode en notitie,
+beheerd in het paneel. Kleuren zijn Gians keuze (hoogwerker oranje,
+rolsteiger blauw, vaste steiger rood, toilet geel); het woord staat er
+altijd bij. Geen dubbel-gebruikcontrole: alles is huur. Bij een hele
+verschuiving een aparte vraag of de middelen mee moeten, standaard nee.
+Nieuwe tabel `plan_middelen`. Tegelijk: de oranje projectlijn geldt alleen
+nog voor de aanname; een bewuste afwijking van Yoobi blijft blauw en staat
+alleen in het paneel. Daarmee is alles gebouwd wat sinds 6 september is
+bedacht; wat volgt komt uit het gebruik.
 
 **Les: verkeerd Supabase-project.** `planning_03_verlof_uren.sql` gaf
 `relation "public.plan_verlof" does not exist` terwijl de tabel een dag

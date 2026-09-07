@@ -1,5 +1,23 @@
 # CHANGELOG planning.html
 
+## v0.9.0 — Hulpmiddelen: hoogwerker, steigers, toilet (brok 4b), 07-09-2026
+
+Vereist eerst `planning_05_middelen.sql` (tabel `plan_middelen`). Zonder die tabel werkt het bord gewoon, zonder hulpmiddelen.
+
+### Wat er kan
+- **Hulpmiddelen per project of fase**: hoogwerker (oranje), rolsteiger (blauw), vaste steiger (rood), mobiel toilet (geel), overig (grijs, met eigen naam). Elk met periode en notitie (leverancier, tijd).
+- **Op het bord** een smalle strook onderin de projectrij van opbouw- tot afbouwdag, met het woord erbij aan het begin, zodat de kleur niet het enige signaal is. Aanwijzen toont periode en notitie.
+- **In het paneel** een blok Hulpmiddelen: bestaande regels aanpassen (van, tot, notitie) of verwijderen (met bevestiging); toevoegen met van/tot standaard op de periode van het project of de gekozen fase.
+- **Bij een hele verschuiving** van project of fase een aparte vraag of de hulpmiddelen mee moeten ("een bestelde steiger schuift meestal niet mee"). Standaard is niets meeschuiven.
+- Geen dubbel-gebruikwaarschuwing: de hoogwerker wordt gehuurd.
+
+### Ook in deze ronde
+- **Oranje lijn alleen nog voor de aanname** (Yoobi-start in een eerder jaar, geen eigen datum gezet). Een bewuste afwijking van Yoobi blijft blauw en staat alleen in het paneel. Zo blijft oranje een signaal in plaats van ruis. Legenda aangepast, met de hulpmiddelkleuren.
+
+### Onder de kap
+- `plan_middelen` (yoobi_code, fase_id, soort, omschrijving, van, tot). Middelen zonder fase horen bij fase 1 als een project later geknipt wordt.
+- Getest: 128 controles in jsdom, waaronder strook en label, toevoegen (overig zonder naam geweigerd), wijzigen, meeschuiven met bevestiging, verwijderen.
+
 ## v0.8.1 — Tekst schuift achter de linkerkolom, 07-09-2026
 
 De naam en afspraak vóór de lijn bleven zichtbaar bóven de vaste linkerkolom bij horizontaal scrollen; de blokken verdwenen wel. Oorzaak: gelijke stapelhoogte (z-index) als de kolom. Tekst en grepen staan nu één laag lager. Alleen CSS.
