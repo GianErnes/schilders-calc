@@ -128,7 +128,7 @@
   tr.project td.balk { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
   tr.project td.balk .projtekst, tr.project td.balk .greep { user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
   tr.project.sleept td.balk { cursor: grabbing; }
-  .greep { position: absolute; top: 4px; bottom: 4px; width: 10px; cursor: ew-resize; z-index: 3; border-radius: 3px; }
+  .greep { position: absolute; top: 4px; bottom: 4px; width: 10px; cursor: ew-resize; z-index: 1; border-radius: 3px; }
   .greep.links { left: 0; }
   .greep.rechts { right: 0; }
   .greep:hover { background: rgba(23,105,170,0.3); }
@@ -143,7 +143,8 @@
   .fase .rij { gap: 0.35rem; }
   tr.mw td.dag.anderefase { background: var(--paper) !important; }
   /* projecttekst: naam + afspraak vóór de lijn (of erachter als er links geen ruimte is) */
-  .projtekst { position: absolute; top: 50%; transform: translateY(-50%); right: calc(100% + 8px); white-space: nowrap; font-size: 0.76rem; z-index: 2; display: flex; align-items: center; gap: 0.45rem; pointer-events: auto; }
+  /* z-index 1: onder de vaste linkerkolom (2), zodat de tekst er net als de blokken achter schuift */
+  .projtekst { position: absolute; top: 50%; transform: translateY(-50%); right: calc(100% + 8px); white-space: nowrap; font-size: 0.76rem; z-index: 1; display: flex; align-items: center; gap: 0.45rem; pointer-events: auto; }
   .projtekst.rechts { right: auto; left: calc(100% + 8px); }
   .projtekst .pnaam { font-weight: 700; color: var(--ink); cursor: pointer; }
   .projtekst .pnaam:hover { color: var(--blue-deep); }
@@ -371,7 +372,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.8.0';
+const APP_VERSION = '0.8.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';

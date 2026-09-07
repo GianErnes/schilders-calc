@@ -1,5 +1,9 @@
 # CHANGELOG planning.html
 
+## v0.8.1 — Tekst schuift achter de linkerkolom, 07-09-2026
+
+De naam en afspraak vóór de lijn bleven zichtbaar bóven de vaste linkerkolom bij horizontaal scrollen; de blokken verdwenen wel. Oorzaak: gelijke stapelhoogte (z-index) als de kolom. Tekst en grepen staan nu één laag lager. Alleen CSS.
+
 ## v0.8.0 — Projecten in fasen knippen (brok 4a), 07-09-2026
 
 Vereist eerst `planning_04_fasen.sql` (tabel `plan_fasen`). Zonder die tabel werkt het bord gewoon, zonder fasen.
