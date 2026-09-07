@@ -136,6 +136,12 @@
   .pdatums input[type=date] { font: inherit; font-size: 0.82rem; padding: 0.25rem 0.4rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); width: 100%; color: var(--ink); }
   .pdatums .knop { margin-top: 0.5rem; width: 100%; }
   .pdatums .aann { color: var(--amber); font-size: 0.74rem; margin-top: 0.4rem; }
+  .fase { border: 1px solid var(--paper-deep); border-radius: var(--radius); padding: 0.5rem 0.6rem; margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.4rem; }
+  .fase.actief { border-color: var(--blue); background: var(--blue-cell); }
+  .fase .rij input[type=text] { flex: 1; min-width: 0; font-weight: 600; }
+  .fase .rij input[type=date] { flex: 1; min-width: 0; font-size: 0.78rem; padding: 0.2rem 0.3rem; }
+  .fase .rij { gap: 0.35rem; }
+  tr.mw td.dag.anderefase { background: var(--paper) !important; }
   /* projecttekst: naam + afspraak vóór de lijn (of erachter als er links geen ruimte is) */
   .projtekst { position: absolute; top: 50%; transform: translateY(-50%); right: calc(100% + 8px); white-space: nowrap; font-size: 0.76rem; z-index: 2; display: flex; align-items: center; gap: 0.45rem; pointer-events: auto; }
   .projtekst.rechts { right: auto; left: calc(100% + 8px); }
@@ -365,7 +371,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.7.1';
+const APP_VERSION = '0.8.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -381,6 +387,8 @@ let planProjecten = {};      // yoobi_code -> rij uit plan_projecten
 let uren = {};               // sleutel code|mwId|datum -> getal (alleen geladen jaar)
 let gesloten = {};           // 'YYYY-MM-DD' -> {soort, omschrijving}
 let verlof = {};             // mwId|datum -> {id, omschrijving}
+let fasen = {};              // yoobi_code -> [fase-rijen op volgnr]
+let actiefFase = null;       // fase-id van de rij in het paneel (null = project zonder fasen)
 let uitgeklapt = new Set();  // codes waarvan de medewerkerrijen open staan
 let actiefCode = null;       // project in het paneel
 let dagen = [];              // alle dagen van het jaar als 'YYYY-MM-DD'
@@ -512,18 +520,54 @@ function isWeekend(iso) { const d = vanIso(iso).getDay(); return d === 0 || d ==
 function isGesloten(iso) { return !!gesloten[iso]; }
 
 // Projecten die dit jaar op het bord horen.
-function projectenOpBord() {
+// ---------- fasen ----------
+function fasenVan(code) { return fasen[code] || []; }
+function rijKey(code, f) { return code + (f ? '#' + f.id : ''); }
+function faseDatums(p, f) {
+  return { start: vanIso(f.van), eind: vanIso(f.tot), yStart: yoobiDatum(p.startdatum), yEind: yoobiDatum(p.einddatum), afwijkend: true, aanname: false };
+}
+// Bij welke fase hoort een dag: de fase waarin hij valt, anders de
+// dichtstbijzijnde. Zo staat elk uur in precies één rij. null = geen fasen.
+function faseVanDag(code, iso) {
+  const fs = fasenVan(code);
+  if (!fs.length) return null;
+  let beste = null, afstand = Infinity;
+  for (const f of fs) {
+    if (iso >= f.van && iso <= f.tot) return f;
+    const d = iso < f.van ? (vanIso(f.van) - vanIso(iso)) : (vanIso(iso) - vanIso(f.tot));
+    if (d < afstand) { afstand = d; beste = f; }
+  }
+  return beste;
+}
+function hoortBijFase(code, iso, f) {
+  if (!f) return true;
+  const g = faseVanDag(code, iso);
+  return !!g && g.id === f.id;
+}
+function urenVanFase(code, f) {
+  let som = 0;
+  for (const k in uren) if (k.startsWith(code + '|')) { const d = k.split('|')[2]; if (hoortBijFase(code, d, f)) som += uren[k]; }
+  return Math.round(som * 100) / 100;
+}
+
+// Rijen op het bord: een project zonder fasen is één rij, met fasen één rij per fase.
+function rijenOpBord() {
   if (!stand) return [];
   const j1 = new Date(jaar, 0, 1), j2 = new Date(jaar, 11, 31);
-  return stand.projecten
-    .filter(p => p.code)
-    .map(p => ({ p, d: projDatums(p) }))
+  const rijen = [];
+  for (const p of stand.projecten) {
+    if (!p.code) continue;
+    const pl = planProjecten[p.code];
+    if (pl && pl.zichtbaar === false) continue;
+    const fs = fasenVan(p.code);
+    if (fs.length) for (const f of fs) rijen.push({ p, d: faseDatums(p, f), f });
+    else rijen.push({ p, d: projDatums(p), f: null });
+  }
+  return rijen
     .filter(x => {
-      const pl = planProjecten[x.p.code];
-      if (pl && pl.zichtbaar === false) return false;
       if (x.d.start && x.d.start <= j2 && x.d.eind >= j1) return true;
       // Zonder datum in dit jaar, maar wel uren gepland: toch tonen.
-      return urenVanProject(x.p.code) > 0;
+      return urenVanFase(x.p.code, x.f) > 0;
     })
     .sort((a, b) => {
       const sa = a.d.start ? a.d.start.getTime() : Infinity;
@@ -531,6 +575,7 @@ function projectenOpBord() {
       return sa - sbb || String(a.p.klant).localeCompare(String(b.p.klant), 'nl');
     });
 }
+function vindFase(code, faseId) { return fasenVan(code).find(f => f.id === faseId) || null; }
 function projectenZonderDatum() {
   if (!stand) return [];
   return stand.projecten.filter(p => p.code && !projDatums(p).start);
@@ -542,13 +587,14 @@ function vindProject(code) {
 // ---------- laden ----------
 async function laadAlles() {
   const j1 = jaar + '-01-01', j2 = jaar + '-12-31';
-  const [wv, mw, pp, pu, gd, vlRes] = await Promise.all([
+  const [wv, mw, pp, pu, gd, vlRes, fsRes] = await Promise.all([
     sb.from('fin_werkvoorraad').select('peildatum,data').order('peildatum', { ascending: false }).limit(1),
     sb.from('plan_medewerkers').select('*').order('volgorde'),
     sb.from('plan_projecten').select('*'),
     sb.from('plan_uren').select('yoobi_code,medewerker_id,datum,uren').gte('datum', j1).lte('datum', j2),
     sb.from('plan_gesloten_dagen').select('*').gte('datum', j1).lte('datum', j2),
     sb.from('plan_verlof').select('*').gte('datum', j1).lte('datum', j2),
+    sb.from('plan_fasen').select('*').order('volgnr'),
   ]);
   for (const r of [wv, mw, pp, pu, gd]) if (r.error) throw r.error;
   // plan_verlof kan ontbreken zolang planning_02_verlof.sql niet is gedraaid: dan zonder verlof verder.
@@ -574,6 +620,10 @@ async function laadAlles() {
   verlof = {};
   if (vlRes.error) { console.warn('plan_verlof niet leesbaar (tabel nog niet aangemaakt?): ' + vlRes.error.message); }
   else for (const r of (vlRes.data || [])) verlof[r.medewerker_id + '|' + r.datum] = r;
+  fasen = {};
+  if (fsRes.error) { console.warn('plan_fasen niet leesbaar (tabel nog niet aangemaakt?): ' + fsRes.error.message); }
+  else for (const r of (fsRes.data || [])) { (fasen[r.yoobi_code] = fasen[r.yoobi_code] || []).push(r); }
+  for (const c in fasen) fasen[c].sort((a, b) => a.volgnr - b.volgnr);
 }
 
 // ---------- tekenen ----------
@@ -598,7 +648,7 @@ function celKlassen(iso) {
 
 function tekenBord() {
   bouwDagen();
-  const projecten = projectenOpBord();
+  const projecten = rijenOpBord();
   const vandaag = naarIso(new Date());
   let h = '';
 
@@ -629,9 +679,9 @@ function tekenBord() {
   if (!projecten.length) {
     h += '<tr><td class="label" style="color:var(--muted);font-weight:500">Geen projecten in ' + jaar + '</td><td colspan="' + dagen.length + '"></td></tr>';
   }
-  for (const { p, d } of projecten) {
-    h += tekenProjectRij(p, d);
-    if (uitgeklapt.has(p.code)) for (const m of medewerkers) h += tekenMwRij(p, d, m);
+  for (const { p, d, f } of projecten) {
+    h += tekenProjectRij(p, d, f);
+    if (uitgeklapt.has(rijKey(p.code, f))) for (const m of medewerkers) h += tekenMwRij(p, d, m, f);
   }
   h += '</tbody>';
 
@@ -667,16 +717,18 @@ function tekenBord() {
   document.getElementById('jaarLabel').textContent = jaar;
 }
 
-function tekenProjectRij(p, d) {
+function tekenProjectRij(p, d, f) {
   const j1 = dagen[0], j2 = dagen[dagen.length - 1];
   const sIso = d.start ? naarIso(d.start) : null;
   const eIso = d.eind ? naarIso(d.eind) : null;
   const geplandeDagen = new Set();
-  for (const k in uren) if (k.startsWith(p.code + '|')) geplandeDagen.add(k.split('|')[2]);
+  for (const k in uren) if (k.startsWith(p.code + '|')) { const dd = k.split('|')[2]; if (hoortBijFase(p.code, dd, f)) geplandeDagen.add(dd); }
   const bemand = geplandeDagen.size > 0;
   const pl = planProjecten[p.code] || {};
-  let h = '<tr class="project' + (p.code === actiefCode ? ' actief' : '') + '" data-code="' + esc(p.code) + '">';
-  h += '<td class="label" title="' + esc(p.klant + ' — ' + p.naam) + '"><span class="klant">' + esc(p.klant) + '</span><span class="naam">' + esc(p.naam) + '</span></td>';
+  const isActief = p.code === actiefCode && ((f && f.id === actiefFase) || (!f && !actiefFase));
+  const naamTekst = p.naam + (f ? ' · ' + f.naam : '');
+  let h = '<tr class="project' + (isActief ? ' actief' : '') + '" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + '>';
+  h += '<td class="label" title="' + esc(p.klant + ' — ' + naamTekst) + '"><span class="klant">' + esc(p.klant) + '</span><span class="naam">' + esc(naamTekst) + '</span></td>';
   // Naam + afspraak vóór de start van de lijn. Geen ruimte links (start in
   // de eerste week, of overloopwerk vanaf 1 januari): dan achter het eind,
   // en loopt ook dat het jaar uit, dan rechts van het eerste zichtbare stuk.
@@ -700,9 +752,9 @@ function tekenProjectRij(p, d) {
       if (iso === sIso) inhoud += '<span class="greep links" title="Startdatum verschuiven"></span>';
       if (iso === eIso) inhoud += '<span class="greep rechts" title="Einddatum verschuiven"></span>';
       if (iso === tekstCel) {
-        const n = pl.klantnotitie || '';
-        inhoud += '<span class="projtekst' + (tekstRechts ? ' rechts' : '') + '"><span class="pnaam" title="' + esc(p.klant + ' — ' + p.naam) + '">' + esc(p.naam) + '</span>'
-          + '<span class="notitie' + (n ? '' : ' leeg') + '" data-code="' + esc(p.code) + '" title="' + esc(n ? n + ' — klik om te wijzigen' : 'Klik om de afspraak met de klant te noteren') + '">' + (n ? esc(n) : '+ afspraak') + '</span></span>';
+        const n = (f ? f.notitie : pl.klantnotitie) || '';
+        inhoud += '<span class="projtekst' + (tekstRechts ? ' rechts' : '') + '"><span class="pnaam" title="' + esc(p.klant + ' — ' + naamTekst) + '">' + esc(naamTekst) + '</span>'
+          + '<span class="notitie' + (n ? '' : ' leeg') + '" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + ' title="' + esc(n ? n + ' — klik om te wijzigen' : 'Klik om de afspraak met de klant te noteren') + '">' + (n ? esc(n) : '+ afspraak') + '</span></span>';
       }
     }
     h += '<td class="' + k + '">' + inhoud + '</td>';
@@ -710,24 +762,27 @@ function tekenProjectRij(p, d) {
   return h + '</tr>';
 }
 
-function tekenMwRij(p, d, m) {
+function tekenMwRij(p, d, m, f) {
   const sIso = d.start ? naarIso(d.start) : null;
   const eIso = d.eind ? naarIso(d.eind) : null;
-  let h = '<tr class="mw" data-code="' + esc(p.code) + '" data-mw="' + esc(m.id) + '"><td class="label">' + esc(m.naam) + '</td>';
+  let h = '<tr class="mw" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + ' data-mw="' + esc(m.id) + '"><td class="label">' + esc(m.naam) + '</td>';
   for (const iso of dagen) {
     let k = celKlassen(iso);
     const vrij = isVerlof(m.id, iso);
     if (vrij) k += ' verlof';
-    const blok = isWeekend(iso) || isGesloten(iso) || vrij;
+    // Bij fasen hoort elke dag bij precies één fase; de andere fasen tonen die dag leeg.
+    const andereFase = f && !hoortBijFase(p.code, iso, f);
+    const blok = isWeekend(iso) || isGesloten(iso) || vrij || andereFase;
     const inBalk = sIso && iso >= sIso && iso <= eIso;
     if (!inBalk && !blok) k += ' buiten';
-    const w = uren[sleutel(p.code, m.id, iso)];
+    if (andereFase) k += ' buiten anderefase';
+    const w = andereFase ? 0 : uren[sleutel(p.code, m.id, iso)];
     if (w) k += ' gevuld';
     const t = vrij ? ' title="' + esc(m.naam + ' vrij' + (verlof[m.id + '|' + iso].omschrijving ? ': ' + verlof[m.id + '|' + iso].omschrijving : '')) + '"' : '';
     h += '<td class="' + k + '" data-code="' + esc(p.code) + '" data-mw="' + esc(m.id) + '" data-datum="' + iso + '"' + t + '>';
     if (!blok) h += '<input type="text" inputmode="decimal" value="' + (w ? fmtUur(w) : '') + '" aria-label="' + esc(m.naam + ' ' + iso) + '">';
     else if (w) h += '<span class="fout-uren" title="Uren gepland op een vrije dag">' + fmtUur(w) + '</span>';
-    else if (vrij) h += '✕';
+    else if (vrij && !andereFase) h += '✕';
     h += '</td>';
   }
   return h + '</tr>';
@@ -802,18 +857,18 @@ function werkOverCellen(mwId, iso) {
 }
 
 function werkBalk(code) {
-  const geplandeDagen = new Set();
-  for (const k in uren) if (k.startsWith(code + '|')) geplandeDagen.add(k.split('|')[2]);
-  const tr = document.querySelector('#bord tr.project[data-code="' + code + '"]');
-  if (!tr) return;
-  const cellen = tr.querySelectorAll('td');
-  cellen.forEach((td, i) => {
-    if (i === 0) return;
-    const iso = dagen[i - 1];
-    if (td.classList.contains('balk')) {
-      td.classList.toggle('onbemand', geplandeDagen.size === 0);
-      td.classList.toggle('gepland', geplandeDagen.has(iso));
-    }
+  document.querySelectorAll('#bord tr.project[data-code="' + code + '"]').forEach(tr => {
+    const f = tr.dataset.fase ? vindFase(code, tr.dataset.fase) : null;
+    const geplandeDagen = new Set();
+    for (const k in uren) if (k.startsWith(code + '|')) { const dd = k.split('|')[2]; if (hoortBijFase(code, dd, f)) geplandeDagen.add(dd); }
+    tr.querySelectorAll('td').forEach((td, i) => {
+      if (i === 0) return;
+      const iso = dagen[i - 1];
+      if (td.classList.contains('balk')) {
+        td.classList.toggle('onbemand', geplandeDagen.size === 0);
+        td.classList.toggle('gepland', geplandeDagen.has(iso));
+      }
+    });
   });
 }
 
@@ -832,6 +887,7 @@ function tekenPaneel() {
     el.innerHTML = '<h2>Project</h2><div class="leeg-tekst">Klik op een project in de linkerkolom om de cijfers te zien en de uren uit te klappen.</div>';
     return;
   }
+  if (fasenVan(p.code).length) { tekenFasePaneel(el, p); return; }
   const d = projDatums(p);
   const ingepland = urenVanProject(p.code);
   const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
@@ -853,6 +909,7 @@ function tekenPaneel() {
     '<label>Start</label><input type="date" id="pStart" value="' + (d.start ? naarIso(d.start) : '') + '">' +
     '<label>Eind</label><input type="date" id="pEind" value="' + (d.eind ? naarIso(d.eind) : '') + '">' +
     (d.afwijkend ? '<button class="knop" id="pTerug">Terug naar Yoobi-datum</button>' : '') +
+    '<label>Knip in fasen op</label><div class="rij"><input type="date" id="pKnipDatum" style="flex:1"><button class="knop" id="pKnip" title="Alles vóór deze datum wordt fase 1, vanaf deze datum fase 2">Knip</button></div>' +
     '</div>' +
     '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Resterend = budget − geboekt − ingepland. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
@@ -862,6 +919,124 @@ function tekenPaneel() {
   inE.addEventListener('change', () => datumsUitPaneel(p, d));
   const knop = document.getElementById('pTerug');
   if (knop) knop.addEventListener('click', () => slaDatumsOp(p.code, null, null, null));
+  document.getElementById('pKnip').addEventListener('click', () => knipFase(p.code, document.getElementById('pKnipDatum').value, null));
+}
+
+// Paneel voor een project met fasen: cijfers voor het geheel, daaronder per fase.
+function tekenFasePaneel(el, p) {
+  const fs = fasenVan(p.code);
+  const ingepland = urenVanProject(p.code);
+  const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
+  const rest = Math.round((budget - geboekt - ingepland) * 100) / 100;
+  const yS = yoobiDatum(p.startdatum), yE = yoobiDatum(p.einddatum);
+  let h = '<h2>Project</h2>' +
+    '<div class="pnaam">' + esc(p.naam) + '</div>' +
+    '<div class="pklant">' + esc(p.klant) + ' · Yoobi ' + esc(p.code) + ' · ' + fs.length + ' fasen</div>' +
+    '<div class="cijfers">' +
+    '<div class="c"><div class="t">Aanneemsom</div><div class="v num">' + eur(p.aanneemsom) + '</div></div>' +
+    '<div class="c"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div></div>' +
+    '<div class="c"><div class="t">Ingepland ' + jaar + '</div><div class="v num">' + fmtUur(ingepland) + ' <small>uur</small></div></div>' +
+    '<div class="c"><div class="t">Geboekt</div><div class="v num">' + fmtUur(geboekt) + ' <small>uur</small></div></div>' +
+    '<div class="c' + (rest < 0 ? ' waarschuw' : '') + '"><div class="t">Resterend</div><div class="v num">' + fmtUur(rest) + ' <small>uur</small></div></div>' +
+    '</div>' +
+    '<div class="pdatums">Yoobi: ' + fmtDatum(yS) + ' – ' + fmtDatum(yE) + '</div>';
+  fs.forEach((f, i) => {
+    const act = f.id === actiefFase;
+    h += '<div class="fase' + (act ? ' actief' : '') + '" data-fase="' + esc(f.id) + '">' +
+      '<div class="rij"><input type="text" class="fnaam" value="' + esc(f.naam) + '" title="naam van de fase"><span class="num" style="color:var(--muted);font-size:0.78rem;white-space:nowrap">' + fmtUur(urenVanFase(p.code, f)) + ' uur</span></div>' +
+      '<div class="rij"><input type="date" class="fvan" value="' + esc(f.van) + '"><span>–</span><input type="date" class="ftot" value="' + esc(f.tot) + '"></div>' +
+      '<div class="rij"><input type="date" class="fknip" title="Knip deze fase op deze datum"><button class="knop klein fknipknop">Knip</button>' +
+      (i > 0 ? '<button class="knop klein fsamen" title="Voeg samen met de fase hierboven">Samenvoegen met vorige</button>' : '') + '</div>' +
+      '</div>';
+  });
+  h += '<div class="voetnoot">Budget, geboekt en resterend gelden voor het hele project; per fase zie je wat erop staat. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde.</div>' +
+    '<div class="paneelknoppen"><button class="knop" id="pVerberg">Verbergen</button></div>';
+  el.innerHTML = h;
+  document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
+  el.querySelectorAll('.fase').forEach(div => {
+    const f = vindFase(p.code, div.dataset.fase); if (!f) return;
+    div.querySelector('.fnaam').addEventListener('change', e => hernoemFase(f, e.target.value.trim()));
+    const zetDatums = () => {
+      const v = div.querySelector('.fvan').value, t = div.querySelector('.ftot').value;
+      if (!v || !t) return;
+      const tt = t < v ? v : t;
+      const heel = v !== f.van && (vanIso(tt) - vanIso(v)) === (vanIso(f.tot) - vanIso(f.van));
+      slaDatumsOp(p.code, v, tt, heel ? f.van : null, f.id);
+    };
+    div.querySelector('.fvan').addEventListener('change', zetDatums);
+    div.querySelector('.ftot').addEventListener('change', zetDatums);
+    div.querySelector('.fknipknop').addEventListener('click', () => knipFase(p.code, div.querySelector('.fknip').value, f.id));
+    const sam = div.querySelector('.fsamen');
+    if (sam) sam.addEventListener('click', () => voegFaseSamen(p.code, f.id));
+  });
+}
+
+// Alle fasen van een project in één keer wegschrijven (renummerd).
+async function schrijfFasen(code, lijst) {
+  let r = await sb.from('plan_fasen').delete().eq('yoobi_code', code);
+  if (r && r.error) throw r.error;
+  if (lijst.length) {
+    r = await sb.from('plan_fasen').insert(lijst.map((f, i) => ({ yoobi_code: code, volgnr: i + 1, naam: f.naam, van: f.van, tot: f.tot, notitie: f.notitie || null })));
+    if (r && r.error) throw r.error;
+  }
+}
+async function naFaseWijziging(fn, melding) {
+  try { await fn(); toonStatus(melding); }
+  catch (e) { toonStatus('Fasen opslaan mislukt: ' + (e.message || e), true); }
+  await laadAlles().catch(() => {});
+  hertekenMetScroll();
+}
+function knipFase(code, datum, faseId) {
+  const p = vindProject(code); if (!p) return;
+  if (!datum) { toonStatus('Kies eerst een knipdatum', true); return; }
+  const fs = fasenVan(code).map(f => ({ ...f }));
+  let nieuw;
+  if (!fs.length) {
+    const d = projDatums(p);
+    if (!d.start || !d.eind) { toonStatus('Project heeft geen periode om te knippen', true); return; }
+    const s = naarIso(d.start), e = naarIso(d.eind);
+    if (datum <= s || datum > e) { toonStatus('Knipdatum moet ná de start en op of vóór het einde liggen (' + fmtDatum(d.start) + ' – ' + fmtDatum(d.eind) + ')', true); return; }
+    nieuw = [
+      { naam: 'fase 1', van: s, tot: plusDagen(datum, -1), notitie: (planProjecten[code] || {}).klantnotitie || null },
+      { naam: 'fase 2', van: datum, tot: e, notitie: null },
+    ];
+  } else {
+    const i = fs.findIndex(f => f.id === faseId);
+    if (i < 0) return;
+    const f = fs[i];
+    if (datum <= f.van || datum > f.tot) { toonStatus('Knipdatum moet binnen de fase liggen (' + fmtDatum(vanIso(f.van)) + ' – ' + fmtDatum(vanIso(f.tot)) + ')', true); return; }
+    nieuw = [...fs.slice(0, i), { naam: f.naam, van: f.van, tot: plusDagen(datum, -1), notitie: f.notitie }, { naam: 'fase ' + (fs.length + 1), van: datum, tot: f.tot, notitie: null }, ...fs.slice(i + 1)];
+  }
+  uitgeklapt.clear(); actiefFase = null;
+  naFaseWijziging(() => schrijfFasen(code, nieuw), 'Geknipt in ' + nieuw.length + ' fasen');
+}
+function voegFaseSamen(code, faseId) {
+  const fs = fasenVan(code).map(f => ({ ...f }));
+  const i = fs.findIndex(f => f.id === faseId);
+  if (i <= 0) return;
+  const a = fs[i - 1], b = fs[i];
+  const samen = { naam: a.naam, van: a.van < b.van ? a.van : b.van, tot: a.tot > b.tot ? a.tot : b.tot, notitie: a.notitie || b.notitie || null };
+  const nieuw = [...fs.slice(0, i - 1), samen, ...fs.slice(i + 1)];
+  uitgeklapt.clear(); actiefFase = null;
+  if (nieuw.length === 1) {
+    // Eén fase over = geen fasen meer; de periode gaat terug naar het project.
+    naFaseWijziging(async () => {
+      await schrijfFasen(code, []);
+      const r = await sb.from('plan_projecten').upsert({ yoobi_code: code, plan_start: samen.van, plan_eind: samen.tot, klantnotitie: samen.notitie || (planProjecten[code] || {}).klantnotitie || null }, { onConflict: 'yoobi_code' });
+      if (r.error) throw r.error;
+    }, 'Fasen samengevoegd; project heeft weer één periode');
+  } else {
+    naFaseWijziging(() => schrijfFasen(code, nieuw), 'Fasen samengevoegd');
+  }
+}
+async function hernoemFase(f, naam) {
+  if (!naam || naam === f.naam) return;
+  try {
+    const r = await sb.from('plan_fasen').update({ naam }).eq('id', f.id);
+    if (r.error) throw r.error;
+    f.naam = naam; toonStatus('Fase hernoemd');
+  } catch (e) { toonStatus('Hernoemen mislukt: ' + (e.message || e), true); }
+  hertekenMetScroll();
 }
 
 function datumsUitPaneel(p, d) {
@@ -907,7 +1082,18 @@ async function slaUrenOp(code, mwId, iso, waarde) {
   }
 }
 
-async function slaNotitieOp(code, tekst) {
+async function slaNotitieOp(code, tekst, faseId) {
+  if (faseId) {
+    const f = vindFase(code, faseId); if (!f) return;
+    if ((f.notitie || '') === tekst) return;
+    try {
+      const r = await sb.from('plan_fasen').update({ notitie: tekst || null }).eq('id', faseId);
+      if (r.error) throw r.error;
+      f.notitie = tekst || null;
+      toonStatus('Notitie opgeslagen');
+    } catch (e) { toonStatus('Notitie opslaan mislukt: ' + (e.message || e), true); }
+    return;
+  }
   const oud = (planProjecten[code] || {}).klantnotitie || '';
   if (tekst === oud) return;
   try {
@@ -922,10 +1108,12 @@ async function slaNotitieOp(code, tekst) {
 
 // Datums opslaan. sIso/eIso null = terug naar Yoobi. oudStart gezet =
 // hele verschuiving: vraag of de uren mee mogen.
-async function slaDatumsOp(code, sIso, eIso, oudStart) {
+async function slaDatumsOp(code, sIso, eIso, oudStart, faseId) {
+  const fase = faseId ? vindFase(code, faseId) : null;
   let verplaats = null;
   if (oudStart && sIso && sIso !== oudStart) {
-    const keys = Object.keys(uren).filter(k => k.startsWith(code + '|'));
+    // Bij een fase alleen de uren die (vóór het verschuiven) bij deze fase horen.
+    const keys = Object.keys(uren).filter(k => k.startsWith(code + '|') && hoortBijFase(code, k.split('|')[2], fase));
     if (keys.length) {
       const som = keys.reduce((a, k) => a + uren[k], 0);
       const dagenSet = new Set(keys.map(k => k.split('|')[2]));
@@ -938,9 +1126,16 @@ async function slaDatumsOp(code, sIso, eIso, oudStart) {
   }
   toonStatus('Opslaan…');
   try {
-    let r = await sb.from('plan_projecten').upsert({ yoobi_code: code, plan_start: sIso, plan_eind: eIso }, { onConflict: 'yoobi_code' }).select();
-    if (r.error) throw r.error;
-    planProjecten[code] = (r.data && r.data[0]) || { ...(planProjecten[code] || {}), yoobi_code: code, plan_start: sIso, plan_eind: eIso };
+    let r;
+    if (fase) {
+      r = await sb.from('plan_fasen').update({ van: sIso, tot: eIso }).eq('id', fase.id);
+      if (r.error) throw r.error;
+      fase.van = sIso; fase.tot = eIso;
+    } else {
+      r = await sb.from('plan_projecten').upsert({ yoobi_code: code, plan_start: sIso, plan_eind: eIso }, { onConflict: 'yoobi_code' }).select();
+      if (r.error) throw r.error;
+      planProjecten[code] = (r.data && r.data[0]) || { ...(planProjecten[code] || {}), yoobi_code: code, plan_start: sIso, plan_eind: eIso };
+    }
     if (verplaats) {
       const oud = verplaats.keys.map(k => { const d = k.split('|'); return { medewerker_id: d[1], datum: d[2], uren: uren[k] }; });
       const nieuw = oud.map(o => ({ yoobi_code: code, medewerker_id: o.medewerker_id, datum: schuifWerkdagen(o.datum, verplaats.n, o.medewerker_id), uren: o.uren }));
@@ -976,12 +1171,13 @@ bordEl.addEventListener('pointerdown', e => {
   // Voorkom dat de browser zelf tekst gaat selecteren of slepen; dan
   // stuurt hij pointercancel en is ons slepen weg voor het begon.
   e.preventDefault();
-  const code = td.parentElement.dataset.code;
+  const code = td.parentElement.dataset.code, faseId = td.parentElement.dataset.fase || null;
   const p = vindProject(code); if (!p) return;
-  const d = projDatums(p);
+  const fase = faseId ? vindFase(code, faseId) : null;
+  const d = fase ? faseDatums(p, fase) : projDatums(p);
   let mode = 'heel';
   if (e.target.classList.contains('greep')) mode = e.target.classList.contains('links') ? 'start' : 'eind';
-  sleep = { code, mode, sIso: naarIso(d.start), eIso: naarIso(d.eind), x0: e.clientX, laatsteDelta: 0, actief: false, timer: null, pointerId: e.pointerId };
+  sleep = { code, faseId, mode, sIso: naarIso(d.start), eIso: naarIso(d.eind), x0: e.clientX, laatsteDelta: 0, actief: false, timer: null, pointerId: e.pointerId };
   // Aanraking: pas slepen na kort vasthouden, zodat scrollen over het bord blijft werken.
   if (e.pointerType === 'touch') sleep.timer = setTimeout(() => { if (sleep) sleep.actief = true; }, 350);
   else sleep.actief = true;
@@ -1006,11 +1202,12 @@ function sleepBeweeg(e) {
   sleep.laatsteDelta = delta;
   const p = vindProject(sleep.code); if (!p) return;
   const { s, e: ei } = sleepNieuweDatums();
-  const tr = bordEl.querySelector('tr.project[data-code="' + sleep.code + '"]');
+  const tr = bordEl.querySelector('tr.project[data-code="' + sleep.code + '"]' + (sleep.faseId ? '[data-fase="' + sleep.faseId + '"]' : ':not([data-fase])'));
   if (!tr) return;
-  const d = projDatums(p);
+  const fase = sleep.faseId ? vindFase(sleep.code, sleep.faseId) : null;
+  const d = fase ? faseDatums(p, fase) : projDatums(p);
   const tmp = document.createElement('tbody');
-  tmp.innerHTML = tekenProjectRij(p, { start: vanIso(s), eind: vanIso(ei), yStart: d.yStart, yEind: d.yEind, afwijkend: true, aanname: false });
+  tmp.innerHTML = tekenProjectRij(p, { start: vanIso(s), eind: vanIso(ei), yStart: d.yStart, yEind: d.yEind, afwijkend: true, aanname: false }, fase);
   const nieuw = tmp.firstElementChild;
   nieuw.classList.add('sleept');
   tr.replaceWith(nieuw);
@@ -1033,8 +1230,8 @@ function sleepLos(e) {
   sleepAf();
   if (was.laatsteDelta === 0) return;   // gewone klik: uitklappen regelt de click-handler
   netGesleept = true; setTimeout(() => { netGesleept = false; }, 0);
-  actiefCode = was.code;
-  slaDatumsOp(was.code, s, ei, was.mode === 'heel' ? was.sIso : null);
+  actiefCode = was.code; actiefFase = was.faseId;
+  slaDatumsOp(was.code, s, ei, was.mode === 'heel' ? was.sIso : null, was.faseId);
 }
 
 // ---------- feestdagen ----------
@@ -1368,10 +1565,11 @@ bordEl.addEventListener('click', e => {
   const rij = e.target.closest('tr.project');
   if (!rij) return;
   if (netGesleept || rij.classList.contains('sleept')) return;
-  const code = rij.dataset.code;
-  if (uitgeklapt.has(code) && actiefCode === code) uitgeklapt.delete(code);
-  else uitgeklapt.add(code);
-  actiefCode = code;
+  const code = rij.dataset.code, faseId = rij.dataset.fase || null;
+  const key = rijKey(code, faseId ? { id: faseId } : null);
+  if (uitgeklapt.has(key) && actiefCode === code && actiefFase === faseId) uitgeklapt.delete(key);
+  else uitgeklapt.add(key);
+  actiefCode = code; actiefFase = faseId;
   const links = document.getElementById('bordScroll').scrollLeft;
   tekenBord();
   document.getElementById('bordScroll').scrollLeft = links;
@@ -1379,8 +1577,9 @@ bordEl.addEventListener('click', e => {
 
 function bewerkNotitie(el) {
   if (el.querySelector('input')) return;
-  const code = el.dataset.code;
-  const oud = (planProjecten[code] || {}).klantnotitie || '';
+  const code = el.dataset.code, faseId = el.dataset.fase || null;
+  const fase = faseId ? vindFase(code, faseId) : null;
+  const oud = (fase ? fase.notitie : (planProjecten[code] || {}).klantnotitie) || '';
   el.classList.remove('leeg');
   el.innerHTML = '<input type="text" value="' + esc(oud) + '" placeholder="bv. vast doorgegeven: week 37" maxlength="120">';
   const inp = el.querySelector('input');
@@ -1389,8 +1588,9 @@ function bewerkNotitie(el) {
   const sluit = async (opslaan) => {
     if (klaar) return; klaar = true;
     const nieuw = inp.value.trim();
-    if (opslaan) await slaNotitieOp(code, nieuw);
-    const n = (planProjecten[code] || {}).klantnotitie || '';
+    if (opslaan) await slaNotitieOp(code, nieuw, faseId);
+    const f2 = faseId ? vindFase(code, faseId) : null;
+    const n = (f2 ? f2.notitie : (planProjecten[code] || {}).klantnotitie) || '';
     el.classList.toggle('leeg', !n);
     el.textContent = n || '+ afspraak';
   };

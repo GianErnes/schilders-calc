@@ -1,5 +1,23 @@
 # CHANGELOG planning.html
 
+## v0.8.0 — Projecten in fasen knippen (brok 4a), 07-09-2026
+
+Vereist eerst `planning_04_fasen.sql` (tabel `plan_fasen`). Zonder die tabel werkt het bord gewoon, zonder fasen.
+
+Aanleiding: een project als Massop met werk in september en één dag in november stond als één lange rij hoog op het bord; in november keek je omhoog naar een anonieme lijn.
+
+### Wat er kan
+- **Knip in fasen** in het paneel: kies een datum, het project splitst in fase 1 (tot en met de dag ervoor) en fase 2 (vanaf die dag). Een fase kun je nog eens knippen. Standaardnamen "fase 1", "fase 2", … zelf te hernoemen.
+- **Elke fase is een eigen rij** op het bord met eigen lijn, gesorteerd op eigen start: fase 2 van Massop staat tussen de novemberprojecten. Slepen en trekken werken per fase; uren meeverschuiven geldt voor de dagen van die fase.
+- **Eigen klantafspraak per fase**, vóór de lijn naast de naam ("Massop | Kelderkamer · fase 2  vast doc week 46").
+- **Elke dag hoort bij precies één fase**: de fase waarin hij valt, anders de dichtstbijzijnde. Een uur staat dus nooit dubbel en verdwijnt nooit; in de andere fase-rijen is die dag niet invulbaar.
+- **Samenvoegen met vorige** per fase. Blijft er één over, dan verdwijnen de fasen en krijgt het project die periode als eigen start/eind terug.
+- Paneel bij een project met fasen: aanneemsom, budget, ingepland, geboekt en resterend voor het geheel; per fase naam, van/tot, uren, knip- en samenvoegknop.
+
+### Onder de kap
+- `plan_fasen` (yoobi_code, volgnr, naam, van, tot, notitie). Knippen en samenvoegen schrijven alle fasen van een project opnieuw (renummerd); slepen, hernoemen en de notitie zijn losse updates.
+- Getest: 116 controles in jsdom, waaronder knippen (ook geweigerd buiten de periode), toewijzing van dagen aan fasen, slepen per fase met alleen de eigen uren, hernoemen, notitie per fase, samenvoegen terug naar één periode.
+
 ## v0.7.1 — Kop blijft altijd zichtbaar, 07-09-2026
 
 De pagina scrolde mee als het paneel rechts hoger was dan het scherm, waardoor de kop van het bord (weeknummers, dagen) uit beeld verdween. Nu staat de pagina stil: het bord vult het scherm onder de kopbalk en scrolt zelf, het paneel rechts scrolt zelf als het te hoog wordt. Op smalle schermen (onder 1100 px) scrolt de pagina zoals voorheen, met het paneel bovenaan. Alleen CSS; 97 controles ongewijzigd goed. Beeld niet in een echte browser getest.

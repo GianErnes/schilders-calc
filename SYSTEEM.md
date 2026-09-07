@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.7.1 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.8.0 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -83,7 +83,7 @@ computegrootte Nano.
 
 Adres van een project is altijd `https://<verwijzing>.supabase.co`.
 
-**schilders-calc** telt 44 tabellen, 7 opslagbakken, 19 triggers, 16 Edge
+**schilders-calc** telt 45 tabellen, 7 opslagbakken, 20 triggers, 16 Edge
 Functions en 9 cronjobs. De grootste tabellen zijn `calc_regel_stappen`
 (1959 rijen), `meetstaat` (747) en `bewerkingen` (548). De 36 tabellen
 van toen zijn geteld op 2 augustus 2026 met `information_schema.tables`
@@ -96,7 +96,8 @@ aangelegd met `sql/oplever_tabellen.sql`. Op 6 september 2026 kwamen
 erbij voor de planningsapp, elk met een `set_updated_at`-trigger,
 aangelegd met `planning_01_tabellen.sql` (twintig controleregels, alle
 GOED). Op 7 september kwam `plan_verlof` erbij (verlof per medewerker per
-dag, `planning_02_verlof.sql`, vijf controleregels GOED). Die getallen zijn opgeteld bij de meting van 2 augustus en niet
+dag, `planning_02_verlof.sql`, vijf controleregels GOED) en `plan_fasen`
+(project in fasen knippen, `planning_04_fasen.sql`). Die getallen zijn opgeteld bij de meting van 2 augustus en niet
 opnieuw geteld.
 
 > **Twee triggertellingen spreken elkaar tegen.** Hier staat 14, de
@@ -4294,6 +4295,18 @@ Zie `CHANGELOG_planning.md`.
 **Werkwijze-misser:** v0.6.0 is gebouwd zonder op bevestiging te wachten.
 De afspraak blijft: filosoferen, samenvatten, bevestiging, dan bouwen,
 ook bij kleine wijzigingen.
+
+### Planning brok 4a: fasen (v0.8.0)
+
+Een project kan in fasen geknipt worden; elke fase is een eigen rij met
+eigen periode, eigen klantafspraak en eigen plek in de volgorde. Uren
+blijven aan het project hangen; elke dag hoort bij precies één fase (de
+fase waarin hij valt, anders de dichtstbijzijnde). Nieuwe tabel
+`plan_fasen`. Zie `CHANGELOG_planning.md`. Hierna brok 4b: steigers en
+hoogwerker als hulpmiddelenlaag, die op de fasen voortbouwt.
+
+Gian meldt dat de planning voor 2026 zo goed als volledig in het eigen
+bord staat en Yoobi's planning daarmee geschiedenis is.
 
 **Les: verkeerd Supabase-project.** `planning_03_verlof_uren.sql` gaf
 `relation "public.plan_verlof" does not exist` terwijl de tabel een dag
