@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.2.0 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.4.0 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -83,7 +83,7 @@ computegrootte Nano.
 
 Adres van een project is altijd `https://<verwijzing>.supabase.co`.
 
-**schilders-calc** telt 43 tabellen, 7 opslagbakken, 18 triggers, 16 Edge
+**schilders-calc** telt 44 tabellen, 7 opslagbakken, 19 triggers, 16 Edge
 Functions en 9 cronjobs. De grootste tabellen zijn `calc_regel_stappen`
 (1959 rijen), `meetstaat` (747) en `bewerkingen` (548). De 36 tabellen
 van toen zijn geteld op 2 augustus 2026 met `information_schema.tables`
@@ -95,7 +95,8 @@ aangelegd met `sql/oplever_tabellen.sql`. Op 6 september 2026 kwamen
 `plan_medewerkers`, `plan_projecten`, `plan_uren` en `plan_gesloten_dagen`
 erbij voor de planningsapp, elk met een `set_updated_at`-trigger,
 aangelegd met `planning_01_tabellen.sql` (twintig controleregels, alle
-GOED). Die getallen zijn opgeteld bij de meting van 2 augustus en niet
+GOED). Op 7 september kwam `plan_verlof` erbij (verlof per medewerker per
+dag, `planning_02_verlof.sql`, vijf controleregels GOED). Die getallen zijn opgeteld bij de meting van 2 augustus en niet
 opnieuw geteld.
 
 > **Twee triggertellingen spreken elkaar tegen.** Hier staat 14, de
@@ -4248,8 +4249,32 @@ aanname op vandaag. Onderweg twee fouten in v0.1.x gevonden en hersteld:
 de totaaltelling kreeg bij het tekenen geen kleur, en de markering van
 overschrijdingen was 50 keer te traag. Details in `CHANGELOG_planning.md`.
 
-**Nog niet gebouwd (brok 3b):** project verbergen, knop Yoobi verversen
-via de gebruikersweg van `fin-werkvoorraad-sync` v5, beheer van gesloten
-dagen en medewerkers, verlof per medewerker. De cron-weg van v5 draait
-voor het eerst op dinsdag 8 september 06:00 UTC; verwacht `gestart_door`
-= `cron` en `zonder_code` = 0 in de nieuwste rij van `fin_werkvoorraad`.
+### Planning brok 3b: vrije dagen, medewerkers, verversen, verbergen (v0.3.0 en v0.4.0)
+
+Zelfde dag, omdat de ploeg 's middags ging plannen en zonder vrije dagen
+mensen op hun vakantie gezet zouden worden. v0.3.0: knop "Vrije dagen"
+met voorstel van de negen Nederlandse feestdagen (Paasdatum berekend),
+periodes als bedrijfsvakantie, en verlof per medewerker (nieuwe tabel
+`plan_verlof`; via het beheer of door onderaan het bord op een dag te
+klikken). Meeverschuiven springt per medewerker over zijn eigen verlof.
+v0.4.0: medewerkers beheren (norm, actief, volgorde, toevoegen), knop
+"Yoobi verversen" via de gebruikersweg van `fin-werkvoorraad-sync` v5,
+project verbergen met kaart om terug te halen. Details in
+`CHANGELOG_planning.md`.
+
+**Slepen werkte eerst niet in de browser** (v0.2.0): de browser begon
+zelf tekst te selecteren en stuurde `pointercancel`. Hersteld in v0.2.1
+met `user-select: none` en `preventDefault` op de balk. Les: wat jsdom
+niet nabootst, moet Gian in de browser vangen.
+
+**Besloten voor brok 4: hulpmiddelen.** Steigers en hoogwerker als derde
+laag naast projecten en mensen: tabel `plan_middelen` (project, soort,
+van, tot, notitie), dunne regel onder de projectbalk per soort,
+waarschuwing als de hoogwerker op twee projecten tegelijk staat, en later
+een kostenlijn (huurdagen × dagtarief). Bij een hele verschuiving apart
+vragen of de hulpmiddelen mee moeten; bij een bestelde steiger vaak niet.
+
+De cron-weg van v5 draait voor het eerst op dinsdag 8 september 06:00
+UTC; verwacht `gestart_door` = `cron` en `zonder_code` = 0 in de nieuwste
+rij van `fin_werkvoorraad`. De gebruikersweg is via de verversknop te
+testen.

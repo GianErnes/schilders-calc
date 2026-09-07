@@ -1,5 +1,17 @@
 # CHANGELOG planning.html
 
+## v0.4.0 — Medewerkers, Yoobi verversen, verbergen (brok 3b, deel 2), 07-09-2026
+
+### Wat er kan
+- **Medewerkers beheren** in hetzelfde scherm als Vrije dagen: norm (uren per dag) aanpassen, actief aan/uit, volgorde met pijltjes, nieuwe medewerker toevoegen (dubbele naam wordt geweigerd). Niet-actief verdwijnt van het bord; uren blijven bewaard.
+- **Yoobi verversen** (knop bovenaan): start `fin-werkvoorraad-sync` v5 met het sessietoken van de ingelogde gebruiker, wacht tot de stand een nieuw tijdstempel heeft (hoogstens 2 minuten) en herlaadt het bord. Een 401 betekent dat v5 niet gedeployd is of Verify JWT aan staat.
+- **Project verbergen** (knop in het paneel) voor kapstokprojecten zonder werk. Kaart "Verborgen projecten" rechts met "toon" om ze terug te zetten.
+
+### Onder de kap
+- `plan_medewerkers` wordt nu volledig geladen (ook inactief) en bij gebruik gefilterd. Schrijft `plan_medewerkers` (upsert op id, insert bij nieuw) en `plan_projecten.zichtbaar`.
+- Verversen leest `fin_werkvoorraad.bijgewerkt_op` voor en na; die kolom schrijft de Edge Function (bron: `fin-werkvoorraad-sync_v5_index.ts`).
+- Getest: 75 controles in jsdom. De echte aanroep van de Edge Function is alleen te testen in de browser.
+
 ## v0.3.0 — Vrije dagen: gesloten dagen en verlof (brok 3b, deel 1), 07-09-2026
 
 Vereist eerst `planning_02_verlof.sql` (tabel `plan_verlof`). Zonder die tabel werkt het bord gewoon, maar zonder verlof (melding in de browserconsole).

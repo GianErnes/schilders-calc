@@ -198,6 +198,11 @@
   ul.lijst li:first-child { border-top: none; }
   ul.lijst .m { color: var(--muted); }
   ul.lijst label { display: flex; align-items: center; gap: 0.5rem; }
+  ul.lijst input.mwnorm { width: 4.2rem; font: inherit; font-size: 0.82rem; padding: 0.2rem 0.3rem; border: 1px solid var(--paper-deep); border-radius: 4px; }
+  ul.lijst li.inactief { color: var(--muted); }
+  .kaart ul.zonder li { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+  .paneelknoppen { display: flex; gap: 0.5rem; margin-top: 0.7rem; }
+  .paneelknoppen .knop { flex: 1; }
   .hint { color: var(--muted); font-size: 0.76rem; margin-top: 0.4rem; }
   .popover { position: absolute; background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); box-shadow: 0 6px 24px rgba(0,0,0,0.14); padding: 0.7rem 0.8rem; z-index: 60; font-size: 0.82rem; min-width: 220px; }
   .popover .rij { margin-top: 0.5rem; }
@@ -225,7 +230,8 @@
     </div>
     <div class="header-right">
       <span class="status" id="status"></span>
-      <button class="knop" id="beheerKnop">Vrije dagen</button>
+      <button class="knop" id="verversKnop" title="Projecten opnieuw uit Yoobi halen">Yoobi verversen</button>
+      <button class="knop" id="beheerKnop">Vrije dagen &amp; medewerkers</button>
       <button class="knop" id="naarVandaag">Vandaag</button>
       <div class="jaarkiezer">
         <button id="jaarMin" title="Vorig jaar">‹</button>
@@ -256,6 +262,11 @@
         <h2>Project</h2>
         <div class="leeg-tekst">Klik op een project in de linkerkolom om de cijfers te zien en de uren uit te klappen.</div>
       </div>
+      <div class="kaart" id="verborgenKaart" style="display:none">
+        <h2>Verborgen projecten</h2>
+        <ul class="zonder" id="verborgenLijst"></ul>
+        <div class="voetnoot">Verborgen projecten staan niet op het bord. Klik "toon" om ze terug te zetten.</div>
+      </div>
       <div class="kaart" id="zonderKaart" style="display:none">
         <h2>Nog geen datum in Yoobi</h2>
         <ul class="zonder" id="zonderLijst"></ul>
@@ -267,7 +278,7 @@
 
 <div class="overlay" id="beheerOverlay">
   <div class="modaal">
-    <header><h2>Vrije dagen <span id="beheerJaar" class="num"></span></h2><button class="sluit" id="beheerSluit" title="Sluiten">×</button></header>
+    <header><h2>Vrije dagen <span id="beheerJaar" class="num"></span> &amp; medewerkers</h2><button class="sluit" id="beheerSluit" title="Sluiten">×</button></header>
     <section>
       <h3>Gesloten dagen (voor iedereen)</h3>
       <div class="rij">
@@ -294,6 +305,16 @@
       <div class="hint">Sneller voor één dag: klik onderaan het bord op de dag bij de medewerker.</div>
       <ul class="lijst" id="vlLijst"></ul>
     </section>
+    <section>
+      <h3>Medewerkers</h3>
+      <ul class="lijst" id="mwLijst"></ul>
+      <div class="rij" style="margin-top:0.7rem">
+        <input type="text" id="mwNaam" placeholder="naam" style="flex:1">
+        <input type="number" id="mwNorm" value="7.5" step="0.25" min="0" max="24" style="width:5rem" title="uren per dag">
+        <button class="knop primair" id="mwToevoegen">Toevoegen</button>
+      </div>
+      <div class="hint">Niet actief = verdwijnt van het bord, uren blijven bewaard. De norm is de werkdag in uren voor de totaaltelling.</div>
+    </section>
   </div>
 </div>
 <div class="popover" id="popover" style="display:none"></div>
@@ -304,7 +325,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.4.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -315,6 +336,7 @@ let jaar = new Date().getFullYear();
 let stand = null;            // data-object uit fin_werkvoorraad
 let peildatum = null;
 let medewerkers = [];        // actieve rijen uit plan_medewerkers, op volgorde
+let alleMedewerkers = [];    // ook inactieve, voor het beheer
 let planProjecten = {};      // yoobi_code -> rij uit plan_projecten
 let uren = {};               // sleutel code|mwId|datum -> getal (alleen geladen jaar)
 let gesloten = {};           // 'YYYY-MM-DD' -> {soort, omschrijving}
@@ -474,7 +496,7 @@ async function laadAlles() {
   const j1 = jaar + '-01-01', j2 = jaar + '-12-31';
   const [wv, mw, pp, pu, gd, vlRes] = await Promise.all([
     sb.from('fin_werkvoorraad').select('peildatum,data').order('peildatum', { ascending: false }).limit(1),
-    sb.from('plan_medewerkers').select('*').eq('actief', true).order('volgorde'),
+    sb.from('plan_medewerkers').select('*').order('volgorde'),
     sb.from('plan_projecten').select('*'),
     sb.from('plan_uren').select('yoobi_code,medewerker_id,datum,uren').gte('datum', j1).lte('datum', j2),
     sb.from('plan_gesloten_dagen').select('*').gte('datum', j1).lte('datum', j2),
@@ -490,7 +512,8 @@ async function laadAlles() {
     stand = { projecten: [] };
     peildatum = null;
   }
-  medewerkers = (mw.data || []).map(m => ({ ...m, norm_uren: Number(m.norm_uren) }));
+  alleMedewerkers = (mw.data || []).map(m => ({ ...m, norm_uren: Number(m.norm_uren) }));
+  medewerkers = alleMedewerkers.filter(m => m.actief);
   planProjecten = {};
   for (const r of (pp.data || [])) planProjecten[r.yoobi_code] = r;
   uren = {};
@@ -585,6 +608,7 @@ function tekenBord() {
   }
   zetOverKlassen();
   tekenZonderDatum();
+  tekenVerborgen();
   tekenPaneel();
   document.getElementById('jaarLabel').textContent = jaar;
 }
@@ -751,7 +775,9 @@ function tekenPaneel() {
     '<label>Eind</label><input type="date" id="pEind" value="' + (d.eind ? naarIso(d.eind) : '') + '">' +
     (d.afwijkend ? '<button class="knop" id="pTerug">Terug naar Yoobi-datum</button>' : '') +
     '</div>' +
-    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Resterend = budget − geboekt − ingepland. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>';
+    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Resterend = budget − geboekt − ingepland. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
+    '<div class="paneelknoppen"><button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
+  document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
   const inS = document.getElementById('pStart'), inE = document.getElementById('pEind');
   inS.addEventListener('change', () => datumsUitPaneel(p, d));
   inE.addEventListener('change', () => datumsUitPaneel(p, d));
@@ -964,6 +990,7 @@ overlay.addEventListener('click', e => { if (e.target === overlay) overlay.class
 
 function tekenBeheer() {
   document.getElementById('beheerJaar').textContent = jaar;
+  tekenMedewerkersBeheer();
   document.getElementById('feestLijst').innerHTML = '';
   const gs = Object.values(gesloten).sort((a, b) => a.datum.localeCompare(b.datum));
   document.getElementById('gsLijst').innerHTML = gs.length ? gs.map(g =>
@@ -1058,6 +1085,122 @@ document.getElementById('vlLijst').addEventListener('click', e => {
   const b = e.target.closest('button[data-vl]'); if (!b) return;
   const [mw, iso] = b.dataset.vl.split('|');
   wisVerlof(mw, iso);
+});
+
+// ---------- project verbergen / tonen ----------
+async function zetZichtbaar(code, zichtbaar) {
+  try {
+    const r = await sb.from('plan_projecten').upsert({ yoobi_code: code, zichtbaar }, { onConflict: 'yoobi_code' }).select();
+    if (r.error) throw r.error;
+    planProjecten[code] = (r.data && r.data[0]) || { ...(planProjecten[code] || {}), yoobi_code: code, zichtbaar };
+    if (!zichtbaar) { uitgeklapt.delete(code); if (actiefCode === code) actiefCode = null; }
+    toonStatus(zichtbaar ? 'Project weer op het bord' : 'Project verborgen');
+  } catch (e) { toonStatus('Opslaan mislukt: ' + (e.message || e), true); }
+  hertekenMetScroll();
+}
+function tekenVerborgen() {
+  const lijst = stand ? stand.projecten.filter(p => p.code && planProjecten[p.code] && planProjecten[p.code].zichtbaar === false) : [];
+  const kaart = document.getElementById('verborgenKaart');
+  kaart.style.display = lijst.length ? '' : 'none';
+  document.getElementById('verborgenLijst').innerHTML = lijst.map(p =>
+    '<li><span><span class="k">' + esc(p.klant) + '</span>' + esc(p.naam) + '</span><button class="knop klein" data-toon="' + esc(p.code) + '">toon</button></li>').join('');
+}
+document.getElementById('verborgenLijst').addEventListener('click', e => {
+  const b = e.target.closest('button[data-toon]'); if (b) zetZichtbaar(b.dataset.toon, true);
+});
+
+// ---------- medewerkers beheren ----------
+function tekenMedewerkersBeheer() {
+  const el = document.getElementById('mwLijst');
+  el.innerHTML = alleMedewerkers.map((m, i) =>
+    '<li class="' + (m.actief ? '' : 'inactief') + '" data-mw="' + esc(m.id) + '"><span class="rij">' +
+    '<button class="knop klein" data-mwop="op" title="Hoger op het bord"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
+    '<button class="knop klein" data-mwop="neer" title="Lager op het bord"' + (i === alleMedewerkers.length - 1 ? ' disabled' : '') + '>↓</button>' +
+    '<b>' + esc(m.naam) + '</b></span><span class="rij">' +
+    '<input class="mwnorm num" type="number" step="0.25" min="0" max="24" value="' + m.norm_uren + '" title="uren per dag"> uur' +
+    '<label><input type="checkbox" class="mwactief"' + (m.actief ? ' checked' : '') + '> actief</label></span></li>').join('');
+}
+async function slaMedewerkerOp(m) {
+  const r = await sb.from('plan_medewerkers').upsert(m, { onConflict: 'id' }).select();
+  if (r.error) throw r.error;
+  return r.data && r.data[0];
+}
+async function naMedewerkerWijziging(fn) {
+  try { await fn(); toonStatus('Medewerkers opgeslagen'); }
+  catch (e) { toonStatus('Opslaan mislukt: ' + (e.message || e), true); }
+  await laadAlles().catch(() => {});
+  tekenMedewerkersBeheer(); hertekenMetScroll();
+}
+document.getElementById('mwLijst').addEventListener('click', e => {
+  const b = e.target.closest('button[data-mwop]'); if (!b) return;
+  const li = b.closest('li'), id = li.dataset.mw;
+  const i = alleMedewerkers.findIndex(m => m.id === id), j = b.dataset.mwop === 'op' ? i - 1 : i + 1;
+  if (i < 0 || j < 0 || j >= alleMedewerkers.length) return;
+  const a = alleMedewerkers[i], bm = alleMedewerkers[j];
+  naMedewerkerWijziging(async () => {
+    await slaMedewerkerOp({ id: a.id, naam: a.naam, norm_uren: a.norm_uren, actief: a.actief, volgorde: j + 1 });
+    await slaMedewerkerOp({ id: bm.id, naam: bm.naam, norm_uren: bm.norm_uren, actief: bm.actief, volgorde: i + 1 });
+  });
+});
+document.getElementById('mwLijst').addEventListener('change', e => {
+  const li = e.target.closest('li'); if (!li) return;
+  const m = alleMedewerkers.find(x => x.id === li.dataset.mw); if (!m) return;
+  const norm = parseUur(li.querySelector('.mwnorm').value);
+  if (isNaN(norm)) { toonStatus('Ongeldige norm', true); return; }
+  const actief = li.querySelector('.mwactief').checked;
+  naMedewerkerWijziging(() => slaMedewerkerOp({ id: m.id, naam: m.naam, norm_uren: norm, actief, volgorde: m.volgorde }));
+});
+document.getElementById('mwToevoegen').addEventListener('click', () => {
+  const naam = document.getElementById('mwNaam').value.trim();
+  const norm = parseUur(document.getElementById('mwNorm').value);
+  if (!naam) { toonStatus('Vul een naam in', true); return; }
+  if (isNaN(norm) || norm <= 0) { toonStatus('Ongeldige norm', true); return; }
+  if (alleMedewerkers.some(m => m.naam.toLowerCase() === naam.toLowerCase())) { toonStatus('Die naam bestaat al', true); return; }
+  const volgorde = alleMedewerkers.reduce((a, m) => Math.max(a, m.volgorde || 0), 0) + 1;
+  naMedewerkerWijziging(async () => {
+    const r = await sb.from('plan_medewerkers').insert({ naam, norm_uren: norm, actief: true, volgorde });
+    if (r.error) throw r.error;
+    document.getElementById('mwNaam').value = '';
+  });
+});
+
+// ---------- Yoobi verversen (gebruikersweg van fin-werkvoorraad-sync v5) ----------
+let verversBezig = false;
+document.getElementById('verversKnop').addEventListener('click', async () => {
+  if (verversBezig) return;
+  verversBezig = true;
+  const knop = document.getElementById('verversKnop');
+  knop.disabled = true; knop.textContent = 'Yoobi verversen…';
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error('niet ingelogd');
+    const vooraf = await sb.from('fin_werkvoorraad').select('bijgewerkt_op').order('peildatum', { ascending: false }).limit(1);
+    const oudStempel = vooraf.data && vooraf.data[0] ? vooraf.data[0].bijgewerkt_op : null;
+    const res = await fetch(SUPABASE_URL + '/functions/v1/fin-werkvoorraad-sync', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    if (!res.ok) throw new Error('functie antwoordde ' + res.status + (res.status === 401 ? ' (geen toegang; staat v5 er?)' : ''));
+    toonStatus('Yoobi wordt opgehaald…');
+    // Wachten tot de stand een nieuw tijdstempel heeft, hoogstens 2 minuten.
+    let klaar = false;
+    for (let i = 0; i < 24 && !klaar; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const nu = await sb.from('fin_werkvoorraad').select('bijgewerkt_op').order('peildatum', { ascending: false }).limit(1);
+      const stempel = nu.data && nu.data[0] ? nu.data[0].bijgewerkt_op : null;
+      if (stempel && stempel !== oudStempel) klaar = true;
+    }
+    if (!klaar) throw new Error('geen nieuwe stand binnen 2 minuten; probeer later opnieuw of kijk in de function-logs');
+    await laadAlles();
+    document.getElementById('peildatum').textContent = 'Yoobi-stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : 'onbekend');
+    hertekenMetScroll();
+    toonStatus('Yoobi ververst: ' + (stand.projecten || []).length + ' projecten');
+  } catch (e) {
+    toonStatus('Verversen mislukt: ' + (e.message || e), true);
+  }
+  knop.disabled = false; knop.textContent = 'Yoobi verversen';
+  verversBezig = false;
 });
 
 function hertekenMetScroll() {
