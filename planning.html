@@ -48,8 +48,11 @@
   #login button{width:100%;padding:11px;background:#e63329;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
   #login .err{color:#e63329;font-size:12px;margin-top:8px;min-height:16px}
 
-  .wrap { padding: 1rem 1.2rem 2rem; }
-  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+  /* Eén schuifgebied: de pagina staat stil, het bord en het paneel scrollen zelf. */
+  html, body { height: 100%; }
+  body { overflow: hidden; }
+  .wrap { padding: 1rem 1.2rem 0.8rem; height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; }
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.9rem; flex: 0 0 auto; }
   header h1 { margin: 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; }
   header .sub { color: var(--muted); font-size: 0.83rem; margin-top: 0.1rem; }
   .header-right { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
@@ -63,12 +66,21 @@
   .status.fout { color: var(--accent); font-weight: 600; }
 
   /* Lay-out: bord links, paneel rechts */
-  .hoofd { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0.9rem; align-items: start; }
-  @media (max-width: 1100px) { .hoofd { grid-template-columns: 1fr; } .paneel { order: -1; } }
+  .hoofd { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0.9rem; align-items: stretch; flex: 1 1 auto; min-height: 0; }
+  .bordkolom { display: flex; flex-direction: column; min-height: 0; }
+  .bordkolom .bord-kaart { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .legenda { flex: 0 0 auto; }
+  @media (max-width: 1100px) {
+    body { overflow: auto; }
+    .wrap { height: auto; }
+    .hoofd { grid-template-columns: 1fr; }
+    .paneel { order: -1; position: static; max-height: none; }
+    .bord-scroll { max-height: calc(100vh - 150px); }
+  }
 
   /* Het bord */
   .bord-kaart { background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); overflow: hidden; }
-  .bord-scroll { overflow: auto; max-height: calc(100vh - 150px); position: relative; }
+  .bord-scroll { overflow: auto; flex: 1 1 auto; min-height: 0; position: relative; }
   table.bord { border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 0.8rem; }
   table.bord th, table.bord td { padding: 0; border-bottom: 1px solid var(--paper-deep); border-right: 1px solid #f1f2f4; height: 30px; }
   table.bord col.c-label { width: var(--label); }
@@ -173,7 +185,7 @@
   tfoot tr.kop td { height: 22px; font-size: 0.7rem; color: var(--muted); font-weight: 600; }
 
   /* paneel rechts */
-  .paneel { position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 0.9rem; }
+  .paneel { display: flex; flex-direction: column; gap: 0.9rem; overflow: auto; min-height: 0; padding-right: 2px; }
   .kaart { background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); padding: 0.9rem 1rem; }
   .kaart h2 { margin: 0 0 0.6rem; font-size: 0.95rem; }
   .kaart .leeg-tekst { color: var(--muted); font-size: 0.82rem; }
@@ -266,7 +278,7 @@
   </header>
 
   <div class="hoofd">
-    <div>
+    <div class="bordkolom">
       <div class="bord-kaart">
         <div class="bord-scroll" id="bordScroll">
           <table class="bord" id="bord"></table>
@@ -353,7 +365,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.7.0';
+const APP_VERSION = '0.7.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';

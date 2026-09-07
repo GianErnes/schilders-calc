@@ -1,5 +1,9 @@
 # CHANGELOG planning.html
 
+## v0.7.1 — Kop blijft altijd zichtbaar, 07-09-2026
+
+De pagina scrolde mee als het paneel rechts hoger was dan het scherm, waardoor de kop van het bord (weeknummers, dagen) uit beeld verdween. Nu staat de pagina stil: het bord vult het scherm onder de kopbalk en scrolt zelf, het paneel rechts scrolt zelf als het te hoog wordt. Op smalle schermen (onder 1100 px) scrolt de pagina zoals voorheen, met het paneel bovenaan. Alleen CSS; 97 controles ongewijzigd goed. Beeld niet in een echte browser getest.
+
 ## v0.7.0 — Naam vóór de lijn, inklapbare kolom, zoeken, 07-09-2026
 
 Op verzoek na v0.6.0: de projectnaam hoort wel in de tijdlijn.
