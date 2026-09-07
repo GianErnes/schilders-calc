@@ -1,5 +1,13 @@
 # CHANGELOG planning.html
 
+## v0.9.2 — Urencel selecteert het hele getal, 07-09-2026
+
+Klik of tab je in een urencel met inhoud, dan staat het hele getal geselecteerd en vervangt wat je typt het meteen. Voorheen kwam de cursor achter het getal en typte je eraan vast.
+
+## v0.9.1 — "Wijkt af van Yoobi" alleen bij echt verschil, 07-09-2026
+
+De melding verscheen zodra er eigen datums waren opgeslagen, ook als die gelijk waren aan Yoobi (bijvoorbeeld na verschuiven en terugzetten). Nu alleen als start of eind werkelijk anders is. De knop "Terug naar Yoobi-datum" blijft zichtbaar zolang er eigen datums staan, zodat je ze kunt opruimen. 130 controles.
+
 ## v0.9.0 — Hulpmiddelen: hoogwerker, steigers, toilet (brok 4b), 07-09-2026
 
 Vereist eerst `planning_05_middelen.sql` (tabel `plan_middelen`). Zonder die tabel werkt het bord gewoon, zonder hulpmiddelen.
