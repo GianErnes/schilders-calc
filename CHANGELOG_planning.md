@@ -1,5 +1,22 @@
 # CHANGELOG planning.html
 
+## v0.2.0 — Datums aanpassen (brok 3a), 07-09-2026
+
+### Wat er kan
+- Balk slepen: midden vastpakken verschuift start en eind samen; de grepen aan het linker- en rechteruiteinde verschuiven alleen start of alleen eind. Tijdens het slepen staan de nieuwe datums rechtsboven.
+- Datumvelden Start en Eind in het paneel rechts, plus de knop "Terug naar Yoobi-datum" die onze datums wist.
+- Uren verschuiven mee bij een hele verschuiving (slepen in het midden, of start en eind in het paneel even veel opschuiven), na bevestiging met aantal uren, dagen en werkdagen. Elke geplande dag gaat evenveel werkdagen op; weekend en gesloten dagen tellen niet mee. Bij trekken aan een uiteinde blijven de uren staan.
+- Overloopwerk: ligt de Yoobi-start vóór het gekozen jaar en is er geen eigen datum, dan begint de balk als aanname op vandaag (oranje rand met streepjes; het paneel legt het uit). Reden: Yoobi's `startdate` is de opdrachtdatum, niet de geplande uitvoering.
+- Aanraking: slepen start pas na 350 ms vasthouden zodat scrollen over het bord blijft werken. Niet getest op iPad; de datumvelden zijn het zekere alternatief.
+
+### Gerepareerd
+- De kleur van de totaaltelling (groen/oranje/rood) werd bij het tekenen niet gezet, pas na een wijziging.
+- De markering van overschrijdingen doorzocht na elke tekening 730 keer de hele tabel; nu alleen de dagen waar uren op staan. In jsdom van 19 s naar 0,4 s per tekening.
+
+### Onder de kap
+- Schrijft `plan_projecten.plan_start`/`plan_eind` (upsert; null = terug naar Yoobi). Bij meeverschuiven: eerst de oude dagen van dat project uit `plan_uren`, dan de nieuwe dagen erin.
+- Getest: 44 controles in jsdom, waaronder slepen en trekken met nagebootste muisgebeurtenissen, bevestigingstekst, verplaatste rijen en terug naar Yoobi.
+
 ## v0.1.2 — Kolombreedtes afgedwongen, 06-09-2026
 
 In de browser rekte de linkerkolom mee met de langste projectnaam, stond de scroll op maart en liepen de getallen onderaan in elkaar. Eén oorzaak: `table-layout: fixed` werkt alleen met een tabelbreedte, en die ontbrak. De tabel krijgt nu 300 + 365 × 34 px, de linkerkolom knipt lange namen af met "…" (volledige naam in de zweeftekst), en "Vandaag" scrolt op de echte kolompositie. Rijhoogte ongewijzigd. 23/23 controles in jsdom; het beeld zelf is niet in een echte browser getest.

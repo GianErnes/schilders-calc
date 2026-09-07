@@ -107,6 +107,18 @@
   td.balk.start.eind { border-radius: 8px; }
   td.balk.onbemand { background: repeating-linear-gradient(135deg, var(--blue-soft) 0 6px, var(--paper) 6px 12px); border-top: 1px solid var(--blue); border-bottom: 1px solid var(--blue); }
   td.balk.afwijkend { box-shadow: inset 0 -3px 0 var(--amber); }
+  td.balk.aanname { box-shadow: inset 0 -3px 0 var(--amber); background-image: repeating-linear-gradient(90deg, transparent 0 10px, rgba(255,255,255,0.25) 10px 12px); }
+  tr.project td.balk { cursor: grab; touch-action: none; }
+  tr.project.sleept td.balk { cursor: grabbing; }
+  .greep { position: absolute; top: 0; bottom: 0; width: 9px; cursor: ew-resize; z-index: 2; }
+  .greep.links { left: 0; border-radius: 8px 0 0 8px; }
+  .greep.rechts { right: 0; border-radius: 0 8px 8px 0; }
+  .greep:hover { background: rgba(255,255,255,0.35); }
+  td.balk.onbemand .greep:hover { background: rgba(23,105,170,0.25); }
+  .pdatums label { display: block; font-size: 0.7rem; color: var(--muted); font-weight: 600; margin-top: 0.5rem; }
+  .pdatums input[type=date] { font: inherit; font-size: 0.82rem; padding: 0.25rem 0.4rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); width: 100%; color: var(--ink); }
+  .pdatums .knop { margin-top: 0.5rem; width: 100%; }
+  .pdatums .aann { color: var(--amber); font-size: 0.74rem; margin-top: 0.4rem; }
   .balktekst { position: absolute; left: 0; top: 5px; height: 30px; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; font-size: 0.74rem; color: #fff; z-index: 1; background: var(--blue); border-radius: 0 6px 6px 0; padding: 0 8px 0 6px; max-width: 900px; overflow: hidden; }
   td.balk.onbemand .balktekst { background: var(--blue-soft); color: var(--blue-deep); }
   .balktekst .bnaam { font-weight: 700; }
@@ -226,7 +238,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.1.2';
+const APP_VERSION = '0.2.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -309,11 +321,40 @@ function projDatums(p) {
   const pl = planProjecten[p.code] || {};
   const yStart = yoobiDatum(p.startdatum);
   const yEind = yoobiDatum(p.einddatum);
-  const start = vanIso(pl.plan_start) || yStart;
+  let start = vanIso(pl.plan_start) || yStart;
   let eind = vanIso(pl.plan_eind) || yEind;
+  let aanname = false;
+  // Overloopwerk: Yoobi-start voor het gekozen jaar en nog geen eigen datum.
+  // Dan is de Yoobi-start de opdrachtdatum, niet de uitvoering (gezien
+  // 06-09-2026). Voorlopig: vandaag als dat in dit jaar valt, anders 1 jan.
+  if (!pl.plan_start && yStart && yStart.getFullYear() < jaar) {
+    const vandaag = new Date(); vandaag.setHours(0, 0, 0, 0);
+    start = vandaag.getFullYear() === jaar ? vandaag : new Date(jaar, 0, 1);
+    if (eind && eind < start) start = eind;
+    aanname = true;
+  }
   if (start && (!eind || eind < start)) eind = start;
   const afwijkend = !!(pl.plan_start || pl.plan_eind);
-  return { start, eind, yStart, yEind, afwijkend };
+  return { start, eind, yStart, yEind, afwijkend, aanname };
+}
+
+// ---------- werkdagen ----------
+function isWerkdag(iso) { return !isWeekend(iso) && !isGesloten(iso); }
+function plusDagen(iso, n) { const d = vanIso(iso); d.setDate(d.getDate() + n); return naarIso(d); }
+// n werkdagen verder (n<0 = terug); weekend en gesloten dagen tellen niet.
+function schuifWerkdagen(iso, n) {
+  let d = iso, stap = n > 0 ? 1 : -1, over = Math.abs(n);
+  let rem = 0;
+  while (over > 0 && rem < 1000) { d = plusDagen(d, stap); rem++; if (isWerkdag(d)) over--; }
+  return d;
+}
+// Aantal werkdagen van a naar b (negatief als b voor a ligt).
+function werkdagenTussen(a, b) {
+  if (a === b) return 0;
+  const stap = b > a ? 1 : -1;
+  let d = a, n = 0, rem = 0;
+  while (d !== b && rem < 1000) { d = plusDagen(d, stap); rem++; if (isWerkdag(d)) n += stap; }
+  return n;
 }
 function urenVanProject(code) {
   let som = 0;
@@ -453,7 +494,7 @@ function tekenBord() {
   h += '<tfoot><tr class="kop"><td class="label">Nog te plannen per dag</td>' + dagen.map(() => '<td></td>').join('') + '</tr>';
   for (const m of medewerkers) {
     h += '<tr data-mw="' + esc(m.id) + '"><td class="label">' + esc(m.naam) + ' <span class="num" style="color:var(--muted);font-weight:500">(' + fmtUur(m.norm_uren) + ')</span></td>';
-    for (const iso of dagen) h += '<td class="' + celKlassen(iso) + ' num" data-mw="' + esc(m.id) + '" data-datum="' + iso + '">' + restantInhoud(m, iso) + '</td>';
+    for (const iso of dagen) h += '<td class="' + celKlassen(iso) + ' num ' + restantKlasse(m, iso) + '" data-mw="' + esc(m.id) + '" data-datum="' + iso + '">' + restantInhoud(m, iso) + '</td>';
     h += '</tr>';
   }
   h += '</tfoot>';
@@ -493,9 +534,12 @@ function tekenProjectRij(p, d) {
       if (iso === eIso) k += ' eind';
       if (!bemand) k += ' onbemand';
       if (d.afwijkend) k += ' afwijkend';
+      if (d.aanname) k += ' aanname';
+      if (iso === sIso) inhoud += '<span class="greep links" title="Startdatum verschuiven"></span>';
+      if (iso === eIso) inhoud += '<span class="greep rechts" title="Einddatum verschuiven"></span>';
       if (iso === eersteZichtbaar) {
         const n = pl.klantnotitie || '';
-        inhoud = '<div class="balktekst"><span class="bnaam">' + esc(p.naam) + '</span>'
+        inhoud += '<div class="balktekst"><span class="bnaam">' + esc(p.naam) + '</span>'
           + '<span class="notitie' + (n ? '' : ' leeg') + '" data-code="' + esc(p.code) + '" title="Klik om de afspraak met de klant te noteren">' + (n ? esc(n) : 'afspraak klant…') + '</span></div>';
       }
     }
@@ -550,7 +594,15 @@ function werkTotaalCel(mwId, iso) {
 // Rode hoekjes: alle cellen met uren van deze medewerker op deze dag,
 // als het dagtotaal boven de norm zit.
 function zetOverKlassen() {
-  for (const m of medewerkers) for (const iso of dagen) werkOverCellen(m.id, iso);
+  // Alleen de medewerker-dagen waar uren op staan; de rest heeft niets te markeren.
+  const gezien = new Set();
+  for (const k in uren) {
+    const d = k.split('|');
+    const mk = d[1] + '|' + d[2];
+    if (gezien.has(mk)) continue;
+    gezien.add(mk);
+    werkOverCellen(d[1], d[2]);
+  }
 }
 function werkOverCellen(mwId, iso) {
   const m = medewerkers.find(x => x.id === mwId);
@@ -612,8 +664,31 @@ function tekenPaneel() {
     '<div class="c' + (rest < 0 ? ' waarschuw' : '') + '"><div class="t">Resterend</div><div class="v num">' + fmtUur(rest) + ' <small>uur</small></div></div>' +
     '</div>' +
     '<div class="pdatums">Yoobi: ' + fmtDatum(d.yStart) + ' – ' + fmtDatum(d.yEind) +
-    (d.afwijkend ? '<br><span class="afw">Onze planning: ' + fmtDatum(d.start) + ' – ' + fmtDatum(d.eind) + '</span>' : '') + '</div>' +
-    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Resterend = budget − geboekt − ingepland.</div>';
+    (d.afwijkend ? '<br><span class="afw">Onze planning wijkt af van Yoobi</span>' : '') +
+    (d.aanname ? '<div class="aann">Yoobi-start ligt in ' + d.yStart.getFullYear() + '. De balk begint als aanname op vandaag; zet de echte start hieronder.</div>' : '') +
+    '<label>Start</label><input type="date" id="pStart" value="' + (d.start ? naarIso(d.start) : '') + '">' +
+    '<label>Eind</label><input type="date" id="pEind" value="' + (d.eind ? naarIso(d.eind) : '') + '">' +
+    (d.afwijkend ? '<button class="knop" id="pTerug">Terug naar Yoobi-datum</button>' : '') +
+    '</div>' +
+    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Resterend = budget − geboekt − ingepland. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>';
+  const inS = document.getElementById('pStart'), inE = document.getElementById('pEind');
+  inS.addEventListener('change', () => datumsUitPaneel(p, d));
+  inE.addEventListener('change', () => datumsUitPaneel(p, d));
+  const knop = document.getElementById('pTerug');
+  if (knop) knop.addEventListener('click', () => slaDatumsOp(p.code, null, null, null));
+}
+
+function datumsUitPaneel(p, d) {
+  const sV = document.getElementById('pStart').value, eV = document.getElementById('pEind').value;
+  if (!sV || !eV) return;
+  let sIso = sV, eIso = eV;
+  if (eIso < sIso) { eIso = sIso; document.getElementById('pEind').value = eIso; }
+  const oudS = d.start ? naarIso(d.start) : null;
+  // Start en eind samen verschoven (even lange balk) = hele verschuiving: uren mee.
+  const oudLengte = d.start && d.eind ? Math.round((d.eind - d.start) / 86400000) : null;
+  const nieuwLengte = Math.round((vanIso(eIso) - vanIso(sIso)) / 86400000);
+  const heel = oudS && sIso !== oudS && oudLengte === nieuwLengte;
+  slaDatumsOp(p.code, sIso, eIso, heel ? oudS : null);
 }
 
 // ---------- opslaan ----------
@@ -659,15 +734,130 @@ async function slaNotitieOp(code, tekst) {
   }
 }
 
-// ---------- gebeurtenissen ----------
+// Datums opslaan. sIso/eIso null = terug naar Yoobi. oudStart gezet =
+// hele verschuiving: vraag of de uren mee mogen.
+async function slaDatumsOp(code, sIso, eIso, oudStart) {
+  let verplaats = null;
+  if (oudStart && sIso && sIso !== oudStart) {
+    const keys = Object.keys(uren).filter(k => k.startsWith(code + '|'));
+    if (keys.length) {
+      const som = keys.reduce((a, k) => a + uren[k], 0);
+      const dagenSet = new Set(keys.map(k => k.split('|')[2]));
+      const n = werkdagenTussen(oudStart, sIso);
+      const richting = n > 0 ? 'later' : 'eerder';
+      if (n !== 0 && confirm(fmtUur(som) + ' uur op ' + dagenSet.size + ' dag' + (dagenSet.size === 1 ? '' : 'en') + ' ' + Math.abs(n) + ' werkdag' + (Math.abs(n) === 1 ? '' : 'en') + ' ' + richting + ' meeverplaatsen?')) {
+        verplaats = { keys, n };
+      }
+    }
+  }
+  toonStatus('Opslaan…');
+  try {
+    let r = await sb.from('plan_projecten').upsert({ yoobi_code: code, plan_start: sIso, plan_eind: eIso }, { onConflict: 'yoobi_code' }).select();
+    if (r.error) throw r.error;
+    planProjecten[code] = (r.data && r.data[0]) || { ...(planProjecten[code] || {}), yoobi_code: code, plan_start: sIso, plan_eind: eIso };
+    if (verplaats) {
+      const oud = verplaats.keys.map(k => { const d = k.split('|'); return { medewerker_id: d[1], datum: d[2], uren: uren[k] }; });
+      const nieuw = oud.map(o => ({ yoobi_code: code, medewerker_id: o.medewerker_id, datum: schuifWerkdagen(o.datum, verplaats.n), uren: o.uren }));
+      // Eerst weg, dan nieuw, zodat een dag die zowel oud als nieuw is niet dubbel telt.
+      r = await sb.from('plan_uren').delete().eq('yoobi_code', code).in('datum', [...new Set(oud.map(o => o.datum))]);
+      if (r.error) throw r.error;
+      r = await sb.from('plan_uren').upsert(nieuw, { onConflict: 'yoobi_code,medewerker_id,datum' });
+      if (r.error) throw r.error;
+      for (const k of verplaats.keys) delete uren[k];
+      for (const w of nieuw) if (w.datum.startsWith(String(jaar))) uren[sleutel(code, w.medewerker_id, w.datum)] = w.uren;
+    }
+    toonStatus('Datums opgeslagen');
+  } catch (e) {
+    toonStatus('Datums opslaan mislukt: ' + (e.message || e), true);
+    await laadAlles().catch(() => {});
+  }
+  const links = document.getElementById('bordScroll').scrollLeft;
+  tekenBord();
+  document.getElementById('bordScroll').scrollLeft = links;
+}
+
+// ---------- slepen op de balk ----------
 const bordEl = document.getElementById('bord');
+let sleep = null;
+let netGesleept = false;   // { code, mode, sIso, eIso, x0, laatsteDelta, actief, timer }
+const DAGBREEDTE = 34;
+
+bordEl.addEventListener('pointerdown', e => {
+  if (e.button !== undefined && e.button !== 0) return;
+  if (e.target.closest('.notitie') || e.target.closest('input')) return;
+  const td = e.target.closest('tr.project td.balk');
+  if (!td) return;
+  const code = td.parentElement.dataset.code;
+  const p = vindProject(code); if (!p) return;
+  const d = projDatums(p);
+  let mode = 'heel';
+  if (e.target.classList.contains('greep')) mode = e.target.classList.contains('links') ? 'start' : 'eind';
+  sleep = { code, mode, sIso: naarIso(d.start), eIso: naarIso(d.eind), x0: e.clientX, laatsteDelta: 0, actief: false, timer: null, pointerId: e.pointerId };
+  // Aanraking: pas slepen na kort vasthouden, zodat scrollen over het bord blijft werken.
+  if (e.pointerType === 'touch') sleep.timer = setTimeout(() => { if (sleep) sleep.actief = true; }, 350);
+  else sleep.actief = true;
+  window.addEventListener('pointermove', sleepBeweeg);
+  window.addEventListener('pointerup', sleepLos);
+  window.addEventListener('pointercancel', sleepAf);
+});
+
+function sleepNieuweDatums() {
+  const dlt = sleep.laatsteDelta;
+  let s = sleep.sIso, e = sleep.eIso;
+  if (sleep.mode === 'heel') { s = plusDagen(s, dlt); e = plusDagen(e, dlt); }
+  else if (sleep.mode === 'start') { s = plusDagen(s, dlt); if (s > e) s = e; }
+  else { e = plusDagen(e, dlt); if (e < s) e = s; }
+  return { s, e };
+}
+function sleepBeweeg(e) {
+  if (!sleep) return;
+  const delta = Math.round((e.clientX - sleep.x0) / DAGBREEDTE);
+  if (!sleep.actief) { if (Math.abs(e.clientX - sleep.x0) > 8) sleepAf(); return; }
+  if (delta === sleep.laatsteDelta) return;
+  sleep.laatsteDelta = delta;
+  const p = vindProject(sleep.code); if (!p) return;
+  const { s, e: ei } = sleepNieuweDatums();
+  const tr = bordEl.querySelector('tr.project[data-code="' + sleep.code + '"]');
+  if (!tr) return;
+  const d = projDatums(p);
+  const tmp = document.createElement('tbody');
+  tmp.innerHTML = tekenProjectRij(p, { start: vanIso(s), eind: vanIso(ei), yStart: d.yStart, yEind: d.yEind, afwijkend: true, aanname: false });
+  const nieuw = tmp.firstElementChild;
+  nieuw.classList.add('sleept');
+  tr.replaceWith(nieuw);
+  const tip = document.getElementById('status');
+  tip.textContent = fmtDatum(vanIso(s)) + ' – ' + fmtDatum(vanIso(ei));
+}
+function sleepAf() {
+  if (!sleep) return;
+  clearTimeout(sleep.timer);
+  window.removeEventListener('pointermove', sleepBeweeg);
+  window.removeEventListener('pointerup', sleepLos);
+  window.removeEventListener('pointercancel', sleepAf);
+  const was = sleep; sleep = null;
+  if (was.laatsteDelta !== 0) { const links = document.getElementById('bordScroll').scrollLeft; tekenBord(); document.getElementById('bordScroll').scrollLeft = links; }
+}
+function sleepLos(e) {
+  if (!sleep) return;
+  const was = sleep;
+  const { s, e: ei } = sleepNieuweDatums();
+  sleepAf();
+  if (was.laatsteDelta === 0) return;   // gewone klik: uitklappen regelt de click-handler
+  netGesleept = true; setTimeout(() => { netGesleept = false; }, 0);
+  actiefCode = was.code;
+  slaDatumsOp(was.code, s, ei, was.mode === 'heel' ? was.sIso : null);
+}
+
+// ---------- gebeurtenissen ----------
 
 bordEl.addEventListener('click', e => {
   const notitie = e.target.closest('.notitie');
   if (notitie) { e.stopPropagation(); bewerkNotitie(notitie); return; }
   if (e.target.closest('input')) return;
+  if (e.target.closest('.greep')) return;
   const rij = e.target.closest('tr.project');
   if (!rij) return;
+  if (netGesleept || rij.classList.contains('sleept')) return;
   const code = rij.dataset.code;
   if (uitgeklapt.has(code) && actiefCode === code) uitgeklapt.delete(code);
   else uitgeklapt.add(code);

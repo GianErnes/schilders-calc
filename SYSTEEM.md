@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.1.2 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.2.0 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -4235,3 +4235,21 @@ medewerkers, verlof per medewerker.
 
 **Bewaard in de projectkennis:** `planning.html`, `CHANGELOG_planning.md`,
 `planning_01_tabellen.sql`, `fin-werkvoorraad-sync_v5_index.ts`.
+
+## Wat er op 7 september 2026 gedaan is
+
+### Planning brok 3a: datums aanpassen (planning.html v0.2.0)
+
+Slepen op de balk (midden = hele balk, grepen = alleen start of eind),
+datumvelden in het paneel met "Terug naar Yoobi-datum", en uren die bij
+een hele verschuiving meegaan na bevestiging, werkdag voor werkdag over
+weekend en gesloten dagen heen. Overloopwerk zonder eigen datum begint als
+aanname op vandaag. Onderweg twee fouten in v0.1.x gevonden en hersteld:
+de totaaltelling kreeg bij het tekenen geen kleur, en de markering van
+overschrijdingen was 50 keer te traag. Details in `CHANGELOG_planning.md`.
+
+**Nog niet gebouwd (brok 3b):** project verbergen, knop Yoobi verversen
+via de gebruikersweg van `fin-werkvoorraad-sync` v5, beheer van gesloten
+dagen en medewerkers, verlof per medewerker. De cron-weg van v5 draait
+voor het eerst op dinsdag 8 september 06:00 UTC; verwacht `gestart_door`
+= `cron` en `zonder_code` = 0 in de nieuwste rij van `fin_werkvoorraad`.
