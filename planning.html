@@ -145,10 +145,10 @@
   /* hulpmiddelen: smalle strook onderin de projectrij */
   :root { --m-hoogwerker: #f59e0b; --m-rolsteiger: #0ea5e9; --m-vaste_steiger: #dc2626; --m-mobiel_toilet: #facc15; --m-overig: #9ca3af; }
   tr.project td.dag { position: relative; }
-  .middel { position: absolute; left: 0; right: 0; bottom: 3px; height: 6px; background: var(--m-kleur); opacity: 0.9; }
+  .middel { position: absolute; left: 0; right: 0; bottom: calc(3px + var(--m-laag, 0) * 14px); height: 6px; background: var(--m-kleur); opacity: 0.9; }
   .middel.mstart { left: 2px; border-radius: 3px 0 0 3px; }
   .middel.meind { right: 2px; border-radius: 0 3px 3px 0; }
-  .middeltekst { position: absolute; bottom: 9px; left: 2px; white-space: nowrap; font-size: 0.62rem; font-weight: 700; color: var(--m-kleur); z-index: 1; line-height: 1; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
+  .middeltekst { position: absolute; bottom: calc(9px + var(--m-laag, 0) * 14px); left: 2px; white-space: nowrap; font-size: 0.62rem; font-weight: 700; color: var(--m-kleur); z-index: 1; line-height: 1; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
   .middeltekst .mo { font-weight: 500; color: var(--ink-soft); }
   .middelen { margin-top: 0.7rem; }
   .middelen h3 { margin: 0 0 0.4rem; font-size: 0.8rem; color: var(--ink-soft); }
@@ -234,6 +234,7 @@
 
   /* verlof */
   td.dag.verlof { background: var(--gesloten) !important; color: var(--muted); font-weight: 600; }
+  td.dag.verlof.ziek { background: #fdecec !important; color: var(--accent-deep); }
   tr.mw td.dag.verlof, tr.mw td.dag.gesloten { text-align: center; font-size: 0.78rem; }
   tr.mw td.dag .fout-uren { color: var(--accent-deep); font-weight: 700; }
   tfoot td.dag.klik { cursor: pointer; }
@@ -396,7 +397,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.9.3';
+const APP_VERSION = '0.10.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -511,6 +512,7 @@ function projDatums(p) {
 
 // ---------- werkdagen ----------
 // Hele dag vrij (uren leeg). Een reservering met uren blokkeert de dag niet.
+function isZiek(mwId, iso) { const v = verlof[mwId + '|' + iso]; return !!(v && v._ziek); }
 function isVerlof(mwId, iso) { const v = verlof[mwId + '|' + iso]; return !!v && (v.uren === null || v.uren === undefined || v.uren === ''); }
 // Gereserveerde uren op een dag (bureau, ziekenhuis); 0 als er niets of een hele dag staat.
 function reservering(mwId, iso) { const v = verlof[mwId + '|' + iso]; return v && v.uren ? Number(v.uren) : 0; }
@@ -617,7 +619,7 @@ function vindProject(code) {
 // ---------- laden ----------
 async function laadAlles() {
   const j1 = jaar + '-01-01', j2 = jaar + '-12-31';
-  const [wv, mw, pp, pu, gd, vlRes, fsRes, mdRes] = await Promise.all([
+  const [wv, mw, pp, pu, gd, vlRes, fsRes, mdRes, zkRes] = await Promise.all([
     sb.from('fin_werkvoorraad').select('peildatum,data').order('peildatum', { ascending: false }).limit(1),
     sb.from('plan_medewerkers').select('*').order('volgorde'),
     sb.from('plan_projecten').select('*'),
@@ -626,6 +628,7 @@ async function laadAlles() {
     sb.from('plan_verlof').select('*').gte('datum', j1).lte('datum', j2),
     sb.from('plan_fasen').select('*').order('volgnr'),
     sb.from('plan_middelen').select('*').order('van'),
+    sb.from('pers_verzuim_dagen').select('medewerker_id,datum,percentage').gte('datum', j1).lte('datum', j2),
   ]);
   for (const r of [wv, mw, pp, pu, gd]) if (r.error) throw r.error;
   // plan_verlof kan ontbreken zolang planning_02_verlof.sql niet is gedraaid: dan zonder verlof verder.
@@ -651,6 +654,19 @@ async function laadAlles() {
   verlof = {};
   if (vlRes.error) { console.warn('plan_verlof niet leesbaar (tabel nog niet aangemaakt?): ' + vlRes.error.message); }
   else for (const r of (vlRes.data || [])) verlof[r.medewerker_id + '|' + r.datum] = r;
+  // v0.10.0: ziekdagen uit de personeelsmodule (view pers_verzuim_dagen, alleen leesbaar voor directie).
+  // Ze komen als synthetische verlofregel in dezelfde map: 100% = hele dag, anders als reservering
+  // van norm × percentage. Een eigen verlofregel op dezelfde dag wint. Planning schrijft hier nooit.
+  if (zkRes.error) { console.warn('pers_verzuim_dagen niet leesbaar (geen personeelsrechten of view ontbreekt): ' + zkRes.error.message); }
+  else for (const r of (zkRes.data || [])) {
+    if (!r.medewerker_id) continue;                       // medewerker staat niet op het bord
+    const k = r.medewerker_id + '|' + r.datum;
+    if (verlof[k]) continue;
+    const m = alleMedewerkers.find(x => x.id === r.medewerker_id);
+    const pct = Number(r.percentage) || 100;
+    const uren = pct >= 100 || !m ? null : Math.round(Number(m.norm_uren) * pct / 100 * 4) / 4;
+    verlof[k] = { medewerker_id: r.medewerker_id, datum: r.datum, uren: uren, omschrijving: 'ziek' + (pct < 100 ? ' (' + pct + '%)' : ''), _ziek: true };
+  }
   fasen = {};
   if (fsRes.error) { console.warn('plan_fasen niet leesbaar (tabel nog niet aangemaakt?): ' + fsRes.error.message); }
   else for (const r of (fsRes.data || [])) { (fasen[r.yoobi_code] = fasen[r.yoobi_code] || []).push(r); }
@@ -770,7 +786,16 @@ function tekenProjectRij(p, d, f) {
   const isActief = p.code === actiefCode && ((f && f.id === actiefFase) || (!f && !actiefFase));
   const naamTekst = p.naam + (f ? ' · ' + f.naam : '');
   const mds = middelenVan(p.code, f);
-  let h = '<tr class="project' + (isActief ? ' actief' : '') + '" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + '>';
+  // v0.10.1: overlappende hulpmiddelen krijgen elk een eigen laag (laagste vrije laag, op volgorde van start).
+  // De rij groeit 14px per extra laag; zonder overlap blijft alles zoals het was.
+  const laagVan = {}; const lagenEind = [];
+  for (const md of [...mds].sort((a, b) => a.van < b.van ? -1 : a.van > b.van ? 1 : 0)) {
+    let li = lagenEind.findIndex(e => e < md.van);
+    if (li < 0) { li = lagenEind.length; lagenEind.push(md.tot); } else lagenEind[li] = md.tot;
+    laagVan[md.id] = li;
+  }
+  const extraHoogte = lagenEind.length > 1 ? (lagenEind.length - 1) * 14 : 0;
+  let h = '<tr class="project' + (isActief ? ' actief' : '') + '" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + (extraHoogte ? ' style="height:' + (40 + extraHoogte) + 'px"' : '') + '>';
   h += '<td class="label" title="' + esc(p.klant + ' — ' + naamTekst) + '"><span class="klant">' + esc(p.klant) + '</span><span class="naam">' + esc(naamTekst) + '</span></td>';
   // Naam + afspraak vóór de start van de lijn. Geen ruimte links (start in
   // de eerste week, of overloopwerk vanaf 1 januari): dan achter het eind,
@@ -804,9 +829,10 @@ function tekenProjectRij(p, d, f) {
     for (const md of mds) {
       if (iso < md.van || iso > md.tot) continue;
       const kl = 'var(--m-' + md.soort + ')';
-      inhoud += '<span class="middel' + (iso === md.van ? ' mstart' : '') + (iso === md.tot ? ' meind' : '') + '" style="--m-kleur:' + kl + '" title="' + esc(middelNaam(md) + ' ' + fmtDatum(vanIso(md.van)) + ' – ' + fmtDatum(vanIso(md.tot)) + (md.omschrijving && md.soort !== 'overig' ? ' · ' + md.omschrijving : '')) + '"></span>';
+      const laagStijl = '--m-kleur:' + kl + ';--m-laag:' + (laagVan[md.id] || 0);
+      inhoud += '<span class="middel' + (iso === md.van ? ' mstart' : '') + (iso === md.tot ? ' meind' : '') + '" style="' + laagStijl + '" title="' + esc(middelNaam(md) + ' ' + fmtDatum(vanIso(md.van)) + ' – ' + fmtDatum(vanIso(md.tot)) + (md.omschrijving && md.soort !== 'overig' ? ' · ' + md.omschrijving : '')) + '"></span>';
       if (iso === md.van || (md.van < j1 && iso === j1)) {
-        inhoud += '<span class="middeltekst" style="--m-kleur:' + kl + '">' + esc(middelNaam(md)) + (md.omschrijving && md.soort !== 'overig' ? ' <span class="mo">' + esc(md.omschrijving) + '</span>' : '') + '</span>';
+        inhoud += '<span class="middeltekst" style="' + laagStijl + '">' + esc(middelNaam(md)) + (md.omschrijving && md.soort !== 'overig' ? ' <span class="mo">' + esc(md.omschrijving) + '</span>' : '') + '</span>';
       }
     }
     h += '<td class="' + k + '">' + inhoud + '</td>';
@@ -821,7 +847,7 @@ function tekenMwRij(p, d, m, f) {
   for (const iso of dagen) {
     let k = celKlassen(iso);
     const vrij = isVerlof(m.id, iso);
-    if (vrij) k += ' verlof';
+    if (vrij) k += ' verlof' + (isZiek(m.id, iso) ? ' ziek' : '');
     // Bij fasen hoort elke dag bij precies één fase; de andere fasen tonen die dag leeg.
     const andereFase = f && !hoortBijFase(p.code, iso, f);
     const blok = isWeekend(iso) || isGesloten(iso) || vrij || andereFase;
@@ -830,11 +856,11 @@ function tekenMwRij(p, d, m, f) {
     if (andereFase) k += ' buiten anderefase';
     const w = andereFase ? 0 : uren[sleutel(p.code, m.id, iso)];
     if (w) k += ' gevuld';
-    const t = vrij ? ' title="' + esc(m.naam + ' vrij' + (verlof[m.id + '|' + iso].omschrijving ? ': ' + verlof[m.id + '|' + iso].omschrijving : '')) + '"' : '';
+    const t = vrij ? ' title="' + esc(m.naam + (isZiek(m.id, iso) ? ' ' + verlof[m.id + '|' + iso].omschrijving : ' vrij' + (verlof[m.id + '|' + iso].omschrijving ? ': ' + verlof[m.id + '|' + iso].omschrijving : ''))) + '"' : '';
     h += '<td class="' + k + '" data-code="' + esc(p.code) + '" data-mw="' + esc(m.id) + '" data-datum="' + iso + '"' + t + '>';
     if (!blok) h += '<input type="text" inputmode="decimal" value="' + (w ? fmtUur(w) : '') + '" aria-label="' + esc(m.naam + ' ' + iso) + '">';
     else if (w) h += '<span class="fout-uren" title="Uren gepland op een vrije dag">' + fmtUur(w) + '</span>';
-    else if (vrij && !andereFase) h += '✕';
+    else if (vrij && !andereFase) h += isZiek(m.id, iso) ? 'z' : '✕';
     h += '</td>';
   }
   return h + '</tr>';
@@ -842,14 +868,14 @@ function tekenMwRij(p, d, m, f) {
 
 // Inhoud en kleur van een cel in de totaaltelling.
 function restantInhoud(m, iso) {
-  if (isVerlof(m.id, iso)) return '✕';
+  if (isVerlof(m.id, iso)) return isZiek(m.id, iso) ? 'z' : '✕';
   if (isWeekend(iso) || isGesloten(iso)) return '';
   const t = dagTotaal(m.id, iso) + reservering(m.id, iso);
   const r = Math.round((m.norm_uren - t) * 100) / 100;
   return fmtUur(r);
 }
 function restantKlasse(m, iso) {
-  if (isVerlof(m.id, iso)) return 'verlof klik';
+  if (isVerlof(m.id, iso)) return 'verlof klik' + (isZiek(m.id, iso) ? ' ziek' : '');
   if (isWeekend(iso) || isGesloten(iso)) return '';
   const res = reservering(m.id, iso);
   const t = dagTotaal(m.id, iso) + res;
@@ -943,8 +969,7 @@ function tekenPaneel() {
   const d = projDatums(p);
   const ingepland = urenVanProject(p.code);
   const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
-  const nogPlannen = Math.round((budget - ingepland) * 100) / 100;
-  const nogWerken = Math.round((budget - geboekt) * 100) / 100;
+  const rest = Math.round((budget - geboekt - ingepland) * 100) / 100;
   el.innerHTML =
     '<h2>Project</h2>' +
     '<div class="pnaam">' + esc(p.naam) + '</div>' +
@@ -954,8 +979,7 @@ function tekenPaneel() {
     '<div class="c"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Ingepland ' + jaar + '</div><div class="v num">' + fmtUur(ingepland) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Geboekt</div><div class="v num">' + fmtUur(geboekt) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Budget min ingepland ' + jaar + '"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogWerken < 0 ? ' waarschuw' : '') + '" title="Budget min geboekt (Yoobi)"><div class="t">Nog te werken</div><div class="v num">' + fmtUur(nogWerken) + ' <small>uur</small></div></div>' +
+    '<div class="c' + (rest < 0 ? ' waarschuw' : '') + '"><div class="t">Resterend</div><div class="v num">' + fmtUur(rest) + ' <small>uur</small></div></div>' +
     '</div>' +
     '<div class="pdatums">Yoobi: ' + fmtDatum(d.yStart) + ' – ' + fmtDatum(d.yEind) +
     (d.afwijkend ? '<br><span class="afw">Onze planning wijkt af van Yoobi</span>' : '') +
@@ -965,7 +989,7 @@ function tekenPaneel() {
     (d.eigen ? '<button class="knop" id="pTerug">Terug naar Yoobi-datum</button>' : '') +
     '<label>Knip in fasen op</label><div class="rij"><input type="date" id="pKnipDatum" style="flex:1"><button class="knop" id="pKnip" title="Alles vóór deze datum wordt fase 1, vanaf deze datum fase 2">Knip</button></div>' +
     '</div>' +
-    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Nog te plannen = budget − ingepland; nog te werken = budget − geboekt. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
+    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Resterend = budget − geboekt − ingepland. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
     middelenHtml(p, null, d) +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
@@ -983,8 +1007,7 @@ function tekenFasePaneel(el, p) {
   const fs = fasenVan(p.code);
   const ingepland = urenVanProject(p.code);
   const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
-  const nogPlannen = Math.round((budget - ingepland) * 100) / 100;
-  const nogWerken = Math.round((budget - geboekt) * 100) / 100;
+  const rest = Math.round((budget - geboekt - ingepland) * 100) / 100;
   const yS = yoobiDatum(p.startdatum), yE = yoobiDatum(p.einddatum);
   let h = '<h2>Project</h2>' +
     '<div class="pnaam">' + esc(p.naam) + '</div>' +
@@ -994,8 +1017,7 @@ function tekenFasePaneel(el, p) {
     '<div class="c"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Ingepland ' + jaar + '</div><div class="v num">' + fmtUur(ingepland) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Geboekt</div><div class="v num">' + fmtUur(geboekt) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Budget min ingepland ' + jaar + '"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogWerken < 0 ? ' waarschuw' : '') + '" title="Budget min geboekt (Yoobi)"><div class="t">Nog te werken</div><div class="v num">' + fmtUur(nogWerken) + ' <small>uur</small></div></div>' +
+    '<div class="c' + (rest < 0 ? ' waarschuw' : '') + '"><div class="t">Resterend</div><div class="v num">' + fmtUur(rest) + ' <small>uur</small></div></div>' +
     '</div>' +
     '<div class="pdatums">Yoobi: ' + fmtDatum(yS) + ' – ' + fmtDatum(yE) + '</div>';
   fs.forEach((f, i) => {
@@ -1009,7 +1031,7 @@ function tekenFasePaneel(el, p) {
   });
   const fAct = fs.find(f => f.id === actiefFase) || fs[0];
   h += middelenHtml(p, fAct, faseDatums(p, fAct)) +
-    '<div class="voetnoot">Budget, geboekt, nog te plannen en nog te werken gelden voor het hele project; per fase zie je wat erop staat. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
+    '<div class="voetnoot">Budget, geboekt en resterend gelden voor het hele project; per fase zie je wat erop staat. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg">Verbergen</button></div>';
   el.innerHTML = h;
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
@@ -1668,7 +1690,8 @@ bordEl.addEventListener('click', e => {
   const bestaand = verlof[mwId + '|' + iso];
   const geplandHier = dagTotaal(mwId, iso);
   popover.innerHTML = '<b>' + esc(m.naam) + '</b> · ' + DAGNAMEN[d.getDay()] + ' ' + fmtDatum(d) +
-    (bestaand ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + '</div><div class="rij"><button class="knop primair" id="poWis">Opheffen</button></div>'
+    (bestaand && bestaand._ziek ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + ' — gemeld in Personeel. Daar aanpassen of hersteld melden.</div>'
+          : bestaand ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + '</div><div class="rij"><button class="knop primair" id="poWis">Opheffen</button></div>'
           : (geplandHier ? '<div class="hint" style="color:var(--amber)">Let op: er staat al ' + fmtUur(geplandHier) + ' uur gepland op deze dag.</div>' : '') +
             '<div class="rij"><input type="text" inputmode="decimal" id="poUren" placeholder="uren" style="width:5rem" title="leeg = hele dag"><input type="text" id="poOm" placeholder="omschrijving (mag leeg)" style="flex:1"></div>' +
             '<div class="rij"><button class="knop primair" id="poZet">Opslaan</button><span class="hint" style="margin:0">uren leeg = hele dag vrij</span></div>');
