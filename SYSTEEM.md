@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.9.3 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.10.3 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -4379,3 +4379,24 @@ gekozen: ingepland alleen vanaf vandaag tellen; dat maskeert een te
 ruime planning. De verversknop is in gebruik (Yoobi-stand 9 september),
 dus de gebruikersweg van `fin-werkvoorraad-sync` v5 werkt. Het bord
 wordt ook op iPad gebruikt.
+
+**Twee takken van planning.html.** Vanuit de personeelschat (zieke
+medewerker moet op het bord niet beschikbaar zijn) is planning.html daar
+doorontwikkeld: v0.10.0 leest ziekdagen uit de view `pers_verzuim_dagen`,
+v0.10.1 tekent overlappende hulpmiddelen in lagen. Tegelijk ontstond in de
+planningschat v0.9.3 (paneel), beide vanaf v0.9.2, en v0.9.3 is even live
+geweest. De planningschat heeft 's ochtends de sessiestart-check niet
+herhaald en pas laat gemerkt dat er een tweede tak was. Samengevoegd tot
+v0.10.2 = v0.10.1 + paneelwijziging; 132 controles goed. Een parallel
+gebouwde v0.9.4 (baantjes voor hulpmiddelen) is weggegooid omdat v0.10.1
+hetzelfde beter oplost.
+
+Voorstel, nog niet bevestigd: één bestand, één chat. Wijzigingen aan
+`planning.html` alleen in de planningschat; heeft een andere module iets
+in het bord nodig, dan wordt dat daar gevraagd en hier gebouwd. En: de
+sessiestart-check elke ochtend opnieuw, niet alleen bij de eerste sessie.
+
+Uit Gians eerste blik op v0.10.1: de namen bij de hulpmiddelstroken waren
+slecht leesbaar over de blokken heen en de rij werd hoog. v0.10.3 zet de
+naam in de strook zelf (11 px hoog, wit op kleur) en de lagen 12 px uit
+elkaar.
