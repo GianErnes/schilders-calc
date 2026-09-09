@@ -5,6 +5,15 @@ synchroon-check tegen de changelog, drie ochtendtellers na inloggen, en het
 systeemstatus-blok "Achter de schermen" (opruimpunt 5 uit SYSTEEM.md).
 Hoort bij `sql/start_01_systeem_status.sql`.
 
+## v0.2.3 — Taken-tegel krijgt changelog-check (09-09-2026)
+
+- Tegel Taken vergelijkt nu `APP_VERSION` in `taken.html` met de bovenste
+  entry in `CHANGELOG_taken.md` (nieuw bestand, aangemaakt 09-09-2026).
+  Daarmee heeft elke eigen app op de startpagina een changelog-check;
+  Voorraad blijft de banner-vergelijking houden.
+- Getest: JS parse (node); de leesregel van de changelog gecontroleerd op
+  de tekst van `CHANGELOG_taken.md`. Niet in de browser.
+
 ## v0.2.2 — Teller heet Actueel (09-09-2026)
 
 - Label "taken actueel", detail "plus N op de rol (achterstand)" — dezelfde
