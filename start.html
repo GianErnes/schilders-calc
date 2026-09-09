@@ -50,6 +50,20 @@
   .tegel.uit-sync{border-color:#f5c9a0;background:#fffaf5}
   .badge{position:absolute;top:14px;right:14px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:#fdeaea;color:var(--accent-deep)}
   .badge.ok{background:#ecfaf1;color:var(--groen)}
+  /* systeemstatus */
+  .status{margin-top:30px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;display:none}
+  .status h2{margin:0 0 4px;font-size:16px}
+  .status .uitleg{font-size:12.5px;color:var(--ink-faint);margin-bottom:12px}
+  .status table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .status td{padding:7px 8px;border-top:1px solid var(--line-soft,#eef1f4);vertical-align:top}
+  .status td:first-child{width:18px;padding-left:0}
+  .status .stip{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ink-faint);margin-top:4px}
+  .status .stip.ok{background:var(--groen)} .status .stip.let_op{background:var(--amber)} .status .stip.fout,.status .stip.nooit{background:var(--accent)}
+  .status .taak{font-weight:600;white-space:nowrap}
+  .status .toel{color:var(--ink-soft)}
+  .status .geleden{color:var(--ink-faint);white-space:nowrap;text-align:right}
+  .status tr.cron .taak{font-weight:500;color:var(--ink-soft)}
+  .status .kop2{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-faint);padding-top:14px}
   footer{margin-top:28px;font-size:12.5px;color:var(--ink-faint);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
   @media (max-width:1000px){.tegels{grid-template-columns:repeat(2,1fr)}.tellers{grid-template-columns:1fr}}
 </style>
@@ -81,6 +95,12 @@
 
   <div class="tegels" id="tegels"></div>
 
+  <section class="status" id="status">
+    <h2>Achter de schermen</h2>
+    <div class="uitleg">Bovenaan het echte bewijs (bestand, tabel). Daaronder de cronjobs: bij de meeste betekent groen alleen dat het verzoek is verstuurd — zie SYSTEEM.md §3.4.</div>
+    <table id="status_tabel"></table>
+  </section>
+
   <footer>
     <span>Versies live opgehaald uit GitHub Pages · groen = code en changelog gelijk · oranje = changelog loopt achter</span>
     <span id="appVersie"></span>
@@ -92,7 +112,7 @@
    start.html — startpagina Ernes Schilders
    Geen functies van de apps zelf; alleen tegels, versies, tellers.
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.1.1';
+const APP_VERSION = 'v0.2.0';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-start-auth' } });
@@ -220,6 +240,31 @@ async function naLogin(uid){
   $('uit').onclick = async () => { await sb.auth.signOut(); location.reload(); };
   $('tellers').classList.remove('uit');
   telTaken(); telZiek(); telCert();
+  if(IK && IK.rol === 'alles') systeemStatus();
+}
+
+/* ---------- systeemstatus (alleen rol 'alles') ---------- */
+function geleden(ts){
+  if(!ts) return '';
+  const min = Math.round((Date.now() - new Date(ts)) / 60000);
+  if(min < 60) return `${min} min geleden`;
+  const u = Math.round(min / 60);
+  if(u < 48) return `${u} uur geleden`;
+  return `${Math.round(u / 24)} dagen geleden`;
+}
+async function systeemStatus(){
+  const box = $('status'); box.style.display = 'block';
+  const { data, error } = await sb.rpc('systeem_status');
+  if(error){ $('status_tabel').innerHTML = `<tr><td colspan="4" style="color:var(--accent-deep)">Status ophalen mislukt: ${esc(error.message)}. Is start_01_systeem_status.sql gedraaid?</td></tr>`; return; }
+  const rijen = data || [];
+  const bewijs = rijen.filter(r => r.groep === 'bewijs'), cron = rijen.filter(r => r.groep === 'cron');
+  const rij = r => `<tr class="${esc(r.groep)}"><td><span class="stip ${esc(r.status)}"></span></td><td class="taak">${esc(r.taak)}</td><td class="toel">${esc(r.toelichting)}</td><td class="geleden">${esc(geleden(r.laatst))}</td></tr>`;
+  $('status_tabel').innerHTML =
+    bewijs.map(rij).join('') +
+    (cron.length ? `<tr><td colspan="4" class="kop2">Cronjobs</td></tr>` + cron.map(rij).join('') : '');
+  const slecht = rijen.filter(r => r.status === 'fout' || r.status === 'nooit').length;
+  const letop = rijen.filter(r => r.status === 'let_op').length;
+  if(slecht || letop) document.title = `${slecht ? '● ' : '○ '}Start — Ernes Schilders`;
 }
 
 function zetTeller(id, n, kleur, detail){
