@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.9.2 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.9.3 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
@@ -4322,6 +4322,32 @@ nog voor de aanname; een bewuste afwijking van Yoobi blijft blauw en staat
 alleen in het paneel. Daarmee is alles gebouwd wat sinds 6 september is
 bedacht; wat volgt komt uit het gebruik.
 
+## Wat er op 8 september 2026 gedaan is
+
+**Planning zit aantoonbaar in de backup.** Gian downloadde
+`backup-2026-09-08.json` (14,5 MB, gemaakt 04:00) en liet hem nakijken:
+46 tabellen, waaronder alle zeven `plan_`-tabellen, ook `plan_fasen` en
+`plan_middelen` die pas op 7 september zijn aangemaakt. Stand in het
+bestand: `plan_uren` 290 rijen, `plan_projecten` 47, `plan_verlof` 20,
+`plan_gesloten_dagen` 16, `plan_medewerkers` 4, `plan_fasen` 4,
+`plan_middelen` 1. Conclusie: `backup-dump` kiest zijn tabellen
+dynamisch uit `public`; nieuwe tabellen gaan vanzelf mee en er hoeft
+niets aan de functie te veranderen. De structuurdump in `schema/` is
+niet nagekeken; dat die dezelfde tabellen bevat is een aanname op grond
+van `schema_dump()`, die eveneens de database leest.
+
+**Kapstokprojecten** (onderhoudsplannen met 0 uur en € 0) worden bewust
+niet automatisch gefilterd; Gian verbergt ze per project met de knop
+"Verbergen", en dat geldt voor alle jaren. Reden: een automatische regel
+op 0 uur zou echt werk zoals "herstel onder garantie" ook wegfilteren.
+
+**Werkwijze, opnieuw aangescherpt.** Op 7 september is drie keer gebouwd
+zonder op bevestiging te wachten (v0.6.0, v0.9.1, v0.9.2). Afspraak
+blijft: eerst in een of twee zinnen zeggen wat er zou veranderen en wat
+het gevolg is, dan wachten op ja. Ook bij kleine wijzigingen. v0.9.2
+(urencel selecteert het hele getal) staat klaar maar is alleen live als
+Gian daarvoor kiest.
+
 **Les: verkeerd Supabase-project.** `planning_03_verlof_uren.sql` gaf
 `relation "public.plan_verlof" does not exist` terwijl de tabel een dag
 eerder met vijf keer GOED was aangelegd. Oorzaak: de SQL Editor stond op
@@ -4340,3 +4366,16 @@ De cron-weg van v5 draait voor het eerst op dinsdag 8 september 06:00
 UTC; verwacht `gestart_door` = `cron` en `zonder_code` = 0 in de nieuwste
 rij van `fin_werkvoorraad`. De gebruikersweg is via de verversknop te
 testen.
+
+## Wat er op 9 september 2026 gedaan is
+
+**Rekenfout in het paneel (v0.9.3).** "Resterend = budget − geboekt −
+ingepland" trok bij een lopend project de al gewerkte én geplande dagen
+twee keer af; Terworm toonde −26,75 terwijl er 43,75 uur budget over was.
+Gian legde uit hoe het hoort, met Yoobi als voorbeeld: budget, ingepland
+en geboekt staan naast elkaar. Nu twee getallen: nog te plannen (budget −
+ingepland dit jaar) en nog te werken (budget − geboekt). Bewust niet
+gekozen: ingepland alleen vanaf vandaag tellen; dat maskeert een te
+ruime planning. De verversknop is in gebruik (Yoobi-stand 9 september),
+dus de gebruikersweg van `fin-werkvoorraad-sync` v5 werkt. Het bord
+wordt ook op iPad gebruikt.
