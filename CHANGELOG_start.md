@@ -5,6 +5,11 @@ synchroon-check tegen de changelog, drie ochtendtellers na inloggen, en het
 systeemstatus-blok "Achter de schermen" (opruimpunt 5 uit SYSTEEM.md).
 Hoort bij `sql/start_01_systeem_status.sql`.
 
+## v0.2.2 — Teller heet Actueel (09-09-2026)
+
+- Label "taken actueel", detail "plus N op de rol (achterstand)" — dezelfde
+  woorden als de rubrieken in taken.html.
+
 ## v0.2.1 — Taken-teller telt zoals taken.html (09-09-2026)
 
 - De teller volgde alleen `toegewezen_aan` en miste daardoor Yoobi-taken

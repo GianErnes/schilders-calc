@@ -88,7 +88,7 @@
   </div>
 
   <div class="tellers uit" id="tellers">
-    <a class="teller" href="taken.html" id="t_taken" target="_blank" rel="noopener"><div class="getal num">–</div><div class="wat">taken voor vandaag</div><div class="detail"></div></a>
+    <a class="teller" href="taken.html" id="t_taken" target="_blank" rel="noopener"><div class="getal num">–</div><div class="wat">taken actueel</div><div class="detail"></div></a>
     <a class="teller" href="personeel.html" id="t_ziek" target="_blank" rel="noopener"><div class="getal num">–</div><div class="wat">lopende ziekmeldingen</div><div class="detail"></div></a>
     <a class="teller" href="personeel.html" id="t_cert" target="_blank" rel="noopener"><div class="getal num">–</div><div class="wat">certificaten die aandacht vragen</div><div class="detail"></div></a>
   </div>
@@ -112,7 +112,7 @@
    start.html — startpagina Ernes Schilders
    Geen functies van de apps zelf; alleen tegels, versies, tellers.
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.2.0';
+const APP_VERSION = 'v0.2.2';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-start-auth' } });
@@ -212,6 +212,7 @@ async function voorraadBadge(){
 
 /* ---------- tellers (na login) ---------- */
 let IK = null;
+let MAP_YOOBI = {};   /* Yoobi-naam -> persoon, zoals taken.html */
 async function start(){
   const d = new Date();
   $('datum').textContent = d.toLocaleDateString('nl-NL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
@@ -234,8 +235,10 @@ $('l_knop').onclick = async () => {
 $('l_ww').addEventListener('keydown', e => { if(e.key === 'Enter') $('l_knop').click(); });
 
 async function naLogin(uid){
-  const { data } = await sb.from('taken_rollen').select('persoon, rol, ziet_personeel').eq('user_id', uid).maybeSingle();
-  IK = data;
+  const { data: rollen } = await sb.from('taken_rollen').select('user_id, persoon, rol, ziet_personeel, yoobi_naam');
+  IK = (rollen || []).find(r => r.user_id === uid) || null;
+  MAP_YOOBI = {};
+  (rollen || []).forEach(r => { if(r.yoobi_naam) MAP_YOOBI[r.yoobi_naam] = r.persoon; });
   $('ik').innerHTML = IK ? `${esc(IK.persoon)} · <button id="uit">uitloggen</button>` : '<button id="uit">uitloggen</button>';
   $('uit').onclick = async () => { await sb.auth.signOut(); location.reload(); };
   $('tellers').classList.remove('uit');
@@ -275,15 +278,28 @@ function zetTeller(id, n, kleur, detail){
 
 async function telTaken(){
   if(!IK){ zetTeller('t_taken', '–', '', 'geen rol gevonden'); return; }
-  /* zelfde idee als "Actueel" in taken.html: open, actueel, voor mij, gepland vandaag of eerder */
-  const eind = vandaagISO() + 'T23:59:59';
-  const { data, error } = await sb.from('taken').select('onderwerp, gepland_op')
-    .is('voltooid_op', null).eq('status', 'actueel').eq('toegewezen_aan', IK.persoon).lte('gepland_op', eind)
-    .order('gepland_op', { ascending: true }).limit(200);
-  if(error){ zetTeller('t_taken', '!', 'rood', error.message); return; }
-  const n = (data || []).length;
-  const teLaat = (data || []).filter(t => String(t.gepland_op).slice(0,10) < vandaagISO()).length;
-  zetTeller('t_taken', n, n ? (teLaat ? 'rood' : '') : 'groen', n ? (teLaat ? `${teLaat} van vóór vandaag` : 'alles van vandaag zelf') : 'niets open voor vandaag');
+  /* Zelfde regels als "Vandaag" in taken.html v0.18.0:
+     - persoon = toegewezen_aan, of bij bron yoobi de persoon achter username
+     - vast in Vandaag: op mijn naam, gepland vandaag, niet vandaag weggezet
+     - plus alles wat ik zelf naar Vandaag heb gehaald (taak_dagkeuze stand 'gehaald')
+     - achterstand (gepland vóór vandaag) apart geteld, zoals "Op de rol" */
+  const v = vandaagISO(), eind = v + 'T23:59:59';
+  const [t, k] = await Promise.all([
+    sb.from('taken').select('crmtaskid, bron, username, toegewezen_aan, gepland_op, status')
+      .is('voltooid_op', null).neq('status', 'vervallen').lte('gepland_op', eind).limit(1000),
+    sb.from('taak_dagkeuze').select('taak_id, stand, dag').eq('persoon', IK.persoon)
+  ]);
+  if(t.error){ zetTeller('t_taken', '!', 'rood', t.error.message); return; }
+  const gehaald = new Set(), weggezet = new Set();
+  (k.data || []).forEach(r => { if(r.stand === 'gehaald') gehaald.add(String(r.taak_id)); else if(r.stand === 'weggezet' && r.dag === v) weggezet.add(String(r.taak_id)); });
+  const persoonVan = x => String(x.bron === 'yoobi' ? (MAP_YOOBI[x.username] || 'overig') : (x.toegewezen_aan || 'overig')).toLowerCase().trim();
+  const mijn = (t.data || []).filter(x => persoonVan(x) === IK.persoon);
+  const dag = x => String(x.gepland_op || '').slice(0,10);
+  const vandaag = mijn.filter(x => (dag(x) === v && !weggezet.has(String(x.crmtaskid))) || gehaald.has(String(x.crmtaskid)));
+  const achterstand = mijn.filter(x => dag(x) && dag(x) < v && !gehaald.has(String(x.crmtaskid)));
+  const n = vandaag.length;
+  zetTeller('t_taken', n, achterstand.length ? 'rood' : (n ? '' : 'groen'),
+    achterstand.length ? `plus ${achterstand.length} op de rol (achterstand)` : (n ? 'zoals Actueel in de takenapp' : 'Actueel is leeg'));
 }
 
 async function telZiek(){
