@@ -113,7 +113,9 @@
         <label class="veld">Pagina <input id="pagina" class="smal" type="number" min="1" value="1"></label>
         <label class="veld">Status (projects) <select id="status"><option value="">alle</option><option value="active">alleen actief</option></select></label>
         <button class="knop" id="verkenBtn">Verkennen</button>
+        <button class="knop stil" id="onderzoekBtn" title="Haalt customers, contacts, crmContact en projects op en zet een samenvatting op het klembord">Veldonderzoek → klembord</button>
       </div>
+      <div id="onderzoekStatus" class="leeg" style="margin-top:0.6rem;display:none"></div>
       <div class="uitkomst" id="uitkomst">
         <div class="kpi" id="kpi"></div>
         <details open><summary>Veldnamen (<span id="aantalVelden">0</span>)</summary><div class="chips" id="chips"></div></details>
@@ -130,7 +132,7 @@
 </div>
 
 <script>
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.2.0';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const FUNCTIE_URL = SUPABASE_URL + '/functions/v1/yoobi-backup-sync';
@@ -180,27 +182,84 @@ async function laadLogboek() {
   box.innerHTML = `<table><thead><tr><th>Wanneer</th><th>Soort</th><th>Door</th><th></th><th>Details</th><th>Fouten</th></tr></thead><tbody>${rijen}</tbody></table>`;
 }
 
+// ---------- aanroep functie ----------
+async function roepFunctie(body) {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { toonLogin(); throw new Error('Niet ingelogd'); }
+  const res = await fetch(FUNCTIE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + session.access_token },
+    body: JSON.stringify(body),
+  });
+  const tekst = await res.text();
+  let j = null; try { j = JSON.parse(tekst); } catch (e) { j = null; }
+  return { res, tekst, j };
+}
+
+// ---------- veldonderzoek: vier endpoints, samenvatting naar klembord ----------
+function eersteRecord(ruw) {
+  if (Array.isArray(ruw)) return ruw[0] ?? null;
+  if (ruw && typeof ruw === 'object') {
+    if (Array.isArray(ruw.results)) return ruw.results[0] ?? null;
+    if (Array.isArray(ruw.data)) return ruw.data[0] ?? null;
+    return ruw;
+  }
+  return ruw;
+}
+async function veldonderzoek() {
+  const knop = el('onderzoekBtn'), status = el('onderzoekStatus');
+  knop.disabled = true; status.style.display = ''; status.textContent = 'Bezig…';
+  const stappen = [
+    { naam: 'customers',  body: { endpoint: 'customers',  pagina: '1' } },
+    { naam: 'contacts',   body: { endpoint: 'contacts',   pagina: '1' } },
+    { naam: 'crmContact', body: { endpoint: 'crmContact', pagina: '1' } },
+    { naam: 'projects (alle includes, alle statussen)', body: { endpoint: 'projects', pagina: '1', status: '' } },
+  ];
+  const regels = ['VELDONDERZOEK klanten.html v' + APP_VERSION + ' — ' + new Date().toLocaleString('nl-NL'), ''];
+  for (const st of stappen) {
+    status.textContent = 'Bezig met ' + st.naam + '…';
+    regels.push('=== ' + st.naam + ' ===');
+    try {
+      const { res, j } = await roepFunctie({ dryrun: '1', ...st.body });
+      if (!j) { regels.push('functie HTTP ' + res.status + ', geen JSON'); regels.push(''); continue; }
+      regels.push('functie HTTP ' + res.status + (j.versie ? ' (v' + j.versie + ')' : '') + ' · Yoobi HTTP ' + (j.http_status ?? '?') + ' · rijen: ' + (j.aantal_rijen ?? '?') + ' · ' + (j.ms ?? '?') + ' ms');
+      if (j.pad) regels.push('pad: ' + j.pad);
+      if (j.metadata) regels.push('metadata: ' + JSON.stringify(j.metadata));
+      if (j.fout) regels.push('FOUT: ' + j.fout);
+      const velden = Array.isArray(j.velden) ? j.velden : [];
+      regels.push('veldnamen (' + velden.length + '): ' + velden.join(', '));
+      const rec = eersteRecord(j.ruw);
+      regels.push('eerste record: ' + (rec === null ? 'geen' : JSON.stringify(rec)));
+    } catch (e) {
+      regels.push('AANROEP MISLUKT: ' + (e.message || e));
+    }
+    regels.push('');
+  }
+  const tekst = regels.join('\n');
+  let gekopieerd = false;
+  try { await navigator.clipboard.writeText(tekst); gekopieerd = true; } catch (e) { gekopieerd = false; }
+  el('ruw').textContent = tekst;
+  el('kpi').innerHTML = '<span><b>Veldonderzoek klaar.</b> ' + (gekopieerd ? 'De samenvatting staat op je klembord: plak hem in het gesprek met Claude.' : 'Kopiëren naar klembord lukte niet; de tekst staat hieronder bij Ruwe data, selecteer en kopieer die.') + '</span>';
+  el('chips').innerHTML = ''; el('aantalVelden').textContent = '0';
+  el('uitkomst').style.display = '';
+  status.textContent = gekopieerd ? 'Klaar — op klembord.' : 'Klaar — zie Ruwe data hieronder.';
+  knop.disabled = false;
+  laadLogboek(); laadStand();
+}
+
 // ---------- verkennen ----------
 async function verkennen() {
   const knop = el('verkenBtn');
   knop.disabled = true; knop.textContent = 'Bezig…';
   const uit = el('uitkomst'); uit.style.display = 'none';
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) { toonLogin(); return; }
     const endpoint = el('endpoint').value;
     const code = el('code').value.trim();
     const body = { dryrun: '1', endpoint, pagina: el('pagina').value || '1', status: el('status').value };
     if (endpoint === 'infoOrder') body.orderNumber = code; else if (code) body.code = code;
 
     const t0 = Date.now();
-    const res = await fetch(FUNCTIE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify(body),
-    });
-    const tekst = await res.text();
-    let j = null; try { j = JSON.parse(tekst); } catch (e) { j = null; }
+    const { res, tekst, j } = await roepFunctie(body);
 
     const kpi = [];
     kpi.push(`<span>Antwoord functie: <b class="${res.ok ? 'ok' : 'fout'}">HTTP ${res.status}</b></span>`);
@@ -258,6 +317,7 @@ el('loginBtn').addEventListener('click', inloggen);
 el('wachtwoord').addEventListener('keydown', e => { if (e.key === 'Enter') inloggen(); });
 el('uitlogBtn').addEventListener('click', async () => { await sb.auth.signOut(); toonLogin(); });
 el('verkenBtn').addEventListener('click', verkennen);
+el('onderzoekBtn').addEventListener('click', veldonderzoek);
 el('endpoint').addEventListener('change', () => {
   const v = el('endpoint').value;
   el('code').placeholder = v === 'infoOrder' ? 'ordernummer' : ['customer','project','projectInsight','projectrates'].includes(v) ? 'code' : '—';
