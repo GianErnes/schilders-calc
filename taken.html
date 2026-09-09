@@ -597,7 +597,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.18.0';
+const APP_VERSION = 'v0.18.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -965,6 +965,15 @@ function sorteer(lijst, rubriek){
   const kopie = lijst.slice();
   if(rubriek === 'voltooid'){
     kopie.sort((a,b) => (b._voltooid || 0) - (a._voltooid || 0));
+  } else if(rubriek === 'oprol'){
+    /* v0.18.1: Op de rol aflopend — de meest recente plandatum bovenaan,
+       de langste achterstand onderaan. Zonder datum blijft onderaan. */
+    kopie.sort((a,b) => {
+      if(!a._gepland && !b._gepland) return 0;
+      if(!a._gepland) return 1;
+      if(!b._gepland) return -1;
+      return b._gepland - a._gepland;
+    });
   } else {
     kopie.sort((a,b) => {
       if(!a._gepland && !b._gepland) return 0;
