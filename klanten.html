@@ -50,6 +50,12 @@
   td.fout { color: var(--accent-deep); }
   .leeg { color: var(--muted); font-size: 0.88rem; }
   .melding { background: #fff4f3; border: 1px solid #f6cfcc; color: var(--accent-deep); border-radius: var(--radius); padding: 0.8rem 1rem; font-size: 0.9rem; }
+  .balk { height: 8px; background: var(--paper-deep); border-radius: 4px; overflow: hidden; margin: 0.5rem 0; }
+  .balk > div { height: 100%; background: var(--accent); width: 0; transition: width .4s; }
+  .tellers { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.7rem; }
+  .teller { background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); padding: 0.6rem 0.8rem; }
+  .teller .n { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 600; }
+  .teller .l { color: var(--muted); font-size: 0.78rem; }
   #app-loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); background: var(--page); z-index: 90; }
   #login{position:fixed;inset:0;background:#f5f6f7;display:none;align-items:center;justify-content:center;z-index:100}
   #login .box{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:30px;width:320px;box-shadow:0 6px 28px rgba(0,0,0,.07)}
@@ -82,6 +88,7 @@
     </div>
     <div class="header-right">
       <span class="stand" id="stand">Stand: nog geen sync</span>
+      <button class="knop" id="syncBtn">Sync nu</button>
       <button class="knop stil" id="uitlogBtn">Uitloggen</button>
     </div>
   </header>
@@ -91,6 +98,19 @@
   </div>
 
   <div id="inhoud" style="display:none">
+    <div class="card" id="syncKaart" style="display:none">
+      <h2>Sync bezig</h2>
+      <div class="card-sub" id="syncTekst">…</div>
+      <div class="balk"><div id="syncBalk"></div></div>
+      <div class="leeg" id="syncDetail"></div>
+    </div>
+
+    <div class="card">
+      <h2>Inhoud van de kopie</h2>
+      <div class="card-sub">Aantallen in de eigen tabellen, records die uit Yoobi verdwenen zijn niet meegeteld.</div>
+      <div class="tellers" id="tellers"><span class="leeg">Laden…</span></div>
+    </div>
+
     <div class="card">
       <h2>Verkennen</h2>
       <div class="card-sub">Haalt één pagina van één Yoobi-endpoint op via <span class="mono">yoobi-backup-sync</span> en toont het antwoord. Schrijft niets weg behalve een logregel. Dit is het gereedschap voor het veldonderzoek (testpunten T1–T3, T6).</div>
@@ -132,7 +152,7 @@
 </div>
 
 <script>
-const APP_VERSION = '0.2.1';
+const APP_VERSION = '0.3.0';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const FUNCTIE_URL = SUPABASE_URL + '/functions/v1/yoobi-backup-sync';
@@ -158,6 +178,7 @@ async function laadStand() {
   const s = el('stand');
   if (error || !data || !data.length) { s.textContent = 'Stand: nog geen sync gedraaid'; s.className = 'stand'; return; }
   const r = data[0];
+  if (!r.klaar_op) { s.textContent = 'Sync bezig sinds ' + fmtTijd(r.gestart_op); s.className = 'stand'; return; }
   if (r.geslaagd === true) { s.textContent = 'Stand: ' + fmtTijd(r.klaar_op || r.gestart_op); s.className = 'stand groen'; }
   else if (r.geslaagd === false) { s.textContent = 'Laatste sync mislukt ' + fmtTijd(r.gestart_op) + ' — Yoobi onbereikbaar?'; s.className = 'stand oranje'; }
   else { s.textContent = 'Stand: sync nog niet gebouwd (' + fmtTijd(r.gestart_op) + ')'; s.className = 'stand'; }
@@ -166,16 +187,18 @@ async function laadStand() {
 // ---------- logboek ----------
 async function laadLogboek() {
   const { data, error } = await sb.from('yoobi_sync_log')
-    .select('gestart_op,klaar_op,soort,gestart_door,geslaagd,aantallen,fouten')
+    .select('gestart_op,klaar_op,soort,gestart_door,geslaagd,aantallen,fouten,cursor')
     .order('gestart_op', { ascending: false }).limit(10);
   const box = el('logboek');
   if (error) { box.textContent = 'Logboek kon niet geladen worden: ' + error.message; return; }
   if (!data || !data.length) { box.textContent = 'Nog geen regels. Klik op Verkennen om de eerste te maken.'; return; }
   const rijen = data.map(r => {
     const a = r.aantallen || {};
+    const c = r.cursor || {};
     const kort = [a.versie ? 'v' + a.versie : null, a.endpoint || null, a.http_status ? 'HTTP ' + a.http_status : null,
-      a.aantal_rijen != null ? a.aantal_rijen + ' rijen' : null, a.ms != null ? a.ms + ' ms' : null].filter(Boolean).join(' · ');
-    const st = r.geslaagd === true ? '✓' : r.geslaagd === false ? '✗' : '–';
+      a.aantal_rijen != null ? a.aantal_rijen + ' rijen' : null, a.ms != null ? a.ms + ' ms' : null,
+      c.stap != null ? c.stap + ' stappen' : null, c.voortgang || null].filter(Boolean).join(' · ');
+    const st = r.geslaagd === true ? '✓' : r.geslaagd === false ? '✗' : (r.klaar_op ? '–' : '⏳');
     return `<tr><td class="mono">${esc(fmtTijd(r.gestart_op))}</td><td>${esc(r.soort)}</td><td>${esc((r.gestart_door || '').replace('gebruiker:', ''))}</td><td>${st}</td><td class="mono">${esc(kort)}</td><td class="${r.fouten ? 'fout' : ''}">${esc(r.fouten || '')}</td></tr>`;
   }).join('');
   box.className = '';
@@ -183,8 +206,19 @@ async function laadLogboek() {
 }
 
 // ---------- aanroep functie ----------
+// Sessie eerst verversen: een verlopen token gaf op 09-09-2026 een 401 "Geen toegang".
+async function verseSessie() {
+  let { data: { session } } = await sb.auth.getSession();
+  if (!session) return null;
+  const verlooptOver = (session.expires_at || 0) * 1000 - Date.now();
+  if (verlooptOver < 5 * 60 * 1000) {
+    const r = await sb.auth.refreshSession();
+    if (!r.error && r.data.session) session = r.data.session;
+  }
+  return session;
+}
 async function roepFunctie(body) {
-  const { data: { session } } = await sb.auth.getSession();
+  const session = await verseSessie();
   if (!session) { toonLogin(); throw new Error('Niet ingelogd'); }
   const res = await fetch(FUNCTIE_URL, {
     method: 'POST',
@@ -259,6 +293,69 @@ async function veldonderzoek() {
   laadLogboek(); laadStand();
 }
 
+// ---------- tellers ----------
+async function laadTellers() {
+  const tabellen = [['yoobi_klanten', 'klanten'], ['yoobi_contacten', 'contactpersonen'], ['yoobi_projecten', 'projecten'], ['yoobi_orders', 'orders'], ['yoobi_project_inzicht', 'projectinzichten']];
+  const html = [];
+  for (const [tabel, label] of tabellen) {
+    let q = sb.from(tabel).select('*', { count: 'exact', head: true });
+    if (tabel !== 'yoobi_project_inzicht') q = q.is('verdwenen_op', null);
+    const { count, error } = await q;
+    html.push(`<div class="teller"><div class="n">${error ? '–' : (count ?? 0).toLocaleString('nl-NL')}</div><div class="l">${label}</div></div>`);
+  }
+  el('tellers').innerHTML = html.join('');
+}
+
+// ---------- sync starten en volgen ----------
+let volgTimer = null;
+const FASE_LABEL = { klanten_lijst: 'klantenlijst', contacten_lijst: 'contactpersonen', projecten_lijst: 'projectenlijst', klant_details: 'klantdetails (adres, e-mail, telefoon)', inzicht: 'projectinzicht', orders: 'orders en factuurtermijnen', afsluiten: 'afsluiten' };
+
+async function startSync() {
+  const knop = el('syncBtn'); knop.disabled = true; knop.textContent = 'Starten…';
+  try {
+    const { res, j } = await roepFunctie({ soort: 'handmatig' });
+    if (res.status === 202 && j && j.run_id) { volgRun(j.run_id); }
+    else if (res.status === 409 && j && j.run_id) { volgRun(j.run_id); }
+    else { alert('Sync starten mislukt (HTTP ' + res.status + '): ' + (j && j.fout ? j.fout : '')); knop.disabled = false; knop.textContent = 'Sync nu'; }
+  } catch (e) { alert('Sync starten mislukt: ' + (e.message || e)); knop.disabled = false; knop.textContent = 'Sync nu'; }
+}
+
+async function volgRun(runId) {
+  const kaart = el('syncKaart'); kaart.style.display = '';
+  const knop = el('syncBtn'); knop.disabled = true; knop.textContent = 'Bezig…';
+  clearInterval(volgTimer);
+  const tik = async () => {
+    const { data, error } = await sb.from('yoobi_sync_log').select('gestart_op,klaar_op,geslaagd,cursor,aantallen,fouten').eq('id', runId).single();
+    if (error || !data) return;
+    const c = data.cursor || {};
+    const plan = c.plan || [];
+    const faseNr = Math.min(c.fase ?? 0, plan.length - 1);
+    const pct = plan.length ? Math.round(((c.fase ?? 0) / plan.length) * 100) : 0;
+    el('syncBalk').style.width = (data.klaar_op ? 100 : Math.max(3, pct)) + '%';
+    el('syncTekst').textContent = data.klaar_op
+      ? (data.geslaagd ? 'Klaar. ' : 'Mislukt. ') + 'Gestart ' + fmtTijd(data.gestart_op) + ', klaar ' + fmtTijd(data.klaar_op) + '.'
+      : 'Fase ' + ((c.fase ?? 0) + 1) + ' van ' + plan.length + ' — ' + (FASE_LABEL[plan[faseNr]] || plan[faseNr] || '') + ' · stap ' + (c.stap ?? 0) + ' · ' + (c.voortgang || '');
+    const a = data.aantallen || {};
+    const regels = Object.entries(a).filter(([k, v]) => v && typeof v === 'object' && 'opgehaald' in v)
+      .map(([k, v]) => `${FASE_LABEL[k] || k}: ${v.opgehaald} opgehaald, ${v.nieuw} nieuw, ${v.gewijzigd} gewijzigd`);
+    if (a.verdwenen && typeof a.verdwenen === 'object') regels.push('verdwenen uit Yoobi: ' + JSON.stringify(a.verdwenen));
+    el('syncDetail').innerHTML = regels.map(esc).join('<br>') + (data.fouten ? `<br><span style="color:var(--accent-deep)">${esc(data.fouten)}</span>` : '');
+    if (data.klaar_op) {
+      clearInterval(volgTimer); volgTimer = null;
+      knop.disabled = false; knop.textContent = 'Sync nu';
+      laadStand(); laadLogboek(); laadTellers();
+    }
+  };
+  await tik();
+  volgTimer = setInterval(tik, 3000);
+}
+
+// Bij laden: loopt er nog een run? Dan meteen volgen.
+async function checkLopendeRun() {
+  const { data } = await sb.from('yoobi_sync_log').select('id,gestart_op').is('klaar_op', null).in('soort', ['nacht', 'week', 'handmatig']).order('gestart_op', { ascending: false }).limit(1);
+  if (data && data.length && (Date.now() - new Date(data[0].gestart_op).getTime()) < 45 * 60 * 1000) volgRun(data[0].id);
+}
+
 // ---------- verkennen ----------
 async function verkennen() {
   const knop = el('verkenBtn');
@@ -315,7 +412,7 @@ async function laadApp() {
   el('geenToegang').style.display = ok ? 'none' : '';
   el('inhoud').style.display = ok ? '' : 'none';
   loading.style.display = 'none';
-  if (ok) { laadStand(); laadLogboek(); }
+  if (ok) { laadStand(); laadLogboek(); laadTellers(); checkLopendeRun(); }
 }
 function toonLogin() { el('app-loading').style.display = 'none'; el('wrap').style.display = 'none'; el('login').style.display = 'flex'; }
 async function inloggen() {
@@ -329,6 +426,7 @@ el('loginBtn').addEventListener('click', inloggen);
 el('wachtwoord').addEventListener('keydown', e => { if (e.key === 'Enter') inloggen(); });
 el('uitlogBtn').addEventListener('click', async () => { await sb.auth.signOut(); toonLogin(); });
 el('verkenBtn').addEventListener('click', verkennen);
+el('syncBtn').addEventListener('click', startSync);
 el('onderzoekBtn').addEventListener('click', veldonderzoek);
 el('endpoint').addEventListener('change', () => {
   const v = el('endpoint').value;
