@@ -3,6 +3,29 @@
 Personeelsdossier van Ernes Schilders: gegevens, dossier, verzuim en certificaten
 per medewerker, alleen zichtbaar voor de directie. Hoort bij `personeel_01_tabellen.sql`.
 
+## v0.3.1 — Volgende mijlpaal uit de echte taak, plus twee database-fixes
+
+**Gerepareerd**
+- Het rode verzuimblok toonde de volgende mijlpaal uit de kalender, ook als die
+  taak al was afgevinkt. Nu leest de app de open poortwachter-taak uit `taken`
+  en toont die; de kalender is alleen nog terugval als er geen open taak is.
+
+**Database — nodig gebleken tijdens de test van brok D**
+- `personeel_03_taken_bron.sql`: check-constraint `taken_bron_check` kende alleen
+  `offerte`, `yoobi`, `eigen`; uitgebreid met `dossier`, `verzuim`, `certificaat`.
+- `personeel_04_taken_policies.sql`: de vier RLS-policies op `taken` kenden die
+  bronnen ook niet, waardoor personeelstaken niet leesbaar, bij te werken of te
+  verwijderen waren en de app ze niet mocht invoegen (afvinken gaf "Afgevinkt"
+  maar raakte nul rijen). Policies opnieuw aangemaakt met identieke logica en
+  de uitgebreide bronlijst.
+- Les: de vervolgtaak uit v0.2.0 (`bron='dossier'`) heeft tot deze fix nooit
+  kunnen bestaan. Mijn bewering daar dat taken.html "niets aan de database"
+  nodig had, was een ongecontroleerde aanname.
+
+**Getest in de echte omgeving (09-09-2026)**
+- Ziekmelding → taak week 6 (trigger 1); afvinken in taken.html → taak week 8
+  op de juiste datum (trigger 2).
+
 ## v0.3.0 — Verzuim met poortwachter-reeks (brok D)
 
 **Nieuw in de app**

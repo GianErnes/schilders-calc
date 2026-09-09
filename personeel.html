@@ -435,7 +435,7 @@
 /* ════════════════════════════════════════════════════════
    Personeel — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.3.0';
+const APP_VERSION = 'v0.3.1';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-personeel-auth' } });
@@ -456,6 +456,7 @@ let VERZUIM = [];             // pers_verzuim van HUIDIG
 let MIJLPALEN = [];           // pers_verzuim_mijlpalen
 let LOPEND_ALLE = {};         // medewerker_id -> true als er een lopende melding is
 let ZM = null;                // ziekmelding-venster: { modus, rij }
+let VERZUIM_TAKEN = [];       // open taken (bron='verzuim') van HUIDIG
 const BUCKET = 'personeel';
 const SOORT_NAAM = { functioneringsgesprek:'Functioneringsgesprek', beoordelingsgesprek:'Beoordelingsgesprek', waarschuwing:'Waarschuwing',
   opleiding:'Opleiding', contractwijziging:'Contractwijziging', loonafspraak:'Loonafspraak', verzuimcontact:'Verzuimcontact', notitie:'Notitie' };
@@ -635,6 +636,13 @@ async function laadDossierEnDocs(){
     sb.from('pers_documenten').select('*').eq('medewerker_id', id).order('created_at', { ascending: false }),
     sb.from('pers_verzuim').select('*').eq('medewerker_id', id).order('van', { ascending: false })
   ]);
+  /* open poortwachter-taken van deze medewerker: de echte stand, ongeacht wie afvinkte */
+  let vt = { data: [] };
+  if(z.data && z.data.length){
+    vt = await sb.from('taken').select('crmtaskid, bron_ref, bron_kenmerk, onderwerp, gepland_op, status')
+      .eq('bron', 'verzuim').in('bron_ref', z.data.map(v => v.id)).is('voltooid_op', null).neq('status', 'vervallen');
+    if(vt.error){ toast('Poortwachter-taken laden mislukt: ' + vt.error.message, true); vt = { data: [] }; }
+  }
   if(!HUIDIG || HUIDIG.id !== id) return;   /* intussen iemand anders gekozen */
   if(d.error){ toast('Dossier laden mislukt: ' + d.error.message, true); }
   if(x.error){ toast('Documenten laden mislukt: ' + x.error.message, true); }
@@ -642,6 +650,7 @@ async function laadDossierEnDocs(){
   DOSSIER = d.data || [];
   DOCS = x.data || [];
   VERZUIM = z.data || [];
+  VERZUIM_TAKEN = vt.data || [];
   tekenDossier();
   tekenDocs();
   tekenVerzuim();
@@ -836,10 +845,18 @@ function tekenVerzuim(){
 
   if(lopend){
     const dag = verzuimDagen(lopend), week = Math.floor((dag - 1) / 7) + 1;
-    const vm = volgendeMijlpaal(lopend);
+    const open = VERZUIM_TAKEN.find(t => t.bron_ref === lopend.id);
+    let volgendeTekst;
+    if(open){
+      const m = MIJLPALEN.find(x => String(x.week) === String(open.bron_kenmerk));
+      volgendeTekst = `Open taak: week ${esc(open.bron_kenmerk)} — ${esc(m ? m.titel : open.onderwerp)} (${datumNl(String(open.gepland_op).slice(0,10))}). Afvinken in de takenapp plant de volgende.`;
+    } else {
+      const vm = volgendeMijlpaal(lopend);
+      volgendeTekst = vm ? `Geen open taak gevonden; volgens de kalender zou week ${vm.week} — ${esc(vm.titel)} (${datumNl(vm.datum)}) de volgende zijn.` : 'Geen mijlpalen meer in de reeks.';
+    }
     $('z_lopend').innerHTML = `<div class="lopend">
       <div class="kop"><b>Ziek sinds ${datumNl(lopend.van)}</b><span class="dag num">dag ${dag} · week ${week}</span><span>${lopend.percentage}% arbeidsongeschikt</span></div>
-      <div class="volgende">${vm ? `Volgende mijlpaal: week ${vm.week} — ${esc(vm.titel)} (${datumNl(vm.datum)}). Staat als taak in de takenapp.` : 'Geen mijlpalen meer in de reeks.'}</div>
+      <div class="volgende">${volgendeTekst}</div>
       ${lopend.afspraken ? `<div class="afspraken">${esc(lopend.afspraken)}</div>` : ''}
       <div class="knoppen">
         <button class="knop" id="z_hersteld">Hersteld</button>
