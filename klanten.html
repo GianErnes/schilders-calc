@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ernes Schilders — Klanten (Yoobi-kopie)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1d21; --ink-soft: #4b5563; --paper: #ffffff; --paper-warm: #f9fafb;
+    --paper-deep: #e5e7eb; --page: #f5f6f7; --accent: #e63329; --accent-deep: #c62828;
+    --muted: #6b7280; --field-border: #9ca3af; --green: #16a34a; --amber: #ea580c;
+    --blue: #2196f3; --shadow-sm: 0 1px 2px rgba(0,0,0,0.04); --radius: 6px; --radius-lg: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--page); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 1.4rem 1.4rem 3rem; }
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+  header h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; }
+  header .sub { color: var(--muted); font-size: 0.85rem; margin-top: 0.15rem; }
+  .header-right { display: flex; align-items: center; gap: 0.6rem; }
+  .stand { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 0.82rem; border: 1px solid var(--paper-deep); background: var(--paper); color: var(--ink-soft); }
+  .stand.oranje { background: #fff7ed; border-color: #fed7aa; color: #9a3412; }
+  .stand.groen  { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+  .card { background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); padding: 1.1rem 1.25rem; box-shadow: var(--shadow-sm); margin-bottom: 1.1rem; }
+  .card h2 { margin: 0 0 0.2rem; font-size: 1.02rem; font-weight: 600; }
+  .card-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.9rem; }
+  .rij { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: flex-end; }
+  .veld { display: flex; flex-direction: column; gap: 3px; font-size: 0.8rem; color: var(--ink-soft); }
+  .veld select, .veld input { padding: 8px 10px; border: 1px solid var(--paper-deep); border-radius: var(--radius); font-size: 14px; font-family: inherit; background: #fff; min-width: 150px; }
+  .veld input.smal { min-width: 90px; width: 90px; }
+  button.knop { padding: 9px 16px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  button.knop.stil { background: var(--paper-warm); color: var(--ink); border: 1px solid var(--paper-deep); font-weight: 500; }
+  button.knop:disabled { opacity: 0.55; cursor: wait; }
+  .uitkomst { margin-top: 1rem; display: none; }
+  .kpi { display: flex; gap: 1.4rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 0.7rem; }
+  .kpi b { color: var(--ink); font-weight: 600; }
+  .kpi .ok { color: var(--green); } .kpi .fout { color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 0.4rem 0 0.9rem; max-height: 240px; overflow: auto; }
+  .chip { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: 4px; padding: 1px 6px; }
+  pre { background: #1a1d21; color: #e5e7eb; padding: 0.9rem 1rem; border-radius: var(--radius); font-size: 12px; line-height: 1.45; overflow: auto; max-height: 520px; margin: 0; }
+  details summary { cursor: pointer; font-size: 0.88rem; color: var(--ink-soft); margin-bottom: 0.4rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--paper-deep); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 0.78rem; }
+  td.fout { color: var(--accent-deep); }
+  .leeg { color: var(--muted); font-size: 0.88rem; }
+  .melding { background: #fff4f3; border: 1px solid #f6cfcc; color: var(--accent-deep); border-radius: var(--radius); padding: 0.8rem 1rem; font-size: 0.9rem; }
+  #app-loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); background: var(--page); z-index: 90; }
+  #login{position:fixed;inset:0;background:#f5f6f7;display:none;align-items:center;justify-content:center;z-index:100}
+  #login .box{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:30px;width:320px;box-shadow:0 6px 28px rgba(0,0,0,.07)}
+  #login h2{margin:0 0 4px;font-size:18px;color:#1a1d21}
+  #login p{margin:0 0 18px;font-size:13px;color:#6b7280}
+  #login input{width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:10px;border:1px solid #e5e7eb;border-radius:6px;font-size:14px}
+  #login button{width:100%;padding:11px;background:#e63329;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+  #login .err{color:#e63329;font-size:12px;margin-top:8px;min-height:16px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="app-loading">Laden…</div>
+<div id="login">
+  <div class="box">
+    <h2>Klanten (Yoobi-kopie)</h2>
+    <p>Log in met je Schilders Calc account.</p>
+    <input id="email" type="email" placeholder="E-mailadres" autocomplete="username">
+    <input id="wachtwoord" type="password" placeholder="Wachtwoord" autocomplete="current-password">
+    <button id="loginBtn">Inloggen</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="wrap" id="wrap" style="display:none">
+  <header>
+    <div>
+      <h1>Ernes Schilders — Klanten</h1>
+      <div class="sub">Kopie van Yoobi, alleen lezen · <span id="appVersie"></span> · <span id="wieIngelogd"></span></div>
+    </div>
+    <div class="header-right">
+      <span class="stand" id="stand">Stand: nog geen sync</span>
+      <button class="knop stil" id="uitlogBtn">Uitloggen</button>
+    </div>
+  </header>
+
+  <div id="geenToegang" class="melding" style="display:none">
+    Dit account heeft geen toegang tot de Yoobi-kopie. Toegang wordt beheerd in de tabel <span class="mono">yoobi_toegang</span>.
+  </div>
+
+  <div id="inhoud" style="display:none">
+    <div class="card">
+      <h2>Verkennen</h2>
+      <div class="card-sub">Haalt één pagina van één Yoobi-endpoint op via <span class="mono">yoobi-backup-sync</span> en toont het antwoord. Schrijft niets weg behalve een logregel. Dit is het gereedschap voor het veldonderzoek (testpunten T1–T3, T6).</div>
+      <div class="rij">
+        <label class="veld">Endpoint
+          <select id="endpoint">
+            <option value="customers">customers — klantenlijst</option>
+            <option value="customer">customer — één klant (code)</option>
+            <option value="contacts">contacts — contactpersonen</option>
+            <option value="crmContact">crmContact — CRM-contacten</option>
+            <option value="projects">projects — projectenlijst, alle includes</option>
+            <option value="project">project — één project (code)</option>
+            <option value="projectAllCodes">projectAllCodes — alle codes</option>
+            <option value="projectInsight">projectInsight — uren/omzet (code)</option>
+            <option value="projectrates">projectrates — tarieven (code)</option>
+            <option value="infoOrder">infoOrder — order (ordernummer)</option>
+          </select>
+        </label>
+        <label class="veld">Code / ordernummer <input id="code" class="smal" placeholder="—"></label>
+        <label class="veld">Pagina <input id="pagina" class="smal" type="number" min="1" value="1"></label>
+        <label class="veld">Status (projects) <select id="status"><option value="">alle</option><option value="active">alleen actief</option></select></label>
+        <button class="knop" id="verkenBtn">Verkennen</button>
+      </div>
+      <div class="uitkomst" id="uitkomst">
+        <div class="kpi" id="kpi"></div>
+        <details open><summary>Veldnamen (<span id="aantalVelden">0</span>)</summary><div class="chips" id="chips"></div></details>
+        <details><summary>Ruwe data</summary><pre id="ruw"></pre></details>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Logboek</h2>
+      <div class="card-sub">Laatste 10 regels uit <span class="mono">yoobi_sync_log</span>.</div>
+      <div id="logboek" class="leeg">Laden…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = '0.1.0';
+const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
+const FUNCTIE_URL = SUPABASE_URL + '/functions/v1/yoobi-backup-sync';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const el = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtTijd = iso => iso ? new Date(iso).toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+
+// ---------- toegang ----------
+async function heeftToegang(userId) {
+  const { data, error } = await sb.from('yoobi_toegang').select('user_id').eq('user_id', userId);
+  if (error) { console.error('yoobi_toegang', error); return false; }
+  return Array.isArray(data) && data.length === 1;
+}
+
+// ---------- syncstand ----------
+async function laadStand() {
+  const { data, error } = await sb.from('yoobi_sync_log')
+    .select('gestart_op,klaar_op,soort,geslaagd,fouten')
+    .in('soort', ['nacht', 'week', 'handmatig'])
+    .order('gestart_op', { ascending: false }).limit(1);
+  const s = el('stand');
+  if (error || !data || !data.length) { s.textContent = 'Stand: nog geen sync gedraaid'; s.className = 'stand'; return; }
+  const r = data[0];
+  if (r.geslaagd === true) { s.textContent = 'Stand: ' + fmtTijd(r.klaar_op || r.gestart_op); s.className = 'stand groen'; }
+  else if (r.geslaagd === false) { s.textContent = 'Laatste sync mislukt ' + fmtTijd(r.gestart_op) + ' — Yoobi onbereikbaar?'; s.className = 'stand oranje'; }
+  else { s.textContent = 'Stand: sync nog niet gebouwd (' + fmtTijd(r.gestart_op) + ')'; s.className = 'stand'; }
+}
+
+// ---------- logboek ----------
+async function laadLogboek() {
+  const { data, error } = await sb.from('yoobi_sync_log')
+    .select('gestart_op,klaar_op,soort,gestart_door,geslaagd,aantallen,fouten')
+    .order('gestart_op', { ascending: false }).limit(10);
+  const box = el('logboek');
+  if (error) { box.textContent = 'Logboek kon niet geladen worden: ' + error.message; return; }
+  if (!data || !data.length) { box.textContent = 'Nog geen regels. Klik op Verkennen om de eerste te maken.'; return; }
+  const rijen = data.map(r => {
+    const a = r.aantallen || {};
+    const kort = [a.versie ? 'v' + a.versie : null, a.endpoint || null, a.http_status ? 'HTTP ' + a.http_status : null,
+      a.aantal_rijen != null ? a.aantal_rijen + ' rijen' : null, a.ms != null ? a.ms + ' ms' : null].filter(Boolean).join(' · ');
+    const st = r.geslaagd === true ? '✓' : r.geslaagd === false ? '✗' : '–';
+    return `<tr><td class="mono">${esc(fmtTijd(r.gestart_op))}</td><td>${esc(r.soort)}</td><td>${esc((r.gestart_door || '').replace('gebruiker:', ''))}</td><td>${st}</td><td class="mono">${esc(kort)}</td><td class="${r.fouten ? 'fout' : ''}">${esc(r.fouten || '')}</td></tr>`;
+  }).join('');
+  box.className = '';
+  box.innerHTML = `<table><thead><tr><th>Wanneer</th><th>Soort</th><th>Door</th><th></th><th>Details</th><th>Fouten</th></tr></thead><tbody>${rijen}</tbody></table>`;
+}
+
+// ---------- verkennen ----------
+async function verkennen() {
+  const knop = el('verkenBtn');
+  knop.disabled = true; knop.textContent = 'Bezig…';
+  const uit = el('uitkomst'); uit.style.display = 'none';
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { toonLogin(); return; }
+    const endpoint = el('endpoint').value;
+    const code = el('code').value.trim();
+    const body = { dryrun: '1', endpoint, pagina: el('pagina').value || '1', status: el('status').value };
+    if (endpoint === 'infoOrder') body.orderNumber = code; else if (code) body.code = code;
+
+    const t0 = Date.now();
+    const res = await fetch(FUNCTIE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify(body),
+    });
+    const tekst = await res.text();
+    let j = null; try { j = JSON.parse(tekst); } catch (e) { j = null; }
+
+    const kpi = [];
+    kpi.push(`<span>Antwoord functie: <b class="${res.ok ? 'ok' : 'fout'}">HTTP ${res.status}</b></span>`);
+    if (j) {
+      if (j.versie) kpi.push(`<span>Functie <b>v${esc(j.versie)}</b></span>`);
+      if (j.http_status != null) kpi.push(`<span>Yoobi: <b class="${j.ok ? 'ok' : 'fout'}">HTTP ${esc(j.http_status)}</b></span>`);
+      if (j.aantal_rijen != null) kpi.push(`<span>Rijen op deze pagina: <b>${esc(j.aantal_rijen)}</b></span>`);
+      if (j.metadata) kpi.push(`<span>Metadata: <b class="mono">${esc(JSON.stringify(j.metadata))}</b></span>`);
+      if (j.ms != null) kpi.push(`<span>Duur Yoobi: <b>${esc(j.ms)} ms</b></span>`);
+      if (j.pad) kpi.push(`<span>Pad: <b class="mono">${esc(j.pad)}</b></span>`);
+      if (j.fout) kpi.push(`<span class="fout">Fout: ${esc(j.fout)}</span>`);
+    } else {
+      kpi.push(`<span class="fout">Geen JSON terug (${Date.now() - t0} ms)</span>`);
+    }
+    el('kpi').innerHTML = kpi.join('');
+    const velden = (j && Array.isArray(j.velden)) ? j.velden : [];
+    el('aantalVelden').textContent = velden.length;
+    el('chips').innerHTML = velden.map(v => `<span class="chip">${esc(v)}</span>`).join('') || '<span class="leeg">Geen velden (geen geldige Yoobi-response).</span>';
+    el('ruw').textContent = j ? JSON.stringify(j.ruw ?? j, null, 2) : tekst.slice(0, 5000);
+    uit.style.display = '';
+  } catch (e) {
+    el('kpi').innerHTML = `<span class="fout">Aanroep mislukt: ${esc(e.message || e)}</span>`;
+    el('chips').innerHTML = ''; el('ruw').textContent = ''; el('aantalVelden').textContent = '0';
+    uit.style.display = '';
+  } finally {
+    knop.disabled = false; knop.textContent = 'Verkennen';
+    laadLogboek(); laadStand();
+  }
+}
+
+// ---------- inloggen ----------
+async function laadApp() {
+  const loading = el('app-loading');
+  loading.style.display = 'flex';
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { toonLogin(); return; }
+  el('wieIngelogd').textContent = session.user.email || '';
+  el('login').style.display = 'none';
+  el('wrap').style.display = '';
+  const ok = await heeftToegang(session.user.id);
+  el('geenToegang').style.display = ok ? 'none' : '';
+  el('inhoud').style.display = ok ? '' : 'none';
+  loading.style.display = 'none';
+  if (ok) { laadStand(); laadLogboek(); }
+}
+function toonLogin() { el('app-loading').style.display = 'none'; el('wrap').style.display = 'none'; el('login').style.display = 'flex'; }
+async function inloggen() {
+  const email = el('email').value.trim(), wachtwoord = el('wachtwoord').value, err = el('loginErr');
+  err.textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email, password: wachtwoord });
+  if (error) { err.textContent = 'Inloggen mislukt. Controleer je e-mailadres en wachtwoord.'; return; }
+  laadApp();
+}
+el('loginBtn').addEventListener('click', inloggen);
+el('wachtwoord').addEventListener('keydown', e => { if (e.key === 'Enter') inloggen(); });
+el('uitlogBtn').addEventListener('click', async () => { await sb.auth.signOut(); toonLogin(); });
+el('verkenBtn').addEventListener('click', verkennen);
+el('endpoint').addEventListener('change', () => {
+  const v = el('endpoint').value;
+  el('code').placeholder = v === 'infoOrder' ? 'ordernummer' : ['customer','project','projectInsight','projectrates'].includes(v) ? 'code' : '—';
+});
+el('appVersie').textContent = 'v' + APP_VERSION;
+laadApp();
+</script>
+</body>
+</html>
