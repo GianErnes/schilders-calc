@@ -187,6 +187,15 @@
   .contacten div{padding:3px 0}
   .contacten b{color:var(--ink)}
   .samenvatting{font-size:13px;color:var(--ink-soft)}
+  /* certificaten */
+  .cert{max-width:820px;display:flex;align-items:center;gap:14px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px;cursor:pointer}
+  .cert:hover{border-color:var(--ink-faint)}
+  .cert .stip{width:10px;height:10px;border-radius:50%;flex:none}
+  .cert .stip.ok{background:var(--groen)} .cert .stip.bijna{background:var(--amber)} .cert .stip.verlopen{background:var(--accent)} .cert .stip.geen{background:var(--ink-faint)}
+  .cert .csoort{font-weight:700;min-width:180px}
+  .cert .cdata{color:var(--ink-soft);font-size:13.5px}
+  .cert .cstatus{margin-left:auto;font-size:13px;font-weight:600}
+  .cert .cstatus.bijna{color:var(--amber)} .cert .cstatus.verlopen{color:var(--accent-deep)} .cert .cstatus.ok{color:var(--groen)}
   .knop.gevaar:hover{background:#fdeaea}
 
   @media (max-width:820px){
@@ -335,7 +344,12 @@
           <div id="z_historie"></div>
         </div>
         <div class="paneel" id="p_certificaten">
-          <div class="placeholder"><b>Certificaten</b> komt in brok E: VCA, BHV, hoogwerker met vervaldatum en een herinnering als taak.</div>
+          <div class="balk">
+            <button class="knop primair" id="c_nieuw">+ Certificaat</button>
+            <div class="ruimte"></div>
+            <span class="samenvatting">Herinnering komt als taak in de takenapp, standaard 90 dagen vooraf.</span>
+          </div>
+          <div id="c_lijst"></div>
         </div>
         <div class="paneel" id="p_documenten">
           <div class="dropzone" id="doc_drop">Sleep bestanden hierheen of <u>kies een bestand</u><br><span style="font-size:12.5px">PDF, foto's, Word — tot 25 MB per bestand</span></div>
@@ -414,6 +428,33 @@
   </div>
 </div>
 
+<div class="schaduw" id="cSchaduw">
+  <div class="modaal">
+    <h3 id="c_kop">Certificaat</h3>
+    <div class="velden">
+      <div class="veld"><label for="c_soort">Certificaat</label>
+        <input id="c_soort" list="c_soorten" placeholder="bijv. VCA Basis">
+        <datalist id="c_soorten">
+          <option>VCA Basis</option><option>VCA VOL</option><option>BHV</option><option>Hoogwerker</option>
+          <option>Rijbewijs B</option><option>Rijbewijs BE</option><option>Asbestherkenning</option><option>Werken op hoogte</option>
+        </datalist>
+      </div>
+      <div class="velden" style="grid-template-columns:1fr 1fr;gap:12px 16px">
+        <div class="veld"><label for="c_behaald">Behaald op</label><input id="c_behaald" type="date"></div>
+        <div class="veld"><label for="c_verloopt">Verloopt op</label><input id="c_verloopt" type="date"></div>
+      </div>
+      <div class="veld"><label for="c_dagen">Herinner … dagen vooraf</label><input id="c_dagen" type="number" min="0" max="730" step="1" value="90"></div>
+      <div class="veld"><label for="c_notitie">Notitie</label><input id="c_notitie" placeholder="Certificaatnummer, opleider…"></div>
+    </div>
+    <div class="bijlagen" id="c_bijlagen"></div>
+    <div class="knoppen">
+      <button class="knop gevaar" id="c_verwijder" style="margin-right:auto;display:none">Verwijderen</button>
+      <button class="knop" id="c_annuleer">Annuleren</button>
+      <button class="knop primair" id="c_bewaar">Bewaren</button>
+    </div>
+  </div>
+</div>
+
 <div class="schaduw" id="hSchaduw">
   <div class="modaal">
     <h3>Hersteld melden</h3>
@@ -435,7 +476,7 @@
 /* ════════════════════════════════════════════════════════
    Personeel — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.3.1';
+const APP_VERSION = 'v0.4.0';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-personeel-auth' } });
@@ -457,6 +498,9 @@ let MIJLPALEN = [];           // pers_verzuim_mijlpalen
 let LOPEND_ALLE = {};         // medewerker_id -> true als er een lopende melding is
 let ZM = null;                // ziekmelding-venster: { modus, rij }
 let VERZUIM_TAKEN = [];       // open taken (bron='verzuim') van HUIDIG
+let CERTS = [];               // pers_certificaten van HUIDIG
+let CERT_SIGNAAL = {};        // medewerker_id -> tekst als iets (bijna) verlopen is
+let CM = null;                // certificaat-venster: { modus, rij }
 const BUCKET = 'personeel';
 const SOORT_NAAM = { functioneringsgesprek:'Functioneringsgesprek', beoordelingsgesprek:'Beoordelingsgesprek', waarschuwing:'Waarschuwing',
   opleiding:'Opleiding', contractwijziging:'Contractwijziging', loonafspraak:'Loonafspraak', verzuimcontact:'Verzuimcontact', notitie:'Notitie' };
@@ -550,12 +594,13 @@ async function naToegang(){
 
 /* ---------- data ---------- */
 async function laadAlles(){
-  const [m, p, g, l, mp] = await Promise.all([
+  const [m, p, g, l, mp, ct] = await Promise.all([
     sb.from('pers_medewerkers').select('*').order('naam'),
     sb.from('plan_medewerkers').select('id, naam, volgorde').order('volgorde'),
     sb.from('pers_dossier').select('medewerker_id, datum').in('soort', [...GESPREKKEN]).order('datum', { ascending: false }),
     sb.from('pers_verzuim').select('medewerker_id').is('tot', null),
-    sb.from('pers_verzuim_mijlpalen').select('*').eq('actief', true).order('week')
+    sb.from('pers_verzuim_mijlpalen').select('*').eq('actief', true).order('week'),
+    sb.from('pers_certificaten').select('medewerker_id, soort, verloopt_op, herinner_dagen').not('verloopt_op', 'is', null)
   ]);
   if(m.error){ toast('Medewerkers laden mislukt: ' + m.error.message, true); return; }
   if(p.error){ toast('Planbord laden mislukt: ' + p.error.message, true); }
@@ -564,6 +609,14 @@ async function laadAlles(){
   if(mp.error){ toast('Mijlpalen laden mislukt: ' + mp.error.message, true); }
   LOPEND_ALLE = {}; (l.data || []).forEach(r => LOPEND_ALLE[r.medewerker_id] = true);
   MIJLPALEN = mp.data || [];
+  if(ct.error){ toast('Certificaten laden mislukt: ' + ct.error.message, true); }
+  CERT_SIGNAAL = {};
+  (ct.data || []).forEach(c => {
+    const st = certStatus(c);
+    if(st.klasse === 'verlopen' || st.klasse === 'bijna'){
+      CERT_SIGNAAL[c.medewerker_id] = (CERT_SIGNAAL[c.medewerker_id] ? CERT_SIGNAAL[c.medewerker_id] + '; ' : '') + `${c.soort} ${st.tekst.toLowerCase()}`;
+    }
+  });
   MEDEWERKERS = m.data || [];
   PLANBORD = p.data || [];
   GESPREK_LAATST = {};
@@ -593,7 +646,7 @@ function tekenLijst(){
         <div class="naam">${esc(m.naam)}</div>
         <div class="functie">${esc(m.functie || (m.actief ? 'Functie nog niet ingevuld' : 'Uit dienst'))}</div>
       </div>
-      <div class="signalen">${LOPEND_ALLE[m.id] ? '<span class="signaal rood" title="Ziek gemeld"></span>' : ''}${gesprekSignaal(m.id, m) ? `<span class="signaal" title="${esc(gesprekSignaal(m.id, m))}"></span>` : ''}</div>
+      <div class="signalen">${LOPEND_ALLE[m.id] ? '<span class="signaal rood" title="Ziek gemeld"></span>' : ''}${gesprekSignaal(m.id, m) ? `<span class="signaal" title="${esc(gesprekSignaal(m.id, m))}"></span>` : ''}${CERT_SIGNAAL[m.id] ? `<span class="signaal" title="${esc(CERT_SIGNAAL[m.id])}"></span>` : ''}</div>
     </div>`).join('') || `<div class="leeg" style="padding:16px 8px">Nog geen medewerkers.</div>`;
   $('lijst').querySelectorAll('.persoon').forEach(el => el.onclick = () => kies(el.dataset.id));
 }
@@ -631,11 +684,14 @@ function kies(id){
 async function laadDossierEnDocs(){
   if(!HUIDIG) return;
   const id = HUIDIG.id;
-  const [d, x, z] = await Promise.all([
+  const [d, x, z, c] = await Promise.all([
     sb.from('pers_dossier').select('*').eq('medewerker_id', id).order('datum', { ascending: false }).order('created_at', { ascending: false }),
     sb.from('pers_documenten').select('*').eq('medewerker_id', id).order('created_at', { ascending: false }),
-    sb.from('pers_verzuim').select('*').eq('medewerker_id', id).order('van', { ascending: false })
+    sb.from('pers_verzuim').select('*').eq('medewerker_id', id).order('van', { ascending: false }),
+    sb.from('pers_certificaten').select('*').eq('medewerker_id', id).order('verloopt_op', { ascending: true, nullsFirst: false })
   ]);
+  if(c.error){ toast('Certificaten laden mislukt: ' + c.error.message, true); }
+  CERTS = c.data || [];
   /* open poortwachter-taken van deze medewerker: de echte stand, ongeacht wie afvinkte */
   let vt = { data: [] };
   if(z.data && z.data.length){
@@ -654,6 +710,7 @@ async function laadDossierEnDocs(){
   tekenDossier();
   tekenDocs();
   tekenVerzuim();
+  tekenCerts();
 }
 
 function telInTab(tab, n){
@@ -958,15 +1015,124 @@ $('h_bewaar').onclick = async () => {
   await laadAlles();
 };
 
+/* ---------- certificaten ---------- */
+function certStatus(c){
+  if(!c.verloopt_op) return { klasse:'geen', tekst:'Verloopt niet' };
+  const dagen = dagenTussen(vandaagISO(), c.verloopt_op);
+  if(dagen < 0) return { klasse:'verlopen', tekst:`Verlopen (${-dagen} ${-dagen === 1 ? 'dag' : 'dagen'})` };
+  if(dagen <= (c.herinner_dagen ?? 90)) return { klasse:'bijna', tekst:`Verloopt over ${dagen} ${dagen === 1 ? 'dag' : 'dagen'}` };
+  return { klasse:'ok', tekst:'Geldig' };
+}
+function tekenCerts(){
+  telInTab('certificaten', CERTS.length);
+  $('c_lijst').innerHTML = CERTS.length ? CERTS.map(c => {
+    const st = certStatus(c);
+    const data = [c.behaald_op ? 'behaald ' + datumNl(c.behaald_op) : null, c.verloopt_op ? 'verloopt ' + datumNl(c.verloopt_op) : null].filter(Boolean).join(' · ');
+    return `<div class="cert" data-id="${c.id}">
+      <span class="stip ${st.klasse}"></span>
+      <span class="csoort">${esc(c.soort)}</span>
+      <span class="cdata num">${esc(data)}${c.notitie ? ' · ' + esc(c.notitie) : ''}</span>
+      <span class="cstatus ${st.klasse}">${esc(st.tekst)}</span>
+    </div>`;
+  }).join('') : '<div class="leeg" style="padding:8px 0">Nog geen certificaten. VCA, BHV, hoogwerker — met vervaldatum krijg je op tijd een taak.</div>';
+  $('c_lijst').querySelectorAll('.cert').forEach(el => el.onclick = () => openCert(CERTS.find(c => c.id === el.dataset.id)));
+}
+$('c_nieuw').onclick = () => openCert(null);
+function openCert(rij){
+  CM = { modus: rij ? 'bewerk' : 'nieuw', rij };
+  $('c_kop').textContent = rij ? 'Certificaat bewerken' : 'Nieuw certificaat';
+  $('c_soort').value = rij ? rij.soort : '';
+  $('c_behaald').value = rij ? (rij.behaald_op || '') : '';
+  $('c_verloopt').value = rij ? (rij.verloopt_op || '') : '';
+  $('c_dagen').value = rij ? (rij.herinner_dagen ?? 90) : 90;
+  $('c_notitie').value = rij ? (rij.notitie || '') : '';
+  $('c_verwijder').style.display = rij ? '' : 'none';
+  tekenCertBijlagen();
+  $('cSchaduw').classList.add('zie');
+  $('c_soort').focus();
+}
+function sluitCert(){ $('cSchaduw').classList.remove('zie'); CM = null; }
+$('c_annuleer').onclick = sluitCert;
+$('cSchaduw').addEventListener('click', e => { if(e.target === $('cSchaduw')) sluitCert(); });
+function tekenCertBijlagen(){
+  const box = $('c_bijlagen');
+  if(!CM || CM.modus === 'nieuw'){ box.innerHTML = '<span style="font-size:13px;color:var(--ink-soft)">De scan kun je toevoegen zodra het certificaat is bewaard.</span>'; return; }
+  const bijl = DOCS.filter(x => x.certificaat_id === CM.rij.id);
+  box.innerHTML = (bijl.length ? bijl.map(docHtml).join('') : '') +
+    `<button class="knop klein" id="c_bijlage_knop" type="button">+ Scan toevoegen</button><input type="file" id="c_bijlage_input" multiple style="display:none">`;
+  koppelDocKnoppen(box);
+  $('c_bijlage_knop').onclick = () => $('c_bijlage_input').click();
+  $('c_bijlage_input').onchange = async e => { await uploadBestanden([...e.target.files], null, CM.rij.id); tekenCertBijlagen(); };
+}
+$('c_bewaar').onclick = async () => {
+  if(!HUIDIG || !CM) return;
+  const soort = $('c_soort').value.trim();
+  if(!soort){ toast('Welk certificaat is het?', true); return; }
+  const dagen = parseInt($('c_dagen').value, 10);
+  if(isNaN(dagen) || dagen < 0 || dagen > 730){ toast('Herinneringstermijn: 0 tot 730 dagen', true); return; }
+  const rij = { soort, behaald_op: $('c_behaald').value || null, verloopt_op: $('c_verloopt').value || null, herinner_dagen: dagen, notitie: $('c_notitie').value.trim() || null };
+  if(rij.behaald_op && rij.verloopt_op && rij.verloopt_op < rij.behaald_op){ toast('Vervaldatum ligt vóór de behaaldatum', true); return; }
+  $('c_bewaar').disabled = true;
+  try{
+    let bewaard;
+    if(CM.modus === 'nieuw'){
+      const { data, error } = await sb.from('pers_certificaten').insert({ ...rij, medewerker_id: HUIDIG.id }).select().single();
+      if(error) throw error; bewaard = data;
+    } else {
+      const { data, error } = await sb.from('pers_certificaten').update(rij).eq('id', CM.rij.id).select().single();
+      if(error) throw error; bewaard = data;
+    }
+    const fout = await synchroniseerCertTaak(bewaard);
+    toast(fout ? 'Bewaard, maar de taak lukte niet: ' + fout : 'Bewaard', !!fout);
+    sluitCert();
+    await laadAlles();
+  }catch(err){ toast('Bewaren mislukt: ' + err.message, true); }
+  finally{ $('c_bewaar').disabled = false; }
+};
+$('c_verwijder').onclick = async () => {
+  if(!CM || CM.modus !== 'bewerk') return;
+  if(!confirm(`"${CM.rij.soort}" verwijderen?\nScans blijven staan onder Documenten.`)) return;
+  await sb.from('taken').update({ status: 'vervallen' }).eq('bron', 'certificaat').eq('bron_ref', CM.rij.id).is('voltooid_op', null);
+  const { error } = await sb.from('pers_certificaten').delete().eq('id', CM.rij.id);
+  if(error){ toast('Verwijderen mislukt: ' + error.message, true); return; }
+  toast('Verwijderd');
+  sluitCert();
+  await laadAlles();
+};
+/* één herinneringstaak per certificaat: bron='certificaat', bron_ref=certificaat.id */
+async function synchroniseerCertTaak(c){
+  const { data: bestaand, error } = await sb.from('taken').select('crmtaskid')
+    .eq('bron', 'certificaat').eq('bron_ref', c.id).is('voltooid_op', null).neq('status', 'vervallen').maybeSingle();
+  if(error) return error.message;
+  if(!c.verloopt_op){
+    if(bestaand){ const { error: e } = await sb.from('taken').update({ status: 'vervallen' }).eq('crmtaskid', bestaand.crmtaskid); if(e) return e.message; }
+    return null;
+  }
+  const d = new Date(c.verloopt_op); d.setDate(d.getDate() - (c.herinner_dagen ?? 90));
+  let herinner = d.toISOString().slice(0,10);
+  if(herinner < vandaagISO()) herinner = vandaagISO();          /* al binnen de termijn: taak voor vandaag */
+  const taak = {
+    onderwerp: `${HUIDIG.naam}: ${c.soort} verloopt op ${datumNl(c.verloopt_op)}`,
+    notitie: 'Herhaling of herexamen regelen.' + (c.notitie ? ' ' + c.notitie : ''),
+    gepland_op: herinner + 'T09:00:00',
+    toegewezen_aan: IK.persoon,
+    bron: 'certificaat', bron_ref: c.id, bron_kenmerk: c.soort,
+    projectnaam: 'Personeel · ' + HUIDIG.naam,
+  };
+  if(bestaand){ const { error: e } = await sb.from('taken').update(taak).eq('crmtaskid', bestaand.crmtaskid); return e ? e.message : null; }
+  const { error: e2 } = await sb.from('taken').insert({ ...taak, soort: 'eenmalig', status: 'actueel', aangemaakt_door: UID });
+  return e2 ? e2.message : null;
+}
+
 /* ---------- documenten ---------- */
 function docHtml(x){
   const ext = (x.bestandsnaam.split('.').pop() || '').toUpperCase().slice(0,4);
-  const geb = x.dossier_id ? DOSSIER.find(r => r.id === x.dossier_id) : null;
+  const geb = x.dossier_id ? DOSSIER.find(r => r.id === x.dossier_id) : (x.certificaat_id ? CERTS.find(r => r.id === x.certificaat_id) : null);
   return `<div class="doc" data-id="${x.id}">
     <div class="ico">${esc(ext)}</div>
     <div>
       <div class="dnaam" data-open="${x.id}">${esc(x.bestandsnaam)}</div>
-      <div class="dmeta">${datumNl(x.created_at.slice(0,10))} · ${grootteNl(x.grootte)}${geb ? ' · bij: ' + esc(geb.titel) : ''}</div>
+      <div class="dmeta">${datumNl(x.created_at.slice(0,10))} · ${grootteNl(x.grootte)}${geb ? ' · bij: ' + esc(geb.titel || geb.soort) : ''}</div>
     </div>
     <div class="dacties"><button class="knop tekst klein" data-weg="${x.id}" title="Verwijderen">✕</button></div>
   </div>`;
@@ -998,7 +1164,7 @@ async function verwijderDoc(id){
   await laadDossierEnDocs();
   if(GEB && GEB.modus === 'bewerk') tekenBijlagen();
 }
-async function uploadBestanden(files, dossierId){
+async function uploadBestanden(files, dossierId, certificaatId){
   if(!HUIDIG || !files.length) return;
   let ok = 0;
   for(const f of files){
@@ -1008,7 +1174,7 @@ async function uploadBestanden(files, dossierId){
     const { error: e1 } = await sb.storage.from(BUCKET).upload(pad, f, { contentType: f.type || 'application/octet-stream' });
     if(e1){ toast(`${f.name}: ${e1.message}`, true); continue; }
     const { error: e2 } = await sb.from('pers_documenten').insert({
-      medewerker_id: HUIDIG.id, dossier_id: dossierId || null, storage_path: pad,
+      medewerker_id: HUIDIG.id, dossier_id: dossierId || null, certificaat_id: certificaatId || null, storage_path: pad,
       bestandsnaam: f.name, mime: f.type || null, grootte: f.size
     });
     if(e2){ toast(`${f.name} geüpload maar niet geregistreerd: ${e2.message}`, true); continue; }

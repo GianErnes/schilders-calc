@@ -3,6 +3,25 @@
 Personeelsdossier van Ernes Schilders: gegevens, dossier, verzuim en certificaten
 per medewerker, alleen zichtbaar voor de directie. Hoort bij `personeel_01_tabellen.sql`.
 
+## v0.4.0 — Certificaten met herinneringstaak (brok E)
+
+**Nieuw**
+- Tab **Certificaten**: lijst met kleurstip (groen geldig, oranje binnen de
+  herinneringstermijn, rood verlopen, grijs zonder vervaldatum). Knop
+  *+ Certificaat*: soort (vrije tekst met suggesties), behaald op, verloopt op,
+  herinnering … dagen vooraf (standaard 90, per certificaat instelbaar), notitie,
+  scan als bijlage (verschijnt ook onder Documenten met "bij: <soort>").
+- Eén taak per certificaat in `taken`: `bron='certificaat'`, `bron_ref`=id,
+  gepland op vervaldatum min termijn (of vandaag als die al voorbij is).
+  Datum of termijn wijzigen schuift de taak mee; vervaldatum wissen of
+  certificaat verwijderen zet de open taak op vervallen.
+- Signaal in de lijst links (oranje bolletje met tooltip) bij certificaten die
+  binnen de termijn verlopen of al verlopen zijn.
+
+**Database (`personeel_05_certificaten.sql`)**
+- Kolom `pers_certificaten.herinner_dagen integer not null default 90`
+  (0–730).
+
 ## v0.3.1 — Volgende mijlpaal uit de echte taak, plus twee database-fixes
 
 **Gerepareerd**
