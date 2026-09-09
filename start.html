@@ -74,9 +74,9 @@
   </div>
 
   <div class="tellers uit" id="tellers">
-    <a class="teller" href="taken.html" id="t_taken"><div class="getal num">–</div><div class="wat">taken voor vandaag</div><div class="detail"></div></a>
-    <a class="teller" href="personeel.html" id="t_ziek"><div class="getal num">–</div><div class="wat">lopende ziekmeldingen</div><div class="detail"></div></a>
-    <a class="teller" href="personeel.html" id="t_cert"><div class="getal num">–</div><div class="wat">certificaten die aandacht vragen</div><div class="detail"></div></a>
+    <a class="teller" href="taken.html" id="t_taken" target="_blank" rel="noopener"><div class="getal num">–</div><div class="wat">taken voor vandaag</div><div class="detail"></div></a>
+    <a class="teller" href="personeel.html" id="t_ziek" target="_blank" rel="noopener"><div class="getal num">–</div><div class="wat">lopende ziekmeldingen</div><div class="detail"></div></a>
+    <a class="teller" href="personeel.html" id="t_cert" target="_blank" rel="noopener"><div class="getal num">–</div><div class="wat">certificaten die aandacht vragen</div><div class="detail"></div></a>
   </div>
 
   <div class="tegels" id="tegels"></div>
@@ -92,7 +92,7 @@
    start.html — startpagina Ernes Schilders
    Geen functies van de apps zelf; alleen tegels, versies, tellers.
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.1.0';
+const APP_VERSION = 'v0.1.1';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-start-auth' } });
@@ -128,7 +128,7 @@ function bust(url){ return url + (url.includes('?') ? '&' : '?') + 't=' + Date.n
 /* ---------- tegels ---------- */
 function tekenTegels(){
   $('tegels').innerHTML = APPS.map(a => `
-    <a class="tegel" id="tegel_${a.id}" href="${esc(a.link)}" style="--tk:${a.kleur}">
+    <a class="tegel" id="tegel_${a.id}" href="${esc(a.link)}" target="_blank" rel="noopener" style="--tk:${a.kleur}">
       <div class="naam">${esc(a.naam)}</div>
       <div class="wat">${esc(a.wat)}</div>
       <div class="versie laden" id="v_${a.id}">versie ophalen…</div>
