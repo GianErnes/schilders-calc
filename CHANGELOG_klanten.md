@@ -1,5 +1,9 @@
 # CHANGELOG klanten.html
 
+## v0.2.1 — Veldonderzoek ronde 2: detail-endpoints (09-09-2026)
+
+- De knop Veldonderzoek haalt nu ook de detail-endpoints op met codes uit de eerste klant en het eerste project: customer, project, projectInsight, projectrates, infoOrder en projectAllCodes. crmContact is weggelaten (Yoobi geeft daar een HTTP 500 uit eigen fout, testpunt T3).
+
 ## v0.2.0 — Knop Veldonderzoek → klembord (09-09-2026)
 
 - Nieuwe knop naast Verkennen: haalt achter elkaar customers, contacts, crmContact en projects (pagina 1) op en zet per endpoint statuscodes, aantallen, metadata, alle veldnamen en het eerste record als tekst op het klembord. Bedoeld om in het gesprek te plakken; vervangt schermafbeeldingen van uitgeklapte lijsten.

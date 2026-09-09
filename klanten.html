@@ -132,7 +132,7 @@
 </div>
 
 <script>
-const APP_VERSION = '0.2.0';
+const APP_VERSION = '0.2.1';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const FUNCTIE_URL = SUPABASE_URL + '/functions/v1/yoobi-backup-sync';
@@ -209,18 +209,25 @@ function eersteRecord(ruw) {
 async function veldonderzoek() {
   const knop = el('onderzoekBtn'), status = el('onderzoekStatus');
   knop.disabled = true; status.style.display = ''; status.textContent = 'Bezig…';
+  // Ronde 2 (v0.2.1): de detail-endpoints, met codes uit de eerste records van de lijsten.
+  const gevonden = { klantcode: '', projectcode: '', ordernummer: '' };
   const stappen = [
-    { naam: 'customers',  body: { endpoint: 'customers',  pagina: '1' } },
-    { naam: 'contacts',   body: { endpoint: 'contacts',   pagina: '1' } },
-    { naam: 'crmContact', body: { endpoint: 'crmContact', pagina: '1' } },
-    { naam: 'projects (alle includes, alle statussen)', body: { endpoint: 'projects', pagina: '1', status: '' } },
+    { naam: 'customers',  body: { endpoint: 'customers',  pagina: '1' }, na: rec => { gevonden.klantcode = rec?.code || ''; } },
+    { naam: 'projects (pagina 1)', body: { endpoint: 'projects', pagina: '1', status: '' }, na: rec => { gevonden.projectcode = rec?.projectcode || ''; gevonden.ordernummer = rec?.orders?.[0]?.orderNumber || ''; } },
+    { naam: 'customer (detail, eerste klant)', body: () => ({ endpoint: 'customer', code: gevonden.klantcode }) },
+    { naam: 'project (detail, eerste project)', body: () => ({ endpoint: 'project', code: gevonden.projectcode }) },
+    { naam: 'projectInsight (eerste project)', body: () => ({ endpoint: 'projectInsight', code: gevonden.projectcode }) },
+    { naam: 'projectrates (eerste project)', body: () => ({ endpoint: 'projectrates', code: gevonden.projectcode }) },
+    { naam: 'infoOrder (eerste order)', body: () => ({ endpoint: 'infoOrder', orderNumber: gevonden.ordernummer }) },
+    { naam: 'projectAllCodes', body: { endpoint: 'projectAllCodes' }, kort: true },
   ];
-  const regels = ['VELDONDERZOEK klanten.html v' + APP_VERSION + ' — ' + new Date().toLocaleString('nl-NL'), ''];
+  const regels = ['VELDONDERZOEK ronde 2 — klanten.html v' + APP_VERSION + ' — ' + new Date().toLocaleString('nl-NL'), ''];
   for (const st of stappen) {
+    const body = typeof st.body === 'function' ? st.body() : st.body;
     status.textContent = 'Bezig met ' + st.naam + '…';
     regels.push('=== ' + st.naam + ' ===');
     try {
-      const { res, j } = await roepFunctie({ dryrun: '1', ...st.body });
+      const { res, j } = await roepFunctie({ dryrun: '1', ...body });
       if (!j) { regels.push('functie HTTP ' + res.status + ', geen JSON'); regels.push(''); continue; }
       regels.push('functie HTTP ' + res.status + (j.versie ? ' (v' + j.versie + ')' : '') + ' · Yoobi HTTP ' + (j.http_status ?? '?') + ' · rijen: ' + (j.aantal_rijen ?? '?') + ' · ' + (j.ms ?? '?') + ' ms');
       if (j.pad) regels.push('pad: ' + j.pad);
@@ -229,7 +236,12 @@ async function veldonderzoek() {
       const velden = Array.isArray(j.velden) ? j.velden : [];
       regels.push('veldnamen (' + velden.length + '): ' + velden.join(', '));
       const rec = eersteRecord(j.ruw);
-      regels.push('eerste record: ' + (rec === null ? 'geen' : JSON.stringify(rec)));
+      if (st.na) st.na(rec);
+      // Lijsten die we al kennen (customers, projects) alleen samenvatten; de rest volledig.
+      const alBekend = st.naam === 'customers' || st.naam.startsWith('projects');
+      if (st.kort) regels.push('aantal codes: ' + (Array.isArray(j.ruw) ? j.ruw.length : (j.aantal_rijen ?? '?')) + ' · voorbeeld: ' + JSON.stringify(Array.isArray(j.ruw) ? j.ruw.slice(0, 3) : eersteRecord(j.ruw)));
+      else if (alBekend) regels.push('(lijst al bekend uit ronde 1; alleen gebruikt om codes te vinden)');
+      else regels.push('ruwe response: ' + JSON.stringify(j.ruw));
     } catch (e) {
       regels.push('AANROEP MISLUKT: ' + (e.message || e));
     }
