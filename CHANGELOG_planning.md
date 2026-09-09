@@ -1,5 +1,17 @@
 # CHANGELOG planning.html
 
+## v0.10.4 — Stroken onder en boven de lijn, rij groeit pas bij drie, 09-09-2026
+
+Idee van Gian: niet de rij hoger maken, maar de ruimte in de rij gebruiken. De eerste hulpmiddelstrook ligt nu onder de projectlijn, de tweede erboven, beide over de werkblokken heen (de blokken zijn achtergrond). Zo blijft een rij met twee hulpmiddelen gewoon 40 px. Pas bij een derde en vierde overlappende strook groeit de rij, 12 px per strook, en die komen bovenop. Lijn, blokken, grepen en tekst zijn onderaan de rij verankerd, zodat een hogere rij ze niet meer oprekt. Bij vier overlappende middelen: rij 64 px in plaats van 76. 135 controles.
+
+## v0.10.3 — Naam ín de hulpmiddelstrook, 09-09-2026
+
+De namen bij de stroken stonden als losse tekst boven de strook, over de werkblokken heen, en waren slecht leesbaar. Nu is de strook 11 px hoog met de naam erin: wit op de kleur, donker op het gele toilet. Geen losse tekst meer boven de strook. Lagen staan 12 px uit elkaar in plaats van 14 (vier hulpmiddelen: rij 76 in plaats van 82 px). Alleen CSS en één getal; 132 controles ongewijzigd goed. Leesbaarheid beoordeelt Gian in de browser.
+
+## v0.10.2 — Twee takken samengevoegd, 09-09-2026
+
+Op 9 september is aan planning.html in twee chats tegelijk gewerkt: v0.9.3 (paneel: nog te plannen / nog te werken) in de planningschat en v0.10.0/v0.10.1 (ziekdagen uit Personeel, hulpmiddelen in lagen) in de personeelschat, beide vanaf v0.9.2. v0.10.2 is v0.10.1 plus de paneelwijziging van v0.9.3; verder geen nieuw gedrag. Volledige testreeks (132 controles in jsdom) op het samengevoegde bestand: fasen, hulpmiddelen, verlof, zoeken, slepen, paneel. De ziekdagen- en lagenlogica staan niet in die reeks en bewijzen zich in de browser (F-testronde uit de personeelschat).
+
 ## v0.10.1 — Overlappende hulpmiddelen onder elkaar, 09-09-2026
 
 Twee of meer hulpmiddelen die elkaar in tijd overlappen (steiger én toilet) stonden op dezelfde pixels, strook én naam door elkaar. Nu krijgt elk middel een eigen laag: op volgorde van startdatum de laagste laag die vrij is, zoals afspraken in een agenda. De projectrij groeit 14px per extra laag (40 → 54 → 68 → 82px); rijen zonder overlap blijven exact zoals ze waren. Gevonden door Gian bij een demonstratie aan Max.
@@ -7,6 +19,13 @@ Twee of meer hulpmiddelen die elkaar in tijd overlappen (steiger én toilet) sto
 ## v0.10.0 — Ziekdagen uit Personeel op het bord, 09-09-2026
 
 Het bord leest de view `pers_verzuim_dagen` uit de personeelsmodule (alleen leesbaar voor wie `ziet_personeel` heeft). Elke ziekdag komt als regel in dezelfde verlof-map: 100% ziek blokkeert de hele dag (licht rood, "z" in plaats van ✕), gedeeltelijk ziek telt als reservering van norm × percentage, zodat de rest van de dag inplanbaar blijft. Een eigen verlofregel op dezelfde dag wint. Klik op een ziekdag in de totaalrij geeft geen "Opheffen" maar de tekst dat dit in Personeel is gemeld. Planning schrijft nooit in personeel. Is de view niet leesbaar, dan gaat het bord zonder ziekdagen verder (console.warn), zoals bij `plan_verlof`.
+
+## v0.9.3 — "Resterend" vervangen door "nog te plannen" en "nog te werken", 09-09-2026
+
+"Resterend = budget − geboekt − ingepland" telde bij een lopend project de gewerkte dagen dubbel (Terworm: −26,75 terwijl er 43,75 uur budget over was). Nu, zoals Yoobi de cijfers naast elkaar zet:
+- **Nog te plannen** = budget − ingepland (dit jaar). Rood als je meer hebt ingezet dan het budget.
+- **Nog te werken** = budget − geboekt (Yoobi). Rood als het project over zijn budget is.
+Ingepland telt alleen het gekozen jaar (keuze Gian). Gebouwd in de planningschat, los van v0.10.0/v0.10.1 uit de personeelschat; samengevoegd in v0.10.2.
 
 ## v0.9.2 — Urencel selecteert het hele getal, 07-09-2026
 
