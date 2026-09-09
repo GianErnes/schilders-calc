@@ -56,6 +56,49 @@
   .teller { background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); padding: 0.6rem 0.8rem; }
   .teller .n { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 600; }
   .teller .l { color: var(--muted); font-size: 0.78rem; }
+  /* zoekscherm */
+  .zoekbalk { display: flex; gap: 0.6rem; margin-bottom: 0.9rem; }
+  .zoekbalk input { flex: 1; padding: 11px 14px; border: 1px solid var(--paper-deep); border-radius: var(--radius); font-size: 16px; font-family: inherit; }
+  .zoekbalk select { padding: 10px 12px; border: 1px solid var(--paper-deep); border-radius: var(--radius); font-size: 14px; font-family: inherit; background: #fff; }
+  .zoekgrid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 1rem; align-items: start; }
+  @media (max-width: 800px) { .zoekgrid { grid-template-columns: 1fr; } }
+  .lijst { background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); overflow: hidden; max-height: 70vh; overflow-y: auto; }
+  .lijst .item { padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--paper-deep); cursor: pointer; }
+  .lijst .item:hover { background: var(--paper-warm); }
+  .lijst .item.actief { background: #fff4f3; border-left: 3px solid var(--accent); }
+  .lijst .item .n { font-weight: 500; }
+  .lijst .item .s { color: var(--muted); font-size: 0.8rem; }
+  .lijst .item.verdwenen .n { text-decoration: line-through; color: var(--muted); }
+  .lijst .meer { padding: 0.6rem 0.9rem; color: var(--muted); font-size: 0.82rem; }
+  .kaart { background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); padding: 1.1rem 1.25rem; box-shadow: var(--shadow-sm); min-height: 200px; }
+  .kaart .kop { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; }
+  .kaart .kop h2 { margin: 0; font-size: 1.15rem; }
+  .kaart .kop .code { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+  .kaart .kop .rechts { margin-left: auto; display: flex; gap: 0.5rem; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.75rem; border: 1px solid var(--paper-deep); background: var(--paper-warm); color: var(--ink-soft); }
+  .badge.groen { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+  .badge.grijs { background: var(--paper-warm); }
+  .badge.rood { background: #fff4f3; border-color: #f6cfcc; color: var(--accent-deep); }
+  .blok2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 0.9rem 0; }
+  @media (max-width: 800px) { .blok2 { grid-template-columns: 1fr; } }
+  .vak { background: var(--paper-warm); border-radius: var(--radius); padding: 0.7rem 0.9rem; font-size: 0.9rem; }
+  .vak .t { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.35rem; }
+  .vak a { color: var(--blue); text-decoration: none; }
+  .cp { padding: 0.3rem 0; border-top: 1px solid var(--paper-deep); }
+  .cp:first-of-type { border-top: none; }
+  .cp .sub { color: var(--ink-soft); font-size: 0.83rem; }
+  .proj { border-top: 1px solid var(--paper-deep); }
+  .proj summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 80px minmax(0,1fr) 90px 100px; gap: 0.6rem; padding: 0.5rem 0; font-size: 0.9rem; align-items: center; }
+  .proj summary::-webkit-details-marker { display: none; }
+  .proj summary .pc { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--ink-soft); }
+  .proj summary .pn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .proj summary .pb { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+  .proj.gesloten summary { color: var(--muted); }
+  .proj .detail { padding: 0.3rem 0 0.9rem 0; font-size: 0.86rem; }
+  .proj .detail .rij2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  @media (max-width: 800px) { .proj .detail .rij2 { grid-template-columns: 1fr; } .proj summary { grid-template-columns: 70px minmax(0,1fr) 70px; } .proj summary .pb { display: none; } }
+  .termijn { display: grid; grid-template-columns: 90px minmax(0,1fr) 60px; gap: 0.5rem; padding: 2px 0; }
+  .leeg-kaart { color: var(--muted); text-align: center; padding: 3rem 1rem; }
   #app-loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); background: var(--page); z-index: 90; }
   #login{position:fixed;inset:0;background:#f5f6f7;display:none;align-items:center;justify-content:center;z-index:100}
   #login .box{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:30px;width:320px;box-shadow:0 6px 28px rgba(0,0,0,.07)}
@@ -98,6 +141,21 @@
   </div>
 
   <div id="inhoud" style="display:none">
+    <div class="zoekbalk">
+      <input id="zoek" type="search" placeholder="Zoek op naam, adres, plaats, postcode, telefoon, e-mail, klant- of projectcode…" autocomplete="off">
+      <select id="filter">
+        <option value="alle">Alle klanten</option>
+        <option value="actief">Met actief project</option>
+        <option value="verdwenen">Verdwenen uit Yoobi</option>
+      </select>
+    </div>
+    <div class="zoekgrid">
+      <div class="lijst" id="lijst"><div class="meer">Laden…</div></div>
+      <div class="kaart" id="kaart"><div class="leeg-kaart">Kies een klant uit de lijst, of typ om te zoeken.</div></div>
+    </div>
+
+    <details style="margin-top:1.6rem" id="beheer">
+      <summary style="cursor:pointer;color:var(--ink-soft);font-size:0.9rem;margin-bottom:0.8rem">Beheer: sync, inhoud, verkennen, logboek</summary>
     <div class="card" id="syncKaart" style="display:none">
       <h2>Sync bezig</h2>
       <div class="card-sub" id="syncTekst">…</div>
@@ -148,11 +206,12 @@
       <div class="card-sub">Laatste 10 regels uit <span class="mono">yoobi_sync_log</span>.</div>
       <div id="logboek" class="leeg">Laden…</div>
     </div>
+    </details>
   </div>
 </div>
 
 <script>
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.4.0';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const FUNCTIE_URL = SUPABASE_URL + '/functions/v1/yoobi-backup-sync';
@@ -293,6 +352,173 @@ async function veldonderzoek() {
   laadLogboek(); laadStand();
 }
 
+// ---------- zoekscherm ----------
+const DATA = { klanten: [], contacten: [], projecten: [], perKlantContact: new Map(), perKlantProject: new Map(), geladen: false };
+let gekozenCode = null;
+const fmtEur = n => n == null ? '—' : new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+const fmtDatum = d => d ? new Date(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const norm = s => String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const cijfers = s => String(s ?? '').replace(/\D/g, '');
+
+async function alles(tabel, kolommen, orde) {
+  const uit = []; const stap = 1000;
+  for (let van = 0; ; van += stap) {
+    const { data, error } = await sb.from(tabel).select(kolommen).order(orde).range(van, van + stap - 1);
+    if (error) throw new Error(tabel + ': ' + error.message);
+    uit.push(...(data || []));
+    if (!data || data.length < stap) break;
+  }
+  return uit;
+}
+
+async function laadZoekdata() {
+  try {
+    const [k, c, p] = await Promise.all([
+      alles('yoobi_klanten', 'code,naam,adres,postcode,plaats,telefoon,email,factuur_email,factuur_adres,factuur_postcode,factuur_plaats,kvk,categorie,actief,verdwenen_op,gewijzigd_op,detail_opgehaald_op', 'naam'),
+      alles('yoobi_contacten', 'id,klant_code,naam,functie,telefoon,mobiel,email,primair,actief,notitie,verdwenen_op', 'naam'),
+      alles('yoobi_projecten', 'code,naam,klant_code,klant_naam,status,label,classificatie,startdatum,einddatum,aanneemsom,begrote_uren,geboekte_uren,verdwenen_op', 'startdatum'),
+    ]);
+    DATA.klanten = k; DATA.contacten = c; DATA.projecten = p.reverse();
+    DATA.perKlantContact = new Map(); DATA.perKlantProject = new Map();
+    for (const x of c) { if (!x.klant_code) continue; if (!DATA.perKlantContact.has(x.klant_code)) DATA.perKlantContact.set(x.klant_code, []); DATA.perKlantContact.get(x.klant_code).push(x); }
+    for (const x of p) { if (!x.klant_code) continue; if (!DATA.perKlantProject.has(x.klant_code)) DATA.perKlantProject.set(x.klant_code, []); DATA.perKlantProject.get(x.klant_code).push(x); }
+    // zoeksleutel per klant: eigen velden + contactpersonen + projectcodes/-namen
+    for (const kl of k) {
+      const cps = DATA.perKlantContact.get(kl.code) || [];
+      const prs = DATA.perKlantProject.get(kl.code) || [];
+      kl._tekst = norm([kl.naam, kl.adres, kl.postcode, kl.plaats, kl.email, kl.factuur_email, kl.code, kl.kvk,
+        ...cps.map(x => [x.naam, x.email].join(' ')), ...prs.map(x => [x.code, x.naam].join(' '))].join(' | '));
+      kl._cijfers = [kl.telefoon, kl.postcode, ...cps.map(x => x.telefoon + ' ' + x.mobiel)].map(cijfers).join(' ');
+      kl._actief = prs.some(x => x.status === 'active' && !x.verdwenen_op);
+      kl._nProj = prs.length;
+    }
+    DATA.geladen = true;
+    toonLijst();
+  } catch (e) {
+    el('lijst').innerHTML = '<div class="meer">Laden mislukt: ' + esc(e.message || e) + '</div>';
+  }
+}
+
+function zoekResultaten() {
+  const q = norm(el('zoek').value.trim());
+  const qc = cijfers(q);
+  const f = el('filter').value;
+  let lijst = DATA.klanten.filter(kl => {
+    if (f === 'verdwenen') { if (!kl.verdwenen_op) return false; }
+    else if (kl.verdwenen_op) return false;
+    if (f === 'actief' && !kl._actief) return false;
+    if (!q) return true;
+    const woorden = q.split(/\s+/).filter(Boolean);
+    if (woorden.every(w => kl._tekst.includes(w))) return true;
+    if (qc.length >= 4 && kl._cijfers.includes(qc)) return true;
+    return false;
+  });
+  return lijst;
+}
+
+function toonLijst() {
+  if (!DATA.geladen) return;
+  const res = zoekResultaten();
+  const max = 150;
+  const html = res.slice(0, max).map(kl => `
+    <div class="item ${kl.code === gekozenCode ? 'actief' : ''} ${kl.verdwenen_op ? 'verdwenen' : ''}" data-code="${esc(kl.code)}">
+      <div class="n">${esc(kl.naam || '(naam onbekend)')}</div>
+      <div class="s">${esc([kl.plaats, kl._nProj ? kl._nProj + (kl._nProj === 1 ? ' project' : ' projecten') : null, kl._actief ? 'actief' : null].filter(Boolean).join(' · '))}</div>
+    </div>`).join('');
+  el('lijst').innerHTML = html + `<div class="meer">${res.length > max ? max + ' van ' : ''}${res.length} van ${DATA.klanten.filter(k => !k.verdwenen_op).length} klanten</div>`;
+  if (res.length === 1 && el('zoek').value.trim()) toonKlant(res[0].code);
+}
+
+async function toonKlant(code) {
+  gekozenCode = code;
+  document.querySelectorAll('.lijst .item').forEach(x => x.classList.toggle('actief', x.dataset.code === code));
+  const kl = DATA.klanten.find(x => x.code === code);
+  if (!kl) return;
+  const cps = (DATA.perKlantContact.get(code) || []).filter(x => !x.verdwenen_op);
+  const prs = (DATA.perKlantProject.get(code) || []);
+  const actief = prs.filter(x => x.status === 'active' && !x.verdwenen_op);
+  const overig = prs.filter(x => !(x.status === 'active' && !x.verdwenen_op));
+
+  const adresHtml = [kl.adres, [kl.postcode, kl.plaats].filter(Boolean).join(' ')].filter(Boolean).map(esc).join('<br>') || '<span class="leeg">geen adres in Yoobi</span>';
+  const factuurAdres = kl.factuur_adres ? '<div class="t" style="margin-top:0.5rem">Factuuradres</div>' + [kl.factuur_adres, [kl.factuur_postcode, kl.factuur_plaats].filter(Boolean).join(' ')].filter(Boolean).map(esc).join('<br>') : '';
+  const contactHtml = [
+    kl.telefoon ? `<div>☎ <a href="tel:${esc(kl.telefoon)}">${esc(kl.telefoon)}</a></div>` : '',
+    kl.email ? `<div>✉ <a href="mailto:${esc(kl.email)}">${esc(kl.email)}</a></div>` : '',
+    kl.factuur_email && kl.factuur_email !== kl.email ? `<div>✉ <a href="mailto:${esc(kl.factuur_email)}">${esc(kl.factuur_email)}</a> <span class="leeg">(factuur)</span></div>` : '',
+  ].join('') || '<span class="leeg">geen telefoon of e-mail op de klant</span>';
+
+  const cpHtml = cps.length ? cps.map(x => `<div class="cp"><div>${esc(x.naam || '—')}${x.primair ? ' <span class="badge grijs">primair</span>' : ''}${x.functie ? ' <span class="sub">' + esc(x.functie) + '</span>' : ''}</div>
+      <div class="sub">${[x.mobiel ? '<a href="tel:' + esc(x.mobiel) + '">' + esc(x.mobiel) + '</a>' : '', x.telefoon ? '<a href="tel:' + esc(x.telefoon) + '">' + esc(x.telefoon) + '</a>' : '', x.email ? '<a href="mailto:' + esc(x.email) + '">' + esc(x.email) + '</a>' : ''].filter(Boolean).join(' · ') || '—'}</div>
+      ${x.notitie ? '<div class="sub">' + esc(x.notitie) + '</div>' : ''}</div>`).join('') : '<span class="leeg">geen contactpersonen</span>';
+
+  const projRij = x => `<details class="proj ${x.status === 'active' ? '' : 'gesloten'}" data-code="${esc(x.code)}">
+      <summary><span class="pc">${esc(x.code.startsWith('yoobi-id-') ? '(geen code)' : x.code)}</span><span class="pn" title="${esc(x.naam)}">${esc(x.naam || '—')}</span>
+      <span><span class="badge ${x.status === 'active' ? 'groen' : 'grijs'}">${esc(x.status === 'active' ? 'actief' : (x.status || '—'))}</span></span><span class="pb">${fmtEur(x.aanneemsom)}</span></summary>
+      <div class="detail"><span class="leeg">Laden…</span></div></details>`;
+
+  el('kaart').innerHTML = `
+    <div class="kop"><h2>${esc(kl.naam || '(naam onbekend)')}</h2><span class="code">Yoobi ${esc(kl.code)}</span>
+      ${kl.categorie ? '<span class="badge grijs">' + esc(kl.categorie) + '</span>' : ''}
+      ${kl.verdwenen_op ? '<span class="badge rood">verdwenen uit Yoobi ' + esc(fmtDatum(kl.verdwenen_op)) + '</span>' : ''}
+      <span class="rechts"><button class="knop stil" id="ruwKnop" style="padding:4px 10px;font-size:12px">Ruwe gegevens</button></span></div>
+    <div class="blok2">
+      <div class="vak"><div class="t">Adres</div>${adresHtml}${factuurAdres}<div class="t" style="margin-top:0.5rem">Contact</div>${contactHtml}${kl.kvk ? '<div class="t" style="margin-top:0.5rem">KvK</div>' + esc(kl.kvk) : ''}</div>
+      <div class="vak"><div class="t">Contactpersonen (${cps.length})</div>${cpHtml}</div>
+    </div>
+    <div class="vak" style="background:none;padding:0"><div class="t">Projecten (${prs.length}${actief.length ? ', ' + actief.length + ' actief' : ''})</div>
+      ${prs.length ? actief.map(projRij).join('') + overig.map(projRij).join('') : '<span class="leeg">geen projecten</span>'}</div>
+    <pre id="ruwKlant" style="display:none;margin-top:0.9rem"></pre>
+    <div class="leeg" style="margin-top:0.9rem;font-size:0.78rem">Klantgegevens uit Yoobi opgehaald: ${esc(fmtTijd(kl.detail_opgehaald_op))} · laatst gewijzigd in Yoobi: ${esc(fmtTijd(kl.gewijzigd_op))}</div>`;
+
+  el('ruwKnop').addEventListener('click', async () => {
+    const pre = el('ruwKlant');
+    if (pre.style.display === 'none') {
+      const { data } = await sb.from('yoobi_klanten').select('ruw').eq('code', code).single();
+      pre.textContent = JSON.stringify(data ? data.ruw : {}, null, 2); pre.style.display = '';
+    } else pre.style.display = 'none';
+  });
+  el('kaart').querySelectorAll('details.proj').forEach(d => d.addEventListener('toggle', () => { if (d.open && !d.dataset.geladen) { d.dataset.geladen = '1'; laadProject(d); } }));
+}
+
+async function laadProject(d) {
+  const code = d.dataset.code; const box = d.querySelector('.detail');
+  try {
+    const [{ data: p }, { data: orders }, { data: inz }] = await Promise.all([
+      sb.from('yoobi_projecten').select('omschrijving,bijzonderheden,kleuren_producten,uitvoeringsdocument,label,classificatie,startdatum,einddatum,begrote_uren,geboekte_uren,aanneemsom,hoofdproject_code,contactpersonen').eq('code', code).single(),
+      sb.from('yoobi_orders').select('ordernummer,omschrijving,status,bedrag,factuurtermijnen,verdwenen_op').eq('project_code', code).order('ordernummer'),
+      sb.from('yoobi_project_inzicht').select('uren,kosten,omzet,uren_gefactureerd,opgehaald_op').eq('project_code', code).maybeSingle(),
+    ]);
+    const cp = Array.isArray(p?.contactpersonen) ? p.contactpersonen : [];
+    const cpTxt = cp.map(c => [c.initials || c.firstname, c.infix, c.lastname].filter(Boolean).join(' ') + (Array.isArray(c.contactinfo) && c.contactinfo.length ? ' (' + c.contactinfo.map(i => i.value).filter(Boolean).join(', ') + ')' : '')).join('; ');
+    const termijnen = (orders || []).flatMap(o => (Array.isArray(o.factuurtermijnen) ? o.factuurtermijnen : []).map(t => ({ ...t, order: o.ordernummer })));
+    box.innerHTML = `
+      <div class="rij2">
+        <div class="vak"><div class="t">Project</div>
+          <div>${esc([p?.label, p?.classificatie].filter(Boolean).join(' · ') || '—')}</div>
+          <div>Contract ${esc(fmtDatum(p?.startdatum))} – ${esc(fmtDatum(p?.einddatum))} <span class="leeg">(contractdatum, geen uitvoerdatum)</span></div>
+          <div>Aanneemsom ${fmtEur(p?.aanneemsom)} · begroot ${p?.begrote_uren ?? '—'} u · geboekt ${p?.geboekte_uren ?? '—'} u</div>
+          ${p?.hoofdproject_code ? '<div>Hoofdproject ' + esc(p.hoofdproject_code) + '</div>' : ''}
+          ${cpTxt ? '<div class="t" style="margin-top:0.4rem">Contactpersonen project</div><div>' + esc(cpTxt) + '</div>' : ''}
+          ${p?.omschrijving ? '<div class="t" style="margin-top:0.4rem">Omschrijving</div><div style="white-space:pre-wrap">' + esc(p.omschrijving) + '</div>' : ''}
+          ${p?.bijzonderheden ? '<div class="t" style="margin-top:0.4rem">Bijzonderheden tijdens het werk</div><div style="white-space:pre-wrap">' + esc(p.bijzonderheden) + '</div>' : ''}
+          ${p?.kleuren_producten ? '<div class="t" style="margin-top:0.4rem">Gebruikte kleuren / producten</div><div style="white-space:pre-wrap">' + esc(p.kleuren_producten) + '</div>' : ''}
+          ${p?.uitvoeringsdocument ? '<div class="t" style="margin-top:0.4rem">Uitvoeringsdocument</div><div>' + esc(p.uitvoeringsdocument) + '</div>' : ''}
+        </div>
+        <div class="vak"><div class="t">Orders en factuurtermijnen</div>
+          ${(orders || []).length ? (orders || []).map(o => `<div><span class="mono">${esc(o.ordernummer)}</span> ${esc(o.omschrijving || '')} · ${fmtEur(o.bedrag)} <span class="badge grijs">${esc(o.status || '')}</span></div>`).join('') : '<span class="leeg">geen orders in de kopie' + ((p && true) ? ' (orders van afgesloten projecten komen met de weekrun)' : '') + '</span>'}
+          ${termijnen.length ? '<div style="margin-top:0.4rem">' + termijnen.map(t => `<div class="termijn"><span class="mono">${esc(t.date || '')}</span><span>${esc(t.name || '')}${t.approvedOn ? ' <span class="leeg">akkoord ' + esc(t.approvedOn) + '</span>' : ''}</span><span style="text-align:right">${t.isPercentage ? esc(t.rate) + '%' : fmtEur(t.rate)}</span></div>`).join('') + '</div>' : ''}
+          <div class="t" style="margin-top:0.5rem">Inzicht</div>
+          ${inz ? `<div>${inz.uren ?? '—'} u geboekt · kosten ${fmtEur(inz.kosten)} · omzet ${fmtEur(inz.omzet)} <span class="leeg">(stand ${esc(fmtTijd(inz.opgehaald_op))})</span></div>` : '<span class="leeg">geen inzicht in de kopie</span>'}
+        </div>
+      </div>`;
+  } catch (e) { box.innerHTML = '<span class="leeg">Laden mislukt: ' + esc(e.message || e) + '</span>'; }
+}
+
+let zoekTimer = null;
+el('zoek').addEventListener('input', () => { clearTimeout(zoekTimer); zoekTimer = setTimeout(toonLijst, 150); });
+el('filter').addEventListener('change', toonLijst);
+el('lijst').addEventListener('click', e => { const it = e.target.closest('.item'); if (it) toonKlant(it.dataset.code); });
+
 // ---------- tellers ----------
 async function laadTellers() {
   const tabellen = [['yoobi_klanten', 'klanten'], ['yoobi_contacten', 'contactpersonen'], ['yoobi_projecten', 'projecten'], ['yoobi_orders', 'orders'], ['yoobi_project_inzicht', 'projectinzichten']];
@@ -321,7 +547,7 @@ async function startSync() {
 }
 
 async function volgRun(runId) {
-  const kaart = el('syncKaart'); kaart.style.display = '';
+  const kaart = el('syncKaart'); kaart.style.display = ''; el('beheer').open = true;
   const knop = el('syncBtn'); knop.disabled = true; knop.textContent = 'Bezig…';
   clearInterval(volgTimer);
   const tik = async () => {
@@ -332,6 +558,7 @@ async function volgRun(runId) {
     const faseNr = Math.min(c.fase ?? 0, plan.length - 1);
     const pct = plan.length ? Math.round(((c.fase ?? 0) / plan.length) * 100) : 0;
     el('syncBalk').style.width = (data.klaar_op ? 100 : Math.max(3, pct)) + '%';
+    el('syncKaart').querySelector('h2').textContent = data.klaar_op ? (data.geslaagd ? 'Laatste sync' : 'Laatste sync mislukt') : 'Sync bezig';
     el('syncTekst').textContent = data.klaar_op
       ? (data.geslaagd ? 'Klaar. ' : 'Mislukt. ') + 'Gestart ' + fmtTijd(data.gestart_op) + ', klaar ' + fmtTijd(data.klaar_op) + '.'
       : 'Fase ' + ((c.fase ?? 0) + 1) + ' van ' + plan.length + ' — ' + (FASE_LABEL[plan[faseNr]] || plan[faseNr] || '') + ' · stap ' + (c.stap ?? 0) + ' · ' + (c.voortgang || '');
@@ -343,7 +570,7 @@ async function volgRun(runId) {
     if (data.klaar_op) {
       clearInterval(volgTimer); volgTimer = null;
       knop.disabled = false; knop.textContent = 'Sync nu';
-      laadStand(); laadLogboek(); laadTellers();
+      laadStand(); laadLogboek(); laadTellers(); laadZoekdata();
     }
   };
   await tik();
@@ -412,7 +639,7 @@ async function laadApp() {
   el('geenToegang').style.display = ok ? 'none' : '';
   el('inhoud').style.display = ok ? '' : 'none';
   loading.style.display = 'none';
-  if (ok) { laadStand(); laadLogboek(); laadTellers(); checkLopendeRun(); }
+  if (ok) { laadZoekdata(); laadStand(); laadLogboek(); laadTellers(); checkLopendeRun(); }
 }
 function toonLogin() { el('app-loading').style.display = 'none'; el('wrap').style.display = 'none'; el('login').style.display = 'flex'; }
 async function inloggen() {

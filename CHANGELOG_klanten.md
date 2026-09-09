@@ -1,5 +1,12 @@
 # CHANGELOG klanten.html
 
+## v0.4.0 — Zoekscherm (09-09-2026)
+
+- Zoekveld bovenaan: zoekt in naam, adres, postcode, plaats, e-mail, klantcode, KvK, namen en e-mails van contactpersonen, projectcodes en projectnamen; telefoonnummers op cijfers (minimaal 4). Meerdere woorden = alle woorden moeten voorkomen. Filter: alle / met actief project / verdwenen uit Yoobi. Bij precies één treffer opent de klantkaart direct.
+- Links de resultatenlijst (max. 150 getoond), rechts de klantkaart: adres, factuuradres, telefoon, e-mail (klikbaar), KvK, categorie, contactpersonen, projecten (actief eerst). Per project uitklapbaar: label/classificatie, contractdata, aanneemsom en uren, contactpersonen van het project, omschrijving, bijzonderheden, gebruikte kleuren/producten, orders met factuurtermijnen, inzicht. Knop Ruwe gegevens toont het complete Yoobi-record.
+- Zoekdata (klanten, contactpersonen, projecten) wordt één keer geladen en lokaal doorzocht; details per project pas bij uitklappen.
+- Sync, inhoud, verkennen en logboek staan nu in een inklapbaar blok Beheer onderaan; opent vanzelf bij een lopende sync. Kopje van de synckaart toont na afloop "Laatste sync".
+
 ## v0.3.0 — Sync nu, voortgang, inhoud van de kopie (09-09-2026)
 
 - Knop **Sync nu** start een run van `yoobi-backup-sync` v0.2.0 (estafette, brok 2b). De pagina volgt de run elke 3 seconden via `yoobi_sync_log.cursor`: fase, stap, voortgang, aantallen per fase, fouten. Bij herladen van de pagina wordt een lopende run automatisch weer gevolgd.
