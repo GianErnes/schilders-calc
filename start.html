@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start — Ernes Schilders</title>
+<style>
+  :root{
+    --paper:#f6f7f9;--card:#fff;--ink:#191c21;--ink-soft:#5b636e;--ink-faint:#98a0ac;
+    --line:#e7eaee;--accent:#e63329;--accent-deep:#c62828;--groen:#158048;--amber:#ea580c;
+    --radius:16px;--shadow:0 1px 2px rgba(20,25,35,.05),0 8px 24px rgba(20,25,35,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums}
+  .wrap{max-width:1180px;margin:0 auto;padding:34px 28px 40px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:26px}
+  header h1{margin:0;font-size:28px;letter-spacing:-.5px}
+  header .sub{color:var(--ink-soft);margin-top:4px;font-size:14px}
+  header .rechts{text-align:right;font-size:13px;color:var(--ink-soft)}
+  header .rechts button{border:0;background:transparent;color:var(--ink-soft);cursor:pointer;font:inherit;padding:0;text-decoration:underline}
+
+  /* tellers */
+  .tellers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:28px}
+  .teller{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;text-decoration:none;color:inherit;display:block;min-height:96px}
+  .teller:hover{border-color:var(--ink-faint)}
+  .teller .getal{font-size:34px;font-weight:800;letter-spacing:-1px;line-height:1}
+  .teller .getal.rood{color:var(--accent-deep)} .teller .getal.oranje{color:var(--amber)} .teller .getal.groen{color:var(--groen)}
+  .teller .wat{font-size:13.5px;color:var(--ink-soft);margin-top:6px}
+  .teller .detail{font-size:12.5px;color:var(--ink-faint);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tellers.uit{display:none}
+  .inlog{background:var(--card);border:1px dashed var(--line);border-radius:var(--radius);padding:14px 18px;margin-bottom:28px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--ink-soft)}
+  .inlog input{padding:8px 10px;border:1px solid var(--line);border-radius:10px;font:inherit}
+  .inlog button{padding:8px 14px;border:0;border-radius:10px;background:var(--ink);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+  .inlog .fout{color:var(--accent);width:100%}
+
+  /* tegels */
+  .tegels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .tegel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;text-decoration:none;color:inherit;display:flex;flex-direction:column;min-height:150px;position:relative;box-shadow:var(--shadow);transition:transform .12s,border-color .12s;border-top:4px solid var(--tk,var(--ink-faint))}
+  .tegel:hover{transform:translateY(-2px);border-color:var(--ink-faint)}
+  .tegel .naam{font-size:18px;font-weight:800;letter-spacing:-.3px}
+  .tegel .wat{font-size:13px;color:var(--ink-soft);margin-top:3px;flex:1}
+  .tegel .versie{font-size:22px;font-weight:700;letter-spacing:-.5px;margin-top:12px;color:var(--tk,var(--ink))}
+  .tegel .versie.laden{color:var(--ink-faint);font-weight:500;font-size:14px}
+  .tegel .sync{font-size:12px;margin-top:4px;color:var(--ink-faint)}
+  .tegel .sync.ok::before{content:'● ';color:var(--groen)}
+  .tegel .sync.mis::before{content:'● ';color:var(--amber)}
+  .tegel .sync.fout::before{content:'● ';color:var(--accent)}
+  .tegel.uit-sync{border-color:#f5c9a0;background:#fffaf5}
+  .badge{position:absolute;top:14px;right:14px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:#fdeaea;color:var(--accent-deep)}
+  .badge.ok{background:#ecfaf1;color:var(--groen)}
+  footer{margin-top:28px;font-size:12.5px;color:var(--ink-faint);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  @media (max-width:1000px){.tegels{grid-template-columns:repeat(2,1fr)}.tellers{grid-template-columns:1fr}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Ernes Schilders</h1>
+      <div class="sub" id="datum"></div>
+    </div>
+    <div class="rechts" id="ik"></div>
+  </header>
+
+  <div class="inlog" id="inlog" style="display:none">
+    <span>Log in voor de tellers (taken, verzuim, certificaten):</span>
+    <input id="l_email" type="email" placeholder="E-mailadres" autocomplete="username">
+    <input id="l_ww" type="password" placeholder="Wachtwoord" autocomplete="current-password">
+    <button id="l_knop">Inloggen</button>
+    <span class="fout" id="l_fout"></span>
+  </div>
+
+  <div class="tellers uit" id="tellers">
+    <a class="teller" href="taken.html" id="t_taken"><div class="getal num">–</div><div class="wat">taken voor vandaag</div><div class="detail"></div></a>
+    <a class="teller" href="personeel.html" id="t_ziek"><div class="getal num">–</div><div class="wat">lopende ziekmeldingen</div><div class="detail"></div></a>
+    <a class="teller" href="personeel.html" id="t_cert"><div class="getal num">–</div><div class="wat">certificaten die aandacht vragen</div><div class="detail"></div></a>
+  </div>
+
+  <div class="tegels" id="tegels"></div>
+
+  <footer>
+    <span>Versies live opgehaald uit GitHub Pages · groen = code en changelog gelijk · oranje = changelog loopt achter</span>
+    <span id="appVersie"></span>
+  </footer>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   start.html — startpagina Ernes Schilders
+   Geen functies van de apps zelf; alleen tegels, versies, tellers.
+   ════════════════════════════════════════════════════════ */
+const APP_VERSION = 'v0.1.0';
+const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-start-auth' } });
+
+/* Voorraad-app: eigen repo, eigen Supabase (alleen lezen voor het badge) */
+const VOORRAAD_SUPA = 'https://rcwlbcfuvfprnnkypbba.supabase.co';
+const VOORRAAD_KEY  = 'sb_publishable_1z1Igz3u6xBMvDFxpHiQmA_KJlhzbwW';
+
+/* Tegels. bestand = waar APP_VERSION staat; changelog = waar de bovenste entry staat.
+   Beide relatief aan deze pagina (schilders-calc) of absoluut (voorraad-app). */
+const APPS = [
+  { id:'calc',       naam:'Calculatie',  wat:'Calculaties, offertes, onderhoudsplannen', link:'index.html',      bestand:'index.html',      changelog:'CHANGELOG.md',            kleur:'#e63329' },
+  { id:'planning',   naam:'Planning',    wat:'Jaarbord: wie werkt waar en wanneer',      link:'planning.html',   bestand:'planning.html',   changelog:'CHANGELOG_planning.md',   kleur:'#2563eb' },
+  { id:'taken',      naam:'Taken',       wat:'Wat er vandaag en binnenkort moet gebeuren', link:'taken.html',    bestand:'taken.html',      changelog:null,                      kleur:'#7c3aed' },
+  { id:'financieel', naam:'Financieel',  wat:'Werkvoorraad: budget, geboekt, resterend',  link:'financieel.html', bestand:'financieel.html', changelog:'CHANGELOG_financieel.md', kleur:'#158048' },
+  { id:'oplevering', naam:'Oplevering',  wat:'Opleverpunten met foto per project',         link:'oplevering.html', bestand:'oplevering.html', changelog:'CHANGELOG_oplevering.md', kleur:'#0e7490' },
+  { id:'klanten',    naam:'Klanten',     wat:'Klantenbestand (kopie uit Yoobi)',           link:'klanten.html',    bestand:'klanten.html',    changelog:'CHANGELOG_klanten.md',    kleur:'#b45309' },
+  { id:'personeel',  naam:'Personeel',   wat:'Gegevens, dossier, verzuim, certificaten',   link:'personeel.html',  bestand:'personeel.html',  changelog:'CHANGELOG_personeel.md',  kleur:'#d6336c' },
+  { id:'voorraad',   naam:'Voorraad',    wat:'Magazijn, bussen, bestellen',
+    link:'https://gianernes.github.io/voorraad-app/',
+    bestand:'https://gianernes.github.io/voorraad-app/voorraad-app_2.html',
+    changelog:'banner',   /* geen los bestand: de versie in de banner bovenin moet gelijk zijn aan APP_VERSION */
+    kleur:'#4b5563' },
+];
+
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function vandaagISO(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function datumNl(iso){ if(!iso) return ''; const [j,m,d] = iso.split('-'); return `${d}-${m}-${j}`; }
+function norm(v){ return String(v || '').trim().replace(/^v/i, ''); }   /* 'v0.4.0' en '0.4.0' zijn gelijk */
+function bust(url){ return url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(); }
+
+/* ---------- tegels ---------- */
+function tekenTegels(){
+  $('tegels').innerHTML = APPS.map(a => `
+    <a class="tegel" id="tegel_${a.id}" href="${esc(a.link)}" style="--tk:${a.kleur}">
+      <div class="naam">${esc(a.naam)}</div>
+      <div class="wat">${esc(a.wat)}</div>
+      <div class="versie laden" id="v_${a.id}">versie ophalen…</div>
+      <div class="sync" id="s_${a.id}"></div>
+    </a>`).join('');
+}
+
+async function haalVersie(a){
+  const vEl = $('v_' + a.id), sEl = $('s_' + a.id);
+  let code = null, log = null, fout = null;
+  try{
+    const r = await fetch(bust(a.bestand), { cache: 'no-store' });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const t = await r.text();
+    const m = t.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    code = m ? m[1] : null;
+    if(a.changelog === 'banner'){
+      const b = t.match(/Versie:\s*([0-9][0-9.]*)/);
+      log = b ? b[1] : null;
+    }
+  }catch(e){ fout = 'bestand niet bereikbaar: ' + e.message; }
+
+  if(!fout && a.changelog && a.changelog !== 'banner'){
+    try{
+      const r = await fetch(bust(a.changelog), { cache: 'no-store' });
+      if(r.ok){
+        const t = await r.text();
+        const m = t.match(/^##\s*v?([0-9][0-9.]*)/m);
+        log = m ? m[1] : null;
+      } else log = null;
+    }catch(e){ log = null; }
+  }
+
+  if(fout || !code){
+    vEl.textContent = 'onbekend'; vEl.classList.remove('laden');
+    sEl.textContent = fout || 'APP_VERSION niet gevonden'; sEl.className = 'sync fout';
+    return;
+  }
+  vEl.textContent = code; vEl.classList.remove('laden');
+  const tegel = $('tegel_' + a.id);
+  if(!a.changelog){ sEl.textContent = 'geen changelog'; sEl.className = 'sync'; return; }
+  if(log === null){ sEl.textContent = a.changelog === 'banner' ? 'banner niet gevonden' : 'changelog niet gevonden'; sEl.className = 'sync mis'; tegel.classList.add('uit-sync'); return; }
+  if(norm(log) === norm(code)){ sEl.textContent = a.changelog === 'banner' ? 'banner gelijk' : 'changelog gelijk'; sEl.className = 'sync ok'; }
+  else { sEl.textContent = (a.changelog === 'banner' ? 'banner zegt ' : 'changelog zegt ') + log; sEl.className = 'sync mis'; tegel.classList.add('uit-sync'); }
+}
+
+/* Voorraad-badge: aantal producten onder minimum (magazijn), zonder login — de app zelf werkt ook zo */
+async function voorraadBadge(){
+  try{
+    const r = await fetch(VOORRAAD_SUPA + '/rest/v1/products?select=qty,min', { headers: { apikey: VOORRAAD_KEY, Authorization: 'Bearer ' + VOORRAAD_KEY } });
+    if(!r.ok) return;
+    const rows = await r.json();
+    const laag = rows.filter(p => Number(p.qty) < Number(p.min)).length;
+    const t = $('tegel_voorraad');
+    const b = document.createElement('span');
+    b.className = 'badge' + (laag ? '' : ' ok');
+    b.textContent = laag ? `${laag} laag` : 'op peil';
+    t.appendChild(b);
+  }catch(e){ /* stil: badge is bijzaak */ }
+}
+
+/* ---------- tellers (na login) ---------- */
+let IK = null;
+async function start(){
+  const d = new Date();
+  $('datum').textContent = d.toLocaleDateString('nl-NL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  $('appVersie').textContent = 'start.html ' + APP_VERSION;
+  tekenTegels();
+  APPS.forEach(haalVersie);
+  voorraadBadge();
+
+  const { data: sess } = await sb.auth.getSession();
+  if(sess?.session) await naLogin(sess.session.user.id);
+  else $('inlog').style.display = 'flex';
+}
+$('l_knop').onclick = async () => {
+  $('l_fout').textContent = '';
+  const { data, error } = await sb.auth.signInWithPassword({ email: $('l_email').value.trim(), password: $('l_ww').value });
+  if(error){ $('l_fout').textContent = 'Inloggen mislukt: ' + error.message; return; }
+  $('inlog').style.display = 'none';
+  await naLogin(data.user.id);
+};
+$('l_ww').addEventListener('keydown', e => { if(e.key === 'Enter') $('l_knop').click(); });
+
+async function naLogin(uid){
+  const { data } = await sb.from('taken_rollen').select('persoon, rol, ziet_personeel').eq('user_id', uid).maybeSingle();
+  IK = data;
+  $('ik').innerHTML = IK ? `${esc(IK.persoon)} · <button id="uit">uitloggen</button>` : '<button id="uit">uitloggen</button>';
+  $('uit').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+  $('tellers').classList.remove('uit');
+  telTaken(); telZiek(); telCert();
+}
+
+function zetTeller(id, n, kleur, detail){
+  const el = $(id);
+  const g = el.querySelector('.getal'); g.textContent = n; g.className = 'getal num ' + (kleur || '');
+  el.querySelector('.detail').textContent = detail || '';
+}
+
+async function telTaken(){
+  if(!IK){ zetTeller('t_taken', '–', '', 'geen rol gevonden'); return; }
+  /* zelfde idee als "Actueel" in taken.html: open, actueel, voor mij, gepland vandaag of eerder */
+  const eind = vandaagISO() + 'T23:59:59';
+  const { data, error } = await sb.from('taken').select('onderwerp, gepland_op')
+    .is('voltooid_op', null).eq('status', 'actueel').eq('toegewezen_aan', IK.persoon).lte('gepland_op', eind)
+    .order('gepland_op', { ascending: true }).limit(200);
+  if(error){ zetTeller('t_taken', '!', 'rood', error.message); return; }
+  const n = (data || []).length;
+  const teLaat = (data || []).filter(t => String(t.gepland_op).slice(0,10) < vandaagISO()).length;
+  zetTeller('t_taken', n, n ? (teLaat ? 'rood' : '') : 'groen', n ? (teLaat ? `${teLaat} van vóór vandaag` : 'alles van vandaag zelf') : 'niets open voor vandaag');
+}
+
+async function telZiek(){
+  if(!IK || !IK.ziet_personeel){ zetTeller('t_ziek', '–', '', 'alleen voor directie'); return; }
+  const { data, error } = await sb.from('pers_verzuim').select('van, percentage, pers_medewerkers(naam)').is('tot', null).order('van');
+  if(error){ zetTeller('t_ziek', '!', 'rood', error.message); return; }
+  const rows = data || [];
+  const dag = v => Math.round((new Date(vandaagISO()) - new Date(v)) / 86400000) + 1;
+  zetTeller('t_ziek', rows.length, rows.length ? 'rood' : 'groen',
+    rows.length ? rows.map(r => `${r.pers_medewerkers?.naam || '?'} (dag ${dag(r.van)}${r.percentage < 100 ? ', ' + r.percentage + '%' : ''})`).join(' · ') : 'niemand ziek gemeld');
+}
+
+async function telCert(){
+  if(!IK || !IK.ziet_personeel){ zetTeller('t_cert', '–', '', 'alleen voor directie'); return; }
+  const { data, error } = await sb.from('pers_certificaten').select('soort, verloopt_op, herinner_dagen, pers_medewerkers(naam)').not('verloopt_op', 'is', null);
+  if(error){ zetTeller('t_cert', '!', 'rood', error.message); return; }
+  const v = vandaagISO();
+  const aandacht = (data || []).map(c => {
+    const dagen = Math.round((new Date(c.verloopt_op) - new Date(v)) / 86400000);
+    return { ...c, dagen };
+  }).filter(c => c.dagen <= (c.herinner_dagen ?? 90)).sort((a,b) => a.dagen - b.dagen);
+  const verlopen = aandacht.filter(c => c.dagen < 0).length;
+  zetTeller('t_cert', aandacht.length, aandacht.length ? (verlopen ? 'rood' : 'oranje') : 'groen',
+    aandacht.length ? aandacht.map(c => `${c.pers_medewerkers?.naam || '?'} ${c.soort} ${c.dagen < 0 ? 'verlopen' : datumNl(c.verloopt_op)}`).join(' · ') : 'alles geldig');
+}
+
+start();
+</script>
+</body>
+</html>
