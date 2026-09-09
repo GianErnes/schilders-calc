@@ -1,5 +1,9 @@
 # CHANGELOG planning.html
 
+## v0.10.0 — Ziekdagen uit Personeel op het bord, 09-09-2026
+
+Het bord leest de view `pers_verzuim_dagen` uit de personeelsmodule (alleen leesbaar voor wie `ziet_personeel` heeft). Elke ziekdag komt als regel in dezelfde verlof-map: 100% ziek blokkeert de hele dag (licht rood, "z" in plaats van ✕), gedeeltelijk ziek telt als reservering van norm × percentage, zodat de rest van de dag inplanbaar blijft. Een eigen verlofregel op dezelfde dag wint. Klik op een ziekdag in de totaalrij geeft geen "Opheffen" maar de tekst dat dit in Personeel is gemeld. Planning schrijft nooit in personeel. Is de view niet leesbaar, dan gaat het bord zonder ziekdagen verder (console.warn), zoals bij `plan_verlof`.
+
 ## v0.9.2 — Urencel selecteert het hele getal, 07-09-2026
 
 Klik of tab je in een urencel met inhoud, dan staat het hele getal geselecteerd en vervangt wat je typt het meteen. Voorheen kwam de cursor achter het getal en typte je eraan vast.

@@ -234,6 +234,7 @@
 
   /* verlof */
   td.dag.verlof { background: var(--gesloten) !important; color: var(--muted); font-weight: 600; }
+  td.dag.verlof.ziek { background: #fdecec !important; color: var(--accent-deep); }
   tr.mw td.dag.verlof, tr.mw td.dag.gesloten { text-align: center; font-size: 0.78rem; }
   tr.mw td.dag .fout-uren { color: var(--accent-deep); font-weight: 700; }
   tfoot td.dag.klik { cursor: pointer; }
@@ -396,7 +397,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.9.2';
+const APP_VERSION = '0.10.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -511,6 +512,7 @@ function projDatums(p) {
 
 // ---------- werkdagen ----------
 // Hele dag vrij (uren leeg). Een reservering met uren blokkeert de dag niet.
+function isZiek(mwId, iso) { const v = verlof[mwId + '|' + iso]; return !!(v && v._ziek); }
 function isVerlof(mwId, iso) { const v = verlof[mwId + '|' + iso]; return !!v && (v.uren === null || v.uren === undefined || v.uren === ''); }
 // Gereserveerde uren op een dag (bureau, ziekenhuis); 0 als er niets of een hele dag staat.
 function reservering(mwId, iso) { const v = verlof[mwId + '|' + iso]; return v && v.uren ? Number(v.uren) : 0; }
@@ -617,7 +619,7 @@ function vindProject(code) {
 // ---------- laden ----------
 async function laadAlles() {
   const j1 = jaar + '-01-01', j2 = jaar + '-12-31';
-  const [wv, mw, pp, pu, gd, vlRes, fsRes, mdRes] = await Promise.all([
+  const [wv, mw, pp, pu, gd, vlRes, fsRes, mdRes, zkRes] = await Promise.all([
     sb.from('fin_werkvoorraad').select('peildatum,data').order('peildatum', { ascending: false }).limit(1),
     sb.from('plan_medewerkers').select('*').order('volgorde'),
     sb.from('plan_projecten').select('*'),
@@ -626,6 +628,7 @@ async function laadAlles() {
     sb.from('plan_verlof').select('*').gte('datum', j1).lte('datum', j2),
     sb.from('plan_fasen').select('*').order('volgnr'),
     sb.from('plan_middelen').select('*').order('van'),
+    sb.from('pers_verzuim_dagen').select('medewerker_id,datum,percentage').gte('datum', j1).lte('datum', j2),
   ]);
   for (const r of [wv, mw, pp, pu, gd]) if (r.error) throw r.error;
   // plan_verlof kan ontbreken zolang planning_02_verlof.sql niet is gedraaid: dan zonder verlof verder.
@@ -651,6 +654,19 @@ async function laadAlles() {
   verlof = {};
   if (vlRes.error) { console.warn('plan_verlof niet leesbaar (tabel nog niet aangemaakt?): ' + vlRes.error.message); }
   else for (const r of (vlRes.data || [])) verlof[r.medewerker_id + '|' + r.datum] = r;
+  // v0.10.0: ziekdagen uit de personeelsmodule (view pers_verzuim_dagen, alleen leesbaar voor directie).
+  // Ze komen als synthetische verlofregel in dezelfde map: 100% = hele dag, anders als reservering
+  // van norm × percentage. Een eigen verlofregel op dezelfde dag wint. Planning schrijft hier nooit.
+  if (zkRes.error) { console.warn('pers_verzuim_dagen niet leesbaar (geen personeelsrechten of view ontbreekt): ' + zkRes.error.message); }
+  else for (const r of (zkRes.data || [])) {
+    if (!r.medewerker_id) continue;                       // medewerker staat niet op het bord
+    const k = r.medewerker_id + '|' + r.datum;
+    if (verlof[k]) continue;
+    const m = alleMedewerkers.find(x => x.id === r.medewerker_id);
+    const pct = Number(r.percentage) || 100;
+    const uren = pct >= 100 || !m ? null : Math.round(Number(m.norm_uren) * pct / 100 * 4) / 4;
+    verlof[k] = { medewerker_id: r.medewerker_id, datum: r.datum, uren: uren, omschrijving: 'ziek' + (pct < 100 ? ' (' + pct + '%)' : ''), _ziek: true };
+  }
   fasen = {};
   if (fsRes.error) { console.warn('plan_fasen niet leesbaar (tabel nog niet aangemaakt?): ' + fsRes.error.message); }
   else for (const r of (fsRes.data || [])) { (fasen[r.yoobi_code] = fasen[r.yoobi_code] || []).push(r); }
@@ -821,7 +837,7 @@ function tekenMwRij(p, d, m, f) {
   for (const iso of dagen) {
     let k = celKlassen(iso);
     const vrij = isVerlof(m.id, iso);
-    if (vrij) k += ' verlof';
+    if (vrij) k += ' verlof' + (isZiek(m.id, iso) ? ' ziek' : '');
     // Bij fasen hoort elke dag bij precies één fase; de andere fasen tonen die dag leeg.
     const andereFase = f && !hoortBijFase(p.code, iso, f);
     const blok = isWeekend(iso) || isGesloten(iso) || vrij || andereFase;
@@ -830,11 +846,11 @@ function tekenMwRij(p, d, m, f) {
     if (andereFase) k += ' buiten anderefase';
     const w = andereFase ? 0 : uren[sleutel(p.code, m.id, iso)];
     if (w) k += ' gevuld';
-    const t = vrij ? ' title="' + esc(m.naam + ' vrij' + (verlof[m.id + '|' + iso].omschrijving ? ': ' + verlof[m.id + '|' + iso].omschrijving : '')) + '"' : '';
+    const t = vrij ? ' title="' + esc(m.naam + (isZiek(m.id, iso) ? ' ' + verlof[m.id + '|' + iso].omschrijving : ' vrij' + (verlof[m.id + '|' + iso].omschrijving ? ': ' + verlof[m.id + '|' + iso].omschrijving : ''))) + '"' : '';
     h += '<td class="' + k + '" data-code="' + esc(p.code) + '" data-mw="' + esc(m.id) + '" data-datum="' + iso + '"' + t + '>';
     if (!blok) h += '<input type="text" inputmode="decimal" value="' + (w ? fmtUur(w) : '') + '" aria-label="' + esc(m.naam + ' ' + iso) + '">';
     else if (w) h += '<span class="fout-uren" title="Uren gepland op een vrije dag">' + fmtUur(w) + '</span>';
-    else if (vrij && !andereFase) h += '✕';
+    else if (vrij && !andereFase) h += isZiek(m.id, iso) ? 'z' : '✕';
     h += '</td>';
   }
   return h + '</tr>';
@@ -842,14 +858,14 @@ function tekenMwRij(p, d, m, f) {
 
 // Inhoud en kleur van een cel in de totaaltelling.
 function restantInhoud(m, iso) {
-  if (isVerlof(m.id, iso)) return '✕';
+  if (isVerlof(m.id, iso)) return isZiek(m.id, iso) ? 'z' : '✕';
   if (isWeekend(iso) || isGesloten(iso)) return '';
   const t = dagTotaal(m.id, iso) + reservering(m.id, iso);
   const r = Math.round((m.norm_uren - t) * 100) / 100;
   return fmtUur(r);
 }
 function restantKlasse(m, iso) {
-  if (isVerlof(m.id, iso)) return 'verlof klik';
+  if (isVerlof(m.id, iso)) return 'verlof klik' + (isZiek(m.id, iso) ? ' ziek' : '');
   if (isWeekend(iso) || isGesloten(iso)) return '';
   const res = reservering(m.id, iso);
   const t = dagTotaal(m.id, iso) + res;
@@ -1664,7 +1680,8 @@ bordEl.addEventListener('click', e => {
   const bestaand = verlof[mwId + '|' + iso];
   const geplandHier = dagTotaal(mwId, iso);
   popover.innerHTML = '<b>' + esc(m.naam) + '</b> · ' + DAGNAMEN[d.getDay()] + ' ' + fmtDatum(d) +
-    (bestaand ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + '</div><div class="rij"><button class="knop primair" id="poWis">Opheffen</button></div>'
+    (bestaand && bestaand._ziek ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + ' — gemeld in Personeel. Daar aanpassen of hersteld melden.</div>'
+          : bestaand ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + '</div><div class="rij"><button class="knop primair" id="poWis">Opheffen</button></div>'
           : (geplandHier ? '<div class="hint" style="color:var(--amber)">Let op: er staat al ' + fmtUur(geplandHier) + ' uur gepland op deze dag.</div>' : '') +
             '<div class="rij"><input type="text" inputmode="decimal" id="poUren" placeholder="uren" style="width:5rem" title="leeg = hele dag"><input type="text" id="poOm" placeholder="omschrijving (mag leeg)" style="flex:1"></div>' +
             '<div class="rij"><button class="knop primair" id="poZet">Opslaan</button><span class="hint" style="margin:0">uren leeg = hele dag vrij</span></div>');
