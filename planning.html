@@ -145,13 +145,11 @@
   /* hulpmiddelen: smalle strook onderin de projectrij */
   :root { --m-hoogwerker: #f59e0b; --m-rolsteiger: #0ea5e9; --m-vaste_steiger: #dc2626; --m-mobiel_toilet: #facc15; --m-overig: #9ca3af; }
   tr.project td.dag { position: relative; }
-  .middel { position: absolute; left: 0; right: 0; bottom: calc(2px + var(--m-laag, 0) * 12px); height: 11px; background: var(--m-kleur); opacity: 0.92; }
+  .middel { position: absolute; left: 0; right: 0; bottom: calc(3px + var(--m-laag, 0) * 14px); height: 6px; background: var(--m-kleur); opacity: 0.9; }
   .middel.mstart { left: 2px; border-radius: 3px 0 0 3px; }
   .middel.meind { right: 2px; border-radius: 0 3px 3px 0; }
-  /* naam ín de strook: wit op de kleur, donker op geel */
-  .middeltekst { position: absolute; bottom: calc(2px + var(--m-laag, 0) * 12px); left: 5px; height: 11px; line-height: 11px; white-space: nowrap; font-size: 0.6rem; font-weight: 700; color: #fff; z-index: 1; pointer-events: none; }
-  .middeltekst.donker { color: #3b2f00; }
-  .middeltekst .mo { font-weight: 500; opacity: 0.9; }
+  .middeltekst { position: absolute; bottom: calc(9px + var(--m-laag, 0) * 14px); left: 2px; white-space: nowrap; font-size: 0.62rem; font-weight: 700; color: var(--m-kleur); z-index: 1; line-height: 1; text-shadow: 0 0 2px #fff, 0 0 2px #fff; }
+  .middeltekst .mo { font-weight: 500; color: var(--ink-soft); }
   .middelen { margin-top: 0.7rem; }
   .middelen h3 { margin: 0 0 0.4rem; font-size: 0.8rem; color: var(--ink-soft); }
   .middelen ul { list-style: none; margin: 0; padding: 0; font-size: 0.78rem; }
@@ -399,7 +397,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.10.3';
+const APP_VERSION = '0.10.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -796,7 +794,7 @@ function tekenProjectRij(p, d, f) {
     if (li < 0) { li = lagenEind.length; lagenEind.push(md.tot); } else lagenEind[li] = md.tot;
     laagVan[md.id] = li;
   }
-  const extraHoogte = lagenEind.length > 1 ? (lagenEind.length - 1) * 12 : 0;
+  const extraHoogte = lagenEind.length > 1 ? (lagenEind.length - 1) * 14 : 0;
   let h = '<tr class="project' + (isActief ? ' actief' : '') + '" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + (extraHoogte ? ' style="height:' + (40 + extraHoogte) + 'px"' : '') + '>';
   h += '<td class="label" title="' + esc(p.klant + ' — ' + naamTekst) + '"><span class="klant">' + esc(p.klant) + '</span><span class="naam">' + esc(naamTekst) + '</span></td>';
   // Naam + afspraak vóór de start van de lijn. Geen ruimte links (start in
@@ -834,7 +832,7 @@ function tekenProjectRij(p, d, f) {
       const laagStijl = '--m-kleur:' + kl + ';--m-laag:' + (laagVan[md.id] || 0);
       inhoud += '<span class="middel' + (iso === md.van ? ' mstart' : '') + (iso === md.tot ? ' meind' : '') + '" style="' + laagStijl + '" title="' + esc(middelNaam(md) + ' ' + fmtDatum(vanIso(md.van)) + ' – ' + fmtDatum(vanIso(md.tot)) + (md.omschrijving && md.soort !== 'overig' ? ' · ' + md.omschrijving : '')) + '"></span>';
       if (iso === md.van || (md.van < j1 && iso === j1)) {
-        inhoud += '<span class="middeltekst' + (md.soort === 'mobiel_toilet' ? ' donker' : '') + '" style="' + laagStijl + '">' + esc(middelNaam(md)) + (md.omschrijving && md.soort !== 'overig' ? ' <span class="mo">' + esc(md.omschrijving) + '</span>' : '') + '</span>';
+        inhoud += '<span class="middeltekst" style="' + laagStijl + '">' + esc(middelNaam(md)) + (md.omschrijving && md.soort !== 'overig' ? ' <span class="mo">' + esc(md.omschrijving) + '</span>' : '') + '</span>';
       }
     }
     h += '<td class="' + k + '">' + inhoud + '</td>';
@@ -971,8 +969,7 @@ function tekenPaneel() {
   const d = projDatums(p);
   const ingepland = urenVanProject(p.code);
   const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
-  const nogPlannen = Math.round((budget - ingepland) * 100) / 100;
-  const nogWerken = Math.round((budget - geboekt) * 100) / 100;
+  const rest = Math.round((budget - geboekt - ingepland) * 100) / 100;
   el.innerHTML =
     '<h2>Project</h2>' +
     '<div class="pnaam">' + esc(p.naam) + '</div>' +
@@ -982,8 +979,7 @@ function tekenPaneel() {
     '<div class="c"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Ingepland ' + jaar + '</div><div class="v num">' + fmtUur(ingepland) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Geboekt</div><div class="v num">' + fmtUur(geboekt) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Budget min ingepland ' + jaar + '"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogWerken < 0 ? ' waarschuw' : '') + '" title="Budget min geboekt (Yoobi)"><div class="t">Nog te werken</div><div class="v num">' + fmtUur(nogWerken) + ' <small>uur</small></div></div>' +
+    '<div class="c' + (rest < 0 ? ' waarschuw' : '') + '"><div class="t">Resterend</div><div class="v num">' + fmtUur(rest) + ' <small>uur</small></div></div>' +
     '</div>' +
     '<div class="pdatums">Yoobi: ' + fmtDatum(d.yStart) + ' – ' + fmtDatum(d.yEind) +
     (d.afwijkend ? '<br><span class="afw">Onze planning wijkt af van Yoobi</span>' : '') +
@@ -993,7 +989,7 @@ function tekenPaneel() {
     (d.eigen ? '<button class="knop" id="pTerug">Terug naar Yoobi-datum</button>' : '') +
     '<label>Knip in fasen op</label><div class="rij"><input type="date" id="pKnipDatum" style="flex:1"><button class="knop" id="pKnip" title="Alles vóór deze datum wordt fase 1, vanaf deze datum fase 2">Knip</button></div>' +
     '</div>' +
-    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Nog te plannen = budget − ingepland; nog te werken = budget − geboekt. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
+    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Resterend = budget − geboekt − ingepland. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
     middelenHtml(p, null, d) +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
@@ -1011,8 +1007,7 @@ function tekenFasePaneel(el, p) {
   const fs = fasenVan(p.code);
   const ingepland = urenVanProject(p.code);
   const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
-  const nogPlannen = Math.round((budget - ingepland) * 100) / 100;
-  const nogWerken = Math.round((budget - geboekt) * 100) / 100;
+  const rest = Math.round((budget - geboekt - ingepland) * 100) / 100;
   const yS = yoobiDatum(p.startdatum), yE = yoobiDatum(p.einddatum);
   let h = '<h2>Project</h2>' +
     '<div class="pnaam">' + esc(p.naam) + '</div>' +
@@ -1022,8 +1017,7 @@ function tekenFasePaneel(el, p) {
     '<div class="c"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Ingepland ' + jaar + '</div><div class="v num">' + fmtUur(ingepland) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Geboekt</div><div class="v num">' + fmtUur(geboekt) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Budget min ingepland ' + jaar + '"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogWerken < 0 ? ' waarschuw' : '') + '" title="Budget min geboekt (Yoobi)"><div class="t">Nog te werken</div><div class="v num">' + fmtUur(nogWerken) + ' <small>uur</small></div></div>' +
+    '<div class="c' + (rest < 0 ? ' waarschuw' : '') + '"><div class="t">Resterend</div><div class="v num">' + fmtUur(rest) + ' <small>uur</small></div></div>' +
     '</div>' +
     '<div class="pdatums">Yoobi: ' + fmtDatum(yS) + ' – ' + fmtDatum(yE) + '</div>';
   fs.forEach((f, i) => {
@@ -1037,7 +1031,7 @@ function tekenFasePaneel(el, p) {
   });
   const fAct = fs.find(f => f.id === actiefFase) || fs[0];
   h += middelenHtml(p, fAct, faseDatums(p, fAct)) +
-    '<div class="voetnoot">Budget, geboekt, nog te plannen en nog te werken gelden voor het hele project; per fase zie je wat erop staat. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
+    '<div class="voetnoot">Budget, geboekt en resterend gelden voor het hele project; per fase zie je wat erop staat. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg">Verbergen</button></div>';
   el.innerHTML = h;
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
