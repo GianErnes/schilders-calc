@@ -3,6 +3,24 @@
 Personeelsdossier van Ernes Schilders: gegevens, dossier, verzuim en certificaten
 per medewerker, alleen zichtbaar voor de directie. Hoort bij `personeel_01_tabellen.sql`.
 
+## v0.5.0 — Verzuimstatistiek (brok G)
+
+**Nieuw**
+- Knop **Statistiek** in de kop opent een jaaroverzicht in het rechterpaneel:
+  per medewerker meldingen, ziektedagen, beschikbare dagen, verzuimpercentage
+  (groen < 3%, oranje 3–6%, rood ≥ 6%), gemiddelde en langste duur, met een
+  bedrijfstotaal. Jaarkiezer vanaf het eerste jaar met data of indiensttreding
+  (max 10 jaar terug). Daaronder de laatste vijf jaar bedrijfsbreed naast elkaar.
+- Rekenregels (bewust gekozen, staan ook onder de tabel): ziektedagen zijn
+  werkdagen ma–vr, gewogen naar percentage (50% = halve dag); beschikbaar =
+  werkdagen van het jaar in dienst, zonder feestdagen en verlof; lopende
+  melding telt tot vandaag; melding hoort bij het jaar van de eerste ziektedag,
+  dagen worden per kalenderjaar afgekapt.
+- Rekenfunctie `werkdagenTussen` los getest: vr–ma = 2, heel 2026 = 261.
+
+**Nog niet**
+- Feestdagen aftrekken (geen tabel voor), grafiek, export.
+
 ## v0.4.0 — Certificaten met herinneringstaak (brok E)
 
 **Nieuw**

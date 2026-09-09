@@ -187,6 +187,17 @@
   .contacten div{padding:3px 0}
   .contacten b{color:var(--ink)}
   .samenvatting{font-size:13px;color:var(--ink-soft)}
+  /* statistiek */
+  .stat table{border-collapse:collapse;width:100%;max-width:960px;font-size:14px}
+  .stat th,.stat td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line)}
+  .stat th{font-size:12px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .stat th:first-child,.stat td:first-child{text-align:left}
+  .stat tr.totaal td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
+  .stat .pct{font-weight:700}
+  .stat .pct.hoog{color:var(--accent-deep)} .stat .pct.midden{color:var(--amber)} .stat .pct.laag{color:var(--groen)}
+  .stat .toel{font-size:12.5px;color:var(--ink-faint);margin-top:14px;max-width:960px;line-height:1.5}
+  .stat h3{margin:26px 0 10px;font-size:15px}
+  .knop.actief{background:var(--ink);color:#fff;border-color:var(--ink)}
   /* certificaten */
   .cert{max-width:820px;display:flex;align-items:center;gap:14px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px;cursor:pointer}
   .cert:hover{border-color:var(--ink-faint)}
@@ -237,6 +248,7 @@
     </div>
     <div class="rechts">
       <span style="font-size:13px;color:var(--ink-soft)" id="ikBen"></span>
+      <button class="knop" id="statKnop">Statistiek</button>
       <button class="knop" id="nieuwKnop">+ Medewerker</button>
       <button class="knop tekst" id="uitloggen">Uitloggen</button>
     </div>
@@ -255,6 +267,18 @@
       <div class="leeg" id="leeg">
         <h3>Kies een medewerker</h3>
         Links staat iedereen die bij Ernes Schilders werkt. Klik op een naam om de kaart te openen.
+      </div>
+      <div id="statistiek" class="stat" style="display:none">
+        <div class="balk">
+          <h2 style="margin:0;font-size:22px;letter-spacing:-.4px">Verzuimstatistiek</h2>
+          <select id="st_jaar" class="knop"></select>
+          <div class="ruimte"></div>
+          <button class="knop tekst" id="st_sluit">Terug naar medewerkers</button>
+        </div>
+        <div id="st_tabel"></div>
+        <h3>Bedrijfsbreed, laatste vijf jaar</h3>
+        <div id="st_jaren"></div>
+        <div class="toel">Ziektedagen zijn werkdagen (ma–vr), gewogen naar percentage arbeidsongeschiktheid: een halve dag bij 50%. Beschikbare dagen zijn de werkdagen van het jaar waarin iemand in dienst was; feestdagen en verlof zijn niet afgetrokken, dus het percentage ligt iets lager dan de officiële formule. Een lopende melding telt tot vandaag. Meldingen worden geteld in het jaar van de eerste ziektedag; dagen worden per kalenderjaar afgekapt.</div>
       </div>
       <div id="kaart" style="display:none">
         <div class="kaartkop">
@@ -476,7 +500,7 @@
 /* ════════════════════════════════════════════════════════
    Personeel — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.4.0';
+const APP_VERSION = 'v0.5.0';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-personeel-auth' } });
@@ -657,6 +681,7 @@ const VELDEN = ['functie','in_dienst_sinds','contracttype','contract_einddatum',
                 'geboortedatum','email_prive','adres','uit_dienst_op','actief','notitie'];
 
 function kies(id){
+  if(STAT_OPEN){ STAT_OPEN = false; $('statistiek').style.display = 'none'; $('statKnop').classList.remove('actief'); }
   HUIDIG = MEDEWERKERS.find(m => m.id === id) || null;
   tekenLijst();
   if(!HUIDIG){ $('kaart').style.display = 'none'; $('leeg').style.display = 'block'; return; }
@@ -1234,6 +1259,88 @@ $('tabs').querySelectorAll('.tab').forEach(t => t.onclick = () => {
   $('tabs').querySelectorAll('.tab').forEach(x => x.classList.toggle('actief', x === t));
   document.querySelectorAll('.paneel').forEach(p => p.classList.toggle('actief', p.id === 'p_' + t.dataset.tab));
 });
+
+/* ---------- statistiek ---------- */
+let STAT_OPEN = false;
+let ALLE_VERZUIM = null;   /* pers_verzuim van iedereen, geladen bij openen */
+function werkdagenTussen(vanISO, totISO){   /* inclusief beide grenzen, alleen ma-vr */
+  let n = 0; const d = new Date(vanISO), e = new Date(totISO);
+  for(; d <= e; d.setDate(d.getDate() + 1)){ const w = d.getUTCDay(); if(w >= 1 && w <= 5) n++; }
+  return n;
+}
+function knip(a, b){ return a > b ? a : b; }   /* latere van twee ISO-datums */
+function knipEind(a, b){ return a < b ? a : b; }
+function statVoorJaar(jaar){
+  const j1 = `${jaar}-01-01`, j2 = `${jaar}-12-31`, vandaag = vandaagISO();
+  const eindJaar = knipEind(j2, vandaag);        /* lopend jaar: tot vandaag */
+  const rijen = MEDEWERKERS.map(m => {
+    const vz = (ALLE_VERZUIM || []).filter(v => v.medewerker_id === m.id);
+    /* beschikbaar: werkdagen van het jaar waarin in dienst */
+    let van = j1, tot = eindJaar;
+    if(m.in_dienst_sinds && m.in_dienst_sinds > van) van = m.in_dienst_sinds;
+    if(m.uit_dienst_op && m.uit_dienst_op < tot) tot = m.uit_dienst_op;
+    const beschikbaar = van <= tot ? werkdagenTussen(van, tot) : 0;
+    let ziek = 0, meldingen = 0, langste = 0, duurTotaal = 0;
+    vz.forEach(v => {
+      const vEind = v.tot || vandaag;
+      const a = knip(v.van, j1), b = knipEind(vEind, eindJaar);
+      if(a <= b){ ziek += werkdagenTussen(a, b) * (v.percentage / 100); }
+      if(v.van.slice(0,4) === String(jaar)){
+        meldingen++;
+        const duur = werkdagenTussen(v.van, vEind);
+        duurTotaal += duur; if(duur > langste) langste = duur;
+      }
+    });
+    return { naam: m.naam, actief: m.actief, beschikbaar, ziek: Math.round(ziek * 10) / 10, meldingen,
+             pct: beschikbaar ? Math.round(ziek / beschikbaar * 1000) / 10 : null,
+             gem: meldingen ? Math.round(duurTotaal / meldingen * 10) / 10 : null, langste };
+  }).filter(r => r.beschikbaar > 0 || r.meldingen > 0);
+  const tot = rijen.reduce((t, r) => ({ beschikbaar: t.beschikbaar + r.beschikbaar, ziek: t.ziek + r.ziek, meldingen: t.meldingen + r.meldingen, langste: Math.max(t.langste, r.langste), duur: t.duur + (r.gem || 0) * r.meldingen }), { beschikbaar:0, ziek:0, meldingen:0, langste:0, duur:0 });
+  tot.pct = tot.beschikbaar ? Math.round(tot.ziek / tot.beschikbaar * 1000) / 10 : null;
+  tot.gem = tot.meldingen ? Math.round(tot.duur / tot.meldingen * 10) / 10 : null;
+  tot.ziek = Math.round(tot.ziek * 10) / 10;
+  return { rijen, tot };
+}
+function pctKlasse(p){ return p == null ? '' : p >= 6 ? 'hoog' : p >= 3 ? 'midden' : 'laag'; }
+function pctTekst(p){ return p == null ? '–' : p.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
+function tekenStatistiek(){
+  const jaar = parseInt($('st_jaar').value, 10);
+  const { rijen, tot } = statVoorJaar(jaar);
+  const kop = '<tr><th>Medewerker</th><th>Meldingen</th><th>Ziektedagen</th><th>Beschikbaar</th><th>Verzuim</th><th>Gem. duur</th><th>Langste</th></tr>';
+  const rij = r => `<tr><td>${esc(r.naam)}${r.actief ? '' : ' <span style="color:var(--ink-faint)">(uit dienst)</span>'}</td><td class="num">${r.meldingen}</td><td class="num">${r.ziek.toLocaleString('nl-NL')}</td><td class="num">${r.beschikbaar}</td><td class="num pct ${pctKlasse(r.pct)}">${pctTekst(r.pct)}</td><td class="num">${r.gem == null ? '–' : r.gem.toLocaleString('nl-NL')}</td><td class="num">${r.langste || '–'}</td></tr>`;
+  $('st_tabel').innerHTML = `<table>${kop}${rijen.map(rij).join('')}<tr class="totaal"><td>Ernes Schilders</td><td class="num">${tot.meldingen}</td><td class="num">${tot.ziek.toLocaleString('nl-NL')}</td><td class="num">${tot.beschikbaar}</td><td class="num pct ${pctKlasse(tot.pct)}">${pctTekst(tot.pct)}</td><td class="num">${tot.gem == null ? '–' : tot.gem.toLocaleString('nl-NL')}</td><td class="num">${tot.langste || '–'}</td></tr></table>`;
+  const nu = new Date().getFullYear();
+  const jaren = []; for(let j = nu; j > nu - 5; j--) jaren.push(j);
+  const per = jaren.map(j => ({ j, ...statVoorJaar(j).tot }));
+  $('st_jaren').innerHTML = `<table><tr><th>Jaar</th>${per.map(p => `<th>${p.j}${p.j === nu ? ' (t/m nu)' : ''}</th>`).join('')}</tr>
+    <tr><td>Verzuim</td>${per.map(p => `<td class="num pct ${pctKlasse(p.pct)}">${pctTekst(p.pct)}</td>`).join('')}</tr>
+    <tr><td>Meldingen</td>${per.map(p => `<td class="num">${p.meldingen}</td>`).join('')}</tr>
+    <tr><td>Ziektedagen</td>${per.map(p => `<td class="num">${p.ziek.toLocaleString('nl-NL')}</td>`).join('')}</tr>
+    <tr><td>Gemiddelde duur</td>${per.map(p => `<td class="num">${p.gem == null ? '–' : p.gem.toLocaleString('nl-NL')}</td>`).join('')}</tr></table>`;
+}
+async function openStatistiek(){
+  const { data, error } = await sb.from('pers_verzuim').select('medewerker_id, van, tot, percentage');
+  if(error){ toast('Verzuim laden mislukt: ' + error.message, true); return; }
+  ALLE_VERZUIM = data || [];
+  const nu = new Date().getFullYear();
+  const eerste = Math.min(nu, ...ALLE_VERZUIM.map(v => parseInt(v.van.slice(0,4), 10)), ...MEDEWERKERS.map(m => m.in_dienst_sinds ? parseInt(m.in_dienst_sinds.slice(0,4), 10) : nu));
+  const van = Math.max(eerste, nu - 10);
+  const gekozen = $('st_jaar').value;
+  $('st_jaar').innerHTML = ''; for(let j = nu; j >= van; j--){ const o = document.createElement('option'); o.value = j; o.textContent = j; $('st_jaar').appendChild(o); }
+  if(gekozen && [...$('st_jaar').options].some(o => o.value === gekozen)) $('st_jaar').value = gekozen;
+  STAT_OPEN = true;
+  $('kaart').style.display = 'none'; $('leeg').style.display = 'none'; $('statistiek').style.display = 'block';
+  $('statKnop').classList.add('actief');
+  tekenStatistiek();
+}
+function sluitStatistiek(){
+  STAT_OPEN = false;
+  $('statistiek').style.display = 'none'; $('statKnop').classList.remove('actief');
+  if(HUIDIG) kies(HUIDIG.id); else $('leeg').style.display = 'block';
+}
+$('statKnop').onclick = () => STAT_OPEN ? sluitStatistiek() : openStatistiek();
+$('st_sluit').onclick = sluitStatistiek;
+$('st_jaar').onchange = tekenStatistiek;
 
 /* ---------- nieuwe medewerker ---------- */
 $('nieuwKnop').onclick = () => {
