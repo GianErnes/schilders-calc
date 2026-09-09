@@ -1,5 +1,9 @@
 # CHANGELOG planning.html
 
+## v0.10.1 — Overlappende hulpmiddelen onder elkaar, 09-09-2026
+
+Twee of meer hulpmiddelen die elkaar in tijd overlappen (steiger én toilet) stonden op dezelfde pixels, strook én naam door elkaar. Nu krijgt elk middel een eigen laag: op volgorde van startdatum de laagste laag die vrij is, zoals afspraken in een agenda. De projectrij groeit 14px per extra laag (40 → 54 → 68 → 82px); rijen zonder overlap blijven exact zoals ze waren. Gevonden door Gian bij een demonstratie aan Max.
+
 ## v0.10.0 — Ziekdagen uit Personeel op het bord, 09-09-2026
 
 Het bord leest de view `pers_verzuim_dagen` uit de personeelsmodule (alleen leesbaar voor wie `ziet_personeel` heeft). Elke ziekdag komt als regel in dezelfde verlof-map: 100% ziek blokkeert de hele dag (licht rood, "z" in plaats van ✕), gedeeltelijk ziek telt als reservering van norm × percentage, zodat de rest van de dag inplanbaar blijft. Een eigen verlofregel op dezelfde dag wint. Klik op een ziekdag in de totaalrij geeft geen "Opheffen" maar de tekst dat dit in Personeel is gemeld. Planning schrijft nooit in personeel. Is de view niet leesbaar, dan gaat het bord zonder ziekdagen verder (console.warn), zoals bij `plan_verlof`.
