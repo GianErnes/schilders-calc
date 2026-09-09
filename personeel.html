@@ -169,6 +169,24 @@
   .bijlagen{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
   .bijlagen .doc{padding:7px 10px}
   .knop.gevaar{color:var(--accent-deep);border-color:#f3c9c9}
+  /* verzuim */
+  .lopend{max-width:820px;border:1px solid #f3c9c9;background:#fff7f7;border-radius:var(--radius);padding:16px 18px;margin-bottom:18px}
+  .lopend .kop{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .lopend .kop b{font-size:17px}
+  .lopend .kop .dag{color:var(--accent-deep);font-weight:700}
+  .lopend .volgende{margin-top:8px;font-size:14px;color:var(--ink-soft)}
+  .lopend .afspraken{margin-top:8px;white-space:pre-wrap;font-size:14px}
+  .lopend .knoppen{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .periode{max-width:820px;display:flex;align-items:center;gap:14px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px;cursor:pointer}
+  .periode:hover{border-color:var(--ink-faint)}
+  .periode .van{min-width:180px;font-weight:600}
+  .periode .duur{color:var(--ink-soft);font-size:13.5px}
+  .periode .pct{margin-left:auto;font-size:13px;color:var(--ink-soft)}
+  .signaal.rood{background:var(--accent)}
+  .contacten{margin:6px 0 14px 28px;max-width:790px;font-size:13.5px;color:var(--ink-soft)}
+  .contacten div{padding:3px 0}
+  .contacten b{color:var(--ink)}
+  .samenvatting{font-size:13px;color:var(--ink-soft)}
   .knop.gevaar:hover{background:#fdeaea}
 
   @media (max-width:820px){
@@ -308,7 +326,13 @@
           <div class="tijdlijn" id="d_lijst"></div>
         </div>
         <div class="paneel" id="p_verzuim">
-          <div class="placeholder"><b>Verzuim</b> komt in brok D: ziekmeldingen als periode, met de poortwachter-mijlpalen als taken in de takenapp.</div>
+          <div class="balk">
+            <button class="knop primair" id="z_nieuw">Ziekmelding</button>
+            <div class="ruimte"></div>
+            <span class="samenvatting" id="z_samenvatting"></span>
+          </div>
+          <div id="z_lopend"></div>
+          <div id="z_historie"></div>
         </div>
         <div class="paneel" id="p_certificaten">
           <div class="placeholder"><b>Certificaten</b> komt in brok E: VCA, BHV, hoogwerker met vervaldatum en een herinnering als taak.</div>
@@ -369,13 +393,49 @@
   </div>
 </div>
 
+<div class="schaduw" id="zSchaduw">
+  <div class="modaal">
+    <h3 id="z_kop">Ziekmelding</h3>
+    <div class="velden">
+      <div class="veld"><label for="z_van">Eerste ziektedag</label><input id="z_van" type="date"></div>
+      <div class="veld"><label for="z_pct">Percentage arbeidsongeschikt</label>
+        <select id="z_pct"><option>100</option><option>75</option><option>50</option><option>25</option></select>
+      </div>
+      <div class="veld" id="z_tot_veld" style="display:none"><label for="z_tot">Laatste ziektedag</label><input id="z_tot" type="date"></div>
+      <div class="veld"><label for="z_afspraken">Afspraken en inzetbaarheid</label>
+        <textarea id="z_afspraken" placeholder="Wat is afgesproken, wat kan de medewerker wel. Geen medische inhoud — dat is aan de bedrijfsarts."></textarea>
+      </div>
+    </div>
+    <div class="knoppen">
+      <button class="knop gevaar" id="z_verwijder" style="margin-right:auto;display:none">Verwijderen</button>
+      <button class="knop" id="z_annuleer">Annuleren</button>
+      <button class="knop primair" id="z_bewaar">Bewaren</button>
+    </div>
+  </div>
+</div>
+
+<div class="schaduw" id="hSchaduw">
+  <div class="modaal">
+    <h3>Hersteld melden</h3>
+    <div class="velden">
+      <div class="veld"><label for="h_tot">Laatste ziektedag</label><input id="h_tot" type="date"></div>
+      <div class="veld"><label for="h_gemeld">Hersteld gemeld op</label><input id="h_gemeld" type="date"></div>
+    </div>
+    <p style="font-size:13px;color:var(--ink-soft);margin:12px 0 0">Nog open poortwachter-taken komen op vervallen te staan.</p>
+    <div class="knoppen">
+      <button class="knop" id="h_annuleer">Annuleren</button>
+      <button class="knop primair" id="h_bewaar">Hersteld</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 /* ════════════════════════════════════════════════════════
    Personeel — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.2.0';
+const APP_VERSION = 'v0.3.0';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-personeel-auth' } });
@@ -391,7 +451,11 @@ let TOON_INACTIEF = false;
 let DOSSIER = [];             // pers_dossier van HUIDIG
 let DOCS = [];                // pers_documenten van HUIDIG
 let GESPREK_LAATST = {};      // medewerker_id -> laatste gespreksdatum (voor signalen)
-let GEB = null;               // { modus, rij }
+let GEB = null;               // { modus, rij, verzuimId }
+let VERZUIM = [];             // pers_verzuim van HUIDIG
+let MIJLPALEN = [];           // pers_verzuim_mijlpalen
+let LOPEND_ALLE = {};         // medewerker_id -> true als er een lopende melding is
+let ZM = null;                // ziekmelding-venster: { modus, rij }
 const BUCKET = 'personeel';
 const SOORT_NAAM = { functioneringsgesprek:'Functioneringsgesprek', beoordelingsgesprek:'Beoordelingsgesprek', waarschuwing:'Waarschuwing',
   opleiding:'Opleiding', contractwijziging:'Contractwijziging', loonafspraak:'Loonafspraak', verzuimcontact:'Verzuimcontact', notitie:'Notitie' };
@@ -485,14 +549,20 @@ async function naToegang(){
 
 /* ---------- data ---------- */
 async function laadAlles(){
-  const [m, p, g] = await Promise.all([
+  const [m, p, g, l, mp] = await Promise.all([
     sb.from('pers_medewerkers').select('*').order('naam'),
     sb.from('plan_medewerkers').select('id, naam, volgorde').order('volgorde'),
-    sb.from('pers_dossier').select('medewerker_id, datum').in('soort', [...GESPREKKEN]).order('datum', { ascending: false })
+    sb.from('pers_dossier').select('medewerker_id, datum').in('soort', [...GESPREKKEN]).order('datum', { ascending: false }),
+    sb.from('pers_verzuim').select('medewerker_id').is('tot', null),
+    sb.from('pers_verzuim_mijlpalen').select('*').eq('actief', true).order('week')
   ]);
   if(m.error){ toast('Medewerkers laden mislukt: ' + m.error.message, true); return; }
   if(p.error){ toast('Planbord laden mislukt: ' + p.error.message, true); }
   if(g.error){ toast('Gesprekken laden mislukt: ' + g.error.message, true); }
+  if(l.error){ toast('Verzuim laden mislukt: ' + l.error.message, true); }
+  if(mp.error){ toast('Mijlpalen laden mislukt: ' + mp.error.message, true); }
+  LOPEND_ALLE = {}; (l.data || []).forEach(r => LOPEND_ALLE[r.medewerker_id] = true);
+  MIJLPALEN = mp.data || [];
   MEDEWERKERS = m.data || [];
   PLANBORD = p.data || [];
   GESPREK_LAATST = {};
@@ -522,7 +592,7 @@ function tekenLijst(){
         <div class="naam">${esc(m.naam)}</div>
         <div class="functie">${esc(m.functie || (m.actief ? 'Functie nog niet ingevuld' : 'Uit dienst'))}</div>
       </div>
-      <div class="signalen">${gesprekSignaal(m.id, m) ? `<span class="signaal" title="${esc(gesprekSignaal(m.id, m))}"></span>` : ''}</div>
+      <div class="signalen">${LOPEND_ALLE[m.id] ? '<span class="signaal rood" title="Ziek gemeld"></span>' : ''}${gesprekSignaal(m.id, m) ? `<span class="signaal" title="${esc(gesprekSignaal(m.id, m))}"></span>` : ''}</div>
     </div>`).join('') || `<div class="leeg" style="padding:16px 8px">Nog geen medewerkers.</div>`;
   $('lijst').querySelectorAll('.persoon').forEach(el => el.onclick = () => kies(el.dataset.id));
 }
@@ -560,17 +630,21 @@ function kies(id){
 async function laadDossierEnDocs(){
   if(!HUIDIG) return;
   const id = HUIDIG.id;
-  const [d, x] = await Promise.all([
+  const [d, x, z] = await Promise.all([
     sb.from('pers_dossier').select('*').eq('medewerker_id', id).order('datum', { ascending: false }).order('created_at', { ascending: false }),
-    sb.from('pers_documenten').select('*').eq('medewerker_id', id).order('created_at', { ascending: false })
+    sb.from('pers_documenten').select('*').eq('medewerker_id', id).order('created_at', { ascending: false }),
+    sb.from('pers_verzuim').select('*').eq('medewerker_id', id).order('van', { ascending: false })
   ]);
   if(!HUIDIG || HUIDIG.id !== id) return;   /* intussen iemand anders gekozen */
   if(d.error){ toast('Dossier laden mislukt: ' + d.error.message, true); }
   if(x.error){ toast('Documenten laden mislukt: ' + x.error.message, true); }
+  if(z.error){ toast('Verzuim laden mislukt: ' + z.error.message, true); }
   DOSSIER = d.data || [];
   DOCS = x.data || [];
+  VERZUIM = z.data || [];
   tekenDossier();
   tekenDocs();
+  tekenVerzuim();
 }
 
 function telInTab(tab, n){
@@ -611,11 +685,15 @@ function tekenDossier(){
 $('d_filter').onchange = tekenDossier;
 
 $('d_nieuw').onclick = () => openGebeurtenis(null);
-function openGebeurtenis(rij){
-  GEB = { modus: rij ? 'bewerk' : 'nieuw', rij };
-  $('g_kop').textContent = rij ? 'Gebeurtenis bewerken' : 'Nieuwe gebeurtenis';
+function openGebeurtenis(rij, verzuimId){
+  GEB = { modus: rij ? 'bewerk' : 'nieuw', rij, verzuimId: verzuimId || (rij ? rij.verzuim_id : null) };
+  /* verzuimcontact alleen kiesbaar als het aan een ziekmelding hangt */
+  const opt = $('g_soort').querySelector('option[value="verzuimcontact"]');
+  if(GEB.verzuimId && !opt){ const o = document.createElement('option'); o.value = 'verzuimcontact'; o.textContent = 'Verzuimcontact'; $('g_soort').appendChild(o); }
+  if(!GEB.verzuimId && opt) opt.remove();
+  $('g_kop').textContent = rij ? 'Gebeurtenis bewerken' : (verzuimId ? 'Contactmoment' : 'Nieuwe gebeurtenis');
   $('g_datum').value = rij ? rij.datum : vandaagISO();
-  $('g_soort').value = rij ? rij.soort : 'notitie';
+  $('g_soort').value = rij ? rij.soort : (verzuimId ? 'verzuimcontact' : 'notitie');
   $('g_titel').value = rij ? rij.titel : '';
   $('g_tekst').value = rij ? (rij.tekst || '') : '';
   $('g_vervolg').value = rij ? (rij.vervolg_op || '') : '';
@@ -653,6 +731,7 @@ $('g_bewaar').onclick = async () => {
     titel,
     tekst: $('g_tekst').value.trim() || null,
     vervolg_op: $('g_vervolg').value || null,
+    verzuim_id: GEB.verzuimId || null,
   };
   $('g_bewaar').disabled = true;
   try{
@@ -727,6 +806,141 @@ async function verwijderOpenTaak(bron, ref){
   if(error) toast('Taak opruimen lukte niet: ' + error.message, true);
 }
 
+/* ---------- verzuim ---------- */
+function dagenTussen(a, b){ return Math.round((new Date(b) - new Date(a)) / 86400000); }
+function verzuimDagen(v){ return dagenTussen(v.van, v.tot || vandaagISO()) + 1; }   /* kalenderdagen, inclusief */
+function volgendeMijlpaal(v){
+  const vandaag = vandaagISO();
+  for(const m of MIJLPALEN){
+    const d = new Date(v.van); d.setDate(d.getDate() + m.week * 7);
+    const iso = d.toISOString().slice(0,10);
+    if(iso >= vandaag) return { ...m, datum: iso };
+  }
+  return null;
+}
+function tekenVerzuim(){
+  telInTab('verzuim', VERZUIM.length);
+  const lopend = VERZUIM.find(v => !v.tot);
+  $('z_nieuw').style.display = lopend ? 'none' : '';
+
+  /* samenvatting dit jaar */
+  const jaar = new Date().getFullYear();
+  const ditJaar = VERZUIM.filter(v => v.van.slice(0,4) === String(jaar) || (v.tot || vandaagISO()).slice(0,4) === String(jaar));
+  let dagen = 0;
+  ditJaar.forEach(v => {
+    const van = v.van < `${jaar}-01-01` ? `${jaar}-01-01` : v.van;
+    const tot = (v.tot || vandaagISO()) > `${jaar}-12-31` ? `${jaar}-12-31` : (v.tot || vandaagISO());
+    dagen += Math.max(0, dagenTussen(van, tot) + 1);
+  });
+  $('z_samenvatting').textContent = ditJaar.length ? `${jaar}: ${ditJaar.length} ${ditJaar.length === 1 ? 'melding' : 'meldingen'}, ${dagen} kalenderdagen` : `${jaar}: geen verzuim`;
+
+  if(lopend){
+    const dag = verzuimDagen(lopend), week = Math.floor((dag - 1) / 7) + 1;
+    const vm = volgendeMijlpaal(lopend);
+    $('z_lopend').innerHTML = `<div class="lopend">
+      <div class="kop"><b>Ziek sinds ${datumNl(lopend.van)}</b><span class="dag num">dag ${dag} · week ${week}</span><span>${lopend.percentage}% arbeidsongeschikt</span></div>
+      <div class="volgende">${vm ? `Volgende mijlpaal: week ${vm.week} — ${esc(vm.titel)} (${datumNl(vm.datum)}). Staat als taak in de takenapp.` : 'Geen mijlpalen meer in de reeks.'}</div>
+      ${lopend.afspraken ? `<div class="afspraken">${esc(lopend.afspraken)}</div>` : ''}
+      <div class="knoppen">
+        <button class="knop" id="z_hersteld">Hersteld</button>
+        <button class="knop" id="z_contact">Contactmoment</button>
+        <button class="knop tekst" id="z_bewerk">Aanpassen</button>
+      </div>
+    </div>${contactenHtml(lopend)}`;
+    $('z_hersteld').onclick = () => openHersteld(lopend);
+    $('z_contact').onclick = () => openGebeurtenis(null, lopend.id);
+    $('z_bewerk').onclick = () => openZiekmelding(lopend);
+  } else {
+    $('z_lopend').innerHTML = '';
+  }
+
+  const afgesloten = VERZUIM.filter(v => v.tot);
+  $('z_historie').innerHTML = afgesloten.length
+    ? afgesloten.map(v => `<div class="periode" data-id="${v.id}">
+        <span class="van num">${datumNl(v.van)} – ${datumNl(v.tot)}</span>
+        <span class="duur">${verzuimDagen(v)} ${verzuimDagen(v) === 1 ? 'dag' : 'dagen'}</span>
+        <span class="pct">${v.percentage}%</span>
+      </div>${contactenHtml(v)}`).join('')
+    : (lopend ? '' : '<div class="leeg" style="padding:8px 0">Geen verzuim vastgelegd.</div>');
+  $('z_historie').querySelectorAll('.periode').forEach(el => el.onclick = () => openZiekmelding(VERZUIM.find(v => v.id === el.dataset.id)));
+}
+function contactenHtml(v){
+  const c = DOSSIER.filter(r => r.verzuim_id === v.id);
+  if(!c.length) return '';
+  return `<div class="contacten">${c.map(r => `<div><span class="num">${datumNl(r.datum)}</span> · <b>${esc(r.titel)}</b>${r.tekst ? ' — ' + esc(r.tekst.length > 140 ? r.tekst.slice(0,140) + '…' : r.tekst) : ''}</div>`).join('')}</div>`;
+}
+
+$('z_nieuw').onclick = () => openZiekmelding(null);
+function openZiekmelding(rij){
+  ZM = { modus: rij ? 'bewerk' : 'nieuw', rij };
+  $('z_kop').textContent = rij ? 'Ziekmelding aanpassen' : 'Ziekmelding';
+  $('z_van').value = rij ? rij.van : vandaagISO();
+  $('z_pct').value = rij ? String(rij.percentage) : '100';
+  $('z_tot_veld').style.display = rij && rij.tot ? '' : 'none';
+  $('z_tot').value = rij ? (rij.tot || '') : '';
+  $('z_afspraken').value = rij ? (rij.afspraken || '') : '';
+  $('z_verwijder').style.display = rij ? '' : 'none';
+  $('zSchaduw').classList.add('zie');
+}
+function sluitZiekmelding(){ $('zSchaduw').classList.remove('zie'); ZM = null; }
+$('z_annuleer').onclick = sluitZiekmelding;
+$('zSchaduw').addEventListener('click', e => { if(e.target === $('zSchaduw')) sluitZiekmelding(); });
+$('z_bewaar').onclick = async () => {
+  if(!HUIDIG || !ZM) return;
+  const van = $('z_van').value;
+  if(!van){ toast('Vul de eerste ziektedag in', true); return; }
+  const rij = { van, percentage: parseInt($('z_pct').value, 10), afspraken: $('z_afspraken').value.trim() || null };
+  if(ZM.modus === 'bewerk' && ZM.rij.tot){
+    const tot = $('z_tot').value;
+    if(!tot || tot < van){ toast('De laatste ziektedag moet op of na de eerste liggen', true); return; }
+    rij.tot = tot;
+  }
+  $('z_bewaar').disabled = true;
+  try{
+    if(ZM.modus === 'nieuw'){
+      const { error } = await sb.from('pers_verzuim').insert({ ...rij, medewerker_id: HUIDIG.id, aangemaakt_door: UID });
+      if(error) throw error;
+      toast('Ziekmelding vastgelegd; eerste poortwachter-taak staat in de takenapp');
+    } else {
+      const { error } = await sb.from('pers_verzuim').update(rij).eq('id', ZM.rij.id);
+      if(error) throw error;
+      toast('Bewaard');
+    }
+    sluitZiekmelding();
+    await laadAlles();
+  }catch(err){ toast('Bewaren mislukt: ' + err.message, true); }
+  finally{ $('z_bewaar').disabled = false; }
+};
+$('z_verwijder').onclick = async () => {
+  if(!ZM || ZM.modus !== 'bewerk') return;
+  if(!confirm(`Ziekmelding van ${datumNl(ZM.rij.van)} verwijderen?\nAlleen voor foutieve invoer. Contactmomenten in het dossier blijven staan, taken worden opgeruimd.`)) return;
+  await sb.from('taken').update({ status: 'vervallen' }).eq('bron', 'verzuim').eq('bron_ref', ZM.rij.id).is('voltooid_op', null);
+  const { error } = await sb.from('pers_verzuim').delete().eq('id', ZM.rij.id);
+  if(error){ toast('Verwijderen mislukt: ' + error.message, true); return; }
+  toast('Verwijderd');
+  sluitZiekmelding();
+  await laadAlles();
+};
+
+function openHersteld(v){
+  ZM = { modus: 'hersteld', rij: v };
+  $('h_tot').value = vandaagISO();
+  $('h_gemeld').value = vandaagISO();
+  $('hSchaduw').classList.add('zie');
+}
+$('h_annuleer').onclick = () => { $('hSchaduw').classList.remove('zie'); ZM = null; };
+$('hSchaduw').addEventListener('click', e => { if(e.target === $('hSchaduw')) $('h_annuleer').click(); });
+$('h_bewaar').onclick = async () => {
+  if(!ZM || ZM.modus !== 'hersteld') return;
+  const tot = $('h_tot').value;
+  if(!tot || tot < ZM.rij.van){ toast('De laatste ziektedag moet op of na de eerste liggen', true); return; }
+  const { error } = await sb.from('pers_verzuim').update({ tot, hersteld_gemeld_op: $('h_gemeld').value || null }).eq('id', ZM.rij.id);
+  if(error){ toast('Hersteld melden mislukt: ' + error.message, true); return; }
+  toast(`Hersteld per ${datumNl(tot)}`);
+  $('hSchaduw').classList.remove('zie'); ZM = null;
+  await laadAlles();
+};
+
 /* ---------- documenten ---------- */
 function docHtml(x){
   const ext = (x.bestandsnaam.split('.').pop() || '').toUpperCase().slice(0,4);
@@ -798,6 +1012,7 @@ function tekenMeta(){
   const j = dienstjaren(HUIDIG.in_dienst_sinds);
   if(j !== null) delen.push(j === 0 ? 'korter dan een jaar in dienst' : `${j} jaar in dienst`);
   if(HUIDIG.contracttype) delen.push(HUIDIG.contracttype.toLowerCase());
+  if(LOPEND_ALLE[HUIDIG.id]) delen.push('ziek gemeld');
   if(!HUIDIG.actief) delen.push('uit dienst' + (HUIDIG.uit_dienst_op ? ' per ' + datumNl(HUIDIG.uit_dienst_op) : ''));
   $('k_meta').textContent = delen.join(' · ') || 'Nog geen gegevens ingevuld';
 }

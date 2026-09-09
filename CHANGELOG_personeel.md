@@ -3,6 +3,39 @@
 Personeelsdossier van Ernes Schilders: gegevens, dossier, verzuim en certificaten
 per medewerker, alleen zichtbaar voor de directie. Hoort bij `personeel_01_tabellen.sql`.
 
+## v0.3.0 — Verzuim met poortwachter-reeks (brok D)
+
+**Nieuw in de app**
+- Tab **Verzuim**: knop *Ziekmelding* (eerste ziektedag, percentage, afspraken;
+  bewust geen klachtveld). Lopende melding bovenaan met dag- en weekteller,
+  percentage, afspraken en de eerstvolgende mijlpaal. Knoppen *Hersteld*,
+  *Contactmoment*, *Aanpassen*. Historie van afgesloten periodes met duur.
+- *Contactmoment* maakt een dossierregel van soort `verzuimcontact` met
+  `verzuim_id`; verschijnt onder de melding én in het dossier. Die soort is
+  alleen kiesbaar vanuit een ziekmelding.
+- Samenvatting per kalenderjaar: aantal meldingen en kalenderdagen (afgekapt
+  op jaargrens). Echte statistiek volgt in brok G.
+- Lijst links: rood bolletje bij lopend verzuim; kaartkop toont "ziek gemeld".
+- Verwijderen van een melding alleen voor foutieve invoer; zet open taken op
+  vervallen, laat contactmomenten staan.
+
+**Nieuw in de database (`personeel_02_verzuim.sql`)**
+- `pers_verzuim_mijlpalen` (week, titel, toelichting, actief) — startlijst
+  weken 6, 8, 26, 42, 52, 87. Aanpasbaar zonder code. Controleren bij arbodienst.
+- `pers_verzuim_plan_volgende(verzuim_id, na_week)` maakt de taak voor de
+  eerstvolgende mijlpaal die nog niet voorbij is: `bron='verzuim'`,
+  `bron_ref`=verzuim-id, `bron_kenmerk`=week, op naam van wie de melding invoerde.
+- Trigger op `pers_verzuim`: bij insert eerste mijlpaal; bij herstel (tot gevuld)
+  open verzuimtaken op `vervallen`; bij heropenen opnieuw eerste mijlpaal.
+- Trigger op `taken`: verzuimtaak afgevinkt → volgende mijlpaal. Werkt ook
+  vanuit taken.html.
+
+**Aannames om te testen**
+- Dat de trigger op `taken` afgaat bij het afvinken in taken.html (update van
+  `voltooid_op`, taken.html regel 1707) en dat de `security definer`-functies
+  door RLS heen mogen schrijven in `taken`.
+- Dat de mijlpaaldatum (van + week×7) klopt met wat de arbodienst hanteert.
+
 ## v0.2.0 — Dossier, documenten en de eerste taakkoppeling (brok C)
 
 **Nieuw**
