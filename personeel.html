@@ -134,6 +134,43 @@
   .toast.zie{opacity:1;transform:translate(-50%,0)}
   .toast.fout{background:var(--accent-deep)}
 
+  /* tijdlijn */
+  .balk{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .balk .ruimte{flex:1}
+  .tijdlijn{max-width:820px;border-left:2px solid var(--line);margin-left:6px;padding-left:22px}
+  .gebeurtenis{position:relative;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:10px;cursor:pointer}
+  .gebeurtenis:hover{border-color:var(--ink-faint)}
+  .gebeurtenis::before{content:'';position:absolute;left:-29px;top:18px;width:10px;height:10px;border-radius:50%;background:var(--ink-faint);border:2px solid var(--paper)}
+  .gebeurtenis .regel1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .gebeurtenis .datum{color:var(--ink-soft);font-size:13px;min-width:80px}
+  .gebeurtenis .titel{font-weight:700}
+  .gebeurtenis .tekst{margin-top:6px;color:var(--ink-soft);font-size:14px;white-space:pre-wrap;line-height:1.45}
+  .gebeurtenis .voet{margin-top:8px;display:flex;gap:14px;font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap}
+  .soortlabel{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--line-soft);color:var(--ink-soft)}
+  .soortlabel.functioneringsgesprek,.soortlabel.beoordelingsgesprek{background:#e8efff;color:#2547b8}
+  .soortlabel.waarschuwing{background:#fdeaea;color:var(--accent-deep)}
+  .soortlabel.opleiding{background:var(--groen-tint);color:var(--groen)}
+  .soortlabel.contractwijziging,.soortlabel.loonafspraak{background:var(--amber-tint);color:var(--amber)}
+  .soortlabel.verzuimcontact{background:#f3e8ff;color:#7e22ce}
+  .gebeurtenis.waarschuwing::before{background:var(--accent)}
+  .gebeurtenis.functioneringsgesprek::before,.gebeurtenis.beoordelingsgesprek::before{background:#2547b8}
+
+  /* documenten */
+  .dropzone{border:2px dashed var(--line);border-radius:var(--radius);padding:22px;text-align:center;color:var(--ink-soft);max-width:820px;margin-bottom:16px;cursor:pointer}
+  .dropzone.over{border-color:var(--ink);background:#fff}
+  .doclijst{max-width:820px}
+  .doc{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:8px}
+  .doc .ico{width:34px;height:34px;border-radius:8px;background:var(--line-soft);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--ink-soft);flex:none}
+  .doc .dnaam{font-weight:600;cursor:pointer}
+  .doc .dnaam:hover{text-decoration:underline}
+  .doc .dmeta{font-size:12.5px;color:var(--ink-soft)}
+  .doc .dacties{margin-left:auto;display:flex;gap:4px}
+  .modaal.breed{width:560px}
+  .bijlagen{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .bijlagen .doc{padding:7px 10px}
+  .knop.gevaar{color:var(--accent-deep);border-color:#f3c9c9}
+  .knop.gevaar:hover{background:#fdeaea}
+
   @media (max-width:820px){
     main{grid-template-columns:1fr}
     .lijst{border-right:0;border-bottom:1px solid var(--line);max-height:40vh}
@@ -252,7 +289,23 @@
         </div>
 
         <div class="paneel" id="p_dossier">
-          <div class="placeholder"><b>Dossier</b> komt in brok C: gesprekken, waarschuwingen, opleidingen en afspraken op een tijdlijn, met bijlagen.</div>
+          <div class="balk">
+            <button class="knop primair" id="d_nieuw">+ Gebeurtenis</button>
+            <select id="d_filter" class="knop">
+              <option value="">Alle soorten</option>
+              <option value="functioneringsgesprek">Functioneringsgesprek</option>
+              <option value="beoordelingsgesprek">Beoordelingsgesprek</option>
+              <option value="waarschuwing">Waarschuwing</option>
+              <option value="opleiding">Opleiding</option>
+              <option value="contractwijziging">Contractwijziging</option>
+              <option value="loonafspraak">Loonafspraak</option>
+              <option value="verzuimcontact">Verzuimcontact</option>
+              <option value="notitie">Notitie</option>
+            </select>
+            <div class="ruimte"></div>
+            <span id="d_signaal" style="font-size:13px;color:var(--amber)"></span>
+          </div>
+          <div class="tijdlijn" id="d_lijst"></div>
         </div>
         <div class="paneel" id="p_verzuim">
           <div class="placeholder"><b>Verzuim</b> komt in brok D: ziekmeldingen als periode, met de poortwachter-mijlpalen als taken in de takenapp.</div>
@@ -261,7 +314,9 @@
           <div class="placeholder"><b>Certificaten</b> komt in brok E: VCA, BHV, hoogwerker met vervaldatum en een herinnering als taak.</div>
         </div>
         <div class="paneel" id="p_documenten">
-          <div class="placeholder"><b>Documenten</b> komt in brok C, samen met het dossier.</div>
+          <div class="dropzone" id="doc_drop">Sleep bestanden hierheen of <u>kies een bestand</u><br><span style="font-size:12.5px">PDF, foto's, Word — tot 25 MB per bestand</span></div>
+          <input type="file" id="doc_input" multiple style="display:none">
+          <div class="doclijst" id="doc_lijst"></div>
         </div>
       </div>
     </section>
@@ -285,13 +340,42 @@
   </div>
 </div>
 
+<div class="schaduw" id="gebSchaduw">
+  <div class="modaal breed">
+    <h3 id="g_kop">Nieuwe gebeurtenis</h3>
+    <div class="velden" style="grid-template-columns:1fr 1fr">
+      <div class="veld"><label for="g_datum">Datum</label><input id="g_datum" type="date"></div>
+      <div class="veld"><label for="g_soort">Soort</label>
+        <select id="g_soort">
+          <option value="functioneringsgesprek">Functioneringsgesprek</option>
+          <option value="beoordelingsgesprek">Beoordelingsgesprek</option>
+          <option value="waarschuwing">Waarschuwing</option>
+          <option value="opleiding">Opleiding</option>
+          <option value="contractwijziging">Contractwijziging</option>
+          <option value="loonafspraak">Loonafspraak</option>
+          <option value="notitie">Notitie</option>
+        </select>
+      </div>
+      <div class="veld breed"><label for="g_titel">Titel</label><input id="g_titel" placeholder="Kort: waar ging het over"></div>
+      <div class="veld breed"><label for="g_tekst">Verslag / afspraken</label><textarea id="g_tekst" style="min-height:120px"></textarea></div>
+      <div class="veld"><label for="g_vervolg">Vervolg op (wordt een taak voor jou)</label><input id="g_vervolg" type="date"></div>
+    </div>
+    <div class="bijlagen" id="g_bijlagen"></div>
+    <div class="knoppen">
+      <button class="knop gevaar" id="g_verwijder" style="margin-right:auto;display:none">Verwijderen</button>
+      <button class="knop" id="g_annuleer">Annuleren</button>
+      <button class="knop primair" id="g_bewaar">Bewaren</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 /* ════════════════════════════════════════════════════════
    Personeel — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.1.0';
+const APP_VERSION = 'v0.2.0';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-personeel-auth' } });
@@ -304,6 +388,14 @@ let MEDEWERKERS = [];         // pers_medewerkers
 let PLANBORD = [];            // plan_medewerkers (id, naam)
 let HUIDIG = null;            // geselecteerde medewerker
 let TOON_INACTIEF = false;
+let DOSSIER = [];             // pers_dossier van HUIDIG
+let DOCS = [];                // pers_documenten van HUIDIG
+let GESPREK_LAATST = {};      // medewerker_id -> laatste gespreksdatum (voor signalen)
+let GEB = null;               // { modus, rij }
+const BUCKET = 'personeel';
+const SOORT_NAAM = { functioneringsgesprek:'Functioneringsgesprek', beoordelingsgesprek:'Beoordelingsgesprek', waarschuwing:'Waarschuwing',
+  opleiding:'Opleiding', contractwijziging:'Contractwijziging', loonafspraak:'Loonafspraak', verzuimcontact:'Verzuimcontact', notitie:'Notitie' };
+const GESPREKKEN = new Set(['functioneringsgesprek','beoordelingsgesprek']);
 
 const $ = id => document.getElementById(id);
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -322,6 +414,24 @@ function datumNl(d){
   const [j,m,dag] = d.split('-');
   return `${dag}-${m}-${j}`;
 }
+function vandaagISO(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function maandenGeleden(iso){
+  if(!iso) return null;
+  const d = new Date(iso), n = new Date();
+  return (n.getFullYear() - d.getFullYear()) * 12 + (n.getMonth() - d.getMonth());
+}
+function gesprekSignaal(medId, m){
+  /* oranje als er langer dan 12 maanden geen functionerings- of beoordelingsgesprek is geweest,
+     alleen voor wie in dienst is en langer dan een jaar werkt (anders is het geen signaal) */
+  if(!m.actief) return null;
+  const jaren = dienstjaren(m.in_dienst_sinds);
+  if(jaren !== null && jaren < 1) return null;
+  const laatst = GESPREK_LAATST[medId];
+  if(!laatst) return 'Nog geen gesprek vastgelegd';
+  const mnd = maandenGeleden(laatst);
+  return mnd >= 12 ? `Laatste gesprek ${mnd} maanden geleden` : null;
+}
+function grootteNl(b){ if(b == null) return ''; return b > 1048576 ? (b/1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b/1024)) + ' kB'; }
 function dienstjaren(sinds){
   if(!sinds) return null;
   const s = new Date(sinds), n = new Date();
@@ -375,14 +485,18 @@ async function naToegang(){
 
 /* ---------- data ---------- */
 async function laadAlles(){
-  const [m, p] = await Promise.all([
+  const [m, p, g] = await Promise.all([
     sb.from('pers_medewerkers').select('*').order('naam'),
-    sb.from('plan_medewerkers').select('id, naam, volgorde').order('volgorde')
+    sb.from('plan_medewerkers').select('id, naam, volgorde').order('volgorde'),
+    sb.from('pers_dossier').select('medewerker_id, datum').in('soort', [...GESPREKKEN]).order('datum', { ascending: false })
   ]);
   if(m.error){ toast('Medewerkers laden mislukt: ' + m.error.message, true); return; }
   if(p.error){ toast('Planbord laden mislukt: ' + p.error.message, true); }
+  if(g.error){ toast('Gesprekken laden mislukt: ' + g.error.message, true); }
   MEDEWERKERS = m.data || [];
   PLANBORD = p.data || [];
+  GESPREK_LAATST = {};
+  (g.data || []).forEach(r => { if(!GESPREK_LAATST[r.medewerker_id]) GESPREK_LAATST[r.medewerker_id] = r.datum; });
   /* sorteer op planbordvolgorde, daarna alfabetisch */
   const volg = {}; PLANBORD.forEach(x => volg[x.id] = x.volgorde);
   MEDEWERKERS.sort((a,b) => {
@@ -408,7 +522,7 @@ function tekenLijst(){
         <div class="naam">${esc(m.naam)}</div>
         <div class="functie">${esc(m.functie || (m.actief ? 'Functie nog niet ingevuld' : 'Uit dienst'))}</div>
       </div>
-      <div class="signalen"></div>
+      <div class="signalen">${gesprekSignaal(m.id, m) ? `<span class="signaal" title="${esc(gesprekSignaal(m.id, m))}"></span>` : ''}</div>
     </div>`).join('') || `<div class="leeg" style="padding:16px 8px">Nog geen medewerkers.</div>`;
   $('lijst').querySelectorAll('.persoon').forEach(el => el.onclick = () => kies(el.dataset.id));
 }
@@ -439,7 +553,244 @@ function kies(id){
     const w = HUIDIG[v];
     el.value = v === 'actief' ? String(w !== false) : (w ?? '');
   });
+  laadDossierEnDocs();
 }
+
+/* ---------- dossier ---------- */
+async function laadDossierEnDocs(){
+  if(!HUIDIG) return;
+  const id = HUIDIG.id;
+  const [d, x] = await Promise.all([
+    sb.from('pers_dossier').select('*').eq('medewerker_id', id).order('datum', { ascending: false }).order('created_at', { ascending: false }),
+    sb.from('pers_documenten').select('*').eq('medewerker_id', id).order('created_at', { ascending: false })
+  ]);
+  if(!HUIDIG || HUIDIG.id !== id) return;   /* intussen iemand anders gekozen */
+  if(d.error){ toast('Dossier laden mislukt: ' + d.error.message, true); }
+  if(x.error){ toast('Documenten laden mislukt: ' + x.error.message, true); }
+  DOSSIER = d.data || [];
+  DOCS = x.data || [];
+  tekenDossier();
+  tekenDocs();
+}
+
+function telInTab(tab, n){
+  const t = $('tabs').querySelector(`[data-tab="${tab}"]`);
+  let b = t.querySelector('.tel');
+  if(!n){ if(b) b.remove(); return; }
+  if(!b){ b = document.createElement('span'); b.className = 'tel'; t.appendChild(b); }
+  b.textContent = n;
+}
+
+function tekenDossier(){
+  const filter = $('d_filter').value;
+  const rijen = filter ? DOSSIER.filter(r => r.soort === filter) : DOSSIER;
+  telInTab('dossier', DOSSIER.length);
+  const sig = gesprekSignaal(HUIDIG.id, HUIDIG);
+  $('d_signaal').textContent = sig || '';
+  if(!rijen.length){
+    $('d_lijst').innerHTML = `<div class="leeg" style="padding:8px 0">${DOSSIER.length ? 'Niets van deze soort.' : 'Nog niets vastgelegd. Begin met een gebeurtenis.'}</div>`;
+    return;
+  }
+  $('d_lijst').innerHTML = rijen.map(r => {
+    const bijl = DOCS.filter(x => x.dossier_id === r.id);
+    const voet = [];
+    if(r.vervolg_op) voet.push(`Vervolg op ${datumNl(r.vervolg_op)}`);
+    if(bijl.length) voet.push(bijl.length === 1 ? '1 bijlage' : `${bijl.length} bijlagen`);
+    return `<div class="gebeurtenis ${esc(r.soort)}" data-id="${r.id}">
+      <div class="regel1">
+        <span class="datum num">${datumNl(r.datum)}</span>
+        <span class="soortlabel ${esc(r.soort)}">${esc(SOORT_NAAM[r.soort] || r.soort)}</span>
+        <span class="titel">${esc(r.titel)}</span>
+      </div>
+      ${r.tekst ? `<div class="tekst">${esc(r.tekst)}</div>` : ''}
+      ${voet.length ? `<div class="voet">${voet.map(esc).join('<span>·</span>')}</div>` : ''}
+    </div>`;
+  }).join('');
+  $('d_lijst').querySelectorAll('.gebeurtenis').forEach(el => el.onclick = () => openGebeurtenis(DOSSIER.find(r => r.id === el.dataset.id)));
+}
+$('d_filter').onchange = tekenDossier;
+
+$('d_nieuw').onclick = () => openGebeurtenis(null);
+function openGebeurtenis(rij){
+  GEB = { modus: rij ? 'bewerk' : 'nieuw', rij };
+  $('g_kop').textContent = rij ? 'Gebeurtenis bewerken' : 'Nieuwe gebeurtenis';
+  $('g_datum').value = rij ? rij.datum : vandaagISO();
+  $('g_soort').value = rij ? rij.soort : 'notitie';
+  $('g_titel').value = rij ? rij.titel : '';
+  $('g_tekst').value = rij ? (rij.tekst || '') : '';
+  $('g_vervolg').value = rij ? (rij.vervolg_op || '') : '';
+  $('g_verwijder').style.display = rij ? '' : 'none';
+  tekenBijlagen();
+  $('gebSchaduw').classList.add('zie');
+  $('g_titel').focus();
+}
+function sluitGebeurtenis(){ $('gebSchaduw').classList.remove('zie'); GEB = null; }
+$('g_annuleer').onclick = sluitGebeurtenis;
+$('gebSchaduw').addEventListener('click', e => { if(e.target === $('gebSchaduw')) sluitGebeurtenis(); });
+
+function tekenBijlagen(){
+  const box = $('g_bijlagen');
+  if(!GEB || GEB.modus === 'nieuw'){
+    box.innerHTML = '<span style="font-size:13px;color:var(--ink-soft)">Bijlagen kun je toevoegen zodra de gebeurtenis is bewaard.</span>';
+    return;
+  }
+  const bijl = DOCS.filter(x => x.dossier_id === GEB.rij.id);
+  box.innerHTML = (bijl.length ? bijl.map(docHtml).join('') : '') +
+    `<button class="knop klein" id="g_bijlage_knop" type="button">+ Bijlage</button><input type="file" id="g_bijlage_input" multiple style="display:none">`;
+  koppelDocKnoppen(box);
+  $('g_bijlage_knop').onclick = () => $('g_bijlage_input').click();
+  $('g_bijlage_input').onchange = async e => { await uploadBestanden([...e.target.files], GEB.rij.id); tekenBijlagen(); };
+}
+
+$('g_bewaar').onclick = async () => {
+  if(!HUIDIG || !GEB) return;
+  const titel = $('g_titel').value.trim();
+  if(!titel){ toast('Geef de gebeurtenis een titel', true); return; }
+  if(!$('g_datum').value){ toast('Kies een datum', true); return; }
+  const rij = {
+    datum: $('g_datum').value,
+    soort: $('g_soort').value,
+    titel,
+    tekst: $('g_tekst').value.trim() || null,
+    vervolg_op: $('g_vervolg').value || null,
+  };
+  $('g_bewaar').disabled = true;
+  try{
+    let bewaard;
+    if(GEB.modus === 'nieuw'){
+      const { data, error } = await sb.from('pers_dossier').insert({ ...rij, medewerker_id: HUIDIG.id }).select().single();
+      if(error) throw error;
+      bewaard = data;
+    } else {
+      const { data, error } = await sb.from('pers_dossier').update(rij).eq('id', GEB.rij.id).select().single();
+      if(error) throw error;
+      bewaard = data;
+    }
+    const taakFout = await synchroniseerVervolgTaak(bewaard);
+    if(taakFout) toast('Bewaard, maar de taak lukte niet: ' + taakFout, true);
+    else toast('Bewaard');
+    sluitGebeurtenis();
+    await laadAlles();
+  }catch(err){
+    toast('Bewaren mislukt: ' + err.message, true);
+  }finally{
+    $('g_bewaar').disabled = false;
+  }
+};
+
+$('g_verwijder').onclick = async () => {
+  if(!GEB || GEB.modus !== 'bewerk') return;
+  const r = GEB.rij;
+  if(!confirm(`"${r.titel}" van ${datumNl(r.datum)} verwijderen?\nBijlagen blijven staan onder Documenten.`)) return;
+  const { error } = await sb.from('pers_dossier').delete().eq('id', r.id);
+  if(error){ toast('Verwijderen mislukt: ' + error.message, true); return; }
+  await verwijderOpenTaak('dossier', r.id);
+  toast('Verwijderd');
+  sluitGebeurtenis();
+  await laadAlles();
+};
+
+/* ---------- koppeling met taken.html ----------
+   Eén taak per dossierregel: bron='dossier', bron_ref=dossier.id.
+   Formaat gepland_op en velden overgenomen uit taken.html v0.18.0. */
+async function synchroniseerVervolgTaak(d){
+  const { data: bestaand, error } = await sb.from('taken').select('crmtaskid, voltooid_op')
+    .eq('bron', 'dossier').eq('bron_ref', d.id).is('voltooid_op', null).maybeSingle();
+  if(error) return error.message;
+
+  if(!d.vervolg_op){
+    if(bestaand){
+      const { error: e2 } = await sb.from('taken').delete().eq('crmtaskid', bestaand.crmtaskid);
+      if(e2) return e2.message;
+    }
+    return null;
+  }
+  const taak = {
+    onderwerp: `${HUIDIG.naam}: vervolg ${SOORT_NAAM[d.soort].toLowerCase()} — ${d.titel}`,
+    notitie: d.tekst ? d.tekst.slice(0, 400) : null,
+    gepland_op: d.vervolg_op + 'T09:00:00',
+    toegewezen_aan: IK.persoon,
+    bron: 'dossier',
+    bron_ref: d.id,
+    bron_kenmerk: d.soort,
+    projectnaam: 'Personeel · ' + HUIDIG.naam,
+  };
+  if(bestaand){
+    const { error: e3 } = await sb.from('taken').update(taak).eq('crmtaskid', bestaand.crmtaskid);
+    return e3 ? e3.message : null;
+  }
+  const { error: e4 } = await sb.from('taken').insert({ ...taak, soort: 'eenmalig', status: 'actueel', aangemaakt_door: UID });
+  return e4 ? e4.message : null;
+}
+async function verwijderOpenTaak(bron, ref){
+  const { error } = await sb.from('taken').delete().eq('bron', bron).eq('bron_ref', ref).is('voltooid_op', null);
+  if(error) toast('Taak opruimen lukte niet: ' + error.message, true);
+}
+
+/* ---------- documenten ---------- */
+function docHtml(x){
+  const ext = (x.bestandsnaam.split('.').pop() || '').toUpperCase().slice(0,4);
+  const geb = x.dossier_id ? DOSSIER.find(r => r.id === x.dossier_id) : null;
+  return `<div class="doc" data-id="${x.id}">
+    <div class="ico">${esc(ext)}</div>
+    <div>
+      <div class="dnaam" data-open="${x.id}">${esc(x.bestandsnaam)}</div>
+      <div class="dmeta">${datumNl(x.created_at.slice(0,10))} · ${grootteNl(x.grootte)}${geb ? ' · bij: ' + esc(geb.titel) : ''}</div>
+    </div>
+    <div class="dacties"><button class="knop tekst klein" data-weg="${x.id}" title="Verwijderen">✕</button></div>
+  </div>`;
+}
+function koppelDocKnoppen(root){
+  root.querySelectorAll('[data-open]').forEach(el => el.onclick = () => openDoc(el.dataset.open));
+  root.querySelectorAll('[data-weg]').forEach(el => el.onclick = () => verwijderDoc(el.dataset.weg));
+}
+function tekenDocs(){
+  telInTab('documenten', DOCS.length);
+  $('doc_lijst').innerHTML = DOCS.length ? DOCS.map(docHtml).join('')
+    : '<div class="leeg" style="padding:8px 0">Nog geen documenten. Contract, ID-kopie, loonstroken — alles wat bij deze medewerker hoort.</div>';
+  koppelDocKnoppen($('doc_lijst'));
+}
+async function openDoc(id){
+  const x = DOCS.find(d => d.id === id); if(!x) return;
+  const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(x.storage_path, 3600);
+  if(error){ toast('Openen mislukt: ' + error.message, true); return; }
+  window.open(data.signedUrl, '_blank');
+}
+async function verwijderDoc(id){
+  const x = DOCS.find(d => d.id === id); if(!x) return;
+  if(!confirm(`"${x.bestandsnaam}" definitief verwijderen?`)) return;
+  const { error: e1 } = await sb.storage.from(BUCKET).remove([x.storage_path]);
+  if(e1){ toast('Bestand verwijderen mislukt: ' + e1.message, true); return; }
+  const { error: e2 } = await sb.from('pers_documenten').delete().eq('id', id);
+  if(e2){ toast('Registratie verwijderen mislukt: ' + e2.message, true); return; }
+  toast('Verwijderd');
+  await laadDossierEnDocs();
+  if(GEB && GEB.modus === 'bewerk') tekenBijlagen();
+}
+async function uploadBestanden(files, dossierId){
+  if(!HUIDIG || !files.length) return;
+  let ok = 0;
+  for(const f of files){
+    if(f.size > 25 * 1048576){ toast(`${f.name} is groter dan 25 MB`, true); continue; }
+    const veilig = f.name.replace(/[^A-Za-z0-9._-]+/g, '_');
+    const pad = `${HUIDIG.id}/${Date.now()}_${veilig}`;
+    const { error: e1 } = await sb.storage.from(BUCKET).upload(pad, f, { contentType: f.type || 'application/octet-stream' });
+    if(e1){ toast(`${f.name}: ${e1.message}`, true); continue; }
+    const { error: e2 } = await sb.from('pers_documenten').insert({
+      medewerker_id: HUIDIG.id, dossier_id: dossierId || null, storage_path: pad,
+      bestandsnaam: f.name, mime: f.type || null, grootte: f.size
+    });
+    if(e2){ toast(`${f.name} geüpload maar niet geregistreerd: ${e2.message}`, true); continue; }
+    ok++;
+  }
+  if(ok) toast(ok === 1 ? '1 bestand toegevoegd' : `${ok} bestanden toegevoegd`);
+  await laadDossierEnDocs();
+}
+$('doc_drop').onclick = () => $('doc_input').click();
+$('doc_input').onchange = e => { uploadBestanden([...e.target.files], null); e.target.value = ''; };
+['dragenter','dragover'].forEach(ev => $('doc_drop').addEventListener(ev, e => { e.preventDefault(); $('doc_drop').classList.add('over'); }));
+['dragleave','drop'].forEach(ev => $('doc_drop').addEventListener(ev, e => { e.preventDefault(); $('doc_drop').classList.remove('over'); }));
+$('doc_drop').addEventListener('drop', e => uploadBestanden([...e.dataTransfer.files], null));
 
 function tekenMeta(){
   const delen = [];
