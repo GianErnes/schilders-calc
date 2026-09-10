@@ -1,3 +1,20 @@
+## v4.64.0 — Calculatie-app alleen nog met het administratie-account
+
+### Wat er nu kan
+
+De Calculatie-app laat alleen nog `administratie@ernes.nl` binnen. Log je in met een ander account (gian, max, maud, jens, bjorn), dan word je direct weer uitgelogd en zegt het inlogscherm: *De Calculatie-app werkt alleen met het administratie-account.* Dat geldt ook als je met zo'n account al ingelogd was en de pagina ververst.
+
+**Waarom.** Op 10 september 2026 was een verzonden onderhoudsplan (VvE Chateau Geerlingshof) onvindbaar in de Onderhoudsplan-tab. Na een uur zoeken bleek: alle plannen staan op naam van administratie, de tabel `onderhoudsplannen` heeft een persoonlijke policy (`user_id = auth.uid()`), en er was ingelogd als gian. De app krijgt dan nul rijen terug zonder foutmelding en toont een leeg nieuw plan. Omdat de app nergens laat zien met welk account je werkt, was dat niet te zien. Met één toegestaan account kan dit niet meer voorkomen. De andere apps (Taken, Planning, Personeel enzovoort) blijven gewoon met persoonlijke accounts werken; die lezen de plannen-tabellen niet.
+
+### Hoe het onder de kap zit
+
+- Nieuwe constante `TOEGESTANE_ACCOUNTS` direct onder `APP_VERSION`, een lijstje met nu één adres. Uitbreiden is een adres toevoegen.
+- Nieuwe functie `_accountToegestaan()` leest het e-mailadres uit de Supabase-sessie en vergelijkt hoofdletterongevoelig met de lijst.
+- `_showApp()` roept die functie als eerste aan. Alle drie de routes naar de app (inloggen, sessieherstel bij paginalaad, wachtwoordherstel) komen langs `_showApp`, dus één poort dekt alles. Bij weigering: `signOut()`, inlogscherm terug, melding via `_showAuthMsg`.
+- Geen SQL, geen policy-wijziging. Alle zes bestaande plannen stonden al op administratie (gecontroleerd met een query op 10 september), dus er hoefde niets overgezet te worden.
+
+**Kanttekening.** Dit is een controle in de app, geen database-beveiliging. De policies op de calculatie-tabellen staan open voor iedere ingelogde gebruiker; wie de Supabase-gegevens heeft en handig is, kan er omheen. Het doel is bescherming tegen per-ongeluk-verkeerd-inloggen, niet tegen inbrekers.
+
 ## v4.63.0 — Getekend exemplaar van een geaccordeerd onderhoudsplan (route 2, brok B)
 
 ### Wat er nu kan

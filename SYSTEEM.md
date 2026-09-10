@@ -313,6 +313,19 @@ Kleuren per persoon, gebruikt door de hele suite: Gian blauw `#2563eb`,
 Max oranje `#f97316`, Maud zalm `#f28b82`, Jens geel `#eab308`, Bjorn
 groen `#16a34a`.
 
+**De Calculatie-app (`index.html`) laat sinds v4.64.0 (10 september 2026)
+alleen `administratie@ernes.nl` binnen.** Andere accounts worden bij
+inloggen of sessieherstel direct uitgelogd met een melding. Reden: de
+tabel `onderhoudsplannen` heeft als enige calculatie-tabel een
+persoonlijke policy (`eigen plannen alles`, `user_id = auth.uid()`,
+gecontroleerd in `pg_policies` op 10 september), alle plannen staan op
+naam van administratie, en wie als gian of max inlogt ziet een leeg
+formulier zonder foutmelding. De lijst staat in de constante
+`TOEGESTANE_ACCOUNTS`; de poort zit in `_showApp()`. Dit is een
+app-controle, geen database-beveiliging. De andere apps blijven met
+persoonlijke accounts werken en lezen de plannen-tabellen niet
+(gecontroleerd met grep op alle html-bestanden, 10 september).
+
 ### 2.4 Sleutels en geheimen
 
 Waar de werkelijke waarden liggen: **[TE CONTROLEREN: welke kluis]**.
