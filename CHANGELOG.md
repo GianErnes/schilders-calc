@@ -1,3 +1,24 @@
+## v4.65.2 — Versie-geschiedenis weer één zin per versie
+
+### Wat er nu kan
+
+Het blok *Versie-geschiedenis* belooft "1 zin per versie", maar vanaf v3.33.0 (6 juni 2026) waren de regels uitgegroeid tot technische verslagen van 300 tot 2.800 tekens met functienamen, tabellen en rollback-volgorde. Dat hoort in dit CHANGELOG onder *Hoe het onder de kap zit*, en daar stond het ook al. Alle 207 regels langer dan 300 tekens zijn herschreven naar één zin in gewone taal (maximaal 159 tekens), plus twee kortere regels die nog CSS-namen bevatten (v3.72.1 en v4.65.1). Aan de CHANGELOG-teksten is niets veranderd; de techniek is dus nergens verloren.
+
+De oude regels van vóór v3.33.0 (in de oude stijl, 2 tot 3 zinnen) zijn ongemoeid gelaten.
+
+**Afspraak voortaan:** de regel in de app is één zin voor Gian, zonder functienamen of tabelnamen, maximaal circa 150 tekens. Techniek gaat alleen in CHANGELOG.md.
+
+### Hoe het onder de kap zit
+
+- Alleen de `h`-teksten in `RELEASE_HIGHLIGHTS` zijn gewijzigd; versienummers, datums en volgorde zijn gelijk (339 regels voor en na, geen dubbelen, gecontroleerd door de array in node uit te voeren).
+- Bestand kromp van 1.795.209 naar circa 1.609.000 bytes.
+- Nakijklijst oud → nieuw meegeleverd als `nakijklijst_versiegeschiedenis.md` (niet voor de repo).
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Geen SQL, geen Edge Function.
+2. Steekproef in de app: open Versie-geschiedenis en lees een paar regels na; of gebruik de nakijklijst.
+
 ## v4.65.1 — Versie-informatie voor v4.64.0 alsnog toegevoegd
 
 ### Wat er nu kan
