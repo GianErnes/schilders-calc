@@ -2337,8 +2337,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.64.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.65.0</h2>
       <div class="intro-body">
+        <p><strong>🔄 Verfsysteem wisselen op een regel (v4.65.0).</strong> Naast de systeemnaam in de regelkop staat een knop 🔄. Die opent dezelfde zoeklijst als Regel toevoegen; kies je een systeem, dan vervangt de nieuwe momentopname (naam, eenheid, ondergrond, locatie, bewerkingen) de oude. De naam van de post, hoeveelheid, toeslag, aan/uit, volgorde en meetstaat blijven staan. Geen bevestigingsvenster. Heeft de regel meetstaat-regels en heeft het nieuwe systeem een andere eenheid, dan wordt de wissel geweigerd. Hangt er een onderhoudsplan met per-stap-percentages aan deze regel, dan krijg je een melding: die percentages horen bij de oude bewerkingen en gelden niet meer. De knop volgt het slot van de calculatie. Geen SQL.</p>
         <p><strong>✅ Getekend exemplaar van een geaccordeerd onderhoudsplan (v4.63.0, route 2 brok B).</strong> Geeft een klant akkoord op een planlink met PDF, dan krijgt hij op de klantpagina hetzelfde als bij een offerte: het exemplaar met GEACCORDEERD-stempel op elke pagina en achteraan een akkoordbevestiging, hier met de gekozen betaalwijze (per beurt of per maand) in plaats van een bedrag. Hij kan het downloaden en ziet het in beeld. Jij hebt in het linkbeheer van het plan de knop Getekend exemplaar (PDF), en het Archiveren-venster heeft een nieuwe regel Geaccordeerd onderhoudsplan (getekend), standaard aangevinkt zodra er een planakkoord met PDF ligt, zodat het met de projectmap naar Yoobi gaat. De offerte-kant is niet veranderd. Nog open: de knop in de bevestigingsmail na een planakkoord zit in de Edge Function offerte-accord en volgt apart. Geen SQL.</p>
         <p><strong>📄 PDF alsnog maken uit de momentopname (v4.62.0).</strong> Heeft een planlink nog geen PDF (gemaakt vóór v4.61.0, of het maken mislukte), dan staat er in het linkbeheer nu de knop <strong>PDF alsnog maken uit de momentopname</strong>. Die gebruikt uitsluitend de bevroren bijlage die de klant heeft gekregen, niet het huidige plan, en hangt de PDF aan de bestaande link: dezelfde link, dezelfde openingsteller, dezelfde opvolging. Zo krijg je ook van een al verzonden plan een schone PDF voor Yoobi, ook als het plan daarna per ongeluk is aangepast. Geen SQL.</p>
         <p><strong>🔓 Op een vergrendeld plan kun je weer een ander plan kiezen (v4.61.1).</strong> Reparatie op v4.60.0: het slot zette ook de bronkiezer vast (zoekveld, statusvinkjes en de knop Wijzig), waardoor je vanaf een verzonden plan niet meer naar een ander plan kon. Een ander plan kiezen is navigatie, geen wijziging aan het bevroren plan; die knoppen werken nu altijd. Verder niets veranderd.</p>
@@ -3399,7 +3400,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 <!-- ADD SYSTEM TO ONDERDEEL MODAL -->
 <div class="modal-overlay" id="addSysModal">
   <div class="modal" style="max-width: 640px;">
-    <div class="modal-head"><h3>Verfsysteem toevoegen</h3><button class="close-x" onclick="closeAddSysModal()">✕</button></div>
+    <div class="modal-head"><h3 id="addSysTitel">Verfsysteem toevoegen</h3><button class="close-x" onclick="closeAddSysModal()">✕</button></div>
     <div class="modal-body">
       <label>Zoek of kies een systeem</label>
       <input type="text" id="addSysSearch" placeholder="Type om te zoeken..." oninput="renderAddSysList()">
@@ -3667,7 +3668,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.64.0';
+const APP_VERSION = 'v4.65.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4084,6 +4085,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.65.0', d: '2026-09-12', h: 'Verfsysteem wisselen op een calc-regel. Knop 🔄 in de regelkop (class systeem-naam, bewust zonder lock-allowed zodat het calc-slot hem uitschakelt, plus JS-borg met _isCalcLocked) opent de bestaande addSysModal; addSysCtx draagt een optioneel regelId en selectAddSys vertakt daarop naar de nieuwe wisselRegelSysteem. Nieuwe _regelHeeftPerStapPlan doet een gerichte query op onderhoudsplannen (calculatie_id) en onderhoudsplan_beurten (plan_id) omdat _ohpState.plan niet betrouwbaar bij de open calc hoort; treft ze een beurt met scaling.modus per_stap en stap-ids van deze regel, dan een toast, wissel gaat door (besluit 12-09-2026). Blokkade met toast als de regel meetstaat-rijen heeft (calcRegelId) en de eenheid van het nieuwe systeem afwijkt; gelijke eenheid mag, meetstaat blijft. Opslagvolgorde: nieuwe stappen inserten met select, oude stappen verwijderen op id, daarna regel-update via de nieuwe wachtende _updateRegelDBAwait (de bestaande _updateRegelDB wacht niet). Terugval: mislukt de insert dan niets veranderd; mislukt de delete dan gaan de nieuwe stappen weer weg; mislukt de regel-update dan melding en herlaad van de calc. Behouden: naam, hoeveelheid, toeslag, actief, volgorde, meetstaat. Vervangen: systeemId, systeemNaam, systeemEenheid, systeemOndergrond(+Id), systeemLocatie, stappen. Namen wisselRegelSysteem, _updateRegelDBAwait en _regelHeeftPerStapPlan vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
   { v: '4.63.0', d: '2026-09-03', h: 'Getekend exemplaar voor planakkoorden (route 2, brok B). _bouwGetekendePdfBytes kent nu info.isPlan en info.betaalkeuze: titel Akkoordbevestiging onderhoudsplan, de zin Dit onderhoudsplan is digitaal geaccordeerd, en een regel Betaling met de nieuwe _accordBetaalLabel (per beurt / per maand, kort label naast de bestaande zinvariant _accordBetaalWoord) in plaats van het bedrag, dat bij plannen null is; de GEACCORDEERD-stempel per pagina (v4.2.0) werkt ongewijzigd op de rasterpagina\u0027s, besluit 03-09-2026 dat de stempel ook op planpagina\u0027s komt. Klantpagina: _accordCtx draagt isPlan en betaalkeuze (uit res.betaalkeuze, na een vers akkoord uit het formulier), _accordToonGetekendInViewer en _accordKlantDownloadGetekend geven die door, en knoptekst, banner, meldingen en bestandsnaam volgen het documenttype. _accordDownloadGetekend kreeg een vierde parameter opts { isPlan, betaalkeuze, naam }; leeg betekent het offertegedrag van altijd. Planlinkbeheer toont bij status akkoord en aanwezige pdf_path de knop Getekend exemplaar (PDF) met _ohpPlanNaam als bestandsnaam. Archiveren: nieuwe _archAccordPlanRij, gevuld met een gerichte select op onderhoudsplan_id van _ohpState.plan (alleen als die bij de open calc hoort), nieuwe optie geaccordeerdplan met vooraf: true en een eigen tak in _archiveerVolgende; de bestaande offerte-select filtert nog steeds op onderhoudsplan_id leeg. Buiten deze brok: mail B na een planakkoord zit in offerte-accord (niet gezien). Zeven inhoudstests met echte pdf-lib en pdftotext groen: plan-titel, plan-zin, regel Betaling per maand, geen regel Bedrag, stempel op pagina 1, en het offertepad ongewijzigd. Namen _accordBetaalLabel, _archAccordPlanRij, geaccordeerdplan en ohpAcGetekend vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function in deze brok.' },
   { v: '4.62.0', d: '2026-09-03', h: 'PDF alsnog maken uit de momentopname van een bestaande planlink. Aanleiding: het Trilsbeek-Gid-plan was verzonden onder v4.51.0 (pdf_path null) en daarna per ongeluk gewijzigd; een nieuwe link zou de gewijzigde versie bevriezen, terwijl de schone verzonden versie in offerte_accorderingen.snapshot.html staat. _ohpPlanPdfBlob is gesplitst: nieuwe _ohpPdfVanPrintArea(voortgang) rastert wat er in printArea staat (html2canvas, pdf-lib, AV als PNG, stijlherstel, gooit nooit) en nieuwe _ohpWachtOpFonts wacht de vier Libre Franklin-gewichten af; _ohpPlanPdfBlob bouwt eerst uit het live plan (ligging, _ohpBuildOfferteHTML, fonts, _ohpPreloadImages, _ohpPaginate) en roept dan de rasteraar aan. Nieuwe _ohpAccordPdfAlsnog(rij, plan, calc, body, btn): zet rij.snapshot.html in printArea (al gepagineerd, dus bewust GEEN _ohpPaginate en niets uit het live plan), wacht fonts en beelden af, rastert, uploadt naar ACCORD_PDF_BUCKET onder token.pdf en zet pdf_path op de bestaande rij via update op id; daarna ohpAccordLinkBeheer() zodat de knop Bevroren PDF downloaden verschijnt. Weigert met toast zonder snapshot.html of als er al een pdf_path is; bij een fout printArea leeg, toast en knop hersteld, geen update. In _ohpAccordBeheerRender staat de knop ohpAcPdfAlsnog onder de rode geen-PDF-melding wanneer snapshot.html bestaat, met de uitleg dat de link dezelfde blijft. Route 3 vervangt later alleen _ohpPdfVanPrintArea en _ohpPlanPdfBlob. Dertien nieuwe slice-tests groen (momentopname gebruikt, niet opnieuw gepagineerd, pad token.pdf, update op de juiste rij, venster ververst, de twee weigeringen, uploadfout met herstel) plus de zestien van v4.61.0. Namen _ohpPdfVanPrintArea, _ohpWachtOpFonts, _ohpAccordPdfAlsnog en ohpAcPdfAlsnog vooraf op nul treffers gecontroleerd. Geen SQL, geen Edge Function.' },
   { v: '4.61.1', d: '2026-09-03', h: 'Reparatie op v4.60.0: het planslot zette ook de bronkiezer vast. De CSS op #onderhoud.is-locked raakte het zoekveld ohpBronZoek en de statusvinkjes in #ohpBronWrap, en de knop Wijzig in #ohpBronCompact had bovendien een JS-borg in _ohpWijzigBron; met een geopend vergrendeld plan kwam je zo niet meer bij een ander plan (gemeld 03-09-2026 na de eerste dag gebruik). Een ander plan kiezen is navigatie en geen wijziging aan het bevroren plan. Fix: JS-borg uit _ohpWijzigBron, lock-allowed op de knop Wijzig, en een CSS-uitzondering voor input en button binnen #ohpBronWrap en #ohpBronCompact (pointer-events auto, opacity 1). Het wisselen zelf loopt via _ohpSetBronCalc naar _ohpRenderInhoud, dat het slot per plan opnieuw bepaalt. Bannertekst noemt nu ook het kiezen van een ander plan. Geen SQL, geen Edge Function.' },
@@ -7760,6 +7762,15 @@ function _updateRegelDB(regel, odId) {
     _sb.from('calc_regels').update(_mapRegelToDB(regel, odId)).eq('id', regel.id),
     'Regel bijwerken'
   ).then(({ error }) => { if (error && error.message !== 'timeout') _toast('Fout: ' + error.message); });
+}
+// v4.65.0 — Zelfde update als _updateRegelDB, maar wachtend en met foutresultaat,
+// voor routes die pas verder mogen als de database het heeft (systeemwissel).
+async function _updateRegelDBAwait(regel, odId) {
+  const { error } = await _sbQuery(
+    _sb.from('calc_regels').update(_mapRegelToDB(regel, odId)).eq('id', regel.id),
+    'Regel bijwerken'
+  );
+  return !error;
 }
 async function _deleteRegelDB(id) {
   // FK CASCADE pakt stappen en meetstaat-rijen
@@ -18805,7 +18816,7 @@ function renderRegel(hgId, odId, r) {
   return `<div class="calc-regel-wrap ${actiefR?'':'is-inactief'} ${stappenOpen?'stappen-open':''}" id="rw_${r.id}">
     <div class="calc-regel">
       <div class="regel-kop-naam">${caretHtml}<input value="${r.naam||''}" placeholder="Locatie/omschrijving" onchange="updReg('${hgId}','${odId}','${r.id}','naam',this.value)"></div>
-      <div class="systeem-naam"><input type="checkbox" class="actief-toggle" ${actiefR?'checked':''} onchange="toggleRegelActief('${hgId}','${odId}','${r.id}')" title="Aan/uit voor offerte" style="margin-right:0.4rem; vertical-align:middle;"><strong>${sysNaam}</strong> <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span></div>
+      <div class="systeem-naam"><input type="checkbox" class="actief-toggle" ${actiefR?'checked':''} onchange="toggleRegelActief('${hgId}','${odId}','${r.id}')" title="Aan/uit voor offerte" style="margin-right:0.4rem; vertical-align:middle;"><strong>${sysNaam}</strong> <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span> <button class="btn-secondary btn btn-sm" onclick="openWisselSysModal('${hgId}','${odId}','${r.id}')" title="Verfsysteem van deze regel wisselen (naam, hoeveelheid, toeslag en meetstaat blijven)" style="margin-left:0.3rem; padding:0 0.35rem;">🔄</button></div>
       <div>${hoeveelHtml}</div>
       <div><input type="number" step="5" value="${r.toeslag||0}" onchange="updReg('${hgId}','${odId}','${r.id}','toeslag',parseFloat(this.value))" title="Toeslag voor staat (matig=15, slecht=30)"> <span style="color:var(--muted); font-size:0.7rem;">% staat</span></div>
       <div class="regel-stats">
@@ -19244,8 +19255,10 @@ async function delReg(hgId, odId, rId) {
 
 // ADD SYSTEM TO ONDERDEEL — search + filter
 let addSysCtx = null;
-function openAddSysModal(hgId, odId) {
-  addSysCtx = { hgId, odId };
+function openAddSysModal(hgId, odId, regelId) {
+  addSysCtx = { hgId, odId, regelId: regelId || null };
+  const titel = document.getElementById('addSysTitel');
+  if (titel) titel.textContent = regelId ? 'Verfsysteem wisselen' : 'Verfsysteem toevoegen';
   const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
   const loc = (hg?.naam || '').toLowerCase();
   let suggested = '';
@@ -19282,6 +19295,12 @@ function renderAddSysList() {
 }
 async function selectAddSys(sysId) {
   if (!addSysCtx) return;
+  if (addSysCtx.regelId) { // v4.65.0 — wisselroute
+    const ctx = addSysCtx;
+    closeAddSysModal();
+    await wisselRegelSysteem(ctx.hgId, ctx.odId, ctx.regelId, sysId);
+    return;
+  }
   const od = _findOnderdeel(addSysCtx.hgId, addSysCtx.odId);
   if (!od) { closeAddSysModal(); return; }
   const snap = _snapshotSystem(sysId);
@@ -19302,6 +19321,108 @@ async function selectAddSys(sysId) {
   od.regels.push(saved);
   _touchCalc(data.calc.id);
   renderCalcStructuur();
+}
+// v4.65.0 — VERFSYSTEEM WISSELEN OP EEN CALC-REGEL
+// Knop 🔄 in de regelkop opent dezelfde zoeklijst als "regel toevoegen"; met
+// regelId in addSysCtx vertakt selectAddSys naar wisselRegelSysteem. De nieuwe
+// momentopname vervangt systeem, eenheid, ondergrond, locatie en bewerkingen;
+// naam, hoeveelheid, toeslag, aan/uit, volgorde en meetstaat blijven staan.
+function openWisselSysModal(hgId, odId, rId) {
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) { _toast('Deze offerte is vergrendeld'); return; }
+  openAddSysModal(hgId, odId, rId);
+}
+// Gerichte query: hangt er aan deze calc een onderhoudsplan met een beurt in
+// per_stap-modus die stap-ids van deze regel noemt? _ohpState.plan is hier
+// bewust niet gebruikt: die hoort alleen bij de open calc na bronkeuze in de
+// OHP-tab of na Archiveren, en kan dus van een andere calc zijn.
+async function _regelHeeftPerStapPlan(calcId, stapIds) {
+  if (!_sb || !calcId || !stapIds.length) return false;
+  const { data: planRow, error: e1 } = await _sbQuery(
+    _sb.from('onderhoudsplannen').select('id').eq('calculatie_id', calcId).maybeSingle(),
+    'Onderhoudsplan controleren'
+  );
+  if (e1 || !planRow) return false;
+  const { data: beurten, error: e2 } = await _sbQuery(
+    _sb.from('onderhoudsplan_beurten').select('scaling').eq('plan_id', planRow.id),
+    'Beurten controleren'
+  );
+  if (e2 || !beurten) return false;
+  const ids = new Set(stapIds);
+  return beurten.some(b => {
+    const sc = b.scaling || {};
+    if (sc.modus !== 'per_stap' || !sc.stappen) return false;
+    return Object.keys(sc.stappen).some(k => ids.has(k));
+  });
+}
+async function wisselRegelSysteem(hgId, odId, rId, sysId) {
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) { _toast('Deze offerte is vergrendeld'); return; }
+  const od = _findOnderdeel(hgId, odId);
+  if (!od) return;
+  const r = od.regels.find(x => x.id === rId);
+  if (!r) return;
+  const snap = _snapshotSystem(sysId);
+  if (!snap) { _toast('Systeem niet gevonden'); return; }
+  if (snap.systeemId === r.systeemId) { _toast('Deze regel gebruikt dit systeem al'); return; }
+  // Blokkade: meetstaat aanwezig én eenheid wijkt af.
+  const msAantal = (data.calc.meetstaat || []).filter(ms => ms.calcRegelId === rId).length;
+  if (msAantal > 0 && snap.systeemEenheid !== r.systeemEenheid) {
+    _toast(`Niet gewisseld: deze regel heeft ${msAantal} meetstaat-regel${msAantal===1?'':'s'} in ${r.systeemEenheid || '?'}, het nieuwe systeem rekent in ${snap.systeemEenheid || '?'}`);
+    return;
+  }
+  const oudeStappen = (r.stappen || []).slice();
+  const oudeIds = oudeStappen.map(st => st.id).filter(Boolean);
+  // Waarschuwing (geen blokkade): plan met per-stap-percentages voor deze regel.
+  let perStapPlan = false;
+  try { perStapPlan = await _regelHeeftPerStapPlan(data.calc.id, oudeIds); } catch (e) { perStapPlan = false; }
+  // 1) nieuwe stappen schrijven
+  let nieuweStappen = [];
+  if (snap.stappen && snap.stappen.length) {
+    const rows = snap.stappen.map((st, i) => _mapStapToDBSnapshot(st, rId, i));
+    const { data: sRows, error: sErr } = await _sbQuery(
+      _sb.from('calc_regel_stappen').insert(rows).select(),
+      'Nieuwe bewerkingen opslaan'
+    );
+    if (sErr || !sRows) { _toast('Wissel niet uitgevoerd: nieuwe bewerkingen konden niet worden opgeslagen'); return; }
+    nieuweStappen = sRows.map(_mapStapFromDBSnapshot);
+  }
+  // 2) oude stappen verwijderen op id
+  if (oudeIds.length) {
+    const { error: dErr } = await _sbQuery(
+      _sb.from('calc_regel_stappen').delete().in('id', oudeIds),
+      'Oude bewerkingen verwijderen'
+    );
+    if (dErr) {
+      const nIds = nieuweStappen.map(st => st.id).filter(Boolean);
+      if (nIds.length) await _sbQuery(_sb.from('calc_regel_stappen').delete().in('id', nIds), 'Terugdraaien nieuwe bewerkingen');
+      _toast('Wissel teruggedraaid: oude bewerkingen konden niet worden verwijderd');
+      return;
+    }
+  }
+  // 3) regel-update, wachtend
+  const nieuweRegel = {
+    ...r,
+    systeemId: snap.systeemId,
+    systeemNaam: snap.systeemNaam,
+    systeemEenheid: snap.systeemEenheid,
+    systeemOndergrond: snap.systeemOndergrond,
+    systeemOndergrondId: snap.systeemOndergrondId,
+    systeemLocatie: snap.systeemLocatie,
+    stappen: nieuweStappen
+  };
+  const ok = await _updateRegelDBAwait(nieuweRegel, od.id);
+  if (!ok) {
+    _toast('Bewerkingen zijn gewisseld maar de regel zelf niet bijgewerkt; calculatie wordt herladen');
+    if (typeof openCalc === 'function' && data.calc && data.calc.id) { try { await openCalc(data.calc.id); } catch (e) {} }
+    return;
+  }
+  Object.assign(r, nieuweRegel);
+  _touchCalc(data.calc.id);
+  renderCalcStructuur();
+  if (perStapPlan) {
+    _toast('Gewisseld. Let op: het onderhoudsplan had per-stap-percentages voor deze regel; die gelden nu niet meer');
+  } else {
+    _toast(`Verfsysteem gewisseld naar ${snap.systeemNaam}`);
+  }
 }
 // v3.50.0 — Een calc-regel met zijn complete verfsysteem dupliceren binnen
 // hetzelfde onderdeel. De kopie krijgt alle stappen (snapshot plus percentages),

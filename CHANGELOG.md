@@ -1,3 +1,33 @@
+## v4.65.0 — Verfsysteem wisselen op een calc-regel
+
+### Wat er nu kan
+
+Naast de systeemnaam in de kop van een calc-regel staat een knop **🔄**. Die opent dezelfde zoeklijst als *Regel toevoegen*, met de titel *Verfsysteem wisselen*. Kies je een systeem, dan vervangt de nieuwe momentopname de oude: systeemnaam, eenheid, ondergrond, locatie en alle bewerkingen. **Blijven staan:** naam van de post, hoeveelheid, toeslag, aan/uit, volgorde en de meetstaat. Er komt geen bevestigingsvenster; je ziet direct een melding *Verfsysteem gewisseld naar …*.
+
+Twee borgen:
+- Heeft de regel meetstaat-regels én rekent het nieuwe systeem in een andere eenheid (m² tegenover m¹ bijvoorbeeld), dan wordt de wissel **geweigerd** met een melding. Bij gelijke eenheid mag het wel en blijft de meetstaat intact.
+- Hangt er aan de calculatie een onderhoudsplan met een beurt op **per-stap-percentages** voor deze regel, dan gaat de wissel door maar krijg je een melding: die percentages hoorden bij de oude bewerkingen en gelden niet meer. Controleer het plan dan even.
+
+De knop volgt het slot van de calculatie: is de offerte vergrendeld, dan is hij uitgeschakeld.
+
+### Hoe het onder de kap zit
+
+- `openWisselSysModal(hgId, odId, rId)` → `openAddSysModal(hgId, odId, regelId)`; `addSysCtx` draagt `regelId`, `selectAddSys` vertakt daarop naar `wisselRegelSysteem`. De zoeklijst zelf is ongewijzigd; de modal-kop kreeg `id="addSysTitel"`.
+- `_regelHeeftPerStapPlan(calcId, stapIds)`: gerichte query op `onderhoudsplannen` (calculatie_id) en `onderhoudsplan_beurten` (plan_id), omdat `_ohpState.plan` alleen na bronkeuze of Archiveren bij de open calc hoort.
+- Opslagvolgorde: nieuwe stappen `insert().select()` → oude stappen `delete().in('id', …)` → regel-update via de nieuwe wachtende `_updateRegelDBAwait` (de bestaande `_updateRegelDB` wacht niet). Terugval: insert mislukt = niets veranderd; delete mislukt = nieuwe stappen weer verwijderd; regel-update mislukt = melding en `openCalc` herlaadt de calculatie.
+- Knop bewust zonder `lock-allowed`, plus JS-borg met `_isCalcLocked` op beide instappunten.
+
+### Getest
+
+- Parse-test op het scriptblok (node) groen.
+- Logische test met nagebouwde database (vijf scenario's): opslagvolgorde insert→delete→update, behoud van naam/hoeveelheid/toeslag/volgorde, blokkade bij meetstaat met afwijkende eenheid, terugdraaien bij mislukte delete, niets gedaan bij mislukte insert, herlaad bij mislukte regel-update. Allemaal groen.
+- Niet getest: in de echte gebruiksomgeving. Zie teststappen hieronder.
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Geen SQL, geen Edge Function.
+2. Testen in een concept-calc: (a) regel zonder meetstaat wisselen → naam, hoeveelheid, toeslag blijven, bewerkingen nieuw; (b) regel met meetstaat naar een systeem met andere eenheid → geweigerd; (c) zelfde regel naar een systeem met gelijke eenheid → gewisseld, meetstaat staat er nog; (d) calc vergrendelen → knop grijs; (e) calc met plan op per-stap → melding na de wissel.
+
 ## v4.64.0 — Calculatie-app alleen nog met het administratie-account
 
 ### Wat er nu kan
