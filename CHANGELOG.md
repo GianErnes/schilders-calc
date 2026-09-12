@@ -1,3 +1,14 @@
+## v4.65.1 — Versie-informatie voor v4.64.0 alsnog toegevoegd
+
+### Wat er nu kan
+
+Niets nieuws in de werking. Bij v4.64.0 was in de app alleen de kop van het welkomstblok opgehoogd; de regel in de versiegeschiedenis (`RELEASE_HIGHLIGHTS`) en de alinea in de welkomsttekst ontbraken. Die staan er nu. De datum bij de 4.64.0-regel (2026-09-10) is de aanleidingsdatum uit de CHANGELOG, niet de commitdatum — die kon ik niet ophalen (GitHub API rate-limit).
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Geen SQL, geen Edge Function.
+2. Controleren: welkomstblok toont v4.65.1 met de 🔒-alinea van v4.64.0; het versie-overzicht toont regels voor 4.65.1, 4.65.0 en 4.64.0.
+
 ## v4.65.0 — Verfsysteem wisselen op een calc-regel
 
 ### Wat er nu kan
