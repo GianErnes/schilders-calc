@@ -1,3 +1,26 @@
+## v4.70.0 — Het planvenster toont het opvolgschema
+
+### Wat er nu kan
+
+Bij een gemailde planlink stond in het Accordeerlink-venster een vaste zin ("De opvolgautomaat volgt dit plan zodra je het hieronder naar de klant mailt"), ongeacht of er al gemaild was en wat de automaat deed. Bij een offerte stond op dezelfde plek al het hele schema. Nu ook bij een plan: gemaild op, nabellen door Maud (eerste maandag na het mailen), herinneringsmail (zeven dagen voor geldig-tot, niet vóór het nabellen), verlopen-mail (tien dagen erna) en taak om af te sluiten (twintig dagen erna), elk met de geplande datum of "gedaan op". Bij een VvE alleen het nabellen, als altijd.
+
+Nieuw ten opzichte van het offerteblok: staat het plan na het mailen niet op Verzonden, dan zegt het venster in rood dat de opvolging stilstaat, welke status het plan wel heeft, en dat de status bovenaan de Onderhoudsplan-tab rechtgezet moet worden. Aanleiding: God 2026-2036 is op 3 september gemaild en geopend, maar stond daarna niet meer op Verzonden. De automaat meldde dat elf dagen lang correct in zijn rapport (`poort_status_niet_verzonden: 1`), maar het venster liet niets zien. Op 14 september is de status met de hand rechtgezet.
+
+### Hoe het onder de kap zit
+
+- Nieuw `_ohpOpvolgBlokHtml(plan, rij)`, vlak na `_opvolgBlokHtml`. Zelfde rekenregels en dezelfde hulpfuncties (`_opvolgEersteMaandagNa`, `_opvolgYmdPlus`, `_opvolgRegel`). Verschillen, gelijk aan de plan-tak van `offerte-herinnering` v4.51.0: geldig-tot uit `rij.snapshot.geldigTot` met `plan.offerteConfig.geldigTot` als tweede bron; VvE via `plan.ontvangerType`; de stilstand-regel kijkt naar `plan.status !== 'verzonden'`.
+- `_ohpAccordBeheerRender` roept het blok aan in plaats van de vaste tekst. De knop houdt id `ohpAcOpvolg`; de bestaande handler (aan/uit zetten van `automaat_uit`) is niet aangeraakt. Ook in de toestanden "nog niet gemaild" en "automaat uit" staat de knop er, zoals voorheen.
+- Geen extra query: `ohpAccordLinkBeheer` haalt de rij al op met `select('*')` en `plan` komt uit `_ohpState.plan`.
+- Geen SQL, geen Edge Function.
+- Getest: parse-test op het volledige script; runtime-test in node van `_ohpOpvolgBlokHtml` in acht scenario's (God op Concept met stilstand-regel, God op Verzonden, Geurden met gedaan-stempel op de beltaak, VvE, geen geldig-tot, nog niet gemaild, automaat uit, link al akkoord). De datums kloppen met de rekenregels van de Edge Function. Niet getest in de browser.
+
+### Wat je moet doen
+
+1. `index.html` uploaden (samen met v4.69.0, dit bestand bevat beide).
+2. Open het Accordeerlink-venster van God 2026-2036: er hoort "Gemaild op 3 september" te staan met het schema, zonder rode regel (status is Verzonden). Na de run van 15-09 06:30 hoort bij Nabellen "gedaan op 15 september" te staan.
+3. Open dat van Geurden 2026-2036: "Gemaild op 14 september", nabellen 21 september.
+4. Zet op een proefplan met gemailde link de status even op Concept en open het venster: de rode regel hoort te verschijnen. Daarna terugzetten.
+
 ## v4.69.0 — Accordeerlinks bewaren alleen nog de PDF
 
 ### Wat er nu kan
