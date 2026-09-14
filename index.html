@@ -2343,8 +2343,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.68.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.69.0</h2>
       <div class="intro-body">
+        <p><strong>📄 Accordeerlinks bewaren alleen nog de PDF (v4.69.0).</strong> Bij elke accordeerlink, voor een offerte of een onderhoudsplan, werd naast de PDF ook een complete HTML-kopie van het document in de database gezet, met logo's, handtekening en ligging als tekst erin. Die kopie werd nooit getoond zodra er een PDF was, maar woog 200 kB tot 1 MB per link en liet de nachtelijke backup hard groeien. Voortaan gaat alleen de PDF mee. Mislukt het maken van de PDF, dan komt er geen link en zie je in het venster waarom; met Terug kom je weer bij het linkbeheer. Bestaande links veranderen niet.</p>
         <p><strong>💬 Wat Maud hoorde bij het nabellen staat nu bij de offerte (v4.68.0).</strong> Belt Maud een klant na en schrijft ze bij het afvinken in de takenapp op wat de klant zei, dan kwam dat tot nu toe alleen per mail bij Gian terecht. Voortaan staat het ook in het Accordeerlink-venster van de calculatie, in een blok "Nabellen door Maud": wanneer er gebeld is, door wie, en wat er is opgeschreven. Staat de beltaak nog open of is hij vervallen, dan staat dat er ook. De vragen die de klant via de offertelink stelt stonden daar al. Nieuw is verder een 💬-knopje naast de calculatienaam bovenin de Calculatie-tab, dat verschijnt zodra er een nabelmelding of een klantvraag ligt en het venster opent als je erop klikt; is er niets, dan zie je niets. De app leest alleen uit de takenlijst; afvinken blijft in de takenapp. Geen SQL nodig, want het administratie-account mag de takenlijst al lezen.</p>
         <p><strong>🔓 Het slot zit alleen nog op de prijs (v4.67.0).</strong> Een verzonden of geaccepteerde calculatie zette tot nu toe álles op slot, ook velden die de prijs niet raken. Voortaan blijven klantgegevens, contactpersoon, e-mail, telefoon, werk- en briefadres, notities, taken, foto's, documenten, projectnaam, opnamedatum en deadline gewoon bewerkbaar op een vergrendelde calculatie. Een tikfout in een naam herstellen of een telefoonnummer toevoegen kan dus zonder eerst terug naar Concept. Wat dicht blijft is alles wat de prijs bepaalt: regels, staart, aantal schilders, uren per dag, reisafstand met de knop Afstand ophalen, klanttype (stuurt de geldigheid en de voorwaarden) en het hele Offerte-blok met datums, nummer en teksten. De gele banner zegt nu precies wat wel en niet open is. Let op: wat de klant al heeft ontvangen verandert hier niet door; de accordeerlink bewaart een momentopname en sinds v4.61.0 een bevroren PDF. Print je de offerte opnieuw vanuit de app, dan staan de gewijzigde klantgegevens er wel op. Geen SQL nodig.</p>
         <p><strong>🧮 App en offerte tonen hetzelfde totaal (v4.66.0).</strong> De prijstabel op de offerte rondt elke eenheidsprijs naar boven af op de cent, en daardoor lag het offertetotaal altijd iets boven het totaal in de app; bij grote hoeveelheden kon dat euro's zijn. Maud had gelijk. Voortaan toont de Calculatie-tab onder "Totaal incl." het bedrag zoals de klant het op de offerte ziet, met daaronder klein het rekenkundige totaal en het verschil. Het dashboardbedrag en het invulveld {totaal_incl} in de offerteteksten gebruiken nu ook dat offertetotaal, zodat in de offertetekst nooit meer een ander bedrag staat dan in de prijstabel eronder. Aan de prijstabel zelf en aan het bedrag op de accordeerlink verandert niets; die gebruikten dit totaal al. Bijvangst: het invulveld {totaal_incl} bleek al langer kapot en gaf "€ [object Object]" in plaats van een bedrag; dat is nu ook hersteld. Een calculatie zonder regels toont het rekenkundige totaal zoals voorheen. Open een bestaande calculatie één keer; dan wordt het dashboardbedrag stil bijgewerkt. Geen SQL nodig.</p>
@@ -3678,7 +3679,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.68.0';
+const APP_VERSION = 'v4.69.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4095,6 +4096,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.69.0', d: '2026-09-14', h: 'Accordeerlinks bewaren alleen nog de PDF, geen HTML-kopie meer; mislukt de PDF, dan komt er geen link en zie je waarom.' },
   { v: '4.68.0', d: '2026-09-14', h: 'Wat Maud bij het nabellen opschreef staat in het Accordeerlink-venster; een 💬 naast de calculatienaam verschijnt bij meldingen of klantvragen.' },
   { v: '4.67.0', d: '2026-09-14', h: 'Op een vergrendelde calculatie blijven klantgegevens, adressen, notities, projectnaam en datums bewerkbaar; alleen wat de prijs bepaalt staat nog op slot.' },
   { v: '4.66.0', d: '2026-09-14', h: 'Calculatie-tab, dashboard en offertetekst tonen hetzelfde totaal als de prijstabel op de offerte; het rekenkundige totaal staat er klein onder.' },
@@ -23010,6 +23012,17 @@ async function _accordToonGetekendInViewer(root, info) {
   }
 }
 
+// v4.69.0 — Melding als de PDF niet gemaakt kon worden: geen link, wel uitleg en een weg terug.
+function _accordGeenPdfMelding(body, e, isPlan) {
+  const reden = _accordEsc((e && e.message) ? e.message : String(e || 'onbekende oorzaak'));
+  body.innerHTML = '<p class="acb-fout">Geen link aangemaakt: de PDF van ' + (isPlan ? 'het onderhoudsplan' : 'de offerte') + ' kon niet worden gemaakt of opgeslagen.</p>'
+    + '<p class="acb-sub">Reden: ' + reden + '</p>'
+    + '<p class="acb-sub">Zonder PDF komt er geen link: de PDF is wat de klant ziet en tekent. Probeer het opnieuw; blijft het misgaan, dan is dat een storing en geen klantprobleem.</p>'
+    + '<button type="button" class="acb-btn sec" id="acGeenPdfTerug">Terug</button>';
+  const b = document.getElementById('acGeenPdfTerug');
+  if (b) b.onclick = () => { if (isPlan) ohpAccordLinkBeheer(); else accordLinkBeheer(); };
+}
+
 async function _accordNieuweLink(c, body, supersede) {
   // v4.26.0 — harde stop: geen accordeerlink zonder offertenummer (Yoobi-verkoopnummer).
   if (!_offerteNummer(c)) {
@@ -23053,26 +23066,9 @@ async function _accordNieuweLink(c, body, supersede) {
       }
     }
   } catch (e) { /* detectie mislukt, dan zonder ophogen doorgaan */ }
-  const offHtml = _bouwOfferteDocHtml();
-  if (offHtml == null) { _accordBeheerRender(body, c, null); return; }
-  // Volledig document bevriezen: offerte + getekende kozijnen + foto-bijlage + AV,
-  // net als de knop Offerte + bijlagen, met de per-offerte schakelaars.
-  let volledigHtml = '<div class="dpv-blok">' + offHtml + '</div>';
-  try {
-    const _cfg = _offCfg();
-    const _koz = (c.meetstaat || []).filter(ms => ms.tekening && ms.tekening.vorm);
-    if (_cfg.bijlageKozijnen !== false && _koz.length) {
-      volledigHtml += '<div class="dpv-blok dpv-pagebreak">' + _bouwKozijnenHtml(c, _koz) + '</div>';
-    }
-    const _fotos = (c.fotos || []);
-    if (_cfg.bijlageFotos !== false && _fotos.length) {
-      const _fh = await _accordFotoHtmlLang(c, _fotos);
-      volledigHtml += '<div class="dpv-blok dpv-pagebreak">' + _fh + '</div>';
-    }
-    const _ktype = (_cfg && _cfg.klanttype) ? _cfg.klanttype : 'consument';
-    const _base = location.origin + location.pathname.replace(/[^/]*$/, '');
-    volledigHtml += _bouwVoorwaardenHtml(_ktype).split('src="av-').join('src="' + _base + 'av-');
-  } catch (e) {}
+  // v4.69.0 \u2014 De HTML-momentopname gaat niet meer mee in de rij. De PDF hieronder is het
+  // bevroren document; de klantpagina toonde de HTML toch al niet zodra er een PDF was.
+  // Gemeten 14-09-2026: 44 offertelinks, 8,5 MB aan HTML die nooit getoond werd.
   let bedrag = null;
   try { const cij = _berekenOfferteCijfers(c); if (cij) bedrag = cij.totaalIncl; } catch (e) {}
 
@@ -23081,29 +23077,31 @@ async function _accordNieuweLink(c, body, supersede) {
   else token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36);
 
   // v3.79.0 — het bevroren document als echte PDF (zelfde opbouw als de knop
-  // "Offerte + bijlagen") in de publieke bucket zetten. De klantpagina toont die PDF.
-  // Lukt het niet (pdfmake niet geladen of upload mislukt), dan blijft de HTML-momentopname
-  // de terugval en werkt de link via de oude weg.
+  // "Offerte + bijlagen") in de bak accord-pdf zetten. De klantpagina toont die PDF.
+  // v4.69.0 — Geen PDF, geen link. Mislukt het opbouwen of opslaan, dan stopt het
+  // aanmaken hier met de reden in het venster; er komt geen rij in de tabel.
+  // Voorheen ging de link stil door met alleen een HTML-momentopname.
   let pdfUrl = null, pdfPath = null;
   try {
-    if (typeof pdfMake !== 'undefined' && pdfMake.createPdf) {
-      const dd = await _bouwOfferteCompleetDocDef();
-      if (dd) {
-        const blob = await new Promise((resolve, reject) => {
-          try { pdfMake.createPdf(dd).getBlob(b => resolve(b)); } catch (err) { reject(err); }
-        });
-        const path = token + '.pdf';
-        const { error: upErr } = await _sb.storage.from(ACCORD_PDF_BUCKET)
-          .upload(path, blob, { contentType: 'application/pdf', upsert: true });
-        if (upErr) throw upErr;
-        const { data: pub } = _sb.storage.from(ACCORD_PDF_BUCKET).getPublicUrl(path);
-        pdfUrl = (pub && pub.publicUrl) ? pub.publicUrl : null;
-        pdfPath = pdfUrl ? path : null;
-      }
-    }
+    if (typeof pdfMake === 'undefined' || !pdfMake.createPdf) throw new Error('de PDF-bibliotheek is nog niet geladen; wacht even en probeer opnieuw');
+    body.innerHTML = 'Bezig met aanmaken\u2026 PDF opbouwen';
+    const dd = await _bouwOfferteCompleetDocDef();
+    if (!dd) { _accordBeheerRender(body, c, null); return; } // melding is al getoond
+    const blob = await new Promise((resolve, reject) => {
+      try { pdfMake.createPdf(dd).getBlob(b => resolve(b)); } catch (err) { reject(err); }
+    });
+    if (!blob || !blob.size) throw new Error('de PDF kwam leeg uit de opbouw');
+    const path = token + '.pdf';
+    const { error: upErr } = await _sb.storage.from(ACCORD_PDF_BUCKET)
+      .upload(path, blob, { contentType: 'application/pdf', upsert: true });
+    if (upErr) throw upErr;
+    const { data: pub } = _sb.storage.from(ACCORD_PDF_BUCKET).getPublicUrl(path);
+    pdfUrl = (pub && pub.publicUrl) ? pub.publicUrl : null;
+    pdfPath = path;
   } catch (e) {
-    console.warn('Accord-PDF maken/uploaden mislukt, val terug op HTML-momentopname:', e);
-    pdfUrl = null; pdfPath = null;
+    console.warn('Accord-PDF maken/uploaden mislukt, geen link aangemaakt:', e);
+    _accordGeenPdfMelding(body, e, false);
+    return;
   }
 
   try {
@@ -23113,7 +23111,7 @@ async function _accordNieuweLink(c, body, supersede) {
       calculatie_id: c.id,
       token: token,
       snapshot: {
-        html: volledigHtml, pdf: pdfUrl, v: APP_VERSION, op: new Date().toISOString(),
+        pdf: pdfUrl, v: APP_VERSION, op: new Date().toISOString(), // v4.69.0 — geen html meer
         // v3.95.0 — bevroren klantgegevens voor de Resend-mails (offerte-accord leest deze uit).
         offertenummer: _offerteNummer(c) || '',
         aanhef: _offAanhef(c, (c.offerteConfig && typeof c.offerteConfig === 'object') ? c.offerteConfig : {}),
@@ -23135,7 +23133,7 @@ async function _accordNieuweLink(c, body, supersede) {
 /* ---------- v4.51.0 \u2014 Accordeerlink voor onderhoudsplannen ---------- */
 // Eigen venster naast het offerte-linkbeheer. Een planlink hangt aan
 // onderhoudsplan_id (calculatie_id blijft gevuld, besluit 29-08-2026), heeft
-// geen PDF en geen bedrag, en de klantpagina rendert de bevroren bijlage-HTML.
+// geen bedrag, en sinds v4.61.0 een raster-PDF als bevroren document (v4.69.0: verplicht).
 
 // Geldigheidsnorm voor de planbrief: particulier 21 dagen, VvE 180 (minimaal
 // een half jaar, besluit 29-08-2026). Valt samen met _offGeldigDagenNorm.
@@ -23561,26 +23559,25 @@ async function _ohpAccordNieuweLink(plan, calc, body, invoer) {
     return;
   }
 
-  let snapHtml;
-  try {
-    snapHtml = await _ohpAccordSnapshotHtml(plan, calc);
-  } catch (e) {
-    body.innerHTML = '<p class="acb-fout">Bijlage bevriezen mislukt: ' + _accordEsc(e.message || e) + '</p>';
-    return;
-  }
+  // v4.69.0 — De HTML-momentopname (_ohpAccordSnapshotHtml) gaat niet meer mee in de rij:
+  // ruim 1 MB per planlink door het liggingsplaatje en de logo's als data-URI. De raster-PDF
+  // hieronder is het bevroren document. Voor oude planlinks zonder PDF blijft de knop
+  // "PDF alsnog maken uit de momentopname" (v4.62.0) werken; nieuwe hebben hem niet nodig.
 
   let token;
   if (window.crypto && crypto.randomUUID) token = crypto.randomUUID().replace(/-/g, '') + Date.now().toString(36);
   else token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36);
 
   // v4.61.0 — raster-PDF maken en in de besloten bak zetten (zelfde route als de offerte,
-  // r. _accordNieuweLink). Mislukt het, dan gaat de link toch de deur uit met alleen de
-  // HTML-momentopname en krijg jij een melding (besluit 03-09-2026).
+  // r. _accordNieuweLink).
+  // v4.69.0 — Geen PDF, geen link (besluit Gian 14-09-2026: dezelfde regel als bij de
+  // offerte). Mislukt het, dan stopt het aanmaken hier met de reden in het venster.
   let pdfPath = null;
   try {
     body.innerHTML = 'Bezig met aanmaken\u2026 PDF opbouwen';
     const blob = await _ohpPlanPdfBlob(plan, calc, (i, n) => { body.innerHTML = 'Bezig met aanmaken\u2026 PDF-pagina ' + i + ' van ' + n; });
-    if (blob) {
+    if (!blob || !blob.size) throw new Error('de PDF kwam leeg uit de opbouw (zie de regel "Plan-PDF maken mislukt" in de console)');
+    {
       // De PDF van de vorige open planlink van dit plan weghalen via de Storage-API (nooit
       // via SQL, zie SYSTEEM.md), zodat de bak niet volloopt met wezen zoals bij de offerte.
       try {
@@ -23596,10 +23593,10 @@ async function _ohpAccordNieuweLink(plan, calc, body, invoer) {
       pdfPath = path;
     }
   } catch (e) {
-    console.warn('Plan-PDF uploaden mislukt, val terug op HTML-momentopname:', e);
-    pdfPath = null;
+    console.warn('Plan-PDF maken/uploaden mislukt, geen link aangemaakt:', e);
+    _accordGeenPdfMelding(body, e, true);
+    return;
   }
-  if (!pdfPath) _toast('Link aangemaakt zonder PDF: de klant ziet de HTML-versie en kan niet downloaden. Maak de link opnieuw voor een PDF.');
   body.innerHTML = 'Bezig met aanmaken\u2026';
 
   const calcCfg = (calc.offerteConfig && typeof calc.offerteConfig === 'object') ? calc.offerteConfig : {};
@@ -23610,13 +23607,13 @@ async function _ohpAccordNieuweLink(plan, calc, body, invoer) {
       onderhoudsplan_id: plan.id,
       token: token,
       snapshot: {
-        html: snapHtml, v: APP_VERSION, op: new Date().toISOString(),
+        v: APP_VERSION, op: new Date().toISOString(), // v4.69.0 — geen html meer
         offertenummer: invoer.nummer,
         aanhef: _offAanhef(calc, calcCfg),
         klantEmail: invoer.email,
         geldigTot: invoer.geldig || ''
       },
-      pdf_path: pdfPath, // v4.61.0 — raster-PDF in accord-pdf; null als het maken mislukte (klantpagina valt dan terug op de HTML)
+      pdf_path: pdfPath, // v4.61.0 — raster-PDF in accord-pdf; sinds v4.69.0 altijd gevuld (geen PDF = geen link)
       bedrag: null    // geen bedrag in de akkoordzin (besluit 29-08-2026)
     });
     if (error) throw error;

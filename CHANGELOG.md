@@ -1,3 +1,31 @@
+## v4.69.0 — Accordeerlinks bewaren alleen nog de PDF
+
+### Wat er nu kan
+
+Bij elke accordeerlink, voor een offerte of een onderhoudsplan, ging naast de PDF ook een complete HTML-kopie van het document in de database: tekst, logo's, handtekening en bij een plan het liggingsplaatje, alles als tekst in de kolom `snapshot`. De klantpagina toonde die kopie nooit zodra er een PDF was. Ze woog wel 200 kB per offertelink en ruim 1 MB per planlink, en liet de nachtelijke backup binnen zes weken van 8,4 MB naar boven de 15 MB groeien (gemeten 14-09-2026: 47 rijen, 13 MB, waarvan 11,7 MB snapshot).
+
+Voortaan gaat alleen de PDF mee. Mislukt het maken of opslaan van de PDF, dan komt er geen link en geen rij: het venster zegt waarom en een knop Terug brengt je bij het linkbeheer. Voorheen ging een offertelink in dat geval stil door met alleen de HTML (de klant zag een webpagina en kon niets downloaden) en een planlink met een waarschuwing.
+
+Bestaande links veranderen niet: rijen met HTML houden hun HTML, oude links zonder PDF blijven via de HTML werken en de knop *PDF alsnog maken uit de momentopname* (v4.62.0) blijft voor die oude planlinks bestaan.
+
+### Hoe het onder de kap zit
+
+- `_accordNieuweLink`: de opbouw van `volledigHtml` (`_bouwOfferteDocHtml`, `_bouwKozijnenHtml`, `_accordFotoHtmlLang`, `_bouwVoorwaardenHtml`) is weg. De PDF-stap gooit bij ontbrekende pdfmake, lege blob of upload-fout een fout; die wordt gevangen door `_accordGeenPdfMelding(body, e, false)` en de functie stopt vóór de `delete`/`insert`. Een `null` uit `_bouwOfferteCompleetDocDef` (melding al getoond) rendert het beheervenster opnieuw, als voorheen. `snapshot` bevat nog `pdf, v, op, offertenummer, aanhef, klantEmail, geldigTot`.
+- `_ohpAccordNieuweLink`: de aanroep van `_ohpAccordSnapshotHtml` is weg (de functie zelf blijft staan, wordt nu door niets meer aangeroepen). Een lege blob uit `_ohpPlanPdfBlob` of een upload-fout gaat naar `_accordGeenPdfMelding(body, e, true)`; geen `delete`/`insert`. De toast "Link aangemaakt zonder PDF" is weg omdat die toestand niet meer kan ontstaan. `snapshot` bevat nog `v, op, offertenummer, aanhef, klantEmail, geldigTot`.
+- Nieuw: `_accordGeenPdfMelding(body, e, isPlan)`, één melding voor beide, met knop Terug naar `accordLinkBeheer` of `ohpAccordLinkBeheer`.
+- Edge Function `offerte-accord` ongewijzigd: hij geeft `snapshot` door zoals hij is en vervangt `pdf` door een verse ondertekende link. Zonder `html` erin toont de klantpagina de PDF (regel `docHtml = pdfUrl ? ... : iframe`). De klantpagina-code is niet aangeraakt.
+- Getest: parse-test op het volledige script; runtime-test in node met nagebouwde `_sb`, `pdfMake` en `document` in acht scenario's (offerte: PDF lukt, pdfmake ontbreekt, upload mislukt, lege PDF, docdef null; plan: PDF lukt, blob null, upload mislukt). Bij succes bevat de insert geen `html` en een gevulde `pdf_path`; bij elke mislukking is er geen insert en toont het venster de reden, en Terug roept het juiste beheervenster aan. Niet getest in de echte browser: dat is stap 2 en 3 hieronder.
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Geen SQL, geen Edge Function.
+2. Maak bij een testcalculatie een nieuwe accordeerlink. Het venster hoort "Bezig met aanmaken… PDF opbouwen" te tonen en daarna de gewone linkstand met de knop *Bevroren PDF downloaden*. Open de klantlink via *Zelf bekijken*: de PDF hoort te verschijnen.
+3. Zelfde bij een onderhoudsplan.
+4. Controleer in de SQL Editor dat de nieuwe rij klein is:
+   `select pg_size_pretty(pg_column_size(snapshot)::bigint), pdf_path from offerte_accorderingen order by aangemaakt_op desc limit 2;`
+   De nieuwste rij hoort onder de 1 kB te zitten.
+5. De 44 bestaande offerterijen mét PDF bevatten 8,5 MB HTML die nooit meer getoond wordt. Opruimen is een aparte stap; wil je die, dan komt daar een SQL met projectcheck en telling vooraf voor.
+
 ## v4.68.0 — Nabelverslag van Maud bij de offerte
 
 ### Wat er nu kan
