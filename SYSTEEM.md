@@ -34,12 +34,20 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.59.1 |
-| Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.17.0 |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.68.0 |
+| Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
-| Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.1.0 |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.10.3 |
+| Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.2.0 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.10.4 |
+| Personeel | `personeel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/personeel.html | v0.5.0 |
+| Klanten | `klanten.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/klanten.html | v0.4.0 |
+| Start | `start.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/start.html | v0.2.3 |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
+
+Versies in deze tabel zijn op 14 september 2026 uit de live bestanden
+gelezen (`APP_VERSION`); Personeel, Klanten en Start ontbraken tot dan in
+de tabel. Let op: `planning.html`, `financieel.html` en `klanten.html`
+schrijven hun versie zonder de letter v.
 
 **Let op bij Voorraad.** In die repo staat geen `index.html`. Het korte
 adres `gianernes.github.io/voorraad-app/` werkt daarom niet. Je moet de
@@ -306,8 +314,43 @@ op `@ernes.nl`, plus `administratie@ernes.nl`. In de tabel `taken_rollen`
 staan 6 regels, wat daarmee klopt.
 
 De rollen bepalen wat iemand ziet. `alles` ziet alles, `eigen` ziet alleen
-de eigen taken, afgedwongen door rijbeveiliging in de database. Wie welke
-rol heeft is **[TE CONTROLEREN]** en hoort hier ingevuld te worden.
+de eigen taken, afgedwongen door rijbeveiliging in de database. Stand van
+`taken_rollen` op 14 september 2026 (query van Gian):
+
+| persoon | rol | ziet_klant |
+|---|---|---|
+| administratie | alles | nee |
+| gian | alles | nee |
+| max | eigen | nee |
+| maud | eigen | ja |
+| jens | eigen | nee |
+| bjorn | eigen | nee |
+
+Let op: eerdere aantekeningen zetten Max op `alles`; dat was fout, de
+database is de waarheid. Wil Max ieders taken zien, dan is dat één UPDATE
+op `taken_rollen`.
+
+De leespolicy `taken_lezen` (gelezen uit `pg_policies`, 14 september):
+rol `alles` leest alles; rol `eigen` leest taken met `bron` in eigen,
+offerte, dossier, verzuim of certificaat als `toegewezen_aan` de eigen
+persoon is, en Yoobi-taken op de eigen Yoobi-naam. Daarnaast laat
+`taken_klant_zicht` Yoobi-taken lezen aan wie `ziet_klant` heeft (Maud).
+
+**Actueel in de takenapp is per aangemeld account, niet per filter.** In
+Actueel landt wat op de naam van het aangemelde account voor vandaag
+gepland staat plus wat dat account zelf met de pijl heeft gehaald
+(`taak_dagkeuze`, per persoon). De persoonsknoppen bovenin sturen alleen
+de rubrieken eronder. Op het administratie-account is Actueel daarom
+altijd leeg; dat is geen fout. Gian meldt zich in de takenapp aan als
+`gian`. Bewust besluit 14 september: hier niets aan veranderen.
+
+**De Calculatie-app leest sinds v4.68.0 (14 september 2026) uit `taken`.**
+Alleen lezen, alleen beltaken (`bron = 'offerte'`, `bron_ref` =
+calculatie-id, `bron_kenmerk` `opvolg-bel` of het oudere `nabellen`), om
+Mauds afvinkmelding in het Accordeerlink-venster te tonen. Dat werkt omdat
+het administratie-account rol `alles` heeft; zou dat account ooit op
+`eigen` gaan, dan verdwijnt het nabelblok stil (de functie geeft dan een
+lege lijst, geen foutmelding).
 
 Kleuren per persoon, gebruikt door de hele suite: Gian blauw `#2563eb`,
 Max oranje `#f97316`, Maud zalm `#f28b82`, Jens geel `#eab308`, Bjorn
@@ -4413,3 +4456,90 @@ Uit Gians eerste blik op v0.10.1: de namen bij de hulpmiddelstroken waren
 slecht leesbaar over de blokken heen en de rij werd hoog. v0.10.3 zet de
 naam in de strook zelf (11 px hoog, wit op kleur) en de lagen 12 px uit
 elkaar.
+
+## Wat er op 14 september 2026 gedaan is
+
+Drie vragen van Gian, deels aangedragen door Maud, in drie brokken op
+`index.html`: v4.66.0, v4.67.0 en v4.68.0. Alle drie na uploaden in de
+echte omgeving door Gian bevestigd. Geen SQL, geen Edge Functions.
+
+### v4.66.0: app en offerte tonen hetzelfde totaal
+
+Maud zag centen verschil tussen het totaal in de app en het totaal op de
+offerte. Oorzaak, gelezen in de code: de prijstabel rondt elke
+eenheidsprijs naar boven af op de cent en vermenigvuldigt daarna met de
+hoeveelheid (`_berekenOfferteCijfers`, stap 7); de app toonde het
+rekenkundige totaal zonder die afronding. Structureel, geen rekenfout, en
+bij grote hoeveelheden kan het euro's zijn. Afronden op hele euro's (Gians
+eerste idee) had het niet opgelost: twee verschillende bedragen blijven na
+afronden verschillend.
+
+Gekozen: de app toont overal het offertetotaal. Nieuwe helper
+`_calcTotaalGetoond(c)` geeft de offertecijfers voor de actieve calculatie
+en valt anders terug op `_calcTotalForArchive`. Gebruikt in `renderTotals`
+(met daaronder klein "rekenkundig €… · +€… afronding eenheidsprijzen"),
+in het dashboardbedrag `totaal_incl_btw` en in het invulveld
+`{totaal_incl}`. Het bedrag op de accordeerlink gebruikte het
+offertetotaal al.
+
+Bekende beperking: vergrendelen vanuit het dashboard zonder de calculatie
+open te hebben cachet op dat moment het rekenkundige totaal; bij de eerste
+keer openen wordt het stil vervangen (zelfherstel uit v3.56.1). Niet
+opgelost omdat de offerte-rekenkern op `data.calc` leest en ombouwen dat
+niet waard is.
+
+**Bijvangst.** `{totaal_incl}` was al langer kapot: de oude code gaf een
+object aan de geldopmaak, met "€ [object Object]" als uitkomst
+(nagebootst in node). Hersteld. Als dit veld ooit in een tekstsectie is
+gebruikt, kan die tekst in een verzonden offerte hebben gestaan; niet
+gecontroleerd.
+
+Gemeten: rekentest in node met de uitgeknipte rekenkern op een nagebouwde
+calculatie: getoond totaal exact gelijk aan `totaalIncl`, verschil exact
+het overschot incl. BTW, terugval voor niet-actieve en lege calculatie.
+
+### v4.67.0: het slot zit alleen nog op de prijs
+
+Een verzonden calculatie zette alles in de Calculatie-tab op slot, ook
+velden die de prijs niet raken. Nu blijven open: klantnaam, aanspreekvorm,
+contactpersoon, e-mail, telefoon, werk- en briefadres met zoekknoppen,
+notitiepaneel (notities, taken, foto's, documenten), projectnaam,
+opnamedatum, deadline. Dicht blijven: regels, staart, schilders, uren per
+dag, reisafstand met Afstand ophalen, klanttype (stuurt geldigheid en
+voorwaarden) en het volledige Offerte-blok.
+
+Bouw: de bestaande slotregels in CSS krijgen `:not(.lock-open *)`; blokken
+met `lock-open` vallen erbuiten, `lock-keep` sluit daarbinnen alsnog een
+veld. Complexe selectors in `:not()` werken sinds Safari 9, Chrome 88 en
+Firefox 84 (caniuse.com, 14 september). Er waren geen JS-borgen op deze
+velden. Bewuste keuze: het notitiepaneel gaat als geheel open, dus ook
+foto's toevoegen op een verzonden offerte kan; gebrek-stippen veranderen
+de prijs niet dankzij de bestaande borg in `_syncGebrekToeslagen`. Wat de
+klant ontving verandert niet (momentopname en bevroren PDF in de link);
+een herprint vanuit de app toont wel de gewijzigde klantgegevens.
+
+### v4.68.0: nabelverslag van Maud bij de offerte
+
+Mauds afvinkmelding op de beltaak kwam alleen per mail bij Gian
+(`taak-afvinkmelding`). Nu ook in het Accordeerlink-venster van de
+calculatie, blok "Nabellen door Maud" (gebeld door wie en wanneer, nog
+open, of vervallen, plus de melding), en een 💬-knopje naast de
+calculatienaam zodra er een melding of een klantvraag ligt. De klantvragen
+uit de offertelink stonden al in dat venster; alleen de vindbaarheid is
+nieuw. Cache per calculatie van vijf minuten, zodat het vaak aangeroepen
+`renderCalcStructuur` de database niet telkens raakt. Zie 2.3 voor de
+rechten.
+
+### Aantekeningen
+
+- Kolomnamen van `taken` die de Calculatie-app nu leest: `afvink_melding`,
+  `voltooid_op`, `voltooid_door`, `gepland_op`, `status`, `bron`,
+  `bron_ref`, `bron_kenmerk`. Bron: `taken.html` v0.18.2 en
+  `sql/offerte_taken_sync_yoobi.sql`. `select('*')` met voorzichtig lezen,
+  zodat een afwijkende naam een leeg veld geeft en geen fout.
+- De GitHub API (`api.github.com`) gaf vandaag 403 door het uurlimiet van
+  60 anonieme aanroepen. Bestanden via `raw.githubusercontent.com` blijven
+  wel werken; alleen mappen doorbladeren lukt dan niet.
+- Jsdom op het volledige `index.html` (1,6 MB) loopt vast. Werkbare
+  testvorm: alleen de benodigde functies uitknippen (acorn) en met een
+  nagebouwde `data` en een nep-Supabase draaien.
