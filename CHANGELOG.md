@@ -1,3 +1,29 @@
+## v4.67.0 — Het slot zit alleen nog op de prijs
+
+### Wat er nu kan
+
+Een verzonden of geaccepteerde calculatie zette tot nu toe alles in de Calculatie-tab op slot, ook velden die de prijs niet raken. Voortaan blijven op een vergrendelde calculatie bewerkbaar: klantnaam, aanspreekvorm, contactpersoon, e-mail, telefoon, werkadres (postcode, huisnummer, straat, woonplaats en de knop Zoek straat en woonplaats), briefadres, het notitiepaneel (notities, taken, foto's, documenten), projectnaam, opnamedatum en deadline.
+
+Dicht blijft alles wat de prijs bepaalt: regels, staart, aantal schilders, uren per werkdag, reisafstand met de knop Afstand ophalen, klanttype (stuurt geldigheid, aanhef en voorwaarden) en het volledige Offerte-blok (datums, nummer, versie, garantiejaren, prijsweergave, bijlagen, teksten). De gele banner benoemt nu wat wel en niet open is.
+
+Wat de klant al ontvangen heeft verandert hier niet door: de accordeerlink bewaart een momentopname en sinds v4.61.0 een bevroren PDF. Print je de offerte opnieuw vanuit de app, dan staan de gewijzigde klantgegevens er wel op; dat is bedoeld.
+
+### Hoe het onder de kap zit
+
+- Het slot blijft CSS: de bestaande regels op `#calculatie.is-locked` krijgen `:not(.lock-open *)` erbij, zodat ze niets meer raken binnen een blok met klasse `lock-open`. Binnen zo'n blok zet `.lock-keep` een element alsnog op slot (zelfde uiterlijk als het gewone slot).
+- `lock-open` staat op: het kblok *Project en planning* (statische HTML), `#klantAdresBlok` en `#notitiesPaneel` (containers; de inhoud wordt door JS gerenderd en erft de uitzondering).
+- `lock-keep` staat op: `#calcSchilders`, `#calcUurDag`, `#calcReis`, de select Klanttype en de knop Afstand ophalen (de laatste drie in de template van `renderOfferteBlok`).
+- De uitzondering voor `input.actief-toggle` (v3.11.0) en voor `.calc-lock-banner button` staan ongewijzigd in aparte regels met `!important`.
+- Er waren geen JS-borgen (`_isCalcLocked`) op deze velden; de change-listener voor de kopvelden en de `_offCfg*`-functies schrijven gewoon weg. De borgen die er wel zijn (verfsysteem wisselen, kozijn kopiëren, gebrek- en vullingsync) blijven staan.
+- Complexe selectors in `:not()` worden ondersteund sinds Safari 9, Chrome 88 en Firefox 84 (opgezocht op caniuse.com, 14-09-2026).
+- Getest: parse-test op het volledige script, en een selectortest in jsdom met 17 representatieve elementen (open: projectnaam, deadline, klant, e-mail, Zoek-knop, notitietekst, fotoknop, Voorbeeld, Controleer; dicht: schilders, klanttype, Afstand ophalen, reis, geldig-tot, regelhoeveelheid, aan/uit-vinkje via zijn eigen regel, offertetekst). Alle 17 zoals bedoeld. Niet getest in de echte gebruiksomgeving.
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Geen SQL, geen Edge Function.
+2. Open een verzonden calculatie. Pas een telefoonnummer of de achternaam van de contactpersoon aan, herlaad de pagina en controleer dat het is bewaard.
+3. Controleer dat schilders, uren per dag, reisafstand, klanttype, de regels en het Offerte-blok nog steeds grijs en onaanraakbaar zijn.
+
 ## v4.66.0 — App en offerte tonen hetzelfde totaal
 
 ### Wat er nu kan

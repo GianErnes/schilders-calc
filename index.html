@@ -165,17 +165,23 @@
   .calc-lock-banner strong { color: #5a3500; }
   /* In een gelockte calc disable je alle inputs/selects/buttons binnen #calculatie,
      met uitzondering van de status-selector zelf en de print-knoppen */
-  #calculatie.is-locked input,
-  #calculatie.is-locked select,
-  #calculatie.is-locked textarea,
-  #calculatie.is-locked button:not(.lock-allowed) {
+  /* v4.67.0 — Het slot zit alleen nog op wat de prijs bepaalt. Blokken met
+     .lock-open (project en planning, klant en adres, notities) blijven bewerkbaar;
+     velden die daarbinnen tóch de prijs sturen dragen .lock-keep (schilders,
+     uur/dag, reisafstand, Afstand ophalen, klanttype) en gaan alsnog op slot. */
+  #calculatie.is-locked input:not(.lock-open *),
+  #calculatie.is-locked select:not(.lock-open *),
+  #calculatie.is-locked textarea:not(.lock-open *),
+  #calculatie.is-locked button:not(.lock-allowed):not(.lock-open *),
+  #calculatie.is-locked .lock-open .lock-keep {
     pointer-events: none;
     opacity: 0.55;
     background: var(--bg) !important;
     cursor: not-allowed;
   }
-  #calculatie.is-locked input[type="number"],
-  #calculatie.is-locked input[type="text"] {
+  #calculatie.is-locked input[type="number"]:not(.lock-open *),
+  #calculatie.is-locked input[type="text"]:not(.lock-open *),
+  #calculatie.is-locked .lock-open input.lock-keep {
     border-color: var(--border) !important;
   }
   #calculatie.is-locked .calc-lock-banner button {
@@ -2337,8 +2343,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.66.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.67.0</h2>
       <div class="intro-body">
+        <p><strong>🔓 Het slot zit alleen nog op de prijs (v4.67.0).</strong> Een verzonden of geaccepteerde calculatie zette tot nu toe álles op slot, ook velden die de prijs niet raken. Voortaan blijven klantgegevens, contactpersoon, e-mail, telefoon, werk- en briefadres, notities, taken, foto's, documenten, projectnaam, opnamedatum en deadline gewoon bewerkbaar op een vergrendelde calculatie. Een tikfout in een naam herstellen of een telefoonnummer toevoegen kan dus zonder eerst terug naar Concept. Wat dicht blijft is alles wat de prijs bepaalt: regels, staart, aantal schilders, uren per dag, reisafstand met de knop Afstand ophalen, klanttype (stuurt de geldigheid en de voorwaarden) en het hele Offerte-blok met datums, nummer en teksten. De gele banner zegt nu precies wat wel en niet open is. Let op: wat de klant al heeft ontvangen verandert hier niet door; de accordeerlink bewaart een momentopname en sinds v4.61.0 een bevroren PDF. Print je de offerte opnieuw vanuit de app, dan staan de gewijzigde klantgegevens er wel op. Geen SQL nodig.</p>
         <p><strong>🧮 App en offerte tonen hetzelfde totaal (v4.66.0).</strong> De prijstabel op de offerte rondt elke eenheidsprijs naar boven af op de cent, en daardoor lag het offertetotaal altijd iets boven het totaal in de app; bij grote hoeveelheden kon dat euro's zijn. Maud had gelijk. Voortaan toont de Calculatie-tab onder "Totaal incl." het bedrag zoals de klant het op de offerte ziet, met daaronder klein het rekenkundige totaal en het verschil. Het dashboardbedrag en het invulveld {totaal_incl} in de offerteteksten gebruiken nu ook dat offertetotaal, zodat in de offertetekst nooit meer een ander bedrag staat dan in de prijstabel eronder. Aan de prijstabel zelf en aan het bedrag op de accordeerlink verandert niets; die gebruikten dit totaal al. Bijvangst: het invulveld {totaal_incl} bleek al langer kapot en gaf "€ [object Object]" in plaats van een bedrag; dat is nu ook hersteld. Een calculatie zonder regels toont het rekenkundige totaal zoals voorheen. Open een bestaande calculatie één keer; dan wordt het dashboardbedrag stil bijgewerkt. Geen SQL nodig.</p>
         <p><strong>🔄 Verfsysteem wisselen op een regel (v4.65.0).</strong> Naast de systeemnaam in de regelkop staat een knop 🔄. Die opent dezelfde zoeklijst als Regel toevoegen; kies je een systeem, dan vervangt de nieuwe momentopname (naam, eenheid, ondergrond, locatie, bewerkingen) de oude. De naam van de post, hoeveelheid, toeslag, aan/uit, volgorde en meetstaat blijven staan. Geen bevestigingsvenster. Heeft de regel meetstaat-regels en heeft het nieuwe systeem een andere eenheid, dan wordt de wissel geweigerd. Hangt er een onderhoudsplan met per-stap-percentages aan deze regel, dan krijg je een melding: die percentages horen bij de oude bewerkingen en gelden niet meer. De knop volgt het slot van de calculatie. Geen SQL.</p>
         <p><strong>🔒 Calculatie-app alleen nog met het administratie-account (v4.64.0).</strong> Log je in met een ander account (gian, max, maud, jens, bjorn), dan word je direct weer uitgelogd en zegt het inlogscherm dat de Calculatie-app alleen met het administratie-account werkt; dat geldt ook bij verversen met zo'n account. Aanleiding: op 10 september 2026 was een verzonden onderhoudsplan onvindbaar omdat alle plannen op administratie staan, de plannen-tabel een persoonlijke policy heeft en er als gian was ingelogd; de app kreeg nul rijen terug zonder foutmelding. Dit is een controle in de app, geen database-beveiliging. De andere apps blijven met persoonlijke accounts werken. Geen SQL.</p>
@@ -2690,18 +2697,18 @@
     </div>
     <div id="calcLockBanner"></div>
     <div class="kblok-kop">Project en planning</div>
-    <div class="kblok">
+    <div class="kblok lock-open">
       <div class="kgrid kgrid-vrij">
         <div class="k-ruim"><label>Projectnaam</label><input type="text" id="calcProject" placeholder="bv. Kerkstraat 12"></div>
-        <div class="k-kort"><label>Aantal schilders</label><input type="number" id="calcSchilders" step="1" min="1"></div>
-        <div class="k-kort"><label>Uren per werkdag</label><input type="number" id="calcUurDag" step="0.5" min="1"></div>
+        <div class="k-kort"><label>Aantal schilders</label><input type="number" id="calcSchilders" class="lock-keep" step="1" min="1"></div>
+        <div class="k-kort"><label>Uren per werkdag</label><input type="number" id="calcUurDag" class="lock-keep" step="0.5" min="1"></div>
         <div class="k-datum"><label>Opname-datum</label><input type="date" id="calcOpname"></div>
         <div class="k-datum"><label>Deadline offerte <span class="sub-muted">(+14 dgn)</span></label><input type="date" id="calcDeadline"></div>
       </div>
     </div>
-    <div id="klantAdresBlok"></div>
+    <div id="klantAdresBlok" class="lock-open"></div>
     <div id="offerteInstellingenBlok"></div>
-    <div id="notitiesPaneel"></div>
+    <div id="notitiesPaneel" class="lock-open"></div>
     <div class="calc-layout">
       <div>
         <div id="calcKlapBar" class="calc-klap-bar"></div>
@@ -3670,7 +3677,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.66.0';
+const APP_VERSION = 'v4.67.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4087,6 +4094,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.67.0', d: '2026-09-14', h: 'Op een vergrendelde calculatie blijven klantgegevens, adressen, notities, projectnaam en datums bewerkbaar; alleen wat de prijs bepaalt staat nog op slot.' },
   { v: '4.66.0', d: '2026-09-14', h: 'Calculatie-tab, dashboard en offertetekst tonen hetzelfde totaal als de prijstabel op de offerte; het rekenkundige totaal staat er klein onder.' },
   { v: '4.65.2', d: '2026-09-13', h: 'Versie-geschiedenis weer één zin per versie: 207 regels vanaf v3.33.0 herschreven in gewone taal, techniek staat alleen nog in CHANGELOG.md.' },
   { v: '4.65.1', d: '2026-09-13', h: 'Ontbrekende versieregel en welkomstalinea voor v4.64.0 alsnog toegevoegd.' },
@@ -5781,7 +5789,7 @@ function renderOfferteBlok() {
     let ka = `<div class="kblok-kop">Klant en adres</div><div class="kblok"><div class="kgrid kgrid-vrij">
       <div class="k-mid"><label>Klant</label><input type="text" id="calcKlant" value="${_offEsc(c.klant || '')}"></div>
       <div class="k-keuze"><label>Klanttype</label>
-        <select onchange="_offCfgKlanttype(this.value)">
+        <select class="lock-keep" onchange="_offCfgKlanttype(this.value)">
           <option value="consument" ${cfg.klanttype === 'consument' ? 'selected' : ''}>Particulier</option>
           <option value="vve" ${cfg.klanttype === 'vve' ? 'selected' : ''}>VVE</option>
           <option value="zakelijk" ${cfg.klanttype === 'zakelijk' ? 'selected' : ''}>Zakelijk</option>
@@ -5803,12 +5811,12 @@ function renderOfferteBlok() {
       <div class="k-mid"><label>Achternaam</label><input type="text" value="${_offEsc(_cp.achternaam)}" placeholder="Beekman" onchange="_offCfgContact('achternaam', this.value)"></div>
       <div class="k-breed"><label>E-mail <span class="sub-muted">— voor het verzenden</span></label><input type="email" value="${_offEsc(cfg.email || '')}" placeholder="naam@voorbeeld.nl" onchange="_offCfgVeld('email', this.value.trim())"></div>
       <div class="k-mid"><label>Telefoon <span class="sub-muted">— voor de nabeltaak</span></label><input type="tel" value="${_offEsc(cfg.telefoon || '')}" placeholder="06 12 34 56 78" onchange="_offCfgVeld('telefoon', this.value.trim())"></div>
-      <div class="subkop"><span>Werkadres</span><span class="sub-muted">— waar het werk is, stuurt de reisafstand</span><span class="sub-knoppen"><button class="btn btn-secondary btn-sm" onclick="ophaalAfstand()">📍 Afstand ophalen</button><button class="btn btn-secondary btn-sm" onclick="_offWerkadresZoek()">📍 Zoek straat en woonplaats</button></span></div>
+      <div class="subkop"><span>Werkadres</span><span class="sub-muted">— waar het werk is, stuurt de reisafstand</span><span class="sub-knoppen"><button class="btn btn-secondary btn-sm lock-keep" onclick="ophaalAfstand()">📍 Afstand ophalen</button><button class="btn btn-secondary btn-sm" onclick="_offWerkadresZoek()">📍 Zoek straat en woonplaats</button></span></div>
       <div class="k-kort"><label>Postcode</label><input type="text" id="calcPostcode" value="${_offEsc(c.postcode || '')}" placeholder="6433 KE" autocomplete="off"></div>
       <div class="k-mini"><label>Huisnummer</label><input type="text" id="calcHuisnummer" value="${_offEsc(c.huisnummer || '')}" placeholder="nr." autocomplete="off"></div>
       <div class="k-breed"><label>Straat</label><input type="text" value="${_offEsc(_wadr.straat)}" placeholder="Straatnaam" onchange="_offCfgWerkadres('straat', this.value)"></div>
       <div class="k-mid"><label>Woonplaats</label><input type="text" value="${_offEsc(_wadr.woonplaats)}" placeholder="Plaats" onchange="_offCfgWerkadres('woonplaats', this.value)"></div>
-      <div class="k-mid"><label>Reisafstand (km enkele reis)</label><input type="number" id="calcReis" step="0.1" min="0" value="${c.reis || 0}" onchange="_renderRayonIndicator()"><div id="reisRayonIndicator" style="margin-top:0.2rem; font-size:0.7rem;"></div></div>`;
+      <div class="k-mid"><label>Reisafstand (km enkele reis)</label><input type="number" id="calcReis" class="lock-keep" step="0.1" min="0" value="${c.reis || 0}" onchange="_renderRayonIndicator()"><div id="reisRayonIndicator" style="margin-top:0.2rem; font-size:0.7rem;"></div></div>`;
     if (_briefApart) {
       ka += `
       <div class="subkop"><span>Adres klant (briefhoofd)</span><span class="sub-muted">— kantooradres, bovenaan de brief</span><span class="sub-knoppen"><button class="btn btn-secondary btn-sm" onclick="_offAdresZoek()">📍 Zoek straat en woonplaats</button></span></div>
@@ -19888,9 +19896,10 @@ function _applyCalcLockUI() {
     <span style="font-size:1.3rem;">🔒</span>
     <div style="flex:1;">
       <strong>Vergrendeld — status is ${lbl}.</strong>
-      Deze calculatie is bevroren met de instellingen die golden op moment van vergrendelen.
-      Wijzig je later je tarieven of opslagen, dan blijft deze offerte op de oude waarden staan.
-      Zet status op <em>Concept</em> om aan te passen.
+      De prijs is bevroren: regels, staart, schilders, uren per dag, reisafstand, klanttype en het Offerte-blok staan op slot,
+      met de instellingen die golden op moment van vergrendelen.
+      Klantgegevens, contactpersoon, adressen, notities, projectnaam, opname- en deadline-datum kun je gewoon aanpassen.
+      Zet status op <em>Concept</em> om de prijs te wijzigen.
     </div>
     <button class="btn-secondary btn" style="font-size:0.8rem;" onclick="setCalcStatus('${c.id}', 'concept')">Naar concept</button>
   </div>`;
