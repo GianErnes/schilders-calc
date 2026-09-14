@@ -1,3 +1,28 @@
+## v4.68.0 — Nabelverslag van Maud bij de offerte
+
+### Wat er nu kan
+
+Belt Maud een klant na en schrijft ze bij het afvinken in de takenapp op wat de klant zei, dan kwam dat alleen per mail bij Gian terecht. Voortaan staat het ook in het Accordeerlink-venster van de calculatie, in een blok *Nabellen door Maud*: per beltaak of er gebeld is (door wie en wanneer), of hij nog openstaat (met de geplande datum) of vervallen is, en de melding zelf. De vragen die de klant via de offertelink stelt stonden daar al onder *Vragen van de klant*.
+
+Naast de calculatienaam bovenin de Calculatie-tab verschijnt een 💬-knopje zodra er een nabelmelding of een klantvraag ligt ("💬 1 nabelmelding van Maud · 2 vragen van de klant"). Klikken opent het Accordeerlink-venster. Is er niets, dan is er ook geen knopje. Het knopje werkt ook op een vergrendelde calculatie.
+
+De app leest alleen uit de takenlijst; afvinken en bewerken blijft in de takenapp.
+
+### Hoe het onder de kap zit
+
+- `_nabelTakenOphalen(calcId)`: `taken` met `bron = 'offerte'`, `bron_ref = calculatie-id`, `bron_kenmerk in ('opvolg-bel', 'nabellen')`, nieuwste eerst op `gepland_op`. `select('*')` en defensief lezen, zodat een ontbrekende kolom geen fout geeft. Bij een fout `[]` en een `console.warn`; het venster opent dan gewoon zonder het blok.
+- `_nabelBlokHtml(nabel)`: bouwt het blok in de bestaande `.acb-vragen`-stijl. Melding via `_accordEsc` (HTML in een melding wordt als tekst getoond), regelovergangen blijven staan (`white-space: pre-wrap`).
+- `accordLinkBeheer` haalt de taken op na de accordering en geeft ze als vierde parameter aan `_accordBeheerRender(body, c, rij, nabel)`. Het blok staat zowel bij een bestaande link (na de klantvragen) als in de tak zonder link.
+- Badge: `<span id="calcSignaal">` naast `calcActieveLabel`. `renderCalcStructuur` roept `_calcSignaalLaden()` aan; die werkt met een cache per calculatie van vijf minuten en een bezig-vlag, zodat het vaak aangeroepen `renderCalcStructuur` niet telkens de database raakt. Het venster vernieuwt de cache meteen (`_calcSignaalVernieuw`). De knop heeft `lock-allowed`.
+- Rechten: leespolicy `taken_lezen` geeft rol `alles` alles; het administratie-account staat op `alles` (query van Gian, 14-09-2026). Geen SQL.
+- Getest: parse-test op het volledige script; runtime-test in node met een nagebouwde database (drie beltaken: gebeld met melding, vervallen, nog open; één klantvraag): filters van de query kloppen, drie standen renderen goed, HTML in een melding wordt geëscaped, badge toont "1 nabelmelding van Maud · 1 vraag van de klant", cache voorkomt een tweede ophaalronde, wisselen van calculatie leegt de badge, geen meldingen en geen vragen geeft geen badge, databasefout geeft `[]` zonder crash. Niet getest in de echte gebruiksomgeving.
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Geen SQL, geen Edge Function.
+2. Open een calculatie waarvan Maud de beltaak met een opmerking heeft afgevinkt (de mails van `taak-afvinkmelding` vertellen welke). Bovenin hoort 💬 te staan; klik erop en controleer dat het blok *Nabellen door Maud* haar tekst toont.
+3. Open een calculatie zonder beltaak: geen 💬, en het Accordeerlink-venster ziet er uit als voorheen.
+
 ## v4.67.0 — Het slot zit alleen nog op de prijs
 
 ### Wat er nu kan
