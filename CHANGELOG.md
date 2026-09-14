@@ -1,3 +1,27 @@
+## v4.66.0 — App en offerte tonen hetzelfde totaal
+
+### Wat er nu kan
+
+Maud merkte op dat het totaal in de app centen afweek van het totaal op de offerte. Oorzaak: de prijstabel op de offerte rondt elke eenheidsprijs naar boven af op de cent en vermenigvuldigt daarna met de hoeveelheid; de app toonde het rekenkundige totaal zonder die afronding. Het verschil was dus structureel en nooit een fout in de prijstabel. Bij grote hoeveelheden kon het oplopen tot euro's.
+
+Voortaan toont de Calculatie-tab onder *Totaal incl.* het bedrag zoals de klant het op de offerte ziet (excl. BTW, BTW en incl. zijn alle drie het offertecijfer). Daaronder staat klein het rekenkundige totaal en het verschil ("afronding eenheidsprijzen"). Het dashboardbedrag en het invulveld `{totaal_incl}` in de offerteteksten gebruiken hetzelfde offertetotaal. Aan de prijstabel zelf en aan het bedrag op de accordeerlink verandert niets; die gebruikten dit totaal al. Een calculatie zonder regels toont het rekenkundige totaal zoals voorheen.
+
+Bijvangst: `{totaal_incl}` was al langer kapot en gaf "€ [object Object]" in plaats van een bedrag (de vorige code gaf een object aan de geldopmaak). Hersteld.
+
+### Hoe het onder de kap zit
+
+- Nieuwe helper `_calcTotaalGetoond(c)`: geeft `{ totaal, exBtw, btw, rekenkundig, overschot, bron }`. `bron` is `'offerte'` als `_berekenOfferteCijfers(c)` een resultaat geeft en `c === data.calc && c.__loaded`; anders `'rekenkundig'` met de uitkomst van `_calcTotalForArchive(c)`. De beperking tot de actieve calc is nodig omdat de offerte-rekenkern via `calcProjectTotalen()` en `_calcDays()` op `data.calc` leest.
+- `_syncCalcTotalToDB` en de payload in `_touchCalc` gebruiken de helper voor `totaal_incl_btw`. Vergrendel je een calculatie vanuit het dashboard zonder hem open te hebben, dan wordt op dat moment het rekenkundige totaal gecachet; bij de eerstvolgende keer openen wordt het via `_syncCalcTotalToDB` stil vervangen door het offertetotaal (bestaand zelfherstel uit v3.56.1).
+- `renderTotals`: bij `bron === 'offerte'` toont het eindblok `exBtwFinal`, `btwBedrag` en `totaalIncl`, plus een regel "rekenkundig €… · +€… afronding eenheidsprijzen" (het overschot incl. BTW, alleen als het groter is dan een halve cent). Het scenario-blok (oorspronkelijk volledig vs. aangepast) blijft op rekenkundige basis, want `totaal_offerte_origineel` is dat ook.
+- `_offVulVelden`: `{totaal_incl}` leest nu `.totaal` van het helper-object.
+- Getest: parse-test op het volledige script (`new Function`), en een rekentest in node met de uitgeknipte rekenkern (25 functies) op een nagebouwde calculatie van drie regels, reis en een staartpost: getoond totaal is exact gelijk aan `totaalIncl` van de prijstabel (3204,7576 tegen rekenkundig 3204,6879), het verschil is exact het overschot incl. BTW, en de terugval werkt voor een niet-actieve en een lege calculatie. Niet getest in de echte gebruiksomgeving; dat is stap 2 hieronder.
+
+### Wat je moet doen
+
+1. `index.html` uploaden. Geen SQL, geen Edge Function.
+2. Open een verzonden calculatie met veel m² en vergelijk *Totaal incl.* in de Calculatie-tab met het totaal onderaan het Offertedocument (knop 📄). Die moeten nu tot op de cent gelijk zijn. Kijk ook of het dashboardbedrag na het openen meebeweegt.
+3. Controleer in het Offerte-voorbeeld een tekst met `{totaal_incl}`: daar hoort nu een bedrag te staan.
+
 ## v4.65.2 — Versie-geschiedenis weer één zin per versie
 
 ### Wat er nu kan
