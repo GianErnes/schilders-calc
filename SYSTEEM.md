@@ -166,7 +166,7 @@ doen is **[TE CONTROLEREN]**.
 | Craft.do | werkvoorbereidingsdocumenten |
 | Resend | verzenden van alle e-mail uit het systeem |
 | Anthropic | leescontrole op offertes en de vraagbaak in de app |
-| Google Agenda | klantboekingen voor de opnames lezen, via een serviceaccount, alleen-lezen |
+| Google Agenda en Google Drive | boekingen voor de opnames lezen én elke nacht de backup wegschrijven naar een map in de Drive van `administratie@ernes.nl`, via één serviceaccount met twee bereiken (`calendar.readonly`, `drive.file`). Zie 4.7 |
 | PDOK Locatieserver | adressen opzoeken, gratis |
 | OpenRouteService | rijafstand berekenen |
 
@@ -384,10 +384,15 @@ Welke sleutels bestaan (waarden staan in de kluis, niet hier):
 - Resend, sleutel voor het verzenden van mail
 - Anthropic, sleutel voor de leescontrole en de vraagbaak
 - Craft.do, koppelingsgegevens
-- Google, het serviceaccount voor de agendakoppeling: `GOOGLE_SA_JSON`
-  (het complete sleutelbestand) en `GOOGLE_AGENDA_GEBRUIKER`
-  (`administratie@ernes.nl`), als Edge Function secrets in
-  `schilders-calc`
+- Google, het serviceaccount voor de agenda- en Drive-koppeling:
+  `GOOGLE_SA_JSON` (het complete sleutelbestand), `GOOGLE_AGENDA_GEBRUIKER`
+  (`administratie@ernes.nl`) en sinds 15 september 2026
+  `GOOGLE_DRIVE_BACKUP_MAP` (de id van de Drive-map waar de backup heen
+  gaat), als Edge Function secrets in `schilders-calc`. Het serviceaccount
+  heeft in de Workspace-beheerconsole twee bereiken: `calendar.readonly`
+  (agenda lezen) en `drive.file` (alleen bestanden die het zelf aanmaakt).
+  Zie 4.7 voor waarom die map-id door de functie zelf is aangemaakt en
+  niet met de hand
 - `AFTAP_SECRET`, waarmee de cronjobs `backup-nachtelijk`,
   `taken-mail-melding` en `werkvoorraad-sync-wekelijks` de Edge Functions
   van binnenuit mogen aanroepen. Gaat mee in de header `x-aftap-key`
@@ -458,9 +463,12 @@ binnen op een **gedeelde mailbox** die Gian, Max en Maud alledrie lezen:
 Dat is bewust zo. Kwam die post op een persoonlijk adres binnen, dan zou
 het systeem alleen werken zolang die ene persoon zijn mail leest.
 
-De nachtelijke backup stuurt elke maandag een statusbericht met bijlage
-naar `info@ernes.nl`. **Die bijlage is de enige kopie van de gegevens
-buiten Supabase.** Zie 4.7, want er zitten drie haken aan.
+De nachtelijke backup stuurt elke maandag een statusbericht naar
+`info@ernes.nl`. Tot 14 september 2026 zat daar de gegevensbackup als
+bijlage bij en was die bijlage de enige kopie buiten Supabase. Sinds
+15 september 2026 gaat de kopie elke nacht naar Google Drive en meldt de
+maandagmail alleen nog of dat gelukt is. Het schemabestand zit nog wel als
+bijlage bij die mail. Zie 4.7.
 
 ### 2.6 Betalingen
 
@@ -511,7 +519,7 @@ Allemaal in `schilders-calc`, allemaal actief.
 
 | Naam | UTC | Bij ons, zomer | Bij ons, winter | Roept aan | Wat het doet |
 |---|---|---|---|---|---|
-| `backup-nachtelijk` | 02:00 | 04:00 | 03:00 | `backup-dump` | dump van de database naar de bak `backups`, plus kopie van foto's en documenten. Stuurt maandag een statusmail |
+| `backup-nachtelijk` | 02:00 | 04:00 | 03:00 | `backup-dump` | dump van de database en het schema naar de bak `backups`, kopie van beide naar Google Drive, spiegel van de vijf bestandsbakken. Stuurt maandag een statusmail en bij een mislukte Drive-kopie of schemadump direct een foutmail |
 | `opname-boekingen-dagelijks` | 03:45 | 05:45 | 04:45 | `opname-boekingen` | leest de klantboekingen uit de Google agenda en werkt de tabel `opname_boekingen` bij. Bijgekomen 9 augustus 2026 |
 | `yuki-vuller-dagelijks` | 05:00 | 07:00 | 06:00 | `smooth-function` | haalt de standen uit Yuki en vult het financiele dashboard |
 | `yuki-vuller-middag` | 10:00 | 12:00 | 11:00 | `smooth-function` | zelfde, tweede keer op de dag |
@@ -610,6 +618,22 @@ tabel, vergelijkt en meldt wat hij zou doen (nieuw, bijgewerkt,
 ongewijzigd), maar verandert niets. Alleen met `?schrijf=1` schrijft hij
 naar de tabel `opname_boekingen`, en die parameter geeft alleen de
 cronjob mee.
+
+**`backup-dump`, versie 6 sinds 15 september 2026.** Doet alles wat v5
+deed (dump naar de bak, schemadump, spiegel van vijf bakken, opruimen,
+maandagmail) en zet daarna de gegevensbackup en het schemabestand ook in
+Google Drive, in de map Backups Schilders Calc van `administratie@ernes.nl`.
+Hij meldt zich daarvoor aan met hetzelfde serviceaccount als
+`opname-boekingen`, met het bereik `drive.file`, namens administratie@;
+de aanmeldcode is uit `opname-boekingen` overgenomen. Upload in twee
+stappen (Drive weigert bestanden boven 5 MB via de gewone weg). Staat er
+al een bestand met dezelfde naam, dan gaat dat eerst naar de prullenbak.
+Bestanden ouder dan 60 dagen gaan naar de prullenbak van Drive, niet
+definitief weg (keuze Gian). Mislukt de Drive-stap, dan loopt de backup
+in de bak gewoon door en gaat er direct een mail "Drive-upload MISLUKT"
+uit. Testaanroep `?drive=test`: zonder secret `GOOGLE_DRIVE_BACKUP_MAP`
+maakt hij de map aan en meldt de id, met secret zet hij een klein
+testbestand in de map. Raakt in beide gevallen bak noch database. Zie 4.7.
 
 Mengregels bij het bijwerken van een bestaande rij:
 
@@ -1104,43 +1128,84 @@ lijst ernaast.
 
 ### 4.7 De eigen nachtelijke dump
 
-Bijgewerkt 27 juli 2026, na bestudering van de wekelijkse statusmail.
+Bijgewerkt 15 september 2026, na de bouw van `backup-dump` v6.
 
-**Wat hij doet.** Elke nacht om 02:00 UTC schrijft `backup-dump` één
-bestand weg naar de bak `backups`, met de naam `backup-JJJJ-MM-DD.json`.
-Op 27 juli was dat 8,32 MB met 37 tabellen erin, wat klopt met de
-werkelijkheid. Daarnaast spiegelt hij `calculatie-fotos` en
-`calculatie-documenten`, en die zijn bij: achterstand nul.
+**Wat hij doet.** Elke nacht om 02:00 UTC schrijft `backup-dump` de
+volledige inhoud van de database weg als `backup-JJJJ-MM-DD.json` in de
+bak `backups` (60 dagen bewaard) en het herbouwbestand van de structuur
+als `schema/schema-JJJJ-MM-DD.sql` (30 dagen). Daarna zet hij beide
+bestanden ook in Google Drive, en tot slot spiegelt hij de vijf
+bestandsbakken (`accord-pdf` voorop) naar `bestanden/` in dezelfde bak.
 
-Elke maandag om 04:00 onze tijd gaat er een statusmail naar
-`info@ernes.nl`, verstuurd vanaf `offerte@ernes.nl`, met **de nieuwste
-backup als bijlage**. Die bijlage is de enige kopie van de gegevens buiten
-Supabase.
+**Waar de kopie buiten Supabase staat.** In de Google Drive van
+`administratie@ernes.nl`, map **Backups Schilders Calc**, sinds
+15 september 2026. Elke dag komt er een JSON van 15+ MB en een SQL van
+ongeveer 60 kB bij; na 60 dagen gaan ze naar de prullenbak van Drive
+(Google leegt die zelf na 30 dagen). Reken op ongeveer 1 GB aan
+Drive-ruimte. De maandagmail meldt of de kopie van die nacht gelukt is en
+geeft een link; mislukt de kopie op welke nacht dan ook, dan komt er
+direct een mail "Drive-upload MISLUKT" op `info@ernes.nl`.
 
-**Drie dingen die je moet weten voordat je hierop vertrouwt.**
+Vóór 15 september was de kopie buiten Supabase de bijlage bij de
+maandagmail. Die grens lag op 15 MB (`BIJLAGE_MAX` in de functie, niet de
+25 MB die hier eerder stond) en is op 14 september 2026 overschreden.
+Sindsdien ging alleen het schemabestand nog mee. Oorzaak van de groei,
+gemeten op 14 september: `offerte_accorderingen` was 13 MB bij 47 rijen,
+omdat de kolom `snapshot` per accordeerlink de complete HTML van het
+document met plaatjes als tekst bevatte (ongeveer 195 kB per offertelink,
+1 MB per planlink). Gedicht in `index.html` v4.69.0: nieuwe links slaan
+alleen nog de PDF op. Daarnaast kwamen op 9 september de `yoobi_*`-tabellen
+erbij (ongeveer 19 MB), een eenmalige trap. **Nog open:** de 44 bestaande
+offerterijen met PDF bevatten 8,5 MB HTML die nooit meer getoond wordt;
+opruimen kan met één update op `snapshot`, met projectcheck-guard en telling
+vooraf. Gian heeft daar nog geen ja op gegeven. Oude planlinks en de drie
+offertelinks zonder `pdf_path` hebben hun HTML wél nodig.
 
-**1. Het is een JSON-export, geen volledige databasedump.** Je krijgt
-daarmee alle rijen terug, en **niet** de tabeldefinities, de policies, de
-triggers of de indexen. Zou je dit in een leeg project moeten
-terugzetten, dan heb je eerst een database nodig om het ín te gieten, en
-die structuur staat nergens vastgelegd.
+**Vier dingen die je moet weten voordat je hierop vertrouwt.**
 
-De platformbackup van Supabase heeft de structuur wél, maar zit ín
-Supabase. De maandagmail zit buiten de deur, maar heeft alleen de inhoud.
-**Los van elkaar is geen van beide compleet.** Een schemadump ontbreekt.
+**1. De functie ziet in Drive alleen wat hij zelf heeft aangemaakt.** Dat
+komt door het bereik `drive.file`, bewust gekozen omdat het geen toegang
+geeft tot de rest van de Drive. De map is daarom op 15 september door de
+functie zelf aangemaakt via `?drive=test`, en de id staat in de secret
+`GOOGLE_DRIVE_BACKUP_MAP`. Verplaats, hernoem of vervang die map nooit met
+de hand: hernoemen kan, verplaatsen binnen Mijn Drive ook, maar een nieuwe
+map maken in Drive en de secret daarop zetten werkt niet ("File not
+found"). Nieuwe map nodig? Secret leegmaken, `?drive=test` aanroepen,
+nieuwe id in de secret.
 
-**2. Die bijlage loopt vast, vermoedelijk begin december 2026.** Het
-bestand groeide van 7,03 MB op 17 juli naar 8,32 MB op 27 juli, ongeveer
-0,13 MB per dag. De grens voor een mailbijlage ligt rond de 25 MB. Bij dit
-tempo is dat over een kleine 130 dagen bereikt.
+**2. Als het misgaat, kijk in deze volgorde.** (a) Staat het bestand van
+vannacht in de Drive-map? Nee: (b) is er een mail "Drive-upload MISLUKT" op
+info@? De fout staat erin. De drie oorzaken tot nu toe bedacht: het bereik
+`drive.file` ontbreekt bij de domeinbrede machtiging in de
+Workspace-beheerconsole (foutmelding `unauthorized_client`), de secret
+`GOOGLE_DRIVE_BACKUP_MAP` is leeg of wijst naar een map die de functie niet
+kent (`File not found`), of de Google Drive API is in cloudproject
+`ernes-agenda` uitgezet (`accessNotConfigured`). (c) Geen mail en geen
+bestand: dan is de hele run niet gedraaid, zie 3.4 en 4.3.
 
-En dan gebeurt er niets zichtbaars: de mail komt aan zonder bijlage, of
-komt helemaal niet aan, en niemand merkt dat de enige kopie buiten
-Supabase is opgehouden te bestaan. Zie de opruimlijst.
+**3. Testen zonder de nacht af te wachten.** In de SQL Editor, met de
+sleutel uit de kluis:
 
-**3. Hij is nog nooit teruggezet.** Of dat JSON-bestand werkelijk bruikbaar
-is om mee te herstellen weet niemand. Dat is de eerstvolgende test die
-gedaan moet worden en de belangrijkste openstaande vraag van dit document.
+```sql
+select extensions.http_set_curlopt('CURLOPT_TIMEOUT_MS', '60000');
+select status, content
+from extensions.http((
+  'GET',
+  'https://gjcjpigirqbpkjkymbio.supabase.co/functions/v1/backup-dump?drive=test',
+  array[extensions.http_header('x-aftap-key',
+    (select decrypted_secret from vault.decrypted_secrets where name = 'aftap_secret'))],
+  null, null
+)::extensions.http_request);
+```
+
+Verwacht: status 200 en `"stap":"klaar"` met een link. Dit is op
+15 september 2026 twee keer met dit resultaat gedraaid. Dezelfde vorm
+zonder `?drive=test` start een echte nachtelijke run (met `?mail=1` ook
+de weekmail); dat heeft dan wel een minuut nodig.
+
+**4. Hij is nog nooit teruggezet.** Of het JSON-bestand samen met het
+schemabestand werkelijk bruikbaar is om mee te herstellen weet niemand.
+Dat is nog altijd de belangrijkste openstaande vraag van dit document.
 
 ### 4.8 Herbouwen vanaf nul
 
@@ -1166,8 +1231,8 @@ Supabase houdt op te bestaan.
 |---|---|---|
 | De vier appbestanden | ja, GitHub | minuten |
 | Broncode Edge Functions | ja, `ernes-edge-functions` | — |
-| Structuur van de database | ja, `schema/` en de maandagbijlage | half uur |
-| Inhoud van de database | ja, de JSON uit 4.7 | minuten |
+| Structuur van de database | ja, `schema/`, Google Drive en de maandagbijlage | half uur |
+| Inhoud van de database | ja, de JSON in Google Drive (60 dagen), zie 4.7 | minuten |
 | **De zestien functies uitrollen** | n.v.t. | **uren klikwerk** |
 | De negen cronjobs | ja, hoofdstuk 3.1 | half uur |
 | De geheimen | ja, de kluis | half uur |
@@ -1291,8 +1356,10 @@ draait op de servers van GitHub. Er hoeft niets geïnstalleerd te worden
 en er valt niets te leren op het verkeerde moment.
 
 **3. De bestanden echt buiten de deur.** De bak `backups` zit in hetzelfde
-project dat bij ramp 3 verdwenen is. Alleen de maandagbijlage staat er
-buiten, en daar zitten geen foto's of PDF's in.
+project dat bij ramp 3 verdwenen is. De gegevens en het schema staan sinds
+15 september 2026 wel buiten, in Google Drive (zie 4.7), maar de foto's,
+documenten en getekende akkoorden in `bestanden/` niet. Die zitten nog
+uitsluitend in het project zelf.
 
 #### De volgorde bij een echte herbouw
 
@@ -1745,7 +1812,15 @@ van een backup is één keer echt geoefend en werkte.
    > Daarom staat er nu een vijfde controleregel in die kijkt of die
    > beveiliging er nog op zit. Die vangt niet alleen deze fout maar elke
    > toekomstige keer dat iemand die functie opnieuw aanmaakt.
-9. **De maandagbijlage vervangen door iets dat blijft werken.**
+9. ~~**De maandagbijlage vervangen door iets dat blijft werken.**~~
+   **Gedaan op 15 september 2026.** `backup-dump` v6 zet de backup en het
+   schema elke nacht in Google Drive; de bijlage is uit de maandagmail.
+   Zie 4.7. De schatting hieronder van 2 augustus ("ongeveer 1 jaar") is
+   niet uitgekomen: de grens in de functie was 15 MB (`BIJLAGE_MAX`), niet
+   20 of 25 MB gecodeerd, en die is op 14 september 2026 overschreden door
+   HTML in `offerte_accorderingen.snapshot`, niet door gewone groei. De
+   les van 2 augustus, "meet opnieuw voordat je hierop bouwt", geldt
+   dubbel: ook de grens zelf moet je in de code nakijken.
    **Opnieuw gemeten op 2 augustus 2026: dit speelt niet dit jaar en de
    oude schatting zat er een factor acht naast.**
 
@@ -4543,3 +4618,91 @@ rechten.
 - Jsdom op het volledige `index.html` (1,6 MB) loopt vast. Werkbare
   testvorm: alleen de benodigde functies uitknippen (acorn) en met een
   nagebouwde `data` en een nep-Supabase draaien.
+
+### Later op 14 september: v4.69.0 en v4.70.0
+
+Bron: het overdrachtsbericht van die avond; de code zelf is in de sessie
+van 15 september niet opnieuw gelezen.
+
+- **v4.69.0:** nieuwe accordeerlinks slaan geen HTML meer op in
+  `offerte_accorderingen.snapshot`, alleen de PDF; geen PDF betekent geen
+  link. Aanleiding: de tabel was 13 MB bij 47 rijen en dat brak de
+  maandagbijlage, zie 4.7.
+- **v4.70.0:** het planvenster toont het opvolgschema. Het plan God
+  2026-2036 stond van 3 tot 14 september niet op Verzonden, waardoor de
+  automaat terecht zweeg. Controle op 15 september 06:30: verwacht
+  `waarvan_plannen: 2, beltaken: 1` in het rapport.
+
+## Wat er op 15 september 2026 gedaan is
+
+Eén klus, geen wijziging aan `index.html`: de dagelijkse kopie van de
+backup naar Google Drive. Aanleiding staat in 4.7.
+
+### `backup-dump` naar v6
+
+Gebouwd op v5, alle bestaande gedrag ongewijzigd. Nieuw: na de schemadump
+gaan de JSON en het schemabestand naar Google Drive, met een resumable
+upload namens `administratie@ernes.nl`. Aanmeldcode overgenomen uit
+`opname-boekingen` v4 met het bereik `drive.file` in plaats van
+`calendar.readonly`. Keuzes van Gian: 60 dagen bewaren (gelijk aan de bak)
+en oude bestanden naar de prullenbak, niet definitief wissen. De
+maandagmail heeft de JSON-bijlage niet meer en meldt in plaats daarvan of
+de Drive-kopie gelukt is, met link; het schemabestand blijft als bijlage.
+Testmodus `?drive=test`. Details in 3.2 en 4.7.
+
+Gemeten vóór uitrol: `deno check` zonder strengheidsregels geeft alleen de
+`attachments`-melding die v5 ook al had; een harnas met nagebootste
+Google-token (echte RSA-handtekening geverifieerd), Drive, Supabase en
+Resend, 30 controles over vijf scenario's (normale nacht met weekmail,
+geweigerd token, ontbrekende secret, testmodus met en zonder secret,
+verkeerde aftap-sleutel), alle geslaagd.
+
+### Wat er aan de Google-kant is gedaan
+
+1. Google Drive API ingeschakeld in cloudproject `ernes-agenda`
+   (stond uit; alleen de Calendar API stond aan).
+2. Bereik `https://www.googleapis.com/auth/drive.file` toegevoegd aan de
+   domeinbrede machtiging van het serviceaccount (client-id begint met
+   118275) in de Workspace-beheerconsole, onder Beveiliging →
+   Toegangs- en gegevensbeheer → API-functies → Domeinbrede machtiging.
+3. Functie gedeployd, `?drive=test` aangeroepen zonder secret: status 200,
+   `"stap":"map aangemaakt"`. Map-id in de secret `GOOGLE_DRIVE_BACKUP_MAP`
+   gezet. Tweede aanroep: status 200, `"stap":"klaar"`, testbestand
+   zichtbaar in Drive. Daarmee is de hele keten in het echt bewezen, op de
+   nachtelijke run met 15 MB na.
+
+### Wat er onderweg geleerd is
+
+- **`drive.file` ziet alleen eigen bestanden.** Het oorspronkelijke plan
+  (map met de hand maken, id in de secret) had niet gewerkt. Opgezocht
+  vóór de bouw, plan aangepast: de functie maakt de map zelf. Zie 4.7
+  punt 1.
+- **De Drive API is een aparte schakelaar** in het cloudproject, los van
+  de Calendar API. Stond in geen enkel eerder plan.
+- **De nieuwe secret werd direct gelezen** zonder opnieuw deployen. Eén
+  waarneming, geen garantie.
+- **Testvorm voor Edge Functions met de aftap-sleutel:** `extensions.http`
+  in de SQL Editor met de sleutel uit `vault.decrypted_secrets`, zie de
+  query in 4.7 punt 3. Wacht op het antwoord en toont de inhoud, anders
+  dan `net.http_post` dat de cron gebruikt. Nooit de sleutel zelf in de
+  query zetten (zie de les van 27 juli in 2.4).
+- Voor de Drive op de Mac van Gian synchroniseert de map mee; na 60 dagen
+  is dat ongeveer 1 GB aan schijfruimte. Kan in de Drive-app op "alleen
+  online" gezet worden; voor de backup maakt het niet uit.
+
+### Nog te controleren
+
+- 16 september ochtend: `backup-2026-09-16.json` en `schema-2026-09-16.sql`
+  in de Drive-map, geen mail "Drive-upload MISLUKT". Dit is de eerste run
+  met het echte bestand van 15+ MB; de tijdslimiet van de Edge Function is
+  daarmee nog niet in het echt beproefd.
+- 21 september: weekstatusmail met de regel "Kopie naar Google Drive" en
+  zonder JSON-bijlage.
+- Open, apart besluit: de 8,5 MB oude HTML in `offerte_accorderingen`
+  opruimen, zie 4.7.
+- 4.4 zegt nog dat de nachtelijke kopie maar twee bakken spiegelt en
+  `accord-pdf` geen backup heeft. Dat is sinds v5 (30 juli) niet meer zo
+  en is vandaag niet herschreven; hoort bij een volgende opruimronde van
+  dit document.
+- `backup-dump_v6_index.ts` hoort als `index.ts` in de map `backup-dump`
+  van `ernes-edge-functions`; de ophaalknop doet dat zondag ook zelf.
