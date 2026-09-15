@@ -598,7 +598,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.19.0';
+const APP_VERSION = 'v0.19.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -971,6 +971,18 @@ function sorteer(lijst, rubriek){
   const kopie = lijst.slice();
   if(rubriek === 'voltooid'){
     kopie.sort((a,b) => (b._voltooid || 0) - (a._voltooid || 0));
+  } else if(rubriek === 'vandaag'){
+    /* v0.19.1: Actueel in drie blokken. Eerst wat vandaag gepland staat
+       (oplopend op tijd), dan gehaalde taken met een datum in de toekomst
+       (oplopend), dan de te-late taken onderaan met de meest recente
+       plandatum bovenaan (zoals Op de rol). Zonder datum als laatste. */
+    const blok = t => !t._gepland ? 3 : t._telaat ? 2 : lokaalISO(t._gepland) === lokaalISO(new Date()) ? 0 : 1;
+    kopie.sort((a,b) => {
+      const ba = blok(a), bb = blok(b);
+      if(ba !== bb) return ba - bb;
+      if(ba === 3) return 0;
+      return ba === 2 ? b._gepland - a._gepland : a._gepland - b._gepland;
+    });
   } else if(rubriek === 'oprol'){
     /* v0.18.1: Op de rol aflopend — de meest recente plandatum bovenaan,
        de langste achterstand onderaan. Zonder datum blijft onderaan. */

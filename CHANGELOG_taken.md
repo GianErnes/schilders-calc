@@ -6,6 +6,18 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.19.1 — Te laat onderaan in Actueel, 15-09-2026
+
+Actueel sorteert in drie blokken: eerst wat vandaag gepland staat
+(oplopend op tijd), dan gehaalde taken met een datum in de toekomst
+(oplopend), dan de te-late taken onderaan met de meest recente plandatum
+bovenaan, zoals Op de rol sinds v0.18.1. Zonder datum als laatste.
+Plandatum en te-laat pillen ongewijzigd; niets in de database geraakt.
+Technisch: nieuwe tak `vandaag` in `sorteer()`.
+Getest: JS parse (node) en sorteertest met zeven neptaken (vandaag 08 en
+14 uur, morgen, gisteren, 3 dagen en een week te laat, zonder datum).
+Niet getest: browser.
+
 ## v0.19.0 — Klantopvolging alleen dit jaar, 15-09-2026
 
 Klantopvolging toont standaard alleen Yoobi-taken met een plandatum in het
