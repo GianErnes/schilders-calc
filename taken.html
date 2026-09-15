@@ -193,6 +193,7 @@
   .section.lapsed .head .title .t{color:var(--ink-faint)}
 
   .hidnote{font-size:12px;color:var(--ink-faint);font-weight:600;padding:2px 4px 0}
+  .hidnote.klantjaren{cursor:pointer;color:var(--ink-soft);text-decoration:underline;text-decoration-color:var(--ink-faint);padding-top:8px}
 
   /* verdeling onderaan, stil, om te meten */
   .meten{margin:4px 6px 0;padding:12px 12px 4px;border-top:1px solid var(--line-soft)}
@@ -597,7 +598,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.18.2';
+const APP_VERSION = 'v0.19.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -632,6 +633,11 @@ let LAATSTE_HERO = null;
 
 /* Open/dicht-stand van de rubrieken, blijft staan over renders heen. */
 const OPEN_STAND = {};
+/* v0.19.0: Klantopvolging toont standaard alleen Yoobi-taken van dit
+   kalenderjaar. Wat verder vooruit staat blijft in de tabel en komt vanzelf
+   in beeld zodra dat jaar aanbreekt. Met de regel onderaan haal je ze
+   tijdelijk erbij; bij herladen start dit weer op uit. */
+let TOON_KLANT_ANDERE_JAREN = false;
 
 /* Het vel: wat er nu open staat. */
 let VEL = null;           /* { modus:'nieuw'|'eigen'|'yoobi'|'klaar', taak, soort, persoon, fotoBlob, fotoWeg } */
@@ -1037,6 +1043,20 @@ function bouwRubriek(r){
      erbij die zegt wanneer je hem zelf bijwerkt. */
   if(r.key === 'klant'){
     voorNoot = '<div class="hidnote">Deze lijst haalt zichzelf niet op. Klaar met verwerken in Yoobi? Tik dan \u21bb hierboven.</div>';
+    /* v0.19.0: alleen dit kalenderjaar tonen. Taken zonder datum blijven
+       staan; die zijn niet in een jaar te plaatsen. */
+    const ditJaar = new Date().getFullYear();
+    const anderJaar = t => !!(t._gepland && t._gepland.getFullYear() !== ditJaar);
+    const buiten = eigen.filter(anderJaar).length;
+    if(!TOON_KLANT_ANDERE_JAREN) zichtbaar = eigen.filter(t => !anderJaar(t));
+    sub = 'uit Yoobi \u00b7 ' + (eigen.length - buiten) + ' dit jaar' +
+          (buiten ? ' \u00b7 ' + buiten + ' in andere jaren' : '');
+    if(buiten > 0){
+      extraNoot = '<div class="hidnote klantjaren" data-klantjaren="1" role="button" tabindex="0">' +
+        (TOON_KLANT_ANDERE_JAREN ? 'Andere jaren staan erbij \u00b7 verbergen'
+                                 : buiten + ' uit andere jaren verborgen \u00b7 tonen') +
+        '</div>';
+    }
   }
   if(r.key === 'herhalend'){
     zichtbaar = eigen.filter(t => t._binnenWeek);
@@ -1055,7 +1075,10 @@ function bouwRubriek(r){
 
   const leegTekst = r.key === 'oprol' ? 'Niets meer op de rol. Alles is gekozen of gedaan.'
                   : r.key === 'vandaag' ? 'Niets voor vandaag gepland. Pak hieronder op wat er nog ligt.'
+                  : (r.key === 'klant' && eigen.length) ? 'Niets meer voor dit jaar.'
                   : 'niets hier';
+  /* v0.19.0: bij Klantopvolging telt de kop alleen wat je ziet. */
+  const telling = r.key === 'klant' ? zichtbaar.length : eigen.length;
   const kaarten = zichtbaar.length
     ? zichtbaar.map(t => kaart(t, t.crmtaskid === heroId)).join('')
     : '<div class="hidnote">' + leegTekst + '</div>';
@@ -1065,7 +1088,7 @@ function bouwRubriek(r){
     cluster(eigen) +
     '<span class="title"><span class="t">' + r.titel + '</span><span class="sub">' + sub + '</span></span>' +
     (r.key === 'klant' ? '<span class="ophaal-knop" data-ophaal="1" role="button" tabindex="0" aria-label="Yoobi ophalen" title="Yoobi ophalen">\u21bb</span>' : '') +
-    '<span class="count">' + eigen.length + '</span><span class="chev"></span>' +
+    '<span class="count">' + telling + '</span><span class="chev"></span>' +
     '</button>' + gatehint +
     '<div class="cards"><div class="inner">' + voorNoot + kaarten + extraNoot + '</div></div></div>';
 }
@@ -2213,6 +2236,13 @@ document.getElementById('lijst').addEventListener('click', async function(e){
   }
   const ophaalKnop = e.target.closest('[data-ophaal]');
   if(ophaalKnop){ e.stopPropagation(); haalYoobiOp(); return; }
+  const jarenKnop = e.target.closest('[data-klantjaren]');
+  if(jarenKnop){
+    e.stopPropagation();
+    TOON_KLANT_ANDERE_JAREN = !TOON_KLANT_ANDERE_JAREN;
+    render();
+    return;
+  }
   const toonKnop = e.target.closest('[data-toon]');
   if(toonKnop){
     e.stopPropagation();

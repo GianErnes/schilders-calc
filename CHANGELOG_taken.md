@@ -6,6 +6,21 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.19.0 — Klantopvolging alleen dit jaar, 15-09-2026
+
+Klantopvolging toont standaard alleen Yoobi-taken met een plandatum in het
+huidige kalenderjaar. Taken voor latere jaren blijven in de tabel en de sync
+haalt ze gewoon binnen; ze verschijnen vanzelf zodra dat jaar aanbreekt.
+Onderaan de lijst staat een tikbare regel ("N uit andere jaren verborgen ·
+tonen") die ze tijdelijk erbij zet; bij herladen start de rubriek weer
+verborgen. De teller in de kop telt alleen wat zichtbaar is; de subregel
+noemt beide aantallen. Taken zonder plandatum blijven altijd zichtbaar.
+Andere rubrieken, eigen taken en de meetstrook zijn ongewijzigd.
+Technisch: `TOON_KLANT_ANDERE_JAREN`, filter in `bouwRubriek` (tak
+`klant`), klik op `[data-klantjaren]` in de lijst-handler.
+Getest: JS parse (node) en runtime-test van `bouwRubriek` met neptaken
+(2026, 2027, 2028, zonder datum). Niet getest: browser.
+
 ## v0.18.2 — Op de rol standaard dicht, 09-09-2026
 
 De rubriek Op de rol start dichtgeklapt; openklappen blijft met een tik.
