@@ -6,6 +6,23 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.21.0 — Push opent de taak; push_op mee gewist, brok 4, 16-09-2026
+
+Een tik op een pushmelding opent nu de taak zelf: de verzendfuncties
+geven `taken.html?taak=<crmtaskid>` mee en `openViaAdres()` (aangeroepen
+aan het eind van `start()`) zoekt die taak en opent hem met `openTask`.
+Het nummer wordt daarna uit het adres gehaald zodat verversen niet
+steeds dezelfde taak opent; onbekende of onzichtbare taak = niets doen.
+Daarnaast: wie een piep-tijd naar de toekomst verzet, wist nu naast
+`mail_op` ook `push_op`, anders zou de verzendfunctie na verzetten wel
+opnieuw claimen maar nooit meer pushen.
+Hoort bij `taken-mail-melding` v3 en `taak-afvinkmelding` v2 (Edge
+Functions, besloten repo): push eerst, anders mail.
+Getest: JS parse (node), div/scripttag-balans, drie scenario's voor
+`openViaAdres` (bekende taak, onbekende taak, geen parameter).
+Niet getest: browser; of iOS een al geopende beginscherm-app naar het
+nieuwe adres laat springen.
+
 ## v0.20.0 — Meldingen op de iPhone (web push), brok 2, 16-09-2026
 
 Nieuwe knop `meldingen` in de voet, alleen voor Gian, Max, Bjorn en Jens

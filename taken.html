@@ -600,7 +600,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.20.0';
+const APP_VERSION = 'v0.21.0';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -1645,9 +1645,12 @@ async function slaOp(){
     toegewezen_aan: VEL.persoon,
   };
 
-  /* mailmelding opnieuw scherpstellen als de melding nog in de toekomst ligt */
+  /* melding opnieuw scherpstellen als de piep-tijd nog in de toekomst ligt.
+     v0.21.0: push_op mee, anders zou de verzendfunctie na een verzette
+     tijd wel opnieuw claimen maar nooit meer pushen. */
   if(VEL.modus !== 'nieuw' && w.piepAan && w.piep_op && new Date(w.piep_op).getTime() > Date.now()){
     rij.mail_op = null;
+    rij.push_op = null;
   }
 
   try{
@@ -2236,6 +2239,24 @@ async function start(){
   if(!ok) return;
   await laadTaken();
   initPush();
+  openViaAdres();
+}
+
+/* v0.21.0: een tik op een pushmelding opent taken.html?taak=<crmtaskid>.
+   Staat die taak in de lijst, dan gaat hij meteen open. Het nummer wordt
+   daarna uit het adres gehaald, zodat verversen niet steeds dezelfde taak
+   opent. Onbekende of onzichtbare taak: niets doen, de app staat gewoon. */
+function openViaAdres(){
+  try{
+    const params = new URLSearchParams(location.search);
+    const id = params.get('taak');
+    if(!id) return;
+    history.replaceState(null, '', location.pathname);
+    const t = TAKEN.find(function(x){ return String(x.crmtaskid) === String(id); });
+    if(t) openTask(t);
+  }catch(e){
+    console.warn('openViaAdres:', e);
+  }
 }
 
 /* ────────────────────────────────────────────────────────

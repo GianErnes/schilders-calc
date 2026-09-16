@@ -4781,25 +4781,71 @@ Zie `CHANGELOG_taken.md`. Kern: knop `meldingen` in de voet voor
 `start()`, toast met knop Aanzetten als `ingetrokken_op` gevuld is.
 `sw.js` doet geen caching; de pagina's komen altijd live.
 
-**Let op bij de eerste keer:** het bestaande Taken-icoon op het
-beginscherm is gezet zonder manifest. VERMOEDEN, te bevestigen door Gian:
-dat icoon moet eraf en opnieuw erop voordat de knop "meldingen aanzetten"
-toont in plaats van "zet de app op het beginscherm". Eenmalig opnieuw
-inloggen hoort daarbij.
+**Icoon opnieuw zetten was niet nodig.** Het vermoeden dat een zonder
+manifest geplaatst beginscherm-icoon eraf en opnieuw erop moest, bleek
+onjuist: Gian opende het bestaande Taken-icoon, de knop toonde meteen
+"meldingen aanzetten" en het abonnement kwam in `push_subscriptions`
+(gemeten 16 september, 20:55). iOS leest het manifest kennelijk bij het
+openen. Bjorn, Jens en Max hoeven dus alleen op de knop te tikken.
 
-### Nog te bouwen (besluiten van Gian, 16 september)
+### Brok 3: Edge Function `taak-push`
 
-- **Brok 3:** Edge Function `taak-push` (verzendfunctie, code uit
-  `push-test`): krijgt persoon + tekst, zoekt de toestellen in
-  `push_subscriptions` via `taken_rollen.user_id`, verstuurt, zet
-  `ingetrokken_op` en `laatste_fout` bij 404/410, meldt het aantal
-  geslaagde afleveringen terug.
-- **Brok 4:** `taken-mail-melding` v3: eerst push naar de toegewezen
-  persoon; minstens één aflevering geslaagd (Apple 201) = `push_op` zetten
-  en géén mail; anders mail zoals nu. `taak-afvinkmelding` v2: zelfde
-  regel voor de afvinkmelding aan Gian. Voorbehoud dat erbij hoort: 201
-  betekent dat Apple het heeft aangenomen, niet dat het toestel het heeft
-  getoond.
-- Gebeurtenissen: alleen het piep-moment en de afvinkmelding. Geen aparte
-  melding bij toewijzen of te laat (afgewezen door Gian).
-- Daarna opruimen: `pushtest.html`, `manifest_pushtest.json`, `push-test`.
+De verzendfunctie. Beslist niets; wie een melding wil, roept hem aan met
+`x-aftap-key` en `{persoon, titel, tekst, url}`. Route: `taken_rollen`
+(persoon, `ilike`) → `user_id` → `push_subscriptions` waar
+`ingetrokken_op` leeg is. Per toestel: RFC 8291-versleuteling en
+VAPID-handtekening op de ingebouwde WebCrypto, geen bibliotheek.
+Antwoord altijd `{persoon, toestellen, geslaagd, ingetrokken, mislukt}`;
+nul toestellen is geen fout maar `geslaagd: 0`.
+
+Wat de functie met Apple's antwoord doet: 201 → `laatst_gebruikt_op`;
+404/410 → `ingetrokken_op` gevuld en `laatste_fout`, rij blijft staan
+(voedt de toast in de app); andere fout → alleen `laatste_fout`, rij
+blijft actief. Gemeten 16 september: `toestellen 1, geslaagd 1`, melding
+op iPhone én Apple Watch (iOS spiegelt meldingen van beginscherm-apps
+naar de Watch als de iPhone vergrendeld is).
+
+Huisstijl zoals de andere functies: gewone JavaScript in `index.ts`, geen
+backticks, `x-aftap-key`, Verify JWT uit. Bovenaan `// @ts-nocheck`
+zodat een typecontrole niet over ontbrekende types valt.
+
+### Brok 4: push eerst, anders mail
+
+`taken-mail-melding` **v3**: na de claim eerst `taak-push`; `geslaagd ≥ 1`
+→ `push_op` zetten, geen mail, nieuwe teller `verstuurd_push` in het
+rapport; anders het mailpad van v2, ongewijzigd. Een storing in de push
+(geen toestel, pushdienst onbereikbaar, `taak-push` zelf stuk) kost nooit
+een melding: dan gaat de mail. De harde stop op een ontbrekende
+`RESEND_API_KEY` blijft, ook nu de meeste meldingen via push gaan: zonder
+terugval is niets doen veiliger.
+
+`taak-afvinkmelding` **v2**: zelfde regel voor de afvinkmelding aan Gian;
+antwoord vermeldt `kanaal: "push"` of `"mail"`.
+
+Beide geven `./taken.html?taak=<crmtaskid>` mee; taken.html v0.21.0
+opent bij een tik op de melding de taak zelf.
+
+> **Leesregel `mail_op` (v3).** `mail_op` blijft de claimkolom, ook als
+> de melding via push ging. `mail_op` gevuld = afgehandeld; `push_op`
+> erbij = het kanaal was push; `mail_op` gevuld en `push_op` leeg = mail
+> (of bewust geen adres). Wie de meldingsgeschiedenis analyseert, leest
+> `mail_op` dus niet meer als "gemaild". Bewust geen nieuwe claimkolom.
+> taken.html wist bij het verzetten van een piep-tijd beide kolommen.
+
+> **Voorbehoud dat bij "push eerst" hoort.** Een 201 van Apple is
+> "aangenomen", niet "getoond". Een toestel dat dagen uit staat krijgt de
+> push pas bij aanzetten, na de TTL van 24 uur niet meer, en er volgt
+> geen mail. Geaccepteerd door Gian op 16 september 2026.
+
+Bewust niet gebouwd: aparte meldingen bij toewijzen of bij te laat
+(afgewezen door Gian). Nog op te ruimen zodra brok 4 in het echt bewezen
+is: `pushtest.html`, `manifest_pushtest.json` en de functie `push-test`.
+
+### Praktijktest voor brok 4 (nog te doen door Gian)
+
+1. Eigen taak met piep-tijd drie minuten vooruit → push, geen mail;
+   in de database `mail_op` én `push_op` gevuld.
+2. Taak afvinken met afvinkmeldingstekst → push in plaats van mail; tik
+   opent de afgevinkte taak.
+3. Bjorn, Jens en Max: Taken vanaf het beginscherm openen, onderaan
+   "meldingen aanzetten" tikken.
