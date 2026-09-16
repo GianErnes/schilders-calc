@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f6f7f9">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <title>Taken — Ernes</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -598,7 +600,12 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.19.1';
+const APP_VERSION = 'v0.20.0';
+/* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
+   VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
+const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
+/* Wie de meldingsknop ziet. Maud niet, met opzet (besluit Gian 16-09-2026). */
+const PUSH_PERSONEN = ['gian', 'max', 'bjorn', 'jens'];
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -1125,6 +1132,7 @@ function bouwMeetstrook(){
 function bouwVoet(){
   const naam = IK ? pInfo(IK.persoon).naam : '';
   const rechts = (IK && IK.rol === 'alles' ? '<button type="button" id="beheerMail">meldingsadressen</button> ' : '') +
+    (IK && PUSH_PERSONEN.includes(IK.persoon) ? '<button type="button" id="pushknop">' + esc(pushKnopTekst()) + '</button> ' : '') +
     '<button type="button" id="afmelden">afmelden</button>';
   return '<div class="voet"><span>taken ' + APP_VERSION + (naam ? ' · aangemeld als ' + esc(naam) : '') + '</span>' +
     '<span>' + rechts + '</span></div>';
@@ -2039,6 +2047,141 @@ async function meldAan(){
 }
 
 /* ────────────────────────────────────────────────────────
+   Web push (v0.20.0)
+   Op iPhone bestaat push alleen als de app vanaf het beginscherm is
+   geopend; in Safari zelf ontbreekt window.PushManager. sw.js toont de
+   melding en opent taken.html bij een tik. Het abonnement van dit
+   toestel staat in push_subscriptions (één rij per endpoint).
+   ──────────────────────────────────────────────────────── */
+let PUSH_REG = null;      // ServiceWorkerRegistration
+let PUSH_SUB = null;      // PushSubscription van dit toestel, of null
+let PUSH_BEZIG = false;
+
+function pushKanHier(){
+  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+}
+
+function pushKnopTekst(){
+  if(!pushKanHier()) return 'meldingen: zet de app op het beginscherm';
+  if(Notification.permission === 'denied') return 'meldingen: geweigerd in Instellingen';
+  return PUSH_SUB ? 'meldingen: aan' : 'meldingen aanzetten';
+}
+
+function pushKnopBijwerken(){
+  const k = document.getElementById('pushknop');
+  if(k) k.textContent = pushKnopTekst();
+}
+
+function base64UrlNaarBytes(s){
+  const pad = '='.repeat((4 - s.length % 4) % 4);
+  const raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  const uit = new Uint8Array(raw.length);
+  for(let i = 0; i < raw.length; i++) uit[i] = raw.charCodeAt(i);
+  return uit;
+}
+
+/* Bij het openen: service worker registreren, bestaand abonnement ophalen,
+   en kijken of de verzendfunctie het heeft ingetrokken. Fouten hier mogen
+   de app nooit hinderen: alles zit in try/catch en er wordt niets gewacht. */
+async function initPush(){
+  if(!IK || !PUSH_PERSONEN.includes(IK.persoon)) return;
+  if(!('serviceWorker' in navigator)) return;
+  try{
+    PUSH_REG = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+    if(!pushKanHier()){ pushKnopBijwerken(); return; }
+    PUSH_SUB = await PUSH_REG.pushManager.getSubscription();
+    pushKnopBijwerken();
+    if(!PUSH_SUB) return;
+    const { data, error } = await sb.from('push_subscriptions')
+      .select('id, ingetrokken_op').eq('endpoint', PUSH_SUB.endpoint).maybeSingle();
+    if(error) return;
+    if(!data){
+      /* toestel heeft een abonnement maar de database kent het niet
+         (bijv. na een herbouw): stil opnieuw vastleggen */
+      await bewaarPushAbonnement(PUSH_SUB);
+    } else if(data.ingetrokken_op){
+      toastMetActie('Meldingen staan uit op dit toestel.', 'Aanzetten', pushAan);
+    }
+  }catch(e){
+    console.warn('push init:', e);
+  }
+}
+
+async function bewaarPushAbonnement(sub){
+  const j = sub.toJSON();
+  const rij = {
+    user_id: UID,
+    endpoint: j.endpoint,
+    p256dh: j.keys.p256dh,
+    auth: j.keys.auth,
+    user_agent: navigator.userAgent.slice(0, 300),
+    ingetrokken_op: null,
+    laatste_fout: null
+  };
+  const { error } = await sb.from('push_subscriptions').upsert(rij, { onConflict: 'endpoint' });
+  if(error) throw new Error(error.message);
+}
+
+async function pushAan(){
+  if(PUSH_BEZIG) return;
+  PUSH_BEZIG = true;
+  try{
+    if(!pushKanHier()){
+      toast('Open de app vanaf het beginscherm om meldingen aan te zetten.');
+      return;
+    }
+    if(!PUSH_REG) PUSH_REG = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+    await navigator.serviceWorker.ready;
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){
+      toast(perm === 'denied' ? 'Meldingen zijn geweigerd. Zet ze aan via Instellingen › Meldingen › Taken.' : 'Geen toestemming gegeven.');
+      pushKnopBijwerken();
+      return;
+    }
+    PUSH_SUB = await PUSH_REG.pushManager.getSubscription() ||
+      await PUSH_REG.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64UrlNaarBytes(VAPID_PUBLIC_KEY) });
+    await bewaarPushAbonnement(PUSH_SUB);
+    pushKnopBijwerken();
+    toast('Meldingen staan aan op dit toestel.');
+  }catch(e){
+    toast('Meldingen aanzetten mislukte: ' + e.message);
+  }finally{
+    PUSH_BEZIG = false;
+  }
+}
+
+async function pushUit(){
+  if(PUSH_BEZIG) return;
+  PUSH_BEZIG = true;
+  try{
+    const endpoint = PUSH_SUB ? PUSH_SUB.endpoint : null;
+    if(PUSH_SUB){ await PUSH_SUB.unsubscribe(); PUSH_SUB = null; }
+    if(endpoint){
+      const { error } = await sb.from('push_subscriptions').delete().eq('endpoint', endpoint);
+      if(error) throw new Error(error.message);
+    }
+    pushKnopBijwerken();
+    toast('Meldingen staan uit op dit toestel.');
+  }catch(e){
+    toast('Meldingen uitzetten mislukte: ' + e.message);
+  }finally{
+    PUSH_BEZIG = false;
+  }
+}
+
+function schakelPush(){
+  if(!pushKanHier()){
+    toast('Op de iPhone werken meldingen alleen als je Taken vanaf het beginscherm opent.');
+    return;
+  }
+  if(PUSH_SUB){
+    toastMetActie('Meldingen op dit toestel uitzetten?', 'Uitzetten', pushUit);
+  } else {
+    pushAan();
+  }
+}
+
+/* ────────────────────────────────────────────────────────
    Start
    ──────────────────────────────────────────────────────── */
 function toonMelding(tekst, fout){
@@ -2092,6 +2235,7 @@ async function start(){
   const ok = await laadProfiel();
   if(!ok) return;
   await laadTaken();
+  initPush();
 }
 
 /* ────────────────────────────────────────────────────────
@@ -2241,6 +2385,7 @@ async function init(){
    ──────────────────────────────────────────────────────── */
 document.getElementById('lijst').addEventListener('click', async function(e){
   if(e.target.closest('#beheerMail')){ openBeheer(); return; }
+  if(e.target.closest('#pushknop')){ schakelPush(); return; }
   if(e.target.closest('#afmelden')){
     await sb.auth.signOut();
     location.reload();

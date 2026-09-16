@@ -6,6 +6,26 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.20.0 — Meldingen op de iPhone (web push), brok 2, 16-09-2026
+
+Nieuwe knop `meldingen` in de voet, alleen voor Gian, Max, Bjorn en Jens
+(vaste lijst `PUSH_PERSONEN`; Maud met opzet niet). Tik = toestemming
+vragen, abonneren met de publieke VAPID-sleutel, rij in
+`push_subscriptions` (upsert op `endpoint`). Nog een tik = uitzetten
+(abonnement weg, rij weg). In Safari zelf, waar iOS geen push kent, zegt
+de knop dat de app op het beginscherm moet. Bij het openen: `sw.js`
+registreren en, als de verzendfunctie het abonnement heeft ingetrokken
+(`ingetrokken_op` gevuld), een toast met knop Aanzetten.
+Nieuw in de head: `manifest.json` (short_name Taken) en
+`apple-touch-icon`. Er wordt in deze versie nog géén melding verstuurd;
+dat is brok 3/4 (verzendfunctie en koppeling aan `taken-mail-melding`).
+Getest: JS parse (node), div/scripttag-balans, en tien nagebootste
+scenario's (aanzetten, uitzetten, ingetrokken rij, ontbrekende rij,
+geweigerd, Safari, Maud). Het bewijs dat een push op het slot-scherm
+komt is op 16-09 los geleverd met `pushtest.html` en de Edge Function
+`push-test` (Apple 201, melding zichtbaar op Gians iPhone).
+Niet getest: browser met deze versie.
+
 ## v0.19.1 — Te laat onderaan in Actueel, 15-09-2026
 
 Actueel sorteert in drie blokken: eerst wat vandaag gepland staat

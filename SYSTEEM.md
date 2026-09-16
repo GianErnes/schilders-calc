@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 13 augustus 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 16 september 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -4706,3 +4706,100 @@ verkeerde aftap-sleutel), alle geslaagd.
   dit document.
 - `backup-dump_v6_index.ts` hoort als `index.ts` in de map `backup-dump`
   van `ernes-edge-functions`; de ophaalknop doet dat zondag ook zelf.
+
+## Wat er op 16 september 2026 gedaan is: meldingen op de iPhone (web push)
+
+Doel: taken.html geeft op de iPhone echte meldingen via web push, naast
+of in plaats van de mail die `taken-mail-melding` nu stuurt. Gebouwd in
+brokken; brok 1 en 2 staan, brok 3 en 4 volgen.
+
+### Hoe het werkt, in gewone taal
+
+Een toestel dat de Taken-app vanaf het beginscherm opent kan zich
+abonneren. Apple geeft dat toestel een uniek adres (`endpoint`) plus twee
+codes. Dat bewaren wij in `push_subscriptions`. Wie een melding wil
+sturen, versleutelt de tekst met die codes, ondertekent het verzoek met
+onze VAPID-sleutel en stuurt het naar Apple. Apple bezorgt het; `sw.js`
+op het toestel toont het als melding en opent taken.html bij een tik.
+
+Drie dingen die iOS eist, alle drie gemeten in de bewijsronde van 16
+september: de app moet vanaf het beginscherm geopend zijn (in Safari zelf
+bestaat `window.PushManager` niet), er moet een manifest met `display:
+standalone` gelinkt zijn, en toestemming mag pas na een tik gevraagd
+worden. De beginscherm-app heeft eigen opslag, los van Safari: inloggen
+en abonneren gebeuren dus ín de beginscherm-app.
+
+### Het bewijs vooraf (stap A en B)
+
+Voordat er iets aan taken.html veranderde is het hele pad los bewezen met
+`pushtest.html`, `manifest_pushtest.json`, `sw.js` en een tijdelijke Edge
+Function `push-test`. Uitkomst: lokale melding zichtbaar (A1), abonnement
+bij `web.push.apple.com` aangemaakt (A2), en een bericht via de Edge
+Function door Apple aangenomen met status 201 en om 20:40 als banner op
+Gians slot-scherm getoond (B). `pushtest.html`, `manifest_pushtest.json`
+en `push-test` zijn tijdelijk en kunnen weg zodra brok 4 werkt.
+
+### Sleutels
+
+- VAPID-sleutelpaar aangemaakt op 16 september 2026 met een losse
+  pagina (`vapid_sleutels.html`, staat niet in de repo, werkt lokaal met
+  WebCrypto).
+- Publieke sleutel staat in taken.html als `VAPID_PUBLIC_KEY` en in de
+  verzendfunctie. Mag openbaar zijn.
+- Private sleutel staat alleen als Edge Function secret
+  `VAPID_PRIVATE_KEY`. Nooit in de chat, nooit in de repo. Hoort bij de
+  kluislijst in 2.x: bij een herbouw opnieuw zetten, en dan moeten alle
+  toestellen opnieuw abonneren (de publieke sleutel verandert mee).
+
+### Brok 1: database (`push_01_tabellen.sql`)
+
+Tabel `push_subscriptions`: `user_id` (auth.users), `endpoint` (uniek),
+`p256dh`, `auth`, `user_agent`, `ingetrokken_op`, `laatste_fout`,
+`laatst_gebruikt_op`, `created_at`, `updated_at`. Kolom `taken.push_op`
+als zusje van `mail_op`.
+
+**Bewuste afwijking van het suitemodel:** de policy
+`push_subscriptions_authenticated_eigen` laat iedereen alleen eigen rijen
+zien, maken en wissen (`user_id = auth.uid()`), niet "ingelogd mag
+alles". De Edge Function leest alles met de service-rol.
+
+Gevolg om te kennen: zou op één iPhone iemand anders inloggen en
+abonneren, dan botst de upsert op het bestaande endpoint van de vorige
+gebruiker en weigert RLS de overschrijving. Het toestel meldt dan
+"Meldingen aanzetten mislukte". Oplossing: de oude rij wissen in Studio.
+Komt in de praktijk niet voor, want ieder heeft zijn eigen telefoon.
+
+Getest op lokale Postgres 16: projectguard stopt in een verkeerd project,
+twee keer draaien is schoon, RLS-scenario's (eigen rij ja, rij van ander
+nee, anon nee) en het herinschakel-pad. Alle zes controleregels GOED in
+het echte project (Gian, 16 september).
+
+### Brok 2: taken.html v0.20.0 en manifest.json
+
+Zie `CHANGELOG_taken.md`. Kern: knop `meldingen` in de voet voor
+`PUSH_PERSONEN` (gian, max, bjorn, jens), `sw.js`-registratie in
+`start()`, toast met knop Aanzetten als `ingetrokken_op` gevuld is.
+`sw.js` doet geen caching; de pagina's komen altijd live.
+
+**Let op bij de eerste keer:** het bestaande Taken-icoon op het
+beginscherm is gezet zonder manifest. VERMOEDEN, te bevestigen door Gian:
+dat icoon moet eraf en opnieuw erop voordat de knop "meldingen aanzetten"
+toont in plaats van "zet de app op het beginscherm". Eenmalig opnieuw
+inloggen hoort daarbij.
+
+### Nog te bouwen (besluiten van Gian, 16 september)
+
+- **Brok 3:** Edge Function `taak-push` (verzendfunctie, code uit
+  `push-test`): krijgt persoon + tekst, zoekt de toestellen in
+  `push_subscriptions` via `taken_rollen.user_id`, verstuurt, zet
+  `ingetrokken_op` en `laatste_fout` bij 404/410, meldt het aantal
+  geslaagde afleveringen terug.
+- **Brok 4:** `taken-mail-melding` v3: eerst push naar de toegewezen
+  persoon; minstens één aflevering geslaagd (Apple 201) = `push_op` zetten
+  en géén mail; anders mail zoals nu. `taak-afvinkmelding` v2: zelfde
+  regel voor de afvinkmelding aan Gian. Voorbehoud dat erbij hoort: 201
+  betekent dat Apple het heeft aangenomen, niet dat het toestel het heeft
+  getoond.
+- Gebeurtenissen: alleen het piep-moment en de afvinkmelding. Geen aparte
+  melding bij toewijzen of te laat (afgewezen door Gian).
+- Daarna opruimen: `pushtest.html`, `manifest_pushtest.json`, `push-test`.
