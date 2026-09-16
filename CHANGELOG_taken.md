@@ -6,6 +6,16 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.21.1 — Icoon met zwarte band, 16-09-2026
+
+`apple-touch-icon` wijst nu naar `apple-touch-icon-taken.png` (Ernes-logo
+met zwarte band "Taken", 180×180), in lijn met de andere apps van de
+suite die vandaag elk een eigen kleur kregen. Verder niets gewijzigd; de
+iconen in `manifest.json` en `sw.js` blijven `icon-192/512.png`. Het
+icoon op de iPhone verandert pas na verwijderen en opnieuw toevoegen,
+met opnieuw inloggen en meldingen aanzetten. Getest: JS-parse (node),
+tagbalans. Niet getest: iPhone.
+
 ## v0.21.0 — Push opent de taak; push_op mee gewist, brok 4, 16-09-2026
 
 Een tik op een pushmelding opent nu de taak zelf: de verzendfuncties
