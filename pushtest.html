@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Pushtest — Schilders Calc</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pushtest">
+<meta name="theme-color" content="#f6f7f9">
+<link rel="manifest" href="./manifest_pushtest.json">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<style>
+  :root{
+    --paper:#f6f7f9; --card:#ffffff; --ink:#191c21; --ink-soft:#5b636e;
+    --ink-faint:#98a0ac; --line:#e7eaee; --groen:#158048; --groen-tint:#ecfaf1;
+    --groen-lijn:#c7ecd6; --rood:#b42318; --rood-tint:#fef3f2; --rood-lijn:#f9c9c4;
+    --blauw:#2563eb; --radius:16px;
+    --shadow:0 1px 2px rgba(20,25,35,.05), 0 8px 24px rgba(20,25,35,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper); color:var(--ink); line-height:1.45;
+    padding:max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  }
+  main{max-width:560px;margin:0 auto}
+  h1{font-size:22px;margin:8px 0 4px}
+  .sub{color:var(--ink-soft);margin:0 0 20px;font-size:15px}
+  .kaart{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+  h2{font-size:16px;margin:0 0 10px}
+  dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:15px}
+  dt{color:var(--ink-soft)} dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+  .ja{color:var(--groen);font-weight:600} .nee{color:var(--rood);font-weight:600}
+  button{
+    appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);
+    border-radius:12px;padding:13px 16px;font-size:16px;font-weight:600;width:100%;
+    margin-top:8px;cursor:pointer
+  }
+  button.primair{background:var(--blauw);border-color:var(--blauw);color:#fff}
+  button:disabled{opacity:.45}
+  input{width:100%;font-size:14px;padding:11px 12px;border:1px solid var(--line);
+    border-radius:10px;font-family:ui-monospace,Menlo,monospace;margin-top:6px}
+  textarea{width:100%;min-height:150px;font-size:12px;padding:10px;border:1px solid var(--line);
+    border-radius:10px;font-family:ui-monospace,Menlo,monospace;margin-top:8px;resize:vertical}
+  .melding{padding:10px 12px;border-radius:10px;font-size:14px;margin-top:10px;display:none}
+  .melding.ok{display:block;background:var(--groen-tint);border:1px solid var(--groen-lijn);color:var(--groen)}
+  .melding.fout{display:block;background:var(--rood-tint);border:1px solid var(--rood-lijn);color:var(--rood)}
+  .uitleg{font-size:14px;color:var(--ink-soft);margin:0 0 8px}
+  .stap{display:inline-block;background:var(--paper);border:1px solid var(--line);border-radius:999px;
+    padding:1px 9px;font-size:12px;color:var(--ink-soft);margin-right:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+<main>
+  <h1>Pushtest</h1>
+  <p class="sub">Tijdelijke pagina. Bewijst of deze iPhone vanaf dit adres meldingen kan tonen en ontvangen. Wordt na het bewijs verwijderd.</p>
+
+  <section class="kaart">
+    <h2>Wat de telefoon zegt</h2>
+    <dl>
+      <dt>Geopend vanaf beginscherm</dt><dd id="d_standalone">…</dd>
+      <dt>Service worker beschikbaar</dt><dd id="d_sw">…</dd>
+      <dt>Push beschikbaar</dt><dd id="d_push">…</dd>
+      <dt>Toestemming meldingen</dt><dd id="d_perm">…</dd>
+      <dt>Service worker geregistreerd</dt><dd id="d_reg">…</dd>
+      <dt>Abonnement aanwezig</dt><dd id="d_sub">…</dd>
+    </dl>
+    <div id="m_diag" class="melding"></div>
+  </section>
+
+  <section class="kaart">
+    <h2><span class="stap">Stap A1</span>Lokale melding</h2>
+    <p class="uitleg">Vraagt toestemming en laat de service worker direct een melding tonen. Er komt niets van buiten; dit bewijst alleen dat tonen kan.</p>
+    <button class="primair" id="b_lokaal">Test lokale melding</button>
+    <div id="m_lokaal" class="melding"></div>
+  </section>
+
+  <section class="kaart">
+    <h2><span class="stap">Stap A2</span>Abonneren</h2>
+    <p class="uitleg">Plak de publieke VAPID-sleutel (de lange code die met "B" begint). Die wordt op deze telefoon bewaard.</p>
+    <input id="i_vapid" placeholder="publieke sleutel" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button id="b_abonneer">Abonneer deze telefoon</button>
+    <button id="b_afmeld">Abonnement verwijderen</button>
+    <div id="m_abon" class="melding"></div>
+    <textarea id="t_sub" readonly placeholder="Hier verschijnt het abonnement om te kopiëren."></textarea>
+    <button id="b_kopieer" disabled>Kopieer abonnement</button>
+  </section>
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const SLEUTEL_OPSLAG = 'pushtest_vapid_public';
+  let REG = null;
+
+  function toon(id, tekst, goed){
+    const el = $(id); el.textContent = tekst; el.className = 'melding ' + (goed ? 'ok' : 'fout');
+  }
+  function jaNee(id, waarde, tekstJa, tekstNee){
+    const el = $(id); el.textContent = waarde ? (tekstJa || 'ja') : (tekstNee || 'nee');
+    el.className = waarde ? 'ja' : 'nee';
+  }
+  function base64UrlNaarBytes(s){
+    const pad = '='.repeat((4 - s.length % 4) % 4);
+    const b64 = (s + pad).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(b64);
+    const uit = new Uint8Array(raw.length);
+    for(let i = 0; i < raw.length; i++) uit[i] = raw.charCodeAt(i);
+    return uit;
+  }
+
+  async function diagnose(){
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    jaNee('d_standalone', standalone);
+    const swOk = 'serviceWorker' in navigator;
+    jaNee('d_sw', swOk);
+    jaNee('d_push', 'PushManager' in window);
+    const perm = ('Notification' in window) ? Notification.permission : 'geen API';
+    $('d_perm').textContent = perm === 'granted' ? 'gegeven' : perm === 'denied' ? 'geweigerd' : perm === 'default' ? 'nog niet gevraagd' : perm;
+    $('d_perm').className = perm === 'granted' ? 'ja' : perm === 'denied' ? 'nee' : '';
+    if(!swOk){ jaNee('d_reg', false); jaNee('d_sub', false); return; }
+    try{
+      REG = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+      await navigator.serviceWorker.ready;
+      jaNee('d_reg', true);
+      const sub = REG.pushManager ? await REG.pushManager.getSubscription() : null;
+      jaNee('d_sub', !!sub);
+      if(sub){ $('t_sub').value = JSON.stringify(sub.toJSON(), null, 2); $('b_kopieer').disabled = false; }
+    }catch(e){
+      jaNee('d_reg', false);
+      toon('m_diag', 'Registreren van sw.js mislukte: ' + e.message, false);
+    }
+    if(!standalone){
+      toon('m_diag', 'Op iPhone werkt push alleen als de pagina vanaf het beginscherm is geopend. Voeg deze pagina toe aan het beginscherm en open hem daar.', false);
+    }
+  }
+
+  $('b_lokaal').addEventListener('click', async () => {
+    try{
+      if(!('Notification' in window)) throw new Error('Deze browser kent geen Notification API.');
+      const perm = await Notification.requestPermission();
+      diagnose();
+      if(perm !== 'granted') throw new Error('Toestemming niet gegeven (' + perm + ').');
+      if(!REG) throw new Error('Service worker is niet geregistreerd.');
+      await REG.showNotification('Pushtest Schilders Calc', {
+        body: 'Lokale melding om ' + new Date().toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit', second:'2-digit'}),
+        icon: './icon-192.png', data: { url: './pushtest.html' }
+      });
+      toon('m_lokaal', 'Melding aangevraagd. Zie je hem bovenin of op het slot-scherm, dan is stap A1 geslaagd.', true);
+    }catch(e){
+      toon('m_lokaal', 'Mislukt: ' + e.message, false);
+    }
+  });
+
+  $('b_abonneer').addEventListener('click', async () => {
+    try{
+      const sleutel = $('i_vapid').value.trim();
+      if(!sleutel) throw new Error('Vul eerst de publieke VAPID-sleutel in.');
+      const bytes = base64UrlNaarBytes(sleutel);
+      if(bytes.length !== 65 || bytes[0] !== 4) throw new Error('Dit lijkt geen geldige publieke sleutel (verwacht 65 bytes, gevonden ' + bytes.length + ').');
+      localStorage.setItem(SLEUTEL_OPSLAG, sleutel);
+      if(!REG || !REG.pushManager) throw new Error('Push is hier niet beschikbaar (niet vanaf beginscherm geopend?).');
+      const perm = await Notification.requestPermission();
+      if(perm !== 'granted') throw new Error('Toestemming niet gegeven (' + perm + ').');
+      const sub = await REG.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes });
+      $('t_sub').value = JSON.stringify(sub.toJSON(), null, 2);
+      $('b_kopieer').disabled = false;
+      toon('m_abon', 'Abonnement aangemaakt. Kopieer het en plak het in de chat voor stap B.', true);
+      diagnose();
+    }catch(e){
+      toon('m_abon', 'Mislukt: ' + e.message, false);
+    }
+  });
+
+  $('b_afmeld').addEventListener('click', async () => {
+    try{
+      const sub = REG && REG.pushManager ? await REG.pushManager.getSubscription() : null;
+      if(!sub) throw new Error('Er is geen abonnement op deze telefoon.');
+      await sub.unsubscribe();
+      $('t_sub').value = ''; $('b_kopieer').disabled = true;
+      toon('m_abon', 'Abonnement verwijderd.', true);
+      diagnose();
+    }catch(e){
+      toon('m_abon', 'Mislukt: ' + e.message, false);
+    }
+  });
+
+  $('b_kopieer').addEventListener('click', async () => {
+    try{
+      await navigator.clipboard.writeText($('t_sub').value);
+      toon('m_abon', 'Gekopieerd.', true);
+    }catch(e){
+      $('t_sub').select();
+      toon('m_abon', 'Kopiëren via knop lukte niet; de tekst is geselecteerd, kopieer hem met de hand.', false);
+    }
+  });
+
+  const bewaard = localStorage.getItem(SLEUTEL_OPSLAG);
+  if(bewaard) $('i_vapid').value = bewaard;
+  diagnose();
+})();
+</script>
+</body>
+</html>
