@@ -1,5 +1,8 @@
 # Changelog Oplevering
 
+## v0.2.1 — Eigen icoon op het iPhone-beginscherm
+Eén regel in de head: `apple-touch-icon` naar het nieuwe `apple-touch-icon-oplevering.png` (Ernes-logo met oranje band "Oplevering", 180×180). Icoon dat er al staat: verwijderen en opnieuw toevoegen. Verder niets gewijzigd. Getest: JS-parse (node), tagbalans. Niet getest: iPhone. 16-09-2026.
+
 ## v0.2.0 — Elke ring zijn eigen maat
 Een ring was altijd 7 procent van de fotobreedte. Een haarscheur en een hele muur kregen dus dezelfde cirkel. Vanaf nu stel je de maat per ring in.
 

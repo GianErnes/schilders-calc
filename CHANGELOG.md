@@ -1,3 +1,15 @@
+## v4.70.1 — Eigen icoon op het iPhone-beginscherm
+
+### Wat er nu kan
+
+Wie Calculatie op het beginscherm van de iPhone zet, krijgt het Ernes-logo met een blauwe band "Calculatie" in plaats van de grijze letter S die iOS zelf maakt. Elke app in de suite krijgt dezelfde dag een eigen kleur (planning groen, financieel paars, oplevering oranje, taken zwart), zodat ze op het beginscherm en in meldingen uit elkaar te houden zijn. Een icoon dat er al staat moet eenmalig verwijderd en opnieuw toegevoegd worden.
+
+### Hoe het onder de kap zit
+
+- Eén regel in de head: `<link rel="apple-touch-icon" href="./apple-touch-icon-calc.png">`. Nieuw bestand `apple-touch-icon-calc.png` (180×180) in de hoofdmap van de repo, gemaakt uit `erneslogo.png`.
+- Geen `apple-mobile-web-app-capable` toegevoegd: Calculatie opent op de telefoon dus nog gewoon in Safari, met adresbalk. Dat is bewust; de app is voor de computer gebouwd.
+- Getest: HTML-parse van het scriptblok (node), tagbalans, de vier versieankers gelijk (APP_VERSION, welkomsttekst, RELEASE_HIGHLIGHTS, CHANGELOG). Niet getest: iPhone.
+
 ## v4.70.0 — Het planvenster toont het opvolgschema
 
 ### Wat er nu kan

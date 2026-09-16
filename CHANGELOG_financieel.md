@@ -1,5 +1,8 @@
 # Changelog — financieel.html
 
+## v1.1.2 — 16-09-2026
+- Eigen icoon op het iPhone-beginscherm: `apple-touch-icon` naar het nieuwe `apple-touch-icon-financieel.png` (Ernes-logo met paarse band "Financieel", 180×180). Icoon dat er al staat: verwijderen en opnieuw toevoegen. Verder alleen het versienummer. Getest: JS-parse (node), tagbalans. Niet getest: iPhone.
+
 ## v1.1.1 — 30-07-2026
 - Rekening 23000 Betalingen onderweg wordt voortaan uit een saldibalans per 31 december gelezen. Betaalbatches worden geboekt op hun uitvoerdatum, en die ligt in de toekomst; de balans per vandaag zag die boekingen niet en miste daardoor 11.613 aan geagendeerde batches. Het banksaldo stond met dat bedrag te hoog terwijl de formule zelf klopte.
 - Alle andere cijfers blijven per vandaag opgevraagd, anders zou toekomstige omzet in het dashboard lekken. Het is één extra SOAP-aanroep.

@@ -1,5 +1,9 @@
 # CHANGELOG planning.html
 
+## v0.10.5 — Eigen icoon op het iPhone-beginscherm, 16-09-2026
+
+Eén regel in de head: `apple-touch-icon` naar het nieuwe `apple-touch-icon-planning.png` (Ernes-logo met groene band "Planning", 180×180, uit `erneslogo.png`). Wie Planning op het beginscherm heeft staan ziet nu een grijze P; na verwijderen en opnieuw toevoegen het logo. Verder niets gewijzigd. Getest: JS-parse (node) en tagbalans. Niet getest: iPhone.
+
 ## v0.10.4 — Stroken onder en boven de lijn, rij groeit pas bij drie, 09-09-2026
 
 Idee van Gian: niet de rij hoger maken, maar de ruimte in de rij gebruiken. De eerste hulpmiddelstrook ligt nu onder de projectlijn, de tweede erboven, beide over de werkblokken heen (de blokken zijn achtergrond). Zo blijft een rij met twee hulpmiddelen gewoon 40 px. Pas bij een derde en vierde overlappende strook groeit de rij, 12 px per strook, en die komen bovenop. Lijn, blokken, grepen en tekst zijn onderaan de rij verankerd, zodat een hogere rij ze niet meer oprekt. Bij vier overlappende middelen: rij 64 px in plaats van 76. 135 controles.

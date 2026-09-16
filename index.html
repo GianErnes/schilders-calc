@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Schilders Calculatie</title>
+<link rel="apple-touch-icon" href="./apple-touch-icon-calc.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Libre+Franklin:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -2343,8 +2344,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.70.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.70.1</h2>
       <div class="intro-body">
+        <p><strong>📱 Eigen icoon op de iPhone (v4.70.1).</strong> Zet je Calculatie op het beginscherm van je telefoon, dan krijgt hij het Ernes-logo met een blauwe band "Calculatie" in plaats van een grijze letter. Elke app in de suite krijgt zo zijn eigen kleur. Staat het icoon er al, dan eenmalig verwijderen en opnieuw toevoegen.</p>
         <p><strong>⏰ Het planvenster toont nu het opvolgschema (v4.70.0).</strong> Bij een gemailde planlink stond in het Accordeerlink-venster alleen een vaste zin over de opvolgautomaat; bij een offerte stond daar al het hele schema. Nu ook bij een plan: gemaild op, nabellen door Maud, herinneringsmail, verlopen-mail en afsluittaak, elk met de geplande datum of "gedaan op". Staat het plan na het mailen niet op Verzonden, dan zegt het venster in rood dat de opvolging stilstaat en waarom; dat was bij God 2026-2036 elf dagen onzichtbaar.</p>
         <p><strong>📄 Accordeerlinks bewaren alleen nog de PDF (v4.69.0).</strong> Bij elke accordeerlink, voor een offerte of een onderhoudsplan, werd naast de PDF ook een complete HTML-kopie van het document in de database gezet, met logo's, handtekening en ligging als tekst erin. Die kopie werd nooit getoond zodra er een PDF was, maar woog 200 kB tot 1 MB per link en liet de nachtelijke backup hard groeien. Voortaan gaat alleen de PDF mee. Mislukt het maken van de PDF, dan komt er geen link en zie je in het venster waarom; met Terug kom je weer bij het linkbeheer. Bestaande links veranderen niet.</p>
         <p><strong>💬 Wat Maud hoorde bij het nabellen staat nu bij de offerte (v4.68.0).</strong> Belt Maud een klant na en schrijft ze bij het afvinken in de takenapp op wat de klant zei, dan kwam dat tot nu toe alleen per mail bij Gian terecht. Voortaan staat het ook in het Accordeerlink-venster van de calculatie, in een blok "Nabellen door Maud": wanneer er gebeld is, door wie, en wat er is opgeschreven. Staat de beltaak nog open of is hij vervallen, dan staat dat er ook. De vragen die de klant via de offertelink stelt stonden daar al. Nieuw is verder een 💬-knopje naast de calculatienaam bovenin de Calculatie-tab, dat verschijnt zodra er een nabelmelding of een klantvraag ligt en het venster opent als je erop klikt; is er niets, dan zie je niets. De app leest alleen uit de takenlijst; afvinken blijft in de takenapp. Geen SQL nodig, want het administratie-account mag de takenlijst al lezen.</p>
@@ -3680,7 +3682,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.70.0';
+const APP_VERSION = 'v4.70.1';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4097,6 +4099,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.70.1', d: '2026-09-16', h: 'Op het beginscherm van de iPhone toont Calculatie het Ernes-logo met een blauwe band in plaats van een grijze letter.' },
   { v: '4.70.0', d: '2026-09-14', h: 'Het planvenster toont het opvolgschema zoals bij een offerte, met een rode melding als het plan gemaild is maar niet op Verzonden staat.' },
   { v: '4.69.0', d: '2026-09-14', h: 'Accordeerlinks bewaren alleen nog de PDF, geen HTML-kopie meer; mislukt de PDF, dan komt er geen link en zie je waarom.' },
   { v: '4.68.0', d: '2026-09-14', h: 'Wat Maud bij het nabellen opschreef staat in het Accordeerlink-venster; een 💬 naast de calculatienaam verschijnt bij meldingen of klantvragen.' },
