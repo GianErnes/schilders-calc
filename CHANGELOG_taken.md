@@ -6,6 +6,17 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.21.2 — Foto groot bekijken, 18-09-2026
+
+Tik op de foto bij een taak en hij opent groot op een zwart scherm
+(lightbox), sluiten met ✕, tik naast de foto of Escape. Pinch-zoom is
+van de browser zelf. De miniatuur toont nu de hele foto (`object-fit:
+contain`, donkere achtergrond) in plaats van een afgesneden uitsnede
+(`cover`). Werkt zowel met de opgeslagen foto (signed URL) als met een
+zojuist gekozen foto (blob-URL). Escape sluit alleen de lightbox, niet
+het taakvenster erachter. Getest: JS-parse (node), tagbalans, gedrag
+open/sluiten in jsdom. Niet getest: iPhone.
+
 ## v0.21.1 — Icoon met zwarte band, 16-09-2026
 
 `apple-touch-icon` wijst nu naar `apple-touch-icon-taken.png` (Ernes-logo
