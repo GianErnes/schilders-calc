@@ -271,6 +271,11 @@
   .wv-tabel td { padding: 0.4rem 0.6rem; border-top: 1px solid var(--paper-deep); }
   .wv-tabel .num-r { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .wv-tabel th.num-r { text-align: right; }
+  .wv-filter { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 0.8rem; }
+  .wv-filter button { font: inherit; font-size: 0.78rem; padding: 3px 10px; border: 1px solid var(--paper-deep); background: var(--paper); color: var(--muted); border-radius: 999px; cursor: pointer; }
+  .wv-filter button:hover { border-color: var(--accent); color: var(--ink); }
+  .wv-filter button.actief { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .wv-kop2 { font-size: 0.76rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; margin: 1rem 0 0.4rem; }
   .wv-voetnoot, .voetnoot { color: var(--muted); font-size: 0.76rem; margin-top: 0.6rem; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -392,7 +397,7 @@
 //  Verbinding met Supabase. De cijfers komen uit de tabel
 //  fin_dashboard, die door de Yuki-vuller wordt bijgewerkt.
 // ============================================================
-const APP_VERSION = '1.1.2';
+const APP_VERSION = '1.2.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -695,6 +700,19 @@ function wvDatum(s) {
   return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
 }
 
+// Stand wordt eenmaal geladen en bewaard; filteren gebeurt in de browser
+// zodat een knopdruk geen nieuwe query kost.
+let WV_STAND = null;
+let WV_FILTER = 'dit_volgend';
+
+function wvJaren(filter) {
+  const j = new Date().getFullYear();
+  if (filter === 'dit') return [j];
+  if (filter === 'volgend') return [j + 1];
+  if (filter === 'dit_volgend') return [j, j + 1];
+  return null; // alles
+}
+
 async function laadWerkvoorraad() {
   const el = document.getElementById('wvInhoud');
   const sub = document.getElementById('wvSub');
@@ -707,42 +725,88 @@ async function laadWerkvoorraad() {
       el.innerHTML = '<div class="bericht-leeg">Er is nog geen werkvoorraad-stand beschikbaar.</div>';
       return;
     }
-    const stand = data[0].data || {};
-    const projecten = (stand.projecten || []).slice();
+    WV_STAND = data[0].data || {};
     if (sub) sub.textContent = 'Getekend werk volgens Yoobi · peildatum '
       + new Date(data[0].peildatum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
-
-    // Sorteren op einddatum, dichtstbij bovenaan, zonder einddatum onderaan.
-    projecten.sort((a, b) => {
-      const da = wvDatum(a.einddatum), db = wvDatum(b.einddatum);
-      if (da && db) return da - db;
-      if (da) return -1;
-      if (db) return 1;
-      return String(a.klant).localeCompare(String(b.klant), 'nl');
-    });
-
-    const uur = n => Number(n || 0).toLocaleString('nl-NL', { maximumFractionDigits: 1 });
-    const rijen = projecten.map(p =>
-      '<tr><td>' + (p.klant || '') + '</td><td>' + (p.naam || '') + '</td>'
-      + '<td class="num-r">' + (p.einddatum || '—') + '</td>'
-      + '<td class="num-r">' + eur(p.aanneemsom || 0) + '</td>'
-      + '<td class="num-r">' + uur(p.resturen) + '</td></tr>').join('');
-
-    const weggelaten = Number(stand.weggelaten_zonder_klant || 0) + Number(stand.weggelaten_verlopen || 0);
-
-    el.innerHTML =
-      '<div class="wv-totalen">'
-      + '<div class="wt"><div class="t">Aanneemsom totaal</div><div class="v">' + eur(stand.totaal_aanneemsom || 0) + '</div></div>'
-      + '<div class="wt"><div class="t">Nog te maken uren</div><div class="v">' + uur(stand.totaal_resturen) + '</div></div>'
-      + '<div class="wt"><div class="t">Projecten</div><div class="v">' + (stand.aantal_projecten || 0) + '</div></div>'
-      + '</div>'
-      + '<div class="wv-scroll"><table class="wv-tabel">'
-      + '<thead><tr><th>Klant</th><th>Project</th><th class="num-r">Eind</th><th class="num-r">Aanneemsom</th><th class="num-r">Resturen</th></tr></thead>'
-      + '<tbody>' + rijen + '</tbody></table></div>'
-      + (weggelaten ? '<div class="wv-voetnoot">' + weggelaten + ' interne of al lang verlopen Yoobi-projecten tellen niet mee.</div>' : '');
+    toonWerkvoorraad();
   } catch (e) {
     el.innerHTML = '<div class="bericht-leeg">De werkvoorraad kon niet geladen worden.</div>';
   }
+}
+
+function wvSorteer(lijst) {
+  // Sorteren op einddatum, dichtstbij bovenaan, zonder einddatum onderaan.
+  return lijst.slice().sort((a, b) => {
+    const da = wvDatum(a.einddatum), db = wvDatum(b.einddatum);
+    if (da && db) return da - db;
+    if (da) return -1;
+    if (db) return 1;
+    return String(a.klant).localeCompare(String(b.klant), 'nl');
+  });
+}
+
+function wvSelecteer(projecten, filter) {
+  // Geeft { gefilterd, zonderStart } terug. Filter op startdatum.
+  const jaren = wvJaren(filter);
+  const zonderStart = projecten.filter(p => !wvDatum(p.startdatum));
+  const metStart = projecten.filter(p => wvDatum(p.startdatum));
+  const gefilterd = jaren ? metStart.filter(p => jaren.includes(wvDatum(p.startdatum).getFullYear())) : metStart;
+  return { gefilterd, zonderStart };
+}
+
+function wvTotalen(lijst) {
+  return {
+    aanneemsom: lijst.reduce((t, p) => t + Number(p.aanneemsom || 0), 0),
+    resturen: lijst.reduce((t, p) => t + Number(p.resturen || 0), 0),
+    aantal: lijst.length
+  };
+}
+
+function toonWerkvoorraad() {
+  const el = document.getElementById('wvInhoud');
+  const stand = WV_STAND || {};
+  const projecten = stand.projecten || [];
+  const j = new Date().getFullYear();
+  const { gefilterd, zonderStart } = wvSelecteer(projecten, WV_FILTER);
+  const tot = wvTotalen(gefilterd), totZ = wvTotalen(zonderStart);
+
+  const uur = n => Number(n || 0).toLocaleString('nl-NL', { maximumFractionDigits: 1 });
+  const rij = p =>
+    '<tr><td>' + (p.klant || '') + '</td><td>' + (p.naam || '') + '</td>'
+    + '<td class="num-r">' + (p.startdatum || '—') + '</td>'
+    + '<td class="num-r">' + (p.einddatum || '—') + '</td>'
+    + '<td class="num-r">' + eur(p.aanneemsom || 0) + '</td>'
+    + '<td class="num-r">' + uur(p.resturen) + '</td></tr>';
+  const kop = '<thead><tr><th>Klant</th><th>Project</th><th class="num-r">Start</th><th class="num-r">Eind</th><th class="num-r">Aanneemsom</th><th class="num-r">Resturen</th></tr></thead>';
+
+  const knoppen = [
+    ['dit', 'Dit jaar (' + j + ')'],
+    ['volgend', 'Volgend jaar (' + (j + 1) + ')'],
+    ['dit_volgend', j + ' + ' + (j + 1)],
+    ['alles', 'Alles']
+  ].map(([k, l]) => '<button type="button" data-wvf="' + k + '"' + (k === WV_FILTER ? ' class="actief"' : '') + '>' + l + '</button>').join('');
+
+  const weggelaten = Number(stand.weggelaten_zonder_klant || 0) + Number(stand.weggelaten_verlopen || 0);
+
+  el.innerHTML =
+    '<div class="wv-filter" id="wvFilter">' + knoppen + '</div>'
+    + '<div class="wv-totalen">'
+    + '<div class="wt"><div class="t">Aanneemsom totaal</div><div class="v">' + eur(tot.aanneemsom) + '</div></div>'
+    + '<div class="wt"><div class="t">Nog te maken uren</div><div class="v">' + uur(tot.resturen) + '</div></div>'
+    + '<div class="wt"><div class="t">Projecten</div><div class="v">' + tot.aantal + '</div></div>'
+    + '</div>'
+    + (gefilterd.length
+      ? '<div class="wv-scroll"><table class="wv-tabel">' + kop + '<tbody>' + wvSorteer(gefilterd).map(rij).join('') + '</tbody></table></div>'
+      : '<div class="bericht-leeg">Geen projecten met een startdatum in deze periode.</div>')
+    + (zonderStart.length
+      ? '<div class="wv-kop2">Zonder startdatum in Yoobi (' + zonderStart.length + ') · ' + eur(totZ.aanneemsom) + ' · ' + uur(totZ.resturen) + ' uur — niet in de totalen hierboven</div>'
+        + '<div class="wv-scroll"><table class="wv-tabel">' + kop + '<tbody>' + wvSorteer(zonderStart).map(rij).join('') + '</tbody></table></div>'
+      : '')
+    + (weggelaten ? '<div class="wv-voetnoot">' + weggelaten + ' interne of al lang verlopen Yoobi-projecten tellen niet mee.</div>' : '');
+
+  document.getElementById('wvFilter').querySelectorAll('button').forEach(b => {
+    b.onclick = () => { WV_FILTER = b.dataset.wvf; toonWerkvoorraad(); };
+  });
 }
 
 async function laadData() {
