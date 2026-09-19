@@ -1,3 +1,22 @@
+## v4.72.0 — Compacte meetregels op de iPad
+
+### Wat er nu kan
+
+In de kaartweergave (schermen smaller dan 1024 px, dus de staande iPad) was elke meetregel zes stroken hoog met een hoofdletterlabel boven elk veld. Nu zijn het twee stroken: bovenaan nummer, calc-regel, omschrijving en de knoppen; daaronder b, h, aantal en factor met een klein label ernaast, en rechts het totaal. Het veld Opmerking is verborgen als het leeg is en verschijnt als derde strook na een tik op het 💬-knopje (dat kleurt als er een opmerking staat). Minder vulling om en tussen de kaarten. Desktop (tabel) ongewijzigd; de zoom van 1,3 blijft.
+
+### Hoe het onder de kap zit
+
+- CSS-blok `@media (max-width: 1024px)` voor `table.meetstaat-tbl` herschreven: `order` per cel, `td.ms-break` (100% breed, hoogte 0) als regelovergang, `td.ms-getal::before` als inline label, `td[data-label="Opmerking"]` alleen zichtbaar bij `tr.ms-opm-open`.
+- `renderMeetstaat()`: klasse `ms-getal` op de vier getalcellen, `ms-acties` op de knoppencel, 💬-knop (`.ms-opmbtn`, buiten de media query `display:none`), placeholders op omschrijving en opmerking, `ms-opm-open` op de rij als de opmerking gevuld is.
+- Nieuw `msToggleOpm(idx)` en `_msOpmSync(inp)` (alleen DOM-klassen, geen data).
+- `msKey()`: Enter op factor met verborgen Opmerking (`offsetParent === null`) roept direct `addMeetstaat()` aan. De numpad-knop "Volgende" ging al buiten Opmerking om.
+- Geen SQL, geen Edge Function.
+- Getest: parse-test scriptblok (node), rij-HTML gerenderd met synthetische data en gecontroleerd op klassen/knop, td-telling per rij, vier versieankers gelijk. Niet getest: het uiterlijk op de iPad zelf.
+
+### Wat je moet doen
+
+`index.html` en `CHANGELOG.md` uploaden. Op de staande iPad controleren: (1) past strook 2 op één regel of breekt hij, (2) 💬 opent en sluit het opmerkingveld en kleurt bij inhoud, (3) numpad "Volgende" op factor van de laatste regel maakt nog een nieuwe regel.
+
 ## v4.71.0 — Meetstaat opent bij de laatste meetregel
 
 ### Wat er nu kan
