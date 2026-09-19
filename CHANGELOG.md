@@ -1,3 +1,20 @@
+## v4.71.0 — Meetstaat opent bij de laatste meetregel
+
+### Wat er nu kan
+
+Bij het wisselen van Calculatie naar Meetstaat op de iPad moest je elke keer helemaal naar beneden vegen om bij de laatste meetregel en de knop "+ Regel" te komen. Nu springt de pagina bij het openen van de Meetstaat-tab (via de navigatie en via de sprong vanuit Calculatie) naar de laatste meetregel, zodat die en de knop samen in beeld staan. Daarnaast staat "+ Regel" ook bovenaan in de kop van de Meetstaat. Volgorde, nummering en Enter-gedrag zijn niet veranderd.
+
+### Hoe het onder de kap zit
+
+- Nieuw `_meetstaatScrollNaarEind()` vlak na `renderMeetstaat()`: na 60 ms `scrollIntoView({ block: 'center' })` op de laatste `#meetstaatLijst tbody tr`. Zonder regels gebeurt niets. Aangeroepen in de nav-handler voor `meetstaat` en aan het eind van `goToMeetstaat()`.
+- Extra knop in `.panel-actions` van `#meetstaat`, zelfde `addMeetstaat()` als de knop onder de tabel.
+- Geen SQL, geen Edge Function.
+- Getest: parse-test van het scriptblok (node), tagbalans, vier versieankers gelijk. Niet getest: het scrollgedrag op de iPad zelf.
+
+### Wat je moet doen
+
+`index.html` en `CHANGELOG.md` uploaden. Daarna op de iPad: Calculatie → Meetstaat wisselen bij een calculatie met veel meetregels en kijken of je onderaan uitkomt.
+
 ## v4.70.1 — Eigen icoon op het iPhone-beginscherm
 
 ### Wat er nu kan
