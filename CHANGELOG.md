@@ -1,3 +1,20 @@
+## v4.74.1 — Fix: kozijn-tekeningen volgen de aan/uit-knoppen
+
+### Wat er nu kan
+
+Zet je een gevel (onderdeel) of hoofdgroep uit met de rode knoppen, dan liet het klantdocument die gevel al weg, maar de bijlage "Kozijn-tekeningen" toonde nog alle tekeningen, ook van de uitgezette gevels. Dat vertroebelde voor de klant wat wel en niet in de prijs zit (gemerkt bij de offerte Troost). Nu tellen in de bijlage, de accordpagina, het Archiveren-venster en de doorlopende PDF alleen kozijnen mee waarvan de calc-regel, het onderdeel en de hoofdgroep aan staan. Zet je de gevel weer aan, dan komen de tekeningen terug. De telling in de kop van de bijlage klopt weer. Je eigen Meetstaat-tab toont alles. Een kozijn zonder regelkoppeling, of met een regel die niet meer bestaat, blijft zichtbaar: daar valt niets over te oordelen en stil verbergen is erger.
+
+### Hoe het onder de kap zit
+
+- Nieuw `_msTeltMee(c, ms)` naast `_isActief()`: zoekt de calc-regel van de meetregel in de meegegeven calculatie en eist `_isActief` op hoofdgroep, onderdeel en regel. `_kozijnenVoorDocument(c)` combineert dat met "heeft een tekening".
+- Toegepast op de zes verzamelplekken: `renderOfferteBlok` (vinkje), `_craftBouwKozijnen` (accordpagina), `openArchiveerModal`, `printKozijnen`, `_bouwOfferteCompleetDocDef`, `printOfferteCompleet`. Het Meetstaat-overzicht "Getekende kozijnen" is bewust ongewijzigd.
+- Geen SQL.
+- Getest (node): filter met acht meetregels over een uitgezet onderdeel, een uitgezette regel, een uitgezette hoofdgroep, ongekoppeld, verwijderde regel en een regel zonder tekening: precies de vier verwachte tekeningen blijven over. Niet getest: browser.
+
+### Wat je moet doen
+
+`index.html` en `CHANGELOG.md` uploaden. Bij Troost: kozijnen-PDF of Offerte + bijlagen openen en controleren dat alleen de twee aangezette gevels erin staan en de telling in de kop klopt. Voor een bestaande accordeerlink even een nieuwe maken; het snapshot van de oude bevat nog alle tekeningen.
+
 ## v4.74.0 — Diktekanten van draairamen volgens het normenboek
 
 ### Wat er nu kan
