@@ -4957,3 +4957,50 @@ uit het normenboek en de code, bron: scan blz. 34–35 en `index.html` v4.73.0:
   Klaar (2× omtrek → omtrek + drie kanten). Eerst uittekenen en afstemmen.
 - Deuren (vulling m²): kanten tellen nu nergens. Normenboek-bladzijde voor
   deuren nog niet gezien; ontwerp volgt daarna.
+
+## Wat er op 20 september 2026 verder gedaan is: diktekanten (v4.74.0) en kozijnen-bijlage (v4.74.1)
+
+**v4.74.0 — Diktekanten van draairamen.** Keuze van Gian na het normenboek
+(blz. 34): meters erbij op dezelfde regel, geen aparte systemen per kolom.
+Nieuw in de tekenaar:
+- Raamhout is voor elk raamtype 1× de omtrek (`_kozijnRamenCm`,
+  `_kozijnRondRamenCm`); draai buiten telde eerst 2×.
+- `_kozijnDiktekantenCm()`: naar de schilder toe = omtrek min één zijkant;
+  van de schilder af = één zijkant. "Één zijkant" = `_kozijnZijkantCm(pts)`,
+  de langste (nagenoeg) verticale rand van het vak, terugval bbox-hoogte;
+  vak-punten zijn `[x, y]`-lijsten. Vast, glas, vulling: geen kanten.
+- Rond draairaam is een kantelraam: halve omtrek, ongeacht de kant (keuze
+  Gian; geen schakelaar per tekening).
+- Buiten/binnen: `_kozijnGeschilderdVan()` leest de hoofdgroepnaam van de
+  calc-regel waar het kozijn aan hangt (via `_allCalcRegels()` en
+  `data.calc.meetstaat[_kozijnEditIdx]`); bevat de naam "binnen" → binnenwerk,
+  anders buitenwerk. Geen schakelaar per tekening (Gians keuze). Aanname die
+  Gian bevestigde: zijn hoofdgroepen heten Buiten/Binnen of iets met die
+  woorden erin; de standaardnamen bij een nieuwe calculatie zijn dat ook.
+- Tekening: `m1Delen.diktekanten` en `geschilderdVan`. Voet toont
+  "diktekanten x,xx · buitenwerk (uit hoofdgroep)"; PDF toont het deel.
+- Gevolg: bestaande draai-buiten-ramen worden bij openen en Klaar lager
+  (100×150: 10,00 → 8,50), draai-binnen hoger (5,00 → 6,50). Door Gian in
+  de browser bevestigd.
+
+**v4.74.1 — Kozijn-tekeningen volgen de aan/uit-knoppen.** Gemerkt bij de
+offerte Troost: twee gevels uitgezet met de rode knoppen, het klantdocument
+liet ze weg (de cijfers komen uit de calculatieloop die inactief overslaat),
+maar de kozijnen-bijlage toonde alle tekeningen. Nieuw `_msTeltMee(c, ms)`
+naast `_isActief()`: regel, onderdeel en hoofdgroep van de meetregel moeten
+aan staan; `_kozijnenVoorDocument(c)` combineert dat met "heeft tekening".
+Toegepast op de zes verzamelplekken (Offerte-blok-vinkje, `_craftBouwKozijnen`,
+`openArchiveerModal`, `printKozijnen`, `_bouwOfferteCompleetDocDef`,
+`printOfferteCompleet`). Meetstaat-overzicht bewust ongewijzigd. Ongekoppeld of
+verwijderde regel → zichtbaar (niet stil verbergen). Let op: een bestaande
+accordeerlink houdt zijn oude snapshot; nieuwe link maken. Door Gian
+bevestigd bij Troost.
+
+**Open: deurkanten (brok 3).** Het normenboek zegt niets over onder-, boven-
+en zijkanten van deuren (Gian heeft gezocht). Een vulling (m²) telt nu alleen
+het vlak; de kanten tellen nergens. Er moet een eigen regel bedacht worden
+voordat er gebouwd wordt. Gedachten voor dat gesprek: welke kanten
+(onderkant vrijwel altijd; bovenkant en scharnierzijde afhankelijk van
+draairichting), in m¹ naar welke regel (het raamhout van het kozijn zelf, of
+een eigen "deurkanten"-systeem met eigen minuten), en of het normenboek
+elders (deurenhoofdstuk, m²-normen) de kanten al impliciet meerekent.
