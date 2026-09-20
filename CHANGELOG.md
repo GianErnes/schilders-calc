@@ -1,3 +1,21 @@
+## v4.74.0 — Diktekanten van draairamen volgens het normenboek
+
+### Wat er nu kan
+
+Het Tijdnormenboek (blz. 34) telt bij een draairaam de diktekanten: draait het raam naar de schilder toe, dan boven-, onder- en één zijkant; draait het van de schilder af, dan alleen één zijkant. De tekenaar deed dat tot nu toe grof: draai buiten telde de hele omtrek dubbel, draai binnen kreeg niets extra. Nu telt elk raamtype 1× de omtrek als raamhout en komen de diktekanten er als eigen deel bij: naar de schilder toe = omtrek min één zijkant, van de schilder af = één zijkant (de langste rechte zijkant van het vak). Of de schilder buiten of binnen staat volgt uit de hoofdgroep van de calc-regel waar het kozijn aan hangt (naam bevat "binnen" → binnenwerk, anders buitenwerk); geen schakelaar per tekening. Een rond draairaam is een kantelraam: halve omtrek, ongeacht de kant. Vaste ramen, vast glas en vullingen krijgen geen diktekanten. De voet toont "diktekanten x,xx" en "buitenwerk/binnenwerk (uit hoofdgroep)"; regel en kozijnen-PDF tonen de uitsplitsing. Bestaande tekeningen veranderen pas bij openen en Klaar; een draai-buiten-raam van 100×150 gaat dan van 10,00 naar 8,50 m¹ raamhout+kanten, een draai-binnen-raam van 5,00 naar 6,50.
+
+### Hoe het onder de kap zit
+
+- `_kozijnRamenCm()` en `_kozijnRondRamenCm()`: draai_buiten van 2× naar 1× omtrek.
+- Nieuw `_kozijnGeschilderdVan()` (hoofdgroepnaam via `_allCalcRegels()` van de calc-regel van `data.calc.meetstaat[_kozijnEditIdx]`), `_kozijnZijkantCm(pts)` (langste rand met |dx| ≤ 2% van |dy|, terugval bbox-hoogte; punten zijn `[x, y]`), `_kozijnDiktekantenCm()`.
+- `_kozijnTotaalCm()` telt diktekanten mee; tekening krijgt `m1Delen.diktekanten` en `geschilderdVan`; voet, PDF (html en pdfmake) tonen het deel.
+- Geen SQL.
+- Getest (node, synthetische data): rechthoek 100×150 in vier combinaties (draai buiten/binnen × buiten-/binnenwerk: 3,50 / 1,50 / 1,50 / 3,50), vast en glas 0, schuin enkel (omtrek 4,14 − zijkant 1,20 = 2,94), boog (4,97 − 1,20 = 3,77), gesplitst kozijn met één draaivak (3,00), rond Ø70 kantelraam 1,10, tekening-JSON en voettekst. Niet getest: in de browser.
+
+### Wat je moet doen
+
+`index.html` en `CHANGELOG.md` uploaden. Controleer in een testcalculatie: een draairaam onder hoofdgroep Buiten toont "diktekanten" in de voet met "buitenwerk (uit hoofdgroep)", hetzelfde raam onder een hoofdgroep met "binnen" in de naam wisselt van 3 naar 1 kant, en de kozijnen-PDF toont het deel.
+
 ## v4.73.0 — Roeden naar een eigen regel in de kozijn-tekenaar
 
 ### Wat er nu kan

@@ -2349,8 +2349,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.73.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.74.0</h2>
       <div class="intro-body">
+        <p><strong>📏 Diktekanten van draairamen (v4.74.0).</strong> De tekenaar telt de diktekanten van een draairaam nu zoals het normenboek: draait het raam naar je toe, dan boven-, onder- en één zijkant; draait het van je af, dan één zijkant. Of je buiten of binnen staat volgt uit de hoofdgroep van de regel. Een rond kantelraam telt de halve omtrek. Draai-buiten-ramen telden eerst de hele omtrek dubbel en worden dus iets lager; draai-binnen-ramen krijgen er een zijkant bij. Bestaande tekeningen veranderen pas als je ze opent en op Klaar tikt.</p>
         <p><strong>🪟 Roeden naar een eigen regel (v4.73.0).</strong> Glasroeden hebben in het normenboek eigen minuten. Kies in de kozijn-tekenaar bij de roeden "Roeden naar regel" en de roedenmeters gaan uit het kozijntotaal naar die m¹-regel, als automatische regel onder het kozijn, net als de deur-m². Kruis en spaken van het ronde raam zijn ook roeden. Zonder keuze verandert er niets.</p>
         <p><strong>📐 Compacte meetregels op de iPad (v4.72.0).</strong> Elke meetregel is nu twee stroken in plaats van zes: bovenaan calc-regel en omschrijving, daaronder de maten met het totaal. De opmerking zit achter het 💬-knopje en verschijnt alleen als er iets in staat.</p>
         <p><strong>📏 Meetstaat opent onderaan (v4.71.0).</strong> Kom je terug op de Meetstaat, dan sta je meteen bij de laatste meetregel en de knop "+ Regel". Die knop staat nu ook bovenaan in de kop.</p>
@@ -3691,7 +3692,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.73.0';
+const APP_VERSION = 'v4.74.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4108,6 +4109,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.74.0', d: '2026-09-20', h: 'Kozijn-tekenaar telt diktekanten van draairamen volgens het normenboek; buiten of binnen volgt uit de hoofdgroep.' },
   { v: '4.73.0', d: '2026-09-20', h: 'Kozijn-tekenaar: roeden kun je naar een eigen m¹-regel sturen, met hun eigen normminuten.' },
   { v: '4.72.0', d: '2026-09-19', h: 'Meetregels op de iPad zijn twee stroken in plaats van zes; de opmerking zit achter een 💬-knopje.' },
   { v: '4.71.0', d: '2026-09-19', h: 'De Meetstaat opent bij de laatste meetregel, en "+ Regel" staat nu ook bovenaan in de kop.' },
@@ -14061,6 +14063,7 @@ function _bouwKozijnenHtml(c, kozijnen) {
       const delen = [`frame ${fmNl(dln.frame || 0)}`];
       if (+dln.tussenwerk > 0.0001) delen.push(`tussenwerk ${fmNl(dln.tussenwerk)}`);
       if (+dln.ramen > 0.0001) delen.push(`ramen ${fmNl(dln.ramen)}`);
+      if (+dln.diktekanten > 0.0001) delen.push(`diktekanten ${fmNl(dln.diktekanten)}`);   // v4.74.0
       if (+dln.roeden > 0.0001 && !tek.roedenRegelId) delen.push(`roeden ${fmNl(dln.roeden)}`);
       if (delen.length > 1) m1Regel = `${m1} (${delen.join(' + ')})`;
     }
@@ -15668,6 +15671,7 @@ async function _bouwOfferteCompleetDocDef() {
         const delen = ['frame ' + fmNl(dln.frame || 0)];
         if (+dln.tussenwerk > 0.0001) delen.push('tussenwerk ' + fmNl(dln.tussenwerk));
         if (+dln.ramen > 0.0001) delen.push('ramen ' + fmNl(dln.ramen));
+        if (+dln.diktekanten > 0.0001) delen.push('diktekanten ' + fmNl(dln.diktekanten));   // v4.74.0
         if (+dln.roeden > 0.0001 && !tek.roedenRegelId) delen.push('roeden ' + fmNl(dln.roeden));
         if (delen.length > 1) m1Regel = m1 + ' (' + delen.join(' + ') + ')';
       }
@@ -17406,8 +17410,7 @@ function _kozijnRondRoedenCm() {
 }
 function _kozijnRondRamenCm() {
   const v = _kozijnRondV(), dm = _kozijnRondDims(), om = Math.PI * dm.d;
-  if (v.type === 'vast' || v.type === 'draai_binnen') return om;       // raamhout, 1× omtrek
-  if (v.type === 'draai_buiten') return 2 * om;                         // raamhout + sponningkanten, 2× omtrek
+  if (v.type === 'vast' || v.type === 'draai_binnen' || v.type === 'draai_buiten') return om;   // v4.74.0 — raamhout 1× omtrek; diktekanten apart
   return 0;
 }
 function _kozijnRondVlakCm2() {
@@ -17614,8 +17617,50 @@ function _kozijnRamenCm() {
   let s = 0;
   _kozijnCollectAll().vakken.forEach(vk => {
     const ty = (vk.node && vk.node.type) || 'glas';
-    if (ty === 'vast' || ty === 'draai_binnen') s += _kozijnPolyPerim(vk.pts);        // raamhout, 1× omtrek
-    else if (ty === 'draai_buiten') s += 2 * _kozijnPolyPerim(vk.pts);                 // raamhout + sponningkanten, 2× omtrek
+    // v4.74.0 — raamhout is voor elk raamtype 1× de omtrek; de diktekanten tellen apart (_kozijnDiktekantenCm).
+    if (ty === 'vast' || ty === 'draai_binnen' || ty === 'draai_buiten') s += _kozijnPolyPerim(vk.pts);
+  });
+  return s;
+}
+// v4.74.0 — Diktekanten (Tijdnormenboek blz. 34): draait het raam naar de schilder
+// toe, dan boven-, onder- en één zijkant (= omtrek min één zijkant); draait het van
+// de schilder af, dan alleen één zijkant. Welke kant de schilder staat volgt uit de
+// hoofdgroep van de calc-regel waar het kozijn aan hangt (naam bevat "binnen" →
+// binnenwerk, anders buitenwerk). Rond raam: kantelraam, halve omtrek, ongeacht kant.
+function _kozijnGeschilderdVan() {
+  try {
+    const ms = (data.calc && data.calc.meetstaat && _kozijnEditIdx != null) ? data.calc.meetstaat[_kozijnEditIdx] : null;
+    const rid = ms ? ms.calcRegelId : '';
+    const ctx = rid ? _allCalcRegels().find(x => x.regel.id === rid) : null;
+    const hg = ctx ? String(ctx.hgNaam || '').toLowerCase() : '';
+    return hg.indexOf('binnen') >= 0 ? 'binnen' : 'buiten';
+  } catch (_) { return 'buiten'; }
+}
+function _kozijnZijkantCm(pts) {
+  // langste (nagenoeg) verticale rand van het vak; terugval: hoogte van het omhullende vak
+  let best = 0, minY = Infinity, maxY = -Infinity;
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];          // punten zijn [x, y]
+    minY = Math.min(minY, a[1]); maxY = Math.max(maxY, a[1]);
+    const dx = Math.abs(b[0] - a[0]), dy = Math.abs(b[1] - a[1]);
+    if (dy > 0 && dx <= 0.02 * dy) best = Math.max(best, dy);
+  }
+  return best > 0 ? best : Math.max(0, maxY - minY);
+}
+function _kozijnDiktekantenCm() {
+  const kant = _kozijnGeschilderdVan();
+  if (_kozijnState.vorm === 'rond') {
+    const v = _kozijnRondV(), dm = _kozijnRondDims();
+    return (v.type === 'draai_binnen' || v.type === 'draai_buiten') ? 0.5 * Math.PI * dm.d : 0;
+  }
+  if (!_kozijnState.verdeling) return 0;
+  let s = 0;
+  _kozijnCollectAll().vakken.forEach(vk => {
+    const ty = (vk.node && vk.node.type) || 'glas';
+    if (ty !== 'draai_binnen' && ty !== 'draai_buiten') return;
+    const naarToe = (ty === 'draai_buiten' && kant === 'buiten') || (ty === 'draai_binnen' && kant === 'binnen');
+    const om = _kozijnPolyPerim(vk.pts), zij = Math.min(om, _kozijnZijkantCm(vk.pts));
+    s += naarToe ? (om - zij) : zij;
   });
   return s;
 }
@@ -17720,7 +17765,7 @@ function _kozijnRoedenRegelSelectHtml() {
   const opts = `<option value="">— in het kozijntotaal (niet gekoppeld) —</option>` + regels.map(ctx => `<option value="${ctx.regel.id}" ${ctx.regel.id === cur ? 'selected' : ''}>${_escapeHtml(_calcRegelLabel(ctx.regel, ctx))}</option>`).join('');
   return `<div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Roeden naar regel:</span><select onchange="_kozijnSetRoedenRegel(this.value)" style="flex:1 1 200px; min-width:160px; padding:0.4rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;">${opts}</select></div>`;
 }
-function _kozijnTotaalCm() { return _kozijnOmtrekCm() + _kozijnMembersCm() + _kozijnRamenCm() + (_kozijnRoedenRegelId() ? 0 : _kozijnRoedenCm()); }
+function _kozijnTotaalCm() { return _kozijnOmtrekCm() + _kozijnMembersCm() + _kozijnRamenCm() + _kozijnDiktekantenCm() + (_kozijnRoedenRegelId() ? 0 : _kozijnRoedenCm()); }
 function _kozijnNodeAt(path) {
   let node = _kozijnState.verdeling; if (!node) return null;
   if (path === '') return node;
@@ -17944,17 +17989,19 @@ function _kozijnHuidigAantal() {
 }
 function _kozijnUpdateOmtrek() {
   const omtrek = _kozijnOmtrekCm() / 100, members = _kozijnMembersCm() / 100, ramen = _kozijnRamenCm() / 100, roeden = _kozijnRoedenCm() / 100;
+  const kanten = _kozijnDiktekantenCm() / 100;                    // v4.74.0
   const roedenRid = _kozijnRoedenRegelId();                       // v4.73.0
-  const totaal = omtrek + members + ramen + (roedenRid ? 0 : roeden);
+  const totaal = omtrek + members + ramen + kanten + (roedenRid ? 0 : roeden);
   const aantal = _kozijnHuidigAantal();
   const el = document.getElementById('kozijnOmtrek');
   if (!el) return;
   const fm = (x) => x.toFixed(2).replace('.', ',');
   let m1;
-  if (members > 0 || ramen > 0 || (roeden > 0 && !roedenRid)) {
+  if (members > 0 || ramen > 0 || kanten > 0 || (roeden > 0 && !roedenRid)) {
     const delen = [`frame ${fm(omtrek)}`];
     if (members > 0) delen.push(`tussenwerk ${fm(members)}`);
     if (ramen > 0) delen.push(`ramen ${fm(ramen)}`);
+    if (kanten > 0) delen.push(`diktekanten ${fm(kanten)}`);
     if (roeden > 0 && !roedenRid) delen.push(`roeden ${fm(roeden)}`);
     m1 = `Totaal: ${fm(totaal)} m¹  (${delen.join(' + ')})`;
   } else {
@@ -17972,6 +18019,9 @@ function _kozijnUpdateOmtrek() {
   }
   if (_kozijnState.lozeDorpel && _kozijnState.vorm !== 'rond') {
     m1 += ` <span style="color:var(--muted); font-size:0.85em;">· loze onderdorpel</span>`;
+  }
+  if (kanten > 0) {   // v4.74.0
+    m1 += ` <span style="color:var(--muted); font-size:0.85em;">· ${_kozijnGeschilderdVan() === 'binnen' ? 'binnenwerk' : 'buitenwerk'} (uit hoofdgroep)</span>`;
   }
   const perRegel = _kozijnVlakkenPerRegel();
   const m2Lijnen = Object.keys(perRegel)
@@ -18039,12 +18089,14 @@ function _kozijnBouwTekening() {
     // v4.73.0 — roeden naar een eigen m¹-regel; omtrekM1 is dan zonder roeden.
     roedenRegelId: _kozijnRoedenRegelId(),
     roedenM1: +(_kozijnRoedenCm() / 100).toFixed(3),
+    geschilderdVan: _kozijnGeschilderdVan(),   // v4.74.0 — afgeleid uit de hoofdgroep bij Klaar
     omtrekM1: +(cm / 100).toFixed(3),
     // v3.55.0 — uitsplitsing van de m¹ voor de kozijnen-PDF (frame/tussenwerk/ramen/roeden, in m).
     m1Delen: {
       frame: +(_kozijnOmtrekCm() / 100).toFixed(3),
       tussenwerk: +(_kozijnMembersCm() / 100).toFixed(3),
       ramen: +(_kozijnRamenCm() / 100).toFixed(3),
+      diktekanten: +(_kozijnDiktekantenCm() / 100).toFixed(3),   // v4.74.0
       roeden: +(_kozijnRoedenCm() / 100).toFixed(3)
     },
     vlakkenM2: +_kozijnVlakkenM2().toFixed(3),
