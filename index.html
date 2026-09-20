@@ -2349,8 +2349,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.72.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.73.0</h2>
       <div class="intro-body">
+        <p><strong>🪟 Roeden naar een eigen regel (v4.73.0).</strong> Glasroeden hebben in het normenboek eigen minuten. Kies in de kozijn-tekenaar bij de roeden "Roeden naar regel" en de roedenmeters gaan uit het kozijntotaal naar die m¹-regel, als automatische regel onder het kozijn, net als de deur-m². Kruis en spaken van het ronde raam zijn ook roeden. Zonder keuze verandert er niets.</p>
         <p><strong>📐 Compacte meetregels op de iPad (v4.72.0).</strong> Elke meetregel is nu twee stroken in plaats van zes: bovenaan calc-regel en omschrijving, daaronder de maten met het totaal. De opmerking zit achter het 💬-knopje en verschijnt alleen als er iets in staat.</p>
         <p><strong>📏 Meetstaat opent onderaan (v4.71.0).</strong> Kom je terug op de Meetstaat, dan sta je meteen bij de laatste meetregel en de knop "+ Regel". Die knop staat nu ook bovenaan in de kop.</p>
         <p><strong>📱 Eigen icoon op de iPhone (v4.70.1).</strong> Zet je Calculatie op het beginscherm van je telefoon, dan krijgt hij het Ernes-logo met een blauwe band "Calculatie" in plaats van een grijze letter. Elke app in de suite krijgt zo zijn eigen kleur. Staat het icoon er al, dan eenmalig verwijderen en opnieuw toevoegen.</p>
@@ -3690,7 +3691,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.72.0';
+const APP_VERSION = 'v4.73.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4107,6 +4108,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.73.0', d: '2026-09-20', h: 'Kozijn-tekenaar: roeden kun je naar een eigen m¹-regel sturen, met hun eigen normminuten.' },
   { v: '4.72.0', d: '2026-09-19', h: 'Meetregels op de iPad zijn twee stroken in plaats van zes; de opmerking zit achter een 💬-knopje.' },
   { v: '4.71.0', d: '2026-09-19', h: 'De Meetstaat opent bij de laatste meetregel, en "+ Regel" staat nu ook bovenaan in de kop.' },
   { v: '4.70.1', d: '2026-09-16', h: 'Op het beginscherm van de iPhone toont Calculatie het Ernes-logo met een blauwe band in plaats van een grijze letter.' },
@@ -14059,8 +14061,12 @@ function _bouwKozijnenHtml(c, kozijnen) {
       const delen = [`frame ${fmNl(dln.frame || 0)}`];
       if (+dln.tussenwerk > 0.0001) delen.push(`tussenwerk ${fmNl(dln.tussenwerk)}`);
       if (+dln.ramen > 0.0001) delen.push(`ramen ${fmNl(dln.ramen)}`);
-      if (+dln.roeden > 0.0001) delen.push(`roeden ${fmNl(dln.roeden)}`);
+      if (+dln.roeden > 0.0001 && !tek.roedenRegelId) delen.push(`roeden ${fmNl(dln.roeden)}`);
       if (delen.length > 1) m1Regel = `${m1} (${delen.join(' + ')})`;
+    }
+    // v4.73.0 — roeden naar een eigen regel: als aparte post naast het kozijn-m¹.
+    if (tek.roedenRegelId && +tek.roedenM1 > 0.0001) {
+      m1Regel += ` <span style="font-weight:400;">&middot; roeden ${fmNl(tek.roedenM1)} m¹ &rarr; ${_escapeHtml(_kozijnRegelNaam(tek.roedenRegelId) || 'eigen regel')}</span>`;
     }
     const loosNote = (tek.lozeDorpel && tek.vorm !== 'rond') ? ` <span style="font-weight:400; color:#666;">&middot; loze onderdorpel</span>` : '';
     // v3.55.0 — vulling per soort met naam; oude tekeningen zonder per-regel-lijst tonen het kale totaal.
@@ -15662,8 +15668,11 @@ async function _bouwOfferteCompleetDocDef() {
         const delen = ['frame ' + fmNl(dln.frame || 0)];
         if (+dln.tussenwerk > 0.0001) delen.push('tussenwerk ' + fmNl(dln.tussenwerk));
         if (+dln.ramen > 0.0001) delen.push('ramen ' + fmNl(dln.ramen));
-        if (+dln.roeden > 0.0001) delen.push('roeden ' + fmNl(dln.roeden));
+        if (+dln.roeden > 0.0001 && !tek.roedenRegelId) delen.push('roeden ' + fmNl(dln.roeden));
         if (delen.length > 1) m1Regel = m1 + ' (' + delen.join(' + ') + ')';
+      }
+      if (tek.roedenRegelId && +tek.roedenM1 > 0.0001) {   // v4.73.0
+        m1Regel += ' \u00b7 roeden ' + fmNl(tek.roedenM1) + ' m\u00b9 \u2192 ' + (_kozijnRegelNaam(tek.roedenRegelId) || 'eigen regel');
       }
       const loosNote = (tek.lozeDorpel && tek.vorm !== 'rond') ? ' \u00b7 loze onderdorpel' : '';
       const perRegelVlakken = Array.isArray(tek.vlakkenM2PerRegel) ? tek.vlakkenM2PerRegel.filter(v => v && +v.m2 > 0.0001) : [];
@@ -16751,7 +16760,7 @@ function renderMeetstaat() {
     const tekenBtn = _thumb
       ? `<span class="kozijn-thumb-btn" title="Kozijn bewerken" onclick="openKozijnTekenaar(${idx})">${_thumb}</span>`
       : `<button class="${_tk ? 'btn' : 'btn-secondary btn'} btn-sm ms-tekenbtn" title="${_tk ? 'Kozijn bewerken' : 'Kozijn tekenen'}" onclick="openKozijnTekenaar(${idx})">${_tk ? '📐' : '✏️'}</button>`;
-    const _auto = ms.bron === 'vulling_auto';
+    const _auto = _isAutoMs(ms);
     const _dis = _auto ? 'disabled' : '';
     const _trCls = [_auto ? 'ms-auto' : '', (ms.opmerking || '').trim() ? 'ms-opm-open' : ''].filter(Boolean).join(' ');
     const opmBtn = `<button class="btn-secondary btn btn-sm ms-opmbtn${(ms.opmerking || '').trim() ? ' actief' : ''}" title="Opmerking tonen of verbergen" onclick="msToggleOpm(${idx})">💬</button> `;
@@ -16782,7 +16791,8 @@ function renderMeetstaat() {
       <div class="kozijn-galerij">`;
     _kozijnen.forEach(({ ms, idx }) => {
       const naam = ms.omschrijving || ms.tekening.naam || 'Kozijn';
-      const m1 = ms.tekening.omtrekM1 != null ? (ms.tekening.omtrekM1.toFixed(2).replace('.', ',') + ' m¹') : '';
+      let m1 = ms.tekening.omtrekM1 != null ? (ms.tekening.omtrekM1.toFixed(2).replace('.', ',') + ' m¹') : '';
+      if (ms.tekening.roedenRegelId && +ms.tekening.roedenM1 > 0.0001) m1 += ` + roeden ${(+ms.tekening.roedenM1).toFixed(2).replace('.', ',')}`;   // v4.73.0
       const copyBtn = _gLock ? '' : `<span class="kozijn-galerij-copy" title="Kopieer dit kozijn naar het onderdeel waar je mee bezig bent" onclick="event.stopPropagation(); kopieerKozijnNaarActief(${idx})">⧉</span>`;
       html += `<div class="kozijn-galerij-item" onclick="openKozijnTekenaar(${idx})" title="Openen">
         ${copyBtn}
@@ -16901,7 +16911,7 @@ async function addMeetstaat() {
   const allRegels = _allCalcRegels();
   if (!allRegels.length) { alert('Voeg eerst regels toe in de Calculatie-tab.'); return; }
   // Onthoud: laatste handmatige regel's calcRegelId en omschrijving (auto-regels overslaan)
-  const handmRijen = data.calc.meetstaat.filter(ms => ms.bron !== 'vulling_auto');
+  const handmRijen = data.calc.meetstaat.filter(ms => !_isAutoMs(ms));
   const last = handmRijen[handmRijen.length - 1];
   const calcRegelId = last ? last.calcRegelId : allRegels[0].regel.id;
   // v3.69.0 — de naam van een kozijntekening vult de omschrijving van die regel; die naam
@@ -17073,7 +17083,7 @@ const NumPad = {
 
 function updMeetstaat(idx, field, value) {
   if (!data.calc.meetstaat || !data.calc.meetstaat[idx]) return;
-  if (data.calc.meetstaat[idx].bron === 'vulling_auto') { renderMeetstaat(); return; } // auto-regel: niet handmatig wijzigen
+  if (_isAutoMs(data.calc.meetstaat[idx])) { renderMeetstaat(); return; } // auto-regel: niet handmatig wijzigen
   data.calc.meetstaat[idx][field] = value;
   if (data.calc.meetstaat[idx].id) _updateMeetstaatDB(data.calc.meetstaat[idx], data.calc.id);
   _touchCalc(data.calc.id);
@@ -17594,7 +17604,7 @@ function _kozijnCollectAll() {
   return _kozijnCollectFrom(_kozijnState.verdeling || { t: 'vak' }, g.pts, '', { vakken: [], dividers: [] });
 }
 function _kozijnMembersCm() {
-  if (_kozijnState.vorm === 'rond') return _kozijnRondRoedenCm();
+  if (_kozijnState.vorm === 'rond') return 0;   // v4.73.0 — kruis/spaken tellen als roeden, zie _kozijnRoedenCm
   if (!_kozijnState.verdeling) return 0;
   return _kozijnCollectAll().dividers.reduce((s, d) => s + (d.geenStijl ? 0 : d.len), 0);
 }
@@ -17634,7 +17644,7 @@ function _kozijnVakRoeden(pts, node) {
   return out;
 }
 function _kozijnRoedenCm() {
-  if (_kozijnState.vorm === 'rond') return 0; // rond telt kruis/spaken al via het tussenwerk
+  if (_kozijnState.vorm === 'rond') return _kozijnRondRoedenCm(); // v4.73.0 — kruis/spaken zijn glasroeden
   let s = 0;
   _kozijnCollectAll().vakken.forEach(vk => { _kozijnVakRoeden(vk.pts, vk.node).forEach(rd => { s += rd.len; }); });
   return s;
@@ -17688,7 +17698,29 @@ function _kozijnVlakkenM2PerRegelLijst() {
   const per = _kozijnVlakkenPerRegel();
   return Object.keys(per).filter(k => per[k].m2 > 0.0001).map(k => ({ regelId: k, label: per[k].label || _kozijnRegelNaam(k) || '', m2: +per[k].m2.toFixed(3) }));
 }
-function _kozijnTotaalCm() { return _kozijnOmtrekCm() + _kozijnMembersCm() + _kozijnRamenCm() + _kozijnRoedenCm(); }
+// v4.73.0 — Roeden naar een eigen m¹-regel (glasroeden hebben eigen normminuten).
+// Is een roeden-regel gekozen, dan zitten de roeden niet in het kozijntotaal maar
+// gaan ze als auto-regel naar die calc-regel (zie _syncVullingMeetstaat).
+function _kozijnM1Regels() {
+  return (typeof _allCalcRegels === 'function' ? _allCalcRegels() : []).filter(x => (x.regel.systeemEenheid || '') === 'm¹');
+}
+function _kozijnRoedenRegelId() {
+  const rid = _kozijnState.roedenRegelId || '';
+  if (!rid) return '';
+  return _kozijnM1Regels().some(x => x.regel.id === rid) ? rid : '';
+}
+function _kozijnSetRoedenRegel(regelId) {
+  _kozijnState.roedenRegelId = regelId || '';
+  _kozijnTeken(); _kozijnUpdateOmtrek();
+}
+function _kozijnRoedenRegelSelectHtml() {
+  const regels = _kozijnM1Regels();
+  if (!regels.length) return `<div style="font-size:0.78rem; color:var(--accent-deep); margin-bottom:0.5rem;">Geen m¹-regel in de calculatie om de roeden aan te koppelen.</div>`;
+  const cur = _kozijnRoedenRegelId();
+  const opts = `<option value="">— in het kozijntotaal (niet gekoppeld) —</option>` + regels.map(ctx => `<option value="${ctx.regel.id}" ${ctx.regel.id === cur ? 'selected' : ''}>${_escapeHtml(_calcRegelLabel(ctx.regel, ctx))}</option>`).join('');
+  return `<div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Roeden naar regel:</span><select onchange="_kozijnSetRoedenRegel(this.value)" style="flex:1 1 200px; min-width:160px; padding:0.4rem; border:1px solid var(--paper-deep); border-radius:var(--radius); font-family:inherit;">${opts}</select></div>`;
+}
+function _kozijnTotaalCm() { return _kozijnOmtrekCm() + _kozijnMembersCm() + _kozijnRamenCm() + (_kozijnRoedenRegelId() ? 0 : _kozijnRoedenCm()); }
 function _kozijnNodeAt(path) {
   let node = _kozijnState.verdeling; if (!node) return null;
   if (path === '') return node;
@@ -17850,6 +17882,7 @@ function _kozijnRenderVerdeelControls() {
     el.innerHTML =
       `<div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Indeling:</span>${modiBtns}</div>` +
       nBlok +
+      (v.mode !== 'heel' ? _kozijnRoedenRegelSelectHtml() : '') +   // v4.73.0 — kruis/spaken zijn glasroeden
       `<div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Type:</span>${typeBtns}</div>` +
       vulBlok;
     return;
@@ -17884,6 +17917,7 @@ function _kozijnRenderVerdeelControls() {
       const st = (as, val) => `<button class="btn-secondary btn btn-sm" onclick="_kozijnSetRoeden('${sel.path}','${as}',-1)">−</button><span style="min-width:1.6rem; text-align:center; font-weight:600;">${val}</span><button class="btn-secondary btn btn-sm" onclick="_kozijnSetRoeden('${sel.path}','${as}',1)">+</button>`;
       const totRuit = rk * rr;
       roedenBlok = `<div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Roeden · ruitjes:</span>${st('k', rk)}<span style="font-size:0.78rem; color:var(--muted);">breed ×</span>${st('r', rr)}<span style="font-size:0.78rem; color:var(--muted);">hoog${totRuit > 1 ? ` = ${totRuit} ruitjes` : ''}</span></div>`;
+      if (_kozijnRoedenCm() > 0) roedenBlok += _kozijnRoedenRegelSelectHtml();   // v4.73.0
     }
     el.innerHTML = `<div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:0.5rem;"><span style="font-size:0.8rem; color:var(--ink-soft);">Type:</span>${typeBtns}</div>${vulBlok}${roedenBlok}<div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.8rem; color:var(--ink-soft);">Vak delen:</span><button class="btn-secondary btn btn-sm" onclick="_kozijnSplit('${sel.path}','v')">│ verticaal</button><button class="btn-secondary btn btn-sm" onclick="_kozijnSplit('${sel.path}','h')">─ horizontaal</button></div>`;
     return;
@@ -17910,23 +17944,31 @@ function _kozijnHuidigAantal() {
 }
 function _kozijnUpdateOmtrek() {
   const omtrek = _kozijnOmtrekCm() / 100, members = _kozijnMembersCm() / 100, ramen = _kozijnRamenCm() / 100, roeden = _kozijnRoedenCm() / 100;
-  const totaal = omtrek + members + ramen + roeden;
+  const roedenRid = _kozijnRoedenRegelId();                       // v4.73.0
+  const totaal = omtrek + members + ramen + (roedenRid ? 0 : roeden);
   const aantal = _kozijnHuidigAantal();
   const el = document.getElementById('kozijnOmtrek');
   if (!el) return;
   const fm = (x) => x.toFixed(2).replace('.', ',');
   let m1;
-  if (members > 0 || ramen > 0 || roeden > 0) {
+  if (members > 0 || ramen > 0 || (roeden > 0 && !roedenRid)) {
     const delen = [`frame ${fm(omtrek)}`];
     if (members > 0) delen.push(`tussenwerk ${fm(members)}`);
     if (ramen > 0) delen.push(`ramen ${fm(ramen)}`);
-    if (roeden > 0) delen.push(`roeden ${fm(roeden)}`);
+    if (roeden > 0 && !roedenRid) delen.push(`roeden ${fm(roeden)}`);
     m1 = `Totaal: ${fm(totaal)} m¹  (${delen.join(' + ')})`;
   } else {
     m1 = `Omtrek: ${fm(omtrek)} m¹`;
   }
   if (aantal > 1) {
     m1 += ` &nbsp;×${aantal} = <strong>${fm(totaal * aantal)} m¹</strong>`;
+  }
+  // v4.73.0 — roeden als eigen post naar de gekozen regel, of waarschuwing als er roeden zijn zonder regel
+  if (roeden > 0 && roedenRid) {
+    const staart = aantal > 1 ? ` &nbsp;×${aantal} = <strong>${fm(roeden * aantal)} m¹</strong>` : '';
+    m1 += `<br><span style="color:var(--ink-soft);">Roeden → ${_escapeHtml(_kozijnRegelNaam(roedenRid) || 'regel')}: ${fm(roeden)} m¹${staart}</span>`;
+  } else if (roeden > 0 && _kozijnM1Regels().length) {
+    m1 += ` <span style="color:var(--accent-deep); font-size:0.85em;">· roeden zitten in het kozijntotaal (geen roeden-regel gekozen)</span>`;
   }
   if (_kozijnState.lozeDorpel && _kozijnState.vorm !== 'rond') {
     m1 += ` <span style="color:var(--muted); font-size:0.85em;">· loze onderdorpel</span>`;
@@ -17957,7 +17999,8 @@ function openKozijnTekenaar(idx) {
     maten: (t.maten && typeof t.maten === 'object') ? Object.assign({}, t.maten) : Object.assign({}, _KOZIJN_DEFAULTS['rechthoek']),
     verdeling: (t.verdeling && typeof t.verdeling === 'object') ? t.verdeling : { t: 'vak' },
     markeringen: Array.isArray(t.markeringen) ? t.markeringen.map(m => Object.assign({}, m)) : [],
-    lozeDorpel: t.lozeDorpel === true
+    lozeDorpel: t.lozeDorpel === true,
+    roedenRegelId: (typeof t.roedenRegelId === 'string') ? t.roedenRegelId : ''   // v4.73.0
   };
   _kozijnSel = null;
   _kozijnMarkeerType = null;
@@ -17993,6 +18036,9 @@ function _kozijnBouwTekening() {
     verdeling: _kozijnState.verdeling,
     markeringen: (_kozijnState.markeringen || []).map(m => Object.assign({}, m)),
     lozeDorpel: !!_kozijnState.lozeDorpel,
+    // v4.73.0 — roeden naar een eigen m¹-regel; omtrekM1 is dan zonder roeden.
+    roedenRegelId: _kozijnRoedenRegelId(),
+    roedenM1: +(_kozijnRoedenCm() / 100).toFixed(3),
     omtrekM1: +(cm / 100).toFixed(3),
     // v3.55.0 — uitsplitsing van de m¹ voor de kozijnen-PDF (frame/tussenwerk/ramen/roeden, in m).
     m1Delen: {
@@ -18082,7 +18128,7 @@ async function kopieerKozijnNaarActief(idx) {
   const allRegels = _allCalcRegels();
 
   // 1) Actief onderdeel: de onderste handmatige rij
-  const handm = data.calc.meetstaat.filter(ms => ms.bron !== 'vulling_auto');
+  const handm = data.calc.meetstaat.filter(ms => !_isAutoMs(ms));
   const last = handm[handm.length - 1];
   const lastCtx = last ? allRegels.find(x => x.regel.id === last.calcRegelId) : null;
   if (!lastCtx) { alert('Geen actief onderdeel gevonden. Voer eerst een meetstaat-regel in voor het onderdeel waar je mee bezig bent.'); return; }
@@ -18119,6 +18165,7 @@ async function kopieerKozijnNaarActief(idx) {
     if (Array.isArray(node.k)) node.k.forEach(herkoppel);
   };
   herkoppel(kopie.verdeling);
+  if (kopie.roedenRegelId) kopie.roedenRegelId = mapRegelId(kopie.roedenRegelId);   // v4.73.0
   if (Array.isArray(kopie.vlakkenM2PerRegel)) {
     kopie.vlakkenM2PerRegel.forEach(v => {
       const nieuw = mapRegelId(v.regelId);
@@ -20327,8 +20374,9 @@ async function _syncGebrekToeslagen() {
 // v3.67.0 — doelen per kozijntekening: één auto-regel per tekening per calc-regel,
 // i.p.v. één samengerolde regel per calc-regel over alle tekeningen heen. De auto-regel
 // onthoudt zijn brontekening (bronMeetstaatId) zodat hij eronder geplaatst kan blijven.
+function _isAutoMs(ms) { return !!ms && (ms.bron === 'vulling_auto' || ms.bron === 'roeden_auto'); }   // v4.73.0
 function _vullingDoelenPerTekening() {
-  const out = [];   // [{ bronId, regelId, m2, naam }]
+  const out = [];   // [{ bronId, regelId, m2, naam, bron, hCm, bCm }]
   const rijen = (data.calc && data.calc.meetstaat) ? data.calc.meetstaat : [];
   rijen.forEach(ms => {
     const tek = ms.tekening;
@@ -20345,8 +20393,19 @@ function _vullingDoelenPerTekening() {
       const m2 = (parseFloat(v.m2) || 0) * mult;
       if (!(m2 > 0.0001)) return;
       const deurLabel = v.label || _kozijnRegelNaam(rid) || 'Vulling';
-      out.push({ bronId: ms.id, regelId: rid, m2, naam: `${tekNaam} · ${deurLabel} (auto)` });
+      out.push({ bronId: ms.id, regelId: rid, m2, naam: `${tekNaam} · ${deurLabel} (auto)`, bron: 'vulling_auto', hCm: 100, bCm: Math.round(m2 * 100) });
     });
+  });
+  // v4.73.0 — roeden per tekening naar de gekozen m¹-regel: hCm 0, bCm = roeden-cm × aantal × factor.
+  rijen.forEach(ms => {
+    const tek = ms.tekening;
+    if (!tek || !tek.vorm || !ms.id) return;
+    const rid = (typeof tek.roedenRegelId === 'string') ? tek.roedenRegelId : '';
+    const roedenM1 = parseFloat(tek.roedenM1) || 0;
+    if (!rid || !(roedenM1 > 0.0001)) return;
+    const mult = (ms.aantal && ms.aantal > 0 ? ms.aantal : 1) * (ms.factor != null ? ms.factor : 1);
+    const tekNaam = ms.omschrijving || tek.naam || 'Kozijn';
+    out.push({ bronId: ms.id, regelId: rid, m2: 0, naam: `${tekNaam} · roeden (auto)`, bron: 'roeden_auto', hCm: 0, bCm: Math.round(roedenM1 * 100 * mult) });
   });
   return out;
 }
@@ -20354,31 +20413,31 @@ async function _syncVullingMeetstaat() {
   if (!data.calc) return;
   if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) return; // bevroren offerte: niet aankomen
   if (!Array.isArray(data.calc.meetstaat)) data.calc.meetstaat = [];
-  const doelen = _vullingDoelenPerTekening();                                  // [{bronId, regelId, m2, naam}]
-  const autoRijen = data.calc.meetstaat.filter(ms => ms.bron === 'vulling_auto');
+  const doelen = _vullingDoelenPerTekening();                                  // [{bronId, regelId, m2, naam, bron, hCm, bCm}]
+  const autoRijen = data.calc.meetstaat.filter(_isAutoMs);
   let veranderd = false;
   const gebruikt = new Set();
   // 1) per doel: bestaande auto-regel (zelfde brontekening + calc-regel) bijwerken, anders invoegen.
   //    m² wordt gecodeerd als b×h: hCm=100 (1 m), bCm=m²×100.
   for (const d of doelen) {
-    const bCm = Math.round(d.m2 * 100);
-    const row = autoRijen.find(ms => (ms.bronMeetstaatId || '') === d.bronId && ms.calcRegelId === d.regelId && !gebruikt.has(ms.id));
+    const bCm = d.bCm;
+    const row = autoRijen.find(ms => (ms.bronMeetstaatId || '') === d.bronId && ms.calcRegelId === d.regelId && (ms.bron || 'vulling_auto') === d.bron && !gebruikt.has(ms.id));
     if (row) {
       gebruikt.add(row.id);
-      if ((row.bCm || 0) !== bCm || (row.hCm || 0) !== 100 || (row.aantal || 0) !== 1 || (row.factor || 0) !== 1 || row.omschrijving !== d.naam) {
-        row.bCm = bCm; row.hCm = 100; row.aantal = 1; row.factor = 1; row.omschrijving = d.naam;
+      if ((row.bCm || 0) !== bCm || (row.hCm || 0) !== d.hCm || (row.aantal || 0) !== 1 || (row.factor || 0) !== 1 || row.omschrijving !== d.naam) {
+        row.bCm = bCm; row.hCm = d.hCm; row.aantal = 1; row.factor = 1; row.omschrijving = d.naam;
         _updateMeetstaatDB(row, data.calc.id);
         veranderd = true;
       }
     } else {
       const nieuw = {
         calcRegelId: d.regelId, omschrijving: d.naam,
-        hCm: 100, bCm: bCm, aantal: 1, factor: 1, opmerking: '', tekening: null,
-        bron: 'vulling_auto', bronMeetstaatId: d.bronId
+        hCm: d.hCm, bCm: bCm, aantal: 1, factor: 1, opmerking: '', tekening: null,
+        bron: d.bron, bronMeetstaatId: d.bronId
       };
       const saved = await _insertMeetstaatDB(nieuw, data.calc.id, data.calc.meetstaat.length);
       if (saved) {
-        saved.bron = saved.bron || 'vulling_auto';
+        saved.bron = saved.bron || d.bron;
         saved.bronMeetstaatId = saved.bronMeetstaatId || d.bronId;
         data.calc.meetstaat.push(saved);
         gebruikt.add(saved.id);
@@ -20411,13 +20470,13 @@ function _herordenVullingMeetstaat() {
   const ms = data.calc.meetstaat;
   const autosByBron = {};
   ms.forEach(r => {
-    if (r.bron !== 'vulling_auto') return;
+    if (!_isAutoMs(r)) return;
     const b = r.bronMeetstaatId || '';
     (autosByBron[b] = autosByBron[b] || []).push(r);
   });
   const nieuw = [];
   ms.forEach(r => {
-    if (r.bron === 'vulling_auto') return;                  // wordt onder zijn brontekening geplaatst
+    if (_isAutoMs(r)) return;                               // wordt onder zijn brontekening geplaatst
     nieuw.push(r);
     if (r.tekening && r.tekening.vorm && autosByBron[r.id]) {
       autosByBron[r.id].forEach(a => nieuw.push(a));

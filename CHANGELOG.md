@@ -1,3 +1,25 @@
+## v4.73.0 — Roeden naar een eigen regel in de kozijn-tekenaar
+
+### Wat er nu kan
+
+Glasroeden hebben in het Tijdnormenboek (blz. 37) een eigen kolom met minuten per meter, die afwijkt van raamhout. Tot nu toe telden roeden gewoon mee in het kozijntotaal, tegen het tarief van de kozijn-regel. Nu kun je in de tekenaar bij de roeden een m¹-regel kiezen ("Roeden naar regel", bijvoorbeeld een regel met het verfsysteem Glasroeden buiten). De roedenmeters gaan dan uit het kozijntotaal en verschijnen als automatische regel "… · roeden (auto)" direct onder het kozijn in de meetstaat, gekoppeld aan die regel, net als de deur-m². Aantal en factor van het kozijn werken door. Kruis en spaken van het ronde raam zijn ook glasroeden en volgen dezelfde keuze (ze heten in de voet nu "roeden" in plaats van "tussenwerk"; het totaal is gelijk). Zonder keuze verandert er niets: roeden blijven in het kozijntotaal, met een grijze melding in de voet. Voet, galerij, kozijnen-PDF en accordpagina tonen het kozijn-m¹ en de roeden als twee posten naast elkaar, met de naam van de roeden-regel. Dupliceren en kopiëren naar een andere gevel nemen de koppeling mee (op regelnaam, zoals bij vullingen). Bestaande tekeningen veranderen pas als je ze opent, een regel kiest en op Klaar tikt.
+
+### Hoe het onder de kap zit
+
+- `_kozijnRoedenCm()` telt nu ook rond (kruis 2×d, spaken n×r); `_kozijnMembersCm()` geeft voor rond 0. `_kozijnTotaalCm()` laat roeden weg als `_kozijnRoedenRegelId()` een geldige m¹-regel oplevert.
+- Nieuw: `_kozijnM1Regels()`, `_kozijnRoedenRegelId()`, `_kozijnSetRoedenRegel()`, `_kozijnRoedenRegelSelectHtml()`. Keuzelijst in het vak-roedenblok (als het vak roeden heeft) en in het rond-paneel (bij kruis/spaken).
+- Tekening krijgt `roedenRegelId` en `roedenM1` (excl. aantal); `omtrekM1` en b-veld zijn zonder roeden als gekoppeld; `m1Delen.roeden` blijft de fysieke lengte.
+- `_vullingDoelenPerTekening()` levert nu ook doelen `bron:'roeden_auto'` (hCm 0, bCm = roedenM1 × 100 × aantal × factor); `_syncVullingMeetstaat()` en `_herordenVullingMeetstaat()` werken generiek via nieuwe `_isAutoMs()`. Alle plekken die `bron === 'vulling_auto'` toetsten gebruiken `_isAutoMs`.
+- `kopieerKozijnNaarActief()` hermapt `roedenRegelId` op regelnaam. PDF (html en pdfmake) en galerij tonen roeden als eigen post bij een gekoppelde tekening.
+- Geen SQL: constraint-query op `meetstaat` toonde alleen PK en twee FK's, geen check op `bron`.
+- Getest (node, synthetische data): rechthoek 100×150 met 2×3 roeden (3,50 m¹ roeden, totaal 8,50 → 5,00 gekoppeld), ongeldige m²-regel wordt genegeerd, rond Ø70 kruis (1,40 roeden), tekening-JSON, voet met en zonder regel, rond-paneel toont keuzelijst, sync: aanmaken, ongewijzigd = 0 db-acties, aantal 2→3 geeft bCm 280→420, koppeling weghalen verwijdert de auto-regel. Niet getest: in de browser.
+
+### Wat je moet doen
+
+1. Verfsystemen "Glasroeden buiten" en "Glasroeden binnen" (m¹) aanmaken met de minuten van blz. 37 en als calc-regel in de calculatie zetten.
+2. `index.html` en `CHANGELOG.md` uploaden.
+3. Een kozijn met roeden openen, "Roeden naar regel" kiezen, Klaar: controleer dat het kozijntotaal daalt met de roedenmeters, dat er een grijze auto-regel onder staat met dezelfde meters × aantal, en dat de kozijnen-PDF beide posten toont.
+
 ## v4.72.0 — Compacte meetregels op de iPad
 
 ### Wat er nu kan
