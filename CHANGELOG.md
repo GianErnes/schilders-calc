@@ -1,3 +1,26 @@
+## v4.75.0 — Deuronderkant behandelen, plus fix gebrek-telling bij uitgezette gevels
+
+### Wat er nu kan
+
+Het normenboek zegt niets over de onderkant van deuren, terwijl dat apart werk is (deur uit de hengsels, kale of aangetaste onderkant behandelen, terughangen). Boven- en zijkanten zitten vermoedelijk in de m²-minuten van de deur. Daarom, in de lijn van de gebrek-herstelposten: in Instellingen staat nu bij de gebrek-prijzen een vast bedrag "Deuronderkant behandelen (€ / deur)". In de kozijn-tekenaar krijgt elk vak van het type Vulling een vinkje "Onderkant behandelen (deur)", met het ingestelde bedrag erachter. Vink je het aan, dan verschijnt automatisch de staartpost "Deuronderkant behandelen" (aantal deuren × bedrag), die meetelt in de werkdagen. Het aantal is de som van de vinkjes × het aantal van het kozijn, alleen voor kozijnen in gevels die aan staan. Vinkjes weg of bedrag op 0 → post weg. De voet van de tekenaar en de kozijnen-PDF vermelden "Onderkant behandelen: n deuren". Werkt voor buiten- en binnendeuren; het ronde raam heeft geen vinkje.
+
+Fix erbij: de gebrek-herstelposten (houtrot, scheur, kit, loszittende verf) telden stippen van álle tekeningen, ook van uitgezette gevels. Nu tellen alleen tekeningen mee in gevels die aan staan, en de aan/uit-knoppen werken de posten meteen bij.
+
+### Hoe het onder de kap zit
+
+- Instellingen: `data.settings.deurOnderkantPrijs` (default 0, gaat mee in het JSON-blok van `app_settings`), veld `#setDeurOnderkantPrijs`, `updDeurOnderkantPrijs()`.
+- Tekenaar: vinkje in het vak-vulblok, `_kozijnSetOnderkant(path, aan)` zet `node.onderkant`; `_kozijnDeurOnderkanten()` telt vullingen met vinkje; tekening krijgt `deurOnderkanten` (per kozijn, zonder aantal). Deep copy bij dupliceren en kopiëren neemt het vinkje mee.
+- Staart: `_telDeurOnderkanten()` (× aantal, met `_msTeltMee`) en `_syncDeurOnderkantPost()`, aangeroepen uit `_syncGebrekToeslagen()`. Post: `type 'eenheid'`, `eenheid 'deur'`, `teltInWerkdagen true`, gemerkt met `gebrekType 'deur_onderkant'` in de bestaande kolom `gebrek_type`. Geen SQL.
+- `_telGebreken()` slaat tekeningen over waarvoor `_msTeltMee()` false is. `toggleHgActief`, `toggleOdActief` en `toggleRegelActief` roepen `_syncGebrekToeslagen()` aan.
+- PDF (html en pdfmake): regel "Onderkant behandelen: n deur(en)" onder de vullingen.
+- Getest (node, synthetische data): dubbele deur met één vinkje → tekening 1, voet "2 deuren" bij aantal 2; paneel toont vinkje met prijs, per vak apart; sync: houtrot 2×30 en onderkant 2×45 (uitgezette gevel telt niet), ongewijzigd = 0 db-acties, gevel aan → beide 3, prijs 0 → post verwijderd. Niet getest: browser.
+
+### Wat je moet doen
+
+1. `index.html` en `CHANGELOG.md` uploaden.
+2. Instellingen → Gebrek-prijzen: bedrag per deur invullen.
+3. In een testcalculatie een deur tekenen (vak type Vulling, gekoppeld aan een m²-regel), "Onderkant behandelen" aanvinken, Klaar: controleer de staartpost (aantal × bedrag), dat de werkdagen stijgen, en dat de post verdwijnt als je het vinkje uitzet of de gevel uitzet. Bij Troost: kijk of de houtrotpost nu lager is dan voorheen (de stippen van de uitgezette gevels vallen weg).
+
 ## v4.74.1 — Fix: kozijn-tekeningen volgen de aan/uit-knoppen
 
 ### Wat er nu kan
