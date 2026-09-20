@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 16 september 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 20 september 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -4849,3 +4849,111 @@ is: `pushtest.html`, `manifest_pushtest.json` en de functie `push-test`.
    opent de afgevinkte taak.
 3. Bjorn, Jens en Max: Taken vanaf het beginscherm openen, onderaan
    "meldingen aanzetten" tikken.
+
+## Wat er op 19 september 2026 gedaan is: meetstaat op de iPad (v4.71.0 en v4.72.0)
+
+Aanleiding: bij de opname wisselt Gian op een staande iPad tussen de
+tabs Calculatie en Meetstaat. Elke keer terug op de Meetstaat stond hij
+bovenaan en moest hij door alle meetregels naar beneden vegen; bovendien
+was elke meetregel in de kaartweergave zes stroken hoog. Twee brokken,
+allebei alleen `index.html`, geen SQL, geen Edge Function. Beide door Gian
+op de iPad bevestigd ("past en alles werkt").
+
+**v4.71.0 — Meetstaat opent onderaan.** `_meetstaatScrollNaarEind()`,
+direct na `renderMeetstaat()` in de code, scrolt na 60 ms naar de laatste
+`#meetstaatLijst tbody tr`; aangeroepen in de nav-handler voor de tab
+`meetstaat` en aan het eind van `goToMeetstaat()`. Zonder regels gebeurt
+niets. "+ Regel" staat nu ook in de kop van de Meetstaat
+(`.panel-actions`), dezelfde `addMeetstaat()` als onderaan. Bewust niet
+gedaan: nieuwste regel bovenaan (nummering en Enter-doorloop gaan uit van
+nieuw = onderaan) en springen naar de meetregels van de aangeklikte
+calc-regel vanuit Calculatie (`goToMeetstaat` krijgt de regel wel mee,
+doet er niets mee — was al zo).
+
+**v4.72.0 — Compacte kaart.** In `@media (max-width: 1024px)` is het
+CSS-blok voor `table.meetstaat-tbl` herschreven naar twee stroken per
+regel, geregeld met `order` per cel:
+
+- strook 1: nummer, `td[data-label="Calc-regel"]`, `td[data-label=
+  "Omschrijving"]` (placeholder in plaats van label erboven), `td.ms-acties`
+  met 💬-knop, ×-knop en tekenknop;
+- `td.ms-break` (100% breed, hoogte 0) dwingt de regelovergang;
+- strook 2: de vier `td.ms-getal` met het label via `::before` *naast* het
+  veld (tekst ongewijzigd: b (cm), h (cm), aantal, factor), en
+  `td.ms-totaal` rechts;
+- strook 3: `td[data-label="Opmerking"]` is `display:none` en verschijnt
+  alleen bij `tr.ms-opm-open`. Die klasse zet `renderMeetstaat()` als de
+  opmerking gevuld is en `msToggleOpm(idx)` bij een tik op 💬;
+  `_msOpmSync(inp)` kleurt de knop (`.ms-opmbtn.actief`) mee met de
+  inhoud. Puur DOM, geen datawijziging.
+
+Buiten de media query staan `.ms-opmbtn` en `td.ms-break` op
+`display:none`, dus de desktoptabel ziet er niet anders uit; de kopregel
+heeft 11 `th`, elke rij 11 `td`. De zoom van 1,3 op aanraakschermen
+(v4.33.0) is bewust gebleven.
+
+**Enter-doorloop.** Met toetsenbord ging Enter op factor naar Opmerking en
+Enter op Opmerking naar een nieuwe regel. Nu Opmerking verborgen kan zijn,
+controleert `msKey()` bij veld 5 op `next.offsetParent === null` en roept
+dan direct `addMeetstaat()` aan. De numpad-knop "Volgende" (`next()` in
+de numpad-code) maakte al een nieuwe regel zonder langs Opmerking te gaan
+en is niet gewijzigd.
+
+**Les uit de sessie.** Bij het vervangen van het CSS-blok knipte de
+Python-patch te vroeg af (de zoekstring `'  }\n'` matchte al binnen een
+dieper ingesprongen `'    }\n'`), waardoor de oude regels erachter bleven
+staan en buiten de media query gingen gelden. De accolade-telling van het
+hele `<style>`-blok (voor/na moeten gelijk zijn) ving dat op vóór
+uitlevering. Die telling hoort vanaf nu standaard bij elke CSS-patch,
+naast de div/td-balans en de node-parse-test.
+
+## Wat er op 20 september 2026 gedaan is: roeden naar een eigen regel (v4.73.0)
+
+Aanleiding: het Tijdnormenboek (blz. 34–37, scan van Gian) geeft glasroeden een
+eigen kolom minuten per meter, afwijkend van raamhout. Roeden telden tot nu toe
+mee in het kozijntotaal tegen het tarief van de kozijn-regel. Keuze van Gian:
+geen factor op de meters, maar roeden als eigen post naar een eigen m¹-regel
+(zelfde patroon als de deur-m² sinds v3.42.0/v3.67.0). Geen SQL: de
+constraint-query op `meetstaat` (door Gian gedraaid) toonde alleen PK en twee
+FK's, geen check op `bron`. Door Gian in de browser bevestigd en direct in de
+offerte Troost gebruikt.
+
+**Verfsystemen.** Gian heeft "Glasroeden buiten" en "Glasroeden binnen" (m¹)
+aangemaakt met de minuten van blz. 37. Alleen verfsystemen zijn koppelbaar aan
+een calc-regel; bewerkingen zijn de losse stappen erin. De tekenaar kent het
+systeem niet, alleen de m¹-regel van de calculatie.
+
+**Werking.** In de tekenaar staat "Roeden naar regel" (keuzelijst van alle
+m¹-regels) bij een vak met roeden en bij het ronde raam met kruis of spaken.
+Kruis en spaken tellen vanaf nu als roeden (`_kozijnRoedenCm()`), niet meer als
+tussenwerk (`_kozijnMembersCm()` geeft voor rond 0); het totaal is gelijk, de
+voet noemt ze anders. Gekoppeld → `_kozijnTotaalCm()` laat roeden weg, de
+tekening krijgt `roedenRegelId` en `roedenM1` (zonder aantal), en
+`_vullingDoelenPerTekening()` levert een doel `bron:'roeden_auto'` met hCm 0
+en bCm = roedenM1 × 100 × aantal × factor. `_syncVullingMeetstaat()` en
+`_herordenVullingMeetstaat()` zijn generiek via `_isAutoMs()` (vulling_auto of
+roeden_auto); alle plekken die op `bron === 'vulling_auto'` toetsten gebruiken
+die helper. Ongeldige regel (verwijderd of m²) → niet gekoppeld. Niet gekoppeld
+→ roeden in het kozijntotaal zoals voorheen, met grijze melding in de voet.
+`kopieerKozijnNaarActief()` hermapt `roedenRegelId` op regelnaam. Voet,
+galerij, kozijnen-PDF (html en pdfmake) tonen kozijn-m¹ en roeden als twee
+posten met regelnaam. `m1Delen.roeden` blijft de fysieke lengte.
+
+**Open, nog te bouwen (brok 2 en 3).** Diktekanten en deurkanten. Bevindingen
+uit het normenboek en de code, bron: scan blz. 34–35 en `index.html` v4.73.0:
+- Normenboek telt diktekanten niet als extra meters maar als andere kolom
+  (vast / 3 diktekanten / 1 diktekant) met andere minuten per meter. Regel:
+  draait het raam naar de schilder toe → 3 kanten (boven, onder, één zijkant);
+  van de schilder af → 1 kant.
+- De tekenaar telt nu in meters: vast en draai binnen = 1× omtrek, draai
+  buiten = 2× omtrek (`_kozijnRamenCm`, `_kozijnRondRamenCm`). Dus draai
+  binnen krijgt niets extra en draai buiten de volle omtrek in plaats van
+  driekwart.
+- Keuze van Gian: meters erbij op dezelfde regel (niet aparte systemen). Omdat
+  hij ook binnenwerk tekent, komt er per tekening een schakelaar "Geschilderd
+  van: buiten / binnen" (standaard buiten, oude tekeningen = buiten). De knoppen
+  "Draai binnen/buiten" blijven de fysieke draairichting.
+- Let op: dit verandert bestaande totalen van draai-buiten-ramen bij opnieuw
+  Klaar (2× omtrek → omtrek + drie kanten). Eerst uittekenen en afstemmen.
+- Deuren (vulling m²): kanten tellen nu nergens. Normenboek-bladzijde voor
+  deuren nog niet gezien; ontwerp volgt daarna.
