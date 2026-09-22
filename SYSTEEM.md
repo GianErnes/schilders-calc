@@ -5004,3 +5004,45 @@ voordat er gebouwd wordt. Gedachten voor dat gesprek: welke kanten
 draairichting), in m¹ naar welke regel (het raamhout van het kozijn zelf, of
 een eigen "deurkanten"-systeem met eigen minuten), en of het normenboek
 elders (deurenhoofdstuk, m²-normen) de kanten al impliciet meerekent.
+
+## Wat er op 22 september 2026 gedaan is: BTW-tarief per calculatie en per staartpost (v4.76.0)
+
+**Aanleiding.** Het restaurant van de Bokkerijder: geen woning, dus 21% BTW,
+terwijl de instelling op 9% staat (woningen ouder dan twee jaar, of gebouwen
+die voor meer dan de helft permanent bewoond worden; Gians regel). Er was
+één globaal percentage (`data.settings.btw`); een tijdelijke omzetting zou
+alle niet-vergrendelde calculaties raken.
+
+**Wat er is gebouwd (index.html v4.76.0).**
+- Bij Klant en adres een dropdown BTW-tarief: volg instelling / 9% / 21%.
+  Kolom `calculaties.btw_pct_override` (numeric, null = volg instelling),
+  op slot bij vergrendeling (`lock-keep`).
+- Een staartpost kan een eigen tarief krijgen: kolommen `staart.btw_pct` en
+  `staart_lib.btw_pct`. Zo'n post heet in de code een **derden-post**
+  (`_isDerdenPost(p)`). Gians regel: werk van derden gaat één-op-één in de
+  offerte, zonder risico-opslag, met eigen BTW; de opslag rekent over de rest.
+  Een derden-post kan niet "in prijs" verstopt worden (UI, `saveStaart`,
+  beide to-mappers en de rekenroutes dwingen dat af).
+- Rekenkern in één blok vóór `calcStaart`: `_calcBtwPct`, `_isDerdenPost`,
+  `_derdenTotaal`, `_btwVerdeling`. Vijf routes gebruiken die kern:
+  `renderTotals`, `printCalc`, `_berekenOfferteCijfers` (en daarmee prijstabel
+  HTML/PDF en lijstbedrag via `_calcTotaalGetoond`), `printOfferteYoobi`,
+  `_calcTotalForArchive`. Bij twee tarieven verschijnt per tarief een
+  BTW-regel met grondslag; bij één tarief is de weergave ongewijzigd.
+- SQL: `calculaties_btw_01_kolommen.sql` (project-guard op het bestaan van
+  calculaties/staart/staart_lib, add column if not exists, drie
+  controleregels). Geen RLS-wijziging.
+
+**Bekend gat.** Het onderhoudsplan rekent met één BTW-factor per beurt
+(`_ohpBtwFactor`). `_ohpBronCalcBtw()` neemt de calculatie-override nu wel
+over, maar een derden-post op een afwijkend tarief wordt in een beurt nog
+niet apart belast. Aparte chat.
+
+**Bewijs.** Node-parsecheck en brace/tag-balans op het gepatchte bestand;
+rekenkern in isolatie getest met vijf gevallen en invarianten (zie
+CHANGELOG). Test in de echte omgeving door Gian met de Bokkerijder-calculatie
+stond op het moment van schrijven nog open.
+
+**Ook gemerkt.** SYSTEEM.md had op dit moment geen sectie voor v4.75.0
+(deuronderkant, 20 september); die staat wel in CHANGELOG.md en in de
+in-app welkomsttekst. Nog na te dragen in de chat van dat bestand.

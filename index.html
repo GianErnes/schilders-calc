@@ -2349,8 +2349,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.75.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.76.0</h2>
       <div class="intro-body">
+        <p><strong>🧾 BTW-tarief per calculatie en per staartpost (v4.76.0).</strong> Bij Klant en adres staat een keuze BTW-tarief: volg de instelling, 9% voor woningen ouder dan twee jaar en gebouwen die voor meer dan de helft permanent bewoond worden, of 21% voor alles anders (een restaurant, een kantoor). Daarnaast kan een staartpost een eigen tarief krijgen. Zo'n post is werk van derden, bijvoorbeeld een onderaannemer: het bedrag gaat één-op-één in de offerte zonder risico-opslag en draagt zijn eigen BTW. Staan er twee tarieven in één offerte, dan toont de kaart, het offertedocument en de prijstabel per tarief een BTW-regel met de grondslag erbij; bij één tarief blijft alles zoals het was. Een derden-post kan niet in de eenheidsprijs worden verwerkt. Let op: het onderhoudsplan rekent nog met één tarief per beurt; een plan met een derden-post op een ander tarief rekent daar nog niet mee. Eenmalig SQL nodig (drie kolommen).</p>
         <p><strong>🚪 Deuronderkant behandelen (v4.75.0).</strong> Zet in Instellingen een vast bedrag per deur, vink in de kozijn-tekenaar bij een deur "Onderkant behandelen" aan, en de app zet automatisch een staartpost neer (aantal deuren × bedrag) die ook meetelt in de werkdagen. Werkt voor buiten- en binnendeuren. Daarbij een fix: gebrek-stippen op tekeningen van uitgezette gevels tellen niet meer mee in de herstelposten.</p>
         <p><strong>🧩 Kozijn-tekeningen volgen de aan/uit-knoppen (v4.74.1).</strong> Zet je een gevel of onderdeel uit, dan verdwijnen de kozijntekeningen van die gevel ook uit de bijlage, de accordpagina en de doorlopende PDF. De klant ziet dan alleen kozijnen die in zijn prijs zitten. Zet je de gevel weer aan, dan komen ze terug. Je eigen Meetstaat-tab blijft alles tonen.</p>
         <p><strong>📏 Diktekanten van draairamen (v4.74.0).</strong> De tekenaar telt de diktekanten van een draairaam nu zoals het normenboek: draait het raam naar je toe, dan boven-, onder- en één zijkant; draait het van je af, dan één zijkant. Of je buiten of binnen staat volgt uit de hoofdgroep van de regel. Een rond kantelraam telt de halve omtrek. Draai-buiten-ramen telden eerst de hele omtrek dubbel en worden dus iets lager; draai-binnen-ramen krijgen er een zijkant bij. Bestaande tekeningen veranderen pas als je ze opent en op Klaar tikt.</p>
@@ -3539,6 +3540,15 @@ Hout binnen;Gronden;m²;6;0,10</div>
         </div>
         <div><label>Bedrag / Tarief / %</label><input type="number" id="staartBedrag" step="0.01"></div>
         <div id="staartHoevWrap"><label>Hoeveelheid</label><input type="number" id="staartHoev" step="0.1"></div>
+        <!-- v4.76.0 — derden-post met eigen BTW-tarief -->
+        <div style="grid-column: 1 / -1;"><label>BTW-tarief</label>
+          <select id="staartBtw" onchange="updateStaartFields()">
+            <option value="">Volg calculatie</option>
+            <option value="9">9% — derden-post, geen opslag</option>
+            <option value="21">21% — derden-post, geen opslag</option>
+          </select>
+          <div style="font-size:0.72rem; color:var(--ink-soft); margin-top:0.25rem;">Een post met eigen tarief is werk van derden (bijv. onderaannemer): het bedrag gaat één-op-één in de offerte, zonder risico-opslag, met zijn eigen BTW. Zo'n post kan niet in de eenheidsprijs worden verwerkt.</div>
+        </div>
         <div style="grid-column: 1 / -1; padding: 0.7rem 0.8rem; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); display: flex; align-items: flex-start; gap: 0.6rem; cursor: pointer;" onclick="document.getElementById('staartVerstop').click()">
           <input type="checkbox" id="staartVerstop" style="width: auto; margin: 0; flex-shrink: 0; margin-top: 0.15rem; cursor: pointer;" onclick="event.stopPropagation()">
           <div style="flex: 1; font-size: 0.85rem; color: var(--ink); line-height: 1.4;">
@@ -3697,7 +3707,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.75.0';
+const APP_VERSION = 'v4.76.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4114,6 +4124,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.76.0', d: '2026-09-22', h: 'BTW-tarief per calculatie (9% of 21%) bij Klant en adres, en per staartpost een eigen tarief voor werk van derden zonder opslag.' },
   { v: '4.75.0', d: '2026-09-20', h: 'Deuronderkant behandelen: vast bedrag per deur uit Instellingen, vinkje in de tekenaar, automatische staartpost die in de werkdagen meetelt. Fix: gebrek-stippen van uitgezette gevels tellen niet meer mee.' },
   { v: '4.74.1', d: '2026-09-20', h: 'Fix: kozijntekeningen van uitgezette gevels staan niet meer in de bijlage, de accordpagina en de doorlopende PDF.' },
   { v: '4.74.0', d: '2026-09-20', h: 'Kozijn-tekenaar telt diktekanten van draairamen volgens het normenboek; buiten of binnen volgt uit de hoofdgroep.' },
@@ -4906,7 +4917,8 @@ function _mapStaartFromDB(row) {
     hoeveelheid: parseFloat(row.hoeveelheid) || 0,
     verstopInEenheidsprijs: !!row.verstop_in_eenheidsprijs,
     teltInWerkdagen: !!row.telt_in_werkdagen,
-    gebrekType: row.gebrek_type || null
+    gebrekType: row.gebrek_type || null,
+    btwPct: (row.btw_pct != null) ? parseFloat(row.btw_pct) : null   // v4.76.0 — derden-post met eigen BTW-tarief
   };
 }
 function _mapStaartToDB(s) {
@@ -4917,8 +4929,9 @@ function _mapStaartToDB(s) {
     eenheid:     s.eenheid   || '',
     grondslag:   s.grondslag || '',
     hoeveelheid: s.hoeveelheid || 0,
-    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs,
-    telt_in_werkdagen: !!s.teltInWerkdagen
+    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs && !_isDerdenPost(s),
+    telt_in_werkdagen: !!s.teltInWerkdagen,
+    btw_pct: _isDerdenPost(s) ? parseFloat(s.btwPct) : null   // v4.76.0
   };
 }
 async function _fetchStaartLibFromDB() {
@@ -5823,6 +5836,13 @@ function renderOfferteBlok() {
           <option value="consument" ${cfg.klanttype === 'consument' ? 'selected' : ''}>Particulier</option>
           <option value="vve" ${cfg.klanttype === 'vve' ? 'selected' : ''}>VVE</option>
           <option value="zakelijk" ${cfg.klanttype === 'zakelijk' ? 'selected' : ''}>Zakelijk</option>
+        </select>
+      </div>
+      <div class="k-keuze"><label>BTW-tarief <span class="sub-muted">— 9% woning &gt; 2 jaar</span></label>
+        <select class="lock-keep" onchange="updBtwOverride(this.value)" title="9% geldt voor woningen ouder dan 2 jaar en gebouwen die voor meer dan de helft permanent bewoond worden. Alles anders is 21%.">
+          <option value="" ${c.btwPctOverride == null ? 'selected' : ''}>Volg instelling (${fmt(_activeSettings(c).btw != null ? parseFloat(_activeSettings(c).btw) : 21)}%)</option>
+          <option value="9" ${c.btwPctOverride === 9 ? 'selected' : ''}>9% — woning</option>
+          <option value="21" ${c.btwPctOverride === 21 ? 'selected' : ''}>21% — niet-woning / zakelijk</option>
         </select>
       </div>
       <div class="k-keuze"><label>Aanspreekvorm</label>
@@ -7206,6 +7226,7 @@ function _mapCalcHeaderFromDB(row) {
     postcode:            row.postcode || '',
     huisnummer:          row.huisnummer || '',
     volleDagenOverride:  row.volle_dagen_override,
+    btwPctOverride:      (row.btw_pct_override != null) ? parseFloat(row.btw_pct_override) : null,   // v4.76.0
     notities:            row.notities || '',
     settingsSnapshot:    row.settings_snapshot || null,
     opnameDatum:         row.opname_datum || null,
@@ -7239,6 +7260,7 @@ function _mapCalcHeaderToDB(c) {
     postcode: c.postcode || '',
     huisnummer: c.huisnummer || '',
     volle_dagen_override: c.volleDagenOverride != null ? c.volleDagenOverride : null,
+    btw_pct_override: (c.btwPctOverride != null && c.btwPctOverride !== '') ? parseFloat(c.btwPctOverride) : null,   // v4.76.0
     notities: c.notities || '',
     settings_snapshot: c.settingsSnapshot || null,
     opname_datum: c.opnameDatum || null,
@@ -8116,9 +8138,10 @@ function _mapStaartCalcToDB(s, calcId, idx) {
     grondslag:   s.grondslag || '',
     hoeveelheid: s.hoeveelheid || 0,
     volgorde:    idx != null ? idx : (s.volgorde || 0),
-    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs,
+    verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs && !_isDerdenPost(s),
     telt_in_werkdagen: !!s.teltInWerkdagen,
-    gebrek_type: s.gebrekType || null
+    gebrek_type: s.gebrekType || null,
+    btw_pct: _isDerdenPost(s) ? parseFloat(s.btwPct) : null   // v4.76.0
   };
 }
 async function _insertStaartCalcDB(s, calcId, idx) {
@@ -9568,7 +9591,7 @@ function _ohpBronCalcBtw() {
   const calc = _ohpBronCalc();
   if (!calc) return 21;
   const sett = _ohpEffectieveSettings(_ohpState.plan, calc); // v4.60.0
-  return sett.btw != null ? parseFloat(sett.btw) : 21;
+  return _calcBtwPct(calc, sett);   // v4.76.0 — eigen tarief van de calculatie gaat vóór de instelling
 }
 
 // BTW-factor van het plan: override als gezet, anders uit bron-calc.
@@ -14195,9 +14218,11 @@ function printCalc() {
   const arbo = arbeid * sett.arbo/100;
   const staartTotaal = calcStaartTotaal();
   const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
-  const winstBedrag = directe * sett.winst/100;
+  const derdenTot = _derdenTotaal(c.staart || [], calcStaart);   // v4.76.0
+  const winstBedrag = (directe - derdenTot) * sett.winst/100;
   const exBtw = directe + winstBedrag;
-  const btwBedrag = exBtw * sett.btw/100;
+  const btwVerd = _btwVerdeling(exBtw, c, sett, c.staart || [], calcStaart);   // v4.76.0
+  const btwBedrag = btwVerd.btw;
   const totaal = exBtw + btwBedrag;
 
   const STATUS_LABELS = { afspraak:'Afspraak', concept:'Concept', gereed:'Gereed', verzonden:'Verzonden', geaccepteerd:'Geaccepteerd', verloren:'Verloren' };
@@ -14381,7 +14406,7 @@ function printCalc() {
       <tr class="totaal-row"><td><strong>Directe kosten</strong></td><td class="num right">${eur(directe)}</td></tr>
       <tr><td>+ Risico (${sett.winst}% over directe kosten)</td><td class="num right">${eur(winstBedrag)}</td></tr>
       <tr class="totaal-row"><td><strong>Excl. BTW</strong></td><td class="num right">${eur(exBtw)}</td></tr>
-      <tr><td>+ BTW (${sett.btw}% over excl. BTW)</td><td class="num right">${eur(btwBedrag)}</td></tr>
+      ${btwVerd.regels.map(r => `<tr><td>+ BTW ${fmt(r.pct)}% over ${btwVerd.gemengd ? eur(r.grondslag) : 'excl. BTW'}</td><td class="num right">${eur(r.btw)}</td></tr>`).join('')}
       <tr class="grand-row"><td><strong>Totaal incl. BTW</strong></td><td class="num right"><strong>${eur(totaal)}</strong></td></tr>
       ${(() => {
         // v3.11.0 — Oorspronkelijk vs aangepast op PDF
@@ -14435,7 +14460,7 @@ function printCalc() {
       <tr><td>Afval / Milieu</td><td class="num right">${sett.afval}%</td><td style="color:#666; font-size:9pt;">over arbeid + materiaal-verkoopprijs</td></tr>
       <tr><td>ARBO / Veiligheid</td><td class="num right">${sett.arbo}%</td><td style="color:#666; font-size:9pt;">over arbeid</td></tr>
       <tr><td>Risico</td><td class="num right">${sett.winst}%</td><td style="color:#666; font-size:9pt;">over directe kosten</td></tr>
-      <tr><td>BTW</td><td class="num right">${sett.btw}%</td><td style="color:#666; font-size:9pt;">over excl. BTW totaal</td></tr>
+      <tr><td>BTW</td><td class="num right">${fmt(btwVerd.basisPct)}%</td><td style="color:#666; font-size:9pt;">${c.btwPctOverride != null ? 'eigen tarief van deze calculatie' : 'over excl. BTW totaal'}${btwVerd.gemengd ? ' · derden-posten met eigen tarief apart' : ''}</td></tr>
     </tbody></table>
     <h3>Materiaalopslag per groep</h3>
     <table><tbody>`;
@@ -14700,16 +14725,18 @@ function _berekenOfferteCijfers(c) {
   const arbo = arbeid * sett.arbo/100;
 
   // 2. Splits staart in verstop vs zichtbaar
+  // v4.76.0 — een derden-post (eigen BTW-tarief) kan nooit verstopt worden.
   const staartLijst = (c.staart || []);
-  const staartZichtbaar = staartLijst.filter(p => !p.verstopInEenheidsprijs);
-  const staartVerstopt  = staartLijst.filter(p => p.verstopInEenheidsprijs);
+  const staartZichtbaar = staartLijst.filter(p => !p.verstopInEenheidsprijs || _isDerdenPost(p));
+  const staartVerstopt  = staartLijst.filter(p => p.verstopInEenheidsprijs && !_isDerdenPost(p));
   const staartZichtbaarTot = staartZichtbaar.reduce((s,p) => s + calcStaart(p), 0);
   const staartVerstopTot   = staartVerstopt.reduce((s,p) => s + calcStaart(p), 0);
   const staartTotaal = staartZichtbaarTot + staartVerstopTot;
 
   const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
   const winstFactor = 1 + (sett.winst || 0)/100;
-  const winstBedrag = directe * (sett.winst || 0)/100;
+  const derdenTot = _derdenTotaal(staartLijst, calcStaart);   // v4.76.0 — geen opslag over derden-posten
+  const winstBedrag = (directe - derdenTot) * (sett.winst || 0)/100;
   const exBtw = directe + winstBedrag;
 
   // 3. Verzamel alle regels met hun verkoopprijs
@@ -14730,8 +14757,9 @@ function _berekenOfferteCijfers(c) {
   // 4. Zichtbare bedragen onderaan (incl. winst-aandeel)
   const reisZichtbaar = reisTotaal * winstFactor;
   const staartZichtbaarRows = staartZichtbaar.map(p => ({
-    naam: p.naam, type: p.type, bedrag: calcStaart(p) * winstFactor,
-    hoeveelheid: p.hoeveelheid, eenheid: p.eenheid, grondslag: p.grondslag
+    naam: p.naam, type: p.type, bedrag: calcStaart(p) * (_isDerdenPost(p) ? 1 : winstFactor),   // v4.76.0 — derden-post zonder opslag
+    hoeveelheid: p.hoeveelheid, eenheid: p.eenheid, grondslag: p.grondslag,
+    btwPct: _isDerdenPost(p) ? parseFloat(p.btwPct) : null
   }));
   const staartZichtbaarRowsTot = staartZichtbaarRows.reduce((s,p) => s + p.bedrag, 0);
 
@@ -14761,7 +14789,8 @@ function _berekenOfferteCijfers(c) {
   // 8. Eindtotaal
   const sumRegels = regels.reduce((s, y) => s + y.toonRegelTotaal, 0);
   const exBtwFinal = sumRegels + reisZichtbaar + staartZichtbaarRowsTot;
-  const btwBedrag = exBtwFinal * sett.btw/100;
+  const btwVerd = _btwVerdeling(exBtwFinal, c, sett, staartLijst, calcStaart);   // v4.76.0 — BTW per tarief
+  const btwBedrag = btwVerd.btw;
   const totaalIncl = exBtwFinal + btwBedrag;
   const afrondingsOverschot = exBtwFinal - exBtw;
 
@@ -14770,6 +14799,7 @@ function _berekenOfferteCijfers(c) {
     reisTotaal, reisZichtbaar, reisAfstand,
     dagenFactureerbaar, weken,
     exBtwFinal, btwBedrag, totaalIncl, afrondingsOverschot,
+    btwPct: btwVerd.basisPct, btwRegels: btwVerd.regels, btwGemengd: btwVerd.gemengd,   // v4.76.0
     fmt, eur
   };
 }
@@ -14840,16 +14870,18 @@ function printOfferteYoobi() {
   const arbo = arbeid * sett.arbo/100;
 
   // 2. Splits staart in verstop vs zichtbaar
+  // v4.76.0 — een derden-post (eigen BTW-tarief) kan nooit verstopt worden.
   const staartLijst = (c.staart || []);
-  const staartZichtbaar = staartLijst.filter(p => !p.verstopInEenheidsprijs);
-  const staartVerstopt  = staartLijst.filter(p => p.verstopInEenheidsprijs);
+  const staartZichtbaar = staartLijst.filter(p => !p.verstopInEenheidsprijs || _isDerdenPost(p));
+  const staartVerstopt  = staartLijst.filter(p => p.verstopInEenheidsprijs && !_isDerdenPost(p));
   const staartZichtbaarTot = staartZichtbaar.reduce((s,p) => s + calcStaart(p), 0);
   const staartVerstopTot   = staartVerstopt.reduce((s,p) => s + calcStaart(p), 0);
   const staartTotaal = staartZichtbaarTot + staartVerstopTot;
 
   const directe = arbeid + t.matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
   const winstFactor = 1 + (sett.winst || 0)/100;
-  const winstBedrag = directe * (sett.winst || 0)/100;
+  const derdenTot = _derdenTotaal(staartLijst, calcStaart);   // v4.76.0 — geen opslag over derden-posten
+  const winstBedrag = (directe - derdenTot) * (sett.winst || 0)/100;
   const exBtw = directe + winstBedrag;
 
   // 3. Verzamel alle regels met hun verkoopprijs (uit calcRegelTotalen.verkoop)
@@ -14878,7 +14910,8 @@ function printOfferteYoobi() {
   const staartZichtbaarRows = staartZichtbaar.map(p => ({
     naam: p.naam,
     type: p.type,
-    bedrag: calcStaart(p) * winstFactor
+    bedrag: calcStaart(p) * (_isDerdenPost(p) ? 1 : winstFactor),   // v4.76.0 — derden-post zonder opslag
+    btwPct: _isDerdenPost(p) ? parseFloat(p.btwPct) : null
   }));
   const staartZichtbaarRowsTot = staartZichtbaarRows.reduce((s,p) => s + p.bedrag, 0);
 
@@ -14911,7 +14944,8 @@ function printOfferteYoobi() {
   // 8. Eindtotaal Yoobi-versie (kan iets hoger uitvallen dan exBtw door afronding)
   const sumYoobiRegels = yoobiRegels.reduce((s, y) => s + y.toonRegelTotaal, 0);
   const exBtwYoobi = sumYoobiRegels + reisZichtbaar + staartZichtbaarRowsTot;
-  const btwBedragYoobi = exBtwYoobi * sett.btw/100;
+  const btwVerdYoobi = _btwVerdeling(exBtwYoobi, c, sett, staartLijst, calcStaart);   // v4.76.0
+  const btwBedragYoobi = btwVerdYoobi.btw;
   const totaalYoobi = exBtwYoobi + btwBedragYoobi;
   const afrondingsOverschot = exBtwYoobi - exBtw;
 
@@ -15013,9 +15047,9 @@ function printOfferteYoobi() {
     else if (p.type === 'week') detail = `${weken} weken`;
     else if (p.type === 'eenheid') detail = `${fmt(p.hoeveelheid||0)} ${p.eenheid||''}`;
     else if (p.type === 'percent') detail = `${fmt(p.bedrag)}% over ${p.grondslag}`;
-    const bedrag = calcStaart(p) * winstFactor;
+    const bedrag = calcStaart(p) * (_isDerdenPost(p) ? 1 : winstFactor);   // v4.76.0
     html += `<tr>
-      <td>${p.naam}</td>
+      <td>${p.naam}${_isDerdenPost(p) ? ` <span style="color:#666; font-size:8.5pt;">(derden, BTW ${fmt(parseFloat(p.btwPct))}%)</span>` : ''}</td>
       <td>${detail}</td>
       <td class="num right">${eur(bedrag)}</td>
     </tr>`;
@@ -15026,7 +15060,7 @@ function printOfferteYoobi() {
   html += `<div class="section">
     <table><tbody>
       <tr class="totaal-row"><td><strong>Totaal excl. BTW</strong></td><td class="num right">${eur(exBtwYoobi)}</td></tr>
-      <tr><td>BTW (${sett.btw}%)</td><td class="num right">${eur(btwBedragYoobi)}</td></tr>
+      ${btwVerdYoobi.regels.map(r => `<tr><td>BTW ${fmt(r.pct)}%${btwVerdYoobi.gemengd ? ` over ${eur(r.grondslag)}` : ''}</td><td class="num right">${eur(r.btw)}</td></tr>`).join('')}
       <tr class="grand-row"><td><strong>Totaal incl. BTW</strong></td><td class="num right"><strong>${eur(totaalYoobi)}</strong></td></tr>
     </tbody></table>
   </div>`;
@@ -15158,15 +15192,15 @@ function _bouwOfferteDocHtml() {
       h += `<tr><td>Reiskosten</td><td class="num right">${eur(cij.reisZichtbaar)}</td></tr>`;
     }
     cij.staartZichtbaarRows.forEach(p => {
-      h += `<tr><td>${p.naam}</td><td class="num right">${eur(p.bedrag)}</td></tr>`;
+      h += `<tr><td>${p.naam}${(p.btwPct != null && cij.btwGemengd) ? ` <span style="color:#666; font-size:8.5pt;">(BTW ${fmt(p.btwPct)}%)</span>` : ''}</td><td class="num right">${eur(p.bedrag)}</td></tr>`;   // v4.76.0 — derden-post met eigen tarief
     });
     h += `</tbody></table>`;
     // Eindtotalen als apart, rechts ingesprongen blok (Yoobi-stijl) met EUR-kolom
     const f = n => cij.fmt(n);
     h += `<table class="kosten-eind" style="width:52%;margin-left:48%;margin-right:0;"><tbody>
       <tr class="te-excl"><td class="lbl">Totaal excl. BTW</td><td class="cur">EUR</td><td class="num right">${f(cij.exBtwFinal)}</td></tr>
-      <tr class="te-btw"><td class="lbl">${sett.btw}%</td><td class="cur">EUR</td><td class="num right">${f(cij.btwBedrag)}</td></tr>
-      <tr class="te-incl"><td class="lbl"><strong>Totaal incl. ${sett.btw}% BTW</strong></td><td class="cur"><strong>EUR</strong></td><td class="num right"><strong>${f(cij.totaalIncl)}</strong></td></tr>
+      ${cij.btwRegels.map(r => `<tr class="te-btw"><td class="lbl">${cij.btwGemengd ? `BTW ${fmt(r.pct)}% over ${f(r.grondslag)}` : `${fmt(r.pct)}%`}</td><td class="cur">EUR</td><td class="num right">${f(r.btw)}</td></tr>`).join('')}
+      <tr class="te-incl"><td class="lbl"><strong>Totaal incl. ${cij.btwGemengd ? '' : fmt(cij.btwPct) + '% '}BTW</strong></td><td class="cur"><strong>EUR</strong></td><td class="num right"><strong>${f(cij.totaalIncl)}</strong></td></tr>
     </tbody></table>`;
     return h;
   }
@@ -15425,15 +15459,15 @@ function _bouwOfferteDocDef() {
     const out = [];
     const extra = [];
     if (cij.reisTotaal > 0) extra.push([{ text: 'Reiskosten' }, { text: eur(cij.reisZichtbaar), alignment: 'right' }]);
-    cij.staartZichtbaarRows.forEach(p => extra.push([{ text: p.naam }, { text: eur(p.bedrag), alignment: 'right' }]));
+    cij.staartZichtbaarRows.forEach(p => extra.push([{ text: p.naam + ((p.btwPct != null && cij.btwGemengd) ? ' (BTW ' + fmt(p.btwPct) + '%)' : '') }, { text: eur(p.bedrag), alignment: 'right' }]));   // v4.76.0
     if (extra.length) {
       out.push({ table: { widths: ['*', 'auto'], body: extra }, layout: { hLineWidth: () => 0, vLineWidth: () => 0, paddingTop: () => 2, paddingBottom: () => 2, paddingLeft: () => 0, paddingRight: () => 0 }, margin: [0, 6, 0, 0] });
     }
     const f = n => fmt(n);
     const eind = [
       [{ text: 'Totaal excl. BTW', italics: true }, { text: 'EUR', italics: true, alignment: 'center' }, { text: f(cij.exBtwFinal), italics: true, alignment: 'right' }],
-      [{ text: sett.btw + '%', italics: true }, { text: 'EUR', italics: true, alignment: 'center' }, { text: f(cij.btwBedrag), italics: true, alignment: 'right' }],
-      [{ text: 'Totaal incl. ' + sett.btw + '% BTW', bold: true }, { text: 'EUR', bold: true, alignment: 'center' }, { text: f(cij.totaalIncl), bold: true, alignment: 'right' }]
+      ...cij.btwRegels.map(r => [{ text: (cij.btwGemengd ? 'BTW ' + fmt(r.pct) + '% over ' + f(r.grondslag) : fmt(r.pct) + '%'), italics: true }, { text: 'EUR', italics: true, alignment: 'center' }, { text: f(r.btw), italics: true, alignment: 'right' }]),
+      [{ text: 'Totaal incl. ' + (cij.btwGemengd ? '' : fmt(cij.btwPct) + '% ') + 'BTW', bold: true }, { text: 'EUR', bold: true, alignment: 'center' }, { text: f(cij.totaalIncl), bold: true, alignment: 'right' }]
     ];
     out.push({
       columns: [
@@ -19845,6 +19879,7 @@ function _calcTotaalGetoond(c) {
       const cij = _berekenOfferteCijfers(c);
       if (cij && isFinite(cij.totaalIncl)) {
         val.totaal = cij.totaalIncl; val.exBtw = cij.exBtwFinal; val.btw = cij.btwBedrag;
+        val.btwRegels = cij.btwRegels;   // v4.76.0
         val.overschot = isFinite(cij.afrondingsOverschot) ? cij.afrondingsOverschot : 0;
         val.bron = 'offerte';
       }
@@ -20371,6 +20406,53 @@ async function ophaalAfstand() {
 // ============================================================
 // STAARTKOSTEN
 // ============================================================
+// ============================================================
+// BTW PER CALCULATIE EN PER STAARTPOST (v4.76.0)
+// Het calculatie-tarief komt uit de override op de calc, anders uit de
+// instelling. Een staartpost met eigen tarief (btwPct) is een derden-post:
+// die gaat één-op-één door zonder risico-opslag en draagt zijn eigen BTW.
+// Alle rekenroutes (kaart, intern print, offertecijfers, Yoobi-print,
+// archieftotaal) gebruiken deze functies zodat ze identiek uitkomen.
+// ============================================================
+function _calcBtwPct(c, sett) {
+  if (c && c.btwPctOverride != null && c.btwPctOverride !== '' && isFinite(parseFloat(c.btwPctOverride))) return parseFloat(c.btwPctOverride);
+  return (sett && sett.btw != null) ? parseFloat(sett.btw) : 21;
+}
+function _isDerdenPost(p) {
+  return !!p && p.btwPct != null && p.btwPct !== '' && isFinite(parseFloat(p.btwPct));
+}
+// Som van de derden-posten in deze context. bedragFn(p) geeft het bedrag excl. BTW van één post.
+function _derdenTotaal(staart, bedragFn) {
+  return (staart || []).reduce((s, p) => s + (_isDerdenPost(p) ? (bedragFn(p) || 0) : 0), 0);
+}
+// Verdeelt exBtw over de aanwezige tarieven. Basis = exBtw min de derden-posten.
+function _btwVerdeling(exBtw, c, sett, staart, bedragFn) {
+  const basisPct = _calcBtwPct(c, sett);
+  const perPct = {};
+  let derdenTot = 0;
+  (staart || []).forEach(p => {
+    if (!_isDerdenPost(p)) return;
+    const b = bedragFn(p) || 0;
+    const pct = parseFloat(p.btwPct);
+    derdenTot += b;
+    perPct[pct] = (perPct[pct] || 0) + b;
+  });
+  const regels = [];
+  const voegToe = (pct, grondslag) => {
+    const r = regels.find(x => x.pct === pct);
+    if (r) r.grondslag += grondslag; else regels.push({ pct, grondslag });
+  };
+  voegToe(basisPct, exBtw - derdenTot);
+  Object.keys(perPct).map(Number).sort((a, b) => a - b).forEach(pct => voegToe(pct, perPct[pct]));
+  regels.forEach(r => { r.btw = r.grondslag * r.pct / 100; });
+  const btw = regels.reduce((s, r) => s + r.btw, 0);
+  return { basisPct, regels, btw, totaal: exBtw + btw, gemengd: regels.length > 1, derdenTot };
+}
+// Tekstregel(s) voor de BTW in een document: één regel per tarief.
+function _btwRegelsTekst(verd, eurFn) {
+  return verd.regels.map(r => ({ label: verd.gemengd ? `BTW ${fmt(r.pct)}% over ${eurFn(r.grondslag)}` : `BTW (${fmt(r.pct)}%)`, bedrag: r.btw, pct: r.pct, grondslag: r.grondslag }));
+}
+
 function calcStaart(p) {
   if (p.type === 'vast') return p.bedrag || 0;
   if (p.type === 'dag') return (p.bedrag||0) * _calcDaysFactureerbaar();
@@ -20802,7 +20884,7 @@ function renderStaartList() {
       else if (p.type === 'week') hoev = _calcWeeks() + ' weken';
       else if (p.type === 'percent') hoev = '× ' + p.grondslag;
       html += `<tr>
-        <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Wordt verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}</td>
+        <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Wordt verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}${_isDerdenPost(p) ? ` <span title="Werk van derden: eigen BTW-tarief, geen risico-opslag" style="color:var(--ink-soft); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">BTW ${fmt(parseFloat(p.btwPct))}%</span>` : ''}</td>
         <td>${detail}</td>
         <td class="num right">${eur(p.bedrag)}</td>
         <td>${hoev}</td>
@@ -20832,8 +20914,9 @@ async function addStaartFromTpl() {
     eenheid: t.eenheid,
     grondslag: t.grondslag,
     hoeveelheid: 0,
-    verstopInEenheidsprijs: !!t.verstopInEenheidsprijs,
-    teltInWerkdagen: !!t.teltInWerkdagen
+    verstopInEenheidsprijs: !!t.verstopInEenheidsprijs && !_isDerdenPost(t),
+    teltInWerkdagen: !!t.teltInWerkdagen,
+    btwPct: _isDerdenPost(t) ? parseFloat(t.btwPct) : null   // v4.76.0
   };
   const idx = (data.calc.staart || []).length;
   const saved = await _insertStaartCalcDB(payload, data.calc.id, idx);
@@ -20859,6 +20942,7 @@ function openStaartModal(p, mode) {
   document.getElementById('staartHoev').value = p.hoeveelheid || 0;
   document.getElementById('staartVerstop').checked = !!p.verstopInEenheidsprijs;
   document.getElementById('staartTeltInWerkdagen').checked = !!p.teltInWerkdagen;
+  document.getElementById('staartBtw').value = _isDerdenPost(p) ? String(parseFloat(p.btwPct)) : '';   // v4.76.0
   updateStaartFields();
   document.getElementById('staartModal').classList.add('active');
 }
@@ -20869,6 +20953,12 @@ function updateStaartFields() {
   document.getElementById('staartEenheidWrap').style.display = type === 'eenheid' ? '' : 'none';
   document.getElementById('staartGrondslagWrap').style.display = type === 'percent' ? '' : 'none';
   document.getElementById('staartHoevWrap').style.display = type === 'eenheid' ? '' : 'none';
+  // v4.76.0 — derden-post kan niet in de eenheidsprijs worden verstopt
+  const derden = document.getElementById('staartBtw').value !== '';
+  const vs = document.getElementById('staartVerstop');
+  if (derden) vs.checked = false;
+  vs.disabled = derden;
+  vs.parentElement.style.opacity = derden ? '0.5' : '';
 }
 async function saveStaart() {
   const payload = {
@@ -20880,7 +20970,9 @@ async function saveStaart() {
     hoeveelheid: parseFloat(document.getElementById('staartHoev').value) || 0,
     verstopInEenheidsprijs: document.getElementById('staartVerstop').checked,
     teltInWerkdagen: document.getElementById('staartTeltInWerkdagen').checked,
+    btwPct: document.getElementById('staartBtw').value !== '' ? parseFloat(document.getElementById('staartBtw').value) : null,   // v4.76.0
   };
+  if (payload.btwPct != null) payload.verstopInEenheidsprijs = false;   // v4.76.0 — derden-post nooit verstopt
   if (!payload.naam) { alert('Geef een naam.'); return; }
   if (staartCtx.mode === 'editCalc') {
     const p = data.calc.staart.find(x => x.id === staartCtx.id);
@@ -20936,7 +21028,7 @@ function renderStaartLib() {
     else if (p.type === 'week') detail = 'per week';
     else detail = 'vast';
     html += `<tr>
-      <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Standaard verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}</td>
+      <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Standaard verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}${_isDerdenPost(p) ? ` <span title="Werk van derden: eigen BTW-tarief, geen risico-opslag" style="color:var(--ink-soft); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">BTW ${fmt(parseFloat(p.btwPct))}%</span>` : ''}</td>
       <td>${p.type}</td>
       <td class="num right">${p.type==='percent' ? fmt(p.bedrag)+'%' : eur(p.bedrag)}</td>
       <td>${detail}</td>
@@ -21002,12 +21094,16 @@ function renderTotals() {
   const extraUren = _extraUrenUitStaart(data.calc.staart || [], t, sett.uurloon || 0);
   const directe = arbeid + matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
   const subtotaal = directe;
-  const winstBedrag = subtotaal * sett.winst/100;
+  const derdenTot = _derdenTotaal(data.calc.staart || [], calcStaart);   // v4.76.0 — derden-posten: geen opslag
+  const winstBedrag = (subtotaal - derdenTot) * sett.winst/100;
   const exBtw = subtotaal + winstBedrag;
-  const btwBedrag = exBtw * sett.btw/100;
+  const btwVerd = _btwVerdeling(exBtw, data.calc, sett, data.calc.staart || [], calcStaart);   // v4.76.0
+  const btwBedrag = btwVerd.btw;
   const totaal = exBtw + btwBedrag;
 
   const _tg = _calcTotaalGetoond(data.calc); // v4.66.0 — totaal zoals op de offerte
+  const _btwRegelsKaart = (_tg.btwRegels && _tg.btwRegels.length) ? _tg.btwRegels : btwVerd.regels;   // v4.76.0
+  const _btwGemengdKaart = _btwRegelsKaart.length > 1;
   const body = document.getElementById('totalsBody');
   if (t.uren === 0 && data.calc.staart.length === 0) {
     body.innerHTML = '<p style="opacity: 0.6;"><em>Voeg hoofdgroepen, onderdelen en regels toe.</em></p>';
@@ -21041,11 +21137,11 @@ function renderTotals() {
     <div class="line indent"><span>+ risico</span><span>${eur(winstBedrag)}</span></div>
     ${_tg.bron === 'offerte' ? `
     <div class="line"><span>Excl. BTW</span><span>${eur(_tg.exBtw)}</span></div>
-    <div class="line indent"><span>+ BTW</span><span>${eur(_tg.btw)}</span></div>
+    ${_btwRegelsKaart.map(r => `<div class="line indent"><span>+ BTW ${fmt(r.pct)}%${_btwGemengdKaart ? ` over ${eur(r.grondslag)}` : ''}</span><span>${eur(r.btw)}</span></div>`).join('')}
     <div class="grand"><span class="label">Totaal incl.</span><span class="value">${eur(_tg.totaal)}</span></div>
-    <div class="line indent" style="font-size:0.72rem; color: var(--ink-soft);" title="De prijstabel rondt elke eenheidsprijs naar boven af op de cent. Dit is het bedrag zoals de klant het ziet; hieronder het rekenkundige totaal zonder die afronding."><span>rekenkundig ${eur(totaal)}${_tg.overschot > 0.005 ? ` · +${eur(_tg.overschot * (1 + sett.btw/100))} afronding eenheidsprijzen` : ''}</span><span></span></div>` : `
+    <div class="line indent" style="font-size:0.72rem; color: var(--ink-soft);" title="De prijstabel rondt elke eenheidsprijs naar boven af op de cent. Dit is het bedrag zoals de klant het ziet; hieronder het rekenkundige totaal zonder die afronding."><span>rekenkundig ${eur(totaal)}${_tg.overschot > 0.005 ? ` · +${eur(_tg.overschot * (1 + btwVerd.basisPct/100))} afronding eenheidsprijzen` : ''}</span><span></span></div>` : `
     <div class="line"><span>Excl. BTW</span><span>${eur(exBtw)}</span></div>
-    <div class="line indent"><span>+ BTW</span><span>${eur(btwBedrag)}</span></div>
+    ${btwVerd.regels.map(r => `<div class="line indent"><span>+ BTW ${fmt(r.pct)}%${btwVerd.gemengd ? ` over ${eur(r.grondslag)}` : ''}</span><span>${eur(r.btw)}</span></div>`).join('')}
     <div class="grand"><span class="label">Totaal incl.</span><span class="value">${eur(totaal)}</span></div>`}
     ${(() => {
       // v3.11.0 — Scenario-blok: toon alleen als er iets uitgezet is
@@ -21100,6 +21196,16 @@ function renderTotals() {
   `;
   renderStaartList();
   renderNormRefs();
+}
+// v4.76.0 — BTW-tarief per calculatie (null = volg instelling)
+function updBtwOverride(v) {
+  if (!data.calc) return;
+  const n = parseFloat(v);
+  data.calc.btwPctOverride = (v === '' || v == null || !isFinite(n)) ? null : n;
+  _updateCalcDB(data.calc);
+  _touchCalc(data.calc.id);
+  renderTotals();
+  if (typeof renderStaartList === 'function') renderStaartList();
 }
 function updVolleDagenOverride(v) {
   if (v === 'null') data.calc.volleDagenOverride = null;
@@ -21412,9 +21518,27 @@ function _calcTotalForArchive(c, includeInactief = false) {
   const arbo = arbeid * sett.arbo / 100;
   const directe = arbeid + matVerkoop + reisTotaal + kleinMat + afval + arbo + staartTotaal;
   const sub = directe;
-  const wB = sub * sett.winst / 100;
+  // v4.76.0 — derden-posten zonder opslag, BTW per tarief (identiek aan de kaart)
+  const _stBedrag = (p) => {
+    if (p.type === 'vast') return p.bedrag || 0;
+    if (p.type === 'dag') return (p.bedrag || 0) * dagenFactureerbaar;
+    if (p.type === 'week') return (p.bedrag || 0) * weken;
+    if (p.type === 'eenheid') return (p.bedrag || 0) * (p.hoeveelheid || 0);
+    if (p.type === 'percent') {
+      let basis = 0;
+      if (p.grondslag === 'arbeid') basis = arbeidBasis;
+      else if (p.grondslag === 'materiaal') basis = matVerkoop;
+      else if (p.grondslag === 'arbeid_materiaal') basis = arbeidBasis + matVerkoop;
+      else if (p.grondslag === 'subtotaal') basis = verkoop;
+      return basis * (p.bedrag || 0) / 100;
+    }
+    return 0;
+  };
+  const derdenTot = _derdenTotaal(c.staart || [], _stBedrag);
+  const wB = (sub - derdenTot) * sett.winst / 100;
   const exBtw = sub + wB;
-  return { uren, totaal: exBtw * (1 + sett.btw / 100), exBtw };
+  const btwVerd = _btwVerdeling(exBtw, c, sett, c.staart || [], _stBedrag);
+  return { uren, totaal: exBtw + btwVerd.btw, exBtw };
 }
 
 // Dashboard-state voor groepering en sortering — alleen in geheugen, niet gepersisteerd.

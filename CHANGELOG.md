@@ -1,3 +1,28 @@
+## v4.76.0 — BTW-tarief per calculatie en per staartpost (werk van derden)
+
+### Wat er nu kan
+
+Aanleiding: het restaurant van de Bokkerijder. Het schilderwerk aan een pand dat niet (voor meer dan de helft permanent) bewoond wordt valt onder 21% BTW, terwijl de instelling op 9% staat voor woningen ouder dan twee jaar. Tot nu toe was er één globaal percentage; de enige uitweg was de instelling tijdelijk omzetten, met alle niet-vergrendelde calculaties als bijvangst.
+
+Nu staat bij **Klant en adres** een keuze **BTW-tarief**: Volg instelling (toont het actuele percentage), 9% woning, of 21% niet-woning/zakelijk. De keuze gaat op slot bij een vergrendelde calculatie, net als de andere prijsbepalende velden.
+
+Daarnaast kan een **staartpost een eigen tarief** krijgen (in het bewerkvenster van de post en van een template in de bibliotheek). Zo'n post is werk van derden, bijvoorbeeld een onderaannemer die ander werk doet dan schilderen. Gians regel: het bedrag gaat één-op-één in de offerte, zonder risico-opslag, en draagt zijn eigen BTW. De opslag rekent over de rest zoals altijd. In de staartlijst staat "BTW 21%" achter de naam; op het Yoobi-hulpdocument staat "(derden, BTW 21%)".
+
+Staan er twee tarieven in één calculatie, dan tonen de kaart, het interne print, de klantofferte (HTML en PDF) en het Yoobi-hulpdocument per tarief een BTW-regel met de grondslag erbij ("BTW 9% over € 11.550,00", "BTW 21% over € 1.000,00"). Op de klantofferte krijgt de derden-regel het tarief tussen haakjes. Bij één tarief blijft de weergave exact zoals voorheen.
+
+Een derden-post kan niet "in prijs" worden verwerkt: het vinkje gaat uit en op slot zodra een tarief gekozen is, en de rekenroutes en DB-mappers dwingen dat ook af voor oude data.
+
+### Hoe het onder de kap zit
+
+- Drie nullable kolommen, zie `calculaties_btw_01_kolommen.sql`: `calculaties.btw_pct_override`, `staart.btw_pct`, `staart_lib.btw_pct`. Null = volg het niveau erboven. Mappers `_mapCalcHeaderFromDB/ToDB`, `_mapStaartFromDB` (gedeeld), `_mapStaartToDB` (lib), `_mapStaartCalcToDB` (calc).
+- Rekenkern (nieuw blok vóór `calcStaart`): `_calcBtwPct(c, sett)` (override vóór instelling, terugval 21), `_isDerdenPost(p)`, `_derdenTotaal(staart, bedragFn)`, `_btwVerdeling(exBtw, c, sett, staart, bedragFn)` → `{ basisPct, regels[{pct, grondslag, btw}], btw, totaal, gemengd, derdenTot }`. Basisgrondslag = exBtw min derden-posten; een derden-post op hetzelfde tarief als de calculatie versmelt in één regel.
+- Vijf rekenroutes gaan door die kern en rekenen identiek: `renderTotals` (kaart), `printCalc` (intern), `_berekenOfferteCijfers` (klantofferte, prijstabel HTML `bouwBijkomendEnTotaal` en pdfmake `bijkomendEnTotaalContent`, en via `_calcTotaalGetoond` het lijstbedrag), `printOfferteYoobi`, `_calcTotalForArchive`. In elke route: `winst = (directe − derdenTot) × winst%`; zichtbare derden-rij = `calcStaart(p) × 1` in plaats van `× winstFactor`.
+- `_berekenOfferteCijfers` geeft extra terug: `btwPct`, `btwRegels`, `btwGemengd`; `staartZichtbaarRows[].btwPct`. `_calcTotaalGetoond` geeft `btwRegels` door aan de kaart.
+- UI: dropdown in `_renderKlantAdres`-blok (klasse `lock-keep`), `updBtwOverride(v)`; select `#staartBtw` in het staartvenster, `updateStaartFields()` schakelt `#staartVerstop` uit bij een tarief, `saveStaart()` zet `verstopInEenheidsprijs=false` bij een tarief, `addStaartFromTpl()` neemt `btwPct` van het template over.
+- Onderhoudsplan: `_ohpBronCalcBtw()` gebruikt nu `_calcBtwPct(calc, sett)`, dus de calculatie-override komt door in het plan. De beurtberekening kent echter nog één BTW-factor per beurt (`_ohpBtwFactor`); een derden-post op een afwijkend tarief wordt daar nog niet apart belast. **Bekend gat**, aparte chat.
+- Test: Node-parsecheck, brace/tag-balans, rekenkern in isolatie met vijf gevallen (alles 9, alles 21, mix, zelfde tarief, twee derden-tarieven) plus invarianten (grondslagen sommeren tot exBtw; geen opslag over derden). Nog niet in de echte omgeving getest op het moment van schrijven.
+- Geen wijziging aan RLS: de tabellen volgen "ingelogd mag alles".
+
 ## v4.75.0 — Deuronderkant behandelen, plus fix gebrek-telling bij uitgezette gevels
 
 ### Wat er nu kan
