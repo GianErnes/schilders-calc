@@ -1,5 +1,19 @@
 # CHANGELOG planning.html
 
+## v0.11.0 — "Over datum": nog open in Yoobi, planning voorbij, 23-09-2026
+
+Vraag van Gian: een werk dat door regen of anderszins niet is uitgevoerd, blijft stil op zijn oude plek in de planning staan en schuift uit beeld. Regel (Gian): een project dat in Yoobi gesloten is, is echt klaar; alles wat over datum is en nog open staat, is ofwel nog uit te voeren (herplannen) ofwel te sluiten. Dat moet een melding krijgen.
+
+Hoe het werkt: een project dat nog in de Yoobi-stand staat (de sync haalt alleen actieve projecten, dus "niet in de stand" = gesloten) en waarvan de einddatum op ons bord (`plan_eind`, anders Yoobi-eind; bij fasen het einde van de laatste fase) meer dan **2 werkdagen** vóór vandaag ligt, telt als over datum. Weekend en gesloten dagen tellen niet mee (`werkdagenTussen`). Voorbeeld: eind vrijdag → maandag en dinsdag nog stil, woensdag melding. Verborgen projecten worden met rust gelaten.
+
+Zichtbaar: rood label "Over datum" in de linkerkolom, rode gestreepte periodelijn en rode urenblokken op de rij, muistip met wat te doen. In de kop een rode knop "N over datum"; elke klik springt naar de volgende over-datum-rij (uitgelicht, 2,5 s) en scrolt de einddatum in beeld. Projecten die over datum zijn maar niet op dit jaarbord staan (eind vóór dit jaar) komen in een kaart "Over datum, niet op dit bord" rechts, met einddatum — anders zou de teller iets tellen dat je niet kunt vinden. Legenda-item toegevoegd. Melding verdwijnt vanzelf na balk slepen of na sluiten in Yoobi (het tweede na de nachtsync).
+
+Geen nieuwe tabel of opslag; puur berekening bij het tekenen. Nieuwe functies: `projectEind`, `isOverDatum`, `projectenOverDatum`, `tekenOverDatum`; constante `OVER_DATUM_WERKDAGEN = 2`.
+
+Getest (node, synthetisch): drempel rond weekend en gesloten dag (7 gevallen), laatste-fase-bepaling, JS-parse, divbalans. Niet getest: echt bord, iPhone, gedrag van de springknop met ingeklapte kolom.
+
+Hoort erbij, apart gesprek: het 3-maandenfilter ("verlopen") in Edge Function `fin-werkvoorraad-sync` uitzetten, zodat oude nooit-gesloten projecten in de stand blijven en hier zichtbaar worden. Gian ruimt die handmatig op. Volgorde: eerst dit bord, dan het filter.
+
 ## v0.10.5 — Eigen icoon op het iPhone-beginscherm, 16-09-2026
 
 Eén regel in de head: `apple-touch-icon` naar het nieuwe `apple-touch-icon-planning.png` (Ernes-logo met groene band "Planning", 180×180, uit `erneslogo.png`). Wie Planning op het beginscherm heeft staan ziet nu een grijze P; na verwijderen en opnieuw toevoegen het logo. Verder niets gewijzigd. Getest: JS-parse (node) en tagbalans. Niet getest: iPhone.

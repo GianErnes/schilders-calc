@@ -125,6 +125,14 @@
   td.balk.gepland::after { content: ''; position: absolute; left: 1px; right: 1px; bottom: 6px; height: 28px; background: var(--blue); border-radius: 4px; }
   td.balk.afwijkend.gepland::after { background: var(--blue); }
   tr.project.actief td.balk.gepland::after { background: var(--blue-deep); }
+  /* v0.11.0: over datum = nog open in Yoobi, maar de balk eindigde > 2 werkdagen geleden */
+  tr.project.overdatum td.balk::before { background: repeating-linear-gradient(90deg, var(--accent) 0 6px, #fca5a5 6px 10px); }
+  tr.project.overdatum td.balk.gepland::after { background: var(--accent); }
+  tr.project.overdatum .label .naam { color: var(--accent-deep); }
+  .overlabel { display: inline-block; background: var(--accent); color: #fff; font-size: 0.6rem; font-weight: 700; padding: 0 5px; border-radius: 3px; margin-left: 6px; vertical-align: middle; line-height: 1.4; letter-spacing: 0.02em; }
+  tr.project.uitgelicht .label { background: #fee2e2 !important; transition: background 0.3s; }
+  .knop.overknop { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .knop.overknop:hover { background: var(--accent-deep); }
   tr.project td.balk { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
   tr.project td.balk .projtekst, tr.project td.balk .greep { user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
   tr.project.sleept td.balk { cursor: grabbing; }
@@ -297,6 +305,7 @@
     <div class="header-right">
       <span id="zoekKop"><input type="search" placeholder="Zoek project…" aria-label="Zoek project"></span>
       <span class="status" id="status"></span>
+      <button class="knop overknop" id="overDatumKnop" style="display:none" title="Nog open in Yoobi, maar de planning is voorbij: herplannen (balk slepen) of sluiten in Yoobi. Klik om er langs te gaan."></button>
       <button class="knop" id="verversKnop" title="Projecten opnieuw uit Yoobi halen">Yoobi verversen</button>
       <button class="knop" id="beheerKnop">Vrije dagen &amp; medewerkers</button>
       <button class="knop" id="naarVandaag">Vandaag</button>
@@ -320,6 +329,7 @@
         <span><i style="background:var(--blue)"></i> dag met geplande uren</span>
         <span><i style="background:repeating-linear-gradient(90deg,var(--blue) 0 3px,var(--blue-soft) 3px 5px);height:4px;vertical-align:2px"></i> nog niemand op gepland</span>
         <span><i style="background:repeating-linear-gradient(90deg,var(--amber) 0 3px,transparent 3px 7px);height:4px;vertical-align:2px"></i> aanname: echte start nog zetten</span>
+        <span><i style="background:repeating-linear-gradient(90deg,var(--accent) 0 3px,#fca5a5 3px 5px);height:4px;vertical-align:2px"></i> over datum: herplannen of sluiten in Yoobi</span>
         <span><i class="mi" style="background:#f59e0b"></i> hoogwerker</span>
         <span><i class="mi" style="background:#0ea5e9"></i> rolsteiger</span>
         <span><i class="mi" style="background:#dc2626"></i> vaste steiger</span>
@@ -340,6 +350,11 @@
         <h2>Verborgen projecten</h2>
         <ul class="zonder" id="verborgenLijst"></ul>
         <div class="voetnoot">Verborgen projecten staan niet op het bord. Klik "toon" om ze terug te zetten.</div>
+      </div>
+      <div class="kaart" id="overKaart" style="display:none">
+        <h2>Over datum, niet op dit bord</h2>
+        <ul class="zonder" id="overLijst"></ul>
+        <div class="voetnoot">Nog open in Yoobi, maar de planning eindigde vóór dit jaar. Sluit ze in Yoobi of geef ze een nieuwe datum via het bord van dat jaar.</div>
       </div>
       <div class="kaart" id="zonderKaart" style="display:none">
         <h2>Nog geen datum in Yoobi</h2>
@@ -401,7 +416,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.10.5';
+const APP_VERSION = '0.11.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -620,6 +635,37 @@ function vindProject(code) {
   return stand ? stand.projecten.find(p => p.code === code) : null;
 }
 
+// ---------- over datum (v0.11.0) ----------
+// Een project dat nog in de Yoobi-stand staat (= niet gesloten) maar waarvan de
+// balk op ons bord meer dan OVER_DATUM_WERKDAGEN werkdagen geleden eindigde,
+// is ofwel niet uitgevoerd (herplannen) ofwel klaar (sluiten in Yoobi).
+// Weekend en gesloten dagen tellen niet als werkdag. Verborgen projecten
+// worden met rust gelaten: die zijn bewust van het bord gehaald.
+const OVER_DATUM_WERKDAGEN = 2;
+// Einddatum van het hele project op ons bord: laatste fase, anders de projectdatums.
+function projectEind(p) {
+  const fs = fasenVan(p.code);
+  if (fs.length) { let m = null; for (const f of fs) if (f.tot && (!m || f.tot > m)) m = f.tot; return vanIso(m); }
+  return projDatums(p).eind;
+}
+function isOverDatum(p, vandaagIso) {
+  const e = projectEind(p);
+  if (!e) return false;
+  const eIso = naarIso(e);
+  if (eIso >= vandaagIso) return false;
+  return werkdagenTussen(eIso, vandaagIso) > OVER_DATUM_WERKDAGEN;
+}
+function projectenOverDatum() {
+  if (!stand) return [];
+  const v = naarIso(new Date());
+  return stand.projecten.filter(p => {
+    if (!p.code) return false;
+    const pl = planProjecten[p.code];
+    if (pl && pl.zichtbaar === false) return false;
+    return isOverDatum(p, v);
+  });
+}
+
 // ---------- laden ----------
 async function laadAlles() {
   const j1 = jaar + '-01-01', j2 = jaar + '-12-31';
@@ -775,9 +821,44 @@ function tekenBord() {
   zetOverKlassen();
   tekenZonderDatum();
   tekenVerborgen();
+  tekenOverDatum();
   tekenPaneel();
   document.getElementById('jaarLabel').textContent = jaar;
 }
+
+// Teller in de kop + kaart voor over-datum-projecten die niet op dit jaarbord staan.
+let overDatumCursor = -1;
+function tekenOverDatum() {
+  const lijst = projectenOverDatum();
+  const opBord = new Set(Array.from(document.querySelectorAll('#bord tbody tr.project.overdatum')).map(tr => tr.dataset.code));
+  const nietOpBord = lijst.filter(p => !opBord.has(p.code));
+  const knop = document.getElementById('overDatumKnop');
+  knop.style.display = lijst.length ? '' : 'none';
+  knop.textContent = lijst.length + ' over datum';
+  const kaart = document.getElementById('overKaart');
+  kaart.style.display = nietOpBord.length ? '' : 'none';
+  document.getElementById('overLijst').innerHTML = nietOpBord.map(p => {
+    const e = projectEind(p);
+    return '<li><span><span class="k">' + esc(p.klant) + '</span>' + esc(p.naam) + '</span><span class="num" style="color:var(--accent-deep);font-weight:600;white-space:nowrap">t/m ' + (e ? fmtDatum(e) : '—') + '</span></li>';
+  }).join('');
+  overDatumCursor = -1;
+}
+// Klik op de teller: springt langs de over-datum-rijen op het bord, één per klik.
+document.getElementById('overDatumKnop').addEventListener('click', () => {
+  const rijen = Array.from(document.querySelectorAll('#bord tbody tr.project.overdatum:not(.verborgen-zoek)'));
+  if (!rijen.length) { toonStatus('Niet op dit jaarbord; zie de kaart rechts', true); return; }
+  overDatumCursor = (overDatumCursor + 1) % rijen.length;
+  const tr = rijen[overDatumCursor];
+  document.querySelectorAll('#bord tbody tr.uitgelicht').forEach(r => r.classList.remove('uitgelicht'));
+  tr.classList.add('uitgelicht');
+  setTimeout(() => tr.classList.remove('uitgelicht'), 2500);
+  const sc = document.getElementById('bordScroll');
+  tr.scrollIntoView({ block: 'center', inline: 'nearest' });
+  const eind = tr.querySelector('td.balk.eind') || tr.querySelector('td.balk');
+  const label = document.querySelector('#bord thead tr.dagen th.label');
+  if (eind) sc.scrollLeft = Math.max(0, eind.offsetLeft - (label ? label.offsetWidth : LABEL_BREEDTE) - 6 * eind.offsetWidth);
+  toonStatus((overDatumCursor + 1) + ' van ' + rijen.length + ' over datum');
+});
 
 function tekenProjectRij(p, d, f) {
   const j1 = dagen[0], j2 = dagen[dagen.length - 1];
@@ -801,8 +882,9 @@ function tekenProjectRij(p, d, f) {
   // Twee lagen passen in de gewone rij (onder en boven de lijn); elke laag daarboven maakt de rij 12 px hoger.
   const extraHoogte = lagenEind.length > 2 ? (lagenEind.length - 2) * 12 : 0;
   const bodemVanLaag = (l) => (l === 0 ? 1 : 27 + (l - 1) * 12) + 'px';
-  let h = '<tr class="project' + (isActief ? ' actief' : '') + '" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + (extraHoogte ? ' style="height:' + (40 + extraHoogte) + 'px"' : '') + '>';
-  h += '<td class="label" title="' + esc(p.klant + ' — ' + naamTekst) + '"><span class="klant">' + esc(p.klant) + '</span><span class="naam">' + esc(naamTekst) + '</span></td>';
+  const over = isOverDatum(p, naarIso(new Date()));
+  let h = '<tr class="project' + (isActief ? ' actief' : '') + (over ? ' overdatum' : '') + '" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + (extraHoogte ? ' style="height:' + (40 + extraHoogte) + 'px"' : '') + '>';
+  h += '<td class="label" title="' + esc(p.klant + ' — ' + naamTekst) + (over ? ' — over datum: herplannen (balk slepen) of sluiten in Yoobi' : '') + '"><span class="klant">' + esc(p.klant) + (over ? '<span class="overlabel">Over datum</span>' : '') + '</span><span class="naam">' + esc(naamTekst) + '</span></td>';
   // Naam + afspraak vóór de start van de lijn. Geen ruimte links (start in
   // de eerste week, of overloopwerk vanaf 1 januari): dan achter het eind,
   // en loopt ook dat het jaar uit, dan rechts van het eerste zichtbare stuk.
