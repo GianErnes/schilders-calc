@@ -1,3 +1,20 @@
+## v4.77.0 — De offertedatum vraagt om vandaag bij het aanmaken van een link
+
+### Wat er nu kan
+
+Aanleiding: offerte 260112 (De Vreede-Ernes). De accordeerlink werd op 23 september gemaakt, maar het document droeg de offertedatum 11 september, de dag waarop de calculatie was begonnen. De offertedatum wordt éénmalig gezet en schuift daarna niet mee; alleen bij een herziening (versievraag sinds v4.14.3) ging hij naar vandaag.
+
+Nu kijkt de app bij het aanmaken van een **eerste** accordeerlink of de offertedatum gelijk is aan vandaag. Zo niet, dan komt er een vraag met de huidige datum, de datum van vandaag en de nieuwe geldig-tot erbij. OK zet de offertedatum op vandaag en geldig-tot op de norm voor het klanttype (particulier 21, zakelijk 30, VvE 180 dagen). Annuleren laat alles staan. De aanpassing gebeurt vóór het bouwen van de PDF, zodat het bevroren exemplaar en de snapshot (geldigTot voor de opvolging) de nieuwe datums dragen. Is de herzieningsvraag gesteld, dan komt deze vraag niet: OK daar zet de datum al op vandaag, Annuleren daar is expliciet "datum ongewijzigd".
+
+Let op: een handmatig ingekorte of verlengde geldig-tot springt bij OK terug naar de norm, net als bij een herziening.
+
+### Hoe het onder de kap zit
+
+- Nieuwe functie `_accordOffertedatumNaarVandaag(c, vraagFn, vandaagIso)` vlak boven `_accordNieuweLink`. Past `c.offerteConfig` in het geheugen aan en geeft `true` terug bij een wijziging; `vraagFn`/`vandaagIso` zijn injecteerbaar voor de test (standaard `confirm` en `_offIsoVandaag`).
+- In `_accordNieuweLink`: vlag `_herzieningGevraagd` wordt `true` in de bestaande `_gereageerd`-tak. Na het herzieningsblok, als de vlag `false` is: aanroep, bij `true` opslaan in `calculaties.offerte_config` en `renderOfferteBlok()`; alles in try/catch zodat een storing de linkaanmaak niet blokkeert.
+- Test: Node-parsecheck en div-telling (gelijk aan v4.76.0); logica in isolatie met zes gevallen (al vandaag → geen vraag; OK consument/zakelijk/VvE; Annuleren laat staan; lege config). Nog niet in de echte omgeving getest op het moment van schrijven.
+- Geen SQL, geen Edge Function, geen RLS-wijziging.
+
 ## v4.76.0 — BTW-tarief per calculatie en per staartpost (werk van derden)
 
 ### Wat er nu kan

@@ -2349,8 +2349,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.76.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.77.0</h2>
       <div class="intro-body">
+        <p><strong>📅 De offertedatum vraagt om vandaag bij het aanmaken van een link (v4.77.0).</strong> De offertedatum wordt gezet als je een calculatie begint en schuift daarna niet mee. Lag er tijd tussen het rekenen en het versturen, dan ging de offerte met een oude datum de deur uit; bij De Vreede-Ernes stond 11 september op een link van 23 september. Voortaan kijkt de app bij het aanmaken van een eerste accordeerlink of de offertedatum vandaag is. Is dat niet zo, dan vraagt hij of de datum op vandaag mag; OK zet ook geldig-tot opnieuw op de norm voor het klanttype (particulier 21, zakelijk 30, VvE 180 dagen), Annuleren laat alles staan. Dat gebeurt voordat de PDF wordt gebouwd, dus het bevroren exemplaar toont de nieuwe datum. Bij een herziene offerte kwam die vraag al via de versie-ophoging, en daar blijft het bij één vraag. Geen SQL en geen Edge Function.</p>
         <p><strong>🧾 BTW-tarief per calculatie en per staartpost (v4.76.0).</strong> Bij Klant en adres staat een keuze BTW-tarief: volg de instelling, 9% voor woningen ouder dan twee jaar en gebouwen die voor meer dan de helft permanent bewoond worden, of 21% voor alles anders (een restaurant, een kantoor). Daarnaast kan een staartpost een eigen tarief krijgen. Zo'n post is werk van derden, bijvoorbeeld een onderaannemer: het bedrag gaat één-op-één in de offerte zonder risico-opslag en draagt zijn eigen BTW. Staan er twee tarieven in één offerte, dan toont de kaart, het offertedocument en de prijstabel per tarief een BTW-regel met de grondslag erbij; bij één tarief blijft alles zoals het was. Een derden-post kan niet in de eenheidsprijs worden verwerkt. Let op: het onderhoudsplan rekent nog met één tarief per beurt; een plan met een derden-post op een ander tarief rekent daar nog niet mee. Eenmalig SQL nodig (drie kolommen).</p>
         <p><strong>🚪 Deuronderkant behandelen (v4.75.0).</strong> Zet in Instellingen een vast bedrag per deur, vink in de kozijn-tekenaar bij een deur "Onderkant behandelen" aan, en de app zet automatisch een staartpost neer (aantal deuren × bedrag) die ook meetelt in de werkdagen. Werkt voor buiten- en binnendeuren. Daarbij een fix: gebrek-stippen op tekeningen van uitgezette gevels tellen niet meer mee in de herstelposten.</p>
         <p><strong>🧩 Kozijn-tekeningen volgen de aan/uit-knoppen (v4.74.1).</strong> Zet je een gevel of onderdeel uit, dan verdwijnen de kozijntekeningen van die gevel ook uit de bijlage, de accordpagina en de doorlopende PDF. De klant ziet dan alleen kozijnen die in zijn prijs zitten. Zet je de gevel weer aan, dan komen ze terug. Je eigen Meetstaat-tab blijft alles tonen.</p>
@@ -3707,7 +3708,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.76.0';
+const APP_VERSION = 'v4.77.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4124,6 +4125,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.77.0', d: '2026-09-23', h: 'Bij het aanmaken van een eerste accordeerlink vraagt de app of de offertedatum op vandaag mag; geldig-tot schuift dan mee.' },
   { v: '4.76.0', d: '2026-09-22', h: 'BTW-tarief per calculatie (9% of 21%) bij Klant en adres, en per staartpost een eigen tarief voor werk van derden zonder opslag.' },
   { v: '4.75.0', d: '2026-09-20', h: 'Deuronderkant behandelen: vast bedrag per deur uit Instellingen, vinkje in de tekenaar, automatische staartpost die in de werkdagen meetelt. Fix: gebrek-stippen van uitgezette gevels tellen niet meer mee.' },
   { v: '4.74.1', d: '2026-09-20', h: 'Fix: kozijntekeningen van uitgezette gevels staan niet meer in de bijlage, de accordpagina en de doorlopende PDF.' },
@@ -23460,6 +23462,30 @@ function _accordGeenPdfMelding(body, e, isPlan) {
   if (b) b.onclick = () => { if (isPlan) ohpAccordLinkBeheer(); else accordLinkBeheer(); };
 }
 
+// v4.77.0 — Staat de offertedatum niet op vandaag, vraag dan of hij op vandaag mag.
+// Geeft true terug als de config is aangepast (in het geheugen; opslaan doet de aanroeper).
+// vraagFn en vandaagIso zijn er voor de test; in de app zijn het confirm en _offIsoVandaag.
+function _accordOffertedatumNaarVandaag(c, vraagFn, vandaagIso) {
+  const vraag = vraagFn || (m => confirm(m));
+  const vandaag = vandaagIso || _offIsoVandaag();
+  if (!c.offerteConfig || typeof c.offerteConfig !== 'object') c.offerteConfig = {};
+  const cfg = c.offerteConfig;
+  const huidig = String(cfg.offertedatum || '').slice(0, 10);
+  if (huidig === vandaag) return false;
+  const dagen = _offGeldigDagenNorm(cfg.klanttype);
+  const nieuwGeldig = _offIsoPlusDagen(vandaag, dagen);
+  const ok = vraag(
+    'De offertedatum staat op ' + (huidig ? _offDatumLang(huidig) : 'geen datum') + '.\n\n' +
+    'Op vandaag (' + _offDatumLang(vandaag) + ') zetten?\n\n' +
+    'OK = offertedatum vandaag, geldig-tot ' + _offDatumLang(nieuwGeldig) + ' (' + dagen + ' dagen, norm ' + _offKlanttypeLabel(cfg.klanttype) + ').\n' +
+    'Annuleren = datum laten staan.'
+  );
+  if (!ok) return false;
+  cfg.offertedatum = vandaag;
+  cfg.geldigTot = nieuwGeldig;
+  return true;
+}
+
 async function _accordNieuweLink(c, body, supersede) {
   // v4.26.0 — harde stop: geen accordeerlink zonder offertenummer (Yoobi-verkoopnummer).
   if (!_offerteNummer(c)) {
@@ -23474,6 +23500,7 @@ async function _accordNieuweLink(c, body, supersede) {
   // Sinds v4.14.3 na een bevestigingsvraag: OK hoogt op en schuift de offertedatum mee naar vandaag (geldig-tot
   // opnieuw op +30 dagen), v\u00f3\u00f3r het document wordt gebouwd zodat het bevroren
   // exemplaar de nieuwe versie en datum toont.
+  let _herzieningGevraagd = false; // v4.77.0 — is de versievraag hieronder gesteld?
   try {
     const { data: _prevAcc } = await _sb.from('offerte_accorderingen')
       .select('status, gereageerd_op, vragen').eq('calculatie_id', c.id)
@@ -23482,6 +23509,7 @@ async function _accordNieuweLink(c, body, supersede) {
       r.gereageerd_op != null || r.status === 'akkoord' || r.status === 'afgekeurd' ||
       (Array.isArray(r.vragen) && r.vragen.length > 0));
     if (_gereageerd) {
+      _herzieningGevraagd = true;
       if (!c.offerteConfig || typeof c.offerteConfig !== 'object') c.offerteConfig = {};
       const _cfgH = c.offerteConfig;
       // v4.14.3 — de ophoging is een vraag geworden. Eigen testreacties dwongen
@@ -23503,6 +23531,20 @@ async function _accordNieuweLink(c, body, supersede) {
       }
     }
   } catch (e) { /* detectie mislukt, dan zonder ophogen doorgaan */ }
+  // v4.77.0 — Eerste link met een oude offertedatum: vragen of hij op vandaag mag.
+  // De datum wordt gezet bij het begin van de calculatie en schoof daarna niet mee;
+  // bij De Vreede-Ernes ging zo een link van 23-09 met datum 11-09 de deur uit.
+  // Niet bij een herziening: daar dekt de versievraag hierboven dit al af (OK = vandaag,
+  // Annuleren = expliciet ongewijzigd), twee vragen zouden verwarren.
+  if (!_herzieningGevraagd) {
+    try {
+      const _besluit = _accordOffertedatumNaarVandaag(c);
+      if (_besluit) {
+        try { await _sb.from('calculaties').update({ offerte_config: c.offerteConfig }).eq('id', c.id); } catch (e2) {}
+        try { renderOfferteBlok(); } catch (e3) {}
+      }
+    } catch (e) { /* vraag mislukt, dan met de bestaande datum doorgaan */ }
+  }
   // v4.69.0 \u2014 De HTML-momentopname gaat niet meer mee in de rij. De PDF hieronder is het
   // bevroren document; de klantpagina toonde de HTML toch al niet zodra er een PDF was.
   // Gemeten 14-09-2026: 44 offertelinks, 8,5 MB aan HTML die nooit getoond werd.
