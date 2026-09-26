@@ -1,5 +1,10 @@
 # CHANGELOG planning.html
 
+## v0.11.1 — Hulpmiddel-naam altijd zwart, 25-09-2026
+
+- De naam en omschrijving in de hulpmiddelstrook waren wit (donker alleen bij mobiel toilet). Loopt de tekst voorbij een korte strook over de projectblokken of leeg veld heen, dan was hij onleesbaar. Nu altijd zwart, ongeacht de kleur eronder.
+- Technisch: `.middeltekst` color `#000`; `.middeltekst.donker` en de bijbehorende klasse in `tekenProjectRij` verwijderd (overbodig).
+
 ## v0.11.0 — "Over datum": nog open in Yoobi, planning voorbij, 23-09-2026
 
 Vraag van Gian: een werk dat door regen of anderszins niet is uitgevoerd, blijft stil op zijn oude plek in de planning staan en schuift uit beeld. Regel (Gian): een project dat in Yoobi gesloten is, is echt klaar; alles wat over datum is en nog open staat, is ofwel nog uit te voeren (herplannen) ofwel te sluiten. Dat moet een melding krijgen.

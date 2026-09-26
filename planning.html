@@ -158,9 +158,8 @@
   .middel { position: absolute; left: 0; right: 0; bottom: var(--m-bodem, 1px); height: 11px; background: var(--m-kleur); opacity: 0.95; z-index: 1; }
   .middel.mstart { left: 2px; border-radius: 3px 0 0 3px; }
   .middel.meind { right: 2px; border-radius: 0 3px 3px 0; }
-  /* naam ín de strook: wit op de kleur, donker op geel */
-  .middeltekst { position: absolute; bottom: var(--m-bodem, 1px); left: 5px; height: 11px; line-height: 11px; white-space: nowrap; font-size: 0.6rem; font-weight: 700; color: #fff; z-index: 2; pointer-events: none; }
-  .middeltekst.donker { color: #3b2f00; }
+  /* naam ín de strook: altijd zwart (v0.11.1), zodat hij ook leesbaar blijft waar hij over blokken of leeg veld heen loopt */
+  .middeltekst { position: absolute; bottom: var(--m-bodem, 1px); left: 5px; height: 11px; line-height: 11px; white-space: nowrap; font-size: 0.6rem; font-weight: 700; color: #000; z-index: 2; pointer-events: none; }
   .middeltekst .mo { font-weight: 500; opacity: 0.9; }
   .middelen { margin-top: 0.7rem; }
   .middelen h3 { margin: 0 0 0.4rem; font-size: 0.8rem; color: var(--ink-soft); }
@@ -416,7 +415,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.11.0';
+const APP_VERSION = '0.11.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -920,7 +919,7 @@ function tekenProjectRij(p, d, f) {
       const laagStijl = '--m-kleur:' + kl + ';--m-bodem:' + bodemVanLaag(laagVan[md.id] || 0);
       inhoud += '<span class="middel' + (iso === md.van ? ' mstart' : '') + (iso === md.tot ? ' meind' : '') + '" style="' + laagStijl + '" title="' + esc(middelNaam(md) + ' ' + fmtDatum(vanIso(md.van)) + ' – ' + fmtDatum(vanIso(md.tot)) + (md.omschrijving && md.soort !== 'overig' ? ' · ' + md.omschrijving : '')) + '"></span>';
       if (iso === md.van || (md.van < j1 && iso === j1)) {
-        inhoud += '<span class="middeltekst' + (md.soort === 'mobiel_toilet' ? ' donker' : '') + '" style="' + laagStijl + '">' + esc(middelNaam(md)) + (md.omschrijving && md.soort !== 'overig' ? ' <span class="mo">' + esc(md.omschrijving) + '</span>' : '') + '</span>';
+        inhoud += '<span class="middeltekst" style="' + laagStijl + '">' + esc(middelNaam(md)) + (md.omschrijving && md.soort !== 'overig' ? ' <span class="mo">' + esc(md.omschrijving) + '</span>' : '') + '</span>';
       }
     }
     h += '<td class="' + k + '">' + inhoud + '</td>';
