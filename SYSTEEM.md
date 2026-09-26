@@ -5046,3 +5046,63 @@ stond op het moment van schrijven nog open.
 **Ook gemerkt.** SYSTEEM.md had op dit moment geen sectie voor v4.75.0
 (deuronderkant, 20 september); die staat wel in CHANGELOG.md en in de
 in-app welkomsttekst. Nog na te dragen in de chat van dat bestand.
+
+## Wat er op 26 september 2026 gedaan is: steigeraanvraag vanuit de calculatie (v4.78.0)
+
+**Aanleiding.** Na een opname moet de steigerofferte vrijwel meteen worden
+aangevraagd bij de vaste steigerbouwer. Werkadres en foto's staan al in de
+calculatie; het overtypen in een losse mail is dubbel werk en wordt vergeten.
+
+**Wat er is gebouwd.**
+- `index.html` v4.78.0: knop **Steiger aanvragen** in de calc-kop naast Naar
+  Craft (`steigerKnop`, `steigerAanvragen()`), venster `steigerModal` met
+  werkadres ter controle (`_steigerWerkadres`, zelfde vier velden als de
+  controle in `controleerCalc`), aanpasbare standaardtekst
+  (`_steigerStandaardtekst`) en de foto's uit het klusdossier als aanvinkbare
+  thumbnails, standaard uit. Foto's gaan als base64 mee via dezelfde route als
+  Naar Craft (`_craftFotoDataUrl`, dus met gebrekstippen). Na versturen wordt
+  de knop groen met datum (`_steigerKnopBijwerken`, stempel
+  `calculaties.steiger_aangevraagd_op`, gelezen in `_mapCalcHeaderFromDB`,
+  bewust niet in de to-mapper). Werkt in elke status (`lock-allowed`).
+- Instellingen -> sectie **Steigerbouwer**: veld `data.settings.steigerEmail`
+  (`updSettingText`). Dit is de enige plek waar het adres staat.
+- Edge Function **`steiger-aanvraag`** (nieuw, Verify JWT aan): leest het
+  adres server-side uit `app_settings.data.steigerEmail` en de calculatie uit
+  `calculaties` (naam, huisnummer, postcode, offerte_config; werkadres volgens
+  dezelfde regels als `_offWerkadresEffectief`). Mailt via Resend met
+  `bcc: administratie@ernes.nl`, `reply_to info@ernes.nl`, foto's als
+  `attachments` (max 15, max 2 MB per stuk). Daarna stempel op de calculatie en
+  een taak in `taken`: `bron='steiger'`, `bron_ref` = calculatie-id,
+  `bron_kenmerk='steiger-opvolging'`, `toegewezen_aan='gian'`, `gepland_op`
+  = vandaag + 7 kalenderdagen 09:00 (besluit Gian). Mislukken stempel of taak,
+  dan is de mail toch verstuurd; de app meldt dat apart.
+- SQL `steiger_01_kolom_en_bron.sql`: kolom `steiger_aangevraagd_op`
+  (timestamptz), `taken_bron_check` uitgebreid met `steiger` door de bestaande
+  lijst uit `pg_constraint` te lezen en aan te vullen (dus ook als er
+  inmiddels meer bronnen in staan). Project-guard, idempotent.
+
+**Bewust open gelaten.**
+- ~~RLS-policies~~ Gedaan in dezelfde sessie: `steiger_02_policies.sql`
+  herschrijft `taken_lezen`, `taken_bijwerken` en `taken_verwijderen` met
+  `steiger` in de bronlijst, letterlijk naar de `pg_policies`-uitvoer van
+  Gian (26 september). `taken_aanmaken` bewust niet: steigertaken komen, net
+  als offertetaken, alleen uit een Edge Function. Lokaal getest met RLS aan
+  en nagebootste `taken_rol()`/`taken_persoon()`: rol `eigen` ziet, bewerkt
+  en verwijdert alleen zijn eigen steigertaak, en mag er geen aanmaken.
+- `taken.html` toont nog geen pill "Steiger" (aparte chat, één bestand één
+  chat). De taak verschijnt wel, alleen zonder label.
+- Het adres komt uit `app_settings`; iedereen met toegang tot Instellingen in
+  de Calculatie-app (alleen administratie) kan het wijzigen.
+
+**Bewijs.** `index.html`: CSS-braces, node-parse en div-balans (delta gelijk
+aan live), runtime-test van `_steigerWerkadres` (zakelijk, particulier,
+onvolledig), `_steigerStandaardtekst` en `_steigerRender` (twee foto's
+standaard uit, lege-fotomelding, banner bij eerdere verzending). Edge
+Function: `deno check` en een mocktest met zeven gevallen (ontbrekend adres,
+ontbrekende calc-id, lege tekst, onbekende calc, onvolledig werkadres,
+geslaagde verzending met twee bijlagen en taak op +7 dagen 09:00, Resend-fout
+-> 502). SQL: gedraaid in een lokale Postgres 16 tegen een nagebootste
+`taken_bron_check`; `steiger` toegelaten, onbekende bron geweigerd, tweede
+run doet niets. **Nog niet getest in de echte omgeving**: Resend-bijlagen (uit
+de documentatie, niet uit eigen ervaring) en de kolomtypes van `taken` bij
+het invoegen door de functie.

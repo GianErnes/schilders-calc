@@ -1,3 +1,21 @@
+## v4.78.0 — Steigeraanvraag vanuit de calculatie (2026-09-26)
+
+**Nieuw**
+- Knop **Steiger aanvragen** in de calc-kop naast Naar Craft. Venster met werkadres ter controle, aanpasbare standaardtekst en de foto's uit het klusdossier als aanvinkbare thumbnails (standaard uit, link "Alles aanvinken"). Blokkeert met een melding als het steigerbouweradres of het werkadres (straat, huisnummer, postcode, woonplaats) ontbreekt. Werkt in elke status.
+- Na versturen wordt de knop groen met datum en tijd (`calculaties.steiger_aangevraagd_op`); opnieuw sturen vraagt eerst bevestiging.
+- Instellingen: nieuwe sectie **Steigerbouwer** met het e-mailadres (`data.settings.steigerEmail`).
+- Nieuwe Edge Function `steiger-aanvraag`: leest ontvanger en calculatie server-side, mailt via Resend met bcc administratie@ernes.nl en de foto's als bijlage, stempelt de calculatie en zet een taak `bron='steiger'` voor Gian op +7 dagen 09:00.
+
+**Technisch**
+- Functies: `steigerAanvragen`, `_steigerRender`, `_steigerThumbsLaden`, `_steigerVerstuur`, `_steigerCall`, `_steigerWerkadres`, `_steigerStandaardtekst`, `_steigerKnopBijwerken`, `closeSteigerModal`; constante `STEIGER_FN_URL`. Foto's via `_signFotoUrls` + `_craftFotoDataUrl` (gebrekstippen erop), base64 zonder data-prefix.
+- `_mapCalcHeaderFromDB` leest `steiger_aangevraagd_op`; bewust niet in `_mapCalcHeaderToDB`.
+- SQL `steiger_01_kolom_en_bron.sql`: kolom + uitbreiding `taken_bron_check` (leest de bestaande lijst uit `pg_constraint`). `steiger_02_policies.sql`: `taken_lezen`, `taken_bijwerken`, `taken_verwijderen` met `steiger`; `taken_aanmaken` bewust niet (alleen Edge Function). Lokaal getest met RLS aan.
+
+**Getest**
+- Node-parse, CSS-braces, div-balans. Runtime: werkadres zakelijk/particulier/onvolledig, standaardtekst, render met en zonder foto's en met eerdere verzending.
+- Edge Function: `deno check` + mocktest (zeven gevallen). SQL: lokale Postgres 16, idempotent.
+- Nog niet in de echte omgeving: Resend-bijlagen en het invoegen in `taken` door de functie.
+
 ## v4.77.0 — De offertedatum vraagt om vandaag bij het aanmaken van een link
 
 ### Wat er nu kan
