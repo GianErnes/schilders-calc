@@ -1,3 +1,19 @@
+## v4.79.0 — Kopblokken inklapbaar, bcc op de offertemail (2026-09-26)
+
+**Nieuw**
+- Project en planning, Klant en adres en Offerte-instellingen hebben een klikbare kop met pijltje en samenvatting (project: naam · opname · deadline; klant: naam · woonplaats · klanttype; offerte: nummer · offertedatum · geldig tot). Dicht bij het openen van een calculatie, open bij een nieuwe calculatie zonder naam en klant. Binnen dezelfde calculatie blijft de gekozen stand staan, ook na een re-render.
+- Edge Function `offerte-verzenden`: elke offerte- en planmail gaat in bcc naar administratie@ernes.nl (`MAIL_BCC`). Eén regel in `sendMail`; verder ongewijzigd.
+- Edge Function `offerte-herinnering`: de herinnering en de verlopen-mail (offerte én plan) gaan ook in bcc naar administratie. `sendMail` kreeg een vierde parameter `bcc` (standaard uit); het interne seintje naar info@ blijft zonder bcc.
+
+**Technisch**
+- Inklappen via CSS (`.kblok-wrap.dicht > .kblok { display:none }`), niet door de inhoud weg te laten: de projectvelden staan als vaste HTML en worden elders op id gelezen en gevuld. Het projectblok is statisch omhuld met `#kw_project`; Klant en adres en Offerte-instellingen krijgen hun wrap in `renderOfferteBlok` via `_kblokKopHtml` en `_kblokWrap`.
+- Stand in `_kblokDicht` (sessie), reset per calculatie-id in `_kblokResetVoorCalc` (aangeroepen in `renderCalcStructuur`). `kblokToggle`, `_kblokToepassen`, `_kblokSamenvattingen` (leest `data.calc` en `offerteConfig`, niet de velden), `_kblokDatumKort`. Een losse `change`-listener ververst de projectkop na blur.
+- Geen SQL.
+
+**Getest**
+- CSS-braces, node-parse, div-balans. Runtime met stub-DOM: bestaande calc dicht en samenvattingen exact, toggle blijft staan bij re-render, nieuwe calc open, wissel naar andere calc weer dicht, geen calc leeg.
+- `offerte-verzenden` en `offerte-herinnering`: `deno check`. Nog niet in de echte omgeving: of de bcc daadwerkelijk aankomt (te zien bij de eerstvolgende offertemail resp. herinnering).
+
 ## v4.78.0 — Steigeraanvraag vanuit de calculatie (2026-09-26)
 
 **Nieuw**

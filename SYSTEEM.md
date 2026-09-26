@@ -5106,3 +5106,29 @@ geslaagde verzending met twee bijlagen en taak op +7 dagen 09:00, Resend-fout
 run doet niets. **Nog niet getest in de echte omgeving**: Resend-bijlagen (uit
 de documentatie, niet uit eigen ervaring) en de kolomtypes van `taken` bij
 het invoegen door de functie.
+
+## Wat er op 26 september 2026 verder gedaan is: kopblokken inklapbaar en bcc (v4.79.0)
+
+**Kopblokken.** De drie blokken bovenaan de Calculatie-tab klappen in zoals
+Notities, maar met een wezenlijk verschil in de bouw: Notities laat de inhoud
+bij dicht weg uit de DOM, de kopblokken verbergen hem met CSS. Reden: het
+projectblok is vaste HTML met velden op id (`calcProject`, `calcOpname`, …)
+die `renderCalcStructuur` en de globale change-listener rechtstreeks
+aanspreken. Zou dat blok verdwijnen, dan breekt dat. Stand: `_kblokDicht`
+per sessie, reset in `_kblokResetVoorCalc` zodra een andere calculatie-id
+opent (dicht, of open als naam én klant leeg zijn). Samenvattingen komen uit
+`data.calc` en `offerteConfig`, niet uit de velden. Besluit Gian: altijd
+dicht bij openen, niet per apparaat onthouden.
+
+**bcc.** `offerte-verzenden` stuurt elke mail nu met `bcc: [MAIL_BCC]`
+(administratie@ernes.nl). De rest van de functie is letterlijk de versie die
+Gian op 26 september plakte. `offerte-herinnering` doet hetzelfde op de twee klantmails
+(herinnering en verlopen-mail, offerte én plan) via een vierde parameter
+`bcc` op `sendMail`; het interne seintje naar info@ blijft zonder bcc.
+Beide functies: `deno check`, verder letterlijk de code van 26 september.
+
+**Bewijs.** Zie CHANGELOG v4.79.0: parse/braces/div-balans, runtime-test met
+stub-DOM (vijf scenario's), `deno check` op de Edge Function. Niet in de echte
+omgeving getest: de bcc-aankomst en het gedrag van de inklapkoppen op de iPad
+(de flex-kop met `max-width: 65%` op de samenvatting is een aanname over de
+beschikbare breedte; loopt de tekst af, dan wordt hij afgekapt met …).

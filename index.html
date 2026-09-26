@@ -357,6 +357,14 @@
   }
   /* v4.0.1 — compacte blokken voor de calc-kop (Project, Klant en adres, Offerte-instellingen) */
   .kblok-kop { font-weight: 600; font-size: 0.85rem; color: var(--muted); margin: 0 0 0.35rem; }
+  /* v4.79.0 — inklapbare kopblokken, zelfde gedrag als Notities maar via CSS zodat de velden blijven bestaan */
+  .kblok-wrap .kblok-kop { display: flex; align-items: center; gap: 0.45rem; cursor: pointer; user-select: none; padding: 0.3rem 0.35rem; border-radius: var(--radius); }
+  .kblok-wrap .kblok-kop:hover { background: var(--paper-warm); }
+  .kblok-caret { display: inline-block; width: 1em; font-size: 0.7rem; transition: transform 0.12s; }
+  .kblok-wrap.dicht .kblok-caret { transform: rotate(-90deg); }
+  .kblok-sum { margin-left: auto; font-weight: 400; font-size: 0.74rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%; }
+  .kblok-wrap.dicht > .kblok { display: none; }
+  .kblok-wrap.dicht { margin-bottom: 0.45rem; }
   .kblok { background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); padding: 0.65rem 0.8rem; margin-bottom: 0.85rem; }
   .kgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 0.38rem 0.55rem; }
   .kgrid > div > label { display: block; font-size: 0.65rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 0.1rem; letter-spacing: 0.01em; }
@@ -2349,8 +2357,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.78.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.79.0</h2>
       <div class="intro-body">
+        <p><strong>📂 De drie kopblokken van de calculatie klappen in (v4.79.0).</strong> Project en planning, Klant en adres en Offerte-instellingen hebben nu dezelfde inklapbare kop als Notities, taken en foto's. Open je een calculatie, dan staan ze dicht en zie je in de kop een korte samenvatting: projectnaam met opname en deadline, klant met woonplaats en klanttype, offertenummer met datum en geldig-tot. Klik op de kop om een blok te openen, nog eens om het te sluiten. Een nieuwe calculatie zonder klantnaam opent met alle drie de blokken open, want dan moet je toch invullen. De velden blijven onder de motorkap gewoon bestaan, dus Yoobi, de afstandsknop en de controle werken ongewijzigd. Alleen weergave. Geen SQL nodig.</p>
         <p><strong>🏗️ Steiger aanvragen bij de vaste steigerbouwer (v4.78.0).</strong> Bovenaan de calculatie staat naast Naar Craft de knop Steiger aanvragen. Die opent een venster met het werkadres ter controle, een begeleidende tekst die je per keer kunt aanpassen, en de foto's uit het klusdossier als aanvinkbare thumbnails: alleen de aangevinkte gaan mee als bijlage. Na versturen wordt de knop groen met datum en tijd, en staat er een week later een taak voor Gian in de Takenapp met de vraag of de steigerofferte al binnen is. Administratie krijgt elke aanvraag in blinde kopie. Het e-mailadres van de steigerbouwer stel je in onder Instellingen, bij Steigerbouwer; de knop blokkeert zolang dat adres of het werkadres leeg is. Werkt in elke status, want de aanvraag hoort direct na de opname. Vereist eenmalig de SQL, de nieuwe Edge Function steiger-aanvraag en de bijgewerkte taken-constraint.</p>
         <p><strong>📅 De offertedatum vraagt om vandaag bij het aanmaken van een link (v4.77.0).</strong> De offertedatum wordt gezet als je een calculatie begint en schuift daarna niet mee. Lag er tijd tussen het rekenen en het versturen, dan ging de offerte met een oude datum de deur uit; bij De Vreede-Ernes stond 11 september op een link van 23 september. Voortaan kijkt de app bij het aanmaken van een eerste accordeerlink of de offertedatum vandaag is. Is dat niet zo, dan vraagt hij of de datum op vandaag mag; OK zet ook geldig-tot opnieuw op de norm voor het klanttype (particulier 21, zakelijk 30, VvE 180 dagen), Annuleren laat alles staan. Dat gebeurt voordat de PDF wordt gebouwd, dus het bevroren exemplaar toont de nieuwe datum. Bij een herziene offerte kwam die vraag al via de versie-ophoging, en daar blijft het bij één vraag. Geen SQL en geen Edge Function.</p>
         <p><strong>🧾 BTW-tarief per calculatie en per staartpost (v4.76.0).</strong> Bij Klant en adres staat een keuze BTW-tarief: volg de instelling, 9% voor woningen ouder dan twee jaar en gebouwen die voor meer dan de helft permanent bewoond worden, of 21% voor alles anders (een restaurant, een kantoor). Daarnaast kan een staartpost een eigen tarief krijgen. Zo'n post is werk van derden, bijvoorbeeld een onderaannemer: het bedrag gaat één-op-één in de offerte zonder risico-opslag en draagt zijn eigen BTW. Staan er twee tarieven in één offerte, dan toont de kaart, het offertedocument en de prijstabel per tarief een BTW-regel met de grondslag erbij; bij één tarief blijft alles zoals het was. Een derden-post kan niet in de eenheidsprijs worden verwerkt. Let op: het onderhoudsplan rekent nog met één tarief per beurt; een plan met een derden-post op een ander tarief rekent daar nog niet mee. Eenmalig SQL nodig (drie kolommen).</p>
@@ -2716,7 +2725,8 @@
       </div>
     </div>
     <div id="calcLockBanner"></div>
-    <div class="kblok-kop">Project en planning</div>
+    <div class="kblok-wrap dicht" id="kw_project">
+    <div class="kblok-kop" onclick="kblokToggle('project')"><span class="kblok-caret">▼</span><span>Project en planning</span><span class="kblok-sum" id="kwsum_project"></span></div>
     <div class="kblok lock-open">
       <div class="kgrid kgrid-vrij">
         <div class="k-ruim"><label>Projectnaam</label><input type="text" id="calcProject" placeholder="bv. Kerkstraat 12"></div>
@@ -2725,6 +2735,7 @@
         <div class="k-datum"><label>Opname-datum</label><input type="date" id="calcOpname"></div>
         <div class="k-datum"><label>Deadline offerte <span class="sub-muted">(+14 dgn)</span></label><input type="date" id="calcDeadline"></div>
       </div>
+    </div>
     </div>
     <div id="klantAdresBlok" class="lock-open"></div>
     <div id="offerteInstellingenBlok"></div>
@@ -3725,7 +3736,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.78.0';
+const APP_VERSION = 'v4.79.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4142,6 +4153,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.79.0', d: '2026-09-26', h: 'Project en planning, Klant en adres en Offerte-instellingen klappen in met een samenvatting in de kop; dicht bij openen, open bij een nieuwe calculatie.' },
   { v: '4.78.0', d: '2026-09-26', h: 'Knop Steiger aanvragen: mailt werkadres, tekst en gekozen foto\'s naar de vaste steigerbouwer en zet een week later een opvolgtaak klaar.' },
   { v: '4.77.0', d: '2026-09-23', h: 'Bij het aanmaken van een eerste accordeerlink vraagt de app of de offertedatum op vandaag mag; geldig-tot schuift dan mee.' },
   { v: '4.76.0', d: '2026-09-22', h: 'BTW-tarief per calculatie (9% of 21%) bij Klant en adres, en per staartpost een eigen tarief voor werk van derden zonder opslag.' },
@@ -5849,7 +5861,7 @@ function renderOfferteBlok() {
 
   // ---- 1. KLANT EN ADRES ----
   if (kaBlok) {
-    let ka = `<div class="kblok-kop">Klant en adres</div><div class="kblok"><div class="kgrid kgrid-vrij">
+    let ka = _kblokKopHtml('klant', 'Klant en adres') + `<div class="kblok"><div class="kgrid kgrid-vrij">
       <div class="k-mid"><label>Klant</label><input type="text" id="calcKlant" value="${_offEsc(c.klant || '')}"></div>
       <div class="k-keuze"><label>Klanttype</label>
         <select class="lock-keep" onchange="_offCfgKlanttype(this.value)">
@@ -5906,14 +5918,14 @@ function renderOfferteBlok() {
     ka += `</div>`;
     ka += `<div id="offAdresStatus" style="margin-top:0.4rem; font-size:0.68rem; color:var(--muted);">${_briefApart ? 'Het briefhoofd komt bovenaan de brief. Het werkadres stuurt de reisafstand en toon je in de tekst met {werkadres}.' : 'Vul bij Klant alleen de achternaam in: de aanspreekvorm zet zelf De heer, Mevrouw of Familie voor de naam op de offerte. Laat je het briefhoofd leeg dan is het werkadres meteen het adres op de offerte; vul je het in dan komt dat bovenaan de brief terwijl het werkadres de reisafstand blijft sturen. Klik op Zoek om straat en woonplaats uit de postcode te halen.'}</div>`;
     ka += `</div>`;
-    kaBlok.innerHTML = ka;
+    kaBlok.innerHTML = _kblokWrap('klant', ka);
   }
 
   // ---- 2. OFFERTE-INSTELLINGEN ----
   if (instBlok) {
     const _kozAanwezig = _kozijnenVoorDocument(c).length > 0;   // v4.74.1
     const _fotoAanwezig = (c.fotos || []).length > 0;
-    let inst = `<div class="kblok-kop">Offerte-instellingen</div><div class="kblok"><div class="kgrid kgrid-vrij">
+    let inst = _kblokKopHtml('offerte', 'Offerte-instellingen') + `<div class="kblok"><div class="kgrid kgrid-vrij">
       <div class="k-datum"><label>Offertedatum</label><input type="date" value="${cfg.offertedatum}" onchange="_offCfgDatum(this.value)"></div>
       <div class="k-datum"><label>Geldig tot</label><input type="date" value="${cfg.geldigTot}" onchange="_offCfgVeld('geldigTot', this.value)"></div>
       <div class="k-nummer"><label>Offertenummer</label><input type="text" value="${_offEsc(cfg.offerteNummerVrij)}" placeholder="bv. 260069" onchange="_offCfgVeld('offerteNummerVrij', this.value.trim())"><div class="k-hint">Yoobi-verkoopnummer. Verplicht voor de accordeerlink.</div></div>
@@ -5936,8 +5948,9 @@ function renderOfferteBlok() {
       </div>
     </div>`;
     inst += `</div>`;
-    instBlok.innerHTML = inst;
+    instBlok.innerHTML = _kblokWrap('offerte', inst);
   }
+  _kblokSamenvattingen(); // v4.79.0
 
   // ---- 3. OFFERTETEKSTEN ----
   if (body) {
@@ -6397,6 +6410,77 @@ const STEIGER_FN_URL = SUPABASE_URL + '/functions/v1/steiger-aanvraag';
 let _steigerBezig = false;
 
 function closeSteigerModal() { document.getElementById('steigerModal').classList.remove('active'); }
+
+// ============================================================
+// KOPBLOKKEN INKLAPPEN — v4.79.0
+// Project en planning, Klant en adres en Offerte-instellingen klappen in via
+// CSS (klasse 'dicht' op de wrap), zodat de invulvelden blijven bestaan en
+// alle code die ze op id leest of vult ongewijzigd werkt. Stand: dicht bij het
+// openen van een calculatie; open bij een nieuwe calc zonder klantnaam. Binnen
+// dezelfde calc blijft de gekozen stand staan, ook na een re-render.
+// ============================================================
+const _kblokDicht = { project: true, klant: true, offerte: true };
+let _kblokCalcId = null;
+
+function _kblokResetVoorCalc(c) {
+  if (!c || c.id === _kblokCalcId) { _kblokToepassen(); return; }
+  _kblokCalcId = c.id;
+  const nieuw = !((c.klant || '').trim()) && !((c.naam || '').trim());
+  ['project', 'klant', 'offerte'].forEach(k => { _kblokDicht[k] = !nieuw; });
+  _kblokToepassen();
+}
+function _kblokToepassen() {
+  ['project', 'klant', 'offerte'].forEach(k => {
+    const el = document.getElementById('kw_' + k);
+    if (el) el.classList.toggle('dicht', !!_kblokDicht[k]);
+  });
+}
+function _kblokKopHtml(code, titel) {
+  return '<div class="kblok-kop" onclick="kblokToggle(\'' + code + '\')"><span class="kblok-caret">▼</span><span>' + titel + '</span><span class="kblok-sum" id="kwsum_' + code + '"></span></div>';
+}
+function _kblokWrap(code, inner) {
+  return '<div class="kblok-wrap' + (_kblokDicht[code] ? ' dicht' : '') + '" id="kw_' + code + '">' + inner + '</div>';
+}
+function kblokToggle(code) {
+  _kblokDicht[code] = !_kblokDicht[code];
+  _kblokToepassen();
+}
+function _kblokDatumKort(iso) {
+  if (!iso) return '';
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? (parseInt(m[3], 10) + '-' + parseInt(m[2], 10) + '-' + m[1]) : String(iso);
+}
+// Samenvattingen in de koppen. Leest uit data.calc en de offerte-config, niet uit
+// de velden, zodat ze ook kloppen als een blok dicht staat.
+function _kblokSamenvattingen() {
+  const c = data.calc;
+  const zet = (code, tekst) => { const el = document.getElementById('kwsum_' + code); if (el) el.textContent = tekst; };
+  if (!c) { zet('project', ''); zet('klant', ''); zet('offerte', ''); return; }
+  const cfg = (c.offerteConfig && typeof c.offerteConfig === 'object') ? c.offerteConfig : {};
+  const p = [];
+  if ((c.naam || '').trim()) p.push(c.naam.trim());
+  if (c.opnameDatum) p.push('opname ' + _kblokDatumKort(c.opnameDatum));
+  if (c.deadlineDatum) p.push('deadline ' + _kblokDatumKort(c.deadlineDatum));
+  zet('project', p.join(' · ') || 'nog leeg');
+  const k = [];
+  if ((c.klant || '').trim()) k.push(c.klant.trim());
+  try {
+    const wa = _offWerkadresEffectief(c, cfg);
+    if ((wa.woonplaats || '').trim()) k.push(wa.woonplaats.trim());
+  } catch (e) { /* geen adres */ }
+  if (cfg.klanttype) k.push(_offKlanttypeLabel(cfg.klanttype));
+  zet('klant', k.join(' · ') || 'nog leeg');
+  const o = [];
+  if ((cfg.offerteNummerVrij || '').trim()) o.push('nr ' + String(cfg.offerteNummerVrij).trim());
+  if (cfg.offertedatum) o.push(_kblokDatumKort(cfg.offertedatum));
+  if (cfg.geldigTot) o.push('geldig tot ' + _kblokDatumKort(cfg.geldigTot));
+  zet('offerte', o.join(' · ') || 'nog leeg');
+}
+// Projectvelden worden op blur bijgewerkt in data.calc; daarna de kop verversen.
+document.addEventListener('change', e => {
+  if (e.target && ['calcProject', 'calcOpname', 'calcDeadline', 'calcKlant'].includes(e.target.id)) setTimeout(_kblokSamenvattingen, 0);
+});
+
 
 function _steigerKnopBijwerken() {
   const knop = document.getElementById('steigerKnop');
@@ -19084,6 +19168,7 @@ function renderCalcStructuur() {
     lbl.textContent = `Actief: ${data.calc.naam || '(zonder naam)'} · ${total} ${total === 1 ? 'calculatie' : 'calculaties'} totaal`;
   }
   if (typeof _calcSignaalLaden === 'function') _calcSignaalLaden(); // v4.68.0 — 💬 bij meldingen of vragen
+  _kblokResetVoorCalc(data.calc); // v4.79.0 — dicht bij openen, open bij een nieuwe calc
   document.getElementById('calcProject').value = data.calc.naam || '';
   document.getElementById('calcSchilders').value = data.calc.schilders || 2;
   document.getElementById('calcUurDag').value = data.calc.uurDag || 7.5;
