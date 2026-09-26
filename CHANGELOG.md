@@ -1,3 +1,13 @@
+## v4.80.1 — Fout bij taak opslaan zichtbaar; fix bron_ref (2026-09-26)
+
+**Gerepareerd**
+- De spiegel-trigger gaf `column "bron_ref" is of type uuid but expression is of type text` (live getest door Gian): `taken.bron_ref` is een uuid, de functie gaf hem als text. `calctaken_02_fix_bron_ref.sql` vervangt alleen de functie en vult de mislukte todo alsnog; `calctaken_01_spiegel.sql` is met dezelfde fix bijgewerkt voor wie het script later nog eens draait.
+- `_updateTodoDB` slikte een databasefout in (`_sbQuery` waarschuwt alleen in de console). Nu een toast "Taak opslaan mislukt: …". Daardoor was de triggerfout in de app onzichtbaar.
+
+**Getest**
+- SQL opnieuw in lokale Postgres, nu met `bron_ref uuid` en `crmtaskid` in de nabootsing: spiegel, afvinken beide kanten, cascade, herhaald draaien.
+- Les: mijn nabootsing had `bron_ref text`, dus de test kon deze fout niet vangen. De kolomtypes van `taken` zijn nu wel bekend voor bron_ref (uuid) en bron_kenmerk (text).
+
 ## v4.80.0 — Calculatie-taken gespiegeld naar de Takenapp (2026-09-26)
 
 **Nieuw**

@@ -5155,3 +5155,10 @@ Bestaande todos van vóór de SQL zijn niet gespiegeld.
 gequeryd; de eerste getypte taak in de app is de echte test.
 
 **Bewijs.** Elf scenario's in een lokale Postgres 16, zie CHANGELOG v4.80.0.
+
+**Correctie 26 september, later die dag.** Live bleek `taken.bron_ref` een
+uuid (fout 42804); de functie gaf text. Gefixt in `calctaken_02_fix_bron_ref.sql`
+en in het hoofdscript. Vastgelegd: `taken.bron_ref` uuid, `taken.bron_kenmerk`
+text, `taken.crmtaskid` is de sleutel die `taken.html` gebruikt. Daarnaast
+v4.80.1: `_updateTodoDB` toont nu een toast bij een databasefout; tot dan
+kwam die alleen in de console, waardoor de triggerfout onzichtbaar was.
