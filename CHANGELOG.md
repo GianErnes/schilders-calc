@@ -1,3 +1,19 @@
+## v4.80.0 — Calculatie-taken gespiegeld naar de Takenapp (2026-09-26)
+
+**Nieuw**
+- Elke taak in het blok Notities, taken en foto's met tekst krijgt een spiegelrij in `taken` (`bron='calculatie'`, Gian, vandaag 09:00). Tekst wijzigen, afvinken, heropenen en verwijderen werken door; afvinken in de Takenapp werkt terug naar de calculatie. Lege taken worden niet gespiegeld; bestaande taken van vóór de SQL ook niet (besluit Gian).
+- Kopje "Taken — staan ook in de Takenapp" in het blok.
+
+**Technisch**
+- De koppeling zit volledig in de database (`calctaken_01_spiegel.sql`): trigger `trg_todo_spiegel` op `todos` (functie `todo_spiegel_naar_taken`, SECURITY DEFINER) en trigger `trg_taak_spiegel` op `taken` (functie `taak_spiegel_naar_todo`). Sleutel is `(bron='calculatie', bron_kenmerk = todo-id)`, `bron_ref` = calculatie-id; geen aanname over het type van `taken.id`. Beide kanten schrijven alleen bij een echt verschil.
+- `taken_bron_check` en de policies lezen/bijwerken/verwijderen krijgen `calculatie`; `taken_aanmaken` niet (spiegels komen uit de trigger).
+- App: `_herlaadTodos(c)` in `openCalc` voor een al geladen calc, zodat vinkjes uit de Takenapp direct zichtbaar zijn.
+
+**Getest**
+- SQL in lokale Postgres 16: leeg → geen spiegel; tekst → spiegel; tekst wijzigen; afvinken en heropenen in beide richtingen; leegmaken → spiegel weg en terug; todo verwijderen; cascade via calculatie; script herhaald.
+- App: parse/braces/div-balans, runtime-test `_herlaadTodos`.
+- Nog niet in de echte omgeving: de exacte kolomset van `taken` (klantnaam, vandaag, voltooid_op) is uit `taken.html` en `offerte-herinnering` afgeleid, niet uit een query. Faalt de insert, dan zegt de foutmelding bij het typen van een taak in de app welke kolom.
+
 ## v4.79.0 — Kopblokken inklapbaar, bcc op de offertemail (2026-09-26)
 
 **Nieuw**

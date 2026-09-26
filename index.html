@@ -2357,8 +2357,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.79.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.80.0</h2>
       <div class="intro-body">
+        <p><strong>✅ Calculatie-taken staan ook in de Takenapp (v4.80.0).</strong> Typ je in het blok Notities, taken en foto's een taak, dan verschijnt hij vanzelf in de Takenapp, op naam van Gian en gepland op vandaag; verplaatsen of aan iemand anders geven doe je daar. Afvinken werkt in twee richtingen: vink je hem af in de Takenapp, dan staat hij ook in de calculatie afgevinkt, en andersom. Tekst wijzigen werkt door, verwijderen ook. Een lege taak komt niet in de Takenapp, pas als er tekst in staat. Bestaande taken van vóór deze versie blijven zoals ze waren. De koppeling zit in de database, dus de app zelf hoefde er nauwelijks voor te veranderen: alleen bij het openen van een calculatie haalt hij de taken opnieuw op, zodat een vinkje uit de Takenapp meteen zichtbaar is. Eenmalig SQL nodig.</p>
         <p><strong>📂 De drie kopblokken van de calculatie klappen in (v4.79.0).</strong> Project en planning, Klant en adres en Offerte-instellingen hebben nu dezelfde inklapbare kop als Notities, taken en foto's. Open je een calculatie, dan staan ze dicht en zie je in de kop een korte samenvatting: projectnaam met opname en deadline, klant met woonplaats en klanttype, offertenummer met datum en geldig-tot. Klik op de kop om een blok te openen, nog eens om het te sluiten. Een nieuwe calculatie zonder klantnaam opent met alle drie de blokken open, want dan moet je toch invullen. De velden blijven onder de motorkap gewoon bestaan, dus Yoobi, de afstandsknop en de controle werken ongewijzigd. Alleen weergave. Geen SQL nodig.</p>
         <p><strong>🏗️ Steiger aanvragen bij de vaste steigerbouwer (v4.78.0).</strong> Bovenaan de calculatie staat naast Naar Craft de knop Steiger aanvragen. Die opent een venster met het werkadres ter controle, een begeleidende tekst die je per keer kunt aanpassen, en de foto's uit het klusdossier als aanvinkbare thumbnails: alleen de aangevinkte gaan mee als bijlage. Na versturen wordt de knop groen met datum en tijd, en staat er een week later een taak voor Gian in de Takenapp met de vraag of de steigerofferte al binnen is. Administratie krijgt elke aanvraag in blinde kopie. Het e-mailadres van de steigerbouwer stel je in onder Instellingen, bij Steigerbouwer; de knop blokkeert zolang dat adres of het werkadres leeg is. Werkt in elke status, want de aanvraag hoort direct na de opname. Vereist eenmalig de SQL, de nieuwe Edge Function steiger-aanvraag en de bijgewerkte taken-constraint.</p>
         <p><strong>📅 De offertedatum vraagt om vandaag bij het aanmaken van een link (v4.77.0).</strong> De offertedatum wordt gezet als je een calculatie begint en schuift daarna niet mee. Lag er tijd tussen het rekenen en het versturen, dan ging de offerte met een oude datum de deur uit; bij De Vreede-Ernes stond 11 september op een link van 23 september. Voortaan kijkt de app bij het aanmaken van een eerste accordeerlink of de offertedatum vandaag is. Is dat niet zo, dan vraagt hij of de datum op vandaag mag; OK zet ook geldig-tot opnieuw op de norm voor het klanttype (particulier 21, zakelijk 30, VvE 180 dagen), Annuleren laat alles staan. Dat gebeurt voordat de PDF wordt gebouwd, dus het bevroren exemplaar toont de nieuwe datum. Bij een herziene offerte kwam die vraag al via de versie-ophoging, en daar blijft het bij één vraag. Geen SQL en geen Edge Function.</p>
@@ -3736,7 +3737,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.79.0';
+const APP_VERSION = 'v4.80.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4153,6 +4154,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.80.0', d: '2026-09-26', h: 'Taken uit de calculatie staan ook in de Takenapp (Gian, vandaag); afvinken werkt in twee richtingen.' },
   { v: '4.79.0', d: '2026-09-26', h: 'Project en planning, Klant en adres en Offerte-instellingen klappen in met een samenvatting in de kop; dicht bij openen, open bij een nieuwe calculatie.' },
   { v: '4.78.0', d: '2026-09-26', h: 'Knop Steiger aanvragen: mailt werkadres, tekst en gekozen foto\'s naar de vaste steigerbouwer en zet een week later een opvolgtaak klaar.' },
   { v: '4.77.0', d: '2026-09-23', h: 'Bij het aanmaken van een eerste accordeerlink vraagt de app of de offertedatum op vandaag mag; geldig-tot schuift dan mee.' },
@@ -7900,6 +7902,18 @@ async function _fetchCalcHeadersFromDB() {
   );
   if (error) return null;
   return (rows || []).map(_mapCalcHeaderFromDB);
+}
+// v4.80.0 — todos opnieuw ophalen voor een al geladen calc. De Takenapp kan
+// intussen een spiegeltaak hebben afgevinkt (trigger taak_spiegel_naar_todo zet
+// todos.done); zonder dit zag je dat pas na F5. Stil bij fouten: dan blijft de
+// gecachte lijst staan.
+async function _herlaadTodos(c) {
+  if (!c || !c.__loaded || !_sb) return;
+  try {
+    const { data: rows, error } = await _sbQuery(_sb.from('todos').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Taken verversen');
+    if (error || !Array.isArray(rows)) return;
+    c.todos = rows.map(_mapTodoFromDB);
+  } catch (e) { /* gecachte lijst blijft */ }
 }
 async function _loadCalcBody(c) {
   if (c.__loaded) return true;
@@ -18736,7 +18750,7 @@ function renderNotitiesPaneel() {
       <div class="notities-body">
         <textarea id="notitiesTextarea" rows="4" placeholder="Wensen klant, aandachtspunten, observaties..." onchange="updNotities(this.value)">${data.calc.notities || ''}</textarea>
         <div class="todo-list">
-          <div class="todo-list-titel">Taken</div>
+          <div class="todo-list-titel">Taken <span class="sub-muted" style="font-weight:400;">— staan ook in de Takenapp</span></div>
           ${todosHtml}
           <button class="btn-secondary btn btn-sm" onclick="addTodo()" style="margin-top: 0.4rem;">+ Taak</button>
         </div>
@@ -20139,6 +20153,7 @@ async function openCalc(id) {
   data.activeCalcId = id;
   try { localStorage.setItem('verfcalc_v3_activeCalcId', id); } catch(e) {}
   if (!c.__loaded) await _loadCalcBody(c);
+  else await _herlaadTodos(c); // v4.80.0 — vinkjes uit de Takenapp meenemen
   // Cache het totaalbedrag in de DB zodat het dashboard ook na een nieuwe
   // sessie/dag een correcte waarde toont, ook voor verzonden/geaccepteerde calcs.
   _syncCalcTotalToDB(c);

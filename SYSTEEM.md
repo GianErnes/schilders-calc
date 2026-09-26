@@ -5132,3 +5132,26 @@ stub-DOM (vijf scenario's), `deno check` op de Edge Function. Niet in de echte
 omgeving getest: de bcc-aankomst en het gedrag van de inklapkoppen op de iPad
 (de flex-kop met `max-width: 65%` op de samenvatting is een aanname over de
 beschikbare breedte; loopt de tekst af, dan wordt hij afgekapt met …).
+
+## Wat er op 26 september 2026 als laatste gedaan is: calculatie-taken in de Takenapp (v4.80.0)
+
+**Keuze.** Route A (spiegelen, `todos` blijft bestaan), maar in de database in
+plaats van in de app. Reden: `taken.html` kent `todos` niet en mag in deze
+chat niet mee, en een spiegel in de app zou bij elke wijziging van beide
+apps opnieuw uit de pas kunnen lopen. Twee triggers houden het bij elkaar:
+`trg_todo_spiegel` (todos → taken) en `trg_taak_spiegel` (taken → todos,
+alleen `voltooid_op`). Sleutel: `bron='calculatie'`, `bron_kenmerk` =
+todo-id, `bron_ref` = calculatie-id. Standaard Gian, vandaag 09:00;
+verplaatsen gebeurt in de Takenapp en de calculatie raakt datum en persoon
+niet meer aan.
+
+**Regels.** Lege taak = geen spiegel. Tekst leegmaken = spiegel weg. Todo
+verwijderen of calculatie verwijderen (cascade) = spiegel weg. Afvinken en
+heropenen in beide richtingen, zonder lus (schrijven alleen bij verschil).
+Bestaande todos van vóór de SQL zijn niet gespiegeld.
+
+**Bekend.** De Takenapp toont deze taken nog zonder pill (aparte chat voor
+`taken.html`). De kolomset van `taken` in de trigger is afgeleid, niet
+gequeryd; de eerste getypte taak in de app is de echte test.
+
+**Bewijs.** Elf scenario's in een lokale Postgres 16, zie CHANGELOG v4.80.0.
