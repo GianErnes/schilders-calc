@@ -526,7 +526,7 @@ Allemaal in `schilders-calc`, allemaal actief.
 | `yuki-vuller-avond` | 17:00 | 19:00 | 18:00 | `smooth-function` | zelfde, derde keer op de dag. Bijgekomen 1 augustus 2026 |
 | `offerte-opvolging-werkdagen` | ma t/m vr 06:30 | 08:30 | 07:30 | `offerte-herinnering` | herinnert aan openstaande offertes |
 | `taken-mail-melding` | elke 2 minuten | | | `taken-mail-melding` | stuurt mail bij nieuwe of gewijzigde taken |
-| `werkvoorraad-sync-wekelijks` | dinsdag 06:00 | 08:00 | 07:00 | `fin-werkvoorraad-sync` | haalt de werkvoorraad uit Yoobi |
+| `werkvoorraad-sync-wekelijks` | dinsdag 06:00 | 08:00 | 07:00 | `fin-werkvoorraad-sync` | haalt de werkvoorraad uit Yoobi. Enige job via `extensions.http`; sinds 27 september 2026 met 60 s wachttijd (`CURLOPT_TIMEOUT_MS`), zie de sectie van die datum |
 | `maandbericht-maandelijks` | de 7e, 07:00 | 09:00 | 08:00 | `maandbericht` | stelt het maandbericht op |
 
 **Twee dingen om te weten.**
@@ -884,9 +884,16 @@ volgorde van tijd en je trekt er makkelijk de verkeerde conclusie uit.
 > verstuurd. Wil je weten of het werk ook echt gedaan is, kijk dan bij
 > Invocations van de functie zelf. Daar staat 200 of een foutcode.
 >
-> Uitzondering: `werkvoorraad-sync-wekelijks` gebruikt `extensions.http`
-> en wacht wél op antwoord. Bij die ene job zegt een mislukte run
-> daadwerkelijk iets.
+> `werkvoorraad-sync-wekelijks` gebruikt `extensions.http` en wacht wél
+> op antwoord, maar sinds `fin-werkvoorraad-sync` v5 (6 september 2026)
+> antwoordt de functie direct met 202 en doet het werk daarna op de
+> achtergrond. **"Succeeded" betekent bij deze job dus "verzoek
+> aangenomen", niet "Yoobi opgehaald".** Hier stond tot 27 september dat
+> een mislukte run bij deze job wél iets zegt; dat klopte alleen voor
+> v4. Het bewijs is de laatste stand in `fin_werkvoorraad`, en die staat
+> sinds 27 september als bewijsregel bovenaan het blok "Achter de
+> schermen" in start.html. Een mislukte run zegt nog steeds iets, maar
+> alleen over de opstart van de functie (zie de sectie van 27 september).
 
 > **Drie valse signalen bij de nachtelijke backup.** Van alle
 > achtergrondtaken is `backup-nachtelijk` de belangrijkste, en juist die
@@ -5192,3 +5199,68 @@ meer hoger uitvallen dan Actueel in de Takenapp, zolang er oude
 Een titelwijziging van zo'n taak in de Takenapp gaat niet terug naar de
 calculatie (`trg_taak_spiegel` spiegelt alleen `voltooid_op`). Review-
 knoppen (WhatsApp/mail) schuiven naar taken.html v0.23.0.
+
+## Wat er op 27 september 2026 gedaan is: werkvoorraad-cron wacht 60 s, bewijsregel in Start (start_02)
+
+**Aanleiding.** Op het dashboard stond een oranje bolletje bij
+"Werkvoorraad uit Yoobi (wekelijks)": laatste gelukte run 15-09. De run
+van dinsdag 22-09 stond in `cron.job_run_details` als `failed` met
+"Operation timed out after 5002 milliseconds with 0 bytes received".
+Tegelijk stond er in `fin_werkvoorraad` gewoon een stand van 22-09
+06:00:17, `gestart_door=cron`, 126 projecten. Het werk was dus gedaan;
+alleen cron had het wachten na 5 seconden opgegeven.
+
+**Waarom eerdere runs wél slaagden.** De functie antwoordt sinds v5
+direct met 202 (`EdgeRuntime.waitUntil`, regels 282–294 van
+`fin-werkvoorraad-sync_v5_index.ts`) en haalt daarna pas Yoobi op. De
+runs van 01-09 en 15-09 deden 10 seconden werk maar antwoordden binnen
+een fractie van een seconde. Op 22-09 kwam er 5 seconden lang niets: de
+functie kwam niet op tijd op gang (de stand kwam ook 7 seconden later
+dan anders). Aanname: een trage opstart van de Edge Function. Het was
+niet Yoobi, want de time-out zat vóór de Yoobi-aanroep en de stand was
+compleet. De cron-opdracht had geen `http_set_curlopt`, dus gold de
+standaard van 5 seconden. Sinds v5 klopte de uitzondering in 3.4
+("bij deze job zegt een mislukte run wél iets") niet meer; gecorrigeerd.
+
+**Gedaan, bestand `start_02_werkvoorraad_status.sql`** (drie delen,
+allemaal herhaalbaar, met projectcheck bovenin):
+
+1. **DEEL A.** `cron.alter_job` op `werkvoorraad-sync-wekelijks`: de
+   opdracht begint nu met `select extensions.http_set_curlopt(
+   'CURLOPT_TIMEOUT_MS', '60000');` gevolgd door de bestaande aanroep,
+   letterlijk gelijk, sleutel uit de kluis. pg_cron voert de twee
+   opdrachten in dezelfde sessie uit; dat was een aanname en is met
+   DEEL T bewezen.
+2. **DEEL T.** Tijdelijke job `werkvoorraad-sync-test`, twee minuten
+   later, met exact de opdracht uit `cron.job`. Uitslag 27-09 09:17
+   UTC: `succeeded`, "1 row", en 9 seconden later een stand met
+   `gestart_door=cron`, 125 projecten. Daarna verwijderd met
+   `cron.unschedule`.
+3. **DEEL B.** `systeem_status()` vervangen (tekst uit
+   `pg_get_functiondef`, twee wijzigingen): nieuw blok 3b, bewijsregel
+   "Werkvoorraad uit Yoobi" op de laatste `bijgewerkt_op` uit
+   `fin_werkvoorraad`, met erbij `cron` of `knop in Planning` en het
+   aantal projecten; groen tot 8 dagen, oranje tot 15, daarna rood. In
+   blok 4 heet de cronregel van deze job nu "Verzoek aangenomen" in
+   plaats van "Gelukt". `start.html` is niet gewijzigd; die toont wat de
+   functie teruggeeft. De bewijsregel telt ook handmatige verversingen
+   via de knop in planning.html mee, en dat is de bedoeling: de vraag
+   is of de werkvoorraad vers is, niet wie hem ververst heeft.
+
+Eerst getest in een lokale Postgres 16 met nagebouwde tabellen (hele
+bestand foutloos, controleregels GOED, functie geeft de nieuwe regel
+terug), daarna in de echte database (A GOED, B GOED, testjob geslaagd).
+De eerste echte weekrun met 60 seconden is dinsdag 29 september 08:00.
+
+**Opgevallen, niet gerepareerd.** `zonder_code` staat in elke stand op 2
+(Simons 2029 en Wilpshaar 2032, zie 3.2). De verwachting bij v5 dat dit
+op 0 zou komen is dus niet uitgekomen. En `weggelaten_verlopen` staat op
+46: dat is het driemaandsfilter dat Gian uit wil zetten om oude, nooit
+afgesloten projecten met de hand op te ruimen. Beide zijn werk aan de
+Edge Function, aparte chat.
+
+**Handmatig testen van de cron-weg**, zonder op dinsdag te wachten: de
+vorm uit 4.7 (backup-dump) met `POST`, adres
+`.../functions/v1/fin-werkvoorraad-sync`, `'application/json'`, `'{}'`.
+Verwacht 202 met `"gestart": true`; een minuut later een stand van
+vandaag met `gestart_door=cron`. Op 27 september zo gedraaid.
