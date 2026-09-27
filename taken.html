@@ -81,10 +81,8 @@
   .treffers-leeg{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;font-size:14px;color:var(--ink-soft);font-weight:600;text-align:center}
   .section{margin-bottom:9px;--balk:var(--card);--balkrand:var(--line);--vak:transparent}
   .section[data-key="vandaag"]{--balk:#f9e4e1;--balkrand:#f0cfc9;--vak:#fbeeec}
-  .section[data-key="oprol"]{--balk:#eef1f5;--balkrand:#dde2e9;--vak:#f5f7f9}
-  .section[data-key="los"]{--balk:#f8f0d3;--balkrand:#ecdfae;--vak:#fbf6e2}
+  .section[data-key="taken"]{--balk:#eef1f5;--balkrand:#dde2e9;--vak:#f5f7f9} /* v0.22.0: kleur van Op de rol */
   .section[data-key="herhalend"]{--balk:#e2edfa;--balkrand:#c9dcf3;--vak:#eaf2fb}
-  .section[data-key="klant"]{--balk:#f9e4e1;--balkrand:#f0cfc9;--vak:#fbeeec}
   .section[data-key="voltooid"]{--balk:#e3f2e9;--balkrand:#cde6d8;--vak:#ecf6f0}
   .section[data-key="vervallen"]{--balk:#f1f2f4;--balkrand:#e3e6e9;--vak:#f3f4f6}
   .head{
@@ -421,6 +419,42 @@
     border:none;cursor:pointer;padding:0;white-space:nowrap;
   }
 
+  /* v0.22.0: schermafhankelijk. Telefoon: alles onder elkaar in vaste
+     volgorde (de kolommen doen niet mee, display:contents). Vanaf 700 px
+     twee kolommen; vanaf 1100 px is het taakvel een paneel rechts. */
+  .rubrieken{display:flex;flex-direction:column}
+  .kolom{display:contents}
+  .rubrieken .section[data-key="vandaag"]{order:1}
+  .rubrieken .section[data-key="taken"]{order:2}
+  .rubrieken .section[data-key="herhalend"]{order:3}
+  .rubrieken .section[data-key="voltooid"]{order:4}
+  .rubrieken .section[data-key="vervallen"]{order:5}
+  @media (min-width:700px){
+    .app{max-width:1060px}
+    .rubrieken{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 18px;align-items:start}
+    .kolom{display:block;min-width:0}
+    .fab{right:max(24px, calc(50% - 530px + 24px))}
+  }
+  @media (min-width:1100px){
+    body.vel-open{padding-right:440px}
+    body.vel-open .scrim{display:none}
+    body.vel-open .fab{display:none}
+    #sheet{
+      left:auto;right:0;top:0;bottom:0;width:440px;max-width:none;margin:0;
+      max-height:none;border-radius:0;border-left:1px solid var(--line);
+      transform:translateX(100%);
+      padding-top:calc(14px + env(safe-area-inset-top));
+    }
+    #sheet.show{transform:translateX(0)}
+    #sheet .grip{display:none}
+    #sheet .velsluit{display:flex}
+  }
+  /* v0.22.0: sluitknop, alleen in paneelstand (daar is geen scrim om op te tikken) */
+  .velsluit{
+    display:none;position:sticky;top:0;float:right;z-index:2;margin:0 0 6px 10px;
+    width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);
+    color:var(--ink-soft);font-size:15px;line-height:1;cursor:pointer;align-items:center;justify-content:center
+  }
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important}
   }
@@ -457,6 +491,7 @@
   <div class="scrim" id="scrim"></div>
   <div class="sheet" id="sheet" role="dialog" aria-label="Taak">
     <div class="grip"></div>
+    <button type="button" class="velsluit" id="s_sluit" aria-label="Sluiten">✕</button>
     <h2 id="s_title" style="display:none">Taak</h2>
     <input class="titelinput" id="s_titelinput" placeholder="Wat moet er gebeuren?" style="display:none">
     <div class="who-row" id="s_whorow"></div>
@@ -605,7 +640,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.21.2';
+const APP_VERSION = 'v0.22.0';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -778,11 +813,13 @@ function rubriekVan(t, nu, vandaagISO){
      weggezet. Dan valt hij door naar Op de rol (gepland <= vandaag). Morgen
      is de weggezet-set leeg en wint de planning weer. */
   if(t._vandaagVast && !MIJN_WEGGEZET_VANDAAG.has(String(t.crmtaskid))) return 'vandaag';
-  if(MIJN_VANDAAG.has(String(t.crmtaskid))) return 'vandaag';
-  if(t._gepland && lokaalISO(t._gepland) <= vandaagISO) return 'oprol';
-  if(t.bron === 'yoobi') return 'klant';
-  if(t.soort === 'herhalend') return 'herhalend';
-  return 'los';
+  /* v0.22.0: 'gehaald' telt niet bij Yoobi; daar staat geen pijl meer. */
+  if(t.bron !== 'yoobi' && MIJN_VANDAAG.has(String(t.crmtaskid))) return 'vandaag';
+  /* v0.22.0: Op de rol, Losse taken en Klantopvolging zijn samen Taken.
+     Alleen een herhaler die nog niet aan de beurt is blijft in Herhalend. */
+  const verlopen = !!(t._gepland && lokaalISO(t._gepland) <= vandaagISO);
+  if(t.soort === 'herhalend' && !verlopen) return 'herhalend';
+  return 'taken';
 }
 function verrijk(rijen){
   const nu = new Date();
@@ -855,6 +892,7 @@ async function schakelDagkeuze(id){
   /* v0.18.0: een vaste taak (vandaag gepland op jouw naam) zit niet in
      MIJN_VANDAAG maar staat wel in Actueel; de pijl moet hem dan wegzetten. */
   const t = TAKEN.find(function(x){ return String(x.crmtaskid) === String(id); });
+  if(t && t.bron === 'yoobi') return; /* v0.22.0: geen dagkeuze bij Yoobi */
   const aan = t ? t._rubriek !== 'vandaag' : !MIJN_VANDAAG.has(String(id));
   const fout = await zetDagkeuze(id, aan);
   if(fout){ toast('Keuze opslaan lukt niet: ' + fout); return; }
@@ -881,14 +919,13 @@ const NA_VIER = new Date().getHours() >= 16;
 
 const RUBRIEKEN = [
   { key:'vandaag',   titel:'Actueel',        sub:'op jouw naam vandaag, plus wat je zelf hebt gehaald', open:true, klasse:'today' }, /* v0.18.0: was Vandaag */
-  { key:'oprol',     titel:'Op de rol',      sub:'blijven liggen en nog op te pakken',       open:false,   klasse:'roll' }, /* v0.18.2: standaard dicht */
-  { key:'los',       titel:'Losse taken',    sub:'wat er nog aankomt',                       open:false },
+  { key:'taken',     titel:'Taken',          sub:'alles wat open ligt · Yoobi bijwerken met ↻', open:false, klasse:'roll' }, /* v0.22.0: Op de rol + Losse taken + Klantopvolging */
   { key:'herhalend', titel:'Herhalend ↻',    sub:'',                                         open:false },
-  { key:'klant',     titel:'Klantopvolging', sub:'uit Yoobi · bijwerken met ↻',             open:false, klasse:'gated' },
   { key:'voltooid',  titel:'Voltooid',       sub:'je eigen afgevinkte taken',                open:false,   klasse:'done' },
   { key:'vervallen', titel:'Vervallen',      sub:'niet meer nodig, blijft als historie',     open:false,   klasse:'lapsed' },
 ];
 RUBRIEKEN.forEach(r => { OPEN_STAND[r.key] = r.open; });
+const KOLOM_LINKS = ['vandaag', 'herhalend']; /* v0.22.0: rest rechts */
 
 /* ────────────────────────────────────────────────────────
    Opbouw
@@ -950,8 +987,9 @@ function kaart(t, hero){
      verschijnt de pijl niet. Eruit gaat via de datum, niet via een tik. */
   /* v0.18.0: ook bij een vaste taak staat de pijl er, om hem voor vandaag
      weg te zetten. Morgen komt hij door de planning vanzelf terug. */
+  /* v0.22.0: pijl bij elke open taak die niet uit Yoobi komt. */
   const inVandaag = t._rubriek === 'vandaag';
-  const kies = (inVandaag || t._rubriek === 'oprol')
+  const kies = (t.bron !== 'yoobi' && t._rubriek !== 'voltooid' && t._rubriek !== 'vervallen')
     ? '<span class="kies' + (inVandaag ? ' aan' : '') + '" data-kies="' + esc(t.crmtaskid) +
       '" role="button" tabindex="0" aria-label="' + (inVandaag ? 'Uit Actueel' : 'Naar Actueel') +
       '" title="' + (inVandaag ? 'Uit Actueel' : 'Naar Actueel') + '">' +
@@ -995,14 +1033,14 @@ function sorteer(lijst, rubriek){
       if(ba === 3) return 0;
       return ba === 2 ? b._gepland - a._gepland : a._gepland - b._gepland;
     });
-  } else if(rubriek === 'oprol'){
-    /* v0.18.1: Op de rol aflopend — de meest recente plandatum bovenaan,
-       de langste achterstand onderaan. Zonder datum blijft onderaan. */
+  } else if(rubriek === 'taken'){
+    /* v0.22.0: oudste plandatum bovenaan (keuze Gian), zonder datum onderaan.
+       Vervangt het aflopende Op de rol van v0.18.1. */
     kopie.sort((a,b) => {
       if(!a._gepland && !b._gepland) return 0;
       if(!a._gepland) return 1;
       if(!b._gepland) return -1;
-      return b._gepland - a._gepland;
+      return a._gepland - b._gepland;
     });
   } else {
     kopie.sort((a,b) => {
@@ -1058,27 +1096,31 @@ function bouwRubriek(r){
   let sub = r.sub;
   let extraNoot = '';
   let voorNoot = '';
-  if(r.key === 'oprol'){
-    const laat = eigen.filter(t => t._telaat).length;
-    sub = eigen.length === 0 ? 'niets meer open'
-        : (eigen.length - laat) + ' speelt vandaag' + (laat ? ' · ' + laat + ' te laat' : '');
-  }
-  /* v0.16.1: de Yoobi-lijst ververst zichzelf niet, dus staat de regel
-     erbij die zegt wanneer je hem zelf bijwerkt. */
-  if(r.key === 'klant'){
-    voorNoot = '<div class="hidnote">Deze lijst haalt zichzelf niet op. Klaar met verwerken in Yoobi? Tik dan \u21bb hierboven.</div>';
-    /* v0.19.0: alleen dit kalenderjaar tonen. Taken zonder datum blijven
-       staan; die zijn niet in een jaar te plaatsen. */
+  if(r.key === 'taken'){
+    /* v0.22.0: Op de rol, Losse taken en Klantopvolging in één lijst.
+       v0.16.1: de Yoobi-taken verversen zichzelf niet, dus staat de regel
+       erbij die zegt wanneer je ze zelf bijwerkt. */
+    if(eigen.some(t => t.bron === 'yoobi') || (IK && (IK.rol === 'alles' || IK.ziet_klant))){
+      voorNoot = '<div class="hidnote">De Yoobi-taken halen zichzelf niet op. Klaar met verwerken in Yoobi? Tik dan \u21bb hierboven.</div>';
+    }
+    /* v0.19.0, v0.22.0: Yoobi-taken uit een ander kalenderjaar standaard
+       verborgen. Alleen Yoobi; eigen taken blijven altijd zichtbaar.
+       Zonder datum blijft staan, die is niet in een jaar te plaatsen. */
     const ditJaar = new Date().getFullYear();
-    const anderJaar = t => !!(t._gepland && t._gepland.getFullYear() !== ditJaar);
+    const anderJaar = t => !!(t.bron === 'yoobi' && t._gepland && t._gepland.getFullYear() !== ditJaar);
     const buiten = eigen.filter(anderJaar).length;
     if(!TOON_KLANT_ANDERE_JAREN) zichtbaar = eigen.filter(t => !anderJaar(t));
-    sub = 'uit Yoobi \u00b7 ' + (eigen.length - buiten) + ' dit jaar' +
-          (buiten ? ' \u00b7 ' + buiten + ' in andere jaren' : '');
+    const vISO = lokaalISO(new Date());
+    const laat = zichtbaar.filter(t => t._telaat).length;
+    const vandaagN = zichtbaar.filter(t => t._gepland && lokaalISO(t._gepland) === vISO).length;
+    const komt = zichtbaar.length - laat - vandaagN;
+    sub = zichtbaar.length === 0 ? 'niets meer open'
+        : [laat ? laat + ' te laat' : '', vandaagN ? vandaagN + ' vandaag' : '', komt ? komt + ' komt nog' : '']
+            .filter(Boolean).join(' \u00b7 ');
     if(buiten > 0){
       extraNoot = '<div class="hidnote klantjaren" data-klantjaren="1" role="button" tabindex="0">' +
-        (TOON_KLANT_ANDERE_JAREN ? 'Andere jaren staan erbij \u00b7 verbergen'
-                                 : buiten + ' uit andere jaren verborgen \u00b7 tonen') +
+        (TOON_KLANT_ANDERE_JAREN ? 'Yoobi-taken uit andere jaren staan erbij \u00b7 verbergen'
+                                 : buiten + ' Yoobi-taken uit andere jaren verborgen \u00b7 tonen') +
         '</div>';
     }
   }
@@ -1097,12 +1139,11 @@ function bouwRubriek(r){
 
   const gatehint = '';
 
-  const leegTekst = r.key === 'oprol' ? 'Niets meer op de rol. Alles is gekozen of gedaan.'
-                  : r.key === 'vandaag' ? 'Niets voor vandaag gepland. Pak hieronder op wat er nog ligt.'
-                  : (r.key === 'klant' && eigen.length) ? 'Niets meer voor dit jaar.'
+  const leegTekst = r.key === 'taken' ? 'Niets meer open. Alles is gekozen of gedaan.'
+                  : r.key === 'vandaag' ? 'Niets voor vandaag gepland. Pak onder Taken op wat er nog ligt.'
                   : 'niets hier';
-  /* v0.19.0: bij Klantopvolging telt de kop alleen wat je ziet. */
-  const telling = r.key === 'klant' ? zichtbaar.length : eigen.length;
+  /* v0.19.0, v0.22.0: bij Taken telt de kop alleen wat je ziet. */
+  const telling = r.key === 'taken' ? zichtbaar.length : eigen.length;
   const kaarten = zichtbaar.length
     ? zichtbaar.map(t => kaart(t, t.crmtaskid === heroId)).join('')
     : '<div class="hidnote">' + leegTekst + '</div>';
@@ -1111,7 +1152,7 @@ function bouwRubriek(r){
     '<button class="head" aria-expanded="' + open + '">' +
     cluster(eigen) +
     '<span class="title"><span class="t">' + r.titel + '</span><span class="sub">' + sub + '</span></span>' +
-    (r.key === 'klant' ? '<span class="ophaal-knop" data-ophaal="1" role="button" tabindex="0" aria-label="Yoobi ophalen" title="Yoobi ophalen">\u21bb</span>' : '') +
+    (r.key === 'taken' ? '<span class="ophaal-knop" data-ophaal="1" role="button" tabindex="0" aria-label="Yoobi ophalen" title="Yoobi ophalen">\u21bb</span>' : '') +
     '<span class="count">' + telling + '</span><span class="chev"></span>' +
     '</button>' + gatehint +
     '<div class="cards"><div class="inner">' + voorNoot + kaarten + extraNoot + '</div></div></div>';
@@ -1178,7 +1219,13 @@ function render(){
     if(ZOEK){
       lijst.innerHTML = bouwTreffers() + bouwVoet();
     } else {
-      lijst.innerHTML = RUBRIEKEN.filter(r => r.key !== 'vervallen' || zicht.some(t => t._rubriek === 'vervallen')).map(bouwRubriek).join('') + bouwMeetstrook() + bouwVoet();
+      /* v0.22.0: twee kolommen op een breed scherm; op de telefoon zet de
+         CSS alles in vaste volgorde onder elkaar. */
+      const rubs = RUBRIEKEN.filter(r => r.key !== 'vervallen' || zicht.some(t => t._rubriek === 'vervallen'));
+      const links = rubs.filter(r => KOLOM_LINKS.indexOf(r.key) >= 0).map(bouwRubriek).join('');
+      const rechts = rubs.filter(r => KOLOM_LINKS.indexOf(r.key) < 0).map(bouwRubriek).join('');
+      lijst.innerHTML = '<div class="rubrieken"><div class="kolom">' + links + '</div><div class="kolom">' + rechts + '</div></div>' +
+        bouwMeetstrook() + bouwVoet();
     }
     window.scrollTo(0, scrollY);
   }catch(e){
@@ -1321,7 +1368,7 @@ function openTask(t){
      blijft daarom weg. */
   /* v0.18.0: ook bij een vaste taak zichtbaar; uitzetten = voor vandaag
      wegzetten. Aan/uit volgt de rubriek, niet alleen de eigen keuze. */
-  zet('s_vandaagwrap', (modus === 'eigen' || modus === 'yoobi'));
+  zet('s_vandaagwrap', modus === 'eigen'); /* v0.22.0: niet bij Yoobi */
   const vandaagAan = t._rubriek === 'vandaag' || MIJN_VANDAAG.has(String(t.crmtaskid));
   document.getElementById('s_vandaag').classList.toggle('uit', !vandaagAan);
   document.getElementById('s_vandaagtekst').textContent = vandaagAan ? 'Staat in Actueel' : 'Naar Actueel';
@@ -1553,11 +1600,13 @@ async function verwijderSjabloon(id){
 }
 
 function toonVel(){
+  document.body.classList.add('vel-open'); /* v0.22.0: paneel rechts vanaf 1100 px */
   document.getElementById('scrim').classList.add('show');
   document.getElementById('sheet').classList.add('show');
   document.getElementById('sheet').scrollTop = 0;
 }
 function sluitVel(){
+  document.body.classList.remove('vel-open');
   document.getElementById('scrim').classList.remove('show');
   document.getElementById('sheet').classList.remove('show');
   VEL = null;
@@ -1750,6 +1799,7 @@ async function vinkAf(){
         gepland_op: volgendeTs,
         piep_op: w.piepAan ? naarUTC(volgendeTs) : null,
         mail_op: null,
+        push_op: null, /* v0.22.0: mee gewist, zoals sinds v0.21.0 bij bewaren */
       });
       const { error: e2 } = await sb.from('taken').update(herhalerUpdate).eq('crmtaskid', t.crmtaskid);
       if(e2) throw e2;
@@ -1824,6 +1874,7 @@ async function schakelVandaag(){
   document.getElementById('s_vandaag').classList.toggle('uit', !aanNu);
   document.getElementById('s_vandaagtekst').textContent = aanNu ? 'Staat in Actueel' : 'Naar Actueel';
   if(!VEL || VEL.modus === 'nieuw') return; /* bij nieuw gaat hij mee met Toevoegen */
+  if(VEL.modus !== 'eigen') return; /* v0.22.0: geen dagkeuze bij Yoobi */
   const fout = await zetDagkeuze(VEL.taak.crmtaskid, aanNu);
   if(fout){ toast('Keuze opslaan lukt niet: ' + fout); return; }
   toast(aanNu ? 'Naar Actueel' : 'Uit Actueel');
@@ -1841,7 +1892,7 @@ async function schakelPiep(){
     const u = tijdTekst(t._gepland);
     piep_op = naarUTC(naarTimestamp(lokaalISO(t._gepland), u || '09:00'));
   }
-  const { error } = await sb.from('taken').update({ piep: aanNu, piep_op: piep_op, mail_op: null }).eq('crmtaskid', t.crmtaskid);
+  const { error } = await sb.from('taken').update({ piep: aanNu, piep_op: piep_op, mail_op: null, push_op: null }).eq('crmtaskid', t.crmtaskid);
   if(error){ toast('Melding opslaan lukt niet: ' + error.message); return; }
   await laadTaken();
 }
@@ -1863,7 +1914,7 @@ async function verzetMelding(hoe){
   }
   const doelTs = doel.toISOString();
   const { error } = await sb.from('taken').update({
-    piep: true, piep_op: doelTs, melding_geleverd_op: null, mail_op: null,
+    piep: true, piep_op: doelTs, melding_geleverd_op: null, mail_op: null, push_op: null,
   }).eq('crmtaskid', t.crmtaskid);
   if(error){ toast('Uitstellen lukt niet: ' + error.message); return; }
   document.getElementById('s_toggle').classList.remove('uit');
@@ -2272,7 +2323,7 @@ function openViaAdres(){
 let YOOBI_BEZIG = false;
 
 function ophaalStand(draait, subtekst){
-  const sec = document.querySelector('.section[data-key="klant"]');
+  const sec = document.querySelector('.section[data-key="taken"]');
   if(!sec) return;
   const knop = sec.querySelector('[data-ophaal]');
   if(knop) knop.classList.toggle('draait', draait);
@@ -2281,7 +2332,7 @@ function ophaalStand(draait, subtekst){
      tekst valt hij nu terug op de vaste ondertitel van de rubriek. */
   var tekst = subtekst;
   if(tekst == null && !draait){
-    var rub = RUBRIEKEN.filter(function(r){ return r.key === 'klant'; })[0];
+    var rub = RUBRIEKEN.filter(function(r){ return r.key === 'taken'; })[0];
     tekst = rub ? rub.sub : '';
   }
   if(tekst != null){
@@ -2368,7 +2419,7 @@ async function haalYoobiOp(){
       if(fase === 'idle' && stamp && stamp !== startStamp){
         YOOBI_BEZIG=false;
         await laadTaken();
-        toast('Klantopvolging bijgewerkt');
+        toast('Yoobi-taken bijgewerkt');
         return;
       }
       /* v0.16.3: staat alles vier minuten lang stil, dan is de keten weg
@@ -2429,7 +2480,7 @@ document.getElementById('lijst').addEventListener('click', async function(e){
   const toonKnop = e.target.closest('[data-toon]');
   if(toonKnop){
     e.stopPropagation();
-    OPEN_STAND['klant'] = true;
+    OPEN_STAND['taken'] = true;
     render();
     return;
   }
@@ -2495,6 +2546,7 @@ zoekWisEl.addEventListener('click', function(){
   zoekveldEl.focus();
 });
 document.getElementById('scrim').addEventListener('click', function(){ sluitVel(); sluitBeheer(); sluitSjabloon(); });
+document.getElementById('s_sluit').addEventListener('click', function(){ sluitVel(); }); /* v0.22.0 */
 document.getElementById('beheer_bewaar').addEventListener('click', bewaarBeheer);
 document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ sluitSjabloon(); sluitVel(); } });
 

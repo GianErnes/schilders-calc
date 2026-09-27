@@ -6,6 +6,49 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.22.0 — Eén rubriek Taken, pijl overal, breed scherm, 26-09-2026
+
+**Rubrieken.** Op de rol, Losse taken en Klantopvolging zijn samen één
+rubriek **Taken**: elke open taak die niet in Actueel staat, behalve een
+herhaler die nog niet aan de beurt is (die blijft in Herhalend). Sortering:
+oudste plandatum bovenaan, zonder datum onderaan (keuze Gian; vervangt het
+aflopende Op de rol van v0.18.1). Kopregel "x te laat · y vandaag · z komt
+nog", de ↻-knop voor Yoobi ophalen staat in deze kop. Yoobi-taken uit een
+ander kalenderjaar blijven standaard verborgen (regel "tonen" onderaan,
+zoals v0.19.0); eigen taken uit andere jaren blijven altijd zichtbaar.
+Standaard dicht. Volgorde: Actueel, Taken, Herhalend, Voltooid, Vervallen.
+
+**Pijl naar Actueel.** Bij elke open taak die niet uit Yoobi komt, in elke
+rubriek (dus ook Herhalend en toekomstige taken). Bij Yoobi-taken nergens
+meer een pijl, ook niet de schakelaar in het taakvel. Een Yoobi-taak die
+vandaag op jouw naam staat landt nog wel vanzelf in Actueel; eruit gaat
+alleen door de datum in Yoobi te verzetten (besluit Gian). De stand
+'gehaald' in `taak_dagkeuze` telt niet meer bij Yoobi-taken; zulke rijen
+blijven in de database staan maar doen niets. `schakelDagkeuze` weigert
+Yoobi-taken ook als hij toch wordt aangeroepen.
+
+**Schermen.** Telefoon ongewijzigd. Vanaf 700 px twee kolommen (links
+Actueel en Herhalend, rechts Taken, Voltooid, Vervallen), app tot 1060 px
+breed. Vanaf 1100 px is het taakvel een paneel rechts (440 px) in plaats
+van een vel van onderen; de lijst blijft bruikbaar en een andere kaart
+aantikken opent die taak (niet-bewaarde wijzigingen gaan dan verloren,
+net als bij tikken op de scrim op de telefoon). Het paneel heeft een
+✕-knop, alleen in die stand. Technisch: `.rubrieken` met twee `.kolom`;
+op de telefoon `display:contents` plus `order`, breed `grid`.
+
+**push_op.** Mee gewist met `mail_op` bij de herhaler die doorschuift,
+bij melding aan/uit (`schakelPiep`) en bij uitstellen (`verzetMelding`),
+zoals bij bewaren sinds v0.21.0.
+
+**Getest.** CSS-accolades, div- en button-balans, JS-parse (node).
+Rubriek, pijl en sortering met dertien neptaken in Node (eigen, Yoobi,
+calculatie, herhalend; te laat, vandaag, later, zonder datum, 2024,
+gehaald). Schermafdrukken in Chromium (Playwright) met nagebootste
+Supabase op 390, 820, 1180 en 1400 px, plus openen van een andere kaart
+en sluiten met ✕ in paneelstand.
+**Niet getest.** Echte iPhone, iPad en pc met live data; Safari (de test
+draaide in Chromium).
+
 ## v0.21.2 — Foto groot bekijken, 18-09-2026
 
 Tik op de foto bij een taak en hij opent groot op een zwart scherm

@@ -5162,3 +5162,33 @@ en in het hoofdscript. Vastgelegd: `taken.bron_ref` uuid, `taken.bron_kenmerk`
 text, `taken.crmtaskid` is de sleutel die `taken.html` gebruikt. Daarnaast
 v4.80.1: `_updateTodoDB` toont nu een toast bij een databasefout; tot dan
 kwam die alleen in de console, waardoor de triggerfout onzichtbaar was.
+
+## Wat er op 26 september 2026 gedaan is: Takenapp één rubriek Taken en breed scherm (taken.html v0.22.0)
+
+**Waarom.** Gian vroeg of Op de rol en Losse taken nog apart moesten. De
+splitsing was een datumsplitsing (vandaag of eerder = Op de rol, later of
+zonder datum = Losse taken); de oorsprong ligt vóór v0.13.2 en is niet
+vastgelegd. Besluit: samen met Klantopvolging één rubriek **Taken**,
+oudste datum bovenaan. Herhalend blijft apart.
+
+**Regels.** Pijl naar Actueel bij alle open niet-Yoobi-taken. Yoobi krijgt
+nergens een pijl; 'gehaald' telt niet voor Yoobi; een Yoobi-taak van
+vandaag op jouw naam gaat alleen weg door de datum in Yoobi te verzetten.
+Jaarfilter van v0.19.0 geldt nu alleen voor Yoobi-taken binnen Taken.
+
+**Schermen.** Telefoon ongewijzigd; vanaf 700 px twee kolommen; vanaf
+1100 px taakvel als paneel rechts met ✕.
+
+**Mee.** `push_op` wordt nu overal gewist waar `mail_op` gewist wordt
+(was open punt v0.21.3).
+
+**Gevolg voor start.html (niet aangepast, eigen chat).** De teller "taken
+actueel" in `telTaken()` telt 'gehaald' ook bij Yoobi mee en noemt de
+achterstand nog "op de rol". Na v0.22.0 kan de teller daardoor een of
+meer hoger uitvallen dan Actueel in de Takenapp, zolang er oude
+'gehaald'-rijen voor Yoobi-taken bestaan.
+
+**Nog open.** Calculatie-taken hebben in de Takenapp nog geen eigen pil.
+Een titelwijziging van zo'n taak in de Takenapp gaat niet terug naar de
+calculatie (`trg_taak_spiegel` spiegelt alleen `voltooid_op`). Review-
+knoppen (WhatsApp/mail) schuiven naar taken.html v0.23.0.
