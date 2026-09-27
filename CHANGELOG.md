@@ -1,3 +1,19 @@
+## v4.81.0 — Kozijntekening op een m²-regel wordt gesignaleerd (2026-09-27)
+
+**Aanleiding**
+- Simons | Binnenwerk: rij "Voordeurpui" (9,99 m¹ kozijnhout) hing aan `BG · Binnendeuren (m²)`. Een tekening-rij heeft `hCm = 0`, dus `_meetstaatRijTotaal` gaf 0,00 m² en het hout telde nergens mee. Daardoor had een loze onderdorpel geen prijseffect. Geen rekenfout in de tekenaar (`_kozijnOmtrekCm` getest: 1100 → 800 cm bij 300×250 met loze dorpel), maar een koppelfout die de app toeliet zonder melding. Ontstaat doordat `addMeetstaat` de calc-regel van de vorige rij overneemt.
+
+**Nieuw**
+- Helpers `_msRegelEenheid(ms)`, `_msTekeningOpNietM1(ms)` en `_msTekeningFoutTekst(ms)`: een rij mét tekening (niet auto) waarvan de regel geen m¹ is. Ontbrekende `systeemEenheid` geldt als m², net als in `_meetstaatRijTotaal`. Onbekende regel-id: geen melding.
+- `renderMeetstaat`: zo'n rij krijgt class `ms-tek-fout` (oranje), een ⚠ met tooltip achter het totaal, en boven de tabel een banner met het aantal en de rijnummers. De regel-dropdown van een rij met tekening toont alleen m¹-regels; de huidige regel blijft erbij met "— telt niet mee" als hij fout staat.
+- Tekenaar: `_kozijnRegelWaarschuwing(ms)` vult `#kozijnRegelWaarschuwing` bovenin het venster bij openen, ook voor een verse rij zonder tekening. `saveKozijnTekenaar` geeft bij Klaar een toast als de rij fout hangt; Klaar blokkeert niet (bewuste keuze, geen optie 3).
+- Auto-regels (`vulling_auto`, `roeden_auto`) uitgezonderd: die horen op m².
+
+**Getest**
+- CSS brace-check, JS-parse van alle scriptblokken, div-balans (zelfde +2/+2 als de toegevoegde banner-divs), zeven runtime-tests op de helpers in Node met synthetische regels. Niet getest: het rendergedrag in de browser en op de iPad; dat is aan Gian bij Simons | Binnenwerk (rij 22 moet oranje worden, rij 23 niet).
+
+**Geen SQL, geen Edge Function.**
+
 ## v4.80.1 — Fout bij taak opslaan zichtbaar; fix bron_ref (2026-09-26)
 
 **Gerepareerd**
