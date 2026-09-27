@@ -6,6 +6,32 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.23.0 — Herhalend opgegaan in Taken, 27-09-2026
+
+**Rubriek Herhalend vervalt.** Alles wat open is en niet in Actueel staat,
+staat nu in Taken, ook de herhaler die nog niet aan de beurt is (keuze
+Gian). `rubriekVan` geeft daardoor nooit meer `'herhalend'` terug; de
+CSS-kleur en de `order` voor die rubriek zijn weg. Sortering ongewijzigd:
+oudste plandatum bovenaan, zonder datum onderaan. De ↻-pil met het ritme
+laat zien dat het een herhaler is.
+
+**Verder dan een week weg standaard verborgen.** Een herhaler die pas over
+meer dan zeven dagen aan de beurt is (`_binnenWeek` is onwaar, dezelfde
+grens als de oude rubriek Herhalend) staat niet in de lijst en telt niet
+mee in de kop "x te laat · y vandaag · z komt nog". Onderaan staat de
+regel "n herhalers verder dan een week weg verborgen · tonen"
+(`data-herhalers`, toestand `TOON_HERHALERS_VERDEROP`), naast de bestaande
+regel voor Yoobi-taken uit andere jaren. Eenmalige taken ver vooruit
+blijven altijd zichtbaar, dat was al zo.
+
+**Breed scherm.** Links Actueel, Voltooid en Vervallen; rechts Taken
+(`KOLOM_LINKS`). Telefoon: Actueel, Taken, Voltooid, Vervallen.
+
+Getest: JS-parse van alle scriptblokken, CSS-accolades en div-balans
+tegen live v0.22.0, runtimetest van `rubriekVan`/`verrijk` met zeven
+synthetische taken in Node. Niet getest in de browser; dat is de
+eerste-gebruikstest van Gian.
+
 ## v0.22.0 — Eén rubriek Taken, pijl overal, breed scherm, 26-09-2026
 
 **Rubrieken.** Op de rol, Losse taken en Klantopvolging zijn samen één

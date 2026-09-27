@@ -5264,3 +5264,14 @@ vorm uit 4.7 (backup-dump) met `POST`, adres
 `.../functions/v1/fin-werkvoorraad-sync`, `'application/json'`, `'{}'`.
 Verwacht 202 met `"gestart": true`; een minuut later een stand van
 vandaag met `gestart_door=cron`. Op 27 september zo gedraaid.
+
+## Wat er op 27 september 2026 verder gedaan is: Herhalend opgegaan in Taken (taken.html v0.23.0)
+
+Besluit Gian: alle open taken behalve Actueel op één hoop, ook de
+terugkerende. De rubriek Herhalend bestaat niet meer. Herhalers die pas
+over meer dan een week aan de beurt zijn, staan standaard verborgen met
+een "tonen"-regel onderaan Taken (dezelfde weekgrens als de oude rubriek),
+zodat jaarlijkse herhalers de lijst niet vol zetten. Op een breed scherm
+staan Actueel, Voltooid en Vervallen links en Taken rechts. Getest in Node
+(parse, balans, runtimetest van de rubriekkeuze); nog niet in de browser.
+Ontwerpregel blijft: een taak zit in Actueel, of in Taken, of is klaar.

@@ -82,7 +82,6 @@
   .section{margin-bottom:9px;--balk:var(--card);--balkrand:var(--line);--vak:transparent}
   .section[data-key="vandaag"]{--balk:#f9e4e1;--balkrand:#f0cfc9;--vak:#fbeeec}
   .section[data-key="taken"]{--balk:#eef1f5;--balkrand:#dde2e9;--vak:#f5f7f9} /* v0.22.0: kleur van Op de rol */
-  .section[data-key="herhalend"]{--balk:#e2edfa;--balkrand:#c9dcf3;--vak:#eaf2fb}
   .section[data-key="voltooid"]{--balk:#e3f2e9;--balkrand:#cde6d8;--vak:#ecf6f0}
   .section[data-key="vervallen"]{--balk:#f1f2f4;--balkrand:#e3e6e9;--vak:#f3f4f6}
   .head{
@@ -426,9 +425,8 @@
   .kolom{display:contents}
   .rubrieken .section[data-key="vandaag"]{order:1}
   .rubrieken .section[data-key="taken"]{order:2}
-  .rubrieken .section[data-key="herhalend"]{order:3}
-  .rubrieken .section[data-key="voltooid"]{order:4}
-  .rubrieken .section[data-key="vervallen"]{order:5}
+  .rubrieken .section[data-key="voltooid"]{order:3}
+  .rubrieken .section[data-key="vervallen"]{order:4}
   @media (min-width:700px){
     .app{max-width:1060px}
     .rubrieken{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 18px;align-items:start}
@@ -640,7 +638,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.22.0';
+const APP_VERSION = 'v0.23.0';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -685,6 +683,7 @@ const OPEN_STAND = {};
    in beeld zodra dat jaar aanbreekt. Met de regel onderaan haal je ze
    tijdelijk erbij; bij herladen start dit weer op uit. */
 let TOON_KLANT_ANDERE_JAREN = false;
+let TOON_HERHALERS_VERDEROP = false; /* v0.23.0: herhalers verder dan een week weg */
 
 /* Het vel: wat er nu open staat. */
 let VEL = null;           /* { modus:'nieuw'|'eigen'|'yoobi'|'klaar', taak, soort, persoon, fotoBlob, fotoWeg } */
@@ -816,9 +815,9 @@ function rubriekVan(t, nu, vandaagISO){
   /* v0.22.0: 'gehaald' telt niet bij Yoobi; daar staat geen pijl meer. */
   if(t.bron !== 'yoobi' && MIJN_VANDAAG.has(String(t.crmtaskid))) return 'vandaag';
   /* v0.22.0: Op de rol, Losse taken en Klantopvolging zijn samen Taken.
-     Alleen een herhaler die nog niet aan de beurt is blijft in Herhalend. */
-  const verlopen = !!(t._gepland && lokaalISO(t._gepland) <= vandaagISO);
-  if(t.soort === 'herhalend' && !verlopen) return 'herhalend';
+     v0.23.0: ook de herhaler die nog niet aan de beurt is (keuze Gian);
+     de rubriek Herhalend bestaat niet meer. Wat verder dan een week weg
+     is, verbergt bouwRubriek standaard. */
   return 'taken';
 }
 function verrijk(rijen){
@@ -920,12 +919,11 @@ const NA_VIER = new Date().getHours() >= 16;
 const RUBRIEKEN = [
   { key:'vandaag',   titel:'Actueel',        sub:'op jouw naam vandaag, plus wat je zelf hebt gehaald', open:true, klasse:'today' }, /* v0.18.0: was Vandaag */
   { key:'taken',     titel:'Taken',          sub:'alles wat open ligt · Yoobi bijwerken met ↻', open:false, klasse:'roll' }, /* v0.22.0: Op de rol + Losse taken + Klantopvolging */
-  { key:'herhalend', titel:'Herhalend ↻',    sub:'',                                         open:false },
   { key:'voltooid',  titel:'Voltooid',       sub:'je eigen afgevinkte taken',                open:false,   klasse:'done' },
   { key:'vervallen', titel:'Vervallen',      sub:'niet meer nodig, blijft als historie',     open:false,   klasse:'lapsed' },
 ];
 RUBRIEKEN.forEach(r => { OPEN_STAND[r.key] = r.open; });
-const KOLOM_LINKS = ['vandaag', 'herhalend']; /* v0.22.0: rest rechts */
+const KOLOM_LINKS = ['vandaag', 'voltooid', 'vervallen']; /* v0.23.0: Taken alleen rechts (was Actueel + Herhalend links) */
 
 /* ────────────────────────────────────────────────────────
    Opbouw
@@ -968,7 +966,6 @@ function pillen(t){
   if(t.klantnaam && t.bron !== 'yoobi') p.push('<span class="pill klant">' + esc(t.klantnaam) + '</span>');
   if(t._rubriek === 'voltooid' && t._voltooid) p.push('<span class="pill date">✓ ' + esc(afvinkTekst(t, false)) + '</span>');
   if(t._rubriek === 'vervallen' && t._gepland) p.push('<span class="pill date">' + esc(datumTekst(t._gepland)) + '</span>');
-  if(t._rubriek === 'herhalend' && !t._binnenWeek) p.push('<span class="pill date">verschijnt later</span>');
   return p.join('');
 }
 
@@ -1110,6 +1107,12 @@ function bouwRubriek(r){
     const anderJaar = t => !!(t.bron === 'yoobi' && t._gepland && t._gepland.getFullYear() !== ditJaar);
     const buiten = eigen.filter(anderJaar).length;
     if(!TOON_KLANT_ANDERE_JAREN) zichtbaar = eigen.filter(t => !anderJaar(t));
+    /* v0.23.0: een herhaler die pas over meer dan een week aan de beurt is,
+       staat standaard niet in de lijst (was de rubriek Herhalend). Regel
+       "tonen" onderaan haalt ze erbij. Telt niet mee in de kop. */
+    const verderop = t => !!(t.soort === 'herhalend' && !t._binnenWeek);
+    const verderopN = zichtbaar.filter(verderop).length;
+    if(!TOON_HERHALERS_VERDEROP) zichtbaar = zichtbaar.filter(t => !verderop(t));
     const vISO = lokaalISO(new Date());
     const laat = zichtbaar.filter(t => t._telaat).length;
     const vandaagN = zichtbaar.filter(t => t._gepland && lokaalISO(t._gepland) === vISO).length;
@@ -1117,18 +1120,18 @@ function bouwRubriek(r){
     sub = zichtbaar.length === 0 ? 'niets meer open'
         : [laat ? laat + ' te laat' : '', vandaagN ? vandaagN + ' vandaag' : '', komt ? komt + ' komt nog' : '']
             .filter(Boolean).join(' \u00b7 ');
+    if(verderopN > 0){
+      extraNoot += '<div class="hidnote klantjaren" data-herhalers="1" role="button" tabindex="0">' +
+        (TOON_HERHALERS_VERDEROP ? 'Herhalers verder dan een week weg staan erbij \u00b7 verbergen'
+                                 : verderopN + (verderopN === 1 ? ' herhaler' : ' herhalers') + ' verder dan een week weg verborgen \u00b7 tonen') +
+        '</div>';
+    }
     if(buiten > 0){
-      extraNoot = '<div class="hidnote klantjaren" data-klantjaren="1" role="button" tabindex="0">' +
+      extraNoot += '<div class="hidnote klantjaren" data-klantjaren="1" role="button" tabindex="0">' +
         (TOON_KLANT_ANDERE_JAREN ? 'Yoobi-taken uit andere jaren staan erbij \u00b7 verbergen'
                                  : buiten + ' Yoobi-taken uit andere jaren verborgen \u00b7 tonen') +
         '</div>';
     }
-  }
-  if(r.key === 'herhalend'){
-    zichtbaar = eigen.filter(t => t._binnenWeek);
-    const verborgen = eigen.length - zichtbaar.length;
-    sub = zichtbaar.length + ' speelt deze week · ' + verborgen + ' verderop';
-    if(verborgen > 0) extraNoot = '<div class="hidnote">De rest verschijnt vanzelf zodra hij binnen een week valt.</div>';
   }
 
   let heroId = null;
@@ -2474,6 +2477,13 @@ document.getElementById('lijst').addEventListener('click', async function(e){
   if(jarenKnop){
     e.stopPropagation();
     TOON_KLANT_ANDERE_JAREN = !TOON_KLANT_ANDERE_JAREN;
+    render();
+    return;
+  }
+  const herhKnop = e.target.closest('[data-herhalers]'); /* v0.23.0 */
+  if(herhKnop){
+    e.stopPropagation();
+    TOON_HERHALERS_VERDEROP = !TOON_HERHALERS_VERDEROP;
     render();
     return;
   }
