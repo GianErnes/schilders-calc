@@ -1,5 +1,16 @@
 # CHANGELOG — Kleurvisualisatie
 
+## v0.1.1 — Fotogrens 12 MP → 60 MP (2026-09-29)
+
+**Gerepareerd**
+- Een gewone iPhone-foto (4032×3024 = 12,19 MP) werd geweigerd met "Foto groter dan
+  12 megapixel" (gezien door Gian bij de eerste test). De grens uit spec §5 zat net te
+  krap; de app verkleint toch alles zelf naar 1600 px. Nu 60 MP, ruim boven de
+  48 MP-stand van de nieuwste iPhones.
+
+**Getest**
+- JS-parse, CSS-brace-check en de Playwright-browsertest opnieuw: goed.
+
 ## v0.1.0 — `kleur.html`, fase 0, chat B (2026-09-29)
 
 Eerste versie van de kleurvisualisatie-app. Foto → Edge Function `kleur-analyse` →
