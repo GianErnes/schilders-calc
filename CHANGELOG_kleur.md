@@ -1,5 +1,14 @@
 # CHANGELOG — Kleurvisualisatie
 
+## Fase 0 afgesloten, gestopt (2026-09-29)
+
+Eerste echte foto: het benoemen van vlakken door Claude en de herkleuring op vlak
+materiaal werken; de vloedvulling op kleurovereenkomst faalt op baksteen, begroeiing,
+schaduw en ruiten. Een segmentatiemodel (route 1) haalt naar inschatting niet de eis
+"altijd perfect zonder correctie". Besluit Gian: stoppen. Onderbouwing en wat bewaard
+blijft staan in `kleurvisualisatie_fase0_spec.md`, sectie "Uitkomst fase 0".
+Alles blijft staan als proefversie; niets komt op het dashboard.
+
 ## v0.1.1 — Fotogrens 12 MP → 60 MP (2026-09-29)
 
 **Gerepareerd**
