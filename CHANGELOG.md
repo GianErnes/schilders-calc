@@ -1,3 +1,23 @@
+## v4.82.0 — Beurtnamen letterlijk in de offerte-bijlage van het onderhoudsplan (2026-10-01)
+
+**Aanleiding**
+- Plan van Gessel, gesplitste woning: beurt 2028 "Achter- en linkergevel" en 2031 "Voor- en rechtergevel". In de bijlage stond bij 2028 "Startonderhoudsbeurt", zodat de klant niet kon zien welk deel in welk jaar aan de beurt is. Oorzaak: twee bewuste keuzes uit v3.25.0 in `_renderOhpBijlage` — de eerste beurt kreeg altijd het label "Startonderhoudsbeurt" (`_labelVoor`), en `_ohpTypeLabel` zette namen met "controle"/"herschilder"/"tussen"/"inspectie" om naar een vast type en kapte de rest af op 22 tekens.
+
+**Gewijzigd**
+- `_labelVoor(b)`: de ingevoerde naam (getrimd) is leidend. Leeg naamveld → "Startonderhoudsbeurt" voor de eerste beurt, anders "Onderhoudsbeurt".
+- `_ohpTypeLabel(naam)`: alleen nog terugval "Onderhoudsbeurt" bij een lege naam; geen typeherkenning, geen afkappen.
+- Nieuw `_ohpKort(label, max=22)`: afkappen met "…", uitsluitend toegepast in de horizontale tijdlijn (smalle kolommen). Jaar-blokken §01, de eenmalig-zin in de hero, de jaartabel en de kozijnbijlage tonen de volledige naam.
+- Welkomstkop, in-app changelogparagraaf, `APP_VERSION` en de versielijst bijgewerkt.
+
+**Getest**
+- Node: parse van het scriptblok, CSS brace-balans (811/811), div-balans gelijk aan live (1331/1334). Zeven runtime-tests op `_labelVoor`/`_ohpTypeLabel`/`_ohpKort` met synthetische beurten, waaronder lege naam op start- en latere beurt en een naam van 36 tekens.
+- Niet getest: het rendergedrag van lange namen in de tijdlijn en jaar-blokken op iPad/print. Dat is aan Gian bij het plan van Gessel (2028 moet "Achter- en linkergevel" tonen).
+
+**Niet meegenomen (apart)**
+- Kop "Onderhoudsplan 2027-2032" versus "2026 — 2032" rechts op dezelfde pagina.
+
+**Geen SQL, geen Edge Function.**
+
 ## v4.81.0 — Kozijntekening op een m²-regel wordt gesignaleerd (2026-09-27)
 
 **Aanleiding**
