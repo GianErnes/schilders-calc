@@ -2365,8 +2365,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.82.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.83.0</h2>
       <div class="intro-body">
+        <p><strong>💳 Betaalwijze staat altijd op de akkoordbevestiging van een plan (v4.83.0).</strong> Gaf een klant akkoord op een plan met betaalmodel Contant of Maandelijks, dan ontbrak op de akkoordbevestiging de rij Betaling: die werd alleen gevuld als de klant zelf had gekozen (betaalmodel Beide). Voortaan staat de betaalweg er altijd: de klantkeuze als die er is, anders het betaalmodel van het plan. Bij nieuwe accordeerlinks wordt dat betaalmodel bij het aanmaken bevroren, zodat een latere wijziging van het plan de bevestiging niet verandert; bestaande links lezen het betaalmodel van het plan. Dezelfde zin verschijnt op de klantpagina en in het Accordeerlink-venster. Een al geaccordeerd plan: open het Accordeerlink-venster en download het getekende exemplaar opnieuw. Geen SQL, geen deploy.</p>
         <p><strong>🏷️ Beurtnamen in de offerte-bijlage letterlijk overgenomen (v4.82.0).</strong> De eerste beurt heette in de bijlage altijd "Startonderhoudsbeurt" en namen met "controle" of "herschilder" werden omgezet naar een vast type. Bij een gesplitste woning (achter-/linkergevel in 2028, voor-/rechtergevel in 2031) was daardoor niet te zien welk deel wanneer aan de beurt is. Voortaan staat de naam er precies zoals je hem bij Beurten intikt; "Startonderhoudsbeurt" verschijnt alleen nog als het naamveld leeg is. Alleen de horizontale tijdlijn kapt lange namen af op 22 tekens.</p>
         <p><strong>⚠️ Een kozijntekening op een m²-regel valt nu op (v4.81.0).</strong> Een getekend kozijn levert strekkende meters kozijnhout, en die tellen alleen mee als de rij aan een m¹-regel hangt. Stond de rij op een m²-regel (bij Simons: een voordeurpui op Binnendeuren), dan telde het hout stilletjes voor nul en zag je in de meetstaat alleen een 0,00 m². Voortaan krijgt zo'n rij een oranje waarschuwing met de meters die niet meetellen, staat er boven de tabel hoeveel tekeningen fout hangen, en toont de tekenaar dezelfde waarschuwing bovenin. Bij een rij mét tekening laat de regelkeuze alleen nog m¹-regels zien; hangt hij nu nog fout, dan blijft de huidige regel bovenaan staan met de toevoeging dat hij niet meetelt, zodat je hem in één keer omzet. Klaar blijft gewoon werken. Vulling-regels (deuren en panelen, auto) blijven op m² en zijn hiervan uitgezonderd. Geen SQL nodig.</p>
         <p><strong>✅ Calculatie-taken staan ook in de Takenapp (v4.80.0).</strong> Typ je in het blok Notities, taken en foto's een taak, dan verschijnt hij vanzelf in de Takenapp, op naam van Gian en gepland op vandaag; verplaatsen of aan iemand anders geven doe je daar. Afvinken werkt in twee richtingen: vink je hem af in de Takenapp, dan staat hij ook in de calculatie afgevinkt, en andersom. Tekst wijzigen werkt door, verwijderen ook. Een lege taak komt niet in de Takenapp, pas als er tekst in staat. Bestaande taken van vóór deze versie blijven zoals ze waren. De koppeling zit in de database, dus de app zelf hoefde er nauwelijks voor te veranderen: alleen bij het openen van een calculatie haalt hij de taken opnieuw op, zodat een vinkje uit de Takenapp meteen zichtbaar is. Eenmalig SQL nodig.</p>
@@ -3748,7 +3749,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.82.0';
+const APP_VERSION = 'v4.83.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4165,6 +4166,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.83.0', d: '2026-10-01', h: 'De akkoordbevestiging van een onderhoudsplan toont altijd de betaalwijze: de klantkeuze als die er is, anders het betaalmodel van het plan. Nieuwe accordeerlinks bevriezen dat betaalmodel bij het aanmaken.' },
   { v: '4.82.0', d: '2026-10-01', h: 'De offerte-bijlage van het onderhoudsplan toont de beurtnaam letterlijk zoals ingevoerd. "Startonderhoudsbeurt" is alleen nog de terugval bij een lege naam; afkappen gebeurt alleen in de tijdlijn.' },
   { v: '4.81.0', d: '2026-09-27', h: 'Een kozijntekening die aan een m²-regel hangt krijgt een waarschuwing: het kozijnhout telt dan niet mee. De regelkeuze toont bij een tekening alleen m¹-regels.' },
   { v: '4.80.1', d: '2026-09-26', h: 'Mislukt het opslaan van een calculatie-taak, dan zie je dat nu als melding in plaats van dat het stil misgaat.' },
@@ -14042,12 +14044,12 @@ async function openArchiveerModal() {
     const _pl = _ohpState.plan;
     if (_pl && _pl.id && _pl.calculatieId === data.calc.id) {
       const { data: plRows } = await _sb.from('offerte_accorderingen')
-        .select('pdf_path, klant_naam, gereageerd_op, bedrag, notitie, betaalkeuze')
+        .select('pdf_path, klant_naam, gereageerd_op, bedrag, notitie, betaalkeuze, snapshot') // v4.83.0 — snapshot voor het bevroren betaalmodel
         .eq('onderhoudsplan_id', _pl.id)
         .eq('status', 'akkoord')
         .order('gereageerd_op', { ascending: false });
       const pr = (plRows || []).find(r => r.pdf_path);
-      if (pr) _archAccordPlanRij = { pdf_path: pr.pdf_path, snapshot: {}, klant_naam: pr.klant_naam, gereageerd_op: pr.gereageerd_op, bedrag: pr.bedrag, notitie: pr.notitie, betaalkeuze: pr.betaalkeuze || null, planNaam: _ohpPlanNaam(_pl, data.calc) };
+      if (pr) _archAccordPlanRij = { pdf_path: pr.pdf_path, snapshot: {}, klant_naam: pr.klant_naam, gereageerd_op: pr.gereageerd_op, bedrag: pr.bedrag, notitie: pr.notitie, betaalkeuze: _accordEffectieveKeuze(pr.betaalkeuze, pr.snapshot, _pl.betaalmodel), planNaam: _ohpPlanNaam(_pl, data.calc) }; // v4.83.0
     }
   } catch (e) {
     _archAccordPlanRij = null;
@@ -22807,6 +22809,23 @@ function _accordBetaalWoord(keuze) {
   if (keuze === 'abo') return ', met maandelijkse betaling';
   return '';
 }
+// v4.83.0 — de betaalweg die op de akkoordbevestiging van een plan hoort.
+// Tot v4.82.0 stond de rij Betaling alleen bij een klantkeuze (betaalmodel
+// beide); bij Contant of Maandelijks had de klant niets te kiezen en bleef
+// het vel stil (Geurden, akkoord 01-10-2026). Volgorde: klantkeuze → het
+// betaalmodel dat bij het aanmaken van de link in de snapshot is bevroren
+// (nieuw sinds v4.83.0) → het betaalmodel van het plan (klantpagina: uit de
+// Edge Function, die het sinds v4.51.0 al teruggeeft; in de app: _ohpState)
+// → niets. Alleen 'contant' en 'abo' tellen; 'beide' zonder keuze geeft ''.
+// Aanname bij het bevriezen: wat de klant zag toen hij tekende, is leidend.
+function _accordEffectieveKeuze(betaalkeuze, snapshot, planBetaalmodel) {
+  const ok = (v) => v === 'contant' || v === 'abo';
+  if (ok(betaalkeuze)) return betaalkeuze;
+  const snap = (snapshot && typeof snapshot === 'object') ? snapshot.betaalmodel : null;
+  if (ok(snap)) return snap;
+  if (ok(planBetaalmodel)) return planBetaalmodel;
+  return null;
+}
 function _accordLinkVoor(token) {
   return location.origin + location.pathname + '?accord=' + token;
 }
@@ -22854,6 +22873,7 @@ function _accordRender(root, token, res) {
   const pdfUrl = (res.snapshot && res.snapshot.pdf) ? res.snapshot.pdf : null;
   const bedrag = res.bedrag;
   const reedsAf = res.status === 'akkoord' || res.status === 'afgekeurd';
+  const _keuzeEff = isPlan ? _accordEffectieveKeuze(res.betaalkeuze, res.snapshot, res.betaalmodel) : null; // v4.83.0
 
   // v4.12.0 — verlopen en nog onbeantwoord: geen document en geen accord-knoppen,
   // alleen de verlopen-melding met het vraagformulier. Al beantwoorde links
@@ -22866,7 +22886,7 @@ function _accordRender(root, token, res) {
     banner = '<div class="ac-banner ac-ok">' + _docLidwoord + ' is geaccordeerd'
       + (res.klant_naam ? ' door ' + _accordEsc(res.klant_naam) : '')
       + (res.gereageerd_op ? ' op ' + _accordDatum(res.gereageerd_op) : '')
-      + (isPlan ? _accordBetaalWoord(res.betaalkeuze) : '') + '.</div>'; // v4.51.0 — de gekozen weg in woorden
+      + (isPlan ? _accordBetaalWoord(_keuzeEff) : '') + '.</div>'; // v4.51.0 — de gekozen weg in woorden; v4.83.0 — ook zonder keuze
   } else if (res.status === 'afgekeurd') {
     banner = '<div class="ac-banner ac-nee">' + _docLidwoord + ' is afgewezen'
       + (res.klant_naam ? ' door ' + _accordEsc(res.klant_naam) : '')
@@ -22912,7 +22932,7 @@ function _accordRender(root, token, res) {
   }
 
   if (pdfUrl) {
-    _accordCtx = { pdfUrl: pdfUrl, project: res.project, klant: res.klant, bedrag: res.bedrag, isPlan: isPlan, betaalkeuze: res.betaalkeuze || null }; // v4.63.0 — plan-velden voor het getekende exemplaar
+    _accordCtx = { pdfUrl: pdfUrl, project: res.project, klant: res.klant, bedrag: res.bedrag, isPlan: isPlan, betaalkeuze: _keuzeEff }; // v4.63.0 — plan-velden voor het getekende exemplaar; v4.83.0 — effectieve betaalweg
     // Heropent de klant een al geaccordeerde link, dan meteen de getekende offerte aanbieden.
     if (res.status === 'akkoord') {
       _accordZetGetekendKnop(root.querySelector('#acPdfDl'), { naam: res.klant_naam, datumIso: res.gereageerd_op, notitie: res.notitie });
@@ -22921,7 +22941,7 @@ function _accordRender(root, token, res) {
     }
   }
 
-  if (!reedsAf) _accordWireActies(root, token, bedrag, { isPlan: isPlan, keuzeNodig: !!res.keuze_nodig }); // v4.51.0
+  if (!reedsAf) _accordWireActies(root, token, bedrag, { isPlan: isPlan, keuzeNodig: !!res.keuze_nodig, betaalweg: _keuzeEff }); // v4.51.0; v4.83.0 — betaalweg zonder keuze
 }
 
 // v4.12.0 / v4.35.0 — pagina voor een verlopen, nog onbeantwoorde offerte.
@@ -22968,7 +22988,7 @@ function _accordActiesHtml() {
 }
 
 function _accordWireActies(root, token, bedrag, opts) {
-  const _o = opts || {}; // v4.51.0 — { isPlan, keuzeNodig }; leeg = offertegedrag van altijd
+  const _o = opts || {}; // v4.51.0 — { isPlan, keuzeNodig }; v4.83.0 — betaalweg; leeg = offertegedrag van altijd
   const form = root.querySelector('#acForm');
   const melding = root.querySelector('#acMelding');
   const acties = root.querySelector('#acActies');
@@ -22997,7 +23017,7 @@ function _accordWireActies(root, token, bedrag, opts) {
 }
 
 function _accordFormHtml(mode, bedrag, opts) {
-  const _o = opts || {}; // v4.51.0 — { isPlan, keuzeNodig }
+  const _o = opts || {}; // v4.51.0 — { isPlan, keuzeNodig }; v4.83.0 — betaalweg
   if (mode === 'akkoord') {
     // v4.51.0 — bij betaalmodel beide is de keuze verplicht; de server dwingt dat
     // ook af. De akkoordzin noemt de gekozen weg (span acAkkWeg, gevuld door de
@@ -23035,7 +23055,7 @@ function _accordFormHtml(mode, bedrag, opts) {
 }
 
 async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
-  const _o = opts || {}; // v4.51.0 — { isPlan, keuzeNodig }
+  const _o = opts || {}; // v4.51.0 — { isPlan, keuzeNodig }; v4.83.0 — betaalweg
   const naam = (form.querySelector('#acNaam') ? form.querySelector('#acNaam').value : '').trim();
   const notitie = (form.querySelector('#acNotitie') ? form.querySelector('#acNotitie').value : '').trim();
   if ((mode === 'akkoord' || mode === 'afkeuren') && !naam) { alert('Vul uw naam in.'); return; }
@@ -23047,6 +23067,7 @@ async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
     betaalkeuze = gekozen ? gekozen.value : null;
     if (!betaalkeuze) { alert('Kies eerst hoe u wilt betalen: per beurt of per maand.'); return; }
   }
+  const _keuzeNa = _o.isPlan ? _accordEffectieveKeuze(betaalkeuze, null, _o.betaalweg || null) : null; // v4.83.0 — klantkeuze, anders de betaalweg van de link
   if (mode === 'akkoord' && !(form.querySelector('#acAkkVink') && form.querySelector('#acAkkVink').checked)) {
     alert('Vink het akkoord aan om te bevestigen.'); return;
   }
@@ -23089,7 +23110,7 @@ async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
     if (ifr && !_o.isPlan) _accordStempel(ifr, naam, new Date().toISOString()); // v4.51.0 — de planbijlage heeft geen ondertekenvak
     // Bij een PDF-link nu de getekende offerte aanbieden om te downloaden.
     if (_accordCtx && _accordCtx.pdfUrl) {
-      if (_o.isPlan) _accordCtx.betaalkeuze = betaalkeuze || _accordCtx.betaalkeuze || null; // v4.63.0
+      if (_o.isPlan) _accordCtx.betaalkeuze = _keuzeNa; // v4.63.0; v4.83.0 — effectieve betaalweg
       const _info = { naam: naam, datumIso: new Date().toISOString(), notitie: notitie };
       _accordZetGetekendKnop(root.querySelector('#acPdfDl'), _info);
       // v4.11.0 — en het gestempelde exemplaar ook in beeld zetten.
@@ -23100,7 +23121,7 @@ async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
   const heeftPdfDl = !!(mode === 'akkoord' && _accordCtx && _accordCtx.pdfUrl);
   acties.innerHTML = '<div class="ac-banner ' + (mode === 'akkoord' ? 'ac-ok' : 'ac-nee') + '">'
     + (mode === 'akkoord'
-        ? 'Bedankt. Uw akkoord is vastgelegd' + _accordBetaalWoord(betaalkeuze) + '.' + (heeftPdfDl ? ' U kunt hierboven uw getekende ' + (_o.isPlan ? 'onderhoudsplan' : 'offerte') + ' downloaden.' : '')
+        ? 'Bedankt. Uw akkoord is vastgelegd' + _accordBetaalWoord(_keuzeNa) + '.' + (heeftPdfDl ? ' U kunt hierboven uw getekende ' + (_o.isPlan ? 'onderhoudsplan' : 'offerte') + ' downloaden.' : '')
         : 'Bedankt. Uw reactie is vastgelegd.')
     + '</div>';
 }
@@ -24049,7 +24070,7 @@ function _ohpAccordBeheerRender(body, plan, calc, rij) {
     h += '<div class="acb-status akkoord">Geaccordeerd'
       + (rij.klant_naam ? ' door ' + _accordEsc(rij.klant_naam) : '')
       + (rij.gereageerd_op ? ' op ' + _accordDatum(rij.gereageerd_op) : '')
-      + _accordBetaalWoord(rij.betaalkeuze) + '.'
+      + _accordBetaalWoord(_accordEffectieveKeuze(rij.betaalkeuze, rij.snapshot, plan.betaalmodel)) + '.' // v4.83.0
       + (rij.notitie ? '<br><span style="font-weight:400;">Opmerking: ' + _accordEsc(rij.notitie) + '</span>' : '')
       + '</div>';
   } else if (rij.status === 'afgekeurd') {
@@ -24132,7 +24153,7 @@ function _ohpAccordBeheerRender(body, plan, calc, rij) {
   const _btnPdf = body.querySelector('#ohpAcPdf'); // v4.61.0
   if (_btnPdf) _btnPdf.addEventListener('click', () => _ohpAccordPdfDownload(rij, plan, calc, _btnPdf));
   const _btnGet = body.querySelector('#ohpAcGetekend'); // v4.63.0
-  if (_btnGet) _btnGet.addEventListener('click', () => _accordDownloadGetekend(rij, calc, _btnGet, { isPlan: true, betaalkeuze: rij.betaalkeuze || null, naam: _ohpPlanNaam(plan, calc) }));
+  if (_btnGet) _btnGet.addEventListener('click', () => _accordDownloadGetekend(rij, calc, _btnGet, { isPlan: true, betaalkeuze: _accordEffectieveKeuze(rij.betaalkeuze, rij.snapshot, plan.betaalmodel), naam: _ohpPlanNaam(plan, calc) })); // v4.83.0
   const _btnPdfAlsnog = body.querySelector('#ohpAcPdfAlsnog'); // v4.62.0
   if (_btnPdfAlsnog) _btnPdfAlsnog.addEventListener('click', () => _ohpAccordPdfAlsnog(rij, plan, calc, body, _btnPdfAlsnog));
   const _btnMail = body.querySelector('#ohpAcMail');
@@ -24455,7 +24476,8 @@ async function _ohpAccordNieuweLink(plan, calc, body, invoer) {
         offertenummer: invoer.nummer,
         aanhef: _offAanhef(calc, calcCfg),
         klantEmail: invoer.email,
-        geldigTot: invoer.geldig || ''
+        geldigTot: invoer.geldig || '',
+        betaalmodel: plan.betaalmodel || 'abo' // v4.83.0 — bevroren voor de akkoordbevestiging (zelfde terugval als _ohpIsAbo)
       },
       pdf_path: pdfPath, // v4.61.0 — raster-PDF in accord-pdf; sinds v4.69.0 altijd gevuld (geen PDF = geen link)
       bedrag: null    // geen bedrag in de akkoordzin (besluit 29-08-2026)

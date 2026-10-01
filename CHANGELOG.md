@@ -1,3 +1,27 @@
+## v4.83.0 — Betaalwijze altijd op de akkoordbevestiging van een onderhoudsplan (2026-10-01)
+
+**Aanleiding**
+- Plan Geurden 2026-2036 (betaalmodel Maandelijks), digitaal geaccordeerd 01-10-2026. Op de Akkoordbevestiging ontbrak de rij Betaling. Oorzaak: `_bouwGetekendePdfBytes` toonde de rij alleen bij een gevulde `betaalkeuze`, en die wordt uitsluitend gevuld als de klant moest kiezen (betaalmodel Beide). Bij Contant of Maandelijks bleef het vel stil. Ontwerpgat uit v4.51.0/v4.63.0, geen bug.
+- Bij het lezen van de Edge Function `offerte-accord` bleek dat de GET sinds v4.51.0 al `betaalmodel` van het plan teruggeeft; de app las het nooit. Geen deploy nodig.
+
+**Gewijzigd**
+- Nieuw `_accordEffectieveKeuze(betaalkeuze, snapshot, planBetaalmodel)`: klantkeuze → in de snapshot bevroren betaalmodel → betaalmodel van het plan → niets. Alleen `contant`/`abo` tellen; `beide` zonder keuze geeft zoals voorheen niets.
+- Aanmaken planlink (`_ohpAccordMaak`): `betaalmodel` gaat mee in `snapshot`, zodat een latere wijziging van het plan de bevestiging van een al getekend akkoord niet verandert.
+- Klantpagina: banner "is geaccordeerd … met …", `_accordCtx.betaalkeuze` en de bedankzin direct na akkoord gebruiken de effectieve keuze (doorgegeven als `opts.betaalweg` aan `_accordWireActies`/`_accordVerstuur`). Terugval op `res.betaalmodel` uit de Edge Function dekt oude links, ook na de 30 dagen waarin de snapshot nog meekomt.
+- App: archiefquery in het documentenvenster leest ook `snapshot`; archiefdownload, downloadknop en statuszin in het Accordeerlink-venster vallen terug op `plan.betaalmodel`.
+- `_bouwGetekendePdfBytes` ongewijzigd; krijgt de effectieve keuze als `info.betaalkeuze`.
+- Welkomstkop, in-app changelogparagraaf, `APP_VERSION`, `RELEASE_HIGHLIGHTS` en `SYSTEEM.md` (sectie 1 oktober 2026) bijgewerkt.
+
+**Bewust niet**
+- Geen SQL voor bestaande planlinks (besluit Gian 01-10-2026); de terugval op het plan dekt ze. Op het vel geen onderscheid tussen "klant koos" en "plan schreef voor".
+- Akkoorden buiten de link om (mondeling/mail) hebben nog geen bevestiging.
+
+**Getest**
+- Node: parse van het scriptblok, CSS brace-balans (811/811), div-balans gelijk aan live (1331/1334). Acht runtime-tests op `_accordEffectieveKeuze` met synthetische `betaalkeuze`/`snapshot`/`betaalmodel` (klantkeuze gaat voor, bevroren snapshot, oude link met plan contant/abo, beide zonder keuze, snapshot `null` na 30 dagen, alles leeg, ongeldige waarden) plus de vel-regel. Niet getest in de echte omgeving: Geurden opnieuw downloaden en een nieuwe planlink aanmaken is aan Gian.
+
+**Voor Gian**
+- Geurden: plan openen → Accordeerlink → getekend exemplaar opnieuw downloaden; de rij Betaling "per maand" hoort er nu op te staan.
+
 ## v4.82.0 — Beurtnamen letterlijk in de offerte-bijlage van het onderhoudsplan (2026-10-01)
 
 **Aanleiding**

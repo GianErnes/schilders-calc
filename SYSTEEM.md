@@ -5275,3 +5275,54 @@ zodat jaarlijkse herhalers de lijst niet vol zetten. Op een breed scherm
 staan Actueel, Voltooid en Vervallen links en Taken rechts. Getest in Node
 (parse, balans, runtimetest van de rubriekkeuze); nog niet in de browser.
 Ontwerpregel blijft: een taak zit in Actueel, of in Taken, of is klaar.
+
+## Wat er op 1 oktober 2026 gedaan is: betaalwijze altijd op de akkoordbevestiging van een plan (v4.83.0)
+
+**Aanleiding.** Plan Geurden 2026-2036, betaalmodel Maandelijks, digitaal
+geaccordeerd 01-10-2026 12:52. Op de akkoordbevestiging ontbrak de rij
+Betaling. Oorzaak was geen bug maar een ontwerpgat uit v4.51.0/v4.63.0: de rij
+stond alleen op het vel als `offerte_accorderingen.betaalkeuze` gevuld was, en
+die kolom wordt uitsluitend gevuld als de klant móést kiezen (betaalmodel
+`beide`). Bij Contant of Maandelijks viel er niets te kiezen en bleef het vel
+stil.
+
+**Bevinding bij het lezen van de Edge Function `offerte-accord`** (code door
+Gian geplakt, 01-10-2026): de GET geeft sinds v4.51.0 al `betaalmodel` van het
+plan terug, naast `keuze_nodig` en `betaalkeuze`. De app las dat veld nooit. De
+overdracht uit de vorige sessie ("alleen `keuze_nodig`") was dus onjuist; er is
+geen deploy nodig geweest. Ook gezien: de snapshot gaat heel door, maar alleen
+zolang `magDocumentZien` waar is (bij akkoord tot 30 dagen na de reactie);
+daarna is `snapshot` `null` terwijl de banner "is geaccordeerd" blijft staan.
+
+**Besluit Gian (01-10-2026).** Route B met de bestaande route A als vangnet:
+1. Bij het aanmaken van een planlink gaat `betaalmodel` mee in de snapshot
+   (`_ohpAccordMaak`, insert in `offerte_accorderingen`). Wat de klant zag toen
+   hij tekende, is leidend; een latere wijziging van het plan raakt de
+   bevestiging niet.
+2. Voor het vel, de banner, de bedankzin en het Accordeerlink-venster geldt
+   één regel, `_accordEffectieveKeuze(betaalkeuze, snapshot, planBetaalmodel)`:
+   klantkeuze → `snapshot.betaalmodel` → betaalmodel van het plan (klantpagina:
+   `res.betaalmodel` uit de Edge Function; app: `_ohpState.plan` / `plan`) →
+   niets. Alleen `contant` en `abo` tellen; `beide` zonder keuze geeft niets,
+   zoals voorheen.
+3. Geen SQL voor bestaande links (bewust: de terugval op het plan dekt ze, en
+   de klant krijgt het exemplaar via Gians download). Op het vel is niet te
+   zien of de klant koos of het plan voorschreef; gewoon "per maand" / "per
+   beurt" (besluit Gian).
+
+**Gewijzigd in `index.html`.** Nieuwe functie `_accordEffectieveKeuze` naast
+`_accordBetaalLabel`/`_accordBetaalWoord`; klantpagina bepaalt `_keuzeEff` één
+keer en gebruikt die voor banner, `_accordCtx` en (via `opts.betaalweg` in
+`_accordWireActies`/`_accordVerstuur`) voor de bedankzin direct na akkoord; de
+archiefquery in het documentenvenster leest nu ook `snapshot`; de twee
+downloadpaden en de statuszin in het Accordeerlink-venster lopen door dezelfde
+functie. `_bouwGetekendePdfBytes` is ongewijzigd: die krijgt de effectieve
+keuze aangereikt als `info.betaalkeuze`.
+
+**Geurden.** Open het plan → Accordeerlink → "getekend exemplaar" opnieuw
+downloaden; het vel wordt elke keer opnieuw opgebouwd. Status na deze sessie:
+door Gian te testen in de echte omgeving.
+
+**Niet in deze brok.** Akkoorden buiten de link om (mondeling/mail): daar
+bestaat geen rij in `offerte_accorderingen`, dus ook geen bevestiging. Blijft
+open.
