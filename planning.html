@@ -415,7 +415,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.11.1';
+const APP_VERSION = '0.12.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -428,7 +428,8 @@ let peildatum = null;
 let medewerkers = [];        // actieve rijen uit plan_medewerkers, op volgorde
 let alleMedewerkers = [];    // ook inactieve, voor het beheer
 let planProjecten = {};      // yoobi_code -> rij uit plan_projecten
-let uren = {};               // sleutel code|mwId|datum -> getal (alleen geladen jaar)
+let uren = {};               // sleutel code|mwId|datum -> getal (alleen geladen jaar; voedt het bord)
+let urenBuiten = {};         // zelfde sleutel, uren buiten het geladen jaar (v0.12.0; alleen voor projectbrede sommen in het paneel)
 let gesloten = {};           // 'YYYY-MM-DD' -> {soort, omschrijving}
 let verlof = {};             // mwId|datum -> {id, omschrijving}
 let fasen = {};              // yoobi_code -> [fase-rijen op volgnr]
@@ -553,9 +554,12 @@ function werkdagenTussen(a, b) {
   while (d !== b && rem < 1000) { d = plusDagen(d, stap); rem++; if (isWerkdag(d)) n += stap; }
   return n;
 }
-function urenVanProject(code) {
+// alleJaren = true telt ook de uren buiten het bordjaar mee (v0.12.0).
+// Zonder vlag: alleen het geladen jaar, voor de tegel "Ingepland <jaar>".
+function urenVanProject(code, alleJaren) {
   let som = 0;
   for (const k in uren) if (k.startsWith(code + '|')) som += uren[k];
+  if (alleJaren) for (const k in urenBuiten) if (k.startsWith(code + '|')) som += urenBuiten[k];
   return Math.round(som * 100) / 100;
 }
 function dagTotaal(mwId, datum) {
@@ -594,9 +598,10 @@ function hoortBijFase(code, iso, f) {
   const g = faseVanDag(code, iso);
   return !!g && g.id === f.id;
 }
+// Fase-uren tellen over alle jaren (v0.12.0): een fase in 2026 toont ook op het bord 2027 haar uren.
 function urenVanFase(code, f) {
   let som = 0;
-  for (const k in uren) if (k.startsWith(code + '|')) { const d = k.split('|')[2]; if (hoortBijFase(code, d, f)) som += uren[k]; }
+  for (const m of [uren, urenBuiten]) for (const k in m) if (k.startsWith(code + '|')) { const d = k.split('|')[2]; if (hoortBijFase(code, d, f)) som += m[k]; }
   return Math.round(som * 100) / 100;
 }
 
@@ -668,7 +673,7 @@ function projectenOverDatum() {
 // ---------- laden ----------
 async function laadAlles() {
   const j1 = jaar + '-01-01', j2 = jaar + '-12-31';
-  const [wv, mw, pp, pu, gd, vlRes, fsRes, mdRes, zkRes] = await Promise.all([
+  const [wv, mw, pp, pu, gd, vlRes, fsRes, mdRes, zkRes, puBuiten] = await Promise.all([
     sb.from('fin_werkvoorraad').select('peildatum,data').order('peildatum', { ascending: false }).limit(1),
     sb.from('plan_medewerkers').select('*').order('volgorde'),
     sb.from('plan_projecten').select('*'),
@@ -678,6 +683,8 @@ async function laadAlles() {
     sb.from('plan_fasen').select('*').order('volgnr'),
     sb.from('plan_middelen').select('*').order('van'),
     sb.from('pers_verzuim_dagen').select('medewerker_id,datum,percentage').gte('datum', j1).lte('datum', j2),
+    // v0.12.0: uren buiten het bordjaar, voor projectbrede "nog te plannen" en fase-sommen.
+    sb.from('plan_uren').select('yoobi_code,medewerker_id,datum,uren').or('datum.lt.' + j1 + ',datum.gt.' + j2),
   ]);
   for (const r of [wv, mw, pp, pu, gd]) if (r.error) throw r.error;
   // plan_verlof kan ontbreken zolang planning_02_verlof.sql niet is gedraaid: dan zonder verlof verder.
@@ -697,6 +704,12 @@ async function laadAlles() {
   for (const r of (pu.data || [])) {
     const n = Number(r.uren);
     if (n > 0) uren[sleutel(r.yoobi_code, r.medewerker_id, r.datum)] = n;
+  }
+  urenBuiten = {};
+  if (puBuiten.error) { console.warn('plan_uren buiten ' + jaar + ' niet geladen; nog te plannen telt alleen dit jaar: ' + puBuiten.error.message); }
+  else for (const r of (puBuiten.data || [])) {
+    const n = Number(r.uren);
+    if (n > 0) urenBuiten[sleutel(r.yoobi_code, r.medewerker_id, r.datum)] = n;
   }
   gesloten = {};
   for (const r of (gd.data || [])) gesloten[r.datum] = r;
@@ -1056,7 +1069,7 @@ function tekenPaneel() {
   const d = projDatums(p);
   const ingepland = urenVanProject(p.code);
   const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
-  const nogPlannen = Math.round((budget - ingepland) * 100) / 100;
+  const nogPlannen = Math.round((budget - urenVanProject(p.code, true)) * 100) / 100;
   const nogWerken = Math.round((budget - geboekt) * 100) / 100;
   el.innerHTML =
     '<h2>Project</h2>' +
@@ -1067,7 +1080,7 @@ function tekenPaneel() {
     '<div class="c"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Ingepland ' + jaar + '</div><div class="v num">' + fmtUur(ingepland) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Geboekt</div><div class="v num">' + fmtUur(geboekt) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Budget min ingepland ' + jaar + '"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
+    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Budget min ingepland, alle jaren"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
     '<div class="c' + (nogWerken < 0 ? ' waarschuw' : '') + '" title="Budget min geboekt (Yoobi)"><div class="t">Nog te werken</div><div class="v num">' + fmtUur(nogWerken) + ' <small>uur</small></div></div>' +
     '</div>' +
     '<div class="pdatums">Yoobi: ' + fmtDatum(d.yStart) + ' – ' + fmtDatum(d.yEind) +
@@ -1078,7 +1091,7 @@ function tekenPaneel() {
     (d.eigen ? '<button class="knop" id="pTerug">Terug naar Yoobi-datum</button>' : '') +
     '<label>Knip in fasen op</label><div class="rij"><input type="date" id="pKnipDatum" style="flex:1"><button class="knop" id="pKnip" title="Alles vóór deze datum wordt fase 1, vanaf deze datum fase 2">Knip</button></div>' +
     '</div>' +
-    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Nog te plannen = budget − ingepland; nog te werken = budget − geboekt. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
+    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Nog te plannen = budget − ingepland over alle jaren; nog te werken = budget − geboekt. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
     middelenHtml(p, null, d) +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
@@ -1096,7 +1109,7 @@ function tekenFasePaneel(el, p) {
   const fs = fasenVan(p.code);
   const ingepland = urenVanProject(p.code);
   const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
-  const nogPlannen = Math.round((budget - ingepland) * 100) / 100;
+  const nogPlannen = Math.round((budget - urenVanProject(p.code, true)) * 100) / 100;
   const nogWerken = Math.round((budget - geboekt) * 100) / 100;
   const yS = yoobiDatum(p.startdatum), yE = yoobiDatum(p.einddatum);
   let h = '<h2>Project</h2>' +
@@ -1107,7 +1120,7 @@ function tekenFasePaneel(el, p) {
     '<div class="c"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Ingepland ' + jaar + '</div><div class="v num">' + fmtUur(ingepland) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Geboekt</div><div class="v num">' + fmtUur(geboekt) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Budget min ingepland ' + jaar + '"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
+    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Budget min ingepland, alle jaren"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
     '<div class="c' + (nogWerken < 0 ? ' waarschuw' : '') + '" title="Budget min geboekt (Yoobi)"><div class="t">Nog te werken</div><div class="v num">' + fmtUur(nogWerken) + ' <small>uur</small></div></div>' +
     '</div>' +
     '<div class="pdatums">Yoobi: ' + fmtDatum(yS) + ' – ' + fmtDatum(yE) + '</div>';
@@ -1122,7 +1135,7 @@ function tekenFasePaneel(el, p) {
   });
   const fAct = fs.find(f => f.id === actiefFase) || fs[0];
   h += middelenHtml(p, fAct, faseDatums(p, fAct)) +
-    '<div class="voetnoot">Budget, geboekt, nog te plannen en nog te werken gelden voor het hele project; per fase zie je wat erop staat. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
+    '<div class="voetnoot">Budget, geboekt, nog te plannen en nog te werken gelden voor het hele project, over alle jaren; per fase zie je wat erop staat, ook buiten dit jaar. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg">Verbergen</button></div>';
   el.innerHTML = h;
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
@@ -1389,7 +1402,10 @@ async function slaDatumsOp(code, sIso, eIso, oudStart, faseId) {
       r = await sb.from('plan_uren').upsert(nieuw, { onConflict: 'yoobi_code,medewerker_id,datum' });
       if (r.error) throw r.error;
       for (const k of verplaats.keys) delete uren[k];
-      for (const w of nieuw) if (w.datum.startsWith(String(jaar))) uren[sleutel(code, w.medewerker_id, w.datum)] = w.uren;
+      for (const w of nieuw) {
+        const k = sleutel(code, w.medewerker_id, w.datum);
+        if (w.datum.startsWith(String(jaar))) uren[k] = w.uren; else urenBuiten[k] = w.uren; // v0.12.0: over de jaargrens niet kwijt
+      }
     }
     if (oudStart && sIso && sIso !== oudStart) {
       await verschuifMiddelen(code, fase, Math.round((vanIso(sIso) - vanIso(oudStart)) / 86400000));

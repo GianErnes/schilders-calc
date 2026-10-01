@@ -1,5 +1,22 @@
 # CHANGELOG planning.html
 
+## v0.12.0 — Nog te plannen en fase-uren tellen over alle jaren, 01-10-2026
+
+Melding van Gian (project De Bie, Yoobi 20261671, fase 1 in nov 2026, fase 2 in apr 2027): op het bord 2026 stond "nog te plannen 8,89" (budget 21,64 − 12,75 gepland), op het bord 2027 stond ineens 21,64 nog te plannen en fase 1 toonde 0 uur. Oorzaak: `laadAlles` haalde `plan_uren` alleen voor het bordjaar op, en "nog te plannen" en de fase-sommen rekenden met dat jaar. Intern consistent, maar fout voor elk project dat over de jaargrens loopt.
+
+Hoe het nu werkt: één extra query in `laadAlles` haalt de uren **buiten** het bordjaar (`datum < 1 jan OR datum > 31 dec`) in een aparte laag `urenBuiten`. Het bord zelf blijft rekenen op `uren` (alleen bordjaar) en wordt niet trager. In het paneel:
+- **Ingepland <jaar>**: ongewijzigd, telt alleen het bordjaar.
+- **Nog te plannen**: budget − ingepland over álle jaren (`urenVanProject(code, true)`).
+- **Uren per fase**: over alle jaren, dus fase 1 toont op het bord 2027 ook haar 12,75 uur uit 2026.
+- Uren die bij een verschuiving over de jaargrens landen, gaan in `urenBuiten` in plaats van uit het geheugen te verdwijnen (voorheen pas zichtbaar na herladen).
+- Voetnoten en muistips aangepast.
+
+Terugval: mislukt de extra query, dan een waarschuwing in de console en gedrag als v0.11.1 (alleen dit jaar).
+
+Niet gewijzigd, bewust: bij het verschuiven van een fase gaan alleen de uren van het bordjaar mee (`slaDatumsOp` kijkt in `uren`). Een fase die zelf over de jaargrens ligt verschuif je dus per bordjaar.
+
+Getest: Node-parsetest, CSS/div-balans, rekenlogica met synthetische De Bie-data (12,75 / 8,89 / fase-sommen beide kanten op). De PostgREST `.or('datum.lt.…,datum.gt.…')`-filter is uit de supabase-js-documentatie en niet live getest — controleer bij de eerste lading dat het paneel op 2027 nu 8,89 toont.
+
 ## v0.11.1 — Hulpmiddel-naam altijd zwart, 25-09-2026
 
 - De naam en omschrijving in de hulpmiddelstrook waren wit (donker alleen bij mobiel toilet). Loopt de tekst voorbij een korte strook over de projectblokken of leeg veld heen, dan was hij onleesbaar. Nu altijd zwart, ongeacht de kleur eronder.
