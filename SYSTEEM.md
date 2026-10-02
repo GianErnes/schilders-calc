@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 20 september 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 2 oktober 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -5326,3 +5326,51 @@ door Gian te testen in de echte omgeving.
 **Niet in deze brok.** Akkoorden buiten de link om (mondeling/mail): daar
 bestaat geen rij in `offerte_accorderingen`, dus ook geen bevestiging. Blijft
 open.
+
+## Wat er op 2 oktober 2026 gedaan is: materiaalaandeel-check in de calculatie (v4.84.0)
+
+**Vakregel.** Van de som arbeid plus materiaal is in de schilderspraktijk
+hooguit 20% materiaal; in circa negen van de tien klussen klopt die
+verhouding (bron: Gian, mondeling 02-10-2026). Zit materiaal erboven, dan
+is dat meestal een signaal van een calculatiefout (eenheid, rendement,
+hoeveelheid) en soms een bijzondere klus. Dit is de eerste prijsgevoel-
+controle uit `controle_calculatie_offerte_spec.md` (laag 3), maar bewust
+los van de Controleer-knop: een live signaal in de calculatie zelf.
+
+**Rekenbasis (besluiten Gian 02-10-2026).**
+- Breuk: materiaal verkoop / (arbeid + materiaal verkoop). Waarschuwing
+  zodra het aandeel groter is dan 0,20 (`MAT_AANDEEL_MAX` in `index.html`,
+  vaste constante, geen instelling).
+- Per regel: `t.arbeid` en `t.matVerkoop` uit `calcRegelTotalen`. Arbeid is
+  daar al inclusief uurloon en de staat-toeslag van de regel (factor
+  `1 + toeslag/100` op uren en arbeid, niet op materiaal); materiaal is
+  toeslagvrij. Beide in euro, dus de breuk kan er direct op rekenen.
+- Totaalpaneel: `arbeid` zoals het paneel toont (inclusief afrondingstoeslag
+  bij volle dagen) en `matVerkoop` uit `calcProjectTotalen`. Inactieve
+  regels, onderdelen en hoofdgroepen vallen er via `_isActief` vanzelf uit.
+- Buiten de breuk: opslagen klein materiaal, afval en ARBO, reis, staart.
+- Geen ondergrens in bedrag. Een regel met vooral kit en weinig uren krijgt
+  gewoon zijn signaal; de beoordeling blijft bij de calculator.
+
+**Weergave.** In de regelkop naast `mat. € …` een oranje `⚠ 27%`
+(klasse `mat-aandeel-tag`, zelfde kleuren als de v4.81.0-waarschuwing),
+met bij aanraken de rekenbasis in woorden. Op het totaalpaneel onder
+"Totaal materiaal incl. toeslagen" een ingesprongen regel "Materiaalaandeel
+(vakregel ≤ 20%)" met het percentage: grijs eronder, oranje vet met ⚠
+erboven. Niets wordt opgeslagen; het is afgeleide informatie. Geen melding
+in offerte, Controleer-lijst, mail of taak.
+
+**Gewijzigd in `index.html`.** Helpers `_matAandeel` en `_matAandeelTitel`
+plus constante `MAT_AANDEEL_MAX` naast `calcRegelTotalen`; één regel in
+`renderRegel` (regel-stats) en één blok in `renderTotals`; drie CSS-regels.
+Rekenkern ongewijzigd. Geen SQL, geen deploy.
+
+**Getest.** Node-parse van het scriptblok, CSS-accoladebalans 814/814,
+div-balans gelijk aan live, runtime-test van de breuk met zes gevallen
+(onder, precies 20%, boven, leeg, alleen materiaal, met 30% toeslag).
+Status: door Gian te testen op iPad/iPhone met een echte calculatie
+waarvan hij weet dat hij scheef zit.
+
+**Niet in deze brok.** Grens als instelling in `app_settings`; opname in de
+Controleer-lijst; per-onderdeel of per-hoofdgroep signaal (per regel en
+totaal bleken genoeg om te zien waar het scheefgaat).

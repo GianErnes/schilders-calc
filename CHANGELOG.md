@@ -1,3 +1,20 @@
+## v4.84.0 — Materiaalaandeel-check: ⚠ boven de 20% per regel en in het totaalpaneel (2026-10-02)
+
+**Aanleiding**
+- Vakregel uit de schilderspraktijk (Gian, 02-10-2026): van arbeid plus materiaal is hooguit 20% materiaal; in negen van de tien klussen klopt dat. Zit een regel erboven, dan is dat meestal een calculatiefout (eenheid, rendement, hoeveelheid). Eerste prijsgevoel-controle uit `controle_calculatie_offerte_spec.md` (laag 3), bewust los van de Controleer-knop.
+
+**Gebouwd**
+- Breuk materiaal verkoop / (arbeid + materiaal verkoop), grens `MAT_AANDEEL_MAX = 0.20` als constante. Helpers `_matAandeel` en `_matAandeelTitel` naast `calcRegelTotalen`.
+- Regelkop: oranje `⚠ 27%` naast `mat. € …` zodra de regel boven de 20% zit; aanraken toont de rekenbasis. Arbeid per regel is incl. uurloon en staat-toeslag (zoals `calcRegelTotalen` al rekent), materiaal toeslagvrij.
+- Totaalpaneel: regel "Materiaalaandeel (vakregel ≤ 20%)" onder Totaal materiaal, grijs eronder en oranje vet met ⚠ erboven. Arbeid incl. afrondingstoeslag zoals het paneel toont; alleen actieve regels via `calcProjectTotalen`.
+- Buiten de breuk: opslagen klein materiaal, afval en ARBO, reis en staart. Geen ondergrens in bedrag. Niets wordt opgeslagen.
+
+**Niet gewijzigd**
+- Rekenkern, offerte, Controleer-lijst. Geen SQL, geen deploy.
+
+**Getest**
+- Node-parse, CSS 814/814, div-balans gelijk aan live, runtime-test breuk (6 gevallen). Praktijktest op iPad/iPhone door Gian.
+
 ## v4.83.0 — Betaalwijze altijd op de akkoordbevestiging van een onderhoudsplan (2026-10-01)
 
 **Aanleiding**
