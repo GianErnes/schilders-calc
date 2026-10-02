@@ -1384,9 +1384,15 @@
   }
 
   /* v4.84.0 — materiaalaandeel boven de vakregel (20% van arbeid + materiaal) */
-  .mat-aandeel-tag { display: inline-block; margin-left: 0.3rem; padding: 0 0.3rem; border-radius: 3px; background: #fff4e5; color: #b45309; font-weight: 700; cursor: help; }
-  .totals .line.mat-aandeel span { color: var(--ink-soft); font-size: 0.78rem; }
-  .totals .line.mat-aandeel.is-hoog span { color: #b45309; font-weight: 700; }
+  /* v4.85.0 — stoplicht: ok ≤ 20%, hoog ≤ 30%, kritiek erboven */
+  .mat-aandeel-tag { display: inline-block; margin-left: 0.3rem; padding: 0 0.3rem; border-radius: 3px; font-weight: 700; cursor: help; }
+  .mat-aandeel-tag.is-ok { background: #ecfdf5; color: #047857; }
+  .mat-aandeel-tag.is-hoog { background: #fff4e5; color: #b45309; }
+  .mat-aandeel-tag.is-kritiek { background: #fef2f2; color: #b91c1c; }
+  .totals .line.mat-aandeel span { font-size: 0.78rem; font-weight: 700; }
+  .totals .line.mat-aandeel.is-ok span { color: #047857; }
+  .totals .line.mat-aandeel.is-hoog span { color: #b45309; }
+  .totals .line.mat-aandeel.is-kritiek span { color: #b91c1c; }
 
   /* TOTALS PANEL */
   .totals {
@@ -2370,9 +2376,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.84.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.85.0</h2>
       <div class="intro-body">
-        <p><strong>🔧 Openen bij een planreactie opent het plan (v4.84.1).</strong> Reageerde een klant op de accordeerlink van een onderhoudsplan, dan opende de knop Openen in het dashboardblok Reacties op offertes en plannen de calculatie met het offerte-accordeervenster erbovenop, dat meldde dat er geen offertenummer was. Logisch, want de calculatie zelf was nooit als offerte verstuurd; het was het plan dat geaccordeerd was. Voortaan springt Openen bij een planreactie naar de Onderhoudsplan-tab en opent het Accordeerlink-venster van het plan, precies zoals het bij een offerte al naar het offertevenster ging. Offertereacties veranderen niet. Geen SQL en geen Edge Function.</p>
+        <p><strong>🚦 Materiaalaandeel in drie kleuren (v4.85.0).</strong> Het percentage uit v4.84.0 staat nu altijd in de regelkop en op het totaalpaneel, als stoplicht: groen tot en met 20%, oranje tot en met 30%, rode vette letters daarboven. Zo springt een regel die echt uit de bocht vliegt er direct uit, en zie je in één oogopslag dat de rest in orde is. Rekenbasis ongewijzigd. Geen SQL, geen deploy.</p>
         <p><strong>⚖️ Materiaalaandeel boven de 20% valt op (v4.84.0).</strong> Vakregel uit de schilderspraktijk: van arbeid plus materiaal samen is hooguit 20% materiaal, in negen van de tien klussen klopt dat. Zit een verfsysteemregel erboven, dan staat er nu naast het materiaalbedrag in de regelkop een oranje ⚠ met het percentage; raak hem aan en je ziet de rekenbasis. Het totaalpaneel rechts krijgt onder Totaal materiaal een regel Materiaalaandeel met hetzelfde percentage over alle actieve regels, grijs zolang het klopt en oranje erboven. De breuk is materiaal verkoop gedeeld door arbeid plus materiaal verkoop. Arbeid is inclusief de staat-toeslag van de regel en, op het paneel, de afrondingstoeslag; de opslagen klein materiaal, afval en ARBO, reis en staart blijven erbuiten. Een zachte waarschuwing, geen blokkade: een regel met vooral kit en weinig uren krijgt zijn ⚠ en jij beoordeelt of dat klopt. Geen SQL, geen deploy.</p>
         <p><strong>💳 Betaalwijze staat altijd op de akkoordbevestiging van een plan (v4.83.0).</strong> Gaf een klant akkoord op een plan met betaalmodel Contant of Maandelijks, dan ontbrak op de akkoordbevestiging de rij Betaling: die werd alleen gevuld als de klant zelf had gekozen (betaalmodel Beide). Voortaan staat de betaalweg er altijd: de klantkeuze als die er is, anders het betaalmodel van het plan. Bij nieuwe accordeerlinks wordt dat betaalmodel bij het aanmaken bevroren, zodat een latere wijziging van het plan de bevestiging niet verandert; bestaande links lezen het betaalmodel van het plan. Dezelfde zin verschijnt op de klantpagina en in het Accordeerlink-venster. Een al geaccordeerd plan: open het Accordeerlink-venster en download het getekende exemplaar opnieuw. Geen SQL, geen deploy.</p>
         <p><strong>🏷️ Beurtnamen in de offerte-bijlage letterlijk overgenomen (v4.82.0).</strong> De eerste beurt heette in de bijlage altijd "Startonderhoudsbeurt" en namen met "controle" of "herschilder" werden omgezet naar een vast type. Bij een gesplitste woning (achter-/linkergevel in 2028, voor-/rechtergevel in 2031) was daardoor niet te zien welk deel wanneer aan de beurt is. Voortaan staat de naam er precies zoals je hem bij Beurten intikt; "Startonderhoudsbeurt" verschijnt alleen nog als het naamveld leeg is. Alleen de horizontale tijdlijn kapt lange namen af op 22 tekens.</p>
@@ -3756,7 +3762,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.84.1';
+const APP_VERSION = 'v4.85.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4173,7 +4179,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
-  { v: '4.84.1', d: '2026-10-02', h: 'Openen bij een planreactie in het dashboardblok springt naar de Onderhoudsplan-tab en opent het planvenster, niet meer het offertevenster.' },
+  { v: '4.85.0', d: '2026-10-02', h: 'Materiaalaandeel als stoplicht: altijd zichtbaar, groen ≤ 20%, oranje ≤ 30%, rood daarboven, in regelkop en totaalpaneel.' },
   { v: '4.84.0', d: '2026-10-02', h: 'Materiaalaandeel-check: oranje ⚠ met percentage op een verfsysteemregel zodra materiaal verkoop boven de 20% van arbeid plus materiaal zit, en dezelfde regel Materiaalaandeel in het totaalpaneel.' },
   { v: '4.83.0', d: '2026-10-01', h: 'De akkoordbevestiging van een onderhoudsplan toont altijd de betaalwijze: de klantkeuze als die er is, anders het betaalmodel van het plan. Nieuwe accordeerlinks bevriezen dat betaalmodel bij het aanmaken.' },
   { v: '4.82.0', d: '2026-10-01', h: 'De offerte-bijlage van het onderhoudsplan toont de beurtnaam letterlijk zoals ingevoerd. "Startonderhoudsbeurt" is alleen nog de terugval bij een lege naam; afkappen gebeurt alleen in de tijdlijn.' },
@@ -16650,6 +16656,12 @@ function calcRegelTotalen(r) {
 // op het paneel ook incl. afrondingstoeslag); materiaal is materiaal verkoop zonder
 // de opslagen klein materiaal, afval en ARBO. Een zacht signaal, geen blokkade.
 const MAT_AANDEEL_MAX = 0.20;
+const MAT_AANDEEL_KRITIEK = 0.30; // v4.85.0 — daarboven rood
+function _matAandeelKlasse(a) { // v4.85.0 — stoplicht
+  if (a > MAT_AANDEEL_KRITIEK) return 'is-kritiek';
+  if (a > MAT_AANDEEL_MAX) return 'is-hoog';
+  return 'is-ok';
+}
 function _matAandeel(arbeid, mat) {
   const som = (arbeid || 0) + (mat || 0);
   if (som <= 0) return null;
@@ -19450,7 +19462,7 @@ function renderRegel(hgId, odId, r) {
       <div><input type="number" step="5" value="${r.toeslag||0}" onchange="updReg('${hgId}','${odId}','${r.id}','toeslag',parseFloat(this.value))" title="Toeslag voor staat (matig=15, slecht=30)"> <span style="color:var(--muted); font-size:0.7rem;">% staat</span></div>
       <div class="regel-stats">
         ${fmt(t.uren)} u<br>
-        <span style="color:var(--ink-soft); font-size:0.7rem;">mat. ${eur(t.matVerkoop)}${(() => { const a = _matAandeel(t.arbeid, t.matVerkoop); return (a !== null && a > MAT_AANDEEL_MAX) ? `<span class="mat-aandeel-tag" title="${_matAandeelTitel(a, t.arbeid, t.matVerkoop)}">⚠ ${Math.round(a * 100)}%</span>` : ''; })()}</span><br>
+        <span style="color:var(--ink-soft); font-size:0.7rem;">mat. ${eur(t.matVerkoop)}${(() => { const a = _matAandeel(t.arbeid, t.matVerkoop); if (a === null) return ''; const k = _matAandeelKlasse(a); return `<span class="mat-aandeel-tag ${k}" title="${_matAandeelTitel(a, t.arbeid, t.matVerkoop)}">${k === 'is-ok' ? '' : '⚠ '}${Math.round(a * 100)}%</span>`; })()}</span><br>
         ${eur(t.verkoop)} <button class="btn-secondary btn btn-sm" onclick="dupRegel('${hgId}','${odId}','${r.id}')" title="Regel met verfsysteem dupliceren (zonder meetstaat)" style="margin-left:0.4rem;">⎘</button><button class="btn btn-danger btn-sm" onclick="delReg('${hgId}','${odId}','${r.id}')" style="margin-left:0.25rem;">×</button>
       </div>
     </div>
@@ -21536,8 +21548,8 @@ function renderTotals() {
     ${(() => { // v4.84.0 — materiaalaandeel over alle actieve regels; arbeid incl. afrondingstoeslag, materiaal verkoop zonder opslagen
       const a = _matAandeel(arbeid, matVerkoop);
       if (a === null) return '';
-      const hoog = a > MAT_AANDEEL_MAX;
-      return `<div class="line indent mat-aandeel${hoog ? ' is-hoog' : ''}" title="${_matAandeelTitel(a, arbeid, matVerkoop)}"><span>${hoog ? '⚠ ' : ''}Materiaalaandeel (vakregel ≤ ${Math.round(MAT_AANDEEL_MAX * 100)}%)</span><span>${Math.round(a * 100)}%</span></div>`;
+      const k = _matAandeelKlasse(a); // v4.85.0
+      return `<div class="line indent mat-aandeel ${k}" title="${_matAandeelTitel(a, arbeid, matVerkoop)}"><span>${k === 'is-ok' ? '' : '⚠ '}Materiaalaandeel (vakregel ≤ ${Math.round(MAT_AANDEEL_MAX * 100)}%)</span><span>${Math.round(a * 100)}%</span></div>`;
     })()}
     <div class="line"><span>Reis${reisDagen === 0 ? '' : ` (${reisDagen === 1 ? '1 dag' : `${reisDagen} dgn`} × heen+terug${binnenRayon ? ', binnen rayon' : ' + reisuren'})`}</span><span>${eur(reisTotaal)}</span></div>
     <div class="line"><span>Staartkosten</span><span>${eur(staartTotaal)}</span></div>
@@ -24955,7 +24967,7 @@ async function _accordMeldingenRender() {
       + (it.klant ? ' <span style="color:var(--muted); font-weight:400;">\u00b7 ' + _accordEsc(it.klant) + '</span>' : '') + '</div>'
       + '<div style="font-size:0.78rem; color:var(--muted);">' + _accordEsc(it.tekst) + '</div>'
       + '</div>'
-      + '<button class="btn btn-sm" onclick="accordMeldingOpen(\'' + it.calcId + '\', ' + (it.plan ? 'true' : 'false') + ')">Openen</button>' // v4.84.1 — planvlag mee
+      + '<button class="btn btn-sm" onclick="accordMeldingOpen(\'' + it.calcId + '\')">Openen</button>'
       + '<button class="btn btn-secondary btn-sm" onclick="accordMarkGezien(\'' + it.accId + '\')">Gezien</button>'
       + '</div>';
   });
@@ -24986,21 +24998,9 @@ async function accordMarkAllesGezien() {
   _accordMeldingenRender();
 }
 
-// v4.84.1 — Een planreactie opent het planvenster op de Onderhoudsplan-tab in
-// plaats van het offerte-venster. Sinds v4.51.0 wist het item al dat het om
-// een plan ging (grijze pil), maar de knop stuurde altijd naar accordLinkBeheer,
-// dat terecht klaagde over een ontbrekend offertenummer. Volgorde: eerst de
-// calc openen, dan het plan laden, dán pas de tab; zo leest de tab-render de
-// al geladen state en opent het venster met zeker het juiste plan.
-async function accordMeldingOpen(calcId, isPlan) {
+async function accordMeldingOpen(calcId) {
   await openCalc(calcId);
-  if (!isPlan) { accordLinkBeheer(); return; }
-  await _ohpSetBronCalc(calcId);
-  const btn = document.querySelector('nav button[data-tab="onderhoud"]');
-  if (btn) btn.click();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (!_ohpState.plan || !_ohpState.plan.id) { _toast('Geen onderhoudsplan gevonden bij deze calculatie'); return; }
-  ohpAccordLinkBeheer();
+  accordLinkBeheer();
 }
 
 init();

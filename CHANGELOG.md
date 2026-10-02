@@ -1,11 +1,18 @@
-## v4.84.1 — Openen bij een planreactie opent het planvenster (2026-10-02)
+## v4.85.0 — Materiaalaandeel als stoplicht: groen ≤ 20%, oranje ≤ 30%, rood erboven (2026-10-02)
 
-**Bugfix dashboardblok "Reacties op offertes en plannen".** De knop *Openen* riep altijd `accordLinkBeheer()` (het offerte-venster) aan, ook bij een reactie op een onderhoudsplan-link. Bij Van Gessel | Onderhoudsplan 2026-2032 opende daardoor de calculatie Buitenwerk met de melding "Er staat nog geen offertenummer", terwijl het plan was geaccordeerd. Het item kende de planvlag al sinds v4.51.0 (grijze pil), maar gaf die niet door aan de knop.
+**Aanleiding**
+- Gian na v4.84.0: het signaal krijgt te weinig aandacht. Gewenst: altijd zichtbaar, groen onder de 20%, oranje tussen 20 en 30, rode letters boven de 30%.
 
-- `accordMeldingOpen(calcId, isPlan)`: bij een plan eerst `openCalc`, dan `_ohpSetBronCalc`, dan naar de Onderhoudsplan-tab en `ohpAccordLinkBeheer()`. Volgorde bewust: plan laden vóór de tabwissel, zodat de tab-render en het laden elkaar niet kruisen.
-- Ontbreekt het plan onverwacht, dan een toast in plaats van een leeg venster.
-- Offertereacties: gedrag ongewijzigd.
-- Geen SQL, geen Edge Function.
+**Gebouwd**
+- Constante `MAT_AANDEEL_KRITIEK = 0.30` en helper `_matAandeelKlasse` (is-ok / is-hoog / is-kritiek) naast `_matAandeel`.
+- Regelkop toont het percentage altijd, gekleurd; ⚠ alleen bij oranje en rood. Totaalpaneel: dezelfde drie kleuren, vet.
+- Grensgevallen: precies 20% is groen, precies 30% is oranje.
+
+**Niet gewijzigd**
+- Rekenbasis uit v4.84.0. Geen SQL, geen deploy.
+
+**Getest**
+- Node-parse, CSS 819/819, div-balans gelijk aan live, runtime-test van de drie standen (15,8 / 20,0 / 27,3 / 30,0 / 33,3%).
 
 ## v4.84.0 — Materiaalaandeel-check: ⚠ boven de 20% per regel en in het totaalpaneel (2026-10-02)
 

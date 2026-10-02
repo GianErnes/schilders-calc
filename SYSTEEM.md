@@ -5374,3 +5374,12 @@ waarvan hij weet dat hij scheef zit.
 **Niet in deze brok.** Grens als instelling in `app_settings`; opname in de
 Controleer-lijst; per-onderdeel of per-hoofdgroep signaal (per regel en
 totaal bleken genoeg om te zien waar het scheefgaat).
+
+### Aanvulling v4.85.0 (zelfde dag): stoplicht
+
+Op verzoek van Gian (signaal kreeg te weinig aandacht) toont de regelkop het
+materiaalaandeel nu altijd, en kleuren regelkop en totaalpaneel in drie
+standen: groen tot en met 20% (`MAT_AANDEEL_MAX`), oranje tot en met 30%
+(`MAT_AANDEEL_KRITIEK`), rood vet daarboven. Helper `_matAandeelKlasse`
+geeft de CSS-klasse (`is-ok`, `is-hoog`, `is-kritiek`). Het ⚠ staat alleen
+bij oranje en rood. Rekenbasis ongewijzigd.
