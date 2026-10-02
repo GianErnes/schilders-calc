@@ -1,3 +1,12 @@
+## v4.84.1 — Openen bij een planreactie opent het planvenster (2026-10-02)
+
+**Bugfix dashboardblok "Reacties op offertes en plannen".** De knop *Openen* riep altijd `accordLinkBeheer()` (het offerte-venster) aan, ook bij een reactie op een onderhoudsplan-link. Bij Van Gessel | Onderhoudsplan 2026-2032 opende daardoor de calculatie Buitenwerk met de melding "Er staat nog geen offertenummer", terwijl het plan was geaccordeerd. Het item kende de planvlag al sinds v4.51.0 (grijze pil), maar gaf die niet door aan de knop.
+
+- `accordMeldingOpen(calcId, isPlan)`: bij een plan eerst `openCalc`, dan `_ohpSetBronCalc`, dan naar de Onderhoudsplan-tab en `ohpAccordLinkBeheer()`. Volgorde bewust: plan laden vóór de tabwissel, zodat de tab-render en het laden elkaar niet kruisen.
+- Ontbreekt het plan onverwacht, dan een toast in plaats van een leeg venster.
+- Offertereacties: gedrag ongewijzigd.
+- Geen SQL, geen Edge Function.
+
 ## v4.84.0 — Materiaalaandeel-check: ⚠ boven de 20% per regel en in het totaalpaneel (2026-10-02)
 
 **Aanleiding**
