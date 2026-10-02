@@ -1,3 +1,24 @@
+## v4.86.0 — Reisafstand 0 km zwijgt niet meer; afstand wordt automatisch opgehaald (2026-10-02)
+
+**Aanleiding**
+- Gian zag een calculatie met "Reis (6 dgn × heen+terug, binnen rayon) € 0,00". Oorzaak (uit de live code): `binnenRayon = reisAfstand <= rayonDrempel`, dus 0 km valt automatisch binnen het rayon en de regel oogt als een uitkomst in plaats van een ontbrekende invoer. De rayon-pill was bij 0 km bewust leeg. Ontwerpgat, geen rekenfout.
+
+**Gebouwd**
+- Totaalpaneel: bij afstand 0 en reisdagen > 0 oranje vette regel "⚠ Reis: geen afstand ingevuld" met "—" in plaats van € 0,00.
+- Rayon-pill onder het veld Reisafstand: bij 0 km oranje "● geen afstand — reiskosten worden niet gerekend".
+- Controle (`_controleerVerzamel`): nieuw controlepunt (niet blokkerend) bij reisafstand 0.
+- Automaat `_autoAfstandOphalen()` boven op de bestaande `ophaalAfstand()`: vuurt bij wijziging van postcode of huisnummer en bij `openCalc`, uitsluitend als de calc niet vergrendeld is, de postcode de vorm 1234 AB heeft, het huisnummer is ingevuld, de afstand 0 is en dit adres in deze sessie nog niet geprobeerd is (`_autoAfstandGeprobeerd`, sleutel calc-id|postcode|huisnummer). De beslislogica staat apart in `_autoAfstandMag()` zodat hij testbaar is. Handmatig ingevulde afstand wordt nooit overschreven.
+- Bijvangst: de change-listener roept nu zelf `_renderRayonIndicator()` aan na het bijwerken van `data.calc.reis`. De inline `onchange` op het veld vuurt vóór de document-listener en las daardoor de oude waarde (aanname op basis van event-volgorde, niet in browser getest).
+
+**Niet gewijzigd**
+- Rekenkern, offerte-PDF, werkbon, onderhoudsplan. Geen SQL, geen Edge Function-deploy; de bestaande afstand-functie wordt alleen vaker aangeroepen.
+
+**Getest**
+- Node-parse, CSS 819/819, div-balans +1/+1 t.o.v. live (één extra regelvariant), runtime-test van `_autoAfstandMag` in 11 gevallen (vergrendeld, al ingevuld, postcode leeg/half, huisnummer leeg, al geprobeerd, ander huisnummer, andere calc, reis als string/undefined) en van de labelkeuze in het totaalpaneel.
+
+**Niet getest**
+- De echte PDOK/ORS-aanroep en het gedrag op de iPad bij openen van een calculatie zonder afstand. Te doen door Gian: open de calculatie uit de screenshot; verwacht is dat de afstand binnen enkele seconden gevuld wordt en de reisregel een bedrag toont.
+
 ## v4.85.0 — Materiaalaandeel als stoplicht: groen ≤ 20%, oranje ≤ 30%, rood erboven (2026-10-02)
 
 **Aanleiding**

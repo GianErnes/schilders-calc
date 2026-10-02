@@ -5383,3 +5383,16 @@ standen: groen tot en met 20% (`MAT_AANDEEL_MAX`), oranje tot en met 30%
 (`MAT_AANDEEL_KRITIEK`), rood vet daarboven. Helper `_matAandeelKlasse`
 geeft de CSS-klasse (`is-ok`, `is-hoog`, `is-kritiek`). Het ⚠ staat alleen
 bij oranje en rood. Rekenbasis ongewijzigd.
+
+### Aanvulling v4.86.0 (zelfde dag): reisafstand 0 km
+
+Een calculatie zonder reisafstand toonde "Reis (… binnen rayon) € 0,00",
+omdat 0 km onder de rayon-grens valt. Nu: oranje waarschuwing in het
+totaalpaneel, de rayon-pill en de Controle, en de app haalt de afstand zelf
+op via `ophaalAfstand()` (PDOK + OpenRouteService via de bestaande Edge
+Function) zodra postcode en huisnummer er staan en de afstand nog 0 is. Dat
+gebeurt bij het invullen van het adres en bij het openen van een calculatie,
+één keer per adres per sessie, nooit bij vergrendelde calculaties en nooit
+over een handmatig ingevulde afstand heen. Beslislogica in
+`_autoAfstandMag()`, los van het ophalen, zodat hij in Node te testen is.
+Geen SQL, geen deploy. Nog te doen door Gian: live test op de iPad.
