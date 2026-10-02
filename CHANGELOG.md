@@ -1,23 +1,22 @@
-## v4.86.0 — Reisafstand 0 km zwijgt niet meer; afstand wordt automatisch opgehaald (2026-10-02)
+## v4.85.1 — Naar Craft: beeldresultaat zichtbaar in de slotmelding, venster bij mislukte afbeeldingen (2026-10-02)
 
 **Aanleiding**
-- Gian zag een calculatie met "Reis (6 dgn × heen+terug, binnen rayon) € 0,00". Oorzaak (uit de live code): `binnenRayon = reisAfstand <= rayonDrempel`, dus 0 km valt automatisch binnen het rayon en de regel oogt als een uitkomst in plaats van een ontbrekende invoer. De rayon-pill was bij 0 km bewust leeg. Ontwerpgat, geen rekenfout.
+- Gian 02-10-2026: de foto's komen niet in Craft aan. Na Naar Craft zag hij alleen "Werkvoorbereiding naar Craft gestuurd", niets over afbeeldingen. Oorzaak van die blindheid: `_toast` overschrijft de vorige melding meteen, dus "X van Y afbeeldingen in Craft" verdween binnen een milliseconde achter de slotmelding. Of de foto's wel of niet door Craft zijn aangenomen was daardoor niet vast te stellen. De PDF "Offerte compleet" van dezelfde calc toont de foto's wél, dus laden/omzetten in de browser werkt (zelfde `crossOrigin`, zelfde links).
 
 **Gebouwd**
-- Totaalpaneel: bij afstand 0 en reisdagen > 0 oranje vette regel "⚠ Reis: geen afstand ingevuld" met "—" in plaats van € 0,00.
-- Rayon-pill onder het veld Reisafstand: bij 0 km oranje "● geen afstand — reiskosten worden niet gerekend".
-- Controle (`_controleerVerzamel`): nieuw controlepunt (niet blokkerend) bij reisafstand 0.
-- Automaat `_autoAfstandOphalen()` boven op de bestaande `ophaalAfstand()`: vuurt bij wijziging van postcode of huisnummer en bij `openCalc`, uitsluitend als de calc niet vergrendeld is, de postcode de vorm 1234 AB heeft, het huisnummer is ingevuld, de afstand 0 is en dit adres in deze sessie nog niet geprobeerd is (`_autoAfstandGeprobeerd`, sleutel calc-id|postcode|huisnummer). De beslislogica staat apart in `_autoAfstandMag()` zodat hij testbaar is. Handmatig ingevulde afstand wordt nooit overschreven.
-- Bijvangst: de change-listener roept nu zelf `_renderRayonIndicator()` aan na het bijwerken van `data.calc.reis`. De inline `onchange` op het veld vuurt vóór de document-listener en las daardoor de oude waarde (aanname op basis van event-volgorde, niet in browser getest).
+- Eén slotmelding met het beeldresultaat: "Tekst in Craft · 4 van 4 foto's, 2 van 2 kozijnen in Craft", of bij problemen "… (3 mislukt)", "geen afbeeldingen kunnen maken (5 in dossier, 5 mislukt)", "afbeeldingen verstuurd, geen bevestiging van Craft". Rood als er iets mis is, groen als alles klopt.
+- `alert`-venster zodra niet alles lukt: per foto de reden uit de app (laadfout, geen link) en per afbeelding de status die Craft teruggaf, met eventuele foutmelding uit het antwoord. Zo is het op de iPad leesbaar zonder console.
+- `_craftBouwFotos(c, diag)` vult een diagnose-object en haalt vlak voor het versturen álle fotolinks vers op (was: alleen de ontbrekende), zodat een verlopen link (1 uur geldig) geen stille oorzaak meer kan zijn.
+- Nieuwe helpers `_craftBeeldStatussen`, `_craftBeeldMelding`, `_craftBeeldProbleem`.
 
 **Niet gewijzigd**
-- Rekenkern, offerte-PDF, werkbon, onderhoudsplan. Geen SQL, geen Edge Function-deploy; de bestaande afstand-functie wordt alleen vaker aangeroepen.
+- De verzending zelf (payload, Edge Function `craft-werkvoorbereiding`, stempel `craft_geexporteerd_op`). Geen SQL, geen deploy. De steigerroute gebruikt `_craftBouwFotos` niet en is ongemoeid.
 
 **Getest**
-- Node-parse, CSS 819/819, div-balans +1/+1 t.o.v. live (één extra regelvariant), runtime-test van `_autoAfstandMag` in 11 gevallen (vergrendeld, al ingevuld, postcode leeg/half, huisnummer leeg, al geprobeerd, ander huisnummer, andere calc, reis als string/undefined) en van de labelkeuze in het totaalpaneel.
+- Node-parse, CSS 819/819, div-balans gelijk aan live (1332/1335), tien runtime-tests op de drie helpers (alles goed, Craft weigert, omzetten mislukt, leeg dossier, geen lijst terug, gemengd, kale getallen i.p.v. objecten).
 
 **Niet getest**
-- De echte PDOK/ORS-aanroep en het gedrag op de iPad bij openen van een calculatie zonder afstand. Te doen door Gian: open de calculatie uit de screenshot; verwacht is dat de afstand binnen enkele seconden gevuld wordt en de reisregel een bedrag toont.
+- In de browser tegen Craft. Dat is precies de volgende stap: één keer Naar Craft drukken en de slotmelding of het venster lezen.
 
 ## v4.85.0 — Materiaalaandeel als stoplicht: groen ≤ 20%, oranje ≤ 30%, rood erboven (2026-10-02)
 

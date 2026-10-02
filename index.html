@@ -2376,9 +2376,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.86.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.85.1</h2>
       <div class="intro-body">
-        <p><strong>🚐 Reisafstand 0 km zwijgt niet meer (v4.86.0).</strong> Een calculatie zonder ingevulde reisafstand toonde "Reis (6 dgn × heen+terug, binnen rayon) € 0,00", alsof er gerekend was. Nul kilometer viel stilletjes binnen het rayon. Nu staat er oranje "⚠ Reis: geen afstand ingevuld", de rayon-pill onder het veld zegt hetzelfde en de Controle meldt het als controlepunt. Daarbij vult de app de afstand voortaan zelf in: zodra postcode en huisnummer er staan en de afstand nog 0 is, haalt hij de rij-afstand op via PDOK en OpenRouteService, bij het invullen van het adres én bij het openen van de calculatie. Een handmatig ingevulde afstand wordt nooit overschreven, vergrendelde calculaties blijven met rust, en per adres wordt het één keer per sessie geprobeerd. Mislukt het ophalen, dan blijft de waarschuwing staan. Rekenkern, PDF en werkbon ongewijzigd. Geen SQL, geen deploy.</p>
+        <p><strong>👁️ Naar Craft laat nu zien wat er met de foto's gebeurde (v4.85.1).</strong> De melding over de afbeeldingen werd tot nu toe binnen een tel overschreven door "Werkvoorbereiding naar Craft gestuurd", zodat je nooit kon zien of de foto's en kozijnen waren aangekomen. Nu staat het in één slotmelding, bijvoorbeeld "Tekst in Craft · 4 van 4 foto's, 2 van 2 kozijnen". Kon een foto niet worden omgezet of weigerde Craft een upload, dan krijg je een venster met per foto de reden en het antwoord van Craft. Vlak voor het versturen worden ook alle fotolinks vers opgehaald, zodat een verlopen link geen stille oorzaak meer kan zijn. Aan de verzending zelf is niets veranderd. Geen SQL, geen deploy.</p>
         <p><strong>🚦 Materiaalaandeel in drie kleuren (v4.85.0).</strong> Het percentage uit v4.84.0 staat nu altijd in de regelkop en op het totaalpaneel, als stoplicht: groen tot en met 20%, oranje tot en met 30%, rode vette letters daarboven. Zo springt een regel die echt uit de bocht vliegt er direct uit, en zie je in één oogopslag dat de rest in orde is. Rekenbasis ongewijzigd. Geen SQL, geen deploy.</p>
         <p><strong>⚖️ Materiaalaandeel boven de 20% valt op (v4.84.0).</strong> Vakregel uit de schilderspraktijk: van arbeid plus materiaal samen is hooguit 20% materiaal, in negen van de tien klussen klopt dat. Zit een verfsysteemregel erboven, dan staat er nu naast het materiaalbedrag in de regelkop een oranje ⚠ met het percentage; raak hem aan en je ziet de rekenbasis. Het totaalpaneel rechts krijgt onder Totaal materiaal een regel Materiaalaandeel met hetzelfde percentage over alle actieve regels, grijs zolang het klopt en oranje erboven. De breuk is materiaal verkoop gedeeld door arbeid plus materiaal verkoop. Arbeid is inclusief de staat-toeslag van de regel en, op het paneel, de afrondingstoeslag; de opslagen klein materiaal, afval en ARBO, reis en staart blijven erbuiten. Een zachte waarschuwing, geen blokkade: een regel met vooral kit en weinig uren krijgt zijn ⚠ en jij beoordeelt of dat klopt. Geen SQL, geen deploy.</p>
         <p><strong>💳 Betaalwijze staat altijd op de akkoordbevestiging van een plan (v4.83.0).</strong> Gaf een klant akkoord op een plan met betaalmodel Contant of Maandelijks, dan ontbrak op de akkoordbevestiging de rij Betaling: die werd alleen gevuld als de klant zelf had gekozen (betaalmodel Beide). Voortaan staat de betaalweg er altijd: de klantkeuze als die er is, anders het betaalmodel van het plan. Bij nieuwe accordeerlinks wordt dat betaalmodel bij het aanmaken bevroren, zodat een latere wijziging van het plan de bevestiging niet verandert; bestaande links lezen het betaalmodel van het plan. Dezelfde zin verschijnt op de klantpagina en in het Accordeerlink-venster. Een al geaccordeerd plan: open het Accordeerlink-venster en download het getekende exemplaar opnieuw. Geen SQL, geen deploy.</p>
@@ -3763,7 +3763,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.86.0';
+const APP_VERSION = 'v4.85.1';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4180,7 +4180,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
-  { v: '4.86.0', d: '2026-10-02', h: 'Reisafstand 0 km: oranje waarschuwing in totaalpaneel, rayon-pill en Controle; afstand wordt automatisch opgehaald zodra postcode en huisnummer er staan.' },
+  { v: '4.85.1', d: '2026-10-02', h: 'Naar Craft: het resultaat van foto\'s en kozijnen blijft zichtbaar in de slotmelding; bij mislukte afbeeldingen een venster met de reden per foto en de antwoorden van Craft.' },
   { v: '4.85.0', d: '2026-10-02', h: 'Materiaalaandeel als stoplicht: altijd zichtbaar, groen ≤ 20%, oranje ≤ 30%, rood daarboven, in regelkop en totaalpaneel.' },
   { v: '4.84.0', d: '2026-10-02', h: 'Materiaalaandeel-check: oranje ⚠ met percentage op een verfsysteemregel zodra materiaal verkoop boven de 20% van arbeid plus materiaal zit, en dezelfde regel Materiaalaandeel in het totaalpaneel.' },
   { v: '4.83.0', d: '2026-10-01', h: 'De akkoordbevestiging van een onderhoudsplan toont altijd de betaalwijze: de klantkeuze als die er is, anders het betaalmodel van het plan. Nieuwe accordeerlinks bevriezen dat betaalmodel bij het aanmaken.' },
@@ -5429,8 +5429,6 @@ function _controleerVerzamel() {
   if (!(wa.woonplaats || '').trim()) ontbreekt.push('woonplaats');
   if (ontbreekt.length) blok('Het werkadres is onvolledig: ' + ontbreekt.join(', ') + ' ontbreekt.');
   else if (!/^\d{4}\s?[A-Za-z]{2}$/.test((wa.postcode || '').trim())) check('De postcode van het werkadres (' + wa.postcode + ') heeft niet de vorm 1234 AB.');
-  // v4.86.0 — reisafstand 0 betekent geen reiskosten; dat moet opvallen.
-  if (!((parseFloat(c.reis) || 0) > 0)) check('De reisafstand is 0 km: er worden geen reiskosten gerekend. Vul de afstand in of haal hem op via 📍 Afstand ophalen.');
   if (cfg.klanttype === 'zakelijk' || cfg.klanttype === 'vve') {
     const ba = (cfg.adres && typeof cfg.adres === 'object') ? cfg.adres : {};
     const bOntbreekt = [];
@@ -6810,16 +6808,19 @@ function _craftFotoBijschrift(f) {
 }
 
 // Bouwt de afbeeldingen-array voor Craft (4b: foto's; in 4c komen de kozijnen erbij).
-async function _craftBouwFotos(c) {
+// v4.85.1 — diag (optioneel object) wordt gevuld met { totaal, mislukt:[{nr, reden}] },
+//           en alle fotolinks worden vers opgehaald (niet alleen de ontbrekende).
+async function _craftBouwFotos(c, diag) {
   const fotos = (c.fotos || []);
+  if (diag) { diag.totaal = fotos.length; diag.mislukt = []; }
   if (!fotos.length) return [];
-  const missing = fotos.filter(f => !f.signedUrl);
-  if (missing.length) await _signFotoUrls(missing);
+  try { await _signFotoUrls(fotos); } catch (e) { /* oude links blijven staan; laadfout wordt hieronder gemeld */ }
   const uit = [];
-  for (const f of fotos) {
-    let dataUrl = null;
-    try { dataUrl = await _craftFotoDataUrl(f, 1600); } catch (e) { dataUrl = null; }
-    if (!dataUrl) continue;
+  for (let i = 0; i < fotos.length; i++) {
+    const f = fotos[i];
+    let dataUrl = null, reden = '';
+    try { dataUrl = await _craftFotoDataUrl(f, 1600); } catch (e) { dataUrl = null; reden = (e && e.message) || 'onbekend'; }
+    if (!dataUrl) { if (diag) diag.mislukt.push({ nr: i + 1, reden: reden || 'leeg resultaat' }); continue; }
     uit.push({ base64: dataUrl, mime: 'image/jpeg', caption: _craftFotoBijschrift(f) });
   }
   return uit;
@@ -6896,6 +6897,53 @@ async function _craftBouwKozijnen(c) {
     uit.push({ base64: png, mime: 'image/png', caption: _craftKozijnBijschrift(ms, regelLocatie[ms.calcRegelId] || '') });
   }
   return uit;
+}
+
+// v4.85.1 — Tekst van het beeldresultaat voor de slotmelding.
+// fres = antwoord van de Edge Function op de foto-aanroep (of null als er niets te sturen was).
+function _craftBeeldStatussen(fres) {
+  return (fres && fres.fotos && Array.isArray(fres.fotos.resultaten)) ? fres.fotos.resultaten.map(r => typeof r === 'number' ? r : ((r && r.status != null) ? r.status : '?')) : null;
+}
+function _craftBeeldMelding(nFotos, nKozijnen, diag, fres) {
+  const totaalDossier = (diag && diag.totaal) || 0;
+  const mislukt = (diag && diag.mislukt) ? diag.mislukt.length : 0;
+  const verstuurd = nFotos + nKozijnen;
+  if (!verstuurd) {
+    if (!totaalDossier && !nKozijnen) return 'geen afbeeldingen in het dossier';
+    return 'geen afbeeldingen kunnen maken (' + totaalDossier + ' in dossier, ' + mislukt + ' mislukt)';
+  }
+  const st = _craftBeeldStatussen(fres);
+  if (!st) return 'afbeeldingen verstuurd, geen bevestiging van Craft';
+  const ok = st.filter(x => x === 200).length;
+  const okFotos = Math.min(nFotos, st.slice(0, nFotos).filter(x => x === 200).length);
+  const okKoz = Math.min(nKozijnen, st.slice(nFotos).filter(x => x === 200).length);
+  let m = okFotos + ' van ' + totaalDossier + " foto's, " + okKoz + ' van ' + nKozijnen + ' kozijnen in Craft';
+  if (ok < st.length || mislukt) m = m.replace(' in Craft', ' in Craft (' + (st.length - ok + mislukt) + ' mislukt)');
+  return m;
+}
+// Tekst voor een venster als er iets mis ging; '' als alles in orde is.
+function _craftBeeldProbleem(nFotos, nKozijnen, diag, fres) {
+  const regels = [];
+  if (diag && diag.mislukt && diag.mislukt.length) {
+    regels.push('Niet kunnen omzetten in de app:');
+    diag.mislukt.forEach(x => regels.push('  foto ' + x.nr + ': ' + x.reden));
+  }
+  const st = _craftBeeldStatussen(fres);
+  if (fres && !st) regels.push('Craft gaf geen lijst met resultaten terug: ' + JSON.stringify(fres).slice(0, 300));
+  if (st) {
+    const fout = st.map((x, i) => ({ x, i })).filter(o => o.x !== 200);
+    if (fout.length) {
+      regels.push('Door Craft geweigerd (status per afbeelding):');
+      fout.forEach(o => {
+        const r = (typeof fres.fotos.resultaten[o.i] === 'object' && fres.fotos.resultaten[o.i]) || {};
+        const wat = o.i < nFotos ? 'foto ' + (o.i + 1) : 'kozijn ' + (o.i - nFotos + 1);
+        const extra = r.error || r.fout || r.body || r.message || '';
+        regels.push('  ' + wat + ': status ' + o.x + (extra ? ' — ' + String(extra).slice(0, 160) : ''));
+      });
+    }
+  }
+  if (!regels.length) return '';
+  return 'Afbeeldingen naar Craft: niet alles is gelukt.\n\n' + regels.join('\n') + '\n\nDe tekst is wel verstuurd.';
 }
 
 let _craftBezig = false;
@@ -6983,20 +7031,25 @@ async function craftNaarCraft() {
   }
 
     // Foto's en kozijntekeningen met gebrekstippen meesturen (4b + 4c).
+    let beeldMelding = '';
     try {
       if (knop) knop.textContent = '⏳ Beeld…';
-      const fotos = await _craftBouwFotos(c);
+      const diag = {};
+      const fotos = await _craftBouwFotos(c, diag);
       const kozijnen = await _craftBouwKozijnen(c);
       const afbeeldingen = fotos.concat(kozijnen);
+      let fres = null;
       if (afbeeldingen.length) {
         _toast(afbeeldingen.length + ' afbeelding' + (afbeeldingen.length === 1 ? '' : 'en') + ' versturen…', 'ok');
-        const fres = await _craftCall({ documentId: kandidaat.id, fotos: afbeeldingen });
-        const gelukt = (fres && fres.fotos && Array.isArray(fres.fotos.resultaten))
-          ? fres.fotos.resultaten.filter(r => r.status === 200).length : 0;
-        _toast(gelukt + ' van ' + afbeeldingen.length + ' afbeeldingen in Craft (' + fotos.length + " foto's, " + kozijnen.length + ' kozijnen).', 'ok');
+        fres = await _craftCall({ documentId: kandidaat.id, fotos: afbeeldingen });
       }
+      // v4.85.1 — één slotmelding met het beeldresultaat; _toast overschrijft anders meteen.
+      beeldMelding = _craftBeeldMelding(fotos.length, kozijnen.length, diag, fres);
+      const probleem = _craftBeeldProbleem(fotos.length, kozijnen.length, diag, fres);
+      if (probleem) alert(probleem);
     } catch (e) {
-      _toast('Beeld versturen mislukt: ' + e.message);
+      beeldMelding = 'afbeeldingen mislukt: ' + e.message;
+      alert('Afbeeldingen naar Craft mislukt.\n\n' + e.message + '\n\nDe tekst is wel verstuurd.');
     }
 
     // Gelukt: markeer de calc als geëxporteerd (lokaal + gericht in de DB).
@@ -7005,7 +7058,7 @@ async function craftNaarCraft() {
     try {
       await _sb.from('calculaties').update({ craft_geexporteerd_op: nu }).eq('id', c.id);
     } catch (e) { /* knop wordt in finally bijgewerkt; een volgende load herstelt zo nodig */ }
-    _toast('Werkvoorbereiding naar Craft gestuurd.', 'ok');
+    _toast('Tekst in Craft' + (beeldMelding ? ' · ' + beeldMelding : '') + '.', beeldMelding && /mislukt|geen/.test(beeldMelding) ? 'err' : 'ok');
   } finally {
     _craftBezig = false;
     if (knop) { knop.disabled = false; knop.style.opacity = ''; }
@@ -20250,7 +20303,6 @@ async function openCalc(id) {
   // sessie/dag een correcte waarde toont, ook voor verzonden/geaccepteerde calcs.
   _syncCalcTotalToDB(c);
   renderCalcStructuur(); renderDashboard();
-  _autoAfstandOphalen(); // v4.86.0 — bestaande calc zonder afstand herstelt zichzelf
   // switch to calculatie tab
   document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
@@ -20662,10 +20714,7 @@ document.addEventListener('change', e => {
     }
     _updateCalcDB(data.calc);
     if (['reis','schilders','uurDag'].includes(k)) renderTotals();
-    if (k === 'reis') _renderRayonIndicator();
     renderDashboard();
-    // v4.86.0 — adres ingevuld en afstand nog 0: afstand zelf ophalen.
-    if (['postcode','huisnummer'].includes(k)) _autoAfstandOphalen();
   }
 });
 // Helper: tel N dagen op bij een YYYY-MM-DD datum, retourneert YYYY-MM-DD
@@ -20805,31 +20854,6 @@ async function ophaalAfstand() {
     return;
   }
   setStatus(`${km.toLocaleString('nl-NL')} km enkele reis · opgehaald`, 'var(--accent-deep)');
-}
-
-// v4.86.0 — Automatisch afstand ophalen als de afstand nog 0 is.
-// Beslist alleen óf het mag; het ophalen zelf blijft ophaalAfstand().
-// Eén poging per calc+postcode+huisnummer per sessie, zodat een blur op
-// het veld niet telkens opnieuw naar PDOK/ORS gaat.
-const _autoAfstandGeprobeerd = new Set();
-function _autoAfstandMag(c, lockedFn, geprobeerd) {
-  if (!c) return { ok: false, reden: 'geen calc' };
-  if (lockedFn(c)) return { ok: false, reden: 'vergrendeld' };
-  if ((parseFloat(c.reis) || 0) > 0) return { ok: false, reden: 'afstand al ingevuld' };
-  const pc = (c.postcode || '').trim();
-  const hn = (c.huisnummer || '').trim();
-  if (!/^\d{4}\s?[A-Za-z]{2}$/.test(pc)) return { ok: false, reden: 'postcode onvolledig' };
-  if (!hn) return { ok: false, reden: 'huisnummer leeg' };
-  const sleutel = (c.id || '') + '|' + pc.toUpperCase().replace(/\s+/g, '') + '|' + hn.toUpperCase();
-  if (geprobeerd.has(sleutel)) return { ok: false, reden: 'al geprobeerd' };
-  return { ok: true, sleutel: sleutel };
-}
-async function _autoAfstandOphalen() {
-  const c = data.calc;
-  const b = _autoAfstandMag(c, _isCalcLocked, _autoAfstandGeprobeerd);
-  if (!b.ok) return;
-  _autoAfstandGeprobeerd.add(b.sleutel);
-  try { await ophaalAfstand(); } catch (e) { /* ophaalAfstand meldt zelf via toast */ }
 }
 // ============================================================
 // STAARTKOSTEN
@@ -21584,9 +21608,7 @@ function renderTotals() {
       const k = _matAandeelKlasse(a); // v4.85.0
       return `<div class="line indent mat-aandeel ${k}" title="${_matAandeelTitel(a, arbeid, matVerkoop)}"><span>${k === 'is-ok' ? '' : '⚠ '}Materiaalaandeel (vakregel ≤ ${Math.round(MAT_AANDEEL_MAX * 100)}%)</span><span>${Math.round(a * 100)}%</span></div>`;
     })()}
-    ${(reisAfstand <= 0 && reisDagen > 0)
-      ? `<div class="line" style="color: var(--accent-deep); font-weight: 600;" title="Vul de reisafstand in of laat de app hem ophalen via postcode en huisnummer. Zonder afstand rekent de calculatie geen reiskosten."><span>⚠ Reis: geen afstand ingevuld</span><span>—</span></div>`
-      : `<div class="line"><span>Reis${reisDagen === 0 ? '' : ` (${reisDagen === 1 ? '1 dag' : `${reisDagen} dgn`} × heen+terug${binnenRayon ? ', binnen rayon' : ' + reisuren'})`}</span><span>${eur(reisTotaal)}</span></div>`}
+    <div class="line"><span>Reis${reisDagen === 0 ? '' : ` (${reisDagen === 1 ? '1 dag' : `${reisDagen} dgn`} × heen+terug${binnenRayon ? ', binnen rayon' : ' + reisuren'})`}</span><span>${eur(reisTotaal)}</span></div>
     <div class="line"><span>Staartkosten</span><span>${eur(staartTotaal)}</span></div>
     <div class="line divider"><span>Directe kosten</span><span>${eur(directe)}</span></div>
     <div class="line indent"><span>+ risico</span><span>${eur(winstBedrag)}</span></div>
@@ -21766,8 +21788,7 @@ function _renderRayonIndicator() {
   const afstand = data.calc.reis || 0;
   const drempel = _S().rayonDrempel != null ? _S().rayonDrempel : 15;
   if (afstand <= 0) {
-    // v4.86.0 — 0 km zweeg; nu een oranje waarschuwing, want zonder afstand worden geen reiskosten gerekend.
-    el.innerHTML = `<span style="color: var(--accent-deep); background: rgba(194,65,12,0.08); padding: 0.15rem 0.45rem; border-radius: 0.6rem;" title="Vul de afstand in of laat hem ophalen via postcode en huisnummer">● geen afstand — reiskosten worden niet gerekend</span>`;
+    el.innerHTML = '';
     return;
   }
   if (afstand <= drempel) {

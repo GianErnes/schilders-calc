@@ -5384,15 +5384,33 @@ standen: groen tot en met 20% (`MAT_AANDEEL_MAX`), oranje tot en met 30%
 geeft de CSS-klasse (`is-ok`, `is-hoog`, `is-kritiek`). Het ⚠ staat alleen
 bij oranje en rood. Rekenbasis ongewijzigd.
 
-### Aanvulling v4.86.0 (zelfde dag): reisafstand 0 km
+## Wat er op 2 oktober 2026 verder gedaan is: Naar Craft maakt het beeldresultaat zichtbaar (v4.85.1)
 
-Een calculatie zonder reisafstand toonde "Reis (… binnen rayon) € 0,00",
-omdat 0 km onder de rayon-grens valt. Nu: oranje waarschuwing in het
-totaalpaneel, de rayon-pill en de Controle, en de app haalt de afstand zelf
-op via `ophaalAfstand()` (PDOK + OpenRouteService via de bestaande Edge
-Function) zodra postcode en huisnummer er staan en de afstand nog 0 is. Dat
-gebeurt bij het invullen van het adres en bij het openen van een calculatie,
-één keer per adres per sessie, nooit bij vergrendelde calculaties en nooit
-over een handmatig ingevulde afstand heen. Beslislogica in
-`_autoAfstandMag()`, los van het ophalen, zodat hij in Node te testen is.
-Geen SQL, geen deploy. Nog te doen door Gian: live test op de iPad.
+**Aanleiding.** Melding van Gian: foto's komen niet in Craft aan, de app zegt
+alleen "Werkvoorbereiding naar Craft gestuurd". Onderzoek in de live code:
+`_toast` vervangt de vorige melding direct, dus de melding over de
+afbeeldingen was nooit zichtbaar. De fotostap kan dus al langer stil falen
+zonder dat iemand het ziet. Dit is een instantie van het principe uit de
+projectkennis: de app moet fouten zelf zichtbaar maken, niet via een consult.
+
+**Wat vaststaat.** De PDF "Offerte compleet" toont de foto's wél (bron: Gian,
+02-10-2026). Die route laadt foto's op dezelfde manier als Naar Craft
+(`_fotoNaarDataUrl` vs `_craftFotoDataUrl`, beide `crossOrigin='anonymous'`
+op dezelfde signed url). Het omzetten in de browser is dus in orde.
+
+**Hoofdverdachte (aanname, nog niet bewezen).** De Edge Function
+`craft-werkvoorbereiding` of de Craft-API zelf weigert de uploads. Naar
+Craft stuurt het veld `base64` mét `data:image/jpeg;base64,`-prefix; de
+steigerroute (`steiger-aanvraag`) stuurt zonder prefix. In v4.9.0 werkte dit,
+dus de functie strip(te) de prefix; of dat nog zo is, is alleen in de
+functiecode te zien (niet in de projectkennis, Gian moet die plakken).
+
+**Gebouwd (`index.html` v4.85.1).** Slotmelding bevat het beeldresultaat;
+venster met reden per foto en Craft-status per afbeelding bij problemen;
+`_craftBouwFotos(c, diag)` vernieuwt alle fotolinks vooraf. Verzending
+ongewijzigd, geen SQL, geen deploy.
+
+**Volgende stap.** Gian drukt één keer op Naar Craft bij een calc met foto's
+en leest de melding of het venster. Statussen ≠ 200 → Edge Function/Craft
+(functiecode nodig). "Niet kunnen omzetten" → client-kant, dan afwijking
+t.o.v. de PDF-route onderzoeken.
