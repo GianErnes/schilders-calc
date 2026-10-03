@@ -458,7 +458,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.15.0';
+const APP_VERSION = '0.15.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -645,9 +645,10 @@ function hoortBijFase(code, iso, f) {
   return !!g && g.id === f.id;
 }
 // Fase-uren tellen over alle jaren (v0.12.0): een fase in 2026 toont ook op het bord 2027 haar uren.
-function urenVanFase(code, f) {
+// v0.15.1: ditJaar = alleen de uren van het bordjaar (voor de bordfilter); standaard alle jaren (paneel).
+function urenVanFase(code, f, ditJaar) {
   let som = 0;
-  for (const m of [uren, urenBuiten]) for (const k in m) if (k.startsWith(code + '|')) { const d = k.split('|')[2]; if (hoortBijFase(code, d, f)) som += m[k]; }
+  for (const m of (ditJaar ? [uren] : [uren, urenBuiten])) for (const k in m) if (k.startsWith(code + '|')) { const d = k.split('|')[2]; if (hoortBijFase(code, d, f)) som += m[k]; }
   return Math.round(som * 100) / 100;
 }
 
@@ -667,8 +668,9 @@ function rijenOpBord() {
   return rijen
     .filter(x => {
       if (x.d.start && x.d.start <= j2 && x.d.eind >= j1) return true;
-      // Zonder datum in dit jaar, maar wel uren gepland: toch tonen.
-      return urenVanFase(x.p.code, x.f) > 0;
+      // Zonder datum in dit jaar, maar wel uren in dít jaar gepland: toch tonen.
+      // (v0.15.1: telde sinds v0.12.0 per ongeluk alle jaren mee, waardoor 2027-werk op het 2026-bord stond.)
+      return urenVanFase(x.p.code, x.f, true) > 0;
     })
     .sort((a, b) => {
       const sa = a.d.start ? a.d.start.getTime() : Infinity;

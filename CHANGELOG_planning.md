@@ -1,5 +1,13 @@
 # CHANGELOG planning.html
 
+## v0.15.1 — 2027-werk stond op het 2026-bord, 03-10-2026
+
+**Aanleiding.** Gezien na v0.15.0 (schermafbeelding Gian): Penders "2027 Controlebeurt" met Yoobi-datums in april 2027 en 0 uur in 2026 stond toch op het 2026-bord. Oorzaak: de terugval in `rijenOpBord` ("geen datum in dit jaar, maar wel uren: toch tonen") gebruikt `urenVanFase`, en die telt sinds v0.12.0 ook `urenBuiten` mee. Elk project met uren in welk jaar dan ook kwam zo op elk jaarbord. Fout uit v0.12.0, zichtbaar geworden door de labels van v0.15.0.
+
+**Wijziging.** `urenVanFase(code, f, ditJaar)`: met `ditJaar` alleen de uren van het bordjaar. De bordfilter geeft `true` mee; het paneel (fase-sommen) blijft alle jaren tellen, zoals bedoeld in v0.12.0.
+
+**Getest.** `node --check` schoon; de 28 gedragstests van v0.15.0 slagen nog; extra test: project met start in 2027 en alleen uren in 2027 staat niet op het 2026-bord, met uren in 2026 wel. Niet in de browser getest.
+
 ## v0.15.0 — Kennisgevingen aan de klant: maand, week en startdag, 03-10-2026
 
 **Aanleiding.** Wens van Gian: vanuit de planning drie korte mails aan de klant kunnen sturen — de geplande maand direct na het inplannen, de week ongeveer twee weken vooraf, en de startdag de week ervoor — met vastlegging van wanneer wat verzonden is. Keuzes van Gian (03-10-2026): contactpersoon uit Yoobi kiezen bij de eerste mail (niet de sync uitbreiden), signalen op het bord maar versturen blijft handmatig, de drie mails staan los van elkaar, afzender planning@ernes.nl, starttijd in de dagmail "tussen 8:15 en 8:30 uur" tenzij later ingedeeld, en een knop "overslaan" zodat oude projecten niet blijven knipperen.
