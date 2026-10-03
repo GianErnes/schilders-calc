@@ -442,7 +442,7 @@
       <input type="text" id="kennisOnderwerp">
       <label class="hint" style="margin:0.6rem 0 0.2rem">Tekst (pas aan wat je wilt; dit is precies wat de klant krijgt)</label>
       <textarea id="kennisTekst"></textarea>
-      <div class="hint">Afzender planning@ernes.nl · antwoorden komen op info@ernes.nl · kopie naar administratie@ernes.nl. Elke verzending wordt vastgelegd met datum, adres en tekst.</div>
+      <div class="hint">Onder de tekst komt automatisch je volledige mailhandtekening (groet, logo's, keurmerken), dezelfde als onder de offertemail. Afzender planning@ernes.nl · antwoorden komen op info@ernes.nl · kopie naar administratie@ernes.nl. Elke verzending wordt vastgelegd met datum, adres en tekst.</div>
     </section>
     <section class="rij" style="justify-content:space-between">
       <span class="hint" id="kennisMelding" style="margin:0"></span>
@@ -458,7 +458,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.15.1';
+const APP_VERSION = '0.15.2';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -2416,7 +2416,7 @@ function kennisTekst(p, soort, naam) {
     kern = 'De werkzaamheden aan ' + proj + ' starten op ' + fmtDatumLang(start) + '. ' + wie + '\n\n' +
       'Bent u die ochtend niet thuis, laat ons dan weten hoe wij toegang krijgen.';
   }
-  return aanhef(naam) + '\n\n' + kern + '\n\nMet vriendelijke groet,\nErnes Schilders';
+  return aanhef(naam) + '\n\n' + kern;   // v0.15.2: geen groet; de functie zet de volledige handtekening eronder
 }
 function kennisOnderwerp(p, soort) {
   const start = projectStart(p);

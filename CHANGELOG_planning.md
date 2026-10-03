@@ -1,5 +1,15 @@
 # CHANGELOG planning.html
 
+## v0.15.2 — Volledige mailhandtekening onder de kennisgevingen, 03-10-2026
+
+**Aanleiding.** Eerste echte verzending (dagmail, 3 oktober 20:16, afzender planning@ernes.nl): werkt, maar zonder de handtekening met logo's die de offertemail wel heeft.
+
+**Wijziging.**
+1. **Edge Function `planning-kennisgeving` v2** (opnieuw uitrollen, Verify JWT blijft AAN): `handtekening()` letterlijk overgenomen uit `offerte-verzenden` v3.96.0 (groet "Met kleurrijke groet, Gian Ernes", logo, contactgegevens, klantenvertellen, Vakwerk PlusGarantie, KvK; plaatjes op www.ernes.nl). Staat onder elke kennisgeving, in dezelfde omslag (640 px, Arial) als de offertemail. De tekstversie krijgt een platte handtekening van drie regels. Eindigt de tekst uit de app toch op een groet ("Met vriendelijke/kleurrijke/hartelijke groet, …"), dan knipt de functie die weg zodat de groet één keer staat; in `plan_kennisgevingen.tekst` komt de tekst zonder groet en zonder handtekening.
+2. **planning.html**: de drie mailteksten eindigen niet meer op "Met vriendelijke groet, Ernes Schilders"; de hint onder het tekstvak zegt dat de handtekening er automatisch onder komt.
+
+**Getest.** Functie: 9 Deno-tests (de 8 van v1 plus: handtekening aanwezig in de html; groet in de app-tekst wordt weggeknipt; groet staat één keer in html én tekst; vastgelegde tekst zonder groet); `deno check` schoon. App: `node --check` schoon, 30 gedragstests slagen (de aanhef-test en de teksttests ongewijzigd). Niet getest: de weergave van de handtekening in Gmail/Apple Mail voor deze mail — in de offertemail is hij al in gebruik.
+
 ## v0.15.1 — 2027-werk stond op het 2026-bord, 03-10-2026
 
 **Aanleiding.** Gezien na v0.15.0 (schermafbeelding Gian): Penders "2027 Controlebeurt" met Yoobi-datums in april 2027 en 0 uur in 2026 stond toch op het 2026-bord. Oorzaak: de terugval in `rijenOpBord` ("geen datum in dit jaar, maar wel uren: toch tonen") gebruikt `urenVanFase`, en die telt sinds v0.12.0 ook `urenBuiten` mee. Elk project met uren in welk jaar dan ook kwam zo op elk jaarbord. Fout uit v0.12.0, zichtbaar geworden door de labels van v0.15.0.
