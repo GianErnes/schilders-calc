@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 2 oktober 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 3 oktober 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -5414,3 +5414,50 @@ ongewijzigd, geen SQL, geen deploy.
 en leest de melding of het venster. Statussen ≠ 200 → Edge Function/Craft
 (functiecode nodig). "Niet kunnen omzetten" → client-kant, dan afwijking
 t.o.v. de PDF-route onderzoeken.
+
+## Wat er op 3 oktober 2026 gedaan is: agenda-abonnement vanuit de planning (planning.html v0.13.0)
+
+**Aanleiding.** Gian wilde de planning in de agenda van de telefoon. Besluit
+na afweging: abonnements-feed (iCalendar), eenrichting, één hele-dag-item
+per project per werkdag, per medewerker gefilterd. Geen tweewegs koppeling
+met de Google-API en geen losse ICS-downloads (die verouderen stil).
+
+**Wat er nu is.**
+- SQL `planning_02_ics_token.sql`: kolom `plan_medewerkers.ics_token` plus
+  unieke index `plan_medewerkers_ics_token_uniek`. Project-guard op het
+  bestaan van de drie planningstabellen, idempotent. Geen RLS-wijziging.
+- Edge Function **`planning-ics`** (nieuw; broncode hoort in de besloten
+  repo `ernes-edge-functions`). **Verify JWT UIT**, zoals `taak-push`: een
+  agenda-app stuurt geen kopregels mee. Toegang zit uitsluitend in
+  `?t=<ics_token>`. Leest `plan_medewerkers`, `plan_uren`, `plan_verlof`
+  en de laatste `fin_werkvoorraad`-stand met de service-rol; schrijft
+  nooit. Antwoordt `text/calendar`, hele-dag-afspraken, UID
+  `<yoobi_code>-<medewerker_id>-<datum>@ernes`, bereik −30/+365 dagen,
+  `X-PUBLISHED-TTL:PT1H`. Geen geheimen buiten `SUPABASE_URL` en
+  `SUPABASE_SERVICE_ROLE_KEY` (zet Supabase zelf klaar).
+- planning.html v0.13.0: knop **Agenda** per medewerker in Beheer, paneel
+  met webcal-link, kopiëren, openen, vernieuwen, intrekken, QR. Zie
+  `CHANGELOG_planning.md`.
+
+**Teller Edge Functions.** Sectie 3.2 noemt "zestien" (stand 9 augustus).
+Sindsdien zijn er in elk geval `steiger-aanvraag` (26 september) en nu
+`planning-ics` bijgekomen. Het getal in 3.2 is daarmee **[TE CONTROLEREN]**
+tegen de lijst in Studio; niet in deze sessie gecorrigeerd omdat ik de
+tussenliggende stand niet zelf heb geteld.
+
+**Beheer en nood.**
+- Medewerker lekt zijn link → in planning.html *Link vernieuwen*; de oude
+  URL geeft daarna 404. Of in Studio: `update plan_medewerkers set
+  ics_token = null where naam = '…'`.
+- Agenda van een medewerker blijft leeg → eerst `GET` op de link in een
+  browser: 404 = token klopt niet, 503 = databasefout (log van de
+  functie), 200 zonder `VEVENT` = geen uren/verlof in het bereik.
+- Functie weg of niet uitgerold → alle abonnementen tonen niets of een
+  fout in de agenda-app; de planning zelf werkt gewoon door.
+
+**Bewijs.** SQL op lokale Postgres 16 (guard, idempotentie, uniciteit);
+`deno check` plus 20 mocktests op de functie en parsing van de uitvoer
+door ical.js; QR-generator door jsQR teruggelezen op 120 teksten;
+planning.html parse/balans en runtime-harnas. **Niet getest:** de echte
+keten tot in Apple en Google Agenda; de Google-menutekst in de uitleg is
+een aanname.

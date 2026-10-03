@@ -1,5 +1,31 @@
 # CHANGELOG planning.html
 
+## v0.13.0 — Agenda-abonnement per medewerker (Apple/Google Agenda), 03-10-2026
+
+**Aanleiding.** Vraag van Gian: kan de planning in de agenda van de telefoon? Gekozen (na afweging van losse ICS-download en tweewegs Google API): een abonnements-feed, eenrichting, één hele-dag-item per project per werkdag, per medewerker gefilterd. Weekblik is genoeg; trage verversing door Google (soms pas na een dag) is aanvaard.
+
+**Wijziging.** Drie delen, in deze volgorde uit te rollen:
+
+1. **SQL `planning_02_ics_token.sql`** — kolom `plan_medewerkers.ics_token` (tekst, leeg = geen feed) met unieke index. Geen RLS-wijziging: de bestaande policy `plan_medewerkers_authenticated_alles` geldt, dus iedereen die in planning.html kan, kan links maken en vernieuwen.
+2. **Edge Function `planning-ics` (nieuw, Verify JWT UIT)** — `GET ?t=<token>` → medewerker via `ics_token` → `plan_uren` en `plan_verlof` van vandaag −30 t/m +365 dagen → projectnaam en klant uit de laatste `fin_werkvoorraad`-stand (`data.projecten[]`, match op `code`, zelfde bron als het bord) → `text/calendar`. Per dag met uren één hele-dag-afspraak `"<klant> – <project> (7,5 u)"`, omschrijving met Yoobi-code; verlof als `"Verlof – <omschrijving>"` of `"<x> u gereserveerd"`. UID stabiel per project+medewerker+datum (`@ernes`), zodat agenda-apps een gewijzigde dag bijwerken in plaats van verdubbelen. `LAST-MODIFIED` uit `plan_uren.updated_at`. Dagen met 0 uur en onbekende tokens (ook te korte: geen databaseaanroep) geven niets terug; databasefout → 503. Leest met de service-rol, schrijft nooit.
+3. **planning.html** — in Beheer → Medewerkers per medewerker een knop **Agenda** (✓ als er een link is). Paneel: de `webcal://`-link, *Kopieer link*, *Open in agenda-app*, *Link vernieuwen* (nieuw token, oude link direct dood, met bevestiging), *Intrekken* (token leeg, agenda wordt leeg, met bevestiging), een QR-code en drie regels uitleg. Token: 24 willekeurige bytes uit `crypto.getRandomValues` → 32 tekens base64url. De QR wordt in de pagina zelf berekend (eigen implementatie, bytemodus, foutcorrectie M, versie 1 t/m 10; geen externe bibliotheek). Opslaan via `update … eq('id')`, dus de bestaande `slaMedewerkerOp`-upsert raakt het token niet aan.
+
+**Bewust buiten scope.** Adres in het item, begintijden, gesloten dagen/feestdagen (staan al in ieders agenda), verlof van anderen, pushmelding bij wijziging, iets terugschrijven vanuit de agenda.
+
+**Beveiliging, eerlijk gezegd.** De link is zonder login bereikbaar; dat moet, want agenda-apps kunnen niet inloggen. Het geheim is het token (32 tekens, ~144 bits). Wie zijn link doorstuurt, geeft zijn planning weg; daarvoor is *Link vernieuwen*. Het token staat leesbaar in `plan_medewerkers` voor iedere ingelogde planninggebruiker (zelfde kring die het bord ziet).
+
+**Getest.**
+- SQL op lokale Postgres 16: project-guard stopt in een leeg project; tweemaal draaien schoon; dubbel token geweigerd; gewone update op de rij laat het token staan.
+- Edge Function: `deno check` schoon; 20 mocktests (404-paden, 405, HEAD, lege planning, 503 bij databasefout, escaping van `,` en `;`, regelvouwing op 75 octetten incl. é, stabiele UID, LAST-MODIFIED, CRLF); uitvoer onafhankelijk geparsed door ical.js (Mozilla) als hele-dag-afspraken.
+- QR: 120 willekeurige teksten in versie 1 t/m 10 correct teruggelezen door jsQR (onafhankelijke lezer). Daarbij drie fouten in de eerste versie gevonden en hersteld — zonder die externe lezer waren er twee ongemerkt gebleven.
+- planning.html: Node-parsetest, CSS-balans (214/214), div-balans (110/110), runtime-harnas: 500 tokens uniek en passend op de `TOKEN_RE` van de functie, url-opbouw, paneel in drie toestanden met stub-DOM, QR van een echte link leesbaar (versie 6).
+
+**Niet getest (aan Gian).**
+- De hele keten in het echt: SQL → deploy → link maken → abonneren op een iPhone en in Google Agenda. Hoe het er in de agenda-apps uitziet kan ik niet zien.
+- Aanname: op iPhone opent tikken op een `webcal://`-link de Agenda met een abonnementsvraag (algemeen bekend gedrag, niet door mij getest).
+- Aanname: de menutekst "Andere agenda's → Via URL" in Google Agenda staat uit het geheugen, niet opgezocht. Controleren voordat de uitleg aan een medewerker wordt gegeven; staat in `tekenAgendaPaneel`.
+- Of Supabase een `HEAD` op een Edge Function doorlaat is niet gecontroleerd; `GET` is wat agenda-apps gebruiken.
+
 ## v0.12.0 — Nog te plannen en fase-uren tellen over alle jaren, 01-10-2026
 
 Melding van Gian (project De Bie, Yoobi 20261671, fase 1 in nov 2026, fase 2 in apr 2027): op het bord 2026 stond "nog te plannen 8,89" (budget 21,64 − 12,75 gepland), op het bord 2027 stond ineens 21,64 nog te plannen en fase 1 toonde 0 uur. Oorzaak: `laadAlles` haalde `plan_uren` alleen voor het bordjaar op, en "nog te plannen" en de fase-sommen rekenden met dat jaar. Intern consistent, maar fout voor elk project dat over de jaargrens loopt.

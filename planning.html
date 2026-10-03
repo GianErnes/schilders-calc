@@ -277,6 +277,11 @@
   .paneelknoppen { display: flex; gap: 0.5rem; margin-top: 0.7rem; }
   .paneelknoppen .knop { flex: 1; }
   .hint { color: var(--muted); font-size: 0.76rem; margin-top: 0.4rem; }
+  .agendapaneel { margin-top: 0.7rem; padding: 0.7rem 0.8rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); background: var(--paper-warm); font-size: 0.82rem; }
+  .agendapaneel .url { width: 100%; font: inherit; font-size: 0.74rem; font-family: 'JetBrains Mono', monospace; padding: 0.35rem 0.5rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); background: var(--paper); box-sizing: border-box; }
+  .agendapaneel .qr { display: flex; gap: 0.9rem; align-items: flex-start; margin-top: 0.6rem; flex-wrap: wrap; }
+  .agendapaneel .qr svg { border: 1px solid var(--paper-deep); border-radius: 4px; background: #fff; flex: none; }
+  .agendapaneel ol { margin: 0.3rem 0 0; padding-left: 1.1rem; }
   .popover { position: absolute; background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); box-shadow: 0 6px 24px rgba(0,0,0,0.14); padding: 0.7rem 0.8rem; z-index: 60; font-size: 0.82rem; min-width: 220px; }
   .popover .rij { margin-top: 0.5rem; }
 </style>
@@ -398,12 +403,13 @@
     <section>
       <h3>Medewerkers</h3>
       <ul class="lijst" id="mwLijst"></ul>
+      <div class="agendapaneel" id="agendaPaneel" style="display:none"></div>
       <div class="rij" style="margin-top:0.7rem">
         <input type="text" id="mwNaam" placeholder="naam" style="flex:1">
         <input type="text" inputmode="decimal" id="mwNorm" value="7,5" style="width:5rem" title="uren per dag">
         <button class="knop primair" id="mwToevoegen">Toevoegen</button>
       </div>
-      <div class="hint">Niet actief = verdwijnt van het bord, uren blijven bewaard. De norm is de werkdag in uren voor de totaaltelling.</div>
+      <div class="hint">Niet actief = verdwijnt van het bord, uren blijven bewaard. De norm is de werkdag in uren voor de totaaltelling. <b>Agenda</b>: een abonnementslink waarmee de medewerker zijn planning in Apple of Google Agenda ziet (alleen lezen, ververst vanzelf).</div>
     </section>
   </div>
 </div>
@@ -415,7 +421,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.12.0';
+const APP_VERSION = '0.13.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -1529,7 +1535,7 @@ overlay.addEventListener('click', e => { if (e.target === overlay) overlay.class
 
 function tekenBeheer() {
   document.getElementById('beheerJaar').textContent = jaar;
-  tekenMedewerkersBeheer();
+  tekenMedewerkersBeheer(); tekenAgendaPaneel();
   document.getElementById('feestLijst').innerHTML = '';
   const gs = Object.values(gesloten).sort((a, b) => a.datum.localeCompare(b.datum));
   document.getElementById('gsLijst').innerHTML = gs.length ? gs.map(g =>
@@ -1671,7 +1677,8 @@ function tekenMedewerkersBeheer() {
     '<button class="knop klein" data-mwop="neer" title="Lager op het bord"' + (i === alleMedewerkers.length - 1 ? ' disabled' : '') + '>↓</button>' +
     '<b>' + esc(m.naam) + '</b></span><span class="rij">' +
     '<input class="mwnorm num" type="text" inputmode="decimal" value="' + fmtUur(m.norm_uren) + '" title="uren per dag"> uur' +
-    '<label><input type="checkbox" class="mwactief"' + (m.actief ? ' checked' : '') + '> actief</label></span></li>').join('');
+    '<label><input type="checkbox" class="mwactief"' + (m.actief ? ' checked' : '') + '> actief</label>' +
+    '<button class="knop klein" data-mwop="agenda" title="Agenda-abonnement voor deze medewerker">' + (m.ics_token ? 'Agenda ✓' : 'Agenda') + '</button></span></li>').join('');
 }
 async function slaMedewerkerOp(m) {
   const r = await sb.from('plan_medewerkers').upsert(m, { onConflict: 'id' }).select();
@@ -1687,6 +1694,7 @@ async function naMedewerkerWijziging(fn) {
 document.getElementById('mwLijst').addEventListener('click', e => {
   const b = e.target.closest('button[data-mwop]'); if (!b) return;
   const li = b.closest('li'), id = li.dataset.mw;
+  if (b.dataset.mwop === 'agenda') { agendaMwId = (agendaMwId === id) ? null : id; tekenAgendaPaneel(); return; }
   const i = alleMedewerkers.findIndex(m => m.id === id), j = b.dataset.mwop === 'op' ? i - 1 : i + 1;
   if (i < 0 || j < 0 || j >= alleMedewerkers.length) return;
   const a = alleMedewerkers[i], bm = alleMedewerkers[j];
@@ -1716,6 +1724,192 @@ document.getElementById('mwToevoegen').addEventListener('click', () => {
     document.getElementById('mwNaam').value = '';
   });
 });
+
+// ---------- agenda-abonnement per medewerker (v0.13.0) ----------
+// Edge Function planning-ics levert een .ics op basis van plan_medewerkers.ics_token.
+// De link is zonder login bereikbaar; het geheim zit in het token. Vernieuwen = oude link dood.
+const ICS_FUNCTIE_URL = SUPABASE_URL + '/functions/v1/planning-ics';
+let agendaMwId = null;
+function agendaUrl(m, schema) { return (schema || 'webcal') + ICS_FUNCTIE_URL.slice(5) + '?t=' + encodeURIComponent(m.ics_token); }
+function nieuwIcsToken() {   // 24 willekeurige bytes → 32 tekens base64url
+  const b = new Uint8Array(24); crypto.getRandomValues(b);
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function tekenAgendaPaneel() {
+  const el = document.getElementById('agendaPaneel');
+  const m = alleMedewerkers.find(x => x.id === agendaMwId);
+  if (!m) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = '';
+  if (!m.ics_token) {
+    el.innerHTML = '<b>Agenda van ' + esc(m.naam) + '</b><div class="hint" style="margin:0.3rem 0 0.6rem">Nog geen agenda-link. Maak er een; de link werkt direct.</div>' +
+      '<button class="knop primair" data-agenda="nieuw">Agenda-link maken</button>';
+  } else {
+    const url = agendaUrl(m), https = agendaUrl(m, 'https');
+    el.innerHTML = '<b>Agenda van ' + esc(m.naam) + '</b>' +
+      '<div class="rij" style="margin-top:0.4rem"><input class="url" readonly value="' + esc(url) + '" onclick="this.select()"></div>' +
+      '<div class="rij" style="margin-top:0.4rem">' +
+        '<button class="knop" data-agenda="kopieer">Kopieer link</button>' +
+        '<a class="knop" href="' + esc(url) + '" style="text-decoration:none">Open in agenda-app</a>' +
+        '<button class="knop" data-agenda="vernieuw" title="Maakt een nieuwe link; de oude werkt daarna niet meer">Link vernieuwen</button>' +
+        '<button class="knop" data-agenda="intrek" title="Verwijdert de link; de agenda van ' + esc(m.naam) + ' wordt dan leeg">Intrekken</button>' +
+      '</div>' +
+      '<div class="qr">' + qrSvg(url, 150) + '<div><div class="hint" style="margin:0">Zo zet de medewerker hem op zijn telefoon:</div><ol class="hint" style="margin-top:0.2rem">' +
+        '<li><b>iPhone</b>: scan de QR of tik op de link, dan vraagt Agenda om het abonnement toe te voegen.</li>' +
+        '<li><b>Google Agenda</b>: op de computer bij <i>Andere agenda\'s</i> → <i>Via URL</i> de link plakken (met https:// als webcal:// niet wordt geaccepteerd). Google ververst traag, soms pas na een dag.</li>' +
+        '<li>Alleen lezen: wijzigingen in de agenda-app komen niet in de planning. Wie de link doorstuurt, geeft zijn planning weg; dan hier <i>Link vernieuwen</i>.</li>' +
+      '</ol></div></div>' +
+      '<div class="hint num" style="margin-top:0.4rem;word-break:break-all">https-variant: ' + esc(https) + '</div>';
+  }
+}
+async function zetIcsToken(m, token) {
+  try {
+    const r = await sb.from('plan_medewerkers').update({ ics_token: token }).eq('id', m.id).select();
+    if (r.error) throw r.error;
+    if (!r.data || !r.data.length) throw new Error('geen rij bijgewerkt (RLS?)');
+    m.ics_token = r.data[0].ics_token;
+    toonStatus(token ? 'Agenda-link klaar voor ' + m.naam : 'Agenda-link van ' + m.naam + ' ingetrokken');
+  } catch (e) {
+    toonStatus('Agenda-link opslaan mislukt: ' + (e.message || e) + (/ics_token/.test(String(e.message || e)) ? ' — staat planning_02_ics_token.sql er al?' : ''), true);
+  }
+  tekenMedewerkersBeheer(); tekenAgendaPaneel();
+}
+document.getElementById('agendaPaneel').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-agenda]'); if (!b) return;
+  const m = alleMedewerkers.find(x => x.id === agendaMwId); if (!m) return;
+  const op = b.dataset.agenda;
+  if (op === 'nieuw') return zetIcsToken(m, nieuwIcsToken());
+  if (op === 'vernieuw') { if (!confirm('Nieuwe agenda-link voor ' + m.naam + '? De huidige link werkt daarna niet meer; de medewerker moet opnieuw abonneren.')) return; return zetIcsToken(m, nieuwIcsToken()); }
+  if (op === 'intrek') { if (!confirm('Agenda-link van ' + m.naam + ' intrekken? Zijn agenda-abonnement wordt dan leeg.')) return; return zetIcsToken(m, null); }
+  if (op === 'kopieer') {
+    const url = agendaUrl(m);
+    try { await navigator.clipboard.writeText(url); toonStatus('Link gekopieerd'); }
+    catch (_) { const inp = document.querySelector('#agendaPaneel .url'); if (inp) { inp.select(); toonStatus('Kopiëren via klembord lukte niet; selecteer en kopieer de link zelf', true); } }
+  }
+});
+
+// ---------- QR-code (bytemodus, foutcorrectie M, versie 1 t/m 10) ----------
+// Eigen implementatie zonder bibliotheek; gecontroleerd met een onafhankelijke lezer (jsQR).
+function qrMatrix(tekst) {
+  const data = new TextEncoder().encode(tekst);
+  // [totaal codewoorden, EC per blok, blokken groep1, data/blok groep1, blokken groep2, data/blok groep2] voor EC-niveau M
+  const TAB = [null,
+    [26, 10, 1, 16, 0, 0], [44, 16, 1, 28, 0, 0], [70, 26, 1, 44, 0, 0], [100, 18, 2, 32, 0, 0], [134, 24, 2, 43, 0, 0],
+    [172, 16, 4, 27, 0, 0], [196, 18, 4, 31, 0, 0], [242, 22, 2, 38, 2, 39], [292, 22, 3, 36, 2, 37], [346, 26, 4, 43, 1, 44]];
+  const ALIGN = [null, [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34], [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50]];
+  let ver = 0;
+  for (let v = 1; v <= 10; v++) {
+    const t = TAB[v], dataCw = t[2] * t[3] + t[4] * t[5];
+    const bits = 4 + (v < 10 ? 8 : 16) + data.length * 8;
+    if (bits <= dataCw * 8) { ver = v; break; }
+  }
+  if (!ver) return null;
+  const t = TAB[ver], dataCw = t[2] * t[3] + t[4] * t[5], n = ver * 4 + 17;
+  // bitstroom
+  const bits = [];
+  const push = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+  push(4, 4); push(data.length, ver < 10 ? 8 : 16);
+  for (const b of data) push(b, 8);
+  push(0, Math.min(4, dataCw * 8 - bits.length));
+  while (bits.length % 8) bits.push(0);
+  const cw = [];
+  for (let i = 0; i < bits.length; i += 8) cw.push(parseInt(bits.slice(i, i + 8).join(''), 2));
+  for (let p = 0; cw.length < dataCw; p++) cw.push(p % 2 ? 0x11 : 0xEC);
+  // GF(256)
+  const EXP = new Array(512), LOG = new Array(256);
+  for (let i = 0, x = 1; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 256) x ^= 0x11D; }
+  for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  const mul = (a, b) => (a && b) ? EXP[LOG[a] + LOG[b]] : 0;
+  const gen = (deg) => { let g = [1]; for (let i = 0; i < deg; i++) { const ng = new Array(g.length + 1).fill(0); for (let j = 0; j < g.length; j++) { ng[j] ^= g[j]; ng[j + 1] ^= mul(g[j], EXP[i]); } g = ng; } return g; };
+  const rs = (msg, deg) => { const g = gen(deg), res = msg.concat(new Array(deg).fill(0)); for (let i = 0; i < msg.length; i++) { const c = res[i]; if (c) for (let j = 0; j < g.length; j++) res[i + j] ^= mul(g[j], c); } return res.slice(msg.length); };
+  // blokken
+  const blokken = [], ecs = [];
+  let pos = 0;
+  for (let g = 0; g < 2; g++) for (let b = 0; b < t[2 + g * 2]; b++) { const len = t[3 + g * 2]; const blk = cw.slice(pos, pos + len); pos += len; blokken.push(blk); ecs.push(rs(blk, t[1])); }
+  const uit = [];
+  const maxLen = Math.max(...blokken.map(b => b.length));
+  for (let i = 0; i < maxLen; i++) for (const b of blokken) if (i < b.length) uit.push(b[i]);
+  for (let i = 0; i < t[1]; i++) for (const e of ecs) uit.push(e[i]);
+  // matrix
+  const M = Array.from({ length: n }, () => new Array(n).fill(null));   // null = nog vrij
+  const vast = Array.from({ length: n }, () => new Array(n).fill(false));
+  const zet = (r, c, v) => { M[r][c] = v; vast[r][c] = true; };
+  const zoeker = (r0, c0) => { for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) { const rr = r0 + r, cc = c0 + c; if (rr < 0 || cc < 0 || rr >= n || cc >= n) continue; const d = Math.max(Math.abs(r - 3), Math.abs(c - 3)); zet(rr, cc, (d <= 1 || d === 3) ? 1 : 0); } };
+  zoeker(0, 0); zoeker(0, n - 7); zoeker(n - 7, 0);
+  for (let i = 8; i < n - 8; i++) { zet(6, i, i % 2 ? 0 : 1); zet(i, 6, i % 2 ? 0 : 1); }
+  const al = ALIGN[ver];
+  for (const r of al) for (const c of al) {
+    if ((r === 6 && (c === 6 || c === n - 7)) || (c === 6 && r === n - 7)) continue;   // valt op een zoeker: overslaan
+    for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) zet(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) === 1 ? 0 : 1);
+  }
+  // formaatgebieden reserveren (worden later gevuld), donkere module
+  for (let i = 0; i < 8; i++) { zet(8, i < 6 ? i : i + 1, 0); zet(i < 6 ? i : i + 1, 8, 0); zet(8, n - 1 - i, 0); zet(n - 1 - i, 8, 0); }
+  zet(8, 8, 0); zet(n - 8, 8, 1);
+  if (ver >= 7) {   // versie-informatie, BCH(18,6) met generator 0x1F25
+    let d = ver << 12;
+    for (let i = 17; i >= 12; i--) if ((d >> i) & 1) d ^= 0x1F25 << (i - 12);
+    const vb = (ver << 12) | d;
+    for (let i = 0; i < 18; i++) { const r = Math.floor(i / 3), c = (i % 3) + n - 11, b = (vb >> i) & 1; zet(r, c, b); zet(c, r, b); }
+  }
+  // data plaatsen
+  let bi = 0, omhoog = true;
+  const dbits = []; for (const b of uit) for (let i = 7; i >= 0; i--) dbits.push((b >> i) & 1);
+  for (let c = n - 1; c > 0; c -= 2) {
+    if (c === 6) c = 5;
+    for (let k = 0; k < n; k++) {
+      const r = omhoog ? n - 1 - k : k;
+      for (const cc of [c, c - 1]) if (!vast[r][cc]) { M[r][cc] = bi < dbits.length ? dbits[bi++] : 0; }
+    }
+    omhoog = !omhoog;
+  }
+  // maskers + straf
+  const MASK = [(r, c) => (r + c) % 2 === 0, (r, c) => r % 2 === 0, (r, c) => c % 3 === 0, (r, c) => (r + c) % 3 === 0,
+    (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0, (r, c) => (r * c) % 2 + (r * c) % 3 === 0,
+    (r, c) => ((r * c) % 2 + (r * c) % 3) % 2 === 0, (r, c) => ((r + c) % 2 + (r * c) % 3) % 2 === 0];
+  const formaat = (mask) => {   // EC M = 00
+    let v = (0 << 3) | mask, d = v << 10;
+    for (let i = 14; i >= 10; i--) if ((d >> i) & 1) d ^= 0x537 << (i - 10);
+    return ((v << 10) | d) ^ 0x5412;
+  };
+  const toepassen = (mask) => {
+    const G = M.map(r => r.slice());
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!vast[r][c] && MASK[mask](r, c)) G[r][c] ^= 1;
+    const f = formaat(mask);
+    for (let i = 0; i < 15; i++) {   // plaatsing volgens ISO 18004 fig. 25 (bit 0 = minst significant)
+      const b = (f >> i) & 1;
+      if (i < 6) G[i][8] = b; else if (i < 8) G[i + 1][8] = b; else G[n - 15 + i][8] = b;           // verticaal, kolom 8
+      if (i < 8) G[8][n - 1 - i] = b; else if (i < 9) G[8][7] = b; else G[8][14 - i] = b;            // horizontaal, rij 8
+    }
+    G[n - 8][8] = 1;
+    return G;
+  };
+  const straf = (G) => {
+    let s = 0;
+    for (let d = 0; d < 2; d++) for (let r = 0; r < n; r++) { let run = 1; for (let c = 1; c < n; c++) { const a = d ? G[c][r] : G[r][c], b = d ? G[c - 1][r] : G[r][c - 1]; if (a === b) { run++; if (run === 5) s += 3; else if (run > 5) s++; } else run = 1; } }
+    for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) { const v = G[r][c]; if (v === G[r][c + 1] && v === G[r + 1][c] && v === G[r + 1][c + 1]) s += 3; }
+    const pat = [1, 0, 1, 1, 1, 0, 1];
+    for (let d = 0; d < 2; d++) for (let r = 0; r < n; r++) for (let c = 0; c < n - 6; c++) {
+      let ok = true; for (let i = 0; i < 7; i++) if ((d ? G[c + i][r] : G[r][c + i]) !== pat[i]) { ok = false; break; }
+      if (!ok) continue;
+      const voor = c >= 4 && [0, 1, 2, 3].every(i => (d ? G[c - 1 - i][r] : G[r][c - 1 - i]) === 0);
+      const na = c + 10 < n && [0, 1, 2, 3].every(i => (d ? G[c + 7 + i][r] : G[r][c + 7 + i]) === 0);
+      if (voor || na) s += 40;
+    }
+    let donker = 0; for (const rij of G) for (const v of rij) donker += v;
+    s += Math.floor(Math.abs(donker * 100 / (n * n) - 50) / 5) * 10;
+    return s;
+  };
+  let beste = null, besteStraf = Infinity;
+  for (let m = 0; m < 8; m++) { const G = toepassen(m); const s = straf(G); if (s < besteStraf) { besteStraf = s; beste = G; } }
+  return beste;
+}
+function qrSvg(tekst, px) {
+  const G = qrMatrix(tekst);
+  if (!G) return '';
+  const n = G.length, marge = 4, tot = n + marge * 2;
+  let d = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (G[r][c]) d += 'M' + (c + marge) + ' ' + (r + marge) + 'h1v1h-1z';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + tot + ' ' + tot + '" width="' + px + '" height="' + px + '" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+}
 
 // ---------- Yoobi verversen (gebruikersweg van fin-werkvoorraad-sync v5) ----------
 let verversBezig = false;
