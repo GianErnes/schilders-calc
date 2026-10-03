@@ -1,5 +1,17 @@
 # CHANGELOG planning.html
 
+## v0.16.0 — Aanhef met heer/mevrouw en achternaam in de kennisgevingen, 03-10-2026
+
+**Aanleiding.** Wens van Gian: "Geachte heer Kamp," in plaats van "Geachte Peter Kamp,". Yoobi geeft geen geslacht mee en de calculatie (waar de aanspreekvorm per calculatie gekozen wordt, `_offAanhef`) is niet aan de Yoobi-projectcode gekoppeld, dus de keuze moet in de planning zelf. Besluit Gian: versturen pas mogelijk als de aanspreekvorm gekozen is; geen gok, geen neutrale terugval.
+
+**Wijziging.**
+1. **SQL `planning_05_aanhef.sql`** (guard op planning_04, idempotent): `plan_projecten.contact_aanspreekvorm` (check: heer / mevrouw / echtpaar / familie / zakelijk) en `contact_achternaam`.
+2. **planning.html**: in het kennisgevingvenster onder de contactpersoon een regel Aanhef: keuzelijst met dezelfde vijf vormen als de offerte en een veld "tussenvoegsel en achternaam" dat uit de Yoobi-naam wordt gegokt (`achternaamGok`: titels als Dhr./Mevr./Fam./De heer en voorletters eraf, vanaf het eerste tussenvoegsel, anders het laatste woord; "Jan van der Berg" → "van der Berg", "L. en M. Willems" → "Willems"). Onder de regel staat live "De mail begint met: Geachte heer Kamp,". Bij zakelijk is het naamveld uit en luidt de aanhef "Geachte heer, mevrouw,". Zonder aanspreekvorm (of zonder achternaam bij een niet-zakelijke vorm) weigert Versturen met een melding. Contactpersoon én aanhef worden vóór elke verzending (en bij "wijzig" zonder mail) met één upsert op `plan_projecten` bewaard; mislukt dat, dan gaat er geen mail. De week- en dagmail nemen de bewaarde aanhef over; het paneel toont hem achter de contactpersoon, of "aanhef nog kiezen" in oranje.
+
+**Getest.** SQL op lokale Postgres 16: guard, tweemaal draaien 3× GOED, check weigert "meneer". App: `node --check` schoon; 43 gedragstests (de 30 bestaande, plus aanhef per vorm en negen naamgokken). Niet in de browser getest; de live-voorbeeldregel en het uitschakelen van het naamveld bij zakelijk zijn alleen uit de code beoordeeld.
+
+**Bewust zo gelaten.** De gok is een voorstel; wat er in het veld staat gaat mee. Eén aanhef per project, ook bij meerdere contactpersonen: wissel je van contactpersoon, dan wordt de achternaam opnieuw gegokt zolang je hem niet zelf hebt aangepast.
+
 ## v0.15.2 — Volledige mailhandtekening onder de kennisgevingen, 03-10-2026
 
 **Aanleiding.** Eerste echte verzending (dagmail, 3 oktober 20:16, afzender planning@ernes.nl): werkt, maar zonder de handtekening met logo's die de offertemail wel heeft.

@@ -458,7 +458,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.15.2';
+const APP_VERSION = '0.16.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -2354,7 +2354,7 @@ document.getElementById('kennisKnop').addEventListener('click', () => {
 function kennisHtml(p) {
   const s = kennisStatus(p);
   const pl = planProjecten[p.code] || {};
-  const contact = pl.contact_email ? esc((pl.contact_naam ? pl.contact_naam + ' · ' : '') + pl.contact_email) : '<span style="color:var(--amber)">nog geen contactpersoon gekozen</span>';
+  const contact = pl.contact_email ? esc((pl.contact_naam ? pl.contact_naam + ' · ' : '') + pl.contact_email) + (pl.contact_aanspreekvorm ? ' <span style="color:var(--muted)">(' + esc(aanhef(pl.contact_aanspreekvorm, pl.contact_achternaam).replace(/^Geachte |,$/g, '')) + ')</span>' : ' <span style="color:var(--amber)">· aanhef nog kiezen</span>') : '<span style="color:var(--amber)">nog geen contactpersoon gekozen</span>';
   let h = '<div class="kennis"><h3>Kennisgevingen aan de klant</h3>' +
     '<div class="contact">Aan: ' + contact + ' <button class="knop klein" data-kcontact title="Contactpersoon kiezen of wijzigen">wijzig</button></div>';
   for (const soort of KENNIS_SOORTEN) {
@@ -2396,8 +2396,36 @@ function startTijden(code, iso) {
   }
   return uit;
 }
-function aanhef(naam) { return naam ? 'Geachte ' + naam + ',' : 'Geachte heer, mevrouw,'; }
-function kennisTekst(p, soort, naam) {
+// v0.16.0: aanhef zoals in de offerte (index.html _offAanhef): aanspreekvorm + tussenvoegsel/achternaam.
+const AANSPREEKVORMEN = [['heer', 'heer'], ['mevrouw', 'mevrouw'], ['echtpaar', 'heer en mevrouw'], ['familie', 'familie'], ['zakelijk', 'heer, mevrouw (zakelijk)']];
+function aanhef(vorm, achternaam) {
+  const n = (achternaam || '').trim();
+  switch (vorm) {
+    case 'heer':     return 'Geachte heer ' + n + ',';
+    case 'mevrouw':  return 'Geachte mevrouw ' + n + ',';
+    case 'echtpaar': return 'Geachte heer en mevrouw ' + n + ',';
+    case 'familie':  return 'Geachte familie ' + n + ',';
+    case 'zakelijk': return 'Geachte heer, mevrouw,';
+    default:         return 'Geachte …,';
+  }
+}
+// Achternaam gokken uit een Yoobi-naam: titels en voorletters eraf, vanaf het eerste tussenvoegsel, anders het laatste woord.
+const TUSSENVOEGSELS = new Set(['van', 'de', 'der', 'den', 'het', 'ten', 'ter', 'te', 'op', 'in', "'t", 'd', 'la', 'le', 'du', 'von', 'zu', 'da', 'di', 'del', 'della', 'dos', 'el', 'al', 'aan', 'bij', 'uit', 'onder', 'over', 'voor']);
+function achternaamGok(naam) {
+  let w = String(naam || '').replace(/[,.]/g, ' ').trim().split(/\s+/).filter(Boolean);
+  if (w.length > 1 && /^de$/i.test(w[0]) && /^heer$/i.test(w[1])) w = w.slice(2);           // "De heer P. Kamp"
+  w = w.filter(x => !/^(dhr|hr|mr|mevr|mw|mej|fam|familie|heer|mevrouw|drs|ir|ing|dr|prof)$/i.test(x));  // titels
+  w = w.filter(x => !/^[A-Za-z]$/.test(x) && !/^[A-Z]{2,3}$/.test(x));                                   // voorletters (P, PJ; punten zijn al weg)
+  if (!w.length) return '';
+  const i = w.length > 1 ? w.findIndex((x, k) => k < w.length - 1 && TUSSENVOEGSELS.has(x.toLowerCase())) : -1;
+  const deel = i >= 0 ? w.slice(i) : [w[w.length - 1]];
+  return deel.map((x, k) => (k < deel.length - 1 && TUSSENVOEGSELS.has(x.toLowerCase())) ? x.toLowerCase() : x).join(' ');
+}
+function kennisAanhefVan(p) {
+  const pl = planProjecten[p.code] || {};
+  return pl.contact_aanspreekvorm ? aanhef(pl.contact_aanspreekvorm, pl.contact_achternaam) : null;
+}
+function kennisTekst(p, soort, aanhefRegel) {
   const start = projectStart(p);
   const proj = p.naam || ('project ' + p.code);
   let kern;
@@ -2416,7 +2444,7 @@ function kennisTekst(p, soort, naam) {
     kern = 'De werkzaamheden aan ' + proj + ' starten op ' + fmtDatumLang(start) + '. ' + wie + '\n\n' +
       'Bent u die ochtend niet thuis, laat ons dan weten hoe wij toegang krijgen.';
   }
-  return aanhef(naam) + '\n\n' + kern;   // v0.15.2: geen groet; de functie zet de volledige handtekening eronder
+  return (aanhefRegel || aanhef('')) + '\n\n' + kern;   // v0.15.2: geen groet; de functie zet de volledige handtekening eronder
 }
 function kennisOnderwerp(p, soort) {
   const start = projectStart(p);
@@ -2460,32 +2488,51 @@ function kennisContactKeuze() {
   return { naam: r.dataset.naam || '', email: r.dataset.email };
 }
 function tekenKennisContact(lijst, huidig, melding) {
-  const sel = (c) => huidig && huidig.email === c.email;
+  const sel = (c) => huidig && huidig.email && huidig.email === c.email;
   let h = '<div class="hint" style="margin:0 0 0.3rem">Contactpersoon (wordt bewaard bij dit project)</div><div class="contactkeuze">';
   let iets = false;
   for (const c of lijst) {
     h += '<label><input type="radio" name="kcontact" value="y" data-naam="' + esc(c.naam || '') + '" data-email="' + esc(c.email) + '"' + (sel(c) ? ' checked' : '') + '> <strong>' + esc(c.naam || '(naamloos)') + '</strong>&nbsp;<span style="color:var(--muted)">' + esc(c.email) + (c.algemeen ? ' (algemeen adres)' : '') + '</span></label>';
     if (sel(c)) iets = true;
   }
-  if (huidig && !iets) { h += '<label><input type="radio" name="kcontact" value="y" data-naam="' + esc(huidig.naam || '') + '" data-email="' + esc(huidig.email) + '" checked> <strong>' + esc(huidig.naam || '(naamloos)') + '</strong>&nbsp;<span style="color:var(--muted)">' + esc(huidig.email) + ' (eerder gekozen)</span></label>'; iets = true; }
+  if (huidig && huidig.email && !iets) { h += '<label><input type="radio" name="kcontact" value="y" data-naam="' + esc(huidig.naam || '') + '" data-email="' + esc(huidig.email) + '" checked> <strong>' + esc(huidig.naam || '(naamloos)') + '</strong>&nbsp;<span style="color:var(--muted)">' + esc(huidig.email) + ' (eerder gekozen)</span></label>'; iets = true; }
   h += '<label><input type="radio" name="kcontact" value="hand"' + (iets ? '' : ' checked') + '> anders:</label>' +
     '<div class="rij" style="margin-left:1.4rem"><input type="text" id="kcNaam" placeholder="naam" style="flex:1"><input type="text" id="kcEmail" placeholder="e-mailadres" style="flex:1.4"></div>' +
-    (melding ? '<div class="hint" style="color:var(--amber)">' + esc(melding) + '</div>' : '') + '</div>';
+    (melding ? '<div class="hint" style="color:var(--amber)">' + esc(melding) + '</div>' : '') + '</div>' +
+    '<div class="hint" style="margin:0.6rem 0 0.2rem">Aanhef in de mail (verplicht; wordt bewaard bij dit project)</div>' +
+    '<div class="rij"><select id="kcVorm"><option value="">— kies aanspreekvorm —</option>' + AANSPREEKVORMEN.map(([v, t]) => '<option value="' + v + '"' + (huidig && huidig.vorm === v ? ' selected' : '') + '>' + t + '</option>').join('') + '</select>' +
+    '<input type="text" id="kcAchternaam" placeholder="tussenvoegsel en achternaam" style="flex:1" value="' + esc(huidig && huidig.achternaam ? huidig.achternaam : '') + '"></div>' +
+    '<div class="hint" id="kcVoorbeeld"></div>';
   document.getElementById('kennisContact').innerHTML = h;
+  const vormEl = document.getElementById('kcVorm'), achtEl = document.getElementById('kcAchternaam');
+  let achternaamHand = !!(huidig && huidig.achternaam);
+  const gokAchternaam = () => { if (achternaamHand) return; const c = kennisContactKeuze(); achtEl.value = c ? achternaamGok(c.naam) : ''; };
+  achtEl.addEventListener('input', () => { achternaamHand = true; kennisVulTekst(); });
+  vormEl.addEventListener('change', () => { if (vormEl.value === 'zakelijk') achtEl.disabled = true; else achtEl.disabled = false; kennisVulTekst(); });
+  kennisOverlay.querySelectorAll('input[name=kcontact]').forEach(r => r.addEventListener('change', gokAchternaam));
+  gokAchternaam();
+  if (vormEl.value === 'zakelijk') achtEl.disabled = true;
   kennisOverlay.querySelectorAll('input[name=kcontact]').forEach(r => r.addEventListener('change', kennisVulTekst));
   ['kcNaam', 'kcEmail'].forEach(id => document.getElementById(id).addEventListener('input', () => { kennisOverlay.querySelector('input[name=kcontact][value=hand]').checked = true; kennisVulTekst(); }));
 }
 let kennisTekstHandmatig = false;
+function kennisAanhefKeuze() {
+  const v = document.getElementById('kcVorm'), a = document.getElementById('kcAchternaam');
+  if (!v) return null;
+  return { vorm: v.value, achternaam: a ? a.value.trim() : '' };
+}
 function kennisVulTekst() {
+  const k = kennisAanhefKeuze();
+  const vb = document.getElementById('kcVoorbeeld');
+  if (vb) vb.textContent = k && k.vorm ? 'De mail begint met: ' + aanhef(k.vorm, k.achternaam) : '';
   if (!kennisHuidig || !kennisHuidig.soort || kennisTekstHandmatig) return;
-  const c = kennisContactKeuze();
-  document.getElementById('kennisTekst').value = kennisTekst(kennisHuidig.p, kennisHuidig.soort, c ? c.naam : '');
+  document.getElementById('kennisTekst').value = kennisTekst(kennisHuidig.p, kennisHuidig.soort, k && k.vorm ? aanhef(k.vorm, k.achternaam) : '');
 }
 async function openKennisModaal(p, soort) {
   kennisHuidig = { p, soort };
   kennisTekstHandmatig = false;
   const pl = planProjecten[p.code] || {};
-  const huidig = pl.contact_email ? { naam: pl.contact_naam || '', email: pl.contact_email } : null;
+  const huidig = pl.contact_email ? { naam: pl.contact_naam || '', email: pl.contact_email, vorm: pl.contact_aanspreekvorm || '', achternaam: pl.contact_achternaam || '' } : (pl.contact_aanspreekvorm ? { naam: '', email: '', vorm: pl.contact_aanspreekvorm, achternaam: pl.contact_achternaam || '' } : null);
   document.getElementById('kennisTitel').textContent = soort ? KENNIS_NAAM[soort] + 'kennisgeving · ' + p.klant : 'Contactpersoon · ' + p.klant;
   document.getElementById('kennisMelding').textContent = '';
   document.getElementById('kennisVerstuur').textContent = soort ? 'Versturen' : 'Bewaren';
@@ -2494,7 +2541,7 @@ async function openKennisModaal(p, soort) {
   tekstSectie.style.display = soort ? '' : 'none';
   if (soort) {
     document.getElementById('kennisOnderwerp').value = kennisOnderwerp(p, soort);
-    document.getElementById('kennisTekst').value = kennisTekst(p, soort, huidig ? huidig.naam : '');
+    document.getElementById('kennisTekst').value = kennisTekst(p, soort, kennisAanhefVan(p));
   }
   document.getElementById('kennisContact').innerHTML = '<div class="hint">Contactpersonen ophalen uit Yoobi…</div>';
   kennisOverlay.classList.add('open');
@@ -2511,15 +2558,17 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
   const c = kennisContactKeuze();
   const meld = document.getElementById('kennisMelding');
   if (!c || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(c.email)) { meld.textContent = 'Kies of vul een geldig e-mailadres in.'; return; }
+  const k = kennisAanhefKeuze();
+  if (!k || !k.vorm) { meld.textContent = 'Kies eerst de aanspreekvorm (heer, mevrouw, …).'; return; }
+  if (k.vorm !== 'zakelijk' && !k.achternaam) { meld.textContent = 'Vul de achternaam voor de aanhef in.'; return; }
   const knop = document.getElementById('kennisVerstuur');
   knop.disabled = true;
-  if (!soort) {
-    const r = await sb.from('plan_projecten').upsert({ yoobi_code: p.code, contact_naam: c.naam || null, contact_email: c.email }, { onConflict: 'yoobi_code' }).select();
-    if (r.error) { meld.textContent = 'Bewaren mislukt: ' + r.error.message; knop.disabled = false; return; }
-    planProjecten[p.code] = { ...(planProjecten[p.code] || {}), ...(r.data && r.data[0] ? r.data[0] : { yoobi_code: p.code, contact_naam: c.naam || null, contact_email: c.email }) };
-    sluitKennisModaal(); tekenPaneel(); toonStatus('Contactpersoon bewaard');
-    return;
-  }
+  // Contactpersoon en aanhef altijd eerst bewaren bij het project (ook vóór een verzending).
+  const velden = { yoobi_code: p.code, contact_naam: c.naam || null, contact_email: c.email, contact_aanspreekvorm: k.vorm, contact_achternaam: k.vorm === 'zakelijk' ? null : k.achternaam };
+  const r = await sb.from('plan_projecten').upsert(velden, { onConflict: 'yoobi_code' }).select();
+  if (r.error) { meld.textContent = 'Bewaren mislukt: ' + r.error.message + (/aanspreekvorm|achternaam/.test(r.error.message) ? ' — staat planning_05_aanhef.sql er al?' : ''); knop.disabled = false; return; }
+  planProjecten[p.code] = { ...(planProjecten[p.code] || {}), ...(r.data && r.data[0] ? r.data[0] : velden) };
+  if (!soort) { sluitKennisModaal(); tekenPaneel(); toonStatus('Contactpersoon en aanhef bewaard'); return; }
   const start = projectStart(p);
   const body = {
     yoobi_code: p.code, soort, aan: c.email, aan_naam: c.naam || null,
@@ -2538,7 +2587,6 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
     const door = await sessieEmail();
     // zelfde beeld als wat de functie wegschreef; bij de volgende laadAlles komt de echte rij
     (kennis[p.code] = kennis[p.code] || {})[soort] = { ...body, id: js.id, overgeslagen: false, verzonden_op: new Date().toISOString(), door, resend_id: js.resend_id };
-    planProjecten[p.code] = { ...(planProjecten[p.code] || { yoobi_code: p.code }), contact_naam: c.naam || null, contact_email: c.email };
     sluitKennisModaal();
     hertekenMetScroll();
     toonStatus(js.vastgelegd === false ? 'Mail verstuurd, maar het vastleggen is mislukt: ' + (js.error || '') : KENNIS_NAAM[soort] + 'kennisgeving verstuurd aan ' + c.email, js.vastgelegd === false);
