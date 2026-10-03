@@ -1,5 +1,24 @@
 # CHANGELOG planning.html
 
+## v0.14.0 — Agenda als tijdblokken 08:00–16:15, volgorde per dag kiesbaar, 03-10-2026
+
+**Aanleiding.** v0.13.0 werkte in de echte iPhone-agenda (bevestigd met schermafbeeldingen), maar als hele-dag-items bovenin. Wens van Gian: blokken in de dagweergave, zoals 08:00–12:30 Laumen en 12:30–16:30 Oudelhoven. Kader dat hij gaf: werkdag altijd 08:00–16:15, pauze 10:00–10:15 en 12:30–13:00, in principe nooit meer dan 7,5 uur per dag gepland.
+
+**Wijziging.**
+
+1. **Edge Function `planning-ics` v2** (opnieuw uitrollen, Verify JWT blijft UIT; link en token veranderen niet). Per project per dag een tijdblok met `DTSTART;TZID=Europe/Amsterdam`, plus een `VTIMEZONE`-blok voor zomer-/wintertijd. De blokken liggen achter elkaar vanaf 08:00; pauzes schuiven alleen de eindtijd op (één afspraak per project, geen gesplitste blokken). Eindigt een blok precies op een pauzegrens, dan staat er 10:00 en niet 10:15. Meer dan 7,5 uur op een dag loopt voorbij 16:15 door, met een "Let op"-regel in de omschrijving — zichtbaar met opzet. Titel "Klant – project"; omschrijving: uren, bij meerdere projecten de tijden en het dagtotaal, Yoobi-code, en de zin dat de tijden een indeling van de uren zijn en geen afspraak met de klant. Verlof blijft een hele-dag-item. Volgorde: `plan_uren.volgorde` (1 = eerst), anders grootste blok eerst, dan klant alfabetisch, dan Yoobi-code.
+2. **SQL `planning_03_volgorde.sql`**: kolom `plan_uren.volgorde smallint` (leeg = regel). Guard eist dat `planning_02` al gedraaid is.
+3. **planning.html**: het dagvenster (klik onderaan het bord op een dag bij een medewerker) toont bij twee of meer projecten de volgorde zoals de agenda hem krijgt, met per project een knop **eerst**. Die zet de volgorde van alle projecten op die dag (1, 2, 3…) met `update … match()` en herbouwt het venster. Mislukt het opslaan, dan draait het geheugen terug en meldt de status het, met een hint naar het SQL-bestand als de kolom ontbreekt. Dezelfde sorteerregel als in de functie staat in `dagProjecten()`. `volgorde` wordt meegeladen in `laadAlles` en gaat uit het geheugen zodra de uren van die dag op nul gaan.
+
+**Bewust zo gelaten.** Bij het verschuiven van een fase (`slaDatumsOp`: delete + upsert) en bij het wissen van uren gaat de handmatige volgorde van die dagen verloren; de dag is dan toch opnieuw ingedeeld. Een gewone urenwijziging via het bord laat `volgorde` staan: de upsert stuurt die kolom niet mee, en PostgREST zet bij een conflict alleen de meegestuurde kolommen — dat laatste is een aanname op basis van PostgREST-gedrag, lokaal met gewone SQL nagebootst, niet tegen PostgREST getest. Begintijd en pauzes staan vast in de functie (`WERKBLOKKEN`), niet per medewerker instelbaar.
+
+**Getest.**
+- SQL op lokale Postgres 16: guard zonder `planning_02` stopt; tweemaal draaien schoon; een upsert die `volgorde` niet meestuurt laat hem staan.
+- Edge Function: `deno check` schoon; 31 mocktests, waaronder 7,5 u → 08:00–16:15, 4 u + 3,5 u → 08:00–12:15 en 12:15–16:15, handmatige volgorde die van de regel wint, een blok over de 10:00-pauze heen (1 u + 2 u → 09:00–11:15), 8,5 u op een dag → eind 17:15 plus waarschuwing, 9 u in één blok → 17:45, een 2-uursblok dat op 10:00 eindigt en niet op 10:15, VTIMEZONE vóór de afspraken, verlof als hele dag. Uitvoer geparsed door ical.js: 08:00 Europe/Amsterdam komt uit op 06:00 UTC (zomertijd, klopt voor oktober vóór de 25e).
+- planning.html: Node-parsetest, CSS 217/217, div 113/113, runtime-harnas met stub-Supabase: regelvolgorde, lijst alleen bij ≥2 projecten, "eerst" slaat 1-2-3 op voor de juiste medewerker en dag, andere medewerker ongemoeid, terugdraaien bij databasefout, deels gezette volgorde.
+
+**Niet getest (aan Gian).** De keten tot in de agenda-app na de herdeploy; of Apple en Google de `VTIMEZONE` netjes overnemen rond de wintertijdwissel van 25 oktober; het dagvenster op de iPad in het echt (knop "eerst" en herbouw van het venster). De eerste controle: één dag met twee projecten, in de agenda moeten ze aansluiten en de dag moet op 16:15 eindigen.
+
 ## v0.13.0 — Agenda-abonnement per medewerker (Apple/Google Agenda), 03-10-2026
 
 **Aanleiding.** Vraag van Gian: kan de planning in de agenda van de telefoon? Gekozen (na afweging van losse ICS-download en tweewegs Google API): een abonnements-feed, eenrichting, één hele-dag-item per project per werkdag, per medewerker gefilterd. Weekblik is genoeg; trage verversing door Google (soms pas na een dag) is aanvaard.

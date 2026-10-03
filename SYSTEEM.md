@@ -5461,3 +5461,35 @@ door ical.js; QR-generator door jsQR teruggelezen op 120 teksten;
 planning.html parse/balans en runtime-harnas. **Niet getest:** de echte
 keten tot in Apple en Google Agenda; de Google-menutekst in de uitleg is
 een aanname.
+
+## Ook op 3 oktober 2026: agenda-feed als tijdblokken, volgorde per dag (planning.html v0.14.0, planning-ics v2)
+
+**Aanleiding.** De feed van die ochtend werkte op de iPhone (bevestigd met
+schermafbeeldingen), maar als hele-dag-items. Gian wilde blokken in de
+dagweergave. Kader: werkdag altijd 08:00–16:15, pauze 10:00–10:15 en
+12:30–13:00, nooit bewust meer dan 7,5 uur per dag.
+
+**Wat er is.**
+- `planning-ics` **v2**: tijdblokken met `TZID=Europe/Amsterdam` en een
+  eigen `VTIMEZONE`. Dagindeling staat vast in de constante `WERKBLOKKEN`
+  in de functie; aanpassen = functie wijzigen en opnieuw uitrollen. Meer
+  dan 7,5 uur loopt zichtbaar voorbij 16:15. Link en token ongewijzigd,
+  dus bestaande abonnementen schakelen vanzelf om.
+- SQL `planning_03_volgorde.sql`: `plan_uren.volgorde` (1 = eerst, leeg
+  = regel grootste blok eerst, dan klant). Guard eist `planning_02`.
+- planning.html v0.14.0: knop **eerst** in het dagvenster onderaan het
+  bord bij twee of meer projecten op een dag. Dezelfde sorteerregel staat
+  op twee plekken: `dagProjecten()` in de app en `maakAfspraken()` in de
+  functie. **Wijzig je de ene, wijzig dan de andere.**
+
+**Nood.** Blokken staan op verkeerde tijden na de wintertijdwissel →
+eerst controleren of de agenda-app de `VTIMEZONE` overneemt (de regels
+staan in de functie); als noodgreep de feed tijdelijk terug naar v1
+(hele dag) uit de repo `ernes-edge-functions`. Volgorde klopt niet in de
+agenda maar wel in het dagvenster → de agenda-app heeft nog niet ververst
+(Google tot een dag).
+
+**Bewijs.** Zie `CHANGELOG_planning.md` v0.14.0: Postgres-test van de SQL,
+`deno check` plus 31 mocktests en ical.js-parse (08:00 Amsterdam = 06:00
+UTC in oktober), parse/balans/runtime-harnas op planning.html. Niet in de
+echte agenda-app getest na deze wijziging.

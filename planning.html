@@ -284,6 +284,9 @@
   .agendapaneel ol { margin: 0.3rem 0 0; padding-left: 1.1rem; }
   .popover { position: absolute; background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); box-shadow: 0 6px 24px rgba(0,0,0,0.14); padding: 0.7rem 0.8rem; z-index: 60; font-size: 0.82rem; min-width: 220px; }
   .popover .rij { margin-top: 0.5rem; }
+  .popover .dagvolgorde-lijst { margin: 0.2rem 0 0; padding-left: 1.2rem; font-size: 0.8rem; }
+  .popover .dagvolgorde-lijst li { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; padding: 0.15rem 0; }
+  .popover .dagvolgorde-lijst .m { color: var(--muted); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -409,7 +412,7 @@
         <input type="text" inputmode="decimal" id="mwNorm" value="7,5" style="width:5rem" title="uren per dag">
         <button class="knop primair" id="mwToevoegen">Toevoegen</button>
       </div>
-      <div class="hint">Niet actief = verdwijnt van het bord, uren blijven bewaard. De norm is de werkdag in uren voor de totaaltelling. <b>Agenda</b>: een abonnementslink waarmee de medewerker zijn planning in Apple of Google Agenda ziet (alleen lezen, ververst vanzelf).</div>
+      <div class="hint">Niet actief = verdwijnt van het bord, uren blijven bewaard. De norm is de werkdag in uren voor de totaaltelling. <b>Agenda</b>: een abonnementslink waarmee de medewerker zijn planning in Apple of Google Agenda ziet (alleen lezen, ververst vanzelf). Tijdblokken 08:00–16:15; de volgorde op een dag kies je in het dagvenster onderaan het bord.</div>
     </section>
   </div>
 </div>
@@ -421,7 +424,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.13.0';
+const APP_VERSION = '0.14.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -435,6 +438,7 @@ let medewerkers = [];        // actieve rijen uit plan_medewerkers, op volgorde
 let alleMedewerkers = [];    // ook inactieve, voor het beheer
 let planProjecten = {};      // yoobi_code -> rij uit plan_projecten
 let uren = {};               // sleutel code|mwId|datum -> getal (alleen geladen jaar; voedt het bord)
+let urenVolgorde = {};       // zelfde sleutel -> 1 = eerst op die dag (v0.14.0; plan_uren.volgorde, leeg = regel). Voedt alleen het dagvenster en de agenda-feed.
 let urenBuiten = {};         // zelfde sleutel, uren buiten het geladen jaar (v0.12.0; alleen voor projectbrede sommen in het paneel)
 let gesloten = {};           // 'YYYY-MM-DD' -> {soort, omschrijving}
 let verlof = {};             // mwId|datum -> {id, omschrijving}
@@ -683,7 +687,7 @@ async function laadAlles() {
     sb.from('fin_werkvoorraad').select('peildatum,data').order('peildatum', { ascending: false }).limit(1),
     sb.from('plan_medewerkers').select('*').order('volgorde'),
     sb.from('plan_projecten').select('*'),
-    sb.from('plan_uren').select('yoobi_code,medewerker_id,datum,uren').gte('datum', j1).lte('datum', j2),
+    sb.from('plan_uren').select('yoobi_code,medewerker_id,datum,uren,volgorde').gte('datum', j1).lte('datum', j2),
     sb.from('plan_gesloten_dagen').select('*').gte('datum', j1).lte('datum', j2),
     sb.from('plan_verlof').select('*').gte('datum', j1).lte('datum', j2),
     sb.from('plan_fasen').select('*').order('volgnr'),
@@ -706,10 +710,11 @@ async function laadAlles() {
   medewerkers = alleMedewerkers.filter(m => m.actief);
   planProjecten = {};
   for (const r of (pp.data || [])) planProjecten[r.yoobi_code] = r;
-  uren = {};
+  uren = {}; urenVolgorde = {};
   for (const r of (pu.data || [])) {
     const n = Number(r.uren);
     if (n > 0) uren[sleutel(r.yoobi_code, r.medewerker_id, r.datum)] = n;
+    if (n > 0 && r.volgorde != null) urenVolgorde[sleutel(r.yoobi_code, r.medewerker_id, r.datum)] = Number(r.volgorde);
   }
   urenBuiten = {};
   if (puBuiten.error) { console.warn('plan_uren buiten ' + jaar + ' niet geladen; nog te plannen telt alleen dit jaar: ' + puBuiten.error.message); }
@@ -1319,7 +1324,7 @@ function datumsUitPaneel(p, d) {
 async function slaUrenOp(code, mwId, iso, waarde) {
   const oud = uren[sleutel(code, mwId, iso)] || 0;
   if (waarde === oud) return;
-  if (waarde > 0) uren[sleutel(code, mwId, iso)] = waarde; else delete uren[sleutel(code, mwId, iso)];
+  if (waarde > 0) uren[sleutel(code, mwId, iso)] = waarde; else { delete uren[sleutel(code, mwId, iso)]; delete urenVolgorde[sleutel(code, mwId, iso)]; }
   werkOverCellen(mwId, iso);
   werkBalk(code);
   if (code === actiefCode) tekenPaneel();
@@ -1977,6 +1982,44 @@ function hertekenMetScroll() {
   document.getElementById('bordScroll').scrollLeft = links;
 }
 
+// ---------- volgorde binnen een dag (v0.14.0) ----------
+// Dezelfde regel als in de Edge Function planning-ics: handmatige volgorde (1 = eerst),
+// anders grootste blok eerst, dan klant alfabetisch, dan Yoobi-code.
+function dagProjecten(mwId, iso) {
+  const rijen = [];
+  for (const k in uren) {
+    const d = k.split('|');
+    if (d[1] !== mwId || d[2] !== iso) continue;
+    const p = stand ? stand.projecten.find(x => x.code === d[0]) : null;
+    rijen.push({ code: d[0], uren: uren[k], klant: p ? p.klant : '', naam: p ? p.naam : 'Project ' + d[0], volgorde: urenVolgorde[k] != null ? urenVolgorde[k] : null });
+  }
+  return rijen.sort((a, b) => (a.volgorde != null ? a.volgorde : 999) - (b.volgorde != null ? b.volgorde : 999) || b.uren - a.uren || a.klant.localeCompare(b.klant, 'nl') || a.code.localeCompare(b.code));
+}
+function dagVolgordeHtml(mwId, iso) {
+  const rijen = dagProjecten(mwId, iso);
+  if (rijen.length < 2) return '<div class="dagvolgorde"></div>';
+  return '<div class="dagvolgorde"><div class="hint" style="margin-top:0.4rem">Volgorde in de agenda' + (rijen.some(r => r.volgorde != null) ? '' : ' <span class="m">(regel: grootste eerst)</span>') + ':</div><ol class="dagvolgorde-lijst">' +
+    rijen.map((r, i) => '<li><span><b>' + esc(r.klant) + '</b> ' + esc(r.naam) + ' <span class="num m">' + fmtUur(r.uren) + ' u</span></span>' +
+      (i === 0 ? '<span class="m">eerst</span>' : '<button class="knop klein" data-eerst="' + esc(r.code) + '">eerst</button>') + '</li>').join('') + '</ol></div>';
+}
+async function zetDagVolgorde(mwId, iso, codeEerst) {
+  const rijen = dagProjecten(mwId, iso);
+  const nieuw = [codeEerst, ...rijen.map(r => r.code).filter(c => c !== codeEerst)];
+  const oud = {}; for (const c of nieuw) oud[c] = urenVolgorde[sleutel(c, mwId, iso)];
+  nieuw.forEach((c, i) => { urenVolgorde[sleutel(c, mwId, iso)] = i + 1; });
+  try {
+    for (let i = 0; i < nieuw.length; i++) {
+      const r = await sb.from('plan_uren').update({ volgorde: i + 1 }).match({ yoobi_code: nieuw[i], medewerker_id: mwId, datum: iso }).select('volgorde');
+      if (r.error) throw r.error;
+      if (!r.data || !r.data.length) throw new Error('rij niet gevonden');
+    }
+    toonStatus('Volgorde opgeslagen; de agenda volgt bij de volgende verversing');
+  } catch (e) {
+    for (const c of nieuw) { if (oud[c] == null) delete urenVolgorde[sleutel(c, mwId, iso)]; else urenVolgorde[sleutel(c, mwId, iso)] = oud[c]; }
+    toonStatus('Volgorde opslaan mislukt: ' + (e.message || e) + (/volgorde/.test(String(e.message || e)) ? ' — staat planning_03_volgorde.sql er al?' : ''), true);
+  }
+}
+
 // Klik op een dag in de totaaltelling: verlof zetten of opheffen.
 const popover = document.getElementById('popover');
 function sluitPopover() { popover.style.display = 'none'; popover.innerHTML = ''; }
@@ -1991,6 +2034,7 @@ bordEl.addEventListener('click', e => {
   const bestaand = verlof[mwId + '|' + iso];
   const geplandHier = dagTotaal(mwId, iso);
   popover.innerHTML = '<b>' + esc(m.naam) + '</b> · ' + DAGNAMEN[d.getDay()] + ' ' + fmtDatum(d) +
+    dagVolgordeHtml(mwId, iso) +
     (bestaand && bestaand._ziek ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + ' — gemeld in Personeel. Daar aanpassen of hersteld melden.</div>'
           : bestaand ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + '</div><div class="rij"><button class="knop primair" id="poWis">Opheffen</button></div>'
           : (geplandHier ? '<div class="hint" style="color:var(--amber)">Let op: er staat al ' + fmtUur(geplandHier) + ' uur gepland op deze dag.</div>' : '') +
@@ -2000,6 +2044,11 @@ bordEl.addEventListener('click', e => {
   popover.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 260) + 'px';
   popover.style.top = (r.top + window.scrollY - popover.offsetHeight - 8) + 'px';
   const wis = document.getElementById('poWis'), zet = document.getElementById('poZet');
+  popover.querySelectorAll('button[data-eerst]').forEach(b => b.addEventListener('click', async ev => {
+    ev.stopPropagation();
+    await zetDagVolgorde(mwId, iso, b.dataset.eerst);
+    td.click();   // dagvenster opnieuw opbouwen met de nieuwe volgorde
+  }));
   if (wis) wis.addEventListener('click', () => { sluitPopover(); wisVerlof(mwId, iso); });
   if (zet) {
     zet.addEventListener('click', () => {
