@@ -458,7 +458,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.16.0';
+const APP_VERSION = '0.16.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -2370,7 +2370,7 @@ function kennisHtml(p) {
     else if (x.vanaf) st = 'vanaf ' + fmtDatum(x.vanaf);
     else st = soort === 'maand' ? 'nog geen uren ingepland' : '—';
     h += '<div class="krij"><span class="soort">' + KENNIS_NAAM[soort] + '</span><span class="st' + klasse + '">' + st + '</span>' +
-      (x.start ? '<button class="knop klein' + (x.nodig || x.verschoven ? ' primair' : '') + '" data-kverstuur="' + soort + '">' + (x.rij && !x.rij.overgeslagen ? 'opnieuw' : 'versturen') + '</button>' : '') +
+      (x.start ? '<button class="knop klein' + (x.nodig || x.verschoven ? ' primair' : '') + '" data-kverstuur="' + soort + '">' + (x.verschoven ? 'corrigeren' : x.rij && !x.rij.overgeslagen ? 'opnieuw' : 'versturen') + '</button>' : '') +
       (!x.rij && x.start ? '<button class="knop klein" data-koverslaan="' + soort + '" title="Geen mail, wel afgehandeld">overslaan</button>' : '') +
       '</div>';
   }
@@ -2425,11 +2425,35 @@ function kennisAanhefVan(p) {
   const pl = planProjecten[p.code] || {};
   return pl.contact_aanspreekvorm ? aanhef(pl.contact_aanspreekvorm, pl.contact_achternaam) : null;
 }
+// v0.16.1: eerdere (niet-overgeslagen) verzending voor deze soort, als de periode sindsdien is veranderd.
+function kennisVorige(p, soort) {
+  const rij = (kennis[p.code] || {})[soort];
+  if (!rij || rij.overgeslagen || !rij.start_bij_verzending) return null;
+  const start = projectStart(p);
+  if (!start || zelfdePeriode(soort, vanIso(rij.start_bij_verzending), start)) return null;
+  return { start: vanIso(rij.start_bij_verzending), tekst: rij.periode_tekst || periodeTekst(soort, vanIso(rij.start_bij_verzending)) };
+}
 function kennisTekst(p, soort, aanhefRegel) {
   const start = projectStart(p);
   const proj = p.naam || ('project ' + p.code);
+  const vorige = kennisVorige(p, soort);
+  const kortWeek = t => String(t).replace(/ \(.*\)$/, '');
   let kern;
-  if (soort === 'maand') {
+  if (vorige && soort === 'maand') {
+    kern = 'In afwijking van ons eerdere bericht: de werkzaamheden aan ' + proj + ' zijn verplaatst van ' + vorige.tekst + ' naar ' + maandTekst(start) + '.\n\n' +
+      'Ongeveer twee weken voor de start laten wij u de precieze week weten, en in de week ervoor de startdag.';
+  } else if (vorige && soort === 'week') {
+    kern = 'In afwijking van ons eerdere bericht: de werkzaamheden aan ' + proj + ' zijn verplaatst van ' + kortWeek(vorige.tekst) + ' naar ' + weekTekst(start) + '.\n\n' +
+      'In de week voorafgaand ontvangt u van ons de exacte startdag.';
+  } else if (vorige && soort === 'dag') {
+    const tijden = startTijden(p.code, naarIso(start));
+    let wie;
+    if (!tijden.length) wie = 'Wij komen die ochtend tussen 8:15 en 8:30 uur bij u langs.';
+    else if (tijden.every(t => t.tijd === tijden[0].tijd)) wie = tijden.map(t => t.naam).join(' en ') + (tijden.length > 1 ? ' komen' : ' komt') + ' die dag ' + tijden[0].tijd + ' bij u langs.';
+    else wie = tijden.map(t => t.naam + ' komt ' + t.tijd).join(', ') + ' bij u langs.';
+    kern = 'In afwijking van ons eerdere bericht: de werkzaamheden aan ' + proj + ' starten niet op ' + vorige.tekst + ' maar op ' + fmtDatumLang(start) + '. ' + wie + '\n\n' +
+      'Bent u die ochtend niet thuis, laat ons dan weten hoe wij toegang krijgen.';
+  } else if (soort === 'maand') {
     kern = 'Hartelijk dank voor uw opdracht. Wij hebben de werkzaamheden aan ' + proj + ' voorlopig ingepland in ' + maandTekst(start) + '.\n\n' +
       'Ongeveer twee weken voor de start laten wij u de precieze week weten, en in de week ervoor de startdag. Heeft u in die periode al iets waar wij rekening mee moeten houden, laat het ons dan gerust weten.';
   } else if (soort === 'week') {
@@ -2449,9 +2473,9 @@ function kennisTekst(p, soort, aanhefRegel) {
 function kennisOnderwerp(p, soort) {
   const start = projectStart(p);
   const proj = p.naam || ('project ' + p.code);
-  return soort === 'maand' ? 'Planning schilderwerk ' + proj + ': ' + maandTekst(start)
+  return (kennisVorige(p, soort) ? 'Gewijzigd: ' : '') + (soort === 'maand' ? 'Planning schilderwerk ' + proj + ': ' + maandTekst(start)
     : soort === 'week' ? 'Planning schilderwerk ' + proj + ': ' + weekTekst(start).replace(/ \(.*\)$/, '')
-    : 'Start schilderwerk ' + proj + ': ' + fmtDatumLang(start);
+    : 'Start schilderwerk ' + proj + ': ' + fmtDatumLang(start));
 }
 
 async function sessieToken() {

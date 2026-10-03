@@ -1,5 +1,13 @@
 # CHANGELOG planning.html
 
+## v0.16.1 — Correctietekst als de planning na een kennisgeving is verschoven, 03-10-2026
+
+**Aanleiding.** Vraag van Gian na de eerste tien weekaankondigingen: zegt de mail bij een verschuiving ook dát er iets verschoven is? Nee: "opnieuw" maakte dezelfde standaardtekst. Besluit Gian: wel een correctietekst, zonder excuses (de wijziging kan ook van de klant komen).
+
+**Wijziging.** `kennisVorige(p, soort)`: de laatste niet-overgeslagen verzending voor die soort, alleen als de periode sindsdien veranderd is (zelfde regel als het oranje label). Is die er, dan begint de tekst met "In afwijking van ons eerdere bericht: de werkzaamheden aan [project] zijn verplaatst van week 43 naar week 45 (2 november t/m 6 november 2026)." (maand: "van oktober 2026 naar november 2026"; dag: "starten niet op donderdag 22 oktober 2026 maar op maandag 2 november 2026", met de startijden zoals gewoonlijk), het onderwerp krijgt "Gewijzigd: " ervoor en de knop in het paneel heet "corrigeren". De oude periode komt uit `periode_tekst` van de eerdere rij (wat de klant las), met terugval op de berekening uit `start_bij_verzending`. Zelfde periode of eerdere rij overgeslagen: gewone tekst en knop "opnieuw".
+
+**Getest.** `node --check` schoon; 49 gedragstests (6 nieuw: week-, dag- en maandcorrectie, onderwerp "Gewijzigd:", zelfde week geeft gewone tekst, overgeslagen geeft gewone tekst). Niet in de browser getest.
+
 ## v0.16.0 — Aanhef met heer/mevrouw en achternaam in de kennisgevingen, 03-10-2026
 
 **Aanleiding.** Wens van Gian: "Geachte heer Kamp," in plaats van "Geachte Peter Kamp,". Yoobi geeft geen geslacht mee en de calculatie (waar de aanspreekvorm per calculatie gekozen wordt, `_offAanhef`) is niet aan de Yoobi-projectcode gekoppeld, dus de keuze moet in de planning zelf. Besluit Gian: versturen pas mogelijk als de aanspreekvorm gekozen is; geen gok, geen neutrale terugval.
