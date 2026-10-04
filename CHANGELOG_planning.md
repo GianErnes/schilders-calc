@@ -1,5 +1,15 @@
 # CHANGELOG planning.html
 
+## v0.17.1 — Paraplu-regel verruimd naar "Onderhouds garantie+ Plan", 04-10-2026
+
+**Aanleiding.** Constatering Gian na het testen van v0.17.0: offertes heten *naam | Onderhouds garantie+ Plan*, en projecten horen dezelfde naam te krijgen. De regel van v0.17.0 eiste het aaneengeschreven woord "onderhoudsplan" en zou die projecten niet herkennen.
+
+**Wijziging.** `PARAPLU_REGEL`: "onderhoud", daarna binnen dertig tekens (zonder `|`) "plan", gevolgd door twee jaartallen met een streepje. Herkent nu *Onderhoudsplan 2026-2032* én *Onderhouds garantie+ Plan 2026-2032*. Eén jaartal telt nog steeds niet. Muistip en voetnoot aangepast. Geen SQL.
+
+**Getest.** Node-parse; 18 runtime-tests (de 14 van v0.17.0 plus: "Onderhouds garantie+ Plan 2026-2032" wel, "Onderhouds garantie+ Plan 2027" niet, "Van Gessel | Onderhouds garantie+ Plan 2026-2032" wel, "Onderhoud | Plan 2026-2032" met `|` ertussen niet).
+
+**Niet getest.** In de browser; v0.17.0 is wel door Gian in de browser bevestigd (bord, "Verborgen projecten" met "regel", "toon", deelprojecten blijven).
+
 ## v0.17.0 — Paraplu-projecten standaard van het bord, "verberg" in "Nog geen datum", 04-10-2026
 
 **Aanleiding.** Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen (bijvoorbeeld *Van Gessel | Onderhoudsplan 2026-2032*) stonden op het bord en in de kaart "Nog geen datum in Yoobi", terwijl het werk in de deelprojecten zit. Gian koos op 04-10-2026 voor herkenning op de naam, met handmatig tonen/verbergen als overrule (route 2 via Yoobi `includeMainOrSubProject=1` blijft mogelijk voor later; de verkenning daarvoor is nog niet gedraaid).

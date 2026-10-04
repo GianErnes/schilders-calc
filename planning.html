@@ -373,7 +373,7 @@
       <div class="kaart" id="verborgenKaart" style="display:none">
         <h2>Verborgen projecten</h2>
         <ul class="zonder" id="verborgenLijst"></ul>
-        <div class="voetnoot">Verborgen projecten staan niet op het bord. Klik "toon" om ze terug te zetten. "regel" = hoofdproject met deelprojecten (naam Onderhoudsplan jjjj-jjjj), standaard verborgen.</div>
+        <div class="voetnoot">Verborgen projecten staan niet op het bord. Klik "toon" om ze terug te zetten. "regel" = hoofdproject met deelprojecten (naam Onderhouds… plan jjjj-jjjj), standaard verborgen.</div>
       </div>
       <div class="kaart" id="overKaart" style="display:none">
         <h2>Over datum, niet op dit bord</h2>
@@ -458,15 +458,16 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.17.0';
+const APP_VERSION = '0.17.1';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
 // "Van Gessel | Onderhoudsplan 2026-2032". Die staan standaard niet op het bord en niet
 // in "Nog geen datum"; wel in "Verborgen projecten" (label "regel") met knop "toon".
-// Regel (Gian, 04-10-2026): de naam bevat "onderhoudsplan" gevolgd door twee jaartallen
-// met een streepje ertussen. Eén jaartal (het deelproject "Onderhoudsplan 2027") telt niet.
-const PARAPLU_REGEL = /onderhoudsplan\D{0,5}(19|20)\d{2}\s*[-–—\/]\s*(19|20)\d{2}/i;
+// Regel (Gian, 04-10-2026, verruimd in v0.17.1): de naam bevat "onderhoud" en daarna "plan"
+// (dus "Onderhoudsplan" én "Onderhouds garantie+ Plan"), gevolgd door twee jaartallen met een
+// streepje ertussen. Eén jaartal (het deelproject "Onderhouds garantie+ Plan 2027") telt niet.
+const PARAPLU_REGEL = /onderhoud[^|]{0,30}?plan\D{0,5}(19|20)\d{2}\s*[-–—\/]\s*(19|20)\d{2}/i;
 function isParaplu(p) { return !!(p && PARAPLU_REGEL.test(String(p.naam || ''))); }
 // Eén plek die zegt of een project van bord en kaarten af is.
 // zichtbaar === false        → bewust verborgen (knop "Verbergen").
@@ -1762,7 +1763,7 @@ function tekenVerborgen() {
   const kaart = document.getElementById('verborgenKaart');
   kaart.style.display = lijst.length ? '' : 'none';
   document.getElementById('verborgenLijst').innerHTML = lijst.map(p =>
-    '<li><span><span class="k">' + esc(p.klant) + (verborgenDoorRegel(p) ? ' · <span title="Hoofdproject met deelprojecten (naam Onderhoudsplan jjjj-jjjj); standaard van het bord">regel</span>' : '') + '</span>' + esc(p.naam) + '</span><button class="knop klein" data-toon="' + esc(p.code) + '">toon</button></li>').join('');
+    '<li><span><span class="k">' + esc(p.klant) + (verborgenDoorRegel(p) ? ' · <span title="Hoofdproject met deelprojecten (naam Onderhoud… plan jjjj-jjjj); standaard van het bord">regel</span>' : '') + '</span>' + esc(p.naam) + '</span><button class="knop klein" data-toon="' + esc(p.code) + '">toon</button></li>').join('');
 }
 document.getElementById('verborgenLijst').addEventListener('click', e => {
   const b = e.target.closest('button[data-toon]'); if (b) zetZichtbaar(b.dataset.toon, true);
