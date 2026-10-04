@@ -1,5 +1,17 @@
 # CHANGELOG planning.html
 
+## v0.16.2 — Voetrijen "Nog te plannen per dag" bij eerste openen allemaal zichtbaar, 04-10-2026
+
+**Aanleiding.** Melding van Gian: bij nieuw openen van de planning is onderaan meestal maar één rij van "Nog te plannen per dag" zichtbaar (alleen Jens); na een willekeurige klik die het bord hertekent staan alle rijen er wel.
+
+**Oorzaak (uit de code).** De voetrijen hangen met `position: sticky; bottom` onder elkaar; per rij wordt `bottom` berekend uit `offsetHeight` van de rijen eronder. In `laadData()` werd `tekenBord()` aangeroepen terwijl `.wrap` nog `display:none` had. Een onzichtbaar element heeft `offsetHeight` 0, dus alle rijen kregen `bottom: 0px` en lagen over elkaar; alleen de laatst getekende (Jens) was zichtbaar. Elke herteken daarna gebeurde met zichtbaar bord en ging goed.
+
+**Wijzigingen.**
+- `laadData()`: `.wrap` eerst zichtbaar maken en de laadmelding sluiten, pas daarna `tekenBord()`.
+- Berekening van de voet-`bottom`s uit `tekenBord()` gehaald naar `zetVoetRijenVast()`. Vangnet: is de onderste voetrij nog 0 pixels hoog, dan wordt een frame later opnieuw gerekend (max. 60 frames, ca. 1 seconde). Daarmee kan dit niet terugkomen als het bord ooit op een andere plek onzichtbaar getekend wordt.
+
+**Status.** Diagnose uit de code; JS parse-test (`node --check`) geslaagd. Nog te controleren door Gian in de echte browser: planning vers openen (ook met Cmd/Ctrl+Shift+R) en zien dat Gian, Max, Bjorn en Jens plus de kopregel onderaan allemaal staan.
+
 ## v0.16.1 — Correctietekst als de planning na een kennisgeving is verschoven, 03-10-2026
 
 **Aanleiding.** Vraag van Gian na de eerste tien weekaankondigingen: zegt de mail bij een verschuiving ook dát er iets verschoven is? Nee: "opnieuw" maakte dezelfde standaardtekst. Besluit Gian: wel een correctietekst, zonder excuses (de wijziging kan ook van de klant komen).

@@ -458,7 +458,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.16.1';
+const APP_VERSION = '0.16.2';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -880,13 +880,7 @@ function tekenBord() {
   document.getElementById('kolomToggle').addEventListener('click', e => { e.stopPropagation(); kolomIngeklapt = !kolomIngeklapt; try { localStorage.setItem('plan_kolom_ingeklapt', kolomIngeklapt ? '1' : '0'); } catch (_e) {} hertekenMetScroll(); });
   document.getElementById('zoekVeld').addEventListener('input', e => { zoekTekst = e.target.value; pasZoekToe(); });
   pasZoekToe();
-  // rijen onderaan vastzetten: elke tfoot-rij zijn eigen bottom
-  const rijen = Array.from(document.querySelectorAll('#bord tfoot tr'));
-  let bottom = 0;
-  for (let r = rijen.length - 1; r >= 0; r--) {
-    rijen[r].querySelectorAll('td').forEach(td => td.style.bottom = bottom + 'px');
-    bottom += rijen[r].offsetHeight;
-  }
+  zetVoetRijenVast();
   zetOverKlassen();
   tekenZonderDatum();
   tekenVerborgen();
@@ -894,6 +888,24 @@ function tekenBord() {
   tekenKennisTeller();
   tekenPaneel();
   document.getElementById('jaarLabel').textContent = jaar;
+}
+
+// v0.16.2: voetrijen "Nog te plannen per dag" onderaan vastzetten, elke tfoot-rij zijn eigen bottom.
+// De hoogte komt uit offsetHeight; dat is 0 zolang het bord onzichtbaar is (display:none).
+// Dan zouden alle rijen bottom:0 krijgen en over elkaar liggen (alleen de laatste zichtbaar).
+// Vangnet: is de hoogte 0, dan een frame later nog eens proberen, hooguit ~1 seconde lang.
+function zetVoetRijenVast(poging) {
+  const rijen = Array.from(document.querySelectorAll('#bord tfoot tr'));
+  if (!rijen.length) return;
+  if (rijen[rijen.length - 1].offsetHeight === 0) {
+    if ((poging || 0) < 60) requestAnimationFrame(() => zetVoetRijenVast((poging || 0) + 1));
+    return;
+  }
+  let bottom = 0;
+  for (let r = rijen.length - 1; r >= 0; r--) {
+    rijen[r].querySelectorAll('td').forEach(td => td.style.bottom = bottom + 'px');
+    bottom += rijen[r].offsetHeight;
+  }
 }
 
 // Teller in de kop + kaart voor over-datum-projecten die niet op dit jaarbord staan.
@@ -2636,10 +2648,11 @@ async function laadData() {
   try {
     await laadAlles();
     document.getElementById('peildatum').textContent = 'Yoobi-stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : 'onbekend');
-    tekenBord();
+    // v0.16.2: eerst zichtbaar maken, dán tekenen. Anders is offsetHeight 0 en liggen de voetrijen over elkaar.
     document.getElementById('login').style.display = 'none';
     loading.style.display = 'none';
     document.querySelector('.wrap').style.display = '';
+    tekenBord();
     scrollNaarVandaag();
   } catch (e) {
     loading.textContent = 'De planning kon niet geladen worden: ' + (e.message || e);
