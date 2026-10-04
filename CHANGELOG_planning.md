@@ -1,5 +1,17 @@
 # CHANGELOG planning.html
 
+## v0.18.0 — Kennisgevingstaak sluit meteen bij versturen/overslaan; cronronde dagelijks, 04-10-2026
+
+**Aanleiding.** Gian 04-10-2026: alle aankondigingen die verstuurd konden worden zijn via de planning verstuurd, maar de taken "Maandaankondiging sturen · …" bleven in de taken-app staan. Oorzaak: de taken worden alleen gesloten door de ronde van Edge Function `planning-kennisgeving-taken`, en die draaide ma t/m vr 06:35 UTC (`planning_06_taken_bron.sql`); zaterdag en zondag was er geen ronde. Besluit Gian: route C — meteen sluiten vanuit de planning én de ronde dagelijks.
+
+**Wijziging.**
+1. **planning.html** — nieuwe helper `kennisSluitTaak(code, soort)`: zet `voltooid_op = nu` op de open rij(en) in `taken` met `bron = 'planning'` en `bron_kenmerk` in `kennis-<soort>:<code>` / `correctie-<soort>:<code>` (vorm van functie v1.1). Aangeroepen na een geslaagde verzending en na overslaan; de statusbalk zegt erbij " · taak in de taken-app gesloten", of "NIET gesloten (zie console)" als het schrijven mislukte. Een mislukte taaksluiting houdt de verzending of het overslaan niet tegen. `voltooid_door` blijft leeg, zoals bij de functie. De Edge Function en de signaalregels zijn niet gewijzigd.
+2. **SQL `planning_07_taken_cron_dagelijks.sql`** (project-guard, idempotent): cronjob `planning-kennisgeving-taken-werkdagen` weg, `planning-kennisgeving-taken-dagelijks` erin met `35 6 * * *` (08:35 zomer / 07:35 winter), zelfde `net.http_post` met `aftap_secret` uit de kluis. Drie controleregels. Onderaan uitgecommentarieerd een directe aanroep om niet op morgen te hoeven wachten.
+
+**Getest.** `node --check` schoon; div-balans 127/127 en CSS 233/233 gelijk aan live v0.17.1; 5 runtime-tests met nagebootste Supabase-client (juiste tabel, update-veld, filters en kenmerk-lijst; geen rij → 0; fout van de server → -1; exception → -1; statusteksten).
+
+**Niet getest.** In de browser; de SQL (pg_cron/pg_net/vault zijn lokaal niet na te bootsen). **Aannames:** (a) de ingelogde gebruiker mag via RLS op `taken` updaten — afgeleid uit taken.html, dat onder dezelfde login afvinkt; faalt dit, dan meldt de statusbalk "NIET gesloten" en sluit de dagelijkse ronde de taak alsnog. (b) `trg_taak_melding_signaal` stuurt geen afvinkmail bij een `voltooid_op` zonder `afvink_melding` — dit is het open punt van 3 oktober; de eerste keer versturen/overslaan na deze versie is de test.
+
 ## v0.17.1 — Paraplu-regel verruimd naar "Onderhouds garantie+ Plan", 04-10-2026
 
 **Aanleiding.** Constatering Gian na het testen van v0.17.0: offertes heten *naam | Onderhouds garantie+ Plan*, en projecten horen dezelfde naam te krijgen. De regel van v0.17.0 eiste het aaneengeschreven woord "onderhoudsplan" en zou die projecten niet herkennen.

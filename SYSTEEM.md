@@ -507,9 +507,9 @@ manieren stuk.
 In het project `schilder-voorraad` bestaat **geen enkele** van de drie.
 Daar draait niets automatisch. Alles wat daar gebeurt komt uit de app.
 
-### 3.1 De negen cronjobs
+### 3.1 De tien cronjobs
 
-Allemaal in `schilders-calc`, allemaal actief.
+Allemaal in `schilders-calc`, allemaal actief. (Negen tot 3 oktober 2026; de tiende is `planning-kennisgeving-taken-dagelijks`, zie de sectie van 4 oktober 2026.)
 
 > **Alle tijden hieronder staan in UTC.** Dat is de tijd waarin cron
 > werkt en waarin de logboeken van Supabase de runs tonen. UTC schuift
@@ -528,6 +528,7 @@ Allemaal in `schilders-calc`, allemaal actief.
 | `taken-mail-melding` | elke 2 minuten | | | `taken-mail-melding` | stuurt mail bij nieuwe of gewijzigde taken |
 | `werkvoorraad-sync-wekelijks` | dinsdag 06:00 | 08:00 | 07:00 | `fin-werkvoorraad-sync` | haalt de werkvoorraad uit Yoobi. Enige job via `extensions.http`; sinds 27 september 2026 met 60 s wachttijd (`CURLOPT_TIMEOUT_MS`), zie de sectie van die datum |
 | `maandbericht-maandelijks` | de 7e, 07:00 | 09:00 | 08:00 | `maandbericht` | stelt het maandbericht op |
+| `planning-kennisgeving-taken-dagelijks` | 06:35 | 08:35 | 07:35 | `planning-kennisgeving-taken` | zet per kennisgevingssignaal uit de planning een taak bij Maud in de taken-app en sluit taken waarvan het signaal weg is. Bijgekomen 3 oktober 2026 als `…-werkdagen` (ma–vr), sinds 4 oktober dagelijks |
 
 **Twee dingen om te weten.**
 
@@ -5493,3 +5494,62 @@ agenda maar wel in het dagvenster → de agenda-app heeft nog niet ververst
 `deno check` plus 31 mocktests en ical.js-parse (08:00 Amsterdam = 06:00
 UTC in oktober), parse/balans/runtime-harnas op planning.html. Niet in de
 echte agenda-app getest na deze wijziging.
+
+## Wat er op 3 oktober 2026 gedaan is: kennisgevingen aan de klant en taken daarvoor (planning.html v0.15.0–v0.16.1)
+
+> Deze sectie is op 4 oktober achteraf geschreven uit het chat
+> "Automatische planningsnotificaties via Resend" en `CHANGELOG_planning.md`;
+> de SQL-bestanden en de Edge Function-bron staan niet in de repo.
+> Open punt: `planning_04/05/06_*.sql` en de `index.ts`-bestanden alsnog in
+> de repo en in `ernes-edge-functions` archiveren.
+
+**Wat het is.** Vanuit het planningsbord gaan drie korte mails naar de
+klant: de geplande maand (signaal vanaf de maandag na de eerste ingeplande
+uren), de week (vanaf twee weken vóór de startweek) en de startdag (de week
+ervoor). Versturen blijft handmatig, met de tekst in beeld. Afzender
+`planning@ernes.nl`, reply-to `info@ernes.nl`, bcc `administratie@ernes.nl`.
+Verschuift de start na een mail naar een andere periode, dan toont het bord
+dat oranje en maakt "opnieuw" een correctietekst (v0.16.1).
+
+**Onderdelen.**
+
+| Onderdeel | Wat | Bijzonderheden |
+|---|---|---|
+| `planning_04_kennisgevingen.sql` | kolommen `plan_projecten.contact_naam/contact_email`; tabel `plan_kennisgevingen` (yoobi_code, soort maand/week/dag, verzonden_op, overgeslagen, aan, aan_naam, door, periode_tekst, start_bij_verzending, onderwerp, tekst, resend_id) | RLS: authenticated alles, anon niets. Laatste rij per soort geldt |
+| `planning_05_aanhef.sql` | `plan_projecten.contact_aanspreekvorm` en `contact_achternaam` | heer/mevrouw/echtpaar/familie/zakelijk (v0.16.0) |
+| Edge Function `planning-kennisgeving` v2 | controleert body en login, mailt via Resend, schrijft de rij, werkt de contactpersoon bij | **Verify JWT AAN**. Ook v2 met de volledige mailhandtekening (v0.15.2) |
+| Edge Function `planning-kennisgeving-taken` v1.1 | rekent dezelfde signalen uit als het bord en zet per open signaal één taak in `taken` bij `maud`; sluit taken waarvan het signaal weg is; `?droog=1` schrijft niets | **Verify JWT UIT**, toegang via `x-aftap-key` (= `AFTAP_SECRET`). Taakvorm: `bron 'planning'`, `bron_ref` leeg (die kolom is uuid), `bron_kenmerk` `kennis-maand\|week\|dag:<Yoobi-code>` of `correctie-…:<code>`, `gepland_op` vandaag 08:00 |
+| `planning_06_taken_bron.sql` | `planning` in `taken_bron_check`; unieke index `taken_planning_open_uidx` op `bron_kenmerk` (open, niet vervallen); cronjob `planning-kennisgeving-taken-werkdagen` `35 6 * * 1-5` | vervangen op 4 oktober door brok 7, zie hieronder |
+
+**Signaalregels staan twee keer**: in planning.html brok 7 én in de
+functie `planning-kennisgeving-taken`. Wijzig je ze, wijzig dan beide.
+
+**Les van die dag.** Bij het deployen van een *nieuwe* functie in de
+Supabase-editor is de bestaande `planning-kennisgeving` per ongeluk
+overschreven met de code van de takenfunctie. Hersteld door v2 opnieuw te
+plakken. Voortaan vermeldt elke uitrolinstructie "New function" én de
+eerste coderegel waaraan je het juiste bestand herkent.
+
+## Wat er op 4 oktober 2026 gedaan is: kennisgevingstaak sluit meteen, ronde dagelijks (planning.html v0.18.0)
+
+**Aanleiding.** Zondag 4 oktober: de in de planning verstuurde
+aankondigingen bleven als taak bij Maud staan. De ronde die ze sluit
+draaide alleen ma–vr. Besluit Gian: meteen sluiten vanuit de planning én
+de ronde dagelijks.
+
+**Wat er veranderd is.**
+- `planning.html` v0.18.0: na versturen of overslaan zet
+  `kennisSluitTaak(code, soort)` direct `voltooid_op` op de open
+  planning-taak (`bron 'planning'`, `bron_kenmerk` in
+  `kennis-<soort>:<code>` / `correctie-<soort>:<code>`). Statusbalk meldt
+  " · taak in de taken-app gesloten" of "NIET gesloten (zie console)".
+  Faalt het, dan is de verzending toch gelukt en sluit de dagelijkse ronde
+  de taak alsnog.
+- `planning_07_taken_cron_dagelijks.sql`: job `…-werkdagen` weg,
+  `planning-kennisgeving-taken-dagelijks` met `35 6 * * *` erin, zelfde
+  aanroep. Drie controleregels.
+
+**Nog te bevestigen in het echt** (stond al open sinds 3 oktober): dat de
+afvinktrigger `trg_taak_melding_signaal` geen mail stuurt bij een
+`voltooid_op` zonder `afvink_melding`. De eerste keer versturen of overslaan
+na v0.18.0 is die test; de dagelijkse ronde van 5 oktober de tweede.

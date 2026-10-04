@@ -458,7 +458,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.17.1';
+const APP_VERSION = '0.18.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -2657,12 +2657,31 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
     (kennis[p.code] = kennis[p.code] || {})[soort] = { ...body, id: js.id, overgeslagen: false, verzonden_op: new Date().toISOString(), door, resend_id: js.resend_id };
     sluitKennisModaal();
     hertekenMetScroll();
-    toonStatus(js.vastgelegd === false ? 'Mail verstuurd, maar het vastleggen is mislukt: ' + (js.error || '') : KENNIS_NAAM[soort] + 'kennisgeving verstuurd aan ' + c.email, js.vastgelegd === false);
+    const nTaak = await kennisSluitTaak(p.code, soort); // v0.18.0
+    toonStatus(js.vastgelegd === false ? 'Mail verstuurd, maar het vastleggen is mislukt: ' + (js.error || '') : KENNIS_NAAM[soort] + 'kennisgeving verstuurd aan ' + c.email + kennisTaakTekst(nTaak), js.vastgelegd === false);
   } catch (e) {
     meld.textContent = 'Versturen mislukt: ' + (e.message || e) + (/404|405/.test(String(e.message || e)) ? ' — is de Edge Function planning-kennisgeving uitgerold?' : '');
     knop.disabled = false;
   }
 });
+// v0.18.0: sluit meteen de open taak in de taken-app die de cron
+// (Edge Function planning-kennisgeving-taken) voor dit signaal had gezet.
+// Vorm van die taak (v1.1 van de functie): bron 'planning', bron_kenmerk
+// 'kennis-<soort>:<Yoobi-code>' of 'correctie-<soort>:<Yoobi-code>'.
+// De cronronde blijft het vangnet (project verborgen, start voorbij).
+// Geeft het aantal gesloten taken terug, of -1 als het schrijven mislukte.
+async function kennisSluitTaak(code, soort) {
+  try {
+    const r = await sb.from('taken')
+      .update({ voltooid_op: new Date().toISOString() })
+      .eq('bron', 'planning').is('voltooid_op', null)
+      .in('bron_kenmerk', ['kennis-' + soort + ':' + code, 'correctie-' + soort + ':' + code])
+      .select('crmtaskid');
+    if (r.error) { console.warn('taak sluiten mislukt: ' + r.error.message); return -1; }
+    return r.data ? r.data.length : 0;
+  } catch (e) { console.warn('taak sluiten mislukt: ' + (e.message || e)); return -1; }
+}
+function kennisTaakTekst(n) { return n > 0 ? ' · taak in de taken-app gesloten' : n < 0 ? ' · taak in de taken-app NIET gesloten (zie console)' : ''; }
 async function kennisOverslaan(p, soort) {
   if (!confirm(KENNIS_NAAM[soort] + 'kennisgeving voor ' + p.klant + ' overslaan? Er gaat geen mail; het signaal verdwijnt.')) return;
   const start = projectStart(p);
@@ -2671,7 +2690,8 @@ async function kennisOverslaan(p, soort) {
   if (r.error) { toonStatus('Overslaan mislukt: ' + r.error.message + (/kennisgevingen/.test(r.error.message) ? ' — staat planning_04_kennisgevingen.sql er al?' : ''), true); return; }
   (kennis[p.code] = kennis[p.code] || {})[soort] = r.data && r.data[0] ? r.data[0] : { ...rij, verzonden_op: new Date().toISOString() };
   hertekenMetScroll();
-  toonStatus(KENNIS_NAAM[soort] + 'kennisgeving overgeslagen');
+  const nTaak = await kennisSluitTaak(p.code, soort); // v0.18.0
+  toonStatus(KENNIS_NAAM[soort] + 'kennisgeving overgeslagen' + kennisTaakTekst(nTaak));
 }
 
 async function laadData() {
