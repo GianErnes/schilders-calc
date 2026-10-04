@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 3 oktober 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 4 oktober 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -5553,3 +5553,21 @@ de ronde dagelijks.
 afvinktrigger `trg_taak_melding_signaal` geen mail stuurt bij een
 `voltooid_op` zonder `afvink_melding`. De eerste keer versturen of overslaan
 na v0.18.0 is die test; de dagelijkse ronde van 5 oktober de tweede.
+
+## Wat er op 4 oktober 2026 gedaan is: verf per verfsysteem op de werkbon, aan/uit-vinkjes ook daar (index.html v4.86.0)
+
+Gian wilde op de werkbon per hoofdgroep de totaal benodigde verf per
+verfsysteem, als bestelhulp bij de groothandel. Dat blok staat er nu
+onderaan, onder "Materiaal totaal voor project": per hoofdgroep elk
+verfsysteem met de hoeveelheid en de verf per materiaal. Nieuwe helper
+`_aggregeerVerfPerSysteem` in index.html, gevoed vanuit `printWerkbon`.
+
+Onderweg gemeten dat de werkbon de aan/uit-vinkjes negeerde: uitgezette
+regels, onderdelen en hoofdgroepen stonden op de bon en telden mee in
+materiaal en uren (de offerte filterde al sinds v3.84.2). Gerepareerd in
+dezelfde release. Wie dus vóór v4.86.0 verf bestelde op basis van een
+werkbon van een calculatie met uitgezette delen, bestelde te veel.
+
+Alleen index.html en CHANGELOG.md geraakt. Geen SQL, geen Edge Function,
+geen cronjob. Getest met Node-tests op de code uit het bestand (13
+geslaagd); nog niet op papier.

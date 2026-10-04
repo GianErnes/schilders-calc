@@ -1,3 +1,24 @@
+## v4.86.0 — Werkbon: verf per verfsysteem per hoofdgroep, aan/uit-vinkjes tellen nu ook op de werkbon (2026-10-04)
+
+**Aanleiding**
+- Gian 04-10-2026: wil op de werkbon per hoofdgroep de totaal benodigde verf per verfsysteem zien, zodat hij bij de groothandel makkelijk per verfsysteem kan bestellen. De werkbon had materiaal per regel, per onderdeel en als projecttotaal per materiaalgroep, maar nergens de sleutel verfsysteem en nergens het niveau hoofdgroep (`printWerkbon`, live regel 16376–16514 van v4.85.1).
+- Bijvangst, eerst als vermoeden uit code lezen en daarna gemeten met een Node-test op de code uit het live bestand: `printWerkbon` en `_aggregeerMateriaalVerbruik` controleerden niet op `_isActief`, en de uren gebruikten `calcOnderdeelTotalenOrigineel`/`calcProjectTotalenOrigineel` die alles meetellen. Synthetische calc met één uitgezette regel, één uitgezet onderdeel en één uitgezette hoofdgroep: projecttotaal grondverf 13,900 ltr waar 3,400 hoort, en de uitgezette hoofdgroep stond op de bon. De offerte filterde al sinds v3.84.2; de bestellijst op de werkbon kwam dus te hoog uit.
+
+**Gebouwd**
+- Nieuw blok "Verf per verfsysteem" onderaan de werkbon, tussen "Materiaal totaal voor project" en "Verfsystemen — opbouw". Per hoofdgroep: elk verfsysteem met totale hoeveelheid in de systeemeenheid, het aantal regels, en daaronder per materiaal het verbruik. Grootste systeem eerst. Basisverbruik zonder staat-toeslag, identiek aan de bestaande materiaaltabellen.
+- Nieuwe helper `_aggregeerVerfPerSysteem(hoofdgroepen)`. Sleutel per systeem = `systeemId` + recept-handtekening van de stappen (bewerking, percentage, materiaalId, verbruik), zodat een regel met overschreven materiaal of percentage een eigen variant wordt, zoals bij `_groepeerUniekeVerfsystemen`. Regels met hoeveelheid 0 of zonder stappen tellen niet mee; een systeem zonder gekoppeld materiaal krijgt de melding "Geen materiaal aan de stappen gekoppeld".
+- Werkbon volgt nu de aan/uit-vinkjes: uitgezette hoofdgroepen, onderdelen en regels staan er niet meer op en tellen niet mee in materiaal (per onderdeel, projecttotaal, nieuw blok) en uren (nu `calcOnderdeelTotalen`/`calcProjectTotalen`). Het blok "Verfsystemen — opbouw" volgt vanzelf, want dat wordt gevuld uit dezelfde loop.
+- Keuzes van Gian: alleen een projecttotaal onderaan (niet ook een blok na elke hoofdgroep); bestaande materiaaltabellen per regel en onderdeel blijven staan.
+
+**Niet gewijzigd**
+- Berekening van verbruik, uren en prijzen. Calculatie-PDF, offerte, meetstaat (incl. "Project-totaal per regel-type"). Geen SQL, geen deploy.
+
+**Getest**
+- Node-parse van het inline script, CSS 607/607, div-balans gelijk aan live (verschil +3, als voorheen), scripttags 6/6, vijf ankers coherent. 13 runtime-tests op code direct uit het gepatchte bestand met synthetische calc: uitgezette hg/od/regel weg van de bon; grondverf projecttotaal 3,400; twee hoofdgroepen in volgorde; totalen per systeem (30 m² → 3,000/2,400 ltr; 40 m² → 10 ltr); sortering grootste eerst; variant bij afwijkend percentage; systeem zonder materiaal; lege calc; hoeveelheid 0; uren per onderdeel alleen actieve regels.
+
+**Niet getest**
+- In de browser/op papier: lay-out en pagina-afbreking van het nieuwe blok op een echte calculatie. Dat is de eerste stap na uitrol: Archiveren → Werkbon op een project met twee hoofdgroepen en één uitgezette regel.
+
 ## v4.85.1 — Naar Craft: beeldresultaat zichtbaar in de slotmelding, venster bij mislukte afbeeldingen (2026-10-02)
 
 **Aanleiding**
