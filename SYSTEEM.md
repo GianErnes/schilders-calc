@@ -106,7 +106,7 @@ aangelegd met `planning_01_tabellen.sql` (twintig controleregels, alle
 GOED). Op 7 september kwam `plan_verlof` erbij (verlof per medewerker per
 dag, `planning_02_verlof.sql`, vijf controleregels GOED) en `plan_fasen`
 (project in fasen knippen, `planning_04_fasen.sql`) en `plan_middelen`
-(hulpmiddelen per project of fase, `planning_05_middelen.sql`). Die getallen zijn opgeteld bij de meting van 2 augustus en niet
+(hulpmiddelen per project of fase, `planning_05_middelen.sql`). Op 4 oktober 2026 kreeg `plan_projecten` de kolom `toon_ondanks_regel` (`planning_06_paraplu.sql`): overrule op de naamregel in `planning.html` v0.17.0 die hoofdprojecten "Onderhoudsplan jjjj-jjjj" standaard van het bord houdt. Die getallen zijn opgeteld bij de meting van 2 augustus en niet
 opnieuw geteld.
 
 > **Twee triggertellingen spreken elkaar tegen.** Hier staat 14, de

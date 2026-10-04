@@ -373,7 +373,7 @@
       <div class="kaart" id="verborgenKaart" style="display:none">
         <h2>Verborgen projecten</h2>
         <ul class="zonder" id="verborgenLijst"></ul>
-        <div class="voetnoot">Verborgen projecten staan niet op het bord. Klik "toon" om ze terug te zetten.</div>
+        <div class="voetnoot">Verborgen projecten staan niet op het bord. Klik "toon" om ze terug te zetten. "regel" = hoofdproject met deelprojecten (naam Onderhoudsplan jjjj-jjjj), standaard verborgen.</div>
       </div>
       <div class="kaart" id="overKaart" style="display:none">
         <h2>Over datum, niet op dit bord</h2>
@@ -458,7 +458,31 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.16.2';
+const APP_VERSION = '0.17.0';
+
+// ---------- paraplu-projecten (v0.17.0) ----------
+// Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
+// "Van Gessel | Onderhoudsplan 2026-2032". Die staan standaard niet op het bord en niet
+// in "Nog geen datum"; wel in "Verborgen projecten" (label "regel") met knop "toon".
+// Regel (Gian, 04-10-2026): de naam bevat "onderhoudsplan" gevolgd door twee jaartallen
+// met een streepje ertussen. Eén jaartal (het deelproject "Onderhoudsplan 2027") telt niet.
+const PARAPLU_REGEL = /onderhoudsplan\D{0,5}(19|20)\d{2}\s*[-–—\/]\s*(19|20)\d{2}/i;
+function isParaplu(p) { return !!(p && PARAPLU_REGEL.test(String(p.naam || ''))); }
+// Eén plek die zegt of een project van bord en kaarten af is.
+// zichtbaar === false        → bewust verborgen (knop "Verbergen").
+// paraplu zonder overrule    → verborgen door de regel; plan_projecten.toon_ondanks_regel = true haalt hem terug.
+// Oude rijen zonder de kolom toon_ondanks_regel (SQL nog niet gedraaid) gelden als "geen overrule".
+function isVerborgen(p) {
+  if (!p || !p.code) return false;
+  const pl = planProjecten[p.code];
+  if (pl && pl.zichtbaar === false) return true;
+  if (isParaplu(p) && !(pl && pl.toon_ondanks_regel === true)) return true;
+  return false;
+}
+function verborgenDoorRegel(p) {
+  const pl = planProjecten[p.code];
+  return isParaplu(p) && !(pl && pl.zichtbaar === false) && !(pl && pl.toon_ondanks_regel === true);
+}
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -659,8 +683,7 @@ function rijenOpBord() {
   const rijen = [];
   for (const p of stand.projecten) {
     if (!p.code) continue;
-    const pl = planProjecten[p.code];
-    if (pl && pl.zichtbaar === false) continue;
+    if (isVerborgen(p)) continue;
     const fs = fasenVan(p.code);
     if (fs.length) for (const f of fs) rijen.push({ p, d: faseDatums(p, f), f });
     else rijen.push({ p, d: projDatums(p), f: null });
@@ -681,7 +704,8 @@ function rijenOpBord() {
 function vindFase(code, faseId) { return fasenVan(code).find(f => f.id === faseId) || null; }
 function projectenZonderDatum() {
   if (!stand) return [];
-  return stand.projecten.filter(p => p.code && !projDatums(p).start);
+  // v0.17.0: verborgen projecten (knop of paraplu-regel) horen hier niet; stonden er tot 0.16.2 wel.
+  return stand.projecten.filter(p => p.code && !projDatums(p).start && !isVerborgen(p));
 }
 function vindProject(code) {
   return stand ? stand.projecten.find(p => p.code === code) : null;
@@ -712,8 +736,7 @@ function projectenOverDatum() {
   const v = naarIso(new Date());
   return stand.projecten.filter(p => {
     if (!p.code) return false;
-    const pl = planProjecten[p.code];
-    if (pl && pl.zichtbaar === false) return false;
+    if (isVerborgen(p)) return false;
     return isOverDatum(p, v);
   });
 }
@@ -1125,8 +1148,12 @@ function tekenZonderDatum() {
   const kaart = document.getElementById('zonderKaart');
   kaart.style.display = lijst.length ? '' : 'none';
   document.getElementById('zonderLijst').innerHTML = lijst.map(p =>
-    '<li><span class="k">' + esc(p.klant) + '</span>' + esc(p.naam) + ' <span class="num" style="color:var(--muted)">' + fmtUur(p.begrote_uren) + ' u</span></li>').join('');
+    '<li><span><span class="k">' + esc(p.klant) + '</span>' + esc(p.naam) + ' <span class="num" style="color:var(--muted)">' + fmtUur(p.begrote_uren) + ' u</span></span>' +
+    '<button class="knop klein" data-verberg="' + esc(p.code) + '" title="Van het bord en uit deze lijst halen; terug te vinden onder Verborgen projecten">verberg</button></li>').join('');
 }
+document.getElementById('zonderLijst').addEventListener('click', e => {
+  const b = e.target.closest('button[data-verberg]'); if (b) zetZichtbaar(b.dataset.verberg, false);
+});
 
 function tekenPaneel() {
   const el = document.getElementById('projectKaart');
@@ -1715,22 +1742,27 @@ document.getElementById('vlLijst').addEventListener('click', e => {
 });
 
 // ---------- project verbergen / tonen ----------
+// v0.17.0: bij een paraplu-project (naamregel) stuurt "toon" de overrule toon_ondanks_regel,
+// en zet "verbergen" die overrule weer uit. Bij een gewoon project blijft het zichtbaar ja/nee.
 async function zetZichtbaar(code, zichtbaar) {
+  const p = vindProject(code);
+  const velden = { yoobi_code: code, zichtbaar };
+  if (isParaplu(p)) { velden.zichtbaar = true; velden.toon_ondanks_regel = zichtbaar; }
   try {
-    const r = await sb.from('plan_projecten').upsert({ yoobi_code: code, zichtbaar }, { onConflict: 'yoobi_code' }).select();
+    const r = await sb.from('plan_projecten').upsert(velden, { onConflict: 'yoobi_code' }).select();
     if (r.error) throw r.error;
-    planProjecten[code] = (r.data && r.data[0]) || { ...(planProjecten[code] || {}), yoobi_code: code, zichtbaar };
+    planProjecten[code] = (r.data && r.data[0]) || { ...(planProjecten[code] || {}), ...velden };
     if (!zichtbaar) { uitgeklapt.delete(code); if (actiefCode === code) actiefCode = null; }
     toonStatus(zichtbaar ? 'Project weer op het bord' : 'Project verborgen');
   } catch (e) { toonStatus('Opslaan mislukt: ' + (e.message || e), true); }
   hertekenMetScroll();
 }
 function tekenVerborgen() {
-  const lijst = stand ? stand.projecten.filter(p => p.code && planProjecten[p.code] && planProjecten[p.code].zichtbaar === false) : [];
+  const lijst = stand ? stand.projecten.filter(p => p.code && isVerborgen(p)) : [];
   const kaart = document.getElementById('verborgenKaart');
   kaart.style.display = lijst.length ? '' : 'none';
   document.getElementById('verborgenLijst').innerHTML = lijst.map(p =>
-    '<li><span><span class="k">' + esc(p.klant) + '</span>' + esc(p.naam) + '</span><button class="knop klein" data-toon="' + esc(p.code) + '">toon</button></li>').join('');
+    '<li><span><span class="k">' + esc(p.klant) + (verborgenDoorRegel(p) ? ' · <span title="Hoofdproject met deelprojecten (naam Onderhoudsplan jjjj-jjjj); standaard van het bord">regel</span>' : '') + '</span>' + esc(p.naam) + '</span><button class="knop klein" data-toon="' + esc(p.code) + '">toon</button></li>').join('');
 }
 document.getElementById('verborgenLijst').addEventListener('click', e => {
   const b = e.target.closest('button[data-toon]'); if (b) zetZichtbaar(b.dataset.toon, true);
@@ -2301,8 +2333,7 @@ function kennisStatus(p) {
   const start = projectStart(p);
   const vandaag = new Date(); vandaag.setHours(0, 0, 0, 0);
   const k = kennis[p.code] || {};
-  const pl = planProjecten[p.code];
-  const verborgen = !!(pl && pl.zichtbaar === false);
+  const verborgen = isVerborgen(p);
   const uit = {};
   for (const soort of KENNIS_SOORTEN) {
     const rij = k[soort] || null;

@@ -1,5 +1,24 @@
 # CHANGELOG planning.html
 
+## v0.17.0 — Paraplu-projecten standaard van het bord, "verberg" in "Nog geen datum", 04-10-2026
+
+**Aanleiding.** Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen (bijvoorbeeld *Van Gessel | Onderhoudsplan 2026-2032*) stonden op het bord en in de kaart "Nog geen datum in Yoobi", terwijl het werk in de deelprojecten zit. Gian koos op 04-10-2026 voor herkenning op de naam, met handmatig tonen/verbergen als overrule (route 2 via Yoobi `includeMainOrSubProject=1` blijft mogelijk voor later; de verkenning daarvoor is nog niet gedraaid).
+
+**Regel.** `PARAPLU_REGEL`: de projectnaam bevat "onderhoudsplan" gevolgd door twee jaartallen met een streepje (ook –, — of /) ertussen. Eén jaartal, zoals het deelproject "Onderhoudsplan 2027", telt niet. Volgens Gian is de naam van een hoofdproject altijd zo opgebouwd.
+
+**Gebouwd.**
+- Eén functie `isVerborgen(p)`: bewust verborgen (`zichtbaar === false`) óf paraplu zonder overrule. Gebruikt in `rijenOpBord`, `projectenOverDatum`, `kennisStatus`, `tekenVerborgen` en nu ook in `projectenZonderDatum` — die laatste negeerde de verberg-vlag (bug sinds het begin: een verborgen project bleef in "Nog geen datum" staan).
+- Kaart "Verborgen projecten" toont ook de regel-verborgen hoofdprojecten, met label "regel" en muistip; knop "toon" werkt voor beide. Voetnoot aangevuld.
+- Kaart "Nog geen datum in Yoobi": knop "verberg" per regel (zelfde `zetZichtbaar`).
+- `zetZichtbaar` onderscheidt nu: paraplu → `toon_ondanks_regel` aan/uit (zichtbaar blijft true); gewoon project → `zichtbaar` zoals voorheen. "Verbergen" in het projectpaneel zet bij een teruggehaalde paraplu de overrule dus weer uit.
+- Nieuwe kolom `plan_projecten.toon_ondanks_regel boolean not null default false` via `planning_06_paraplu.sql` (één controleregel). Oude rijen en standen zonder de kolom gelden als "geen overrule"; de app leest `=== true`, dus niets breekt als de SQL nog niet is gedraaid — alleen "toon" op een hoofdproject geeft dan "Opslaan mislukt" (kolom bestaat niet).
+
+**Niet gewijzigd.** Sync `fin-werkvoorraad-sync`, Edge Function `planning-ics` (aanname: leest `plan_uren`; hoofdprojecten hebben geen uren), deelprojecten (eigen Yoobi-code, blijven gewoon staan).
+
+**Getest.** Node-parse; 14 runtime-tests op `isParaplu`/`isVerborgen`/`verborgenDoorRegel` (Gessel-naam, en-dash, kleine letters, één jaartal niet, "2027 Controlebeurt" niet, jaartallen zonder het woord niet, leeg; zonder rij, rij met default true, overrule true/false, expliciet verborgen wint); div-balans 127/127 en CSS-balans 876/876 gelijk aan live v0.16.2.
+
+**Niet getest.** In de browser tegen de echte stand. Te controleren door Gian: Gessel verdwijnt van bord en uit "Nog geen datum" en staat onder "Verborgen projecten" met "regel"; "toon" haalt hem terug (na de SQL); de deelprojecten staan er nog; "verberg" in "Nog geen datum" werkt.
+
 ## v0.16.2 — Voetrijen "Nog te plannen per dag" bij eerste openen allemaal zichtbaar, 04-10-2026
 
 **Aanleiding.** Melding van Gian: bij nieuw openen van de planning is onderaan meestal maar één rij van "Nog te plannen per dag" zichtbaar (alleen Jens); na een willekeurige klik die het bord hertekent staan alle rijen er wel.
