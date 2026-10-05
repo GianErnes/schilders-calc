@@ -1,3 +1,22 @@
+## v4.87.0 — Werkbon: vervallen delen van een vergrendelde calculatie blijven zichtbaar, doorgestreept met label (2026-10-05)
+
+**Aanleiding**
+- Gian 05-10-2026, als vervolg op v4.86.0: "geldt dus niet voor reeds geaccordeerde calculaties hè?" Gemeten in de code: de aan/uit-vinkjes blijven bewust werken op een vergrendelde calculatie (CSS-uitzondering `#calculatie.is-locked input.actief-toggle`, v3.11.0, "onderhandel-scenario's in geaccepteerde offertes"). Sinds v4.86.0 verdween een uitgezet deel daardoor ook van de werkbon van een geaccordeerde calc, zonder spoor. Gians keuze: niet de vinkjes op slot, maar de werkbon toont ze als vervallen.
+
+**Gebouwd**
+- `printWerkbon`: is de calculatie vergrendeld (`_isCalcLocked`: elke status behalve concept/afspraak), dan blijven uitgezette hoofdgroepen, onderdelen en regels op de bon staan, volledig (kop, hoeveelheid, uren, materiaaltabel) maar grijs en doorgestreept, met label "⊘ vervallen na akkoord" bij status geaccepteerd en "⊘ uitgezet, niet in offerte" bij gereed/verzonden/verloren. In concept/afspraak blijven uitgezette delen weg, zoals in v4.86.0.
+- Vervallen delen tellen nergens mee: niet in uren per onderdeel en project, niet in materiaal per onderdeel en project, niet in "Verf per verfsysteem" en niet in "Verfsystemen — opbouw". Een vervallen onderdeel krijgt geen uren-/materiaalsubtotaal.
+- Nieuwe print-CSS: `.wb-vervallen`, `.wb-strike`, `.wb-verval-label`.
+
+**Niet gewijzigd**
+- De vinkjes zelf en hun effect op het dashboardbedrag (`_syncCalcTotalToDB`). Offerte, calculatie-PDF, meetstaat. Geen SQL, geen deploy.
+
+**Getest**
+- Node-parse, CSS 610/610, div-balans gelijk aan live, scripttags 6/6, vijf ankers coherent. 20 runtime-tests op code uit het gepatchte bestand: concept/afspraak/geen status → weg en geen label; geaccepteerd/gereed/verzonden → zichtbaar met juist label, drie labels, totalen ongewijzigd (3,400 ltr), geen subtotaal voor vervallen onderdeel, recept-opbouw zonder vervallen groep; verloren → label uitgezet; geaccepteerd zonder uitgezette delen → geen label of wrapper. Daarnaast de werkbon-HTML met de echte app-CSS gerenderd in headless Chromium (print-media) en de screenshot bekeken: doorstreping, grijs en labels kloppen.
+
+**Niet getest**
+- Op de iPad/printer vanuit de app zelf (Archiveren → Werkbon op een geaccordeerde calc met een uitgezette regel).
+
 ## v4.86.0 — Werkbon: verf per verfsysteem per hoofdgroep, aan/uit-vinkjes tellen nu ook op de werkbon (2026-10-04)
 
 **Aanleiding**

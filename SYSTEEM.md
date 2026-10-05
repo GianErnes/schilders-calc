@@ -7,7 +7,7 @@ Schilders in elkaar zit. Het is geschreven voor drie soorten lezers: Gian
 zelf als er iets stukgaat, Max of Maud als Gian onbereikbaar is, en een
 buitenstaander die het ooit koud moet overnemen.
 
-Opgesteld 26 juli 2026, laatst bijgewerkt 4 oktober 2026. Alle zes
+Opgesteld 26 juli 2026, laatst bijgewerkt 5 oktober 2026. Alle zes
 hoofdstukken zijn ingevuld.
 
 > **De enige regel die dit document in leven houdt**
@@ -5571,3 +5571,14 @@ werkbon van een calculatie met uitgezette delen, bestelde te veel.
 Alleen index.html en CHANGELOG.md geraakt. Geen SQL, geen Edge Function,
 geen cronjob. Getest met Node-tests op de code uit het bestand (13
 geslaagd); nog niet op papier.
+
+## Wat er op 5 oktober 2026 gedaan is: vervallen delen op de werkbon (index.html v4.87.0)
+
+Vervolg op v4.86.0. De aan/uit-vinkjes werken met opzet ook op een
+vergrendelde calculatie (v3.11.0), dus een uitgezet deel verdween sinds
+v4.86.0 ook spoorloos van de werkbon van een geaccordeerd werk. Nu blijft
+het staan, grijs en doorgestreept, met label "vervallen na akkoord"
+(geaccepteerd) of "uitgezet, niet in offerte" (gereed/verzonden/verloren);
+in concept/afspraak blijft het weg. Telt nergens mee. Alleen `printWerkbon`
+en wat print-CSS in index.html; geen SQL, geen Edge Function. 20 Node-tests
+plus een headless-Chromium-render van de bon.

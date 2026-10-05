@@ -2075,6 +2075,14 @@
     .print-only .section-flow table { page-break-inside: auto; }
     .print-only .section-flow thead { display: table-header-group; }
     .print-only .section-flow tr { page-break-inside: avoid; }
+    /* v4.87.0 — vervallen delen op de werkbon (uitgezet in een vergrendelde calculatie) */
+    .print-only .wb-vervallen { color: #999 !important; }
+    .print-only .wb-vervallen .wb-strike,
+    .print-only .wb-vervallen .wb-strike * { text-decoration: line-through; color: #999 !important; }
+    .print-only .wb-verval-label {
+      display: inline-block; font-size: 8pt; font-weight: bold; color: #a33 !important;
+      border: 1pt solid #a33; border-radius: 3pt; padding: 0 4pt; margin-left: 6pt; vertical-align: middle;
+    }
     .print-only .header-block {
       display: flex;
       justify-content: space-between;
@@ -2376,8 +2384,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.86.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.87.0</h2>
       <div class="intro-body">
+        <p><strong>⊘ Vervallen delen blijven zichtbaar op de werkbon van een vergrendelde calculatie (v4.87.0).</strong> Zet je in een calculatie met status gereed, verzonden of geaccepteerd een regel, onderdeel of hoofdgroep uit met het vinkje, dan verdween die sinds v4.86.0 helemaal van de werkbon. Nu blijft hij staan, grijs en doorgestreept, met het label "vervallen na akkoord" (bij geaccepteerd) of "uitgezet, niet in offerte" (bij gereed/verzonden). Zo ziet de schilder wat erbij hoorde maar niet doorgaat, en zie je zelf dat er aan een geaccordeerde calculatie iets is uitgezet. Vervallen delen tellen nergens mee: niet in uren, niet in materiaal, niet in "Verf per verfsysteem" en niet in de recept-opbouw. In concept en afspraak blijven uitgezette delen gewoon weg. Geen SQL, geen deploy.</p>
         <p><strong>🪣 Verf per verfsysteem op de werkbon, en de aan/uit-vinkjes tellen nu ook daar (v4.86.0).</strong> Onderaan de werkbon staat een nieuw blok "Verf per verfsysteem": per hoofdgroep zie je elk verfsysteem met de totale hoeveelheid vierkante of strekkende meters en daaronder de verf die daarvoor nodig is per materiaal. Zo lees je bij de groothandel in één oogopslag hoeveel grondverf en lak je voor het buitenhoutwerk nodig hebt, los van het binnenwerk. Een regel met een afwijkend materiaal of percentage staat als eigen variant. Daarnaast een correctie: zette je een regel, onderdeel of hoofdgroep uit met het vinkje, dan stond die tot nu toe gewoon op de werkbon en telde mee in materiaal en uren, terwijl de offerte hem al wegliet. De werkbon volgt nu dezelfde regel, dus de bestellijst klopt weer met wat je echt gaat doen. De bestaande materiaaltabellen per regel, onderdeel en project blijven staan. Geen SQL, geen deploy.</p>
         <p><strong>👁️ Naar Craft laat nu zien wat er met de foto's gebeurde (v4.85.1).</strong> De melding over de afbeeldingen werd tot nu toe binnen een tel overschreven door "Werkvoorbereiding naar Craft gestuurd", zodat je nooit kon zien of de foto's en kozijnen waren aangekomen. Nu staat het in één slotmelding, bijvoorbeeld "Tekst in Craft · 4 van 4 foto's, 2 van 2 kozijnen". Kon een foto niet worden omgezet of weigerde Craft een upload, dan krijg je een venster met per foto de reden en het antwoord van Craft. Vlak voor het versturen worden ook alle fotolinks vers opgehaald, zodat een verlopen link geen stille oorzaak meer kan zijn. Aan de verzending zelf is niets veranderd. Geen SQL, geen deploy.</p>
         <p><strong>🚦 Materiaalaandeel in drie kleuren (v4.85.0).</strong> Het percentage uit v4.84.0 staat nu altijd in de regelkop en op het totaalpaneel, als stoplicht: groen tot en met 20%, oranje tot en met 30%, rode vette letters daarboven. Zo springt een regel die echt uit de bocht vliegt er direct uit, en zie je in één oogopslag dat de rest in orde is. Rekenbasis ongewijzigd. Geen SQL, geen deploy.</p>
@@ -3764,7 +3773,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.86.0';
+const APP_VERSION = 'v4.87.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4181,6 +4190,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.87.0', d: '2026-10-05', h: 'Werkbon van een vergrendelde calculatie toont uitgezette regels, onderdelen en hoofdgroepen grijs en doorgestreept met label "vervallen na akkoord" of "uitgezet, niet in offerte"; ze tellen nergens mee. In concept blijven ze weg.' },
   { v: '4.86.0', d: '2026-10-04', h: 'Werkbon: nieuw blok Verf per verfsysteem (per hoofdgroep de hoeveelheid per systeem en de verf per materiaal); uitgezette regels, onderdelen en hoofdgroepen tellen op de werkbon niet meer mee.' },
   { v: '4.85.1', d: '2026-10-02', h: 'Naar Craft: het resultaat van foto\'s en kozijnen blijft zichtbaar in de slotmelding; bij mislukte afbeeldingen een venster met de reden per foto en de antwoorden van Craft.' },
   { v: '4.85.0', d: '2026-10-02', h: 'Materiaalaandeel als stoplicht: altijd zichtbaar, groen ≤ 20%, oranje ≤ 30%, rood daarboven, in regelkop en totaalpaneel.' },
@@ -16403,44 +16413,62 @@ function printWerkbon() {
   // v3.94.0 — verzamel regels-met-stappen voor het opbouw-blok onderaan
   const _wbSpecRegels = [];
   // Loop hoofdgroepen → onderdelen → regels
-  // v4.86.0 — uitgezette hoofdgroepen, onderdelen en regels (aan/uit-vinkje) staan niet op de
-  // werkbon en tellen niet mee in materiaal en uren. De offerte deed dat al sinds v3.84.2;
-  // de werkbon telde tot nu toe alles, waardoor de bestellijst te hoog uitkwam.
+  // v4.86.0 — uitgezette hoofdgroepen, onderdelen en regels (aan/uit-vinkje) tellen niet mee
+  // in materiaal en uren. De offerte deed dat al sinds v3.84.2.
+  // v4.87.0 — In concept/afspraak blijven uitgezette delen weg van de bon. Is de calculatie
+  // vergrendeld (gereed/verzonden/geaccepteerd/verloren), dan staan ze er wél op: grijs en
+  // doorgestreept met een label, zodat de schilder ziet wat erbij hoorde maar niet doorgaat.
+  // De vinkjes zelf blijven werken op een vergrendelde calc (v3.11.0); alleen de weergave wijzigt.
   const _wbOdRegels = od => _isActief(od) ? (od.regels || []).filter(_isActief) : [];
+  const _wbToonVervallen = _isCalcLocked(c);
+  const _wbVervalTekst = c.status === 'geaccepteerd' ? 'vervallen na akkoord' : 'uitgezet, niet in offerte';
+  const _wbVervalLabel = `<span class="wb-verval-label">⊘ ${_wbVervalTekst}</span>`;
   c.hoofdgroepen.forEach(hg => {
-    if (!_isActief(hg)) return;
+    const hgAan = _isActief(hg);
+    if (!hgAan && !_wbToonVervallen) return;
     if (!hg.onderdelen || !hg.onderdelen.length) return;
-    const heeftRegels = hg.onderdelen.some(od => _wbOdRegels(od).length);
+    const heeftRegels = hg.onderdelen.some(od => hgAan ? (_wbToonVervallen ? (od.regels || []).length : _wbOdRegels(od).length) : (od.regels || []).length);
     if (!heeftRegels) return;
-    html += `<h2>${hg.naam}</h2>`;
+    if (!hgAan) html += `<div class="wb-vervallen">`;
+    html += `<h2>${hgAan ? hg.naam : `<span class="wb-strike">${hg.naam}</span>${_wbVervalLabel}`}</h2>`;
     hg.onderdelen.forEach(od => {
-      const _odRegels = _wbOdRegels(od);
-      if (!_odRegels.length) return;
-      html += `<h3>${od.naam}</h3>`;
-      _odRegels.forEach(r => {
+      const odAan = hgAan && _isActief(od);
+      if (!odAan && !_wbToonVervallen) return;
+      const _odAlle = (od.regels || []);
+      const _odRegels = odAan ? _wbOdRegels(od) : [];
+      const _odToon = _wbToonVervallen ? _odAlle : _odRegels;
+      if (!_odToon.length) return;
+      if (hgAan && !odAan) html += `<div class="wb-vervallen">`;
+      html += `<h3>${odAan || !hgAan ? od.naam : `<span class="wb-strike">${od.naam}</span>${_wbVervalLabel}`}</h3>`;
+      _odToon.forEach(r => {
+        const rAan = odAan && _isActief(r);
+        if (odAan && !rAan) html += `<div class="wb-vervallen">`;
         // Sub-titel: regelnaam — verfsysteemnaam, met hoeveelheid eronder
         const regelLabel = (r.naam && r.naam.trim()) ? r.naam : '—';
         html += `<div style="margin-top:8pt; margin-bottom:3pt;">
-          <strong style="font-size:10.5pt;">${regelLabel}</strong>
-          <span style="color:#666;"> — ${r.systeemNaam || '<em>onbekend systeem</em>'}</span>
+          <span class="wb-strike"><strong style="font-size:10.5pt;">${regelLabel}</strong>
+          <span style="color:#666;"> — ${r.systeemNaam || '<em>onbekend systeem</em>'}</span></span>${odAan && !rAan ? _wbVervalLabel : ''}
         </div>`;
-        html += `<div style="font-size:10pt; color:#333; margin-bottom:4pt;">
+        html += `<div class="wb-strike" style="font-size:10pt; color:#333; margin-bottom:4pt;">
           <strong>${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</strong>${r.toeslag ? ` · ${r.toeslag}% staat-toeslag` : ''} · <strong>${fmt1(calcRegelTotalen(r).uren * _urenFactor)} u</strong>
         </div>`;
         // v3.94.0 — stappen niet meer per regel; recept staat één keer in het opbouw-blok onderaan
-        if (r.stappen && r.stappen.length) _wbSpecRegels.push({ r, hgNaam: hg.naam, odNaam: od.naam });
+        if (rAan && r.stappen && r.stappen.length) _wbSpecRegels.push({ r, hgNaam: hg.naam, odNaam: od.naam });
         // Materiaal-overzicht voor deze regel (kleurzone-niveau)
         const matRowsRegel = _aggregeerMateriaalVerbruik([r]);
         if (matRowsRegel.length) {
           const regelLabelMat = (r.naam && r.naam.trim()) ? r.naam : r.systeemNaam || 'regel';
-          html += `<div style="margin-top:4pt; font-size:8.5pt; color:#777; padding-left:8pt; border-left:2pt solid #ddd;">
+          html += `<div class="wb-strike" style="margin-top:4pt; font-size:8.5pt; color:#777; padding-left:8pt; border-left:2pt solid #ddd;">
             <em>Materiaal voor ${regelLabelMat}:</em>
           </div>`;
-          html += `<div style="padding-left:8pt; border-left:2pt solid #ddd;">`;
+          html += `<div class="wb-strike" style="padding-left:8pt; border-left:2pt solid #ddd;">`;
           html += _renderMateriaalTabel(matRowsRegel, { metGroepen: false });
           html += `</div>`;
         }
+        if (odAan && !rAan) html += `</div>`;
       });
+      if (hgAan && !odAan) html += `</div>`;
+      if (!odAan) return; // v4.87.0 — geen subtotalen voor een vervallen onderdeel
       // v3.92.0 — productieve uren-subtotaal voor dit onderdeel
       const _odUren = calcOnderdeelTotalen(od).uren * _urenFactor; // v4.86.0 — alleen actieve regels
       if (_odUren > 0) {
@@ -16462,6 +16490,7 @@ function printWerkbon() {
         html += `</div>`;
       }
     });
+    if (!hgAan) html += `</div>`;
   });
 
   // Projecttotaal materiaal — boodschappenlijst (alle regels van alle onderdelen)
