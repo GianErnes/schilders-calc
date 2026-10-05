@@ -2384,8 +2384,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.87.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.88.0</h2>
       <div class="intro-body">
+        <p><strong>🏗️ Naar Craft stuurt nu ook de werkbon mee, als PDF onder het kopje Documenten (v4.88.0).</strong> Eén druk op Naar Craft levert voortaan tekst, foto's, kozijntekeningen én de werkbon op. De werkbon wordt in de app als PDF gemaakt (dezelfde weergave als Archiveren → Werkbon, inclusief Verf per verfsysteem en eventuele vervallen delen) en in het Craft-document als bestand "Werkbon &lt;projectnaam&gt; &lt;datum&gt;.pdf" onder het kopje Documenten gezet. De slotmelding zegt erbij of de werkbon is aangekomen; lukt het niet, dan krijg je een venster met de reden en gaan tekst en afbeeldingen gewoon door. De PDF is een rasterweergave (niet doorzoekbaar, wel scherp), net als de planbijlage. Hiervoor is een nieuwe versie van de Edge Function craft-werkvoorbereiding nodig; zonder die versie meldt de app "werkbon verstuurd, geen bevestiging van Craft". Geen SQL.</p>
         <p><strong>⊘ Vervallen delen blijven zichtbaar op de werkbon van een vergrendelde calculatie (v4.87.0).</strong> Zet je in een calculatie met status gereed, verzonden of geaccepteerd een regel, onderdeel of hoofdgroep uit met het vinkje, dan verdween die sinds v4.86.0 helemaal van de werkbon. Nu blijft hij staan, grijs en doorgestreept, met het label "vervallen na akkoord" (bij geaccepteerd) of "uitgezet, niet in offerte" (bij gereed/verzonden). Zo ziet de schilder wat erbij hoorde maar niet doorgaat, en zie je zelf dat er aan een geaccordeerde calculatie iets is uitgezet. Vervallen delen tellen nergens mee: niet in uren, niet in materiaal, niet in "Verf per verfsysteem" en niet in de recept-opbouw. In concept en afspraak blijven uitgezette delen gewoon weg. Geen SQL, geen deploy.</p>
         <p><strong>🪣 Verf per verfsysteem op de werkbon, en de aan/uit-vinkjes tellen nu ook daar (v4.86.0).</strong> Onderaan de werkbon staat een nieuw blok "Verf per verfsysteem": per hoofdgroep zie je elk verfsysteem met de totale hoeveelheid vierkante of strekkende meters en daaronder de verf die daarvoor nodig is per materiaal. Zo lees je bij de groothandel in één oogopslag hoeveel grondverf en lak je voor het buitenhoutwerk nodig hebt, los van het binnenwerk. Een regel met een afwijkend materiaal of percentage staat als eigen variant. Daarnaast een correctie: zette je een regel, onderdeel of hoofdgroep uit met het vinkje, dan stond die tot nu toe gewoon op de werkbon en telde mee in materiaal en uren, terwijl de offerte hem al wegliet. De werkbon volgt nu dezelfde regel, dus de bestellijst klopt weer met wat je echt gaat doen. De bestaande materiaaltabellen per regel, onderdeel en project blijven staan. Geen SQL, geen deploy.</p>
         <p><strong>👁️ Naar Craft laat nu zien wat er met de foto's gebeurde (v4.85.1).</strong> De melding over de afbeeldingen werd tot nu toe binnen een tel overschreven door "Werkvoorbereiding naar Craft gestuurd", zodat je nooit kon zien of de foto's en kozijnen waren aangekomen. Nu staat het in één slotmelding, bijvoorbeeld "Tekst in Craft · 4 van 4 foto's, 2 van 2 kozijnen". Kon een foto niet worden omgezet of weigerde Craft een upload, dan krijg je een venster met per foto de reden en het antwoord van Craft. Vlak voor het versturen worden ook alle fotolinks vers opgehaald, zodat een verlopen link geen stille oorzaak meer kan zijn. Aan de verzending zelf is niets veranderd. Geen SQL, geen deploy.</p>
@@ -3773,7 +3774,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.87.0';
+const APP_VERSION = 'v4.88.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4190,6 +4191,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.88.0', d: '2026-10-05', h: 'Naar Craft stuurt de werkbon mee als PDF onder het kopje Documenten ("Werkbon <projectnaam> <datum>.pdf"); slotmelding en foutvenster melden het resultaat. Vereist Edge Function craft-werkvoorbereiding v4.' },
   { v: '4.87.0', d: '2026-10-05', h: 'Werkbon van een vergrendelde calculatie toont uitgezette regels, onderdelen en hoofdgroepen grijs en doorgestreept met label "vervallen na akkoord" of "uitgezet, niet in offerte"; ze tellen nergens mee. In concept blijven ze weg.' },
   { v: '4.86.0', d: '2026-10-04', h: 'Werkbon: nieuw blok Verf per verfsysteem (per hoofdgroep de hoeveelheid per systeem en de verf per materiaal); uitgezette regels, onderdelen en hoofdgroepen tellen op de werkbon niet meer mee.' },
   { v: '4.85.1', d: '2026-10-02', h: 'Naar Craft: het resultaat van foto\'s en kozijnen blijft zichtbaar in de slotmelding; bij mislukte afbeeldingen een venster met de reden per foto en de antwoorden van Craft.' },
@@ -7064,13 +7066,38 @@ async function craftNaarCraft() {
       alert('Afbeeldingen naar Craft mislukt.\n\n' + e.message + '\n\nDe tekst is wel verstuurd.');
     }
 
+    // v4.88.0 — Werkbon als PDF onder het kopje Documenten. Mislukt dit, dan is de rest al binnen.
+    const wb = { geprobeerd: true, pdf: false, teGroot: 0, res: null };
+    try {
+      if (knop) knop.textContent = '⏳ Werkbon…';
+      _toast('Werkbon-PDF maken…', 'ok');
+      const blob = await _werkbonPdfBlob(c, (i, n) => { if (knop) knop.textContent = '⏳ Werkbon ' + i + '/' + n + '…'; });
+      if (blob) {
+        wb.pdf = true;
+        const mb = blob.size / (1024 * 1024);
+        if (mb > 8) { wb.teGroot = mb.toFixed(1); }
+        else {
+          const dataUrl = await _blobNaarDataUrl(blob);
+          _toast('Werkbon versturen (' + mb.toFixed(1) + ' MB)…', 'ok');
+          wb.res = await _craftCall({ documentId: kandidaat.id, bestanden: [{ base64: dataUrl, mime: 'application/pdf', fileName: _werkbonPdfNaam(c), kopje: 'documenten' }] });
+        }
+      }
+      const wbProbleem = _craftWerkbonProbleem(wb);
+      if (wbProbleem) alert(wbProbleem + '\n\nTekst en afbeeldingen zijn wel verstuurd.');
+    } catch (e) {
+      wb.res = null; wb.fout = e.message;
+      alert('Werkbon naar Craft mislukt.\n\n' + e.message + '\n\nTekst en afbeeldingen zijn wel verstuurd.');
+    }
+    const wbMelding = wb.fout ? 'werkbon mislukt: ' + wb.fout : _craftWerkbonMelding(wb);
+
     // Gelukt: markeer de calc als geëxporteerd (lokaal + gericht in de DB).
     const nu = new Date().toISOString();
     c.craftGeexporteerdOp = nu;
     try {
       await _sb.from('calculaties').update({ craft_geexporteerd_op: nu }).eq('id', c.id);
     } catch (e) { /* knop wordt in finally bijgewerkt; een volgende load herstelt zo nodig */ }
-    _toast('Tekst in Craft' + (beeldMelding ? ' · ' + beeldMelding : '') + '.', beeldMelding && /mislukt|geen/.test(beeldMelding) ? 'err' : 'ok');
+    const slot = 'Tekst in Craft' + (beeldMelding ? ' · ' + beeldMelding : '') + (wbMelding ? ' · ' + wbMelding : '') + '.';
+    _toast(slot, /mislukt|geen|geweigerd|te groot/.test(slot) ? 'err' : 'ok');
   } finally {
     _craftBezig = false;
     if (knop) { knop.disabled = false; knop.style.opacity = ''; }
@@ -16385,9 +16412,16 @@ function _renderMateriaalTabel(rows, opts) {
   }
 }
 
+// v4.88.0 — gesplitst: _werkbonHtml(c) bouwt de werkbon-HTML (gebruikt door Archiveren →
+// Werkbon én door de PDF voor Craft); printWerkbon zet hem in printArea en print.
 function printWerkbon() {
   const c = data.calc;
   if (!c) return;
+  document.getElementById('printArea').innerHTML = _werkbonHtml(c);
+  _setPrintTitle('werkbon');
+  window.print();
+}
+function _werkbonHtml(c) {
   const datum = new Date().toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
 
   // v3.92.0 — uren op de werkbon zijn de productieve uren: begroot minus indirecte-uren-aftrek
@@ -16579,9 +16613,137 @@ function printWerkbon() {
     Werkbon · ${c.naam || ''}${c.klant ? ' · ' + c.klant : ''} · ${APP_VERSION} · ${datum}
   </div>`;
 
-  document.getElementById('printArea').innerHTML = html;
-  _setPrintTitle('werkbon');
-  window.print();
+  return html;
+}
+
+// v4.88.0 — Werkbon als raster-PDF (voor Craft). Rendert de werkbon-HTML in een eigen,
+// onzichtbaar iframe met de echte @media print-regels (via _accordPrintCss, zelfde truc als
+// de accordeerpagina), verdeelt de bouwstenen op A4-vellen en rastert elk vel met html2canvas
+// (schaal 2, JPEG) naar pdf-lib — dezelfde bouwstenen als de planbijlage (v4.61.0).
+// Een eigen iframe omdat de print-CSS ook `body > header … display:none` bevat; in het
+// hoofddocument zou dat de app wegklappen. Geeft een Blob of null. Gooit nooit.
+async function _werkbonPdfBlob(c, voortgang) {
+  if (typeof html2canvas !== 'function') { console.warn('Werkbon-PDF: html2canvas niet geladen'); return null; }
+  if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) { console.warn('Werkbon-PDF: pdf-lib niet geladen'); return null; }
+  const PX_MM = 96 / 25.4;
+  const PAGE_W = Math.round(210 * PX_MM), PAGE_H = Math.round(297 * PX_MM); // 794 × 1123 px
+  const PAD = Math.round(15 * PX_MM); // 1.5cm, gelijk aan .print-only padding
+  const USABLE = Math.floor((PAGE_H - 2 * PAD) * 0.97); // 3% marge tegen afrondings- en margeverschillen
+  let ifr = null;
+  try {
+    const html = _werkbonHtml(c);
+    ifr = document.createElement('iframe');
+    ifr.setAttribute('aria-hidden', 'true');
+    ifr.style.cssText = 'position:fixed; left:-30000px; top:0; width:' + PAGE_W + 'px; height:' + PAGE_H + 'px; border:0; visibility:visible; z-index:-1;';
+    const fontLink = document.querySelector('link[href*="fonts.googleapis"]');
+    const eigenCss = '.print-only{display:block !important;padding:0 !important;max-width:none !important;width:' + PAGE_W + 'px;box-sizing:border-box;}'
+      + 'body{margin:0 !important;padding:0 !important;background:#fff !important;}'
+      + '.wb-page{width:' + PAGE_W + 'px;height:' + PAGE_H + 'px;padding:' + PAD + 'px;box-sizing:border-box;overflow:hidden;background:#fff;position:relative;}'
+      + '.wb-page > :first-child{margin-top:0 !important;}'
+      + '#wbFlow{padding:' + PAD + 'px;box-sizing:border-box;}';
+    const srcdoc = '<!doctype html><html lang="nl"><head><meta charset="utf-8">'
+      + (fontLink ? fontLink.outerHTML : '')
+      + '<style>' + _accordPrintCss() + eigenCss + '</style></head>'
+      + '<body><div class="print-only" id="wbFlow">' + html + '</div></body></html>';
+    await new Promise((resolve) => {
+      const klaar = () => resolve();
+      ifr.addEventListener('load', klaar, { once: true });
+      ifr.srcdoc = srcdoc;
+      document.body.appendChild(ifr);
+      setTimeout(klaar, 4000); // nooit eeuwig wachten
+    });
+    const doc = ifr.contentDocument;
+    if (!doc) return null;
+    try { if (doc.fonts && doc.fonts.ready) await Promise.race([doc.fonts.ready, new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
+    const flow = doc.getElementById('wbFlow');
+    if (!flow) return null;
+
+    // Verdelen: te hoge wikkels (Materiaal totaal, Verf per verfsysteem, opbouw) eerst openbreken
+    // tot bouwstenen die op één vel passen; dan greedy op vellen stapelen.
+    let eenheden = Array.from(flow.children);
+    for (let ronde = 0; ronde < 6; ronde++) {
+      let gewijzigd = false;
+      const nieuw = [];
+      eenheden.forEach(el => {
+        const h = el.getBoundingClientRect().height;
+        if (h > USABLE && el.children && el.children.length > 1) {
+          Array.from(el.children).forEach(k => { flow.insertBefore(k, el); nieuw.push(k); });
+          el.remove(); gewijzigd = true;
+        } else nieuw.push(el);
+      });
+      eenheden = nieuw;
+      if (!gewijzigd) break;
+    }
+    const flowTop = flow.getBoundingClientRect().top + PAD;
+    const groepen = []; let huidig = []; let startY = flowTop;
+    eenheden.forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (huidig.length && (r.bottom - startY) > USABLE) { groepen.push(huidig); huidig = []; startY = r.top; }
+      huidig.push(el);
+    });
+    if (huidig.length) groepen.push(huidig);
+    flow.style.padding = '0';
+    const pages = groepen.map(g => {
+      const pg = doc.createElement('div'); pg.className = 'wb-page';
+      g.forEach(el => pg.appendChild(el));
+      flow.appendChild(pg);
+      return pg;
+    });
+    if (!pages.length) return null;
+
+    const { PDFDocument } = PDFLib;
+    const pdf = await PDFDocument.create();
+    const W = 595.28, H = 841.89;
+    for (let i = 0; i < pages.length; i++) {
+      if (typeof voortgang === 'function') { try { voortgang(i + 1, pages.length); } catch (e) {} }
+      const cv = await html2canvas(pages[i], { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, width: PAGE_W, height: PAGE_H, windowWidth: PAGE_W });
+      const img = await pdf.embedJpg(cv.toDataURL('image/jpeg', 0.85));
+      pdf.addPage([W, H]).drawImage(img, { x: 0, y: 0, width: W, height: H });
+    }
+    const bytes = await pdf.save();
+    return new Blob([bytes], { type: 'application/pdf' });
+  } catch (e) {
+    console.warn('Werkbon-PDF mislukt:', e);
+    return null;
+  } finally {
+    if (ifr && ifr.parentNode) ifr.parentNode.removeChild(ifr);
+  }
+}
+// v4.88.0 — Bestandsnaam voor de werkbon-PDF in Craft: "Werkbon <projectnaam> <dd-mm-jjjj>.pdf",
+// zonder tekens die bestandssystemen weigeren.
+function _werkbonPdfNaam(c, d) {
+  const dt = d || new Date();
+  const dd = String(dt.getDate()).padStart(2, '0'), mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const naam = String((c && (c.naam || c.klant)) || 'project').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+  return 'Werkbon ' + naam + ' ' + dd + '-' + mm + '-' + dt.getFullYear() + '.pdf';
+}
+// v4.88.0 — Blob → data-URL (base64), zoals de foto's naar Craft gaan.
+function _blobNaarDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(String(fr.result || ''));
+    fr.onerror = () => reject(new Error('Bestand lezen mislukt'));
+    fr.readAsDataURL(blob);
+  });
+}
+// v4.88.0 — Korte tekst voor de slotmelding over de werkbon; '' als er geen werkbon is geprobeerd.
+// wb = { geprobeerd, pdf, teGroot, res } ; res = antwoord van de Edge Function (bestanden-stap).
+function _craftWerkbonMelding(wb) {
+  if (!wb || !wb.geprobeerd) return '';
+  if (wb.teGroot) return 'werkbon te groot (' + wb.teGroot + ' MB), niet verstuurd';
+  if (!wb.pdf) return 'werkbon-PDF kon niet gemaakt worden';
+  const r = wb.res && wb.res.bestanden && Array.isArray(wb.res.bestanden.resultaten) ? wb.res.bestanden.resultaten[0] : null;
+  if (!r) return 'werkbon verstuurd, geen bevestiging van Craft';
+  return r.ok ? 'werkbon in Craft' : 'werkbon geweigerd door Craft';
+}
+function _craftWerkbonProbleem(wb) {
+  if (!wb || !wb.geprobeerd || wb.teGroot || !wb.pdf) return '';
+  const b = wb.res && wb.res.bestanden;
+  if (!b) return 'Werkbon: de Edge Function gaf geen bestanden-resultaat terug: ' + JSON.stringify(wb.res || {}).slice(0, 300);
+  if (b.ok === false && b.fout) return 'Werkbon: ' + String(b.fout);
+  const r = Array.isArray(b.resultaten) ? b.resultaten[0] : null;
+  if (!r || r.ok) return '';
+  return 'Werkbon door Craft geweigerd. Stappen: ' + JSON.stringify(r.stappen || r).slice(0, 600);
 }
 // ============================================================
 // SNAPSHOT — bevries een verfsysteem in een calc-regel

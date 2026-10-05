@@ -1,3 +1,33 @@
+## v4.88.0 — Naar Craft stuurt de werkbon mee als PDF onder het kopje Documenten (2026-10-05)
+
+**Aanleiding**
+- Gian 05-10-2026: "kunnen we de werkbon exporteren samen met de foto's en kozijntekenaar naar Craft in 1 druk op de knop?" en "kunnen we de pdf dan ook laten landen onder het kopje Documenten?" Eerder besluit (zelfde dag, ander gesprek): werkbon als los PDF-bestand, niet als tekst in het Craft-document.
+
+**Gebouwd — app**
+- `printWerkbon` gesplitst: `_werkbonHtml(c)` bouwt de HTML, `printWerkbon` print hem. Archiveren → Werkbon gedraagt zich hetzelfde.
+- `_werkbonPdfBlob(c, voortgang)`: rendert de werkbon-HTML in een eigen onzichtbaar iframe met de echte `@media print`-regels (via `_accordPrintCss`), breekt te hoge wikkels (Materiaal totaal, Verf per verfsysteem, opbouw) open tot bouwstenen, stapelt die greedy op A4-vellen (1,5 cm marge, 3% speling), rastert elk vel met html2canvas (schaal 2, JPEG 0,85) en bundelt met pdf-lib. Eigen iframe omdat de print-CSS `body > header … display:none` bevat en in het hoofddocument de app zou wegklappen. Geeft Blob of null, gooit nooit, ruimt het iframe op.
+- `craftNaarCraft`: derde stap na tekst en afbeeldingen. PDF > 8 MB wordt niet verstuurd (melding). Payload `{ documentId, bestanden: [{ base64, mime: 'application/pdf', fileName, kopje: 'documenten' }] }`. Bestandsnaam via `_werkbonPdfNaam`: "Werkbon <projectnaam> <dd-mm-jjjj>.pdf", zonder `\ / : * ? " < > |`. Slotmelding krijgt "· werkbon in Craft" / "· werkbon geweigerd door Craft" / "· werkbon-PDF kon niet gemaakt worden" / "· werkbon verstuurd, geen bevestiging van Craft" (oude Edge Function). Bij problemen een venster met de stappen die Craft terugmeldde. Mislukt de werkbon, dan zijn tekst en afbeeldingen al binnen en wordt de export toch gestempeld.
+- Nieuwe helpers `_werkbonPdfNaam`, `_blobNaarDataUrl`, `_craftWerkbonMelding`, `_craftWerkbonProbleem`.
+
+**Gebouwd — Edge Function `craft-werkvoorbereiding` v4** (los bestand `craft-werkvoorbereiding_v4_index.ts`, deployen via Supabase Dashboard → Edge Functions)
+- Nieuw payloadveld `bestanden`; `vulBestanden` zoekt het kopje dat begint met het opgegeven woord (standaard "documenten") en plaatst het bestand erachter.
+- Route A: `POST /upload` met de Content-Type van het bestand, zoals de foto's; daarna `PUT /blocks { id, fileName }` om de naam te zetten.
+- Route B als A faalt: `POST /upload-link { fileName, contentType }` → `PUT` bytes naar de upload-URL → `POST /blocks { type: 'file', url, fileName, mimeType, position }`. Meerdere veldnamen voor de URL's worden geprobeerd.
+- Elke stap meldt zijn status terug in `stappen` (upload, uploadLink, s3, blok, fileName), inclusief het ruwe Craft-antwoord bij falen, zodat uit één mislukte poging blijkt welke route werkt. Antwoord krijgt `versie: 4`.
+- `norm()` strijkt nu ook een eventueel `#`-kopteken weg; bestaande matches veranderen niet.
+- Tekst- en fotostappen ongewijzigd; het sjabloon blijft geweigerd.
+
+**Niet gewijzigd**
+- Berekeningen, offerte, meetstaat, Archiveren → Werkbon. Geen SQL.
+
+**Getest**
+- App: Node-parse, CSS 610/610, div-balans gelijk aan live, vijf ankers; 20 werkbon-runtime-tests (nu via `_werkbonHtml`) en 13 tests op naam en meldingen. `_werkbonPdfBlob` écht gedraaid in headless Chromium met de app-CSS en lokaal gehaalde html2canvas 1.4.1 / pdf-lib 1.17.1: 11 vellen uit een grote testcalc in 21 s zonder GPU, 2,2 MB, vellen bekeken (opmaak intact, vervallen delen grijs, breuken op bouwsteengrenzen), app-header na afloop ongemoeid.
+- Edge Function: tsc-typecheck (alleen Deno-globals en een Uint8Array/BodyInit-typeklacht die ook op de ongewijzigde fotocode slaat); 7 tests op `vulBestanden` tegen een nagemaakte Craft-API: route A, route A faalt → route B, standaardkopje, kopje ontbreekt, kapotte base64, `norm`.
+
+**Niet getest — en dat is de kern**
+- Tegen de echte Craft-API. Of `/upload` een PDF accepteert, of `fileName` via PUT gezet kan worden en wat `/upload-link` precies verwacht en teruggeeft zijn AANNAMES uit de openbare Craft-API-documentatie. Eerste test na deploy: Naar Craft op een testduplicaat, slotmelding lezen; bij "geweigerd" het venster met `stappen` hierheen plakken.
+- Snelheid en geheugen op de iPad bij een werkbon van 15+ vellen.
+
 ## v4.87.0 — Werkbon: vervallen delen van een vergrendelde calculatie blijven zichtbaar, doorgestreept met label (2026-10-05)
 
 **Aanleiding**

@@ -675,7 +675,7 @@ notitie tijdens de opname over. Dit is gekozen en geen vergeten risico.
 | Functie | Vanuit | Wat het doet |
 |---|---|---|
 | `app-hulp` | Calc | vraagbaak in de app |
-| `craft-werkvoorbereiding` | Calc | werkvoorbereidingsdocument in Craft |
+| `craft-werkvoorbereiding` | Calc | werkvoorbereidingsdocument in Craft: tekst, foto's, kozijntekeningen en sinds v4 (5 oktober 2026) de werkbon-PDF onder het kopje Documenten |
 | `offerte-accord` | Calc | akkoordverklaring en ondertekende PDF; sinds 29-08-2026 ook planakkoorden |
 | `offerte-leescontrole` | Calc | controleert de offerte op fouten |
 | `offerte-verzenden` | Calc | verstuurt de offerte of het onderhoudsplan |
@@ -5582,3 +5582,23 @@ het staan, grijs en doorgestreept, met label "vervallen na akkoord"
 in concept/afspraak blijft het weg. Telt nergens mee. Alleen `printWerkbon`
 en wat print-CSS in index.html; geen SQL, geen Edge Function. 20 Node-tests
 plus een headless-Chromium-render van de bon.
+
+## Ook op 5 oktober 2026: werkbon als PDF mee naar Craft (index.html v4.88.0, Edge Function craft-werkvoorbereiding v4)
+
+Naar Craft stuurt nu in drie stappen: tekst, afbeeldingen, en als derde de
+werkbon als PDF onder het kopje Documenten van het Craft-document. De PDF
+ontstaat in de browser (`_werkbonPdfBlob`: eigen iframe met de print-CSS,
+A4-verdeling, html2canvas + pdf-lib, dezelfde bouwstenen als de
+planbijlage) en gaat als base64 naar de Edge Function, die hem via
+`/upload` plaatst en terugvalt op de 3-staps `/upload-link`-route.
+
+Bestand: `craft-werkvoorbereiding_v4_index.ts`, te plakken in Supabase
+Dashboard → Edge Functions → craft-werkvoorbereiding. Secrets ongewijzigd
+(`CRAFT_API_BASE`, `CRAFT_API_TOKEN`). Geen SQL.
+
+Bewijsstand: de app-kant is in headless Chromium gedraaid en de Edge
+Function tegen een nagemaakte Craft-API; tegen de echte Craft-API is nog
+niets gemeten. De functie meldt per stap de Craft-status terug, zodat de
+eerste echte poging meteen vertelt welke route werkt. Oude app met nieuwe
+functie, of nieuwe app met oude functie: beide blijven werken; alleen de
+werkbon komt dan niet of zonder bevestiging aan.
