@@ -1,5 +1,21 @@
 # CHANGELOG planning.html
 
+## v0.18.1 — Startdagmail: alleen eerste lichting, tijd als ±, ochtend/middag; taaksluiting zichtbaar; RLS voor planningtaken, 05-10-2026
+
+**Aanleiding.** (1) Gian 05-10: de startdagkennisgeving noemde per schilder apart hoe laat hij kwam; de klant wil alleen weten wanneer de eerste voor de deur staat. (2) Bij een middagstart stond er nog "Bent u die ochtend niet thuis". (3) Verstuurde kennisgevingen (door Maud) lieten hun taak in de taken-app open staan, terwijl v0.18.0 die onmiddellijk moest sluiten.
+
+**Oorzaak van (3)** (bron: `pg_policies` en `taken_rollen`, door Gian geplakt): `taken_bijwerken` en `taken_lezen` kenden `bron = 'planning'` niet, dus niemand kon vanuit de browser een planningtaak bijwerken; de update raakte stil 0 rijen. Aanname (a) uit v0.18.0 was fout. Daarbovenop behandelde `kennisTaakTekst(0)` "0 rijen" als "niets te melden", waardoor het probleem onzichtbaar bleef.
+
+**Wijziging.**
+1. **planning.html** — `startTijden()` geeft ook `beginMin` terug en formatteert de tijd als `± 8:15 uur` (start ≤ 8:00) of `± HH:MM uur`. Nieuwe `startRegel(tijden)`: alleen de schilders met het vroegste tijdvak, namen met "en", komt/komen, "die ochtend" (≤ 8:00) of "die dag". Latere lichtingen worden niet genoemd. Niemand ingepland (komt volgens Gian niet voor): geen aankomstzin, geen verzonnen tijd meer. Nieuwe `thuisZin(tijden)`: "die ochtend" bij aankomst vóór 12:00, anders "die middag". Beide gebruikt in de twee startdagvarianten van `kennisTekst`.
+2. **planning.html** — `kennisTaakTekst(0)` meldt nu " · geen open taak gevonden in de taken-app (al gesloten, of geen rechten: zie planning_08)".
+3. **SQL `planning_08_taken_rls_planning.sql`** (idempotent, ALTER POLICY): `'planning'` toegevoegd aan de bron-lijst van `taken_lezen` (USING) en `taken_bijwerken` (USING + WITH CHECK). Gevolg: Maud (rol `eigen`, taken op haar naam) en rol `alles` kunnen planningtaken zien en sluiten. INSERT/DELETE ongewijzigd (doet de Edge Function). Controlequery onderaan.
+4. `APP_VERSION` 0.18.0 → 0.18.1.
+
+**Getest.** `node --check` schoon. Gedragstest `startRegel`/`thuisZin` met 4 gevallen (twee lichtingen 8:00+12:15 → "Gian en Max komen die ochtend ± 8:15 uur" + ochtend; één schilder 13:00 → "Jens komt die dag ± 13:00 uur" + middag; 10:30 → "die dag ± 10:30" + ochtend; niemand → lege zin + ochtend). Oude tekst "die ochtend niet thuis" komt niet meer hardgecodeerd voor.
+
+**Niet getest.** In de browser met echte planningsdata; de SQL (RLS niet lokaal na te bootsen). De policy-teksten zijn letterlijk overgenomen uit de geplakte `pg_policies`-uitvoer met alleen `'planning'` toegevoegd. **Test na deploy:** Gian draait planning_08, Maud opent taken.html en ziet de "Startdagbericht sturen"-taken; daarna een kennisgeving versturen/overslaan → statusbalk zegt "taak in de taken-app gesloten". De 17 nu openstaande planningtaken van al verstuurde kennisgevingen sluit de dagelijkse ronde van 06:35 UTC morgenochtend.
+
 ## v0.18.0 — Kennisgevingstaak sluit meteen bij versturen/overslaan; cronronde dagelijks, 04-10-2026
 
 **Aanleiding.** Gian 04-10-2026: alle aankondigingen die verstuurd konden worden zijn via de planning verstuurd, maar de taken "Maandaankondiging sturen · …" bleven in de taken-app staan. Oorzaak: de taken worden alleen gesloten door de ronde van Edge Function `planning-kennisgeving-taken`, en die draaide ma t/m vr 06:35 UTC (`planning_06_taken_bron.sql`); zaterdag en zondag was er geen ronde. Besluit Gian: route C — meteen sluiten vanuit de planning én de ronde dagelijks.

@@ -458,7 +458,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.18.0';
+const APP_VERSION = '0.18.1';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -2436,9 +2436,23 @@ function startTijden(code, iso) {
     if (idx < 0) continue;
     let gewerkt = 0; for (let i = 0; i < idx; i++) gewerkt += rijen[i].uren;
     const beginMin = klokNaWerk(Math.round(gewerkt * 60), false);
-    uit.push({ naam: m.naam, tijd: beginMin <= 8 * 60 ? 'tussen 8:15 en 8:30 uur' : 'rond ' + hhmm(beginMin) + ' uur' });
+    uit.push({ naam: m.naam, beginMin, tijd: '± ' + (beginMin <= 8 * 60 ? '8:15' : hhmm(beginMin)) + ' uur' }); // v0.18.1: altijd ±
   }
   return uit;
+}
+// v0.18.1: alleen de eerste lichting in de mail — de klant wil weten wanneer er iemand aan de deur staat,
+// niet hoe de rest van de dag logistiek loopt. Zelfde tijdvak = zelfde lichting.
+function startRegel(tijden) {
+  if (!tijden.length) return '';   // niemand ingepland: geen aankomstzin, geen verzonnen tijd
+  const vroegst = Math.min(...tijden.map(t => t.beginMin));
+  const eerste = tijden.filter(t => t.tijd === tijden.find(x => x.beginMin === vroegst).tijd);
+  const namen = eerste.map(t => t.naam).join(' en ');
+  return namen + (eerste.length > 1 ? ' komen' : ' komt') + (vroegst <= 8 * 60 ? ' die ochtend ' : ' die dag ') + eerste[0].tijd + ' bij u langs.';
+}
+// v0.18.1: "die ochtend/die middag niet thuis" volgt de aankomsttijd van de eerste lichting.
+function thuisZin(tijden) {
+  const vroegst = tijden.length ? Math.min(...tijden.map(t => t.beginMin)) : 0;
+  return 'Bent u die ' + (vroegst < 12 * 60 ? 'ochtend' : 'middag') + ' niet thuis, laat ons dan weten hoe wij toegang krijgen.';
 }
 // v0.16.0: aanhef zoals in de offerte (index.html _offAanhef): aanspreekvorm + tussenvoegsel/achternaam.
 const AANSPREEKVORMEN = [['heer', 'heer'], ['mevrouw', 'mevrouw'], ['echtpaar', 'heer en mevrouw'], ['familie', 'familie'], ['zakelijk', 'heer, mevrouw (zakelijk)']];
@@ -2491,12 +2505,8 @@ function kennisTekst(p, soort, aanhefRegel) {
       'In de week voorafgaand ontvangt u van ons de exacte startdag.';
   } else if (vorige && soort === 'dag') {
     const tijden = startTijden(p.code, naarIso(start));
-    let wie;
-    if (!tijden.length) wie = 'Wij komen die ochtend tussen 8:15 en 8:30 uur bij u langs.';
-    else if (tijden.every(t => t.tijd === tijden[0].tijd)) wie = tijden.map(t => t.naam).join(' en ') + (tijden.length > 1 ? ' komen' : ' komt') + ' die dag ' + tijden[0].tijd + ' bij u langs.';
-    else wie = tijden.map(t => t.naam + ' komt ' + t.tijd).join(', ') + ' bij u langs.';
-    kern = 'In afwijking van ons eerdere bericht: de werkzaamheden aan ' + proj + ' starten niet op ' + vorige.tekst + ' maar op ' + fmtDatumLang(start) + '. ' + wie + '\n\n' +
-      'Bent u die ochtend niet thuis, laat ons dan weten hoe wij toegang krijgen.';
+    const wie = startRegel(tijden); // v0.18.1
+    kern = 'In afwijking van ons eerdere bericht: de werkzaamheden aan ' + proj + ' starten niet op ' + vorige.tekst + ' maar op ' + fmtDatumLang(start) + '.' + (wie ? ' ' + wie : '') + '\n\n' + thuisZin(tijden);
   } else if (soort === 'maand') {
     kern = 'Hartelijk dank voor uw opdracht. Wij hebben de werkzaamheden aan ' + proj + ' voorlopig ingepland in ' + maandTekst(start) + '.\n\n' +
       'Ongeveer twee weken voor de start laten wij u de precieze week weten, en in de week ervoor de startdag. Heeft u in die periode al iets waar wij rekening mee moeten houden, laat het ons dan gerust weten.';
@@ -2505,12 +2515,8 @@ function kennisTekst(p, soort, aanhefRegel) {
       'In de week voorafgaand ontvangt u van ons de exacte startdag. Wilt u er alvast voor zorgen dat de te schilderen delen voor ons bereikbaar zijn?';
   } else {
     const tijden = startTijden(p.code, naarIso(start));
-    let wie;
-    if (!tijden.length) wie = 'Wij komen die ochtend tussen 8:15 en 8:30 uur bij u langs.';
-    else if (tijden.every(t => t.tijd === tijden[0].tijd)) wie = tijden.map(t => t.naam).join(' en ') + (tijden.length > 1 ? ' komen' : ' komt') + ' die dag ' + tijden[0].tijd + ' bij u langs.';
-    else wie = tijden.map(t => t.naam + ' komt ' + t.tijd).join(', ') + ' bij u langs.';
-    kern = 'De werkzaamheden aan ' + proj + ' starten op ' + fmtDatumLang(start) + '. ' + wie + '\n\n' +
-      'Bent u die ochtend niet thuis, laat ons dan weten hoe wij toegang krijgen.';
+    const wie = startRegel(tijden); // v0.18.1
+    kern = 'De werkzaamheden aan ' + proj + ' starten op ' + fmtDatumLang(start) + '.' + (wie ? ' ' + wie : '') + '\n\n' + thuisZin(tijden);
   }
   return (aanhefRegel || aanhef('')) + '\n\n' + kern;   // v0.15.2: geen groet; de functie zet de volledige handtekening eronder
 }
@@ -2681,7 +2687,7 @@ async function kennisSluitTaak(code, soort) {
     return r.data ? r.data.length : 0;
   } catch (e) { console.warn('taak sluiten mislukt: ' + (e.message || e)); return -1; }
 }
-function kennisTaakTekst(n) { return n > 0 ? ' · taak in de taken-app gesloten' : n < 0 ? ' · taak in de taken-app NIET gesloten (zie console)' : ''; }
+function kennisTaakTekst(n) { return n > 0 ? ' · taak in de taken-app gesloten' : n < 0 ? ' · taak in de taken-app NIET gesloten (zie console)' : ' · geen open taak gevonden in de taken-app (al gesloten, of geen rechten: zie planning_08)'; } // v0.18.1: 0 rijen is ook een melding
 async function kennisOverslaan(p, soort) {
   if (!confirm(KENNIS_NAAM[soort] + 'kennisgeving voor ' + p.klant + ' overslaan? Er gaat geen mail; het signaal verdwijnt.')) return;
   const start = projectStart(p);
