@@ -1,5 +1,18 @@
 # CHANGELOG planning.html
 
+## v0.18.2 — Correctie-kennisgeving kan ook worden overgeslagen, 07-10-2026
+
+**Aanleiding.** Gian 07-10-2026: bij een verschoven start staat in het projectpaneel "corrigeren", maar bij korte-termijn-wijzigingen belt hij de klant zelf en wil hij geen correctiemail sturen. De knop *overslaan* ontbrak daar: in `kennisHtml` werd hij alleen getekend als er nog geen rij voor die soort bestond (`!x.rij`, regel 2418 van v0.18.1). Het oranje signaal en de taak "Correctie sturen" bleven dus staan tot er wél gemaild werd.
+
+**Wijziging (alleen planning.html).**
+1. `kennisHtml`: *overslaan* ook getoond als `x.verschoven` waar is, met titel "Geen correctiemail (klant al anders geïnformeerd), signaal weg".
+2. `kennisOverslaan`: herkent via `kennisStatus` of het om een correctie gaat; bevestigingsvraag en statusregel zeggen dan "Correctie van de weekkennisgeving … overslaan". De weggeschreven rij is dezelfde als bij gewoon overslaan (`overgeslagen = true`, geen eigen veld; geen SQL nodig). Omdat zo'n rij geen `start_bij_verzending` telt, verdwijnt het signaal (`kennisStatus` regel 2350–2351, ongewijzigd) en `kennisSluitTaak` sloot al op `correctie-<soort>:<code>` (v0.18.0).
+3. Nieuw geheugen `kennisOoitVerstuurd[code][soort]`, gevuld bij het laden (elke niet-overgeslagen rij) en na een geslaagde verzending. Helper `kennisOoitEcht(code, soort)`. De statusregel na overslaan luidt dan "correctie overgeslagen 7 okt door gian" in plaats van "overgeslagen …", zodat zichtbaar blijft dat er eerder wél een mail is gegaan. De eerdere verzonden rij blijft in `plan_kennisgevingen` staan.
+
+**Getest.** `node --check` schoon; div-balans 98/99 en accolades 889/889 (v0.18.1: 98/99 en 885/885, verschil zijn de vier nieuwe accoladeparen). 11 runtime-tests op `kennisStatus`/`kennisHtml` met nagebootste globals: geen rij → 3× overslaan; verschoven week → corrigeren én overslaan met correctietitel; verstuurd en niet verschoven → geen overslaan, wel opnieuw; na overslaan van de correctie → signaal weg, label "correctie overgeslagen", geen tweede knop; gewoon overgeslagen zonder eerdere mail → label zonder "correctie". Nog niet getest in de echte omgeving: de klik zelf en het sluiten van de correctietaak (dat pad is ongewijzigd sinds v0.18.1).
+
+**Bewust zo gelaten.** Geen extra waarschuwing bij het overslaan van een correctie; besluit Gian: bij korte termijn belt hij altijd zelf. Edge Functions, SQL en taken-app ongewijzigd.
+
 ## v0.18.1 — Startdagmail: alleen eerste lichting, tijd als ±, ochtend/middag; taaksluiting zichtbaar; RLS voor planningtaken, 05-10-2026
 
 **Aanleiding.** (1) Gian 05-10: de startdagkennisgeving noemde per schilder apart hoe laat hij kwam; de klant wil alleen weten wanneer de eerste voor de deur staat. (2) Bij een middagstart stond er nog "Bent u die ochtend niet thuis". (3) Verstuurde kennisgevingen (door Maud) lieten hun taak in de taken-app open staan, terwijl v0.18.0 die onmiddellijk moest sluiten.

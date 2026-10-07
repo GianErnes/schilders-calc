@@ -458,7 +458,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.18.1';
+const APP_VERSION = '0.18.2';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -504,6 +504,7 @@ let verlof = {};             // mwId|datum -> {id, omschrijving}
 let fasen = {};              // yoobi_code -> [fase-rijen op volgnr]
 let middelen = {};           // yoobi_code -> [hulpmiddel-rijen]
 let kennis = {};             // v0.15.0: yoobi_code -> { maand, week, dag } -> laatste rij uit plan_kennisgevingen
+let kennisOoitVerstuurd = {};  // v0.18.2: yoobi_code -> soort -> true als er ooit een echte mail (niet overgeslagen) is gegaan; voor het label "correctie overgeslagen"
 let urenEerste = {};         // v0.15.0: yoobi_code -> 'YYYY-MM-DD' van de eerste ingeplande uren (plan_uren.created_at), voor het maandsignaal
 const MIDDEL_SOORTEN = { hoogwerker: 'hoogwerker', rolsteiger: 'rolsteiger', vaste_steiger: 'vaste steiger', mobiel_toilet: 'mobiel toilet', overig: 'overig' };
 let actiefFase = null;       // fase-id van de rij in het paneel (null = project zonder fasen)
@@ -791,7 +792,7 @@ async function laadAlles() {
   }
   kennis = {};
   if (knRes.error) { console.warn('plan_kennisgevingen niet leesbaar (planning_04_kennisgevingen.sql nog niet gedraaid?): ' + knRes.error.message); }
-  else for (const r of (knRes.data || [])) { (kennis[r.yoobi_code] = kennis[r.yoobi_code] || {})[r.soort] = r; }
+  else for (const r of (knRes.data || [])) { (kennis[r.yoobi_code] = kennis[r.yoobi_code] || {})[r.soort] = r; if (!r.overgeslagen) (kennisOoitVerstuurd[r.yoobi_code] = kennisOoitVerstuurd[r.yoobi_code] || {})[r.soort] = true; }
   gesloten = {};
   for (const r of (gd.data || [])) gesloten[r.datum] = r;
   verlof = {};
@@ -2404,7 +2405,7 @@ function kennisHtml(p) {
   for (const soort of KENNIS_SOORTEN) {
     const x = s[soort];
     let st, klasse = '';
-    if (x.rij && x.rij.overgeslagen) st = 'overgeslagen ' + fmtDatum(new Date(x.rij.verzonden_op)) + (x.rij.door ? ' door ' + esc(x.rij.door.split('@')[0]) : '');
+    if (x.rij && x.rij.overgeslagen) st = (kennisOoitEcht(p.code, soort) ? 'correctie overgeslagen ' : 'overgeslagen ') + fmtDatum(new Date(x.rij.verzonden_op)) + (x.rij.door ? ' door ' + esc(x.rij.door.split('@')[0]) : '');
     else if (x.rij) {
       st = 'verstuurd ' + fmtDatum(new Date(x.rij.verzonden_op)) + (x.rij.periode_tekst ? ' voor ' + esc(x.rij.periode_tekst) : '');
       if (x.verschoven) { st += ' — nu ' + esc(periodeTekst(soort, x.start)); klasse = ' verschoven'; }
@@ -2415,7 +2416,7 @@ function kennisHtml(p) {
     else st = soort === 'maand' ? 'nog geen uren ingepland' : '—';
     h += '<div class="krij"><span class="soort">' + KENNIS_NAAM[soort] + '</span><span class="st' + klasse + '">' + st + '</span>' +
       (x.start ? '<button class="knop klein' + (x.nodig || x.verschoven ? ' primair' : '') + '" data-kverstuur="' + soort + '">' + (x.verschoven ? 'corrigeren' : x.rij && !x.rij.overgeslagen ? 'opnieuw' : 'versturen') + '</button>' : '') +
-      (!x.rij && x.start ? '<button class="knop klein" data-koverslaan="' + soort + '" title="Geen mail, wel afgehandeld">overslaan</button>' : '') +
+      ((!x.rij || x.verschoven) && x.start ? '<button class="knop klein" data-koverslaan="' + soort + '" title="' + (x.verschoven ? 'Geen correctiemail (klant al anders geïnformeerd), signaal weg' : 'Geen mail, wel afgehandeld') + '">overslaan</button>' : '') + // v0.18.2: ook bij corrigeren
       '</div>';
   }
   return h + '</div>';
@@ -2661,6 +2662,7 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
     const door = await sessieEmail();
     // zelfde beeld als wat de functie wegschreef; bij de volgende laadAlles komt de echte rij
     (kennis[p.code] = kennis[p.code] || {})[soort] = { ...body, id: js.id, overgeslagen: false, verzonden_op: new Date().toISOString(), door, resend_id: js.resend_id };
+    (kennisOoitVerstuurd[p.code] = kennisOoitVerstuurd[p.code] || {})[soort] = true; // v0.18.2
     sluitKennisModaal();
     hertekenMetScroll();
     const nTaak = await kennisSluitTaak(p.code, soort); // v0.18.0
@@ -2688,8 +2690,13 @@ async function kennisSluitTaak(code, soort) {
   } catch (e) { console.warn('taak sluiten mislukt: ' + (e.message || e)); return -1; }
 }
 function kennisTaakTekst(n) { return n > 0 ? ' · taak in de taken-app gesloten' : n < 0 ? ' · taak in de taken-app NIET gesloten (zie console)' : ' · geen open taak gevonden in de taken-app (al gesloten, of geen rechten: zie planning_08)'; } // v0.18.1: 0 rijen is ook een melding
+function kennisOoitEcht(code, soort) { return !!(kennisOoitVerstuurd[code] && kennisOoitVerstuurd[code][soort]); } // v0.18.2
 async function kennisOverslaan(p, soort) {
-  if (!confirm(KENNIS_NAAM[soort] + 'kennisgeving voor ' + p.klant + ' overslaan? Er gaat geen mail; het signaal verdwijnt.')) return;
+  const correctie = !!kennisStatus(p)[soort].verschoven; // v0.18.2: overslaan kan nu ook een correctie zijn
+  const vraag = correctie
+    ? 'Correctie van de ' + KENNIS_NAAM[soort].toLowerCase() + 'kennisgeving voor ' + p.klant + ' overslaan? Er gaat geen mail; het signaal verdwijnt.'
+    : KENNIS_NAAM[soort] + 'kennisgeving voor ' + p.klant + ' overslaan? Er gaat geen mail; het signaal verdwijnt.';
+  if (!confirm(vraag)) return;
   const start = projectStart(p);
   const rij = { yoobi_code: p.code, soort, overgeslagen: true, door: await sessieEmail(), periode_tekst: start ? periodeTekst(soort, start) : null, start_bij_verzending: start ? naarIso(start) : null };
   const r = await sb.from('plan_kennisgevingen').insert(rij).select();
@@ -2697,7 +2704,7 @@ async function kennisOverslaan(p, soort) {
   (kennis[p.code] = kennis[p.code] || {})[soort] = r.data && r.data[0] ? r.data[0] : { ...rij, verzonden_op: new Date().toISOString() };
   hertekenMetScroll();
   const nTaak = await kennisSluitTaak(p.code, soort); // v0.18.0
-  toonStatus(KENNIS_NAAM[soort] + 'kennisgeving overgeslagen' + kennisTaakTekst(nTaak));
+  toonStatus((correctie ? 'Correctie ' + KENNIS_NAAM[soort].toLowerCase() : KENNIS_NAAM[soort]) + 'kennisgeving overgeslagen' + kennisTaakTekst(nTaak));
 }
 
 async function laadData() {
