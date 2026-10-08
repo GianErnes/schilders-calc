@@ -1,3 +1,19 @@
+## v4.89.0 — Calculatielijst standaard op Opname, eerstvolgende datum bovenaan (2026-10-08)
+
+**Aanleiding**
+- Gian 08-10-2026: "Kun je ervoor zorgen dat de lijst met calculatie gesorteerd wordt standaard op opname en dan de eerstvolgende datum bovenaan?" Besluit (ask_user_input): gewoon oplopend, verstreken datums óók bovenaan; geldt binnen elke statusgroep.
+
+**Gebouwd**
+- `_dashSort` startwaarde `{ key: 'opname', dir: 'asc' }` (was `{ key: 'gewijzigd', dir: 'desc' }`). De bestaande comparator zet lege opnamedatums al onderaan, dat is ongewijzigd. Kolomkoppen blijven klikbaar zoals voorheen.
+- Welkomsttekst en RELEASE_HIGHLIGHTS bijgewerkt.
+
+**Niet gewijzigd**
+- Berekeningen, offerte, meetstaat, archieflijst per jaar. Geen SQL, geen Edge Function.
+
+**Getest**
+- Node-parse van het scriptblok, div-balans gelijk aan live (1343/1346), versie 5× aanwezig. Comparator runtime-getest met de nieuwe default: 6 okt > 10 okt > 14 okt > 24 okt > zonder datum.
+- Niet getest: in de browser zelf — controleer na deploy dat het pijltje bij Opname op ↑ staat bij het openen van het dashboard.
+
 ## v4.88.0 — Naar Craft stuurt de werkbon mee als PDF onder het kopje Documenten (2026-10-05)
 
 **Aanleiding**
