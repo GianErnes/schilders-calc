@@ -131,6 +131,8 @@
   tr.project.overdatum .label .naam { color: var(--accent-deep); }
   .kennislabel { display: inline-block; background: var(--amber); color: #fff; font-size: 0.6rem; font-weight: 700; padding: 0 5px; border-radius: 3px; margin-left: 6px; vertical-align: middle; line-height: 1.4; }
   .kennislabel.verschoven { background: #fff; color: var(--amber); border: 1px solid var(--amber); line-height: 1.25; }
+  .kennislabel.nabellen { background: #fff; color: var(--amber); border: 1px solid var(--amber); line-height: 1.25; } /* v0.19.0 */
+  .kennislabel.bounce { background: var(--accent); } /* v0.19.0 */
   .knop.kennisknop { background: var(--amber); color: #fff; border-color: var(--amber); }
   .kennis { margin-top: 0.8rem; border-top: 1px solid var(--paper-deep); padding-top: 0.6rem; }
   .kennis h3 { margin: 0 0 0.3rem; font-size: 0.8rem; }
@@ -141,6 +143,9 @@
   .kennis .krij .st { flex: 1; color: var(--muted); font-size: 0.76rem; }
   .kennis .krij .st.nodig { color: var(--amber); font-weight: 600; }
   .kennis .krij .st.verschoven { color: var(--amber); }
+  .kennis .krij .st.bounce { color: var(--accent); font-weight: 600; } /* v0.19.0 */
+  .kennis .krij .st.nabellen { color: var(--amber); } /* v0.19.0 */
+  .kennis .krij .st .bevestigd { color: var(--green); font-weight: 600; } /* v0.19.0 */
   .kennis .knop.klein { padding: 0.2rem 0.5rem; font-size: 0.74rem; }
   .kmodaal textarea { width: 100%; min-height: 15rem; font: inherit; font-size: 0.85rem; padding: 0.5rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); box-sizing: border-box; }
   .kmodaal input[type=text] { width: 100%; box-sizing: border-box; }
@@ -458,7 +463,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.18.2';
+const APP_VERSION = '0.19.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -2328,9 +2333,22 @@ function zelfdePeriode(soort, a, b) {
   return naarIso(a) === naarIso(b);
 }
 
-// Status per soort: { rij, nodig, verschoven, vanaf }.
+// Status per soort: { rij, nodig, verschoven, vanaf, bounce, nabellen }.
 //   nodig      = signaal: nog geen rij en de signaaldatum is bereikt (en de start is nog niet voorbij)
 //   verschoven = er is gemaild voor een andere periode dan waar de start nu in valt
+//   bounce     = v0.19.0: Resend meldde dat de laatste mail niet afgeleverd is (bounce_op, brok 8)
+//   nabellen   = v0.19.0: echt verstuurd, 3 werkdagen voorbij, klant heeft de knop in de mail niet
+//                gebruikt (bevestigd_op leeg), geen bounce, geen correctie open, start niet voorbij
+// Dezelfde regels staan in Edge Function planning-kennisgeving-taken (v1.2); wijzig je ze, wijzig beide.
+const KENNIS_NABEL_WERKDAGEN = 3; // besluit Gian 09-10-2026
+// Werkdagen (ma–vr) ná dag `van` tot en met dag `tot`; feestdagen tellen mee als werkdag.
+function werkdagenNa(van, tot) {
+  const a = new Date(van); a.setHours(0, 0, 0, 0);
+  const b = new Date(tot); b.setHours(0, 0, 0, 0);
+  let n = 0;
+  for (const d = new Date(a); d < b;) { d.setDate(d.getDate() + 1); if (d.getDay() >= 1 && d.getDay() <= 5) n++; }
+  return n;
+}
 function kennisStatus(p) {
   const start = projectStart(p);
   const vandaag = new Date(); vandaag.setHours(0, 0, 0, 0);
@@ -2350,15 +2368,22 @@ function kennisStatus(p) {
     const nodig = !verborgen && !rij && !!vanaf && vandaag >= vanaf && !!start && !startVoorbij;
     const bijVerz = rij && !rij.overgeslagen && rij.start_bij_verzending ? vanIso(rij.start_bij_verzending) : null;
     const verschoven = !!(bijVerz && start && !zelfdePeriode(soort, bijVerz, start));
-    uit[soort] = { rij, nodig, verschoven, vanaf, start };
+    // v0.19.0: status van een echt verstuurde mail (brok 8-kolommen; leeg zolang de webhook niet is ingesteld)
+    const echt = !verborgen && rij && !rij.overgeslagen && !!start && !startVoorbij;
+    const bounce = !!(echt && rij.bounce_op);
+    const verz = echt && rij.verzonden_op ? new Date(rij.verzonden_op) : null;
+    const nabellen = !!(echt && !bounce && !rij.bevestigd_op && !verschoven && verz && !isNaN(verz.getTime()) && werkdagenNa(verz, vandaag) >= KENNIS_NABEL_WERKDAGEN);
+    uit[soort] = { rij, nodig, verschoven, vanaf, start, bounce, nabellen };
   }
   return uit;
 }
 function kennisTeNodig(p) { const s = kennisStatus(p); return KENNIS_SOORTEN.filter(x => s[x].nodig); }
 function kennisVerschoven(p) { const s = kennisStatus(p); return KENNIS_SOORTEN.filter(x => s[x].verschoven); }
+function kennisBounce(p) { const s = kennisStatus(p); return KENNIS_SOORTEN.filter(x => s[x].bounce); } // v0.19.0
+function kennisNabellen(p) { const s = kennisStatus(p); return KENNIS_SOORTEN.filter(x => s[x].nabellen); } // v0.19.0
 function projectenMetKennis() {
   if (!stand) return [];
-  return stand.projecten.filter(p => p.code && (kennisTeNodig(p).length || kennisVerschoven(p).length));
+  return stand.projecten.filter(p => p.code && (kennisTeNodig(p).length || kennisVerschoven(p).length || kennisBounce(p).length || kennisNabellen(p).length)); // v0.19.0: ook bounce en nabellen
 }
 
 // Label in de linkerkolom (alleen bij de eerste rij van een project met fasen).
@@ -2368,6 +2393,9 @@ function kennisLabelHtml(p, f) {
   let h = '';
   if (nodig.length) h += '<span class="kennislabel" title="Kennisgeving aan de klant kan verstuurd worden: ' + esc(nodig.map(x => KENNIS_NAAM[x].toLowerCase()).join(', ')) + '">✉ ' + esc(nodig.map(x => KENNIS_NAAM[x].toLowerCase()).join(' · ')) + '</span>';
   if (ver.length) h += '<span class="kennislabel verschoven" title="De start is verschoven sinds de kennisgeving: ' + esc(ver.map(x => KENNIS_NAAM[x].toLowerCase()).join(', ')) + '">✉ verschoven</span>';
+  const bo = kennisBounce(p), na = kennisNabellen(p); // v0.19.0
+  if (bo.length) h += '<span class="kennislabel bounce" title="Kennisgeving NIET afgeleverd (adres controleren, opnieuw versturen): ' + esc(bo.map(x => KENNIS_NAAM[x].toLowerCase()).join(', ')) + '">✉ niet afgeleverd</span>';
+  if (na.length) h += '<span class="kennislabel nabellen" title="Na ' + KENNIS_NABEL_WERKDAGEN + ' werkdagen nog niet bevestigd door de klant, nabellen: ' + esc(na.map(x => KENNIS_NAAM[x].toLowerCase()).join(', ')) + '">✉ nabellen</span>';
   return h;
 }
 
@@ -2408,7 +2436,10 @@ function kennisHtml(p) {
     if (x.rij && x.rij.overgeslagen) st = (kennisOoitEcht(p.code, soort) ? 'correctie overgeslagen ' : 'overgeslagen ') + fmtDatum(new Date(x.rij.verzonden_op)) + (x.rij.door ? ' door ' + esc(x.rij.door.split('@')[0]) : '');
     else if (x.rij) {
       st = 'verstuurd ' + fmtDatum(new Date(x.rij.verzonden_op)) + (x.rij.periode_tekst ? ' voor ' + esc(x.rij.periode_tekst) : '');
+      st += kennisStatusTekst(x.rij); // v0.19.0
       if (x.verschoven) { st += ' — nu ' + esc(periodeTekst(soort, x.start)); klasse = ' verschoven'; }
+      else if (x.bounce) klasse = ' bounce';
+      else if (x.nabellen) klasse = ' nabellen';
     }
     else if (x.nodig) { st = 'kan verstuurd worden'; klasse = ' nodig'; }
     else if (!x.start) st = 'nog geen startdatum';
@@ -2420,6 +2451,17 @@ function kennisHtml(p) {
       '</div>';
   }
   return h + '</div>';
+}
+// v0.19.0: afgeleverd / geopend / bevestigd / niet afgeleverd achter 'verstuurd …' (brok 8-kolommen).
+function kennisStatusTekst(rij) {
+  if (!rij) return '';
+  if (rij.bounce_op) return ' · NIET afgeleverd' + (rij.bounce_reden ? ' (' + esc(String(rij.bounce_reden).slice(0, 80)) + ')' : '');
+  let t = '';
+  if (rij.afgeleverd_op) t += ' · afgeleverd';
+  if (rij.geopend_op) t += ' · geopend ' + fmtDatum(new Date(rij.geopend_op));
+  if (rij.bevestigd_op) t += ' · <span class="bevestigd">bevestigd ' + fmtDatum(new Date(rij.bevestigd_op)) + '</span>';
+  else if (rij.afgeleverd_op || rij.geopend_op) t += ' · nog niet bevestigd';
+  return t;
 }
 function koppelKennis(el, p) {
   const c = el.querySelector('[data-kcontact]'); if (c) c.addEventListener('click', () => openKennisModaal(p, null));
@@ -2675,7 +2717,9 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
 // v0.18.0: sluit meteen de open taak in de taken-app die de cron
 // (Edge Function planning-kennisgeving-taken) voor dit signaal had gezet.
 // Vorm van die taak (v1.1 van de functie): bron 'planning', bron_kenmerk
-// 'kennis-<soort>:<Yoobi-code>' of 'correctie-<soort>:<Yoobi-code>'.
+// 'kennis-<soort>:<Yoobi-code>' of 'correctie-<soort>:<Yoobi-code>'; sinds
+// v0.19.0 ook 'nabellen-…' en 'bounce-…' (functie v1.2), want opnieuw
+// versturen maakt die taken overbodig.
 // De cronronde blijft het vangnet (project verborgen, start voorbij).
 // Geeft het aantal gesloten taken terug, of -1 als het schrijven mislukte.
 async function kennisSluitTaak(code, soort) {
@@ -2683,7 +2727,7 @@ async function kennisSluitTaak(code, soort) {
     const r = await sb.from('taken')
       .update({ voltooid_op: new Date().toISOString() })
       .eq('bron', 'planning').is('voltooid_op', null)
-      .in('bron_kenmerk', ['kennis-' + soort + ':' + code, 'correctie-' + soort + ':' + code])
+      .in('bron_kenmerk', ['kennis-' + soort + ':' + code, 'correctie-' + soort + ':' + code, 'nabellen-' + soort + ':' + code, 'bounce-' + soort + ':' + code]) // v0.19.0: ook nabel- en bouncetaak
       .select('crmtaskid');
     if (r.error) { console.warn('taak sluiten mislukt: ' + r.error.message); return -1; }
     return r.data ? r.data.length : 0;

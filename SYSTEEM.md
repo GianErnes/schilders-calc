@@ -382,6 +382,7 @@ Welke sleutels bestaan (waarden staan in de kluis, niet hier):
 - Yoobi, OAuth2-inloggegevens, gebruiker `yoobiernes2`
 - Yuki, koppelingsgegevens voor de boekhouding
 - Resend, sleutel voor het verzenden van mail
+- Resend, Signing secret van de webhook (`RESEND_WEBHOOK_SECRET`, `whsec_…`), voor `planning-kennisgeving-status` (sinds 9 oktober 2026)
 - Anthropic, sleutel voor de leescontrole en de vraagbaak
 - Craft.do, koppelingsgegevens
 - Google, het serviceaccount voor de agenda- en Drive-koppeling:
@@ -5602,3 +5603,43 @@ niets gemeten. De functie meldt per stap de Craft-status terug, zodat de
 eerste echte poging meteen vertelt welke route werkt. Oude app met nieuwe
 functie, of nieuwe app met oude functie: beide blijven werken; alleen de
 werkbon komt dan niet of zonder bevestiging aan.
+
+## Wat er op 9 oktober 2026 gedaan is: status van kennisgevingen en nabel-signaal (planning.html v0.19.0)
+
+**Aanleiding.** Na een verstuurde aankondiging was niet te zien of de
+klant hem gekregen had. Besluit Gian: afgeleverd/gebounced (hard, uit de
+Resend-webhook), geopend (indicatie), bevestigd (knop in de mail); na
+3 werkdagen zonder bevestiging een signaal op het bord én een taak
+"nabellen" bij Maud. Bij een bounce meteen een taak "NIET afgeleverd".
+
+**Wat er nu is.**
+
+| Onderdeel | Doet | Bijzonderheden |
+|---|---|---|
+| `planning_08_kennisgeving_status.sql` | acht kolommen op `plan_kennisgevingen` (`afgeleverd_op`, `geopend_op`, `bounce_op`, `bounce_reden`, `bevestigd_op`, `bevestig_token`, `webhook_laatste`, `webhook_laatste_op`), index op `resend_id`, unieke index op `bevestig_token` | project-guard, idempotent, geen RLS-wijziging; gedraaid 9 oktober, vijf controles GOED |
+| Edge Function `planning-kennisgeving-status` v1 (nieuw) | ontvangt de Resend-webhook, controleert de Svix-handtekening, zoekt de rij op `resend_id`, zet de tijdstempels | **Verify JWT UIT**; geheim `RESEND_WEBHOOK_SECRET`. Account-breed: events van offertes en taakmails komen ook binnen en worden met 200 "niet van ons" genegeerd. Een 500 laat Resend het later opnieuw proberen |
+| Edge Function `planning-kennisgeving-bevestig` v1 (nieuw) | de knop uit de mail: GET toont een pagina met knop, POST zet `bevestigd_op` en sluit de nabel-taak | **Verify JWT UIT**; toegang via het token in de link. Twee stappen tegen mailscanners die links automatisch openen |
+| Edge Function `planning-kennisgeving` v3 | als v2, plus token aanmaken, knop in de mail, token in de rij | **Verify JWT AAN** (ongewijzigd) |
+| Edge Function `planning-kennisgeving-taken` v1.2 | als v1.1, plus signalen `nabellen-<soort>` (3 werkdagen zonder bevestiging) en `bounce-<soort>` | nabel-/bouncetaken mogen wél handmatig worden afgevinkt en komen dan niet terug tot er opnieuw is verstuurd; `bron_kenmerk` `nabellen-…:<code>` / `bounce-…:<code>` |
+| planning.html v0.19.0 | labels "✉ niet afgeleverd" (rood) en "✉ nabellen" (oranje) op het bord, status achter "verstuurd …" in het paneel; `kennisSluitTaak` sluit ook nabel-/bouncetaken | signaalregels staan dubbel: in planning.html (brok 7) en in de taken-functie; wijzig beide |
+
+**Resend-instelling (door Gian te doen, zie ook CHANGELOG_planning.md
+v0.19.0).** Webhook naar `…/functions/v1/planning-kennisgeving-status`
+met events delivered, bounced, delivery_delayed, opened; Signing secret
+in de Edge Function secrets als `RESEND_WEBHOOK_SECRET`. Open-tracking
+(voor "geopend") vraagt een tracking-subdomein `links.ernes.nl` met een
+CNAME bij Ed Mordant — op 9 oktober nog niet besloten. Click-tracking
+uit laten: het zou de bevestigingsknop via Resend omleiden.
+
+**Wat niet draait zonder die instelling.** Alles behalve de
+webhook-kolommen: de knop in de mail, de bevestiging en de nabel-taak
+werken ook zonder webhook. Zonder webhook blijven afgeleverd/geopend/
+bounce leeg en komt er geen bouncetaak.
+
+**Aantal Edge Functions.** Er zijn er twee bijgekomen; het aantal in de
+kop van 3.2 is sinds de planning-functies van 3 oktober niet bijgewerkt
+— **[TE CONTROLEREN: tel ze in het dashboard en zet de kop recht]**.
+
+**Open punt (blijft).** De `index.ts`-bestanden van de planning-functies
+en de planning-SQL staan niet in de openbare repo; de broncode van 9
+oktober is in deze sessie geleverd en hoort in de besloten repo.
