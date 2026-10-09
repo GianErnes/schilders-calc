@@ -8,6 +8,8 @@
 
 **Risico, bewust aanvaard.** Mailscanners die alleen de link ophalen zonder de pagina te draaien, bevestigen niets (het script moet draaien). Scanners die de pagina wél draaien, kunnen een valse "bevestigd" geven, waardoor die klant niet wordt nagebeld. Hoe vaak dat voorkomt is onbekend (aanname: zelden). Te herkennen in de logs aan een vreemde user-agent, en aan een `bevestigd_op` binnen een minuut na `verzonden_op`. Zien we dat, dan terug naar twee stappen of een korte wachttijd.
 
+**v1.1.1 (zelfde dag).** Na de eerste geslaagde klik door Gian stond de knop *Opnieuw proberen* onder "Bedankt!": `.knop { display:block }` won van het `hidden`-attribuut. Eén CSS-regel erbij (`.knop[hidden] { display:none }`). **Echte test geslaagd (Gian 09-10-2026):** mail → knop → bevestig.html → "Bedankt! Uw bevestiging is ontvangen."
+
 **Getest.** Functie v2.1: 6 Deno-tests groen (ongewijzigd gedrag). bevestig.html: `node --check` schoon, 8 controles (bedankt bij bevestigd en al_bevestigd, ongeldig, escaping, automatische aanroep bij openen). **Niet getest:** in de browser tegen de echte functie.
 
 ## v0.19.1b — Bevestigingspagina naar GitHub Pages (bevestig.html), bevestig-functie v2, kennisgeving v3.1, 09-10-2026
