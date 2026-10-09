@@ -1,5 +1,15 @@
 # CHANGELOG planning.html
 
+## v0.19.1c — Bevestigen in één klik: bevestig.html v1.1, bevestig-functie v2.1, 09-10-2026
+
+**Aanleiding.** Gian na de eerste pagina: de klant moet twee keer op een knop drukken en de mailknop zegt al "ja" terwijl pas de tweede klik telt. Besluit Gian: meteen de automatische variant, "dit gaat echt mis".
+
+**Wijziging.** `bevestig.html` v1.1 bevestigt vanzelf bij openen (POST door het script), geen tweede knop; de pagina toont alleen nog "Bedankt!" (ook bij een al bevestigde link), "link niet geldig" of "geen verbinding" met een knop *Opnieuw proberen*. Functie v2.1 logt bij elke bevestiging de user-agent (`ua:` in de Supabase-logs). Mailknop blijft "Ja, ik heb dit ontvangen", want dat is nu wat hij doet. planning.html en kennisgeving v3.1 ongewijzigd.
+
+**Risico, bewust aanvaard.** Mailscanners die alleen de link ophalen zonder de pagina te draaien, bevestigen niets (het script moet draaien). Scanners die de pagina wél draaien, kunnen een valse "bevestigd" geven, waardoor die klant niet wordt nagebeld. Hoe vaak dat voorkomt is onbekend (aanname: zelden). Te herkennen in de logs aan een vreemde user-agent, en aan een `bevestigd_op` binnen een minuut na `verzonden_op`. Zien we dat, dan terug naar twee stappen of een korte wachttijd.
+
+**Getest.** Functie v2.1: 6 Deno-tests groen (ongewijzigd gedrag). bevestig.html: `node --check` schoon, 8 controles (bedankt bij bevestigd en al_bevestigd, ongeldig, escaping, automatische aanroep bij openen). **Niet getest:** in de browser tegen de echte functie.
+
 ## v0.19.1b — Bevestigingspagina naar GitHub Pages (bevestig.html), bevestig-functie v2, kennisgeving v3.1, 09-10-2026
 
 **Aanleiding.** Eerste echte test door Gian: de knop in de mail gaf eerst "Requested function was not found" (functie nog niet uitgerold), daarna de broncode van de pagina als platte tekst. Oorzaak opgezocht in de Supabase-docs: HTML wordt niet ondersteund, een GET die `text/html` teruggeeft wordt herschreven naar `text/plain`. Ontwerpfout van Claude: een pagina uit een Edge Function laten komen zonder dat op te zoeken. Tussendoor ook v1.1 van de functie (formulierpad zonder `/functions/v1`, Supabase haalt dat prefix van `url.pathname` af) — achterhaald door v2.

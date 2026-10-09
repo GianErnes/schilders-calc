@@ -6,15 +6,19 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Ontvangst bevestigen · Ernes Schilders</title>
 <!--
-  bevestig.html v1.0 (09-10-2026) — hoort bij planning.html v0.19.x,
+  bevestig.html v1.1 (09-10-2026) — hoort bij planning.html v0.19.x,
   Edge Function planning-kennisgeving v3.1 (zet de link in de mail) en
   planning-kennisgeving-bevestig v2 (de API erachter).
 
   De klant komt hier via de knop "Ja, ik heb dit ontvangen" in een
-  kennisgevingsmail: bevestig.html?t=<token>. De pagina haalt op wat voor
-  kennisgeving het is (GET), toont één knop, en pas de klik (POST) zet
-  bevestigd_op in plan_kennisgevingen. Twee stappen met opzet: mailscanners
-  openen links automatisch, maar klikken geen knoppen.
+  kennisgevingsmail: bevestig.html?t=<token>. v1.1 (besluit Gian
+  09-10-2026): de pagina bevestigt VANZELF bij openen (POST door het
+  script), er is geen tweede knop. Mailscanners die alleen de link ophalen
+  zonder de pagina te draaien, bevestigen daarmee niets; scanners die de
+  pagina wél draaien kunnen een valse bevestiging geven — bewust
+  geaccepteerd risico, de functie logt het browser-type per bevestiging.
+  v1.0 had twee stappen (pagina met knop, dan klik); dat voelde als twee
+  keer ja zeggen.
 
   Waarom hier en niet in de Edge Function: Supabase herschrijft text/html
   bij een GET naar text/plain (docs, "HTML content is not supported").
@@ -37,8 +41,8 @@
 <div class="kaart">
   <img src="https://www.ernes.nl/images/handtekening/ernes-logo.png" width="160" alt="Ernes Schilders" style="display:block">
   <h1 id="kop">Even geduld…</h1>
-  <div id="tekst"><p>De gegevens worden opgehaald.</p></div>
-  <button id="knop" class="knop" type="button" hidden>Ja, ik heb dit ontvangen</button>
+  <div id="tekst"><p>Uw bevestiging wordt verwerkt.</p></div>
+  <button id="knop" class="knop" type="button" hidden>Opnieuw proberen</button>
   <p class="klein">Ernes Schilders · Koperslager 2, 6422 PR Heerlen · 06-21220045 · <a href="https://www.ernes.nl">www.ernes.nl</a></p>
 </div>
 <script>
@@ -61,40 +65,31 @@
   }
   function storing() {
     toon('Even geen verbinding',
-      '<p>Uw bevestiging kon niet worden verwerkt. Probeer het later nog eens, of bel ons op ' + TEL + '.</p>', false);
+      '<p>Uw bevestiging kon niet worden verwerkt. Probeer het nog eens, of bel ons op ' + TEL + '.</p>', true);
   }
   // Wat de pagina laat zien per antwoord van de functie. Los getest (bevestig_test.js).
-  function verwerkAntwoord(j, naKlik) {
+  function verwerkAntwoord(j) {
     if (!j || !j.ok) { ongeldig(); return; }
     var wat = esc(j.omschrijving || 'onze kennisgeving');
-    if (j.status === 'open') {
-      toon('Ontvangst bevestigen',
-        '<p>U heeft ' + wat + ' ontvangen.</p>' +
-        '<p>Klik op de knop om te bevestigen dat het bericht bij u is aangekomen. Zo weten wij dat de planning bekend is en hoeven wij u niet na te bellen.</p>', true);
-    } else if (j.status === 'bevestigd' || (naKlik && j.status === 'al_bevestigd')) {
+    if (j.status === 'bevestigd' || j.status === 'al_bevestigd') {
       toon('Bedankt!',
         '<p class="groen">Uw bevestiging is ontvangen.</p>' +
-        '<p>U heeft bevestigd dat ' + wat + ' bij u is aangekomen. Wij zien u graag op de afgesproken dag.</p>', false);
-    } else if (j.status === 'al_bevestigd') {
-      toon('Al bevestigd',
-        '<p>U heeft de ontvangst van ' + wat + ' al bevestigd. Dank u wel, er is verder niets nodig.</p>', false);
+        '<p>Wij weten nu dat ' + wat + ' bij u is aangekomen. Wij zien u graag op de afgesproken dag.</p>', false);
     } else { ongeldig(); }
   }
   if (typeof module !== 'undefined') { module.exports = { verwerkAntwoord: verwerkAntwoord }; return; }
 
-  function vraag(init) {
-    return fetch(API + (init ? '' : '?t=' + encodeURIComponent(token)), init || {})
-      .then(function (r) { return r.json().then(function (j) { return { status: r.status, j: j }; }); });
+  function bevestig() {
+    knop.disabled = true;
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token }) })
+      .then(function (r) { return r.json().then(function (j) { return { status: r.status, j: j }; }); })
+      .then(function (a) { a.status === 404 ? ongeldig() : verwerkAntwoord(a.j); })
+      .catch(storing)
+      .then(function () { knop.disabled = false; });
   }
   if (!token) { ongeldig(); return; }
-  vraag().then(function (a) { a.status === 404 ? ongeldig() : verwerkAntwoord(a.j, false); }).catch(storing);
-
-  knop.addEventListener('click', function () {
-    knop.disabled = true; knop.textContent = 'Bezig…';
-    vraag({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token }) })
-      .then(function (a) { a.status === 404 ? ongeldig() : verwerkAntwoord(a.j, true); })
-      .catch(function () { knop.disabled = false; knop.textContent = 'Ja, ik heb dit ontvangen'; storing(); });
-  });
+  bevestig();                                   // v1.1: openen = bevestigen
+  knop.addEventListener('click', bevestig);     // alleen zichtbaar na een storing
 })();
 </script>
 </body>
