@@ -447,7 +447,7 @@
       <input type="text" id="kennisOnderwerp">
       <label class="hint" style="margin:0.6rem 0 0.2rem">Tekst (pas aan wat je wilt; dit is precies wat de klant krijgt)</label>
       <textarea id="kennisTekst"></textarea>
-      <div class="hint">Onder de tekst komt automatisch je volledige mailhandtekening (groet, logo's, keurmerken), dezelfde als onder de offertemail. Afzender planning@ernes.nl · antwoorden komen op info@ernes.nl · kopie naar administratie@ernes.nl. Elke verzending wordt vastgelegd met datum, adres en tekst.</div>
+      <div class="hint">Onder de tekst komt automatisch een knop <b>"Ja, ik heb dit ontvangen"</b> (de klant bevestigt daarmee de ontvangst; blijft dat 3 werkdagen uit, dan komt er een nabel-signaal) en daaronder je volledige mailhandtekening (groet, logo's, keurmerken), dezelfde als onder de offertemail. Afzender planning@ernes.nl · antwoorden komen op info@ernes.nl · kopie naar administratie@ernes.nl. Elke verzending wordt vastgelegd met datum, adres en tekst.</div>
     </section>
     <section class="rij" style="justify-content:space-between">
       <span class="hint" id="kennisMelding" style="margin:0"></span>
@@ -463,7 +463,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.19.0';
+const APP_VERSION = '0.19.2';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -2338,7 +2338,9 @@ function zelfdePeriode(soort, a, b) {
 //   verschoven = er is gemaild voor een andere periode dan waar de start nu in valt
 //   bounce     = v0.19.0: Resend meldde dat de laatste mail niet afgeleverd is (bounce_op, brok 8)
 //   nabellen   = v0.19.0: echt verstuurd, 3 werkdagen voorbij, klant heeft de knop in de mail niet
-//                gebruikt (bevestigd_op leeg), geen bounce, geen correctie open, start niet voorbij
+//                gebruikt (bevestigd_op leeg), geen bounce, geen correctie open, start niet voorbij;
+//                v0.19.2: alleen als de mail een knop had (bevestig_token gevuld) — mails van vóór
+//                v0.19.0 konden niet bevestigd worden en mogen geen nabel-signaal geven
 // Dezelfde regels staan in Edge Function planning-kennisgeving-taken (v1.2); wijzig je ze, wijzig beide.
 const KENNIS_NABEL_WERKDAGEN = 3; // besluit Gian 09-10-2026
 // Werkdagen (ma–vr) ná dag `van` tot en met dag `tot`; feestdagen tellen mee als werkdag.
@@ -2372,7 +2374,7 @@ function kennisStatus(p) {
     const echt = !verborgen && rij && !rij.overgeslagen && !!start && !startVoorbij;
     const bounce = !!(echt && rij.bounce_op);
     const verz = echt && rij.verzonden_op ? new Date(rij.verzonden_op) : null;
-    const nabellen = !!(echt && !bounce && !rij.bevestigd_op && !verschoven && verz && !isNaN(verz.getTime()) && werkdagenNa(verz, vandaag) >= KENNIS_NABEL_WERKDAGEN);
+    const nabellen = !!(echt && !bounce && rij.bevestig_token && !rij.bevestigd_op && !verschoven && verz && !isNaN(verz.getTime()) && werkdagenNa(verz, vandaag) >= KENNIS_NABEL_WERKDAGEN);
     uit[soort] = { rij, nodig, verschoven, vanaf, start, bounce, nabellen };
   }
   return uit;
@@ -2439,7 +2441,7 @@ function kennisHtml(p) {
       st += kennisStatusTekst(x.rij); // v0.19.0
       if (x.verschoven) { st += ' — nu ' + esc(periodeTekst(soort, x.start)); klasse = ' verschoven'; }
       else if (x.bounce) klasse = ' bounce';
-      else if (x.nabellen) klasse = ' nabellen';
+      else if (x.nabellen) { st += ' · niet bevestigd, nabellen'; klasse = ' nabellen'; } // v0.19.2: zeggen waarom oranje
     }
     else if (x.nodig) { st = 'kan verstuurd worden'; klasse = ' nodig'; }
     else if (!x.start) st = 'nog geen startdatum';

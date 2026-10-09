@@ -1,5 +1,13 @@
 # CHANGELOG planning.html
 
+## v0.19.2 — Nabel-signaal alleen voor mails mét knop; statustekst zegt "nabellen", 09-10-2026
+
+**Aanleiding.** Na de eerste geslaagde bevestiging zag Gian bij Hamers de Week-regel oranje: verstuurd 3 oktober, niet bevestigd, 3 werkdagen voorbij → nabel-signaal. Maar die mail is van vóór v0.19.0 en had geen knop; niemand kón bevestigen. Zonder ingreep had de ochtendronde van 10 oktober voor elke oudere kennisgeving een nabel-taak bij Maud gezet.
+
+**Wijziging.** `kennisStatus`: nabellen alleen als `bevestig_token` gevuld is (de mail had een knop). Statustekst in het paneel krijgt bij nabellen " · niet bevestigd, nabellen", zodat zichtbaar is waarom de regel oranje is. **Edge Function `planning-kennisgeving-taken` v1.3**: dezelfde regel, `bevestig_token` opgenomen in de query. Oudere kennisgevingen geven dus nooit een nabel-signaal of -taak; bounce-signalen blijven wel mogelijk (die komen uit de webhook, ongeacht de knop).
+
+**Getest.** Taken v1.3: 7 Deno-tests groen, nieuwe controle "mail zonder knop → geen nabellen". planning.html: `node --check` schoon, div-balans 127/127, 21 runtime-controles op uitgesneden code (nieuwe: token leeg → geen nabellen). **Niet getest:** de ochtendronde in het echt — eerste echte ronde is 10 oktober 06:35 UTC; controleer die ochtend in de taken-app dat er géén nabel-taken staan voor oude kennisgevingen.
+
 ## v0.19.1c — Bevestigen in één klik: bevestig.html v1.1, bevestig-functie v2.1, 09-10-2026
 
 **Aanleiding.** Gian na de eerste pagina: de klant moet twee keer op een knop drukken en de mailknop zegt al "ja" terwijl pas de tweede klik telt. Besluit Gian: meteen de automatische variant, "dit gaat echt mis".
