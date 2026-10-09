@@ -1,5 +1,26 @@
 # CHANGELOG planning.html
 
+## v0.19.1b — Bevestigingspagina naar GitHub Pages (bevestig.html), bevestig-functie v2, kennisgeving v3.1, 09-10-2026
+
+**Aanleiding.** Eerste echte test door Gian: de knop in de mail gaf eerst "Requested function was not found" (functie nog niet uitgerold), daarna de broncode van de pagina als platte tekst. Oorzaak opgezocht in de Supabase-docs: HTML wordt niet ondersteund, een GET die `text/html` teruggeeft wordt herschreven naar `text/plain`. Ontwerpfout van Claude: een pagina uit een Edge Function laten komen zonder dat op te zoeken. Tussendoor ook v1.1 van de functie (formulierpad zonder `/functions/v1`, Supabase haalt dat prefix van `url.pathname` af) — achterhaald door v2.
+
+**Wijziging.** Geen wijziging aan planning.html (blijft v0.19.1).
+1. **`bevestig.html` (nieuw, in de repo naast planning.html)** — de pagina die de klant ziet: haalt met GET op wat voor kennisgeving het is, toont één knop; de klik doet een POST. Teksten: open / bedankt / al bevestigd / link niet geldig / geen verbinding. Geen Supabase-sleutel in de pagina.
+2. **Edge Function `planning-kennisgeving-bevestig` v2** — alleen nog JSON-API met CORS: `GET ?t=` → `{ ok, status:'open'|'al_bevestigd', soort, omschrijving, periode_tekst, bevestigd_op }`; `POST { t }` → zet `bevestigd_op` (eerste keer), sluit de nabel-taak, status `'bevestigd'`; onbekend token → 404 `{ ok:false, status:'ongeldig' }`. OPTIONS/HEAD leeg. Verify JWT UIT (ongewijzigd).
+3. **Edge Function `planning-kennisgeving` v3.1** — de knop wijst naar `https://gianernes.github.io/schilders-calc/bevestig.html?t=<token>` (constante `BEVESTIG_URL`). Nettere link voor de klant dan het supabase.co-adres.
+
+**Getest.** Deno: bevestig v2 6 tests (GET open + CORS + json, 4 ongeldige tokens → 404, OPTIONS/HEAD, POST zet en sluit, al_bevestigd schrijft niets, formulier-POST ook, kapotte JSON 404, taaksluiting niet fataal); kennisgeving v3.1 6 tests (link in mail en token in rij). bevestig.html: `node --check` schoon, 11 controles op de weergavelogica (open/bedankt/al bevestigd/ongeldig/escaping). **Niet getest:** in de browser tegen de echte functie — dat is de eerste echte test: nieuwe kennisgeving aan eigen adres, knop in mail → pagina met knop → klik → "Bedankt" → `bevestigd_op` gevuld. De mail van de eerste test (token `ad77d94f…`) wijst nog naar de functie en geeft na v2 JSON te zien; die mail is afgeschreven.
+
+**Aanname:** GitHub Pages serveert `bevestig.html` op `https://gianernes.github.io/schilders-calc/bevestig.html` zodra het bestand in de root van de repo staat, zoals planning.html.
+
+## v0.19.1 — Uitleg in het kennisgevingsvenster noemt de bevestigingsknop, 09-10-2026
+
+**Aanleiding.** Gian bij de eerste verzending na v0.19.0: "hier staat geen knop, kan dat?" De tekst in het venster is alleen de brief; de knop zet Edge Function `planning-kennisgeving` v3 er bij het versturen tussen. De uitleg onder het tekstvak noemde de handtekening wel en de knop niet.
+
+**Wijziging.** Alleen die uitlegregel (`div.hint` in het kennisgevingsmodaal): noemt nu de knop, wat die doet en het nabel-signaal na 3 werkdagen. Geen andere code geraakt.
+
+**Getest.** `node --check` schoon; div-balans 127/127; het is één tekstregel in de HTML.
+
 ## v0.19.0 — Status van kennisgevingen: afgeleverd, geopend, gebounced, bevestigd door de klant; nabel-signaal, 09-10-2026
 
 **Aanleiding.** Gian 09-10-2026: na een verstuurde planningsaankondiging blijft het stil; niet te verifiëren of de klant hem gezien heeft. Besluiten Gian: alle drie de niveaus (afgeleverd/gebounced via Resend-webhook, geopend als indicatie, bevestigd via een knop in de mail); bij geen bevestiging na 3 werkdagen zowel een signaal op het bord als een taak "nabellen" in de taken-app. Op voorstel van Claude erbij: een taak "NIET afgeleverd" meteen bij een bounce (fout adres wil je dezelfde dag weten).
