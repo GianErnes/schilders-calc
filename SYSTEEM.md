@@ -166,7 +166,7 @@ doen is **[TE CONTROLEREN]**.
 | Craft.do | werkvoorbereidingsdocumenten |
 | Resend | verzenden van alle e-mail uit het systeem |
 | Anthropic | leescontrole op offertes en de vraagbaak in de app |
-| Google Agenda en Google Drive | boekingen voor de opnames lezen én elke nacht de backup wegschrijven naar een map in de Drive van `administratie@ernes.nl`, via één serviceaccount met twee bereiken (`calendar.readonly`, `drive.file`). Zie 4.7 |
+| Google Agenda en Google Drive | boekingen voor de opnames lezen én elke nacht de backup wegschrijven naar een map in de Drive van `administratie@ernes.nl`, via één serviceaccount met drie bereiken (`calendar.readonly`, `calendar.events.owned`, `drive.file`); sinds 11 oktober 2026 schrijft de koppeling ook het adres terug in het locatieveld van de afspraak. Zie 4.7 |
 | PDOK Locatieserver | adressen opzoeken, gratis |
 | OpenRouteService | rijafstand berekenen |
 
@@ -390,8 +390,10 @@ Welke sleutels bestaan (waarden staan in de kluis, niet hier):
   (`administratie@ernes.nl`) en sinds 15 september 2026
   `GOOGLE_DRIVE_BACKUP_MAP` (de id van de Drive-map waar de backup heen
   gaat), als Edge Function secrets in `schilders-calc`. Het serviceaccount
-  heeft in de Workspace-beheerconsole twee bereiken: `calendar.readonly`
-  (agenda lezen) en `drive.file` (alleen bestanden die het zelf aanmaakt).
+  heeft in de Workspace-beheerconsole drie bereiken: `calendar.readonly`
+  (agenda lezen), `calendar.events.owned` (sinds 11 oktober 2026: het
+  locatieveld van afspraken in de eigen agenda zetten) en `drive.file`
+  (alleen bestanden die het zelf aanmaakt).
   Zie 4.7 voor waarom die map-id door de functie zelf is aangemaakt en
   niet met de hand
 - `AFTAP_SECRET`, waarmee de cronjobs `backup-nachtelijk`,
@@ -604,11 +606,13 @@ aanname tot de eerste run van v5; verwacht `zonder_code` = 0. Broncode:
 `fin-werkvoorraad-sync_v5_index.ts` in de projectkennis en in
 `ernes-edge-functions`.
 
-**`opname-boekingen`, de agendakoppeling.** Versie 4 sinds 9 augustus
-2026. Leest de primaire agenda van `administratie@ernes.nl` via een
-Google-serviceaccount: cloudproject `ernes-agenda`, serviceaccount
+**`opname-boekingen`, de agendakoppeling.** Versie 5 sinds 11 oktober
+2026 (v4 was van 9 augustus). Leest de primaire agenda van
+`administratie@ernes.nl` via een Google-serviceaccount: cloudproject
+`ernes-agenda`, serviceaccount
 `schilders-calc-agenda@ernes-agenda.iam.gserviceaccount.com`,
-domeinbrede machtiging met alleen `calendar.readonly`. De sleutels staan
+domeinbrede machtiging met `calendar.readonly` en sinds v5 ook
+`calendar.events.owned`. De sleutels staan
 als secrets in Supabase, zie 2.4. De functie herkent klantboekingen aan
 "geboekt door" in de omschrijving, kijkt 180 dagen terug, zet postcode
 plus huisnummer via PDOK om naar straat en woonplaats en groepeert
@@ -620,6 +624,17 @@ tabel, vergelijkt en meldt wat hij zou doen (nieuw, bijgewerkt,
 ongewijzigd), maar verandert niets. Alleen met `?schrijf=1` schrijft hij
 naar de tabel `opname_boekingen`, en die parameter geeft alleen de
 cronjob mee.
+
+Sinds v5 zet de schrijfrun ook het **locatieveld van de Google-afspraak**:
+"Straat nr, postcode Plaats", uitsluitend als straat en woonplaats van
+PDOK komen, en alleen bij een bevestigde boeking met leeg locatieveld
+die vandaag of later begint. Hoogstens 25 per run, met `sendUpdates=none`
+zodat de klant geen mail krijgt. Een door Gian zelf ingetikte locatie
+wordt nooit overschreven. De droogloop toont de lijst onder
+`locatie.zou_zetten`; `?locatie=0` zet de stap uit. Een patch verandert
+`updated` van de afspraak, dus de volgende run meldt zo'n boeking één
+keer als bijgewerkt op `google_updated`. Mislukt een patch, dan gaat de
+sync gewoon door en staat de fout in `locatie.fouten`.
 
 **`backup-dump`, versie 6 sinds 15 september 2026.** Doet alles wat v5
 deed (dump naar de bak, schemadump, spiegel van vijf bakken, opruimen,
@@ -5644,3 +5659,34 @@ kop van 3.2 is sinds de planning-functies van 3 oktober niet bijgewerkt
 **Open punt (blijft).** De `index.ts`-bestanden van de planning-functies
 en de planning-SQL staan niet in de openbare repo; de broncode van 9
 oktober is in deze sessie geleverd en hoort in de besloten repo.
+
+## Wat er op 11 oktober 2026 gedaan is: adres in het locatieveld van de Google-afspraak (Edge Function opname-boekingen v5)
+
+**Aanleiding.** De klantboekingen zetten postcode en huisnummer in de
+omschrijving van de afspraak, niet in het veld Locatie. Daardoor was het
+adres in de agenda-app op de telefoon niet aanklikbaar voor de
+routeplanner. Gian: "geen gezoek meer tijdens de opnamen".
+
+**Uitgezocht en getest.** Google-documentatie: `events.patch` wijzigt één
+veld; `calendar.events.owned` is het smalste schrijfbereik (alleen
+agenda's die de gebruiker zelf bezit). Of de organisator de locatie van
+een boeking uit een afsprakenplanning mag wijzigen stond nergens; Gian
+heeft het met de hand getest op één boeking: wijzigen lukt en Google
+maakt er direct een klikbaar adres met speld van.
+
+**Gedaan.**
+
+| Stap | Wat | Door wie |
+|---|---|---|
+| Workspace-beheerconsole | `calendar.events.owned` toegevoegd aan de domeinbrede machtiging van client 118275053978788387332; `calendar.readonly` en `drive.file` ongewijzigd | Gian |
+| Edge Function `opname-boekingen` v5 | bereik uitgebreid; `locatie_voorstel` per boeking; na de tabelsync patcht de schrijfrun het locatieveld (regels in 3.2); nieuw blok `locatie` in de uitvoer; `?locatie=0` | geleverd als `opname-boekingen_v5_index.ts`, `deno check` en `deno lint` schoon |
+| Bewijs | droogloop: `ok: true`, 17 kandidaten; schrijfrun: `gezet: 17`, `mislukt: 0`; op de telefoon speld aanwezig bij Pascal Laven (14 okt) | Gian |
+
+**Besluit vervangen.** Het readonly-besluit van 9 augustus 2026 (geen
+schrijfrechten op de agenda) is hiermee bewust losgelaten, met het
+smalste bereik dat volstaat.
+
+**Open punten.** `opname-boekingen_v5_index.ts` hoort in de besloten
+repo `ernes-edge-functions` (door Gian). De marge "vandaag of later" is
+ruim 24 uur, waardoor de eerste run ook twee boekingen van de dag ervoor
+een adres gaf; onschadelijk, niet aangepast.
