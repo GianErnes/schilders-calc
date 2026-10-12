@@ -1,5 +1,31 @@
 # Changelog Oplevering
 
+## v0.3.0 — Houtrot-opgave vanaf de steiger
+Kom je tijdens het werk houtrot tegen, dan maak je per plek een foto, kiest een herstelmethode en zet er een bedrag op. De app telt op en maakt een PDF die je via de deelknop naar de klant mailt. Stap 2 van vier; de accordeerlink en het mailen vanuit de app (stap 3 en 4) volgen.
+
+### Wat er verandert
+- Bovenaan twee tabbladen: Opleveringen en Houtrot. Een nieuwe lijst krijgt de soort van het open tabblad; bij Gegevens staat de keuze bovenin en ligt vast zodra de lijst bestaat.
+- Een houtrot-opgave heeft extra gegevens: e-mail van de klant (voor stap 3), btw 9% of 21%, en een vrij opgavenummer.
+- Een houtrot-plek is een punt met foto en ringen zoals bij de oplevering, plus plek, herstelmethode uit de tarieflijst (Calc → Instellingen → Houtrot-tarieven), aantal, prijs per eenheid en bedrag. Methode kiezen vult prijs en eenheid, aantal × prijs geeft het bedrag, en het bedrag blijft met de hand overschrijfbaar. Methode, klanttekst en prijs worden per plek gekopieerd: een latere tariefwijziging raakt een bestaande opgave niet.
+- Opslaan zonder plek of zonder methode wordt geweigerd. In de lijst staat een plek zonder bedrag oranje, en de kop telt hoeveel plekken nog niet compleet zijn.
+- De kop toont totaal excl., btw en incl. Het overzicht toont per opgave het aantal plekken, het bedrag excl. en de status (concept, verzonden, akkoord, afgewezen). Akkoord en afgewezen staan achter *toon afgehandelde*.
+- Knop PDF maken: A4 met logo en bedrijfsgegevens uit de Calc-instellingen, projectnaam, opgavenummer, datum, klantblok, inleiding, per plek de foto mét ringen naast plek, methode, klanttekst, toelichting, aantal × prijs en bedrag, daaronder de totalen en een slotregel. Op iPhone opent de deelknop (Mail zit daarin), anders wordt het bestand gedownload. Ontbreekt er bij een plek nog iets, dan vraagt de app eerst of je toch wilt doorgaan.
+- Tarieven worden na het inloggen geladen; is de lijst leeg als je een plek opent, dan haalt het vel hem zelf na.
+- Gewone opleveringen werken ongewijzigd.
+
+### Nodig
+- `sql/houtrot_01_tarieven.sql` en `sql/houtrot_02_opgaven.sql`, beide op 12-10-2026 door Gian gedraaid (6× en 8× GOED).
+- pdfmake 0.2.20 via jsDelivr, dezelfde versie als Calc.
+
+### Getest
+- JS-parse (node --check), css-accolades 127/127, tagbalans div 105/105, button 30/30, script 4/4.
+- Runtime in Node met nagebootste Supabase en DOM, op code uit het gepatchte bestand: tabbladen filteren, kaarten met bedrag en status, schakel afgehandelde, totalen met 9% en 21%, punt-vel in beide standen, methode kiezen, herrekenen, handmatig bedrag, weigering zonder plek, opslaan met tariefkopie, telling na opslaan, nieuw erft soort, insert houtrot (concept, btw 9, e-mail, nummer), insert oplevering ongewijzigd, soort vergrendeld bij bewerken, tarieflijst laadt zichzelf na, PDF-definitie met bedrijfsgegevens en terugval, en een echte PDF gebouwd met pdfmake (57 kB, één pagina, tekst en voettekst gecontroleerd).
+- Niet getest: in de browser en op de iPhone. Vooral: de foto mét ringen in de PDF (canvas met een signed URL uit Supabase Storage; lukt dat niet door CORS, dan gaat de kale foto mee, en lukt ook dat niet dan staat er "geen foto") en de deelknop naar Mail. Beide in echt gebruik controleren.
+
+### Bewust nog niet
+- Status wijzigen (verzonden, akkoord, afgewezen) kan nog niet in de app; dat komt met de accordeerlink in stap 3. Tot die tijd blijft een opgave op concept staan.
+- Geen koppeling met een calculatie, Taken of Financieel.
+
 ## v0.2.1 — Eigen icoon op het iPhone-beginscherm
 Eén regel in de head: `apple-touch-icon` naar het nieuwe `apple-touch-icon-oplevering.png` (Ernes-logo met oranje band "Oplevering", 180×180). Icoon dat er al staat: verwijderen en opnieuw toevoegen. Verder niets gewijzigd. Getest: JS-parse (node), tagbalans. Niet getest: iPhone. 16-09-2026.
 

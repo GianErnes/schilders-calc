@@ -9,6 +9,8 @@
 <title>Oplevering — Ernes</title>
 <link rel="apple-touch-icon" href="./apple-touch-icon-oplevering.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/pdfmake.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/vfs_fonts.js"></script>
 <style>
   :root{
     --paper:#f6f7f9;
@@ -212,6 +214,42 @@
   .toast.zie{opacity:1;transform:translate(-50%,0)}
 
   .voet{text-align:center;font-size:11px;color:var(--ink-faint);padding:18px 0 6px;font-weight:600}
+
+  /* v0.3.0 — houtrot-opgave */
+  .tabs{display:flex;gap:6px;margin:0 0 12px;background:var(--line);border-radius:12px;padding:3px}
+  .tabs button{flex:1;padding:9px 6px;border:none;border-radius:10px;background:transparent;font:inherit;
+    font-size:13.5px;font-weight:700;color:var(--ink-soft);cursor:pointer}
+  .tabs button.aan{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+  .bol.concept{background:var(--oranje)}
+  .bol.verzonden{background:var(--blauw)}
+  .bol.akkoord{background:var(--groen)}
+  .bol.afgewezen{background:var(--rood)}
+  .kaart .tel b{color:var(--ink);font-weight:800}
+  .status-pil{display:inline-block;font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:999px;
+    margin:6px 0 2px;text-transform:uppercase;letter-spacing:.3px}
+  .status-pil.concept{background:var(--oranje-tint);color:var(--oranje);border:1px solid var(--oranje-lijn)}
+  .status-pil.verzonden{background:#eaf1ff;color:var(--blauw);border:1px solid #c9dafc}
+  .status-pil.akkoord{background:var(--groen-tint);color:var(--groen);border:1px solid var(--groen-lijn)}
+  .status-pil.afgewezen{background:#fdecea;color:var(--rood);border:1px solid #f5c6c0}
+  .totalen{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;font-size:13.5px}
+  .totalen div{display:flex;justify-content:space-between;padding:2px 0}
+  .totalen .eind{font-weight:800;font-size:15px;border-top:1px solid var(--line);margin-top:4px;padding-top:6px}
+  .punt .tekst .plek{font-weight:700;font-size:14px}
+  .punt .tekst .meth{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+  .punt .bedrag{align-self:center;font-weight:800;font-size:14px;white-space:nowrap;padding-left:8px}
+  .punt .bedrag.leeg{color:var(--oranje)}
+  .soortkeuze{display:flex;gap:8px;margin-bottom:14px}
+  .soortkeuze button{flex:1;padding:10px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);
+    font:inherit;font-size:14px;font-weight:700;color:var(--ink-soft);cursor:pointer}
+  .soortkeuze button.aan{border-color:var(--blauw);color:var(--blauw);background:#eaf1ff}
+  .soortkeuze button:disabled{opacity:.55}
+  .btwkeuze{display:flex;gap:8px}
+  .btwkeuze button{flex:1;padding:10px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);
+    font:inherit;font-size:14px;font-weight:700;color:var(--ink-soft);cursor:pointer}
+  .btwkeuze button.aan{border-color:var(--blauw);color:var(--blauw);background:#eaf1ff}
+  .rij3{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}
+  .hint{font-size:12px;color:var(--ink-faint);margin-top:4px}
+  select.veldinput{appearance:none;-webkit-appearance:none;background:var(--card)}
 </style>
 </head>
 <body>
@@ -234,6 +272,10 @@
   <div class="sheet" id="velOplevering" role="dialog" aria-label="Oplevering">
     <div class="grip"></div>
     <h2 id="o_titel">Nieuwe oplevering</h2>
+    <div class="soortkeuze" id="o_soortkeuze">
+      <button type="button" id="o_soort_opl" onclick="kiesSoort('oplevering')">Oplevering</button>
+      <button type="button" id="o_soort_hr" onclick="kiesSoort('houtrot')">Houtrot-opgave</button>
+    </div>
     <div class="fld">
       <div class="k">Project</div>
       <input class="veldinput" id="o_project" placeholder="Bijvoorbeeld: Janssen | buitenwerk">
@@ -260,6 +302,25 @@
       <div class="k">Notitie</div>
       <textarea class="veldinput" id="o_notitie" placeholder="Wat je verder wilt onthouden"></textarea>
     </div>
+    <div id="o_houtrotvelden">
+      <div class="fld">
+        <div class="k">E-mail klant</div>
+        <input class="veldinput" id="o_email" type="email" inputmode="email" autocomplete="off" placeholder="Voor de accordeerlink (later)">
+      </div>
+      <div class="fld rij2">
+        <div>
+          <div class="k">Btw</div>
+          <div class="btwkeuze">
+            <button type="button" id="o_btw9" onclick="kiesBtw(9)">9%</button>
+            <button type="button" id="o_btw21" onclick="kiesBtw(21)">21%</button>
+          </div>
+        </div>
+        <div>
+          <div class="k">Opgavenummer</div>
+          <input class="veldinput" id="o_nummer" placeholder="Vrij, bv. HR-26-003">
+        </div>
+      </div>
+    </div>
     <button class="bewaarknop" id="o_bewaar">Bewaren</button>
     <button class="weglink" id="o_weg" style="display:none">Oplevering verwijderen</button>
   </div>
@@ -267,10 +328,35 @@
   <!-- vel: punt -->
   <div class="sheet" id="velPunt" role="dialog" aria-label="Punt">
     <div class="grip"></div>
-    <h2>Punt</h2>
+    <h2 id="p_titel">Punt</h2>
     <div class="fld" id="p_fotofld"></div>
+    <div id="p_houtrotvelden">
+      <div class="fld">
+        <div class="k">Plek</div>
+        <input class="veldinput" id="p_plek" placeholder="Bv. dakkapel achter, stijl links onder">
+      </div>
+      <div class="fld">
+        <div class="k">Herstelmethode</div>
+        <select class="veldinput" id="p_methode" onchange="kiesMethode()"></select>
+      </div>
+      <div class="fld rij3">
+        <div>
+          <div class="k">Aantal</div>
+          <input class="veldinput" id="p_aantal" type="number" inputmode="decimal" step="0.5" min="0" onchange="herrekenBedrag()">
+        </div>
+        <div>
+          <div class="k">Prijs p/<span id="p_eenheid">stuk</span></div>
+          <input class="veldinput" id="p_prijs" type="number" inputmode="decimal" step="0.5" min="0" onchange="herrekenBedrag()">
+        </div>
+        <div>
+          <div class="k">Bedrag excl.</div>
+          <input class="veldinput" id="p_bedrag" type="number" inputmode="decimal" step="0.5" min="0" onchange="BEDRAG_HAND = true">
+        </div>
+      </div>
+      <div class="hint">Bedrag = aantal × prijs. Overschrijf het bedrag als het anders ligt.</div>
+    </div>
     <div class="fld">
-      <div class="k">Wat moet er gebeuren</div>
+      <div class="k" id="p_omslabel">Wat moet er gebeuren</div>
       <textarea class="veldinput" id="p_omschrijving" placeholder="Bijvoorbeeld: kitrand onder de dorpel opnieuw"></textarea>
     </div>
     <button class="bewaarknop" id="p_bewaar">Bewaren</button>
@@ -300,7 +386,7 @@
    (opleveringen, oplever_punten) en een eigen opslagbak
    (oplever-fotos) in hetzelfde Supabase-project.
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.2.1';
+const APP_VERSION = 'v0.3.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -315,6 +401,16 @@ let HUIDIG = null;          /* geopende oplevering, met .punten */
 let TOON_AFGEROND = false;
 let VEL_PUNT = null;        /* punt dat in het vel open staat */
 let BEZIG = false;
+/* v0.3.0 — houtrot-opgave */
+let SOORT = 'oplevering';   /* open tabblad: 'oplevering' of 'houtrot' */
+let VEL_SOORT = 'oplevering';
+let VEL_BTW = 21;
+let TARIEVEN = [];          /* actieve rijen uit houtrot_tarieven */
+let BEDRIJF = null;         /* app_settings.data.bedrijf uit Calc, voor de PDF-kop */
+let BEDRAG_HAND = false;    /* bedrag in het punt-vel met de hand gezet */
+const EENHEDEN = ['stuk', 'cm', 'dm', 'm', 'uur'];
+const STATUS_TEKST = { concept: 'Concept', verzonden: 'Verzonden', akkoord: 'Akkoord', afgewezen: 'Afgewezen' };
+const BEDRIJF_STD = { naam: 'Ernes schilders', adres: 'Koperslager 2', pc: '6422 PR Heerlen', tel: '045 5321471', email: 'info@ernes.nl', web: 'www.ernes.nl', iban: 'NL20INGB0679760334', bic: 'INGBNL2A', kvk: '92481183', btw: 'NL866067097B01' };
 
 /* ────────────────────────────────────────────────────────
    Klein gereedschap
@@ -332,6 +428,15 @@ function esc(s){
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function uid(p){ return (p || '') + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+function isHoutrot(o){ return !!o && o.soort === 'houtrot'; }
+function eur(n){ return '€ ' + new Intl.NumberFormat('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(+n || 0); }
+function getal(v){ const n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isFinite(n) ? n : 0; }
+function totalen(o){
+  const sub = (o.punten || []).reduce((t, p) => t + getal(p.bedrag), 0);
+  const pct = getal(o.btw_pct) || 21;
+  const btw = Math.round(sub * pct) / 100;
+  return { sub: sub, pct: pct, btw: btw, incl: sub + btw };
+}
 function toast(t){
   const el = document.getElementById('toast');
   el.textContent = t;
@@ -420,13 +525,14 @@ async function laadLijsten(){
   TELLING = {};
   if (LIJSTEN.length) {
     const tel = await vraag(
-      sb.from('oplever_punten').select('oplevering_id, gereed'),
+      sb.from('oplever_punten').select('oplevering_id, gereed, bedrag'),
       'Punten tellen'
     );
     (tel && tel.data ? tel.data : []).forEach(r => {
-      const t = TELLING[r.oplevering_id] || { totaal: 0, open: 0 };
+      const t = TELLING[r.oplevering_id] || { totaal: 0, open: 0, bedrag: 0 };
       t.totaal++;
       if (!r.gereed) t.open++;
+      t.bedrag += getal(r.bedrag);
       TELLING[r.oplevering_id] = t;
     });
   }
@@ -462,32 +568,53 @@ function render(){
 
 function renderOverzicht(){
   document.getElementById('fab').style.display = '';
-  const lopend = LIJSTEN.filter(o => o.status !== 'afgerond');
-  const klaar  = LIJSTEN.filter(o => o.status === 'afgerond');
+  const hr = SOORT === 'houtrot';
+  const alles = LIJSTEN.filter(o => isHoutrot(o) === hr);
+  const dicht = o => hr ? (o.status === 'akkoord' || o.status === 'afgewezen') : o.status === 'afgerond';
+  const lopend = alles.filter(o => !dicht(o));
+  const klaar  = alles.filter(dicht);
 
-  let html = '';
+  let html = '<div class="tabs">' +
+    '<button class="' + (hr ? '' : 'aan') + '" onclick="kiesTab(\'oplevering\')">Opleveringen</button>' +
+    '<button class="' + (hr ? 'aan' : '') + '" onclick="kiesTab(\'houtrot\')">Houtrot</button></div>';
   if (!lopend.length) {
-    html += '<div class="melding">Geen lopende opleveringen. Tik op de plusknop om er een te beginnen.</div>';
+    html += '<div class="melding">' + (hr
+      ? 'Geen lopende houtrot-opgaven. Tik op de plusknop om er een te beginnen.'
+      : 'Geen lopende opleveringen. Tik op de plusknop om er een te beginnen.') + '</div>';
   } else {
     html += lopend.map(kaartHtml).join('');
   }
   if (klaar.length) {
+    const w = hr ? 'afgehandelde' : 'afgeronde';
     html += '<button class="schakel" onclick="wisselAfgerond()">' +
-      (TOON_AFGEROND ? 'verberg afgeronde' : 'toon afgeronde (' + klaar.length + ')') + '</button>';
+      (TOON_AFGEROND ? 'verberg ' + w : 'toon ' + w + ' (' + klaar.length + ')') + '</button>';
     if (TOON_AFGEROND) html += klaar.map(kaartHtml).join('');
   }
   document.getElementById('lijst').innerHTML = html + voet();
 }
 
+function kiesTab(soort){
+  SOORT = soort; TOON_AFGEROND = false;
+  document.getElementById('fab').setAttribute('aria-label', soort === 'houtrot' ? 'Nieuwe houtrot-opgave' : 'Nieuwe oplevering');
+  renderOverzicht();
+}
+
 function kaartHtml(o){
-  const t = TELLING[o.id] || { totaal: 0, open: 0 };
+  const t = TELLING[o.id] || { totaal: 0, open: 0, bedrag: 0 };
   const plaats = [o.adres, o.plaats].filter(Boolean).join(', ');
-  let tel;
-  if (!t.totaal) tel = 'nog geen punten';
-  else if (!t.open) tel = t.totaal + ' punten, alles klaar';
-  else tel = t.totaal + ' punten, ' + t.open + ' open';
+  let tel, bol;
+  if (isHoutrot(o)) {
+    bol = STATUS_TEKST[o.status] ? o.status : 'concept';
+    tel = (!t.totaal ? 'nog geen punten' : t.totaal + (t.totaal === 1 ? ' punt' : ' punten') + ' · <b>' + eur(t.bedrag) + '</b> excl.') +
+      ' · ' + (STATUS_TEKST[o.status] || 'Concept').toLowerCase();
+  } else {
+    bol = o.status === 'afgerond' ? 'afgerond' : 'lopend';
+    if (!t.totaal) tel = 'nog geen punten';
+    else if (!t.open) tel = t.totaal + ' punten, alles klaar';
+    else tel = t.totaal + ' punten, ' + t.open + ' open';
+  }
   return '<div class="kaart" onclick="openOplevering(\'' + o.id + '\')">' +
-    '<span class="bol ' + (o.status === 'afgerond' ? 'afgerond' : 'lopend') + '"></span>' +
+    '<span class="bol ' + bol + '"></span>' +
     '<div class="mid">' +
       '<div class="t">' + esc(o.projectnaam) + '</div>' +
       (plaats ? '<div class="sub">' + esc(plaats) + '</div>' : '') +
@@ -500,6 +627,7 @@ function wisselAfgerond(){ TOON_AFGEROND = !TOON_AFGEROND; renderOverzicht(); }
 function renderDetail(){
   document.getElementById('fab').style.display = 'none';
   const o = HUIDIG;
+  if (isHoutrot(o)) { renderDetailHoutrot(); return; }
   const punten = o.punten || [];
   const klaar = punten.filter(p => p.gereed).length;
   const pct = punten.length ? Math.round(klaar / punten.length * 100) : 0;
@@ -565,13 +693,33 @@ function sluitVellen(){
 
 let VEL_OPL = null;   /* null = nieuw, anders de oplevering die je bewerkt */
 
+function kiesSoort(soort){
+  if (VEL_OPL) return;   /* soort van een bestaande lijst ligt vast */
+  VEL_SOORT = soort;
+  tekenSoortVelden();
+}
+function kiesBtw(pct){ VEL_BTW = pct; tekenSoortVelden(); }
+function tekenSoortVelden(){
+  const hr = VEL_SOORT === 'houtrot';
+  document.getElementById('o_soort_opl').classList.toggle('aan', !hr);
+  document.getElementById('o_soort_hr').classList.toggle('aan', hr);
+  document.getElementById('o_soort_opl').disabled = !!VEL_OPL;
+  document.getElementById('o_soort_hr').disabled = !!VEL_OPL;
+  document.getElementById('o_houtrotvelden').style.display = hr ? '' : 'none';
+  document.getElementById('o_btw9').classList.toggle('aan', VEL_BTW === 9);
+  document.getElementById('o_btw21').classList.toggle('aan', VEL_BTW !== 9);
+  document.getElementById('o_titel').textContent = VEL_OPL ? 'Gegevens' : (hr ? 'Nieuwe houtrot-opgave' : 'Nieuwe oplevering');
+  document.getElementById('o_weg').textContent = hr ? 'Opgave verwijderen' : 'Oplevering verwijderen';
+}
+
 function nieuweOplevering(){
   VEL_OPL = null;
-  document.getElementById('o_titel').textContent = 'Nieuwe oplevering';
-  ['o_project','o_klant','o_adres','o_postcode','o_plaats','o_notitie'].forEach(k => {
+  VEL_SOORT = SOORT; VEL_BTW = 21;
+  ['o_project','o_klant','o_adres','o_postcode','o_plaats','o_notitie','o_email','o_nummer'].forEach(k => {
     document.getElementById(k).value = '';
   });
   document.getElementById('o_weg').style.display = 'none';
+  tekenSoortVelden();
   toonVel('velOplevering', true);
   setTimeout(() => document.getElementById('o_project').focus(), 250);
 }
@@ -586,6 +734,11 @@ function bewerkOplevering(){
   document.getElementById('o_postcode').value = o.postcode || '';
   document.getElementById('o_plaats').value   = o.plaats || '';
   document.getElementById('o_notitie').value  = o.notitie || '';
+  document.getElementById('o_email').value    = o.klant_email || '';
+  document.getElementById('o_nummer').value   = o.opgave_nummer || '';
+  VEL_SOORT = isHoutrot(o) ? 'houtrot' : 'oplevering';
+  VEL_BTW = getal(o.btw_pct) === 9 ? 9 : 21;
+  tekenSoortVelden();
   document.getElementById('o_weg').style.display = '';
   toonVel('velOplevering', true);
 }
@@ -600,6 +753,11 @@ async function bewaarOplevering(){
     plaats:      document.getElementById('o_plaats').value.trim(),
     notitie:     document.getElementById('o_notitie').value.trim()
   };
+  if (VEL_SOORT === 'houtrot') {
+    rij.klant_email   = document.getElementById('o_email').value.trim() || null;
+    rij.btw_pct       = VEL_BTW === 9 ? 9 : 21;
+    rij.opgave_nummer = document.getElementById('o_nummer').value.trim() || null;
+  }
   if (!rij.projectnaam) { toast('Een project zonder naam kan niet.'); return; }
   BEZIG = true;
   if (VEL_OPL) {
@@ -610,7 +768,8 @@ async function bewaarOplevering(){
     sluitVellen();
     render();
   } else {
-    rij.status = 'lopend';
+    rij.soort = VEL_SOORT;
+    rij.status = VEL_SOORT === 'houtrot' ? 'concept' : 'lopend';
     rij.aangemaakt_door = IK;
     const res = await vraag(sb.from('opleveringen').insert([rij]).select(), 'Aanmaken');
     BEZIG = false;
@@ -637,7 +796,7 @@ async function zetStatus(status){
 
 async function verwijderOplevering(){
   const o = VEL_OPL; if (!o) return;
-  if (!confirm('Deze oplevering en al zijn punten verwijderen? Dat kan niet ongedaan gemaakt worden.')) return;
+  if (!confirm((isHoutrot(o) ? 'Deze opgave' : 'Deze oplevering') + ' en al zijn punten verwijderen? Dat kan niet ongedaan gemaakt worden.')) return;
   /* Eerst de foto-map leegruimen, anders blijven de bestanden achter
      terwijl de rijen door de cascade verdwijnen. */
   const lijst = await vraag(sb.storage.from(BUCKET).list(o.id), 'Fotomap lezen');
@@ -701,7 +860,7 @@ async function nieuwPunt(file){
 function bijwerkTelling(){
   if (!HUIDIG) return;
   const p = HUIDIG.punten || [];
-  TELLING[HUIDIG.id] = { totaal: p.length, open: p.filter(x => !x.gereed).length };
+  TELLING[HUIDIG.id] = { totaal: p.length, open: p.filter(x => !x.gereed).length, bedrag: p.reduce((t, x) => t + getal(x.bedrag), 0) };
 }
 
 function puntBijId(id){
@@ -731,9 +890,57 @@ async function wisselGereed(id){
 function openPunt(id){
   const p = puntBijId(id); if (!p) return;
   VEL_PUNT = p;
+  const hr = isHoutrot(HUIDIG);
+  document.getElementById('p_houtrotvelden').style.display = hr ? '' : 'none';
+  document.getElementById('p_titel').textContent = hr ? 'Houtrot-plek' : 'Punt';
+  document.getElementById('p_omslabel').textContent = hr ? 'Toelichting (optioneel)' : 'Wat moet er gebeuren';
+  document.getElementById('p_omschrijving').placeholder = hr ? 'Bijvoorbeeld: ook de kitnaad vervangen' : 'Bijvoorbeeld: kitrand onder de dorpel opnieuw';
   document.getElementById('p_omschrijving').value = p.omschrijving || '';
+  if (hr) {
+    document.getElementById('p_plek').value   = p.plek || '';
+    document.getElementById('p_aantal').value = getal(p.aantal) || 1;
+    document.getElementById('p_prijs').value  = getal(p.prijs_eenheid);
+    document.getElementById('p_bedrag').value = getal(p.bedrag);
+    document.getElementById('p_eenheid').textContent = p.eenheid || 'stuk';
+    vulMethodes(p);
+    BEDRAG_HAND = getal(p.bedrag) !== Math.round(getal(p.aantal) * getal(p.prijs_eenheid) * 100) / 100;
+  }
   tekenPuntFoto();
   toonVel('velPunt', true);
+}
+
+function vulMethodes(p){
+  const sel = document.getElementById('p_methode');
+  if (!TARIEVEN.length && !vulMethodes._bezig) {   /* tarieven nog niet binnen: ophalen en opnieuw vullen */
+    vulMethodes._bezig = true;
+    laadTarieven().then(() => { vulMethodes._bezig = false; if (VEL_PUNT === p) vulMethodes(p); });
+  }
+  let html = '<option value="">— kies een methode —</option>';
+  TARIEVEN.forEach(t => { html += '<option value="' + esc(t.id) + '">' + esc(t.naam) + ' · ' + eur(t.prijs) + '/' + esc(t.eenheid) + '</option>'; });
+  html += '<option value="anders">Anders / op maat</option>';
+  sel.innerHTML = html;
+  if (p && p.tarief_id && TARIEVEN.some(t => t.id === p.tarief_id)) sel.value = p.tarief_id;
+  else if (p && (p.methode || '').trim()) sel.value = 'anders';
+  else sel.value = '';
+}
+
+function kiesMethode(){
+  const id = document.getElementById('p_methode').value;
+  const t = TARIEVEN.find(x => x.id === id);
+  if (t) {
+    document.getElementById('p_prijs').value = getal(t.prijs);
+    document.getElementById('p_eenheid').textContent = t.eenheid || 'stuk';
+    if (!getal(document.getElementById('p_aantal').value)) document.getElementById('p_aantal').value = 1;
+    BEDRAG_HAND = false;
+    herrekenBedrag();
+  }
+}
+
+function herrekenBedrag(){
+  if (BEDRAG_HAND) return;
+  const a = getal(document.getElementById('p_aantal').value);
+  const pr = getal(document.getElementById('p_prijs').value);
+  document.getElementById('p_bedrag').value = Math.round(a * pr * 100) / 100;
 }
 
 function tekenPuntFoto(){
@@ -796,9 +1003,25 @@ async function zetNieuweFoto(file){
 async function bewaarPunt(){
   const p = VEL_PUNT; if (!p) return;
   const oms = document.getElementById('p_omschrijving').value.trim();
-  p.omschrijving = oms;
-  const res = await vraag(sb.from('oplever_punten').update({ omschrijving: oms }).eq('id', p.id), 'Opslaan');
-  if (!res || res.error) return;
+  const rij = { omschrijving: oms };
+  if (isHoutrot(HUIDIG)) {
+    const sel = document.getElementById('p_methode').value;
+    const t = TARIEVEN.find(x => x.id === sel) || null;
+    rij.plek          = document.getElementById('p_plek').value.trim();
+    rij.tarief_id     = t ? t.id : null;
+    rij.methode       = t ? t.naam : (sel === 'anders' ? 'Anders / op maat' : '');
+    rij.methode_tekst = t ? (t.omschrijving || '') : '';
+    rij.eenheid       = t ? (t.eenheid || 'stuk') : (p.eenheid || 'stuk');
+    rij.aantal        = Math.max(0, getal(document.getElementById('p_aantal').value));
+    rij.prijs_eenheid = Math.max(0, getal(document.getElementById('p_prijs').value));
+    rij.bedrag        = Math.max(0, getal(document.getElementById('p_bedrag').value));
+    if (!rij.plek) { toast('Vul de plek in, anders weet de klant niet waar het zit.'); return; }
+    if (!rij.methode) { toast('Kies een herstelmethode.'); return; }
+  }
+  const res = await vraag(sb.from('oplever_punten').update(rij).eq('id', p.id).select(), 'Opslaan');
+  if (!res || res.error || !res.data || !res.data[0]) return;
+  Object.assign(p, res.data[0]);
+  bijwerkTelling();
   sluitVellen();
   render();
 }
@@ -813,6 +1036,245 @@ async function verwijderPunt(){
   bijwerkTelling();
   sluitVellen();
   render();
+}
+
+/* ────────────────────────────────────────────────────────
+   Houtrot-opgave (v0.3.0): detail, punten, PDF
+   ──────────────────────────────────────────────────────── */
+function renderDetailHoutrot(){
+  const o = HUIDIG;
+  const punten = o.punten || [];
+  const tot = totalen(o);
+  const adres = [o.klant, o.adres, [o.postcode, o.plaats].filter(Boolean).join(' ')].filter(Boolean).join('\n');
+  const st = STATUS_TEKST[o.status] ? o.status : 'concept';
+  const zonderPrijs = punten.filter(p => !getal(p.bedrag)).length;
+
+  let html = '<button class="terug" onclick="sluitDetail()">‹ Alle houtrot-opgaven</button>';
+  html += '<div class="kop">' +
+    '<h2>' + esc(o.projectnaam) + '</h2>' +
+    '<span class="status-pil ' + st + '">' + STATUS_TEKST[st] + (o.opgave_nummer ? ' · ' + esc(o.opgave_nummer) : '') + '</span>' +
+    (adres ? '<div class="adres">' + esc(adres) + '</div>' : '') +
+    (o.klant_email ? '<div class="adres">' + esc(o.klant_email) + '</div>' : '') +
+    (o.notitie ? '<div class="adres" style="margin-top:6px">' + esc(o.notitie) + '</div>' : '') +
+    '<div class="totalen">' +
+      '<div><span>' + punten.length + (punten.length === 1 ? ' plek' : ' plekken') + ', excl. btw</span><span>' + eur(tot.sub) + '</span></div>' +
+      '<div><span>Btw ' + tot.pct + '%</span><span>' + eur(tot.btw) + '</span></div>' +
+      '<div class="eind"><span>Totaal incl. btw</span><span>' + eur(tot.incl) + '</span></div>' +
+    '</div>' +
+    (zonderPrijs ? '<div class="hint" style="color:var(--oranje)">' + zonderPrijs + (zonderPrijs === 1 ? ' plek heeft' : ' plekken hebben') + ' nog geen bedrag.</div>' : '') +
+    '<div class="knoppen">' +
+      '<button class="knopje" onclick="bewerkOplevering()">Gegevens</button>' +
+      '<button class="knopje groen" onclick="maakPdf()"' + (punten.length ? '' : ' disabled') + '>PDF maken</button>' +
+    '</div></div>';
+
+  if (!punten.length) {
+    html += '<div class="melding">Nog geen plekken. Maak een foto van elke houtrotplek die je tegenkomt.</div>';
+  } else {
+    html += punten.map(puntHoutrotHtml).join('');
+  }
+  html += '<div class="toevoegrij">' +
+    '<button onclick="kiesFoto()">📷 Plek met foto</button>' +
+    '<button onclick="nieuwPunt(null)">＋ Zonder foto</button>' +
+    '</div>';
+  document.getElementById('lijst').innerHTML = html + voet();
+}
+
+function puntHoutrotHtml(p){
+  const mk = Array.isArray(p.markeringen) ? p.markeringen : [];
+  const duim = p._url
+    ? '<img class="duim" src="' + p._url + '" alt="foto" onclick="opendMarkeer(\'' + p.id + '\')">'
+    : '<div class="duim leeg" onclick="vervangFoto(\'' + p.id + '\')">📷</div>';
+  const plek = (p.plek || '').trim();
+  const meth = (p.methode || '').trim();
+  const regel = meth ? meth + ' · ' + (getal(p.aantal) || 0) + ' ' + (p.eenheid || 'stuk') + ' × ' + eur(p.prijs_eenheid) : 'Nog geen methode gekozen';
+  const bedrag = getal(p.bedrag);
+  return '<div class="punt">' +
+    duim +
+    '<div class="tekst" onclick="openPunt(\'' + p.id + '\')">' +
+      '<div class="plek' + (plek ? '' : ' leeg') + '">' + esc(plek || 'Plek nog invullen') + '</div>' +
+      '<div class="meth">' + esc(regel) + '</div>' +
+      (mk.length ? '<span class="mkpil">' + mk.length + ' markering' + (mk.length === 1 ? '' : 'en') + '</span>' : '') +
+    '</div>' +
+    '<div class="bedrag' + (bedrag ? '' : ' leeg') + '" onclick="openPunt(\'' + p.id + '\')">' + (bedrag ? eur(bedrag) : '—') + '</div>' +
+    '</div>';
+}
+
+/* Foto plus getekende ringen samenvoegen tot één afbeelding voor de PDF.
+   Zelfde rekenwijze als ringStijl: fx/fy als fractie van de foto, r als
+   straal in fractie van de fotobreedte. Lukt het canvas niet (bijvoorbeeld
+   door een CORS-weigering), dan gaat de kale foto mee. */
+function laadAfbeelding(url){
+  return new Promise((ok, nee) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => ok(img);
+    img.onerror = () => nee(new Error('foto laden mislukt'));
+    img.src = url;
+  });
+}
+async function fotoMetRingen(p, maxBreed){
+  if (!p._url) return null;
+  try {
+    const img = await laadAfbeelding(p._url);
+    const schaal = Math.min(1, (maxBreed || 1200) / img.naturalWidth);
+    const W = Math.round(img.naturalWidth * schaal), H = Math.round(img.naturalHeight * schaal);
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    g.drawImage(img, 0, 0, W, H);
+    const mk = Array.isArray(p.markeringen) ? p.markeringen : [];
+    mk.forEach((m, i) => {
+      const r = ringStraal(m) * W, x = m.fx * W, cy = m.fy * H;
+      g.lineWidth = Math.max(3, W / 250); g.strokeStyle = '#ff3b30';
+      g.beginPath(); g.arc(x, cy, r, 0, Math.PI * 2); g.stroke();
+      const nr = String(i + 1), fs = Math.max(14, W / 40);
+      g.font = '700 ' + fs + 'px -apple-system, Helvetica, Arial, sans-serif';
+      const bx = x + r * 0.7071, by = cy - r * 0.7071, br = fs * 0.75;
+      g.fillStyle = '#ff3b30'; g.beginPath(); g.arc(bx, by, br, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(nr, bx, by + fs * 0.05);
+    });
+    return c.toDataURL('image/jpeg', 0.82);
+  } catch (e) {
+    console.warn('[foto met ringen]', e);
+    try {
+      const r = await fetch(p._url); const b = await r.blob();
+      return await new Promise((ok, nee) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = () => nee(fr.error); fr.readAsDataURL(b); });
+    } catch (e2) { console.warn('[foto kaal]', e2); return null; }
+  }
+}
+
+async function laadBedrijf(){
+  if (BEDRIJF) return BEDRIJF;
+  const res = await vraag(sb.from('app_settings').select('data').limit(1), 'Bedrijfsgegevens ophalen');
+  const b = (res && res.data && res.data[0] && res.data[0].data && res.data[0].data.bedrijf) || {};
+  BEDRIJF = Object.assign({}, BEDRIJF_STD, b);
+  return BEDRIJF;
+}
+
+function datumLang(d){
+  d = d || new Date();
+  return d.getDate() + ' ' + MND[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+/* Bouwt de PDF-definitie van een houtrot-opgave. Geeft een pdfMake-docDefinition. */
+async function bouwHoutrotDoc(o){
+  const bd = await laadBedrijf();
+  const punten = o.punten || [];
+  const tot = totalen(o);
+  const logo = document.querySelector('.brand-logo').getAttribute('src');
+  const klantblok = [o.klant, o.adres, [o.postcode, o.plaats].filter(Boolean).join(' ')].filter(Boolean);
+
+  const inhoud = [];
+  inhoud.push({ columns: [
+    { image: logo, width: 120 },
+    { width: '*', alignment: 'right', fontSize: 8.5, color: '#5b636e', lineHeight: 1.25, text:
+      [bd.naam, bd.adres, bd.pc, bd.tel, bd.email, bd.web].filter(Boolean).join('\n') }
+  ], margin: [0, 0, 0, 22] });
+  inhoud.push({ text: 'Opgave houtrotherstel', fontSize: 18, bold: true, margin: [0, 0, 0, 4] });
+  inhoud.push({ text: [o.projectnaam, o.opgave_nummer ? 'Opgave ' + o.opgave_nummer : null, datumLang()].filter(Boolean).join('  ·  '), fontSize: 9.5, color: '#5b636e', margin: [0, 0, 0, 14] });
+  if (klantblok.length) inhoud.push({ text: klantblok.join('\n'), margin: [0, 0, 0, 14], lineHeight: 1.2 });
+  inhoud.push({ text:
+    'Tijdens de uitvoering van het schilderwerk zijn we op de hieronder beschreven plekken houtrot tegengekomen. ' +
+    'Houtrot zit onder de verflaag en is bij de opname niet altijd te zien. Het herstel valt daarom buiten de offerte. ' +
+    'Per plek staat hieronder een foto, de plek, de herstelmethode en de prijs. Na uw akkoord voeren we het herstel direct mee uit, zodat het schilderwerk er goed op aansluit.',
+    margin: [0, 0, 0, 16], lineHeight: 1.3 });
+
+  for (let i = 0; i < punten.length; i++) {
+    const p = punten[i];
+    const foto = await fotoMetRingen(p, 1000);
+    const rechts = [
+      { text: (i + 1) + '. ' + (p.plek || 'Plek'), bold: true, fontSize: 11, margin: [0, 0, 0, 3] },
+      { text: p.methode || '—', bold: true, fontSize: 9.5 },
+      p.methode_tekst ? { text: p.methode_tekst, fontSize: 9, color: '#5b636e', margin: [0, 2, 0, 4], lineHeight: 1.25 } : null,
+      p.omschrijving ? { text: p.omschrijving, fontSize: 9, margin: [0, 0, 0, 4], lineHeight: 1.25 } : null,
+      { text: (getal(p.aantal) || 0) + ' ' + (p.eenheid || 'stuk') + ' × ' + eur(p.prijs_eenheid), fontSize: 9, color: '#5b636e' },
+      { text: eur(p.bedrag) + ' excl. btw', bold: true, fontSize: 11, margin: [0, 4, 0, 0] }
+    ].filter(Boolean);
+    inhoud.push({ unbreakable: true, margin: [0, 0, 0, 14], columns: [
+      foto ? { image: foto, width: 200 } : { width: 200, text: 'geen foto', color: '#98a0ac', italics: true },
+      { width: '*', stack: rechts, margin: [12, 0, 0, 0] }
+    ] });
+  }
+
+  inhoud.push({ unbreakable: true, margin: [0, 6, 0, 0], table: {
+    widths: ['*', 90],
+    body: [
+      [{ text: 'Totaal herstel excl. btw', margin: [0, 2] }, { text: eur(tot.sub), alignment: 'right', margin: [0, 2] }],
+      [{ text: 'Btw ' + tot.pct + '%', margin: [0, 2] }, { text: eur(tot.btw), alignment: 'right', margin: [0, 2] }],
+      [{ text: 'Totaal incl. btw', bold: true, fontSize: 11.5, margin: [0, 4] }, { text: eur(tot.incl), bold: true, fontSize: 11.5, alignment: 'right', margin: [0, 4] }]
+    ]
+  }, layout: { hLineWidth: (i) => (i === 0 || i === 3) ? 0.8 : 0.4, vLineWidth: () => 0, hLineColor: () => '#c9ced6', paddingLeft: () => 0, paddingRight: () => 0 } });
+
+  inhoud.push({ text:
+    'Deze opgave is meerwerk op de lopende opdracht en geldt tot twee weken na dagtekening. Na uw akkoord voeren we het herstel uit en brengen we het bedrag in rekening op de eindfactuur.',
+    fontSize: 9, color: '#5b636e', margin: [0, 14, 0, 0], lineHeight: 1.3 });
+
+  return {
+    pageSize: 'A4', pageMargins: [48, 44, 48, 54],
+    defaultStyle: { fontSize: 10, color: '#191c21' },
+    footer: (cur, tot) => ({ margin: [48, 18, 48, 0], fontSize: 7.5, color: '#98a0ac', columns: [
+      { width: '*', text: [bd.naam, bd.kvk ? 'KvK ' + bd.kvk : null, bd.btw ? 'Btw ' + bd.btw : null, bd.iban ? 'IBAN ' + bd.iban : null].filter(Boolean).join('  ·  ') },
+      { width: 40, text: cur + ' / ' + tot, alignment: 'right' }
+    ] }),
+    content: inhoud
+  };
+}
+
+async function maakHoutrotPdfBlob(o){
+  if (typeof pdfMake === 'undefined' || !pdfMake.createPdf) throw new Error('de PDF-bibliotheek is nog niet geladen; wacht even en probeer opnieuw');
+  const dd = await bouwHoutrotDoc(o);
+  const blob = await new Promise((ok, nee) => { try { pdfMake.createPdf(dd).getBlob(b => ok(b)); } catch (e) { nee(e); } });
+  if (!blob || !blob.size) throw new Error('de PDF kwam leeg uit de opbouw');
+  return blob;
+}
+
+function pdfNaam(o){
+  const n = (o.projectnaam || 'opgave').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-');
+  const d = new Date(), ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  return 'Houtrot-opgave-' + n + (o.opgave_nummer ? '-' + o.opgave_nummer.replace(/[^\w\-]+/g, '') : '') + '-' + ds + '.pdf';
+}
+
+/* Deelt het bestand via de deelknop van het toestel (op iPhone zit Mail
+   daar in). Kan dat niet, dan wordt het bestand gedownload of geopend. */
+async function deelBestand(blob, naam){
+  try {
+    const f = new File([blob], naam, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) {
+      await navigator.share({ files: [f], title: naam });
+      return 'gedeeld';
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return 'afgebroken';
+    console.warn('[delen]', e);
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = naam; a.target = '_blank';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return 'gedownload';
+}
+
+async function maakPdf(){
+  const o = HUIDIG; if (!o || BEZIG) return;
+  if (!(o.punten || []).length) { toast('Er staan nog geen plekken in deze opgave.'); return; }
+  const open = (o.punten || []).filter(p => !getal(p.bedrag) || !(p.plek || '').trim() || !(p.methode || '').trim()).length;
+  if (open && !confirm(open + (open === 1 ? ' plek is' : ' plekken zijn') + ' nog niet compleet (plek, methode of bedrag). Toch de PDF maken?')) return;
+  BEZIG = true;
+  toast('PDF opbouwen…');
+  try {
+    const blob = await maakHoutrotPdfBlob(o);
+    const hoe = await deelBestand(blob, pdfNaam(o));
+    if (hoe === 'gedeeld') toast('PDF gedeeld.');
+    else if (hoe === 'gedownload') toast('PDF klaargezet als download.');
+  } catch (e) {
+    console.warn('[pdf]', e);
+    toast('PDF maken mislukt: ' + (e.message || 'onbekende fout'));
+  }
+  BEZIG = false;
+}
+
+async function laadTarieven(){
+  const res = await vraag(sb.from('houtrot_tarieven').select('*').eq('actief', true).order('volgorde').order('naam'), 'Houtrot-tarieven laden');
+  TARIEVEN = (res && res.data) ? res.data : [];
 }
 
 /* ────────────────────────────────────────────────────────
@@ -1153,6 +1615,7 @@ async function start(){
   IK = gebruiker.email || null;
   const ok = await laadLijsten();
   if (ok) render();
+  laadTarieven();   /* mag na het tekenen, is pas nodig in het punt-vel */
 }
 
 document.getElementById('fab').addEventListener('click', nieuweOplevering);

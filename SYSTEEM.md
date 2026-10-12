@@ -37,7 +37,7 @@ rechtstreeks met Supabase.
 | Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.68.0 |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
-| Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.2.0 |
+| Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.3.0 (12-10-2026; eerdere rijen staan nog op 14-09) |
 | Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.10.4 |
 | Personeel | `personeel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/personeel.html | v0.5.0 |
 | Klanten | `klanten.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/klanten.html | v0.4.0 |
@@ -106,7 +106,7 @@ aangelegd met `planning_01_tabellen.sql` (twintig controleregels, alle
 GOED). Op 7 september kwam `plan_verlof` erbij (verlof per medewerker per
 dag, `planning_02_verlof.sql`, vijf controleregels GOED) en `plan_fasen`
 (project in fasen knippen, `planning_04_fasen.sql`) en `plan_middelen`
-(hulpmiddelen per project of fase, `planning_05_middelen.sql`). Op 4 oktober 2026 kreeg `plan_projecten` de kolom `toon_ondanks_regel` (`planning_06_paraplu.sql`): overrule op de naamregel in `planning.html` v0.17.0 die hoofdprojecten "Onderhoudsplan jjjj-jjjj" en "Onderhouds garantie+ Plan jjjj-jjjj" standaard van het bord houdt (regel verruimd in v0.17.1). Die getallen zijn opgeteld bij de meting van 2 augustus en niet
+(hulpmiddelen per project of fase, `planning_05_middelen.sql`). Op 4 oktober 2026 kreeg `plan_projecten` de kolom `toon_ondanks_regel` (`planning_06_paraplu.sql`): overrule op de naamregel in `planning.html` v0.17.0 die hoofdprojecten "Onderhoudsplan jjjj-jjjj" en "Onderhouds garantie+ Plan jjjj-jjjj" standaard van het bord houdt (regel verruimd in v0.17.1). Op 12 oktober 2026 kwam `houtrot_tarieven` erbij (`sql/houtrot_01_tarieven.sql`, herstelmethodes met richtprijs, beheerd in Calc v4.90.0 onder Instellingen) en kregen `opleveringen` en `oplever_punten` de houtrot-opgave erbij (`sql/houtrot_02_opgaven.sql`): kolom `soort` ('oplevering'/'houtrot') op beide, op `opleveringen` `klant_email`, `btw_pct` (9/21), `opgave_nummer`, `verzonden_op`, en op `oplever_punten` `plek`, `tarief_id` → houtrot_tarieven (on delete set null), `methode`, `methode_tekst`, `eenheid`, `aantal`, `prijs_eenheid`, `bedrag`. Daarbij is de check op `opleveringen.status` vervangen door `opleveringen_status_check`, die naast lopend/afgerond ook concept/verzonden/akkoord/afgewezen toestaat. Geen nieuwe tabel voor de opgave zelf: bewust besluit van Gian, zodat `oplevering.html` v0.3.0 de camera-, foto- en ringcode hergebruikt. Die getallen zijn opgeteld bij de meting van 2 augustus en niet
 opnieuw geteld.
 
 > **Twee triggertellingen spreken elkaar tegen.** Hier staat 14, de
