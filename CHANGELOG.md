@@ -1,3 +1,24 @@
+## v4.90.0 — Houtrot-tarieven onder Instellingen (2026-10-12)
+
+**Aanleiding**
+- Gian 12-10-2026: tijdens de uitvoering houtrot tegenkomen, per foto kwantificeren en als opgave met foto's en bedrag per foto naar de klant, met akkoord. Besluit (ask_user_input): buitendienst vult het bedrag zelf in op de steiger; verzenden via de app met accordeerlink; vaste tarieflijst, overschrijfbaar; btw per opgave instelbaar (9/21). Bouwvolgorde in vier stappen; dit is stap 1.
+
+**Gebouwd**
+- Nieuwe tabel `houtrot_tarieven` via `sql/houtrot_01_tarieven.sql` (naam uniek, omschrijving, eenheid stuk/cm/dm/m/uur, prijs excl. btw, actief, volgorde; RLS en rechten volgens sjabloon; projectcontrole op het bestaan van `calculaties`; startlijst van vijf methodes met prijs 0; zes controleregels). Door Gian gedraaid, 6× GOED.
+- Blok "Houtrot-tarieven" onder Instellingen, tussen Gebrek-prijzen en Data Beheer: tabel met per rij volgorde, naam, klanttekst, eenheid, prijs, actief en verwijderknop; elke wijziging gaat direct naar Supabase (`houtrotTariefWijzig`), met terugdraaien en melding bij een fout. Lege of dubbele naam wordt geweigerd. "+ Methode toevoegen" maakt een rij "Nieuwe methode" met volgorde max+10 en zet de cursor in het naamveld. Verwijderen vraagt bevestiging en adviseert niet-actief zetten. Laadt bij het openen van de Instellingen-tab, met Ververs-knop; ontbreekt de tabel dan staat de reden in het blok.
+- Welkomsttekst en RELEASE_HIGHLIGHTS bijgewerkt.
+
+**Niet gewijzigd**
+- Berekeningen, offerte, de bestaande gebrek-prijs voor houtrot (v3.39.0) bij de stippen; die staat hier los van. Geen Edge Function. `oplevering.html` nog niet aangeraakt.
+
+**Getest**
+- SQL: pglast-parse; lokaal Postgres 16: projectcontrole stopt zonder `calculaties`, eerste run 6× GOED, tweede run idempotent (5 rijen blijven 5), `updated_at`-trigger, check-constraint op eenheid, anon permission denied, authenticated lezen/schrijven.
+- App: node --check op het scriptblok, css-accolades 822/822, div-balans +6/+6 t.o.v. live (1349/1352), versie 4× aanwezig plus commentaaranker. Runtime in Node met mock Supabase en DOM, op code direct uit het gepatchte bestand gesneden: laden, renderen, prijs wijzigen, lege en dubbele naam geweigerd, niet-actief dimmen, toevoegen met unieke naam en volgorde, DB-fout terugdraaien, verwijderen, cache bij herladen, escaping van namen.
+- Niet getest: in de browser zelf. Controleer na deploy dat het blok onder Instellingen de vijf startmethodes toont en dat een prijswijziging na Ververs blijft staan.
+
+**Volgende stappen**
+- Stap 2: houtrot-opgave en punten in `oplevering.html` (SQL `houtrot_02_opgaven.sql`), PDF downloaden. Stap 3: accordeerlink en mail (Edge Functions `offerte-accord` en `offerte-verzenden`, soort `houtrot`). Stap 4: klantpagina en bevestigingsmails.
+
 ## v4.89.0 — Calculatielijst standaard op Opname, eerstvolgende datum bovenaan (2026-10-08)
 
 **Aanleiding**
