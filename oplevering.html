@@ -386,7 +386,7 @@
    (opleveringen, oplever_punten) en een eigen opslagbak
    (oplever-fotos) in hetzelfde Supabase-project.
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.3.0';
+const APP_VERSION = 'v0.3.1';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
@@ -815,8 +815,17 @@ async function verwijderOplevering(){
 /* ────────────────────────────────────────────────────────
    Punten
    ──────────────────────────────────────────────────────── */
+/* v0.3.1: bij een oplevering opent de camera direct (capture="environment");
+   bij een houtrot-opgave vervalt dat, zodat iOS en Android het menu
+   camera / fotobibliotheek / bestanden tonen. Een eerder gemaakte foto
+   (van een collega, of van gisteren) kan dan ook in de opgave. */
+function stelFotoInvoerIn(inv){
+  if (isHoutrot(HUIDIG)) inv.removeAttribute('capture');
+  else inv.setAttribute('capture', 'environment');
+}
 function kiesFoto(){
   const inv = document.getElementById('fotoInvoer');
+  stelFotoInvoerIn(inv);
   inv.value = '';
   inv.click();
 }
@@ -968,6 +977,7 @@ function vervangFoto(id){
   const p = puntBijId(id); if (!p) return;
   VEL_PUNT = p;
   const inv = document.getElementById('fotoVervang');
+  stelFotoInvoerIn(inv);
   inv.value = '';
   inv.click();
 }

@@ -1,5 +1,8 @@
 # Changelog Oplevering
 
+## v0.3.1 — Foto kiezen uit bibliotheek bij houtrot
+Bij een houtrot-opgave opende de fotoknop op iPhone altijd direct de camera, zonder keuze voor de fotobibliotheek of bestanden. Dat kwam door `capture="environment"` op de verborgen bestandsinvoer, een keuze uit de eerste oplever-app (22-08-2026). Bij een houtrot-opgave vervalt dat attribuut nu vlak voor het openen (`stelFotoInvoerIn`), zodat het toestel het menu camera / fotobibliotheek / bestanden toont; bij een oplevering blijft de camera direct opengaan. Gevonden door Gian bij de iPhone-test van v0.3.0 op 12-10-2026.
+
 ## v0.3.0 — Houtrot-opgave vanaf de steiger
 Kom je tijdens het werk houtrot tegen, dan maak je per plek een foto, kiest een herstelmethode en zet er een bedrag op. De app telt op en maakt een PDF die je via de deelknop naar de klant mailt. Stap 2 van vier; de accordeerlink en het mailen vanuit de app (stap 3 en 4) volgen.
 
