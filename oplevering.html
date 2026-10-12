@@ -386,13 +386,18 @@
    (opleveringen, oplever_punten) en een eigen opslagbak
    (oplever-fotos) in hetzelfde Supabase-project.
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.3.1';
+const APP_VERSION = 'v0.4.0';
 
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-oplever-auth' } });
 
 const BUCKET = 'oplever-fotos';
+/* v0.4.0 — accordeerlink voor houtrot-opgaven. Zelfde bak en Edge Function
+   als de offertes in Calc (index.html, v3.79.0 / v3.96.0). */
+const ACCORD_PDF_BUCKET = 'accord-pdf';
+const VERZEND_FN_URL = SUPABASE_URL + '/functions/v1/offerte-verzenden';
+const OPGAVE_GELDIG_DAGEN = 14;
 
 let IK = null;              /* e-mailadres van de ingelogde gebruiker */
 let LIJSTEN = [];           /* alle opleveringen */
@@ -1072,9 +1077,12 @@ function renderDetailHoutrot(){
       '<div class="eind"><span>Totaal incl. btw</span><span>' + eur(tot.incl) + '</span></div>' +
     '</div>' +
     (zonderPrijs ? '<div class="hint" style="color:var(--oranje)">' + zonderPrijs + (zonderPrijs === 1 ? ' plek heeft' : ' plekken hebben') + ' nog geen bedrag.</div>' : '') +
+    verzendRegelHtml(o) +
     '<div class="knoppen">' +
       '<button class="knopje" onclick="bewerkOplevering()">Gegevens</button>' +
-      '<button class="knopje groen" onclick="maakPdf()"' + (punten.length ? '' : ' disabled') + '>PDF maken</button>' +
+      '<button class="knopje" onclick="maakPdf()"' + (punten.length ? '' : ' disabled') + '>PDF</button>' +
+      (st === 'akkoord' || st === 'afgewezen' ? '' :
+        '<button class="knopje groen" onclick="verstuurOpgave()"' + (punten.length ? '' : ' disabled') + '>' + (st === 'verzonden' ? 'Opnieuw versturen' : 'Opgave versturen') + '</button>') +
     '</div></div>';
 
   if (!punten.length) {
@@ -1235,6 +1243,129 @@ async function maakHoutrotPdfBlob(o){
   const blob = await new Promise((ok, nee) => { try { pdfMake.createPdf(dd).getBlob(b => ok(b)); } catch (e) { nee(e); } });
   if (!blob || !blob.size) throw new Error('de PDF kwam leeg uit de opbouw');
   return blob;
+}
+
+/* ────────────────────────────────────────────────────────
+   v0.4.0 — Opgave versturen met accordeerlink
+   Zelfde mechanisme als een offerte in Calc: PDF in de bak accord-pdf,
+   rij in offerte_accorderingen (met oplevering_id, zonder calculatie),
+   mail A via de Edge Function offerte-verzenden. De klant opent
+   ?accord=TOKEN op de Calc-pagina en geeft daar akkoord; offerte-accord
+   zet deze opgave dan op akkoord of afgewezen.
+   ──────────────────────────────────────────────────────── */
+function verzendRegelHtml(o){
+  if (!o.verzonden_op) return '';
+  let d = '';
+  try { d = new Date(o.verzonden_op).toLocaleString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (_) { d = String(o.verzonden_op).slice(0, 10); }
+  return '<div class="hint">Verstuurd op ' + esc(d) + (o.klant_email ? ' naar ' + esc(o.klant_email) : '') + '. Geldig ' + OPGAVE_GELDIG_DAGEN + ' dagen.</div>';
+}
+
+function ymdPlusDagen(n){
+  const d = new Date(); d.setDate(d.getDate() + n);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function maakToken(){
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g, '') + Date.now().toString(36);
+  return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+/* Het bevroren beeld van de opgave voor de accordeerlink. offerte-accord en
+   offerte-verzenden lezen offertenummer, aanhef, klantEmail, geldigTot en
+   projectnaam; de rest is voor later (nacalculatie, stap 4). */
+function bouwOpgaveSnapshot(o){
+  const tot = totalen(o);
+  return {
+    soort: 'houtrot', v: APP_VERSION, op: new Date().toISOString(),
+    offertenummer: o.opgave_nummer || '',
+    aanhef: o.klant || '',
+    klantEmail: (o.klant_email || '').trim(),
+    projectnaam: o.projectnaam || '',
+    geldigTot: ymdPlusDagen(OPGAVE_GELDIG_DAGEN),
+    btw_pct: tot.pct,
+    totalen: { excl: tot.sub, btw: tot.btw, incl: tot.incl },
+    punten: (o.punten || []).map(p => ({
+      plek: p.plek || '', methode: p.methode || '', aantal: getal(p.aantal) || 0,
+      eenheid: p.eenheid || 'stuk', prijs_eenheid: getal(p.prijs_eenheid) || 0, bedrag: getal(p.bedrag) || 0
+    }))
+  };
+}
+
+/* Zelfde aanroep als _offerteVerzendCall in Calc: ingelogd (sessie als Bearer),
+   terugval op de anon-sleutel. */
+async function verzendCall(token, tekst){
+  let auth = SUPABASE_KEY;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && session.access_token) auth = session.access_token;
+  } catch (_) {}
+  const res = await fetch(VERZEND_FN_URL, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + auth, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, tekst: tekst || '' })
+  });
+  let js = null;
+  try { js = await res.json(); } catch (_) {}
+  if (!res.ok || !js || !js.ok) throw new Error((js && js.error) ? js.error : ('fout ' + res.status));
+  return js;
+}
+
+async function verstuurOpgave(){
+  const o = HUIDIG; if (!o || BEZIG || !isHoutrot(o)) return;
+  const punten = o.punten || [];
+  if (!punten.length) { toast('Er staan nog geen plekken in deze opgave.'); return; }
+  const email = (o.klant_email || '').trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    toast('Vul eerst het e-mailadres van de klant in bij Gegevens.');
+    bewerkOplevering();
+    return;
+  }
+  const open = punten.filter(p => !getal(p.bedrag) || !(p.plek || '').trim() || !(p.methode || '').trim()).length;
+  if (open && !confirm(open + (open === 1 ? ' plek is' : ' plekken zijn') + ' nog niet compleet (plek, methode of bedrag). Toch versturen?')) return;
+  const tot = totalen(o);
+  const vraagTekst = (o.status === 'verzonden' ? 'Deze opgave is al verstuurd. Opnieuw versturen maakt een nieuwe link; de oude werkt dan niet meer.\n\n' : '')
+    + 'Opgave van ' + eur(tot.incl) + ' incl. btw versturen naar ' + email + '?';
+  if (!confirm(vraagTekst)) return;
+
+  BEZIG = true;
+  let stap = 'PDF opbouwen';
+  try {
+    toast('PDF opbouwen…');
+    const blob = await maakHoutrotPdfBlob(o);
+    const token = maakToken();
+    const path = token + '.pdf';
+
+    stap = 'PDF opslaan';
+    toast('PDF opslaan…');
+    const { error: upErr } = await sb.storage.from(ACCORD_PDF_BUCKET).upload(path, blob, { contentType: 'application/pdf', upsert: true });
+    if (upErr) throw upErr;
+
+    stap = 'Link aanmaken';
+    /* Eén actieve link per opgave: oude open links van deze opgave weg. */
+    const { error: delErr } = await sb.from('offerte_accorderingen').delete().eq('oplevering_id', o.id).eq('status', 'open');
+    if (delErr) throw delErr;
+    const { error: insErr } = await sb.from('offerte_accorderingen').insert({
+      oplevering_id: o.id, calculatie_id: null, token: token, status: 'open',
+      bedrag: tot.incl, pdf_path: path, snapshot: bouwOpgaveSnapshot(o)
+    });
+    if (insErr) throw insErr;
+
+    stap = 'Mailen';
+    toast('Mail versturen…');
+    await verzendCall(token, '');
+
+    stap = 'Status bijwerken';
+    const nu = new Date().toISOString();
+    const { data, error: stErr } = await sb.from('opleveringen').update({ status: 'verzonden', verzonden_op: nu }).eq('id', o.id).select();
+    if (stErr) throw stErr;
+    o.status = 'verzonden'; o.verzonden_op = (data && data[0] && data[0].verzonden_op) || nu;
+    toast('Opgave verstuurd naar ' + email + '.');
+  } catch (e) {
+    console.warn('[versturen]', stap, e);
+    toast(stap + ' mislukt: ' + (e.message || 'onbekende fout'));
+  }
+  BEZIG = false;
+  render();
 }
 
 function pdfNaam(o){

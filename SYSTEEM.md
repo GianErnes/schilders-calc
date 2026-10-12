@@ -37,7 +37,7 @@ rechtstreeks met Supabase.
 | Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.68.0 |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
-| Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.3.1 (12-10-2026; eerdere rijen staan nog op 14-09) |
+| Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.4.0 (12-10-2026; eerdere rijen staan nog op 14-09) |
 | Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.10.4 |
 | Personeel | `personeel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/personeel.html | v0.5.0 |
 | Klanten | `klanten.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/klanten.html | v0.4.0 |

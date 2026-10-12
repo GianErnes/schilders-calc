@@ -1,5 +1,16 @@
 # Changelog Oplevering
 
+## v0.4.0 — Opgave versturen met accordeerlink
+Stap 3 van de houtrot-opgave. Onder de totalen staat nu de groene knop *Opgave versturen*. Die bouwt de PDF, zet hem in de bak `accord-pdf`, maakt een accordeerlink aan (rij in `offerte_accorderingen` met `oplevering_id`, zonder calculatie; `sql/houtrot_03_accord.sql`) en mailt de klant via de Edge Function `offerte-verzenden` (v4.91.0) met de knop "Opgave bekijken en akkoord geven". De klant geeft akkoord op de Calc-pagina (`?accord=TOKEN`), en `offerte-accord` (v4.91.0) zet de opgave dan op akkoord of afgewezen; dat zie je terug in de status-pil.
+
+### Wat er verandert
+- Knop *Opgave versturen* (bij een al verstuurde opgave *Opnieuw versturen*; na akkoord of afwijzing verdwijnt hij). Vereist een e-mailadres bij Gegevens en minstens één plek; bij plekken zonder plek, methode of bedrag vraagt de app eerst of je toch wilt doorgaan. De bevestigingsvraag noemt het bedrag incl. btw en het e-mailadres.
+- Eén actieve link per opgave: opnieuw versturen wist de oude open link en maakt een nieuwe. De link is 14 dagen geldig (`geldigTot` in het snapshot, vandaag + 14).
+- Na een geslaagde mail gaat de opgave op *verzonden* met `verzonden_op`; onder de totalen staat "Verstuurd op <datum> naar <e-mail>". Mislukt een stap (PDF, opslaan, link, mail), dan blijft de status staan en zegt de toast welke stap faalde.
+- De knop *PDF maken* heet nu *PDF* en staat zonder kleur; hij blijft voor het delen via het deelblad.
+- Geen opvolgautomaat bij houtrot-opgaven (besluit 12-10-2026): geen beltaak, herinnering of verlopen-mail.
+- Nog geen begeleidend tekstvak; de mail gebruikt de vaste intro uit `offerte-verzenden`. Dat kan er later bij, net als in Calc.
+
 ## v0.3.1 — Foto kiezen uit bibliotheek bij houtrot
 Bij een houtrot-opgave opende de fotoknop op iPhone altijd direct de camera, zonder keuze voor de fotobibliotheek of bestanden. Dat kwam door `capture="environment"` op de verborgen bestandsinvoer, een keuze uit de eerste oplever-app (22-08-2026). Bij een houtrot-opgave vervalt dat attribuut nu vlak voor het openen (`stelFotoInvoerIn`), zodat het toestel het menu camera / fotobibliotheek / bestanden toont; bij een oplevering blijft de camera direct opengaan. Gevonden door Gian bij de iPhone-test van v0.3.0 op 12-10-2026.
 
