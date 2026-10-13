@@ -6,7 +6,10 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Ontvangst bevestigen · Ernes Schilders</title>
 <!--
-  bevestig.html v1.1.1 (09-10-2026) — hoort bij planning.html v0.19.x,
+  v1.2 (12-10-2026): slotzin per soort (maand/week/dag) met terugvaltekst;
+  de oude vaste zin "op de afgesproken dag" klopte alleen bij de startdag.
+
+  bevestig.html v1.2 (12-10-2026) — hoort bij planning.html v0.19.x,
   Edge Function planning-kennisgeving v3.1 (zet de link in de mail) en
   planning-kennisgeving-bevestig v2 (de API erachter).
 
@@ -69,13 +72,21 @@
       '<p>Uw bevestiging kon niet worden verwerkt. Probeer het nog eens, of bel ons op ' + TEL + '.</p>', true);
   }
   // Wat de pagina laat zien per antwoord van de functie. Los getest (bevestig_test.js).
+  // v1.2: slotzin per soort, in lijn met de belofte in de mail zelf (kennisTekst in planning.html).
+  // 'soort' komt van de functie (maand | week | dag); onbekend of leeg → neutrale terugvalzin.
+  var SLOT = {
+    maand: 'Ongeveer twee weken voor de start laten wij u de precieze week weten, en in de week ervoor de startdag.',
+    week: 'In de week voorafgaand ontvangt u van ons de exacte startdag.',
+    dag: 'Wij zien u graag op de afgesproken dag.'
+  };
+  function slotZin(soort) { return SLOT[String(soort || '').toLowerCase()] || 'U hoort van ons zodra er meer bekend is.'; }
   function verwerkAntwoord(j) {
     if (!j || !j.ok) { ongeldig(); return; }
     var wat = esc(j.omschrijving || 'onze kennisgeving');
     if (j.status === 'bevestigd' || j.status === 'al_bevestigd') {
       toon('Bedankt!',
         '<p class="groen">Uw bevestiging is ontvangen.</p>' +
-        '<p>Wij weten nu dat ' + wat + ' bij u is aangekomen. Wij zien u graag op de afgesproken dag.</p>', false);
+        '<p>Wij weten nu dat ' + wat + ' bij u is aangekomen. ' + slotZin(j.soort) + '</p>', false);
     } else { ongeldig(); }
   }
   if (typeof module !== 'undefined') { module.exports = { verwerkAntwoord: verwerkAntwoord }; return; }

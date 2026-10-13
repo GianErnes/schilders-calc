@@ -1,5 +1,15 @@
 # CHANGELOG planning.html
 
+## v0.19.2 + bevestig.html v1.2 — Bedanktpagina: slotzin per soort kennisgeving, 12-10-2026
+
+**Aanleiding.** Gian 12-10-2026 (schermafbeelding): na bevestiging van een maandaankondiging zegt de pagina "Wij zien u graag op de afgesproken dag", terwijl die mail alleen een maand noemt en juist belooft dat de week en de startdag nog volgen. Bron: `bevestig.html` v1.1.1 regel 78 — de slotzin was één vaste tekst voor maand, week en startdag.
+
+**Wijziging (alleen `bevestig.html` → v1.2).** Nieuwe tabel `SLOT` en helper `slotZin(soort)`; de slotzin volgt nu de belofte uit `kennisTekst` in planning.html: maand → "Ongeveer twee weken voor de start laten wij u de precieze week weten, en in de week ervoor de startdag."; week → "In de week voorafgaand ontvangt u van ons de exacte startdag."; dag → "Wij zien u graag op de afgesproken dag." (ongewijzigd); geen of onbekende `soort` → "U hoort van ons zodra er meer bekend is." Hoofdletters in `soort` worden genegeerd. Geldt ook bij `al_bevestigd`. Eerste zin met de omschrijving, de ongeldig- en storingsteksten en de automatische bevestiging bij openen zijn ongewijzigd. planning.html (v0.19.2), Edge Functions en SQL niet geraakt.
+
+**Aanname.** Dat de functie `planning-kennisgeving-bevestig` v2.1 `soort` meestuurt in het antwoord (CHANGELOG v0.19.1b zegt dat; de functiecode is in deze sessie niet gezien). Stuurt hij dat niet, dan toont de pagina de terugvalzin — niet fout, wel minder specifiek. **Controle na deploy:** een maand- of weekaankondiging aan een eigen adres bevestigen en de slotzin lezen; staat er de terugvalzin, dan plakt Gian het `return`-deel van de GET/POST in de functie.
+
+**Getest.** `node --check` op het scriptblok schoon; div-telling 2/2 gelijk aan v1.1.1; 9 runtime-tests met nagebootste DOM (maand/week/dag, al_bevestigd met hoofdletter, geen soort, onbekende soort, escaping, ongeldig en status `open` ongewijzigd). **Niet getest:** in de browser tegen de echte functie.
+
 ## v0.19.2 — Nabel-signaal alleen voor mails mét knop; statustekst zegt "nabellen", 09-10-2026
 
 **Aanleiding.** Na de eerste geslaagde bevestiging zag Gian bij Hamers de Week-regel oranje: verstuurd 3 oktober, niet bevestigd, 3 werkdagen voorbij → nabel-signaal. Maar die mail is van vóór v0.19.0 en had geen knop; niemand kón bevestigen. Zonder ingreep had de ochtendronde van 10 oktober voor elke oudere kennisgeving een nabel-taak bij Maud gezet.
