@@ -2384,8 +2384,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.90.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.91.0</h2>
       <div class="intro-body">
+        <p><strong>🪜 Klimtoeslag alleen over het buitenwerk (v4.91.0).</strong> Een percentage-staartpost zoals de klimtoeslag rekende altijd over de arbeid van de hele calculatie. Bij een nieuwbouw met binnen- én buitenwerk klopt dat niet: binnen klim je niet. In het staart-venster staan nu twee extra grondslagen: "Arbeid — alleen hoofdgroep Buiten" en "Arbeid — alleen hoofdgroep Binnen". De app telt dan alleen de arbeid van de hoofdgroepen waarvan de naam het woord buiten (of binnen) bevat, hoofdletters maken niet uit; uitgevinkte hoofdgroepen tellen niet mee. Dit werkt door in de calculatie, het offertebedrag, de werkdagen (als de post meetelt in werkdagen), het onderhoudsplan en het archieftotaal. Op de offerte staat dan "10% over arbeid buiten". Heet geen enkele hoofdgroep Buiten, dan is de post € 0 en meldt de knop Controleer dat. Bestaande staartposten blijven over de hele arbeid rekenen; de keuze maak je per post. Geen SQL nodig.</p>
         <p><strong>🪵 Houtrot-tarieven onder Instellingen (v4.90.0).</strong> Eerste stap van de houtrot-opgave: de lijst met herstelmethodes waaruit de buitendienst straks op de steiger kiest als ze houtrot tegenkomen. Per methode een naam voor de keuzelijst, de tekst die de klant op de opgave leest, een eenheid (stuk, cm, dm, m of uur), een richtprijs excl. btw, de volgorde en een vinkje Actief. Je wijzigt rechtstreeks in de tabel; elke wijziging wordt meteen opgeslagen. Een methode die niet meer gebruikt wordt zet je op niet-actief in plaats van hem weg te gooien. De opgave zelf, de foto's, de PDF en de accordeerlink volgen in de volgende stappen. Vereist eenmalig de SQL houtrot_01_tarieven.sql (al gedraaid).</p>
         <p><strong>📅 Calculatielijst staat standaard op Opname, eerstvolgende datum bovenaan (v4.89.0).</strong> Het dashboard sorteerde tot nu toe op Gewijzigd (nieuwste boven), zodat je elke keer zelf op Opname moest tikken. Nu staat de lijst bij het openen meteen op opnamedatum oplopend, binnen elke statusgroep: verstreken en aanstaande opnames bovenaan, verder in de toekomst eronder, calculaties zonder opnamedatum onderaan. Tikken op een kolomkop werkt zoals altijd. Geen SQL.</p>
         <p><strong>🏗️ Naar Craft stuurt nu ook de werkbon mee, als PDF onder het kopje Documenten (v4.88.0).</strong> Eén druk op Naar Craft levert voortaan tekst, foto's, kozijntekeningen én de werkbon op. De werkbon wordt in de app als PDF gemaakt (dezelfde weergave als Archiveren → Werkbon, inclusief Verf per verfsysteem en eventuele vervallen delen) en in het Craft-document als bestand "Werkbon &lt;projectnaam&gt; &lt;datum&gt;.pdf" onder het kopje Documenten gezet. De slotmelding zegt erbij of de werkbon is aangekomen; lukt het niet, dan krijg je een venster met de reden en gaan tekst en afbeeldingen gewoon door. De PDF is een rasterweergave (niet doorzoekbaar, wel scherp), net als de planbijlage. Hiervoor is een nieuwe versie van de Edge Function craft-werkvoorbereiding nodig; zonder die versie meldt de app "werkbon verstuurd, geen bevestiging van Craft". Geen SQL.</p>
@@ -3608,6 +3609,8 @@ Hout binnen;Gronden;m²;6;0,10</div>
         <div id="staartGrondslagWrap"><label>Grondslag</label>
           <select id="staartGrondslag">
             <option value="arbeid">Arbeid</option>
+            <option value="arbeid_buiten">Arbeid — alleen hoofdgroep Buiten</option>
+            <option value="arbeid_binnen">Arbeid — alleen hoofdgroep Binnen</option>
             <option value="materiaal">Materiaal</option>
             <option value="arbeid_materiaal">Arbeid + Materiaal</option>
             <option value="subtotaal">Subtotaal (alle directe kosten)</option>
@@ -3782,7 +3785,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.90.0';
+const APP_VERSION = 'v4.91.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4199,6 +4202,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.91.0', d: '2026-10-14', h: 'Percent-staartpost (klimtoeslag) kan nu alleen over de arbeid van de hoofdgroep Buiten of Binnen rekenen: twee nieuwe grondslagen in het staart-venster, doorgetrokken naar offerte, werkdagen, onderhoudsplan en archieftotaal. Controleer waarschuwt als zo\'n hoofdgroep ontbreekt.' },
   { v: '4.90.0', d: '2026-10-12', h: 'Houtrot-tarieven onder Instellingen: beheer van herstelmethodes (naam, klanttekst, eenheid, richtprijs, volgorde, actief) voor de komende houtrot-opgave vanaf de steiger. Vereist eenmalig SQL houtrot_01_tarieven.sql.' },
   { v: '4.89.0', d: '2026-10-08', h: 'Calculatielijst op het dashboard sorteert standaard op Opname oplopend (eerstvolgende datum bovenaan, binnen elke statusgroep, lege datums onderaan) in plaats van Gewijzigd nieuwste boven.' },
   { v: '4.88.0', d: '2026-10-05', h: 'Naar Craft stuurt de werkbon mee als PDF onder het kopje Documenten ("Werkbon <projectnaam> <datum>.pdf"); slotmelding en foutvenster melden het resultaat. Vereist Edge Function craft-werkvoorbereiding v4.' },
@@ -5647,6 +5651,14 @@ function _controleerVerzamel() {
   if (!(c.staart || []).length) {
     overweeg('De staart is leeg: geen klimtoeslag, kleinschaligheid of andere toeslagen gekozen.');
   }
+  // v4.91.0 — percent-post over hoofdgroep Buiten/Binnen zonder zo'n hoofdgroep rekent € 0
+  (c.staart || []).forEach(p => {
+    if (p.type !== 'percent') return;
+    const loc = p.grondslag === 'arbeid_buiten' ? 'buiten' : p.grondslag === 'arbeid_binnen' ? 'binnen' : null;
+    if (!loc) return;
+    const heeftHg = (c.hoofdgroepen || []).some(hg => _isActief(hg) && _hgIsLocatie(hg, loc));
+    if (!heeftHg) check(`Staartpost "${p.naam || '(zonder naam)'}" rekent over de hoofdgroep ${loc === 'buiten' ? 'Buiten' : 'Binnen'}, maar er is geen actieve hoofdgroep met dat woord in de naam: de post is € 0.`);
+  });
 
   // 11. Houtrot-opmerking passend bij binnen- of buitenwerk
   let heeftBuiten = false, heeftBeide = false, heeftLocatie = false;
@@ -9512,8 +9524,11 @@ function _ohpRegelRauw(r, sett, stappenOverride, stapTrace) {
 // regelScaling: Map<regelId, factor 0..1> of null
 // stapScaling:  Map<stapId, factor 0..1> of null
 function _ohpProjectRauw(calc, sett, regelScaling, stapScaling, trace) {
-  const tot = { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0 };
+  const tot = { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0, arbeidBuiten:0, arbeidBinnen:0 };
   (calc.hoofdgroepen || []).forEach(hg => {
+    // v4.91.0 — grondslag per hoofdgroep: arbeid van Buiten/Binnen apart bijhouden
+    const hgBuiten = _hgIsLocatie(hg, 'buiten');
+    const hgBinnen = _hgIsLocatie(hg, 'binnen');
     (hg.onderdelen || []).forEach(od => {
       (od.regels || []).forEach(r => {
         const rFactor = (regelScaling && regelScaling.has(r.id)) ? regelScaling.get(r.id) : 1;
@@ -9528,6 +9543,8 @@ function _ohpProjectRauw(calc, sett, regelScaling, stapScaling, trace) {
         const stapTrace = (trace && stapScaling) ? [] : null;
         const rTot = _ohpRegelRauw(r, sett, stapScaling, stapTrace);
         Object.keys(tot).forEach(k => tot[k] += (rTot[k] || 0) * rFactor);
+        if (hgBuiten) tot.arbeidBuiten += (rTot.arbeid || 0) * rFactor;   // v4.91.0
+        if (hgBinnen) tot.arbeidBinnen += (rTot.arbeid || 0) * rFactor;   // v4.91.0
         if (trace) {
           trace.regels.push({ hg: hg.naam || '', od: od.naam || '', naam: r.naam || '(zonder naam)', hoeveelheid: r.hoeveelheid, eenheid: r.eenheid || '', factor: rFactor, basis: rTot.arbeid + rTot.matVerkoop, resultaat: (rTot.arbeid + rTot.matVerkoop) * rFactor, stappen: stapTrace });
         }
@@ -9549,6 +9566,8 @@ function _ohpStaartPost(p, calc, sett, projectRauw, dagenFactureerbaar, weken) {
     // 'subtotaal' verwijst naar verkoop van regels; in onze rauwe vorm benaderen we dat
     // met arbeid + matVerkoop. Dit is dezelfde benadering als de live calc-tab op dit moment doet.
     if (p.grondslag === 'arbeid')                basis = projectRauw.arbeid;
+    else if (p.grondslag === 'arbeid_buiten')    basis = projectRauw.arbeidBuiten || 0;   // v4.91.0
+    else if (p.grondslag === 'arbeid_binnen')    basis = projectRauw.arbeidBinnen || 0;   // v4.91.0
     else if (p.grondslag === 'materiaal')        basis = projectRauw.matVerkoop;
     else if (p.grondslag === 'arbeid_materiaal') basis = projectRauw.arbeid + projectRauw.matVerkoop;
     else if (p.grondslag === 'subtotaal')        basis = projectRauw.arbeid + projectRauw.matVerkoop;
@@ -14926,7 +14945,7 @@ function printCalc() {
       else if (p.type === 'dag') detail = '€ ' + fmt(p.bedrag) + '/dag × ' + dagenFactureerbaar + ' dagen';
       else if (p.type === 'week') detail = '€ ' + fmt(p.bedrag) + '/week × ' + weken + ' weken';
       else if (p.type === 'eenheid') detail = '€ ' + fmt(p.bedrag) + '/' + (p.eenheid||'eenh.') + ' × ' + fmt(p.hoeveelheid||0);
-      else if (p.type === 'percent') detail = fmt(p.bedrag) + '% over ' + p.grondslag;
+      else if (p.type === 'percent') detail = fmt(p.bedrag) + '% over ' + _grondslagLabel(p.grondslag);
       html += `<tr>
         <td>${p.naam}</td>
         <td>${p.type}</td>
@@ -15598,7 +15617,7 @@ function printOfferteYoobi() {
     else if (p.type === 'dag') detail = `${dagenFactureerbaar} dagen`;
     else if (p.type === 'week') detail = `${weken} weken`;
     else if (p.type === 'eenheid') detail = `${fmt(p.hoeveelheid||0)} ${p.eenheid||''}`;
-    else if (p.type === 'percent') detail = `${fmt(p.bedrag)}% over ${p.grondslag}`;
+    else if (p.type === 'percent') detail = `${fmt(p.bedrag)}% over ${_grondslagLabel(p.grondslag)}`;
     const bedrag = calcStaart(p) * (_isDerdenPost(p) ? 1 : winstFactor);   // v4.76.0
     html += `<tr>
       <td>${p.naam}${_isDerdenPost(p) ? ` <span style="color:#666; font-size:8.5pt;">(derden, BTW ${fmt(parseFloat(p.btwPct))}%)</span>` : ''}</td>
@@ -17159,6 +17178,9 @@ function _calcDays() {
   // (typisch: kleinschaligheidstoeslag). Zo wordt het werkelijke dagen-getal
   // hoger en valt de afrondingstoeslag automatisch lager uit (geen dubbeltelling).
   const t = calcProjectTotalen();
+  // v4.91.0 — grondslag per hoofdgroep (klimtoeslag alleen buiten) ook voor de werkdag-uren
+  t.arbeidBuiten = _calcArbeidHoofdgroepen('buiten');
+  t.arbeidBinnen = _calcArbeidHoofdgroepen('binnen');
   const extraUren = _extraUrenUitStaart(data.calc.staart || [], t, (_S().uurloon || 0));
   const u = t.uren + extraUren;
   const s = data.calc.schilders || 1;
@@ -21298,6 +21320,25 @@ function _btwRegelsTekst(verd, eurFn) {
   return verd.regels.map(r => ({ label: verd.gemengd ? `BTW ${fmt(r.pct)}% over ${eurFn(r.grondslag)}` : `BTW (${fmt(r.pct)}%)`, bedrag: r.btw, pct: r.pct, grondslag: r.grondslag }));
 }
 
+// v4.91.0 — Grondslag per hoofdgroep: een percent-post (klimtoeslag) kan alleen over
+// de arbeid van de hoofdgroep(en) Buiten of Binnen rekenen. Een hoofdgroep telt mee
+// als zijn naam het woord 'buiten' resp. 'binnen' bevat (hoofdletterongevoelig).
+// Inactieve hoofdgroepen tellen niet mee, net als in calcProjectTotalen.
+function _hgIsLocatie(hg, loc) {
+  const n = String((hg && hg.naam) || '').toLowerCase();
+  return n.includes(loc);
+}
+function _calcArbeidHoofdgroepen(loc) {
+  return (data.calc.hoofdgroepen || [])
+    .filter(hg => _isActief(hg) && _hgIsLocatie(hg, loc))
+    .reduce((s, hg) => s + (calcHoofdgroepTotalen(hg).arbeid || 0), 0);
+}
+// Leesbare tekst voor '% over …' op offerte, staartlijst en bibliotheek.
+function _grondslagLabel(g) {
+  if (g === 'arbeid_buiten') return 'arbeid buiten';
+  if (g === 'arbeid_binnen') return 'arbeid binnen';
+  return g || '';
+}
 function calcStaart(p) {
   if (p.type === 'vast') return p.bedrag || 0;
   if (p.type === 'dag') return (p.bedrag||0) * _calcDaysFactureerbaar();
@@ -21307,6 +21348,8 @@ function calcStaart(p) {
     const t = calcProjectTotalen();
     let basis = 0;
     if (p.grondslag === 'arbeid') basis = t.arbeid;
+    else if (p.grondslag === 'arbeid_buiten') basis = _calcArbeidHoofdgroepen('buiten');   // v4.91.0
+    else if (p.grondslag === 'arbeid_binnen') basis = _calcArbeidHoofdgroepen('binnen');   // v4.91.0
     else if (p.grondslag === 'materiaal') basis = t.matVerkoop;
     else if (p.grondslag === 'arbeid_materiaal') basis = t.arbeid + t.matVerkoop;
     else if (p.grondslag === 'subtotaal') basis = t.verkoop;
@@ -21606,6 +21649,8 @@ function _extraUrenUitStaart(staartPosten, t, uurloon) {
     } else if (p.type === 'percent') {
       let basis = 0;
       if (p.grondslag === 'arbeid') basis = t.arbeid || 0;
+      else if (p.grondslag === 'arbeid_buiten') basis = t.arbeidBuiten || 0;   // v4.91.0
+      else if (p.grondslag === 'arbeid_binnen') basis = t.arbeidBinnen || 0;   // v4.91.0
       else if (p.grondslag === 'materiaal') basis = t.matVerkoop || 0;
       else if (p.grondslag === 'arbeid_materiaal') basis = (t.arbeid || 0) + (t.matVerkoop || 0);
       else if (p.grondslag === 'subtotaal') basis = t.verkoop || 0;
@@ -21746,7 +21791,7 @@ function renderStaartList() {
       if (p.type === 'eenheid') hoev = fmt(p.hoeveelheid||0) + ' ' + (p.eenheid||'');
       else if (p.type === 'dag') hoev = fmt(_calcDaysFactureerbaar()) + ' dagen';
       else if (p.type === 'week') hoev = _calcWeeks() + ' weken';
-      else if (p.type === 'percent') hoev = '× ' + p.grondslag;
+      else if (p.type === 'percent') hoev = '× ' + _grondslagLabel(p.grondslag);
       html += `<tr>
         <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Wordt verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}${_isDerdenPost(p) ? ` <span title="Werk van derden: eigen BTW-tarief, geen risico-opslag" style="color:var(--ink-soft); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">BTW ${fmt(parseFloat(p.btwPct))}%</span>` : ''}</td>
         <td>${detail}</td>
@@ -21887,7 +21932,7 @@ function renderStaartLib() {
   sorted.forEach(p => {
     let detail = '';
     if (p.type === 'eenheid') detail = 'per ' + (p.eenheid||'?');
-    else if (p.type === 'percent') detail = '% over ' + p.grondslag;
+    else if (p.type === 'percent') detail = '% over ' + _grondslagLabel(p.grondslag);
     else if (p.type === 'dag') detail = 'per dag';
     else if (p.type === 'week') detail = 'per week';
     else detail = 'vast';
@@ -22296,9 +22341,12 @@ function _calcTotalForArchive(c, includeInactief = false) {
     })));
   }
   let arbeid = 0, matInkoop = 0, matVerkoop = 0, uren = 0, verkoop = 0;
+  let arbeidBuiten = 0, arbeidBinnen = 0;   // v4.91.0 — grondslag per hoofdgroep
   c.hoofdgroepen.forEach(hg => {
     // v3.11.0: skip inactieve hoofdgroepen + onderdelen + regels (tenzij includeInactief)
     if (!includeInactief && !_isActief(hg)) return;
+    const hgBuiten = _hgIsLocatie(hg, 'buiten');
+    const hgBinnen = _hgIsLocatie(hg, 'binnen');
     hg.onderdelen.forEach(od => {
       if (!includeInactief && !_isActief(od)) return;
       od.regels.forEach(r => {
@@ -22324,6 +22372,8 @@ function _calcTotalForArchive(c, includeInactief = false) {
     const rArbo = sysArbeid * (sett.arbo || 0) / 100;
     const rVerkoop = (sysArbeid + smV + rKleinMat + rAfval + rArbo) * (1 + (sett.winst || 0) / 100);
     arbeid += sysArbeid * r.hoeveelheid * tF;
+    if (hgBuiten) arbeidBuiten += sysArbeid * r.hoeveelheid * tF;   // v4.91.0
+    if (hgBinnen) arbeidBinnen += sysArbeid * r.hoeveelheid * tF;   // v4.91.0
     matInkoop += smI * r.hoeveelheid;
     matVerkoop += smV * r.hoeveelheid;
     uren += sysUren * r.hoeveelheid * tF;
@@ -22334,7 +22384,7 @@ function _calcTotalForArchive(c, includeInactief = false) {
   // Grondslag voor percent-staart en de extra werkdag-uren: arbeid vóór afrondingstoeslag.
   const arbeidBasis = arbeid;
   // Reis & dagen — incl. extra uren uit staartposten met teltInWerkdagen (v3.16.0)
-  const extraUren = _extraUrenUitStaart(c.staart || [], { arbeid: arbeidBasis, matVerkoop, verkoop }, sett.uurloon || 0);
+  const extraUren = _extraUrenUitStaart(c.staart || [], { arbeid: arbeidBasis, arbeidBuiten, arbeidBinnen, matVerkoop, verkoop }, sett.uurloon || 0);
   const urenVoorDagen = uren + extraUren;
   const dagenWerkelijk = urenVoorDagen > 0 ? Math.round((urenVoorDagen / (c.schilders || 1) / (c.uurDag || 7.5)) * 100) / 100 : 0;
   // Resolve volle dagen: per-calc override OR global setting
@@ -22377,6 +22427,8 @@ function _calcTotalForArchive(c, includeInactief = false) {
     else if (p.type === 'percent') {
       let basis = 0;
       if (p.grondslag === 'arbeid') basis = arbeidBasis;
+      else if (p.grondslag === 'arbeid_buiten') basis = arbeidBuiten;   // v4.91.0
+      else if (p.grondslag === 'arbeid_binnen') basis = arbeidBinnen;   // v4.91.0
       else if (p.grondslag === 'materiaal') basis = matVerkoop;
       else if (p.grondslag === 'arbeid_materiaal') basis = arbeidBasis + matVerkoop;
       else if (p.grondslag === 'subtotaal') basis = verkoop;
@@ -22398,6 +22450,8 @@ function _calcTotalForArchive(c, includeInactief = false) {
     if (p.type === 'percent') {
       let basis = 0;
       if (p.grondslag === 'arbeid') basis = arbeidBasis;
+      else if (p.grondslag === 'arbeid_buiten') basis = arbeidBuiten;   // v4.91.0
+      else if (p.grondslag === 'arbeid_binnen') basis = arbeidBinnen;   // v4.91.0
       else if (p.grondslag === 'materiaal') basis = matVerkoop;
       else if (p.grondslag === 'arbeid_materiaal') basis = arbeidBasis + matVerkoop;
       else if (p.grondslag === 'subtotaal') basis = verkoop;

@@ -1,3 +1,24 @@
+## v4.91.0 — Klimtoeslag alleen over hoofdgroep Buiten (of Binnen) (2026-10-14)
+
+**Aanleiding**
+- Gian 14-10-2026: "Ik heb een nieuwbouw calculatie en ik wil alleen op het buitenwerk klimtoeslag rekenen? Kan dat nu al?" Dat kon niet: een percent-staartpost rekende altijd over de arbeid van het hele project. Besluit (ask_user_input): grondslag op basis van de hoofdgroep die 'Buiten' heet, niet op de locatie van het verfsysteem.
+
+**Gebouwd**
+- Twee nieuwe grondslagen voor percent-staartposten: `arbeid_buiten` en `arbeid_binnen`, in het keuzemenu als "Arbeid — alleen hoofdgroep Buiten/Binnen". Een hoofdgroep telt mee als zijn naam het woord buiten resp. binnen bevat (hoofdletterongevoelig, `_hgIsLocatie`). Een hoofdgroep met beide woorden telt in beide mee.
+- Doorgetrokken naar alle vijf rekenplekken: `calcStaart` (calc-tab, via nieuwe helper `_calcArbeidHoofdgroepen`, alleen actieve hoofdgroepen), `_extraUrenUitStaart` (werkdagen; `_calcDays` geeft nu `arbeidBuiten/arbeidBinnen` mee), `_ohpProjectRauw` + `_ohpStaartPost` (onderhoudsplan, inclusief regel-schaling), en de twee percent-plekken in `_calcTotalForArchive` (dashboard/archief/bevroren origineel).
+- Nieuwe helper `_grondslagLabel` zet de tekst '% over …' op offerte, Yoobi-overzicht, staartlijst en bibliotheek om naar "arbeid buiten" / "arbeid binnen"; bestaande grondslagen onveranderd.
+- Knop Controleer: zwaarte "controleer" als een percent-post over Buiten/Binnen rekent terwijl er geen actieve hoofdgroep met dat woord in de naam is (de post is dan € 0).
+- Welkomsttekst en RELEASE_HIGHLIGHTS bijgewerkt.
+
+**Niet gewijzigd**
+- Bestaande staartposten en de bibliotheek (Klimtoeslag blijft standaard grondslag `arbeid`; keuze per post). Geen SQL: `grondslag` is een vrije tekstkolom in `staart` en `staart_lib` volgens de datadictionary. Geen Edge Function.
+- Het onderhoudsplan-pad telde al nooit op actief-status van hoofdgroepen (het schaalt per regel); dat is zo gebleven.
+
+**Getest**
+- Node-parse van het scriptblok, div-balans gelijk aan live (1349/1352).
+- Runtime-test met stubs (12 gevallen, allemaal goed): calc-tab 10% over 1600 arbeid = 160, alleen buiten = 100, alleen binnen = 60, inactieve hoofdgroep "Buiten garage" telt op de calc-tab niet mee; werkdag-uren over buiten-arbeid; onderhoudsplan inclusief regel-schaling 0,5; oude `t` zonder de nieuwe velden geeft 0 in plaats van een fout.
+- Niet getest: in de browser. Controleer na deploy: (1) staart-venster toont de twee nieuwe opties; (2) op de nieuwbouw-calc klimtoeslag op "Arbeid — alleen hoofdgroep Buiten" zetten en het bedrag vergelijken met 10% van het arbeidstotaal van de hoofdgroep Buiten; (3) offerte-PDF toont "10% over arbeid buiten"; (4) dashboardtotaal gelijk aan het totaal op de kaart; (5) opslaan slaagt (als Supabase een CHECK-constraint op `grondslag` zou hebben, faalt het opslaan met een melding — dat is niet uit de datadictionary af te leiden).
+
 ## v4.90.0 — Houtrot-tarieven onder Instellingen (2026-10-12)
 
 **Aanleiding**
