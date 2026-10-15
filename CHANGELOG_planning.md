@@ -1,5 +1,21 @@
 # CHANGELOG planning.html
 
+## v0.20.0 — Dagvenster: volgorde in de agenda met nummerknoppen en ▲/▼, 15-10-2026
+
+**Aanleiding.** Gian 15-10-2026: "Kan ik dan ook kiezen welk project als tweede moet?" Sinds v0.14.0 was er alleen een knop *eerst*; een andere volgorde dan "X vooraan" kon alleen door van achteren naar voren meerdere keren *eerst* te tikken. Besluit (ask_user_input): beide bedieningen.
+
+**Wijziging (alleen planning.html).**
+1. `dagVolgordeHtml`: per project een rij knoppen **1, 2, 3 …** (de huidige plek staat vet en is geen knop) plus **▲** (één plek eerder, niet op de eerste regel) en **▼** (één plek later, niet op de laatste). Alle knoppen dragen `data-vcode` (Yoobi-code) en `data-vnaar` (gewenste plek, 1 = eerst). De knop *eerst* en `data-eerst` zijn weg.
+2. Nieuwe pure functie `dagVolgordeVerplaats(codes, code, naar)`: haalt `code` uit de lijst en voegt hem op plek `naar` weer in; de rest schuift door in de bestaande volgorde. Een plek buiten bereik wordt de laatste plek; een onbekende code laat de lijst ongemoeid.
+3. `zetDagVolgorde(mwId, iso, code, naar)` gebruikt die functie en slaat daarna, als voorheen, de hele dag op met `update … match()` per rij (1, 2, 3 …); terugdraaien van het geheugen bij een fout en de hint naar `planning_03_volgorde.sql` zijn ongewijzigd. Klik-afhandeling in het dagvenster luistert nu op `button[data-vcode]`.
+4. Drie CSS-regels voor de knoppenrij (`.dagvolgorde-lijst .knoppen`, `.knop`, `.pos`).
+
+**Niet gewijzigd.** Edge Function `planning-ics` (leest alleen de nummers 1, 2, 3 …), SQL, de sorteerregel in `dagProjecten()` en het gedrag bij fase verschuiven of uren wissen (v0.14.0).
+
+**Getest.** `node --check` schoon; div-balans 127/127 gelijk aan live v0.19.2; 12 controles met nagebootste Supabase-client: verplaatsen naar plek 1/2/3, naar de eigen plek, buiten bereik, onbekende code; aantal en plaatsing van de knoppen (▲ niet op regel 1, ▼ niet op de laatste, huidige plek als vette tekst); opslaan C→plek 2 geeft updates A=1, C=2, B=3 op `plan_uren` met juiste `match`; serverfout draait het geheugen terug en meldt de SQL-hint. Niet getest: in de echte browser/iPhone-agenda — dat is de volgende stap bij Gian.
+
+---
+
 ## v0.19.2 + bevestig.html v1.2 — Bedanktpagina: slotzin per soort kennisgeving, 12-10-2026
 
 **Aanleiding.** Gian 12-10-2026 (schermafbeelding): na bevestiging van een maandaankondiging zegt de pagina "Wij zien u graag op de afgesproken dag", terwijl die mail alleen een maand noemt en juist belooft dat de week en de startdag nog volgen. Bron: `bevestig.html` v1.1.1 regel 78 — de slotzin was één vaste tekst voor maand, week en startdag.

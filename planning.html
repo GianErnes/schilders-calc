@@ -308,6 +308,9 @@
   .popover .dagvolgorde-lijst { margin: 0.2rem 0 0; padding-left: 1.2rem; font-size: 0.8rem; }
   .popover .dagvolgorde-lijst li { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; padding: 0.15rem 0; }
   .popover .dagvolgorde-lijst .m { color: var(--muted); }
+  .popover .dagvolgorde-lijst .knoppen { display: inline-flex; gap: 0.2rem; align-items: center; flex: none; }
+  .popover .dagvolgorde-lijst .knoppen .knop { padding: 0.1rem 0.4rem; min-width: 1.6rem; font-size: 0.75rem; }
+  .popover .dagvolgorde-lijst .knoppen .pos { display: inline-block; min-width: 1.6rem; text-align: center; font-weight: 700; color: var(--blue-deep); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -463,7 +466,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.19.2';
+const APP_VERSION = '0.20.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -2100,13 +2103,26 @@ function dagProjecten(mwId, iso) {
 function dagVolgordeHtml(mwId, iso) {
   const rijen = dagProjecten(mwId, iso);
   if (rijen.length < 2) return '<div class="dagvolgorde"></div>';
+  // v0.20.0: per regel nummerknoppen (1, 2, 3 …; de huidige plek staat vet) en ▲/▼ om één plek te schuiven.
+  const n = rijen.length;
   return '<div class="dagvolgorde"><div class="hint" style="margin-top:0.4rem">Volgorde in de agenda' + (rijen.some(r => r.volgorde != null) ? '' : ' <span class="m">(regel: grootste eerst)</span>') + ':</div><ol class="dagvolgorde-lijst">' +
-    rijen.map((r, i) => '<li><span><b>' + esc(r.klant) + '</b> ' + esc(r.naam) + ' <span class="num m">' + fmtUur(r.uren) + ' u</span></span>' +
-      (i === 0 ? '<span class="m">eerst</span>' : '<button class="knop klein" data-eerst="' + esc(r.code) + '">eerst</button>') + '</li>').join('') + '</ol></div>';
+    rijen.map((r, i) => '<li><span><b>' + esc(r.klant) + '</b> ' + esc(r.naam) + ' <span class="num m">' + fmtUur(r.uren) + ' u</span></span><span class="knoppen">' +
+      Array.from({ length: n }, (_, j) => j === i ? '<span class="pos num">' + (j + 1) + '</span>' : '<button class="knop klein" data-vcode="' + esc(r.code) + '" data-vnaar="' + (j + 1) + '" title="Op plek ' + (j + 1) + '">' + (j + 1) + '</button>').join('') +
+      (i > 0 ? '<button class="knop klein" data-vcode="' + esc(r.code) + '" data-vnaar="' + i + '" title="Eén plek eerder">▲</button>' : '<span style="display:inline-block;min-width:1.6rem"></span>') +
+      (i < n - 1 ? '<button class="knop klein" data-vcode="' + esc(r.code) + '" data-vnaar="' + (i + 2) + '" title="Eén plek later">▼</button>' : '<span style="display:inline-block;min-width:1.6rem"></span>') +
+      '</span></li>').join('') + '</ol></div>';
 }
-async function zetDagVolgorde(mwId, iso, codeEerst) {
+// Nieuwe lijst van Yoobi-codes als `code` op plek `naar` (1 = eerst) komt; de rest schuift door in de bestaande volgorde.
+function dagVolgordeVerplaats(codes, code, naar) {
+  const rest = codes.filter(c => c !== code);
+  if (rest.length === codes.length) return codes.slice();
+  const i = Math.min(Math.max(Number(naar) - 1, 0), rest.length);
+  rest.splice(i, 0, code);
+  return rest;
+}
+async function zetDagVolgorde(mwId, iso, code, naar) {
   const rijen = dagProjecten(mwId, iso);
-  const nieuw = [codeEerst, ...rijen.map(r => r.code).filter(c => c !== codeEerst)];
+  const nieuw = dagVolgordeVerplaats(rijen.map(r => r.code), code, naar);
   const oud = {}; for (const c of nieuw) oud[c] = urenVolgorde[sleutel(c, mwId, iso)];
   nieuw.forEach((c, i) => { urenVolgorde[sleutel(c, mwId, iso)] = i + 1; });
   try {
@@ -2146,9 +2162,9 @@ bordEl.addEventListener('click', e => {
   popover.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 260) + 'px';
   popover.style.top = (r.top + window.scrollY - popover.offsetHeight - 8) + 'px';
   const wis = document.getElementById('poWis'), zet = document.getElementById('poZet');
-  popover.querySelectorAll('button[data-eerst]').forEach(b => b.addEventListener('click', async ev => {
+  popover.querySelectorAll('button[data-vcode]').forEach(b => b.addEventListener('click', async ev => {
     ev.stopPropagation();
-    await zetDagVolgorde(mwId, iso, b.dataset.eerst);
+    await zetDagVolgorde(mwId, iso, b.dataset.vcode, b.dataset.vnaar);
     td.click();   // dagvenster opnieuw opbouwen met de nieuwe volgorde
   }));
   if (wis) wis.addEventListener('click', () => { sluitPopover(); wisVerlof(mwId, iso); });
