@@ -41,7 +41,8 @@ rechtstreeks met Supabase.
 | Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.10.4 |
 | Personeel | `personeel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/personeel.html | v0.5.0 |
 | Klanten | `klanten.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/klanten.html | v0.4.0 |
-| Start | `start.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/start.html | v0.2.3 |
+| Klantenkaart | `kaart.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/kaart.html | v0.1.0 (15-10-2026) |
+| Start | `start.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/start.html | v0.3.0 (15-10-2026) |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 Versies in deze tabel zijn op 14 september 2026 uit de live bestanden
@@ -167,7 +168,8 @@ doen is **[TE CONTROLEREN]**.
 | Resend | verzenden van alle e-mail uit het systeem |
 | Anthropic | leescontrole op offertes en de vraagbaak in de app |
 | Google Agenda en Google Drive | boekingen voor de opnames lezen én elke nacht de backup wegschrijven naar een map in de Drive van `administratie@ernes.nl`, via één serviceaccount met drie bereiken (`calendar.readonly`, `calendar.events.owned`, `drive.file`); sinds 11 oktober 2026 schrijft de koppeling ook het adres terug in het locatieveld van de afspraak. Zie 4.7 |
-| PDOK Locatieserver | adressen opzoeken, gratis |
+| PDOK Locatieserver | adressen opzoeken, gratis; sinds 15 oktober 2026 ook het geocoderen van klantadressen voor `kaart.html` |
+| PDOK BRT-Achtergrondkaart (Kadaster) | kaarttegels onder de klantenkaart, gratis, zonder sleutel; `kaart.html` valt bij tegelfouten terug op OpenStreetMap |
 | OpenRouteService | rijafstand berekenen |
 
 ---
@@ -5690,3 +5692,45 @@ smalste bereik dat volstaat.
 repo `ernes-edge-functions` (door Gian). De marge "vandaag of later" is
 ruim 24 uur, waardoor de eerste run ook twee boekingen van de dag ervoor
 een adres gaf; onschadelijk, niet aangepast.
+
+---
+
+## Wat er op 15 oktober 2026 gedaan is: klantenkaart (kaart.html v0.1.0, tabel yoobi_klant_geo, start.html v0.3.0)
+
+**Aanleiding.** Gian wil zien waar de klanten in Zuid-Limburg zitten om
+het campagnegebied te bepalen (Google Ads, folders, wintercampagne).
+Intern, alleen na inloggen; nooit openbaar.
+
+**Gemeten vooraf** (leesquery's `kaart_00_meting.sql`, gedraaid door
+Gian in Studio): 889 klanten in `yoobi_klanten`, 878 met adres en
+plaats, 828 met postcode; nergens in het schema coördinaten; huisnummer
+zit in het adresveld; categorieën Particuliere klant (640), Klant (106),
+Particuliere prospect (80), Prospect (48), leeg (11), Leverancier (3),
+zakelijk partner (1); 577 klanten met minstens één project, waarvan 211
+in de laatste 2 jaar, 379 in 5, 564 in 10; RLS op alle yoobi_-tabellen
+via `yoobi_mag_lezen()`; `yoobi_toegang` bevat `maud@ernes.nl` en
+`administratie@ernes.nl`.
+
+**Besluiten** (ask_user_input): standaard alleen klanten, prospects
+via schakelaar; klanttype-filter particulier/zakelijk op basis van de
+categorie; buitenlandse adressen overslaan (PDOK kent alleen NL);
+tegels van PDOK met terugval naar OpenStreetMap (keuze bouwchef).
+
+**Gedaan.**
+
+| Stap | Wat | Door wie |
+|---|---|---|
+| `kaart_01_klant_geo.sql` | nieuwe tabel `public.yoobi_klant_geo` (klant_code, lat, lon, bron, zoekvraag, pdok_weergave, adres_hash, geocodeerd_op, fout); RLS ALL voor authenticated via `yoobi_mag_lezen()`, zelfde patroon als `yoobi_storingsnotities`; bewust geen foreign key naar `yoobi_klanten`, de sync blijft onaangeraakt | geleverd; gedraaid en bevestigd door Gian (controleblok: tabel 1, RLS aan, 1 policy, 1 trigger, 0 rijen) |
+| `kaart.html` v0.1.0 | login via `yoobi_toegang`; Leaflet 1.9.4 + markercluster 1.5.3 (jsdelivr, versies geverifieerd bij npm); PDOK BRT-tegels met OSM-terugval; filters periode/klanttype/plaats/prospects; telling per plaats; geocoderen alleen op knopdruk via PDOK Locatieserver, resultaat in `yoobi_klant_geo`, adreswijziging herkend via `adres_hash` | geleverd; `node --check` schoon, div-balans 29/29, adresfuncties getest op de 25 steekproefadressen uit de meting |
+| `start.html` v0.3.0 | tegel Klantenkaart | geleverd |
+| `CHANGELOG_kaart.md`, `CHANGELOG_start.md` | nieuw / bijgewerkt | geleverd |
+
+**Nog niet getest** (pas na uitrol op GitHub Pages): de PDOK-tegel-url
+(`service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/standaard/EPSG:3857/{z}/{x}/{y}.png`,
+uit voorbeeldcode), het geocoderen in de echte browser, en de upsert
+in `yoobi_klant_geo` onder RLS. De terugval naar OpenStreetMap en de
+foutmeldingen vangen een mislukking zichtbaar op.
+
+**Kanttekening.** "Laatste project" is de jongste `einddatum` (anders
+`startdatum`) uit `yoobi_projecten`: contractdata, geen uitvoerdata.
+Alleen de twee accounts in `yoobi_toegang` zien de kaart.

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ernes Schilders — Klantenkaart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<!-- Leaflet 1.9.4 en Leaflet.markercluster 1.5.3: versies op 15-10-2026 geverifieerd bij het npm-register -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<style>
+  :root {
+    --ink: #1a1d21; --ink-soft: #4b5563; --paper: #ffffff; --paper-warm: #f9fafb;
+    --paper-deep: #e5e7eb; --page: #f5f6f7; --accent: #e63329; --accent-deep: #c62828;
+    --muted: #6b7280; --green: #16a34a; --amber: #ea580c; --blue: #2196f3;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04); --radius: 6px; --radius-lg: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--page); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 1.2rem 1.2rem 3rem; }
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  header h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; }
+  header .sub { color: var(--muted); font-size: 0.85rem; margin-top: 0.15rem; }
+  .header-right { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .card { background: var(--paper); border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); padding: 1rem 1.1rem; box-shadow: var(--shadow-sm); margin-bottom: 1rem; }
+  .card h2 { margin: 0 0 0.2rem; font-size: 1.02rem; font-weight: 600; }
+  .card-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.7rem; }
+  .rij { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: flex-end; }
+  .veld { display: flex; flex-direction: column; gap: 3px; font-size: 0.8rem; color: var(--ink-soft); }
+  .veld select, .veld input { padding: 8px 10px; border: 1px solid var(--paper-deep); border-radius: var(--radius); font-size: 14px; font-family: inherit; background: #fff; min-width: 150px; }
+  .vink { display: flex; align-items: center; gap: 6px; font-size: 0.88rem; padding: 8px 0; cursor: pointer; }
+  button.knop { padding: 9px 16px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  button.knop.stil { background: var(--paper-warm); color: var(--ink); border: 1px solid var(--paper-deep); font-weight: 500; }
+  button.knop:disabled { opacity: 0.55; cursor: wait; }
+  .kpi { display: flex; gap: 1.2rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--ink-soft); margin: 0.6rem 0 0; }
+  .kpi b { color: var(--ink); font-weight: 600; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1rem; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  #kaart { height: 640px; border-radius: var(--radius-lg); border: 1px solid var(--paper-deep); background: #e9ecef; }
+  @media (max-width: 900px) { #kaart { height: 460px; } }
+  .plaatsen { max-height: 640px; overflow: auto; }
+  .plaatsen table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  .plaatsen td { padding: 5px 6px; border-bottom: 1px solid var(--paper-deep); cursor: pointer; }
+  .plaatsen td.n { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .plaatsen tr:hover td { background: var(--paper-warm); }
+  .plaatsen tr.actief td { background: #fff4f3; font-weight: 600; }
+  table.lijst { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+  table.lijst th, table.lijst td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--paper-deep); vertical-align: top; }
+  table.lijst th { color: var(--muted); font-weight: 500; font-size: 0.78rem; }
+  td.fout { color: var(--accent-deep); }
+  .leeg { color: var(--muted); font-size: 0.88rem; }
+  .melding { background: #fff4f3; border: 1px solid #f6cfcc; color: var(--accent-deep); border-radius: var(--radius); padding: 0.8rem 1rem; font-size: 0.9rem; margin-bottom: 1rem; }
+  .melding.info { background: #fff7ed; border-color: #fed7aa; color: #9a3412; }
+  .balk { height: 8px; background: var(--paper-deep); border-radius: 4px; overflow: hidden; margin: 0.5rem 0; }
+  .balk > div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  details summary { cursor: pointer; font-size: 0.92rem; font-weight: 600; }
+  .popup b { font-size: 0.95rem; }
+  .popup .mono { font-size: 0.8rem; color: var(--ink-soft); }
+  #app-loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); background: var(--page); z-index: 90; }
+  #login{position:fixed;inset:0;background:#f5f6f7;display:none;align-items:center;justify-content:center;z-index:100}
+  #login .box{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:30px;width:320px;box-shadow:0 6px 28px rgba(0,0,0,.07)}
+  #login h2{margin:0 0 4px;font-size:18px;color:#1a1d21}
+  #login p{margin:0 0 18px;font-size:13px;color:#6b7280}
+  #login input{width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:10px;border:1px solid #e5e7eb;border-radius:6px;font-size:14px}
+  #login button{width:100%;padding:11px;background:#e63329;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+  #login .err{color:#e63329;font-size:12px;margin-top:8px;min-height:16px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+</head>
+<body>
+<div id="app-loading">Laden…</div>
+<div id="login">
+  <div class="box">
+    <h2>Klantenkaart</h2>
+    <p>Log in met je Schilders Calc account.</p>
+    <input id="email" type="email" placeholder="E-mailadres" autocomplete="username">
+    <input id="wachtwoord" type="password" placeholder="Wachtwoord" autocomplete="current-password">
+    <button id="loginBtn">Inloggen</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="wrap" id="wrap" style="display:none">
+  <header>
+    <div>
+      <h1>Ernes Schilders — Klantenkaart</h1>
+      <div class="sub">Waar onze klanten zitten, uit de Yoobi-kopie · <span id="appVersie"></span> · <span id="wieIngelogd"></span></div>
+    </div>
+    <div class="header-right">
+      <button class="knop stil" id="uitlogBtn">Uitloggen</button>
+    </div>
+  </header>
+
+  <div id="geenToegang" class="melding" style="display:none">
+    Dit account heeft geen toegang tot de Yoobi-kopie. Toegang wordt beheerd in de tabel <span class="mono">yoobi_toegang</span>.
+  </div>
+  <div id="fout" class="melding" style="display:none"></div>
+  <div id="tegelMelding" class="melding info" style="display:none"></div>
+
+  <div id="inhoud" style="display:none">
+    <div class="card">
+      <div class="rij">
+        <label class="veld">Periode laatste project
+          <select id="fPeriode">
+            <option value="2">Laatste 2 jaar</option>
+            <option value="5">Laatste 5 jaar</option>
+            <option value="10" selected>Laatste 10 jaar</option>
+            <option value="alles">Alles (ook zonder project)</option>
+          </select>
+        </label>
+        <label class="veld">Klanttype
+          <select id="fType">
+            <option value="alle">Particulier en zakelijk</option>
+            <option value="particulier">Particulier</option>
+            <option value="zakelijk">Zakelijk</option>
+          </select>
+        </label>
+        <label class="veld">Plaats
+          <select id="fPlaats"><option value="">Alle plaatsen</option></select>
+        </label>
+        <label class="vink"><input type="checkbox" id="fProspects"> Ook prospects tonen</label>
+      </div>
+      <div class="kpi" id="kpi"></div>
+    </div>
+
+    <div class="layout">
+      <div id="kaart"></div>
+      <div class="card plaatsen">
+        <h2>Per plaats</h2>
+        <div class="card-sub">Binnen de huidige filters. Klik om op die plaats in te zoomen.</div>
+        <div id="perPlaats" class="leeg">—</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem">
+      <details id="geoBlok">
+        <summary>Adressen zonder coördinaten <span class="mono" id="geoAantal"></span></summary>
+        <div class="card-sub" style="margin-top:0.5rem">
+          Deze klanten staan (nog) niet op de kaart. Geocoderen gebeurt alleen op knopdruk, via de PDOK Locatieserver (dezelfde dienst als in de calculatie-app), en het resultaat wordt opgeslagen in <span class="mono">yoobi_klant_geo</span>.
+          Buitenlandse adressen (geen Nederlandse postcode of land ≠ NL) worden overgeslagen: PDOK kent alleen Nederland.
+        </div>
+        <div class="rij" style="margin-bottom:0.6rem">
+          <button class="knop" id="geoBtn">Geocoderen</button>
+          <button class="knop stil" id="geoFoutBtn">Mislukte opnieuw proberen</button>
+          <span id="geoStatus" class="leeg"></span>
+        </div>
+        <div class="balk" id="geoBalk" style="display:none"><div></div></div>
+        <div id="geoLijst" class="leeg">—</div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = '0.1.0';
+const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Kaarttegels. PDOK BRT-Achtergrondkaart (Kadaster, gratis, zonder sleutel); bij tegelfouten
+// automatisch terug naar OpenStreetMap met een zichtbare melding. De PDOK-url is uit
+// voorbeeldcode overgenomen en pas na een test in de browser bevestigd.
+const TEGELS_PDOK = 'https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/standaard/EPSG:3857/{z}/{x}/{y}.png';
+const TEGELS_OSM  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const START_CENTRUM = [50.89, 5.98];   // Heerlen
+const START_ZOOM = 11;
+
+const el = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const datumNl = iso => { if (!iso) return '—'; const [j, m, d] = String(iso).slice(0, 10).split('-'); return `${d}-${m}-${j}`; };
+const slaap = ms => new Promise(r => setTimeout(r, ms));
+
+// ---------- toegang (zelfde route als klanten.html) ----------
+async function heeftToegang(userId) {
+  const { data, error } = await sb.from('yoobi_toegang').select('user_id').eq('user_id', userId);
+  if (error) { console.error('yoobi_toegang', error); return false; }
+  return Array.isArray(data) && data.length === 1;
+}
+
+// ---------- data laden (paging per 1000, zoals klanten.html) ----------
+async function alles(tabel, kolommen, orde) {
+  const uit = []; const stap = 1000;
+  for (let van = 0; ; van += stap) {
+    const { data, error } = await sb.from(tabel).select(kolommen).order(orde).range(van, van + stap - 1);
+    if (error) throw new Error(tabel + ': ' + error.message);
+    uit.push(...(data || []));
+    if (!data || data.length < stap) break;
+  }
+  return uit;
+}
+
+let KLANTEN = [];      // verrijkte klantrecords
+let GEO = new Map();   // klant_code -> geo-rij
+let PLAATSEN = new Map(); // genormaliseerde plaats -> weergavenaam
+
+// Plaatsnamen in Yoobi zijn niet consistent (HEERLEN naast Heerlen): hier gelijkgetrokken, alleen voor weergave en telling.
+function normPlaats(p) {
+  const s = String(p || '').trim();
+  if (!s) return '';
+  return s.toLowerCase().replace(/(^|[\s-])(\S+)/g, (m, a, w) => (a && ['en', 'op', 'aan', 'de', 'den', 'ter', 'van'].includes(w)) ? a + w : a + w[0].toUpperCase() + w.slice(1));
+}
+// Yoobi-categorieën (gemeten 15-10-2026): Particuliere klant, Klant, Particuliere prospect, Prospect, leeg, Leverancier, zakelijk partner.
+function klanttype(cat) {
+  const c = String(cat || '').toLowerCase();
+  if (c.includes('leverancier')) return 'leverancier';
+  if (c.includes('particulier')) return 'particulier';
+  if (c) return 'zakelijk';
+  return 'onbekend';
+}
+function isProspect(cat) { return String(cat || '').toLowerCase().includes('prospect'); }
+function nlPostcode(pc) { const s = String(pc || '').replace(/\s+/g, '').toUpperCase(); return /^\d{4}[A-Z]{2}$/.test(s) ? s.slice(0, 4) + ' ' + s.slice(4) : ''; }
+function isBuitenland(k) {
+  const land = String(k.land || '').trim().toUpperCase();
+  if (land && !['NL', 'NEDERLAND', 'NETHERLANDS', 'THE NETHERLANDS'].includes(land)) return true;
+  const pc = String(k.postcode || '').trim();
+  if (pc && pc !== '-' && !nlPostcode(pc)) return true;   // 4851 (BE) of 52134 (DE) is geen NL-postcode
+  return false;
+}
+// Huisnummer uit het adresveld: "Rumpenerstraat 83-139" -> straat, nummer 83 (eerste nummer bij een reeks), "Frankenlaan 1U" -> 1 + U
+function splitsAdres(adres) {
+  const s = String(adres || '').trim();
+  const m = /^(.*?)\s+(\d+)\s*([A-Za-z]{0,2})?(?:\s*[-\/]\s*\S+)?\s*$/.exec(s);
+  if (!m) return { straat: s, nummer: '', toevoeging: '' };
+  return { straat: m[1].trim(), nummer: m[2], toevoeging: (m[3] || '').toUpperCase() };
+}
+function adresHash(k) {
+  const s = [k.adres, k.postcode, k.plaats].map(x => String(x || '').trim().toLowerCase()).join('|');
+  let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(16);
+}
+
+async function laadData() {
+  const [klanten, projecten, geo] = await Promise.all([
+    alles('yoobi_klanten', 'code,naam,adres,postcode,plaats,land,categorie,actief,verdwenen_op', 'code'),
+    alles('yoobi_projecten', 'klant_code,startdatum,einddatum,verdwenen_op', 'code'),
+    alles('yoobi_klant_geo', 'klant_code,lat,lon,bron,adres_hash,geocodeerd_op,fout,pdok_weergave', 'klant_code'),
+  ]);
+  // laatste project per klant = max(coalesce(einddatum, startdatum)); contractdata, geen uitvoerdata
+  const laatste = new Map();
+  for (const p of projecten) {
+    if (!p.klant_code) continue;
+    const d = p.einddatum || p.startdatum;
+    if (!d) continue;
+    const prev = laatste.get(p.klant_code);
+    if (!prev || d > prev) laatste.set(p.klant_code, d);
+  }
+  GEO = new Map(geo.map(g => [g.klant_code, g]));
+  PLAATSEN = new Map();
+  KLANTEN = klanten.filter(k => !k.verdwenen_op).map(k => {
+    const np = normPlaats(k.plaats);
+    if (np && !PLAATSEN.has(np)) PLAATSEN.set(np, np);
+    const g = GEO.get(k.code);
+    const hash = adresHash(k);
+    return {
+      ...k, type: klanttype(k.categorie), prospect: isProspect(k.categorie), plaatsNorm: np,
+      laatsteProject: laatste.get(k.code) || null, buitenland: isBuitenland(k), hash,
+      geo: g && g.lat != null && g.lon != null && g.adres_hash === hash ? g : null,
+      geoVerouderd: !!(g && g.lat != null && g.adres_hash && g.adres_hash !== hash),
+      geoFout: g && g.lat == null ? (g.fout || 'onbekende fout') : null,
+    };
+  });
+  const sel = el('fPlaats');
+  const huidig = sel.value;
+  sel.innerHTML = '<option value="">Alle plaatsen</option>' + [...PLAATSEN.keys()].sort((a, b) => a.localeCompare(b, 'nl')).map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+  sel.value = huidig;
+}
+
+// ---------- filters ----------
+function filterKlanten() {
+  const periode = el('fPeriode').value, type = el('fType').value, plaats = el('fPlaats').value, prospects = el('fProspects').checked;
+  const grens = periode === 'alles' ? null : (() => { const d = new Date(); d.setFullYear(d.getFullYear() - Number(periode)); return d.toISOString().slice(0, 10); })();
+  return KLANTEN.filter(k => {
+    if (k.type === 'leverancier') return false;
+    if (k.prospect && !prospects) return false;
+    if (type !== 'alle' && k.type !== type) return false;
+    if (plaats && k.plaatsNorm !== plaats) return false;
+    if (grens && (!k.laatsteProject || k.laatsteProject < grens)) return false;
+    return true;
+  });
+}
+
+// ---------- kaart ----------
+let kaart, cluster, tegelFouten = 0, tegelsOSM = false;
+function maakKaart() {
+  kaart = L.map('kaart').setView(START_CENTRUM, START_ZOOM);
+  const laag = L.tileLayer(TEGELS_PDOK, { maxZoom: 19, minZoom: 6, attribution: 'Kaart: &copy; Kadaster / PDOK (BRT-Achtergrondkaart)' }).addTo(kaart);
+  laag.on('tileerror', () => {
+    tegelFouten++;
+    if (tegelFouten >= 3 && !tegelsOSM) {
+      tegelsOSM = true;
+      kaart.removeLayer(laag);
+      L.tileLayer(TEGELS_OSM, { maxZoom: 19, attribution: '&copy; OpenStreetMap-bijdragers' }).addTo(kaart);
+      const m = el('tegelMelding'); m.style.display = ''; m.textContent = 'De PDOK-achtergrondkaart laadde niet; de kaart gebruikt nu OpenStreetMap. Meld dit, dan wordt de PDOK-aanroep nagekeken.';
+    }
+  });
+  cluster = L.markerClusterGroup({ maxClusterRadius: 50, showCoverageOnHover: false, spiderfyOnMaxZoom: true, disableClusteringAtZoom: 16 });
+  kaart.addLayer(cluster);
+}
+
+function popupHtml(k) {
+  const typeTekst = k.type === 'particulier' ? 'Particulier' : k.type === 'zakelijk' ? 'Zakelijk' : 'Onbekend';
+  return `<div class="popup"><b>${esc(k.naam)}</b><br>${esc(k.adres)}<br>${esc(k.postcode || '')} ${esc(k.plaats || '')}<br>` +
+    `<span class="mono">${esc(typeTekst)}${k.prospect ? ' (prospect)' : ''} · ${esc(k.categorie || '')}</span><br>` +
+    `<span class="mono">Laatste project: ${esc(k.laatsteProject ? datumNl(k.laatsteProject) : 'geen project')}</span></div>`;
+}
+
+function teken() {
+  const lijst = filterKlanten();
+  const opKaart = lijst.filter(k => k.geo);
+  cluster.clearLayers();
+  const markers = opKaart.map(k => L.marker([k.geo.lat, k.geo.lon], { title: k.naam || '' }).bindPopup(popupHtml(k)));
+  cluster.addLayers(markers);
+
+  // telling per plaats
+  const per = new Map();
+  for (const k of lijst) { const p = k.plaatsNorm || '(leeg)'; per.set(p, (per.get(p) || 0) + 1); }
+  const rijen = [...per.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'nl'));
+  const actief = el('fPlaats').value;
+  el('perPlaats').className = '';
+  el('perPlaats').innerHTML = rijen.length ? `<table>${rijen.map(([p, n]) => `<tr class="${p === actief ? 'actief' : ''}" data-plaats="${esc(p)}"><td>${esc(p)}</td><td class="n">${n}</td></tr>`).join('')}</table>` : '<div class="leeg">Geen klanten binnen deze filters.</div>';
+  el('perPlaats').querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => {
+    const p = tr.dataset.plaats;
+    const punten = lijst.filter(k => k.geo && (k.plaatsNorm || '(leeg)') === p).map(k => [k.geo.lat, k.geo.lon]);
+    if (punten.length) kaart.fitBounds(L.latLngBounds(punten).pad(0.2), { maxZoom: 15 });
+  }));
+
+  const zonder = lijst.filter(k => !k.geo);
+  const buitenland = zonder.filter(k => k.buitenland).length;
+  el('kpi').innerHTML = `<span><b>${lijst.length}</b> klanten binnen filters</span><span><b>${opKaart.length}</b> op de kaart</span>` +
+    `<span><b>${zonder.length - buitenland}</b> nog zonder coördinaten</span>` + (buitenland ? `<span><b>${buitenland}</b> buitenland (niet op kaart)</span>` : '') +
+    `<span><b>${KLANTEN.length}</b> klanten totaal in de kopie</span>`;
+  tekenGeoLijst();
+}
+
+// ---------- geocoderen (alleen op knopdruk) ----------
+function geoKandidaten(alleenFouten) {
+  // Alle niet-verdwenen klanten behalve leveranciers en buitenland; onafhankelijk van de filters, zodat één druk alles opvult.
+  return KLANTEN.filter(k => k.type !== 'leverancier' && !k.buitenland && !k.geo && (k.adres || k.postcode) &&
+    (alleenFouten ? !!k.geoFout : !k.geoFout));
+}
+function tekenGeoLijst() {
+  const open = geoKandidaten(false), fouten = geoKandidaten(true);
+  const buitenland = KLANTEN.filter(k => k.type !== 'leverancier' && k.buitenland);
+  el('geoAantal').textContent = `(${open.length} te doen · ${fouten.length} mislukt · ${buitenland.length} buitenland)`;
+  el('geoBtn').textContent = `Geocoderen (${open.length})`;
+  el('geoBtn').disabled = !open.length;
+  el('geoFoutBtn').textContent = `Mislukte opnieuw proberen (${fouten.length})`;
+  el('geoFoutBtn').disabled = !fouten.length;
+  const rij = (k, status) => `<tr><td class="mono">${esc(k.code)}</td><td>${esc(k.naam)}</td><td>${esc(k.adres)}</td><td>${esc(k.postcode || '')}</td><td>${esc(k.plaats || '')}</td><td class="${status.startsWith('mislukt') ? 'fout' : ''}">${esc(status)}</td></tr>`;
+  const alle = [...open.map(k => rij(k, k.geoVerouderd ? 'adres gewijzigd, opnieuw' : 'te doen')), ...fouten.map(k => rij(k, 'mislukt: ' + k.geoFout)), ...buitenland.map(k => rij(k, 'buitenland, overgeslagen'))];
+  el('geoLijst').className = '';
+  el('geoLijst').innerHTML = alle.length ? `<table class="lijst"><thead><tr><th>Code</th><th>Naam</th><th>Adres</th><th>Postcode</th><th>Plaats</th><th>Status</th></tr></thead><tbody>${alle.join('')}</tbody></table>` : '<div class="leeg">Alle adressen hebben coördinaten.</div>';
+}
+
+// Zelfde aanroep als _pdokGeocode in index.html: Locatieserver free-search, type:adres, 1 resultaat, centroide_ll = "POINT(lon lat)".
+async function pdokZoek(q) {
+  const url = `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=${encodeURIComponent(q)}&fq=type:adres&rows=1`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('PDOK HTTP ' + res.status);
+  const json = await res.json();
+  const doc = json && json.response && json.response.docs && json.response.docs[0];
+  if (!doc) return null;
+  const m = /POINT\(([-\d.]+)\s+([-\d.]+)\)/.exec(doc.centroide_ll || '');
+  if (!m) return null;
+  return { lon: parseFloat(m[1]), lat: parseFloat(m[2]), weergave: doc.weergavenaam || '' };
+}
+function zoekvraagVoor(k) {
+  const { straat, nummer, toevoeging } = splitsAdres(k.adres);
+  const pc = nlPostcode(k.postcode);
+  if (pc && nummer) return `${pc} ${nummer}${toevoeging}`;
+  if (pc && !nummer) return pc;
+  return `${straat} ${nummer}${toevoeging} ${k.plaats || ''}`.replace(/\s+/g, ' ').trim();
+}
+
+let geoBezig = false;
+async function geocodeer(alleenFouten) {
+  if (geoBezig) return;
+  const lijst = geoKandidaten(alleenFouten);
+  if (!lijst.length) return;
+  geoBezig = true;
+  el('geoBtn').disabled = true; el('geoFoutBtn').disabled = true;
+  const balk = el('geoBalk'); balk.style.display = ''; balk.firstElementChild.style.width = '0%';
+  let gelukt = 0, mislukt = 0;
+  for (let i = 0; i < lijst.length; i++) {
+    const k = lijst[i];
+    const q = zoekvraagVoor(k);
+    let rij = { klant_code: k.code, zoekvraag: q, adres_hash: k.hash, bron: 'pdok' };
+    try {
+      const r = await pdokZoek(q);
+      if (r) { rij = { ...rij, lat: r.lat, lon: r.lon, pdok_weergave: r.weergave, geocodeerd_op: new Date().toISOString(), fout: null }; gelukt++; }
+      else { rij = { ...rij, lat: null, lon: null, pdok_weergave: null, geocodeerd_op: null, fout: 'geen adres gevonden bij PDOK' }; mislukt++; }
+    } catch (e) {
+      rij = { ...rij, lat: null, lon: null, pdok_weergave: null, geocodeerd_op: null, fout: 'aanroep mislukt: ' + e.message }; mislukt++;
+    }
+    const { error } = await sb.from('yoobi_klant_geo').upsert(rij, { onConflict: 'klant_code' });
+    if (error) { el('geoStatus').textContent = 'Opslaan mislukt: ' + error.message + ' — gestopt.'; break; }
+    el('geoStatus').textContent = `${i + 1} van ${lijst.length} · ${gelukt} gevonden · ${mislukt} mislukt`;
+    balk.firstElementChild.style.width = Math.round((i + 1) / lijst.length * 100) + '%';
+    await slaap(150);   // PDOK niet overvragen
+  }
+  geoBezig = false;
+  el('geoStatus').textContent += ' · klaar, kaart wordt ververst';
+  try { await laadData(); teken(); } catch (e) { toonFout(e); }
+  setTimeout(() => { balk.style.display = 'none'; }, 1500);
+}
+
+function toonFout(e) { const f = el('fout'); f.style.display = ''; f.textContent = 'Laden mislukt: ' + (e && e.message || e); console.error(e); }
+
+// ---------- inloggen ----------
+async function laadApp() {
+  const loading = el('app-loading');
+  loading.style.display = 'flex';
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { toonLogin(); return; }
+  el('wieIngelogd').textContent = session.user.email || '';
+  el('login').style.display = 'none';
+  el('wrap').style.display = '';
+  const ok = await heeftToegang(session.user.id);
+  el('geenToegang').style.display = ok ? 'none' : '';
+  el('inhoud').style.display = ok ? '' : 'none';
+  loading.style.display = 'none';
+  if (ok) {
+    if (!kaart) maakKaart();
+    setTimeout(() => kaart.invalidateSize(), 50);
+    try { await laadData(); teken(); } catch (e) { toonFout(e); }
+  }
+}
+function toonLogin() { el('app-loading').style.display = 'none'; el('wrap').style.display = 'none'; el('login').style.display = 'flex'; }
+async function inloggen() {
+  const email = el('email').value.trim(), wachtwoord = el('wachtwoord').value, err = el('loginErr');
+  err.textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email, password: wachtwoord });
+  if (error) { err.textContent = 'Inloggen mislukt. Controleer je e-mailadres en wachtwoord.'; return; }
+  laadApp();
+}
+el('loginBtn').addEventListener('click', inloggen);
+el('wachtwoord').addEventListener('keydown', e => { if (e.key === 'Enter') inloggen(); });
+el('uitlogBtn').addEventListener('click', async () => { await sb.auth.signOut(); toonLogin(); });
+['fPeriode', 'fType', 'fPlaats', 'fProspects'].forEach(id => el(id).addEventListener('change', teken));
+el('geoBtn').addEventListener('click', () => geocodeer(false));
+el('geoFoutBtn').addEventListener('click', () => geocodeer(true));
+el('appVersie').textContent = 'v' + APP_VERSION;
+laadApp();
+</script>
+</body>
+</html>

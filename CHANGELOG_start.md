@@ -5,6 +5,10 @@ synchroon-check tegen de changelog, drie ochtendtellers na inloggen, en het
 systeemstatus-blok "Achter de schermen" (opruimpunt 5 uit SYSTEEM.md).
 Hoort bij `sql/start_01_systeem_status.sql`.
 
+## v0.3.0 — Tegel Klantenkaart (15-10-2026)
+
+- Nieuwe tegel **Klantenkaart** (`kaart.html`, changelog `CHANGELOG_kaart.md`) na Klanten. Verder ongewijzigd.
+
 ## v0.2.3 — Taken-tegel krijgt changelog-check (09-09-2026)
 
 - Tegel Taken vergelijkt nu `APP_VERSION` in `taken.html` met de bovenste
