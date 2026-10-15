@@ -159,7 +159,7 @@
 </div>
 
 <script>
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.1.1';
 const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -230,6 +230,37 @@ function splitsAdres(adres) {
   if (!m) return { straat: s, nummer: '', toevoeging: '' };
   return { straat: m[1].trim(), nummer: m[2], toevoeging: (m[3] || '').toUpperCase() };
 }
+// v0.1.1 — Controle van een PDOK-resultaat. Aanleiding 15-10-2026: bij een niet-bestaande
+// postcode gaf PDOK het eerstbeste adres elders in het land terug (31 van ~850 pins fout).
+// Weergavenaam heeft de vorm "Straat 17, 6396GS Plaats" (gemeten in yoobi_klant_geo).
+const strip = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+function ontleedWeergave(w) {
+  const m = /^(.*?)\s+(\d+)\S*,\s*(\d{4}\s?[A-Z]{2})\s+(.+)$/i.exec(String(w || '').trim());
+  if (!m) return null;
+  return { straat: m[1], nummer: m[2], postcode: m[3].replace(/\s+/g, '').toUpperCase(), plaats: m[4] };
+}
+// Geeft '' als het resultaat past bij de klant, anders de reden van afkeur.
+function toetsResultaat(k, r) {
+  const d = r && r.ontleed;
+  if (!d) return 'resultaat niet te ontleden';
+  const { straat, nummer } = splitsAdres(k.adres);
+  const pc = nlPostcode(k.postcode).replace(/\s+/g, '');
+  if (!nummer) return 'geen huisnummer in Yoobi-adres';
+  if (d.nummer !== nummer) return `ander huisnummer (${d.nummer})`;
+  if (pc) {
+    if (d.postcode === pc) return '';
+    // postcode in Yoobi klopt niet, maar straat én plaats wel: accepteren
+    if (strip(d.straat) === strip(straat) && strip(d.plaats) === strip(k.plaats)) return '';
+    return `andere postcode (${d.postcode})`;
+  }
+  if (strip(d.straat) === strip(straat)) return '';   // zonder postcode: straat + huisnummer moeten kloppen (plaats mag kerkdorp zijn)
+  return `andere straat (${d.straat})`;
+}
+function vooraf(k) {   // redenen om niet eens te zoeken
+  if (/\bpostbus\b/i.test(k.adres || '')) return 'postbus, geen bezoekadres';
+  if (!splitsAdres(k.adres).nummer) return 'geen huisnummer in Yoobi-adres';
+  return '';
+}
 function adresHash(k) {
   const s = [k.adres, k.postcode, k.plaats].map(x => String(x || '').trim().toLowerCase()).join('|');
   let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
@@ -258,11 +289,15 @@ async function laadData() {
     if (np && !PLAATSEN.has(np)) PLAATSEN.set(np, np);
     const g = GEO.get(k.code);
     const hash = adresHash(k);
+    const heeftPin = !!(g && g.lat != null && g.lon != null);
+    const verouderd = heeftPin && g.adres_hash !== hash;
+    const afgekeurd = heeftPin && !verouderd ? toetsResultaat(k, { ontleed: ontleedWeergave(g.pdok_weergave) }) : '';
     return {
       ...k, type: klanttype(k.categorie), prospect: isProspect(k.categorie), plaatsNorm: np,
       laatsteProject: laatste.get(k.code) || null, buitenland: isBuitenland(k), hash,
-      geo: g && g.lat != null && g.lon != null && g.adres_hash === hash ? g : null,
-      geoVerouderd: !!(g && g.lat != null && g.adres_hash && g.adres_hash !== hash),
+      geo: heeftPin && !verouderd && !afgekeurd ? g : null,
+      geoVerouderd: verouderd,
+      geoAfgekeurd: afgekeurd,   // v0.1.1: eerder opgeslagen pin past niet bij het adres; komt terug in de lijst
       geoFout: g && g.lat == null ? (g.fout || 'onbekende fout') : null,
     };
   });
@@ -354,7 +389,7 @@ function tekenGeoLijst() {
   el('geoFoutBtn').textContent = `Mislukte opnieuw proberen (${fouten.length})`;
   el('geoFoutBtn').disabled = !fouten.length;
   const rij = (k, status) => `<tr><td class="mono">${esc(k.code)}</td><td>${esc(k.naam)}</td><td>${esc(k.adres)}</td><td>${esc(k.postcode || '')}</td><td>${esc(k.plaats || '')}</td><td class="${status.startsWith('mislukt') ? 'fout' : ''}">${esc(status)}</td></tr>`;
-  const alle = [...open.map(k => rij(k, k.geoVerouderd ? 'adres gewijzigd, opnieuw' : 'te doen')), ...fouten.map(k => rij(k, 'mislukt: ' + k.geoFout)), ...buitenland.map(k => rij(k, 'buitenland, overgeslagen'))];
+  const alle = [...open.map(k => rij(k, k.geoVerouderd ? 'adres gewijzigd, opnieuw' : k.geoAfgekeurd ? 'eerdere pin afgekeurd: ' + k.geoAfgekeurd : 'te doen')), ...fouten.map(k => rij(k, 'mislukt: ' + k.geoFout)), ...buitenland.map(k => rij(k, 'buitenland, overgeslagen'))];
   el('geoLijst').className = '';
   el('geoLijst').innerHTML = alle.length ? `<table class="lijst"><thead><tr><th>Code</th><th>Naam</th><th>Adres</th><th>Postcode</th><th>Plaats</th><th>Status</th></tr></thead><tbody>${alle.join('')}</tbody></table>` : '<div class="leeg">Alle adressen hebben coördinaten.</div>';
 }
@@ -369,14 +404,14 @@ async function pdokZoek(q) {
   if (!doc) return null;
   const m = /POINT\(([-\d.]+)\s+([-\d.]+)\)/.exec(doc.centroide_ll || '');
   if (!m) return null;
-  return { lon: parseFloat(m[1]), lat: parseFloat(m[2]), weergave: doc.weergavenaam || '' };
+  return { lon: parseFloat(m[1]), lat: parseFloat(m[2]), weergave: doc.weergavenaam || '', ontleed: ontleedWeergave(doc.weergavenaam) };
 }
-function zoekvraagVoor(k) {
+// v0.1.1: eerst op postcode + huisnummer, en als dat resultaat de controle niet haalt op straat + huisnummer + plaats.
+function zoekvragenVoor(k) {
   const { straat, nummer, toevoeging } = splitsAdres(k.adres);
   const pc = nlPostcode(k.postcode);
-  if (pc && nummer) return `${pc} ${nummer}${toevoeging}`;
-  if (pc && !nummer) return pc;
-  return `${straat} ${nummer}${toevoeging} ${k.plaats || ''}`.replace(/\s+/g, ' ').trim();
+  const opStraat = `${straat} ${nummer}${toevoeging} ${k.plaats || ''}`.replace(/\s+/g, ' ').trim();
+  return pc ? [`${pc} ${nummer}${toevoeging}`, opStraat] : [opStraat];
 }
 
 let geoBezig = false;
@@ -390,14 +425,25 @@ async function geocodeer(alleenFouten) {
   let gelukt = 0, mislukt = 0;
   for (let i = 0; i < lijst.length; i++) {
     const k = lijst[i];
-    const q = zoekvraagVoor(k);
-    let rij = { klant_code: k.code, zoekvraag: q, adres_hash: k.hash, bron: 'pdok' };
-    try {
-      const r = await pdokZoek(q);
-      if (r) { rij = { ...rij, lat: r.lat, lon: r.lon, pdok_weergave: r.weergave, geocodeerd_op: new Date().toISOString(), fout: null }; gelukt++; }
-      else { rij = { ...rij, lat: null, lon: null, pdok_weergave: null, geocodeerd_op: null, fout: 'geen adres gevonden bij PDOK' }; mislukt++; }
-    } catch (e) {
-      rij = { ...rij, lat: null, lon: null, pdok_weergave: null, geocodeerd_op: null, fout: 'aanroep mislukt: ' + e.message }; mislukt++;
+    const vragen = zoekvragenVoor(k);
+    let rij = { klant_code: k.code, zoekvraag: vragen.join(' | '), adres_hash: k.hash, bron: 'pdok', lat: null, lon: null, pdok_weergave: null, geocodeerd_op: null, fout: null };
+    const vooraf_ = vooraf(k);
+    if (vooraf_) { rij.fout = vooraf_; mislukt++; }
+    else {
+      try {
+        let laatsteReden = 'geen adres gevonden bij PDOK';
+        for (const q of vragen) {
+          const r = await pdokZoek(q);
+          if (!r) continue;
+          const reden = toetsResultaat(k, r);
+          if (!reden) { rij = { ...rij, lat: r.lat, lon: r.lon, pdok_weergave: r.weergave, zoekvraag: q, geocodeerd_op: new Date().toISOString(), fout: null }; break; }
+          laatsteReden = `PDOK vond ander adres (${reden}): ${r.weergave}`;
+          await slaap(150);
+        }
+        if (rij.lat != null) gelukt++; else { rij.fout = laatsteReden; mislukt++; }
+      } catch (e) {
+        rij.fout = 'aanroep mislukt: ' + e.message; mislukt++;
+      }
     }
     const { error } = await sb.from('yoobi_klant_geo').upsert(rij, { onConflict: 'klant_code' });
     if (error) { el('geoStatus').textContent = 'Opslaan mislukt: ' + error.message + ' — gestopt.'; break; }

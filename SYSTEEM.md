@@ -5731,6 +5731,20 @@ uit voorbeeldcode), het geocoderen in de echte browser, en de upsert
 in `yoobi_klant_geo` onder RLS. De terugval naar OpenStreetMap en de
 foutmeldingen vangen een mislukking zichtbaar op.
 
+**Zelfde dag, v0.1.1.** Eerste test op GitHub Pages: login, laden,
+telling en pins werkten; één pin "Simpelveld" stond naast Eindhoven.
+Query op `yoobi_klant_geo` (door Gian): 31 pins met een PDOK-weergavenaam
+die niet bij de Yoobi-plaats paste, 18 echt fout. Oorzaak: bij een
+niet-bestaande postcode geeft de PDOK-zoekfunctie het eerstbeste adres
+elders in het land terug en v0.1.0 nam dat blind over. v0.1.1 toetst elk
+resultaat aan huisnummer en postcode (of straat), probeert daarna op
+straat + plaats, en zet anders de reden in de lijst; postbussen en
+adressen zonder huisnummer worden niet opgezocht; eerder opgeslagen
+pins worden bij het laden nagekeken. Getest op de 31 gemeten regels, 31
+juist. Dezelfde zwakte zit nog in `_pdokGeocode` in `index.html` (daar
+ziet de gebruiker het resultaat wel direct op het scherm); niet
+aangepast.
+
 **Kanttekening.** "Laatste project" is de jongste `einddatum` (anders
 `startdatum`) uit `yoobi_projecten`: contractdata, geen uitvoerdata.
 Alleen de twee accounts in `yoobi_toegang` zien de kaart.

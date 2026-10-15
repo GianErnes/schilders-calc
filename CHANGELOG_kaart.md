@@ -1,5 +1,15 @@
 # CHANGELOG kaart.html
 
+## v0.1.1 — Controle op PDOK-resultaten (15-10-2026)
+
+Aanleiding: Gian klikte op een pin "Simpelveld" naast Eindhoven. Meting in `yoobi_klant_geo` (query van Gian): 31 pins waarvan de PDOK-weergavenaam niet bij de Yoobi-plaats paste; 18 daarvan stonden echt verkeerd. Oorzaak: bij een niet-bestaande postcode geeft de PDOK-zoekfunctie het eerstbeste adres elders terug (de vier cijfers van de postcode als huisnummer, of dezelfde letters in een andere stad), en v0.1.0 nam dat blind over.
+
+- Elk PDOK-resultaat wordt getoetst aan het Yoobi-adres: huisnummer moet gelijk zijn; met postcode moet de postcode gelijk zijn (of straat én plaats); zonder postcode moet de straat gelijk zijn. Kerkdorp-verschillen (Klimmen/Voerendaal, Eys/Trintelen) en spelfouten in de plaats blijven geaccepteerd.
+- Haalt het postcode-resultaat de toets niet, dan tweede poging op straat + huisnummer + plaats. Haalt ook die het niet: geen pin, status "PDOK vond ander adres (reden): …" in de lijst, zodat de fout in Yoobi te vinden is.
+- Postbusadressen en adressen zonder huisnummer worden niet opgezocht (status in de lijst).
+- Eerder opgeslagen pins worden bij het laden met dezelfde toets nagekeken; afgekeurde pins verdwijnen van de kaart en komen terug in de lijst "te doen" met de reden.
+- Getest op de 31 gemeten regels: 31 van 31 juist beoordeeld (`node`).
+
 ## v0.1.0 — Eerste versie: klantenkaart Zuid-Limburg (15-10-2026)
 
 Doel: zien waar de klanten zitten om het campagnegebied te bepalen (Google Ads, folders, wintercampagne). Intern, alleen na inloggen.
