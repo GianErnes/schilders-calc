@@ -2105,7 +2105,7 @@ function dagVolgordeHtml(mwId, iso) {
   if (rijen.length < 2) return '<div class="dagvolgorde"></div>';
   // v0.20.0: per regel nummerknoppen (1, 2, 3 …; de huidige plek staat vet) en ▲/▼ om één plek te schuiven.
   const n = rijen.length;
-  return '<div class="dagvolgorde"><div class="hint" style="margin-top:0.4rem">Volgorde in de agenda' + (rijen.some(r => r.volgorde != null) ? '' : ' <span class="m">(regel: grootste eerst)</span>') + ':</div><ol class="dagvolgorde-lijst">' +
+  return '<div class="dagvolgorde"><div class="hint" style="margin-top:0.4rem"><span style="font-weight:600">Volgorde in de agenda</span>' + (rijen.some(r => r.volgorde != null) ? '' : ' <span class="m">(regel: grootste eerst)</span>') + ' <span class="m">— elke tik slaat meteen op</span></div><ol class="dagvolgorde-lijst">' +
     rijen.map((r, i) => '<li><span><b>' + esc(r.klant) + '</b> ' + esc(r.naam) + ' <span class="num m">' + fmtUur(r.uren) + ' u</span></span><span class="knoppen">' +
       Array.from({ length: n }, (_, j) => j === i ? '<span class="pos num">' + (j + 1) + '</span>' : '<button class="knop klein" data-vcode="' + esc(r.code) + '" data-vnaar="' + (j + 1) + '" title="Op plek ' + (j + 1) + '">' + (j + 1) + '</button>').join('') +
       (i > 0 ? '<button class="knop klein" data-vcode="' + esc(r.code) + '" data-vnaar="' + i + '" title="Eén plek eerder">▲</button>' : '<span style="display:inline-block;min-width:1.6rem"></span>') +
@@ -2153,11 +2153,13 @@ bordEl.addEventListener('click', e => {
   const geplandHier = dagTotaal(mwId, iso);
   popover.innerHTML = '<b>' + esc(m.naam) + '</b> · ' + DAGNAMEN[d.getDay()] + ' ' + fmtDatum(d) +
     dagVolgordeHtml(mwId, iso) +
+    // v0.20.0: verlofdeel eigen kopje, knop heet "Verlof opslaan" (was "Opslaan" naast de volgordeknoppen → per ongeluk hele dag vrij)
+    '<div class="hint" style="margin-top:0.6rem;font-weight:600">Verlof / reservering' + (bestaand ? '' : ' <span class="m" style="font-weight:400">(los van de volgorde hierboven)</span>') + '</div>' +
     (bestaand && bestaand._ziek ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + ' — gemeld in Personeel. Daar aanpassen of hersteld melden.</div>'
           : bestaand ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + '</div><div class="rij"><button class="knop primair" id="poWis">Opheffen</button></div>'
           : (geplandHier ? '<div class="hint" style="color:var(--amber)">Let op: er staat al ' + fmtUur(geplandHier) + ' uur gepland op deze dag.</div>' : '') +
             '<div class="rij"><input type="text" inputmode="decimal" id="poUren" placeholder="uren" style="width:5rem" title="leeg = hele dag"><input type="text" id="poOm" placeholder="omschrijving (mag leeg)" style="flex:1"></div>' +
-            '<div class="rij"><button class="knop primair" id="poZet">Opslaan</button><span class="hint" style="margin:0">uren leeg = hele dag vrij</span></div>');
+            '<div class="rij"><button class="knop primair" id="poZet">Verlof opslaan</button><span class="hint" style="margin:0">uren leeg = hele dag vrij</span></div>');
   popover.style.display = 'block';
   popover.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 260) + 'px';
   popover.style.top = (r.top + window.scrollY - popover.offsetHeight - 8) + 'px';
@@ -2172,9 +2174,11 @@ bordEl.addEventListener('click', e => {
     zet.addEventListener('click', () => {
       const om = document.getElementById('poOm').value.trim(), uv = document.getElementById('poUren').value.trim();
       if (uv !== '' && (isNaN(parseUur(uv)) || parseUur(uv) <= 0)) { toonStatus('Ongeldig aantal uren', true); return; }
+      // v0.20.0: hele dag vrij terwijl er al uren staan → eerst bevestigen (16-10-2026: twee man per ongeluk op verlof)
+      if (uv === '' && geplandHier > 0 && !confirm('Er staat al ' + fmtUur(geplandHier) + ' uur gepland op ' + DAGNAMEN[d.getDay()] + ' ' + fmtDatum(d) + '. ' + m.naam + ' toch de hele dag vrij geven?')) return;
       sluitPopover(); zetVerlof(mwId, [iso], om, uv !== '' ? parseUur(uv) : null);
     });
-    document.getElementById('poUren').focus();
+    if (!geplandHier) document.getElementById('poUren').focus(); // v0.20.0: geen focus in het verlofveld als de dag al gevuld is
   }
 });
 

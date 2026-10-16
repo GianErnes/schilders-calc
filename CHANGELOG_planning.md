@@ -1,6 +1,6 @@
 # CHANGELOG planning.html
 
-## v0.20.0 — Dagvenster: volgorde in de agenda met nummerknoppen en ▲/▼, 15-10-2026
+## v0.20.0 — Dagvenster: volgorde met nummerknoppen en ▲/▼; verlofknop gescheiden en beveiligd, 15/16-10-2026
 
 **Aanleiding.** Gian 15-10-2026: "Kan ik dan ook kiezen welk project als tweede moet?" Sinds v0.14.0 was er alleen een knop *eerst*; een andere volgorde dan "X vooraan" kon alleen door van achteren naar voren meerdere keren *eerst* te tikken. Besluit (ask_user_input): beide bedieningen.
 
@@ -9,6 +9,15 @@
 2. Nieuwe pure functie `dagVolgordeVerplaats(codes, code, naar)`: haalt `code` uit de lijst en voegt hem op plek `naar` weer in; de rest schuift door in de bestaande volgorde. Een plek buiten bereik wordt de laatste plek; een onbekende code laat de lijst ongemoeid.
 3. `zetDagVolgorde(mwId, iso, code, naar)` gebruikt die functie en slaat daarna, als voorheen, de hele dag op met `update … match()` per rij (1, 2, 3 …); terugdraaien van het geheugen bij een fout en de hint naar `planning_03_volgorde.sql` zijn ongewijzigd. Klik-afhandeling in het dagvenster luistert nu op `button[data-vcode]`.
 4. Drie CSS-regels voor de knoppenrij (`.dagvolgorde-lijst .knoppen`, `.knop`, `.pos`).
+
+**Incident 16-10-2026.** Twee medewerkers (o.a. Max) stonden op vr 16-10 in de agenda als "Verlof" terwijl er 7,5 uur gepland stond. Oorzaak (analyse Claude, Gian weet het niet zeker): in het dagvenster stond onder de volgordeknoppen de rode knop "Opslaan" met "uren leeg = hele dag vrij" — dat is de verlofknop (`zetVerlof(..., null)`), niet een opslaanknop voor de volgorde. De volgorde zelf raakt `plan_verlof` niet. Herstel: dagvenster openen → Opheffen.
+
+**Extra wijziging (planning.html).**
+5. Verlofdeel krijgt een eigen kopje "Verlof / reservering (los van de volgorde hierboven)"; de knop heet "Verlof opslaan"; bij de volgorde staat "elke tik slaat meteen op".
+6. Hele dag vrij (uren leeg) terwijl er al uren op de dag staan → `confirm("Er staat al 7,5 uur gepland op vr 16 okt 2026. Max toch de hele dag vrij geven?")`. Een reservering met uren of een lege dag vraagt niets.
+7. Het urenveld krijgt geen autofocus meer als de dag al gevuld is.
+
+**Getest (extra).** 6 runtime-controles op de uitgesneden klik-afhandeling met nagebootste DOM: teksten aanwezig, geen focus bij gevulde dag, bevestiging geweigerd → niets opgeslagen en venster blijft open, bevestiging akkoord → `zetVerlof(m, [datum], '', null)`, reservering met uren zonder bevestiging, lege dag zonder bevestiging. Div-balans 128/128 (één div-paar erbij).
 
 **Niet gewijzigd.** Edge Function `planning-ics` (leest alleen de nummers 1, 2, 3 …), SQL, de sorteerregel in `dagProjecten()` en het gedrag bij fase verschuiven of uren wissen (v0.14.0).
 
