@@ -1,3 +1,27 @@
+## v4.92.0 — Dupliceren neemt het onderhoudsplan mee (2026-10-16)
+
+**Aanleiding**
+- Gian 16-10-2026: "Ik heb een onderhoudsplan verzonden en wil een alternatief aanbieden zonder alles opnieuw te hoeven maken, op dit moment kan ik geen onderhoudsplan kopiëren he?" Klopte: een plan hangt één-op-één aan een calculatie (`_fetchOhpByCalc` met `maybeSingle`) en `dupCalc` raakte de plantabellen niet aan. Besluit (ask_user_input): dupliceer de calculatie mét plan (optie 1), niet meerdere plannen per calculatie (optie 2). Vinkje in de modal, standaard aan. Verschil in het alternatief zit alleen in het plan (looptijd, beurten, betaalmodel).
+
+**Gebouwd**
+- Dupliceer-venster: nieuw blok `dupCalcPlanWrap` met vinkje `dupCalcMetPlan` (standaard aan). `dupCalc` is async geworden en toont het blok alleen als de bron een rij in `onderhoudsplannen` heeft; de modal opent direct, de query loopt erachteraan. `_dupCalcStart` geeft `metPlan` door (alleen true als het blok zichtbaar was én het vinkje aanstaat).
+- `_dupCalcUitvoeren(id, metKlant, metPlan)`: stap 6 na de meetstaat roept `_dupOhpNaarCalc(orig.id, fresh.id)` aan. De toast meldt het aantal beurten en externe posten dat meeging; rood als het plan niet meekwam.
+- Nieuwe `_dupOhpNaarCalc(bronCalcId, doelCalcId)`: leest het bronplan via `_fetchOhpByCalc`, schrijft de kopie via `_saveOhpParams` met `id: null`, `status: 'concept'`, `settingsSnapshot: null`, `ligging: null`, `naam` + " (kopie)" als er een eigen naam stond (anders leeg, valt terug op de calc-naam die al "(kopie)" heeft). Daarna beurten via `_addBeurt` met `ingepland: false`, externe posten via `_addExtern`. Planbrief-keuzes: gerichte update van `offerte_config` met alleen de sleutel `brief` (witte lijst, diepe JSON-kopie); `nummer`, `geldigTot` en `offertedatum` gaan bewust niet mee.
+- Welkomsttekst, RELEASE_HIGHLIGHTS en APP_VERSION bijgewerkt.
+
+**Niet gewijzigd**
+- Datamodel: één plan per calculatie blijft. Geen SQL, geen Edge Function; alle geschreven kolommen zitten al in `_mapOhpToDB`/`_mapBeurtToDB`/`_mapExternToDB`.
+- Liggingsfoto gaat niet mee: `_ohpLiggingVerwijder` wist het storage-bestand, twee plannen die hetzelfde pad delen zouden elkaar kapotmaken.
+- De gedupliceerde calculatie is concept en rekent live; het plan erbij ook (geen eigen snapshot). Dat is het bestaande gedrag van dupliceren.
+
+**Terugval**
+- Mislukt het aanmaken van het plan, dan bestaat de kopie van de calculatie gewoon (gedrag van vóór v4.92.0) en zegt de toast dat het plan niet meeging. Mislukt een losse beurt of externe post, dan gaan de andere door en telt de toast de missers.
+
+**Getest**
+- Node-parse van het scriptblok; div-balans +1/+1 t.o.v. live (1350/1353 vs 1349/1352).
+- Runtime-test `_dupOhpNaarCalc` met stubs, 17 proeven groen: status/snapshot/ligging/calculatieId gereset, naam leeg blijft leeg en "Plan A" wordt "Plan A (kopie)", beurten met ingepland=false en id/planId gereset, externe post mee, offerte_config-update bevat alleen `brief` en richt zich op het nieuwe plan-id, geen bronplan → bron=false, plan aanmaken mislukt → geen beurten geprobeerd, één mislukte beurt geteld, zonder `_sb` niets.
+- Niet getest: in de browser. Controleer na deploy: (1) ⎘ op een calculatie zonder plan toont géén vinkje; (2) ⎘ op de verzonden calculatie met plan toont het vinkje aan; (3) na "Zelfde klant" meldt de toast "Onderhoudsplan meegenomen als concept (N beurten …)"; (4) open de kopie, Onderhoudsplan-tab: status Concept, beurten en externe posten aanwezig, ligging leeg, planbrief-keuzes gelijk aan het origineel; (5) het origineel staat nog op Verzonden met zijn beurten; (6) vinkje uit → kopie zonder plan.
+
 ## v4.91.0 — Klimtoeslag alleen over hoofdgroep Buiten (of Binnen) (2026-10-14)
 
 **Aanleiding**

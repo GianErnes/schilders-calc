@@ -2384,8 +2384,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.91.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.92.0</h2>
       <div class="intro-body">
+        <p><strong>⎘ Dupliceren neemt het onderhoudsplan mee (v4.92.0).</strong> Heb je een onderhoudsplan verzonden en wil je de klant een alternatief bieden (andere looptijd, andere beurten, ander betaalmodel), dan hoefde je tot nu toe het hele plan opnieuw te maken: het kopieer-knopje ⎘ nam alleen de calculatie mee. Vanaf nu staat in het dupliceer-venster een vinkje <strong>Onderhoudsplan meenemen</strong> (alleen zichtbaar als de calculatie een plan heeft, standaard aan). De kopie krijgt dan het plan als concept, met alle beurten, externe posten en planbrief-keuzes, zodat je meteen kunt variëren terwijl het verzonden origineel vergrendeld blijft. Bewust niet mee: de liggingsfoto (opnieuw ophalen is één klik), het plannummer en de geldigheid (komen vers bij de eerste accordeerlink), en de vlag "ingepland" bij beurten, want de kopie staat niet in Yoobi. De melding onderaan zegt hoeveel beurten er meegingen. Geen SQL nodig.</p>
         <p><strong>🪜 Klimtoeslag alleen over het buitenwerk (v4.91.0).</strong> Een percentage-staartpost zoals de klimtoeslag rekende altijd over de arbeid van de hele calculatie. Bij een nieuwbouw met binnen- én buitenwerk klopt dat niet: binnen klim je niet. In het staart-venster staan nu twee extra grondslagen: "Arbeid — alleen hoofdgroep Buiten" en "Arbeid — alleen hoofdgroep Binnen". De app telt dan alleen de arbeid van de hoofdgroepen waarvan de naam het woord buiten (of binnen) bevat, hoofdletters maken niet uit; uitgevinkte hoofdgroepen tellen niet mee. Dit werkt door in de calculatie, het offertebedrag, de werkdagen (als de post meetelt in werkdagen), het onderhoudsplan en het archieftotaal. Op de offerte staat dan "10% over arbeid buiten". Heet geen enkele hoofdgroep Buiten, dan is de post € 0 en meldt de knop Controleer dat. Bestaande staartposten blijven over de hele arbeid rekenen; de keuze maak je per post. Geen SQL nodig.</p>
         <p><strong>🪵 Houtrot-tarieven onder Instellingen (v4.90.0).</strong> Eerste stap van de houtrot-opgave: de lijst met herstelmethodes waaruit de buitendienst straks op de steiger kiest als ze houtrot tegenkomen. Per methode een naam voor de keuzelijst, de tekst die de klant op de opgave leest, een eenheid (stuk, cm, dm, m of uur), een richtprijs excl. btw, de volgorde en een vinkje Actief. Je wijzigt rechtstreeks in de tabel; elke wijziging wordt meteen opgeslagen. Een methode die niet meer gebruikt wordt zet je op niet-actief in plaats van hem weg te gooien. De opgave zelf, de foto's, de PDF en de accordeerlink volgen in de volgende stappen. Vereist eenmalig de SQL houtrot_01_tarieven.sql (al gedraaid).</p>
         <p><strong>📅 Calculatielijst staat standaard op Opname, eerstvolgende datum bovenaan (v4.89.0).</strong> Het dashboard sorteerde tot nu toe op Gewijzigd (nieuwste boven), zodat je elke keer zelf op Opname moest tikken. Nu staat de lijst bij het openen meteen op opnamedatum oplopend, binnen elke statusgroep: verstreken en aanstaande opnames bovenaan, verder in de toekomst eronder, calculaties zonder opnamedatum onderaan. Tikken op een kolomkop werkt zoals altijd. Geen SQL.</p>
@@ -3580,6 +3581,13 @@ Hout binnen;Gronden;m²;6;0,10</div>
       <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem;"><strong>Zelfde klant</strong> neemt het adres, de contactpersoon, het e-mailadres en het telefoonnummer mee.</p>
       <p style="margin: 0 0 0.85rem 0; font-size: 0.85rem;"><strong>Andere klant</strong> laat die leeg, en ook de klantnaam.</p>
       <p style="margin: 0; font-size: 0.75rem; color: var(--muted); font-style: italic;">In beide gevallen gaan het klanttype, de garantiejaren, de prijsweergave, de bijlagevinkjes en de sectiekeuzes mee. Het offertenummer en de datums komen vers.</p>
+      <!-- v4.92.0 — alleen zichtbaar als de bron een onderhoudsplan heeft -->
+      <div id="dupCalcPlanWrap" style="display: none; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px solid var(--paper-deep);">
+        <label style="display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.85rem; cursor: pointer;">
+          <input type="checkbox" id="dupCalcMetPlan" checked style="margin-top: 0.2rem;">
+          <span><strong>Onderhoudsplan meenemen.</strong> De kopie krijgt het plan als concept met alle beurten, externe posten en planbrief-keuzes. Niet mee: liggingsfoto, plannummer en geldigheid (komen vers), en de Yoobi-vlag "ingepland".</span>
+        </label>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn-secondary btn" onclick="_dupCalcSluit()">Annuleren</button>
@@ -3785,7 +3793,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.91.0';
+const APP_VERSION = 'v4.92.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4202,6 +4210,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.92.0', d: '2026-10-16', h: 'Dupliceren (⎘) kan het onderhoudsplan meenemen: vinkje in het dupliceer-venster, standaard aan als de calculatie een plan heeft. Plan komt als concept mee met beurten, externe posten en planbrief-keuzes; liggingsfoto, plannummer/geldigheid en de vlag ingepland niet.' },
   { v: '4.91.0', d: '2026-10-14', h: 'Percent-staartpost (klimtoeslag) kan nu alleen over de arbeid van de hoofdgroep Buiten of Binnen rekenen: twee nieuwe grondslagen in het staart-venster, doorgetrokken naar offerte, werkdagen, onderhoudsplan en archieftotaal. Controleer waarschuwt als zo\'n hoofdgroep ontbreekt.' },
   { v: '4.90.0', d: '2026-10-12', h: 'Houtrot-tarieven onder Instellingen: beheer van herstelmethodes (naam, klanttekst, eenheid, richtprijs, volgorde, actief) voor de komende houtrot-opgave vanaf de steiger. Vereist eenmalig SQL houtrot_01_tarieven.sql.' },
   { v: '4.89.0', d: '2026-10-08', h: 'Calculatielijst op het dashboard sorteert standaard op Opname oplopend (eerstvolgende datum bovenaan, binnen elke statusgroep, lege datums onderaan) in plaats van Gewijzigd nieuwste boven.' },
@@ -20808,13 +20817,27 @@ async function delCalc(id) {
 // ============================================================
 let _dupCalcBronId = null;
 
-function dupCalc(id) {
+async function dupCalc(id) {
   const orig = data.calculaties.find(x => x.id === id);
   if (!orig) return;
   _dupCalcBronId = id;
   const el = document.getElementById('dupCalcBron');
   if (el) el.textContent = orig.naam || '(zonder naam)';
+  // v4.92.0 — vinkje "Onderhoudsplan meenemen" alleen tonen als de bron een plan heeft.
+  // Eerst verbergen, dan de modal openen (niet wachten op de query), dan tonen als er een plan is.
+  const wrap = document.getElementById('dupCalcPlanWrap');
+  const vink = document.getElementById('dupCalcMetPlan');
+  if (wrap) wrap.style.display = 'none';
+  if (vink) vink.checked = true;
   document.getElementById('dupCalcModal').classList.add('active');
+  if (wrap && _sb) {
+    const { data: planRow } = await _sbQuery(
+      _sb.from('onderhoudsplannen').select('id').eq('calculatie_id', id).maybeSingle(),
+      'Onderhoudsplan controleren'
+    );
+    // Alleen tonen als de modal intussen niet voor een andere calc is geopend of gesloten.
+    if (planRow && _dupCalcBronId === id) wrap.style.display = '';
+  }
 }
 
 function _dupCalcSluit() {
@@ -20824,9 +20847,13 @@ function _dupCalcSluit() {
 
 function _dupCalcStart(metKlant) {
   const id = _dupCalcBronId;
+  const wrap = document.getElementById('dupCalcPlanWrap');
+  const vink = document.getElementById('dupCalcMetPlan');
+  // v4.92.0 — plan alleen meenemen als het vinkje zichtbaar was (bron heeft een plan) én aanstaat
+  const metPlan = !!(wrap && wrap.style.display !== 'none' && vink && vink.checked);
   document.getElementById('dupCalcModal').classList.remove('active');
   _dupCalcBronId = null;
-  if (id) _dupCalcUitvoeren(id, metKlant === true);
+  if (id) _dupCalcUitvoeren(id, metKlant === true, metPlan);
 }
 
 // Witte lijst voor offerte_config. Bewust geen zwarte lijst: een veld dat
@@ -20863,7 +20890,7 @@ function _dupCfgWitteLijst(bron, metKlant) {
   return uit;
 }
 
-async function _dupCalcUitvoeren(id, metKlant) {
+async function _dupCalcUitvoeren(id, metKlant, metPlan) {
   const orig = data.calculaties.find(x => x.id === id);
   if (!orig) return;
   // Zorg dat origineel volledig geladen is
@@ -20962,11 +20989,80 @@ async function _dupCalcUitvoeren(id, metKlant) {
   }
   fresh.__loaded = true;
 
+  // 6. v4.92.0 — Onderhoudsplan meekopiëren (plan + beurten + externe posten), als gevraagd.
+  // Mislukt dit, dan bestaat de kopie van de calculatie gewoon: dat is het gedrag van vóór v4.92.0.
+  let planTekst = '';
+  if (metPlan) {
+    const r = await _dupOhpNaarCalc(orig.id, fresh.id);
+    if (!r.bron)          planTekst = ' Geen onderhoudsplan gevonden om mee te nemen.';
+    else if (!r.plan)     planTekst = ' Het onderhoudsplan is NIET meegegaan' + (r.fout ? ': ' + r.fout : '.');
+    else {
+      const mis = r.beurtenMislukt + r.externMislukt;
+      planTekst = ' Onderhoudsplan meegenomen als concept (' + r.beurten + ' beurt' + (r.beurten === 1 ? '' : 'en')
+        + (r.extern ? ', ' + r.extern + ' externe post' + (r.extern === 1 ? '' : 'en') : '') + ').'
+        + (mis ? ' Let op: ' + mis + ' regel' + (mis === 1 ? '' : 's') + ' niet gelukt, controleer het plan.' : '');
+    }
+  }
+
   data.calculaties.unshift(fresh);
   renderDashboard();
-  _toast(metKlant
+  _toast((metKlant
     ? 'Kopie met klantgegevens gemaakt, staat nu bij Concept.'
-    : 'Kopie zonder klantgegevens gemaakt, staat nu bij Concept.', 'ok');
+    : 'Kopie zonder klantgegevens gemaakt, staat nu bij Concept.') + planTekst, (metPlan && !planTekst.includes('meegenomen')) ? undefined : 'ok');
+}
+
+// v4.92.0 — Kopieer het onderhoudsplan van bronCalcId naar doelCalcId.
+// Gaat mee: alle planparameters, beurten, externe posten en de planbrief-keuzes (offerte_config.brief).
+// Gaat NIET mee: id, status (altijd concept), settings_snapshot (leeg: concept rekent live),
+// ligging (storage-bestand zou gedeeld worden; _ohpLiggingVerwijder wist het dan voor beide),
+// offerte_config.nummer/geldigTot/offertedatum (komen vers bij de eerste accordeerlink),
+// beurt-vlag ingepland (de kopie staat niet in de Yoobi-planning).
+// Retourneert { bron, plan, beurten, beurtenMislukt, extern, externMislukt, fout }.
+async function _dupOhpNaarCalc(bronCalcId, doelCalcId) {
+  const uit = { bron: false, plan: null, beurten: 0, beurtenMislukt: 0, extern: 0, externMislukt: 0, fout: '' };
+  if (!_sb || !bronCalcId || !doelCalcId) return uit;
+  const bron = await _fetchOhpByCalc(bronCalcId);
+  if (!bron) return uit;
+  uit.bron = true;
+
+  const kopie = {
+    ...bron,
+    id: null,
+    calculatieId: doelCalcId,
+    naam: (bron.naam && String(bron.naam).trim()) ? String(bron.naam).trim() + ' (kopie)' : null,
+    status: 'concept',
+    settingsSnapshot: null,
+    ligging: null,
+    beurten: [],
+    externPosten: []
+  };
+  const nieuw = await _saveOhpParams(kopie);
+  if (!nieuw || !nieuw.id) { uit.fout = 'plan aanmaken mislukt'; return uit; }
+  uit.plan = nieuw;
+
+  // Planbrief-keuzes via witte lijst, gericht op alleen de kolom offerte_config (zit bewust niet in _mapOhpToDB).
+  const briefCfg = (bron.offerteConfig && bron.offerteConfig.brief) ? bron.offerteConfig.brief : null;
+  if (briefCfg) {
+    let cfg = null;
+    try { cfg = { brief: JSON.parse(JSON.stringify(briefCfg)) }; } catch (e) { cfg = null; }
+    if (cfg) {
+      const { error: eCfg } = await _sbQuery(
+        _sb.from('onderhoudsplannen').update({ offerte_config: cfg }).eq('id', nieuw.id),
+        'Planbrief-keuzes kopieren'
+      );
+      if (eCfg) _toast('Planbrief-keuzes niet meegegaan: ' + eCfg.message);
+    }
+  }
+
+  for (const b of (bron.beurten || [])) {
+    const saved = await _addBeurt(nieuw.id, { ...b, id: null, planId: nieuw.id, ingepland: false });
+    if (saved) uit.beurten++; else uit.beurtenMislukt++;
+  }
+  for (const p of (bron.externPosten || [])) {
+    const saved = await _addExtern(nieuw.id, { ...p, id: null, planId: nieuw.id });
+    if (saved) uit.extern++; else uit.externMislukt++;
+  }
+  return uit;
 }
 // ============================================================
 // LOCK / SETTINGS-SNAPSHOT — gereed/verzonden/etc. bevriezen instellingen
