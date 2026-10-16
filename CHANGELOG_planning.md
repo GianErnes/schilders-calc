@@ -1,6 +1,19 @@
 # CHANGELOG planning.html
 
-## v0.20.0 — Dagvenster: volgorde met nummerknoppen en ▲/▼; verlofknop gescheiden en beveiligd, 15/16-10-2026
+## v0.21.0 — Historie van kennisgevingen per project in het paneel, 16-10-2026
+
+**Aanleiding.** Gian 16-10-2026: "Is het mogelijk om van de verstuurde kennisgevingen later terug te zien wat de inhoud van de mail was?" De gegevens stonden er al (`plan_kennisgevingen.onderwerp` en `.tekst` sinds v0.15.0), maar het paneel toonde alleen "verstuurd 5 okt voor week 43" en alleen de laatste rij per soort. Besluit Gian (ask_user_input): volledige historie per project, inclusief eerdere versies en overgeslagen signalen, in het projectpaneel van het bord.
+
+**Wijziging** (alleen planning.html; geen SQL, geen Edge Function).
+1. Nieuwe cache `kennisHistorie[yoobi_code]`: alle rijen van het project, nieuwste eerst. Gevuld in dezelfde laadlus als `kennis`; ook bijgewerkt na een verzending en na overslaan, zoals `kennis`. De bestaande cache `kennis` (laatste rij per soort) is onveranderd, dus signalen, labels en correctieteksten werken als voorheen.
+2. Paneelblok "Kennisgevingen aan de klant": knop **historie · n** naast *wijzig*, alleen als er minstens één rij is.
+3. Nieuw venster `historieOverlay` (zelfde overlay-patroon als het kennisgevingsvenster), titel "Kennisgevingen · [klant]", per rij een kaartje: soort, "verstuurd 5 okt 2026 door gian aan naam · adres" met de bezorgstatus uit `kennisStatusTekst` (afgeleverd/geopend/bevestigd/NIET afgeleverd), de periode, onderwerp vet en de volledige tekst alleen-lezen. Overgeslagen rijen: "overgeslagen 5 okt 2026 door gian · signaal voor week 43 · geen mail verstuurd", zonder tekstblok. Onder elke verstuurde kaart de regel dat groet, bevestigingsknop en handtekening er in de mail automatisch onder stonden — in `tekst` staat alleen de kern (functie v2, v0.17.0). Niets bewerken, verwijderen of opnieuw versturen vanuit dit venster.
+
+**Getest.** `node --check` schoon; div-balans 140/140 (live 127/127, +13 van het nieuwe venster en de kaartjes in geen enkele rij — het verschil zit in het nieuwe overlay-blok), CSS 252/252 (live 241/241, +11 nieuwe regels). 13 gedragstests in jsdom met de echte functies uit het bestand: teller 4 en geen knop zonder rijen, lege melding, vier kaartjes nieuwste eerst, overgeslagen zonder onderwerp/tekst, bounce-rij toont "NIET afgeleverd (reden)" en html in de tekst wordt ge-escaped, bevestigde rij toont afgeleverd + bevestigd + voetregel, aan-naam en periode, titel, overlay open, 4 kaartjes in de DOM, sluitknop sluit. **Niet getest:** de knop zelf in `kennisHtml` (alleen de telregel nagebootst, niet de hele paneelrender), weergave op iPad/iPhone, en de echte rijen uit Supabase — dat doet Gian in de browser.
+
+**Bewust niet.** De afgeleverde html uit Resend ophalen via `resend_id`: vraagt een nieuwe Edge Function. Kan later als de kale tekst niet volstaat.
+
+## v0.20.0 — Dagvenster: volgorde in de agenda met nummerknoppen en ▲/▼, 15-10-2026
 
 **Aanleiding.** Gian 15-10-2026: "Kan ik dan ook kiezen welk project als tweede moet?" Sinds v0.14.0 was er alleen een knop *eerst*; een andere volgorde dan "X vooraan" kon alleen door van achteren naar voren meerdere keren *eerst* te tikken. Besluit (ask_user_input): beide bedieningen.
 
@@ -9,15 +22,6 @@
 2. Nieuwe pure functie `dagVolgordeVerplaats(codes, code, naar)`: haalt `code` uit de lijst en voegt hem op plek `naar` weer in; de rest schuift door in de bestaande volgorde. Een plek buiten bereik wordt de laatste plek; een onbekende code laat de lijst ongemoeid.
 3. `zetDagVolgorde(mwId, iso, code, naar)` gebruikt die functie en slaat daarna, als voorheen, de hele dag op met `update … match()` per rij (1, 2, 3 …); terugdraaien van het geheugen bij een fout en de hint naar `planning_03_volgorde.sql` zijn ongewijzigd. Klik-afhandeling in het dagvenster luistert nu op `button[data-vcode]`.
 4. Drie CSS-regels voor de knoppenrij (`.dagvolgorde-lijst .knoppen`, `.knop`, `.pos`).
-
-**Incident 16-10-2026.** Twee medewerkers (o.a. Max) stonden op vr 16-10 in de agenda als "Verlof" terwijl er 7,5 uur gepland stond. Oorzaak (analyse Claude, Gian weet het niet zeker): in het dagvenster stond onder de volgordeknoppen de rode knop "Opslaan" met "uren leeg = hele dag vrij" — dat is de verlofknop (`zetVerlof(..., null)`), niet een opslaanknop voor de volgorde. De volgorde zelf raakt `plan_verlof` niet. Herstel: dagvenster openen → Opheffen.
-
-**Extra wijziging (planning.html).**
-5. Verlofdeel krijgt een eigen kopje "Verlof / reservering (los van de volgorde hierboven)"; de knop heet "Verlof opslaan"; bij de volgorde staat "elke tik slaat meteen op".
-6. Hele dag vrij (uren leeg) terwijl er al uren op de dag staan → `confirm("Er staat al 7,5 uur gepland op vr 16 okt 2026. Max toch de hele dag vrij geven?")`. Een reservering met uren of een lege dag vraagt niets.
-7. Het urenveld krijgt geen autofocus meer als de dag al gevuld is.
-
-**Getest (extra).** 6 runtime-controles op de uitgesneden klik-afhandeling met nagebootste DOM: teksten aanwezig, geen focus bij gevulde dag, bevestiging geweigerd → niets opgeslagen en venster blijft open, bevestiging akkoord → `zetVerlof(m, [datum], '', null)`, reservering met uren zonder bevestiging, lege dag zonder bevestiging. Div-balans 128/128 (één div-paar erbij).
 
 **Niet gewijzigd.** Edge Function `planning-ics` (leest alleen de nummers 1, 2, 3 …), SQL, de sorteerregel in `dagProjecten()` en het gedrag bij fase verschuiven of uren wissen (v0.14.0).
 

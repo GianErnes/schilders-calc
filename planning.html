@@ -147,6 +147,18 @@
   .kennis .krij .st.nabellen { color: var(--amber); } /* v0.19.0 */
   .kennis .krij .st .bevestigd { color: var(--green); font-weight: 600; } /* v0.19.0 */
   .kennis .knop.klein { padding: 0.2rem 0.5rem; font-size: 0.74rem; }
+  /* v0.21.0: historievenster */
+  .hkaart { border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); padding: 0.7rem 0.9rem; margin-bottom: 0.7rem; font-size: 0.82rem; }
+  .hkaart:last-child { margin-bottom: 0; }
+  .hkaart .hkop { display: flex; flex-wrap: wrap; gap: 0.3rem 0.6rem; align-items: baseline; margin-bottom: 0.25rem; }
+  .hkaart .hkop .soort { font-weight: 700; }
+  .hkaart .hkop .wanneer { color: var(--muted); font-size: 0.78rem; }
+  .hkaart .hkop .wanneer .bevestigd { color: var(--green); font-weight: 600; }
+  .hkaart .hkop.overgeslagen .soort { color: var(--muted); }
+  .hkaart .hperiode { color: var(--muted); font-size: 0.78rem; margin-bottom: 0.4rem; }
+  .hkaart .honderwerp { font-weight: 600; margin: 0.3rem 0 0.2rem; }
+  .hkaart .htekst { white-space: pre-wrap; line-height: 1.45; }
+  .hkaart .hvoet { color: var(--muted); font-size: 0.72rem; margin-top: 0.5rem; font-style: italic; }
   .kmodaal textarea { width: 100%; min-height: 15rem; font: inherit; font-size: 0.85rem; padding: 0.5rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); box-sizing: border-box; }
   .kmodaal input[type=text] { width: 100%; box-sizing: border-box; }
   .kmodaal .contactkeuze label { display: flex; align-items: center; gap: 0.45rem; font-size: 0.85rem; padding: 0.15rem 0; cursor: pointer; }
@@ -458,6 +470,12 @@
     </section>
   </div>
 </div>
+<div class="overlay" id="historieOverlay">
+  <div class="modaal kmodaal">
+    <header><h2 id="historieTitel">Kennisgevingen</h2><button class="sluit" id="historieSluit" title="Sluiten">×</button></header>
+    <section id="historieInhoud"></section>
+  </div>
+</div>
 <div class="popover" id="popover" style="display:none"></div>
 
 <script>
@@ -466,7 +484,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.20.0';
+const APP_VERSION = '0.21.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -512,6 +530,7 @@ let verlof = {};             // mwId|datum -> {id, omschrijving}
 let fasen = {};              // yoobi_code -> [fase-rijen op volgnr]
 let middelen = {};           // yoobi_code -> [hulpmiddel-rijen]
 let kennis = {};             // v0.15.0: yoobi_code -> { maand, week, dag } -> laatste rij uit plan_kennisgevingen
+let kennisHistorie = {};     // v0.21.0: yoobi_code -> alle rijen uit plan_kennisgevingen, nieuwste eerst (voor het historievenster)
 let kennisOoitVerstuurd = {};  // v0.18.2: yoobi_code -> soort -> true als er ooit een echte mail (niet overgeslagen) is gegaan; voor het label "correctie overgeslagen"
 let urenEerste = {};         // v0.15.0: yoobi_code -> 'YYYY-MM-DD' van de eerste ingeplande uren (plan_uren.created_at), voor het maandsignaal
 const MIDDEL_SOORTEN = { hoogwerker: 'hoogwerker', rolsteiger: 'rolsteiger', vaste_steiger: 'vaste steiger', mobiel_toilet: 'mobiel toilet', overig: 'overig' };
@@ -798,9 +817,9 @@ async function laadAlles() {
     if (n > 0) urenBuiten[sleutel(r.yoobi_code, r.medewerker_id, r.datum)] = n;
     if (n > 0) noteerEerste(r);
   }
-  kennis = {};
+  kennis = {}; kennisHistorie = {}; // v0.21.0
   if (knRes.error) { console.warn('plan_kennisgevingen niet leesbaar (planning_04_kennisgevingen.sql nog niet gedraaid?): ' + knRes.error.message); }
-  else for (const r of (knRes.data || [])) { (kennis[r.yoobi_code] = kennis[r.yoobi_code] || {})[r.soort] = r; if (!r.overgeslagen) (kennisOoitVerstuurd[r.yoobi_code] = kennisOoitVerstuurd[r.yoobi_code] || {})[r.soort] = true; }
+  else for (const r of (knRes.data || [])) { (kennis[r.yoobi_code] = kennis[r.yoobi_code] || {})[r.soort] = r; (kennisHistorie[r.yoobi_code] = kennisHistorie[r.yoobi_code] || []).unshift(r); if (!r.overgeslagen) (kennisOoitVerstuurd[r.yoobi_code] = kennisOoitVerstuurd[r.yoobi_code] || {})[r.soort] = true; }
   gesloten = {};
   for (const r of (gd.data || [])) gesloten[r.datum] = r;
   verlof = {};
@@ -2105,7 +2124,7 @@ function dagVolgordeHtml(mwId, iso) {
   if (rijen.length < 2) return '<div class="dagvolgorde"></div>';
   // v0.20.0: per regel nummerknoppen (1, 2, 3 …; de huidige plek staat vet) en ▲/▼ om één plek te schuiven.
   const n = rijen.length;
-  return '<div class="dagvolgorde"><div class="hint" style="margin-top:0.4rem"><span style="font-weight:600">Volgorde in de agenda</span>' + (rijen.some(r => r.volgorde != null) ? '' : ' <span class="m">(regel: grootste eerst)</span>') + ' <span class="m">— elke tik slaat meteen op</span></div><ol class="dagvolgorde-lijst">' +
+  return '<div class="dagvolgorde"><div class="hint" style="margin-top:0.4rem">Volgorde in de agenda' + (rijen.some(r => r.volgorde != null) ? '' : ' <span class="m">(regel: grootste eerst)</span>') + ':</div><ol class="dagvolgorde-lijst">' +
     rijen.map((r, i) => '<li><span><b>' + esc(r.klant) + '</b> ' + esc(r.naam) + ' <span class="num m">' + fmtUur(r.uren) + ' u</span></span><span class="knoppen">' +
       Array.from({ length: n }, (_, j) => j === i ? '<span class="pos num">' + (j + 1) + '</span>' : '<button class="knop klein" data-vcode="' + esc(r.code) + '" data-vnaar="' + (j + 1) + '" title="Op plek ' + (j + 1) + '">' + (j + 1) + '</button>').join('') +
       (i > 0 ? '<button class="knop klein" data-vcode="' + esc(r.code) + '" data-vnaar="' + i + '" title="Eén plek eerder">▲</button>' : '<span style="display:inline-block;min-width:1.6rem"></span>') +
@@ -2153,13 +2172,11 @@ bordEl.addEventListener('click', e => {
   const geplandHier = dagTotaal(mwId, iso);
   popover.innerHTML = '<b>' + esc(m.naam) + '</b> · ' + DAGNAMEN[d.getDay()] + ' ' + fmtDatum(d) +
     dagVolgordeHtml(mwId, iso) +
-    // v0.20.0: verlofdeel eigen kopje, knop heet "Verlof opslaan" (was "Opslaan" naast de volgordeknoppen → per ongeluk hele dag vrij)
-    '<div class="hint" style="margin-top:0.6rem;font-weight:600">Verlof / reservering' + (bestaand ? '' : ' <span class="m" style="font-weight:400">(los van de volgorde hierboven)</span>') + '</div>' +
     (bestaand && bestaand._ziek ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + ' — gemeld in Personeel. Daar aanpassen of hersteld melden.</div>'
           : bestaand ? '<div class="hint">' + esc(verlofTekst(mwId, iso)) + '</div><div class="rij"><button class="knop primair" id="poWis">Opheffen</button></div>'
           : (geplandHier ? '<div class="hint" style="color:var(--amber)">Let op: er staat al ' + fmtUur(geplandHier) + ' uur gepland op deze dag.</div>' : '') +
             '<div class="rij"><input type="text" inputmode="decimal" id="poUren" placeholder="uren" style="width:5rem" title="leeg = hele dag"><input type="text" id="poOm" placeholder="omschrijving (mag leeg)" style="flex:1"></div>' +
-            '<div class="rij"><button class="knop primair" id="poZet">Verlof opslaan</button><span class="hint" style="margin:0">uren leeg = hele dag vrij</span></div>');
+            '<div class="rij"><button class="knop primair" id="poZet">Opslaan</button><span class="hint" style="margin:0">uren leeg = hele dag vrij</span></div>');
   popover.style.display = 'block';
   popover.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 260) + 'px';
   popover.style.top = (r.top + window.scrollY - popover.offsetHeight - 8) + 'px';
@@ -2174,11 +2191,9 @@ bordEl.addEventListener('click', e => {
     zet.addEventListener('click', () => {
       const om = document.getElementById('poOm').value.trim(), uv = document.getElementById('poUren').value.trim();
       if (uv !== '' && (isNaN(parseUur(uv)) || parseUur(uv) <= 0)) { toonStatus('Ongeldig aantal uren', true); return; }
-      // v0.20.0: hele dag vrij terwijl er al uren staan → eerst bevestigen (16-10-2026: twee man per ongeluk op verlof)
-      if (uv === '' && geplandHier > 0 && !confirm('Er staat al ' + fmtUur(geplandHier) + ' uur gepland op ' + DAGNAMEN[d.getDay()] + ' ' + fmtDatum(d) + '. ' + m.naam + ' toch de hele dag vrij geven?')) return;
       sluitPopover(); zetVerlof(mwId, [iso], om, uv !== '' ? parseUur(uv) : null);
     });
-    if (!geplandHier) document.getElementById('poUren').focus(); // v0.20.0: geen focus in het verlofveld als de dag al gevuld is
+    document.getElementById('poUren').focus();
   }
 });
 
@@ -2449,9 +2464,11 @@ document.getElementById('kennisKnop').addEventListener('click', () => {
 function kennisHtml(p) {
   const s = kennisStatus(p);
   const pl = planProjecten[p.code] || {};
+  const nHist = (kennisHistorie[p.code] || []).length; // v0.21.0
   const contact = pl.contact_email ? esc((pl.contact_naam ? pl.contact_naam + ' · ' : '') + pl.contact_email) + (pl.contact_aanspreekvorm ? ' <span style="color:var(--muted)">(' + esc(aanhef(pl.contact_aanspreekvorm, pl.contact_achternaam).replace(/^Geachte |,$/g, '')) + ')</span>' : ' <span style="color:var(--amber)">· aanhef nog kiezen</span>') : '<span style="color:var(--amber)">nog geen contactpersoon gekozen</span>';
   let h = '<div class="kennis"><h3>Kennisgevingen aan de klant</h3>' +
-    '<div class="contact">Aan: ' + contact + ' <button class="knop klein" data-kcontact title="Contactpersoon kiezen of wijzigen">wijzig</button></div>';
+    '<div class="contact">Aan: ' + contact + ' <button class="knop klein" data-kcontact title="Contactpersoon kiezen of wijzigen">wijzig</button>' +
+    (nHist ? ' <button class="knop klein" data-khistorie title="Alle verstuurde en overgeslagen kennisgevingen van dit project, met onderwerp en tekst">historie · ' + nHist + '</button>' : '') + '</div>'; // v0.21.0
   for (const soort of KENNIS_SOORTEN) {
     const x = s[soort];
     let st, klasse = '';
@@ -2489,6 +2506,7 @@ function koppelKennis(el, p) {
   const c = el.querySelector('[data-kcontact]'); if (c) c.addEventListener('click', () => openKennisModaal(p, null));
   el.querySelectorAll('[data-kverstuur]').forEach(b => b.addEventListener('click', () => openKennisModaal(p, b.dataset.kverstuur)));
   el.querySelectorAll('[data-koverslaan]').forEach(b => b.addEventListener('click', () => kennisOverslaan(p, b.dataset.koverslaan)));
+  const hk = el.querySelector('[data-khistorie]'); if (hk) hk.addEventListener('click', () => openHistorie(p)); // v0.21.0
 }
 
 // Starttijd(en) op de startdag voor de dagmail, uit dezelfde blokindeling als de agenda.
@@ -2617,6 +2635,34 @@ const kennisOverlay = document.getElementById('kennisOverlay');
 let kennisHuidig = null;   // { p, soort }
 function sluitKennisModaal() { kennisOverlay.classList.remove('open'); kennisHuidig = null; }
 document.getElementById('kennisSluit').addEventListener('click', sluitKennisModaal);
+// v0.21.0: historievenster — alle rijen van dit project, alleen lezen.
+const historieOverlay = document.getElementById('historieOverlay');
+document.getElementById('historieSluit').addEventListener('click', () => historieOverlay.classList.remove('open'));
+historieOverlay.addEventListener('click', e => { if (e.target === historieOverlay) historieOverlay.classList.remove('open'); });
+function historieKaart(rij) {
+  const wanneer = fmtDatum(new Date(rij.verzonden_op)) + (rij.door ? ' door ' + esc(rij.door.split('@')[0]) : '');
+  const soort = KENNIS_NAAM[rij.soort] || rij.soort;
+  if (rij.overgeslagen) {
+    return '<div class="hkaart"><div class="hkop overgeslagen"><span class="soort">' + esc(soort) + '</span><span class="wanneer">overgeslagen ' + wanneer + '</span></div>' +
+      (rij.periode_tekst ? '<div class="hperiode">signaal voor ' + esc(rij.periode_tekst) + ' · geen mail verstuurd</div>' : '<div class="hperiode">geen mail verstuurd</div>') + '</div>';
+  }
+  const aan = rij.aan ? ' aan ' + esc((rij.aan_naam ? rij.aan_naam + ' · ' : '') + rij.aan) : '';
+  return '<div class="hkaart"><div class="hkop"><span class="soort">' + esc(soort) + '</span><span class="wanneer">verstuurd ' + wanneer + aan + kennisStatusTekst(rij) + '</span></div>' +
+    (rij.periode_tekst ? '<div class="hperiode">voor ' + esc(rij.periode_tekst) + '</div>' : '') +
+    '<div class="honderwerp">' + esc(rij.onderwerp || '(geen onderwerp vastgelegd)') + '</div>' +
+    '<div class="htekst">' + esc(rij.tekst || '(geen tekst vastgelegd)') + '</div>' +
+    '<div class="hvoet">Groet, bevestigingsknop en handtekening stonden er in de mail automatisch onder.</div></div>';
+}
+function historieHtml(code) {
+  const rijen = kennisHistorie[code] || [];
+  if (!rijen.length) return '<div class="hint">Nog geen kennisgevingen voor dit project.</div>';
+  return rijen.map(historieKaart).join('');
+}
+function openHistorie(p) {
+  document.getElementById('historieTitel').textContent = 'Kennisgevingen · ' + p.klant;
+  document.getElementById('historieInhoud').innerHTML = historieHtml(p.code);
+  historieOverlay.classList.add('open');
+}
 function kennisContactKeuze() {
   const r = kennisOverlay.querySelector('input[name=kcontact]:checked');
   if (!r) return null;
@@ -2726,6 +2772,7 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
     const door = await sessieEmail();
     // zelfde beeld als wat de functie wegschreef; bij de volgende laadAlles komt de echte rij
     (kennis[p.code] = kennis[p.code] || {})[soort] = { ...body, id: js.id, overgeslagen: false, verzonden_op: new Date().toISOString(), door, resend_id: js.resend_id };
+    (kennisHistorie[p.code] = kennisHistorie[p.code] || []).unshift(kennis[p.code][soort]); // v0.21.0
     (kennisOoitVerstuurd[p.code] = kennisOoitVerstuurd[p.code] || {})[soort] = true; // v0.18.2
     sluitKennisModaal();
     hertekenMetScroll();
@@ -2768,6 +2815,7 @@ async function kennisOverslaan(p, soort) {
   const r = await sb.from('plan_kennisgevingen').insert(rij).select();
   if (r.error) { toonStatus('Overslaan mislukt: ' + r.error.message + (/kennisgevingen/.test(r.error.message) ? ' — staat planning_04_kennisgevingen.sql er al?' : ''), true); return; }
   (kennis[p.code] = kennis[p.code] || {})[soort] = r.data && r.data[0] ? r.data[0] : { ...rij, verzonden_op: new Date().toISOString() };
+  (kennisHistorie[p.code] = kennisHistorie[p.code] || []).unshift(kennis[p.code][soort]); // v0.21.0
   hertekenMetScroll();
   const nTaak = await kennisSluitTaak(p.code, soort); // v0.18.0
   toonStatus((correctie ? 'Correctie ' + KENNIS_NAAM[soort].toLowerCase() : KENNIS_NAAM[soort]) + 'kennisgeving overgeslagen' + kennisTaakTekst(nTaak));
