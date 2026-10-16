@@ -1,3 +1,21 @@
+## v4.92.1 — Fix: beurt-percentages gaan mee bij dupliceren (2026-10-16)
+
+**Aanleiding**
+- Gian 16-10-2026, direct na het testen van v4.92.0 in de browser: "de onderhoudsbeurten van het gekopieerde plan zijn niet hetzelfde als het origineel, geen bewerkingen van de beurten meegekopieerd". Fout van mij in v4.92.0: de beurt-scaling hangt aan id's van de bron-calculatie (`scaling.regels[regel-id]`, `scaling.stappen[stap-id]`, `scaling.staart[staartpost-id]`; regels 11505, 11642, 11743). Dupliceren geeft regels, stappen en staartposten nieuwe id's, dus de gekopieerde scaling verwees naar niets en elke regel/stap viel terug op de standaard 100% (regels 9644, 9656). Modus `algemeen` (`scaling.pct`) was wel goed.
+
+**Gebouwd**
+- `_dupCalcUitvoeren` bouwt naast de bestaande `regelIdMap` nu ook `stapIdMap` (oude stap-id → nieuwe; koppeling op `volgorde`, die bij de kopie gelijk is aan de positie in `r.stappen`, terugval op index) en `staartIdMap` (uit het resultaat van `_insertStaartCalcDB`). Alle drie gaan als `idMaps` mee naar `_dupOhpNaarCalc`.
+- Nieuwe `_dupOhpVertaalScaling(scaling, idMaps, teller)`: diepe kopie van de scaling, vertaalt de sleutels van `regels`, `stappen` en `staart`; `pct` en overige sleutels ongewijzigd. Niet-vertaalbare id's (wezen, bijv. van een eerder verwijderde regel) vervallen en worden geteld in `uit.wezen`; een leeg geworden object wordt verwijderd zodat de beurt op de standaard valt in plaats van op een leeg object.
+- Toast meldt het aantal weggelaten wees-instellingen.
+
+**Niet gewijzigd**
+- Geen SQL, geen Edge Function. Plan-, beurt- en externe-postmapping ongewijzigd.
+
+**Getest**
+- Node-parse, div-balans gelijk aan v4.92.0 (1350/1353).
+- Runtime-test met stubs, 11 proeven groen: algemeen-pct ongewijzigd, per-regel vertaald inclusief 0%, staartingreep vertaald, per-stap vertaald, wees geteld en weggelaten, null-scaling → {}, zonder idMaps een losse diepe kopie, alleen-wezen → sleutel weg en pct blijft. Aparte test: stapIdMap koppelt correct op volgorde ook als Supabase de rijen door elkaar teruggeeft.
+- Niet getest: in de browser. Controleer na deploy: (1) dupliceer de verzonden calculatie met plan; (2) open in de kopie een beurt in modus per regel: de percentages per regel gelijk aan het origineel; (3) idem per stap; (4) staartingreep (uit/aantal/bedrag) gelijk; (5) het beurtbedrag in de beurtenlijst gelijk aan het origineel (bij gelijke instellingen); (6) de toast noemt geen wezen, tenzij het origineel instellingen had voor regels die niet meer bestaan.
+
 ## v4.92.0 — Dupliceren neemt het onderhoudsplan mee (2026-10-16)
 
 **Aanleiding**

@@ -2384,8 +2384,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.92.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.92.1</h2>
       <div class="intro-body">
+        <p><strong>🩹 Beurt-percentages gaan nu wél mee bij dupliceren (v4.92.1).</strong> Gian zag het meteen na v4.92.0: de beurten van het gekopieerde plan waren niet gelijk aan het origineel. Oorzaak: een beurt in modus per regel of per stap bewaart zijn percentages onder het id van de regel of stap, en de staartingreep onder het id van de staartpost. Bij dupliceren krijgen die allemaal een nieuw id, dus verwees de kopie naar niets en viel elke regel terug op 100%. Nu vertaalt de app die id's mee naar de kopie. Een instelling die naar een inmiddels verwijderde regel wees vervalt, en de melding zegt hoeveel dat er waren. Modus algemeen (één percentage) was al goed. Geen SQL nodig.</p>
         <p><strong>⎘ Dupliceren neemt het onderhoudsplan mee (v4.92.0).</strong> Heb je een onderhoudsplan verzonden en wil je de klant een alternatief bieden (andere looptijd, andere beurten, ander betaalmodel), dan hoefde je tot nu toe het hele plan opnieuw te maken: het kopieer-knopje ⎘ nam alleen de calculatie mee. Vanaf nu staat in het dupliceer-venster een vinkje <strong>Onderhoudsplan meenemen</strong> (alleen zichtbaar als de calculatie een plan heeft, standaard aan). De kopie krijgt dan het plan als concept, met alle beurten, externe posten en planbrief-keuzes, zodat je meteen kunt variëren terwijl het verzonden origineel vergrendeld blijft. Bewust niet mee: de liggingsfoto (opnieuw ophalen is één klik), het plannummer en de geldigheid (komen vers bij de eerste accordeerlink), en de vlag "ingepland" bij beurten, want de kopie staat niet in Yoobi. De melding onderaan zegt hoeveel beurten er meegingen. Geen SQL nodig.</p>
         <p><strong>🪜 Klimtoeslag alleen over het buitenwerk (v4.91.0).</strong> Een percentage-staartpost zoals de klimtoeslag rekende altijd over de arbeid van de hele calculatie. Bij een nieuwbouw met binnen- én buitenwerk klopt dat niet: binnen klim je niet. In het staart-venster staan nu twee extra grondslagen: "Arbeid — alleen hoofdgroep Buiten" en "Arbeid — alleen hoofdgroep Binnen". De app telt dan alleen de arbeid van de hoofdgroepen waarvan de naam het woord buiten (of binnen) bevat, hoofdletters maken niet uit; uitgevinkte hoofdgroepen tellen niet mee. Dit werkt door in de calculatie, het offertebedrag, de werkdagen (als de post meetelt in werkdagen), het onderhoudsplan en het archieftotaal. Op de offerte staat dan "10% over arbeid buiten". Heet geen enkele hoofdgroep Buiten, dan is de post € 0 en meldt de knop Controleer dat. Bestaande staartposten blijven over de hele arbeid rekenen; de keuze maak je per post. Geen SQL nodig.</p>
         <p><strong>🪵 Houtrot-tarieven onder Instellingen (v4.90.0).</strong> Eerste stap van de houtrot-opgave: de lijst met herstelmethodes waaruit de buitendienst straks op de steiger kiest als ze houtrot tegenkomen. Per methode een naam voor de keuzelijst, de tekst die de klant op de opgave leest, een eenheid (stuk, cm, dm, m of uur), een richtprijs excl. btw, de volgorde en een vinkje Actief. Je wijzigt rechtstreeks in de tabel; elke wijziging wordt meteen opgeslagen. Een methode die niet meer gebruikt wordt zet je op niet-actief in plaats van hem weg te gooien. De opgave zelf, de foto's, de PDF en de accordeerlink volgen in de volgende stappen. Vereist eenmalig de SQL houtrot_01_tarieven.sql (al gedraaid).</p>
@@ -3793,7 +3794,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.92.0';
+const APP_VERSION = 'v4.92.1';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4210,6 +4211,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.92.1', d: '2026-10-16', h: 'Fix: beurt-percentages (per regel, per stap, staartingreep) gaan nu mee bij dupliceren; de regel-, stap- en staart-id\'s worden vertaald naar de kopie. In v4.92.0 vielen ze terug op 100%.' },
   { v: '4.92.0', d: '2026-10-16', h: 'Dupliceren (⎘) kan het onderhoudsplan meenemen: vinkje in het dupliceer-venster, standaard aan als de calculatie een plan heeft. Plan komt als concept mee met beurten, externe posten en planbrief-keuzes; liggingsfoto, plannummer/geldigheid en de vlag ingepland niet.' },
   { v: '4.91.0', d: '2026-10-14', h: 'Percent-staartpost (klimtoeslag) kan nu alleen over de arbeid van de hoofdgroep Buiten of Binnen rekenen: twee nieuwe grondslagen in het staart-venster, doorgetrokken naar offerte, werkdagen, onderhoudsplan en archieftotaal. Controleer waarschuwt als zo\'n hoofdgroep ontbreekt.' },
   { v: '4.90.0', d: '2026-10-12', h: 'Houtrot-tarieven onder Instellingen: beheer van herstelmethodes (naam, klanttekst, eenheid, richtprijs, volgorde, actief) voor de komende houtrot-opgave vanaf de steiger. Vereist eenmalig SQL houtrot_01_tarieven.sql.' },
@@ -20934,6 +20936,8 @@ async function _dupCalcUitvoeren(id, metKlant, metPlan) {
   // 2. Kopieer hg → od → regels → stappen via DB
   // En tegelijk: bouw oude→nieuwe regel-id mapping voor meetstaat-koppeling
   const regelIdMap = {};
+  const stapIdMap  = {};   // v4.92.1 — oude stap-id → nieuwe, voor beurt-scaling per stap
+  const staartIdMap = {};  // v4.92.1 — oude staartpost-id → nieuwe, voor de staartingreep per beurt
   for (const hg of (orig.hoofdgroepen || [])) {
     const newHg = await _insertHgDB({ naam: hg.naam, collapsed: hg.collapsed, volgorde: hg.volgorde }, fresh.id);
     if (!newHg) continue;
@@ -20952,6 +20956,13 @@ async function _dupCalcUitvoeren(id, metKlant, metPlan) {
         }, newOd.id);
         if (newRegel) {
           regelIdMap[r.id] = newRegel.id;
+          // v4.92.1 — stappen koppelen op volgorde: de kopie kreeg volgorde = positie in r.stappen.
+          const nieuweStappen = newRegel.stappen || [];
+          (r.stappen || []).forEach((st, i) => {
+            if (!st || !st.id) return;
+            const ns = nieuweStappen.find(x => x.volgorde === i) || nieuweStappen[i];
+            if (ns && ns.id) stapIdMap[st.id] = ns.id;
+          });
           newOd.regels.push(newRegel);
         }
       }
@@ -20973,7 +20984,7 @@ async function _dupCalcUitvoeren(id, metKlant, metPlan) {
   for (let i = 0; i < (orig.staart || []).length; i++) {
     const s = orig.staart[i];
     const saved = await _insertStaartCalcDB(s, fresh.id, i);
-    if (saved) fresh.staart.push(saved);
+    if (saved) { fresh.staart.push(saved); if (s.id) staartIdMap[s.id] = saved.id; } // v4.92.1
   }
 
   // 5. Meetstaat kopieren — koppeling naar nieuwe regel-id via map
@@ -20993,14 +21004,15 @@ async function _dupCalcUitvoeren(id, metKlant, metPlan) {
   // Mislukt dit, dan bestaat de kopie van de calculatie gewoon: dat is het gedrag van vóór v4.92.0.
   let planTekst = '';
   if (metPlan) {
-    const r = await _dupOhpNaarCalc(orig.id, fresh.id);
+    const r = await _dupOhpNaarCalc(orig.id, fresh.id, { regels: regelIdMap, stappen: stapIdMap, staart: staartIdMap });
     if (!r.bron)          planTekst = ' Geen onderhoudsplan gevonden om mee te nemen.';
     else if (!r.plan)     planTekst = ' Het onderhoudsplan is NIET meegegaan' + (r.fout ? ': ' + r.fout : '.');
     else {
       const mis = r.beurtenMislukt + r.externMislukt;
       planTekst = ' Onderhoudsplan meegenomen als concept (' + r.beurten + ' beurt' + (r.beurten === 1 ? '' : 'en')
         + (r.extern ? ', ' + r.extern + ' externe post' + (r.extern === 1 ? '' : 'en') : '') + ').'
-        + (mis ? ' Let op: ' + mis + ' regel' + (mis === 1 ? '' : 's') + ' niet gelukt, controleer het plan.' : '');
+        + (mis ? ' Let op: ' + mis + ' regel' + (mis === 1 ? '' : 's') + ' niet gelukt, controleer het plan.' : '')
+        + (r.wezen ? ' ' + r.wezen + ' beurt-instelling' + (r.wezen === 1 ? '' : 'en') + ' verwees naar een regel die niet meer bestaat en is weggelaten.' : '');
     }
   }
 
@@ -21017,9 +21029,12 @@ async function _dupCalcUitvoeren(id, metKlant, metPlan) {
 // ligging (storage-bestand zou gedeeld worden; _ohpLiggingVerwijder wist het dan voor beide),
 // offerte_config.nummer/geldigTot/offertedatum (komen vers bij de eerste accordeerlink),
 // beurt-vlag ingepland (de kopie staat niet in de Yoobi-planning).
-// Retourneert { bron, plan, beurten, beurtenMislukt, extern, externMislukt, fout }.
-async function _dupOhpNaarCalc(bronCalcId, doelCalcId) {
-  const uit = { bron: false, plan: null, beurten: 0, beurtenMislukt: 0, extern: 0, externMislukt: 0, fout: '' };
+// idMaps (v4.92.1): { regels: {oud→nieuw}, stappen: {oud→nieuw}, staart: {oud→nieuw} }. De beurt-scaling
+// hangt aan regel-, stap- en staartpost-id's van de bron-calculatie; zonder vertaling verwijst de kopie naar
+// id's die niet bestaan en valt elke regel terug op de standaard 100%. Niet te vertalen id's (wezen) vervallen.
+// Retourneert { bron, plan, beurten, beurtenMislukt, extern, externMislukt, wezen, fout }.
+async function _dupOhpNaarCalc(bronCalcId, doelCalcId, idMaps) {
+  const uit = { bron: false, plan: null, beurten: 0, beurtenMislukt: 0, extern: 0, externMislukt: 0, wezen: 0, fout: '' };
   if (!_sb || !bronCalcId || !doelCalcId) return uit;
   const bron = await _fetchOhpByCalc(bronCalcId);
   if (!bron) return uit;
@@ -21055,7 +21070,8 @@ async function _dupOhpNaarCalc(bronCalcId, doelCalcId) {
   }
 
   for (const b of (bron.beurten || [])) {
-    const saved = await _addBeurt(nieuw.id, { ...b, id: null, planId: nieuw.id, ingepland: false });
+    const scaling = _dupOhpVertaalScaling(b.scaling, idMaps, uit);
+    const saved = await _addBeurt(nieuw.id, { ...b, id: null, planId: nieuw.id, ingepland: false, scaling });
     if (saved) uit.beurten++; else uit.beurtenMislukt++;
   }
   for (const p of (bron.externPosten || [])) {
@@ -21063,6 +21079,28 @@ async function _dupOhpNaarCalc(bronCalcId, doelCalcId) {
     if (saved) uit.extern++; else uit.externMislukt++;
   }
   return uit;
+}
+
+// v4.92.1 — Vertaal de id-gebonden sleutels van een beurt-scaling naar de id's van de kopie.
+// `pct` (modus algemeen) en alle andere sleutels gaan ongewijzigd mee. Zonder idMaps: alleen een diepe kopie.
+// Telt niet-vertaalbare id's op in teller.wezen.
+function _dupOhpVertaalScaling(scaling, idMaps, teller) {
+  let sc;
+  try { sc = scaling ? JSON.parse(JSON.stringify(scaling)) : {}; } catch (e) { sc = {}; }
+  if (!idMaps) return sc;
+  [['regels', 'regels'], ['stappen', 'stappen'], ['staart', 'staart']].forEach(([sleutel, mapNaam]) => {
+    const oud = sc[sleutel];
+    const map = idMaps[mapNaam] || {};
+    if (!oud || typeof oud !== 'object') return;
+    const nieuw = {};
+    Object.keys(oud).forEach(oudId => {
+      const nieuwId = map[oudId];
+      if (nieuwId) nieuw[nieuwId] = oud[oudId];
+      else if (teller) teller.wezen++;
+    });
+    if (Object.keys(nieuw).length) sc[sleutel] = nieuw; else delete sc[sleutel];
+  });
+  return sc;
 }
 // ============================================================
 // LOCK / SETTINGS-SNAPSHOT — gereed/verzonden/etc. bevriezen instellingen
