@@ -1,3 +1,28 @@
+## v4.93.0 — Foto's kopiëren naar een andere calculatie (2026-10-17)
+
+**Aanleiding**
+- Gian 17-10-2026: bij het kopiëren van een calculatie gaan de foto's niet mee; kan hij die alsnog in de kopie krijgen? Opnieuw uploaden kan vaak niet: een foto die rechtstreeks in de app is gemaakt staat niet in de iPad-bibliotheek (iOS-gedrag, niet getest) en de app heeft geen downloadknop per foto. Besluit: beide manieren bouwen, overnemen mag ook als er al foto's staan (achteraan).
+- Geverifieerd in het npm-pakket `@supabase/storage-js` 2.118.0 (v2-lijn, de app laadt `@supabase/supabase-js@2` via CDN, regel 2346): `storage.from(bucket).copy(fromPath, toPath)` bestaat en kopieert server-side; vereist RLS `insert` + `select` op `objects`, wat de app al heeft omdat uploaden en tonen werkt. Welke exacte subversie de CDN levert is niet bekend; aanname dat `copy` daarin zit (zit al jaren in v2).
+- Fotomarkeringen zijn kale coördinaten (`{fx, fy, type, notitie}`, `_mapFotoFromDB`), geen id-verwijzingen, dus geen vertaalstap zoals bij v4.92.1 nodig.
+
+**Gebouwd**
+- Kern `_dupFotosNaarCalc(bronCalcId, doelCalcId, startVolgorde)`: leest `calculatie_fotos` van de bron op volgorde, per foto `copy` naar `doel-id/uid.ext` (extensie behouden, kleine letters), dan insert via `_mapFotoToDB` met bijschrift, markeringen, meetel-vlag en doorlopende volgorde. Mislukt de rij, dan wordt het gekopieerde bestand verwijderd (patroon van `_uploadFoto`). Bestanden worden nooit gedeeld (`_deleteFotoDB` wist het bestand). Retourneert `{ bron, gelukt, mislukt, fotos }`; `_dupFotosTekst(r)` maakt de melding.
+- Dupliceer-venster: blok `dupCalcFotoWrap` met vinkje `dupCalcMetFotos` (standaard aan) en het aantal; alleen zichtbaar als de bron foto's heeft (telling via `select('id', { count: 'exact', head: true })`). `_dupCalcStart` geeft `metFotos` door; `_dupCalcUitvoeren(id, metKlant, metPlan, metFotos)` kopieert in stap 7 en zet `fresh.fotos`. Toast rood als niet alles meeging.
+- Foto's-tab: knop **Foto's overnemen uit…** naast + Foto's, uit tijdens uploaden/overnemen. Modal `fotoOvernemenModal` met keuzelijst van alle andere calculaties (zelfde klant bovenaan, hoofdletter- en spatie-ongevoelig; daarna op naam), bij keuze telt de app de foto's en schakelt de knop Overnemen alleen in bij ≥1 (of als tellen mislukt). `_fotoOvernemenStart` kopieert achteraan (`startVolgorde = data.calc.fotos.length`), tekent signed links, zet de foto's in de state alleen als de gebruiker nog in dezelfde calculatie staat, roept `_touchCalc` en rendert.
+- Welkomsttekst, RELEASE_HIGHLIGHTS en APP_VERSION bijgewerkt.
+
+**Niet gewijzigd**
+- Geen SQL, geen Edge Function: alle kolommen van `calculatie_fotos` bestaan (Kolommen.csv). Documenten (PDF's) gaan níet mee bij dupliceren; dat is bewust buiten scope gelaten.
+
+**Terugval**
+- Mislukt het kopiëren bij dupliceren, dan is de kopie van de calculatie er gewoon zonder foto's (gedrag van vóór v4.93.0). Mislukt één foto, dan gaan de andere door en telt de melding de missers. Mislukt de rij na een geslaagde copy, dan wordt het bestand weer verwijderd zodat er geen wezen in Storage komen.
+
+**Getest**
+- Node-parse; div-balans 1356/1359 (+6/+6 t.o.v. v4.92.1, klopt met de nieuwe blokken).
+- Runtime-test kern met nep-Supabase, 14 proeven groen: 3 foto's gekopieerd naar de doelmap met behouden extensie, volgorde loopt door vanaf startVolgorde, bijschrift/markeringen/vlag/calculatie_id in de rij, nieuw pad in de rij, teruggegeven foto-objecten gemapt, meldingstekst; copy-fout op één foto geteld en de rest gaat door; insert-fout → bestand weer verwijderd; geen bron; bron = doel doet niets.
+- Runtime-test keuzelijst: eigen calculatie weg, zelfde klant eerst (ook met andere hoofdletters en een spatie), daarna op naam; knop Overnemen start uitgeschakeld; modal gaat open.
+- Niet getest: in de browser. Controleer na deploy: (1) open je bewerkte kopie → Foto's-tab → Foto's overnemen uit… → origineel staat bovenaan en toont het juiste aantal; (2) Overnemen → foto's verschijnen achteraan met bijschriften en gebrekstippen, en zijn te openen (signed links); (3) verwijder één foto in de kopie en controleer dat het origineel zijn foto nog heeft; (4) ⎘ op een calculatie met foto's toont het vinkje met aantal, zonder foto's niet; (5) dupliceren met vinkje aan → kopie opent met de foto's; (6) in Supabase Storage staan de kopieën onder de map van de nieuwe calculatie-id.
+
 ## v4.92.1 — Fix: beurt-percentages gaan mee bij dupliceren (2026-10-16)
 
 **Aanleiding**

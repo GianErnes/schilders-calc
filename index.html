@@ -2384,8 +2384,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.92.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.93.0</h2>
       <div class="intro-body">
+        <p><strong>📸 Foto's kopiëren naar een andere calculatie (v4.93.0).</strong> Dupliceren liet de foto's altijd liggen, en een foto die je rechtstreeks in de app maakt staat niet in je iPad-bibliotheek, dus opnieuw uploaden kon vaak niet eens. Twee dingen erbij. In het dupliceer-venster staat nu een vinkje <strong>Foto's meenemen</strong> (zichtbaar als de bron foto's heeft, met het aantal erbij, standaard aan). En in de Foto's-tab van elke calculatie staat de knop <strong>Foto's overnemen uit…</strong>: je kiest een andere calculatie (zelfde klant staat bovenaan), ziet hoeveel foto's die heeft, en haalt ze hierheen. Dat werkt dus ook voor een kopie die je al had gemaakt en bewerkt. In beide gevallen gaan bijschriften, gebrekstippen en de meetel-vlag mee, en krijgt de kopie eigen bestanden, zodat verwijderen in de één de ander nooit raakt. Ze komen achteraan bij wat er al staat. Mislukt er één, dan gaan de andere door en zegt de melding hoeveel. Geen SQL nodig.</p>
         <p><strong>🩹 Beurt-percentages gaan nu wél mee bij dupliceren (v4.92.1).</strong> Gian zag het meteen na v4.92.0: de beurten van het gekopieerde plan waren niet gelijk aan het origineel. Oorzaak: een beurt in modus per regel of per stap bewaart zijn percentages onder het id van de regel of stap, en de staartingreep onder het id van de staartpost. Bij dupliceren krijgen die allemaal een nieuw id, dus verwees de kopie naar niets en viel elke regel terug op 100%. Nu vertaalt de app die id's mee naar de kopie. Een instelling die naar een inmiddels verwijderde regel wees vervalt, en de melding zegt hoeveel dat er waren. Modus algemeen (één percentage) was al goed. Geen SQL nodig.</p>
         <p><strong>⎘ Dupliceren neemt het onderhoudsplan mee (v4.92.0).</strong> Heb je een onderhoudsplan verzonden en wil je de klant een alternatief bieden (andere looptijd, andere beurten, ander betaalmodel), dan hoefde je tot nu toe het hele plan opnieuw te maken: het kopieer-knopje ⎘ nam alleen de calculatie mee. Vanaf nu staat in het dupliceer-venster een vinkje <strong>Onderhoudsplan meenemen</strong> (alleen zichtbaar als de calculatie een plan heeft, standaard aan). De kopie krijgt dan het plan als concept, met alle beurten, externe posten en planbrief-keuzes, zodat je meteen kunt variëren terwijl het verzonden origineel vergrendeld blijft. Bewust niet mee: de liggingsfoto (opnieuw ophalen is één klik), het plannummer en de geldigheid (komen vers bij de eerste accordeerlink), en de vlag "ingepland" bij beurten, want de kopie staat niet in Yoobi. De melding onderaan zegt hoeveel beurten er meegingen. Geen SQL nodig.</p>
         <p><strong>🪜 Klimtoeslag alleen over het buitenwerk (v4.91.0).</strong> Een percentage-staartpost zoals de klimtoeslag rekende altijd over de arbeid van de hele calculatie. Bij een nieuwbouw met binnen- én buitenwerk klopt dat niet: binnen klim je niet. In het staart-venster staan nu twee extra grondslagen: "Arbeid — alleen hoofdgroep Buiten" en "Arbeid — alleen hoofdgroep Binnen". De app telt dan alleen de arbeid van de hoofdgroepen waarvan de naam het woord buiten (of binnen) bevat, hoofdletters maken niet uit; uitgevinkte hoofdgroepen tellen niet mee. Dit werkt door in de calculatie, het offertebedrag, de werkdagen (als de post meetelt in werkdagen), het onderhoudsplan en het archieftotaal. Op de offerte staat dan "10% over arbeid buiten". Heet geen enkele hoofdgroep Buiten, dan is de post € 0 en meldt de knop Controleer dat. Bestaande staartposten blijven over de hele arbeid rekenen; de keuze maak je per post. Geen SQL nodig.</p>
@@ -3571,6 +3572,26 @@ Hout binnen;Gronden;m²;6;0,10</div>
 </div>
 
 <!-- DUPLICEER-KEUZE MODAL — v4.48.0 -->
+<!-- v4.93.0 — Foto's overnemen uit een andere calculatie -->
+<div class="modal-overlay" id="fotoOvernemenModal">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-head">
+      <h3>📸 Foto's overnemen</h3>
+      <button class="close-x" onclick="_fotoOvernemenSluit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin: 0 0 0.6rem 0; font-size: 0.85rem;">Kopieer de foto's van een andere calculatie hierheen, met bijschriften, gebrekstippen en de meetel-vlag. Ze komen achteraan; wat hier al staat blijft staan.</p>
+      <label style="font-size: 0.8rem;">Bron (zelfde klant staat bovenaan)</label>
+      <select id="fotoOvernemenBron" onchange="_fotoOvernemenBronGekozen()" style="width: 100%; margin-top: 0.25rem;"></select>
+      <p id="fotoOvernemenInfo" style="margin: 0.5rem 0 0 0; font-size: 0.78rem; color: var(--muted);"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="_fotoOvernemenSluit()">Annuleren</button>
+      <button class="btn" id="fotoOvernemenStartBtn" onclick="_fotoOvernemenStart()" disabled>Overnemen</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="dupCalcModal">
   <div class="modal" style="max-width: 460px;">
     <div class="modal-head">
@@ -3582,6 +3603,13 @@ Hout binnen;Gronden;m²;6;0,10</div>
       <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem;"><strong>Zelfde klant</strong> neemt het adres, de contactpersoon, het e-mailadres en het telefoonnummer mee.</p>
       <p style="margin: 0 0 0.85rem 0; font-size: 0.85rem;"><strong>Andere klant</strong> laat die leeg, en ook de klantnaam.</p>
       <p style="margin: 0; font-size: 0.75rem; color: var(--muted); font-style: italic;">In beide gevallen gaan het klanttype, de garantiejaren, de prijsweergave, de bijlagevinkjes en de sectiekeuzes mee. Het offertenummer en de datums komen vers.</p>
+      <!-- v4.93.0 — alleen zichtbaar als de bron foto's heeft -->
+      <div id="dupCalcFotoWrap" style="display: none; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px solid var(--paper-deep);">
+        <label style="display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.85rem; cursor: pointer;">
+          <input type="checkbox" id="dupCalcMetFotos" checked style="margin-top: 0.2rem;">
+          <span><strong>Foto's meenemen</strong> (<span id="dupCalcFotoAantal"></span>). Met bijschriften, gebrekstippen en meetel-vlag, als eigen kopie van de bestanden.</span>
+        </label>
+      </div>
       <!-- v4.92.0 — alleen zichtbaar als de bron een onderhoudsplan heeft -->
       <div id="dupCalcPlanWrap" style="display: none; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px solid var(--paper-deep);">
         <label style="display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.85rem; cursor: pointer;">
@@ -3794,7 +3822,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.92.1';
+const APP_VERSION = 'v4.93.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4211,6 +4239,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.93.0', d: '2026-10-17', h: 'Foto\'s kopiëren: vinkje "Foto\'s meenemen" bij dupliceren en knop "Foto\'s overnemen uit…" in de Foto\'s-tab. Bijschriften, gebrekstippen en meetel-vlag gaan mee; eigen kopie van de bestanden.' },
   { v: '4.92.1', d: '2026-10-16', h: 'Fix: beurt-percentages (per regel, per stap, staartingreep) gaan nu mee bij dupliceren; de regel-, stap- en staart-id\'s worden vertaald naar de kopie. In v4.92.0 vielen ze terug op 100%.' },
   { v: '4.92.0', d: '2026-10-16', h: 'Dupliceren (⎘) kan het onderhoudsplan meenemen: vinkje in het dupliceer-venster, standaard aan als de calculatie een plan heeft. Plan komt als concept mee met beurten, externe posten en planbrief-keuzes; liggingsfoto, plannummer/geldigheid en de vlag ingepland niet.' },
   { v: '4.91.0', d: '2026-10-14', h: 'Percent-staartpost (klimtoeslag) kan nu alleen over de arbeid van de hoofdgroep Buiten of Binnen rekenen: twee nieuwe grondslagen in het staart-venster, doorgetrokken naar offerte, werkdagen, onderhoudsplan en archieftotaal. Controleer waarschuwt als zo\'n hoofdgroep ontbreekt.' },
@@ -8622,6 +8651,50 @@ async function _deleteFotoFolder(calcId) {
   if (error || !data || !data.length) return;
   const paths = data.map(o => `${calcId}/${o.name}`);
   await _sbQuery(_sb.storage.from(FOTO_BUCKET).remove(paths), 'Fotomap opruimen');
+}
+
+// v4.93.0 — Kopieer alle foto's van bronCalcId naar doelCalcId: bestand (server-side copy in Storage,
+// nieuw pad onder de doelmap) én rij in calculatie_fotos met bijschrift, markeringen en meetel-vlag.
+// Volgorde loopt door vanaf startVolgorde. Bestanden worden nooit gedeeld: _deleteFotoDB wist het bestand,
+// dus een gedeeld pad zou de andere calculatie slopen. Mislukt de rij, dan gaat het gekopieerde bestand weer weg.
+// Retourneert { bron, gelukt, mislukt, fotos } — fotos zijn de nieuwe foto-objecten (zonder signedUrl).
+async function _dupFotosNaarCalc(bronCalcId, doelCalcId, startVolgorde) {
+  const uit = { bron: 0, gelukt: 0, mislukt: 0, fotos: [] };
+  if (!_sb || !bronCalcId || !doelCalcId || bronCalcId === doelCalcId) return uit;
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('calculatie_fotos').select('*').eq('calculatie_id', bronCalcId).order('volgorde'), 'Bronfoto\u2019s lezen'
+  );
+  if (error || !Array.isArray(rows)) return uit;
+  uit.bron = rows.length;
+  let idx = Number.isFinite(startVolgorde) ? startVolgorde : 0;
+  for (const row of rows) {
+    const f = _mapFotoFromDB(row);
+    if (!f.storagePath) { uit.mislukt++; continue; }
+    const m = /\.([a-zA-Z0-9]{1,5})$/.exec(f.storagePath);
+    const ext = m ? m[1].toLowerCase() : 'jpg';
+    const nieuwPad = `${doelCalcId}/${uid('f')}.${ext}`;
+    const cp = await _sbQuery(_sb.storage.from(FOTO_BUCKET).copy(f.storagePath, nieuwPad), 'Foto kopi\u00ebren');
+    if (!cp || cp.error) { uit.mislukt++; continue; }
+    const ins = await _sbQuery(
+      _sb.from('calculatie_fotos').insert([_mapFotoToDB({ ...f, storagePath: nieuwPad }, doelCalcId, idx)]).select(),
+      'Fotokopie opslaan'
+    );
+    if (!ins || ins.error || !ins.data || !ins.data[0]) {
+      await _sbQuery(_sb.storage.from(FOTO_BUCKET).remove([nieuwPad]), 'Fotokopie opruimen');
+      uit.mislukt++; continue;
+    }
+    uit.fotos.push(_mapFotoFromDB(ins.data[0]));
+    uit.gelukt++; idx++;
+  }
+  return uit;
+}
+
+// Tekst voor de melding na het kopiëren van foto's.
+function _dupFotosTekst(r) {
+  if (!r.bron) return 'Geen foto\u2019s gevonden bij de bron.';
+  let t = r.gelukt + ' foto' + (r.gelukt === 1 ? '' : '\u2019s') + ' overgenomen met bijschriften en gebrekstippen.';
+  if (r.mislukt) t += ' Let op: ' + r.mislukt + ' niet gelukt.';
+  return t;
 }
 
 // ============================================================
@@ -19246,6 +19319,7 @@ function msKey(e, rowIdx, fieldIdx) {
 // State per calc-id, zodat keuze niet doorlekt naar andere calcs
 let notitiesCollapsedState = {}; // { calcId: true|false (= user override) }
 let _fotoUploadBusy = false; // v3.24.1 — true tijdens uploaden van foto's
+let _fotoOvernemenBusy = false; // v4.93.0 — true tijdens het overnemen van foto's uit een andere calculatie
 let _fotoSignBusy = false;   // v3.24.1 — voorkomt herhaald signen tijdens één render-cyclus
 let _docUploadBusy = false;  // v3.24.4 — true tijdens uploaden van documenten
 function _isNotitiesCollapsed() {
@@ -19330,6 +19404,7 @@ function renderNotitiesPaneel() {
           <div class="foto-raster">${fotosHtml}</div>
           <input type="file" id="fotoInput" accept="image/*" multiple style="display:none" onchange="addFotos(this)">
           <button class="btn-secondary btn btn-sm" onclick="document.getElementById('fotoInput').click()" ${_fotoUploadBusy ? 'disabled' : ''} style="margin-top: 0.4rem;">${_fotoUploadBusy ? 'Bezig met uploaden…' : '+ Foto\u2019s'}</button>
+          <button class="btn-secondary btn btn-sm" onclick="_fotoOvernemenOpen()" ${(_fotoUploadBusy || _fotoOvernemenBusy) ? 'disabled' : ''} style="margin-top: 0.4rem; margin-left: 0.4rem;" title="Kopieer de foto\u2019s van een andere calculatie hierheen, met bijschriften en gebrekstippen">${_fotoOvernemenBusy ? 'Bezig met overnemen…' : 'Foto\u2019s overnemen uit…'}</button>
         </div>
         <div class="doc-blok">
           <div class="todo-list-titel">Documenten${docCount ? ` (${docCount})` : ''}</div>
@@ -19425,6 +19500,75 @@ async function addFotos(inputEl) {
   if (gelukt) _touchCalc(data.calc.id);
   _fotoUploadBusy = false;
   renderNotitiesPaneel();
+}
+
+// ---- Foto's overnemen uit een andere calculatie (v4.93.0) ----
+// Voor een kopie die al bestaat (dupliceren nam vroeger geen foto's mee) en voor wie het later bedenkt.
+// Komt achteraan bij de bestaande foto's; bestaande foto's blijven ongemoeid.
+function _fotoOvernemenOpen() {
+  if (!data.calc) return;
+  const sel = document.getElementById('fotoOvernemenBron');
+  const info = document.getElementById('fotoOvernemenInfo');
+  if (!sel) return;
+  const eigenKlant = (data.calc.klant || '').trim().toLowerCase();
+  const lijst = (data.calculaties || []).filter(c => c && c.id !== data.calc.id);
+  // Zelfde klant bovenaan, daarna op naam.
+  lijst.sort((a, b) => {
+    const ak = (a.klant || '').trim().toLowerCase() === eigenKlant ? 0 : 1;
+    const bk = (b.klant || '').trim().toLowerCase() === eigenKlant ? 0 : 1;
+    if (ak !== bk) return ak - bk;
+    return (a.naam || '').localeCompare(b.naam || '', 'nl');
+  });
+  sel.innerHTML = '<option value="">\u2014 kies een calculatie \u2014</option>' + lijst.map(c => {
+    const naam = _escapeHtml(c.naam || '(zonder naam)');
+    const kl = (c.klant || '').trim();
+    return `<option value="${c.id}">${naam}${kl ? ' \u00b7 ' + _escapeHtml(kl) : ''}</option>`;
+  }).join('');
+  if (info) info.textContent = '';
+  const knop = document.getElementById('fotoOvernemenStartBtn');
+  if (knop) knop.disabled = true;
+  document.getElementById('fotoOvernemenModal').classList.add('active');
+}
+function _fotoOvernemenSluit() {
+  document.getElementById('fotoOvernemenModal').classList.remove('active');
+}
+async function _fotoOvernemenBronGekozen() {
+  const sel = document.getElementById('fotoOvernemenBron');
+  const info = document.getElementById('fotoOvernemenInfo');
+  const knop = document.getElementById('fotoOvernemenStartBtn');
+  const id = sel ? sel.value : '';
+  if (knop) knop.disabled = true;
+  if (!id) { if (info) info.textContent = ''; return; }
+  if (info) info.textContent = 'Foto\u2019s tellen…';
+  const res = await _sbQuery(
+    _sb.from('calculatie_fotos').select('id', { count: 'exact', head: true }).eq('calculatie_id', id), 'Foto\u2019s tellen'
+  );
+  if (!sel || sel.value !== id) return; // intussen een andere keuze
+  const n = (res && typeof res.count === 'number') ? res.count : null;
+  if (n === null) { if (info) info.textContent = 'Aantal kon niet geteld worden; je kunt het wel proberen.'; if (knop) knop.disabled = false; return; }
+  if (info) info.textContent = n ? (n + ' foto' + (n === 1 ? '' : '\u2019s') + ' bij deze calculatie.') : 'Deze calculatie heeft geen foto\u2019s.';
+  if (knop) knop.disabled = !n;
+}
+async function _fotoOvernemenStart() {
+  if (!data.calc) return;
+  const sel = document.getElementById('fotoOvernemenBron');
+  const bronId = sel ? sel.value : '';
+  if (!bronId) return;
+  _fotoOvernemenSluit();
+  if (!data.calc.fotos) data.calc.fotos = [];
+  _fotoOvernemenBusy = true;
+  renderNotitiesPaneel();
+  const doelId = data.calc.id;
+  const r = await _dupFotosNaarCalc(bronId, doelId, data.calc.fotos.length);
+  // Alleen in de state zetten als de gebruiker nog in dezelfde calculatie staat.
+  if (data.calc && data.calc.id === doelId && r.fotos.length) {
+    await _signFotoUrls(r.fotos);
+    r.fotos.forEach(f => data.calc.fotos.push(f));
+    _touchCalc(doelId);
+  }
+  _fotoOvernemenBusy = false;
+  renderNotitiesPaneel();
+  _toast(_dupFotosTekst(r), (r.gelukt && !r.mislukt) ? 'ok' : undefined);
 }
 async function delFoto(id) {
   if (!data.calc || !data.calc.fotos) return;
@@ -20831,7 +20975,23 @@ async function dupCalc(id) {
   const vink = document.getElementById('dupCalcMetPlan');
   if (wrap) wrap.style.display = 'none';
   if (vink) vink.checked = true;
+  // v4.93.0 — vinkje "Foto's meenemen", alleen als de bron foto's heeft
+  const fWrap = document.getElementById('dupCalcFotoWrap');
+  const fVink = document.getElementById('dupCalcMetFotos');
+  if (fWrap) fWrap.style.display = 'none';
+  if (fVink) fVink.checked = true;
   document.getElementById('dupCalcModal').classList.add('active');
+  if (fWrap && _sb) {
+    const res = await _sbQuery(
+      _sb.from('calculatie_fotos').select('id', { count: 'exact', head: true }).eq('calculatie_id', id), 'Foto\u2019s tellen'
+    );
+    const n = (res && typeof res.count === 'number') ? res.count : 0;
+    if (n && _dupCalcBronId === id) {
+      const aant = document.getElementById('dupCalcFotoAantal');
+      if (aant) aant.textContent = n + ' foto' + (n === 1 ? '' : '\u2019s');
+      fWrap.style.display = '';
+    }
+  }
   if (wrap && _sb) {
     const { data: planRow } = await _sbQuery(
       _sb.from('onderhoudsplannen').select('id').eq('calculatie_id', id).maybeSingle(),
@@ -20853,9 +21013,12 @@ function _dupCalcStart(metKlant) {
   const vink = document.getElementById('dupCalcMetPlan');
   // v4.92.0 — plan alleen meenemen als het vinkje zichtbaar was (bron heeft een plan) én aanstaat
   const metPlan = !!(wrap && wrap.style.display !== 'none' && vink && vink.checked);
+  const fWrap = document.getElementById('dupCalcFotoWrap');
+  const fVink = document.getElementById('dupCalcMetFotos');
+  const metFotos = !!(fWrap && fWrap.style.display !== 'none' && fVink && fVink.checked); // v4.93.0
   document.getElementById('dupCalcModal').classList.remove('active');
   _dupCalcBronId = null;
-  if (id) _dupCalcUitvoeren(id, metKlant === true, metPlan);
+  if (id) _dupCalcUitvoeren(id, metKlant === true, metPlan, metFotos);
 }
 
 // Witte lijst voor offerte_config. Bewust geen zwarte lijst: een veld dat
@@ -20892,7 +21055,7 @@ function _dupCfgWitteLijst(bron, metKlant) {
   return uit;
 }
 
-async function _dupCalcUitvoeren(id, metKlant, metPlan) {
+async function _dupCalcUitvoeren(id, metKlant, metPlan, metFotos) {
   const orig = data.calculaties.find(x => x.id === id);
   if (!orig) return;
   // Zorg dat origineel volledig geladen is
@@ -21016,11 +21179,22 @@ async function _dupCalcUitvoeren(id, metKlant, metPlan) {
     }
   }
 
+  // 7. v4.93.0 — Foto's meekopiëren (bestand + rij), als gevraagd. Mislukt dit, dan is de kopie er zonder foto's.
+  let fotoTekst = '';
+  let fotoFout = false;
+  if (metFotos) {
+    const rf = await _dupFotosNaarCalc(orig.id, fresh.id, 0);
+    fresh.fotos = rf.fotos;
+    fotoTekst = ' ' + _dupFotosTekst(rf);
+    fotoFout = !rf.gelukt || rf.mislukt > 0;
+  }
+
   data.calculaties.unshift(fresh);
   renderDashboard();
   _toast((metKlant
     ? 'Kopie met klantgegevens gemaakt, staat nu bij Concept.'
-    : 'Kopie zonder klantgegevens gemaakt, staat nu bij Concept.') + planTekst, (metPlan && !planTekst.includes('meegenomen')) ? undefined : 'ok');
+    : 'Kopie zonder klantgegevens gemaakt, staat nu bij Concept.') + planTekst + fotoTekst,
+    ((metPlan && !planTekst.includes('meegenomen')) || fotoFout) ? undefined : 'ok');
 }
 
 // v4.92.0 — Kopieer het onderhoudsplan van bronCalcId naar doelCalcId.
