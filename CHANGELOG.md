@@ -1,3 +1,30 @@
+## v4.94.0 — Scherpe foto's, per foto te kiezen (2026-10-17)
+
+**Aanleiding**
+- Gian 17-10-2026: foto's uit de iPad Pro 11" (4e gen.) zijn niet scherp; zou een nieuwe iPad helpen? Uit index.html: `_resizeImageToBlob(file, maxEdge = 1600, quality = 0.8)` verkleint elke foto bij uploaden tot 1600 px; de camera levert 12 MP (opgezocht: Apple-specificaties 4e gen. en M4 allebei 12 MP wide), dus een nieuwe iPad verandert niets. Gian: scherpte is vooral nodig bij het zelf opnieuw beoordelen van een detailfoto; de meeste foto's zijn goed zoals ze zijn. Besluit: per foto kiezen, klantdocumenten niet zwaarder maken.
+
+**Gebouwd**
+- Constanten `FOTO_STD_MAX = 1600, FOTO_STD_Q = 0.8`, `FOTO_SCHERP_MAX = 2800, FOTO_SCHERP_Q = 0.85`, `FOTO_DOC_MAX = 1600`.
+- `_uploadFoto(file, calcId, idx, scherp)` kiest de verkleining; `addFotos(inputEl, scherp)`; tweede verborgen `<input id="fotoInputScherp">` met knop **+ Scherpe foto's** naast + Foto's in de Foto's-tab. Mappers `_mapFotoFromDB`/`_mapFotoToDB` dragen `scherp`; daardoor gaat de vlag ook mee in de fotokopie van v4.93.0 zonder extra code.
+- Miniatuur: label `scherp` rechtsonder (`.foto-scherp`), naast de bestaande gebrekchip linksonder.
+- Aftopping klantdocumenten op `FOTO_DOC_MAX`:
+  - `_fotoNaarDataUrl` (offerte-met-bijlagen via pdfmake en het bevroren document achter de accordeerlink, regel ~16324): canvas wordt geschaald vóór het branden van de stippen; stipgrootte volgt de geschaalde maat. Standaardfoto's (≤1600) blijven ongewijzigd (schaal 1).
+  - `printFotoBijlage`: nieuwe `_fotoDocUrl(f, maxDim)` levert voor scherpe foto's een verkleinde data-URI (zonder stippen; de stippen legt `_bouwFotoHtml` als spans eroverheen) en voor standaardfoto's gewoon de eigen link; de print gebruikt een kopie van de fotolijst met die links. Mislukt het, dan de originele link (liever zwaar dan leeg).
+  - Craft-export verkleinde al zelf naar 1600 (`_craftFotoDataUrl`), ongewijzigd.
+- Welkomsttekst, RELEASE_HIGHLIGHTS, APP_VERSION.
+
+**SQL (vereist, door Gian te draaien)** — `sql_v4.94.0_foto_scherp.sql`: `alter table calculatie_fotos add column if not exists scherp boolean not null default false`. Zonder de kolom mislukt elke foto-upload (de insert noemt de kolom), dus **eerst SQL, dan deployen**.
+
+**Niet gewijzigd / bewust niet**
+- Bestaande foto's zijn al verkleind en zijn niet scherper te maken; de vlag staat daar op false.
+- Het markeerscherm en de lightbox tonen de foto op volle resolutie; daar is de scherpte voor bedoeld. Het schermvoorbeeld van de offerte met bijlagen (regel ~16510, `_bouwFotoHtml` op scherm) toont scherpe foto's ook op volle resolutie; dat is alleen op scherm en geen bestand.
+- Opslag: een scherpe foto wordt grofweg 1–1,5 MB in plaats van 250–400 KB (schatting, niet gemeten).
+
+**Getest**
+- Node-parse; div-balans 1356/1359 (ongewijzigd t.o.v. v4.93.0: geen nieuwe div's).
+- Runtime-test met stubs, 6 proeven groen: standaard → 1600/0,8 en `scherp=false` in de rij; scherp → 2800/0,85 en `scherp=true`; zonder argument standaard; mapper rond (true/false blijft behouden); `_fotoDocUrl` geeft bij een standaardfoto de eigen link en bij ontbrekende link null.
+- Niet getest: in de browser, en de canvas-aftopping (vereist een echte afbeelding). Controleer na SQL + deploy: (1) + Foto's werkt nog en de miniatuur heeft geen label; (2) + Scherpe foto's → upload lukt, label *scherp* op de miniatuur, in de lightbox duidelijk scherper bij inzoomen; (3) Supabase Storage: het bestand van de scherpe foto is zichtbaar groter; (4) print de fotobijlage en de offerte met bijlagen van een calculatie met één scherpe foto: de PDF-grootte moet in dezelfde orde liggen als voorheen en de stippen moeten op hun plek staan; (5) kopieer de foto's naar een andere calculatie: het label gaat mee; (6) Craft-export ongewijzigd.
+
 ## v4.93.0 — Foto's kopiëren naar een andere calculatie (2026-10-17)
 
 **Aanleiding**

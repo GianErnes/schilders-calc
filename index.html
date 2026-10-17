@@ -1174,6 +1174,7 @@
     pointer-events: none;
   }
   .foto-mkchip .fmk-dot { width: 9px; height: 9px; }
+  .foto-scherp { position: absolute; right: 4px; bottom: 4px; z-index: 2; padding: 1px 6px; border-radius: 10px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.02em; background: rgba(255,255,255,0.9); color: var(--ink, #222); } /* v4.94.0 */
   .foto-mkchip.telt { box-shadow: 0 0 0 1.5px var(--accent, #e63329); }
 
   /* DOCUMENTEN (v3.24.4) */
@@ -2384,8 +2385,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.93.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.94.0</h2>
       <div class="intro-body">
+        <p><strong>🔍 Scherpe foto's, per foto te kiezen (v4.94.0).</strong> Elke foto werd bij het uploaden verkleind tot 1600 pixels: snel en licht, maar voor een detail dat je later opnieuw wilt beoordelen soms te weinig. Het ligt dus niet aan je iPad. Naast <strong>+ Foto's</strong> staat nu <strong>+ Scherpe foto's</strong>: die bewaart op 2800 pixels, ruim drie keer zoveel detail, en de miniatuur krijgt het label <em>scherp</em>. Voor de meeste foto's blijft de gewone knop de juiste. De klantdocumenten (fotobijlage, offerte met bijlagen, het bevroren document achter de accordeerlink, Craft) toppen elke foto af op 1600 pixels, dus die worden niet zwaarder; de scherpe versie is er voor jou, in het markeerscherm. De vlag gaat mee bij kopiëren. Bestaande foto's zijn al verkleind en zijn niet scherper te maken. <strong>Vereist één regel SQL</strong> (kolom <code>scherp</code> op <code>calculatie_fotos</code>).</p>
         <p><strong>📸 Foto's kopiëren naar een andere calculatie (v4.93.0).</strong> Dupliceren liet de foto's altijd liggen, en een foto die je rechtstreeks in de app maakt staat niet in je iPad-bibliotheek, dus opnieuw uploaden kon vaak niet eens. Twee dingen erbij. In het dupliceer-venster staat nu een vinkje <strong>Foto's meenemen</strong> (zichtbaar als de bron foto's heeft, met het aantal erbij, standaard aan). En in de Foto's-tab van elke calculatie staat de knop <strong>Foto's overnemen uit…</strong>: je kiest een andere calculatie (zelfde klant staat bovenaan), ziet hoeveel foto's die heeft, en haalt ze hierheen. Dat werkt dus ook voor een kopie die je al had gemaakt en bewerkt. In beide gevallen gaan bijschriften, gebrekstippen en de meetel-vlag mee, en krijgt de kopie eigen bestanden, zodat verwijderen in de één de ander nooit raakt. Ze komen achteraan bij wat er al staat. Mislukt er één, dan gaan de andere door en zegt de melding hoeveel. Geen SQL nodig.</p>
         <p><strong>🩹 Beurt-percentages gaan nu wél mee bij dupliceren (v4.92.1).</strong> Gian zag het meteen na v4.92.0: de beurten van het gekopieerde plan waren niet gelijk aan het origineel. Oorzaak: een beurt in modus per regel of per stap bewaart zijn percentages onder het id van de regel of stap, en de staartingreep onder het id van de staartpost. Bij dupliceren krijgen die allemaal een nieuw id, dus verwees de kopie naar niets en viel elke regel terug op 100%. Nu vertaalt de app die id's mee naar de kopie. Een instelling die naar een inmiddels verwijderde regel wees vervalt, en de melding zegt hoeveel dat er waren. Modus algemeen (één percentage) was al goed. Geen SQL nodig.</p>
         <p><strong>⎘ Dupliceren neemt het onderhoudsplan mee (v4.92.0).</strong> Heb je een onderhoudsplan verzonden en wil je de klant een alternatief bieden (andere looptijd, andere beurten, ander betaalmodel), dan hoefde je tot nu toe het hele plan opnieuw te maken: het kopieer-knopje ⎘ nam alleen de calculatie mee. Vanaf nu staat in het dupliceer-venster een vinkje <strong>Onderhoudsplan meenemen</strong> (alleen zichtbaar als de calculatie een plan heeft, standaard aan). De kopie krijgt dan het plan als concept, met alle beurten, externe posten en planbrief-keuzes, zodat je meteen kunt variëren terwijl het verzonden origineel vergrendeld blijft. Bewust niet mee: de liggingsfoto (opnieuw ophalen is één klik), het plannummer en de geldigheid (komen vers bij de eerste accordeerlink), en de vlag "ingepland" bij beurten, want de kopie staat niet in Yoobi. De melding onderaan zegt hoeveel beurten er meegingen. Geen SQL nodig.</p>
@@ -3822,7 +3824,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.93.0';
+const APP_VERSION = 'v4.94.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4239,6 +4241,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.94.0', d: '2026-10-17', h: 'Knop "+ Scherpe foto\'s" (2800 px) naast de gewone (1600 px), per foto te kiezen, met label op de miniatuur. Klantdocumenten toppen af op 1600 px en worden niet zwaarder. Vereist SQL: kolom scherp op calculatie_fotos.' },
   { v: '4.93.0', d: '2026-10-17', h: 'Foto\'s kopiëren: vinkje "Foto\'s meenemen" bij dupliceren en knop "Foto\'s overnemen uit…" in de Foto\'s-tab. Bijschriften, gebrekstippen en meetel-vlag gaan mee; eigen kopie van de bestanden.' },
   { v: '4.92.1', d: '2026-10-16', h: 'Fix: beurt-percentages (per regel, per stap, staartingreep) gaan nu mee bij dupliceren; de regel-, stap- en staart-id\'s worden vertaald naar de kopie. In v4.92.0 vielen ze terug op 100%.' },
   { v: '4.92.0', d: '2026-10-16', h: 'Dupliceren (⎘) kan het onderhoudsplan meenemen: vinkje in het dupliceer-venster, standaard aan als de calculatie een plan heeft. Plan komt als concept mee met beurten, externe posten en planbrief-keuzes; liggingsfoto, plannummer/geldigheid en de vlag ingepland niet.' },
@@ -8534,6 +8537,12 @@ async function _deleteTodoDB(id) {
 // v3.24.0 — bestanden in Storage, metadata (pad, bijschrift, volgorde) in de tabel.
 // ============================================================
 const FOTO_BUCKET = 'calculatie-fotos';
+// v4.94.0 — twee kwaliteiten bij uploaden. Standaard is bewust klein (snel, lichte PDF's);
+// 'scherp' is voor detailfoto's die je zelf later wilt beoordelen. Klantdocumenten worden
+// altijd afgetopt op FOTO_DOC_MAX, zodat een scherpe foto de PDF's niet zwaarder maakt.
+const FOTO_STD_MAX = 1600, FOTO_STD_Q = 0.8;
+const FOTO_SCHERP_MAX = 2800, FOTO_SCHERP_Q = 0.85;
+const FOTO_DOC_MAX = 1600;
 
 function _mapFotoFromDB(row) {
   return {
@@ -8543,6 +8552,7 @@ function _mapFotoFromDB(row) {
     volgorde:    row.volgorde != null ? row.volgorde : 0,
     markeringen: Array.isArray(row.markeringen) ? row.markeringen : [],   // [{fx,fy,type,notitie}] — fracties 0..1
     gebrekenTellen: !!row.gebreken_tellen,                                 // tellen de stippen mee in de toeslagen?
+    scherp:      !!row.scherp,                                             // v4.94.0 — geüpload op hoge resolutie
     signedUrl:   null   // wordt vlak voor het tonen ingevuld door _signFotoUrls
   };
 }
@@ -8553,7 +8563,8 @@ function _mapFotoToDB(f, calcId, idx) {
     opmerking:     f.opmerking || '',
     volgorde:      idx != null ? idx : (f.volgorde || 0),
     markeringen:   Array.isArray(f.markeringen) ? f.markeringen : [],
-    gebreken_tellen: !!f.gebrekenTellen
+    gebreken_tellen: !!f.gebrekenTellen,
+    scherp:        !!f.scherp   // v4.94.0
   };
 }
 
@@ -8589,8 +8600,10 @@ async function _resizeImageToBlob(file, maxEdge = 1600, quality = 0.8) {
 }
 
 // Upload één bestand: verkleinen -> Storage -> rij in calculatie_fotos. Terug: foto-object of null.
-async function _uploadFoto(file, calcId, idx) {
-  const blob = await _resizeImageToBlob(file);
+async function _uploadFoto(file, calcId, idx, scherp) {
+  const blob = scherp
+    ? await _resizeImageToBlob(file, FOTO_SCHERP_MAX, FOTO_SCHERP_Q)
+    : await _resizeImageToBlob(file, FOTO_STD_MAX, FOTO_STD_Q);
   if (!blob) { _toast('Kon de foto niet verkleinen — is het wel een afbeelding?'); return null; }
   const path = `${calcId}/${uid('f')}.jpg`;
   const up = await _sbQuery(
@@ -8599,7 +8612,7 @@ async function _uploadFoto(file, calcId, idx) {
   );
   if (up.error) return null;
   const ins = await _sbQuery(
-    _sb.from('calculatie_fotos').insert([_mapFotoToDB({ storagePath: path, opmerking: '' }, calcId, idx)]).select(),
+    _sb.from('calculatie_fotos').insert([_mapFotoToDB({ storagePath: path, opmerking: '', scherp: !!scherp }, calcId, idx)]).select(),
     'Foto opslaan'
   );
   if (ins.error || !ins.data || !ins.data[0]) {
@@ -8621,6 +8634,31 @@ async function _signFotoUrls(fotos) {
   const byPath = {};
   data.forEach(d => { if (d && d.path) byPath[d.path] = d.signedUrl; });
   fotos.forEach(f => { f.signedUrl = byPath[f.storagePath] || null; });
+}
+
+// v4.94.0 — Verkleinde kopie (data-URI, zonder stippen) van een scherpe foto voor klantdocumenten die de
+// foto als <img> gebruiken (fotobijlage via print). Standaardfoto's geven gewoon hun eigen link terug.
+// Mislukt het, dan de originele link: liever een zware PDF dan een lege plek.
+function _fotoDocUrl(f, maxDim) {
+  return new Promise((resolve) => {
+    if (!f || !f.signedUrl) { resolve(null); return; }
+    if (!f.scherp) { resolve(f.signedUrl); return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const md = maxDim || FOTO_DOC_MAX;
+        const schaal = Math.min(1, md / Math.max(img.naturalWidth, img.naturalHeight));
+        if (schaal >= 1) { resolve(f.signedUrl); return; }
+        const W = Math.round(img.naturalWidth * schaal), H = Math.round(img.naturalHeight * schaal);
+        const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+        cv.getContext('2d').drawImage(img, 0, 0, W, H);
+        resolve(cv.toDataURL('image/jpeg', 0.82));
+      } catch (e) { resolve(f.signedUrl); }
+    };
+    img.onerror = () => resolve(f.signedUrl);
+    img.src = f.signedUrl;
+  });
 }
 
 // Bijschrift / volgorde / markeringen / meetel-vlag bijwerken — vuren-en-vergeten.
@@ -8654,7 +8692,7 @@ async function _deleteFotoFolder(calcId) {
 }
 
 // v4.93.0 — Kopieer alle foto's van bronCalcId naar doelCalcId: bestand (server-side copy in Storage,
-// nieuw pad onder de doelmap) én rij in calculatie_fotos met bijschrift, markeringen en meetel-vlag.
+// nieuw pad onder de doelmap) én rij in calculatie_fotos met bijschrift, markeringen, meetel-vlag en scherp-vlag.
 // Volgorde loopt door vanaf startVolgorde. Bestanden worden nooit gedeeld: _deleteFotoDB wist het bestand,
 // dus een gedeeld pad zou de andere calculatie slopen. Mislukt de rij, dan gaat het gekopieerde bestand weer weg.
 // Retourneert { bron, gelukt, mislukt, fotos } — fotos zijn de nieuwe foto-objecten (zonder signedUrl).
@@ -14690,7 +14728,10 @@ async function printFotoBijlage() {
   if (!fotos.length) { _toast('Geen foto\u2019s om te printen'); return; }
   const missing = fotos.filter(f => !f.signedUrl);
   if (missing.length) await _signFotoUrls(missing);
-  const html = _bouwFotoHtml(c, fotos);
+  // v4.94.0 — scherpe foto's afgetopt op FOTO_DOC_MAX, zodat de print-PDF niet zwaarder wordt dan nu.
+  const docFotos = [];
+  for (const f of fotos) { const u = await _fotoDocUrl(f, FOTO_DOC_MAX); docFotos.push(f.scherp && u ? { ...f, signedUrl: u } : f); }
+  const html = _bouwFotoHtml(c, docFotos);
   const area = document.getElementById('printArea');
   area.innerHTML = html;
   _setPrintTitle('fotobijlage');
@@ -16327,10 +16368,12 @@ function _fotoNaarDataUrl(f) {
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       try {
-        const W = img.naturalWidth, H = img.naturalHeight;
+        // v4.94.0 — aftoppen op FOTO_DOC_MAX: een scherpe foto mag het klantdocument niet zwaarder maken.
+        const schaal = Math.min(1, FOTO_DOC_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+        const W = Math.round(img.naturalWidth * schaal), H = Math.round(img.naturalHeight * schaal);
         const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
         const ctx = cv.getContext('2d');
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, W, H);
         const mk = Array.isArray(f.markeringen) ? f.markeringen : [];
         const r = Math.max(12, Math.round(Math.min(W, H) * 0.035));
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -19378,7 +19421,7 @@ function renderNotitiesPaneel() {
       <div class="foto-tegel">
         <div class="foto-thumb" onclick="openFotoLightbox('${f.id}')" title="Klik om te bekijken en gebreken te markeren">
           ${f.signedUrl ? `<img src="${_escapeHtml(f.signedUrl)}" alt="foto" loading="lazy">` : `<div class="foto-laden">laden…</div>`}
-          ${_fotoMkChip(f)}
+          ${_fotoMkChip(f)}${f.scherp ? '<span class="foto-scherp" title="Geüpload op hoge resolutie">scherp</span>' : ''}
           <button class="foto-del" onclick="event.stopPropagation(); delFoto('${f.id}')" title="Verwijder foto">×</button>
         </div>
         <input type="text" class="foto-bijschrift" value="${(f.opmerking || '').replace(/"/g, '&quot;')}" placeholder="bijschrift…" onchange="updFotoOpmerking('${f.id}', this.value)">
@@ -19402,8 +19445,10 @@ function renderNotitiesPaneel() {
         <div class="foto-blok">
           <div class="todo-list-titel">Foto's${fotoCount ? ` (${fotoCount})` : ''}</div>
           <div class="foto-raster">${fotosHtml}</div>
-          <input type="file" id="fotoInput" accept="image/*" multiple style="display:none" onchange="addFotos(this)">
+          <input type="file" id="fotoInput" accept="image/*" multiple style="display:none" onchange="addFotos(this, false)">
+          <input type="file" id="fotoInputScherp" accept="image/*" multiple style="display:none" onchange="addFotos(this, true)">
           <button class="btn-secondary btn btn-sm" onclick="document.getElementById('fotoInput').click()" ${_fotoUploadBusy ? 'disabled' : ''} style="margin-top: 0.4rem;">${_fotoUploadBusy ? 'Bezig met uploaden…' : '+ Foto\u2019s'}</button>
+          <button class="btn-secondary btn btn-sm" onclick="document.getElementById('fotoInputScherp').click()" ${_fotoUploadBusy ? 'disabled' : ''} style="margin-top: 0.4rem; margin-left: 0.4rem;" title="Hoge resolutie (${FOTO_SCHERP_MAX} px) voor detailfoto\u2019s die je zelf later wilt beoordelen. Klantdocumenten blijven even licht.">+ Scherpe foto\u2019s</button>
           <button class="btn-secondary btn btn-sm" onclick="_fotoOvernemenOpen()" ${(_fotoUploadBusy || _fotoOvernemenBusy) ? 'disabled' : ''} style="margin-top: 0.4rem; margin-left: 0.4rem;" title="Kopieer de foto\u2019s van een andere calculatie hierheen, met bijschriften en gebrekstippen">${_fotoOvernemenBusy ? 'Bezig met overnemen…' : 'Foto\u2019s overnemen uit…'}</button>
         </div>
         <div class="doc-blok">
@@ -19480,7 +19525,7 @@ async function delTodo(id) {
 }
 
 // ---- Foto's (v3.24.1) ----
-async function addFotos(inputEl) {
+async function addFotos(inputEl, scherp) {
   if (!data.calc) return;
   const files = Array.from(inputEl.files || []).filter(f => f.type && f.type.startsWith('image/'));
   inputEl.value = ''; // reset zodat dezelfde foto later opnieuw gekozen kan worden
@@ -19490,7 +19535,7 @@ async function addFotos(inputEl) {
   renderNotitiesPaneel();
   let idx = data.calc.fotos.length, gelukt = 0;
   for (const file of files) {
-    const foto = await _uploadFoto(file, data.calc.id, idx++);
+    const foto = await _uploadFoto(file, data.calc.id, idx++, scherp === true);
     if (foto) {
       await _signFotoUrls([foto]);
       data.calc.fotos.push(foto);
