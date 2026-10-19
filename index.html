@@ -1174,6 +1174,11 @@
     pointer-events: none;
   }
   .foto-mkchip .fmk-dot { width: 9px; height: 9px; }
+  .tijd-knoppen { display: inline-flex; border: 1px solid var(--paper-deep); border-radius: 6px; overflow: hidden; } /* v4.95.0 */
+  .tijd-knop { border: none; background: transparent; padding: 0.3rem 0.6rem; font-size: 0.72rem; cursor: pointer; color: var(--muted); font-family: inherit; }
+  .tijd-knop.aan { background: var(--ink, #222); color: var(--paper, #fff); }
+  .tijd-totaal { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+  .tijd-live { color: var(--accent, #e63329); font-size: 0.6rem; vertical-align: middle; }
   .foto-scherp { position: absolute; right: 4px; bottom: 4px; z-index: 2; padding: 1px 6px; border-radius: 10px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.02em; background: rgba(255,255,255,0.9); color: var(--ink, #222); } /* v4.94.0 */
   .foto-mkchip.telt { box-shadow: 0 0 0 1.5px var(--accent, #e63329); }
 
@@ -2385,8 +2390,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.94.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.95.0</h2>
       <div class="intro-body">
+        <p><strong>⏱ Tijd per calculatie, gesplitst in Opname en Uitwerking (v4.95.0).</strong> Zodra je in een geopende calculatie werkt (tabs Calculatie, Meetstaat of Onderhoudsplan), telt de app de tijd. De regel is simpel en bewust ruim: elke stilte telt voor maximaal 10 minuten mee, ook op de iPad waar je loopt en meet zonder het scherm aan te raken. Bovenaan de calculatie staan twee knoppen, <strong>Opname</strong> en <strong>Uitwerking</strong>; de app zet de voorzet (Meetstaat en foto's = Opname), jij kunt hem met één tik omzetten en de keuze blijft staan. Ernaast staat het totaal: opname / uitwerking, met een rood stipje als er nu gemeten wordt. In de lijst staat hetzelfde onder de klantnaam. Alleen in de app, nooit op een klantdocument, en zonder terugwerkende kracht: de teller begint vandaag. Om de twee minuten wordt weggeschreven, dus een lege batterij kost hooguit die twee minuten. <strong>Vereist SQL</strong> (nieuwe tabel <code>calculatie_tijd</code>).</p>
         <p><strong>🔍 Scherpe foto's, per foto te kiezen (v4.94.0).</strong> Elke foto werd bij het uploaden verkleind tot 1600 pixels: snel en licht, maar voor een detail dat je later opnieuw wilt beoordelen soms te weinig. Het ligt dus niet aan je iPad. Naast <strong>+ Foto's</strong> staat nu <strong>+ Scherpe foto's</strong>: die bewaart op 2800 pixels, ruim drie keer zoveel detail, en de miniatuur krijgt het label <em>scherp</em>. Voor de meeste foto's blijft de gewone knop de juiste. De klantdocumenten (fotobijlage, offerte met bijlagen, het bevroren document achter de accordeerlink, Craft) toppen elke foto af op 1600 pixels, dus die worden niet zwaarder; de scherpe versie is er voor jou, in het markeerscherm. De vlag gaat mee bij kopiëren. Bestaande foto's zijn al verkleind en zijn niet scherper te maken. <strong>Vereist één regel SQL</strong> (kolom <code>scherp</code> op <code>calculatie_fotos</code>).</p>
         <p><strong>📸 Foto's kopiëren naar een andere calculatie (v4.93.0).</strong> Dupliceren liet de foto's altijd liggen, en een foto die je rechtstreeks in de app maakt staat niet in je iPad-bibliotheek, dus opnieuw uploaden kon vaak niet eens. Twee dingen erbij. In het dupliceer-venster staat nu een vinkje <strong>Foto's meenemen</strong> (zichtbaar als de bron foto's heeft, met het aantal erbij, standaard aan). En in de Foto's-tab van elke calculatie staat de knop <strong>Foto's overnemen uit…</strong>: je kiest een andere calculatie (zelfde klant staat bovenaan), ziet hoeveel foto's die heeft, en haalt ze hierheen. Dat werkt dus ook voor een kopie die je al had gemaakt en bewerkt. In beide gevallen gaan bijschriften, gebrekstippen en de meetel-vlag mee, en krijgt de kopie eigen bestanden, zodat verwijderen in de één de ander nooit raakt. Ze komen achteraan bij wat er al staat. Mislukt er één, dan gaan de andere door en zegt de melding hoeveel. Geen SQL nodig.</p>
         <p><strong>🩹 Beurt-percentages gaan nu wél mee bij dupliceren (v4.92.1).</strong> Gian zag het meteen na v4.92.0: de beurten van het gekopieerde plan waren niet gelijk aan het origineel. Oorzaak: een beurt in modus per regel of per stap bewaart zijn percentages onder het id van de regel of stap, en de staartingreep onder het id van de staartpost. Bij dupliceren krijgen die allemaal een nieuw id, dus verwees de kopie naar niets en viel elke regel terug op 100%. Nu vertaalt de app die id's mee naar de kopie. Een instelling die naar een inmiddels verwijderde regel wees vervalt, en de melding zegt hoeveel dat er waren. Modus algemeen (één percentage) was al goed. Geen SQL nodig.</p>
@@ -2760,7 +2766,7 @@
     <div class="panel-head">
       <h2>Calculatie</h2>
       <div class="panel-actions">
-        <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span><span id="calcSignaal" style="align-self:center; margin-right:0.5rem;"></span>
+        <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span><span id="calcSignaal" style="align-self:center; margin-right:0.5rem;"></span><span id="tijdKop" style="display:inline-flex; align-items:center; gap:0.5rem; margin-right:0.5rem;"></span>
         <button class="btn-secondary btn lock-allowed" onclick="openYoobiZoek()" title="Zoek een klant in Yoobi en vul de klantgegevens automatisch in">🔍 Klant uit Yoobi</button>
         <button id="craftKnop" class="btn-secondary btn lock-allowed" onclick="craftNaarCraft()" title="Stuur de werkvoorbereiding (titel, adres en de drie tekstblokken) naar het verse Craft-document">🏗️ Naar Craft</button>
         <button id="steigerKnop" class="btn-secondary btn lock-allowed" onclick="steigerAanvragen()" title="Vraag een steigerofferte aan bij de vaste steigerbouwer: werkadres, begeleidende tekst en gekozen foto's gaan per mail">🧱 Steiger aanvragen</button>
@@ -3824,7 +3830,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.94.0';
+const APP_VERSION = 'v4.95.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4241,6 +4247,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.95.0', d: '2026-10-17', h: 'Tijdregistratie per calculatie: Opname / Uitwerking met knoppen in de kop en totalen in kop en lijst. Elke stilte telt max. 10 min mee. Vereist SQL: tabel calculatie_tijd.' },
   { v: '4.94.0', d: '2026-10-17', h: 'Knop "+ Scherpe foto\'s" (2800 px) naast de gewone (1600 px), per foto te kiezen, met label op de miniatuur. Klantdocumenten toppen af op 1600 px en worden niet zwaarder. Vereist SQL: kolom scherp op calculatie_fotos.' },
   { v: '4.93.0', d: '2026-10-17', h: 'Foto\'s kopiëren: vinkje "Foto\'s meenemen" bij dupliceren en knop "Foto\'s overnemen uit…" in de Foto\'s-tab. Bijschriften, gebrekstippen en meetel-vlag gaan mee; eigen kopie van de bestanden.' },
   { v: '4.92.1', d: '2026-10-16', h: 'Fix: beurt-percentages (per regel, per stap, staartingreep) gaan nu mee bij dupliceren; de regel-, stap- en staart-id\'s worden vertaald naar de kopie. In v4.92.0 vielen ze terug op 100%.' },
@@ -8999,6 +9006,7 @@ async function loadData() {
   if (calcHeaders !== null) {
     data.calculaties = calcHeaders;
   }
+  _tijdLaadTotalen().then(() => { try { renderDashboard(); } catch (e) {} }); // v4.95.0 — niet wachten, lijst ververst zelf
   // Lege state: maak één lege calc in DB
   if (!data.calculaties.length) {
     const fresh = await _insertCalcDB({ naam: 'Calculatie 1' });
@@ -9053,6 +9061,7 @@ document.querySelectorAll('nav button').forEach(b => {
     document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     document.getElementById(b.dataset.tab).classList.add('active');
+    if (typeof _tijdPauze === 'function') { _tijdPauze(); _tijdRenderKop(); } // v4.95.0
     if (b.dataset.tab === 'dashboard')     renderDashboard();
     if (b.dataset.tab === 'meetstaat')     { renderMeetstaat(); _syncVullingMeetstaat(); _meetstaatScrollNaarEind(); }
     if (b.dataset.tab === 'materialen')    { _materialenVersToegevoegd = []; _matSort = { key: null, dir: null }; renderMaterialen(); }
@@ -19941,6 +19950,7 @@ function renderCalcStructuur() {
     const total = data.calculaties.length;
     lbl.textContent = `Actief: ${data.calc.naam || '(zonder naam)'} · ${total} ${total === 1 ? 'calculatie' : 'calculaties'} totaal`;
   }
+  if (typeof _tijdRenderKop === 'function') _tijdRenderKop(); // v4.95.0
   if (typeof _calcSignaalLaden === 'function') _calcSignaalLaden(); // v4.68.0 — 💬 bij meldingen of vragen
   _kblokResetVoorCalc(data.calc); // v4.79.0 — dicht bij openen, open bij een nieuwe calc
   document.getElementById('calcProject').value = data.calc.naam || '';
@@ -23001,7 +23011,7 @@ function renderCalculatiesArchief() {
     const statusOpts = Object.keys(STATUS_LABELS).map(s => `<option value="${s}" ${s === cl.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('');
     const isActive = cl.id === data.activeCalcId;
     return `<tr ${isActive ? 'style="background: rgba(194,65,12,0.06);"' : ''}>
-      <td><strong style="cursor: pointer; color: var(--accent-deep);" onclick="openCalc('${cl.id}')">${cl.naam || '<em>(zonder naam)</em>'}</strong>${isActive ? ' <span class="mono" style="font-size:0.65rem; color:var(--accent); margin-left:0.4rem;">● actief</span>' : ''}<br><span style="color: var(--muted); font-size: 0.78rem;">${cl.klant || ''}</span></td>
+      <td><strong style="cursor: pointer; color: var(--accent-deep);" onclick="openCalc('${cl.id}')">${cl.naam || '<em>(zonder naam)</em>'}</strong>${isActive ? ' <span class="mono" style="font-size:0.65rem; color:var(--accent); margin-left:0.4rem;">● actief</span>' : ''}<br><span style="color: var(--muted); font-size: 0.78rem;">${cl.klant || ''}</span>${(typeof _tijdLabel === 'function' && _tijdLabel(cl.id)) ? `<br><span class="mono" style="color: var(--muted); font-size: 0.68rem;" title="Gemeten tijd: opname · uitwerking">\u23f1 ${_tijdLabel(cl.id)}</span>` : ''}</td>
       <td class="num">${opnameHtml}</td>
       <td class="num">${deadlineHtml}</td>
       <td class="num">${datumHtml}</td>
@@ -25832,6 +25842,214 @@ async function _accordMeldingenRender() {
   h += '</div>';
   blk.innerHTML = h;
 }
+
+
+// ============================================================
+// TIJDREGISTRATIE PER CALCULATIE (v4.95.0)
+// Meet hoe lang er aan een calculatie gewerkt wordt, gesplitst in Opname en Uitwerking.
+// Regel (Gian, 17-10-2026): elke stilte telt voor maximaal 10 minuten mee, op elk apparaat.
+// Een blok begint bij de eerste aanraking/toets met een geopende calculatie op een calc-tab
+// en eindigt op laatste activiteit + 10 min. Komt er binnen die 10 min weer activiteit, dan loopt
+// het blok door; daarna begint een nieuw blok. Een stand-wissel (Opname ↔ Uitwerking) splitst het
+// blok zonder de 10 minuten toe te voegen, anders zou wisselen tijd opleveren.
+// Wat telt: tabs Calculatie (incl. notities/foto's), Meetstaat (incl. kozijntekenaar) en Onderhoudsplan.
+// Wat niet telt: dashboard, lijst, instellingen, verfsystemen, materialen, planning.
+// Wegschrijven: blok aanmaken bij start, einde bijwerken om de 2 min en bij tab-wissel/weglegen.
+// Een lege batterij kost dus hooguit 2 minuten. Geen terugwerkende kracht; alleen zichtbaar in de app.
+// ============================================================
+const TIJD_STILTE_MS = 10 * 60 * 1000;
+const TIJD_FLUSH_MS  = 2 * 60 * 1000;
+const TIJD_CALC_TABS = { calculatie: true, meetstaat: true, onderhoud: true };
+const _tijd = {
+  userId: null, apparaat: '',
+  calcId: null, stand: null, blokId: null, blokPending: false, begin: 0, laatste: 0,
+  geschreven: 0,                 // laatste einde-waarde die in de DB staat (ms), om nutteloze updates te sparen
+  blokken: {},                   // calcId -> [{ stand, begin, einde }] afgesloten blokken (uit DB + lokaal); optellen gebeurt bij het tonen, afgetopt op nu
+  geladen: false
+};
+
+function _tijdApparaat() {
+  const ua = navigator.userAgent || '';
+  const touch = (navigator.maxTouchPoints || 0) > 1;
+  if (/iPad/.test(ua) || (/Macintosh/.test(ua) && touch)) return 'ipad';
+  if (/iPhone/.test(ua)) return 'iphone';
+  return 'desktop';
+}
+
+function _tijdActieveTab() {
+  const b = document.querySelector('nav button.active');
+  return b ? b.dataset.tab : '';
+}
+
+// Voorzet voor de stand van een calculatie: eerder gekozen stand (bewaard per apparaat), anders afleiden.
+function _tijdVoorzetStand(calcId) {
+  try { const v = localStorage.getItem('verfcalc_tijdstand_' + calcId); if (v === 'opname' || v === 'uitwerking') return v; } catch (e) {}
+  const tab = _tijdActieveTab();
+  const fotoOverlay = document.getElementById('fmkOverlay'); // markeerscherm van een foto, bestaat alleen als het open is
+  if (tab === 'meetstaat' || fotoOverlay) return 'opname';
+  return 'uitwerking';
+}
+
+async function _tijdUserId() {
+  if (_tijd.userId) return _tijd.userId;
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    _tijd.userId = (session && session.user) ? session.user.id : null;
+  } catch (e) { _tijd.userId = null; }
+  return _tijd.userId;
+}
+
+// Alle afgesloten blokken ophalen en per calculatie optellen (eenmalig bij het laden, en na afsluiten van een blok lokaal bijgehouden).
+async function _tijdLaadTotalen() {
+  if (!_sb) return;
+  const { data: rows, error } = await _sbQuery(
+    _sb.from('calculatie_tijd').select('calculatie_id, stand, begin, einde'), 'Tijdregistratie laden'
+  );
+  if (error || !Array.isArray(rows)) return;
+  const per = {};
+  rows.forEach(r => {
+    const b = Date.parse(r.begin), e = Date.parse(r.einde);
+    if (!isFinite(b) || !isFinite(e) || e <= b) return;
+    (per[r.calculatie_id] || (per[r.calculatie_id] = [])).push({ stand: r.stand === 'opname' ? 'opname' : 'uitwerking', begin: b, einde: e });
+  });
+  _tijd.blokken = per;
+  _tijd.geladen = true;
+  _tijdRenderKop();
+}
+
+// Totalen voor een calculatie: afgesloten blokken plus het lopende blok, alles afgetopt op nu.
+// (Een blok eindigt in de DB op laatste + 10 min; dat deel is pas tijd als het verstreken is.)
+function _tijdTotaalVoor(calcId) {
+  const nu = Date.now();
+  const uit = { opname: 0, uitwerking: 0 };
+  (_tijd.blokken[calcId] || []).forEach(b => {
+    const e = Math.min(b.einde, nu);
+    if (e > b.begin) uit[b.stand] += (e - b.begin);
+  });
+  if ((_tijd.blokId !== null || _tijd.blokPending) && _tijd.calcId === calcId && _tijd.begin) {
+    const e = Math.min(_tijd.laatste + TIJD_STILTE_MS, nu);
+    if (e > _tijd.begin) uit[_tijd.stand === 'opname' ? 'opname' : 'uitwerking'] += (e - _tijd.begin);
+  }
+  return uit;
+}
+
+function _tijdFmt(ms) {
+  const min = Math.round(ms / 60000);
+  if (min < 1) return '0 min';
+  const u = Math.floor(min / 60), m = min % 60;
+  if (!u) return m + ' min';
+  return u + 'u' + String(m).padStart(2, '0');
+}
+
+// Korte weergave voor de lijst en de kop. Leeg als er niets gemeten is.
+function _tijdLabel(calcId) {
+  const t = _tijdTotaalVoor(calcId);
+  if (t.opname < 30000 && t.uitwerking < 30000) return '';
+  return 'Opname ' + _tijdFmt(t.opname) + ' \u00b7 Uitwerking ' + _tijdFmt(t.uitwerking);
+}
+
+// Hart van de registratie: aangeroepen bij elke aanraking of toetsaanslag.
+function _tijdActiviteit() {
+  if (!_sb || !data.calc) return;
+  if (!TIJD_CALC_TABS[_tijdActieveTab()]) return;
+  const calcId = data.calc.id;
+  const nu = Date.now();
+  // Lopend blok voor deze calc en de stilte is korter dan de grens: doorlopen.
+  if ((_tijd.blokId !== null || _tijd.blokPending) && _tijd.calcId === calcId && (nu - _tijd.laatste) <= TIJD_STILTE_MS) {
+    _tijd.laatste = nu;
+    return;
+  }
+  // Anders: vorige blok afsluiten (op laatste + 10 min) en een nieuw blok beginnen.
+  _tijdSluitBlok(false);
+  _tijdStartBlok(calcId, _tijdVoorzetStand(calcId), nu);
+}
+
+function _tijdStartBlok(calcId, stand, nu) {
+  _tijd.calcId = calcId; _tijd.stand = stand; _tijd.begin = nu; _tijd.laatste = nu;
+  _tijd.blokId = null; _tijd.blokPending = true; _tijd.geschreven = 0;
+  const mijnBegin = nu;
+  (async () => {
+    const userId = await _tijdUserId();
+    const { data: rows, error } = await _sbQuery(
+      _sb.from('calculatie_tijd').insert([{
+        calculatie_id: calcId, user_id: userId, stand: stand,
+        begin: new Date(nu).toISOString(), einde: new Date(nu + TIJD_STILTE_MS).toISOString(),
+        apparaat: _tijd.apparaat
+      }]).select('id'), 'Tijdblok aanmaken'
+    );
+    // Alleen koppelen als dit nog hetzelfde blok is (de gebruiker kan intussen gewisseld hebben).
+    if (_tijd.blokPending && _tijd.begin === mijnBegin && _tijd.calcId === calcId) {
+      _tijd.blokPending = false;
+      if (!error && rows && rows[0]) { _tijd.blokId = rows[0].id; _tijd.geschreven = nu + TIJD_STILTE_MS; _tijdFlush(); }
+      else { _tijd.blokId = null; _tijd.begin = 0; }
+    }
+  })();
+  _tijdRenderKop();
+}
+
+// Einde van het lopende blok wegschrijven als dat veranderd is. Vuren-en-vergeten.
+function _tijdFlush(eindeMs) {
+  if (_tijd.blokId === null || !_tijd.begin) return;
+  const einde = eindeMs || (_tijd.laatste + TIJD_STILTE_MS);
+  if (einde === _tijd.geschreven) return;
+  _tijd.geschreven = einde;
+  _sbQuery(_sb.from('calculatie_tijd').update({ einde: new Date(einde).toISOString() }).eq('id', _tijd.blokId), 'Tijdblok bijwerken').then(() => {});
+}
+
+// Blok afsluiten. hardNu=true: einde op dit moment (stand-wissel); anders op laatste + 10 min.
+function _tijdSluitBlok(hardNu) {
+  if ((_tijd.blokId === null && !_tijd.blokPending) || !_tijd.begin) { _tijd.blokPending = false; return; }
+  const einde = hardNu ? Date.now() : (_tijd.laatste + TIJD_STILTE_MS);
+  if (_tijd.blokId !== null) _tijdFlush(einde);
+  // Lokaal bewaren (zelfde vorm als uit de DB) zodat de weergave klopt zonder herladen.
+  if (einde > _tijd.begin) {
+    (_tijd.blokken[_tijd.calcId] || (_tijd.blokken[_tijd.calcId] = [])).push({ stand: _tijd.stand === 'opname' ? 'opname' : 'uitwerking', begin: _tijd.begin, einde });
+  }
+  _tijd.blokId = null; _tijd.blokPending = false; _tijd.begin = 0;
+}
+
+// Stand omzetten (knop in de kop): splitst het lopende blok zonder de 10 minuten toe te voegen.
+function _tijdZetStand(stand) {
+  if (!data.calc) return;
+  if (stand !== 'opname' && stand !== 'uitwerking') return;
+  const calcId = data.calc.id;
+  try { localStorage.setItem('verfcalc_tijdstand_' + calcId, stand); } catch (e) {}
+  if ((_tijd.blokId !== null || _tijd.blokPending) && _tijd.calcId === calcId && _tijd.stand !== stand) {
+    const nu = Date.now();
+    _tijdSluitBlok(true);
+    _tijdStartBlok(calcId, stand, nu);
+  }
+  _tijdRenderKop();
+}
+
+// Knop + totalen in de kop van het Calculatie-paneel.
+function _tijdRenderKop() {
+  const el = document.getElementById('tijdKop');
+  if (!el) return;
+  if (!data.calc) { el.innerHTML = ''; return; }
+  const calcId = data.calc.id;
+  const stand = (_tijd.calcId === calcId && _tijd.stand) ? _tijd.stand : _tijdVoorzetStand(calcId);
+  const t = _tijdTotaalVoor(calcId);
+  const live = (_tijd.blokId !== null || _tijd.blokPending) && _tijd.calcId === calcId;
+  el.innerHTML =
+    `<span class="tijd-knoppen" title="Waar ben je mee bezig? Bepaalt onder welke noemer de tijd telt. Voorzet: Meetstaat en foto\u2019s = Opname.">` +
+      `<button class="tijd-knop${stand === 'opname' ? ' aan' : ''}" onclick="_tijdZetStand('opname')">Opname</button>` +
+      `<button class="tijd-knop${stand === 'uitwerking' ? ' aan' : ''}" onclick="_tijdZetStand('uitwerking')">Uitwerking</button>` +
+    `</span>` +
+    `<span class="tijd-totaal" title="Gemeten tijd aan deze calculatie, alle gebruikers samen. Elke stilte telt voor maximaal 10 minuten mee.">\u23f1 ${_tijdFmt(t.opname)} / ${_tijdFmt(t.uitwerking)}${live ? ' <span class="tijd-live">\u25cf</span>' : ''}</span>`;
+}
+
+// Bij wisselen van tab of weglegen: einde wegschrijven. Het blok blijft logisch open;
+// komt de gebruiker binnen 10 minuten terug op een calc-tab, dan loopt het door.
+function _tijdPauze() { _tijdFlush(); }
+
+// Haakjes.
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, _tijdActiviteit, { passive: true, capture: true }));
+document.addEventListener('visibilitychange', () => { if (document.hidden) _tijdPauze(); });
+window.addEventListener('pagehide', _tijdPauze);
+setInterval(() => { _tijdFlush(); _tijdRenderKop(); }, TIJD_FLUSH_MS);
+setInterval(() => { if (_tijd.blokId !== null || _tijd.blokPending) _tijdRenderKop(); }, 60000);
+_tijd.apparaat = _tijdApparaat();
 
 // v4.11.0 — Reactie-meldingen verversen zonder herladen: bij terugkeer naar het
 // venster en stil elke minuut. De functie zelf bewaakt al of het dashboard in beeld

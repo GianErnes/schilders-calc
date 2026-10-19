@@ -1,3 +1,29 @@
+## v4.95.0 — Tijdregistratie per calculatie: Opname / Uitwerking (2026-10-17)
+
+**Aanleiding**
+- Gian 17-10-2026: kan de app meten hoe lang hij aan de opname en de uitwerking van een calculatie werkt? Besluiten (filosofeerronde): elke stilte telt voor maximaal 10 minuten mee, op elk apparaat; schakelaar Opname/Uitwerking met automatische voorzet (manier 3); alleen totalen per calculatie, geen dagoverzicht; geen terugwerkende kracht; nooit op een klantdocument. Ik heb genoteerd dat de 10-minutenstaart de cijfers bewust wat ruim maakt (een koffiepauze van een half uur levert 10 minuten op); Gian kiest dat voor eenvoud.
+
+**Gebouwd**
+- Blok "TIJDREGISTRATIE PER CALCULATIE" (constanten `TIJD_STILTE_MS` = 10 min, `TIJD_FLUSH_MS` = 2 min, `TIJD_CALC_TABS` = calculatie, meetstaat, onderhoud) met state `_tijd`.
+- Meten: `pointerdown` en `keydown` op document (capture, passive) → `_tijdActiviteit()`. Telt alleen met een geopende calculatie op een calc-tab. Lopend blok en stilte ≤ 10 min: `laatste` bijwerken. Anders: vorige blok sluiten op `laatste + 10 min` en nieuw blok starten (`_tijdStartBlok`: insert met `calculatie_id`, `user_id` uit de sessie, `stand`, `begin`, voorlopig `einde`, `apparaat`). Insert is asynchroon; een race met een snelle wissel wordt afgevangen via `blokPending` en vergelijking op `begin`.
+- Wegschrijven: `_tijdFlush` zet `einde = laatste + 10 min` als dat veranderd is, om de 2 min (`setInterval`), bij tab-wissel (haak in de nav-handler), bij `visibilitychange` → hidden en bij `pagehide`. Het blok blijft logisch open; komt de gebruiker binnen 10 min terug, dan loopt het door.
+- Stand: knoppen Opname/Uitwerking in de kop (`#tijdKop` naast het actief-label). Voorzet `_tijdVoorzetStand`: bewaarde keuze per calculatie in localStorage, anders Opname als de Meetstaat-tab actief is of het foto-markeerscherm (`#fmkOverlay`) open staat, anders Uitwerking. `_tijdZetStand` splitst het lopende blok op dit moment (geen staart) en start een nieuw blok in de andere stand.
+- Tonen: `_tijdTotaalVoor(calcId)` telt afgesloten blokken (uit DB bij het laden via `_tijdLaadTotalen`, plus lokaal bijgehouden in `_tijd.blokken`) en het lopende blok op, alles afgetopt op nu; zo is het scherm altijd gelijk aan wat een herlaad zou tonen. Kop: `⏱ 1u40 / 2u15` met rood stipje tijdens meten; lijst: regel onder de klantnaam `⏱ Opname … · Uitwerking …`, alleen als er iets gemeten is (≥ 30 s). Weergave `_tijdFmt`: "45 min", "1u40".
+- Laden: na de calc-headers in `loadData`, zonder te wachten; de lijst ververst zelf als de totalen binnen zijn.
+- CSS `.tijd-knoppen`, `.tijd-knop(.aan)`, `.tijd-totaal`, `.tijd-live`. Welkomsttekst, RELEASE_HIGHLIGHTS, APP_VERSION.
+
+**SQL (vereist, door Gian te draaien, vóór deploy)** — `sql_v4.95.0_calculatie_tijd.sql`: tabel `calculatie_tijd` (id, calculatie_id → calculaties on delete cascade, user_id, stand check opname/uitwerking, begin, einde, apparaat, aangemaakt), index op calculatie_id, RLS aan met policy "authenticated alles" naar het patroon van `planning_01_tabellen.sql`. Zonder de tabel mislukt het aanmaken van blokken stil (console-waarschuwing), de app werkt verder gewoon.
+
+**Niet gewijzigd / bewust niet**
+- Klantdocumenten, accordeerlink, bevroren document: ongemoeid. Geen dagoverzicht. Geen terugwerkende kracht.
+- Totalen zijn alle gebruikers samen; `user_id` wordt wel opgeslagen voor later.
+- `sendBeacon` is niet gebruikt (supabase-js kan dat niet met auth); verlies bij hard afsluiten is hooguit 2 minuten, plus wat er na de laatste flush op `visibilitychange`/`pagehide` nog niet is weggeschreven.
+
+**Getest**
+- Node-parse; div-balans 1356/1359 (ongewijzigd).
+- Runtime-test met bestuurbare klok en nep-Supabase, 17 proeven groen: blok start bij eerste activiteit met juiste velden; activiteit na 5 min blijft hetzelfde blok; lopend totaal; flush schrijft laatste+10; stilte van 30 min sluit het blok (5 werk + 10 staart) en start een nieuw; stand-wissel splitst zonder staart en bewaart de keuze; dashboard-tab telt niet; andere calculatie start nieuw blok met voorzet Opname op de Meetstaat; totalen direct na sluiten tonen alleen verstreken tijd en 20 min later de volle staart (staart hangt aan laatste aanraking, niet aan sluitmoment); laden uit DB topt een toekomstig einde af op nu; kop rendert knoppen en totaal.
+- Niet getest: in de browser, en de iPad-herkenning (`apparaat`, alleen indicatief). Controleer na SQL + deploy: (1) open een calculatie: knoppen Opname/Uitwerking en `⏱ 0 min / 0 min` in de kop; tik ergens → rood stipje; (2) na 2–3 min werken: in Supabase één rij in `calculatie_tijd` met `einde` ≈ laatste tik + 10 min; (3) ga naar Dashboard en kom terug binnen 10 min: zelfde rij groeit, geen nieuwe; (4) Meetstaat openen op een calculatie zonder bewaarde stand: voorzet Opname; (5) stand omzetten: nieuwe rij, oude rij eindigt op het wisselmoment; (6) lijst toont de tijd onder de klantnaam na herladen; (7) iPad wegleggen en 15 min later terugpakken: nieuwe rij bij de volgende tik.
+
 ## v4.94.0 — Scherpe foto's, per foto te kiezen (2026-10-17)
 
 **Aanleiding**
