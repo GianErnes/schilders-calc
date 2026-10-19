@@ -2390,8 +2390,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.96.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.97.0</h2>
       <div class="intro-body">
+        <p><strong>🙋 Aanspreekvorm staat nu ook in de t.a.v.-regel (v4.97.0).</strong> Bij een zakelijke klant met contactpersoon stond in het adresblok "t.a.v. I. Kockelkoren" terwijl de aanhef wel "Geachte heer Kockelkoren" zei. Nu zet de aanspreekvorm ook daar het voorvoegsel: "t.a.v. de heer I. Kockelkoren" of "t.a.v. mevrouw …". Bij zakelijk of zonder aanspreekvorm blijft het alleen de naam. Geldt voor de offerte, het voorbeeld en de PDF. Geen SQL nodig.</p>
         <p><strong>🗑 Prullenbak: verwijderde calculaties, hoofdgroepen, onderdelen en regels zijn 90 dagen terug te halen (v4.96.0).</strong> Aanleiding is Amkreutz (10 oktober), waar de binnen-onderdelen van een opname definitief uit de database verdwenen. Vanaf nu legt de database zelf een kopie van alles wat uit een calculatie wordt verwijderd, inclusief regels, stappen, meetstaat en kozijntekeningen, ook als het buiten de app om gebeurt. Onderaan de calculatielijst staat een nieuwe groep <strong>Prullenbak</strong>, standaard dicht, met per rij wat er is verwijderd, bij welke calculatie, wanneer, hoeveel er onder meeging en een knop <strong>Terugzetten</strong>. Een teruggezette calculatie staat direct weer in haar statusgroep; een teruggezette hoofdgroep of onderdeel staat direct weer in de calculatie. Zoeken in de lijst zoekt ook in de prullenbak. Na 90 dagen ruimt de database de kopieën zelf op. Verder vraagt het verwijderen van een hoofdgroep met inhoud nu om de naam in te typen, en zeggen de bevestigingsvensters eerlijk dat je het terugvindt in de prullenbak. Foto's: de prullenbak bewaart de foto-rij, niet het bestand zelf. <strong>Vereist SQL</strong> (drie bestanden: <code>prullenbak_01_tabellen.sql</code>, <code>prullenbak_02_externe_posten.sql</code>, <code>prullenbak_03_calculatie_tijd.sql</code>).</p>
         <p><strong>⏱ Tijd per calculatie, gesplitst in Opname en Uitwerking (v4.95.0).</strong> Zodra je in een geopende calculatie werkt (tabs Calculatie, Meetstaat of Onderhoudsplan), telt de app de tijd. De regel is simpel en bewust ruim: elke stilte telt voor maximaal 10 minuten mee, ook op de iPad waar je loopt en meet zonder het scherm aan te raken. Bovenaan de calculatie staan twee knoppen, <strong>Opname</strong> en <strong>Uitwerking</strong>; de app zet de voorzet (Meetstaat en foto's = Opname), jij kunt hem met één tik omzetten en de keuze blijft staan. Ernaast staat het totaal: opname / uitwerking, met een rood stipje als er nu gemeten wordt. In de lijst staat hetzelfde onder de klantnaam. Alleen in de app, nooit op een klantdocument, en zonder terugwerkende kracht: de teller begint vandaag. Om de twee minuten wordt weggeschreven, dus een lege batterij kost hooguit die twee minuten. <strong>Vereist SQL</strong> (nieuwe tabel <code>calculatie_tijd</code>).</p>
         <p><strong>🔍 Scherpe foto's, per foto te kiezen (v4.94.0).</strong> Elke foto werd bij het uploaden verkleind tot 1600 pixels: snel en licht, maar voor een detail dat je later opnieuw wilt beoordelen soms te weinig. Het ligt dus niet aan je iPad. Naast <strong>+ Foto's</strong> staat nu <strong>+ Scherpe foto's</strong>: die bewaart op 2800 pixels, ruim drie keer zoveel detail, en de miniatuur krijgt het label <em>scherp</em>. Voor de meeste foto's blijft de gewone knop de juiste. De klantdocumenten (fotobijlage, offerte met bijlagen, het bevroren document achter de accordeerlink, Craft) toppen elke foto af op 1600 pixels, dus die worden niet zwaarder; de scherpe versie is er voor jou, in het markeerscherm. De vlag gaat mee bij kopiëren. Bestaande foto's zijn al verkleind en zijn niet scherper te maken. <strong>Vereist één regel SQL</strong> (kolom <code>scherp</code> op <code>calculatie_fotos</code>).</p>
@@ -3831,7 +3832,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.96.0';
+const APP_VERSION = 'v4.97.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4248,6 +4249,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.97.0', d: '2026-10-19', h: 'Aanspreekvorm zet nu ook "de heer" / "mevrouw" in de t.a.v.-regel van het adresblok.' },
   { v: '4.96.0', d: '2026-10-19', h: 'Prullenbak onderaan de calculatielijst: verwijderde calculaties, hoofdgroepen, onderdelen en regels 90 dagen terug te zetten, inclusief alles eronder. Hoofdgroep met inhoud verwijderen vraagt de naam. Vereist SQL: prullenbak_01/02/03.' },
   { v: '4.95.0', d: '2026-10-17', h: 'Tijdregistratie per calculatie: Opname / Uitwerking met knoppen in de kop en totalen in kop en lijst. Elke stilte telt max. 10 min mee. Vereist SQL: tabel calculatie_tijd.' },
   { v: '4.94.0', d: '2026-10-17', h: 'Knop "+ Scherpe foto\'s" (2800 px) naast de gewone (1600 px), per foto te kiezen, met label op de miniatuur. Klantdocumenten toppen af op 1600 px en worden niet zwaarder. Vereist SQL: kolom scherp op calculatie_fotos.' },
@@ -25798,10 +25800,17 @@ function _ohpPlanMailen(plan, calc, rij, body) {
 // v3.71.0 — contactpersoon (voorletters, tussenvoegsel, achternaam) voor de offerte.
 // Volledige naam mét voorletters, voor de t.a.v.-regel in de kop. Leeg als er geen
 // achternaam is ingevuld.
+// v4.97.0 — de aanspreekvorm zet 'de heer' / 'mevrouw' voor de naam (Hesi, 19-10-2026:
+// "t.a.v. I. Kockelkoren" naast "Geachte heer Kockelkoren"). Zakelijk, echtpaar, familie
+// of leeg: alleen de naam, want dan is het geslacht van de contactpersoon niet bekend.
 function _offContactVol(cfg) {
   const cp = (cfg && cfg.contactpersoon && typeof cfg.contactpersoon === 'object') ? cfg.contactpersoon : {};
   if (!(cp.achternaam && String(cp.achternaam).trim())) return '';
-  return [cp.voorletters, cp.tussenvoegsel, cp.achternaam].map(s => (s == null ? '' : String(s).trim())).filter(Boolean).join(' ');
+  const naam = [cp.voorletters, cp.tussenvoegsel, cp.achternaam].map(s => (s == null ? '' : String(s).trim())).filter(Boolean).join(' ');
+  const v = (cfg && cfg.aanspreekvorm) ? cfg.aanspreekvorm : '';
+  if (v === 'heer') return 'de heer ' + naam;
+  if (v === 'mevrouw') return 'mevrouw ' + naam;
+  return naam;
 }
 // v4.25.0 — kale achternaam: bekende voorvoegsels uit de klantnaam strippen, zodat
 // aanspreekvorm en adressering geen dubbeling geven (Familie Weerts -> Weerts).

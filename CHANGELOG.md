@@ -1,3 +1,19 @@
+## v4.97.0 — Aanspreekvorm ook in de t.a.v.-regel (2026-10-19)
+
+**Aanleiding**
+- Gian 19-10-2026, offerte 260134 Hesi: adresblok toonde "t.a.v. I. Kockelkoren" terwijl de aanhef "Geachte heer Kockelkoren," zei. Oorzaak: `_offContactVol` (v3.71.0) plakte alleen voorletters + tussenvoegsel + achternaam en keek niet naar de aanspreekvorm; `_offAdresNaam` (v4.25.0) deed dat wel, maar alleen voor de particuliere klantnaam, niet voor de contactpersoon.
+
+**Gebouwd**
+- `_offContactVol` zet bij aanspreekvorm `heer` nu "de heer " en bij `mevrouw` "mevrouw " voor de volledige naam. Bij `zakelijk`, `echtpaar`, `familie` of leeg blijft het de kale naam (geslacht contactpersoon onbekend). Werkt door op de drie plekken die de functie gebruiken: HTML-offerte, voorbeeldweergave en PDF.
+- Welkomsttekst en RELEASE_HIGHLIGHTS bijgewerkt.
+
+**Test**
+- `node -e` parse-test op het scriptblok: OK.
+- Unit-test van `_offContactVol` met heer/mevrouw/zakelijk/leeg/echtpaar, tussenvoegsel en ontbrekende achternaam: OK.
+- Nog niet getest in de live omgeving (offerte Hesi opnieuw renderen).
+
+Geen SQL nodig.
+
 ## v4.96.0 — Prullenbak: verwijderde calculaties en onderdelen 90 dagen terug te zetten (2026-10-19)
 
 **Aanleiding**
