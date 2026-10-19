@@ -512,9 +512,9 @@ manieren stuk.
 In het project `schilder-voorraad` bestaat **geen enkele** van de drie.
 Daar draait niets automatisch. Alles wat daar gebeurt komt uit de app.
 
-### 3.1 De tien cronjobs
+### 3.1 De elf cronjobs
 
-Allemaal in `schilders-calc`, allemaal actief. (Negen tot 3 oktober 2026; de tiende is `planning-kennisgeving-taken-dagelijks`, zie de sectie van 4 oktober 2026.)
+Allemaal in `schilders-calc`, allemaal actief. (Negen tot 3 oktober 2026; de tiende is `planning-kennisgeving-taken-dagelijks`, zie de sectie van 4 oktober 2026; de elfde is `prullenbak-opruimen`, zie de sectie van 19 oktober 2026.)
 
 > **Alle tijden hieronder staan in UTC.** Dat is de tijd waarin cron
 > werkt en waarin de logboeken van Supabase de runs tonen. UTC schuift
@@ -534,6 +534,7 @@ Allemaal in `schilders-calc`, allemaal actief. (Negen tot 3 oktober 2026; de tie
 | `werkvoorraad-sync-wekelijks` | dinsdag 06:00 | 08:00 | 07:00 | `fin-werkvoorraad-sync` | haalt de werkvoorraad uit Yoobi. Enige job via `extensions.http`; sinds 27 september 2026 met 60 s wachttijd (`CURLOPT_TIMEOUT_MS`), zie de sectie van die datum |
 | `maandbericht-maandelijks` | de 7e, 07:00 | 09:00 | 08:00 | `maandbericht` | stelt het maandbericht op |
 | `planning-kennisgeving-taken-dagelijks` | 06:35 | 08:35 | 07:35 | `planning-kennisgeving-taken` | zet per kennisgevingssignaal uit de planning een taak bij Maud in de taken-app en sluit taken waarvan het signaal weg is. Bijgekomen 3 oktober 2026 als `…-werkdagen` (ma–vr), sinds 4 oktober dagelijks |
+| `prullenbak-opruimen` | maandag 03:15 | 05:15 | 04:15 | de SQL-functie `prullenbak_opruimen(90)`, geen Edge Function | gooit kopieën in de tabel `prullenbak` weg die ouder zijn dan 90 dagen. Bijgekomen 19 oktober 2026 |
 
 **Twee dingen om te weten.**
 
@@ -766,9 +767,9 @@ kunnen bij de Yoobi-inloggegevens van het project, want alle functies in
 een project delen dezelfde geheimen. Dat is de reden om ze op te ruimen,
 niet de netheid.
 
-### 3.3 De twaalf triggers
+### 3.3 De twaalf eigen triggers, plus vijftien prullenbak-triggers
 
-Allemaal op tabellen in `schilders-calc`, allemaal actief.
+Allemaal op tabellen in `schilders-calc`, allemaal actief. De twaalf hieronder zijn elk apart gemaakt; de vijftien prullenbak-triggers (sinds 19 oktober 2026) staan eronder in één alinea, want het zijn kopieën van elkaar.
 
 | Trigger | Op tabel | Wat het doet |
 |---|---|---|
@@ -784,6 +785,8 @@ Allemaal op tabellen in `schilders-calc`, allemaal actief.
 | `trg_ondergronden_upd` | `ondergronden` | zet de bijwerkdatum |
 | `trg_settings_upd` | `settings` | zet de bijwerkdatum |
 | `trg_verfsystemen_upd` | `verfsystemen` | zet de bijwerkdatum |
+
+**De vijftien prullenbak-triggers** heten `<tabel>_prullenbak` en staan als `before delete` op `calculaties`, `hoofdgroepen`, `onderdelen`, `calc_regels`, `calc_regel_stappen`, `meetstaat`, `staart`, `calculatie_documenten`, `calculatie_fotos`, `offerte_accorderingen`, `onderhoudsplannen`, `onderhoudsplan_beurten`, `onderhoudsplan_externe_posten`, `todos` en `calculatie_tijd`. Ze roepen allemaal dezelfde functie `prullenbak_vang()` aan, die de rij als JSON in de tabel `prullenbak` legt en daarna het verwijderen gewoon laat doorgaan; gaat het kopiëren mis, dan komt er een NOTICE in het logboek en wordt er tóch verwijderd. Terugzetten: `prullenbak_herstel(id)`; opruimen: `prullenbak_opruimen(dagen)`; de app leest de view `prullenbak_overzicht`. Aangelegd met `prullenbak_01_tabellen.sql`, `_02_externe_posten.sql` en `_03_calculatie_tijd.sql`. Zie de sectie van 19 oktober 2026.
 
 Triggers zijn het makkelijkst te vergeten onderdeel van dit systeem,
 omdat ze nergens zichtbaar zijn en geen logboek bijhouden. Ze doen werk
@@ -1145,6 +1148,7 @@ gegevens terug, niet je systeem. Het volgende moet met de hand opnieuw:
 | Edge Functions | de besloten repo `ernes-edge-functions` |
 | Cronjobs | hoofdstuk 3.1, opnieuw aanmaken |
 | Triggers | komen wel mee, die zitten in de database |
+| Per ongeluk verwijderde calculatie, hoofdgroep, onderdeel of regel | daar is geen herstel voor nodig: onderaan de calculatielijst, groep Prullenbak, 90 dagen lang (sinds 19 oktober 2026) |
 | Bestanden in de opslagbakken | de bak `backups`, en voor accord-pdf: nergens |
 | Geheimen en sleutels | de kluis |
 | Instellingen van aanmelden | met de hand |
@@ -5748,3 +5752,69 @@ aangepast.
 **Kanttekening.** "Laatste project" is de jongste `einddatum` (anders
 `startdatum`) uit `yoobi_projecten`: contractdata, geen uitvoerdata.
 Alleen de twee accounts in `yoobi_toegang` zien de kaart.
+
+## Wat er op 19 oktober 2026 gedaan is: prullenbak voor verwijderde calculatie-onderdelen (index.html v4.96.0, drie SQL-bestanden)
+
+**Aanleiding.** Op 10 oktober 2026 verdwenen bij de opname van Amkreutz
+de binnen-onderdelen uit de database, tussen 08:38 en 09:29 UTC, zonder
+spoor. Uit de code (v4.94.0): alle toevoegpaden wachten op bevestiging
+van Supabase, dus wat op het scherm stond, stond in de database;
+verwijderen (`delOd`, `delHg`, `delCalc`) was definitief via FK CASCADE,
+zonder vangnet. De API-logboeken waren verlopen (Pro, 7 dagen), dus de
+oorzaak is niet meer te meten. Alle vier de verwijderpaden in de app
+beginnen met een bevestigingsvenster; de code kent geen `rpc`-aanroepen
+en geen ander pad waarlangs meerdere onderdelen ineens verdwijnen.
+Onherstelbaar, opnieuw ingevoerd. Gian denkt zelf nog na over wat er
+misging.
+
+**Keuze.** Een vangnet in de database (optie B) en niet een kolom
+`verwijderd_op` met filters in de app (optie A): de app merkt er zo niets
+van, de dashboardtotalen en de Yoobi-koppeling blijven kloppen, en het
+vangt ook wat buiten de app om verwijderd wordt (Studio, een toekomstige
+fout). Bewaartermijn 90 dagen.
+
+**Database (drie bestanden, alle door Gian gedraaid, alle controles GOED).**
+`prullenbak_01_tabellen.sql`: tabel `prullenbak` (batch = transactienummer,
+tabel, rij_id, ouder, calculatie_id, omschrijving, de rij als JSON,
+verwijderd_op, verwijderd_door, hersteld_op), RLS en rechten naar het
+sjabloon, dertien `before delete`-triggers, functies `prullenbak_vang`,
+`prullenbak_calc_id`, `prullenbak_herstel`, `prullenbak_opruimen`,
+`prullenbak_ouder_bestaat`, `prullenbak_cron_stand`, view
+`prullenbak_overzicht`, cronjob `prullenbak-opruimen`.
+`prullenbak_02_externe_posten.sql`: veertiende trigger op
+`onderhoudsplan_externe_posten` (uit de FK-query van Gian bleek die te
+cascaden; de FKS-lijst in de projectkennis was ouder dan de database).
+`prullenbak_03_calculatie_tijd.sql`: vijftiende trigger op
+`calculatie_tijd` (bijgekomen in v4.95.0).
+
+Gemeten met de FK-query van 19 oktober (door Gian): alles onder
+`calculaties` cascadet; `offerte_controle_log.calc_id` en
+`opname_boekingen.calculatie_id` staan op SET NULL en worden bij
+verwijderen losgekoppeld, niet gewist. Na een terugzetactie blijven die
+koppelingen leeg; bewust geaccepteerd.
+
+**App (v4.96.0).** Onderaan de calculatielijst een inklapbare groep
+Prullenbak, standaard dicht, met per bovenste verwijderde rij
+(calculatie, hoofdgroep, onderdeel of regel): wat, bij welke calculatie,
+wanneer, hoeveel rijen eronder meegingen, knop Terugzetten (grijs als de
+calculatie zelf ook weg is). Terugzetten gaat via `rpc('prullenbak_herstel')`,
+daarna wordt de calculatie-body herladen of de calculatie-header
+opnieuw opgehaald. Zoeken in de lijst zoekt ook in de prullenbak. Een
+hoofdgroep met inhoud verwijderen vraagt nu om de naam in te typen;
+de bevestigingsteksten verwijzen naar de prullenbak. Zonder de SQL blijft
+de groep gewoon weg.
+
+**Getest.** SQL lokaal in Postgres 16 op een nagebouwd schema met cascade:
+idempotentie, hoofdgroep weg en terug (9 rijen, kozijn-JSON intact), hele
+calculatie weg en terug (20 rijen), dubbel terugzetten geweigerd,
+onderdeel zonder ouder geweigerd, kolom erbij/weg na verwijderen,
+opruimen op leeftijd, verwijderen gaat door als de prullenbak zelf kapot
+is. App: node-parse, div-balans 1356/1359 (ongewijzigd), 18 proeven op
+de prullenbak-functies en de naamdrempel met een nep-Supabase, 6
+proeven op de lijstweergave (dicht, open, leeg, zoeken).
+
+**Niet getest.** In de browser en op de iPad. Foto's: de prullenbak
+bewaart de foto-rij, niet het bestand in de bak `calculatie-fotos`; of de
+app bij verwijderen ook het bestand weghaalt is niet nagekeken.
+Teruggezette meetstaat-auto-regels naast een intussen opnieuw opgebouwde
+meetstaat: niet beproefd.

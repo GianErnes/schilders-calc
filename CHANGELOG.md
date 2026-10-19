@@ -1,3 +1,25 @@
+## v4.96.0 — Prullenbak: verwijderde calculaties en onderdelen 90 dagen terug te zetten (2026-10-19)
+
+**Aanleiding**
+- Amkreutz, 10-10-2026: binnen-onderdelen van een opname definitief uit de database verdwenen (FK CASCADE, geen vangnet, logs verlopen). Gian 19-10: prullenbak gewenst, terugzetten in de calculatielijst en niet onder Instellingen, naam intypen bij het verwijderen van een hoofdgroep met inhoud.
+
+**Database (door Gian gedraaid, alle controles GOED)**
+- `prullenbak_01_tabellen.sql`: tabel `prullenbak` met RLS/rechten naar sjabloon; dertien `before delete`-triggers (`<tabel>_prullenbak`) die de rij als JSON kopiëren vóór het verwijderen en het verwijderen nooit blokkeren; `prullenbak_herstel(id)` zet de rij en alles wat in dezelfde verwijderactie eronder hing terug, ouders eerst, en weigert als de ouder ontbreekt of de rij al terug is; `prullenbak_opruimen(dagen)` plus cronjob `prullenbak-opruimen` (maandag 03:15 UTC, 90 dagen); view `prullenbak_overzicht` met alleen de bovenste rijen (calculatie, hoofdgroep, onderdeel, regel).
+- `prullenbak_02_externe_posten.sql`: trigger op `onderhoudsplan_externe_posten` (bleek te cascaden; stond niet in de FKS-lijst van de projectkennis).
+- `prullenbak_03_calculatie_tijd.sql`: trigger op `calculatie_tijd` (nieuw in v4.95.0).
+- Gemeten (FK-query door Gian): alles onder `calculaties` cascadet; `offerte_controle_log` en `opname_boekingen` staan op SET NULL en raken bij verwijderen alleen hun koppeling kwijt. Na terugzetten blijft die leeg; bewust geaccepteerd.
+
+**Gebouwd (index.html)**
+- Blok PRULLENBAK vóór `renderCalculatiesArchief`: `_pbItems`, `_pbLaad` (view `prullenbak_overzicht`), `_pbVervers` (herladen zonder te wachten, bij start in `loadData` en na elk verwijderpad: `delCalc`, `delHg`, `delOd`, `delReg`), `_pbRenderRow`, `pbHerstel` (rpc `prullenbak_herstel`; daarna calculatie-header ophalen of body herladen via `__loaded = false` + `_loadCalcBody`; groene toast met aantal rijen; `renderDashboard` en zo nodig `renderCalcStructuur`).
+- Calculatielijst: inklapbare groep "🗑 Prullenbak (n)" als laatste, standaard dicht (`_dashCollapsed` krijgt `'prullenbak'`), alleen als er iets in zit. Per rij: soort + naam, "in <calculatie>", verwijderd dd-mm-jjjj uu:mm, "+ n rijen eronder", knop ↩ Terugzetten (grijs met uitleg als de calculatie zelf ook weg is). Zoeken zoekt mee op omschrijving en calculatienaam; de lege-staat verschijnt pas als ook de prullenbak niets oplevert.
+- `delHg`: hoofdgroep met onderdelen → `prompt` met aantallen, naam intypen (hoofdletter- en spatie-ongevoelig), bij afwijking toast en niets verwijderd; lege hoofdgroep → gewone bevestiging. Teksten van `delOd` en `delCalc` verwijzen naar de prullenbak in plaats van "kan niet ongedaan worden gemaakt".
+- Welkomsttekst, RELEASE_HIGHLIGHTS, APP_VERSION. SYSTEEM.md bijgewerkt (3.1, 3.3, 4.6, datumsectie).
+
+**Getest**
+- SQL lokaal (Postgres 16, nagebouwd schema met cascade): idempotentie; hoofdgroep weg/terug 9 rijen met kozijn-JSON; calculatie weg/terug 20 rijen; dubbel terugzetten en terugzetten zonder ouder geweigerd; schema-drift; opruimen; verwijderen gaat door als de prullenbak-tabel ontbreekt.
+- Node-parse; div-balans 1356/1359 (ongewijzigd); vijf ankers v4.96.0. 18 proeven met nep-Supabase (laden, rijweergave, rpc-aanroep, body herladen, header toevoegen zonder dubbel, Postgres-fout in toast, naamdrempel goed/fout/annuleren, lege hoofdgroep). 6 proeven op de lijst (groep dicht/open/leeg, zoeken alleen in prullenbak, zoeken nergens).
+- Niet getest: in de browser en op de iPad. Controleer na deploy: (1) lijst toont onderaan "🗑 Prullenbak" alleen als er iets in zit (de testverwijderingen van vandaag staan erin); (2) onderdeel verwijderen → verschijnt in de prullenbak zonder herladen; (3) Terugzetten → onderdeel staat terug in de calculatie en de rij is uit de prullenbak; (4) hoofdgroep met inhoud verwijderen vraagt de naam, verkeerde naam doet niets; (5) foto-rij terugzetten na een verwijderde calculatie: controleer of de foto zichtbaar is (bestand kan weg zijn).
+
 ## v4.95.0 — Tijdregistratie per calculatie: Opname / Uitwerking (2026-10-17)
 
 **Aanleiding**
