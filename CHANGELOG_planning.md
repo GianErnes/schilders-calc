@@ -1,5 +1,11 @@
 # CHANGELOG planning.html
 
+## v0.21.1 — Kennisgevingen komen van info@ernes.nl, 20-10-2026
+
+- Edge Function `planning-kennisgeving` verstuurt vanaf `info@ernes.nl` in plaats van `planning@ernes.nl` (spam-onderzoek 20-10-2026, zie CHANGELOG.md v4.98.1). Reply-to info@ en bcc administratie@ ongewijzigd.
+- planning.html: hint boven het kennisgevingsvenster en commentaar aangepast. Geen gedrag gewijzigd, geen SQL.
+- Getest: kennisgeving naar mail-tester met nieuwe afzender, 10/10 (Gian, 20-10-2026).
+
 ## v0.21.0 — Historie van kennisgevingen per project in het paneel, 16-10-2026
 
 **Aanleiding.** Gian 16-10-2026: "Is het mogelijk om van de verstuurde kennisgevingen later terug te zien wat de inhoud van de mail was?" De gegevens stonden er al (`plan_kennisgevingen.onderwerp` en `.tekst` sinds v0.15.0), maar het paneel toonde alleen "verstuurd 5 okt voor week 43" en alleen de laatste rij per soort. Besluit Gian (ask_user_input): volledige historie per project, inclusief eerdere versies en overgeslagen signalen, in het projectpaneel van het bord.

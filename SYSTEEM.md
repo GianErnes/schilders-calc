@@ -463,7 +463,13 @@ hij zit niet in de backup. Zie 4.8.
 
 Alle mail uit het systeem en alle waarschuwingen van leveranciers komen
 binnen op een **gedeelde mailbox** die Gian, Max en Maud alledrie lezen:
-`info@ernes.nl`. Het systeem verstuurt zelf vanaf `offerte@ernes.nl`.
+`info@ernes.nl`. Het systeem verstuurt sinds 20 oktober 2026 ook zelf vanaf
+`info@ernes.nl` (daarvoor `offerte@ernes.nl` en `planning@ernes.nl`; omgezet
+na het spam-onderzoek, zie CHANGELOG v4.98.1). De mail wordt via Resend
+verstuurd en met het domein ernes.nl ondertekend. DMARC op ernes.nl staat op
+`p=reject` met strikte DKIM-uitlijning (`adkim=s`), rapporten gaan naar
+`postmaster@` en `dmarc@ernes.nl`; gemeten 20 oktober 2026 met mail-tester
+(10/10) en een DMARC-lookup.
 
 Dat is bewust zo. Kwam die post op een persoonlijk adres binnen, dan zou
 het systeem alleen werken zolang die ene persoon zijn mail leest.
@@ -5529,7 +5535,7 @@ echte agenda-app getest na deze wijziging.
 klant: de geplande maand (signaal vanaf de maandag na de eerste ingeplande
 uren), de week (vanaf twee weken vóór de startweek) en de startdag (de week
 ervoor). Versturen blijft handmatig, met de tekst in beeld. Afzender
-`planning@ernes.nl`, reply-to `info@ernes.nl`, bcc `administratie@ernes.nl`.
+`info@ernes.nl` (tot 20 oktober 2026 `planning@ernes.nl`), reply-to `info@ernes.nl`, bcc `administratie@ernes.nl`.
 Verschuift de start na een mail naar een andere periode, dan toont het bord
 dat oranje en maakt "opnieuw" een correctietekst (v0.16.1).
 

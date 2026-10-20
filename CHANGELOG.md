@@ -1,3 +1,36 @@
+## v4.98.1 — Alle klantmail komt van info@ernes.nl (2026-10-20)
+
+**Aanleiding**
+- Gian 20-10-2026: "veel mails van ons via voorcalculatie en planning komen in de spammap van de klanten", gemengd over mailproviders.
+
+**Metingen (bron: schermfoto's van Gian, 20-10-2026)**
+- mail-tester.com op de offertemail: 10/10. SPF, DKIM en DMARC pass, geen zwarte lijst, SpamAssassin schoon. Oranje: 28% tekst (de rest is opmaak en handtekening-afbeeldingen) en geen List-Unsubscribe (hoort niet bij een offerte).
+- DMARC ernes.nl (EasyDMARC-lookup): `p=reject; sp=none; adkim=s; aspf=r`, rapporten naar postmaster@ en dmarc@ernes.nl en Flowmailer. Strikte DKIM-uitlijning; Resend tekent met ernes.nl zelf (afgeleid uit 10/10 onder adkim=s). DNS is dus in orde, Ed hoeft niets te doen.
+
+**Besluit**
+- De techniek was niet het probleem. Wat overbleef als waarschijnlijkste oorzaak: `offerte@ernes.nl` en `planning@ernes.nl` zijn afzenders die geen klant ooit eerder in zijn inbox had; `info@ernes.nl` kennen ze wel (opname-afspraak, visitekaartje). Gian koos voor alleen de afzender omzetten (optie 1), alles naar info@ inclusief de interne seintjes, en ook de opvolgautomaat mee.
+
+**Gebouwd (Edge Functions, geen SQL, geen app-gedrag)**
+- `offerte-verzenden`, `offerte-accord`, `offerte-herinnering`, `planning-kennisgeving`: in elk bestand één regel, `MAIL_FROM` van `offerte@`/`planning@` naar `info@ernes.nl`. Reply-To blijft info@, bcc administratie@ blijft. Diff per bestand: exact één regel, parse-test (esbuild) OK.
+- index.html v4.98.1: welkomsttekst, intro-alinea, RELEASE_HIGHLIGHTS. Oude changelogteksten over offerte@ (v3.95/v3.96) blijven staan als geschiedenis.
+- planning.html 0.21.1: hint bij het kennisgevingsvenster en commentaar noemen info@.
+- SYSTEEM.md 2.5 en de kennisgevingsparagraaf bijgewerkt; DMARC-stand vastgelegd.
+
+**Getest (door Gian, live)**
+- Test 1: offertemail naar mail-tester met nieuwe afzender: 10/10, correct geverifieerd. Resend accepteert info@ (anders had `offerte-verzenden` 502 gegeven).
+- Test 2: offertemail naar eigen adres: inbox, afzender Ernes Schilders <info@ernes.nl>.
+- Test 3: akkoord via de link: bevestiging aan klant en seintje aan info@, beide van info@; planningskennisgeving naar mail-tester OK.
+- Niet getest: `offerte-herinnering` draait morgenochtend; controleer het rapport in de Supabase-logs op `mislukt: 0`.
+
+**Terugvalweg**
+- Per functie de `MAIL_FROM`-regel terugzetten en deployen; de oude regel staat in het commentaar erachter.
+
+**Geparkeerd**
+- Offertemails sturen geen platte-tekstversie mee (de planningsmail wel); 28% tekst is het resterende spamsignaal. Twee regels per functie als Gian dat wil.
+- Nog niet nagekeken of open/click-tracking in Resend aanstaat (Domains → ernes.nl).
+- `sp=none` in DMARC: subdomeinen onbeschermd. Niet urgent, ooit aan Ed melden.
+- Komt het dagelijkse seintje "Offerte-opvolging" (van info@ aan info@) in de spam van info@, dan alleen de interne verzendingen terug op offerte@.
+
 ## v4.98.0 — Totaal per bewerking, dwars door alle ruimten (2026-10-20)
 
 **Aanleiding**
