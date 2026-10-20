@@ -645,7 +645,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.24.0';
+const APP_VERSION = 'v0.25.0';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -691,6 +691,7 @@ const OPEN_STAND = {};
    tijdelijk erbij; bij herladen start dit weer op uit. */
 let TOON_KLANT_ANDERE_JAREN = false;
 let TOON_HERHALERS_VERDEROP = false; /* v0.23.0: herhalers verder dan een week weg */
+let TOON_LATER = false; /* v0.25.0: Taken na deze week en zonder datum, standaard dichtgeklapt */
 
 /* Het vel: wat er nu open staat. */
 let VEL = null;           /* { modus:'nieuw'|'eigen'|'yoobi'|'klaar', taak, soort, persoon, fotoBlob, fotoWeg } */
@@ -850,9 +851,11 @@ function verrijk(rijen){
       : 0;
     t._binnenWeek = !t._gepland || (t._gepland - nu) < 7 * 86400000;
     /* v0.24.0: urgentie voor de rode arcering in Taken. Alleen open taken
-       met een datum: 'laat' = vóór vandaag, 'week' = vandaag t/m vandaag+7
+       met een datum: 'laat' = vóór vandaag, 'week' = vandaag t/m zondag
        (kale dagen, zomertijd telt niet mee). Zonder datum: geen kleur. */
-    const grensISO = lokaalISO(new Date(nu.getFullYear(), nu.getMonth(), nu.getDate() + 7));
+    /* v0.25.0: niet verder dan de huidige week (t/m zondag), was vandaag+7. */
+    const totZondag = nu.getDay() === 0 ? 0 : 7 - nu.getDay();
+    const grensISO = lokaalISO(new Date(nu.getFullYear(), nu.getMonth(), nu.getDate() + totZondag));
     t._urgentie = (!t._gepland || t.voltooid_op || t.status === 'vervallen') ? ''
                 : t._telaat ? 'laat'
                 : lokaalISO(t._gepland) <= grensISO ? 'week' : '';
@@ -932,7 +935,7 @@ const NA_VIER = new Date().getHours() >= 16;
 
 const RUBRIEKEN = [
   { key:'vandaag',   titel:'Actueel',        sub:'op jouw naam vandaag, plus wat je zelf hebt gehaald', open:true, klasse:'today' }, /* v0.18.0: was Vandaag */
-  { key:'taken',     titel:'Taken',          sub:'alles wat open ligt · Yoobi bijwerken met ↻', open:false, klasse:'roll' }, /* v0.22.0: Op de rol + Losse taken + Klantopvolging */
+  { key:'taken',     titel:'Taken',          sub:'alles wat open ligt · Yoobi bijwerken met ↻', open:true, klasse:'roll' }, /* v0.25.0: standaard open */ /* v0.22.0: Op de rol + Losse taken + Klantopvolging */
   { key:'voltooid',  titel:'Voltooid',       sub:'je eigen afgevinkte taken',                open:false,   klasse:'done' },
   { key:'vervallen', titel:'Vervallen',      sub:'niet meer nodig, blijft als historie',     open:false,   klasse:'lapsed' },
 ];
@@ -1129,6 +1132,11 @@ function bouwRubriek(r){
     const verderop = t => !!(t.soort === 'herhalend' && !t._binnenWeek);
     const verderopN = zichtbaar.filter(verderop).length;
     if(!TOON_HERHALERS_VERDEROP) zichtbaar = zichtbaar.filter(t => !verderop(t));
+    /* v0.25.0: alles na deze week en zonder datum staat standaard
+       dichtgeklapt; de regel onderaan haalt het erbij. Telt niet mee in
+       de kop. */
+    const laterN = zichtbaar.filter(t => !t._urgentie).length;
+    if(!TOON_LATER) zichtbaar = zichtbaar.filter(t => t._urgentie);
     const vISO = lokaalISO(new Date());
     const laat = zichtbaar.filter(t => t._telaat).length;
     const vandaagN = zichtbaar.filter(t => t._gepland && lokaalISO(t._gepland) === vISO).length;
@@ -1136,7 +1144,15 @@ function bouwRubriek(r){
     sub = zichtbaar.length === 0 ? 'niets meer open'
         : [laat ? laat + ' te laat' : '', vandaagN ? vandaagN + ' vandaag' : '', komt ? komt + ' komt nog' : '']
             .filter(Boolean).join(' \u00b7 ');
-    if(verderopN > 0){
+    if(laterN > 0){
+      extraNoot += '<div class="hidnote klantjaren" data-later="1" role="button" tabindex="0">' +
+        (TOON_LATER ? 'Later en zonder datum staan erbij \u00b7 verbergen'
+                    : laterN + ' later of zonder datum dichtgeklapt \u00b7 tonen') +
+        '</div>';
+    }
+    /* v0.25.0: de herhalers-regel alleen als het later-blok open staat;
+       dicht zitten ze daar toch al in. */
+    if(verderopN > 0 && TOON_LATER){
       extraNoot += '<div class="hidnote klantjaren" data-herhalers="1" role="button" tabindex="0">' +
         (TOON_HERHALERS_VERDEROP ? 'Herhalers verder dan een week weg staan erbij \u00b7 verbergen'
                                  : verderopN + (verderopN === 1 ? ' herhaler' : ' herhalers') + ' verder dan een week weg verborgen \u00b7 tonen') +
@@ -2505,6 +2521,13 @@ document.getElementById('lijst').addEventListener('click', async function(e){
   if(jarenKnop){
     e.stopPropagation();
     TOON_KLANT_ANDERE_JAREN = !TOON_KLANT_ANDERE_JAREN;
+    render();
+    return;
+  }
+  const laterKnop = e.target.closest('[data-later]'); /* v0.25.0 */
+  if(laterKnop){
+    e.stopPropagation();
+    TOON_LATER = !TOON_LATER;
     render();
     return;
   }
