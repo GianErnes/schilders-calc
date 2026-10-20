@@ -1,3 +1,22 @@
+## v4.98.0 — Totaal per bewerking, dwars door alle ruimten (2026-10-20)
+
+**Aanleiding**
+- Gian 20-10-2026: "als ik nu van het repareren van alle ruimten in de calculatie de totalen wil zien, hoe doen we dat?" Er waren totalen per regel, onderdeel en hoofdgroep (`calcRegelTotalen` → `calcProjectTotalen`), maar nergens een totaal per bewerking over alle regels heen. Besluit (ask_user_input): op de calc-tab én de werkbon; ook verkoop (zonder staartposten); uitklapbaar per ruimte/regel.
+
+**Gebouwd**
+- Nieuwe helper `_aggregeerPerBewerking(c)`: loopt alle actieve hoofdgroepen → onderdelen → regels, pakt elke snapshot-stap en groepeert op `bewerkingId` (terugval op de naam voor oude snapshots zonder id). Per stap dezelfde rekenweg als `calcSnapshotStep` + `calcRegelTotalen`: uren, arbeid, materiaal inkoop/verkoop, kostprijs en verkoop (arbeid + materiaal verkoop + klein mat + afval + ARBO + risico), × hoeveelheid × staat-toeslag (toeslag niet op materiaal, identiek aan de regel-rekening). Twee lagen van dezelfde bewerking in één systeem tellen in één rij. Volgorde: de laagste positie die de bewerking in een verfsysteem heeft (voorbehandeling bovenaan, afwerking onderaan), bij gelijke positie op naam — besluit Gian 20-10: "dat is het meest logisch" voor het aflezen tijdens de uitvoering. Per bewerking blijft de lijst regels bewaard (regelnaam, hoofdgroep › onderdeel, hoeveelheid, toeslag, bedragen).
+- Calc-tab: inklapbaar blok `#bewerkingBlok` ("🧮 Totaal per bewerking") in de linkerkolom onder de staartkosten, met in de kop het aantal bewerkingen en het urentotaal. Tabel: Bewerking · Uren · Arbeid · Mat. inkoop · Mat. verkoop · Kostprijs · Verkoop, met totaalregel; klik op een bewerking klapt de regels eronder open (`_bwToggle`, open-stand blijft staan bij herrenderen). Toelichting in het blok: verkoop is zonder reis, staartposten, afronding volle dagen en btw. `renderBewerkingTotalen()` wordt aangeroepen aan het einde van `renderTotals()` en ook in het lege-calc-pad.
+- Werkbon: nieuw blok "Uren per bewerking" direct na "Uren totaal project", vóór "Materiaal totaal voor project". Alleen uren (× de productieve-uren-factor, net als de rest van de bon), geen bedragen — bewuste keuze, de werkbon is het uitvoeringsdocument. Doel volgens Gian: na het voorbehandelen meteen zien of de ploeg binnen de uren blijft. Onder "Uren totaal project" staat nu een regel dat alle uren op de bon productieve uren zijn, na de aftrek voor indirecte uren (percentage uit de instelling), zodat niemand de bon voor de begroting aanziet.
+- CSS `.bw-tabel` e.d. naast `.calc-layout`. Welkomsttekst, intro-h2 en RELEASE_HIGHLIGHTS bijgewerkt. Geen SQL, geen Edge Function.
+
+**Niet gewijzigd**
+- Geen enkele bestaande rekenfunctie is aangeraakt; de nieuwe helper leest alleen. Offerte en Yoobi-overzicht ongewijzigd.
+
+**Getest**
+- Node-parse van het scriptblok; div-balans gelijk aan live (1356/1359 → 1361/1364, zelfde verschil); details-tags 9/9.
+- Runtime-test met stubs op code gesneden uit het gepatchte bestand (15 gevallen, allemaal goed): som per bewerking is op zes velden exact gelijk aan `calcProjectTotalen`; inactieve regel, onderdeel en hoofdgroep tellen niet mee; staat-toeslag 10% op uren maar niet op materiaal; twee lagen zelfde bewerking → één rij; volgorde volgt de stappositie en de laagste positie over alle systemen wint; snapshot zonder `bewerkingId` valt terug op de naam; lege calc → lege lijst; verkoopopbouw per stap gecontroleerd met de hand. Rendertest met DOM-stub: tabel met 5 subregels en totaalregel, leeg-melding bij lege calc.
+- Niet getest: in de browser. Controleer na deploy: (1) blok staat onder de staartkosten, standaard dicht, kop toont "N bewerkingen · X u", bewerkingen in stapvolgorde; (2) de totaalregel Uren is gelijk aan "Uren schilderwerk" in het paneel rechts, en Arbeid gelijk aan "Arbeid" daar wanneer er geen afrondingstoeslag is; (3) klikken op een bewerking klapt de regels open, en blijft open na een wijziging in een regel; (4) Archiveren → Werkbon toont de toelichting over productieve uren onder het projecttotaal en daarna "Uren per bewerking", waarvan de som gelijk is aan "Uren totaal project"; (5) op een oude calculatie (snapshot zonder bewerkingId) verschijnen de bewerkingen op naam.
+
 ## v4.97.0 — Aanspreekvorm ook in de t.a.v.-regel (2026-10-19)
 
 **Aanleiding**

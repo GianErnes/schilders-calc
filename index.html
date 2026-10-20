@@ -634,6 +634,21 @@
 
   /* CALCULATIE */
   .calc-layout { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; }
+  /* v4.98.0 — Totaal per bewerking */
+  .bw-tabel { width:100%; border-collapse:collapse; font-size:0.8rem; }
+  .bw-tabel th { text-align:left; font-size:0.65rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-soft); padding:0.35rem 0.4rem; border-bottom:1px solid var(--border); white-space:nowrap; }
+  .bw-tabel td { padding:0.35rem 0.4rem; border-bottom:1px solid var(--paper-deep); vertical-align:top; }
+  .bw-tabel th.num, .bw-tabel td.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .bw-tabel tr.bw-kop { cursor:pointer; }
+  .bw-tabel tr.bw-kop:hover td { background:var(--paper-warm); }
+  .bw-tabel tr.bw-kop td:first-child::before { content:'▸ '; color:var(--ink-soft); }
+  .bw-tabel tr.bw-kop.open td:first-child::before { content:'▾ '; }
+  .bw-tabel tr.bw-sub { display:none; font-size:0.74rem; color:var(--ink-soft); }
+  .bw-tabel tr.bw-sub.open { display:table-row; }
+  .bw-tabel tr.bw-sub td { border-bottom:1px dashed var(--paper-deep); background:var(--paper-warm); }
+  .bw-tabel tr.bw-sub td:first-child { padding-left:1.4rem; }
+  .bw-tabel tr.bw-totaal td { border-top:2px solid var(--ink); border-bottom:none; font-weight:600; }
+  .bw-wrap { overflow-x:auto; }
   @media (max-width: 1100px) { .calc-layout { grid-template-columns: 1fr; } }
 
   .hoofdgroep {
@@ -2390,8 +2405,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.97.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.98.0</h2>
       <div class="intro-body">
+        <p><strong>🧮 Totaal per bewerking, dwars door alle ruimten (v4.98.0).</strong> Vraag van Gian: hoeveel zit er in dit werk aan bijvoorbeeld <em>Repareren stucwerk</em>, opgeteld over alle ruimten waar die stap in het verfsysteem zit? Dat stond nergens: er waren totalen per regel, onderdeel en hoofdgroep, maar niet per bewerking. Onder de staartkosten staat nu een inklapbaar blok <strong>Totaal per bewerking</strong>: per bewerking de uren, arbeid, materiaal (inkoop en verkoop), kostprijs en verkoop, en met een klik op de regel zie je uit welke ruimten dat komt. Het is dezelfde rekenweg als het paneel rechts, alleen anders gegroepeerd; de verkoopkolom is <em>zonder</em> reis, staartposten, afronding op volle dagen en btw, want die rekenen over het geheel en zijn niet eerlijk aan één bewerking toe te wijzen. Komt een bewerking twee keer in een systeem voor (twee lagen), dan telt die als één regel. De volgorde is die van de stappen in het verfsysteem: voorbehandeling bovenaan, afwerking onderaan. Op de werkbon staat hetzelfde overzicht in uren (productieve uren, zonder bedragen) onder het projecttotaal, zodat de ploeg na het voorbehandelen meteen ziet of ze binnen de uren zitten; de bon zegt er nu ook bij dat alle uren productieve uren zijn, na de aftrek voor indirecte uren. Geen SQL nodig.</p>
         <p><strong>🙋 Aanspreekvorm staat nu ook in de t.a.v.-regel (v4.97.0).</strong> Bij een zakelijke klant met contactpersoon stond in het adresblok "t.a.v. I. Kockelkoren" terwijl de aanhef wel "Geachte heer Kockelkoren" zei. Nu zet de aanspreekvorm ook daar het voorvoegsel: "t.a.v. de heer I. Kockelkoren" of "t.a.v. mevrouw …". Bij zakelijk of zonder aanspreekvorm blijft het alleen de naam. Geldt voor de offerte, het voorbeeld en de PDF. Geen SQL nodig.</p>
         <p><strong>🗑 Prullenbak: verwijderde calculaties, hoofdgroepen, onderdelen en regels zijn 90 dagen terug te halen (v4.96.0).</strong> Aanleiding is Amkreutz (10 oktober), waar de binnen-onderdelen van een opname definitief uit de database verdwenen. Vanaf nu legt de database zelf een kopie van alles wat uit een calculatie wordt verwijderd, inclusief regels, stappen, meetstaat en kozijntekeningen, ook als het buiten de app om gebeurt. Onderaan de calculatielijst staat een nieuwe groep <strong>Prullenbak</strong>, standaard dicht, met per rij wat er is verwijderd, bij welke calculatie, wanneer, hoeveel er onder meeging en een knop <strong>Terugzetten</strong>. Een teruggezette calculatie staat direct weer in haar statusgroep; een teruggezette hoofdgroep of onderdeel staat direct weer in de calculatie. Zoeken in de lijst zoekt ook in de prullenbak. Na 90 dagen ruimt de database de kopieën zelf op. Verder vraagt het verwijderen van een hoofdgroep met inhoud nu om de naam in te typen, en zeggen de bevestigingsvensters eerlijk dat je het terugvindt in de prullenbak. Foto's: de prullenbak bewaart de foto-rij, niet het bestand zelf. <strong>Vereist SQL</strong> (drie bestanden: <code>prullenbak_01_tabellen.sql</code>, <code>prullenbak_02_externe_posten.sql</code>, <code>prullenbak_03_calculatie_tijd.sql</code>).</p>
         <p><strong>⏱ Tijd per calculatie, gesplitst in Opname en Uitwerking (v4.95.0).</strong> Zodra je in een geopende calculatie werkt (tabs Calculatie, Meetstaat of Onderhoudsplan), telt de app de tijd. De regel is simpel en bewust ruim: elke stilte telt voor maximaal 10 minuten mee, ook op de iPad waar je loopt en meet zonder het scherm aan te raken. Bovenaan de calculatie staan twee knoppen, <strong>Opname</strong> en <strong>Uitwerking</strong>; de app zet de voorzet (Meetstaat en foto's = Opname), jij kunt hem met één tik omzetten en de keuze blijft staan. Ernaast staat het totaal: opname / uitwerking, met een rood stipje als er nu gemeten wordt. In de lijst staat hetzelfde onder de klantnaam. Alleen in de app, nooit op een klantdocument, en zonder terugwerkende kracht: de teller begint vandaag. Om de twee minuten wordt weggeschreven, dus een lege batterij kost hooguit die twee minuten. <strong>Vereist SQL</strong> (nieuwe tabel <code>calculatie_tijd</code>).</p>
@@ -2806,6 +2822,14 @@
           <button class="btn-secondary btn" onclick="addStaartFromTpl()">+ Uit bibliotheek</button>
           <button class="btn-secondary btn" onclick="addStaartCustom()">+ Eigen post</button>
         </div>
+        <!-- v4.98.0 — Totaal per bewerking, dwars door alle actieve regels -->
+        <details id="bewerkingBlok" style="border:1px solid var(--border); border-radius:8px; margin-top:1.5rem; background:var(--paper);">
+          <summary style="cursor:pointer; user-select:none; padding:0.6rem 0.8rem; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <strong>🧮 Totaal per bewerking</strong>
+            <span id="bewerkingBlokKort" style="font-size:0.78rem; color:var(--ink-soft);"></span>
+          </summary>
+          <div id="bewerkingBlokBody" style="padding:0 0.8rem 0.8rem;"></div>
+        </details>
       </div>
       <div class="totals">
         <h3>Calculatie</h3>
@@ -3832,7 +3856,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.97.0';
+const APP_VERSION = 'v4.98.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4249,6 +4273,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.98.0', d: '2026-10-20', h: 'Totaal per bewerking over alle ruimten: inklapbaar blok onder de staartkosten (uren, arbeid, materiaal, kostprijs, verkoop zonder reis/staart/btw, uitklapbaar per regel, in stapvolgorde van het verfsysteem) en uren per bewerking op de werkbon, met toelichting dat de bon productieve uren toont.' },
   { v: '4.97.0', d: '2026-10-19', h: 'Aanspreekvorm zet nu ook "de heer" / "mevrouw" in de t.a.v.-regel van het adresblok.' },
   { v: '4.96.0', d: '2026-10-19', h: 'Prullenbak onderaan de calculatielijst: verwijderde calculaties, hoofdgroepen, onderdelen en regels 90 dagen terug te zetten, inclusief alles eronder. Hoofdgroep met inhoud verwijderen vraagt de naam. Vereist SQL: prullenbak_01/02/03.' },
   { v: '4.95.0', d: '2026-10-17', h: 'Tijdregistratie per calculatie: Opname / Uitwerking met knoppen in de kop en totalen in kop en lijst. Elke stilte telt max. 10 min mee. Vereist SQL: tabel calculatie_tijd.' },
@@ -16805,7 +16830,26 @@ function _werkbonHtml(c) {
   if (_projUren > 0) {
     html += `<div style="margin-top:18pt; padding:8pt 10pt; border-top:1.5pt solid #333; background:#eef2f6; page-break-inside:avoid;">
       <span style="font-size:11pt; font-weight:bold;">Uren totaal project: ${fmt1(_projUren)} u</span>
+      <div style="font-size:8.5pt; color:#666; margin-top:2pt;"><em>Alle uren op deze bon zijn productieve uren: de begroting min ${fmt0(_aftrek)}% voor overleg, opruimen en wachten.</em></div>
     </div>`;
+  }
+  // v4.98.0 — Uren per bewerking, dwars door alle actieve regels (productieve uren, geen bedragen op de werkbon)
+  const _wbPerBw = _aggregeerPerBewerking(c);
+  if (_wbPerBw.length) {
+    html += `<div style="margin-top:18pt; padding-top:10pt; border-top:1.5pt solid #333;">
+      <h2 style="margin-top:0;">Uren per bewerking</h2>
+      <div style="font-size:9pt; color:#666; margin-bottom:4pt;">
+        <em>In de volgorde van de stappen in het verfsysteem: voorbehandeling bovenaan, afwerking onderaan. Opgeteld over alle regels van het project, met daaronder uit welke regels het komt. Productieve uren, net als de overige uren op deze bon.</em>
+      </div>
+      <table style="font-size:9pt;"><thead><tr><th>Bewerking</th><th class="right" style="width:70pt;">Uren</th></tr></thead><tbody>`;
+    _wbPerBw.forEach(g => {
+      html += `<tr><td><strong>${_escapeHtml(g.naam)}</strong></td><td class="num right"><strong>${fmt1(g.uren * _urenFactor)} u</strong></td></tr>`;
+      g.regels.forEach(rg => {
+        const pad = [rg.hgNaam, rg.odNaam].filter(Boolean).join(' › ');
+        html += `<tr><td style="padding-left:14pt; color:#666; font-size:8.5pt;">${_escapeHtml(rg.label)}${pad ? ` · ${_escapeHtml(pad)}` : ''} — ${fmt(rg.hoeveelheid)} ${_escapeHtml(rg.eenheid)}</td><td class="num right" style="color:#666; font-size:8.5pt;">${fmt1(rg.uren * _urenFactor)} u</td></tr>`;
+      });
+    });
+    html += `</tbody></table></div>`;
   }
   const matRowsTotaal = _aggregeerMateriaalVerbruik(alleRegels);
   if (matRowsTotaal.length) {
@@ -22340,6 +22384,112 @@ async function delStaartLib(id) {
   renderStaartLib(); renderStaartList();
 }
 // ============================================================
+// v4.98.0 — TOTAAL PER BEWERKING (dwars door alle actieve regels)
+// ============================================================
+// Zelfde rekenweg als calcSnapshotStep + calcRegelTotalen, maar gegroepeerd op bewerking
+// in plaats van op regel: per stap × hoeveelheid × staat-toeslag (toeslag op uren, arbeid,
+// kostprijs en verkoop, niet op materiaal — identiek aan calcRegelTotalen). Alleen actieve
+// hoofdgroepen, onderdelen en regels. Verkoop is per stap: arbeid + materiaal verkoop +
+// klein mat + afval + ARBO + risico; zonder reis, staartposten, afronding volle dagen en btw.
+// Sleutel = bewerkingId, terugval op naam (oude snapshots zonder id). Twee lagen van dezelfde
+// bewerking in één systeem tellen samen in één rij. Volgorde = de laagste positie die de bewerking
+// in een verfsysteem heeft (voorbehandeling bovenaan, afwerking onderaan), daarna op naam.
+// Retourneert [{ key, naam, uren, arbeid, matInkoop, matVerkoop, kostprijs, verkoop, regels: [...] }]
+function _aggregeerPerBewerking(c) {
+  const sett = _S();
+  const uurloon = sett.uurloon || 0;
+  const map = new Map();
+  ((c && c.hoofdgroepen) || []).forEach(hg => {
+    if (!_isActief(hg)) return;
+    (hg.onderdelen || []).forEach(od => {
+      if (!_isActief(od)) return;
+      (od.regels || []).forEach(r => {
+        if (!_isActief(r)) return;
+        const h = r.hoeveelheid || 0;
+        if (!h || !r.stappen || !r.stappen.length) return;
+        const tF = 1 + (r.toeslag || 0) / 100;
+        const regelLabel = (r.naam && r.naam.trim()) ? r.naam : (r.systeemNaam || '—');
+        const perRegel = new Map(); // key -> deel van deze regel per bewerking
+        r.stappen.forEach((st, stIdx) => {
+          const naam = (st.bewerkingNaam || '').trim() || '(zonder naam)';
+          const key = st.bewerkingId ? ('id:' + st.bewerkingId) : ('naam:' + naam.toLowerCase());
+          const s1 = calcSnapshotStep(st);
+          const uren1 = s1.minuten / 60;
+          const arbeid1 = uren1 * uurloon;
+          const kleinMat1 = s1.matVerkoop * (sett.kleinMat || 0) / 100;
+          const afval1 = (arbeid1 + s1.matVerkoop) * (sett.afval || 0) / 100;
+          const arbo1 = arbeid1 * (sett.arbo || 0) / 100;
+          const directe1 = arbeid1 + s1.matVerkoop + kleinMat1 + afval1 + arbo1;
+          const verkoop1 = directe1 * (1 + (sett.winst || 0) / 100);
+          const kostprijs1 = arbeid1 + s1.matInkoop;
+          const d = perRegel.get(key) || { key, naam, volgorde: stIdx, uren:0, arbeid:0, matInkoop:0, matVerkoop:0, kostprijs:0, verkoop:0 };
+          d.volgorde = Math.min(d.volgorde, stIdx);
+          d.uren += uren1 * h * tF;
+          d.arbeid += arbeid1 * h * tF;
+          d.matInkoop += s1.matInkoop * h;
+          d.matVerkoop += s1.matVerkoop * h;
+          d.kostprijs += kostprijs1 * h * tF;
+          d.verkoop += verkoop1 * h * tF;
+          perRegel.set(key, d);
+        });
+        perRegel.forEach((d, key) => {
+          const g = map.get(key) || { key, naam: d.naam, volgorde: d.volgorde, uren:0, arbeid:0, matInkoop:0, matVerkoop:0, kostprijs:0, verkoop:0, regels: [] };
+          g.volgorde = Math.min(g.volgorde, d.volgorde);
+          ['uren','arbeid','matInkoop','matVerkoop','kostprijs','verkoop'].forEach(k => g[k] += d[k]);
+          g.regels.push({ label: regelLabel, hgNaam: hg.naam || '', odNaam: od.naam || '', sysNaam: r.systeemNaam || '',
+            hoeveelheid: h, eenheid: r.systeemEenheid || '', toeslag: r.toeslag || 0,
+            uren: d.uren, arbeid: d.arbeid, matInkoop: d.matInkoop, matVerkoop: d.matVerkoop, kostprijs: d.kostprijs, verkoop: d.verkoop });
+          map.set(key, g);
+        });
+      });
+    });
+  });
+  return Array.from(map.values()).sort((a, b) => a.volgorde - b.volgorde || a.naam.localeCompare(b.naam, 'nl'));
+}
+function _bwToggle(tr) {
+  const key = tr.dataset.bw;
+  tr.classList.toggle('open');
+  const open = tr.classList.contains('open');
+  tr.parentNode.querySelectorAll('tr.bw-sub[data-bw="' + key + '"]').forEach(x => x.classList.toggle('open', open));
+}
+function renderBewerkingTotalen() {
+  const body = document.getElementById('bewerkingBlokBody');
+  const kort = document.getElementById('bewerkingBlokKort');
+  if (!body) return;
+  const open = new Set(Array.from(body.querySelectorAll('tr.bw-kop.open')).map(tr => tr.dataset.bw));
+  const rows = data.calc ? _aggregeerPerBewerking(data.calc) : [];
+  if (!rows.length) {
+    body.innerHTML = '<p style="opacity:0.6; font-size:0.8rem; margin:0.5rem 0 0;"><em>Nog geen actieve regels met stappen.</em></p>';
+    if (kort) kort.textContent = '';
+    return;
+  }
+  const tot = rows.reduce((t, g) => { ['uren','arbeid','matInkoop','matVerkoop','kostprijs','verkoop'].forEach(k => t[k] += g[k]); return t; },
+    { uren:0, arbeid:0, matInkoop:0, matVerkoop:0, kostprijs:0, verkoop:0 });
+  if (kort) kort.textContent = `${rows.length} bewerkingen · ${fmt(tot.uren)} u`;
+  let html = `<div style="font-size:0.72rem; color:var(--ink-soft); margin:0.3rem 0 0.5rem;">In de volgorde van de stappen in het verfsysteem. Opgeteld over alle actieve regels, inclusief staat-toeslag. Verkoop is per bewerking: arbeid, materiaal, klein materiaal, afval, ARBO en risico — <strong>zonder</strong> reis, staartposten, afronding op volle dagen en btw. Klik op een bewerking voor de regels erachter.</div>`;
+  html += `<div class="bw-wrap"><table class="bw-tabel"><thead><tr>
+    <th>Bewerking</th><th class="num">Uren</th><th class="num">Arbeid</th><th class="num">Mat. inkoop</th><th class="num">Mat. verkoop</th><th class="num">Kostprijs</th><th class="num">Verkoop</th>
+  </tr></thead><tbody>`;
+  rows.forEach(g => {
+    const isOpen = open.has(g.key);
+    const k = _escapeHtml(g.key);
+    html += `<tr class="bw-kop${isOpen ? ' open' : ''}" data-bw="${k}" onclick="_bwToggle(this)">
+      <td>${_escapeHtml(g.naam)} <span style="color:var(--ink-soft); font-size:0.7rem;">(${g.regels.length} regel${g.regels.length === 1 ? '' : 's'})</span></td>
+      <td class="num">${fmt(g.uren)}</td><td class="num">${eur(g.arbeid)}</td><td class="num">${eur(g.matInkoop)}</td><td class="num">${eur(g.matVerkoop)}</td><td class="num">${eur(g.kostprijs)}</td><td class="num"><strong>${eur(g.verkoop)}</strong></td>
+    </tr>`;
+    g.regels.forEach(rg => {
+      const pad = [rg.hgNaam, rg.odNaam].filter(Boolean).join(' › ');
+      html += `<tr class="bw-sub${isOpen ? ' open' : ''}" data-bw="${k}">
+        <td>${_escapeHtml(rg.label)}${pad ? ` <span style="opacity:0.75;">· ${_escapeHtml(pad)}</span>` : ''} — ${fmt(rg.hoeveelheid)} ${_escapeHtml(rg.eenheid)}${rg.toeslag ? ` · +${fmt(rg.toeslag)}%` : ''}</td>
+        <td class="num">${fmt(rg.uren)}</td><td class="num">${eur(rg.arbeid)}</td><td class="num">${eur(rg.matInkoop)}</td><td class="num">${eur(rg.matVerkoop)}</td><td class="num">${eur(rg.kostprijs)}</td><td class="num">${eur(rg.verkoop)}</td>
+      </tr>`;
+    });
+  });
+  html += `<tr class="bw-totaal"><td>Totaal</td><td class="num">${fmt(tot.uren)}</td><td class="num">${eur(tot.arbeid)}</td><td class="num">${eur(tot.matInkoop)}</td><td class="num">${eur(tot.matVerkoop)}</td><td class="num">${eur(tot.kostprijs)}</td><td class="num">${eur(tot.verkoop)}</td></tr>`;
+  html += `</tbody></table></div>`;
+  body.innerHTML = html;
+}
+// ============================================================
 // TOTAALPANEEL CALCULATIE
 // ============================================================
 function renderTotals() {
@@ -22400,6 +22550,7 @@ function renderTotals() {
   const body = document.getElementById('totalsBody');
   if (t.uren === 0 && data.calc.staart.length === 0) {
     body.innerHTML = '<p style="opacity: 0.6;"><em>Voeg hoofdgroepen, onderdelen en regels toe.</em></p>';
+    if (typeof renderBewerkingTotalen === 'function') renderBewerkingTotalen(); // v4.98.0
     renderNormRefs(); // v3.84.1 — ook bij lege calc de richtwaarde-blokken verversen, anders blijft het totaal van de vorige calc staan
     return;
   }
@@ -22495,6 +22646,7 @@ function renderTotals() {
   `;
   renderStaartList();
   renderNormRefs();
+  if (typeof renderBewerkingTotalen === 'function') renderBewerkingTotalen(); // v4.98.0
 }
 // v4.76.0 — BTW-tarief per calculatie (null = volg instelling)
 function updBtwOverride(v) {
