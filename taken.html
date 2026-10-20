@@ -134,6 +134,13 @@
   .pill.offerte{background:#fff1e8;color:#c2410c}
   .pill.foto{background:#f0f2f5;color:var(--ink-soft)}
   .pill.laat{background:#fdeceb;color:#c0392b}
+  /* v0.24.0: in Taken is achterstand donkerder rood, de komende 7 dagen
+     lichter; daarna en zonder datum blijft de kaart wit. */
+  .section.roll .card.urg-laat{background:#f9dcd9;border-color:#eeaaa3}
+  .section.roll .card.urg-week{background:#fdefed;border-color:#f2cbc6}
+  .scheiding{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;
+    color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em;padding:4px 2px 0}
+  .scheiding::before,.scheiding::after{content:'';flex:1;height:1px;background:var(--line)}
   .pill.schuif{background:#f4f0fa;color:#6b4fa8}
   .kies{
     flex:none;width:30px;height:30px;border-radius:50%;
@@ -638,7 +645,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.23.0';
+const APP_VERSION = 'v0.24.0';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -842,6 +849,13 @@ function verrijk(rijen){
       ? Math.round((new Date(vandaagISO) - new Date(lokaalISO(t._gepland))) / 86400000)
       : 0;
     t._binnenWeek = !t._gepland || (t._gepland - nu) < 7 * 86400000;
+    /* v0.24.0: urgentie voor de rode arcering in Taken. Alleen open taken
+       met een datum: 'laat' = vóór vandaag, 'week' = vandaag t/m vandaag+7
+       (kale dagen, zomertijd telt niet mee). Zonder datum: geen kleur. */
+    const grensISO = lokaalISO(new Date(nu.getFullYear(), nu.getMonth(), nu.getDate() + 7));
+    t._urgentie = (!t._gepland || t.voltooid_op || t.status === 'vervallen') ? ''
+                : t._telaat ? 'laat'
+                : lokaalISO(t._gepland) <= grensISO ? 'week' : '';
     return t;
   });
 }
@@ -992,7 +1006,9 @@ function kaart(t, hero){
       '" title="' + (inVandaag ? 'Uit Actueel' : 'Naar Actueel') + '">' +
       (inVandaag ? '↓' : '↑') + '</span>'
     : '';
-  return '<div class="card' + (hero ? ' hero' : '') + '" tabindex="0" data-id="' + esc(t.crmtaskid) + '">' +
+  /* v0.24.0: rode arcering alleen in de rubriek Taken. */
+  const urg = (t._rubriek === 'taken' && t._urgentie) ? ' urg-' + t._urgentie : '';
+  return '<div class="card' + (hero ? ' hero' : '') + urg + '" tabindex="0" data-id="' + esc(t.crmtaskid) + '">' +
     (hero ? '<span class="now">Nu</span>' : '') +
     '<span class="who" style="background:' + pInfo(t._persoon).css + '"></span>' +
     '<span class="body"><div class="ttl">' + titel + '</div>' +
@@ -1147,9 +1163,21 @@ function bouwRubriek(r){
                   : 'niets hier';
   /* v0.19.0, v0.22.0: bij Taken telt de kop alleen wat je ziet. */
   const telling = r.key === 'taken' ? zichtbaar.length : eigen.length;
-  const kaarten = zichtbaar.length
-    ? zichtbaar.map(t => kaart(t, t.crmtaskid === heroId)).join('')
-    : '<div class="hidnote">' + leegTekst + '</div>';
+  /* v0.24.0: in Taken een dunne lijn tussen het rode blok (achterstand en
+     komende 7 dagen) en de rest. De sortering (oudste datum bovenaan, zonder
+     datum onderaan) zet het rode blok al vanzelf boven. Alleen als beide
+     blokken iets bevatten. */
+  let kaarten;
+  if(!zichtbaar.length){
+    kaarten = '<div class="hidnote">' + leegTekst + '</div>';
+  } else if(r.key === 'taken'){
+    const eersteRest = zichtbaar.findIndex(t => !t._urgentie);
+    kaarten = zichtbaar.map((t, i) =>
+      ((eersteRest > 0 && i === eersteRest) ? '<div class="scheiding">later / zonder datum</div>' : '') +
+      kaart(t, false)).join('');
+  } else {
+    kaarten = zichtbaar.map(t => kaart(t, t.crmtaskid === heroId)).join('');
+  }
 
   return '<div class="section' + (open ? ' open' : '') + (r.klasse ? ' ' + r.klasse : '') + '" data-key="' + r.key + '">' +
     '<button class="head" aria-expanded="' + open + '">' +
