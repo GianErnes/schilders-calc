@@ -2405,8 +2405,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.98.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.99.0</h2>
       <div class="intro-body">
+        <p><strong>⏱ Op de iPad telt de tijd altijd als Opname (v4.99.0).</strong> Het schuifje Opname / Uitwerking werd op de iPad bijna altijd vergeten, want tijdens een opname werk je daar gewoon in de tab Calculatie en dan koos de app Uitwerking. Nu geldt: de iPad is het opname-apparaat, dus daar staat de voorzet altijd op Opname en wordt een tik op Uitwerking niet onthouden, alleen voor het lopende blok gebruikt. Op de iMac verandert er niets: Meetstaat en foto's geven de voorzet Opname, je eigen keuze blijft per calculatie staan. Eén SQL-bestand zet de bestaande iPad-blokken terugwerkend op Opname (besluit Gian: alles wat op de iPad is gemeten was opname). Vereist SQL (<code>tijd_02_ipad_opname.sql</code>).</p>
         <p><strong>📧 Alle mail naar klanten komt nu van info@ernes.nl (v4.98.1).</strong> Aanleiding: te veel offertes en planningsmails landden bij klanten in de spam. Gemeten op 20 oktober: mail-tester gaf 10/10, SPF, DKIM en DMARC (p=reject) kloppen, geen zwarte lijst. De techniek was dus niet het probleem; wat overbleef is dat <em>offerte@</em> en <em>planning@</em> adressen zijn die geen klant ooit eerder in zijn inbox had, terwijl info@ernes.nl bij iedereen bekend is. Daarom versturen de vier mailfuncties (offerte verzenden, bevestiging en seintjes bij een reactie, de opvolgautomaat en de planningskennisgeving) nu allemaal vanaf <strong>info@ernes.nl</strong>; antwoorden komen daar al binnen, dat verandert niet. Getest na deploy: mail-tester opnieuw 10/10 met de nieuwe afzender, bevestiging en seintje na akkoord, planningsmail. Geen SQL. Geparkeerd voor later: meer gewone tekst in de offertemail (nu 28%) en nagaan of click-tracking in Resend aanstaat.</p>
         <p><strong>🧮 Totaal per bewerking, dwars door alle ruimten (v4.98.0).</strong> Vraag van Gian: hoeveel zit er in dit werk aan bijvoorbeeld <em>Repareren stucwerk</em>, opgeteld over alle ruimten waar die stap in het verfsysteem zit? Dat stond nergens: er waren totalen per regel, onderdeel en hoofdgroep, maar niet per bewerking. Onder de staartkosten staat nu een inklapbaar blok <strong>Totaal per bewerking</strong>: per bewerking de uren, arbeid, materiaal (inkoop en verkoop), kostprijs en verkoop, en met een klik op de regel zie je uit welke ruimten dat komt. Het is dezelfde rekenweg als het paneel rechts, alleen anders gegroepeerd; de verkoopkolom is <em>zonder</em> reis, staartposten, afronding op volle dagen en btw, want die rekenen over het geheel en zijn niet eerlijk aan één bewerking toe te wijzen. Komt een bewerking twee keer in een systeem voor (twee lagen), dan telt die als één regel. De volgorde is die van de stappen in het verfsysteem: voorbehandeling bovenaan, afwerking onderaan. Op de werkbon staat hetzelfde overzicht in uren (productieve uren, zonder bedragen) onder het projecttotaal, zodat de ploeg na het voorbehandelen meteen ziet of ze binnen de uren zitten; de bon zegt er nu ook bij dat alle uren productieve uren zijn, na de aftrek voor indirecte uren. Geen SQL nodig.</p>
         <p><strong>🙋 Aanspreekvorm staat nu ook in de t.a.v.-regel (v4.97.0).</strong> Bij een zakelijke klant met contactpersoon stond in het adresblok "t.a.v. I. Kockelkoren" terwijl de aanhef wel "Geachte heer Kockelkoren" zei. Nu zet de aanspreekvorm ook daar het voorvoegsel: "t.a.v. de heer I. Kockelkoren" of "t.a.v. mevrouw …". Bij zakelijk of zonder aanspreekvorm blijft het alleen de naam. Geldt voor de offerte, het voorbeeld en de PDF. Geen SQL nodig.</p>
@@ -3857,7 +3858,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.98.1';
+const APP_VERSION = 'v4.99.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4274,6 +4275,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.99.0', d: '2026-10-22', h: 'Tijdregistratie: op de iPad is de voorzet altijd Opname en wordt een tik op Uitwerking niet onthouden; iMac ongewijzigd. SQL zet bestaande iPad-blokken terugwerkend op Opname.' },
   { v: '4.98.1', d: '2026-10-20', h: 'Alle klantmail (offerte, bevestiging, herinneringen, planning) komt nu van info@ernes.nl in plaats van offerte@/planning@, tegen spam bij klanten. Zit in de vier Edge Functions; geen SQL.' },
   { v: '4.98.0', d: '2026-10-20', h: 'Totaal per bewerking over alle ruimten: inklapbaar blok onder de staartkosten (uren, arbeid, materiaal, kostprijs, verkoop zonder reis/staart/btw, uitklapbaar per regel, in stapvolgorde van het verfsysteem) en uren per bewerking op de werkbon, met toelichting dat de bon productieve uren toont.' },
   { v: '4.97.0', d: '2026-10-19', h: 'Aanspreekvorm zet nu ook "de heer" / "mevrouw" in de t.a.v.-regel van het adresblok.' },
@@ -26149,8 +26151,12 @@ function _tijdActieveTab() {
   return b ? b.dataset.tab : '';
 }
 
-// Voorzet voor de stand van een calculatie: eerder gekozen stand (bewaard per apparaat), anders afleiden.
+// Voorzet voor de stand van een calculatie.
+// v4.99.0 — Op de iPad is de voorzet altijd Opname: daar wordt opgenomen, nooit uitgewerkt. Een tik op
+// Uitwerking geldt alleen voor het lopende blok en wordt op de iPad niet onthouden (besluit Gian 22-10-2026,
+// "hard"). Op de iMac en iPhone: eerder gekozen stand (bewaard per apparaat), anders afleiden uit de tab.
 function _tijdVoorzetStand(calcId) {
+  if (_tijd.apparaat === 'ipad') return 'opname';
   try { const v = localStorage.getItem('verfcalc_tijdstand_' + calcId); if (v === 'opname' || v === 'uitwerking') return v; } catch (e) {}
   const tab = _tijdActieveTab();
   const fotoOverlay = document.getElementById('fmkOverlay'); // markeerscherm van een foto, bestaat alleen als het open is
@@ -26281,7 +26287,7 @@ function _tijdZetStand(stand) {
   if (!data.calc) return;
   if (stand !== 'opname' && stand !== 'uitwerking') return;
   const calcId = data.calc.id;
-  try { localStorage.setItem('verfcalc_tijdstand_' + calcId, stand); } catch (e) {}
+  if (_tijd.apparaat !== 'ipad') { try { localStorage.setItem('verfcalc_tijdstand_' + calcId, stand); } catch (e) {} } // v4.99.0 — iPad onthoudt niets
   if ((_tijd.blokId !== null || _tijd.blokPending) && _tijd.calcId === calcId && _tijd.stand !== stand) {
     const nu = Date.now();
     _tijdSluitBlok(true);
@@ -26300,7 +26306,7 @@ function _tijdRenderKop() {
   const t = _tijdTotaalVoor(calcId);
   const live = (_tijd.blokId !== null || _tijd.blokPending) && _tijd.calcId === calcId;
   el.innerHTML =
-    `<span class="tijd-knoppen" title="Waar ben je mee bezig? Bepaalt onder welke noemer de tijd telt. Voorzet: Meetstaat en foto\u2019s = Opname.">` +
+    `<span class="tijd-knoppen" title="Waar ben je mee bezig? Bepaalt onder welke noemer de tijd telt. Voorzet: op de iPad altijd Opname; op de iMac Meetstaat en foto\u2019s = Opname.">` +
       `<button class="tijd-knop${stand === 'opname' ? ' aan' : ''}" onclick="_tijdZetStand('opname')">Opname</button>` +
       `<button class="tijd-knop${stand === 'uitwerking' ? ' aan' : ''}" onclick="_tijdZetStand('uitwerking')">Uitwerking</button>` +
     `</span>` +

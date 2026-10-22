@@ -1,3 +1,25 @@
+## v4.99.0 — Op de iPad telt de tijd altijd als Opname (2026-10-22)
+
+**Aanleiding**
+- Gian 22-10-2026: "Ik vergeet het schuifje op opname te setten, kan de app niet zelf detecteren als ik mijn iPad in de hand heb?" Schermfoto: L en M Willems-Janssen | Binnenwerk, Opname 0 min · Uitwerking 1u03. Oorzaak (aanname, past bij de foto): op de iPad wordt tijdens de opname in de tab Calculatie gewerkt, en `_tijdVoorzetStand` koos dan Uitwerking; bovendien onthield localStorage een eerdere keuze per calc per apparaat.
+- Besluit (ask_user_input): hard — de iPad is altijd Opname, een keuze wordt daar niet onthouden; en bestaande iPad-blokken terugwerkend omzetten.
+
+**Gebouwd**
+- `_tijdVoorzetStand`: begint met `if (_tijd.apparaat === 'ipad') return 'opname';`. Het apparaat werd sinds v4.95.0 al bepaald door `_tijdApparaat()` (iPad-UA, of Macintosh-UA met meer dan één aanraakpunt) en per blok weggeschreven in `calculatie_tijd.apparaat`, maar nergens gebruikt voor de voorzet.
+- `_tijdZetStand`: schrijft op de iPad niet meer naar localStorage. Een tik op Uitwerking splitst het lopende blok wel (zoals altijd), maar het volgende blok begint weer op Opname. iMac en iPhone ongewijzigd: eigen keuze blijft per calc staan, anders Meetstaat/foto's = Opname.
+- Knoptitel in de kop noemt de iPad-regel. Welkomsttekst, intro-alinea en RELEASE_HIGHLIGHTS bijgewerkt.
+- Nieuw `tijd_02_ipad_opname.sql`: telling per apparaat en stand (alleen kijken), daarna `update calculatie_tijd set stand='opname' where apparaat='ipad' and stand='uitwerking'`, daarna controle. Kolomnamen afgeleid uit de insert in de app, niet uit een opgehaald tabelschema.
+
+**Niet gewijzigd**
+- Geen rekenfunctie, geen tabelstructuur. De 10-minutenregel, flush om de 2 minuten en de weergave in kop en lijst zijn hetzelfde. iPhone volgt de zachte regel (bewust: niet gevraagd).
+
+**Getest**
+- Node-parse van het scriptblok OK. Runtime-test met stubs op de tijdmodule gesneden uit het gepatchte bestand: iPad → voorzet opname ongeacht localStorage en tab; iPad + tik Uitwerking → lopend blok splitst, localStorage blijft leeg, nieuw blok na stilte is weer opname; desktop → localStorage wint, anders Meetstaat = opname, Calculatie = uitwerking.
+- Niet getest: in de browser, en of `apparaat` op jouw iPad daadwerkelijk als `ipad` wordt weggeschreven. Controleer na deploy: (1) stap 1 van de SQL laat rijen met `apparaat = 'ipad'` zien — zo niet, dan herkent de app je iPad niet en moet `_tijdApparaat` erbij; (2) open op de iPad een calc in de tab Calculatie: knop Opname is rood/aan en het stipje telt onder Opname; (3) tik Uitwerking, laat 11 minuten liggen, raak aan: staat weer op Opname; (4) op de iMac gedraagt het zich als voorheen; (5) de lijst toont voor Willems-Janssen na de SQL de 1u03 onder Opname.
+
+**Terugvalweg**
+- De SQL-update is omkeerbaar zolang je weet welke rijen het waren; wil je zekerheid, draai eerst `create table calculatie_tijd_backup_20261022 as select * from calculatie_tijd;`. De app-wijziging is twee regels; terugzetten naar v4.98.1 kan via GitHub.
+
 ## v4.98.1 — Alle klantmail komt van info@ernes.nl (2026-10-20)
 
 **Aanleiding**
