@@ -1,3 +1,30 @@
+## v4.100.0 — Gekoppelde PDF's selectief meesturen in de offerte (2026-10-22)
+
+**Aanleiding**
+- Gian 22-10-2026: "Kan ik ervoor kiezen om bijlagen die gekoppeld zijn aan de calculatie via de documenten koppel functie selectief mee te zenden met de offerte?" Antwoord was nee: de documenten (bucket `calculatie-documenten`, tabel `calculatie_documenten`, v3.24.4) kenden alleen uploaden, openen en verwijderen; `c.documenten` werd nergens in de offerte-opbouw gelezen. Voorbeelden van Gian: steigerplattegrond of offerte van de steigerbouwer, offerte van een onderaannemer.
+- Afgewogen: (1) in de offerte-PDF, (2) losse mailbijlagen via `offerte-verzenden`, (3) downloads op de klantpagina. Advies en besluit Gian: alleen route 1. Een plattegrond hoort bevroren in het accordeer-exemplaar; een derden-offerte die de klant zelf moet afhandelen is een uitzondering die Gian zo nodig zelf nastuurt. Route 2 pas als dat vaak genoeg voorkomt. Beveiliging erbij omdat een per ongeluk aangevinkte inkoopofferte onherroepelijk in het bevroren exemplaar staat: vinkje standaard uit, zichtbaar in het Offerte-blok, genoemd op de Controle-tab (besluit Gian: ja op beide).
+
+**Gebouwd**
+- SQL `documenten_01_meesturen.sql` (project-guard op calculatie_documenten/calculaties/offerte_accorderingen, idempotent): kolom `meesturen boolean NOT NULL DEFAULT false` op `calculatie_documenten`. Door Gian gedraaid 22-10: 51 documenten, 0 aan.
+- `_mapDocFromDB`/`_mapDocToDB`: veld `meesturen`. Nieuwe `setDocMeesturen(id, aan)`: schrijft direct naar de kolom, zet het vinkje terug met een toast als het opslaan mislukt, rendert het notitiepaneel en het Offerte-blok. Nieuwe `_docsVoorOfferte(c)`: de aangevinkte documenten in uploadvolgorde.
+- Notitiepaneel: per documentrij een label "in offerte" met vinkje (CSS `.doc-mee`, aangevinkt blauw/vet).
+- Offerte-blok, kader "Bijlagen in PDF": regel "Documenten (N): naam, naam — vóór de AV; let op inkoopprijzen van derden", of "Documenten: geen aangevinkt" met de plek van het vinkje.
+- Controle-tab, punt 12b: check-melding "N documenten gaan als bijlage mee in de offerte-PDF (vóór de voorwaarden): ... Controleer dat hier geen inkoopprijzen of voorwaarden van derden in staan."
+- `_voegDocumentenInOffertePdf(blob, docs, avPaginas)`: neemt de pdfmake-PDF, kopieert met pdf-lib alle pagina's behalve de laatste `avPaginas`, dan elk document volledig (download uit `calculatie-documenten`, `PDFDocument.load` met `ignoreEncryption`), dan de AV-pagina's; titel en auteur van de offerte blijven. Elke fout (niet op te halen, geen leesbare PDF, nul pagina's, pagina's niet over te nemen, pdf-lib niet geladen) is een Error met de documentnaam erin; de aanroeper stopt. Het aantal AV-pagina's dat werkelijk in de docdef zit, wordt door `_bouwOfferteCompleetDocDef` in `_offAvPaginasLaatst` gezet (0 als de AV-beelden niet laadden).
+- `printOfferteCompleet` (knop Offerte + bijlagen): zonder aangevinkte documenten ongewijzigd (`pdfMake.open()`). Met documenten: tabblad synchroon openen vóór de eerste await (tegen de pop-upblokkering, zelfde truc als `openDoc`), `getBlob` → invoegen → blob-URL in dat tabblad; bij een fout het tabblad sluiten en een toast met de reden. In de HTML-terugval (pdfmake niet geladen) een toast dat de documenten dan niet meegaan.
+- Accordeerlink aanmaken: na de pdfmake-blob en vóór de upload naar `accord-pdf` de documenten invoegen, met voortgangstekst in het venster. Mislukt het: geen link, zelfde regel als v4.69.0, melding via `_accordGeenPdfMelding`. `const blob` werd `let blob`.
+- Paginanummering: "pagina x van y" staat al op de offertepagina's en blijft kloppen; de documenten en de AV tellen niet mee.
+- Welkomsttekst, intro-h2, RELEASE_HIGHLIGHTS bijgewerkt. Geen Edge Function.
+
+**Niet gewijzigd**
+- Dupliceren neemt documenten niet mee (v4.48.0), dus ook geen vinkjes. Planbijlage/Offerte OHP en de onderhoudsplan-accordeerlink zijn niet geraakt: die hebben een eigen opbouw. `offerte-verzenden` krijgt nog steeds alleen `{ token, tekst }`.
+
+**Getest**
+- SQL op lokale Postgres 16: guard stopt in een leeg project zonder te wijzigen; echte run geeft `meesturen | boolean | NO | false`; tweede run alleen een NOTICE.
+- Node-parse van het scriptblok; div-balans 1363/1366 tegenover 1362/1365 live (zelfde verschil -3); scripttags 6/6; accolades gelijk; vijf versieankers op v4.100.0.
+- Runtime-tests met echte pdf-lib 1.17.1 op code gesneden uit het gepatchte bestand (18 gevallen, allemaal goed): basis 3+2 AV met twee documenten van 2 en 1 pagina's → 8 pagina's in de volgorde offerte, doc1, doc2, AV (gecontroleerd op paginaformaat); 0 AV-pagina's → documenten achteraan; avPaginas groter dan de telling afgetopt; geen documenten → zelfde blob terug; document niet in storage, geen PDF, geen opslagpad, pdf-lib afwezig → fout met de documentnaam; `_docsVoorOfferte` filtert en is null-veilig; `setDocMeesturen` schrijft de juiste rij en rendert beide panelen, zet terug bij DB-fout, doet niets bij onbekend id. Offerte-blok-regel en Controle-melding apart getest (leeg, één, twee documenten; naam met < > geëscaped).
+- Niet getest: in de browser. Controleer na deploy: (1) vinkje "in offerte" bij elk document, standaard uit, blijft staan na herladen; (2) Offerte-blok toont de aangevinkte namen; (3) Controle-tab noemt ze; (4) Offerte + bijlagen opent een PDF met de documentpagina's na de foto's en vóór de AV, paginanummering van de offerte ongewijzigd; (5) Accordeerlink: de PDF in het linkbeheer bevat de documenten; (6) een echte steigerbouwer-PDF (vaak uit een printdriver, soms met owner-wachtwoord) laadt — AANNAME dat `ignoreEncryption` dat afvangt, bij een fout staat de naam in de melding; (7) op de iPad/Safari opent het nieuwe tabblad met de PDF en geen lege pagina.
+
 ## v4.99.0 — Op de iPad telt de tijd altijd als Opname (2026-10-22)
 
 **Aanleiding**
