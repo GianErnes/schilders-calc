@@ -484,7 +484,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.21.1';
+const APP_VERSION = '0.22.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -531,8 +531,9 @@ let fasen = {};              // yoobi_code -> [fase-rijen op volgnr]
 let middelen = {};           // yoobi_code -> [hulpmiddel-rijen]
 let kennis = {};             // v0.15.0: yoobi_code -> { maand, week, dag } -> laatste rij uit plan_kennisgevingen
 let kennisHistorie = {};     // v0.21.0: yoobi_code -> alle rijen uit plan_kennisgevingen, nieuwste eerst (voor het historievenster)
-let kennisOoitVerstuurd = {};  // v0.18.2: yoobi_code -> soort -> true als er ooit een echte mail (niet overgeslagen) is gegaan; voor het label "correctie overgeslagen"
+let kennisOoitVerstuurd = {};  // v0.18.2: yoobi_code -> fasesleutel -> soort -> true als er ooit een echte mail (niet overgeslagen) is gegaan; voor het label "correctie overgeslagen" (v0.22.0: per fase)
 let urenEerste = {};         // v0.15.0: yoobi_code -> 'YYYY-MM-DD' van de eerste ingeplande uren (plan_uren.created_at), voor het maandsignaal
+let urenRijen = {};          // v0.22.0: yoobi_code -> [{ datum, created }] van alle ingeplande uren, om het maandsignaal per fase te bepalen
 const MIDDEL_SOORTEN = { hoogwerker: 'hoogwerker', rolsteiger: 'rolsteiger', vaste_steiger: 'vaste steiger', mobiel_toilet: 'mobiel toilet', overig: 'overig' };
 let actiefFase = null;       // fase-id van de rij in het paneel (null = project zonder fasen)
 let uitgeklapt = new Set();  // codes waarvan de medewerkerrijen open staan
@@ -802,8 +803,8 @@ async function laadAlles() {
   medewerkers = alleMedewerkers.filter(m => m.actief);
   planProjecten = {};
   for (const r of (pp.data || [])) planProjecten[r.yoobi_code] = r;
-  uren = {}; urenVolgorde = {}; urenEerste = {};
-  const noteerEerste = r => { if (!r.created_at) return; const d = r.created_at.slice(0, 10); if (!urenEerste[r.yoobi_code] || d < urenEerste[r.yoobi_code]) urenEerste[r.yoobi_code] = d; };
+  uren = {}; urenVolgorde = {}; urenEerste = {}; urenRijen = {}; // v0.22.0: ook urenRijen
+  const noteerEerste = r => { if (!r.created_at) return; const d = r.created_at.slice(0, 10); if (!urenEerste[r.yoobi_code] || d < urenEerste[r.yoobi_code]) urenEerste[r.yoobi_code] = d; (urenRijen[r.yoobi_code] = urenRijen[r.yoobi_code] || []).push({ datum: r.datum, created: d }); };
   for (const r of (pu.data || [])) {
     const n = Number(r.uren);
     if (n > 0) uren[sleutel(r.yoobi_code, r.medewerker_id, r.datum)] = n;
@@ -817,9 +818,9 @@ async function laadAlles() {
     if (n > 0) urenBuiten[sleutel(r.yoobi_code, r.medewerker_id, r.datum)] = n;
     if (n > 0) noteerEerste(r);
   }
-  kennis = {}; kennisHistorie = {}; // v0.21.0
+  kennis = {}; kennisHistorie = {}; kennisOoitVerstuurd = {}; // v0.21.0; v0.22.0: kennis[code][fasesleutel][soort], sleutel '' = zonder fase
   if (knRes.error) { console.warn('plan_kennisgevingen niet leesbaar (planning_04_kennisgevingen.sql nog niet gedraaid?): ' + knRes.error.message); }
-  else for (const r of (knRes.data || [])) { (kennis[r.yoobi_code] = kennis[r.yoobi_code] || {})[r.soort] = r; (kennisHistorie[r.yoobi_code] = kennisHistorie[r.yoobi_code] || []).unshift(r); if (!r.overgeslagen) (kennisOoitVerstuurd[r.yoobi_code] = kennisOoitVerstuurd[r.yoobi_code] || {})[r.soort] = true; }
+  else for (const r of (knRes.data || [])) { kennisNoteer(r); (kennisHistorie[r.yoobi_code] = kennisHistorie[r.yoobi_code] || []).unshift(r); }
   gesloten = {};
   for (const r of (gd.data || [])) gesloten[r.datum] = r;
   verlof = {};
@@ -1219,11 +1220,11 @@ function tekenPaneel() {
     '</div>' +
     '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Nog te plannen = budget − ingepland over alle jaren; nog te werken = budget − geboekt. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
     middelenHtml(p, null, d) +
-    kennisHtml(p) +
+    kennisHtml(p, null) +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
   koppelMiddelen(el, p, null, d);
-  koppelKennis(el, p);
+  koppelKennis(el, p, null);
   const inS = document.getElementById('pStart'), inE = document.getElementById('pEind');
   inS.addEventListener('change', () => datumsUitPaneel(p, d));
   inE.addEventListener('change', () => datumsUitPaneel(p, d));
@@ -1264,12 +1265,12 @@ function tekenFasePaneel(el, p) {
   const fAct = fs.find(f => f.id === actiefFase) || fs[0];
   h += middelenHtml(p, fAct, faseDatums(p, fAct)) +
     '<div class="voetnoot">Budget, geboekt, nog te plannen en nog te werken gelden voor het hele project, over alle jaren; per fase zie je wat erop staat, ook buiten dit jaar. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
-    kennisHtml(p) +
+    kennisHtml(p, fAct) + // v0.22.0: per fase
     '<div class="paneelknoppen"><button class="knop" id="pVerberg">Verbergen</button></div>';
   el.innerHTML = h;
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
   koppelMiddelen(el, p, fAct, faseDatums(p, fAct));
-  koppelKennis(el, p);
+  koppelKennis(el, p, fAct);
   el.querySelectorAll('.fase').forEach(div => {
     const f = vindFase(p.code, div.dataset.fase); if (!f) return;
     div.querySelector('.fnaam').addEventListener('change', e => hernoemFase(f, e.target.value.trim()));
@@ -1359,11 +1360,39 @@ async function verschuifMiddelen(code, f, dagenDelta) {
 }
 
 // Alle fasen van een project in één keer wegschrijven (renummerd).
-async function schrijfFasen(code, lijst) {
-  let r = await sb.from('plan_fasen').delete().eq('yoobi_code', code);
-  if (r && r.error) throw r.error;
-  if (lijst.length) {
-    r = await sb.from('plan_fasen').insert(lijst.map((f, i) => ({ yoobi_code: code, volgnr: i + 1, naam: f.naam, van: f.van, tot: f.tot, notitie: f.notitie || null })));
+// v0.22.0: fasen houden hun id. Tot v0.21.1 werden bij elke knip of samenvoeging alle
+// fasen verwijderd en opnieuw aangemaakt; plan_middelen.fase_id (on delete set null,
+// gemeten 22-10-2026) raakte daardoor elke keer los en elk hulpmiddel viel terug naar
+// de eerste fase. Nu: rijen met id worden bijgewerkt, rijen zonder id ingevoegd,
+// verdwenen rijen verwijderd. `herkoppel` = [{ van, naar }]: hulpmiddelen en
+// kennisgevingen van een opgeslokte fase gaan vóór het verwijderen naar de blijvende.
+// Hernummeren gaat in twee stappen (eerst +1000) voor het geval plan_fasen een unieke
+// beperking plan_fasen_yoobi_code_volgnr_key op (yoobi_code, volgnr) heeft (gemeten 22-10-2026).
+async function schrijfFasen(code, lijst, herkoppel) {
+  const oud = fasenVan(code);
+  const blijven = new Set(lijst.filter(f => f.id).map(f => f.id));
+  let r;
+  for (const h of (herkoppel || [])) {
+    for (const tabel of ['plan_middelen', 'plan_kennisgevingen']) {
+      r = await sb.from(tabel).update({ fase_id: h.naar }).eq('fase_id', h.van);
+      if (r && r.error) throw r.error;
+    }
+  }
+  for (const f of oud) {
+    if (blijven.has(f.id)) continue;
+    r = await sb.from('plan_fasen').delete().eq('id', f.id);
+    if (r && r.error) throw r.error;
+  }
+  for (const f of oud) {
+    if (!blijven.has(f.id)) continue;
+    r = await sb.from('plan_fasen').update({ volgnr: Number(f.volgnr) + 1000 }).eq('id', f.id);
+    if (r && r.error) throw r.error;
+  }
+  for (let i = 0; i < lijst.length; i++) {
+    const f = lijst[i];
+    const velden = { volgnr: i + 1, naam: f.naam, van: f.van, tot: f.tot, notitie: f.notitie || null };
+    r = f.id ? await sb.from('plan_fasen').update(velden).eq('id', f.id)
+             : await sb.from('plan_fasen').insert({ yoobi_code: code, ...velden });
     if (r && r.error) throw r.error;
   }
 }
@@ -1392,7 +1421,7 @@ function knipFase(code, datum, faseId) {
     if (i < 0) return;
     const f = fs[i];
     if (datum <= f.van || datum > f.tot) { toonStatus('Knipdatum moet binnen de fase liggen (' + fmtDatum(vanIso(f.van)) + ' – ' + fmtDatum(vanIso(f.tot)) + ')', true); return; }
-    nieuw = [...fs.slice(0, i), { naam: f.naam, van: f.van, tot: plusDagen(datum, -1), notitie: f.notitie }, { naam: 'fase ' + (fs.length + 1), van: datum, tot: f.tot, notitie: null }, ...fs.slice(i + 1)];
+    nieuw = [...fs.slice(0, i), { ...f, tot: plusDagen(datum, -1) }, { naam: 'fase ' + (fs.length + 1), van: datum, tot: f.tot, notitie: null }, ...fs.slice(i + 1)]; // v0.22.0: id van f blijft
   }
   uitgeklapt.clear(); actiefFase = null;
   naFaseWijziging(() => schrijfFasen(code, nieuw), 'Geknipt in ' + nieuw.length + ' fasen');
@@ -1402,7 +1431,7 @@ function voegFaseSamen(code, faseId) {
   const i = fs.findIndex(f => f.id === faseId);
   if (i <= 0) return;
   const a = fs[i - 1], b = fs[i];
-  const samen = { naam: a.naam, van: a.van < b.van ? a.van : b.van, tot: a.tot > b.tot ? a.tot : b.tot, notitie: a.notitie || b.notitie || null };
+  const samen = { id: a.id, naam: a.naam, van: a.van < b.van ? a.van : b.van, tot: a.tot > b.tot ? a.tot : b.tot, notitie: a.notitie || b.notitie || null }; // v0.22.0: id blijft
   const nieuw = [...fs.slice(0, i - 1), samen, ...fs.slice(i + 1)];
   uitgeklapt.clear(); actiefFase = null;
   if (nieuw.length === 1) {
@@ -1413,7 +1442,7 @@ function voegFaseSamen(code, faseId) {
       if (r.error) throw r.error;
     }, 'Fasen samengevoegd; project heeft weer één periode');
   } else {
-    naFaseWijziging(() => schrijfFasen(code, nieuw), 'Fasen samengevoegd');
+    naFaseWijziging(() => schrijfFasen(code, nieuw, [{ van: b.id, naar: a.id }]), 'Fasen samengevoegd'); // v0.22.0: hulpmiddelen en kennisgevingen van b naar a
   }
 }
 async function hernoemFase(f, naam) {
@@ -2323,6 +2352,9 @@ async function herlaad() {
 // afzender info@ernes.nl sinds 20-10-2026, was planning@). Elke verzending staat in plan_kennisgevingen; de
 // laatste rij per soort geldt. Verschuift de start daarna naar een andere
 // maand/week/dag, dan wordt dat oranje gemeld. Overslaan = rij zonder mail.
+// v0.22.0: bij een project in fasen loopt de hele cyclus (maand, week, startdag)
+// per fase, met de start van die fase; rijen zonder fase_id (van vóór
+// planning_09) horen bij de eerste fase. Besluit Gian 22-10-2026.
 // Contactpersoon: gekozen uit de Yoobi-relatie (Edge Function yoobi-klant,
 // zelfde als in de calculatie) en bewaard op plan_projecten.
 // =====================================================================
@@ -2354,6 +2386,46 @@ function projectStart(p) {
   if (fs.length) { let m = null; for (const f of fs) if (f.van && (!m || f.van < m)) m = f.van; return vanIso(m); }
   return projDatums(p).start;
 }
+// v0.22.0: kennisgevingen per fase. f = null bij een project zonder fasen.
+function kennisStart(p, f) { return f ? vanIso(f.van) : projectStart(p); }
+function faseSleutel(f) { return f ? f.id : ''; }
+function isEersteFase(code, f) { const fs = fasenVan(code); return !!(f && fs.length && fs[0].id === f.id); }
+function kennisFasen(p) { const fs = fasenVan(p.code); return fs.length ? fs : [null]; }
+// Rij uit plan_kennisgevingen in de cache zetten (laden, versturen, overslaan).
+function kennisNoteer(r) {
+  const sl = r.fase_id || '';
+  ((kennis[r.yoobi_code] = kennis[r.yoobi_code] || {})[sl] = kennis[r.yoobi_code][sl] || {})[r.soort] = r;
+  if (!r.overgeslagen) ((kennisOoitVerstuurd[r.yoobi_code] = kennisOoitVerstuurd[r.yoobi_code] || {})[sl] = kennisOoitVerstuurd[r.yoobi_code][sl] || {})[r.soort] = true;
+}
+// Welke cachesleutels gelden voor deze fase: de eigen, plus '' (zonder fase) bij de eerste fase of zonder fasen.
+function kennisSleutels(code, f) { return f ? (isEersteFase(code, f) ? ['', f.id] : [f.id]) : ['']; }
+// Laatste rij per soort voor deze fase.
+function kennisVan(code, f) {
+  const alles = kennis[code] || {};
+  const uit = {};
+  for (const sl of kennisSleutels(code, f)) for (const soort of KENNIS_SOORTEN) {
+    const r = (alles[sl] || {})[soort];
+    if (r && (!uit[soort] || String(r.verzonden_op) > String(uit[soort].verzonden_op))) uit[soort] = r;
+  }
+  return uit;
+}
+// Eerste keer dat er uren voor deze fase zijn ingepland (plan_uren.created_at), voor het maandsignaal.
+function urenEersteVan(code, f) {
+  if (!f) return urenEerste[code] || null;
+  let m = null;
+  for (const r of (urenRijen[code] || [])) { const g = faseVanDag(code, r.datum); if (g && g.id === f.id && (!m || r.created < m)) m = r.created; }
+  return m;
+}
+// Naam van de fase in mail en onderwerp: 'fase 2' of 'fase 2 (daklijsten)'; leeg bij de eerste fase of zonder fasen.
+function faseLabel(p, f) {
+  if (!f || isEersteFase(p.code, f)) return '';
+  const fs = fasenVan(p.code);
+  const nr = fs.findIndex(x => x.id === f.id) + 1;
+  const naam = String(f.naam || '').trim();
+  return 'fase ' + nr + (naam && !/^fase\s*\d+$/i.test(naam) ? ' (' + naam + ')' : '');
+}
+// Kenmerk-achtervoegsel voor taken in de taken-app: '#<fase-id>' bij een fase, anders leeg (functie planning-kennisgeving-taken v1.4).
+function kennisKenmerkSuffix(f) { return f ? '#' + f.id : ''; }
 function weekTekst(start) {
   const ma = maandagVan(start), vr = new Date(ma); vr.setDate(ma.getDate() + 4);
   return 'week ' + isoWeek(start) + ' (' + fmtDatumKort(ma) + ' t/m ' + fmtDatumKort(vr) + ' ' + vr.getFullYear() + ')';
@@ -2376,7 +2448,7 @@ function zelfdePeriode(soort, a, b) {
 //                gebruikt (bevestigd_op leeg), geen bounce, geen correctie open, start niet voorbij;
 //                v0.19.2: alleen als de mail een knop had (bevestig_token gevuld) — mails van vóór
 //                v0.19.0 konden niet bevestigd worden en mogen geen nabel-signaal geven
-// Dezelfde regels staan in Edge Function planning-kennisgeving-taken (v1.2); wijzig je ze, wijzig beide.
+// Dezelfde regels staan in Edge Function planning-kennisgeving-taken (v1.4); wijzig je ze, wijzig beide.
 const KENNIS_NABEL_WERKDAGEN = 3; // besluit Gian 09-10-2026
 // Werkdagen (ma–vr) ná dag `van` tot en met dag `tot`; feestdagen tellen mee als werkdag.
 function werkdagenNa(van, tot) {
@@ -2386,10 +2458,10 @@ function werkdagenNa(van, tot) {
   for (const d = new Date(a); d < b;) { d.setDate(d.getDate() + 1); if (d.getDay() >= 1 && d.getDay() <= 5) n++; }
   return n;
 }
-function kennisStatus(p) {
-  const start = projectStart(p);
+function kennisStatus(p, f) {
+  const start = kennisStart(p, f);
   const vandaag = new Date(); vandaag.setHours(0, 0, 0, 0);
-  const k = kennis[p.code] || {};
+  const k = kennisVan(p.code, f);
   const verborgen = isVerborgen(p);
   const uit = {};
   for (const soort of KENNIS_SOORTEN) {
@@ -2397,7 +2469,8 @@ function kennisStatus(p) {
     let vanaf = null;
     if (soort === 'maand') {
       // de maandag ná de dag waarop de eerste uren zijn ingepland
-      if (urenEerste[p.code]) { const e = vanIso(urenEerste[p.code]); vanaf = maandagVan(e); vanaf.setDate(vanaf.getDate() + 7); }
+      const ue = urenEersteVan(p.code, f); // v0.22.0: per fase
+      if (ue) { const e = vanIso(ue); vanaf = maandagVan(e); vanaf.setDate(vanaf.getDate() + 7); }
     } else if (start) {
       vanaf = maandagVan(start); vanaf.setDate(vanaf.getDate() - (soort === 'week' ? 14 : 7));
     }
@@ -2410,27 +2483,43 @@ function kennisStatus(p) {
     const bounce = !!(echt && rij.bounce_op);
     const verz = echt && rij.verzonden_op ? new Date(rij.verzonden_op) : null;
     const nabellen = !!(echt && !bounce && rij.bevestig_token && !rij.bevestigd_op && !verschoven && verz && !isNaN(verz.getTime()) && werkdagenNa(verz, vandaag) >= KENNIS_NABEL_WERKDAGEN);
-    uit[soort] = { rij, nodig, verschoven, vanaf, start, bounce, nabellen };
+    uit[soort] = { rij, nodig, verschoven, vanaf, start, bounce, nabellen, gedektDoor: null };
+  }
+  // v0.22.0 (besluit Gian 22-10-2026): nabellen vervalt als een látere kennisgeving (week ná maand,
+  // startdag ná maand/week) wél bevestigd is, die bevestiging dateert van ná de verzending van de
+  // onbevestigde mail, en die latere kennisgeving zelf niet verschoven is. Een oude bevestiging van
+  // een inmiddels verschoven startdag zegt niets over een later gestuurde weekmail.
+  for (let i = 0; i < KENNIS_SOORTEN.length; i++) {
+    const x = uit[KENNIS_SOORTEN[i]];
+    if (!x.nabellen) continue;
+    const verz = new Date(x.rij.verzonden_op);
+    for (let j = i + 1; j < KENNIS_SOORTEN.length; j++) {
+      const y = uit[KENNIS_SOORTEN[j]];
+      if (y.rij && !y.rij.overgeslagen && y.rij.bevestigd_op && !y.verschoven && new Date(y.rij.bevestigd_op) > verz) { x.nabellen = false; x.gedektDoor = KENNIS_SOORTEN[j]; break; }
+    }
   }
   return uit;
 }
-function kennisTeNodig(p) { const s = kennisStatus(p); return KENNIS_SOORTEN.filter(x => s[x].nodig); }
-function kennisVerschoven(p) { const s = kennisStatus(p); return KENNIS_SOORTEN.filter(x => s[x].verschoven); }
-function kennisBounce(p) { const s = kennisStatus(p); return KENNIS_SOORTEN.filter(x => s[x].bounce); } // v0.19.0
-function kennisNabellen(p) { const s = kennisStatus(p); return KENNIS_SOORTEN.filter(x => s[x].nabellen); } // v0.19.0
+function kennisTeNodig(p, f) { const s = kennisStatus(p, f); return KENNIS_SOORTEN.filter(x => s[x].nodig); }
+function kennisVerschoven(p, f) { const s = kennisStatus(p, f); return KENNIS_SOORTEN.filter(x => s[x].verschoven); }
+function kennisBounce(p, f) { const s = kennisStatus(p, f); return KENNIS_SOORTEN.filter(x => s[x].bounce); } // v0.19.0
+function kennisNabellen(p, f) { const s = kennisStatus(p, f); return KENNIS_SOORTEN.filter(x => s[x].nabellen); } // v0.19.0
+function kennisIetsOpen(p, f) { return !!(kennisTeNodig(p, f).length || kennisVerschoven(p, f).length || kennisBounce(p, f).length || kennisNabellen(p, f).length); }
+// v0.22.0: lijst van { p, f } met een open signaal; één per fase (f = null zonder fasen).
 function projectenMetKennis() {
   if (!stand) return [];
-  return stand.projecten.filter(p => p.code && (kennisTeNodig(p).length || kennisVerschoven(p).length || kennisBounce(p).length || kennisNabellen(p).length)); // v0.19.0: ook bounce en nabellen
+  const uit = [];
+  for (const p of stand.projecten) { if (!p.code) continue; for (const f of kennisFasen(p)) if (kennisIetsOpen(p, f)) uit.push({ p, f }); }
+  return uit;
 }
 
-// Label in de linkerkolom (alleen bij de eerste rij van een project met fasen).
+// Label in de linkerkolom, per fase (v0.22.0; tot v0.21.1 alleen bij de eerste fase).
 function kennisLabelHtml(p, f) {
-  if (f && fasenVan(p.code)[0] !== f) return '';
-  const nodig = kennisTeNodig(p), ver = kennisVerschoven(p);
+  const nodig = kennisTeNodig(p, f), ver = kennisVerschoven(p, f);
   let h = '';
   if (nodig.length) h += '<span class="kennislabel" title="Kennisgeving aan de klant kan verstuurd worden: ' + esc(nodig.map(x => KENNIS_NAAM[x].toLowerCase()).join(', ')) + '">✉ ' + esc(nodig.map(x => KENNIS_NAAM[x].toLowerCase()).join(' · ')) + '</span>';
   if (ver.length) h += '<span class="kennislabel verschoven" title="De start is verschoven sinds de kennisgeving: ' + esc(ver.map(x => KENNIS_NAAM[x].toLowerCase()).join(', ')) + '">✉ verschoven</span>';
-  const bo = kennisBounce(p), na = kennisNabellen(p); // v0.19.0
+  const bo = kennisBounce(p, f), na = kennisNabellen(p, f); // v0.19.0
   if (bo.length) h += '<span class="kennislabel bounce" title="Kennisgeving NIET afgeleverd (adres controleren, opnieuw versturen): ' + esc(bo.map(x => KENNIS_NAAM[x].toLowerCase()).join(', ')) + '">✉ niet afgeleverd</span>';
   if (na.length) h += '<span class="kennislabel nabellen" title="Na ' + KENNIS_NABEL_WERKDAGEN + ' werkdagen nog niet bevestigd door de klant, nabellen: ' + esc(na.map(x => KENNIS_NAAM[x].toLowerCase()).join(', ')) + '">✉ nabellen</span>';
   return h;
@@ -2446,8 +2535,7 @@ function tekenKennisTeller() {
   kennisCursor = -1;
 }
 document.getElementById('kennisKnop').addEventListener('click', () => {
-  const codes = projectenMetKennis().map(p => p.code);
-  const rijen = codes.map(c => document.querySelector('#bord tbody tr.project[data-code="' + CSS.escape(c) + '"]:not(.verborgen-zoek)')).filter(Boolean);
+  const rijen = projectenMetKennis().map(({ p, f }) => document.querySelector('#bord tbody tr.project[data-code="' + CSS.escape(p.code) + '"]' + (f ? '[data-fase="' + CSS.escape(f.id) + '"]' : ':not([data-fase])') + ':not(.verborgen-zoek)')).filter(Boolean); // v0.22.0: per fase
   if (!rijen.length) { toonStatus('Niet op dit jaarbord', true); return; }
   kennisCursor = (kennisCursor + 1) % rijen.length;
   const tr = rijen[kennisCursor];
@@ -2461,24 +2549,25 @@ document.getElementById('kennisKnop').addEventListener('click', () => {
 });
 
 // Blok in het projectpaneel.
-function kennisHtml(p) {
-  const s = kennisStatus(p);
+function kennisHtml(p, f) {
+  const s = kennisStatus(p, f);
   const pl = planProjecten[p.code] || {};
   const nHist = (kennisHistorie[p.code] || []).length; // v0.21.0
   const contact = pl.contact_email ? esc((pl.contact_naam ? pl.contact_naam + ' · ' : '') + pl.contact_email) + (pl.contact_aanspreekvorm ? ' <span style="color:var(--muted)">(' + esc(aanhef(pl.contact_aanspreekvorm, pl.contact_achternaam).replace(/^Geachte |,$/g, '')) + ')</span>' : ' <span style="color:var(--amber)">· aanhef nog kiezen</span>') : '<span style="color:var(--amber)">nog geen contactpersoon gekozen</span>';
-  let h = '<div class="kennis"><h3>Kennisgevingen aan de klant</h3>' +
+  let h = '<div class="kennis"><h3>Kennisgevingen aan de klant' + (f ? ' · ' + esc(f.naam) : '') + '</h3>' + // v0.22.0: per fase
     '<div class="contact">Aan: ' + contact + ' <button class="knop klein" data-kcontact title="Contactpersoon kiezen of wijzigen">wijzig</button>' +
     (nHist ? ' <button class="knop klein" data-khistorie title="Alle verstuurde en overgeslagen kennisgevingen van dit project, met onderwerp en tekst">historie · ' + nHist + '</button>' : '') + '</div>'; // v0.21.0
   for (const soort of KENNIS_SOORTEN) {
     const x = s[soort];
     let st, klasse = '';
-    if (x.rij && x.rij.overgeslagen) st = (kennisOoitEcht(p.code, soort) ? 'correctie overgeslagen ' : 'overgeslagen ') + fmtDatum(new Date(x.rij.verzonden_op)) + (x.rij.door ? ' door ' + esc(x.rij.door.split('@')[0]) : '');
+    if (x.rij && x.rij.overgeslagen) st = (kennisOoitEcht(p.code, soort, f) ? 'correctie overgeslagen ' : 'overgeslagen ') + fmtDatum(new Date(x.rij.verzonden_op)) + (x.rij.door ? ' door ' + esc(x.rij.door.split('@')[0]) : '');
     else if (x.rij) {
       st = 'verstuurd ' + fmtDatum(new Date(x.rij.verzonden_op)) + (x.rij.periode_tekst ? ' voor ' + esc(x.rij.periode_tekst) : '');
       st += kennisStatusTekst(x.rij); // v0.19.0
       if (x.verschoven) { st += ' — nu ' + esc(periodeTekst(soort, x.start)); klasse = ' verschoven'; }
       else if (x.bounce) klasse = ' bounce';
-      else if (x.nabellen) { st += ' · niet bevestigd, nabellen'; klasse = ' nabellen'; } // v0.19.2: zeggen waarom oranje
+      else if (x.nabellen) { st += (/nog niet bevestigd/.test(st) ? ' · nabellen' : ' · niet bevestigd, nabellen'); klasse = ' nabellen'; } // v0.19.2: zeggen waarom oranje; v0.22.0: niet dubbel
+      else if (x.gedektDoor) st += ' · ' + KENNIS_NAAM[x.gedektDoor].toLowerCase() + ' wel bevestigd, niet nabellen'; // v0.22.0
     }
     else if (x.nodig) { st = 'kan verstuurd worden'; klasse = ' nodig'; }
     else if (!x.start) st = 'nog geen startdatum';
@@ -2502,10 +2591,10 @@ function kennisStatusTekst(rij) {
   else if (rij.afgeleverd_op || rij.geopend_op) t += ' · nog niet bevestigd';
   return t;
 }
-function koppelKennis(el, p) {
-  const c = el.querySelector('[data-kcontact]'); if (c) c.addEventListener('click', () => openKennisModaal(p, null));
-  el.querySelectorAll('[data-kverstuur]').forEach(b => b.addEventListener('click', () => openKennisModaal(p, b.dataset.kverstuur)));
-  el.querySelectorAll('[data-koverslaan]').forEach(b => b.addEventListener('click', () => kennisOverslaan(p, b.dataset.koverslaan)));
+function koppelKennis(el, p, f) {
+  const c = el.querySelector('[data-kcontact]'); if (c) c.addEventListener('click', () => openKennisModaal(p, null, f));
+  el.querySelectorAll('[data-kverstuur]').forEach(b => b.addEventListener('click', () => openKennisModaal(p, b.dataset.kverstuur, f)));
+  el.querySelectorAll('[data-koverslaan]').forEach(b => b.addEventListener('click', () => kennisOverslaan(p, b.dataset.koverslaan, f)));
   const hk = el.querySelector('[data-khistorie]'); if (hk) hk.addEventListener('click', () => openHistorie(p)); // v0.21.0
 }
 
@@ -2567,46 +2656,56 @@ function kennisAanhefVan(p) {
   return pl.contact_aanspreekvorm ? aanhef(pl.contact_aanspreekvorm, pl.contact_achternaam) : null;
 }
 // v0.16.1: eerdere (niet-overgeslagen) verzending voor deze soort, als de periode sindsdien is veranderd.
-function kennisVorige(p, soort) {
-  const rij = (kennis[p.code] || {})[soort];
+function kennisVorige(p, soort, f) {
+  const rij = kennisVan(p.code, f)[soort]; // v0.22.0: per fase
   if (!rij || rij.overgeslagen || !rij.start_bij_verzending) return null;
-  const start = projectStart(p);
+  const start = kennisStart(p, f);
   if (!start || zelfdePeriode(soort, vanIso(rij.start_bij_verzending), start)) return null;
   return { start: vanIso(rij.start_bij_verzending), tekst: rij.periode_tekst || periodeTekst(soort, vanIso(rij.start_bij_verzending)) };
 }
-function kennisTekst(p, soort, aanhefRegel) {
-  const start = projectStart(p);
+// v0.22.0: bij een latere fase heet het werk 'fase 2 (daklijsten) van de werkzaamheden aan X'
+// (enkelvoud: is/start/staat); bij de eerste fase of zonder fasen 'de werkzaamheden aan X'
+// (meervoud). De maandmail van een latere fase begint niet met 'Hartelijk dank voor uw
+// opdracht' (besluit Gian 22-10-2026: elke fase los, fase 1 kondigt geen vervolg aan).
+function kennisWerk(p, f) {
   const proj = p.naam || ('project ' + p.code);
-  const vorige = kennisVorige(p, soort);
+  const fl = faseLabel(p, f);
+  return fl ? { werk: fl + ' van de werkzaamheden aan ' + proj, ev: true } : { werk: 'de werkzaamheden aan ' + proj, ev: false };
+}
+function kennisTekst(p, soort, aanhefRegel, f) {
+  const start = kennisStart(p, f);
+  const { werk, ev } = kennisWerk(p, f);
+  const Werk = werk.charAt(0).toUpperCase() + werk.slice(1);
+  const vorige = kennisVorige(p, soort, f);
   const kortWeek = t => String(t).replace(/ \(.*\)$/, '');
   let kern;
   if (vorige && soort === 'maand') {
-    kern = 'In afwijking van ons eerdere bericht: de werkzaamheden aan ' + proj + ' zijn verplaatst van ' + vorige.tekst + ' naar ' + maandTekst(start) + '.\n\n' +
+    kern = 'In afwijking van ons eerdere bericht: ' + werk + (ev ? ' is' : ' zijn') + ' verplaatst van ' + vorige.tekst + ' naar ' + maandTekst(start) + '.\n\n' +
       'Ongeveer twee weken voor de start laten wij u de precieze week weten, en in de week ervoor de startdag.';
   } else if (vorige && soort === 'week') {
-    kern = 'In afwijking van ons eerdere bericht: de werkzaamheden aan ' + proj + ' zijn verplaatst van ' + kortWeek(vorige.tekst) + ' naar ' + weekTekst(start) + '.\n\n' +
+    kern = 'In afwijking van ons eerdere bericht: ' + werk + (ev ? ' is' : ' zijn') + ' verplaatst van ' + kortWeek(vorige.tekst) + ' naar ' + weekTekst(start) + '.\n\n' +
       'In de week voorafgaand ontvangt u van ons de exacte startdag.';
   } else if (vorige && soort === 'dag') {
     const tijden = startTijden(p.code, naarIso(start));
     const wie = startRegel(tijden); // v0.18.1
-    kern = 'In afwijking van ons eerdere bericht: de werkzaamheden aan ' + proj + ' starten niet op ' + vorige.tekst + ' maar op ' + fmtDatumLang(start) + '.' + (wie ? ' ' + wie : '') + '\n\n' + thuisZin(tijden);
+    kern = 'In afwijking van ons eerdere bericht: ' + werk + (ev ? ' start' : ' starten') + ' niet op ' + vorige.tekst + ' maar op ' + fmtDatumLang(start) + '.' + (wie ? ' ' + wie : '') + '\n\n' + thuisZin(tijden);
   } else if (soort === 'maand') {
-    kern = 'Hartelijk dank voor uw opdracht. Wij hebben de werkzaamheden aan ' + proj + ' voorlopig ingepland in ' + maandTekst(start) + '.\n\n' +
+    kern = (ev ? 'Wij hebben ' + werk : 'Hartelijk dank voor uw opdracht. Wij hebben ' + werk) + ' voorlopig ingepland in ' + maandTekst(start) + '.\n\n' +
       'Ongeveer twee weken voor de start laten wij u de precieze week weten, en in de week ervoor de startdag. Heeft u in die periode al iets waar wij rekening mee moeten houden, laat het ons dan gerust weten.';
   } else if (soort === 'week') {
-    kern = 'Zoals eerder aangekondigd: de werkzaamheden aan ' + proj + ' staan gepland in ' + weekTekst(start) + '.\n\n' +
+    kern = 'Zoals eerder aangekondigd: ' + werk + (ev ? ' staat' : ' staan') + ' gepland in ' + weekTekst(start) + '.\n\n' +
       'In de week voorafgaand ontvangt u van ons de exacte startdag. Wilt u er alvast voor zorgen dat de te schilderen delen voor ons bereikbaar zijn?';
   } else {
     const tijden = startTijden(p.code, naarIso(start));
     const wie = startRegel(tijden); // v0.18.1
-    kern = 'De werkzaamheden aan ' + proj + ' starten op ' + fmtDatumLang(start) + '.' + (wie ? ' ' + wie : '') + '\n\n' + thuisZin(tijden);
+    kern = Werk + (ev ? ' start' : ' starten') + ' op ' + fmtDatumLang(start) + '.' + (wie ? ' ' + wie : '') + '\n\n' + thuisZin(tijden);
   }
   return (aanhefRegel || aanhef('')) + '\n\n' + kern;   // v0.15.2: geen groet; de functie zet de volledige handtekening eronder
 }
-function kennisOnderwerp(p, soort) {
-  const start = projectStart(p);
-  const proj = p.naam || ('project ' + p.code);
-  return (kennisVorige(p, soort) ? 'Gewijzigd: ' : '') + (soort === 'maand' ? 'Planning schilderwerk ' + proj + ': ' + maandTekst(start)
+function kennisOnderwerp(p, soort, f) {
+  const start = kennisStart(p, f);
+  const proj = (p.naam || ('project ' + p.code)) + (faseLabel(p, f) ? ', ' + faseLabel(p, f) : ''); // v0.22.0
+  return (kennisVorige(p, soort, f) ? 'Gewijzigd: ' : '') + (soort === 'maand' ? 'Planning schilderwerk ' + proj + ': ' + maandTekst(start)
     : soort === 'week' ? 'Planning schilderwerk ' + proj + ': ' + weekTekst(start).replace(/ \(.*\)$/, '')
     : 'Start schilderwerk ' + proj + ': ' + fmtDatumLang(start));
 }
@@ -2632,7 +2731,7 @@ async function yoobiContacten(klantcode) {
 
 // Modaal: contactpersoon (uit Yoobi of handmatig), onderwerp en tekst, dan versturen.
 const kennisOverlay = document.getElementById('kennisOverlay');
-let kennisHuidig = null;   // { p, soort }
+let kennisHuidig = null;   // { p, soort, f }  (v0.22.0: f = fase of null)
 function sluitKennisModaal() { kennisOverlay.classList.remove('open'); kennisHuidig = null; }
 document.getElementById('kennisSluit').addEventListener('click', sluitKennisModaal);
 // v0.21.0: historievenster — alle rijen van dit project, alleen lezen.
@@ -2641,7 +2740,8 @@ document.getElementById('historieSluit').addEventListener('click', () => histori
 historieOverlay.addEventListener('click', e => { if (e.target === historieOverlay) historieOverlay.classList.remove('open'); });
 function historieKaart(rij) {
   const wanneer = fmtDatum(new Date(rij.verzonden_op)) + (rij.door ? ' door ' + esc(rij.door.split('@')[0]) : '');
-  const soort = KENNIS_NAAM[rij.soort] || rij.soort;
+  const fz = rij.fase_id ? vindFase(rij.yoobi_code, rij.fase_id) : null; // v0.22.0
+  const soort = (KENNIS_NAAM[rij.soort] || rij.soort) + (fz ? ' · ' + fz.naam : '');
   if (rij.overgeslagen) {
     return '<div class="hkaart"><div class="hkop overgeslagen"><span class="soort">' + esc(soort) + '</span><span class="wanneer">overgeslagen ' + wanneer + '</span></div>' +
       (rij.periode_tekst ? '<div class="hperiode">signaal voor ' + esc(rij.periode_tekst) + ' · geen mail verstuurd</div>' : '<div class="hperiode">geen mail verstuurd</div>') + '</div>';
@@ -2711,22 +2811,22 @@ function kennisVulTekst() {
   const vb = document.getElementById('kcVoorbeeld');
   if (vb) vb.textContent = k && k.vorm ? 'De mail begint met: ' + aanhef(k.vorm, k.achternaam) : '';
   if (!kennisHuidig || !kennisHuidig.soort || kennisTekstHandmatig) return;
-  document.getElementById('kennisTekst').value = kennisTekst(kennisHuidig.p, kennisHuidig.soort, k && k.vorm ? aanhef(k.vorm, k.achternaam) : '');
+  document.getElementById('kennisTekst').value = kennisTekst(kennisHuidig.p, kennisHuidig.soort, k && k.vorm ? aanhef(k.vorm, k.achternaam) : '', kennisHuidig.f);
 }
-async function openKennisModaal(p, soort) {
-  kennisHuidig = { p, soort };
+async function openKennisModaal(p, soort, f) {
+  kennisHuidig = { p, soort, f: f || null };
   kennisTekstHandmatig = false;
   const pl = planProjecten[p.code] || {};
   const huidig = pl.contact_email ? { naam: pl.contact_naam || '', email: pl.contact_email, vorm: pl.contact_aanspreekvorm || '', achternaam: pl.contact_achternaam || '' } : (pl.contact_aanspreekvorm ? { naam: '', email: '', vorm: pl.contact_aanspreekvorm, achternaam: pl.contact_achternaam || '' } : null);
-  document.getElementById('kennisTitel').textContent = soort ? KENNIS_NAAM[soort] + 'kennisgeving · ' + p.klant : 'Contactpersoon · ' + p.klant;
+  document.getElementById('kennisTitel').textContent = soort ? KENNIS_NAAM[soort] + 'kennisgeving · ' + p.klant + (f ? ' · ' + f.naam : '') : 'Contactpersoon · ' + p.klant; // v0.22.0: fase in de titel
   document.getElementById('kennisMelding').textContent = '';
   document.getElementById('kennisVerstuur').textContent = soort ? 'Versturen' : 'Bewaren';
   document.getElementById('kennisVerstuur').disabled = false;
   const tekstSectie = document.getElementById('kennisTekst').closest('section');
   tekstSectie.style.display = soort ? '' : 'none';
   if (soort) {
-    document.getElementById('kennisOnderwerp').value = kennisOnderwerp(p, soort);
-    document.getElementById('kennisTekst').value = kennisTekst(p, soort, kennisAanhefVan(p));
+    document.getElementById('kennisOnderwerp').value = kennisOnderwerp(p, soort, f);
+    document.getElementById('kennisTekst').value = kennisTekst(p, soort, kennisAanhefVan(p), f);
   }
   document.getElementById('kennisContact').innerHTML = '<div class="hint">Contactpersonen ophalen uit Yoobi…</div>';
   kennisOverlay.classList.add('open');
@@ -2739,7 +2839,7 @@ async function openKennisModaal(p, soort) {
 document.getElementById('kennisTekst').addEventListener('input', () => { kennisTekstHandmatig = true; });
 document.getElementById('kennisVerstuur').addEventListener('click', async () => {
   if (!kennisHuidig) return;
-  const { p, soort } = kennisHuidig;
+  const { p, soort, f } = kennisHuidig;
   const c = kennisContactKeuze();
   const meld = document.getElementById('kennisMelding');
   if (!c || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(c.email)) { meld.textContent = 'Kies of vul een geldig e-mailadres in.'; return; }
@@ -2754,9 +2854,9 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
   if (r.error) { meld.textContent = 'Bewaren mislukt: ' + r.error.message + (/aanspreekvorm|achternaam/.test(r.error.message) ? ' — staat planning_05_aanhef.sql er al?' : ''); knop.disabled = false; return; }
   planProjecten[p.code] = { ...(planProjecten[p.code] || {}), ...(r.data && r.data[0] ? r.data[0] : velden) };
   if (!soort) { sluitKennisModaal(); tekenPaneel(); toonStatus('Contactpersoon en aanhef bewaard'); return; }
-  const start = projectStart(p);
+  const start = kennisStart(p, f); // v0.22.0: start van de fase
   const body = {
-    yoobi_code: p.code, soort, aan: c.email, aan_naam: c.naam || null,
+    yoobi_code: p.code, soort, fase_id: f ? f.id : null, aan: c.email, aan_naam: c.naam || null,
     onderwerp: document.getElementById('kennisOnderwerp').value.trim(),
     tekst: document.getElementById('kennisTekst').value.trim(),
     periode_tekst: periodeTekst(soort, start), start_bij_verzending: naarIso(start),
@@ -2771,12 +2871,12 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
     if (!res.ok || !js || !js.ok) throw new Error((js && js.error) ? js.error : ('fout ' + res.status));
     const door = await sessieEmail();
     // zelfde beeld als wat de functie wegschreef; bij de volgende laadAlles komt de echte rij
-    (kennis[p.code] = kennis[p.code] || {})[soort] = { ...body, id: js.id, overgeslagen: false, verzonden_op: new Date().toISOString(), door, resend_id: js.resend_id };
-    (kennisHistorie[p.code] = kennisHistorie[p.code] || []).unshift(kennis[p.code][soort]); // v0.21.0
-    (kennisOoitVerstuurd[p.code] = kennisOoitVerstuurd[p.code] || {})[soort] = true; // v0.18.2
+    const nieuweRij = { ...body, id: js.id, overgeslagen: false, verzonden_op: new Date().toISOString(), door, resend_id: js.resend_id };
+    kennisNoteer(nieuweRij); // v0.22.0: in de fase-cache
+    (kennisHistorie[p.code] = kennisHistorie[p.code] || []).unshift(nieuweRij); // v0.21.0
     sluitKennisModaal();
     hertekenMetScroll();
-    const nTaak = await kennisSluitTaak(p.code, soort); // v0.18.0
+    const nTaak = await kennisSluitTaak(p.code, soort, f); // v0.18.0
     toonStatus(js.vastgelegd === false ? 'Mail verstuurd, maar het vastleggen is mislukt: ' + (js.error || '') : KENNIS_NAAM[soort] + 'kennisgeving verstuurd aan ' + c.email + kennisTaakTekst(nTaak), js.vastgelegd === false);
   } catch (e) {
     meld.textContent = 'Versturen mislukt: ' + (e.message || e) + (/404|405/.test(String(e.message || e)) ? ' — is de Edge Function planning-kennisgeving uitgerold?' : '');
@@ -2791,33 +2891,39 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
 // versturen maakt die taken overbodig.
 // De cronronde blijft het vangnet (project verborgen, start voorbij).
 // Geeft het aantal gesloten taken terug, of -1 als het schrijven mislukte.
-async function kennisSluitTaak(code, soort) {
+// v0.22.0: met fase krijgt het kenmerk '#<fase-id>' erachter (functie v1.4); bij de eerste fase
+// ook de oude vorm zonder achtervoegsel, voor taken die vóór v1.4 zijn aangemaakt.
+async function kennisSluitTaak(code, soort, f) {
   try {
+    const basis = ['kennis-', 'correctie-', 'nabellen-', 'bounce-'].map(k => k + soort + ':' + code);
+    const sfx = kennisKenmerkSuffix(f);
+    const kenmerken = sfx ? basis.map(k => k + sfx).concat(isEersteFase(code, f) ? basis : []) : basis;
     const r = await sb.from('taken')
       .update({ voltooid_op: new Date().toISOString() })
       .eq('bron', 'planning').is('voltooid_op', null)
-      .in('bron_kenmerk', ['kennis-' + soort + ':' + code, 'correctie-' + soort + ':' + code, 'nabellen-' + soort + ':' + code, 'bounce-' + soort + ':' + code]) // v0.19.0: ook nabel- en bouncetaak
+      .in('bron_kenmerk', kenmerken) // v0.19.0: ook nabel- en bouncetaak
       .select('crmtaskid');
     if (r.error) { console.warn('taak sluiten mislukt: ' + r.error.message); return -1; }
     return r.data ? r.data.length : 0;
   } catch (e) { console.warn('taak sluiten mislukt: ' + (e.message || e)); return -1; }
 }
 function kennisTaakTekst(n) { return n > 0 ? ' · taak in de taken-app gesloten' : n < 0 ? ' · taak in de taken-app NIET gesloten (zie console)' : ' · geen open taak gevonden in de taken-app (al gesloten, of geen rechten: zie planning_08)'; } // v0.18.1: 0 rijen is ook een melding
-function kennisOoitEcht(code, soort) { return !!(kennisOoitVerstuurd[code] && kennisOoitVerstuurd[code][soort]); } // v0.18.2
-async function kennisOverslaan(p, soort) {
-  const correctie = !!kennisStatus(p)[soort].verschoven; // v0.18.2: overslaan kan nu ook een correctie zijn
+function kennisOoitEcht(code, soort, f) { const o = kennisOoitVerstuurd[code] || {}; return kennisSleutels(code, f).some(sl => o[sl] && o[sl][soort]); } // v0.18.2; v0.22.0 per fase
+async function kennisOverslaan(p, soort, f) {
+  const correctie = !!kennisStatus(p, f)[soort].verschoven; // v0.18.2: overslaan kan nu ook een correctie zijn
   const vraag = correctie
     ? 'Correctie van de ' + KENNIS_NAAM[soort].toLowerCase() + 'kennisgeving voor ' + p.klant + ' overslaan? Er gaat geen mail; het signaal verdwijnt.'
     : KENNIS_NAAM[soort] + 'kennisgeving voor ' + p.klant + ' overslaan? Er gaat geen mail; het signaal verdwijnt.';
   if (!confirm(vraag)) return;
-  const start = projectStart(p);
-  const rij = { yoobi_code: p.code, soort, overgeslagen: true, door: await sessieEmail(), periode_tekst: start ? periodeTekst(soort, start) : null, start_bij_verzending: start ? naarIso(start) : null };
+  const start = kennisStart(p, f); // v0.22.0
+  const rij = { yoobi_code: p.code, soort, fase_id: f ? f.id : null, overgeslagen: true, door: await sessieEmail(), periode_tekst: start ? periodeTekst(soort, start) : null, start_bij_verzending: start ? naarIso(start) : null };
   const r = await sb.from('plan_kennisgevingen').insert(rij).select();
   if (r.error) { toonStatus('Overslaan mislukt: ' + r.error.message + (/kennisgevingen/.test(r.error.message) ? ' — staat planning_04_kennisgevingen.sql er al?' : ''), true); return; }
-  (kennis[p.code] = kennis[p.code] || {})[soort] = r.data && r.data[0] ? r.data[0] : { ...rij, verzonden_op: new Date().toISOString() };
-  (kennisHistorie[p.code] = kennisHistorie[p.code] || []).unshift(kennis[p.code][soort]); // v0.21.0
+  const nieuweRij = r.data && r.data[0] ? r.data[0] : { ...rij, verzonden_op: new Date().toISOString() };
+  kennisNoteer(nieuweRij); // v0.22.0
+  (kennisHistorie[p.code] = kennisHistorie[p.code] || []).unshift(nieuweRij); // v0.21.0
   hertekenMetScroll();
-  const nTaak = await kennisSluitTaak(p.code, soort); // v0.18.0
+  const nTaak = await kennisSluitTaak(p.code, soort, f); // v0.18.0
   toonStatus((correctie ? 'Correctie ' + KENNIS_NAAM[soort].toLowerCase() : KENNIS_NAAM[soort]) + 'kennisgeving overgeslagen' + kennisTaakTekst(nTaak));
 }
 

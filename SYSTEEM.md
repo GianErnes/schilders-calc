@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.4.0 (12-10-2026; eerdere rijen staan nog op 14-09) |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.10.4 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.22.0 |
 | Personeel | `personeel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/personeel.html | v0.5.0 |
 | Klanten | `klanten.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/klanten.html | v0.4.0 |
 | Klantenkaart | `kaart.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/kaart.html | v0.1.0 (15-10-2026) |
@@ -5824,3 +5824,31 @@ bewaart de foto-rij, niet het bestand in de bak `calculatie-fotos`; of de
 app bij verwijderen ook het bestand weghaalt is niet nagekeken.
 Teruggezette meetstaat-auto-regels naast een intussen opnieuw opgebouwde
 meetstaat: niet beproefd.
+
+## Wat er op 22 oktober 2026 gedaan is: kennisgevingen per fase, fasen houden hun id (planning.html v0.22.0)
+
+**Aanleiding.** Een project dat in fasen is geknipt kreeg maar één
+cyclus kennisgevingen, op de start van fase 1; fase 2 (bv. Pastorie
+H. Cornelius, april 2027) kreeg nooit een signaal. Daarnaast bleek
+(gemeten: `plan_middelen.fase_id` is `on delete set null`) dat elke knip
+of samenvoeging alle fasen verwijderde en opnieuw aanmaakte, waardoor
+hulpmiddelen hun fase kwijtraakten. Besluiten Gian: hele cyclus per
+fase, ook de maand; elke fase los; stabiele fase-id's; nabellen vervalt
+als een latere kennisgeving wél bevestigd is.
+
+**Wat er nu is.**
+
+| Onderdeel | Doet | Bijzonderheden |
+|---|---|---|
+| `planning_09_kennisgeving_fase.sql` | kolom `fase_id` op `plan_kennisgevingen` → `plan_fasen`, `on delete set null`, index | project-guard, idempotent; gedraaid 22 oktober, drie controles GOED. Rijen zonder `fase_id` horen bij de eerste fase |
+| planning.html v0.22.0 | fasen worden bijgewerkt in plaats van verwijderd+aangemaakt; bij samenvoegen gaan hulpmiddelen en kennisgevingen van de opgeslokte fase eerst over naar de blijvende; kennisgevingen, labels, teller, paneel en mailteksten per fase; nabelregel | signaalregels blijven dubbel (brok 7 en de taken-functie). Hernummeren in twee stappen (+1000, dan definitief) vanwege de unieke beperking `plan_fasen_yoobi_code_volgnr_key` op `(yoobi_code, volgnr)` (gemeten 22 oktober) |
+| Edge Function `planning-kennisgeving` v3.2 | als v3.1, plus `fase_id` in body en rij | **Verify JWT AAN** (ongewijzigd) |
+| Edge Function `planning-kennisgeving-taken` v1.4 | signalen per fase; `bron_kenmerk` krijgt `#<fase-id>` erachter bij een fase; nabelregel; fase in onderwerp/notitie van de taak | **Verify JWT UIT** (ongewijzigd). Eenmalig: open taken van fase-projecten zonder achtervoegsel worden gesloten en met achtervoegsel opnieuw aangemaakt. `index_test.ts` moet mee (handtekening `gewensteTaken` veranderd) |
+
+**Bekend.** `planning-kennisgeving-bevestig` v2 sluit de nabeltaak direct
+op het kenmerk zonder achtervoegsel; voor fase 2 en hoger doet de cron
+dat de volgende ochtend.
+
+**Open punt (blijft).** De `index.ts`-bestanden van de planning-functies
+en de planning-SQL staan niet in de openbare repo; de broncode van
+22 oktober is in deze sessie geleverd en hoort in de besloten repo.
