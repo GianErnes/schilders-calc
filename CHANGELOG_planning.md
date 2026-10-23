@@ -1,5 +1,13 @@
 # CHANGELOG planning.html
 
+## v0.22.1 — Komma voor 'en' weg in de maandaankondiging, 23-10-2026
+
+**Aanleiding.** Gian 23-10-2026: de zin "…laten wij u de precieze week weten, en in de week ervoor de startdag" is Engelse zinsbouw; in het Nederlands komt vóór *en* geen komma.
+
+**Wijziging.** Zin wordt "…laten wij u de precieze week weten en in de week ervoor de startdag." op drie plekken: `kennisTekst` in planning.html (maand-aankondiging en maand-correctie) en de slotzin `SLOT.maand` in bevestig.html (→ v1.3). Verder niets. Andere komma's voor *maar/of/zodat/want* in klantteksten: niet gevonden. Al verstuurde kennisgevingen in `plan_kennisgevingen.tekst` houden de oude tekst (historie).
+
+**Getest.** `node --check` schoon op het script; de zin komt in geen van beide bestanden nog met komma voor. **Niet getest:** de browser, en of de Edge Function `planning-kennisgeving` ergens een eigen kopie van deze zin heeft (aanname: nee, de functie zet alleen aanhef, knop en handtekening om `tekst` heen — CHANGELOG v0.21.0).
+
 ## v0.22.0 — Kennisgevingen per fase, nabelregel, fasen houden hun id, 22-10-2026
 
 **Aanleiding.** Gian 22-10-2026: "Houden de kennisgevingsmomenten aan de klant rekening met een opknip van een project en dus een nieuwe aankondiging voor fase 2?" Nee: `projectStart` nam de vroegste fase, `kennisLabelHtml` toonde het label alleen bij de eerste fase en `plan_kennisgevingen` kende geen fase. Voor de Pastorie H. Cornelius (fase 2 in april 2027) kwam dus nooit een signaal. Besluiten (ask_user_input): hele cyclus per fase, ook de maand; elke fase los (fase 1 kondigt geen vervolg aan); stabiele fase-id's in plaats van een volgnummer; alles in één release. Tweede besluit: een nabelsignaal vervalt als een latere kennisgeving wél bevestigd is.

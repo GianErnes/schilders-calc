@@ -484,7 +484,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.22.0';
+const APP_VERSION = '0.22.1';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -2681,7 +2681,7 @@ function kennisTekst(p, soort, aanhefRegel, f) {
   let kern;
   if (vorige && soort === 'maand') {
     kern = 'In afwijking van ons eerdere bericht: ' + werk + (ev ? ' is' : ' zijn') + ' verplaatst van ' + vorige.tekst + ' naar ' + maandTekst(start) + '.\n\n' +
-      'Ongeveer twee weken voor de start laten wij u de precieze week weten, en in de week ervoor de startdag.';
+      'Ongeveer twee weken voor de start laten wij u de precieze week weten en in de week ervoor de startdag.';
   } else if (vorige && soort === 'week') {
     kern = 'In afwijking van ons eerdere bericht: ' + werk + (ev ? ' is' : ' zijn') + ' verplaatst van ' + kortWeek(vorige.tekst) + ' naar ' + weekTekst(start) + '.\n\n' +
       'In de week voorafgaand ontvangt u van ons de exacte startdag.';
@@ -2691,7 +2691,7 @@ function kennisTekst(p, soort, aanhefRegel, f) {
     kern = 'In afwijking van ons eerdere bericht: ' + werk + (ev ? ' start' : ' starten') + ' niet op ' + vorige.tekst + ' maar op ' + fmtDatumLang(start) + '.' + (wie ? ' ' + wie : '') + '\n\n' + thuisZin(tijden);
   } else if (soort === 'maand') {
     kern = (ev ? 'Wij hebben ' + werk : 'Hartelijk dank voor uw opdracht. Wij hebben ' + werk) + ' voorlopig ingepland in ' + maandTekst(start) + '.\n\n' +
-      'Ongeveer twee weken voor de start laten wij u de precieze week weten, en in de week ervoor de startdag. Heeft u in die periode al iets waar wij rekening mee moeten houden, laat het ons dan gerust weten.';
+      'Ongeveer twee weken voor de start laten wij u de precieze week weten en in de week ervoor de startdag. Heeft u in die periode al iets waar wij rekening mee moeten houden, laat het ons dan gerust weten.';
   } else if (soort === 'week') {
     kern = 'Zoals eerder aangekondigd: ' + werk + (ev ? ' staat' : ' staan') + ' gepland in ' + weekTekst(start) + '.\n\n' +
       'In de week voorafgaand ontvangt u van ons de exacte startdag. Wilt u er alvast voor zorgen dat de te schilderen delen voor ons bereikbaar zijn?';
