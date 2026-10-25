@@ -1,3 +1,22 @@
+## v4.101.2 — Regel dupliceren (⎘) faalde stil bij een half volgnummer (2026-10-25)
+
+**Aanleiding**
+- Gian 25-10-2026 (schermafbeelding Algemeen-onderdeel): "waarom kan ik de deuren dekkend niet kopieren? Met de deurkozijnen lukte het net wel." Gelezen in index.html v4.101.1: `dupRegel` (v3.50.0) zet de kopie op het gemiddelde van de volgorde van het origineel en de regel erna. De kolom `calc_regels.volgorde` is `integer NOT NULL` (Kolommen.csv). Bevestigd met een query van Gian op de live database: "Deuren dekkend - dekkend" stond op 15, de regel erna op 20, dus 17,5; PostgREST weigert dat als integer. De kozijnen (20, met 30 erna) gaven 25 en gingen wel goed. `_sbQuery` zet een database-fout alleen in de console, dus de knop leek niets te doen.
+
+**Gebouwd**
+- `dupRegel`: het gemiddelde wordt met `Math.floor` een heel getal; na het invoegen van de kopie roept de functie `_hernummerRegels(od)` aan.
+- Nieuw `_hernummerRegels(od)`: zet de volgorde van alle regels in het onderdeel op 10, 20, 30… in de huidige schermvolgorde en schrijft alleen de gewijzigde rijen naar `calc_regels` (parallel, `Promise.all`). Mislukt een update, dan blijft het scherm kloppen en komt er een melding dat de volgorde na herladen kan afwijken. Bestaande scheve nummers (zoals 15 en 25 in de calculatie van de aanleiding) worden bij de eerstvolgende kopie in dat onderdeel vanzelf rechtgetrokken.
+- `_insertRegelDB`: een geweigerde insert van de regel of van de stappen toont nu `_toast('Regel opslaan — fout: …')` resp. `'Regel-stappen opslaan — fout: …'`. Timeouts meldt `_sbQuery` al zelf en worden niet dubbel gemeld. Dit raakt ook de andere aanroepers (+ Regel, kopieer regels, meetstaat-rijen overnemen, dupCalc): die zwegen tot nu toe ook bij een database-weigering.
+- Vijf versieankers bijgewerkt (APP_VERSION, welkomst-h2, introalinea, RELEASE_HIGHLIGHTS, deze entry). Geen SQL, geen Edge Function, geen SYSTEEM.md-wijziging.
+
+**Niet gewijzigd**
+- Andere plekken die een volgorde toekennen (+ Regel, kopieer regels, overnemen) doen al max+10 en konden niet op een half getal komen.
+- Het verfsysteem-dupliceren op de Verfsystemen-tab (v3.48.0) staat hier los van.
+
+**Getest**
+- node --check op alle scriptblokken; div-balans (1379/1382) en scripttagbalans (6/6) gelijk aan live v4.101.1; vijf versieankers 1× aanwezig.
+- Niet getest: in de browser. Controleer na deploy in de calculatie van de aanleiding: ⎘ bij "Deuren dekkend - dekkend" geeft nu "Regel gedupliceerd" en de kopie staat direct eronder; na herladen staat ze er nog; de query uit de diagnose toont daarna 10, 20, 30… voor het hele onderdeel. Druk daarna nog eens op ⎘ bij dezelfde regel: moet weer lukken.
+
 ## v4.101.1 — Waarschuwing "die staart is onverzekerd" weg uit het onderhoudsplan (2026-10-25)
 
 **Aanleiding**
