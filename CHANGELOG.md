@@ -1,3 +1,20 @@
+## v4.101.1 — Waarschuwing "die staart is onverzekerd" weg uit het onderhoudsplan (2026-10-25)
+
+**Aanleiding**
+- Gian 25-10-2026 (schermafbeelding Resultaat-blok): "Deze tekst moet als waarschuwing eruit bij onderhoudsplannen omdat we toch hebben omschreven dat er afgerekend dient te worden als er een open saldo is bij opzeggen. Klant moet ten allen tijde betalen van wat er is uitgevoerd." Gemeten in index.html v4.101.0: de tekst stond alleen op het scherm (één vindplaats, functie die het Resultaat-blok rendert, tak `_ei.jaar > _laatsteBeurt`, uit v4.45.0). De bijlage zegt onder "Altijd opzegbaar" (sinds v4.46.0/v4.50.0) al dat bij een abonnement de balans wordt opgemaakt en de klant het verschil afrekent; de schermtekst sprak dat tegen. Besluit (ask_user_input): helemaal weg.
+
+**Gebouwd**
+- De oranje "Let op: … die staart is onverzekerd"-tak is verwijderd; de `if/else if` is nu één `if (_ei.jaar < _laatsteBeurt)` voor het blauwe seintje "klant betaalt vooruit", dat ongewijzigd blijft. Commentaar bij de code legt uit waarom.
+- Vijf versieankers bijgewerkt (APP_VERSION, welkomst-h2, introalinea, RELEASE_HIGHLIGHTS, deze entry). Geen SQL, geen Edge Function, geen SYSTEEM.md-wijziging.
+
+**Niet gewijzigd**
+- Offerte, bijlage (`_opzegTekst`) en PDF: daar stond de waarschuwing niet in.
+- De welkomsttekst van v4.45.0 noemt het seintje nog als geschiedenis; bewust laten staan.
+
+**Getest**
+- node --check op alle scriptblokken; div-balans en scripttagbalans gelijk aan live; vijf versieankers 1× aanwezig; "onverzekerd" komt in het rendergedeelte van het Resultaat-blok niet meer voor (alleen nog in de welkomsttekst van v4.45.0 en in de uitleg bij deze versie).
+- Niet getest: in de browser. Controleer na deploy: open een abonnementsplan waarvan de betalingen na de laatste beurt doorlopen (zoals op de schermafbeelding, laatste beurt 2036, betalingen t/m september 2037) en kijk dat onder "Per maand" alleen nog de periode staat, zonder oranje blok; en een plan waarvan de betalingen eerder stoppen toont nog het blauwe "Ter info"-blok.
+
 ## v4.101.0 — Meetstaat-rijen en kozijntekeningen overnemen, ook uit een andere calculatie (2026-10-24)
 
 **Aanleiding**

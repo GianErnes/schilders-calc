@@ -2421,8 +2421,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.101.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.101.1</h2>
       <div class="intro-body">
+        <p><strong>🧹 Waarschuwing "die staart is onverzekerd" weg uit het onderhoudsplan (v4.101.1).</strong> In het Resultaat-blok van een abonnementsplan stond een oranje seintje zodra de maandbetalingen doorliepen na de laatste beurt: die staart zou onverzekerd zijn omdat het plan opzegbaar is. Dat klopt niet meer sinds de bijlage onder <em>Altijd opzegbaar</em> zegt dat wij bij opzegging de balans opmaken en de klant afrekent wat is uitgevoerd. De tekst sprak de eigen offerte tegen en is daarom weg. Het blauwe seintje voor het omgekeerde geval (klant betaalt vooruit) blijft staan. De offerte en de bijlage zijn niet gewijzigd; geen SQL.</p>
         <p><strong>⧉ Meetstaat-rijen en kozijntekeningen overnemen, ook uit een andere calculatie (v4.101.0).</strong> Onderaan de Meetstaat-tab staat naast <strong>+ Regel</strong> de knop <strong>Rijen overnemen uit…</strong>. Je kiest een bron (deze calculatie, of een andere; zelfde klant staat bovenaan) en een doelonderdeel in deze calculatie, vinkt de rijen aan die je wilt hebben, per onderdeel in één keer of los, en haalt ze hierheen. Maten, aantal, factor, omschrijving, opmerking en de kozijntekening gaan mee; gebrekstippen bewust niet, want houtrot zit op dit huis en niet op het model. Elke rij wordt aan de calc-regel met dezelfde naam in het doelonderdeel gehangen. Bestaat die regel daar nog niet, dan maakt de app hem aan als kopie van de bronregel, met het hele verfsysteem erachter; de lijst laat vooraf per rij zien wat er gebeurt (→ regel bestaat, + regel wordt aangemaakt). Deuren, panelen en roeden in een tekening worden op dezelfde manier hergekoppeld; de automatische m²-rijen komen daarna vanzelf. Rijen komen achteraan, wat er al staat blijft staan, en de melding zegt hoeveel rijen, tekeningen en nieuwe regels er zijn. Niet bij een vergrendelde offerte. Geen SQL nodig.</p>
         <p><strong>📎 Gekoppelde PDF’s selectief meesturen in de offerte (v4.100.0).</strong> Bij elk document onder Notities, taken &amp; foto’s staat nu een vinkje <strong>in offerte</strong>, standaard uit. Aangevinkte documenten (een steigerplattegrond, een offerte van een onderaannemer die de klant moet zien) gaan mee in <strong>Offerte + bijlagen</strong> én in het bevroren exemplaar achter de accordeerlink, op hun eigen pagina’s na de foto’s en vóór de algemene voorwaarden. De paginanummering van de offerte telt ze niet mee, net als de voorwaarden. Het Offerte-blok laat bij <em>Bijlagen in PDF</em> zien welke documenten meegaan, en de Controle-tab noemt ze met de waarschuwing om op inkoopprijzen van derden te letten: een per ongeluk aangevinkte inkoopofferte staat anders onherroepelijk in wat de klant tekent. Mislukt het invoegen (bestand niet leesbaar, niet op te halen), dan stopt het maken met de naam van het document in de melding; er wordt niets stilletjes overgeslagen. Documenten gaan niet mee bij dupliceren, dat was al zo. <strong>Vereist SQL</strong> (<code>documenten_01_meesturen.sql</code>, kolom <code>meesturen</code> op <code>calculatie_documenten</code>, al gedraaid op 22-10).</p>
         <p><strong>⏱ Op de iPad telt de tijd altijd als Opname (v4.99.0).</strong> Het schuifje Opname / Uitwerking werd op de iPad bijna altijd vergeten, want tijdens een opname werk je daar gewoon in de tab Calculatie en dan koos de app Uitwerking. Nu geldt: de iPad is het opname-apparaat, dus daar staat de voorzet altijd op Opname en wordt een tik op Uitwerking niet onthouden, alleen voor het lopende blok gebruikt. Op de iMac verandert er niets: Meetstaat en foto's geven de voorzet Opname, je eigen keuze blijft per calculatie staan. Eén SQL-bestand zet de bestaande iPad-blokken terugwerkend op Opname (besluit Gian: alles wat op de iPad is gemeten was opname). Vereist SQL (<code>tijd_02_ipad_opname.sql</code>).</p>
@@ -3905,7 +3906,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.101.0';
+const APP_VERSION = 'v4.101.1';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4322,6 +4323,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.101.1', d: '2026-10-25', h: 'Oranje waarschuwing "die staart is onverzekerd" weg uit het Resultaat-blok van het onderhoudsplan; de bijlage regelt de verrekening bij opzegging al. Blauwe vooruitbetaal-info blijft.' },
   { v: '4.101.0', d: '2026-10-24', h: 'Meetstaat-tab: knop "Rijen overnemen uit…" haalt aangevinkte meetstaat-rijen met kozijntekening (zonder gebrekstippen) uit een onderdeel of een andere calculatie naar een doelonderdeel; ontbrekende calc-regels worden aangemaakt als kopie met verfsysteem.' },
   { v: '4.100.0', d: '2026-10-22', h: 'Gekoppelde PDF\u2019s per document aanvinkbaar als bijlage in de offerte-PDF en het accordeer-exemplaar (vóór de algemene voorwaarden); zichtbaar in het Offerte-blok en de Controle-tab. SQL: kolom meesturen.' },
   { v: '4.99.0', d: '2026-10-22', h: 'Tijdregistratie: op de iPad is de voorzet altijd Opname en wordt een tik op Uitwerking niet onthouden; iMac ongewijzigd. SQL zet bestaande iPad-blokken terugwerkend op Opname.' },
@@ -10985,13 +10987,16 @@ function _ohpRenderResultaat() {
     const _pm = _mnd > 0 ? (totaalGemiddelde / _mnd) : 0;
     const _st = _ohpAboStart(plan), _ei = _ohpAboEind(plan);
     html += `<div style="margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border);"><span style="color: var(--muted); font-size: 0.85rem;">Per maand (incl. BTW)</span><br><strong style="font-size: 1.3rem;">${eur(_pm)}</strong><br><span style="color: var(--muted); font-size: 0.8rem;">van ${_escapeHtml(_ohpMaandLabel(_st))} tot en met ${_escapeHtml(_ohpMaandLabel(_ei))} &middot; ${_mnd} maanden</span></div>`;
-    // Seintje als de betalingen niet gelijk lopen met het werk.
+    // Seintje als de klant vooruitbetaalt (betalingen stoppen vóór de laatste beurt).
+    // v4.101.1 - De oranje waarschuwing voor het omgekeerde geval (betalingen lopen
+    // door ná de laatste beurt, "die staart is onverzekerd") is weg. Sinds v4.46.0
+    // staat in de bijlage onder "Altijd opzegbaar" dat bij opzegging de balans wordt
+    // opgemaakt en de klant afrekent wat is uitgevoerd; de staart was dus niet
+    // onverzekerd en de tekst sprak de offerte tegen (besluit Gian 25-10-2026).
     const _beurtJaren = beurten.filter(b => b.jaartal >= pp && b.jaartal <= eindJaar).map(b => b.jaartal);
     const _laatsteBeurt = _beurtJaren.length ? Math.max.apply(null, _beurtJaren) : null;
     if (_laatsteBeurt != null && _mnd > 0) {
-      if (_ei.jaar > _laatsteBeurt) {
-        html += `<div style="margin-top: 0.5rem; padding: 0.5rem 0.6rem; background: #fff4e5; border-left: 3px solid #f1491c; border-radius: 3px; font-size: 0.8rem; line-height: 1.4;"><strong>Let op:</strong> de betalingen lopen door tot ${_escapeHtml(_ohpMaandLabel(_ei))}, terwijl de laatste beurt in ${_laatsteBeurt} valt. Die staart is onverzekerd, want het plan is op elk moment opzegbaar.</div>`;
-      } else if (_ei.jaar < _laatsteBeurt) {
+      if (_ei.jaar < _laatsteBeurt) {
         html += `<div style="margin-top: 0.5rem; padding: 0.5rem 0.6rem; background: #eef4ff; border-left: 3px solid #3b6fd4; border-radius: 3px; font-size: 0.8rem; line-height: 1.4;"><strong>Ter info:</strong> de klant is in ${_escapeHtml(_ohpMaandLabel(_ei))} uitbetaald, terwijl de laatste beurt pas in ${_laatsteBeurt} valt. Hij betaalt die beurt dus vooruit.</div>`;
       }
     }
