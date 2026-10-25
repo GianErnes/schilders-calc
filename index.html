@@ -1380,6 +1380,18 @@
   .kozijn-galerij { display: flex; flex-wrap: wrap; gap: 0.7rem; }
   .kozijn-galerij-item { width: 120px; border: 1px solid var(--paper-deep); border-radius: var(--radius); background: var(--paper); padding: 0.5rem; cursor: pointer; text-align: center; position: relative; }
   .kozijn-galerij-item:hover { border-color: var(--accent); }
+  /* v4.101.0 — Rijen overnemen: lijst in het venster */
+  .msov-groep { margin: 0 0 0.6rem 0; }
+  .msov-kop { display: flex; align-items: center; gap: 0.45rem; font-weight: 700; font-size: 0.82rem; padding: 0.3rem 0.4rem; background: var(--paper-warm); border-radius: var(--radius); }
+  .msov-rij { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.4rem 0.3rem 1.2rem; font-size: 0.8rem; border-bottom: 1px solid var(--paper-deep); }
+  .msov-rij:last-child { border-bottom: none; }
+  .msov-thumb { width: 36px; height: 30px; display: flex; align-items: center; justify-content: center; flex: 0 0 36px; }
+  .msov-thumb svg { max-width: 36px; max-height: 30px; }
+  .msov-tekst { flex: 1 1 auto; min-width: 0; }
+  .msov-maat { color: var(--ink-soft); font-size: 0.74rem; }
+  .msov-status { flex: 0 0 auto; font-size: 0.72rem; white-space: nowrap; padding: 0.1rem 0.4rem; border-radius: 999px; border: 1px solid var(--paper-deep); color: var(--ink-soft); }
+  .msov-status.nieuw { color: var(--blue); border-color: var(--blue); }
+  .msov-status.los { color: var(--muted); font-style: italic; }
   .kozijn-galerij-copy { position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--paper-deep); border-radius: var(--radius); background: var(--paper); color: var(--blue); font-size: 0.9rem; cursor: pointer; }
   .kozijn-galerij-copy:hover { border-color: var(--blue); background: var(--paper-warm); }
   .kozijn-galerij-tek { height: 72px; display: flex; align-items: center; justify-content: center; }
@@ -2409,8 +2421,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.100.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.101.0</h2>
       <div class="intro-body">
+        <p><strong>⧉ Meetstaat-rijen en kozijntekeningen overnemen, ook uit een andere calculatie (v4.101.0).</strong> Onderaan de Meetstaat-tab staat naast <strong>+ Regel</strong> de knop <strong>Rijen overnemen uit…</strong>. Je kiest een bron (deze calculatie, of een andere; zelfde klant staat bovenaan) en een doelonderdeel in deze calculatie, vinkt de rijen aan die je wilt hebben, per onderdeel in één keer of los, en haalt ze hierheen. Maten, aantal, factor, omschrijving, opmerking en de kozijntekening gaan mee; gebrekstippen bewust niet, want houtrot zit op dit huis en niet op het model. Elke rij wordt aan de calc-regel met dezelfde naam in het doelonderdeel gehangen. Bestaat die regel daar nog niet, dan maakt de app hem aan als kopie van de bronregel, met het hele verfsysteem erachter; de lijst laat vooraf per rij zien wat er gebeurt (→ regel bestaat, + regel wordt aangemaakt). Deuren, panelen en roeden in een tekening worden op dezelfde manier hergekoppeld; de automatische m²-rijen komen daarna vanzelf. Rijen komen achteraan, wat er al staat blijft staan, en de melding zegt hoeveel rijen, tekeningen en nieuwe regels er zijn. Niet bij een vergrendelde offerte. Geen SQL nodig.</p>
         <p><strong>📎 Gekoppelde PDF’s selectief meesturen in de offerte (v4.100.0).</strong> Bij elk document onder Notities, taken &amp; foto’s staat nu een vinkje <strong>in offerte</strong>, standaard uit. Aangevinkte documenten (een steigerplattegrond, een offerte van een onderaannemer die de klant moet zien) gaan mee in <strong>Offerte + bijlagen</strong> én in het bevroren exemplaar achter de accordeerlink, op hun eigen pagina’s na de foto’s en vóór de algemene voorwaarden. De paginanummering van de offerte telt ze niet mee, net als de voorwaarden. Het Offerte-blok laat bij <em>Bijlagen in PDF</em> zien welke documenten meegaan, en de Controle-tab noemt ze met de waarschuwing om op inkoopprijzen van derden te letten: een per ongeluk aangevinkte inkoopofferte staat anders onherroepelijk in wat de klant tekent. Mislukt het invoegen (bestand niet leesbaar, niet op te halen), dan stopt het maken met de naam van het document in de melding; er wordt niets stilletjes overgeslagen. Documenten gaan niet mee bij dupliceren, dat was al zo. <strong>Vereist SQL</strong> (<code>documenten_01_meesturen.sql</code>, kolom <code>meesturen</code> op <code>calculatie_documenten</code>, al gedraaid op 22-10).</p>
         <p><strong>⏱ Op de iPad telt de tijd altijd als Opname (v4.99.0).</strong> Het schuifje Opname / Uitwerking werd op de iPad bijna altijd vergeten, want tijdens een opname werk je daar gewoon in de tab Calculatie en dan koos de app Uitwerking. Nu geldt: de iPad is het opname-apparaat, dus daar staat de voorzet altijd op Opname en wordt een tik op Uitwerking niet onthouden, alleen voor het lopende blok gebruikt. Op de iMac verandert er niets: Meetstaat en foto's geven de voorzet Opname, je eigen keuze blijft per calculatie staan. Eén SQL-bestand zet de bestaande iPad-blokken terugwerkend op Opname (besluit Gian: alles wat op de iPad is gemeten was opname). Vereist SQL (<code>tijd_02_ipad_opname.sql</code>).</p>
         <p><strong>📧 Alle mail naar klanten komt nu van info@ernes.nl (v4.98.1).</strong> Aanleiding: te veel offertes en planningsmails landden bij klanten in de spam. Gemeten op 20 oktober: mail-tester gaf 10/10, SPF, DKIM en DMARC (p=reject) kloppen, geen zwarte lijst. De techniek was dus niet het probleem; wat overbleef is dat <em>offerte@</em> en <em>planning@</em> adressen zijn die geen klant ooit eerder in zijn inbox had, terwijl info@ernes.nl bij iedereen bekend is. Daarom versturen de vier mailfuncties (offerte verzenden, bevestiging en seintjes bij een reactie, de opvolgautomaat en de planningskennisgeving) nu allemaal vanaf <strong>info@ernes.nl</strong>; antwoorden komen daar al binnen, dat verandert niet. Getest na deploy: mail-tester opnieuw 10/10 met de nieuwe afzender, bevestiging en seintje na akkoord, planningsmail. Geen SQL. Geparkeerd voor later: meer gewone tekst in de offertemail (nu 28%) en nagaan of click-tracking in Resend aanstaat.</p>
@@ -3613,6 +3626,35 @@ Hout binnen;Gronden;m²;6;0,10</div>
 </div>
 
 <!-- DUPLICEER-KEUZE MODAL — v4.48.0 -->
+<!-- v4.101.0 — Meetstaat-rijen overnemen uit een onderdeel of een andere calculatie -->
+<div class="modal-overlay" id="msOvernemenModal">
+  <div class="modal" style="max-width: 620px;">
+    <div class="modal-head">
+      <h3>⧉ Rijen overnemen</h3>
+      <button class="close-x" onclick="_msOvernemenSluit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin: 0 0 0.6rem 0; font-size: 0.85rem;">Haal meetstaat-rijen (met kozijntekening, zonder gebrekstippen) naar een onderdeel van deze calculatie. Elke rij hangt aan de calc-regel met dezelfde naam; bestaat die daar niet, dan wordt hij aangemaakt als kopie met verfsysteem. Rijen komen achteraan; wat er al staat blijft staan.</p>
+      <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        <div style="flex:1 1 220px;">
+          <label style="font-size: 0.8rem;">Bron (zelfde klant staat bovenaan)</label>
+          <select id="msOvernemenBron" onchange="_msOvernemenBronGekozen()" style="width: 100%; margin-top: 0.25rem;"></select>
+        </div>
+        <div style="flex:1 1 220px;">
+          <label style="font-size: 0.8rem;">Naar onderdeel in deze calculatie</label>
+          <select id="msOvernemenDoel" onchange="_msOvDoelGekozen()" style="width: 100%; margin-top: 0.25rem;"></select>
+        </div>
+      </div>
+      <p id="msOvernemenInfo" style="margin: 0.5rem 0 0.4rem 0; font-size: 0.78rem; color: var(--muted);"></p>
+      <div id="msOvernemenRijen" style="max-height: 380px; overflow-y: auto; border: 1px solid var(--paper-deep); border-radius: var(--radius); padding: 0.4rem;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="_msOvernemenSluit()">Annuleren</button>
+      <button class="btn" id="msOvernemenStartBtn" onclick="_msOvernemenStart()" disabled>Overnemen</button>
+    </div>
+  </div>
+</div>
+
 <!-- v4.93.0 — Foto's overnemen uit een andere calculatie -->
 <div class="modal-overlay" id="fotoOvernemenModal">
   <div class="modal" style="max-width: 460px;">
@@ -3863,7 +3905,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.100.0';
+const APP_VERSION = 'v4.101.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4280,6 +4322,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.101.0', d: '2026-10-24', h: 'Meetstaat-tab: knop "Rijen overnemen uit…" haalt aangevinkte meetstaat-rijen met kozijntekening (zonder gebrekstippen) uit een onderdeel of een andere calculatie naar een doelonderdeel; ontbrekende calc-regels worden aangemaakt als kopie met verfsysteem.' },
   { v: '4.100.0', d: '2026-10-22', h: 'Gekoppelde PDF\u2019s per document aanvinkbaar als bijlage in de offerte-PDF en het accordeer-exemplaar (vóór de algemene voorwaarden); zichtbaar in het Offerte-blok en de Controle-tab. SQL: kolom meesturen.' },
   { v: '4.99.0', d: '2026-10-22', h: 'Tijdregistratie: op de iPad is de voorzet altijd Opname en wordt een tik op Uitwerking niet onthouden; iMac ongewijzigd. SQL zet bestaande iPad-blokken terugwerkend op Opname.' },
   { v: '4.98.1', d: '2026-10-20', h: 'Alle klantmail (offerte, bevestiging, herinneringen, planning) komt nu van info@ernes.nl in plaats van offerte@/planning@, tegen spam bij klanten. Zit in de vier Edge Functions; geen SQL.' },
@@ -17967,7 +18010,8 @@ function renderMeetstaat() {
     </tr>`;
   });
   html += '</tbody></table></div>';
-  html += `<div style="margin-top:0.7rem;"><button class="btn-secondary btn" onclick="addMeetstaat()">+ Regel</button></div>`;
+  const _msOvLock = (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc));   // v4.101.0
+  html += `<div style="margin-top:0.7rem; display:flex; gap:0.5rem; flex-wrap:wrap;"><button class="btn-secondary btn" onclick="addMeetstaat()">+ Regel</button>${_msOvLock ? '' : `<button class="btn-secondary btn" onclick="_msOvernemenOpen()" title="Meetstaat-rijen en kozijntekeningen overnemen uit een onderdeel of een andere calculatie">⧉ Rijen overnemen uit…</button>`}</div>`;
 
   // v3.36.0 — Overzicht "Getekende kozijnen": alle tekeningen in deze calculatie
   const _kozijnen = [];
@@ -19688,6 +19732,277 @@ async function addFotos(inputEl, scherp) {
   if (gelukt) _touchCalc(data.calc.id);
   _fotoUploadBusy = false;
   renderNotitiesPaneel();
+}
+
+// ---- v4.101.0 — Meetstaat-rijen overnemen uit een onderdeel of een andere calculatie ----
+// Gian 24-10-2026: grotere projecten, veel gelijke kozijnen en ruimten. Bron: deze calculatie of een
+// andere; doel: één onderdeel in deze calculatie. Per rij gaan maten, aantal, factor, omschrijving,
+// opmerking en de tekening mee (diepe kopie, gebrekstippen leeg). Koppeling aan de calc-regel op naam
+// binnen het doelonderdeel, zoals kopieerKozijnNaarActief (v3.52.0); ontbreekt de regel, dan wordt hij
+// aangemaakt als kopie van de bronregel met stappen-snapshot (patroon executeKopieerRegels, v3.13.0).
+// Auto-rijen (vulling/roeden) gaan niet mee: _syncVullingMeetstaat leidt ze af uit de gekopieerde tekening.
+let _msOvCtx = { bron: null, bezig: false };
+const _msOvNorm = (s) => (s || '').toLowerCase().trim();
+
+function _msOvRegelsVan(c) {
+  const out = [];
+  (c && c.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od =>
+    (od.regels || []).forEach(r => out.push({ hgId: hg.id, hgNaam: hg.naam, odId: od.id, odNaam: od.naam, regel: r }))));
+  return out;
+}
+// Alle regel-id's waar een tekening naar verwijst (vullingen, roeden, vlakken-m²).
+function _msOvTekRegelIds(tek) {
+  const ids = [];
+  const loop = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (node.regelId) ids.push(node.regelId);
+    if (Array.isArray(node.k)) node.k.forEach(loop);
+  };
+  if (tek) {
+    loop(tek.verdeling);
+    if (tek.roedenRegelId) ids.push(tek.roedenRegelId);
+    if (Array.isArray(tek.vlakkenM2PerRegel)) tek.vlakkenM2PerRegel.forEach(v => { if (v && v.regelId) ids.push(v.regelId); });
+  }
+  return Array.from(new Set(ids));
+}
+// Onderdeel waar de gebruiker mee bezig is: dat van de onderste handmatige meetstaat-rij (zelfde geheugen als + Regel).
+function _msOvActiefOdId() {
+  const handm = (data.calc.meetstaat || []).filter(ms => !_isAutoMs(ms));
+  const last = handm[handm.length - 1];
+  const ctx = last ? _allCalcRegels().find(x => x.regel.id === last.calcRegelId) : null;
+  return ctx ? ctx.odId : '';
+}
+function _msOvDoelOd() {
+  const sel = document.getElementById('msOvernemenDoel');
+  const odId = sel ? sel.value : '';
+  for (const hg of (data.calc.hoofdgroepen || [])) {
+    const od = (hg.onderdelen || []).find(o => o.id === odId);
+    if (od) return { hg, od };
+  }
+  return null;
+}
+function _msOvernemenOpen() {
+  if (!data.calc) return;
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) { _toast('Deze offerte is vergrendeld'); return; }
+  const bronSel = document.getElementById('msOvernemenBron');
+  const doelSel = document.getElementById('msOvernemenDoel');
+  const lijstEl = document.getElementById('msOvernemenRijen');
+  if (!bronSel || !doelSel || !lijstEl) return;
+  // Doel: onderdelen van deze calculatie, gegroepeerd per hoofdgroep, voorgezet op het actieve onderdeel.
+  const actief = _msOvActiefOdId();
+  doelSel.innerHTML = (data.calc.hoofdgroepen || []).map(hg =>
+    `<optgroup label="${_escapeHtml(hg.naam || '')}">` + (hg.onderdelen || []).map(od =>
+      `<option value="${od.id}" ${od.id === actief ? 'selected' : ''}>${_escapeHtml(od.naam || '(zonder naam)')}</option>`).join('') + '</optgroup>').join('');
+  if (!doelSel.options.length) { _toast('Deze calculatie heeft nog geen onderdeel. Maak dat eerst aan in de Calculatie-tab.'); return; }
+  // Bron: deze calculatie bovenaan, dan de andere (zelfde klant eerst, daarna op naam).
+  const eigenKlant = _msOvNorm(data.calc.klant);
+  const lijst = (data.calculaties || []).filter(c => c && c.id !== data.calc.id);
+  lijst.sort((a, b) => {
+    const ak = _msOvNorm(a.klant) === eigenKlant ? 0 : 1;
+    const bk = _msOvNorm(b.klant) === eigenKlant ? 0 : 1;
+    if (ak !== bk) return ak - bk;
+    return (a.naam || '').localeCompare(b.naam || '', 'nl');
+  });
+  bronSel.innerHTML = '<option value="">\u2014 kies een bron \u2014</option><option value="__deze__">Deze calculatie (ander onderdeel)</option>' + lijst.map(c => {
+    const kl = (c.klant || '').trim();
+    return `<option value="${c.id}">${_escapeHtml(c.naam || '(zonder naam)')}${kl ? ' \u00b7 ' + _escapeHtml(kl) : ''}</option>`;
+  }).join('');
+  _msOvCtx = { bron: null, bezig: false };
+  lijstEl.innerHTML = '<div style="font-size:0.8rem; color:var(--muted); padding:0.4rem;">Kies eerst een bron.</div>';
+  const info = document.getElementById('msOvernemenInfo');
+  if (info) info.textContent = '';
+  _msOvUpdateKnop();
+  document.getElementById('msOvernemenModal').classList.add('active');
+}
+function _msOvernemenSluit() {
+  document.getElementById('msOvernemenModal').classList.remove('active');
+}
+async function _msOvernemenBronGekozen() {
+  const sel = document.getElementById('msOvernemenBron');
+  const info = document.getElementById('msOvernemenInfo');
+  const lijstEl = document.getElementById('msOvernemenRijen');
+  const id = sel ? sel.value : '';
+  _msOvCtx.bron = null;
+  _msOvUpdateKnop();
+  if (!id) { if (lijstEl) lijstEl.innerHTML = '<div style="font-size:0.8rem; color:var(--muted); padding:0.4rem;">Kies eerst een bron.</div>'; if (info) info.textContent = ''; return; }
+  let bron = null;
+  if (id === '__deze__') bron = data.calc;
+  else {
+    bron = (data.calculaties || []).find(c => c.id === id) || null;
+    if (bron && !bron.__loaded) {
+      if (info) info.textContent = 'Meetstaat laden\u2026';
+      const ok = await _loadCalcBody(bron);
+      if (!sel || sel.value !== id) return;   // intussen een andere keuze
+      if (!ok) { if (info) info.textContent = 'Laden mislukt; probeer het nog eens.'; return; }
+    }
+  }
+  if (!bron) return;
+  _msOvCtx.bron = bron;
+  _msOvRenderRijen();
+}
+function _msOvDoelGekozen() { if (_msOvCtx.bron) _msOvRenderRijen(); }
+function _msOvGeselecteerd() {
+  return Array.from(document.querySelectorAll('#msOvernemenRijen .msov-cb')).filter(cb => cb.checked).map(cb => cb.dataset.msId);
+}
+function _msOvUpdateKnop() {
+  const knop = document.getElementById('msOvernemenStartBtn');
+  if (!knop) return;
+  const n = _msOvCtx.bron ? _msOvGeselecteerd().length : 0;
+  knop.disabled = !n || _msOvCtx.bezig;
+  knop.textContent = n ? `Overnemen (${n})` : 'Overnemen';
+}
+function _msOvToggleGroep(odId, aan) {
+  document.querySelectorAll(`#msOvernemenRijen .msov-cb[data-od-id="${odId}"]`).forEach(cb => { cb.checked = !!aan; });
+  _msOvUpdateKnop();
+}
+function _msOvRenderRijen() {
+  const bron = _msOvCtx.bron;
+  const lijstEl = document.getElementById('msOvernemenRijen');
+  const info = document.getElementById('msOvernemenInfo');
+  if (!bron || !lijstEl) return;
+  const eerder = new Set(_msOvGeselecteerd());   // vinkjes bewaren bij wissel van doel
+  const bronRegels = _msOvRegelsVan(bron);
+  const doel = _msOvDoelOd();
+  const doelRegels = doel ? (doel.od.regels || []) : [];
+  const heeftDoel = (naam) => doelRegels.some(r => _msOvNorm(r.naam) === _msOvNorm(naam));
+  const rijen = (bron.meetstaat || []).filter(ms => !_isAutoMs(ms));
+  if (!rijen.length) {
+    lijstEl.innerHTML = '<div style="font-size:0.8rem; color:var(--muted); padding:0.4rem;">Deze bron heeft geen meetstaat-rijen.</div>';
+    if (info) info.textContent = '';
+    _msOvUpdateKnop();
+    return;
+  }
+  // Groeperen per onderdeel van de bron, in bronvolgorde; rijen zonder regel onderaan.
+  const groepen = [];
+  const perOd = {};
+  rijen.forEach(ms => {
+    const ctx = bronRegels.find(x => x.regel.id === ms.calcRegelId);
+    const key = ctx ? ctx.odId : '__los__';
+    if (!perOd[key]) { perOd[key] = { key, label: ctx ? `${ctx.hgNaam} \u203a ${ctx.odNaam}` : 'Zonder calc-regel', rijen: [] }; groepen.push(perOd[key]); }
+    perOd[key].rijen.push({ ms, ctx });
+  });
+  let html = '';
+  let nTek = 0;
+  groepen.forEach(g => {
+    html += `<div class="msov-groep"><div class="msov-kop"><input type="checkbox" onchange="_msOvToggleGroep('${g.key}', this.checked)" title="Alle rijen van dit onderdeel"> ${_escapeHtml(g.label)} <span style="font-weight:400; color:var(--ink-soft);">\u00b7 ${g.rijen.length}</span></div>`;
+    g.rijen.forEach(({ ms, ctx }) => {
+      const tek = (ms.tekening && ms.tekening.vorm) ? ms.tekening : null;
+      if (tek) nTek++;
+      const naam = ms.omschrijving || (tek && tek.naam) || (ctx ? ctx.regel.naam : '') || 'Rij';
+      const maat = [ms.bCm ? `b ${ms.bCm}` : '', ms.hCm ? `h ${ms.hCm}` : '', `\u00d7 ${ms.aantal != null ? ms.aantal : 1}`, (ms.factor != null && +ms.factor !== 1) ? `f ${String(ms.factor).replace('.', ',')}` : ''].filter(Boolean).join(' \u00b7 ');
+      let status;
+      if (!ctx) status = '<span class="msov-status los">zonder regel</span>';
+      else if (heeftDoel(ctx.regel.naam)) status = `<span class="msov-status" title="Hangt aan de bestaande regel in het doelonderdeel">\u2192 ${_escapeHtml(ctx.regel.naam)}</span>`;
+      else status = `<span class="msov-status nieuw" title="Regel bestaat nog niet in het doelonderdeel en wordt aangemaakt als kopie met verfsysteem">+ ${_escapeHtml(ctx.regel.naam)}</span>`;
+      // Vullingen/roeden in de tekening die ook een regel nodig hebben
+      let extra = '';
+      if (tek) {
+        const nieuw = _msOvTekRegelIds(tek).map(id => bronRegels.find(x => x.regel.id === id)).filter(x => x && !heeftDoel(x.regel.naam)).map(x => x.regel.naam);
+        if (nieuw.length) extra = `<div class="msov-maat">+ regel: ${_escapeHtml(Array.from(new Set(nieuw)).join(', '))}</div>`;
+      }
+      html += `<label class="msov-rij"><input type="checkbox" class="msov-cb" data-ms-id="${ms.id}" data-od-id="${g.key}" ${eerder.has(ms.id) ? 'checked' : ''} onchange="_msOvUpdateKnop()">
+        <span class="msov-thumb">${tek ? _kozijnThumbSvg(tek, 30) : ''}</span>
+        <span class="msov-tekst"><div>${_escapeHtml(naam)}</div><div class="msov-maat">${_escapeHtml(maat)}${ctx && ms.omschrijving ? ' \u00b7 ' + _escapeHtml(ctx.regel.naam) : ''}</div>${extra}</span>
+        ${status}</label>`;
+    });
+    html += '</div>';
+  });
+  lijstEl.innerHTML = html;
+  if (info) info.textContent = `${rijen.length} rij${rijen.length === 1 ? '' : 'en'}${nTek ? `, waarvan ${nTek} met tekening` : ''}. Gebrekstippen gaan niet mee.`;
+  _msOvUpdateKnop();
+}
+async function _msOvernemenStart() {
+  if (!data.calc || !_msOvCtx.bron || _msOvCtx.bezig) return;
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) { _toast('Deze offerte is vergrendeld'); return; }
+  const bron = _msOvCtx.bron;
+  const doel = _msOvDoelOd();
+  if (!doel) { _toast('Kies een doelonderdeel.'); return; }
+  const gekozen = new Set(_msOvGeselecteerd());
+  if (!gekozen.size) return;
+  const bronRegels = _msOvRegelsVan(bron);
+  const rijen = (bron.meetstaat || []).filter(ms => !_isAutoMs(ms) && gekozen.has(ms.id));
+  _msOvCtx.bezig = true;
+  _msOvUpdateKnop();
+  const doelId = data.calc.id;
+  const od = doel.od;
+  od.regels = od.regels || [];
+  let nextVolgorde = od.regels.reduce((m, r) => Math.max(m, r.volgorde || 0), 0) + 10;
+  let aangemaakt = 0, gelukt = 0, metTek = 0, mislukt = 0, los = 0;
+  const cache = {};   // bron-regel-id → doel-regel-id ('' als het niet lukte)
+  const vindOfMaak = async (bronRegelId) => {
+    if (!bronRegelId) return '';
+    if (cache[bronRegelId] !== undefined) return cache[bronRegelId];
+    const ctx = bronRegels.find(x => x.regel.id === bronRegelId);
+    if (!ctx) { cache[bronRegelId] = ''; return ''; }   // wees in de bron
+    const r = ctx.regel;
+    const bestaand = od.regels.find(x => _msOvNorm(x.naam) === _msOvNorm(r.naam));
+    if (bestaand) { cache[bronRegelId] = bestaand.id; return bestaand.id; }
+    // Aanmaken als kopie met stappen-snapshot; hoeveelheid 0, want de meetstaat vult die.
+    const payload = {
+      naam: r.naam, systeemId: r.systeemId, hoeveelheid: 0, toeslag: r.toeslag,
+      systeemNaam: r.systeemNaam, systeemEenheid: r.systeemEenheid,
+      systeemOndergrond: r.systeemOndergrond, systeemOndergrondId: r.systeemOndergrondId,
+      systeemLocatie: r.systeemLocatie, volgorde: nextVolgorde,
+      stappen: (r.stappen || []).map((st, i) => ({ ...st, volgorde: i }))
+    };
+    if (typeof r.actief === 'boolean') payload.actief = r.actief;
+    const nieuw = await _insertRegelDB(payload, od.id);
+    if (!nieuw) { cache[bronRegelId] = ''; return ''; }
+    od.regels.push(nieuw);
+    nextVolgorde += 10;
+    aangemaakt++;
+    cache[bronRegelId] = nieuw.id;
+    return nieuw.id;
+  };
+  const hermap = (node, map) => {
+    if (!node || typeof node !== 'object') return;
+    if (node.regelId !== undefined) {
+      const nieuw = map[node.regelId] || '';
+      node.regelId = nieuw;
+      if (!nieuw) node.label = '';
+    }
+    if (Array.isArray(node.k)) node.k.forEach(k => hermap(k, map));
+  };
+  for (const ms of rijen) {
+    if (!data.calc || data.calc.id !== doelId) break;   // intussen een andere calculatie geopend
+    const regelId = await vindOfMaak(ms.calcRegelId);
+    if (ms.calcRegelId && !regelId) los++;
+    let tek = null;
+    if (ms.tekening && ms.tekening.vorm) {
+      tek = JSON.parse(JSON.stringify(ms.tekening));
+      tek.markeringen = [];   // gebrekstippen horen bij het exemplaar, niet bij het model
+      const map = {};
+      for (const id of _msOvTekRegelIds(tek)) map[id] = await vindOfMaak(id);
+      hermap(tek.verdeling, map);
+      if (tek.roedenRegelId) tek.roedenRegelId = map[tek.roedenRegelId] || '';
+      if (Array.isArray(tek.vlakkenM2PerRegel)) tek.vlakkenM2PerRegel.forEach(v => { const n = map[v.regelId] || ''; v.regelId = n; if (!n) v.label = ''; });
+    }
+    const saved = await _insertMeetstaatDB({
+      calcRegelId: regelId, omschrijving: ms.omschrijving || '',
+      hCm: ms.hCm || 0, bCm: ms.bCm || 0, aantal: ms.aantal != null ? ms.aantal : 1,
+      factor: ms.factor != null ? ms.factor : 1, opmerking: ms.opmerking || '', tekening: tek
+    }, doelId, data.calc.meetstaat.length);
+    if (!saved) { mislukt++; continue; }
+    data.calc.meetstaat.push(saved);
+    gelukt++;
+    if (tek) metTek++;
+  }
+  _msOvCtx.bezig = false;
+  _msOvernemenSluit();
+  if (data.calc && data.calc.id === doelId) {
+    _touchCalc(doelId);
+    renderMeetstaat();
+    if (typeof renderCalcStructuur === 'function') renderCalcStructuur();
+    if (typeof renderTotals === 'function') renderTotals();
+    await _syncVullingMeetstaat();
+  }
+  const bronNaam = bron === data.calc ? 'deze calculatie' : (bron.naam || '(zonder naam)');
+  let msg = `${gelukt} rij${gelukt === 1 ? '' : 'en'} overgenomen uit ${bronNaam} naar ${od.naam || '(zonder naam)'}`
+    + (metTek ? `, ${metTek} met tekening` : '')
+    + (aangemaakt ? `, ${aangemaakt} calc-regel${aangemaakt === 1 ? '' : 's'} aangemaakt` : '') + '.';
+  if (los) msg += ` ${los} rij${los === 1 ? '' : 'en'} kon niet aan een regel gehangen worden en staat op "nog koppelen".`;
+  if (mislukt) msg += ` ${mislukt} rij${mislukt === 1 ? '' : 'en'} niet gelukt.`;
+  _toast(msg, (gelukt && !mislukt && !los) ? 'ok' : undefined);
 }
 
 // ---- Foto's overnemen uit een andere calculatie (v4.93.0) ----
