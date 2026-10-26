@@ -294,6 +294,22 @@
   .modaal section { padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--paper-deep); }
   .modaal section:last-child { border-bottom: none; }
   .modaal h3 { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--ink-soft); }
+  /* handleiding (v0.23.0): venster met zoekveld; secties verbergen bij een zoekterm */
+  .hmodaal { max-width: 760px; }
+  .hmodaal header h2 .m { font-weight: 400; color: var(--muted); font-size: 0.8rem; margin-left: 0.4rem; }
+  .hmodaal .hzoek input[type=search] { width: 100%; box-sizing: border-box; font: inherit; font-size: 0.9rem; padding: 0.45rem 0.6rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); }
+  .hmodaal .hlijst { margin: 0.2rem 0 0.6rem; padding-left: 1.4rem; font-size: 0.85rem; columns: 2; column-gap: 1.5rem; }
+  .hmodaal .hlijst li { break-inside: avoid; padding: 0.1rem 0; }
+  .hmodaal a[data-hga] { color: var(--blue); text-decoration: none; }
+  .hmodaal a[data-hga]:hover { text-decoration: underline; }
+  .hmodaal .hsec p, .hmodaal .hsec ul { font-size: 0.85rem; line-height: 1.45; margin: 0.35rem 0; }
+  .hmodaal .hsec ul { padding-left: 1.2rem; }
+  .hmodaal .hsec h3 { font-size: 0.95rem; color: var(--ink); margin-bottom: 0.35rem; }
+  .hmodaal .hsinds { color: var(--muted); font-size: 0.75rem; }
+  .hmodaal .hregister { list-style: none; padding-left: 0; }
+  .hmodaal .hsec.hweg, .hmodaal .hinhoud.hweg { display: none; }
+  .hmodaal .hsec.hlicht { background: #fffbeb; }
+  @media (max-width: 700px) { .hmodaal .hlijst { columns: 1; } }
   .rij { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
   .rij input, .rij select { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.5rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); }
   .rij input[type=text] { flex: 1; min-width: 120px; }
@@ -352,6 +368,7 @@
       <button class="knop kennisknop" id="kennisKnop" style="display:none" title="Kennisgevingen aan klanten die nu verstuurd kunnen worden (maand, week of startdag). Klik om er langs te gaan."></button>
       <button class="knop" id="verversKnop" title="Projecten opnieuw uit Yoobi halen">Yoobi verversen</button>
       <button class="knop" id="beheerKnop">Vrije dagen &amp; medewerkers</button>
+      <button class="knop" id="handleidingKnop" title="Hoe werkt de planning? Uitleg per onderdeel, met zoekveld">Handleiding</button>
       <button class="knop" id="naarVandaag">Vandaag</button>
       <div class="jaarkiezer">
         <button id="jaarMin" title="Vorig jaar">‹</button>
@@ -476,6 +493,220 @@
     <section id="historieInhoud"></section>
   </div>
 </div>
+<div class="overlay" id="handleidingOverlay">
+  <div class="modaal hmodaal">
+    <header><h2>Handleiding planning <span class="m" id="handleidingVersie"></span></h2><button class="sluit" id="handleidingSluit" title="Sluiten">×</button></header>
+    <section class="hzoek">
+      <input type="search" id="handleidingZoek" placeholder="Zoek in de handleiding… (bv. volgorde, steiger, nabellen)" aria-label="Zoek in de handleiding" autocomplete="off">
+      <div class="hint" id="handleidingTreffers" style="margin:0.3rem 0 0"></div>
+    </section>
+    <section class="hinhoud" id="handleidingInhoud">
+      <h3>Inhoud</h3>
+      <ol class="hlijst">
+        <li><a href="#h1" data-hga="h1">Het bord lezen</a></li>
+        <li><a href="#h2" data-hga="h2">Project openen en de cijfers</a></li>
+        <li><a href="#h3" data-hga="h3">Uren plannen</a></li>
+        <li><a href="#h4" data-hga="h4">Datums verschuiven</a></li>
+        <li><a href="#h5" data-hga="h5">Fasen</a></li>
+        <li><a href="#h6" data-hga="h6">Hulpmiddelen</a></li>
+        <li><a href="#h7" data-hga="h7">Klantafspraak bij de lijn</a></li>
+        <li><a href="#h8" data-hga="h8">Dagvenster: één dag vrij, en de volgorde in de agenda</a></li>
+        <li><a href="#h9" data-hga="h9">Vrije dagen &amp; medewerkers</a></li>
+        <li><a href="#h10" data-hga="h10">Agenda-abonnement per medewerker</a></li>
+        <li><a href="#h11" data-hga="h11">Kennisgevingen aan de klant</a></li>
+        <li><a href="#h12" data-hga="h12">Over datum</a></li>
+        <li><a href="#h13" data-hga="h13">Verbergen, paraplu-projecten en "Nog geen datum"</a></li>
+        <li><a href="#h14" data-hga="h14">Yoobi verversen</a></li>
+        <li><a href="#h15" data-hga="h15">Als iets misgaat</a></li>
+        <li><a href="#h16" data-hga="h16">Ik wil… (register op taak)</a></li>
+      </ol>
+      <div class="hint">Elk onderdeel heeft dezelfde opbouw: <b>Waar</b> vind je het · <b>Wat</b> doet het · <b>Hoe</b> doe je het · <b>Let op</b> · <b>Sinds</b> welke versie. Typ in het zoekveld om alleen de passende onderdelen te zien.</div>
+    </section>
+
+    <section class="hsec" id="h1" data-trefwoorden="bord jaar jaarkiezer vandaag weekend gesloten ziek legenda lijn blok gestreept oranje aanname rood zoeken zoekveld kolom inklappen weeknummer">
+      <h3>1. Het bord lezen</h3>
+      <p><b>Waar.</b> Het hoofdscherm. Links de projecten, rechts het jaarrooster met dagkolommen en weeknummers; rechts daarvan het paneel.</p>
+      <p><b>Wat.</b> Elke rij is een project uit Yoobi (of een fase ervan). De dunne blauwe <i>lijn</i> is de periode van start tot eind; alleen dagen waarop iemand uren heeft, krijgen een vol <i>blok</i>. Zo zie je het werk en niet de contractperiode.</p>
+      <ul>
+        <li><b>Gestreepte lijn</b>: er is nog niemand op gepland.</li>
+        <li><b>Oranje gestippeld</b>: aanname. De Yoobi-start ligt in een eerder jaar en er is geen eigen datum gezet; de lijn begint dan op vandaag. Zet de echte start in het paneel (zie 4).</li>
+        <li><b>Rood gestreept</b>: over datum (zie 12).</li>
+        <li><b>Grijs</b>: weekend, niet invulbaar. <b>Grijs gearceerd met ✕</b>: gesloten dag of verlof. <b>Licht rood met z</b>: ziekdag uit de personeelsmodule (alleen zichtbaar voor wie personeel mag zien).</li>
+        <li><b>Smalle gekleurde strook</b> onderin een projectrij: hulpmiddel (zie 6). De legenda onder het bord geeft de kleuren.</li>
+      </ul>
+      <p><b>Hoe.</b> Jaar kiezen met ‹ › in de kop; <b>Vandaag</b> scrolt naar de huidige dag. Het <b>zoekveld</b> (boven de linkerkolom, of in de kop als de kolom is ingeklapt) filtert op klant, projectnaam of Yoobi-code terwijl je typt. Met ‹ › linksboven in het rooster klap je de linkerkolom in of uit; die keuze onthoudt de browser.</p>
+      <p><b>Let op.</b> De totaaltelling onderaan rekent altijd over alle projecten, ook als het zoekveld er maar een paar toont. Werk van een ander jaar staat niet op dit bord; wissel van jaar.</p>
+      <p class="hsinds">Sinds v0.1.0; lijn-en-blokken sinds v0.6.0; zoeken en inklappen sinds v0.7.0; ziekdagen sinds v0.10.0.</p>
+    </section>
+
+    <section class="hsec" id="h2" data-trefwoorden="paneel cijfers aanneemsom budget ingepland geboekt nog te plannen nog te werken wijkt af yoobi">
+      <h3>2. Project openen en de cijfers</h3>
+      <p><b>Waar.</b> Klik op de projectnaam in de linkerkolom. De medewerkerrijen klappen uit onder het project en het paneel rechts vult zich. Nog een klik klapt weer in.</p>
+      <p><b>Wat.</b> Het paneel toont: <b>Aanneemsom</b> · <b>Budget</b> (uren) · <b>Ingepland &lt;jaar&gt;</b> (alleen dit bordjaar) · <b>Geboekt</b> (uit Yoobi) · <b>Nog te plannen</b> = budget − ingepland over álle jaren · <b>Nog te werken</b> = budget − geboekt. Rood betekent: onder nul, dus meer ingezet of gewerkt dan het budget.</p>
+      <p>Daaronder de Yoobi-datums en, als onze planning ervan afwijkt, de melding <i>Onze planning wijkt af van Yoobi</i>. Dat is geen fout: Yoobi's startdatum is de opdrachtdatum, niet de geplande uitvoering.</p>
+      <p><b>Let op.</b> Nog te plannen en nog te werken zijn twee verschillende vragen. Een lopend project kan netjes vol gepland staan (nog te plannen 0) en toch over zijn budget gaan (nog te werken rood).</p>
+      <p class="hsinds">Sinds v0.1.0; twee aparte restanten sinds v0.9.3; alle jaren sinds v0.12.0.</p>
+    </section>
+
+    <section class="hsec" id="h3" data-trefwoorden="uren plannen cel invullen pijltjes totaalrij restant norm overschrijding rood hoekje komma">
+      <h3>3. Uren plannen</h3>
+      <p><b>Waar.</b> Open een project (zie 2). Per medewerker een rij met een cel per dag.</p>
+      <p><b>Hoe.</b> Typ het aantal uren in de cel (komma of punt mag). Opslaan gebeurt zodra je de cel verlaat. Een cel leegmaken verwijdert de uren. Pijltjestoetsen bewegen door het rooster; klik je in een gevulde cel, dan staat het hele getal geselecteerd en vervangt wat je typt het meteen.</p>
+      <p><b>Wat je terugziet.</b> De rij <i>Nog te plannen per dag</i> onderaan het bord toont per medewerker het restant (norm min gepland): grijs = niets gepland, oranje = deels, groen = precies vol, rood = te veel. Een <b>rood hoekje</b> op een cel betekent dat die medewerker op die dag boven zijn norm zit; aanwijzen geeft de uitleg.</p>
+      <p><b>Let op.</b> Weekend, gesloten dagen en hele vrije dagen zijn niet invulbaar. Een reservering (bijvoorbeeld 4 uur bureau) laat de rest van de dag wél planbaar. Bij een project in fasen is een dag alleen invulbaar in de fase waar hij bij hoort (zie 5).</p>
+      <p class="hsinds">Sinds v0.1.0; selectie van het hele getal sinds v0.9.2.</p>
+    </section>
+
+    <section class="hsec" id="h4" data-trefwoorden="datum verschuiven slepen greep start eind terug naar yoobi meeverschuiven uren werkdagen bevestiging aanraking ipad">
+      <h3>4. Datums verschuiven</h3>
+      <p><b>Waar.</b> Op het bord (slepen) of in het paneel (datumvelden <b>Start</b> en <b>Eind</b>).</p>
+      <p><b>Hoe, slepen.</b> Pak de lijn in het midden vast: start en eind schuiven samen. Pak een <i>greep</i> aan het uiteinde: alleen start of alleen eind schuift. Tijdens het slepen staan de nieuwe datums rechtsboven. Op een touchscreen begint het slepen pas na ongeveer een halve seconde vasthouden, zodat scrollen blijft werken.</p>
+      <p><b>Hoe, paneel.</b> Vul Start en/of Eind in. <b>Terug naar Yoobi-datum</b> wist onze eigen datums; het project volgt dan weer Yoobi.</p>
+      <p><b>Uren mee?</b> Bij een hele verschuiving (midden slepen, of start én eind evenveel opschuiven) vraagt het bord of de geplande uren mee moeten. Je ziet aantal uren, dagen en werkdagen. Elke geplande dag schuift dan evenveel <i>werkdagen</i> op; weekend en gesloten dagen tellen niet mee. Zijn er hulpmiddelen, dan komt een aparte vraag of die mee moeten; standaard schuift niets mee (een bestelde steiger schuift meestal niet).</p>
+      <p><b>Let op.</b> Trek je alleen aan een uiteinde, dan blijven de uren waar ze staan. Bij meeverschuiven gaan alleen de uren van het bordjaar mee; een fase die zelf over de jaargrens ligt verschuif je per bordjaar. Na een hele verschuiving gaat de handmatige agenda-volgorde van die dagen verloren (zie 8), en bij een verschoven start kan een correctie-kennisgeving nodig zijn (zie 11). Slepen op iPad is niet door Claude getest; de datumvelden zijn het zekere alternatief.</p>
+      <p class="hsinds">Sinds v0.2.0.</p>
+    </section>
+
+    <section class="hsec" id="h5" data-trefwoorden="fase fasen knippen knip samenvoegen fasenaam opknippen jaargrens">
+      <h3>5. Fasen</h3>
+      <p><b>Waar.</b> In het paneel, onder de datums: <b>Knip in fasen op</b> met een datumveld en de knop <b>Knip</b>.</p>
+      <p><b>Wat.</b> Alles vóór de gekozen datum wordt fase 1, vanaf die datum fase 2. Elke fase is een eigen rij op het bord, met eigen lijn, eigen klantafspraak en eigen plek in de sortering (fase 2 van een project staat gewoon tussen de projecten van die maand). Een fase kun je nog eens knippen.</p>
+      <p><b>Hoe.</b> In het fasepaneel per fase: naam aanpassen (standaard "fase 1", "fase 2", …), een nieuwe knipdatum, en <b>Samenvoegen met vorige</b> (met de fase erboven). Blijft er één fase over, dan verdwijnen de fasen en krijgt het project die periode als eigen start/eind terug.</p>
+      <p><b>Let op.</b> Elke dag hoort bij precies één fase: de fase waarin hij valt, anders de dichtstbijzijnde. Een uur staat nooit dubbel en raakt nooit kwijt; in de andere faserijen is die dag niet invulbaar. Hulpmiddelen en kennisgevingen van een samengevoegde fase gaan mee naar de overblijvende fase. Kennisgevingen aan de klant lopen per fase (zie 11).</p>
+      <p class="hsinds">Sinds v0.8.0; fasen houden hun identiteit bij knippen en samenvoegen sinds v0.22.0.</p>
+    </section>
+
+    <section class="hsec" id="h6" data-trefwoorden="hulpmiddel hulpmiddelen hoogwerker rolsteiger steiger toilet overig strook periode notitie leverancier">
+      <h3>6. Hulpmiddelen</h3>
+      <p><b>Waar.</b> In het paneel, blok <b>Hulpmiddelen</b>, per project of per fase.</p>
+      <p><b>Wat.</b> Soorten: hoogwerker (oranje), rolsteiger (blauw), vaste steiger (rood), mobiel toilet (geel), overig (grijs, met eigen naam). Elk met een periode (van opbouw tot afbouw) en een notitie (leverancier, tijd). Op het bord komt een smalle strook onderin de projectrij, met de naam erin; aanwijzen toont periode en notitie. Overlappen twee middelen in tijd, dan komen ze onder elkaar en wordt de rij hoger.</p>
+      <p><b>Hoe.</b> Toevoegen: kies de soort, de periode (standaard de periode van het project of de gekozen fase), eventueel een notitie, <b>Toevoegen</b>. Bij "overig" is een naam verplicht. Bestaande regels pas je direct aan; ✕ verwijdert na bevestiging.</p>
+      <p><b>Let op.</b> Er is geen waarschuwing voor dubbel gebruik van hetzelfde middel op dezelfde dag: de hoogwerker wordt gehuurd. Bij een hele verschuiving van het project vraagt het bord apart of de hulpmiddelen mee moeten (zie 4).</p>
+      <p class="hsinds">Sinds v0.9.0; overlappende middelen onder elkaar sinds v0.10.1.</p>
+    </section>
+
+    <section class="hsec" id="h7" data-trefwoorden="klantafspraak afspraak notitie label lijn vast doc week">
+      <h3>7. Klantafspraak bij de lijn</h3>
+      <p><b>Waar.</b> Het kleine label naast de projectnaam, vóór het begin van de lijn (of erachter als er links geen ruimte is). Leeg staat er <i>+ afspraak</i>.</p>
+      <p><b>Wat.</b> Een vrije notitie over wat met de klant is afgesproken, bijvoorbeeld "vast doc week 46". Bij fasen heeft elke fase een eigen afspraak.</p>
+      <p><b>Hoe.</b> Klik op het label, typ, Enter of wegklikken slaat op; Escape breekt af.</p>
+      <p><b>Let op.</b> Dit is een tekst voor onszelf op het bord. Hij gaat niet naar de klant en niet naar de agenda-feed.</p>
+      <p class="hsinds">Sinds v0.1.0; vóór de lijn sinds v0.7.0; per fase sinds v0.8.0.</p>
+    </section>
+
+    <section class="hsec" id="h8" data-trefwoorden="dagvenster dag vrij reservering volgorde agenda eerst tweede nummer pijl omhoog omlaag popover onderaan bord">
+      <h3>8. Dagvenster: één dag vrij, en de volgorde in de agenda</h3>
+      <p><b>Waar.</b> Klik onderaan het bord, in de totaalrij, op een dag bij een medewerker. Er opent een klein venster.</p>
+      <p><b>Vrij zetten.</b> Uren leeg laten en <b>Opslaan</b> = hele dag vrij (✕). Een getal invullen = reservering: zoveel uur niet beschikbaar, de rest blijft planbaar. Staat er al verlof, dan toont het venster dat met de knop <b>Opheffen</b>. Staan er al uren gepland, dan waarschuwt het venster. Een ziekdag uit Personeel kun je hier niet opheffen; dat doe je in Personeel.</p>
+      <p><b>Volgorde in de agenda.</b> Werkt een medewerker die dag op twee of meer projecten, dan toont het venster de lijst <i>Volgorde in de agenda</i> in de volgorde zoals zijn agenda-abonnement hem krijgt. Per project staan de nummerknoppen <b>1, 2, 3 …</b> (de huidige plek staat vet) en <b>▲</b> (één plek eerder) / <b>▼</b> (één plek later). Klik het nummer waar het project moet komen; de rest schuift door. De statusbalk meldt <i>Volgorde opgeslagen; de agenda volgt bij de volgende verversing</i>.</p>
+      <p><b>Zonder keuze</b> geldt de regel: grootste urenblok eerst, dan klant alfabetisch, dan Yoobi-code. Dat staat dan als "(regel: grootste eerst)" bij de lijst.</p>
+      <p><b>Let op.</b> Bij één project op een dag verschijnt de lijst niet. Verschuif je het project als geheel of wis je de uren, dan is de handmatige volgorde van die dagen weg; stel hem daarna opnieuw in. De agenda-app ververst zelf, meestal binnen een paar uur; de volgorde staat dus niet direct op de telefoon.</p>
+      <p class="hsinds">Vrij zetten sinds v0.3.0; reservering sinds v0.5.0; volgorde sinds v0.14.0; nummerknoppen en ▲▼ sinds v0.20.0.</p>
+    </section>
+
+    <section class="hsec" id="h9" data-trefwoorden="vrije dagen medewerkers beheer feestdagen gesloten bedrijfsvakantie bouwvak verlof wekelijks herhalen norm actief volgorde toevoegen ziek personeel">
+      <h3>9. Vrije dagen &amp; medewerkers</h3>
+      <p><b>Waar.</b> Knop <b>Vrije dagen &amp; medewerkers</b> in de kop. Het scherm heeft drie blokken.</p>
+      <p><b>Gesloten dagen (voor iedereen).</b> <b>Nederlandse feestdagen voorstellen</b> toont de feestdagen van het bordjaar, aangevinkt behalve wat er al staat; <b>Aangevinkte dagen toevoegen</b> zet ze erin. Een eigen periode: van – t/m, soort (bedrijfsvakantie of feestdag), omschrijving, <b>Toevoegen</b>. Weekenddagen in een periode worden overgeslagen.</p>
+      <p><b>Verlof per medewerker.</b> Medewerker, van – t/m, eventueel uren (leeg = hele dag vrij; een getal = reservering), omschrijving. Vink <b>wekelijks herhalen t/m</b> aan voor iets als "elke vrijdag 4 uur bureau tot 9 oktober" in één handeling. Voor één dag is het dagvenster sneller (zie 8).</p>
+      <p><b>Medewerkers.</b> Per medewerker: norm (uren per dag, telt in de totaalrij), actief aan/uit, volgorde met de pijltjes, en de knop <b>Agenda</b> (zie 10). Nieuwe medewerker: naam en norm, <b>Toevoegen</b>; een dubbele naam wordt geweigerd.</p>
+      <p><b>Let op.</b> Niet actief = verdwijnt van het bord, maar de uren blijven bewaard; zet hem weer actief en alles staat er nog. Ziekdagen komen automatisch uit de personeelsmodule en staan niet in dit scherm; een eigen verlofregel op dezelfde dag wint van de ziekmelding.</p>
+      <p class="hsinds">Gesloten dagen en verlof sinds v0.3.0; medewerkers sinds v0.4.0; reservering en herhalen sinds v0.5.0.</p>
+    </section>
+
+    <section class="hsec" id="h10" data-trefwoorden="agenda abonnement link webcal apple google iphone qr kopieer vernieuwen intrekken tijdblok 08:00 16:15 ics">
+      <h3>10. Agenda-abonnement per medewerker</h3>
+      <p><b>Waar.</b> Vrije dagen &amp; medewerkers → blok Medewerkers → knop <b>Agenda</b> achter de naam (✓ als er al een link is).</p>
+      <p><b>Wat.</b> Een abonnementslink waarmee de medewerker zijn planning in Apple Agenda of Google Agenda ziet. Alleen lezen, ververst vanzelf. Per project per dag één tijdblok, achter elkaar vanaf 08:00 met pauzes verrekend, standaard tot 16:15 bij een volle dag; de volgorde van de blokken is die uit het dagvenster (zie 8). Verlof komt als hele-dag-item. In de omschrijving staan de uren, de Yoobi-code en de zin dat de tijden een indeling van de uren zijn en geen afspraak met de klant.</p>
+      <p><b>Hoe.</b> <b>Agenda-link maken</b>; daarna zie je de link, een QR-code, <b>Kopieer link</b> en <b>Open in agenda-app</b>. iPhone: QR scannen of op de link tikken, Agenda vraagt dan om het abonnement toe te voegen. Google Agenda: op de computer bij <i>Andere agenda's → Via URL</i> de link plakken (deze menutekst is niet door Claude gecontroleerd). <b>Link vernieuwen</b> maakt een nieuwe link; de oude werkt daarna niet meer en de medewerker moet opnieuw abonneren. Intrekken verwijdert de feed.</p>
+      <p><b>Let op.</b> Wie de link doorstuurt, geeft zijn planning weg: dan <b>Link vernieuwen</b>. Meer dan 7,5 uur op een dag loopt in de agenda voorbij 16:15 door, met een "Let op" in de omschrijving: dat is zichtbaar met opzet. Hoe de agenda er op de telefoon precies uitziet kan Claude niet zien; wat hier staat komt uit de code en de changelog.</p>
+      <p class="hsinds">Sinds v0.13.0; tijdblokken sinds v0.14.0.</p>
+    </section>
+
+    <section class="hsec" id="h11" data-trefwoorden="kennisgeving kennisgevingen klant mail maand week startdag aankondiging contactpersoon aanhef versturen overslaan correctie corrigeren afgeleverd geopend bevestigd bounce niet afgeleverd nabellen historie taak taken-app teller envelop">
+      <h3>11. Kennisgevingen aan de klant</h3>
+      <p><b>Waar.</b> Op het bord een label ✉ bij de projectrij (of faserij) en een teller in de kop; klik op de teller en je springt langs de projecten waar iets te versturen is. In het paneel het blok <b>Kennisgevingen aan de klant</b> (bij fasen: per fase, het blok volgt de gekozen fase).</p>
+      <p><b>Wat.</b> Drie mails per project of fase, elk na een klik en met de tekst in beeld, nooit automatisch:</p>
+      <ul>
+        <li><b>Maand</b>: signaal op de maandag nadat de eerste uren zijn ingevoerd. "Wij hebben uw werk voorlopig ingepland in …"</li>
+        <li><b>Week</b>: ongeveer twee weken voor de start. Noemt de week.</li>
+        <li><b>Startdag</b>: in de week ervoor. Noemt de dag en een geschatte begintijd (± 8:15, of een later tijdvak) van de eerste lichting schilders.</li>
+      </ul>
+      <p><b>Hoe.</b> Klik <b>versturen</b> bij de regel. In het venster: contactpersoon kiezen (uit Yoobi of handmatig), aanhef (heer/mevrouw/echtpaar/familie/zakelijk plus achternaam; die gokt het bord uit de Yoobi-naam, controleer hem), onderwerp en tekst aanpassen, <b>Versturen</b>. Onder de tekst zet het systeem zelf een knop <i>"Ja, ik heb dit ontvangen"</i> en je volledige mailhandtekening. Afzender info@ernes.nl, antwoorden komen op info@, kopie naar administratie@. Wil je geen mail (korte termijn, al gebeld): <b>overslaan</b>; het signaal verdwijnt en er gaat niets weg.</p>
+      <p><b>Status.</b> Achter "verstuurd …" komt: <i>afgeleverd</i>, <i>geopend</i> (alleen als open-tracking bij Resend aanstaat), <i>bevestigd</i> (groen, de klant klikte de knop), <i>nog niet bevestigd</i>, of <i>NIET afgeleverd (reden)</i> (rood, fout adres). Blijft een bevestiging 3 werkdagen uit, dan wordt het label oranje <b>✉ nabellen</b> en komt er een taak "nabellen" in de taken-app bij Maud. Bij een bounce meteen een taak "NIET afgeleverd". Nabellen vervalt vanzelf als een latere kennisgeving voor hetzelfde werk wél bevestigd is.</p>
+      <p><b>Correctie.</b> Verschuift de planning na een verzending, dan wordt het label oranje en staat er <b>corrigeren</b>: dezelfde mail, maar beginnend met wat er eerder is gezegd en wat het nu wordt. Ook een correctie kun je overslaan.</p>
+      <p><b>Historie.</b> Knop <b>historie · n</b> in het paneel toont elke verstuurde en overgeslagen kennisgeving van het project met datum, adres, bezorgstatus, onderwerp en de volledige tekst. Alleen lezen.</p>
+      <p><b>Let op.</b> Mails van vóór 9 oktober 2026 hadden geen bevestigingsknop en geven nooit een nabel-signaal. Elke fase heeft zijn eigen cyclus; fase 1 kondigt fase 2 niet aan. De taken in de taken-app sluiten vanzelf bij versturen, overslaan of bevestigen; ze hoef je daar niet af te vinken (nabel- en bouncetaken mag je wél handmatig afvinken). De begintijd in de startdagmail is een indeling van de geplande uren, geen afspraak die de planning vastlegt.</p>
+      <p class="hsinds">Sinds v0.15.0; aanhef v0.16.0; correctietekst v0.16.1; status, bevestigen en nabellen v0.19.x; historie v0.21.0; afzender info@ v0.21.1; per fase v0.22.0.</p>
+    </section>
+
+    <section class="hsec" id="h12" data-trefwoorden="over datum rood knop herplannen sluiten yoobi werkdagen regen niet uitgevoerd">
+      <h3>12. Over datum</h3>
+      <p><b>Wat.</b> Een project dat nog open staat in Yoobi en waarvan het einde op ons bord meer dan 2 werkdagen vóór vandaag ligt (weekend en gesloten dagen tellen niet mee; bij fasen telt het einde van de laatste fase). De regel: gesloten in Yoobi is echt klaar; wat over datum is en nog open staat, moet ofwel herpland ofwel in Yoobi gesloten worden.</p>
+      <p><b>Waar.</b> Rood label <i>Over datum</i> in de linkerkolom, rode gestreepte lijn en rode blokken op de rij. In de kop een rode knop <b>N over datum</b>; elke klik springt naar de volgende. Projecten die over datum zijn maar niet op dit jaarbord staan, komen in de kaart <i>Over datum, niet op dit bord</i> rechts.</p>
+      <p><b>Hoe.</b> Herplannen: lijn slepen of datums in het paneel (zie 4). Of het project sluiten in Yoobi en daarna <b>Yoobi verversen</b> (zie 14).</p>
+      <p><b>Let op.</b> Verborgen projecten worden met rust gelaten. Voorbeeld: eind op vrijdag → maandag en dinsdag nog stil, woensdag melding.</p>
+      <p class="hsinds">Sinds v0.11.0.</p>
+    </section>
+
+    <section class="hsec" id="h13" data-trefwoorden="verbergen verborgen tonen toon paraplu hoofdproject onderhoudsplan deelproject nog geen datum kapstok regel">
+      <h3>13. Verbergen, paraplu-projecten en "Nog geen datum"</h3>
+      <p><b>Verbergen.</b> Knop <b>Verbergen</b> in het paneel, of <b>verberg</b> in de kaart <i>Nog geen datum in Yoobi</i>: het project gaat van het bord, bijvoorbeeld een kapstokproject zonder werk. De kaart <i>Verborgen projecten</i> rechts toont ze met de knop <b>toon</b> om ze terug te zetten.</p>
+      <p><b>Paraplu-projecten.</b> Hoofdprojecten in Yoobi met de naam "Onderhoud… plan jjjj-jjjj" (twee jaartallen met een streepje, zoals "Onderhoudsplan 2026-2032" of "Onderhouds garantie+ Plan 2026-2032") staan standaard niet op het bord: het werk zit in de jaarlijkse deelprojecten. Ze staan onder Verborgen projecten met het label <i>regel</i>; <b>toon</b> haalt ze alsnog op het bord, <b>Verbergen</b> zet die uitzondering weer uit.</p>
+      <p><b>Nog geen datum in Yoobi.</b> Kaart rechts met projecten uit Yoobi zonder startdatum. Zet in Yoobi een datum en ververs, of verberg het project hier.</p>
+      <p><b>Let op.</b> Een deelproject ("Onderhoudsplan 2027", één jaartal) valt niet onder de regel en staat gewoon op het bord.</p>
+      <p class="hsinds">Verbergen sinds v0.4.0; paraplu-regel sinds v0.17.0, verruimd in v0.17.1.</p>
+    </section>
+
+    <section class="hsec" id="h14" data-trefwoorden="yoobi verversen ophalen stand peildatum sync projecten nieuw">
+      <h3>14. Yoobi verversen</h3>
+      <p><b>Waar.</b> Knop <b>Yoobi verversen</b> in de kop. De peildatum van de huidige stand staat ernaast in de ondertitel.</p>
+      <p><b>Wat.</b> Haalt de projecten opnieuw uit Yoobi (dezelfde koppeling als de financiële werkvoorraad), wacht tot de nieuwe stand er is (hoogstens twee minuten) en herlaadt het bord. Nieuwe projecten verschijnen, in Yoobi gesloten projecten verdwijnen, budget en geboekte uren worden bijgewerkt.</p>
+      <p><b>Let op.</b> Onze eigen planning (datums, uren, fasen, hulpmiddelen, kennisgevingen) blijft staan; verversen overschrijft die niet. Yoobi haalt alleen actieve projecten; een project dat niet meer in de stand zit geldt als gesloten. Duurt het langer dan twee minuten, dan meldt de statusbalk dat; probeer het dan nog eens.</p>
+      <p class="hsinds">Sinds v0.4.0.</p>
+    </section>
+
+    <section class="hsec" id="h15" data-trefwoorden="fout mislukt storing statusbalk console sql opslaan mislukt verbinding rechten niet gesloten hulp">
+      <h3>15. Als iets misgaat</h3>
+      <p><b>Lees eerst de statusbalk</b> in de kop (naast het zoekveld). Elke opslag die mislukt, meldt zich daar in het rood, meestal met de reden erbij. Een paar bekende meldingen:</p>
+      <ul>
+        <li><i>Opslaan mislukt … staat planning_0x_….sql er al?</i> — de database mist een kolom of tabel; het bijbehorende SQL-bestand uit de repo moet nog gedraaid worden in Supabase. Dat is werk voor Gian.</li>
+        <li><i>taak NIET gesloten (zie console)</i> na een kennisgeving — de mail is wél weg, alleen de taak in de taken-app is niet gesloten; vink hem daar handmatig af.</li>
+        <li><i>geen open taak gevonden in de taken-app</i> — al gesloten, of geen rechten op planningtaken.</li>
+        <li><i>Volgorde opslaan mislukt</i> — het bord draait de volgorde terug naar wat hij was; niets is kapot.</li>
+      </ul>
+      <p><b>Herladen helpt vaak.</b> Het bord bewaart niets lokaal behalve de stand van de linkerkolom; na herladen zie je precies wat in de database staat. Zie je iets anders dan je verwachtte, herlaad dan eerst voordat je iets "repareert".</p>
+      <p><b>Details voor wie verder wil kijken.</b> Technische meldingen staan in de browserconsole. Hoe het hele systeem in elkaar zit (Supabase, Edge Functions, cronjobs, waar de sleutels staan, wat te doen bij een storing) staat in <b>SYSTEEM.md</b> in de repo <i>GianErnes/schilders-calc</i>. De veranderingen per versie staan in <b>CHANGELOG_planning.md</b>.</p>
+      <p><b>Bij twijfel</b> geen uren wissen en geen SQL draaien; noteer wat je zag (welke knop, welke melding, welk project) en leg het bij Gian neer.</p>
+    </section>
+
+    <section class="hsec" id="h16" data-trefwoorden="ik wil register taak hoe doe ik waar">
+      <h3>16. Ik wil…</h3>
+      <ul class="hregister">
+        <li>… uren inplannen voor een schilder → <a href="#h3" data-hga="h3">3</a></li>
+        <li>… een project later of eerder laten beginnen → <a href="#h4" data-hga="h4">4</a></li>
+        <li>… de uren mee laten schuiven met het project → <a href="#h4" data-hga="h4">4</a></li>
+        <li>… een project in twee delen uitvoeren (nu en volgend jaar) → <a href="#h5" data-hga="h5">5</a></li>
+        <li>… een steiger of hoogwerker bij het project zetten → <a href="#h6" data-hga="h6">6</a></li>
+        <li>… noteren wat ik met de klant heb afgesproken → <a href="#h7" data-hga="h7">7</a></li>
+        <li>… iemand één dag vrij zetten → <a href="#h8" data-hga="h8">8</a></li>
+        <li>… bepalen welk project een schilder 's ochtends als eerste doet → <a href="#h8" data-hga="h8">8</a></li>
+        <li>… de bouwvak of feestdagen afsluiten → <a href="#h9" data-hga="h9">9</a></li>
+        <li>… elke vrijdagmiddag bureau reserveren → <a href="#h9" data-hga="h9">9</a></li>
+        <li>… een nieuwe medewerker toevoegen of iemand van het bord halen → <a href="#h9" data-hga="h9">9</a></li>
+        <li>… de planning in de telefoonagenda van een schilder krijgen → <a href="#h10" data-hga="h10">10</a></li>
+        <li>… de klant laten weten wanneer we komen → <a href="#h11" data-hga="h11">11</a></li>
+        <li>… zien of de klant onze mail heeft gekregen → <a href="#h11" data-hga="h11">11</a></li>
+        <li>… terugzien wat we de klant eerder hebben gemaild → <a href="#h11" data-hga="h11">11</a></li>
+        <li>… weten waarom een project rood is → <a href="#h12" data-hga="h12">12</a> of <a href="#h2" data-hga="h2">2</a></li>
+        <li>… een project zonder werk van het bord halen → <a href="#h13" data-hga="h13">13</a></li>
+        <li>… een nieuw project uit Yoobi op het bord krijgen → <a href="#h14" data-hga="h14">14</a></li>
+        <li>… weten wat een rode melding betekent → <a href="#h15" data-hga="h15">15</a></li>
+      </ul>
+      <div class="hint" style="margin-top:0.6rem">Deze handleiding hoort bij de versie die bovenin staat. Wie een functie in planning.html wijzigt, past in dezelfde wijziging de bijbehorende alinea hier aan; anders loopt de handleiding binnen een paar versies achter op het bord.</div>
+    </section>
+  </div>
+</div>
 <div class="popover" id="popover" style="display:none"></div>
 
 <script>
@@ -484,7 +715,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.22.1';
+const APP_VERSION = '0.23.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -2225,6 +2456,50 @@ bordEl.addEventListener('click', e => {
     document.getElementById('poUren').focus();
   }
 });
+
+// ---------- handleiding (v0.23.0) ----------
+// Vaste tekst in dit bestand, geen database en geen AI: werkt ook als Supabase of Claude niet bereikbaar is.
+// Het zoekveld filtert de secties op hun tekst en op data-trefwoorden; de inhoudsopgave verdwijnt zolang er gezocht wordt.
+const handleidingOverlay = document.getElementById('handleidingOverlay');
+function openHandleiding(sectieId) {
+  document.getElementById('handleidingVersie').textContent = 'v' + APP_VERSION;
+  const zoek = document.getElementById('handleidingZoek');
+  zoek.value = ''; handleidingFilter('');
+  handleidingOverlay.classList.add('open');
+  if (sectieId) handleidingGaNaar(sectieId); else { handleidingOverlay.scrollTop = 0; setTimeout(() => zoek.focus(), 50); }
+}
+function sluitHandleiding() { handleidingOverlay.classList.remove('open'); }
+// Pure functie, ook voor de test: welke sectie-id's blijven zichtbaar bij deze zoekterm?
+function handleidingTreffers(term, secties) {
+  const t = String(term || '').trim().toLowerCase();
+  if (!t) return secties.map(x => x.id);
+  const woorden = t.split(/\s+/).filter(Boolean);
+  return secties.filter(x => { const bron = (x.tekst + ' ' + x.trefwoorden).toLowerCase(); return woorden.every(w => bron.includes(w)); }).map(x => x.id);
+}
+function handleidingFilter(term) {
+  const secties = Array.from(handleidingOverlay.querySelectorAll('.hsec')).map(el => ({ id: el.id, tekst: el.textContent, trefwoorden: el.dataset.trefwoorden || '' }));
+  const zichtbaar = new Set(handleidingTreffers(term, secties));
+  const zoekt = String(term || '').trim() !== '';
+  handleidingOverlay.querySelectorAll('.hsec').forEach(el => el.classList.toggle('hweg', !zichtbaar.has(el.id)));
+  document.getElementById('handleidingInhoud').classList.toggle('hweg', zoekt);
+  const meld = document.getElementById('handleidingTreffers');
+  meld.textContent = !zoekt ? '' : zichtbaar.size === 0 ? 'Niets gevonden. Probeer een ander woord, of kijk bij 16. Ik wil…' : zichtbaar.size + (zichtbaar.size === 1 ? ' onderdeel gevonden' : ' onderdelen gevonden');
+}
+function handleidingGaNaar(id) {
+  const el = document.getElementById(id); if (!el) return;
+  if (el.classList.contains('hweg')) { document.getElementById('handleidingZoek').value = ''; handleidingFilter(''); }
+  el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  handleidingOverlay.querySelectorAll('.hsec.hlicht').forEach(x => x.classList.remove('hlicht'));
+  el.classList.add('hlicht'); setTimeout(() => el.classList.remove('hlicht'), 2000);
+}
+document.getElementById('handleidingKnop').addEventListener('click', () => openHandleiding());
+document.getElementById('handleidingSluit').addEventListener('click', sluitHandleiding);
+handleidingOverlay.addEventListener('click', e => {
+  if (e.target === handleidingOverlay) { sluitHandleiding(); return; }
+  const a = e.target.closest('a[data-hga]'); if (a) { e.preventDefault(); handleidingGaNaar(a.dataset.hga); }
+});
+document.getElementById('handleidingZoek').addEventListener('input', e => handleidingFilter(e.target.value));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && handleidingOverlay.classList.contains('open')) sluitHandleiding(); });
 
 // ---------- gebeurtenissen ----------
 bordEl.addEventListener('dragstart', e => e.preventDefault());

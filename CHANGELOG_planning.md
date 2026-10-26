@@ -1,5 +1,22 @@
 # CHANGELOG planning.html
 
+> **Handleiding meebewegen.** Sinds v0.23.0 staat er een handleiding in planning.html (knop *Handleiding* in de kop, 16 secties). Wie een functie wijzigt, past in dezelfde wijziging de bijbehorende alinea in de handleiding aan en de *Sinds*-regel eronder. Een handleiding die achterloopt is erger dan geen: iemand handelt ernaar.
+
+## v0.23.0 — Handleiding in de app: knop in de kop, 16 secties, zoekveld, 26-10-2026
+
+**Aanleiding.** Gian 26-10-2026 vroeg hoe de agenda-volgorde ook alweer werkte; het antwoord uit de projectknowledge (v0.18.0) was achterhaald, want live stond v0.22.1 met nummerknoppen. Vraag: "Moeten we niet een handleiding in de planning zetten voor het geval jij niet bereikbaar bent?" Besluiten (ask_user_input): vaste tekst in de app, niet via de Vraagbaak (die hangt aan de Anthropic-API en kent alleen de calculatie-app); voor Max, Maud én Gian zelf (met waarom en valkuilen); een knop bovenin; met zoekveld.
+
+**Wijziging (alleen planning.html; geen SQL, geen Edge Function).**
+1. Knop **Handleiding** in de kop, naast *Vrije dagen & medewerkers*.
+2. Overlay `handleidingOverlay` in het bestaande `.overlay`/`.modaal`-patroon (breder: 760px). Bovenin een zoekveld; daaronder een inhoudsopgave (16 links) en 16 secties met vaste opbouw *Waar · Wat · Hoe · Let op · Sinds*: 1 bord lezen, 2 project en cijfers, 3 uren plannen, 4 datums verschuiven, 5 fasen, 6 hulpmiddelen, 7 klantafspraak, 8 dagvenster en agenda-volgorde, 9 vrije dagen & medewerkers, 10 agenda-abonnement, 11 kennisgevingen, 12 over datum, 13 verbergen/paraplu/nog geen datum, 14 Yoobi verversen, 15 als iets misgaat, 16 "Ik wil…"-register (taak → sectie). Elke sectie heeft `data-trefwoorden` voor het zoeken.
+3. Zoeken: `handleidingTreffers(term, secties)` (pure functie) toont alleen secties waarin élk zoekwoord in tekst of trefwoorden voorkomt; de inhoudsopgave verdwijnt zolang er gezocht wordt; treffermelding ("3 onderdelen gevonden" / "Niets gevonden…"). Links in inhoudsopgave en register springen naar de sectie (heffen het filter op als die verborgen was) en lichten hem 2 s op. Sluiten met ×, Escape of een klik naast het venster. `openHandleiding(sectieId)` bestaat voor latere ?-links vanuit het bord.
+4. De tekst is geschreven uit de live code v0.22.1 en CHANGELOG v0.1.0–v0.22.1. Wat Claude niet kon nalezen staat er zo bij: het beeld op de iPhone-agenda, de menutekst in Google Agenda, slepen op iPad. Geen database, geen AI: werkt ook als Supabase of Claude niet bereikbaar is.
+5. Versie 0.22.1 → 0.23.0 (`APP_VERSION`, en daarmee de ondertitel en de kop van de handleiding).
+
+**Getest.** `node --check` schoon op het script; div 145/145 (live 140/140, +5 van het venster), section 25/25 (live 7/7, +18), CSS 268/268 (live 252/252, +16). 42 jsdom-controles met de echte handleidingfuncties uit het bestand: knop opent, versie in de kop, 16 secties met ids h1–h16, 16 inhoudslinks die alle bestaan, trefwoorden en Sinds-regels aanwezig; zoeken op "volgorde" (h8 en h10), twee woorden ("nabellen bounce" → h11, niet h3), onbekend woord → 0 en melding, leeg → alles terug; springen vanuit het register heft het filter op en licht de sectie uit; sluiten via knop, Escape en klik ernaast; en 18 knopteksten die de handleiding noemt komen letterlijk in de app-HTML voor. **Niet getest:** in de browser en op iPad/iPhone (past de extra knop nog in de kop op een smal scherm? — dat is de eerste blik van Gian), en de inhoud zelf tegen het echte gedrag; de tekst volgt code en changelog, niet een doorloop van elk scherm.
+
+**Bewust zo gelaten.** Geen ?-knopjes per onderdeel op het bord (zou kunnen via `openHandleiding('h8')`); geen koppeling met de Vraagbaak van de calculatie-app — kan later met dezelfde tekst als kennisbron, apart besluit.
+
 ## v0.22.1 — Komma voor 'en' weg in de maandaankondiging, 23-10-2026
 
 **Aanleiding.** Gian 23-10-2026: de zin "…laten wij u de precieze week weten, en in de week ervoor de startdag" is Engelse zinsbouw; in het Nederlands komt vóór *en* geen komma.
