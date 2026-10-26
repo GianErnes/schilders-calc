@@ -1,0 +1,599 @@
+# CHANGELOG planning.html
+
+> **Handleiding meebewegen.** Sinds v0.23.0 staat er een handleiding in planning.html (knop *Handleiding* in de kop, 16 secties). Wie een functie wijzigt, past in dezelfde wijziging de bijbehorende alinea in de handleiding aan en de *Sinds*-regel eronder. Een handleiding die achterloopt is erger dan geen: iemand handelt ernaar.
+
+## v0.24.0 — Planbaar budget: 10% van de Yoobi-uren apart voor indirecte tijd, vanaf 30 uur, 26-10-2026
+
+**Aanleiding.** Gian 26-10-2026: "In de werkbon van de calculatie houd ik bewust 10% apart van de uren, dat zou in de planning ook moeten vanaf 30 uur." Gelezen in index.html v4.101.2 (regel 16856): de werkbon rekent met `(100 − indirecteUrenAftrek)/100`, standaard 10%, zonder drempel. Gelezen in planning.html v0.23.0 en fin-werkvoorraad-sync v5 (regel 161): het bord-budget is Yoobi `budgettime`, niet de calculatie. Besluiten (ask_user_input): budget ≥ 30 uur → hele budget −10%, eronder vol; aftrek alleen op *Nog te plannen*, niet op *Nog te werken* (in Yoobi worden de volle uren geboekt, dus budget − geboekt blijft appels met appels); percentage en drempel als twee constanten in de code, geen instellingentabel.
+
+**Wijziging (alleen planning.html; geen SQL, geen Edge Function).**
+1. Constanten `PLAN_AFTREK_PCT = 10` en `PLAN_AFTREK_VANAF = 30` met toelichting, naast `PARAPLU_REGEL`.
+2. `planbaarBudget(budget)`: onder de drempel het volle budget, erboven budget × 0,9, afgerond op 2 decimalen.
+3. `budgetCelHtml(budget)`: de cel *Budget* in het projectpaneel en het fasepaneel toont het volle Yoobi-getal en daaronder, alleen als de aftrek geldt, in klein *planbaar 108 u (−10%)*; de tooltip legt het uit.
+4. *Nog te plannen* = planbaar budget − ingepland (beide panelen); tooltip en voetnoten aangepast. *Nog te werken*, de projectlijst, *Nog geen datum* en de balken op het bord zijn niet veranderd.
+5. Handleiding sectie 2: nieuwe alinea *Planbaar budget*, trefwoorden en *Sinds*-regel bijgewerkt.
+6. Versie 0.23.0 → 0.24.0 (`APP_VERSION`).
+
+**Getest.** `node --check` schoon op het script; div 143/143 en section 25/25 (live 145/145 en 25/25; de twee minder zijn de twee vaste budgetcellen die nu uit één functie komen, verwijderde en toegevoegde regels zijn elk in balans); accolades 994/994. Rekentest in node met de echte functies uit het bestand: 0→0, 29,99→29,99, 30→27, 32,5→29,25, 120→108, null→0, '150'→135; `budgetCelHtml(120)` geeft de regel *planbaar 108 u*, `budgetCelHtml(12)` niet. **Niet getest:** in de browser — kijk na deploy bij een project ≥ 30 uur of *Nog te plannen* 10% lager uitkomt dan vóór de update en of de kleine regel onder *Budget* past in het paneel (ook op iPad).
+
+**Bewust zo gelaten.** De calculatie-app heeft haar eigen instelling (standaard 10); die twee hangen niet aan elkaar. Wil je het percentage in de planning ooit anders, dan is het één getal in de code. Per fase is er geen apart budget, dus daar verandert niets.
+
+## v0.23.0 — Handleiding in de app: knop in de kop, 16 secties, zoekveld, 26-10-2026
+
+**Aanleiding.** Gian 26-10-2026 vroeg hoe de agenda-volgorde ook alweer werkte; het antwoord uit de projectknowledge (v0.18.0) was achterhaald, want live stond v0.22.1 met nummerknoppen. Vraag: "Moeten we niet een handleiding in de planning zetten voor het geval jij niet bereikbaar bent?" Besluiten (ask_user_input): vaste tekst in de app, niet via de Vraagbaak (die hangt aan de Anthropic-API en kent alleen de calculatie-app); voor Max, Maud én Gian zelf (met waarom en valkuilen); een knop bovenin; met zoekveld.
+
+**Wijziging (alleen planning.html; geen SQL, geen Edge Function).**
+1. Knop **Handleiding** in de kop, naast *Vrije dagen & medewerkers*.
+2. Overlay `handleidingOverlay` in het bestaande `.overlay`/`.modaal`-patroon (breder: 760px). Bovenin een zoekveld; daaronder een inhoudsopgave (16 links) en 16 secties met vaste opbouw *Waar · Wat · Hoe · Let op · Sinds*: 1 bord lezen, 2 project en cijfers, 3 uren plannen, 4 datums verschuiven, 5 fasen, 6 hulpmiddelen, 7 klantafspraak, 8 dagvenster en agenda-volgorde, 9 vrije dagen & medewerkers, 10 agenda-abonnement, 11 kennisgevingen, 12 over datum, 13 verbergen/paraplu/nog geen datum, 14 Yoobi verversen, 15 als iets misgaat, 16 "Ik wil…"-register (taak → sectie). Elke sectie heeft `data-trefwoorden` voor het zoeken.
+3. Zoeken: `handleidingTreffers(term, secties)` (pure functie) toont alleen secties waarin élk zoekwoord in tekst of trefwoorden voorkomt; de inhoudsopgave verdwijnt zolang er gezocht wordt; treffermelding ("3 onderdelen gevonden" / "Niets gevonden…"). Links in inhoudsopgave en register springen naar de sectie (heffen het filter op als die verborgen was) en lichten hem 2 s op. Sluiten met ×, Escape of een klik naast het venster. `openHandleiding(sectieId)` bestaat voor latere ?-links vanuit het bord.
+4. De tekst is geschreven uit de live code v0.22.1 en CHANGELOG v0.1.0–v0.22.1. Wat Claude niet kon nalezen staat er zo bij: het beeld op de iPhone-agenda, de menutekst in Google Agenda, slepen op iPad. Geen database, geen AI: werkt ook als Supabase of Claude niet bereikbaar is.
+5. Versie 0.22.1 → 0.23.0 (`APP_VERSION`, en daarmee de ondertitel en de kop van de handleiding).
+
+**Getest.** `node --check` schoon op het script; div 145/145 (live 140/140, +5 van het venster), section 25/25 (live 7/7, +18), CSS 268/268 (live 252/252, +16). 42 jsdom-controles met de echte handleidingfuncties uit het bestand: knop opent, versie in de kop, 16 secties met ids h1–h16, 16 inhoudslinks die alle bestaan, trefwoorden en Sinds-regels aanwezig; zoeken op "volgorde" (h8 en h10), twee woorden ("nabellen bounce" → h11, niet h3), onbekend woord → 0 en melding, leeg → alles terug; springen vanuit het register heft het filter op en licht de sectie uit; sluiten via knop, Escape en klik ernaast; en 18 knopteksten die de handleiding noemt komen letterlijk in de app-HTML voor. **Niet getest:** in de browser en op iPad/iPhone (past de extra knop nog in de kop op een smal scherm? — dat is de eerste blik van Gian), en de inhoud zelf tegen het echte gedrag; de tekst volgt code en changelog, niet een doorloop van elk scherm.
+
+**Bewust zo gelaten.** Geen ?-knopjes per onderdeel op het bord (zou kunnen via `openHandleiding('h8')`); geen koppeling met de Vraagbaak van de calculatie-app — kan later met dezelfde tekst als kennisbron, apart besluit.
+
+## v0.22.1 — Komma voor 'en' weg in de maandaankondiging, 23-10-2026
+
+**Aanleiding.** Gian 23-10-2026: de zin "…laten wij u de precieze week weten, en in de week ervoor de startdag" is Engelse zinsbouw; in het Nederlands komt vóór *en* geen komma.
+
+**Wijziging.** Zin wordt "…laten wij u de precieze week weten en in de week ervoor de startdag." op drie plekken: `kennisTekst` in planning.html (maand-aankondiging en maand-correctie) en de slotzin `SLOT.maand` in bevestig.html (→ v1.3). Verder niets. Andere komma's voor *maar/of/zodat/want* in klantteksten: niet gevonden. Al verstuurde kennisgevingen in `plan_kennisgevingen.tekst` houden de oude tekst (historie).
+
+**Getest.** `node --check` schoon op het script; de zin komt in geen van beide bestanden nog met komma voor. **Niet getest:** de browser, en of de Edge Function `planning-kennisgeving` ergens een eigen kopie van deze zin heeft (aanname: nee, de functie zet alleen aanhef, knop en handtekening om `tekst` heen — CHANGELOG v0.21.0).
+
+## v0.22.0 — Kennisgevingen per fase, nabelregel, fasen houden hun id, 22-10-2026
+
+**Aanleiding.** Gian 22-10-2026: "Houden de kennisgevingsmomenten aan de klant rekening met een opknip van een project en dus een nieuwe aankondiging voor fase 2?" Nee: `projectStart` nam de vroegste fase, `kennisLabelHtml` toonde het label alleen bij de eerste fase en `plan_kennisgevingen` kende geen fase. Voor de Pastorie H. Cornelius (fase 2 in april 2027) kwam dus nooit een signaal. Besluiten (ask_user_input): hele cyclus per fase, ook de maand; elke fase los (fase 1 kondigt geen vervolg aan); stabiele fase-id's in plaats van een volgnummer; alles in één release. Tweede besluit: een nabelsignaal vervalt als een latere kennisgeving wél bevestigd is.
+
+**Meting vooraf (Supabase, 22-10-2026).** `plan_middelen.fase_id` heeft `on delete set null`. Omdat `schrijfFasen` tot v0.21.1 bij elke knip of samenvoeging alle fasen verwijderde en opnieuw aanmaakte, raakte elk hulpmiddel daarbij zijn fase kwijt en viel terug naar de eerste fase. Dat was een bestaande fout; deze release lost hem op.
+
+**Wijziging.**
+1. **SQL `planning_09_kennisgeving_fase.sql`** (gedraaid 22-10-2026, drie controles GOED): kolom `fase_id uuid` op `plan_kennisgevingen`, verwijzing naar `plan_fasen` met `on delete set null`, index. Bestaande rijen blijven leeg en gelden als "eerste fase".
+2. **Fasen houden hun id** (`schrijfFasen`): rijen met id worden bijgewerkt, rijen zonder id ingevoegd, verdwenen rijen verwijderd. `knipFase` geeft de ingekorte fase haar id mee (dat ging in de eerste bouwronde mis en kwam uit de test); `voegFaseSamen` houdt het id van de bovenste fase en zet eerst de hulpmiddelen én kennisgevingen van de opgeslokte fase over (`herkoppel`), dan pas verwijderen. Hernummeren in twee stappen (eerst +1000, dan definitief), omdat `plan_fasen` een unieke beperking `plan_fasen_yoobi_code_volgnr_key` op `(yoobi_code, volgnr)` heeft (GEMETEN, pg_constraint 22-10-2026): zonder tussenstap botst fase 2 → 3 op de bestaande 3.
+3. **Kennisgevingen per fase.** Cache `kennis[code][fasesleutel][soort]` (sleutel `''` = zonder fase); `kennisVan(code, f)` geeft de laatste rij per soort, waarbij rijen zonder `fase_id` bij de eerste fase horen. `kennisStatus(p, f)`: start = `f.van`; maandsignaal = maandag ná de eerste invoer van uren die (via `faseVanDag`, dezelfde regel als het bord) bij die fase horen — nieuwe cache `urenRijen`. Label ✉ per faserij; teller in de kop telt per fase en springt naar de juiste faserij; paneelblok "Kennisgevingen aan de klant · fase 2" volgt de gekozen fase; versturen en overslaan schrijven `fase_id`; historiekaarten tonen de fasenaam.
+4. **Mailtekst latere fase**: "Wij hebben fase 2 (daklijsten) van de werkzaamheden aan X voorlopig ingepland in april 2027" — zonder "Hartelijk dank voor uw opdracht", enkelvoud (is/start/staat). Onderwerp "Planning schilderwerk X, fase 2: april 2027". Fase 1 en projecten zonder fasen: ongewijzigd. Fasenaam alleen als hij niet de standaard "fase n" is.
+5. **Nabelregel** (planning.html én functie v1.4): nabellen vervalt als een látere kennisgeving (week ná maand, startdag ná maand/week) bevestigd is, die bevestiging dateert van ná de verzending van de onbevestigde mail, én die latere niet verschoven is. In het paneel: "startdag wel bevestigd, niet nabellen". Tegengeval uit de praktijk (Bex): startdag bevestigd 14 okt voor 23 okt, weekmail 19 okt voor week 47, startdag inmiddels verschoven → nabellen blijft, terecht.
+6. Paneel: "nog niet bevestigd · niet bevestigd, nabellen" stond dubbel; nu "nog niet bevestigd · nabellen".
+7. **Taken**: `bron_kenmerk` krijgt `#<fase-id>` erachter bij een fase (`kennis-week:20251532#<uuid>`); zonder fasen ongewijzigd. `kennisSluitTaak` sluit bij de eerste fase ook de oude vorm. **Eenmalig** sluit de cron open taken van fase-projecten zonder achtervoegsel en maakt ze met achtervoegsel opnieuw aan.
+8. **Edge Function `planning-kennisgeving` v3.2**: `fase_id` (uuid of leeg) in body en rij; ongeldige waarde = 400.
+9. **Edge Function `planning-kennisgeving-taken` v1.4**: per fase (fasen gesorteerd op volgnr), `plan_fasen` met id/naam, `plan_uren` met datum, `plan_kennisgevingen` met fase_id; nabelregel; fase in onderwerp en notitie van de taak. Handtekening `gewensteTaken(stand, planProjecten, fasen, urenRijen, kennis, vandaag)` is veranderd (4e argument was `urenEerste`; `kennis` nu per fase; `kenmerkMetCode(kenmerk, code, sfx)`): **index_test.ts in de besloten repo moet mee**.
+
+**Getest.** `node --check` schoon; div 140/140, script 2/2, CSS 252/252 (gelijk aan live). 17 gedragstests in node op functies die uit het gepatchte bestand zijn gesneden (`urenEersteVan`, `kennisVan`, `kennisStatus` per fase, `projectenMetKennis`, `faseLabel`, mailteksten en onderwerpen voor fase 1/2 en correcties, vijf nabelgevallen, kenmerken van `kennisSluitTaak`, `schrijfFasen` via `knipFase` en `voegFaseSamen` met een nagebootste Supabase-client inclusief foutdoorgave). 10 tests op de Edge Functions (TypeScript getranspileerd, Deno gestubd): signalen per fase, rij zonder fase_id bij fase 1, zonder fasen ongewijzigd, vier nabelgevallen, `eerderAfgevinkt` met achtervoegsel, `verwerk ?droog=1` met nagebootste PostgREST (querystrings, groepering, oude taak gesloten), `controleerBody` met fase_id. **Niet getest:** de echte browser (paneel, modaal, teller-klik), echte knip/samenvoeging tegen Supabase, `deno check` (geen deno hier), echte mail met fasetekst — dat doet Gian.
+
+**Bekend en bewust gelaten.** `planning-kennisgeving-bevestig` v2 sluit de nabeltaak direct op het kenmerk zónder achtervoegsel; voor fase 2 en hoger sluit de cron die taak pas de volgende ochtend. Wil je dat ook direct, dan heb ik die functie nodig.
+
+**Uitrollen, in deze volgorde.** (1) SQL is al gedraaid. (2) `planning-kennisgeving` v3.2 deployen (Verify JWT AAN). (3) `planning-kennisgeving-taken` v1.4 deployen (Verify JWT UIT). (4) planning.html naar de repo. Draai daarna de taken-functie één keer met `?droog=1` en bekijk `nieuw`/`gesloten_ids` voor je hem echt laat lopen.
+
+## v0.21.1 — Kennisgevingen komen van info@ernes.nl, 20-10-2026
+
+- Edge Function `planning-kennisgeving` verstuurt vanaf `info@ernes.nl` in plaats van `planning@ernes.nl` (spam-onderzoek 20-10-2026, zie CHANGELOG.md v4.98.1). Reply-to info@ en bcc administratie@ ongewijzigd.
+- planning.html: hint boven het kennisgevingsvenster en commentaar aangepast. Geen gedrag gewijzigd, geen SQL.
+- Getest: kennisgeving naar mail-tester met nieuwe afzender, 10/10 (Gian, 20-10-2026).
+
+## v0.21.0 — Historie van kennisgevingen per project in het paneel, 16-10-2026
+
+**Aanleiding.** Gian 16-10-2026: "Is het mogelijk om van de verstuurde kennisgevingen later terug te zien wat de inhoud van de mail was?" De gegevens stonden er al (`plan_kennisgevingen.onderwerp` en `.tekst` sinds v0.15.0), maar het paneel toonde alleen "verstuurd 5 okt voor week 43" en alleen de laatste rij per soort. Besluit Gian (ask_user_input): volledige historie per project, inclusief eerdere versies en overgeslagen signalen, in het projectpaneel van het bord.
+
+**Wijziging** (alleen planning.html; geen SQL, geen Edge Function).
+1. Nieuwe cache `kennisHistorie[yoobi_code]`: alle rijen van het project, nieuwste eerst. Gevuld in dezelfde laadlus als `kennis`; ook bijgewerkt na een verzending en na overslaan, zoals `kennis`. De bestaande cache `kennis` (laatste rij per soort) is onveranderd, dus signalen, labels en correctieteksten werken als voorheen.
+2. Paneelblok "Kennisgevingen aan de klant": knop **historie · n** naast *wijzig*, alleen als er minstens één rij is.
+3. Nieuw venster `historieOverlay` (zelfde overlay-patroon als het kennisgevingsvenster), titel "Kennisgevingen · [klant]", per rij een kaartje: soort, "verstuurd 5 okt 2026 door gian aan naam · adres" met de bezorgstatus uit `kennisStatusTekst` (afgeleverd/geopend/bevestigd/NIET afgeleverd), de periode, onderwerp vet en de volledige tekst alleen-lezen. Overgeslagen rijen: "overgeslagen 5 okt 2026 door gian · signaal voor week 43 · geen mail verstuurd", zonder tekstblok. Onder elke verstuurde kaart de regel dat groet, bevestigingsknop en handtekening er in de mail automatisch onder stonden — in `tekst` staat alleen de kern (functie v2, v0.17.0). Niets bewerken, verwijderen of opnieuw versturen vanuit dit venster.
+
+**Getest.** `node --check` schoon; div-balans 140/140 (live 127/127, +13 van het nieuwe venster en de kaartjes in geen enkele rij — het verschil zit in het nieuwe overlay-blok), CSS 252/252 (live 241/241, +11 nieuwe regels). 13 gedragstests in jsdom met de echte functies uit het bestand: teller 4 en geen knop zonder rijen, lege melding, vier kaartjes nieuwste eerst, overgeslagen zonder onderwerp/tekst, bounce-rij toont "NIET afgeleverd (reden)" en html in de tekst wordt ge-escaped, bevestigde rij toont afgeleverd + bevestigd + voetregel, aan-naam en periode, titel, overlay open, 4 kaartjes in de DOM, sluitknop sluit. **Niet getest:** de knop zelf in `kennisHtml` (alleen de telregel nagebootst, niet de hele paneelrender), weergave op iPad/iPhone, en de echte rijen uit Supabase — dat doet Gian in de browser.
+
+**Bewust niet.** De afgeleverde html uit Resend ophalen via `resend_id`: vraagt een nieuwe Edge Function. Kan later als de kale tekst niet volstaat.
+
+## v0.20.0 — Dagvenster: volgorde in de agenda met nummerknoppen en ▲/▼, 15-10-2026
+
+**Aanleiding.** Gian 15-10-2026: "Kan ik dan ook kiezen welk project als tweede moet?" Sinds v0.14.0 was er alleen een knop *eerst*; een andere volgorde dan "X vooraan" kon alleen door van achteren naar voren meerdere keren *eerst* te tikken. Besluit (ask_user_input): beide bedieningen.
+
+**Wijziging (alleen planning.html).**
+1. `dagVolgordeHtml`: per project een rij knoppen **1, 2, 3 …** (de huidige plek staat vet en is geen knop) plus **▲** (één plek eerder, niet op de eerste regel) en **▼** (één plek later, niet op de laatste). Alle knoppen dragen `data-vcode` (Yoobi-code) en `data-vnaar` (gewenste plek, 1 = eerst). De knop *eerst* en `data-eerst` zijn weg.
+2. Nieuwe pure functie `dagVolgordeVerplaats(codes, code, naar)`: haalt `code` uit de lijst en voegt hem op plek `naar` weer in; de rest schuift door in de bestaande volgorde. Een plek buiten bereik wordt de laatste plek; een onbekende code laat de lijst ongemoeid.
+3. `zetDagVolgorde(mwId, iso, code, naar)` gebruikt die functie en slaat daarna, als voorheen, de hele dag op met `update … match()` per rij (1, 2, 3 …); terugdraaien van het geheugen bij een fout en de hint naar `planning_03_volgorde.sql` zijn ongewijzigd. Klik-afhandeling in het dagvenster luistert nu op `button[data-vcode]`.
+4. Drie CSS-regels voor de knoppenrij (`.dagvolgorde-lijst .knoppen`, `.knop`, `.pos`).
+
+**Niet gewijzigd.** Edge Function `planning-ics` (leest alleen de nummers 1, 2, 3 …), SQL, de sorteerregel in `dagProjecten()` en het gedrag bij fase verschuiven of uren wissen (v0.14.0).
+
+**Getest.** `node --check` schoon; div-balans 127/127 gelijk aan live v0.19.2; 12 controles met nagebootste Supabase-client: verplaatsen naar plek 1/2/3, naar de eigen plek, buiten bereik, onbekende code; aantal en plaatsing van de knoppen (▲ niet op regel 1, ▼ niet op de laatste, huidige plek als vette tekst); opslaan C→plek 2 geeft updates A=1, C=2, B=3 op `plan_uren` met juiste `match`; serverfout draait het geheugen terug en meldt de SQL-hint. Niet getest: in de echte browser/iPhone-agenda — dat is de volgende stap bij Gian.
+
+---
+
+## v0.19.2 + bevestig.html v1.2 — Bedanktpagina: slotzin per soort kennisgeving, 12-10-2026
+
+**Aanleiding.** Gian 12-10-2026 (schermafbeelding): na bevestiging van een maandaankondiging zegt de pagina "Wij zien u graag op de afgesproken dag", terwijl die mail alleen een maand noemt en juist belooft dat de week en de startdag nog volgen. Bron: `bevestig.html` v1.1.1 regel 78 — de slotzin was één vaste tekst voor maand, week en startdag.
+
+**Wijziging (alleen `bevestig.html` → v1.2).** Nieuwe tabel `SLOT` en helper `slotZin(soort)`; de slotzin volgt nu de belofte uit `kennisTekst` in planning.html: maand → "Ongeveer twee weken voor de start laten wij u de precieze week weten, en in de week ervoor de startdag."; week → "In de week voorafgaand ontvangt u van ons de exacte startdag."; dag → "Wij zien u graag op de afgesproken dag." (ongewijzigd); geen of onbekende `soort` → "U hoort van ons zodra er meer bekend is." Hoofdletters in `soort` worden genegeerd. Geldt ook bij `al_bevestigd`. Eerste zin met de omschrijving, de ongeldig- en storingsteksten en de automatische bevestiging bij openen zijn ongewijzigd. planning.html (v0.19.2), Edge Functions en SQL niet geraakt.
+
+**Aanname.** Dat de functie `planning-kennisgeving-bevestig` v2.1 `soort` meestuurt in het antwoord (CHANGELOG v0.19.1b zegt dat; de functiecode is in deze sessie niet gezien). Stuurt hij dat niet, dan toont de pagina de terugvalzin — niet fout, wel minder specifiek. **Controle na deploy:** een maand- of weekaankondiging aan een eigen adres bevestigen en de slotzin lezen; staat er de terugvalzin, dan plakt Gian het `return`-deel van de GET/POST in de functie.
+
+**Getest.** `node --check` op het scriptblok schoon; div-telling 2/2 gelijk aan v1.1.1; 9 runtime-tests met nagebootste DOM (maand/week/dag, al_bevestigd met hoofdletter, geen soort, onbekende soort, escaping, ongeldig en status `open` ongewijzigd). **Niet getest:** in de browser tegen de echte functie.
+
+## v0.19.2 — Nabel-signaal alleen voor mails mét knop; statustekst zegt "nabellen", 09-10-2026
+
+**Aanleiding.** Na de eerste geslaagde bevestiging zag Gian bij Hamers de Week-regel oranje: verstuurd 3 oktober, niet bevestigd, 3 werkdagen voorbij → nabel-signaal. Maar die mail is van vóór v0.19.0 en had geen knop; niemand kón bevestigen. Zonder ingreep had de ochtendronde van 10 oktober voor elke oudere kennisgeving een nabel-taak bij Maud gezet.
+
+**Wijziging.** `kennisStatus`: nabellen alleen als `bevestig_token` gevuld is (de mail had een knop). Statustekst in het paneel krijgt bij nabellen " · niet bevestigd, nabellen", zodat zichtbaar is waarom de regel oranje is. **Edge Function `planning-kennisgeving-taken` v1.3**: dezelfde regel, `bevestig_token` opgenomen in de query. Oudere kennisgevingen geven dus nooit een nabel-signaal of -taak; bounce-signalen blijven wel mogelijk (die komen uit de webhook, ongeacht de knop).
+
+**Getest.** Taken v1.3: 7 Deno-tests groen, nieuwe controle "mail zonder knop → geen nabellen". planning.html: `node --check` schoon, div-balans 127/127, 21 runtime-controles op uitgesneden code (nieuwe: token leeg → geen nabellen). **Niet getest:** de ochtendronde in het echt — eerste echte ronde is 10 oktober 06:35 UTC; controleer die ochtend in de taken-app dat er géén nabel-taken staan voor oude kennisgevingen.
+
+## v0.19.1c — Bevestigen in één klik: bevestig.html v1.1, bevestig-functie v2.1, 09-10-2026
+
+**Aanleiding.** Gian na de eerste pagina: de klant moet twee keer op een knop drukken en de mailknop zegt al "ja" terwijl pas de tweede klik telt. Besluit Gian: meteen de automatische variant, "dit gaat echt mis".
+
+**Wijziging.** `bevestig.html` v1.1 bevestigt vanzelf bij openen (POST door het script), geen tweede knop; de pagina toont alleen nog "Bedankt!" (ook bij een al bevestigde link), "link niet geldig" of "geen verbinding" met een knop *Opnieuw proberen*. Functie v2.1 logt bij elke bevestiging de user-agent (`ua:` in de Supabase-logs). Mailknop blijft "Ja, ik heb dit ontvangen", want dat is nu wat hij doet. planning.html en kennisgeving v3.1 ongewijzigd.
+
+**Risico, bewust aanvaard.** Mailscanners die alleen de link ophalen zonder de pagina te draaien, bevestigen niets (het script moet draaien). Scanners die de pagina wél draaien, kunnen een valse "bevestigd" geven, waardoor die klant niet wordt nagebeld. Hoe vaak dat voorkomt is onbekend (aanname: zelden). Te herkennen in de logs aan een vreemde user-agent, en aan een `bevestigd_op` binnen een minuut na `verzonden_op`. Zien we dat, dan terug naar twee stappen of een korte wachttijd.
+
+**v1.1.1 (zelfde dag).** Na de eerste geslaagde klik door Gian stond de knop *Opnieuw proberen* onder "Bedankt!": `.knop { display:block }` won van het `hidden`-attribuut. Eén CSS-regel erbij (`.knop[hidden] { display:none }`). **Echte test geslaagd (Gian 09-10-2026):** mail → knop → bevestig.html → "Bedankt! Uw bevestiging is ontvangen."
+
+**Getest.** Functie v2.1: 6 Deno-tests groen (ongewijzigd gedrag). bevestig.html: `node --check` schoon, 8 controles (bedankt bij bevestigd en al_bevestigd, ongeldig, escaping, automatische aanroep bij openen). **Niet getest:** in de browser tegen de echte functie.
+
+## v0.19.1b — Bevestigingspagina naar GitHub Pages (bevestig.html), bevestig-functie v2, kennisgeving v3.1, 09-10-2026
+
+**Aanleiding.** Eerste echte test door Gian: de knop in de mail gaf eerst "Requested function was not found" (functie nog niet uitgerold), daarna de broncode van de pagina als platte tekst. Oorzaak opgezocht in de Supabase-docs: HTML wordt niet ondersteund, een GET die `text/html` teruggeeft wordt herschreven naar `text/plain`. Ontwerpfout van Claude: een pagina uit een Edge Function laten komen zonder dat op te zoeken. Tussendoor ook v1.1 van de functie (formulierpad zonder `/functions/v1`, Supabase haalt dat prefix van `url.pathname` af) — achterhaald door v2.
+
+**Wijziging.** Geen wijziging aan planning.html (blijft v0.19.1).
+1. **`bevestig.html` (nieuw, in de repo naast planning.html)** — de pagina die de klant ziet: haalt met GET op wat voor kennisgeving het is, toont één knop; de klik doet een POST. Teksten: open / bedankt / al bevestigd / link niet geldig / geen verbinding. Geen Supabase-sleutel in de pagina.
+2. **Edge Function `planning-kennisgeving-bevestig` v2** — alleen nog JSON-API met CORS: `GET ?t=` → `{ ok, status:'open'|'al_bevestigd', soort, omschrijving, periode_tekst, bevestigd_op }`; `POST { t }` → zet `bevestigd_op` (eerste keer), sluit de nabel-taak, status `'bevestigd'`; onbekend token → 404 `{ ok:false, status:'ongeldig' }`. OPTIONS/HEAD leeg. Verify JWT UIT (ongewijzigd).
+3. **Edge Function `planning-kennisgeving` v3.1** — de knop wijst naar `https://gianernes.github.io/schilders-calc/bevestig.html?t=<token>` (constante `BEVESTIG_URL`). Nettere link voor de klant dan het supabase.co-adres.
+
+**Getest.** Deno: bevestig v2 6 tests (GET open + CORS + json, 4 ongeldige tokens → 404, OPTIONS/HEAD, POST zet en sluit, al_bevestigd schrijft niets, formulier-POST ook, kapotte JSON 404, taaksluiting niet fataal); kennisgeving v3.1 6 tests (link in mail en token in rij). bevestig.html: `node --check` schoon, 11 controles op de weergavelogica (open/bedankt/al bevestigd/ongeldig/escaping). **Niet getest:** in de browser tegen de echte functie — dat is de eerste echte test: nieuwe kennisgeving aan eigen adres, knop in mail → pagina met knop → klik → "Bedankt" → `bevestigd_op` gevuld. De mail van de eerste test (token `ad77d94f…`) wijst nog naar de functie en geeft na v2 JSON te zien; die mail is afgeschreven.
+
+**Aanname:** GitHub Pages serveert `bevestig.html` op `https://gianernes.github.io/schilders-calc/bevestig.html` zodra het bestand in de root van de repo staat, zoals planning.html.
+
+## v0.19.1 — Uitleg in het kennisgevingsvenster noemt de bevestigingsknop, 09-10-2026
+
+**Aanleiding.** Gian bij de eerste verzending na v0.19.0: "hier staat geen knop, kan dat?" De tekst in het venster is alleen de brief; de knop zet Edge Function `planning-kennisgeving` v3 er bij het versturen tussen. De uitleg onder het tekstvak noemde de handtekening wel en de knop niet.
+
+**Wijziging.** Alleen die uitlegregel (`div.hint` in het kennisgevingsmodaal): noemt nu de knop, wat die doet en het nabel-signaal na 3 werkdagen. Geen andere code geraakt.
+
+**Getest.** `node --check` schoon; div-balans 127/127; het is één tekstregel in de HTML.
+
+## v0.19.0 — Status van kennisgevingen: afgeleverd, geopend, gebounced, bevestigd door de klant; nabel-signaal, 09-10-2026
+
+**Aanleiding.** Gian 09-10-2026: na een verstuurde planningsaankondiging blijft het stil; niet te verifiëren of de klant hem gezien heeft. Besluiten Gian: alle drie de niveaus (afgeleverd/gebounced via Resend-webhook, geopend als indicatie, bevestigd via een knop in de mail); bij geen bevestiging na 3 werkdagen zowel een signaal op het bord als een taak "nabellen" in de taken-app. Op voorstel van Claude erbij: een taak "NIET afgeleverd" meteen bij een bounce (fout adres wil je dezelfde dag weten).
+
+**Wijziging.**
+1. **SQL `planning_08_kennisgeving_status.sql`** (project-guard, idempotent): acht kolommen op `plan_kennisgevingen` — `afgeleverd_op`, `geopend_op`, `bounce_op`, `bounce_reden`, `bevestigd_op`, `bevestig_token`, `webhook_laatste`, `webhook_laatste_op`; index op `resend_id`, unieke index op `bevestig_token`. Geen RLS-wijziging, niets aan `taken`. Gedraaid door Gian 09-10-2026, vijf controleregels GOED.
+2. **Edge Function `planning-kennisgeving-status` v1 (nieuw)** — ontvangt de Resend-webhook (account-breed, dus ook voor offertes en taakmails; niet-kennisgevingen worden met 200 "niet van ons" genegeerd). Controleert de Svix-handtekening (HMAC-SHA256 over `svix-id.svix-timestamp.body`, sleutel uit `RESEND_WEBHOOK_SECRET`, 5 minuten speling), zoekt de rij op `resend_id` en zet `afgeleverd_op`/`geopend_op` (eerste keer wint), `bounce_op` + `bounce_reden`, en altijd `webhook_laatste(_op)`. **Verify JWT UIT.**
+3. **Edge Function `planning-kennisgeving-bevestig` v1 (nieuw)** — de knop in de mail. GET met `?t=<token>` toont een pagina met één knop "Ja, ik heb dit ontvangen"; pas de POST van dat formulier zet `bevestigd_op` en sluit de open nabel-taak. Twee stappen met opzet: mailscanners (Outlook Safe Links, Gmail) openen links automatisch, formulieren versturen ze niet. HEAD → 200 leeg. Onbekend token → nette 404-pagina. **Verify JWT UIT.**
+4. **Edge Function `planning-kennisgeving` v3** — maakt per verzending een token (uuid + 16 random bytes), zet boven de handtekening een blok "Heeft u dit bericht ontvangen?" met knop naar functie 3 (tekstversie: platte link), en schrijft het token in `bevestig_token`. Volgorde token → mail → rij, zodat de link in de mail staat vóór hij weg is. Verder ongewijzigd.
+5. **Edge Function `planning-kennisgeving-taken` v1.2** — twee signalen erbij: `nabellen-<soort>` (echt verstuurd, ≥ 3 werkdagen ma–vr na verzending, `bevestigd_op` leeg, geen bounce, geen correctie open, start niet voorbij) en `bounce-<soort>` (`bounce_op` gevuld, start niet voorbij). Taakteksten noemen datum, adres en reden. Anders dan kennis-/correctietaken mogen deze twee wél handmatig worden afgevinkt: een na de verzending afgevinkte nabel-/bouncetaak komt niet terug (nieuwe query op afgevinkte planningstaken). Sluiten vanzelf bij bevestiging, opnieuw versturen of start voorbij.
+6. **planning.html** — `kennisStatus` kent nu `bounce` en `nabellen` (zelfde regels als functie v1.2, helper `werkdagenNa`, constante `KENNIS_NABEL_WERKDAGEN = 3`); op het bord rode label "✉ niet afgeleverd" en oranje omrande label "✉ nabellen"; de ✉-teller in de kop telt ze mee; in het paneel achter "verstuurd …" nu " · afgeleverd", " · geopend <datum>", " · bevestigd <datum>" (groen), " · nog niet bevestigd" of " · NIET afgeleverd (reden)" (rood). `kennisSluitTaak` sluit bij versturen/overslaan ook de nabel- en bouncetaak.
+
+**Instellen (Gian, Resend-dashboard).** (a) Webhooks → Add webhook → URL `https://gjcjpigirqbpkjkymbio.supabase.co/functions/v1/planning-kennisgeving-status`, events `email.delivered`, `email.bounced`, `email.delivery_delayed`, `email.opened`; de Signing secret (`whsec_…`) als Edge Function secret `RESEND_WEBHOOK_SECRET`. (b) Geopend werkt alleen met open-tracking op Domains → ernes.nl → Configuration → Enable tracking metrics; dat vraagt een tracking-subdomein (`links.ernes.nl`) met CNAME in de DNS — open beslissing 09-10-2026; **click tracking daarbij uit laten** (staat standaard aan; zou de bevestigingsknop via een Resend-omleiding laten lopen). Zonder open-tracking blijft `geopend_op` leeg en werkt al het andere gewoon.
+
+**Getest.** Deno 2.9.6 lokaal: status-functie 6 tests (handtekening goed/fout/te oud/dubbel/body gewijzigd, delivered eerste keer wint, onbekend id genegeerd, 401 schrijft niets, bounce-reden, 405), bevestig-functie 6 tests (GET toont knop zonder te schrijven, 404 bij fout/kort/injectie-token, HEAD leest niets, POST zet bevestigd_op en sluit nabel-taak, tweede POST schrijft niets, taaksluiting niet fataal), kennisgeving v3 6 tests (token past in de controle van de bevestigfunctie, knop tussen tekst en handtekening, v2-functies ongewijzigd, zelfde token in mail en rij, mail vóór insert, vastgelegd:false zonder tweede mail, 401 zonder JWT), taken v1.2 7 tests (werkdagen ma→do=3 en vr→ma=1, oud gedrag ongewijzigd, nabellen pas op dag 3 en niet bij bevestigd/overgeslagen/bounce/verschoven/start voorbij, bounce meteen, taakteksten, eerderAfgevinkt, volledige ronde incl. droog). planning.html: `node --check` schoon, div-balans 127/127 en CSS-balans gelijk aan live v0.18.2 (+5 regels), 20 runtime-controles op uitgesneden code (kennisStatus, labels, teller, statustekst). SQL op lokale Postgres 16 (guard, nagebootst project, idempotentie, unieke token) en in het echte project (Gian).
+
+**Niet getest.** In de browser; de echte Resend-webhook (de handtekeningcontrole is tegen de gedocumenteerde Svix-vorm gebouwd, niet tegen een echt bericht); de knop in echte mailprogramma's. **Aannames:** (a) de bounce-reden staat in `data.bounce.message/type/subType` — defensief gelezen, valt terug op de hele `data.bounce` als JSON; (b) `data.email_id` is het id dat Resend bij verzenden teruggaf (`resend_id`) — opgezocht, Resend-docs; (c) de bevestigingspagina onder `…supabase.co/functions/v1/…` is lelijk maar werkt; een eigen adres (bijv. `planning.ernes.nl`) is later mogelijk. **Eerste echte test:** een kennisgeving aan een eigen adres sturen, de webhook-rij en de knop bekijken, en na 3 werkdagen (of met `?droog=1`) de nabel-taak controleren.
+
+## v0.18.2 — Correctie-kennisgeving kan ook worden overgeslagen, 07-10-2026
+
+**Aanleiding.** Gian 07-10-2026: bij een verschoven start staat in het projectpaneel "corrigeren", maar bij korte-termijn-wijzigingen belt hij de klant zelf en wil hij geen correctiemail sturen. De knop *overslaan* ontbrak daar: in `kennisHtml` werd hij alleen getekend als er nog geen rij voor die soort bestond (`!x.rij`, regel 2418 van v0.18.1). Het oranje signaal en de taak "Correctie sturen" bleven dus staan tot er wél gemaild werd.
+
+**Wijziging (alleen planning.html).**
+1. `kennisHtml`: *overslaan* ook getoond als `x.verschoven` waar is, met titel "Geen correctiemail (klant al anders geïnformeerd), signaal weg".
+2. `kennisOverslaan`: herkent via `kennisStatus` of het om een correctie gaat; bevestigingsvraag en statusregel zeggen dan "Correctie van de weekkennisgeving … overslaan". De weggeschreven rij is dezelfde als bij gewoon overslaan (`overgeslagen = true`, geen eigen veld; geen SQL nodig). Omdat zo'n rij geen `start_bij_verzending` telt, verdwijnt het signaal (`kennisStatus` regel 2350–2351, ongewijzigd) en `kennisSluitTaak` sloot al op `correctie-<soort>:<code>` (v0.18.0).
+3. Nieuw geheugen `kennisOoitVerstuurd[code][soort]`, gevuld bij het laden (elke niet-overgeslagen rij) en na een geslaagde verzending. Helper `kennisOoitEcht(code, soort)`. De statusregel na overslaan luidt dan "correctie overgeslagen 7 okt door gian" in plaats van "overgeslagen …", zodat zichtbaar blijft dat er eerder wél een mail is gegaan. De eerdere verzonden rij blijft in `plan_kennisgevingen` staan.
+
+**Getest.** `node --check` schoon; div-balans 98/99 en accolades 889/889 (v0.18.1: 98/99 en 885/885, verschil zijn de vier nieuwe accoladeparen). 11 runtime-tests op `kennisStatus`/`kennisHtml` met nagebootste globals: geen rij → 3× overslaan; verschoven week → corrigeren én overslaan met correctietitel; verstuurd en niet verschoven → geen overslaan, wel opnieuw; na overslaan van de correctie → signaal weg, label "correctie overgeslagen", geen tweede knop; gewoon overgeslagen zonder eerdere mail → label zonder "correctie". Nog niet getest in de echte omgeving: de klik zelf en het sluiten van de correctietaak (dat pad is ongewijzigd sinds v0.18.1).
+
+**Bewust zo gelaten.** Geen extra waarschuwing bij het overslaan van een correctie; besluit Gian: bij korte termijn belt hij altijd zelf. Edge Functions, SQL en taken-app ongewijzigd.
+
+## v0.18.1 — Startdagmail: alleen eerste lichting, tijd als ±, ochtend/middag; taaksluiting zichtbaar; RLS voor planningtaken, 05-10-2026
+
+**Aanleiding.** (1) Gian 05-10: de startdagkennisgeving noemde per schilder apart hoe laat hij kwam; de klant wil alleen weten wanneer de eerste voor de deur staat. (2) Bij een middagstart stond er nog "Bent u die ochtend niet thuis". (3) Verstuurde kennisgevingen (door Maud) lieten hun taak in de taken-app open staan, terwijl v0.18.0 die onmiddellijk moest sluiten.
+
+**Oorzaak van (3)** (bron: `pg_policies` en `taken_rollen`, door Gian geplakt): `taken_bijwerken` en `taken_lezen` kenden `bron = 'planning'` niet, dus niemand kon vanuit de browser een planningtaak bijwerken; de update raakte stil 0 rijen. Aanname (a) uit v0.18.0 was fout. Daarbovenop behandelde `kennisTaakTekst(0)` "0 rijen" als "niets te melden", waardoor het probleem onzichtbaar bleef.
+
+**Wijziging.**
+1. **planning.html** — `startTijden()` geeft ook `beginMin` terug en formatteert de tijd als `± 8:15 uur` (start ≤ 8:00) of `± HH:MM uur`. Nieuwe `startRegel(tijden)`: alleen de schilders met het vroegste tijdvak, namen met "en", komt/komen, "die ochtend" (≤ 8:00) of "die dag". Latere lichtingen worden niet genoemd. Niemand ingepland (komt volgens Gian niet voor): geen aankomstzin, geen verzonnen tijd meer. Nieuwe `thuisZin(tijden)`: "die ochtend" bij aankomst vóór 12:00, anders "die middag". Beide gebruikt in de twee startdagvarianten van `kennisTekst`.
+2. **planning.html** — `kennisTaakTekst(0)` meldt nu " · geen open taak gevonden in de taken-app (al gesloten, of geen rechten: zie planning_08)".
+3. **SQL `planning_08_taken_rls_planning.sql`** (idempotent, ALTER POLICY): `'planning'` toegevoegd aan de bron-lijst van `taken_lezen` (USING) en `taken_bijwerken` (USING + WITH CHECK). Gevolg: Maud (rol `eigen`, taken op haar naam) en rol `alles` kunnen planningtaken zien en sluiten. INSERT/DELETE ongewijzigd (doet de Edge Function). Controlequery onderaan.
+4. `APP_VERSION` 0.18.0 → 0.18.1.
+
+**Getest.** `node --check` schoon. Gedragstest `startRegel`/`thuisZin` met 4 gevallen (twee lichtingen 8:00+12:15 → "Gian en Max komen die ochtend ± 8:15 uur" + ochtend; één schilder 13:00 → "Jens komt die dag ± 13:00 uur" + middag; 10:30 → "die dag ± 10:30" + ochtend; niemand → lege zin + ochtend). Oude tekst "die ochtend niet thuis" komt niet meer hardgecodeerd voor.
+
+**Niet getest.** In de browser met echte planningsdata; de SQL (RLS niet lokaal na te bootsen). De policy-teksten zijn letterlijk overgenomen uit de geplakte `pg_policies`-uitvoer met alleen `'planning'` toegevoegd. **Test na deploy:** Gian draait planning_08, Maud opent taken.html en ziet de "Startdagbericht sturen"-taken; daarna een kennisgeving versturen/overslaan → statusbalk zegt "taak in de taken-app gesloten". De 17 nu openstaande planningtaken van al verstuurde kennisgevingen sluit de dagelijkse ronde van 06:35 UTC morgenochtend.
+
+## v0.18.0 — Kennisgevingstaak sluit meteen bij versturen/overslaan; cronronde dagelijks, 04-10-2026
+
+**Aanleiding.** Gian 04-10-2026: alle aankondigingen die verstuurd konden worden zijn via de planning verstuurd, maar de taken "Maandaankondiging sturen · …" bleven in de taken-app staan. Oorzaak: de taken worden alleen gesloten door de ronde van Edge Function `planning-kennisgeving-taken`, en die draaide ma t/m vr 06:35 UTC (`planning_06_taken_bron.sql`); zaterdag en zondag was er geen ronde. Besluit Gian: route C — meteen sluiten vanuit de planning én de ronde dagelijks.
+
+**Wijziging.**
+1. **planning.html** — nieuwe helper `kennisSluitTaak(code, soort)`: zet `voltooid_op = nu` op de open rij(en) in `taken` met `bron = 'planning'` en `bron_kenmerk` in `kennis-<soort>:<code>` / `correctie-<soort>:<code>` (vorm van functie v1.1). Aangeroepen na een geslaagde verzending en na overslaan; de statusbalk zegt erbij " · taak in de taken-app gesloten", of "NIET gesloten (zie console)" als het schrijven mislukte. Een mislukte taaksluiting houdt de verzending of het overslaan niet tegen. `voltooid_door` blijft leeg, zoals bij de functie. De Edge Function en de signaalregels zijn niet gewijzigd.
+2. **SQL `planning_07_taken_cron_dagelijks.sql`** (project-guard, idempotent): cronjob `planning-kennisgeving-taken-werkdagen` weg, `planning-kennisgeving-taken-dagelijks` erin met `35 6 * * *` (08:35 zomer / 07:35 winter), zelfde `net.http_post` met `aftap_secret` uit de kluis. Drie controleregels. Onderaan uitgecommentarieerd een directe aanroep om niet op morgen te hoeven wachten.
+
+**Getest.** `node --check` schoon; div-balans 127/127 en CSS 233/233 gelijk aan live v0.17.1; 5 runtime-tests met nagebootste Supabase-client (juiste tabel, update-veld, filters en kenmerk-lijst; geen rij → 0; fout van de server → -1; exception → -1; statusteksten).
+
+**Niet getest.** In de browser; de SQL (pg_cron/pg_net/vault zijn lokaal niet na te bootsen). **Aannames:** (a) de ingelogde gebruiker mag via RLS op `taken` updaten — afgeleid uit taken.html, dat onder dezelfde login afvinkt; faalt dit, dan meldt de statusbalk "NIET gesloten" en sluit de dagelijkse ronde de taak alsnog. (b) `trg_taak_melding_signaal` stuurt geen afvinkmail bij een `voltooid_op` zonder `afvink_melding` — dit is het open punt van 3 oktober; de eerste keer versturen/overslaan na deze versie is de test.
+
+## v0.17.1 — Paraplu-regel verruimd naar "Onderhouds garantie+ Plan", 04-10-2026
+
+**Aanleiding.** Constatering Gian na het testen van v0.17.0: offertes heten *naam | Onderhouds garantie+ Plan*, en projecten horen dezelfde naam te krijgen. De regel van v0.17.0 eiste het aaneengeschreven woord "onderhoudsplan" en zou die projecten niet herkennen.
+
+**Wijziging.** `PARAPLU_REGEL`: "onderhoud", daarna binnen dertig tekens (zonder `|`) "plan", gevolgd door twee jaartallen met een streepje. Herkent nu *Onderhoudsplan 2026-2032* én *Onderhouds garantie+ Plan 2026-2032*. Eén jaartal telt nog steeds niet. Muistip en voetnoot aangepast. Geen SQL.
+
+**Getest.** Node-parse; 18 runtime-tests (de 14 van v0.17.0 plus: "Onderhouds garantie+ Plan 2026-2032" wel, "Onderhouds garantie+ Plan 2027" niet, "Van Gessel | Onderhouds garantie+ Plan 2026-2032" wel, "Onderhoud | Plan 2026-2032" met `|` ertussen niet).
+
+**Niet getest.** In de browser; v0.17.0 is wel door Gian in de browser bevestigd (bord, "Verborgen projecten" met "regel", "toon", deelprojecten blijven).
+
+## v0.17.0 — Paraplu-projecten standaard van het bord, "verberg" in "Nog geen datum", 04-10-2026
+
+**Aanleiding.** Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen (bijvoorbeeld *Van Gessel | Onderhoudsplan 2026-2032*) stonden op het bord en in de kaart "Nog geen datum in Yoobi", terwijl het werk in de deelprojecten zit. Gian koos op 04-10-2026 voor herkenning op de naam, met handmatig tonen/verbergen als overrule (route 2 via Yoobi `includeMainOrSubProject=1` blijft mogelijk voor later; de verkenning daarvoor is nog niet gedraaid).
+
+**Regel.** `PARAPLU_REGEL`: de projectnaam bevat "onderhoudsplan" gevolgd door twee jaartallen met een streepje (ook –, — of /) ertussen. Eén jaartal, zoals het deelproject "Onderhoudsplan 2027", telt niet. Volgens Gian is de naam van een hoofdproject altijd zo opgebouwd.
+
+**Gebouwd.**
+- Eén functie `isVerborgen(p)`: bewust verborgen (`zichtbaar === false`) óf paraplu zonder overrule. Gebruikt in `rijenOpBord`, `projectenOverDatum`, `kennisStatus`, `tekenVerborgen` en nu ook in `projectenZonderDatum` — die laatste negeerde de verberg-vlag (bug sinds het begin: een verborgen project bleef in "Nog geen datum" staan).
+- Kaart "Verborgen projecten" toont ook de regel-verborgen hoofdprojecten, met label "regel" en muistip; knop "toon" werkt voor beide. Voetnoot aangevuld.
+- Kaart "Nog geen datum in Yoobi": knop "verberg" per regel (zelfde `zetZichtbaar`).
+- `zetZichtbaar` onderscheidt nu: paraplu → `toon_ondanks_regel` aan/uit (zichtbaar blijft true); gewoon project → `zichtbaar` zoals voorheen. "Verbergen" in het projectpaneel zet bij een teruggehaalde paraplu de overrule dus weer uit.
+- Nieuwe kolom `plan_projecten.toon_ondanks_regel boolean not null default false` via `planning_06_paraplu.sql` (één controleregel). Oude rijen en standen zonder de kolom gelden als "geen overrule"; de app leest `=== true`, dus niets breekt als de SQL nog niet is gedraaid — alleen "toon" op een hoofdproject geeft dan "Opslaan mislukt" (kolom bestaat niet).
+
+**Niet gewijzigd.** Sync `fin-werkvoorraad-sync`, Edge Function `planning-ics` (aanname: leest `plan_uren`; hoofdprojecten hebben geen uren), deelprojecten (eigen Yoobi-code, blijven gewoon staan).
+
+**Getest.** Node-parse; 14 runtime-tests op `isParaplu`/`isVerborgen`/`verborgenDoorRegel` (Gessel-naam, en-dash, kleine letters, één jaartal niet, "2027 Controlebeurt" niet, jaartallen zonder het woord niet, leeg; zonder rij, rij met default true, overrule true/false, expliciet verborgen wint); div-balans 127/127 en CSS-balans 876/876 gelijk aan live v0.16.2.
+
+**Niet getest.** In de browser tegen de echte stand. Te controleren door Gian: Gessel verdwijnt van bord en uit "Nog geen datum" en staat onder "Verborgen projecten" met "regel"; "toon" haalt hem terug (na de SQL); de deelprojecten staan er nog; "verberg" in "Nog geen datum" werkt.
+
+## v0.16.2 — Voetrijen "Nog te plannen per dag" bij eerste openen allemaal zichtbaar, 04-10-2026
+
+**Aanleiding.** Melding van Gian: bij nieuw openen van de planning is onderaan meestal maar één rij van "Nog te plannen per dag" zichtbaar (alleen Jens); na een willekeurige klik die het bord hertekent staan alle rijen er wel.
+
+**Oorzaak (uit de code).** De voetrijen hangen met `position: sticky; bottom` onder elkaar; per rij wordt `bottom` berekend uit `offsetHeight` van de rijen eronder. In `laadData()` werd `tekenBord()` aangeroepen terwijl `.wrap` nog `display:none` had. Een onzichtbaar element heeft `offsetHeight` 0, dus alle rijen kregen `bottom: 0px` en lagen over elkaar; alleen de laatst getekende (Jens) was zichtbaar. Elke herteken daarna gebeurde met zichtbaar bord en ging goed.
+
+**Wijzigingen.**
+- `laadData()`: `.wrap` eerst zichtbaar maken en de laadmelding sluiten, pas daarna `tekenBord()`.
+- Berekening van de voet-`bottom`s uit `tekenBord()` gehaald naar `zetVoetRijenVast()`. Vangnet: is de onderste voetrij nog 0 pixels hoog, dan wordt een frame later opnieuw gerekend (max. 60 frames, ca. 1 seconde). Daarmee kan dit niet terugkomen als het bord ooit op een andere plek onzichtbaar getekend wordt.
+
+**Status.** Diagnose uit de code; JS parse-test (`node --check`) geslaagd. Nog te controleren door Gian in de echte browser: planning vers openen (ook met Cmd/Ctrl+Shift+R) en zien dat Gian, Max, Bjorn en Jens plus de kopregel onderaan allemaal staan.
+
+## v0.16.1 — Correctietekst als de planning na een kennisgeving is verschoven, 03-10-2026
+
+**Aanleiding.** Vraag van Gian na de eerste tien weekaankondigingen: zegt de mail bij een verschuiving ook dát er iets verschoven is? Nee: "opnieuw" maakte dezelfde standaardtekst. Besluit Gian: wel een correctietekst, zonder excuses (de wijziging kan ook van de klant komen).
+
+**Wijziging.** `kennisVorige(p, soort)`: de laatste niet-overgeslagen verzending voor die soort, alleen als de periode sindsdien veranderd is (zelfde regel als het oranje label). Is die er, dan begint de tekst met "In afwijking van ons eerdere bericht: de werkzaamheden aan [project] zijn verplaatst van week 43 naar week 45 (2 november t/m 6 november 2026)." (maand: "van oktober 2026 naar november 2026"; dag: "starten niet op donderdag 22 oktober 2026 maar op maandag 2 november 2026", met de startijden zoals gewoonlijk), het onderwerp krijgt "Gewijzigd: " ervoor en de knop in het paneel heet "corrigeren". De oude periode komt uit `periode_tekst` van de eerdere rij (wat de klant las), met terugval op de berekening uit `start_bij_verzending`. Zelfde periode of eerdere rij overgeslagen: gewone tekst en knop "opnieuw".
+
+**Getest.** `node --check` schoon; 49 gedragstests (6 nieuw: week-, dag- en maandcorrectie, onderwerp "Gewijzigd:", zelfde week geeft gewone tekst, overgeslagen geeft gewone tekst). Niet in de browser getest.
+
+## v0.16.0 — Aanhef met heer/mevrouw en achternaam in de kennisgevingen, 03-10-2026
+
+**Aanleiding.** Wens van Gian: "Geachte heer Kamp," in plaats van "Geachte Peter Kamp,". Yoobi geeft geen geslacht mee en de calculatie (waar de aanspreekvorm per calculatie gekozen wordt, `_offAanhef`) is niet aan de Yoobi-projectcode gekoppeld, dus de keuze moet in de planning zelf. Besluit Gian: versturen pas mogelijk als de aanspreekvorm gekozen is; geen gok, geen neutrale terugval.
+
+**Wijziging.**
+1. **SQL `planning_05_aanhef.sql`** (guard op planning_04, idempotent): `plan_projecten.contact_aanspreekvorm` (check: heer / mevrouw / echtpaar / familie / zakelijk) en `contact_achternaam`.
+2. **planning.html**: in het kennisgevingvenster onder de contactpersoon een regel Aanhef: keuzelijst met dezelfde vijf vormen als de offerte en een veld "tussenvoegsel en achternaam" dat uit de Yoobi-naam wordt gegokt (`achternaamGok`: titels als Dhr./Mevr./Fam./De heer en voorletters eraf, vanaf het eerste tussenvoegsel, anders het laatste woord; "Jan van der Berg" → "van der Berg", "L. en M. Willems" → "Willems"). Onder de regel staat live "De mail begint met: Geachte heer Kamp,". Bij zakelijk is het naamveld uit en luidt de aanhef "Geachte heer, mevrouw,". Zonder aanspreekvorm (of zonder achternaam bij een niet-zakelijke vorm) weigert Versturen met een melding. Contactpersoon én aanhef worden vóór elke verzending (en bij "wijzig" zonder mail) met één upsert op `plan_projecten` bewaard; mislukt dat, dan gaat er geen mail. De week- en dagmail nemen de bewaarde aanhef over; het paneel toont hem achter de contactpersoon, of "aanhef nog kiezen" in oranje.
+
+**Getest.** SQL op lokale Postgres 16: guard, tweemaal draaien 3× GOED, check weigert "meneer". App: `node --check` schoon; 43 gedragstests (de 30 bestaande, plus aanhef per vorm en negen naamgokken). Niet in de browser getest; de live-voorbeeldregel en het uitschakelen van het naamveld bij zakelijk zijn alleen uit de code beoordeeld.
+
+**Bewust zo gelaten.** De gok is een voorstel; wat er in het veld staat gaat mee. Eén aanhef per project, ook bij meerdere contactpersonen: wissel je van contactpersoon, dan wordt de achternaam opnieuw gegokt zolang je hem niet zelf hebt aangepast.
+
+## v0.15.2 — Volledige mailhandtekening onder de kennisgevingen, 03-10-2026
+
+**Aanleiding.** Eerste echte verzending (dagmail, 3 oktober 20:16, afzender planning@ernes.nl): werkt, maar zonder de handtekening met logo's die de offertemail wel heeft.
+
+**Wijziging.**
+1. **Edge Function `planning-kennisgeving` v2** (opnieuw uitrollen, Verify JWT blijft AAN): `handtekening()` letterlijk overgenomen uit `offerte-verzenden` v3.96.0 (groet "Met kleurrijke groet, Gian Ernes", logo, contactgegevens, klantenvertellen, Vakwerk PlusGarantie, KvK; plaatjes op www.ernes.nl). Staat onder elke kennisgeving, in dezelfde omslag (640 px, Arial) als de offertemail. De tekstversie krijgt een platte handtekening van drie regels. Eindigt de tekst uit de app toch op een groet ("Met vriendelijke/kleurrijke/hartelijke groet, …"), dan knipt de functie die weg zodat de groet één keer staat; in `plan_kennisgevingen.tekst` komt de tekst zonder groet en zonder handtekening.
+2. **planning.html**: de drie mailteksten eindigen niet meer op "Met vriendelijke groet, Ernes Schilders"; de hint onder het tekstvak zegt dat de handtekening er automatisch onder komt.
+
+**Getest.** Functie: 9 Deno-tests (de 8 van v1 plus: handtekening aanwezig in de html; groet in de app-tekst wordt weggeknipt; groet staat één keer in html én tekst; vastgelegde tekst zonder groet); `deno check` schoon. App: `node --check` schoon, 30 gedragstests slagen (de aanhef-test en de teksttests ongewijzigd). Niet getest: de weergave van de handtekening in Gmail/Apple Mail voor deze mail — in de offertemail is hij al in gebruik.
+
+## v0.15.1 — 2027-werk stond op het 2026-bord, 03-10-2026
+
+**Aanleiding.** Gezien na v0.15.0 (schermafbeelding Gian): Penders "2027 Controlebeurt" met Yoobi-datums in april 2027 en 0 uur in 2026 stond toch op het 2026-bord. Oorzaak: de terugval in `rijenOpBord` ("geen datum in dit jaar, maar wel uren: toch tonen") gebruikt `urenVanFase`, en die telt sinds v0.12.0 ook `urenBuiten` mee. Elk project met uren in welk jaar dan ook kwam zo op elk jaarbord. Fout uit v0.12.0, zichtbaar geworden door de labels van v0.15.0.
+
+**Wijziging.** `urenVanFase(code, f, ditJaar)`: met `ditJaar` alleen de uren van het bordjaar. De bordfilter geeft `true` mee; het paneel (fase-sommen) blijft alle jaren tellen, zoals bedoeld in v0.12.0.
+
+**Getest.** `node --check` schoon; de 28 gedragstests van v0.15.0 slagen nog; extra test: project met start in 2027 en alleen uren in 2027 staat niet op het 2026-bord, met uren in 2026 wel. Niet in de browser getest.
+
+## v0.15.0 — Kennisgevingen aan de klant: maand, week en startdag, 03-10-2026
+
+**Aanleiding.** Wens van Gian: vanuit de planning drie korte mails aan de klant kunnen sturen — de geplande maand direct na het inplannen, de week ongeveer twee weken vooraf, en de startdag de week ervoor — met vastlegging van wanneer wat verzonden is. Keuzes van Gian (03-10-2026): contactpersoon uit Yoobi kiezen bij de eerste mail (niet de sync uitbreiden), signalen op het bord maar versturen blijft handmatig, de drie mails staan los van elkaar, afzender planning@ernes.nl, starttijd in de dagmail "tussen 8:15 en 8:30 uur" tenzij later ingedeeld, en een knop "overslaan" zodat oude projecten niet blijven knipperen.
+
+**Wijziging.**
+
+1. **SQL `planning_04_kennisgevingen.sql`** (project-guard, idempotent): kolommen `plan_projecten.contact_naam` en `contact_email`; nieuwe tabel `plan_kennisgevingen` (yoobi_code, soort maand/week/dag met check, verzonden_op, overgeslagen, aan, aan_naam, door, periode_tekst, start_bij_verzending, onderwerp, tekst, resend_id) volgens het sjabloon: RLS aan, policy `plan_kennisgevingen_authenticated_alles`, anon niets. Eén rij per verzending of overslaan; de laatste rij per soort geldt. Door Gian gedraaid op 03-10-2026: 7× GOED.
+2. **Edge Function `planning-kennisgeving` v1** (Verify JWT AAN; archief in `ernes-edge-functions`). Volgorde: harde stop zonder `RESEND_API_KEY` → body controleren (400) → inlog controleren via `/auth/v1/user` voor de kolom `door` (401) → Resend vanaf `Ernes Schilders <planning@ernes.nl>`, `reply_to info@ernes.nl`, `bcc administratie@ernes.nl`, tekst als text én eenvoudige html → rij in `plan_kennisgevingen` → contactpersoon op `plan_projecten` bijwerken. Mislukt het vastleggen ná de mail: antwoord `ok:true, vastgelegd:false`, geen tweede mail. De **app** stelt de tekst samen en toont hem vooraf; de functie controleert, verstuurt en legt vast. Overslaan schrijft de app zelf (authenticated), daar komt de functie niet aan te pas.
+3. **planning.html** — nieuw brok 7:
+   - Signalen. Maand: vanaf de maandag ná de eerste ingeplande uren van het project (`min(plan_uren.created_at)`, beide urenqueries laden nu `created_at`). Week: vanaf de maandag twee weken vóór de startweek. Startdag: vanaf de maandag van de week vóór de startweek. Start = eerste fase, anders de projectdatums (zelfde terugval als het bord). Geen signaal als er al een rij is, als de start voorbij is, of als het project verborgen is.
+   - Verschoven: is er gemaild en valt de start nu in een andere maand (maand), andere week (week) of op een andere dag (dag) dan `start_bij_verzending`, dan oranje "verstuurd … voor week 43 — nu week 45" in het paneel en een omlijnd label op het bord.
+   - Bord: oranje label "✉ maand · week" in de linkerkolom (bij fasen alleen op de eerste rij) en een teller "✉ n" in de kop die, zoals de over-datum-teller, langs de projecten springt en het paneel opent.
+   - Paneel (met en zonder fasen): blok "Kennisgevingen aan de klant" met de contactpersoon (knop wijzig) en per soort status + knop versturen/opnieuw + overslaan. Teksten in het paneel: "kan verstuurd worden", "vanaf 5 okt", "verstuurd 5 okt voor week 43", "overgeslagen 5 okt door gian".
+   - Modaal: contactpersonen opgehaald uit Yoobi via de bestaande Edge Function `yoobi-klant` (`?code=<klantcode>` uit de Yoobi-stand; contacten met e-mail, plus het algemene relatieadres als dat afwijkt), de eerder gekozen contactpersoon voorgeselecteerd, of handmatig naam + adres. Onderwerp en volledige tekst aanpasbaar; de aanhef volgt de gekozen naam zolang de tekst niet met de hand is gewijzigd. Versturen roept de functie aan met het sessietoken; de keuze wordt op `plan_projecten` bewaard (ook via de knop wijzig zonder mail, met upsert op yoobi_code).
+   - Dagmail-starttijden: dezelfde blokindeling als `planning-ics` v2 (`WERKBLOKKEN` en `klokNaWerk` letterlijk overgenomen, volgorde via `dagProjecten`). Eerste blok van de dag → "tussen 8:15 en 8:30 uur", later → "rond 12:15 uur"; per schilder een regel als de tijden verschillen; geen uren op de startdag → algemene zin. Weekaanduiding: "week 43 (19 oktober t/m 23 oktober 2026)".
+   - Ontbreekt de tabel (SQL nog niet gedraaid), dan laadt het bord gewoon zonder kennisgevingen (melding in de console) en zegt overslaan het erbij; een 404 van de functie geeft de hint dat hij nog niet is uitgerold.
+
+**Getest.**
+- SQL op lokale Postgres 16: guard in lege database stopt; tweemaal draaien schoon; soort `jaar` geweigerd; anon geen rechten, authenticated lezen en schrijven.
+- Edge Function met Deno 2.2.7 en nagebootste Resend/auth/PostgREST, 8 tests: harde stop raakt niets aan; vijf foute bodies 400 zonder aanroepen; niet ingelogd 401; geslaagde verzending met controle op from/bcc/reply_to, de rij (door, resend_id, start) en de contact-PATCH in de juiste volgorde; Resend-fout 502 zonder rij; vastleggen mislukt → mail één keer, melding apart. `deno check` schoon.
+- planning.html: `node --check` schoon; 28 gedragstests in Node met nagebootste DOM en vaste datum (za 3 okt 2026): signaaldatums per soort, teller, labels, verschoven per soort (zelfde week andere dag = alleen dag verschoven), overgeslagen telt niet als verschoven, start voorbij en verborgen geven geen signaal, fasen nemen de eerste fase, starttijden (08:00 → "tussen 8:15 en 8:30 uur", na 4 uur ander werk → "rond 12:15 uur"), en de drie mailteksten en onderwerpen.
+- **Nog niet getest in de echte omgeving:** de functie tegen Supabase en Resend, het ophalen van contactpersonen via `yoobi-klant` vanuit planning.html, het modaal op iPad/iPhone, en de rij die `laadAlles` na een verzending terugleest.
+
+**Bewust zo gelaten.** Geen automatische verzending (cron): elke mail gaat na een klik met de tekst in beeld. De signalen gebruiken `plan_uren.created_at` van de oudste nog bestaande urenrij; worden alle uren gewist en opnieuw gezet, dan schuift het maandsignaal mee. De starttijd in de dagmail is een indeling van de geplande uren, geen afspraak die de planning vastlegt; wijzigt de volgorde na verzending, dan ziet het bord dat niet (alleen datumverschuivingen). Bij projecten met fasen gelden de kennisgevingen voor de eerste fase; latere fasen krijgen geen eigen mails.
+
+## v0.14.0 — Agenda als tijdblokken 08:00–16:15, volgorde per dag kiesbaar, 03-10-2026
+
+**Aanleiding.** v0.13.0 werkte in de echte iPhone-agenda (bevestigd met schermafbeeldingen), maar als hele-dag-items bovenin. Wens van Gian: blokken in de dagweergave, zoals 08:00–12:30 Laumen en 12:30–16:30 Oudelhoven. Kader dat hij gaf: werkdag altijd 08:00–16:15, pauze 10:00–10:15 en 12:30–13:00, in principe nooit meer dan 7,5 uur per dag gepland.
+
+**Wijziging.**
+
+1. **Edge Function `planning-ics` v2** (opnieuw uitrollen, Verify JWT blijft UIT; link en token veranderen niet). Per project per dag een tijdblok met `DTSTART;TZID=Europe/Amsterdam`, plus een `VTIMEZONE`-blok voor zomer-/wintertijd. De blokken liggen achter elkaar vanaf 08:00; pauzes schuiven alleen de eindtijd op (één afspraak per project, geen gesplitste blokken). Eindigt een blok precies op een pauzegrens, dan staat er 10:00 en niet 10:15. Meer dan 7,5 uur op een dag loopt voorbij 16:15 door, met een "Let op"-regel in de omschrijving — zichtbaar met opzet. Titel "Klant – project"; omschrijving: uren, bij meerdere projecten de tijden en het dagtotaal, Yoobi-code, en de zin dat de tijden een indeling van de uren zijn en geen afspraak met de klant. Verlof blijft een hele-dag-item. Volgorde: `plan_uren.volgorde` (1 = eerst), anders grootste blok eerst, dan klant alfabetisch, dan Yoobi-code.
+2. **SQL `planning_03_volgorde.sql`**: kolom `plan_uren.volgorde smallint` (leeg = regel). Guard eist dat `planning_02` al gedraaid is.
+3. **planning.html**: het dagvenster (klik onderaan het bord op een dag bij een medewerker) toont bij twee of meer projecten de volgorde zoals de agenda hem krijgt, met per project een knop **eerst**. Die zet de volgorde van alle projecten op die dag (1, 2, 3…) met `update … match()` en herbouwt het venster. Mislukt het opslaan, dan draait het geheugen terug en meldt de status het, met een hint naar het SQL-bestand als de kolom ontbreekt. Dezelfde sorteerregel als in de functie staat in `dagProjecten()`. `volgorde` wordt meegeladen in `laadAlles` en gaat uit het geheugen zodra de uren van die dag op nul gaan.
+
+**Bewust zo gelaten.** Bij het verschuiven van een fase (`slaDatumsOp`: delete + upsert) en bij het wissen van uren gaat de handmatige volgorde van die dagen verloren; de dag is dan toch opnieuw ingedeeld. Een gewone urenwijziging via het bord laat `volgorde` staan: de upsert stuurt die kolom niet mee, en PostgREST zet bij een conflict alleen de meegestuurde kolommen — dat laatste is een aanname op basis van PostgREST-gedrag, lokaal met gewone SQL nagebootst, niet tegen PostgREST getest. Begintijd en pauzes staan vast in de functie (`WERKBLOKKEN`), niet per medewerker instelbaar.
+
+**Getest.**
+- SQL op lokale Postgres 16: guard zonder `planning_02` stopt; tweemaal draaien schoon; een upsert die `volgorde` niet meestuurt laat hem staan.
+- Edge Function: `deno check` schoon; 31 mocktests, waaronder 7,5 u → 08:00–16:15, 4 u + 3,5 u → 08:00–12:15 en 12:15–16:15, handmatige volgorde die van de regel wint, een blok over de 10:00-pauze heen (1 u + 2 u → 09:00–11:15), 8,5 u op een dag → eind 17:15 plus waarschuwing, 9 u in één blok → 17:45, een 2-uursblok dat op 10:00 eindigt en niet op 10:15, VTIMEZONE vóór de afspraken, verlof als hele dag. Uitvoer geparsed door ical.js: 08:00 Europe/Amsterdam komt uit op 06:00 UTC (zomertijd, klopt voor oktober vóór de 25e).
+- planning.html: Node-parsetest, CSS 217/217, div 113/113, runtime-harnas met stub-Supabase: regelvolgorde, lijst alleen bij ≥2 projecten, "eerst" slaat 1-2-3 op voor de juiste medewerker en dag, andere medewerker ongemoeid, terugdraaien bij databasefout, deels gezette volgorde.
+
+**Niet getest (aan Gian).** De keten tot in de agenda-app na de herdeploy; of Apple en Google de `VTIMEZONE` netjes overnemen rond de wintertijdwissel van 25 oktober; het dagvenster op de iPad in het echt (knop "eerst" en herbouw van het venster). De eerste controle: één dag met twee projecten, in de agenda moeten ze aansluiten en de dag moet op 16:15 eindigen.
+
+## v0.13.0 — Agenda-abonnement per medewerker (Apple/Google Agenda), 03-10-2026
+
+**Aanleiding.** Vraag van Gian: kan de planning in de agenda van de telefoon? Gekozen (na afweging van losse ICS-download en tweewegs Google API): een abonnements-feed, eenrichting, één hele-dag-item per project per werkdag, per medewerker gefilterd. Weekblik is genoeg; trage verversing door Google (soms pas na een dag) is aanvaard.
+
+**Wijziging.** Drie delen, in deze volgorde uit te rollen:
+
+1. **SQL `planning_02_ics_token.sql`** — kolom `plan_medewerkers.ics_token` (tekst, leeg = geen feed) met unieke index. Geen RLS-wijziging: de bestaande policy `plan_medewerkers_authenticated_alles` geldt, dus iedereen die in planning.html kan, kan links maken en vernieuwen.
+2. **Edge Function `planning-ics` (nieuw, Verify JWT UIT)** — `GET ?t=<token>` → medewerker via `ics_token` → `plan_uren` en `plan_verlof` van vandaag −30 t/m +365 dagen → projectnaam en klant uit de laatste `fin_werkvoorraad`-stand (`data.projecten[]`, match op `code`, zelfde bron als het bord) → `text/calendar`. Per dag met uren één hele-dag-afspraak `"<klant> – <project> (7,5 u)"`, omschrijving met Yoobi-code; verlof als `"Verlof – <omschrijving>"` of `"<x> u gereserveerd"`. UID stabiel per project+medewerker+datum (`@ernes`), zodat agenda-apps een gewijzigde dag bijwerken in plaats van verdubbelen. `LAST-MODIFIED` uit `plan_uren.updated_at`. Dagen met 0 uur en onbekende tokens (ook te korte: geen databaseaanroep) geven niets terug; databasefout → 503. Leest met de service-rol, schrijft nooit.
+3. **planning.html** — in Beheer → Medewerkers per medewerker een knop **Agenda** (✓ als er een link is). Paneel: de `webcal://`-link, *Kopieer link*, *Open in agenda-app*, *Link vernieuwen* (nieuw token, oude link direct dood, met bevestiging), *Intrekken* (token leeg, agenda wordt leeg, met bevestiging), een QR-code en drie regels uitleg. Token: 24 willekeurige bytes uit `crypto.getRandomValues` → 32 tekens base64url. De QR wordt in de pagina zelf berekend (eigen implementatie, bytemodus, foutcorrectie M, versie 1 t/m 10; geen externe bibliotheek). Opslaan via `update … eq('id')`, dus de bestaande `slaMedewerkerOp`-upsert raakt het token niet aan.
+
+**Bewust buiten scope.** Adres in het item, begintijden, gesloten dagen/feestdagen (staan al in ieders agenda), verlof van anderen, pushmelding bij wijziging, iets terugschrijven vanuit de agenda.
+
+**Beveiliging, eerlijk gezegd.** De link is zonder login bereikbaar; dat moet, want agenda-apps kunnen niet inloggen. Het geheim is het token (32 tekens, ~144 bits). Wie zijn link doorstuurt, geeft zijn planning weg; daarvoor is *Link vernieuwen*. Het token staat leesbaar in `plan_medewerkers` voor iedere ingelogde planninggebruiker (zelfde kring die het bord ziet).
+
+**Getest.**
+- SQL op lokale Postgres 16: project-guard stopt in een leeg project; tweemaal draaien schoon; dubbel token geweigerd; gewone update op de rij laat het token staan.
+- Edge Function: `deno check` schoon; 20 mocktests (404-paden, 405, HEAD, lege planning, 503 bij databasefout, escaping van `,` en `;`, regelvouwing op 75 octetten incl. é, stabiele UID, LAST-MODIFIED, CRLF); uitvoer onafhankelijk geparsed door ical.js (Mozilla) als hele-dag-afspraken.
+- QR: 120 willekeurige teksten in versie 1 t/m 10 correct teruggelezen door jsQR (onafhankelijke lezer). Daarbij drie fouten in de eerste versie gevonden en hersteld — zonder die externe lezer waren er twee ongemerkt gebleven.
+- planning.html: Node-parsetest, CSS-balans (214/214), div-balans (110/110), runtime-harnas: 500 tokens uniek en passend op de `TOKEN_RE` van de functie, url-opbouw, paneel in drie toestanden met stub-DOM, QR van een echte link leesbaar (versie 6).
+
+**Niet getest (aan Gian).**
+- De hele keten in het echt: SQL → deploy → link maken → abonneren op een iPhone en in Google Agenda. Hoe het er in de agenda-apps uitziet kan ik niet zien.
+- Aanname: op iPhone opent tikken op een `webcal://`-link de Agenda met een abonnementsvraag (algemeen bekend gedrag, niet door mij getest).
+- Aanname: de menutekst "Andere agenda's → Via URL" in Google Agenda staat uit het geheugen, niet opgezocht. Controleren voordat de uitleg aan een medewerker wordt gegeven; staat in `tekenAgendaPaneel`.
+- Of Supabase een `HEAD` op een Edge Function doorlaat is niet gecontroleerd; `GET` is wat agenda-apps gebruiken.
+
+## v0.12.0 — Nog te plannen en fase-uren tellen over alle jaren, 01-10-2026
+
+Melding van Gian (project De Bie, Yoobi 20261671, fase 1 in nov 2026, fase 2 in apr 2027): op het bord 2026 stond "nog te plannen 8,89" (budget 21,64 − 12,75 gepland), op het bord 2027 stond ineens 21,64 nog te plannen en fase 1 toonde 0 uur. Oorzaak: `laadAlles` haalde `plan_uren` alleen voor het bordjaar op, en "nog te plannen" en de fase-sommen rekenden met dat jaar. Intern consistent, maar fout voor elk project dat over de jaargrens loopt.
+
+Hoe het nu werkt: één extra query in `laadAlles` haalt de uren **buiten** het bordjaar (`datum < 1 jan OR datum > 31 dec`) in een aparte laag `urenBuiten`. Het bord zelf blijft rekenen op `uren` (alleen bordjaar) en wordt niet trager. In het paneel:
+- **Ingepland <jaar>**: ongewijzigd, telt alleen het bordjaar.
+- **Nog te plannen**: budget − ingepland over álle jaren (`urenVanProject(code, true)`).
+- **Uren per fase**: over alle jaren, dus fase 1 toont op het bord 2027 ook haar 12,75 uur uit 2026.
+- Uren die bij een verschuiving over de jaargrens landen, gaan in `urenBuiten` in plaats van uit het geheugen te verdwijnen (voorheen pas zichtbaar na herladen).
+- Voetnoten en muistips aangepast.
+
+Terugval: mislukt de extra query, dan een waarschuwing in de console en gedrag als v0.11.1 (alleen dit jaar).
+
+Niet gewijzigd, bewust: bij het verschuiven van een fase gaan alleen de uren van het bordjaar mee (`slaDatumsOp` kijkt in `uren`). Een fase die zelf over de jaargrens ligt verschuif je dus per bordjaar.
+
+Getest: Node-parsetest, CSS/div-balans, rekenlogica met synthetische De Bie-data (12,75 / 8,89 / fase-sommen beide kanten op). De PostgREST `.or('datum.lt.…,datum.gt.…')`-filter is uit de supabase-js-documentatie en niet live getest — controleer bij de eerste lading dat het paneel op 2027 nu 8,89 toont.
+
+## v0.11.1 — Hulpmiddel-naam altijd zwart, 25-09-2026
+
+- De naam en omschrijving in de hulpmiddelstrook waren wit (donker alleen bij mobiel toilet). Loopt de tekst voorbij een korte strook over de projectblokken of leeg veld heen, dan was hij onleesbaar. Nu altijd zwart, ongeacht de kleur eronder.
+- Technisch: `.middeltekst` color `#000`; `.middeltekst.donker` en de bijbehorende klasse in `tekenProjectRij` verwijderd (overbodig).
+
+## v0.11.0 — "Over datum": nog open in Yoobi, planning voorbij, 23-09-2026
+
+Vraag van Gian: een werk dat door regen of anderszins niet is uitgevoerd, blijft stil op zijn oude plek in de planning staan en schuift uit beeld. Regel (Gian): een project dat in Yoobi gesloten is, is echt klaar; alles wat over datum is en nog open staat, is ofwel nog uit te voeren (herplannen) ofwel te sluiten. Dat moet een melding krijgen.
+
+Hoe het werkt: een project dat nog in de Yoobi-stand staat (de sync haalt alleen actieve projecten, dus "niet in de stand" = gesloten) en waarvan de einddatum op ons bord (`plan_eind`, anders Yoobi-eind; bij fasen het einde van de laatste fase) meer dan **2 werkdagen** vóór vandaag ligt, telt als over datum. Weekend en gesloten dagen tellen niet mee (`werkdagenTussen`). Voorbeeld: eind vrijdag → maandag en dinsdag nog stil, woensdag melding. Verborgen projecten worden met rust gelaten.
+
+Zichtbaar: rood label "Over datum" in de linkerkolom, rode gestreepte periodelijn en rode urenblokken op de rij, muistip met wat te doen. In de kop een rode knop "N over datum"; elke klik springt naar de volgende over-datum-rij (uitgelicht, 2,5 s) en scrolt de einddatum in beeld. Projecten die over datum zijn maar niet op dit jaarbord staan (eind vóór dit jaar) komen in een kaart "Over datum, niet op dit bord" rechts, met einddatum — anders zou de teller iets tellen dat je niet kunt vinden. Legenda-item toegevoegd. Melding verdwijnt vanzelf na balk slepen of na sluiten in Yoobi (het tweede na de nachtsync).
+
+Geen nieuwe tabel of opslag; puur berekening bij het tekenen. Nieuwe functies: `projectEind`, `isOverDatum`, `projectenOverDatum`, `tekenOverDatum`; constante `OVER_DATUM_WERKDAGEN = 2`.
+
+Getest (node, synthetisch): drempel rond weekend en gesloten dag (7 gevallen), laatste-fase-bepaling, JS-parse, divbalans. Niet getest: echt bord, iPhone, gedrag van de springknop met ingeklapte kolom.
+
+Hoort erbij, apart gesprek: het 3-maandenfilter ("verlopen") in Edge Function `fin-werkvoorraad-sync` uitzetten, zodat oude nooit-gesloten projecten in de stand blijven en hier zichtbaar worden. Gian ruimt die handmatig op. Volgorde: eerst dit bord, dan het filter.
+
+## v0.10.5 — Eigen icoon op het iPhone-beginscherm, 16-09-2026
+
+Eén regel in de head: `apple-touch-icon` naar het nieuwe `apple-touch-icon-planning.png` (Ernes-logo met groene band "Planning", 180×180, uit `erneslogo.png`). Wie Planning op het beginscherm heeft staan ziet nu een grijze P; na verwijderen en opnieuw toevoegen het logo. Verder niets gewijzigd. Getest: JS-parse (node) en tagbalans. Niet getest: iPhone.
+
+## v0.10.4 — Stroken onder en boven de lijn, rij groeit pas bij drie, 09-09-2026
+
+Idee van Gian: niet de rij hoger maken, maar de ruimte in de rij gebruiken. De eerste hulpmiddelstrook ligt nu onder de projectlijn, de tweede erboven, beide over de werkblokken heen (de blokken zijn achtergrond). Zo blijft een rij met twee hulpmiddelen gewoon 40 px. Pas bij een derde en vierde overlappende strook groeit de rij, 12 px per strook, en die komen bovenop. Lijn, blokken, grepen en tekst zijn onderaan de rij verankerd, zodat een hogere rij ze niet meer oprekt. Bij vier overlappende middelen: rij 64 px in plaats van 76. 135 controles.
+
+## v0.10.3 — Naam ín de hulpmiddelstrook, 09-09-2026
+
+De namen bij de stroken stonden als losse tekst boven de strook, over de werkblokken heen, en waren slecht leesbaar. Nu is de strook 11 px hoog met de naam erin: wit op de kleur, donker op het gele toilet. Geen losse tekst meer boven de strook. Lagen staan 12 px uit elkaar in plaats van 14 (vier hulpmiddelen: rij 76 in plaats van 82 px). Alleen CSS en één getal; 132 controles ongewijzigd goed. Leesbaarheid beoordeelt Gian in de browser.
+
+## v0.10.2 — Twee takken samengevoegd, 09-09-2026
+
+Op 9 september is aan planning.html in twee chats tegelijk gewerkt: v0.9.3 (paneel: nog te plannen / nog te werken) in de planningschat en v0.10.0/v0.10.1 (ziekdagen uit Personeel, hulpmiddelen in lagen) in de personeelschat, beide vanaf v0.9.2. v0.10.2 is v0.10.1 plus de paneelwijziging van v0.9.3; verder geen nieuw gedrag. Volledige testreeks (132 controles in jsdom) op het samengevoegde bestand: fasen, hulpmiddelen, verlof, zoeken, slepen, paneel. De ziekdagen- en lagenlogica staan niet in die reeks en bewijzen zich in de browser (F-testronde uit de personeelschat).
+
+## v0.10.1 — Overlappende hulpmiddelen onder elkaar, 09-09-2026
+
+Twee of meer hulpmiddelen die elkaar in tijd overlappen (steiger én toilet) stonden op dezelfde pixels, strook én naam door elkaar. Nu krijgt elk middel een eigen laag: op volgorde van startdatum de laagste laag die vrij is, zoals afspraken in een agenda. De projectrij groeit 14px per extra laag (40 → 54 → 68 → 82px); rijen zonder overlap blijven exact zoals ze waren. Gevonden door Gian bij een demonstratie aan Max.
+
+## v0.10.0 — Ziekdagen uit Personeel op het bord, 09-09-2026
+
+Het bord leest de view `pers_verzuim_dagen` uit de personeelsmodule (alleen leesbaar voor wie `ziet_personeel` heeft). Elke ziekdag komt als regel in dezelfde verlof-map: 100% ziek blokkeert de hele dag (licht rood, "z" in plaats van ✕), gedeeltelijk ziek telt als reservering van norm × percentage, zodat de rest van de dag inplanbaar blijft. Een eigen verlofregel op dezelfde dag wint. Klik op een ziekdag in de totaalrij geeft geen "Opheffen" maar de tekst dat dit in Personeel is gemeld. Planning schrijft nooit in personeel. Is de view niet leesbaar, dan gaat het bord zonder ziekdagen verder (console.warn), zoals bij `plan_verlof`.
+
+## v0.9.3 — "Resterend" vervangen door "nog te plannen" en "nog te werken", 09-09-2026
+
+"Resterend = budget − geboekt − ingepland" telde bij een lopend project de gewerkte dagen dubbel (Terworm: −26,75 terwijl er 43,75 uur budget over was). Nu, zoals Yoobi de cijfers naast elkaar zet:
+- **Nog te plannen** = budget − ingepland (dit jaar). Rood als je meer hebt ingezet dan het budget.
+- **Nog te werken** = budget − geboekt (Yoobi). Rood als het project over zijn budget is.
+Ingepland telt alleen het gekozen jaar (keuze Gian). Gebouwd in de planningschat, los van v0.10.0/v0.10.1 uit de personeelschat; samengevoegd in v0.10.2.
+
+## v0.9.2 — Urencel selecteert het hele getal, 07-09-2026
+
+Klik of tab je in een urencel met inhoud, dan staat het hele getal geselecteerd en vervangt wat je typt het meteen. Voorheen kwam de cursor achter het getal en typte je eraan vast.
+
+## v0.9.1 — "Wijkt af van Yoobi" alleen bij echt verschil, 07-09-2026
+
+De melding verscheen zodra er eigen datums waren opgeslagen, ook als die gelijk waren aan Yoobi (bijvoorbeeld na verschuiven en terugzetten). Nu alleen als start of eind werkelijk anders is. De knop "Terug naar Yoobi-datum" blijft zichtbaar zolang er eigen datums staan, zodat je ze kunt opruimen. 130 controles.
+
+## v0.9.0 — Hulpmiddelen: hoogwerker, steigers, toilet (brok 4b), 07-09-2026
+
+Vereist eerst `planning_05_middelen.sql` (tabel `plan_middelen`). Zonder die tabel werkt het bord gewoon, zonder hulpmiddelen.
+
+### Wat er kan
+- **Hulpmiddelen per project of fase**: hoogwerker (oranje), rolsteiger (blauw), vaste steiger (rood), mobiel toilet (geel), overig (grijs, met eigen naam). Elk met periode en notitie (leverancier, tijd).
+- **Op het bord** een smalle strook onderin de projectrij van opbouw- tot afbouwdag, met het woord erbij aan het begin, zodat de kleur niet het enige signaal is. Aanwijzen toont periode en notitie.
+- **In het paneel** een blok Hulpmiddelen: bestaande regels aanpassen (van, tot, notitie) of verwijderen (met bevestiging); toevoegen met van/tot standaard op de periode van het project of de gekozen fase.
+- **Bij een hele verschuiving** van project of fase een aparte vraag of de hulpmiddelen mee moeten ("een bestelde steiger schuift meestal niet mee"). Standaard is niets meeschuiven.
+- Geen dubbel-gebruikwaarschuwing: de hoogwerker wordt gehuurd.
+
+### Ook in deze ronde
+- **Oranje lijn alleen nog voor de aanname** (Yoobi-start in een eerder jaar, geen eigen datum gezet). Een bewuste afwijking van Yoobi blijft blauw en staat alleen in het paneel. Zo blijft oranje een signaal in plaats van ruis. Legenda aangepast, met de hulpmiddelkleuren.
+
+### Onder de kap
+- `plan_middelen` (yoobi_code, fase_id, soort, omschrijving, van, tot). Middelen zonder fase horen bij fase 1 als een project later geknipt wordt.
+- Getest: 128 controles in jsdom, waaronder strook en label, toevoegen (overig zonder naam geweigerd), wijzigen, meeschuiven met bevestiging, verwijderen.
+
+## v0.8.1 — Tekst schuift achter de linkerkolom, 07-09-2026
+
+De naam en afspraak vóór de lijn bleven zichtbaar bóven de vaste linkerkolom bij horizontaal scrollen; de blokken verdwenen wel. Oorzaak: gelijke stapelhoogte (z-index) als de kolom. Tekst en grepen staan nu één laag lager. Alleen CSS.
+
+## v0.8.0 — Projecten in fasen knippen (brok 4a), 07-09-2026
+
+Vereist eerst `planning_04_fasen.sql` (tabel `plan_fasen`). Zonder die tabel werkt het bord gewoon, zonder fasen.
+
+Aanleiding: een project als Massop met werk in september en één dag in november stond als één lange rij hoog op het bord; in november keek je omhoog naar een anonieme lijn.
+
+### Wat er kan
+- **Knip in fasen** in het paneel: kies een datum, het project splitst in fase 1 (tot en met de dag ervoor) en fase 2 (vanaf die dag). Een fase kun je nog eens knippen. Standaardnamen "fase 1", "fase 2", … zelf te hernoemen.
+- **Elke fase is een eigen rij** op het bord met eigen lijn, gesorteerd op eigen start: fase 2 van Massop staat tussen de novemberprojecten. Slepen en trekken werken per fase; uren meeverschuiven geldt voor de dagen van die fase.
+- **Eigen klantafspraak per fase**, vóór de lijn naast de naam ("Massop | Kelderkamer · fase 2  vast doc week 46").
+- **Elke dag hoort bij precies één fase**: de fase waarin hij valt, anders de dichtstbijzijnde. Een uur staat dus nooit dubbel en verdwijnt nooit; in de andere fase-rijen is die dag niet invulbaar.
+- **Samenvoegen met vorige** per fase. Blijft er één over, dan verdwijnen de fasen en krijgt het project die periode als eigen start/eind terug.
+- Paneel bij een project met fasen: aanneemsom, budget, ingepland, geboekt en resterend voor het geheel; per fase naam, van/tot, uren, knip- en samenvoegknop.
+
+### Onder de kap
+- `plan_fasen` (yoobi_code, volgnr, naam, van, tot, notitie). Knippen en samenvoegen schrijven alle fasen van een project opnieuw (renummerd); slepen, hernoemen en de notitie zijn losse updates.
+- Getest: 116 controles in jsdom, waaronder knippen (ook geweigerd buiten de periode), toewijzing van dagen aan fasen, slepen per fase met alleen de eigen uren, hernoemen, notitie per fase, samenvoegen terug naar één periode.
+
+## v0.7.1 — Kop blijft altijd zichtbaar, 07-09-2026
+
+De pagina scrolde mee als het paneel rechts hoger was dan het scherm, waardoor de kop van het bord (weeknummers, dagen) uit beeld verdween. Nu staat de pagina stil: het bord vult het scherm onder de kopbalk en scrolt zelf, het paneel rechts scrolt zelf als het te hoog wordt. Op smalle schermen (onder 1100 px) scrolt de pagina zoals voorheen, met het paneel bovenaan. Alleen CSS; 97 controles ongewijzigd goed. Beeld niet in een echte browser getest.
+
+## v0.7.0 — Naam vóór de lijn, inklapbare kolom, zoeken, 07-09-2026
+
+Op verzoek na v0.6.0: de projectnaam hoort wel in de tijdlijn.
+
+### Wat er anders is
+- **Projectnaam + afspraak staan vóór de start van de lijn**, tegen het beginpunt aan (zoals Yoobi). Klik op de naam klapt het project open; klik op de afspraak bewerkt hem. Geen ruimte links (start in de eerste week, of overloopwerk vanaf 1 januari): dan achter het einde van de lijn.
+- **Linkerkolom inklapbaar** met het knopje ‹ › in de kop. Ingeklapt blijft 40 px over en krijgt het bord de breedte; de keuze wordt in de browser onthouden.
+- **Zoekveld** boven de linkerkolom (bij ingeklapte kolom in de kopbalk): filtert op klant, projectnaam of Yoobi-code terwijl je typt. De totaaltelling onderaan blijft over alle projecten rekenen. Geen treffer geeft een melding.
+
+Getest: 97 controles in jsdom. v0.6.0 is niet live geweest; v0.7.0 bevat die wijzigingen ook (lijn met blokken).
+
+## v0.6.0 — Periode als lijn, geplande dagen als blokken, 07-09-2026
+
+Uit het plannen zelf: een project als Massop (periode september–november, werk op vijf dagen) vulde de hele tijdlijn met een dik blok, en de tekst erop dekte de cellen af zodat je de geplande dagen alleen aan de randjes zag.
+
+### Wat er anders is
+- De **periode** (start tot eind) is een dunne lijn met de grepen aan de uiteinden. Gestreept zolang er niemand op gepland is, oranje als onze datum van Yoobi afwijkt, oranje gestippeld bij een aanname.
+- Alleen **dagen met geplande uren** krijgen een vol blok. Zo zie je het werk en niet de contractperiode.
+- De **projectnaam staat niet meer in de balk**; de vaste linkerkolom toont hem al.
+- De **klantnotitie** is een klein label direct achter het einde van de lijn, buiten de cellen (of ervoor, als de lijn het jaar uitloopt). Leeg = "+ afspraak".
+- Legenda aangepast.
+
+Getest: 88 controles in jsdom. Het beeld zelf beoordeelt Gian.
+
+## v0.5.0 — Reservering: een deel van een dag niet beschikbaar, 07-09-2026
+
+Vereist eerst `planning_03_verlof_uren.sql` (kolom `plan_verlof.uren`).
+
+Aanleiding: bureau-uren en ziekenhuisbezoeken stonden nergens en werden zo overgepland. Yoobi's "Indirecte uren" wordt bewust weggefilterd, en verlof was alleen een hele dag.
+
+### Wat er kan
+- Verlof heeft nu een veld **uren**. Leeg = hele dag vrij (✕, zoals voorheen). Ingevuld = reservering: die uren gaan van de dag af in de totaaltelling (7,5 wordt 4,5 bij 3 uur ziekenhuis), de rest blijft planbaar, en plan je er overheen dan komt het rode hoekje met de reservering in de uitleg. De cel onderaan krijgt een grijs randje; aanwijzen toont de reservering.
+- **Wekelijks herhalen t/m** in het verlofformulier: "elke vrijdag 4 uur bureau tot 9 oktober" is één handeling.
+- Het popover onderaan het bord vraagt nu ook om uren (leeg = hele dag) en toont bij een bestaande regel wat er staat, met "Opheffen".
+- Uurvelden in beheer en popover accepteren een komma (waren getalvelden, die weigeren "2,5").
+
+### Onder de kap
+- `plan_verlof.uren` numeric, null = hele dag. Een reservering blokkeert de dag niet voor meeverschuiven; een hele dag wel.
+- Getest: 84 controles in jsdom.
+
+## v0.4.0 — Medewerkers, Yoobi verversen, verbergen (brok 3b, deel 2), 07-09-2026
+
+### Wat er kan
+- **Medewerkers beheren** in hetzelfde scherm als Vrije dagen: norm (uren per dag) aanpassen, actief aan/uit, volgorde met pijltjes, nieuwe medewerker toevoegen (dubbele naam wordt geweigerd). Niet-actief verdwijnt van het bord; uren blijven bewaard.
+- **Yoobi verversen** (knop bovenaan): start `fin-werkvoorraad-sync` v5 met het sessietoken van de ingelogde gebruiker, wacht tot de stand een nieuw tijdstempel heeft (hoogstens 2 minuten) en herlaadt het bord. Een 401 betekent dat v5 niet gedeployd is of Verify JWT aan staat.
+- **Project verbergen** (knop in het paneel) voor kapstokprojecten zonder werk. Kaart "Verborgen projecten" rechts met "toon" om ze terug te zetten.
+
+### Onder de kap
+- `plan_medewerkers` wordt nu volledig geladen (ook inactief) en bij gebruik gefilterd. Schrijft `plan_medewerkers` (upsert op id, insert bij nieuw) en `plan_projecten.zichtbaar`.
+- Verversen leest `fin_werkvoorraad.bijgewerkt_op` voor en na; die kolom schrijft de Edge Function (bron: `fin-werkvoorraad-sync_v5_index.ts`).
+- Getest: 75 controles in jsdom. De echte aanroep van de Edge Function is alleen te testen in de browser.
+
+## v0.3.0 — Vrije dagen: gesloten dagen en verlof (brok 3b, deel 1), 07-09-2026
+
+Vereist eerst `planning_02_verlof.sql` (tabel `plan_verlof`). Zonder die tabel werkt het bord gewoon, maar zonder verlof (melding in de browserconsole).
+
+### Wat er kan
+- Knop **Vrije dagen** bovenaan opent het beheer voor het gekozen jaar.
+- **Gesloten dagen** (voor iedereen): "Nederlandse feestdagen voorstellen" toont de negen feestdagen van het jaar (Paasdatum berekend, Koningsdag op zaterdag als 27 april een zondag is), alle aangevinkt behalve wat er al staat of in het weekend valt; met één knop toevoegen. Periode toevoegen (van t/m, soort, omschrijving) slaat elke weekdag op. Verwijderen per regel.
+- **Verlof per medewerker**: periode via het beheer, of één dag door onderaan het bord op de dag bij de medewerker te klikken (popover met "Vrij zetten" / "Verlof opheffen", waarschuwt als er al uren staan).
+- Verlofcel: grijs met ✕, geen invoer, telt niet in het restant. Staan er tóch uren op een dag die later vrij werd, dan blijven ze rood zichtbaar zodat je ze kunt verplaatsen.
+- Meeverschuiven van uren springt per medewerker over zijn eigen verlof heen.
+
+### Onder de kap
+- Leest en schrijft `plan_verlof` (upsert op medewerker_id+datum), `plan_gesloten_dagen` (upsert op datum).
+- Getest: 63 controles in jsdom, waaronder feestdagen 2025/2026/2027, periodes zonder weekend, verlof via beheer en via popover, verschuiven over verlof.
+
+## v0.2.1 — Slepen werkte niet in de browser, 07-09-2026
+
+Slepen en trekken deden niets. Vermoedelijke oorzaak (niet na te bootsen in jsdom): de browser begon zelf tekst te selecteren of te slepen en stuurde `pointercancel`. Drie maatregelen: balktekst niet selecteerbaar, browsergedrag bij muis-omlaag op de balk uitgeschakeld, native slepen binnen het bord geblokkeerd. Als dit het niet is, is de volgende stap een kijkje in de browserconsole.
+
+## v0.2.0 — Datums aanpassen (brok 3a), 07-09-2026
+
+### Wat er kan
+- Balk slepen: midden vastpakken verschuift start en eind samen; de grepen aan het linker- en rechteruiteinde verschuiven alleen start of alleen eind. Tijdens het slepen staan de nieuwe datums rechtsboven.
+- Datumvelden Start en Eind in het paneel rechts, plus de knop "Terug naar Yoobi-datum" die onze datums wist.
+- Uren verschuiven mee bij een hele verschuiving (slepen in het midden, of start en eind in het paneel even veel opschuiven), na bevestiging met aantal uren, dagen en werkdagen. Elke geplande dag gaat evenveel werkdagen op; weekend en gesloten dagen tellen niet mee. Bij trekken aan een uiteinde blijven de uren staan.
+- Overloopwerk: ligt de Yoobi-start vóór het gekozen jaar en is er geen eigen datum, dan begint de balk als aanname op vandaag (oranje rand met streepjes; het paneel legt het uit). Reden: Yoobi's `startdate` is de opdrachtdatum, niet de geplande uitvoering.
+- Aanraking: slepen start pas na 350 ms vasthouden zodat scrollen over het bord blijft werken. Niet getest op iPad; de datumvelden zijn het zekere alternatief.
+
+### Gerepareerd
+- De kleur van de totaaltelling (groen/oranje/rood) werd bij het tekenen niet gezet, pas na een wijziging.
+- De markering van overschrijdingen doorzocht na elke tekening 730 keer de hele tabel; nu alleen de dagen waar uren op staan. In jsdom van 19 s naar 0,4 s per tekening.
+
+### Onder de kap
+- Schrijft `plan_projecten.plan_start`/`plan_eind` (upsert; null = terug naar Yoobi). Bij meeverschuiven: eerst de oude dagen van dat project uit `plan_uren`, dan de nieuwe dagen erin.
+- Getest: 44 controles in jsdom, waaronder slepen en trekken met nagebootste muisgebeurtenissen, bevestigingstekst, verplaatste rijen en terug naar Yoobi.
+
+## v0.1.2 — Kolombreedtes afgedwongen, 06-09-2026
+
+In de browser rekte de linkerkolom mee met de langste projectnaam, stond de scroll op maart en liepen de getallen onderaan in elkaar. Eén oorzaak: `table-layout: fixed` werkt alleen met een tabelbreedte, en die ontbrak. De tabel krijgt nu 300 + 365 × 34 px, de linkerkolom knipt lange namen af met "…" (volledige naam in de zweeftekst), en "Vandaag" scrolt op de echte kolompositie. Rijhoogte ongewijzigd. 23/23 controles in jsdom; het beeld zelf is niet in een echte browser getest.
+
+## v0.1.1 — Projectnaam in de balk, 06-09-2026
+
+Na eerste blik in de browser: als je naar de huidige week scrolt zegt een balk niets meer. De projectnaam staat nu vooraan in de balk, de klantnotitie erachter. De tekst heeft de balkkleur als achtergrond en loopt bij een korte balk leesbaar over het einde heen. Getest: 23/23 controles in jsdom.
+
+## v0.1.0 — Het bord in zijn kern (brok 2), 06-09-2026
+
+Eigen pagina naast financieel.html en taken.html, zelfde login en stijl.
+
+### Wat er kan
+- Jaarbord met dagkolommen, weeknummers, weekend grijs (niet invulbaar), gesloten dagen grijs gearceerd (niet invulbaar), vandaag gemarkeerd. Knop "Vandaag" en jaarkiezer.
+- Projecten uit de laatste stand in `fin_werkvoorraad` (Yoobi) die in het gekozen jaar vallen, gesorteerd op startdatum. Blauwe balk; gearceerd zolang er geen uur op gepland is.
+- Klik op een project: medewerkerrijen klappen uit, paneel rechts toont aanneemsom, budget, ingepland (dit jaar), geboekt en resterend (rood als negatief). Nog een klik klapt weer in.
+- Uren per medewerker per dag invullen; opslaan bij verlaten van de cel (komma of punt). Leegmaken verwijdert de rij. Pijltjestoetsen bewegen door het rooster.
+- Totaaltelling onderaan: restant per medewerker per dag (norm min gepland). Grijs = niets gepland, oranje = deels, groen = precies vol, rood = te veel.
+- Rood hoekje op elke gevulde cel van een medewerker op een dag waarop zijn totaal boven de norm zit, met uitleg bij aanwijzen.
+- Klantnotitie in de balk ("afspraak klant…"), klik om te bewerken, Enter of wegklikken slaat op, Escape breekt af.
+- Lijst "Nog geen datum in Yoobi" voor projecten zonder startdatum.
+
+### Nog niet (brok 3)
+- Balk verschuiven, project verbergen, knop "Yoobi verversen" (vereist Edge Function v5), beheer van gesloten dagen en medewerkers, verlof per medewerker.
+
+### Onder de kap
+- Leest: `fin_werkvoorraad` (laatste peildatum), `plan_medewerkers` (actief, op volgorde), `plan_projecten`, `plan_uren` (alleen het gekozen jaar), `plan_gesloten_dagen` (gekozen jaar).
+- Schrijft: `plan_uren` (upsert op yoobi_code+medewerker_id+datum, delete bij 0), `plan_projecten` (upsert klantnotitie).
+- Mislukt opslaan: geheugen en cel worden teruggedraaid en de status meldt het.
+- "Ingepland" en "gearceerd" kijken alleen naar uren in het geladen jaar.
+- Projecten met lege Yoobi-code worden niet getoond (twee in de stand van 01-09-2026); Edge Function v5 geeft die een noodsleutel.
+- Getest: JS parse (node), 23 functionele controles in jsdom met nagebootste Supabase. Niet getest: echte browser, echte Supabase, aanraakbediening.

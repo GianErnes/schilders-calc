@@ -539,13 +539,14 @@
       <p class="hsinds">Sinds v0.1.0; lijn-en-blokken sinds v0.6.0; zoeken en inklappen sinds v0.7.0; ziekdagen sinds v0.10.0.</p>
     </section>
 
-    <section class="hsec" id="h2" data-trefwoorden="paneel cijfers aanneemsom budget ingepland geboekt nog te plannen nog te werken wijkt af yoobi">
+    <section class="hsec" id="h2" data-trefwoorden="paneel cijfers aanneemsom budget ingepland geboekt nog te plannen nog te werken wijkt af yoobi planbaar indirecte uren 10% 30 uur werkbon">
       <h3>2. Project openen en de cijfers</h3>
       <p><b>Waar.</b> Klik op de projectnaam in de linkerkolom. De medewerkerrijen klappen uit onder het project en het paneel rechts vult zich. Nog een klik klapt weer in.</p>
-      <p><b>Wat.</b> Het paneel toont: <b>Aanneemsom</b> · <b>Budget</b> (uren) · <b>Ingepland &lt;jaar&gt;</b> (alleen dit bordjaar) · <b>Geboekt</b> (uit Yoobi) · <b>Nog te plannen</b> = budget − ingepland over álle jaren · <b>Nog te werken</b> = budget − geboekt. Rood betekent: onder nul, dus meer ingezet of gewerkt dan het budget.</p>
+      <p><b>Wat.</b> Het paneel toont: <b>Aanneemsom</b> · <b>Budget</b> (uren) · <b>Ingepland &lt;jaar&gt;</b> (alleen dit bordjaar) · <b>Geboekt</b> (uit Yoobi) · <b>Nog te plannen</b> = planbaar budget − ingepland over álle jaren · <b>Nog te werken</b> = budget − geboekt. Rood betekent: onder nul, dus meer ingezet of gewerkt dan het budget.</p>
+      <p><b>Planbaar budget.</b> Bij een budget van 30 uur of meer rekent het bord voor <i>Nog te plannen</i> met 90% van de Yoobi-uren; onder de 30 uur met het volle budget. Dat is dezelfde 10% die de werkbon van de calculatie-app eraf haalt voor indirecte uren (laden, overleg, opruimen): die uren zijn wel betaald, maar je plant ze niet op het bord. Onder <b>Budget</b> staat dan in klein <i>planbaar … u (−10%)</i>. <i>Nog te werken</i> rekent met het volle budget, want in Yoobi worden ook de volle uren geboekt. Percentage en drempel zijn vaste getallen in de code (<code>PLAN_AFTREK_PCT</code>, <code>PLAN_AFTREK_VANAF</code>).</p>
       <p>Daaronder de Yoobi-datums en, als onze planning ervan afwijkt, de melding <i>Onze planning wijkt af van Yoobi</i>. Dat is geen fout: Yoobi's startdatum is de opdrachtdatum, niet de geplande uitvoering.</p>
       <p><b>Let op.</b> Nog te plannen en nog te werken zijn twee verschillende vragen. Een lopend project kan netjes vol gepland staan (nog te plannen 0) en toch over zijn budget gaan (nog te werken rood).</p>
-      <p class="hsinds">Sinds v0.1.0; twee aparte restanten sinds v0.9.3; alle jaren sinds v0.12.0.</p>
+      <p class="hsinds">Sinds v0.1.0; twee aparte restanten sinds v0.9.3; alle jaren sinds v0.12.0; planbaar budget (−10% vanaf 30 uur) sinds v0.24.0.</p>
     </section>
 
     <section class="hsec" id="h3" data-trefwoorden="uren plannen cel invullen pijltjes totaalrij restant norm overschrijding rood hoekje komma">
@@ -715,7 +716,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.23.0';
+const APP_VERSION = '0.24.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -726,6 +727,26 @@ const APP_VERSION = '0.23.0';
 // streepje ertussen. Eén jaartal (het deelproject "Onderhouds garantie+ Plan 2027") telt niet.
 const PARAPLU_REGEL = /onderhoud[^|]{0,30}?plan\D{0,5}(19|20)\d{2}\s*[-–—\/]\s*(19|20)\d{2}/i;
 function isParaplu(p) { return !!(p && PARAPLU_REGEL.test(String(p.naam || ''))); }
+
+// ---------- planbare uren (v0.24.0) ----------
+// Net als de werkbon in de calculatie-app (daar 10% aftrek indirecte uren, instelling
+// indirecteUrenAftrek) houdt het bord een deel van het Yoobi-budget apart voor indirecte tijd:
+// laden, overleg, opruimen. Besluit Gian 26-10-2026: alleen bij een budget van 30 uur of meer
+// gaat er 10% af; een klein werk heeft die ruimte niet. De aftrek werkt alleen op
+// "Nog te plannen" (budget − ingepland). "Nog te werken" (budget − geboekt) blijft op het
+// volle budget rekenen, want de uren die in Yoobi geboekt worden zijn ook de volle uren.
+const PLAN_AFTREK_PCT = 10;    // percentage van het budget dat niet gepland wordt
+const PLAN_AFTREK_VANAF = 30;  // vanaf dit budget (uren) geldt de aftrek
+function planbaarBudget(budget) {
+  const b = Number(budget || 0);
+  if (b < PLAN_AFTREK_VANAF) return b;
+  return Math.round(b * (100 - PLAN_AFTREK_PCT) / 100 * 100) / 100;
+}
+function budgetCelHtml(budget) {
+  const pb = planbaarBudget(budget);
+  return '<div class="c" title="Uren uit Yoobi' + (pb !== budget ? '. Planbaar = budget min ' + PLAN_AFTREK_PCT + '% voor indirecte uren (geldt vanaf ' + PLAN_AFTREK_VANAF + ' uur)' : '') + '"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div>' +
+    (pb !== budget ? '<div class="num" style="color:var(--muted);font-size:0.78rem">planbaar ' + fmtUur(pb) + ' u (−' + PLAN_AFTREK_PCT + '%)</div>' : '') + '</div>';
+}
 // Eén plek die zegt of een project van bord en kaarten af is.
 // zichtbaar === false        → bewust verborgen (knop "Verbergen").
 // paraplu zonder overrule    → verborgen door de regel; plan_projecten.toon_ondanks_regel = true haalt hem terug.
@@ -1427,7 +1448,7 @@ function tekenPaneel() {
   const d = projDatums(p);
   const ingepland = urenVanProject(p.code);
   const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
-  const nogPlannen = Math.round((budget - urenVanProject(p.code, true)) * 100) / 100;
+  const nogPlannen = Math.round((planbaarBudget(budget) - urenVanProject(p.code, true)) * 100) / 100; // v0.24.0
   const nogWerken = Math.round((budget - geboekt) * 100) / 100;
   el.innerHTML =
     '<h2>Project</h2>' +
@@ -1435,10 +1456,10 @@ function tekenPaneel() {
     '<div class="pklant">' + esc(p.klant) + ' · Yoobi ' + esc(p.code) + '</div>' +
     '<div class="cijfers">' +
     '<div class="c"><div class="t">Aanneemsom</div><div class="v num">' + eur(p.aanneemsom) + '</div></div>' +
-    '<div class="c"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div></div>' +
+    budgetCelHtml(budget) +
     '<div class="c"><div class="t">Ingepland ' + jaar + '</div><div class="v num">' + fmtUur(ingepland) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Geboekt</div><div class="v num">' + fmtUur(geboekt) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Budget min ingepland, alle jaren"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
+    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Planbaar budget min ingepland, alle jaren"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
     '<div class="c' + (nogWerken < 0 ? ' waarschuw' : '') + '" title="Budget min geboekt (Yoobi)"><div class="t">Nog te werken</div><div class="v num">' + fmtUur(nogWerken) + ' <small>uur</small></div></div>' +
     '</div>' +
     '<div class="pdatums">Yoobi: ' + fmtDatum(d.yStart) + ' – ' + fmtDatum(d.yEind) +
@@ -1449,7 +1470,7 @@ function tekenPaneel() {
     (d.eigen ? '<button class="knop" id="pTerug">Terug naar Yoobi-datum</button>' : '') +
     '<label>Knip in fasen op</label><div class="rij"><input type="date" id="pKnipDatum" style="flex:1"><button class="knop" id="pKnip" title="Alles vóór deze datum wordt fase 1, vanaf deze datum fase 2">Knip</button></div>' +
     '</div>' +
-    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Nog te plannen = budget − ingepland over alle jaren; nog te werken = budget − geboekt. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
+    '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Nog te plannen = planbaar budget − ingepland over alle jaren (vanaf ' + PLAN_AFTREK_VANAF + ' uur gaat ' + PLAN_AFTREK_PCT + '% van het budget af voor indirecte uren, net als op de werkbon); nog te werken = volle budget − geboekt. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
     middelenHtml(p, null, d) +
     kennisHtml(p, null) +
     '<div class="paneelknoppen"><button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
@@ -1469,7 +1490,7 @@ function tekenFasePaneel(el, p) {
   const fs = fasenVan(p.code);
   const ingepland = urenVanProject(p.code);
   const budget = Number(p.begrote_uren || 0), geboekt = Number(p.geboekte_uren || 0);
-  const nogPlannen = Math.round((budget - urenVanProject(p.code, true)) * 100) / 100;
+  const nogPlannen = Math.round((planbaarBudget(budget) - urenVanProject(p.code, true)) * 100) / 100; // v0.24.0
   const nogWerken = Math.round((budget - geboekt) * 100) / 100;
   const yS = yoobiDatum(p.startdatum), yE = yoobiDatum(p.einddatum);
   let h = '<h2>Project</h2>' +
@@ -1477,10 +1498,10 @@ function tekenFasePaneel(el, p) {
     '<div class="pklant">' + esc(p.klant) + ' · Yoobi ' + esc(p.code) + ' · ' + fs.length + ' fasen</div>' +
     '<div class="cijfers">' +
     '<div class="c"><div class="t">Aanneemsom</div><div class="v num">' + eur(p.aanneemsom) + '</div></div>' +
-    '<div class="c"><div class="t">Budget</div><div class="v num">' + fmtUur(budget) + ' <small>uur</small></div></div>' +
+    budgetCelHtml(budget) +
     '<div class="c"><div class="t">Ingepland ' + jaar + '</div><div class="v num">' + fmtUur(ingepland) + ' <small>uur</small></div></div>' +
     '<div class="c"><div class="t">Geboekt</div><div class="v num">' + fmtUur(geboekt) + ' <small>uur</small></div></div>' +
-    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Budget min ingepland, alle jaren"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
+    '<div class="c' + (nogPlannen < 0 ? ' waarschuw' : '') + '" title="Planbaar budget min ingepland, alle jaren"><div class="t">Nog te plannen</div><div class="v num">' + fmtUur(nogPlannen) + ' <small>uur</small></div></div>' +
     '<div class="c' + (nogWerken < 0 ? ' waarschuw' : '') + '" title="Budget min geboekt (Yoobi)"><div class="t">Nog te werken</div><div class="v num">' + fmtUur(nogWerken) + ' <small>uur</small></div></div>' +
     '</div>' +
     '<div class="pdatums">Yoobi: ' + fmtDatum(yS) + ' – ' + fmtDatum(yE) + '</div>';
@@ -1495,7 +1516,7 @@ function tekenFasePaneel(el, p) {
   });
   const fAct = fs.find(f => f.id === actiefFase) || fs[0];
   h += middelenHtml(p, fAct, faseDatums(p, fAct)) +
-    '<div class="voetnoot">Budget, geboekt, nog te plannen en nog te werken gelden voor het hele project, over alle jaren; per fase zie je wat erop staat, ook buiten dit jaar. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
+    '<div class="voetnoot">Budget, geboekt, nog te plannen en nog te werken gelden voor het hele project, over alle jaren. Nog te plannen rekent met het planbare budget (vanaf ' + PLAN_AFTREK_VANAF + ' uur ' + PLAN_AFTREK_PCT + '% eraf voor indirecte uren, net als op de werkbon); nog te werken met het volle budget; per fase zie je wat erop staat, ook buiten dit jaar. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
     kennisHtml(p, fAct) + // v0.22.0: per fase
     '<div class="paneelknoppen"><button class="knop" id="pVerberg">Verbergen</button></div>';
   el.innerHTML = h;
