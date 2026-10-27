@@ -715,7 +715,7 @@ niet aan een app, maar aan de database zelf.
 
 | Functie | Vanuit | Wat het doet |
 |---|---|---|
-| `taak-afvinkmelding` | trigger `trg_taak_melding_signaal` op `taken` | mailt Gian de melding die iemand achterliet bij het afvinken |
+| `taak-afvinkmelding` | trigger `trg_taak_melding_signaal` op `taken` | mailt Gian de melding die iemand achterliet bij het afvinken (sinds 27 oktober 2026 niet als Gian zelf afvinkt) |
 
 Die functie mailt altijd naar Gian, ongeacht wie de taak had. Het adres
 staat niet in de code maar wordt opgezocht in `taken_rollen` bij persoon
@@ -785,7 +785,7 @@ Allemaal op tabellen in `schilders-calc`, allemaal actief. De twaalf hieronder z
 | `bescherm_eigen` | `taken` | voorkomt dat iemand andermans taak aanpast |
 | `bevries_yoobi` | `taken` | beschermt velden die uit Yoobi komen |
 | `zet_bijgewerkt` | `taken` | zet de bijwerkdatum |
-| `trg_taak_melding_signaal` | `taken` | mailt Gian als iemand een taak afvinkt met een melding erbij |
+| `trg_taak_melding_signaal` | `taken` | mailt Gian als iemand een taak afvinkt met een melding erbij; sinds 27 oktober 2026 niet als `voltooid_door` = gian (`planning_09_afvinkmelding_gian.sql`) |
 | `trg_bewerkingen_upd` | `bewerkingen` | zet de bijwerkdatum |
 | `trg_materialen_upd` | `materialen` | zet de bijwerkdatum |
 | `trg_ondergronden_upd` | `ondergronden` | zet de bijwerkdatum |
@@ -1533,6 +1533,22 @@ verder omhoog.
 > Dit is werkpatroon en geen oplettendheid. Een regel die alleen werkt
 > als iemand er toevallig aan denkt, is geen regel. Wie hem toepast, hoeft
 > dat niet te melden als verdienste; het hoort er gewoon bij.
+
+> **Verscherpt op 27 oktober 2026: de check geldt ook voor Edge
+> Functions, en een versie in een CHANGELOG is geen bewijs.** Op
+> 22 oktober beschreef CHANGELOG_planning v0.22.0 een `planning-kennisgeving`
+> v3.2 met `fase_id`. Op 27 oktober stond in dashboard én besloten repo
+> nog v3.1. Vijf dagen lang zijn alle mails voor fase 2 en hoger zonder
+> fase opgeslagen en telden ze als fase 1; bij Massop leidde dat tot een
+> "overgeslagen" op een mail die al verstuurd én bevestigd was. Niemand
+> zag het, want de app werkte en de mail kwam aan.
+>
+> **De regel:** raakt een release een Edge Function, dan hoort bij de
+> eerstvolgende sessiestart ook de kopregel van die `index.ts` uit het
+> dashboard (Edge Functions → functie → Code) naast de CHANGELOG. Een
+> Edge Function kun je niet uit de openbare repo halen; die regel plakt
+> Gian. En de code hoort dezelfde dag in `ernes-edge-functions`, anders
+> is de volgende sessie weer op v3.1 aan het bouwen.
 
 ### 5.2 De vijf ankers
 
@@ -5842,7 +5858,7 @@ als een latere kennisgeving wél bevestigd is.
 |---|---|---|
 | `planning_09_kennisgeving_fase.sql` | kolom `fase_id` op `plan_kennisgevingen` → `plan_fasen`, `on delete set null`, index | project-guard, idempotent; gedraaid 22 oktober, drie controles GOED. Rijen zonder `fase_id` horen bij de eerste fase |
 | planning.html v0.22.0 | fasen worden bijgewerkt in plaats van verwijderd+aangemaakt; bij samenvoegen gaan hulpmiddelen en kennisgevingen van de opgeslokte fase eerst over naar de blijvende; kennisgevingen, labels, teller, paneel en mailteksten per fase; nabelregel | signaalregels blijven dubbel (brok 7 en de taken-functie). Hernummeren in twee stappen (+1000, dan definitief) vanwege de unieke beperking `plan_fasen_yoobi_code_volgnr_key` op `(yoobi_code, volgnr)` (gemeten 22 oktober) |
-| Edge Function `planning-kennisgeving` v3.2 | als v3.1, plus `fase_id` in body en rij | **Verify JWT AAN** (ongewijzigd) |
+| Edge Function `planning-kennisgeving` v3.2 | als v3.1, plus `fase_id` in body en rij | **Verify JWT AAN** (ongewijzigd). **Is nooit live gekomen:** op 27 oktober stond v3.1 in dashboard en repo; zie de sectie van 27 oktober (v3.3) |
 | Edge Function `planning-kennisgeving-taken` v1.4 | signalen per fase; `bron_kenmerk` krijgt `#<fase-id>` erachter bij een fase; nabelregel; fase in onderwerp/notitie van de taak | **Verify JWT UIT** (ongewijzigd). Eenmalig: open taken van fase-projecten zonder achtervoegsel worden gesloten en met achtervoegsel opnieuw aangemaakt. `index_test.ts` moet mee (handtekening `gewensteTaken` veranderd) |
 
 **Bekend.** `planning-kennisgeving-bevestig` v2 sluit de nabeltaak direct
@@ -5852,3 +5868,58 @@ dat de volgende ochtend.
 **Open punt (blijft).** De `index.ts`-bestanden van de planning-functies
 en de planning-SQL staan niet in de openbare repo; de broncode van
 22 oktober is in deze sessie geleverd en hoort in de besloten repo.
+
+## Wat er op 27 oktober 2026 gedaan is: bevestigingsknop gemeten, fase_id alsnog in de mailfunctie, afgehandelde nabeltaak zichtbaar (planning.html v0.25.0)
+
+**Aanleiding.** Gian: "er wordt weinig op de bevestigingsknop geklikt."
+Eerst gemeten in plaats van gebouwd (query Gian op `plan_kennisgevingen`,
+mails met knop sinds 9 oktober): maand 9/12, dag 16/26, week 3/9
+bevestigd, totaal 28/47 = 60%, alles afgeleverd. De knop was niet kapot;
+alleen de weekmail scoort laag op een kleine basis. Besluit: geen pijl,
+geen open-tracking; wel een tekst die zegt waarom de klik telt en wat er
+zonder klik gebeurt — en die waar is.
+
+Twee dingen kwamen onderweg boven:
+
+1. **"Ik zie de nabeltaken niet bij Maud."** Query Gian op `taken`: sinds
+   14 oktober zeven nabeltaken, alle bij maud, cron dagelijks `succeeded`,
+   en alle zeven al voltooid — zes door gian (na mailcontact met de klant,
+   afgevinkt in blokken van seconden op 19 en 23 oktober), één vanzelf.
+   De taak ontstaat woensdag/donderdag en is maandagmiddag, als Maud werkt,
+   al dicht. Gian wilde erbij kunnen zetten waarom. Dat kon al (vak *Iets
+   te melden?* bij het afvinken, taken.html v0.16.0), maar het stond
+   nergens terug in de planning en de trigger mailde Gian zijn eigen
+   melding.
+2. **Massop fase 2** (schermafbeelding): de startdagmail van 26 oktober
+   stond in de historie zonder fase, bevestigd; het paneel van fase 2 zei
+   "kan verstuurd worden" en Gian sloeg hem over. Oorzaak: zie de
+   verscherping in 5.1 — v3.1 gooide `fase_id` weg.
+
+**Wat er nu is.**
+
+| Onderdeel | Doet | Bijzonderheden |
+|---|---|---|
+| Edge Function `planning-kennisgeving` v3.3 | `fase_id` (uuid of leeg; ongeldig = 400) in body en rij — wat v3.2 had moeten doen; bevestigingsblok heet "Bevestigt u deze planning?" met per soort "de maand / de week / de startdag" en de zin "Horen wij niets, dan nemen wij binnen enkele werkdagen contact met u op" (niet "bellen": de opvolging gaat in de praktijk ook per mail) | **Verify JWT AAN** (ongewijzigd). Gedeployed 27 oktober uit het dashboard; `index.ts` + `index_test.ts` (7 Deno-tests) horen in `ernes-edge-functions`. Knop, token, link naar bevestig.html, volgorde token → mail → rij: ongewijzigd |
+| `planning_10_kennisgeving_fase_herstel.sql` | toont verstuurde rijen zonder fase sinds 22 oktober bij projecten mét fasen; herstel is handwerk per rij | Gedraaid 27 oktober: twee kandidaten. Beekman week 46 was fase 1 (blijft leeg = eerste fase). Massop startdag 26-10 → fase 2 gezet; de per-ongeluk-overslaanrij van 27-10 (id `dae7d1e9…`) verwijderd. Daarna klopte het paneel. Naweeën: de ochtendronde van 27 oktober had op de fase-loze rij een correctietaak "vrijdag 30 oktober → donderdag 3 september" (= start fase 1) bij Maud gezet; die hoort vanzelf te sluiten in de ronde van 28 oktober. Niet versturen, niet afvinken; staat hij op 28 oktober na 07:35 nog, dan melden |
+| `planning_09_afvinkmelding_gian.sql` | `public.taak_melding_signaal`: één voorwaarde erbij, `lower(voltooid_door) = 'gian'` → geen `net.http_post`; verder letterlijk de functie van 3 augustus | project-guard, idempotent; gedraaid 27 oktober, vier controles GOED. Lokaal getest op Postgres 16 met nagebootste `vault` en `net` (gian → geen mail, maud/max → wel, idempotent). **Let op de naam:** brok 9 van 22 oktober heet `planning_09_kennisgeving_fase.sql`; dit is een tweede brok 9. Niet hernummerd omdat beide al gedraaid zijn |
+| planning.html v0.25.0 | leest handmatig afgevinkte planningstaken uit `taken` (bron planning, `voltooid_op` en `voltooid_door` gevuld); achter de kennisgeving staat "nabeltaak afgehandeld 19 okt 2026 door gian: *melding*", ook in de historie; een afgevinkte taak heft het oranje ✉ nabellen-label en de teller op (de ochtendronde zette die taak al niet terug; het bord liep achter) | 17 jsdom-tests; in de browser bevestigd bij Durlinger en Bex. RLS: ingelogd kan `taken` lezen (gemeten: de regels verschenen) |
+| planning.html v0.24.0 (26 oktober, zat niet in SYSTEEM.md noch CHANGELOG) | planbaar budget: vanaf 30 uur gaat 10% van het Yoobi-budget af voor indirecte uren in *Nog te plannen*; *Nog te werken* op het volle budget | CHANGELOG-entry op 27 oktober gereconstrueerd uit de diff; Gian controleert de tekst |
+
+**Nog te doen in het echt.** (1) Eén kennisgeving voor een project mét
+fasen naar een eigen adres: de historiekaart moet "· fase 2" tonen. (2) Een
+nieuwe nabeltaak afvinken mét melding → geen mail, tekst in het paneel.
+(3) Maud één gewone taak laten afvinken mét melding → die mail moet wél
+komen; zonder die test is niet bewezen dat alleen gian is uitgezet. (4) Over
+ongeveer vier weken de meetquery opnieuw en vergelijken met 9/12 · 16/26
+· 3/9. (5) De drie CHANGELOG_planning-entries (v3.3, v0.24.0, v0.25.0) in
+de repo.
+
+**Bewust gelaten.** De placeholder in taken.html ("Wat je hier typt gaat
+naar Gian") klopt voor Gian zelf nu niet meer; klein, later. Open-tracking
+bij Resend (`links.ernes.nl`, CNAME bij Ed) blijft een open beslissing van
+9 oktober: niet nodig gebleken, 60% bevestigt uit zichzelf.
+
+**Meting die het gevoel ontkrachtte.** "Weinig geklikt" bleek 60%. De les
+staat niet voor niets in 5.6: eerst het getal, dan het besluit. Zonder die
+query was er een pijl in de mail gebouwd op een probleem dat er niet was,
+en was de echte fout (fase_id) niet gevonden.
