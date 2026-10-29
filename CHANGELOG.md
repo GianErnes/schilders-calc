@@ -1,3 +1,30 @@
+## v4.102.0 — Aanvraag onderaannemer: ook timmerman, glaszetter en installateur (2026-10-29)
+
+**Aanleiding**
+- Gian 28-09-2026: "We hebben mogelijk gemaakt om binnen de voorcalculatie een mail aan de steigerbouwer te sturen. Kan dat dan ook naar andere bedrijven zoals de timmerman, glaszetter en installateur of electricien?" Besluiten: één vaste partij per vakgebied; dezelfde inhoud als de steigeraanvraag (werkadres, tekst, foto's); één knop met keuze in het venster in plaats van vier knoppen. Op 28-09 ontworpen, op 29-10 gebouwd; de live stand was intussen v4.101.2.
+
+**Nieuw**
+- Knop **Aanvraag onderaannemer** (`oaKnop`, `onderaannemerAanvragen()`) vervangt Steiger aanvragen. In het venster (`oaModal`) kies je bovenaan het vakgebied: steigerbouwer 🧱, timmerman 🪚, glaszetter 🪟, installateur/elektricien 🔌. Per vakgebied staat eronder "✅ dd-mm" van de laatste aanvraag, "nog niet aangevraagd" of "geen adres ingesteld" (dan niet te kiezen). Wisselen van vakgebied vervangt de standaardtekst zolang je er niet zelf in hebt getypt; aangevinkte foto's blijven staan.
+- Standaardtekst per vakgebied (`_oaStandaardtekst`): aanhef met de bedrijfsnaam als die is ingevuld, "offerte voor steigerwerk / timmerwerk / glaswerk / installatiewerk", en een passende fotozin.
+- De knop wordt groen met per vakgebied de datum: "✅ Aanvragen: 🧱 26-09 · 🪟 28-10"; de tooltip noemt elke aanvraag met tijdstip en adres.
+- Instellingen → sectie **Onderaannemers** (voorheen Steigerbouwer): per vakgebied bedrijfsnaam en e-mailadres (`steigerNaam`, `steigerEmail` (bestond), `timmerNaam`, `timmerEmail`, `glasNaam`, `glasEmail`, `installatieNaam`, `installatieEmail`; allemaal via `updSettingText`).
+- Tabel `calculatie_aanvragen`: één rij per verstuurde aanvraag (vakgebied, naar, naar_naam, tekst, aantal foto's, verstuurd_op, verstuurd_door, taak_gemaakt). Geladen in `_loadCalcBody` (zevende parallelle fetch, `c.aanvragen`), ververst in `openCalc` voor een al geladen calc (`_herlaadAanvragen`, naast `_herlaadTodos`). De drie bestaande steigerstempels zijn door de SQL overgenomen; een stempel zonder rij telt in de app nog als steigeraanvraag (`_oaAanvragen`).
+- Opvolgtaak per aanvraag in de Takenapp: bron `onderaannemer`, `bron_kenmerk` `<vak>-opvolging`, onderwerp "Offerte timmerman <project> al binnen?" (steiger: "Steigerofferte … al binnen?"), gian, +7 dagen 09:00, `projectnaam` gevuld.
+
+**Technisch**
+- Nieuwe Edge Function **`onderaannemer-aanvraag`** (Verify JWT AAN), zelfde opbouw als `steiger-aanvraag`, plus `vakgebied` in de body; onbekend vakgebied → 400 vóór enig netwerkverkeer. Ontvanger server-side uit `app_settings.data.<vak>Email`; bij `steiger` wordt de oude kolom `steiger_aangevraagd_op` nog meegezet voor een oudere app-versie. Antwoord: `{ ok, vakgebied, naar, naar_naam, aangevraagd_op, fotos, aanvraag_id, log, taak }`. `verstuurd_door` komt uit de Bearer van de app (`auth.getUser`), leeg als dat mislukt. De oude functie `steiger-aanvraag` wordt niet meer aangeroepen en kan weg.
+- SQL `onderaannemers_01_aanvragen.sql` (gedraaid 29-10, 7× GOED): tabel + RLS (authenticated alles, zoals calculaties) + index; overname steigerstempels; `taken_bron_check` uitgebreid door de bestaande lijst uit `pg_constraint` te lezen (`array_append`, want `array || 'tekst'` leest plpgsql als array-literal — gevangen door de lokale test); policies `taken_lezen`, `taken_bijwerken`, `taken_verwijderen` herschreven naar de pg_policies-uitvoer van 29-10 met `onderaannemer` erbij. Geen prullenbak-trigger: logboek, geen inhoud.
+- taken.html hoeft niet mee: alleen `yoobi` en `offerte` krijgen daar een label (gemeten), een nieuwe bron valt onder de gewone weergave.
+- Oude functies `_steiger*`, `STEIGER_FN_URL`, `steigerModal` verwijderd; `steigerAangevraagdOp` blijft in `_mapCalcHeaderFromDB` (terugval). Eén knop in de calc-kop, net als voorheen.
+
+**Getest**
+- SQL in lokale Postgres 16 met nabootsing van `calculaties`, `taken` (constraint + vijf policies), `app_settings`: eerste run 7× GOED, tweede run idempotent, cascade bij verwijderen calculatie, projectguard stopt op een lege database. Live gedraaid door Gian: 7× GOED, drie steigerrijen overgenomen.
+- Edge Function: `deno check` en 8 mock-tests (nep-fetch voor Supabase REST, Auth en Resend): weigeringen zonder netwerk, geen adres → 400 zonder mail, onvolledig adres, gelukte timmer-aanvraag (mail, logrij, taak, geen steigerstempel), steiger zet de oude kolom, Resend-fout → 502 zonder logrij/taak, taakfout → `taak=false` met logrij.
+- App: node-parse van het scriptblok, CSS-braces 856/856, div-balans 406/406 (live 399/399), vier versieankers, 12 jsdom-runtime-tests (mapper, terugval oude stempel, knoptekst, standaardteksten, toasts bij ontbrekend adres/werkadres, vakkeuze met disabled knoppen, wisselen met behoud van tekst en vinkjes, versturen met payload/lokale rij/toast, bevestiging bij herhaling, serverfout).
+- **Niet getest in de echte omgeving:** het rendergedeelte in Safari/iPad, de Edge Function tegen de echte Resend en database, en of `auth.getUser` met het token van de app `verstuurd_door` vult (anders blijft die kolom leeg; verder geen gevolg). Eerste echte test: één aanvraag aan een vakgebied met het eigen adres van Gian als ontvanger.
+
+**Vereist** SQL `onderaannemers_01_aanvragen.sql` (gedaan) en deploy van `onderaannemer-aanvraag` met Verify JWT aan, vóór het uploaden van deze index.html.
+
 ## v4.101.2 — Regel dupliceren (⎘) faalde stil bij een half volgnummer (2026-10-25)
 
 **Aanleiding**

@@ -704,6 +704,7 @@ notitie tijdens de opname over. Dit is gekozen en geen vergeten risico.
 | `offerte-accord` | Calc | akkoordverklaring en ondertekende PDF; sinds 29-08-2026 ook planakkoorden |
 | `offerte-leescontrole` | Calc | controleert de offerte op fouten |
 | `offerte-verzenden` | Calc | verstuurt de offerte of het onderhoudsplan |
+| `onderaannemer-aanvraag` | Calc | offerteaanvraag per mail aan een vaste onderaannemer (steiger, timmerwerk, glas, installatie) met foto's; logrij in `calculatie_aanvragen` en opvolgtaak; sinds 29-10-2026, vervangt `steiger-aanvraag` (26-09) |
 | `reisafstand` | Calc | rijafstand naar het werkadres |
 | `yoobi-klant` | Calc | klantgegevens uit Yoobi |
 | `yoobi-taken-sync` | Taken | taken en projectnamen uit Yoobi |
@@ -5923,3 +5924,37 @@ bij Resend (`links.ernes.nl`, CNAME bij Ed) blijft een open beslissing van
 staat niet voor niets in 5.6: eerst het getal, dan het besluit. Zonder die
 query was er een pijl in de mail gebouwd op een probleem dat er niet was,
 en was de echte fout (fase_id) niet gevonden.
+
+## Wat er op 29 oktober 2026 gedaan is: aanvraag onderaannemer vanuit de calculatie (index.html v4.102.0, SQL onderaannemers_01, Edge Function onderaannemer-aanvraag)
+
+**Aanleiding.** De steigeraanvraag van 26 september (v4.78.0) werkte, maar
+alleen voor de steigerbouwer. Gian wilde dezelfde mail ook naar timmerman,
+glaszetter en installateur/elektricien. Besluit: één knop met keuze van het
+vakgebied, één vaste partij per vakgebied, dezelfde inhoud (werkadres,
+tekst, foto's). Ontworpen 28 september, gebouwd 29 oktober op v4.101.2.
+
+**Wat er nu is.**
+
+| Onderdeel | Doet | Bijzonderheden |
+|---|---|---|
+| Tabel `calculatie_aanvragen` | één rij per verstuurde aanvraag: `calculatie_id` (FK cascade), `vakgebied`, `naar`, `naar_naam`, `tekst`, `aantal_fotos`, `verstuurd_op`, `verstuurd_door`, `taak_gemaakt` | RLS authenticated alles (zoals `calculaties`), index op `(calculatie_id, verstuurd_op desc)`, `set_updated_at`-trigger. **Geen** prullenbak-trigger (logboek). De drie steigerstempels van vóór 29-10 zijn overgenomen als rijen `steiger`; de kolom `calculaties.steiger_aangevraagd_op` blijft bestaan en wordt door de nieuwe functie bij `steiger` nog meegezet |
+| `taken` | `taken_bron_check` heeft `onderaannemer` erbij (lijst gelezen uit `pg_constraint`, dus toekomstige bronnen blijven staan); `taken_lezen`, `taken_bijwerken`, `taken_verwijderen` herschreven met `onderaannemer`; `taken_aanmaken` niet (de functie schrijft met de service-rol) | SQL `onderaannemers_01_aanvragen.sql`, project-guard op `calculaties`/`taken`/`app_settings` én kolom `steiger_aangevraagd_op`; idempotent; gedraaid door Gian in Studio 29-10, 7× GOED. Eerste poging via de Supabase-koppeling van Claude bleef hangen op een bevestigingsvraag en heeft niets uitgevoerd (gemeten) |
+| Edge Function `onderaannemer-aanvraag` | `POST { calculatie_id, vakgebied, tekst, fotos }`; ontvanger uit `app_settings.data.<vak>Email` (`steigerEmail`, `timmerEmail`, `glasEmail`, `installatieEmail`), naam uit `<vak>Naam`; mail via Resend met bcc administratie; logrij; bij steiger ook de oude kolom; taak bron `onderaannemer`, `bron_kenmerk` `<vak>-opvolging`, gian, +7 dagen 09:00 | **Verify JWT AAN**. `VAKGEBIEDEN` in de functie en in index.html moeten dezelfde sleutels hebben (steiger, timmer, glas, installatie); een onbekende sleutel geeft 400. `verstuurd_door` via `auth.getUser` op de Bearer; mislukt dat, dan leeg. Broncode hoort in `ernes-edge-functions`, met `test.ts` (8 Deno-mocktests; draaien met `OA_TEST=1`, dan start `Deno.serve` niet). De oude `steiger-aanvraag` wordt nergens meer aangeroepen en kan worden verwijderd; nog niet gedaan |
+| index.html v4.102.0 | knop `oaKnop` → `onderaannemerAanvragen()`, venster `oaModal`/`oaBody`, blok "AANVRAAG ONDERAANNEMER" (`VAKGEBIEDEN`, `_oaRender`, `_oaKiesVak`, `_oaVerstuur`, `_oaCall`, `_herlaadAanvragen`, `_mapAanvraagFromDB`); `c.aanvragen` geladen in `_loadCalcBody` en ververst in `openCalc`; Instellingen-sectie **Onderaannemers** met acht velden | Vakgebied zonder adres is in het venster uitgeschakeld; zonder enig adres komt een toast. Knop groen met per vakgebied de datum. Zie `CHANGELOG.md` v4.102.0 voor de tests |
+
+**Nog te doen in het echt.** (1) Adressen invullen onder Instellingen →
+Onderaannemers. (2) Eén aanvraag sturen met een eigen adres als ontvanger
+en controleren: mail met bijlage, groene knop, rij in
+`calculatie_aanvragen`, taak in de Takenapp met projectnaam. (3) Daarna
+`steiger-aanvraag` verwijderen in Studio en hier doorhalen; sectie 3.2
+telt dan 26 functies (GEMETEN 29-10 via de functielijst: 26 inclusief
+`push-test` en de oude `steiger-aanvraag`; het kopje "zestien" is de stand
+van 9 augustus en staat nog steeds **[TE CONTROLEREN]**).
+
+**Als het stukgaat.** Mail komt niet aan → log van `onderaannemer-aanvraag`
+in Studio; `error` in de toast noemt Resend of het ontbrekende adres. Knop
+niet groen na versturen → `log=false` in het antwoord, dan de insert in
+`calculatie_aanvragen` nakijken (RLS geldt niet voor de service-rol; dan is
+het een kolomnaam). Taak ontbreekt → `taak=false`, meestal de
+bron-constraint: `select pg_get_constraintdef(oid) from pg_constraint where
+conname = 'taken_bron_check'` moet `onderaannemer` bevatten.

@@ -2421,8 +2421,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.101.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.102.0</h2>
       <div class="intro-body">
+        <p><strong>📨 Aanvraag onderaannemer: ook timmerman, glaszetter en installateur (v4.102.0).</strong> De knop Steiger aanvragen bovenaan de calculatie heet nu <strong>Aanvraag onderaannemer</strong>. In het venster kies je eerst het vakgebied: steigerbouwer, timmerman, glaszetter of installateur/elektricien. Per vakgebied zie je of er al eerder een aanvraag is verstuurd en wanneer. De rest werkt zoals je gewend was: werkadres ter controle, een begeleidende tekst die per vakgebied een eigen openingszin heeft en de bedrijfsnaam in de aanhef, en de foto's uit het klusdossier als aanvinkbare thumbnails. Na versturen wordt de knop groen met per vakgebied de datum, en een week later staat er een taak voor Gian klaar ("Offerte timmerman … al binnen?"). Administratie krijgt elke aanvraag in blinde kopie. De adressen stel je in onder Instellingen, bij <strong>Onderaannemers</strong>: per vakgebied een bedrijfsnaam en e-mailadres; het steigeradres van v4.78.0 staat er al. Een vakgebied zonder adres is in het venster niet te kiezen. Elke aanvraag staat voortaan als rij in de nieuwe tabel <code>calculatie_aanvragen</code>; de drie eerdere steigeraanvragen zijn daarin overgenomen. <strong>Vereist</strong> de SQL <code>onderaannemers_01_aanvragen.sql</code> (gedraaid 29-10) en de nieuwe Edge Function <code>onderaannemer-aanvraag</code>; de oude functie <code>steiger-aanvraag</code> wordt niet meer aangeroepen en kan weg.</p>
         <p><strong>⎘ Regel dupliceren werkte soms stil niet (v4.101.2).</strong> De kopieerknop ⎘ op een calc-regel zet de kopie tussen het origineel en de volgende regel in, met als volgnummer het gemiddelde van die twee. Was dat een half getal, bijvoorbeeld 17,5 tussen 15 en 20, dan weigerde de database het en gebeurde er op het scherm helemaal niets. Dat trof vooral regels die zelf al eens een kopie waren, of waar al een kopie achter stond. Vanaf nu rondt de app af op een heel getal en nummert hij na elke kopie alle regels in het onderdeel opnieuw op 10, 20, 30…, zodat er altijd ruimte blijft. Daarnaast laat een mislukte regel-opslag voortaan een melding zien met de reden, in plaats van alleen een regel in de console. Geen SQL nodig.</p>
         <p><strong>🧹 Waarschuwing "die staart is onverzekerd" weg uit het onderhoudsplan (v4.101.1).</strong> In het Resultaat-blok van een abonnementsplan stond een oranje seintje zodra de maandbetalingen doorliepen na de laatste beurt: die staart zou onverzekerd zijn omdat het plan opzegbaar is. Dat klopt niet meer sinds de bijlage onder <em>Altijd opzegbaar</em> zegt dat wij bij opzegging de balans opmaken en de klant afrekent wat is uitgevoerd. De tekst sprak de eigen offerte tegen en is daarom weg. Het blauwe seintje voor het omgekeerde geval (klant betaalt vooruit) blijft staan. De offerte en de bijlage zijn niet gewijzigd; geen SQL.</p>
         <p><strong>⧉ Meetstaat-rijen en kozijntekeningen overnemen, ook uit een andere calculatie (v4.101.0).</strong> Onderaan de Meetstaat-tab staat naast <strong>+ Regel</strong> de knop <strong>Rijen overnemen uit…</strong>. Je kiest een bron (deze calculatie, of een andere; zelfde klant staat bovenaan) en een doelonderdeel in deze calculatie, vinkt de rijen aan die je wilt hebben, per onderdeel in één keer of los, en haalt ze hierheen. Maten, aantal, factor, omschrijving, opmerking en de kozijntekening gaan mee; gebrekstippen bewust niet, want houtrot zit op dit huis en niet op het model. Elke rij wordt aan de calc-regel met dezelfde naam in het doelonderdeel gehangen. Bestaat die regel daar nog niet, dan maakt de app hem aan als kopie van de bronregel, met het hele verfsysteem erachter; de lijst laat vooraf per rij zien wat er gebeurt (→ regel bestaat, + regel wordt aangemaakt). Deuren, panelen en roeden in een tekening worden op dezelfde manier hergekoppeld; de automatische m²-rijen komen daarna vanzelf. Rijen komen achteraan, wat er al staat blijft staan, en de melding zegt hoeveel rijen, tekeningen en nieuwe regels er zijn. Niet bij een vergrendelde offerte. Geen SQL nodig.</p>
@@ -2809,7 +2810,7 @@
         <span id="calcActieveLabel" style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 0.5rem;"></span><span id="calcSignaal" style="align-self:center; margin-right:0.5rem;"></span><span id="tijdKop" style="display:inline-flex; align-items:center; gap:0.5rem; margin-right:0.5rem;"></span>
         <button class="btn-secondary btn lock-allowed" onclick="openYoobiZoek()" title="Zoek een klant in Yoobi en vul de klantgegevens automatisch in">🔍 Klant uit Yoobi</button>
         <button id="craftKnop" class="btn-secondary btn lock-allowed" onclick="craftNaarCraft()" title="Stuur de werkvoorbereiding (titel, adres en de drie tekstblokken) naar het verse Craft-document">🏗️ Naar Craft</button>
-        <button id="steigerKnop" class="btn-secondary btn lock-allowed" onclick="steigerAanvragen()" title="Vraag een steigerofferte aan bij de vaste steigerbouwer: werkadres, begeleidende tekst en gekozen foto's gaan per mail">🧱 Steiger aanvragen</button>
+        <button id="oaKnop" class="btn-secondary btn lock-allowed" onclick="onderaannemerAanvragen()" title="Vraag een offerte aan bij een vaste onderaannemer (steiger, timmerwerk, glas, installatie): werkadres, begeleidende tekst en gekozen foto's gaan per mail">📨 Aanvraag onderaannemer</button>
         <button class="btn-secondary btn lock-allowed" onclick="controleerCalc()" title="Loop de calculatie en offerte na op aandachtspunten voordat de offerte de deur uit gaat">📋 Controleer</button>
         <button class="btn-secondary btn lock-allowed" onclick="openArchiveerModal()" title="Genereer 1 of meerdere PDFs voor in de projectmap (calculatie, meetstaat, offerte, werkbon, onderhoudsplan)">💾 Archiveren</button>
         <button class="btn-secondary btn lock-allowed" onclick="newCalc()">+ Nieuwe</button>
@@ -3109,10 +3110,17 @@
       </div>
     </div>
     <div class="settings-section">
-      <h3>Steigerbouwer</h3>
-      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Het e-mailadres waar de knop Steiger aanvragen (bovenaan de calculatie) de aanvraag naartoe stuurt. De server leest dit adres zelf uit de instellingen; administratie@ernes.nl krijgt altijd een blinde kopie.</em></p>
+      <h3>Onderaannemers</h3>
+      <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>Eén vaste partij per vakgebied. De knop Aanvraag onderaannemer (bovenaan de calculatie) mailt werkadres, tekst en gekozen foto's naar dit adres; de bedrijfsnaam komt in de aanhef. De server leest de adressen zelf uit de instellingen; administratie@ernes.nl krijgt altijd een blinde kopie. Een vakgebied zonder adres is in het venster niet te kiezen.</em></p>
       <div class="form-grid">
-        <div><label>E-mail steigerbouwer</label><input type="email" id="setSteigerEmail" placeholder="bv. planning@steigerbouwer.nl" autocomplete="off" onchange="updSettingText('steigerEmail', this)"></div>
+        <div><label>🧱 Steigerbouwer — bedrijf</label><input type="text" id="setSteigerNaam" placeholder="bv. Steigerbouw Limburg" autocomplete="off" onchange="updSettingText('steigerNaam', this)"></div>
+        <div><label>🧱 Steigerbouwer — e-mail</label><input type="email" id="setSteigerEmail" placeholder="bv. planning@steigerbouwer.nl" autocomplete="off" onchange="updSettingText('steigerEmail', this)"></div>
+        <div><label>🪚 Timmerman — bedrijf</label><input type="text" id="setTimmerNaam" placeholder="bv. Timmerbedrijf Jansen" autocomplete="off" onchange="updSettingText('timmerNaam', this)"></div>
+        <div><label>🪚 Timmerman — e-mail</label><input type="email" id="setTimmerEmail" placeholder="bv. info@timmerbedrijf.nl" autocomplete="off" onchange="updSettingText('timmerEmail', this)"></div>
+        <div><label>🪟 Glaszetter — bedrijf</label><input type="text" id="setGlasNaam" placeholder="bv. Glashandel Parkstad" autocomplete="off" onchange="updSettingText('glasNaam', this)"></div>
+        <div><label>🪟 Glaszetter — e-mail</label><input type="email" id="setGlasEmail" placeholder="bv. offerte@glaszetter.nl" autocomplete="off" onchange="updSettingText('glasEmail', this)"></div>
+        <div><label>🔌 Installateur / elektricien — bedrijf</label><input type="text" id="setInstallatieNaam" placeholder="bv. Installatiebedrijf Peters" autocomplete="off" onchange="updSettingText('installatieNaam', this)"></div>
+        <div><label>🔌 Installateur / elektricien — e-mail</label><input type="email" id="setInstallatieEmail" placeholder="bv. info@installateur.nl" autocomplete="off" onchange="updSettingText('installatieEmail', this)"></div>
       </div>
     </div>
     <div class="settings-section">
@@ -3267,11 +3275,11 @@
   </div>
 </div>
 
-<!-- v4.78.0 — Steigeraanvraag -->
-<div class="modal-overlay" id="steigerModal" onclick="if (event.target === this) closeSteigerModal()">
+<!-- v4.102.0 — Aanvraag onderaannemer (voorheen v4.78.0 Steigeraanvraag) -->
+<div class="modal-overlay" id="oaModal" onclick="if (event.target === this) closeOaModal()">
   <div class="modal" style="max-width:760px;">
-    <div class="modal-head"><h3>🧱 Steiger aanvragen</h3><button class="close-x" onclick="closeSteigerModal()">✕</button></div>
-    <div class="modal-body" id="steigerBody"></div>
+    <div class="modal-head"><h3>📨 Aanvraag onderaannemer</h3><button class="close-x" onclick="closeOaModal()">✕</button></div>
+    <div class="modal-body" id="oaBody"></div>
   </div>
 </div>
 
@@ -3907,7 +3915,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.101.2';
+const APP_VERSION = 'v4.102.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4324,6 +4332,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.102.0', d: '2026-10-29', h: 'Knop Steiger aanvragen is nu Aanvraag onderaannemer: per vakgebied (steiger, timmerman, glaszetter, installateur) een vaste partij onder Instellingen, keuze in het venster, eigen openingszin, logboek per aanvraag in tabel calculatie_aanvragen en een opvolgtaak per aanvraag. SQL onderaannemers_01_aanvragen.sql en Edge Function onderaannemer-aanvraag.' },
   { v: '4.101.2', d: '2026-10-25', h: 'Fix: regel dupliceren (⎘) faalde stil als het volgnummer een half getal werd (integer-kolom). Nu afronden en na elke kopie het onderdeel hernummeren op tientallen; mislukte regel-opslag toont voortaan de foutmelding.' },
   { v: '4.101.1', d: '2026-10-25', h: 'Oranje waarschuwing "die staart is onverzekerd" weg uit het Resultaat-blok van het onderhoudsplan; de bijlage regelt de verrekening bij opzegging al. Blauwe vooruitbetaal-info blijft.' },
   { v: '4.101.0', d: '2026-10-24', h: 'Meetstaat-tab: knop "Rijen overnemen uit…" haalt aangevinkte meetstaat-rijen met kozijntekening (zonder gebrekstippen) uit een onderdeel of een andere calculatie naar een doelonderdeel; ontbrekende calc-regels worden aangemaakt als kopie met verfsysteem.' },
@@ -6711,18 +6720,280 @@ function openYoobiZoek() {
 function closeYoobiModal() { document.getElementById('yoobiModal').classList.remove('active'); }
 
 // ============================================================
-// STEIGERAANVRAAG — v4.78.0
-// Mailt werkadres, begeleidende tekst en gekozen foto's naar de vaste
-// steigerbouwer via de Edge Function steiger-aanvraag. De ontvanger komt
-// server-side uit app_settings.data.steigerEmail (Instellingen), de app
-// stuurt alleen calculatie-id, tekst en de aangevinkte foto's mee.
-// Zelfde patronen als Naar Craft (foto's als base64, stempel in calculaties)
-// en als Offerte mailen (compose-venster met aanpasbare standaardtekst).
+// AANVRAAG ONDERAANNEMER — v4.102.0 (opvolger van Steigeraanvraag v4.78.0)
+// Mailt werkadres, begeleidende tekst en gekozen foto's naar een vaste
+// onderaannemer (steigerbouwer, timmerman, glaszetter, installateur) via de
+// Edge Function onderaannemer-aanvraag. De ontvanger komt server-side uit
+// app_settings.data.<vak>Email (Instellingen -> Onderaannemers); de app stuurt
+// alleen calculatie-id, vakgebied, tekst en de aangevinkte foto's mee.
+// Elke verstuurde aanvraag staat als rij in calculatie_aanvragen (c.aanvragen);
+// de oude kolom steiger_aangevraagd_op wordt door de server bij 'steiger' nog
+// meegezet en hier alleen nog gelezen als terugval voor oude rijen.
+// Zelfde patronen als Naar Craft (foto's als base64) en Offerte mailen
+// (compose-venster met aanpasbare standaardtekst).
 // ============================================================
-const STEIGER_FN_URL = SUPABASE_URL + '/functions/v1/steiger-aanvraag';
-let _steigerBezig = false;
+const OA_FN_URL = SUPABASE_URL + '/functions/v1/onderaannemer-aanvraag';
+// Sleutels gelijk aan VAKGEBIEDEN in de Edge Function; een vakgebied dat daar
+// niet bestaat wordt door de server geweigerd.
+const VAKGEBIEDEN = [
+  { key: 'steiger',     label: 'Steigerbouwer',              icoon: '🧱', werk: 'steigerwerk',     emailKey: 'steigerEmail',     naamKey: 'steigerNaam',     fotoZin: 'De foto\'s van de gevel(s) zitten in de bijlage.' },
+  { key: 'timmer',      label: 'Timmerman',                  icoon: '🪚', werk: 'timmerwerk',      emailKey: 'timmerEmail',      naamKey: 'timmerNaam',      fotoZin: 'De foto\'s van de betreffende onderdelen zitten in de bijlage.' },
+  { key: 'glas',        label: 'Glaszetter',                 icoon: '🪟', werk: 'glaswerk',        emailKey: 'glasEmail',        naamKey: 'glasNaam',        fotoZin: 'De foto\'s van de betreffende kozijnen zitten in de bijlage.' },
+  { key: 'installatie', label: 'Installateur / elektricien', icoon: '🔌', werk: 'installatiewerk', emailKey: 'installatieEmail', naamKey: 'installatieNaam', fotoZin: 'De foto\'s van de situatie zitten in de bijlage.' }
+];
+let _oaBezig = false;
+let _oaVak = 'steiger';          // laatst gekozen vakgebied in het venster (per sessie)
+let _oaTekstAangepast = false;   // true zodra de gebruiker in de tekst heeft getypt
 
-function closeSteigerModal() { document.getElementById('steigerModal').classList.remove('active'); }
+function closeOaModal() { document.getElementById('oaModal').classList.remove('active'); }
+
+function _oaVakInfo(key) { return VAKGEBIEDEN.find(v => v.key === key) || VAKGEBIEDEN[0]; }
+function _oaEmailVan(vak) { return ((data.settings && data.settings[vak.emailKey]) || '').trim(); }
+function _oaNaamVan(vak) { return ((data.settings && data.settings[vak.naamKey]) || '').trim(); }
+
+function _mapAanvraagFromDB(row) {
+  return {
+    id:          row.id,
+    vakgebied:   row.vakgebied || '',
+    naar:        row.naar || '',
+    naarNaam:    row.naar_naam || '',
+    aantalFotos: row.aantal_fotos || 0,
+    verstuurdOp: row.verstuurd_op || null,
+    taakGemaakt: !!row.taak_gemaakt
+  };
+}
+
+// Alle aanvragen van een calculatie, nieuwste eerst. Een oude steigerstempel
+// zonder rij (kan alleen bij rijen van vóór de SQL) telt als steigeraanvraag.
+function _oaAanvragen(c) {
+  const lijst = (c && Array.isArray(c.aanvragen)) ? c.aanvragen.slice() : [];
+  if (c && c.steigerAangevraagdOp && !lijst.some(a => a.vakgebied === 'steiger')) {
+    lijst.push({ id: null, vakgebied: 'steiger', naar: '', naarNaam: '', aantalFotos: 0, verstuurdOp: c.steigerAangevraagdOp, taakGemaakt: true });
+  }
+  return lijst.sort((a, b) => String(b.verstuurdOp || '').localeCompare(String(a.verstuurdOp || '')));
+}
+function _oaLaatste(c, key) { return _oaAanvragen(c).find(a => a.vakgebied === key) || null; }
+function _oaDatumKort(iso) {
+  const d = new Date(iso); if (isNaN(d.getTime())) return '';
+  return String(d.getDate()).padStart(2, '0') + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+async function _herlaadAanvragen(c) {
+  if (!c || !c.id || !_sb) return;
+  try {
+    const { data: rows, error } = await _sbQuery(_sb.from('calculatie_aanvragen').select('*').eq('calculatie_id', c.id).order('verstuurd_op', { ascending: false }), 'Aanvragen verversen');
+    if (error || !Array.isArray(rows)) return;
+    c.aanvragen = rows.map(_mapAanvraagFromDB);
+  } catch (e) { /* gecachte lijst blijft */ }
+}
+
+function _oaKnopBijwerken() {
+  const knop = document.getElementById('oaKnop');
+  if (!knop) return;
+  const c = data.calc;
+  const lijst = c ? _oaAanvragen(c) : [];
+  if (lijst.length) {
+    const perVak = VAKGEBIEDEN.map(v => { const a = lijst.find(x => x.vakgebied === v.key); return a ? (v.icoon + ' ' + _oaDatumKort(a.verstuurdOp)) : null; }).filter(Boolean);
+    knop.textContent = '✅ Aanvragen: ' + perVak.join(' · ');
+    knop.style.background = '#dcfce7';
+    knop.style.borderColor = '#16a34a';
+    knop.style.color = '#15803d';
+    knop.title = lijst.map(a => _oaVakInfo(a.vakgebied).label + ' aangevraagd op ' + new Date(a.verstuurdOp).toLocaleString('nl-NL') + (a.naar ? ' (' + a.naar + ')' : '')).join('\n') + '\nKlik om een volgende aanvraag te sturen.';
+  } else {
+    knop.textContent = '📨 Aanvraag onderaannemer';
+    knop.style.background = '';
+    knop.style.borderColor = '';
+    knop.style.color = '';
+    knop.title = 'Vraag een offerte aan bij een vaste onderaannemer (steiger, timmerwerk, glas, installatie): werkadres, begeleidende tekst en gekozen foto\'s gaan per mail';
+  }
+}
+
+// Werkadres als één regel, plus de lijst van ontbrekende delen (zelfde regels
+// als de controle in controleerCalc: straat, huisnummer, postcode, woonplaats).
+function _oaWerkadres(c, cfg) {
+  const wa = _offWerkadresEffectief(c, cfg);
+  const ontbreekt = [];
+  if (!(wa.straat || '').trim()) ontbreekt.push('straat');
+  if (!(wa.huisnummer || '').trim()) ontbreekt.push('huisnummer');
+  if (!(wa.postcode || '').trim()) ontbreekt.push('postcode');
+  if (!(wa.woonplaats || '').trim()) ontbreekt.push('woonplaats');
+  const regel = [(wa.straat || '').trim() + ' ' + (wa.huisnummer || '').trim(), ((wa.postcode || '').trim() + ' ' + (wa.woonplaats || '').trim()).trim()]
+    .map(x => x.trim()).filter(Boolean).join(', ');
+  return { wa, ontbreekt, regel };
+}
+
+function _oaStandaardtekst(c, cfg, adresRegel, vak) {
+  const naam = (c.naam || '').trim() || '(zonder projectnaam)';
+  const bedrijf = _oaNaamVan(vak);
+  return (bedrijf ? 'Beste ' + bedrijf + ',' : 'Beste,') + '\n\n'
+    + 'Graag ontvangen wij een offerte voor ' + vak.werk + ' op onderstaand adres.\n\n'
+    + 'Project: ' + naam + '\n'
+    + 'Werkadres: ' + adresRegel + '\n\n'
+    + vak.fotoZin + ' Laat het weten als er nog iets ontbreekt.';
+}
+
+function onderaannemerAanvragen() {
+  const c = data.calc;
+  if (!c) { _toast('Geen calculatie open.'); return; }
+  const cfg = _offCfg();
+  if (!cfg) { _toast('Geen offerte-config beschikbaar.'); return; }
+  if (!VAKGEBIEDEN.some(v => _oaEmailVan(v))) { _toast('Nog geen e-mailadres van een onderaannemer ingesteld. Vul dat in onder Instellingen, bij Onderaannemers.'); return; }
+  const adres = _oaWerkadres(c, cfg);
+  if (adres.ontbreekt.length) { _toast('Het werkadres is onvolledig: ' + adres.ontbreekt.join(', ') + ' ontbreekt. Vul het werkadres eerst aan.'); return; }
+  const body = document.getElementById('oaBody');
+  if (!body) return;
+  // Begin bij het laatst gekozen vakgebied, mits daar een adres voor is; anders het eerste met adres.
+  if (!_oaEmailVan(_oaVakInfo(_oaVak))) _oaVak = VAKGEBIEDEN.find(v => _oaEmailVan(v)).key;
+  _oaTekstAangepast = false;
+  _oaRender(body, c, cfg, adres, null, []);
+  document.getElementById('oaModal').classList.add('active');
+  // Thumbnails laden nadat het venster staat (signed urls zijn een netwerkronde).
+  _oaThumbsLaden(c);
+}
+
+// Wisselen van vakgebied: tekst alleen vervangen als de gebruiker er nog niet
+// in heeft getypt; aangevinkte foto's blijven staan.
+function _oaKiesVak(key) {
+  const c = data.calc; if (!c) return;
+  const cfg = _offCfg(); if (!cfg) return;
+  const body = document.getElementById('oaBody'); if (!body) return;
+  const ta = body.querySelector('#oaTekst');
+  const tekstBehouden = (_oaTekstAangepast && ta) ? ta.value : null;
+  const gekozen = Array.from(body.querySelectorAll('input[data-oa-foto]:checked')).map(i => parseInt(i.getAttribute('data-oa-foto'), 10));
+  _oaVak = key;
+  _oaRender(body, c, cfg, _oaWerkadres(c, cfg), tekstBehouden, gekozen);
+  _oaThumbsLaden(c);
+}
+
+function _oaRender(body, c, cfg, adres, tekstBehouden, gekozen) {
+  const vak = _oaVakInfo(_oaVak);
+  const email = _oaEmailVan(vak);
+  const bedrijf = _oaNaamVan(vak);
+  const fotos = Array.isArray(c.fotos) ? c.fotos : [];
+  const laatste = _oaLaatste(c, vak.key);
+  const vakKnoppen = '<div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.8rem;">'
+    + VAKGEBIEDEN.map(v => {
+      const heeftAdres = !!_oaEmailVan(v);
+      const actief = v.key === vak.key;
+      const eerder = _oaLaatste(c, v.key);
+      const stijl = 'padding:0.45rem 0.7rem; border-radius:8px; border:2px solid ' + (actief ? '#16a34a' : 'var(--border)') + '; background:' + (actief ? '#dcfce7' : 'var(--paper, #fff)') + '; cursor:' + (heeftAdres ? 'pointer' : 'not-allowed') + '; opacity:' + (heeftAdres ? '1' : '0.5') + '; font:inherit; font-size:0.85rem; text-align:left; line-height:1.3;';
+      const sub = heeftAdres ? (eerder ? '✅ ' + _oaDatumKort(eerder.verstuurdOp) : 'nog niet aangevraagd') : 'geen adres ingesteld';
+      return '<button type="button" style="' + stijl + '" ' + (heeftAdres ? 'onclick="_oaKiesVak(\'' + v.key + '\')"' : 'disabled') + ' title="' + _offEsc(heeftAdres ? (_oaNaamVan(v) || _oaEmailVan(v)) : 'Vul het adres in onder Instellingen, bij Onderaannemers') + '">'
+        + '<div style="font-weight:600;">' + v.icoon + ' ' + _offEsc(v.label) + '</div><div style="font-size:0.72rem; color:var(--muted);">' + _offEsc(sub) + '</div></button>';
+    }).join('')
+    + '</div>';
+  const alEerder = laatste ? '<div style="background:#fef3c7; border:1px solid #f59e0b; border-radius:6px; padding:0.5rem 0.7rem; font-size:0.82rem; margin-bottom:0.8rem;">Aan de ' + _offEsc(vak.label.toLowerCase()) + ' is al een aanvraag verstuurd op ' + _offEsc(new Date(laatste.verstuurdOp).toLocaleString('nl-NL')) + '. Versturen stuurt een nieuwe.</div>' : '';
+  let fotoHtml;
+  if (!fotos.length) {
+    fotoHtml = '<div style="color:var(--muted); font-size:0.85rem; padding:0.6rem 0; border:1px dashed var(--border); border-radius:6px; text-align:center;">Geen foto\'s in het klusdossier. Maak eerst een foto onder Notities, taken &amp; foto\'s; de aanvraag kan ook zonder foto\'s.</div>';
+  } else {
+    fotoHtml = '<div id="oaFotoGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:0.5rem;">'
+      + fotos.map((f, i) => '<label style="display:block; cursor:pointer; border:2px solid var(--border); border-radius:6px; padding:3px; position:relative;" data-oa-idx="' + i + '">'
+        + '<input type="checkbox" data-oa-foto="' + i + '"' + (gekozen && gekozen.includes(i) ? ' checked' : '') + ' style="position:absolute; top:6px; left:6px; width:18px; height:18px; z-index:2;">'
+        + '<div data-oa-thumb="' + i + '" style="width:100%; aspect-ratio:4/3; background:var(--paper-deep, #eee); border-radius:4px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:0.7rem; overflow:hidden;">…</div>'
+        + '<div style="font-size:0.68rem; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + _offEsc((f.opmerking || '').trim() || ('Foto ' + (i + 1))) + '</div>'
+        + '</label>').join('')
+      + '</div>'
+      + '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.4rem;">Vink aan welke foto\'s meegaan. <a href="#" onclick="event.preventDefault(); document.querySelectorAll(\'#oaFotoGrid input[data-oa-foto]\').forEach(i => i.checked = true);">Alles aanvinken</a></div>';
+  }
+  const tekst = (tekstBehouden != null) ? tekstBehouden : _oaStandaardtekst(c, cfg, adres.regel, vak);
+  body.innerHTML = vakKnoppen + alEerder
+    + '<div style="font-size:0.82rem; color:var(--muted); margin-bottom:0.6rem;">Naar <strong>' + _offEsc(bedrijf ? bedrijf + ' — ' + email : email) + '</strong> &middot; blinde kopie naar administratie@ernes.nl</div>'
+    + '<div style="margin-bottom:0.8rem;"><label style="display:block; font-size:0.8rem; color:var(--muted); margin-bottom:2px;">Werkadres (uit de calculatie)</label><div style="font-weight:600;">' + _offEsc(adres.regel) + '</div></div>'
+    + '<label style="display:block; font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Begeleidende tekst</label>'
+    + '<textarea id="oaTekst" style="width:100%; min-height:170px; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:6px; font:inherit; line-height:1.5; resize:vertical;">' + _offEsc(tekst) + '</textarea>'
+    + '<label style="display:block; font-size:0.8rem; color:var(--muted); margin:0.8rem 0 4px;">Foto\'s uit het klusdossier</label>'
+    + fotoHtml
+    + '<div style="display:flex; gap:0.5rem; margin-top:1rem;">'
+    + '<button class="btn" id="oaVerstuur">📧 Versturen naar ' + _offEsc(vak.label.toLowerCase()) + '</button>'
+    + '<button class="btn btn-secondary" onclick="closeOaModal()">Annuleren</button>'
+    + '</div>';
+  body.querySelectorAll('label[data-oa-idx]').forEach(lbl => {
+    const cb = lbl.querySelector('input');
+    const zet = () => { lbl.style.borderColor = cb.checked ? '#16a34a' : 'var(--border)'; };
+    cb.addEventListener('change', zet); zet();
+  });
+  const ta = body.querySelector('#oaTekst');
+  if (ta) ta.addEventListener('input', () => { _oaTekstAangepast = true; });
+  body.querySelector('#oaVerstuur').addEventListener('click', () => _oaVerstuur(body, c));
+}
+
+async function _oaThumbsLaden(c) {
+  const fotos = Array.isArray(c.fotos) ? c.fotos : [];
+  if (!fotos.length) return;
+  const missing = fotos.filter(f => !f.signedUrl);
+  if (missing.length) { try { await _signFotoUrls(missing); } catch (e) { /* thumbnails blijven leeg, versturen kan nog */ } }
+  fotos.forEach((f, i) => {
+    const box = document.querySelector('[data-oa-thumb="' + i + '"]');
+    if (!box) return;
+    if (f.signedUrl) box.innerHTML = '<img src="' + _offEsc(f.signedUrl) + '" style="width:100%; height:100%; object-fit:cover;" alt="">';
+    else box.textContent = 'geen beeld';
+  });
+}
+
+async function _oaVerstuur(body, c) {
+  if (_oaBezig) return;
+  const vak = _oaVakInfo(_oaVak);
+  const ta = body.querySelector('#oaTekst');
+  const tekst = ta ? ta.value : '';
+  if (!tekst.trim()) { _toast('De begeleidende tekst is leeg.'); return; }
+  const gekozen = Array.from(body.querySelectorAll('input[data-oa-foto]:checked')).map(i => parseInt(i.getAttribute('data-oa-foto'), 10));
+  if (_oaLaatste(c, vak.key) && !confirm('Aan de ' + vak.label.toLowerCase() + ' is al eerder een aanvraag verstuurd. Opnieuw sturen?')) return;
+  const vbtn = body.querySelector('#oaVerstuur');
+  const vbtnTekst = vbtn ? vbtn.textContent : '';
+  _oaBezig = true;
+  if (vbtn) { vbtn.disabled = true; vbtn.textContent = 'Versturen…'; }
+  try {
+    // Foto's client-side naar base64, zelfde route als Naar Craft (met gebrekstippen erop).
+    const fotos = [];
+    const alle = Array.isArray(c.fotos) ? c.fotos : [];
+    for (const idx of gekozen) {
+      const f = alle[idx]; if (!f) continue;
+      if (!f.signedUrl) { try { await _signFotoUrls([f]); } catch (e) {} }
+      let dataUrl = null;
+      try { dataUrl = await _craftFotoDataUrl(f, 1600); } catch (e) { dataUrl = null; }
+      if (!dataUrl) continue;
+      fotos.push({ base64: dataUrl.split(',')[1] || '', naam: 'foto-' + (idx + 1) + '.jpg', bijschrift: _craftFotoBijschrift(f) });
+    }
+    if (gekozen.length && fotos.length < gekozen.length) {
+      if (!confirm(fotos.length + ' van ' + gekozen.length + ' foto\'s konden worden geladen. Toch versturen?')) return;
+    }
+    const res = await _oaCall({ calculatie_id: c.id, vakgebied: vak.key, tekst, fotos });
+    const nu = res.aangevraagd_op || new Date().toISOString();
+    if (!Array.isArray(c.aanvragen)) c.aanvragen = [];
+    c.aanvragen.unshift({ id: res.aanvraag_id || null, vakgebied: vak.key, naar: res.naar || '', naarNaam: res.naar_naam || '', aantalFotos: fotos.length, verstuurdOp: nu, taakGemaakt: !!res.taak });
+    if (vak.key === 'steiger') c.steigerAangevraagdOp = nu;
+    closeOaModal();
+    const naarWie = res.naar_naam ? res.naar_naam + ' (' + res.naar + ')' : (res.naar || 'de ' + vak.label.toLowerCase());
+    let melding = 'Aanvraag ' + vak.werk + ' gemaild naar ' + naarWie;
+    melding += res.taak ? ', opvolgtaak staat klaar.' : '. Let op: de opvolgtaak kon niet worden aangemaakt.';
+    if (res.log === false) melding += ' De aanvraag kon niet in het logboek worden gezet; de knop toont hem na herladen mogelijk niet.';
+    _toast(melding, (res.taak && res.log !== false) ? 'ok' : 'err');
+  } catch (e) {
+    _toast('Aanvraag mislukt: ' + (e.message || e));
+  } finally {
+    _oaBezig = false;
+    if (vbtn) { vbtn.disabled = false; vbtn.textContent = vbtnTekst || '📧 Versturen'; }
+    _oaKnopBijwerken();
+  }
+}
+
+async function _oaCall(payload) {
+  let auth = SUPABASE_KEY;
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    if (session && session.access_token) auth = session.access_token;
+  } catch (e) { /* val terug op anon */ }
+  const res = await fetch(OA_FN_URL, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + auth, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload || {})
+  });
+  let js = null;
+  try { js = await res.json(); } catch (e) {}
+  if (!res.ok || !js || !js.ok) throw new Error((js && js.error) ? js.error : ('fout ' + res.status));
+  return js;
+}
 
 // ============================================================
 // KOPBLOKKEN INKLAPPEN — v4.79.0
@@ -6795,175 +7066,6 @@ document.addEventListener('change', e => {
 });
 
 
-function _steigerKnopBijwerken() {
-  const knop = document.getElementById('steigerKnop');
-  if (!knop) return;
-  const c = data.calc;
-  const stamp = c ? c.steigerAangevraagdOp : null;
-  if (stamp) {
-    const d = new Date(stamp);
-    const dd = String(d.getDate()).padStart(2, '0');
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mi = String(d.getMinutes()).padStart(2, '0');
-    knop.textContent = '✅ Steiger aangevraagd (' + dd + '-' + mm + ' ' + hh + ':' + mi + ')';
-    knop.style.background = '#dcfce7';
-    knop.style.borderColor = '#16a34a';
-    knop.style.color = '#15803d';
-    knop.title = 'Al aangevraagd op ' + d.toLocaleString('nl-NL') + '. Opnieuw sturen kan, je krijgt eerst een bevestiging.';
-  } else {
-    knop.textContent = '🧱 Steiger aanvragen';
-    knop.style.background = '';
-    knop.style.borderColor = '';
-    knop.style.color = '';
-    knop.title = 'Vraag een steigerofferte aan bij de vaste steigerbouwer: werkadres, begeleidende tekst en gekozen foto\'s gaan per mail';
-  }
-}
-
-// Werkadres als één regel, plus de lijst van ontbrekende delen (zelfde regels
-// als de controle in controleerCalc: straat, huisnummer, postcode, woonplaats).
-function _steigerWerkadres(c, cfg) {
-  const wa = _offWerkadresEffectief(c, cfg);
-  const ontbreekt = [];
-  if (!(wa.straat || '').trim()) ontbreekt.push('straat');
-  if (!(wa.huisnummer || '').trim()) ontbreekt.push('huisnummer');
-  if (!(wa.postcode || '').trim()) ontbreekt.push('postcode');
-  if (!(wa.woonplaats || '').trim()) ontbreekt.push('woonplaats');
-  const regel = [(wa.straat || '').trim() + ' ' + (wa.huisnummer || '').trim(), ((wa.postcode || '').trim() + ' ' + (wa.woonplaats || '').trim()).trim()]
-    .map(x => x.trim()).filter(Boolean).join(', ');
-  return { wa, ontbreekt, regel };
-}
-
-function _steigerStandaardtekst(c, cfg, adresRegel) {
-  const naam = (c.naam || '').trim() || '(zonder projectnaam)';
-  return 'Beste,\n\n'
-    + 'Graag ontvangen wij een offerte voor steigerwerk op onderstaand adres.\n\n'
-    + 'Project: ' + naam + '\n'
-    + 'Werkadres: ' + adresRegel + '\n\n'
-    + 'De foto\'s van de gevel(s) zitten in de bijlage. Laat het weten als er nog iets ontbreekt.';
-}
-
-function steigerAanvragen() {
-  const c = data.calc;
-  if (!c) { _toast('Geen calculatie open.'); return; }
-  const cfg = _offCfg();
-  if (!cfg) { _toast('Geen offerte-config beschikbaar.'); return; }
-  const email = ((data.settings && data.settings.steigerEmail) || '').trim();
-  if (!email) { _toast('Geen e-mailadres van de steigerbouwer ingesteld. Vul dat in onder Instellingen, bij Steigerbouwer.'); return; }
-  const adres = _steigerWerkadres(c, cfg);
-  if (adres.ontbreekt.length) { _toast('Het werkadres is onvolledig: ' + adres.ontbreekt.join(', ') + ' ontbreekt. Vul het werkadres eerst aan.'); return; }
-  const body = document.getElementById('steigerBody');
-  if (!body) return;
-  _steigerRender(body, c, cfg, email, adres);
-  document.getElementById('steigerModal').classList.add('active');
-  // Thumbnails laden nadat het venster staat (signed urls zijn een netwerkronde).
-  _steigerThumbsLaden(c);
-}
-
-function _steigerRender(body, c, cfg, email, adres) {
-  const fotos = Array.isArray(c.fotos) ? c.fotos : [];
-  const alEerder = c.steigerAangevraagdOp ? '<div style="background:#fef3c7; border:1px solid #f59e0b; border-radius:6px; padding:0.5rem 0.7rem; font-size:0.82rem; margin-bottom:0.8rem;">Deze aanvraag is al verstuurd op ' + _offEsc(new Date(c.steigerAangevraagdOp).toLocaleString('nl-NL')) + '. Versturen stuurt hem opnieuw.</div>' : '';
-  let fotoHtml;
-  if (!fotos.length) {
-    fotoHtml = '<div style="color:var(--muted); font-size:0.85rem; padding:0.6rem 0; border:1px dashed var(--border); border-radius:6px; text-align:center;">Geen foto\'s in het klusdossier. Maak eerst een foto onder Notities, taken &amp; foto\'s; de aanvraag kan ook zonder foto\'s.</div>';
-  } else {
-    fotoHtml = '<div id="steigerFotoGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:0.5rem;">'
-      + fotos.map((f, i) => '<label style="display:block; cursor:pointer; border:2px solid var(--border); border-radius:6px; padding:3px; position:relative;" data-steiger-idx="' + i + '">'
-        + '<input type="checkbox" data-steiger-foto="' + i + '" style="position:absolute; top:6px; left:6px; width:18px; height:18px; z-index:2;">'
-        + '<div data-steiger-thumb="' + i + '" style="width:100%; aspect-ratio:4/3; background:var(--paper-deep, #eee); border-radius:4px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:0.7rem; overflow:hidden;">…</div>'
-        + '<div style="font-size:0.68rem; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + _offEsc((f.opmerking || '').trim() || ('Foto ' + (i + 1))) + '</div>'
-        + '</label>').join('')
-      + '</div>'
-      + '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.4rem;">Vink aan welke foto\'s meegaan. <a href="#" onclick="event.preventDefault(); document.querySelectorAll(\'#steigerFotoGrid input[data-steiger-foto]\').forEach(i => i.checked = true);">Alles aanvinken</a></div>';
-  }
-  body.innerHTML = alEerder
-    + '<div style="font-size:0.82rem; color:var(--muted); margin-bottom:0.6rem;">Naar <strong>' + _offEsc(email) + '</strong> &middot; blinde kopie naar administratie@ernes.nl</div>'
-    + '<div style="margin-bottom:0.8rem;"><label style="display:block; font-size:0.8rem; color:var(--muted); margin-bottom:2px;">Werkadres (uit de calculatie)</label><div style="font-weight:600;">' + _offEsc(adres.regel) + '</div></div>'
-    + '<label style="display:block; font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Begeleidende tekst</label>'
-    + '<textarea id="steigerTekst" style="width:100%; min-height:170px; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:6px; font:inherit; line-height:1.5; resize:vertical;">' + _offEsc(_steigerStandaardtekst(c, cfg, adres.regel)) + '</textarea>'
-    + '<label style="display:block; font-size:0.8rem; color:var(--muted); margin:0.8rem 0 4px;">Foto\'s uit het klusdossier</label>'
-    + fotoHtml
-    + '<div style="display:flex; gap:0.5rem; margin-top:1rem;">'
-    + '<button class="btn" id="steigerVerstuur">📧 Versturen</button>'
-    + '<button class="btn btn-secondary" onclick="closeSteigerModal()">Annuleren</button>'
-    + '</div>';
-  // Klik op de tegel = checkbox omzetten (het label doet dat al, behalve de thumbnail-div die geen input is; label regelt het).
-  body.querySelectorAll('label[data-steiger-idx]').forEach(lbl => {
-    const cb = lbl.querySelector('input');
-    const zet = () => { lbl.style.borderColor = cb.checked ? '#16a34a' : 'var(--border)'; };
-    cb.addEventListener('change', zet); zet();
-  });
-  body.querySelector('#steigerVerstuur').addEventListener('click', () => _steigerVerstuur(body, c));
-}
-
-async function _steigerThumbsLaden(c) {
-  const fotos = Array.isArray(c.fotos) ? c.fotos : [];
-  if (!fotos.length) return;
-  const missing = fotos.filter(f => !f.signedUrl);
-  if (missing.length) { try { await _signFotoUrls(missing); } catch (e) { /* thumbnails blijven leeg, versturen kan nog */ } }
-  fotos.forEach((f, i) => {
-    const box = document.querySelector('[data-steiger-thumb="' + i + '"]');
-    if (!box) return;
-    if (f.signedUrl) box.innerHTML = '<img src="' + _offEsc(f.signedUrl) + '" style="width:100%; height:100%; object-fit:cover;" alt="">';
-    else box.textContent = 'geen beeld';
-  });
-}
-
-async function _steigerVerstuur(body, c) {
-  if (_steigerBezig) return;
-  const ta = body.querySelector('#steigerTekst');
-  const tekst = ta ? ta.value : '';
-  if (!tekst.trim()) { _toast('De begeleidende tekst is leeg.'); return; }
-  const gekozen = Array.from(body.querySelectorAll('input[data-steiger-foto]:checked')).map(i => parseInt(i.getAttribute('data-steiger-foto'), 10));
-  if (c.steigerAangevraagdOp && !confirm('Deze aanvraag is al eerder verstuurd. Opnieuw sturen?')) return;
-  const vbtn = body.querySelector('#steigerVerstuur');
-  _steigerBezig = true;
-  if (vbtn) { vbtn.disabled = true; vbtn.textContent = 'Versturen…'; }
-  try {
-    // Foto's client-side naar base64, zelfde route als Naar Craft (met gebrekstippen erop).
-    const fotos = [];
-    const alle = Array.isArray(c.fotos) ? c.fotos : [];
-    for (const idx of gekozen) {
-      const f = alle[idx]; if (!f) continue;
-      if (!f.signedUrl) { try { await _signFotoUrls([f]); } catch (e) {} }
-      let dataUrl = null;
-      try { dataUrl = await _craftFotoDataUrl(f, 1600); } catch (e) { dataUrl = null; }
-      if (!dataUrl) continue;
-      fotos.push({ base64: dataUrl.split(',')[1] || '', naam: 'foto-' + (idx + 1) + '.jpg', bijschrift: _craftFotoBijschrift(f) });
-    }
-    if (gekozen.length && fotos.length < gekozen.length) {
-      if (!confirm(fotos.length + ' van ' + gekozen.length + ' foto\'s konden worden geladen. Toch versturen?')) return;
-    }
-    const res = await _steigerCall({ calculatie_id: c.id, tekst, fotos });
-    const nu = res.aangevraagd_op || new Date().toISOString();
-    c.steigerAangevraagdOp = nu;
-    closeSteigerModal();
-    _toast('Steigeraanvraag gemaild naar ' + (res.naar || 'de steigerbouwer') + (res.taak ? ', opvolgtaak staat klaar.' : '. Let op: de opvolgtaak kon niet worden aangemaakt.'), res.taak ? 'ok' : 'err');
-  } catch (e) {
-    _toast('Steigeraanvraag mislukt: ' + (e.message || e));
-  } finally {
-    _steigerBezig = false;
-    if (vbtn) { vbtn.disabled = false; vbtn.textContent = '📧 Versturen'; }
-    _steigerKnopBijwerken();
-  }
-}
-
-async function _steigerCall(payload) {
-  let auth = SUPABASE_KEY;
-  try {
-    const { data: { session } } = await _sb.auth.getSession();
-    if (session && session.access_token) auth = session.access_token;
-  } catch (e) { /* val terug op anon */ }
-  const res = await fetch(STEIGER_FN_URL, {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + auth, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload || {})
-  });
-  let js = null;
-  try { js = await res.json(); } catch (e) {}
-  if (!res.ok || !js || !js.ok) throw new Error((js && js.error) ? js.error : ('fout ' + res.status));
-  return js;
-}
 
 
 // Ingelogde aanroep van de Edge Function: Supabase-sessie als Bearer-token,
@@ -8308,8 +8410,8 @@ async function _herlaadTodos(c) {
 }
 async function _loadCalcBody(c) {
   if (c.__loaded) return true;
-  // Parallelle fetches: hg-tree + todos + staart + meetstaat + fotos + documenten
-  const [hgRes, todoRes, staartRes, msRes, fotoRes, docRes] = await Promise.all([
+  // Parallelle fetches: hg-tree + todos + staart + meetstaat + fotos + documenten + aanvragen
+  const [hgRes, todoRes, staartRes, msRes, fotoRes, docRes, aanvrRes] = await Promise.all([
     _sbQuery(
       _sb.from('hoofdgroepen')
         .select('*, onderdelen(*, calc_regels(*, calc_regel_stappen(*)))')
@@ -8321,7 +8423,8 @@ async function _loadCalcBody(c) {
     _sbQuery(_sb.from('staart').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Staart laden'),
     _sbQuery(_sb.from('meetstaat').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Meetstaat laden'),
     _sbQuery(_sb.from('calculatie_fotos').select('*').eq('calculatie_id', c.id).order('volgorde'), 'Foto\u2019s laden'),
-    _sbQuery(_sb.from('calculatie_documenten').select('*').eq('calculatie_id', c.id).order('aangemaakt'), 'Documenten laden')
+    _sbQuery(_sb.from('calculatie_documenten').select('*').eq('calculatie_id', c.id).order('aangemaakt'), 'Documenten laden'),
+    _sbQuery(_sb.from('calculatie_aanvragen').select('*').eq('calculatie_id', c.id).order('verstuurd_op', { ascending: false }), 'Aanvragen laden') // v4.102.0
   ]);
   if (hgRes.error) return false;
   const hgs = (hgRes.data || []).map(hgRow => {
@@ -8349,6 +8452,7 @@ async function _loadCalcBody(c) {
   c.meetstaat = (msRes.data     || []).map(_mapMeetstaatFromDB);
   c.fotos     = (fotoRes.data   || []).map(_mapFotoFromDB);
   c.documenten = (docRes.data   || []).map(_mapDocFromDB);
+  c.aanvragen  = (aanvrRes.data || []).map(_mapAanvraagFromDB); // v4.102.0 — onderaannemer-aanvragen
   c.__loaded = true;
   // v3.56.1 — Zelfherstel van de dashboard-cache: bij het laden het actuele totaal
   // stil terugschrijven. Geneest lijstbedragen die met de oude archief-formule
@@ -20454,7 +20558,7 @@ function renderCalcStructuur() {
   renderTotals();
   renderOfferteBlok();
   _craftKnopBijwerken();
-  _steigerKnopBijwerken(); // v4.78.0
+  _oaKnopBijwerken(); // v4.102.0 (voorheen de steigerknop, v4.78.0)
   _applyCalcLockUI();
 }
 function renderHoofdgroep(hg) {
@@ -21446,7 +21550,7 @@ async function openCalc(id) {
   data.activeCalcId = id;
   try { localStorage.setItem('verfcalc_v3_activeCalcId', id); } catch(e) {}
   if (!c.__loaded) await _loadCalcBody(c);
-  else await _herlaadTodos(c); // v4.80.0 — vinkjes uit de Takenapp meenemen
+  else await Promise.all([_herlaadTodos(c), _herlaadAanvragen(c)]); // v4.80.0 vinkjes uit de Takenapp; v4.102.0 aanvragen van een andere gebruiker
   // Cache het totaalbedrag in de DB zodat het dashboard ook na een nieuwe
   // sessie/dag een correcte waarde toont, ook voor verzonden/geaccepteerde calcs.
   _syncCalcTotalToDB(c);
@@ -23140,7 +23244,10 @@ function loadSettings() {
   // instellingen, dan halen we hem hier eenmalig weg, zodat hij niet langer met
   // de app meekomt naar de browser. Gebeurt vanzelf en maar één keer.
   if (data.settings && data.settings.orsKey) { delete data.settings.orsKey; saveData(); _saveSettingsDB(); }
-  { const _e = document.getElementById('setSteigerEmail'); if (_e) _e.value = s.steigerEmail || ''; } // v4.78.0
+  // v4.102.0 — Onderaannemers (steigerEmail bestaat sinds v4.78.0)
+  [['setSteigerNaam', 'steigerNaam'], ['setSteigerEmail', 'steigerEmail'], ['setTimmerNaam', 'timmerNaam'], ['setTimmerEmail', 'timmerEmail'],
+   ['setGlasNaam', 'glasNaam'], ['setGlasEmail', 'glasEmail'], ['setInstallatieNaam', 'installatieNaam'], ['setInstallatieEmail', 'installatieEmail']]
+    .forEach(([id, key]) => { const _e = document.getElementById(id); if (_e) _e.value = s[key] || ''; });
   { const _e = document.getElementById('setVertrekPostcode'); if (_e) _e.value = s.vertrekPostcode || ''; }
   { const _e = document.getElementById('setVertrekHuisnummer'); if (_e) _e.value = s.vertrekHuisnummer || ''; }
   { const _e = document.getElementById('setJaarcapEuro'); if (_e) _e.value = (s.jaarcapaciteitEuro != null) ? s.jaarcapaciteitEuro : 450000; }
