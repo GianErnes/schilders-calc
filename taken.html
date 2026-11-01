@@ -645,7 +645,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.25.0';
+const APP_VERSION = 'v0.25.1';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -920,12 +920,30 @@ async function schakelDagkeuze(id){
    DATABRON: de echte tabel. RLS filtert op de server.
    ──────────────────────────────────────────────────────── */
 async function haalTaken(){
-  const { data, error } = await sb
-    .from('taken')
-    .select('*')
-    .order('gepland_op', { ascending: true, nullsFirst: false });
-  if(error) throw error;
-  return verrijk(data || []);
+  /* v0.25.1: de API geeft per aanroep maximaal 1000 rijen terug (max-rows
+     van PostgREST). Met 1144 rijen in taken vielen de nieuwste 144 weg;
+     alles na een bepaalde datum was onzichtbaar. Daarom in blokken via
+     .range() tot het totaal (count: 'exact' uit de eerste aanroep) binnen
+     is; zo hangt de lus niet af van de precieze waarde van max-rows.
+     Tweede sorteersleutel crmtaskid zodat de blokken elkaar niet
+     overlappen bij gelijke datums. */
+  const BLOK = 1000;
+  const alles = [];
+  let totaal = null;
+  for(let van = 0; totaal === null || alles.length < totaal; van += BLOK){
+    const { data, error, count } = await sb
+      .from('taken')
+      .select('*', { count: 'exact' })
+      .order('gepland_op', { ascending: true, nullsFirst: false })
+      .order('crmtaskid', { ascending: true })
+      .range(van, van + BLOK - 1);
+    if(error) throw error;
+    const blok = data || [];
+    alles.push(...blok);
+    if(typeof count === 'number') totaal = count;
+    if(blok.length === 0) break; /* veiligheidsstop: nooit eindeloos */
+  }
+  return verrijk(alles);
 }
 
 /* ────────────────────────────────────────────────────────

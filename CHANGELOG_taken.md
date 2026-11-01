@@ -6,6 +6,38 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.25.1 — Alle taken laden, ook boven de 1000 rijen, 01-11-2026
+
+**Aanleiding.** Gian 01-11-2026: de nieuwe taak "Roode-Wierda | Vocht
+meten keermuren oprit" verdween na verzetten naar 11 november, en onder
+Later / zonder datum stond niets verder dan morgen. Query op de live
+database: `taken` telt 1144 rijen, waarvan 1007 tot en met morgen 14:00.
+`haalTaken` deed één `select('*')` zonder limiet; de API geeft per
+aanroep maximaal 1000 rijen terug (max-rows van PostgREST, standaard
+1000 — opgezocht, niet in de projectinstellingen gecontroleerd). Door de
+sortering op `gepland_op` vielen precies de nieuwste 144 weg, plus de 14
+zonder datum die achteraan staan. De grens schoof elke dag verder op.
+
+**Gebouwd.** `haalTaken` haalt in blokken van 1000 op met `.range()` en
+vraagt met `count: 'exact'` het totaal mee; de lus loopt tot dat totaal
+binnen is, met een stop op een leeg blok. Tweede sorteersleutel
+`crmtaskid` zodat blokken elkaar bij gelijke datums niet overlappen.
+`APP_VERSION` v0.25.1. Geen SQL, geen Edge Function.
+
+**Niet gewijzigd.** Wat de rubrieken tonen of verbergen. Het laden van
+alle (ook oude voltooide) Yoobi-rijen blijft; bij merkbare traagheid is
+"alleen open plus recent voltooid laden" de volgende stap.
+
+**Opgeruimd in de database (op verzoek Gian).** Drie dubbele
+Roode-Wierda-taken (2× 4 nov, 1× "roode" 2 nov) en twee bijbehorende
+regels in `taak_dagkeuze` verwijderd; de taak van 11 nov blijft.
+
+**Getest.** `node -e` parse-test op beide scriptblokken; lus-test met een
+nepclient (1144 rijen in blokken van 1000 → 1144 unieke rijen). Niet
+getest tegen de echte API — dat is de test in de live app: na deployen
+moeten Roode-Wierda (11 nov) en de overige novembertaken onder Later
+staan en in de Voltooid-rubriek niets ontbreken.
+
 ## v0.25.0 — Taken standaard open, alleen deze week in beeld, 20-10-2026
 
 **Taken start open** (`open:true` in `RUBRIEKEN`; was dicht sinds
