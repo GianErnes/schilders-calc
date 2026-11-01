@@ -1,3 +1,31 @@
+## v4.104.0 — Eerdere offerteversies bewaard en inzichtelijk (2026-11-01)
+
+Gebouwd op v4.102.1. Vervangt de nooit-geïnstalleerde v4.103.0 (30-10); beide stappen zijn hier samengevoegd.
+
+**Aanleiding**
+- Gian 30-10-2026, na de vraag van mevrouw Willems over offerte 260139 V3: "Wat ik mis is dat ik nergens in de calculatie eerdere versies kan inzien." Gelezen in index.html: `accordLinkBeheer` haalde met `limit(1)` alleen de nieuwste regel uit `offerte_accorderingen`; `_accordNieuweLink` wiste bij een nieuwe link alle oude regels met status `open` van dezelfde calculatie, dus onbeantwoorde versies verdwenen. Bij Willems stond daardoor alleen V3 nog in de database (query 31-10); V1 en V2 zijn niet terug te halen (PDF heet `token.pdf`, zonder calculatie-id).
+
+**Vooraf gecontroleerd (zelf opgehaald via de Supabase-koppeling, 31-10)**
+- `offerte-accord`: POST weigert elke reactie op een regel met status ≠ open (409); GET geeft bij een onbekende status geen document en `afwijzen_mogelijk: false`. Ongewijzigd.
+- `offerte-herinnering` v24: selecteert `.eq("status","open")`; een vervangen regel valt buiten de nachtelijke opvolging. Ongewijzigd.
+- Constraint `offerte_accorderingen_status_check` liet alleen open/akkoord/afgekeurd toe → SQL nodig.
+- Bak `accord-pdf` staat op privé (`storage.buckets.public = false`) → geen publieke links, download via de ingelogde SDK.
+
+**Gebouwd**
+- SQL `accord_04_vervangen.sql`: constraint opnieuw met `vervangen` erbij. Gedraaid en geverifieerd op 31-10.
+- `_accordEerdereLaden(calcId, huidigId)`: laadt alle offerte-regels van de calculatie (zonder planlinks, zonder de kolom `snapshot`; alleen `snapshot->>pdf` en `snapshot->>offertenummer`), gecachet in `_accordEerdereCache` per calculatie. Mislukt de query, dan ontbreekt alleen het lijstje.
+- `_accordEerdereHtml(c)` + `_accordEerdereWire(body, c)`: blok **Eerdere versies** onderaan `_accordBeheerRender`, onder Nieuwe link maken. Per oudere regel offertenummer/V (of "zonder nummer"), datum, bedrag, status in woorden (geaccordeerd/afgewezen door … op …, vervangen door een nieuwere versie zonder reactie, zonder reactie) en knop ⬇️ PDF: `storage.download(pdf_path)` + `_pdfBytesDownload`, bestandsnaam `<offertenummer> - <calcnaam>.pdf`. Regels zonder `pdf_path` (vóór v3.79.0) tonen "geen PDF bewaard".
+- `_accordNieuweLink`: `delete` van oude open offerteregels vervangen door `update { status: 'vervangen' }`. Mislukt die update, dan wordt de nieuwe link niet aangemaakt (anders twee open links naast elkaar). Planlinks (`_ohpAccordNieuweLink`) ongewijzigd.
+- Klantpagina: nieuwe `_accordRenderVervangen` bij status `vervangen`: kopregel "Offerte vervangen", rode banner, uitleg met mailto info@ernes.nl, geen knoppen (de Edge Function weigert ook een vraag). Voorheen toonde de pagina bij een onbekende status wél Akkoord/Afwijzen, die op 409 stukliepen.
+- Vijf versieankers bijgewerkt. Geen Edge Function gewijzigd, geen SYSTEEM.md-wijziging.
+
+**Niet gewijzigd (bewust)**
+- Vragen op een inmiddels vervangen regel blijven op het dashboard onder Reacties op offertes staan tot Gezien: ze zijn echt gesteld.
+
+**Getest**
+- `node --check` op het inline scriptblok: groen. Rooktest in Node met nepgegevens: lijst met vervangen en geaccordeerde regel, PDF-knop (download-route, bestandsnaam, knop weer vrij), vervangen-pagina zonder knoppen, lege lijst bij andere calculatie. Constraint in de database geverifieerd. Patch van 30/31-10 op v4.102.1 toegepast: alleen de drie versieankers moesten handmatig; de v4.102.1-fix (dashboard houtrotmelding) is intact.
+- Niet getest in de browser. Testscript: (1) calculatie Willems → Accordeerlink → Nieuwe link maken; (2) lijstje moet "260139 V3 … vervangen" tonen en de PDF-knop een bestand geven; (3) de oude V3-link uit de mail in een privévenster: "Offerte vervangen" zonder knoppen.
+
 ## v4.102.1 — Melding van een houtrotopgave opende een verkeerd venster (2026-11-01)
 
 **Aanleiding**
