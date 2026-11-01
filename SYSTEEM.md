@@ -1350,13 +1350,13 @@ maandag meegestuurd als bijlage.
 | Onderdeel | Ligt er | Uitvoerbaar |
 |---|---|---|
 | 39 tabellen | `schema_dump()` | ja |
-| 54 policies op `public` | `schema_dump()` | ja |
-| **17 policies op `storage.objects`** | `schema_dump()` | ja |
+| 86 policies op `public` | `schema_dump()` | ja |
+| **21 policies op `storage.objects`** | `schema_dump()` | ja |
 | 29 indexen | `schema_dump()` | ja |
 | 17 databasefuncties | `schema_dump()` | ja |
 | 13 triggers | `schema_dump()` | ja |
 | rechten en rijbeveiliging | `schema_dump()` | ja |
-| 7 opslagbakken | `schema_dump()` | ja |
+| 8 opslagbakken | `schema_dump()` | ja |
 | 25 verwijssleutels | `schema_dump()` | ja, onderaan als `ALTER TABLE` |
 | 1 reeks (`taak_dagkeuze_id_seq`) | `schema_dump()` | ja, plus `setval` |
 | 9 cronjobs | `schema_dump()` en 3.1 | ja, adres handmatig aanpassen |
@@ -1368,7 +1368,11 @@ maandag meegestuurd als bijlage.
 > 53 op `public` plus 16 op `storage.objects`. Sinds 2 augustus 2026 zijn
 > het er 52 plus 16, samen 68: opruimpunt 17 haalde een dubbele weg. Sinds
 > 22 augustus 2026 zijn het er 54 plus 17, samen 71, door de twee tabellen
-> en de bak van de opleverapp. Op 30 juli 2026 werd een
+> en de bak van de opleverapp. Op 1 november 2026 gemeten met
+> `sql/audit_query_periodiek.sql`: 86 op `public` (68 tabellen met policy,
+> plus `sync_state` zonder) plus 21 op `storage.objects`, samen 107, en 8
+> bakken, alle besloten. Gelijk aan de telling van de hersteltest in 4.9.
+> Op 30 juli 2026 werd een
 > telling over alleen `public` bijna aangezien voor volledig, waarna de
 > zestien opslagregels stilzwijgend uit het herbouwbestand waren gevallen.
 > Gevolg zou zijn geweest: na een herbouw staan de zes bakken er wel, maar
