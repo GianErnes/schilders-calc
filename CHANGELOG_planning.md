@@ -2,6 +2,47 @@
 
 > **Handleiding meebewegen.** Sinds v0.23.0 staat er een handleiding in planning.html (knop *Handleiding* in de kop, 16 secties). Wie een functie wijzigt, past in dezelfde wijziging de bijbehorende alinea in de handleiding aan en de *Sinds*-regel eronder. Een handleiding die achterloopt is erger dan geen: iemand handelt ernaar.
 
+## v0.25.0 — Afgehandelde nabeltaak met melding zichtbaar bij de kennisgeving; Gian mailt zichzelf niet meer, 27-10-2026
+
+**Aanleiding.** Gian 27-10-2026: "ik zie die nabeltaken niet bij Maud staan." Query op `taken` (Gian): sinds 14 oktober zeven nabeltaken aangemaakt, alle bij maud, cron dagelijks `succeeded` — en alle zeven al voltooid, zes door gian (in blokken van seconden op 19 en 23 oktober), één vanzelf. Gian: "met die klanten is via de mail contact geweest en heb ik daarom gesloten. Misschien moet ik dat ergens bij kunnen zetten?" Dat kan al: taken.html v0.16.0 heeft het vak *Iets te melden?* bij het afvinken (`afvink_melding`), maar (a) het stond nergens in de planning terug, en (b) de trigger `trg_taak_melding_signaal` mailt elke melding naar Gian — dus ook zijn eigen. Besluiten (ask_user_input, na uitleg): melding tonen in planning.html én trigger overslaan voor gian.
+
+**Wijziging.**
+1. **SQL `planning_09_afvinkmelding_gian.sql`** (project-guard, idempotent): `public.taak_melding_signaal` krijgt één voorwaarde erbij — `voltooid_door = 'gian'` (hoofdletterongevoelig) → geen `net.http_post`, verder letterlijk de functie van 3 augustus (opgehaald door Gian met `pg_get_functiondef`). Trigger ongewijzigd. Vier controleregels.
+2. **planning.html** — laadronde leest `taken` (bron planning, `voltooid_op` én `voltooid_door` gevuld; de kolommen crmtaskid, bron_kenmerk, voltooid_op, voltooid_door, afvink_melding) in `nabelAfgehandeld[bron_kenmerk]`. Nieuw `nabelTaakVan(rij, totIso)`: de nieuwste handmatig afgevinkte nabel-/bouncetaak van deze verzending (kenmerk met en zonder fase-suffix, zoals `kennisSluitTaak`; afgevinkt ná de verzending en, in de historie, vóór de volgende verzending van dezelfde soort+fase). `nabelTaakTekst(t)`: " · nabeltaak afgehandeld 19 okt 2026 door gian: “melding”" (bouncetaak bij `bounce-…`; melding cursief, ge-escaped, max 200 tekens; zonder melding geen dubbele punt). Getoond in het paneel achter de status en op de historiekaart.
+3. **`kennisStatus`**: een handmatig afgevinkte taak heft het nabel- en bouncesignaal op (`afgehandeld` in de uitkomst). Dat is wat de ochtendronde al deed (v0.19.0: een afgevinkte nabel-/bouncetaak komt niet terug); het bord liet tot nu toe wél het oranje label en de teller staan. Nu kloppen label, teller en paneel met de taken-app.
+4. Handleiding sectie 11: alinea *Status* uitgebreid (afvinken met melding, wat je dan ziet, Gian mailt zichzelf niet), trefwoorden en *Sinds*-regel bijgewerkt. CSS: één regel `.melding`.
+
+**Niet gewijzigd.** taken.html (het vak bestond al; de placeholder "Wat je hier typt gaat naar Gian" klopt voor Gian zelf nu niet meer — bewust gelaten, klein), Edge Functions, `plan_kennisgevingen`. De planning-app zet bij `kennisSluitTaak` nog steeds geen `voltooid_door`; die taken tellen dus niet als "afgehandeld" en tonen geen regel — correct, want er is dan niets gemeld.
+
+**Aannames.** (a) De ingelogde gebruiker mag `taken` lezen via RLS — afgeleid uit taken.html (zelfde login) en `kennisSluitTaak` (update werkt sinds v0.18.0). Faalt het lezen, dan `console.warn` en alles werkt als v0.24.0. (b) `voltooid_door` bevat de korte persoonsnaam (`gian`, `maud`), zoals taken.html schrijft (`IK.persoon`) en de query van 27-10 toont.
+
+**Getest.** SQL op lokale Postgres 16 met nagebootste `taken`, `vault.decrypted_secrets` en `net.http_post` (logtabel): nulmeting (oude functie mailt ook voor gian), daarna gian insert → geen mail, maud insert → mail, update naar afgevinkt door `Gian` (hoofdletter) → geen mail, door max → mail, maud zonder melding → geen mail, melding van gian wél opgeslagen, tweede run idempotent, guard stopt in een leeg project. planning.html: `node --check` schoon; div 143/143, section 25/25 gelijk aan live v0.24.0; CSS 269/269 (+1). 17 jsdom-controles met de echte functies uit het bestand: geen taak → niets; taak na verzending gevonden, tekst met ge-escapete melding; taak van vóór de verzending telt niet; tot-grens; fase met en zonder suffix, nieuwste wint; zonder melding geen dubbele punt; bouncetaak; historiekaart oude vs nieuwe rij; overgeslagen → niets; 200-tekens-kap; kennisStatus-regel, laadronde en versieankers aanwezig. **Niet getest:** in de browser tegen de echte `taken` (RLS-aanname a), de weergave op iPad/iPhone. **Eerste echte test (Gian):** SQL draaien (vier GOED) → planning herladen → bij Durlinger/Bex staat "nabeltaak afgehandeld … door gian" zonder melding (de bestaande taken hadden er geen) en geen oranje "✉ nabellen" meer → een nieuwe nabeltaak afvinken mét melding → geen mail, tekst zichtbaar in paneel en historie. En Maud laat één gewone taak afvinken met melding: die mail moet wél komen.
+
+## planning-kennisgeving v3.2 — Tekst van het bevestigingsblok, 27-10-2026 (geen planning.html-wijziging)
+
+**Aanleiding.** Gian 27-10-2026 (schermafbeelding weekmail Beekman): "er wordt weinig op deze knop geklikt". Eerst gemeten (query Gian op `plan_kennisgevingen`, verzonden sinds 09-10-2026): maand 9/12, dag 16/26, week 3/9 bevestigd; alles afgeleverd (47/47). Totaal 60%; alleen de weekmail scoort laag, op een kleine basis. Besluiten (ask_user_input): geen pijl, geen open-tracking; wel een tekst die zegt waarom de klik telt en wat er zonder klik gebeurt — en die waar is (de nabeltaak na 3 werkdagen bestaat echt; "zonder klik plannen wij niet verder" is bewust niet opgeschreven, want dat klopt niet). Variant C, voor alle drie de soorten.
+
+**Wijziging (alleen Edge Function `planning-kennisgeving` v3.1 → v3.2, besloten repo).**
+- Kop van het blok: "Bevestigt u deze planning?" (was "Heeft u dit bericht ontvangen?").
+- Uitleg: "Met één klik weten wij dat [de maand / de week / de startdag] bij u bekend is en de toegang geregeld wordt. Horen wij niets, dan bellen wij u binnen enkele werkdagen na." Nieuw `periodeWoord(soort)` en `bevestigUitleg(soort)`; `bevestigBlokHtml`, `bevestigBlokTekst` en `tekstNaarHtml` krijgen `soort` mee (optioneel; terugval "de planning"). Tekstversie: zelfde uitleg, link op een eigen regel.
+- Knoptekst "Ja, ik heb dit ontvangen", token, link naar bevestig.html, volgorde token → mail → rij, vastleggen: ongewijzigd. Deploy met Verify JWT AAN (zoals v3.1).
+
+**Niet gewijzigd.** planning.html (noemt alleen de knoptekst, regels 482/635/3029 — klopt nog), bevestig.html, SQL, `planning-kennisgeving-taken`, `-bevestig`, `-status`. Al verstuurde mails houden de oude tekst.
+
+**Getest.** Deno 2.9.6 lokaal, 6 tests groen (`planning-kennisgeving_v3.2_index_test.ts`): periodeWoord per soort + terugval + hoofdletters; html-blok kop/uitleg/knoptekst/link-escaping, oude kop weg; tekstversie; tekstNaarHtml geeft soort door en knipt de groet één keer; volledige `verwerk` met nep-fetch: soortwoord in html én text, token in mail = token in rij, 200; 401 zonder JWT en 400 bij foute soort. `deno check index.ts` schoon. Het oorspronkelijke testbestand van v3.1 is in deze sessie niet gezien; de tests hierboven zijn nieuw geschreven en dekken ook het v3-gedrag (token/volgorde/401/400).
+
+**Niet getest.** In het echt. Controle na deploy (Gian): één kennisgeving (bij voorkeur week) aan een eigen adres; in de mail staat "Bevestigt u deze planning?" met "de week"; knop → bevestig.html → "Bedankt"; `bevestigd_op` gevuld. Meetmoment: over ±4 weken dezelfde query opnieuw draaien en vergelijken met 9/12 · 16/26 · 3/9.
+
+## v0.24.0 — Planbaar budget: −10% voor indirecte uren vanaf 30 uur, 26-10-2026 (reconstructie)
+
+**Let op.** Deze entry is op 27-10-2026 geschreven uit de diff tussen projectknowledge v0.23.0 en live v0.24.0 (raw.githubusercontent.com); de live CHANGELOG stopte bij v0.23.0. Gian controleert of het besluit zo klopt.
+
+**Aanleiding (uit de code-commentaar).** Besluit Gian 26-10-2026: net als de werkbon in de calculatie-app (10% aftrek indirecte uren, instelling `indirecteUrenAftrek`) houdt het bord een deel van het Yoobi-budget apart voor laden, overleg, opruimen — alleen bij een budget van 30 uur of meer; een klein werk heeft die ruimte niet.
+
+**Wijziging (alleen planning.html).** Constanten `PLAN_AFTREK_PCT = 10` en `PLAN_AFTREK_VANAF = 30`; `planbaarBudget(budget)`; `budgetCelHtml(budget)` toont onder *Budget* in klein "planbaar … u (−10%)" als de aftrek geldt. *Nog te plannen* = planbaar budget − ingepland (twee plekken); *Nog te werken* blijft op het volle budget (in Yoobi worden de volle uren geboekt). Voetnoot in het paneel en handleiding sectie 2 (alinea *Planbaar budget*, trefwoorden, *Sinds*) bijgewerkt.
+
+**Getest.** Onbekend — niet in deze sessie gedaan.
+
 ## v0.23.0 — Handleiding in de app: knop in de kop, 16 secties, zoekveld, 26-10-2026
 
 **Aanleiding.** Gian 26-10-2026 vroeg hoe de agenda-volgorde ook alweer werkte; het antwoord uit de projectknowledge (v0.18.0) was achterhaald, want live stond v0.22.1 met nummerknoppen. Vraag: "Moeten we niet een handleiding in de planning zetten voor het geval jij niet bereikbaar bent?" Besluiten (ask_user_input): vaste tekst in de app, niet via de Vraagbaak (die hangt aan de Anthropic-API en kent alleen de calculatie-app); voor Max, Maud én Gian zelf (met waarom en valkuilen); een knop bovenin; met zoekveld.
