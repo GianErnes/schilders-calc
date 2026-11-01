@@ -1,5 +1,13 @@
 # Changelog — financieel.html
 
+## v1.2.0 — 18-09-2026
+- Jaarfilter boven het blok Werkvoorraad: knoppen "Dit jaar (2026)", "Volgend jaar (2027)", "2026 + 2027" (standaard) en "Alles". Het filter kijkt naar de startdatum van het Yoobi-project (`wvSelecteer`, `wvJaren`); de drie totalen (aanneemsom, nog te maken uren, aantal projecten) rekenen voortaan over de gefilterde set (`wvTotalen`) in plaats van de totalen uit de sync over te nemen.
+- Nieuwe kolom Start naast Eind in de projecttabel; sortering blijft op einddatum.
+- Projecten zonder startdatum in Yoobi staan apart onder de hoofdtabel, met kop "Zonder startdatum in Yoobi (n) · aanneemsom · uren — niet in de totalen hierboven". Geen projecten in de gekozen periode: melding "Geen projecten met een startdatum in deze periode."
+- De stand uit `fin_werkvoorraad` wordt één keer geladen (`WV_STAND`) en in de browser gefilterd (`toonWerkvoorraad`), zodat een knopdruk geen nieuwe query kost. Yoobi-datums zijn dd-mm-jjjj, gelezen met de bestaande `wvDatum`.
+- Geen wijziging aan Edge Function of database.
+- Deze entry is op 01-11-2026 achteraf opgebouwd uit het verschil tussen de commits van 16-09-2026 (v1.1.2) en 18-09-2026 (1.2.0) op GitHub; een eerdere reconstructie van 03-10-2026 is nooit in de repo beland. Wat er destijds getest is, is niet vastgelegd.
+
 ## v1.1.2 — 16-09-2026
 - Eigen icoon op het iPhone-beginscherm: `apple-touch-icon` naar het nieuwe `apple-touch-icon-financieel.png` (Ernes-logo met paarse band "Financieel", 180×180). Icoon dat er al staat: verwijderen en opnieuw toevoegen. Verder alleen het versienummer. Getest: JS-parse (node), tagbalans. Niet getest: iPhone.
 

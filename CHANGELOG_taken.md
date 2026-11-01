@@ -6,6 +6,47 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.25.0 — Taken standaard open, alleen deze week in beeld, 20-10-2026
+
+**Taken start open** (`open:true` in `RUBRIEKEN`; was dicht sinds
+v0.22.0).
+
+**Alles na deze week dichtgeklapt.** In Taken staan standaard alleen de
+kaarten met een rode arcering: achterstand plus wat tot en met komende
+zondag gepland staat. Later en zonder datum zijn weg uit de lijst en
+tellen niet mee in de kop "x te laat · y vandaag · z komt nog". Onderaan
+de regel "n later of zonder datum dichtgeklapt · tonen" (`data-later`,
+toestand `TOON_LATER`); open geworden zegt hij "Later en zonder datum
+staan erbij · verbergen". De grens van de lichte arcering uit v0.24.0 is
+daarmee verschoven van vandaag+7 naar het eind van de huidige week (t/m
+zondag, `totZondag` in `verrijk`).
+
+**Herhalers-regel ondergeschikt.** De regel "n herhalers verder dan een
+week weg verborgen · tonen" (v0.23.0) staat er alleen nog als het
+later-blok open staat; dicht zitten die herhalers daar toch al in.
+
+Getest: niet vastgelegd; deze entry is op 01-11-2026 achteraf opgebouwd
+uit het verschil tussen de commits van 20-10-2026 21:09 (v0.24.0) en
+21:17 (v0.25.0) op GitHub. Wat er destijds getest is staat nergens.
+
+## v0.24.0 — Rode arcering in Taken, 20-10-2026
+
+**Urgentie per kaart.** In de rubriek Taken (en alleen daar) kleurt een
+open taak met datum rood: donkerder bij achterstand (`urg-laat`, datum
+vóór vandaag), lichter voor vandaag tot en met vandaag+7 (`urg-week`).
+Zonder datum, voltooid of vervallen: geen kleur. Berekend als kale dagen
+(`_urgentie` in `verrijk`), zomertijd telt niet mee.
+
+**Scheidingslijn.** Tussen het rode blok en de rest een dunne lijn met de
+tekst "later / zonder datum" (`.scheiding`), alleen als beide blokken
+iets bevatten. De sortering (oudste datum bovenaan, zonder datum
+onderaan) zet het rode blok al vanzelf boven; in Taken wordt daardoor
+geen kaart meer als "Nu"-hero getekend.
+
+Getest: niet vastgelegd; entry op 01-11-2026 achteraf opgebouwd uit het
+verschil tussen de commits van 27-09-2026 22:51 (v0.23.0) en 20-10-2026
+21:09 (v0.24.0) op GitHub.
+
 ## v0.23.0 — Herhalend opgegaan in Taken, 27-09-2026
 
 **Rubriek Herhalend vervalt.** Alles wat open is en niet in Actueel staat,
