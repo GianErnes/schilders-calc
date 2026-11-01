@@ -1,3 +1,23 @@
+## v4.102.1 — Melding van een houtrotopgave opende een verkeerd venster (2026-11-01)
+
+**Aanleiding**
+- Gian 01-11-2026, schermafbeelding: de melding "(naamloos) — Afgewezen door Roel Durlinger" opende bij Openen het Accordeerlink-venster van Bierman | Binnenwerk. Het gaat om een opgave uit de opleverapp. Wens: geen onzinvenster van ander werk bij een klik op een melding van een andere klant.
+
+**Oorzaak (gemeten)**
+- `oplevering.html` schrijft een opgave-link in `offerte_accorderingen` met `oplevering_id` gevuld en `calculatie_id: null` (regel 1347).
+- `_accordMeldingenRender` selecteerde `oplevering_id` niet en kende alleen calculaties en plannen: geen naam, dus "(naamloos)".
+- `accordMeldingOpen(null)`: `openCalc(null)` stopt stil (geen calc gevonden), waarna `accordLinkBeheer()` het venster van de toevallig actieve calculatie opende.
+
+**Gewijzigd**
+- Select haalt nu ook `oplevering_id` en, uit het bevroren snapshot van dezelfde rij, `snapshot->>projectnaam` en `snapshot->>aanhef` (aliassen `opgave_project`, `opgave_klant`). Geen extra query en geen afhankelijkheid van RLS op `opleveringen`.
+- Melding: "Houtrotopgave <project>" · klant, oranje pil **opgave** naast de grijze pil **plan**.
+- Knop: bij een opgave geen Openen maar een link **Opleverapp** (`oplevering.html`, nieuw tabblad). Die app kent nog geen diep-link naar één opgave; dat is bewust niet gebouwd (Gian: niet nodig).
+- `accordMeldingOpen`: stopt met een toast als er geen calculatie bij de melding hoort, en opent `accordLinkBeheer` alleen als `openCalc` de bedoelde calculatie ook echt actief heeft gemaakt.
+
+**Getest**
+- node --check op alle inline scriptblokken, div-balans, scripttagbalans, vijf versieankers; jsdom-test op `_accordMeldingenRender` met een nep-Supabase: opgave-rij toont naam, klant en pil, geen Openen-knop; calc-rij ongewijzigd; `accordMeldingOpen(null)` roept `accordLinkBeheer` niet aan.
+- **Niet getest in de echte omgeving:** de arrow-notatie `snapshot->>projectnaam` in `select()` tegen de live PostgREST (opgezocht in de Supabase-documentatie, niet live gedraaid). Faalt die, dan geeft de query een fout en toont het dashboard geen blok (bestaand gedrag bij een fout). Controle: na upload moet het blok met Durlinger de naam van de opgave tonen.
+
 ## v4.102.0 — Aanvraag onderaannemer: ook timmerman, glaszetter en installateur (2026-10-29)
 
 **Aanleiding**
