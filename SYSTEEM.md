@@ -149,7 +149,11 @@ Alleen in schilders-calc.
 | `oplever-fotos` | nee | foto's bij de opleverpunten, leeg bij aanleg |
 | `backups` | nee | nachtelijke dumps, 156 bestanden |
 
-`accord-pdf` staat openbaar omdat de klant er met een link bij moet
+`accord-pdf` staat openbaar omdat de klant er met een link bij moet.
+**[TE CONTROLEREN sinds 1 november 2026]** Het herbouwbestand van die dag
+toont voor deze bak `public = false`. Of de klantlinks met getekende
+URL's werken of de bak ooit stilletjes dicht is gezet, is niet
+uitgezocht.
 kunnen. Of die bestandsnamen te raden zijn is **[TE CONTROLEREN]**. Zijn
 het lange willekeurige codes, dan is het veilig. Staan er klantnamen in,
 dan liggen getekende offertes met bedragen open op internet voor wie het
@@ -1176,8 +1180,11 @@ bestandsbakken (`accord-pdf` voorop) naar `bestanden/` in dezelfde bak.
 
 **Waar de kopie buiten Supabase staat.** In de Google Drive van
 `administratie@ernes.nl`, map **Backups Schilders Calc**, sinds
-15 september 2026. Elke dag komt er een JSON van 15+ MB en een SQL van
-ongeveer 60 kB bij; na 60 dagen gaan ze naar de prullenbak van Drive
+15 september 2026. Elke dag komt er een JSON van ruim 30 MB en een SQL
+van ongeveer 265 kB bij (gemeten 1 november 2026: 31,3 MB en 264 kB; in
+september was dat nog 15 MB en 60 kB, de groei zit in de `yoobi_*`-
+tabellen en de releases sindsdien); na 60 dagen gaan ze naar de
+prullenbak van Drive
 (Google leegt die zelf na 30 dagen). Reken op ongeveer 1 GB aan
 Drive-ruimte. De maandagmail meldt of de kopie van die nacht gelukt is en
 geeft een link; mislukt de kopie op welke nacht dan ook, dan komt er
@@ -1240,9 +1247,11 @@ Verwacht: status 200 en `"stap":"klaar"` met een link. Dit is op
 zonder `?drive=test` start een echte nachtelijke run (met `?mail=1` ook
 de weekmail); dat heeft dan wel een minuut nodig.
 
-**4. Hij is nog nooit teruggezet.** Of het JSON-bestand samen met het
-schemabestand werkelijk bruikbaar is om mee te herstellen weet niemand.
-Dat is nog altijd de belangrijkste openstaande vraag van dit document.
+**4. Hij is op 1 november 2026 voor het eerst teruggezet, en het werkt.**
+JSON plus schemabestand in een leeg project geven alle zes apps werkend
+terug. De procedure, de bevindingen en wat er nog niet gedekt is staan
+in 4.9. Tot die dag was dit de belangrijkste openstaande vraag van dit
+document.
 
 ### 4.8 Herbouwen vanaf nul
 
@@ -1273,7 +1282,8 @@ Supabase houdt op te bestaan.
 | **De zestien functies uitrollen** | n.v.t. | **uren klikwerk** |
 | De negen cronjobs | ja, hoofdstuk 3.1 | half uur |
 | De geheimen | ja, de kluis | half uur |
-| De zes inlogaccounts | nee | half uur, zie waarschuwing |
+| De zes inlogaccounts, `administratie@ernes.nl` als eerste | nee | half uur, zie waarschuwing en 4.9 |
+| **Adres in `taak_melding_signaal`** (databasefunctie) | — | vijf minuten, wordt óók vergeten, zie 4.9 |
 | Opslagbakken en hun rechten | ja, zitten in de schemadump | minuten |
 | **De bestanden zelf** | deels, `accord-pdf` niet | zie de noot hieronder |
 | **Adres en sleutels in de apps** | — | **half uur, wordt altijd vergeten** |
@@ -1433,13 +1443,20 @@ vorige nodig.
    over het archief, lees dan wat er staat voordat je `JA` kiest. Zie 2.1
 6. Cronjobs opnieuw aanmaken volgens hoofdstuk 3.1
 7. Opslagbakken aanmaken, met de goede openbaar-instelling per bak
-8. Data terugzetten uit de JSON
+8. Data terugzetten uit de JSON met `herstel.html`, zie 4.9
 9. Bestanden terugzetten voor zover die er zijn
-10. De zes inlogaccounts aanmaken
-11. **In `taken_rollen` de kolom `user_id` bijwerken met de nieuwe id's.**
-    Sla je dit over, dan ziet niemand één taak en lijkt alles stuk
-12. **Adres en sleutels aanpassen in alle vier de HTML-bestanden**
-13. Aanmelden testen, een calculatie openen, een taak afvinken
+10. De zes inlogaccounts aanmaken, **`administratie@ernes.nl` als eerste**:
+    de Calculatie-app laat alleen dat adres binnen (accountpoort in
+    `index.html`, v4.64.0) en de onderhoudsplannen hangen eraan
+11. **In `taken_rollen` de kolom `user_id` bijwerken met de nieuwe id's,
+    en `onderhoudsplannen`, `onderhoudsplan_beurten` en
+    `onderhoudsplan_externe_posten` op het id van administratie zetten;
+    `push_subscriptions` leegmaken.** Sla je dit over, dan ziet niemand
+    één taak of plan en lijkt alles stuk
+12. **Adres en sleutels aanpassen in alle zes de HTML-bestanden, én het
+    adres in de databasefunctie `taak_melding_signaal`**
+13. Aanmelden testen, in elke app, met het account dat er in live ook
+    voor gebruikt wordt; een calculatie openen, een taak afvinken
 
 **De herbouwset staat in `sql/`**, behalve het deel met de extensies,
 rechten, functies, triggers, indexen, policies, bakken en cronjobs. Dat
@@ -1465,6 +1482,119 @@ ramp 3 heb je alsnog de herbouwmap nodig.
 **Advies: eerst de herbouwmap.** Die dekt alle drie de rampen en kost geen
 abonnement. Een warm reserveproject is een luxe die je later kunt
 overwegen als een dag stilstand te veel blijkt.
+
+**Stand 1 november 2026:** de herbouwmap is er en is geoefend (4.9), en
+het tweede project bestaat sinds die dag ook: `schilders-calc-hersteltest`
+(`xcrhzxeqdlbtwpmiagwk`, eu-west-1, $10 per maand). Het is nu een
+oefenplek met een momentopname van 1 november. Een warme reserve wordt
+het pas als de verse JSON er elke nacht automatisch in geladen wordt;
+dat is nog niet gebouwd (besluit Gian 1 november: wel gewenst, nog niet
+ontworpen). Let daarbij op: de cronjobs en triggers van een reserve
+mogen nooit naar buiten mailen of naar live wijzen.
+
+### 4.9 Herstel met de eigen backup, geoefend op 1 november 2026
+
+**Wat er is bewezen.** De Drive-JSON van 1 november (31,3 MB, 69 tabellen,
+18.618 rijen) plus het herbouwbestand van `schema_dump()` zijn in een
+nieuw, leeg Supabase-project (`schilders-calc-hersteltest`,
+`xcrhzxeqdlbtwpmiagwk`, Postgres 17.11) teruggezet. Daarna werkten alle
+zes apps (Calculatie, Taken, Planning, Klanten, Financieel, Personeel)
+op lokale kopieën van de HTML-bestanden met het nieuwe adres en de
+nieuwe sleutel. Structuur en rijtelling zijn tegen live gelegd: 69
+tabellen, 793 kolommen, 2 views, 46 functies, 57 triggers, 126
+beperkingen, 46 verwijssleutels, 154 indexen, 86 policies, 21
+bakpolicies, 8 bakken, allemaal gelijk; de 19 rijen verschil waren
+rijen die op 1 november na 02:00 in live zijn bijgekomen. Alle 46
+verwijssleutels gingen er zonder fout op, dus de dump is ook
+referentieel compleet. Doorlooptijd van de hele oefening, inclusief
+het bouwen van het gereedschap: een middag; met het gereedschap in de
+hand is het ongeveer een uur, de Edge Functions en de cronjobs niet
+meegerekend.
+
+**Het gereedschap.**
+
+- `schema_dump()` v2 (live sinds 1 november): met views, met
+  `set check_function_bodies = off` vóór de functies, kop zegt "vier
+  tabellen aan auth.users". Het bestand van elke nacht is dus bruikbaar.
+- `herstel.html` in de repo: één bestand dat je lokaal opent. Kies de
+  backup-JSON, vul het adres en de **service-sleutel** van het doelproject
+  in, klik eerst "Alleen vergelijken", dan "Laden". Stuurt per tabel in
+  porties naar de databasefunctie hieronder en toont per tabel
+  aangeboden/ingevoegd/na, groen of rood.
+- `herstel_laad_tabel(tabel, rijen)` en `herstel_tel()` in de database
+  (live sinds 1 november, dus ook in elk herbouwbestand). Alleen
+  aanroepbaar met de service-sleutel. Zetten per tabel de triggers uit,
+  voegen de rijen in met `jsonb_populate_recordset`, zetten de triggers
+  weer aan. Dubbele rijen worden overgeslagen, dus opnieuw draaien kan.
+
+**De procedure, in de volgorde die werkt.** Wijk niet af van de volgorde:
+de verwijssleutels staan onderaan het herbouwbestand opdat de
+tabelvolgorde bij het laden niet uitmaakt, en de triggers moeten uit
+staan tijdens het laden (zie "waarom" hieronder).
+
+1. Nieuw project aanmaken, zelfde regio (eu-west-1).
+2. Het herbouwbestand (`schema-JJJJ-MM-DD.sql` uit Drive) in de SQL
+   Editor van het nieuwe project plakken, **maar in drie delen**:
+   A. alles tot aan het blok CRONJOBS; B. het blok VERWIJSSLEUTELS; C. de
+   `setval`-regels onderaan. Draai nu alleen A. Het blok CRONJOBS sla je
+   over tot de Edge Functions er staan en de adressen zijn omgezet
+   (waarschuwing 2 in de kop van het bestand). De controle vooraf breekt
+   af als het project niet leeg is; dat is de bedoeling.
+3. `herstel.html` openen, backup-JSON laden, controleren dat elke tabel
+   "klopt" zegt.
+4. Deel B draaien, op de vier sleutels naar `auth.users` na (die falen
+   zolang er geen accounts zijn); daarna deel C.
+5. Inlogaccounts aanmaken, **`administratie@ernes.nl` als eerste** (zie
+   4.8 stap 10 en 11), daarna de vier sleutels naar `auth.users`.
+6. Edge Functions uitrollen, secrets, cronjobs, adressen (4.8 stap 4 tot
+   en met 7 en 12), en dan pas het blok CRONJOBS uit het herbouwbestand,
+   met de adressen omgezet.
+7. Bestanden terugzetten uit de bak `backups` van het oude project, als
+   die nog bestaat.
+8. Testen in elke app met het account dat er in live ook voor wordt
+   gebruikt.
+
+**Waarom de triggers uit moeten.** Er staan 41 triggers op insert of
+update. `calculaties.trg_offerte_taken` maakt taken aan, en
+`trg_taak_spiegel`, `trg_todo_spiegel`, `trg_todo_taken` en
+`trg_taken_todo_terug` spiegelen taken en todo's over en weer. Laad je
+met die triggers aan, dan krijg je elke taak dubbel. De 25
+`set_updated_at`-triggers zouden bovendien alle `updated_at`-datums op
+het herstelmoment zetten. `herstel_laad_tabel` regelt dit zelf.
+
+**Bevindingen van 1 november, verwerkt in dit document.**
+
+- De Calculatie-app laat alleen `administratie@ernes.nl` binnen
+  (accountpoort `TOEGESTANE_ACCOUNTS` in `index.html`, v4.64.0) en de
+  onderhoudsplannen hangen aan dat account. Stond nergens; nu in 4.8.
+- Vier tabellen hangen aan `auth.users`, niet drie: `push_subscriptions`
+  was vergeten. Die tabel mag bij een herbouw leeg.
+- `taak_melding_signaal` heeft het live adres in zijn code. Na een
+  herbouw aanpassen, anders roept elke afgevinkte taak het oude project
+  aan. Nu in 4.8.
+- Het herbouwbestand miste de twee views (`pers_verzuim_dagen`,
+  `prullenbak_overzicht`). Gerepareerd in `schema_dump()` v2.
+- De rechten in het herbouwbestand komen neer op: alles aan
+  `authenticated` en `service_role`, niets aan `anon`,
+  `kleur_analyse_log` alleen-lezen voor `authenticated`. Het blok van 1129
+  regels klopt, maar dit is wat het zegt.
+- Vier `CREATE UNIQUE INDEX`-regels in het herbouwbestand missen
+  `IF NOT EXISTS` (de vervangregel in `schema_dump()` pakt alleen
+  `CREATE INDEX`). In een leeg project geen probleem; bij opnieuw draaien
+  wel. **Nog te repareren** in een v3.
+- In de besloten repo `ernes-edge-functions` stonden tot 1 november
+  verouderde zips uit juli naast de actuele code in `supabase/functions/`.
+  Gian greep er twee keer naar. Weggehaald, README herschreven.
+
+**Wat deze oefening niet dekt.**
+
+- Edge Functions, secrets en cronjobs: niet uitgerold in de test. De
+  stappen staan in 4.8, maar zijn niet geoefend.
+- De bestanden (foto's, documenten, akkoord-PDF's): de spiegel staat in
+  de bak `backups` en gaat niet mee naar Drive. Valt Supabase weg (ramp
+  3), dan zijn de bestanden weg. Dit is het grootste overgebleven gat.
+- De inlogaccounts zelf (wachtwoorden): moeten opnieuw; dat is
+  onvermijdelijk en bekend.
 
 ---
 

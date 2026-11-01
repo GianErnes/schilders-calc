@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schilders Calc · Herstel uit backup</title>
+<style>
+  :root { color-scheme: light dark; --rand: #8884; --ok: #2a7a3b; --fout: #b2312b; --wacht: #8a6d1f; }
+  body { font: 15px/1.45 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; margin: 0; padding: 24px; max-width: 920px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .uitleg { opacity: .8; margin: 0 0 20px; }
+  fieldset { border: 1px solid var(--rand); border-radius: 8px; padding: 12px 16px; margin: 0 0 16px; }
+  legend { padding: 0 6px; font-weight: 600; }
+  label { display: block; margin: 8px 0 4px; font-weight: 600; }
+  input[type=text], input[type=password] { width: 100%; box-sizing: border-box; padding: 8px; font: inherit; border: 1px solid var(--rand); border-radius: 6px; }
+  button { font: inherit; padding: 9px 16px; border-radius: 6px; border: 1px solid var(--rand); cursor: pointer; margin: 8px 8px 0 0; }
+  button.primair { font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  table { border-collapse: collapse; width: 100%; margin-top: 12px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--rand); }
+  th { font-weight: 600; }
+  td.n, th.n { text-align: right; }
+  .ok { color: var(--ok); } .fout { color: var(--fout); } .wacht { color: var(--wacht); }
+  #log { white-space: pre-wrap; font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; border: 1px solid var(--rand); border-radius: 8px; padding: 10px; max-height: 260px; overflow: auto; margin-top: 12px; }
+  .klein { font-size: 13px; opacity: .8; }
+</style>
+</head>
+<body>
+<h1>Herstel uit backup</h1>
+<p class="uitleg">Zet een <code>backup-JJJJ-MM-DD.json</code> van de nachtelijke dump terug in een Supabase-project waar het herbouwbestand (deel A) al in staat. Draai deel B (verwijssleutels) en deel C (setval) pas <strong>na</strong> dit laden. Niets van deze pagina wordt opgeslagen; de sleutel blijft in dit venster.</p>
+
+<fieldset>
+  <legend>1. Doelproject</legend>
+  <label for="url">Projectadres</label>
+  <input type="text" id="url" placeholder="https://xxxxxxxxxxxxxxxxxxxx.supabase.co" autocomplete="off" spellcheck="false">
+  <label for="sleutel">Service-sleutel: de legacy <code>service_role</code> (Project Settings → API Keys → tabblad "Legacy anon, service_role API keys"; begint met eyJ). De nieuwe sb_secret_-sleutel werkt niet in een browser.</label>
+  <input type="password" id="sleutel" autocomplete="off">
+  <p class="klein">Controleer het adres twee keer. Deze pagina schrijft naar het project dat hier staat. In een project dat al gevuld is worden bestaande rijen overgeslagen (niet overschreven), maar vermijd dat: herstel hoort in een leeg project.</p>
+</fieldset>
+
+<fieldset>
+  <legend>2. Backupbestand</legend>
+  <input type="file" id="bestand" accept=".json,application/json">
+  <div id="bestandinfo" class="klein"></div>
+</fieldset>
+
+<fieldset>
+  <legend>3. Uitvoeren</legend>
+  <button id="knopTellen">Alleen vergelijken (schrijft niets)</button>
+  <button id="knopLaden" class="primair" disabled>Laden</button>
+  <span id="stand" class="klein"></span>
+  <table id="tabel" hidden>
+    <thead><tr><th>Tabel</th><th class="n">In backup</th><th class="n">In project vooraf</th><th class="n">Ingevoegd</th><th class="n">In project na</th><th>Uitkomst</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div id="log" hidden></div>
+</fieldset>
+
+<script>
+'use strict';
+// Porties: PostgREST krijgt per aanroep hoogstens MAX_RIJEN rijen of ongeveer MAX_BYTES
+// aan JSON, wat het eerst bereikt wordt. offerte_accorderingen heeft rijen van
+// honderden kB (snapshot), vandaar de bytegrens.
+const MAX_RIJEN = 400;
+const MAX_BYTES = 3 * 1024 * 1024;
+
+let backup = null;       // { gemaakt, datum, tabellen: { naam: [rij, ...] } }
+let bestandNaam = '';
+
+const $ = (id) => document.getElementById(id);
+const log = (t) => { const el = $('log'); el.hidden = false; el.textContent += t + '\n'; el.scrollTop = el.scrollHeight; };
+
+function porties(rijen) {
+  // Splits een lijst rijen in porties die elk onder MAX_RIJEN en MAX_BYTES blijven.
+  const uit = []; let huidig = []; let bytes = 0;
+  for (const rij of rijen) {
+    const b = JSON.stringify(rij).length;
+    if (huidig.length > 0 && (huidig.length >= MAX_RIJEN || bytes + b > MAX_BYTES)) {
+      uit.push(huidig); huidig = []; bytes = 0;
+    }
+    huidig.push(rij); bytes += b;
+  }
+  if (huidig.length > 0) uit.push(huidig);
+  return uit;
+}
+
+function doel() {
+  const url = $('url').value.trim().replace(/\/+$/, '');
+  const sleutel = $('sleutel').value.trim();
+  if (!/^https:\/\/[a-z]{20}\.supabase\.co$/.test(url)) throw new Error('Projectadres klopt niet (verwacht https://<20 letters>.supabase.co).');
+  if (sleutel.length < 20) throw new Error('Service-sleutel ontbreekt.');
+  if (sleutel.startsWith('sb_secret_') || sleutel.startsWith('sb_publishable_')) {
+    throw new Error('Dit is een nieuwe sb_-sleutel. Secret keys worden door Supabase vanuit een browser geweigerd. Gebruik de legacy service_role-sleutel (tabblad "Legacy anon, service_role API keys", begint met eyJ).');
+  }
+  if (!sleutel.startsWith('eyJ')) throw new Error('Dit lijkt geen service_role-sleutel (verwacht een lange tekst die met eyJ begint).');
+  return { url, sleutel };
+}
+
+async function rpc(naam, body) {
+  const { url, sleutel } = doel();
+  const res = await fetch(url + '/rest/v1/rpc/' + naam, {
+    method: 'POST',
+    headers: { 'apikey': sleutel, 'Authorization': 'Bearer ' + sleutel, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  const tekst = await res.text();
+  if (!res.ok) throw new Error(naam + ': HTTP ' + res.status + ' – ' + tekst.slice(0, 300));
+  return tekst ? JSON.parse(tekst) : null;
+}
+
+$('bestand').addEventListener('change', async (e) => {
+  backup = null; $('knopLaden').disabled = true; $('bestandinfo').textContent = '';
+  const f = e.target.files[0]; if (!f) return;
+  bestandNaam = f.name;
+  try {
+    const tekst = await f.text();
+    const obj = JSON.parse(tekst);
+    if (!obj || typeof obj.tabellen !== 'object') throw new Error('Geen "tabellen" in dit bestand; is dit wel een backup van backup-dump?');
+    backup = obj;
+    const namen = Object.keys(obj.tabellen);
+    const rijen = namen.reduce((s, n) => s + obj.tabellen[n].length, 0);
+    $('bestandinfo').textContent = `${f.name} · ${(f.size / 1048576).toFixed(1)} MB · gemaakt ${obj.gemaakt || '?'} · ${namen.length} tabellen · ${rijen} rijen`;
+    $('knopLaden').disabled = false;
+  } catch (err) {
+    $('bestandinfo').textContent = 'Kon het bestand niet lezen: ' + err.message;
+  }
+});
+
+function rijHtml(naam, inBackup, vooraf, ingevoegd, na, uitkomst, klasse) {
+  return `<tr><td>${naam}</td><td class="n">${inBackup ?? ''}</td><td class="n">${vooraf ?? ''}</td><td class="n">${ingevoegd ?? ''}</td><td class="n">${na ?? ''}</td><td class="${klasse || ''}">${uitkomst || ''}</td></tr>`;
+}
+
+async function vergelijk() {
+  if (!backup) throw new Error('Kies eerst een backupbestand.');
+  $('stand').textContent = 'Tellen in het project…';
+  const tel = await rpc('herstel_tel');
+  const namenBackup = Object.keys(backup.tabellen).sort();
+  const namenProject = Object.keys(tel).sort();
+  const tbody = $('tabel').querySelector('tbody'); tbody.innerHTML = ''; $('tabel').hidden = false;
+  let waarschuwingen = 0;
+  for (const naam of namenBackup) {
+    const inB = backup.tabellen[naam].length;
+    if (!(naam in tel)) { tbody.innerHTML += rijHtml(naam, inB, '–', '', '', 'tabel bestaat niet in project', 'fout'); waarschuwingen++; continue; }
+    const klasse = tel[naam] > 0 ? 'wacht' : '';
+    tbody.innerHTML += rijHtml(naam, inB, tel[naam], '', '', tel[naam] > 0 ? 'project niet leeg' : '', klasse);
+    if (tel[naam] > 0) waarschuwingen++;
+  }
+  for (const naam of namenProject) {
+    if (!(naam in backup.tabellen)) { tbody.innerHTML += rijHtml(naam, '–', tel[naam], '', '', 'niet in backup', 'wacht'); waarschuwingen++; }
+  }
+  $('stand').textContent = waarschuwingen ? `${waarschuwingen} punt(en) om naar te kijken.` : 'Backup en project passen op elkaar; project is leeg.';
+  return tel;
+}
+
+async function laad() {
+  const vooraf = await vergelijk();
+  const namen = Object.keys(backup.tabellen).sort().filter((n) => n in vooraf);
+  const tbody = $('tabel').querySelector('tbody'); tbody.innerHTML = '';
+  log(`Start laden van ${bestandNaam} (gemaakt ${backup.gemaakt || '?'}) in ${doel().url}`);
+  const t0 = Date.now(); let totaalIn = 0, totaalOver = 0, fouten = 0;
+  for (const naam of namen) {
+    const rijen = backup.tabellen[naam];
+    const delen = porties(rijen);
+    let ingevoegd = 0, na = vooraf[naam], fout = null;
+    $('stand').textContent = `${naam}: ${rijen.length} rijen in ${delen.length} portie(s)…`;
+    for (let i = 0; i < delen.length; i++) {
+      try {
+        const r = await rpc('herstel_laad_tabel', { p_tabel: naam, p_rijen: delen[i] });
+        ingevoegd += r.ingevoegd; na = r.totaal_nu;
+      } catch (err) { fout = err.message; break; }
+    }
+    const verwacht = vooraf[naam] + rijen.length;
+    let uitkomst, klasse;
+    if (fout) { uitkomst = 'FOUT: ' + fout; klasse = 'fout'; fouten++; }
+    else if (na === verwacht) { uitkomst = 'klopt'; klasse = 'ok'; }
+    else if (na === rijen.length) { uitkomst = `klopt (${rijen.length - ingevoegd} al aanwezig, overgeslagen)`; klasse = 'ok'; }
+    else { uitkomst = `verschil: verwacht ${verwacht}`; klasse = 'fout'; fouten++; }
+    totaalIn += ingevoegd; totaalOver += rijen.length - ingevoegd;
+    tbody.innerHTML += rijHtml(naam, rijen.length, vooraf[naam], ingevoegd, na, uitkomst, klasse);
+    log(`${naam}: ${rijen.length} aangeboden, ${ingevoegd} ingevoegd, nu ${na}${fout ? ' – ' + fout : ''}`);
+  }
+  const sec = ((Date.now() - t0) / 1000).toFixed(1);
+  const slot = `Klaar in ${sec} s: ${totaalIn} rijen ingevoegd, ${totaalOver} overgeslagen, ${fouten} tabel(len) met een fout.`;
+  log(slot); $('stand').textContent = slot;
+  if (!fouten) log('Volgende stappen: deel B (verwijssleutels) en deel C (setval) draaien in de SQL Editor; daarna inlogaccounts aanmaken en taken_rollen.user_id koppelen (SYSTEEM.md 4.8).');
+}
+
+$('knopTellen').addEventListener('click', async () => {
+  try { await vergelijk(); } catch (err) { $('stand').textContent = ''; log('Fout: ' + err.message); }
+});
+$('knopLaden').addEventListener('click', async () => {
+  if (!confirm('Laden in ' + $('url').value.trim() + '? Dit schrijft in dat project.')) return;
+  $('knopLaden').disabled = true; $('knopTellen').disabled = true;
+  try { await laad(); } catch (err) { log('Fout: ' + err.message); $('stand').textContent = 'Gestopt met een fout.'; }
+  finally { $('knopLaden').disabled = false; $('knopTellen').disabled = false; }
+});
+</script>
+</body>
+</html>
