@@ -1,3 +1,16 @@
+## v4.104.1 — Vragen en afwijsreden per eerdere versie (2026-11-01)
+
+**Aanleiding**
+- Gian 01-11, na installatie van v4.104.0: "Als er zoals bij Willems meerdere vragen op rij worden gesteld, worden die ook niet onthouden he?" Ze worden wél bewaard (offerte-accord voegt elke vraag toe aan de lijst `vragen` op de regel), maar het lijstje Eerdere versies toonde ze niet. "Dat zou het wel af maken."
+
+**Gebouwd**
+- `_accordEerdereLaden`: kolommen `vragen` en `notitie` mee in de select.
+- `_accordEerdereHtml`: onder elke oudere versie de vragen (❓ tekst, naam, datum) en bij status afgekeurd de reden uit `notitie`, ingesprongen onder de regel.
+- Vijf versieankers bijgewerkt. Geen SQL, geen Edge Function.
+
+**Getest**
+- `node --check`: groen. Rooktest in Node: vervangen regel met één vraag en afgewezen regel met reden geven de verwachte regels. Niet getest in de browser.
+
 ## v4.104.0 — Eerdere offerteversies bewaard en inzichtelijk (2026-11-01)
 
 Gebouwd op v4.102.1. Vervangt de nooit-geïnstalleerde v4.103.0 (30-10); beide stappen zijn hier samengevoegd.

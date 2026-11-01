@@ -2421,8 +2421,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.104.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.104.1</h2>
       <div class="intro-body">
+        <p><strong>❓ Vragen en afwijsreden per eerdere versie (v4.104.1).</strong> In het lijstje Eerdere versies staan nu onder elke oudere accordeerlink de vragen die de klant op die versie stelde (tekst, naam, datum) en bij een afwijzing de opgegeven reden. Zo blijft bij een herziening het hele gesprek per versie terug te lezen. Geen SQL, geen Edge Function.</p>
         <p><strong>🗂️ Eerdere offerteversies bewaard en inzichtelijk (v4.104.0).</strong> Onderin het venster 🔗 Accordeerlink staat nu het blok <strong>Eerdere versies</strong>: elke oudere accordeerlink van deze offerte met offertenummer en V-aanduiding, datum, bedrag, wat de klant ermee deed (geaccordeerd, afgewezen, vervangen zonder reactie) en een knop die de bevroren PDF van die versie ophaalt via je eigen inlog (de bak accord-pdf is privé). Maak je een nieuwe link, dan wordt de oude onbeantwoorde link niet meer gewist maar op <em>vervangen</em> gezet, zodat elke verstuurde versie voor altijd bewaard blijft, los van de 30-dagen-inzage van de klant. Een klant die een oude link opent, ziet een nette melding dat die versie is vervangen en krijgt het mailadres; akkoord, afwijzen of vragen kan op zo'n link niet meer (de Edge Function offerte-accord weigerde dat al, de nachtelijke opvolging kijkt alleen naar open links). Eerlijk erbij: versies die vóór deze release zonder reactie zijn vervangen, waren al gewist en komen niet terug. <strong>Vereist</strong> de SQL <code>accord_04_vervangen.sql</code> (status-constraint uitgebreid; gedraaid 31-10). Geen Edge Function gewijzigd.</p>
         <p><strong>🔧 Melding van een houtrotopgave opende een verkeerd venster (v4.102.1).</strong> Een afwijzing of akkoord op een opgave uit de opleverapp stond op het dashboard als "(naamloos)", en Openen toonde het accordeerlink-venster van de calculatie die toevallig openstond. De melding heet nu "Houtrotopgave &lt;project&gt;" met de klantnaam en een oranje pil <strong>opgave</strong>; de knop heet <strong>Opleverapp</strong> en opent die app in een nieuw tabblad. Openen op een gewone melding kan het venster van een andere calculatie niet meer tonen. Geen SQL en geen Edge Function.</p>
         <p><strong>📨 Aanvraag onderaannemer: ook timmerman, glaszetter en installateur (v4.102.0).</strong> De knop Steiger aanvragen bovenaan de calculatie heet nu <strong>Aanvraag onderaannemer</strong>. In het venster kies je eerst het vakgebied: steigerbouwer, timmerman, glaszetter of installateur/elektricien. Per vakgebied zie je of er al eerder een aanvraag is verstuurd en wanneer. De rest werkt zoals je gewend was: werkadres ter controle, een begeleidende tekst die per vakgebied een eigen openingszin heeft en de bedrijfsnaam in de aanhef, en de foto's uit het klusdossier als aanvinkbare thumbnails. Na versturen wordt de knop groen met per vakgebied de datum, en een week later staat er een taak voor Gian klaar ("Offerte timmerman … al binnen?"). Administratie krijgt elke aanvraag in blinde kopie. De adressen stel je in onder Instellingen, bij <strong>Onderaannemers</strong>: per vakgebied een bedrijfsnaam en e-mailadres; het steigeradres van v4.78.0 staat er al. Een vakgebied zonder adres is in het venster niet te kiezen. Elke aanvraag staat voortaan als rij in de nieuwe tabel <code>calculatie_aanvragen</code>; de drie eerdere steigeraanvragen zijn daarin overgenomen. <strong>Vereist</strong> de SQL <code>onderaannemers_01_aanvragen.sql</code> (gedraaid 29-10) en de nieuwe Edge Function <code>onderaannemer-aanvraag</code>; de oude functie <code>steiger-aanvraag</code> wordt niet meer aangeroepen en kan weg.</p>
@@ -3917,7 +3918,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.104.0';
+const APP_VERSION = 'v4.104.1';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4334,6 +4335,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.104.1', d: '2026-11-01', h: 'Eerdere versies toont per oudere accordeerlink ook de gestelde vragen en de afwijsreden.' },
   { v: '4.104.0', d: '2026-11-01', h: 'Accordeerlink-venster toont onderin Eerdere versies (offertenummer/V, datum, bedrag, reactie, PDF via eigen inlog). Nieuwe link zet de oude onbeantwoorde link op vervangen i.p.v. wissen; klantpagina toont bij een vervangen link een melding zonder knoppen. SQL accord_04_vervangen.sql.' },
   { v: '4.102.1', d: '2026-11-01', h: 'Fix: een reactie op een houtrotopgave uit de opleverapp stond als "(naamloos)" op het dashboard en Openen toonde het accordeerlink-venster van een andere calculatie. Nu projectnaam, klant, pil opgave en een knop Opleverapp.' },
   { v: '4.102.0', d: '2026-10-29', h: 'Knop Steiger aanvragen is nu Aanvraag onderaannemer: per vakgebied (steiger, timmerman, glaszetter, installateur) een vaste partij onder Instellingen, keuze in het venster, eigen openingszin, logboek per aanvraag in tabel calculatie_aanvragen en een opvolgtaak per aanvraag. SQL onderaannemers_01_aanvragen.sql en Edge Function onderaannemer-aanvraag.' },
@@ -25000,7 +25002,7 @@ async function _accordEerdereLaden(calcId, huidigId) {
   if (!calcId || !_sb) return;
   try {
     const { data: rows, error } = await _sb.from('offerte_accorderingen')
-      .select('id, token, status, bedrag, aangemaakt_op, gereageerd_op, klant_naam, pdf_path, snapshot->>pdf, snapshot->>offertenummer')
+      .select('id, token, status, bedrag, aangemaakt_op, gereageerd_op, klant_naam, notitie, vragen, pdf_path, snapshot->>pdf, snapshot->>offertenummer')
       .eq('calculatie_id', calcId).is('onderhoudsplan_id', null)
       .order('aangemaakt_op', { ascending: false });
     if (error) throw error;
@@ -25030,6 +25032,16 @@ function _accordEerdereHtml(c) {
           ? '<button type="button" class="acb-btn sec acb-eerdere-pdf" data-idx="' + i + '" style="padding:4px 10px;font-size:13px;white-space:nowrap;">\u2b07\ufe0f PDF</button>'
           : '<span class="acb-sub" style="white-space:nowrap;">geen PDF bewaard</span>')
       + '</div>';
+    // Vragen en de reden bij afwijzing van die versie, ingesprongen onder de regel.
+    if (Array.isArray(r.vragen) && r.vragen.length) {
+      r.vragen.forEach(v => {
+        h += '<div class="acb-sub" style="margin:2px 0 0 14px;">\u2753 ' + _accordEsc(v.tekst || '')
+          + ' \u2014 ' + (v.naam ? _accordEsc(v.naam) + ', ' : '') + _accordDatum(v.op) + '</div>';
+      });
+    }
+    if (r.status === 'afgekeurd' && (r.notitie || '').trim()) {
+      h += '<div class="acb-sub" style="margin:2px 0 0 14px;">Reden: ' + _accordEsc(r.notitie) + '</div>';
+    }
   });
   h += '</div>';
   return h;
