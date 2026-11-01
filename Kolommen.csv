@@ -1,0 +1,101 @@
+table_name,column_name,data_type,is_nullable,column_default
+app_settings,id,uuid,NO,gen_random_uuid()
+app_settings,data,jsonb,NO,'{}'::jsonb
+app_settings,updated_at,timestamp with time zone,YES,now()
+bewerkingen,id,uuid,NO,gen_random_uuid()
+bewerkingen,ondergrond_id,uuid,YES,null
+bewerkingen,naam,text,NO,null
+bewerkingen,eenheid,text,YES,'m²'::text
+bewerkingen,minuten,numeric,YES,0
+bewerkingen,materiaal_id,uuid,YES,null
+bewerkingen,verbruik,numeric,YES,0
+bewerkingen,volgorde,integer,NO,0
+bewerkingen,created_at,timestamp with time zone,YES,now()
+bewerkingen,updated_at,timestamp with time zone,YES,now()
+bewerkingen,bron,text,YES,'eigen'::text
+calc_regel_stappen,id,uuid,NO,gen_random_uuid()
+calc_regel_stappen,calc_regel_id,uuid,NO,null
+calc_regel_stappen,bewerking_id,uuid,YES,null
+calc_regel_stappen,bewerking_naam,text,YES,''::text
+calc_regel_stappen,bewerking_eenheid,text,YES,''::text
+calc_regel_stappen,minuten,numeric,YES,0
+calc_regel_stappen,percentage,numeric,YES,100
+calc_regel_stappen,materiaal_id,uuid,YES,null
+calc_regel_stappen,materiaal_naam,text,YES,null
+calc_regel_stappen,materiaal_eenheid,text,YES,null
+calc_regel_stappen,materiaal_prijs,numeric,YES,0
+calc_regel_stappen,materiaal_groep,text,YES,null
+calc_regel_stappen,verbruik,numeric,YES,0
+calc_regel_stappen,volgorde,integer,NO,0
+calc_regel_stappen,created_at,timestamp with time zone,YES,now()
+calc_regels,id,uuid,NO,gen_random_uuid()
+calc_regels,onderdeel_id,uuid,NO,null
+calc_regels,naam,text,YES,''::text
+calc_regels,hoeveelheid,numeric,YES,0
+calc_regels,toeslag,numeric,YES,0
+calc_regels,systeem_id,uuid,YES,null
+calc_regels,systeem_naam,text,YES,''::text
+calc_regels,systeem_eenheid,text,YES,'m²'::text
+calc_regels,systeem_ondergrond,text,YES,''::text
+calc_regels,systeem_ondergrond_id,uuid,YES,null
+calc_regels,systeem_locatie,text,YES,'beide'::text
+calc_regels,volgorde,integer,NO,0
+calc_regels,created_at,timestamp with time zone,YES,now()
+calc_regels,actief,boolean,NO,true
+calculatie_documenten,id,uuid,NO,gen_random_uuid()
+calculatie_documenten,calculatie_id,uuid,NO,null
+calculatie_documenten,storage_path,text,NO,null
+calculatie_documenten,bestandsnaam,text,YES,''::text
+calculatie_documenten,grootte,bigint,YES,null
+calculatie_documenten,aangemaakt,timestamp with time zone,YES,now()
+calculatie_fotos,id,uuid,NO,gen_random_uuid()
+calculatie_fotos,calculatie_id,uuid,NO,null
+calculatie_fotos,storage_path,text,NO,null
+calculatie_fotos,opmerking,text,YES,''::text
+calculatie_fotos,volgorde,integer,YES,0
+calculatie_fotos,aangemaakt,timestamp with time zone,YES,now()
+calculatie_fotos,markeringen,jsonb,NO,'[]'::jsonb
+calculatie_fotos,gebreken_tellen,boolean,NO,false
+calculaties,id,uuid,NO,gen_random_uuid()
+calculaties,naam,text,YES,''::text
+calculaties,klant,text,YES,''::text
+calculaties,status,text,YES,'concept'::text
+calculaties,schilders,integer,YES,2
+calculaties,uur_dag,numeric,YES,8
+calculaties,reis,numeric,YES,0
+calculaties,volle_dagen_override,boolean,YES,null
+calculaties,notities,text,YES,''::text
+calculaties,aangemaakt,timestamp with time zone,YES,now()
+calculaties,gewijzigd,timestamp with time zone,YES,now()
+calculaties,settings_snapshot,jsonb,YES,null
+calculaties,totaal_incl_btw,numeric,YES,null
+calculaties,opname_datum,date,YES,null
+calculaties,deadline_datum,date,YES,null
+calculaties,totaal_offerte_origineel,numeric,YES,null
+calculaties,postcode,text,YES,null
+calculaties,huisnummer,text,YES,null
+calculaties,offerte_config,jsonb,NO,'{}'::jsonb
+hoofdgroepen,id,uuid,NO,gen_random_uuid()
+hoofdgroepen,calculatie_id,uuid,NO,null
+hoofdgroepen,naam,text,NO,null
+hoofdgroepen,collapsed,boolean,YES,false
+hoofdgroepen,volgorde,integer,NO,0
+hoofdgroepen,created_at,timestamp with time zone,YES,now()
+hoofdgroepen,actief,boolean,NO,true
+materialen,id,uuid,NO,gen_random_uuid()
+materialen,naam,text,NO,null
+materialen,merk,text,YES,''::text
+materialen,type,text,YES,''::text
+materialen,groep,text,YES,''::text
+materialen,eenheid,text,YES,'L'::text
+materialen,prijs_per,numeric,YES,0
+materialen,rendement,numeric,YES,0
+materialen,created_at,timestamp with time zone,YES,now()
+materialen,updated_at,timestamp with time zone,YES,now()
+meetstaat,id,uuid,NO,gen_random_uuid()
+meetstaat,calculatie_id,uuid,NO,null
+meetstaat,calc_regel_id,uuid,YES,null
+meetstaat,omschrijving,text,YES,''::text
+meetstaat,h_cm,integer,YES,0
+meetstaat,b_cm,integer,YES,0
+meetstaat,aantal,integer,YES,1
