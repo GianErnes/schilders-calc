@@ -40,7 +40,7 @@ Je moet zes dingen beheersen. De eerste drie zijn techniek, de laatste drie zijn
 | Rekenregels | Hoe een calculatie van regel tot totaal rekent: uren, normen, toeslagen (o.a. kleinschaligheidstoeslag met staffel), afronding, btw, bevroren bedragen. Een getal dat technisch klopt kan vakinhoudelijk fout zijn. | DATADICTIONARY_SchildersCalc.md, controle_calculatie_offerte_spec.md, domeinregels |
 | Bedrijf en gebruikers | Gian (eigenaar, 35 jaar schilder, geen developer), Maud (administratie, maandagmiddag), Max, Jens, Bjorn (buitendienst). Yoobi als CRM-koppeling. Je weet wie welk scherm gebruikt en op welk apparaat. | SYSTEEM.md, Yoobi_API_verkenning_bevindingen.md |
 
-Alle bestanden uit de kolom "Waar je het vindt" staan in de openbare repo GianErnes/schilders-calc: de HTML- en CHANGELOG-bestanden en SYSTEEM.md in de root, de schema- en specbestanden (Kolommen.csv, FKS.csv, planning_01_tabellen.sql, DATADICTIONARY_SchildersCalc.md, controle_calculatie_offerte_spec.md) in de map `docs/`. Ontbreekt een bestand, dan meld je dat in het rapport en sla je de controles over die ervan afhangen; je gokt niet.
+Alle bestanden uit de kolom "Waar je het vindt" staan in de root van de openbare repo GianErnes/schilders-calc, ook de schema- en specbestanden (Kolommen.csv, FKS.csv, planning_01_tabellen.sql, DATADICTIONARY_SchildersCalc.md, controle_calculatie_offerte_spec.md). De repo heeft geen submappen voor deze bestanden. Ontbreekt een bestand, dan meld je dat in het rapport en sla je de controles over die ervan afhangen; je gokt niet.
 
 ## Vaste controleronde per release
 
@@ -55,7 +55,7 @@ Elke sessie begint met stap 1 en eindigt met stap 8. Sla geen stap over; meld he
 7. **Browsertest-script leveren.** Per onbewezen claim: welk scherm, welke klik, welk verwacht resultaat, welke query bevestigt het in de database.
 8. **Rapport opleveren.** In het formaat van de sectie Rapportage, gesorteerd op ernst. Geen bevinding zonder bron, geen bevinding zonder bewijstest.
 
-**Vaste controle op het schema (elke ronde, hoort bij stap 6).** De schema-bestanden in `docs/` lopen achter zodra de bouwsessie een tabel of kolom toevoegt. Op 1 november 2026 beschreef Kolommen.csv 100 kolommen terwijl de live database er 809 had in 71 tabellen, en FKS.csv 18 foreign keys tegen 42. Tel daarom elke ronde de rijen in Kolommen.csv en FKS.csv en zet deze query bovenaan de vragenlijst voor Gian:
+**Vaste controle op het schema (elke ronde, hoort bij stap 6).** De schema-bestanden Kolommen.csv en FKS.csv in de root lopen achter zodra de bouwsessie een tabel of kolom toevoegt. Op 1 november 2026 beschreef Kolommen.csv 100 kolommen terwijl de live database er 809 had in 71 tabellen, en FKS.csv 18 foreign keys tegen 42. Tel daarom elke ronde de rijen in Kolommen.csv en FKS.csv en zet deze query bovenaan de vragenlijst voor Gian:
 
 ```sql
 select 'kolommen', count(*) from information_schema.columns where table_schema = 'public'
