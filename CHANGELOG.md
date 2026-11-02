@@ -1,3 +1,46 @@
+## v4.107.0 — Rekenverantwoording planbeurt klaar voor Yoobi (2026-11-02)
+
+**Aanleiding**
+- Gian 02-11: in het Σ-paneel van een planbeurt stond geen totaal uren, alleen materiaalverkoop (Yoobi wil inkoop) en materieel (steiger, hoogwerker) was niet te onderscheiden van materiaal en uren. Keuzes: alles in één versie; materiaal voor Yoobi = inkoop + klein materiaal; totaal uren = schilderwerk + staartposturen én afrondings- en reisuren.
+
+**SQL (uitgevoerd door Claude via de Supabase-koppeling, migratie `staart_kostensoort_materieel`)**
+- `staart` en `staart_lib`: kolom `kostensoort text`, NULL = overig, check-constraint alleen 'materieel'. Bestaande rijen blijven NULL.
+
+**Gebouwd**
+- Mappers (`_mapStaartFromDB`, `_mapStaartToDB`, `_mapStaartCalcToDB`) en de bibliotheek→calculatie-kopie dragen `kostensoort` mee.
+- Staartpost-venster (calculatie én bibliotheek): vinkje "Materieel (steiger, hoogwerker, lift)". Alleen een label.
+- Trace in `_ohpBeurtBasisBedrag`: `totalen.matInkoop`, `afronding.uren`, `reis.uren` (alleen buiten rayon), `kostensoort` per staartpost.
+- Σ-paneel (`_ohpVerHtml`): urenblok telt op naar "Totaal uren incl. toeslagen (als in de calculatie)" en naar "Totaal uren voor Yoobi"; inkoop naast verkoop in de optelling; vinkje materieel per staartpost in het paneel zelf (`_ohpVerZetMaterieel`, schrijft via `_updateStaartCalcDB` op de bron-calculatie en tekent het paneel opnieuw; het paneel staat buiten `#onderhoud`, dus werkt bij vergrendeld plan en vergrendelde Planbasis); nieuw blok "Overname naar Yoobi" met uren, materiaal inkoop + klein materiaal, materieel en overige staart, op prijspeil én geïndexeerd naar het beurtjaar.
+- Niet gedaan: print, OHP-offerte, VvE-bijlage en de calculatie-tab zelf zijn ongewijzigd. Geen Edge Function.
+
+**Getest**
+- `node --check`: groen. `_ohpVerHtml` in Node gedraaid met een nagebouwde trace: urentotalen (110 u / 124,5 u), inkoop + klein materiaal (860), materieel (1.500) en overig (450) plus de indexering (factor 1,1255) kloppen. Browser: niet getest. Test op de live app: (1) staartpost openen in een calculatie, vinkje zetten, herladen, vinkje moet blijven staan; (2) Σ van een beurt openen, vinkje bij een staartpost zetten, paneel moet hertekenen en de post onder Materieel tonen; (3) "Totaal uren incl. toeslagen" in het Σ-paneel moet bij een 100%-beurt gelijk zijn aan dezelfde regel in het rekenpaneel van de bron-calculatie.
+
+## v4.106.0 — Kolom Geïndexeerd (excl. BTW) in de beurtentabel (2026-11-02)
+
+**Aanleiding**
+- Gian 02-11, screenshot van het detail Onderhoudsplannen: de beurtentabel toonde Basis (excl. BTW) en Geïndexeerd (incl. BTW), maar niet het geïndexeerde bedrag zonder BTW. Keuze: alleen in deze tabel, volgorde basis excl → geïnd. excl → geïnd. incl.
+
+**Gebouwd**
+- `_ohpRenderBeurtenLijst()`: extra kolomkop en cel met `geindExBtw` (basis × indexfactor), dat daar al werd berekend voor de incl.-kolom. Niet vet, zodat incl. BTW het eindbedrag blijft.
+- Print, OHP-offerte en VvE-bijlage bewust ongewijzigd. Versieankers bijgewerkt. Geen SQL, geen Edge Function.
+
+**Getest**
+- `node --check`: groen. Browser: niet getest. Test op de live app: onderhoudsplan openen, controleren dat de nieuwe kolom per beurt gelijk is aan "Geïndexeerd excl. BTW" in de Σ-verantwoording en dat incl. = excl. × BTW-factor.
+
+## v4.105.1 — Mailadres in het zoekveld van Onderhoudsplannen (2026-11-02)
+
+**Aanleiding**
+- Gian 02-11, screenshot: in het zoekveld van de plannenlijst op het dashboard staat bij het openen steeds administratie@ernes.nl. De app zet daar niets in (`_dashPlanZoek` start leeg); dit is browser-autofill op een `type="search"`-veld zonder `autocomplete`. Dat het alleen bij plannen en niet bij calculaties gebeurt is browsergedrag dat ik niet heb kunnen herleiden (aanname: Safari).
+
+**Gebouwd**
+- `#calcZoek` en `#planZoek`: `autocomplete="off"` en een `name` zonder mail/user erin.
+- Terugval `_dashZoekvelenOpschonen()`, aangeroepen aan het begin van `renderDashboard()`: staat er iets in een zoekveld terwijl de bijbehorende zoekterm in de app leeg is, dan is het niet getypt en wordt het veld leeggemaakt. Een door de gebruiker getypte zoekterm blijft staan.
+- Versieankers bijgewerkt. Geen SQL, geen Edge Function.
+
+**Getest**
+- `node --check`: groen. Browser: niet getest; autofill laat zich niet in Node nabootsen. Test op de live app: dashboard openen, zoekveld Onderhoudsplannen moet leeg zijn; iets typen, naar een andere tab en terug, zoekterm moet blijven staan.
+
 ## v4.105.0 — Nieuwe calculatiestatus Planbasis (2026-11-02)
 
 **Aanleiding**

@@ -2421,8 +2421,11 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.105.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.107.0</h2>
       <div class="intro-body">
+        <p><strong>🏗️ Rekenverantwoording van een planbeurt klaar voor Yoobi (v4.107.0).</strong> Het Σ-paneel van een beurt toonde losse uren zonder totaal en alleen materiaalverkoop, terwijl je voor het Yoobi-project uren, inkoop en materieel apart nodig hebt. Nu: het urenblok telt op naar "Totaal uren incl. toeslagen" (hetzelfde getal als in de calculatie) en daaronder met afrondings- en reisuren naar "Totaal uren voor Yoobi". Een staartpost kan het vinkje "Materieel" krijgen (steiger, hoogwerker, lift), in het staartpost-venster of rechtstreeks in het Σ-paneel, ook op een vergrendelde calculatie; het is alleen een label, de prijs verandert niet. Onderaan staat een nieuw blok "Overname naar Yoobi" met vier regels, op prijspeil en geïndexeerd naar het beurtjaar: uren, materiaal inkoop + klein materiaal, materieel en overige staartposten. Eenmalige SQL is al uitgevoerd (kolom kostensoort op staart en staart_lib); bestaande staartposten staan op overig tot je ze aanvinkt.</p>
+        <p><strong>📊 Kolom Geïndexeerd excl. BTW in de beurtentabel (v4.106.0).</strong> In het detail van een onderhoudsplan staat tussen "Basis (excl. BTW)" en "Geïndexeerd (incl. BTW)" nu ook het geïndexeerde bedrag zonder BTW. Dat bedrag werd al berekend voor de rekenverantwoording (Σ), maar was in de tabel niet zichtbaar. Alleen weergave, geen rekenwijziging; print, offerte en VvE-bijlage zijn ongewijzigd. Geen SQL, geen Edge Function.</p>
+        <p><strong>🔧 Mailadres in het zoekveld van Onderhoudsplannen (v4.105.1).</strong> Bij het openen van het dashboard stond in het zoekveld van de plannenlijst steeds het inlog-mailadres. Dat deed de browser, niet de app: de wachtwoord-automaat van Safari of Chrome zag een leeg tekstveld en vulde het bewaarde inlogadres in. De zoekvelden van calculaties en plannen vragen de browser nu om ze met rust te laten, en als een browser dat toch negeert, veegt de app het veld leeg zodra het dashboard wordt getekend, zolang jij er zelf niets in hebt getypt. Geen SQL, geen Edge Function.</p>
         <p><strong>🧱 Nieuwe calculatiestatus Planbasis (v4.105.0).</strong> Een calculatie die alleen dient om alles aan een huis in kaart te brengen als basis voor een onderhoudsplan, is geen offerte: de klant krijgt het plan, niet de calculatie. Tot nu toe stond zo'n calculatie noodgedwongen op Verzonden, waar hij over een jaar niet meer van een echte openstaande offerte te onderscheiden was, meetelde als nooit-gewonnen offerte in de win-ratio, standaard onzichtbaar was in de bronkiezer van de Onderhoudsplan-tab en in de takenapp een "Offerte uitbrengen" en een "Stukken in Yoobi bij verkoop zetten" opleverde. Daarom is er nu de status <strong>Planbasis</strong>, met een eigen groep op het dashboard tussen Gereed en Verzonden. De prijs is vergrendeld, net als bij Verzonden, want het plan rekent erop; de gele banner zegt dat erbij. Planbasis telt niet mee in de win-ratio, staat standaard aan in de bronkiezer en maakt geen offertetaken aan; bij de wissel naar Planbasis vervallen nog openstaande uitbreng- en nabeltaken van die calculatie. Je kiest de status zelf in de keuzelijst; de app zet hem niet automatisch, want een calculatie kan ook een echte offerte én een planbron tegelijk zijn. <strong>Vereist</strong> de SQL <code>calc_01_planbasis.sql</code> (statusconstraint uitgebreid, kleine extra trigger). Geen Edge Function.</p>
         <p><strong>🔧 Openen op een planreactie ging naar het verkeerde venster (v4.104.2).</strong> Gaf een klant akkoord op een onderhoudsplan, dan opende <strong>Openen</strong> in het blok Reacties op offertes en plannen de bron-calculatie met het offerte-accordeervenster erbij, dat meldde dat er nog geen accordeerlink was en een groene knop bood om er een te maken: terwijl de klant net via het plan akkoord had gegeven. Voortaan brengt Openen je bij een planreactie naar de Onderhoudsplan-tab met dat plan geladen, zonder venster; het Accordeerlink-venster van het plan roep je daar zelf aan als je het getekende exemplaar wilt. Openen op een offertereactie blijft zoals het was: calculatie open plus het accordeervenster. Wordt het plan niet gevonden, dan zegt de app dat in plaats van stil iets anders te tonen. Geen SQL, geen Edge Function.</p>
         <p><strong>❓ Vragen en afwijsreden per eerdere versie (v4.104.1).</strong> In het lijstje Eerdere versies staan nu onder elke oudere accordeerlink de vragen die de klant op die versie stelde (tekst, naam, datum) en bij een afwijzing de opgegeven reden. Zo blijft bij een herziening het hele gesprek per versie terug te lezen. Geen SQL, geen Edge Function.</p>
@@ -2785,7 +2788,7 @@
         <h3 style="margin: 0;">Calculaties</h3>
         <button class="btn" onclick="newCalc()">+ Nieuwe calculatie</button>
       </div>
-      <input type="search" id="calcZoek" oninput="_dashCalcZoek = this.value; renderCalculatiesArchief();" placeholder="Zoek op naam of klant" style="width: 100%; max-width: 360px; padding: 0.5rem 0.7rem; margin-bottom: 0.8rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); font-size: 0.9rem; font-family: inherit; box-sizing: border-box;">
+      <input type="search" id="calcZoek" name="filter-calculaties" autocomplete="off" oninput="_dashCalcZoek = this.value; renderCalculatiesArchief();" placeholder="Zoek op naam of klant" style="width: 100%; max-width: 360px; padding: 0.5rem 0.7rem; margin-bottom: 0.8rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); font-size: 0.9rem; font-family: inherit; box-sizing: border-box;">
       <div id="calculatiesArchief"></div>
     </div>
 
@@ -2793,7 +2796,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h3 style="margin: 0;">Onderhoudsplannen</h3>
       </div>
-      <input type="search" id="planZoek" oninput="_dashPlanZoek = this.value; _renderPlannenArchiefUit();" placeholder="Zoek op naam of klant" style="width: 100%; max-width: 360px; padding: 0.5rem 0.7rem; margin-bottom: 0.8rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); font-size: 0.9rem; font-family: inherit; box-sizing: border-box;">
+      <input type="search" id="planZoek" name="filter-plannen" autocomplete="off" oninput="_dashPlanZoek = this.value; _renderPlannenArchiefUit();" placeholder="Zoek op naam of klant" style="width: 100%; max-width: 360px; padding: 0.5rem 0.7rem; margin-bottom: 0.8rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); font-size: 0.9rem; font-family: inherit; box-sizing: border-box;">
       <div id="plannenArchief"></div>
     </div>
 
@@ -3781,6 +3784,16 @@ Hout binnen;Gronden;m²;6;0,10</div>
             </div>
           </div>
         </div>
+        <!-- v4.107.0 — kostensoort materieel -->
+        <div style="grid-column: 1 / -1; padding: 0.7rem 0.8rem; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); display: flex; align-items: flex-start; gap: 0.6rem; cursor: pointer;" onclick="document.getElementById('staartMaterieel').click()">
+          <input type="checkbox" id="staartMaterieel" style="width: auto; margin: 0; flex-shrink: 0; margin-top: 0.15rem; cursor: pointer;" onclick="event.stopPropagation()">
+          <div style="flex: 1; font-size: 0.85rem; color: var(--ink); line-height: 1.4;">
+            <div style="font-weight: 600; margin-bottom: 0.2rem;">Materieel (steiger, hoogwerker, lift)</div>
+            <div style="font-weight: 400; color: var(--ink-soft); font-size: 0.78rem;">
+              Alleen een label, verandert niets aan de prijs. In de rekenverantwoording van een planbeurt wordt deze post dan onder Materieel geteld in het blok Overname naar Yoobi, apart van uren en materiaal.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -3921,7 +3934,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.105.0';
+const APP_VERSION = 'v4.107.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4338,6 +4351,9 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.107.0', d: '2026-11-02', h: 'Σ-paneel planbeurt: totaal uren (calc-tab én Yoobi), materiaal inkoop, vinkje Materieel op staartposten en blok Overname naar Yoobi. SQL kostensoort uitgevoerd.' },
+  { v: '4.106.0', d: '2026-11-02', h: 'Beurtentabel in Onderhoudsplannen toont nu ook de kolom Geïndexeerd (excl. BTW), tussen basis en incl. BTW. Alleen weergave.' },
+  { v: '4.105.1', d: '2026-11-02', h: 'Fix: het zoekveld van Onderhoudsplannen werd door de browser met het inlog-mailadres gevuld; zoekvelden nu buiten autofill, met opschoning als terugval.' },
   { v: '4.105.0', d: '2026-11-02', h: 'Nieuwe calculatiestatus Planbasis voor de rekenbasis van een onderhoudsplan: eigen dashboardgroep, prijs vergrendeld, buiten de win-ratio, standaard aan in de OHP-bronkiezer, geen offertetaken. SQL calc_01_planbasis.sql.' },
   { v: '4.104.2', d: '2026-11-02', h: 'Fix: Openen op een planreactie in het meldingenblok gaat naar de Onderhoudsplan-tab met het plan, niet meer naar het offerte-accordeervenster van de bron-calculatie.' },
   { v: '4.104.1', d: '2026-11-01', h: 'Eerdere versies toont per oudere accordeerlink ook de gestelde vragen en de afwijsreden.' },
@@ -5169,7 +5185,8 @@ function _mapStaartFromDB(row) {
     verstopInEenheidsprijs: !!row.verstop_in_eenheidsprijs,
     teltInWerkdagen: !!row.telt_in_werkdagen,
     gebrekType: row.gebrek_type || null,
-    btwPct: (row.btw_pct != null) ? parseFloat(row.btw_pct) : null   // v4.76.0 — derden-post met eigen BTW-tarief
+    btwPct: (row.btw_pct != null) ? parseFloat(row.btw_pct) : null,  // v4.76.0 — derden-post met eigen BTW-tarief
+    kostensoort: row.kostensoort || null   // v4.107.0 — 'materieel' (steiger, hoogwerker) of null = overig
   };
 }
 function _mapStaartToDB(s) {
@@ -5182,7 +5199,8 @@ function _mapStaartToDB(s) {
     hoeveelheid: s.hoeveelheid || 0,
     verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs && !_isDerdenPost(s),
     telt_in_werkdagen: !!s.teltInWerkdagen,
-    btw_pct: _isDerdenPost(s) ? parseFloat(s.btwPct) : null   // v4.76.0
+    btw_pct: _isDerdenPost(s) ? parseFloat(s.btwPct) : null,  // v4.76.0
+    kostensoort: s.kostensoort === 'materieel' ? 'materieel' : null   // v4.107.0
   };
 }
 async function _fetchStaartLibFromDB() {
@@ -9040,7 +9058,8 @@ function _mapStaartCalcToDB(s, calcId, idx) {
     verstop_in_eenheidsprijs: !!s.verstopInEenheidsprijs && !_isDerdenPost(s),
     telt_in_werkdagen: !!s.teltInWerkdagen,
     gebrek_type: s.gebrekType || null,
-    btw_pct: _isDerdenPost(s) ? parseFloat(s.btwPct) : null   // v4.76.0
+    btw_pct: _isDerdenPost(s) ? parseFloat(s.btwPct) : null,  // v4.76.0
+    kostensoort: s.kostensoort === 'materieel' ? 'materieel' : null   // v4.107.0
   };
 }
 async function _insertStaartCalcDB(s, calcId, idx) {
@@ -10017,13 +10036,13 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
   const extraUrenStaart = _extraUrenUitStaart(calc.staart || [], t, (sett.uurloon || 0));
   const dg = _ohpDagen(calc, sett, t.uren + extraUrenStaart);
   _ohpLastBeurtUren = t.uren + extraUrenStaart; // v3.27.4 — manuren werk (excl. reis), voor de planning-capaciteit
-  if (tr) { tr.totalen = { uren: t.uren, arbeid: t.arbeid, matVerkoop: t.matVerkoop }; tr.extraUrenStaart = extraUrenStaart; tr.dagen = dg; }
+  if (tr) { tr.totalen = { uren: t.uren, arbeid: t.arbeid, matVerkoop: t.matVerkoop, matInkoop: t.matInkoop }; tr.extraUrenStaart = extraUrenStaart; tr.dagen = dg; }
 
   // 4. Afrondingstoeslag (extra-arbeid bij volle dagen).
   const dagenVerschil = Math.max(0, dg.factureerbaar - dg.werkelijk);
   const afrondingsToeslag = dg.volleDagen ? dagenVerschil * (calc.schilders || 0) * (calc.uurDag || 7.5) * (sett.uurloon || 0) : 0;
   const arbeid = t.arbeid + afrondingsToeslag;
-  if (tr) tr.afronding = { verschil: dagenVerschil, toeslag: afrondingsToeslag, volleDagen: dg.volleDagen };
+  if (tr) tr.afronding = { verschil: dagenVerschil, toeslag: afrondingsToeslag, volleDagen: dg.volleDagen, uren: dg.volleDagen ? dagenVerschil * (calc.schilders || 0) * (calc.uurDag || 7.5) : 0 };   // v4.107.0 — ook in uren
 
   // 5. Reiskosten op basis van factureerbare dagen (schalen mee met geschaald werk).
   // v3.14.0 — Binnen rayon (≤ sett.rayonDrempel km enkele reis): alleen km-vergoeding,
@@ -10038,7 +10057,7 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
   const reisKostenUren = binnenRayon ? 0 : reisUren * (sett.reistijd || 0);
   const reisKm = reisDagen * (reisAfstand * 2) * (sett.km || 0);
   const reisTotaal = reisKostenUren + reisKm;
-  if (tr) tr.reis = { afstand: reisAfstand, binnenRayon: binnenRayon, rayonDrempel: rayonDrempel, reisDagen: reisDagen, kostenUren: reisKostenUren, km: reisKm, totaal: reisTotaal };
+  if (tr) tr.reis = { afstand: reisAfstand, binnenRayon: binnenRayon, rayonDrempel: rayonDrempel, reisDagen: reisDagen, uren: binnenRayon ? 0 : reisUren, kostenUren: reisKostenUren, km: reisKm, totaal: reisTotaal };   // v4.107.0 — uren: alleen buiten rayon, binnen rayon worden reisuren niet berekend
 
   // 6. Opslagen.
   const kleinMat = t.matVerkoop * (sett.kleinMat || 0) / 100;
@@ -10075,7 +10094,7 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
       netto = Number(ing.b) || 0; ingreep = 'bedrag';
     }
     staartTotaal += netto;
-    if (tr) tr.staart.push({ id: p.id || null, naam: p.naam || '(zonder naam)', type: p.type, eenheid: p.eenheid || '', bedragPerEenheid: p.bedrag || 0, bruto: post, geschaald: geschaald, autoNetto: autoNetto, netto: netto, ingreep: ingreep, aantal: ingreepN });
+    if (tr) tr.staart.push({ id: p.id || null, naam: p.naam || '(zonder naam)', type: p.type, eenheid: p.eenheid || '', bedragPerEenheid: p.bedrag || 0, bruto: post, geschaald: geschaald, autoNetto: autoNetto, netto: netto, ingreep: ingreep, aantal: ingreepN, kostensoort: p.kostensoort || null });
   });
 
   // 8. Directe kosten en risico.
@@ -10532,7 +10551,7 @@ async function _ohpOpenVerantwoording(beurtId) {
   const tr = _ohpLastTrace;
   if (!tr) { _toast('Geen berekening beschikbaar voor deze beurt.'); return; }
   const sub = document.getElementById('ohpVerSub');
-  if (sub) sub.textContent = (b.naam || 'Beurt') + ' \u00b7 ' + (b.jaartal || '');
+  if (sub) { sub.textContent = (b.naam || 'Beurt') + ' \u00b7 ' + (b.jaartal || ''); sub.dataset.beurtId = b.id; }   // v4.107.0 — id voor hertekenen na vinkje materieel
   const body = document.getElementById('ohpVerBody');
   if (body) body.innerHTML = _ohpVerHtml(b, tr, basis, plan);
   if (typeof closeControlePaneel === 'function') closeControlePaneel();
@@ -10618,8 +10637,20 @@ function _ohpVerHtml(b, tr, basis, plan) {
   // 3. Uren, dagen en afronding
   h += '<div class="ver-kop">Uren, dagen en afronding</div>';
   h += '<table class="ver-tab">';
-  h += rij('Uren schilderwerk (geschaald)', tr.totalen.uren.toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + ' u');
-  if (tr.extraUrenStaart > 0) h += rij('Extra uren uit staartposten', tr.extraUrenStaart.toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + ' u');
+  // v4.107.0 — twee totalen: eerst exact de regel uit het rekenpaneel van de calculatie
+  // (schilderwerk + staartposturen, de basis voor de werkdagen), daarna het all-in totaal
+  // voor Yoobi met de afrondings- en reisuren erbij.
+  const uu = v => (v || 0).toLocaleString('nl-NL', { maximumFractionDigits: 1 }) + ' u';
+  const urenCalcTab = tr.totalen.uren + (tr.extraUrenStaart || 0);
+  const urenAfr = (tr.afronding && tr.afronding.uren) || 0;
+  const urenReis = (tr.reis && tr.reis.uren) || 0;
+  const urenYoobi = urenCalcTab + urenAfr + urenReis;
+  h += rij('Uren schilderwerk (geschaald)', uu(tr.totalen.uren));
+  h += rij('+ Uren uit staartposten (kleinschaligheid e.d.)', uu(tr.extraUrenStaart));
+  h += rij('Totaal uren incl. toeslagen (als in de calculatie)', uu(urenCalcTab), true);
+  h += rij('+ Afrondingsuren (volle dagen)', uu(urenAfr));
+  h += rij('+ Reisuren (alleen buiten rayon)', uu(urenReis));
+  h += rij('Totaal uren voor Yoobi', uu(urenYoobi), true);
   h += rij('Dagen werkelijk \u2192 factureerbaar', tr.dagen.werkelijk.toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + ' \u2192 ' + tr.dagen.factureerbaar.toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + (tr.afronding.volleDagen ? ' (volle dagen aan)' : ' (volle dagen uit)'));
   h += rij('Afrondingstoeslag (extra arbeid)', eur(tr.afronding.toeslag));
   h += '</table>';
@@ -10660,7 +10691,12 @@ function _ohpVerHtml(b, tr, basis, plan) {
       } else {
         uitleg = p.geschaald ? (eur(p.bruto) + ' \u00d7 ' + _ohpVerPct(tr.extraFactor)) : eur(p.bruto) + ' (schaalt via dagen/grondslag)';
       }
-      h += rij(_escapeHtml(p.naam) + ' <span style="color:var(--muted); font-size:0.75rem;">' + uitleg + '</span>', eur(p.netto));
+      // v4.107.0 — vinkje materieel per staartpost, rechtstreeks op de bron-calculatie.
+      const mat = p.kostensoort === 'materieel';
+      const vink = (p.id != null)
+        ? ` <label style="font-size:0.72rem; color:${mat ? 'var(--ink)' : 'var(--muted)'}; white-space:nowrap; cursor:pointer;"><input type="checkbox" ${mat ? 'checked' : ''} onchange="_ohpVerZetMaterieel('${p.id}', this.checked)" style="width:auto; margin:0 0.2rem 0 0; vertical-align:middle;">materieel</label>`
+        : '';
+      h += rij(_escapeHtml(p.naam) + vink + ' <span style="color:var(--muted); font-size:0.75rem;">' + uitleg + '</span>', eur(p.netto));
     });
     h += rij('Staart totaal', eur(tr.staartTotaal), true);
     h += '</table>';
@@ -10672,7 +10708,7 @@ function _ohpVerHtml(b, tr, basis, plan) {
   h += '<div class="ver-kop">Optelling naar prijspeil ' + plan.prijspeil + '</div>';
   h += '<table class="ver-tab">';
   h += rij('Arbeid incl. afrondingstoeslag', eur(tr.arbeidInclAfronding));
-  h += rij('Materiaal (verkoop)', eur(tr.totalen.matVerkoop));
+  h += rij('Materiaal (verkoop) <span style="color:var(--muted); font-size:0.75rem;">inkoop ' + eur(tr.totalen.matInkoop || 0) + '</span>', eur(tr.totalen.matVerkoop));
   h += rij('Reiskosten', eur(tr.reis.totaal));
   h += rij('Klein materiaal + afval + arbo', eur(tr.opslagen.kleinMat + tr.opslagen.afval + tr.opslagen.arbo));
   h += rij('Staartposten', eur(tr.staartTotaal));
@@ -10705,7 +10741,41 @@ function _ohpVerHtml(b, tr, basis, plan) {
   h += rij('Eindbedrag incl. BTW (gelijk aan de tijdlijn)', eur(geindExBtw * btwF), true);
   h += '</table>';
 
+  // 10. v4.107.0 — Overname naar Yoobi: de vier budgetten zoals Yoobi ze kent, excl. BTW,
+  //     op prijspeil én geïndexeerd naar het beurtjaar. Materiaal = inkoop + klein materiaal
+  //     (keuze Gian 02-11-2026). Materieel = staartposten met het vinkje materieel; de rest
+  //     van de staart is Overig. Reiskosten, afval, arbo en risico zitten hier bewust niet in.
+  const matYoobi = (tr.totalen.matInkoop || 0) + (tr.opslagen.kleinMat || 0);
+  const materieel = (tr.staart || []).reduce((a, p) => a + (p.kostensoort === 'materieel' ? (p.netto || 0) : 0), 0);
+  const overigStaart = (tr.staartTotaal || 0) - materieel;
+  const rij3 = (label, a, bb, vet) => `<tr><td${vet ? ' style="font-weight:700;"' : ''}>${label}</td><td class="right"${vet ? ' style="font-weight:700;"' : ''}>${a}</td><td class="right"${vet ? ' style="font-weight:700;"' : ''}>${bb}</td></tr>`;
+  h += '<div class="ver-kop">Overname naar Yoobi (excl. BTW)</div>';
+  h += '<table class="ver-tab">';
+  h += rij3('', '<span style="color:var(--muted); font-size:0.75rem;">prijspeil ' + plan.prijspeil + '</span>', '<span style="color:var(--muted); font-size:0.75rem;">ge\u00efndexeerd ' + b.jaartal + '</span>');
+  h += rij3('Uren (totaal voor Yoobi)', uu(urenYoobi), uu(urenYoobi), true);
+  h += rij3('Materiaal inkoop + klein materiaal', eur(matYoobi), eur(matYoobi * factor), true);
+  h += rij3('Materieel (staartposten met vinkje)', eur(materieel), eur(materieel * factor), true);
+  h += rij3('Overige staartposten', eur(overigStaart), eur(overigStaart * factor));
+  h += '</table>';
+  if (!materieel && (tr.staart || []).length) h += '<div style="font-size:0.72rem; color:var(--muted); margin-top:-0.3rem;">Nog geen staartpost als materieel gemarkeerd; zet het vinkje hierboven bij de staartposten.</div>';
+  h += '<div style="font-size:0.72rem; color:var(--muted); margin-top:0.2rem;">Niet in deze regels: arbeid in euro\u2019s, reiskosten, afval, arbo en risico. Uren indexeren niet.</div>';
+
   return h;
+}
+
+// v4.107.0 — Vinkje materieel vanuit het Σ-paneel: schrijft kostensoort op de staartpost
+// van de bron-calculatie en tekent het paneel opnieuw. Werkt ook bij een vergrendelde
+// bron-calculatie of een vergrendeld plan: alleen een label, de prijs verandert niet.
+function _ohpVerZetMaterieel(staartId, aan) {
+  const calc = _ohpBronCalc();
+  if (!calc) return;
+  const p = (calc.staart || []).find(x => x.id === staartId);
+  if (!p) return;
+  p.kostensoort = aan ? 'materieel' : null;
+  _updateStaartCalcDB(p, calc.id);
+  const sub = document.getElementById('ohpVerSub');
+  const beurtId = sub && sub.dataset.beurtId;
+  if (beurtId) _ohpOpenVerantwoording(beurtId);
 }
 
 function _ohpRenderBeurtenLijst() {
@@ -10725,6 +10795,7 @@ function _ohpRenderBeurtenLijst() {
   html += '<th>Naam</th>';
   html += '<th style="width: 110px;">Modus</th>';
   html += '<th style="width: 140px;" class="right">Basis (excl. BTW)</th>';
+  html += '<th style="width: 160px;" class="right">Geïndexeerd (excl. BTW)</th>';
   html += '<th style="width: 160px;" class="right">Geïndexeerd (incl. BTW)</th>';
   html += '<th style="width: 100px; text-align: center;" title="Meerekenen in gemiddelde jaarbedrag?">Mee in gem.</th>';
   html += '<th style="width: 150px;"></th>';
@@ -10744,6 +10815,7 @@ function _ohpRenderBeurtenLijst() {
       <td><input type="text" value="${_escapeHtml(b.naam || '')}" placeholder="bv. Onderhoudsbeurt" onchange="_ohpUpdBeurtVeld('${b.id}','naam',this.value)"></td>
       <td><span style="font-size: 0.85rem; color: var(--muted);">${modusLabel}</span></td>
       <td class="right">${eur(basis)}</td>
+      <td class="right">${eur(geindExBtw)}</td>
       <td class="right"><strong>${eur(geindIncBtw)}</strong></td>
       <td style="text-align: center;"><input type="checkbox" ${mee ? 'checked' : ''} onchange="_ohpUpdBeurtVeld('${b.id}','meeInGemiddelde',this.checked)"></td>
       <td class="right">
@@ -22829,7 +22901,8 @@ async function addStaartFromTpl() {
     hoeveelheid: 0,
     verstopInEenheidsprijs: !!t.verstopInEenheidsprijs && !_isDerdenPost(t),
     teltInWerkdagen: !!t.teltInWerkdagen,
-    btwPct: _isDerdenPost(t) ? parseFloat(t.btwPct) : null   // v4.76.0
+    btwPct: _isDerdenPost(t) ? parseFloat(t.btwPct) : null,  // v4.76.0
+    kostensoort: t.kostensoort || null   // v4.107.0
   };
   const idx = (data.calc.staart || []).length;
   const saved = await _insertStaartCalcDB(payload, data.calc.id, idx);
@@ -22855,6 +22928,7 @@ function openStaartModal(p, mode) {
   document.getElementById('staartHoev').value = p.hoeveelheid || 0;
   document.getElementById('staartVerstop').checked = !!p.verstopInEenheidsprijs;
   document.getElementById('staartTeltInWerkdagen').checked = !!p.teltInWerkdagen;
+  document.getElementById('staartMaterieel').checked = (p.kostensoort === 'materieel');   // v4.107.0
   document.getElementById('staartBtw').value = _isDerdenPost(p) ? String(parseFloat(p.btwPct)) : '';   // v4.76.0
   updateStaartFields();
   document.getElementById('staartModal').classList.add('active');
@@ -22884,6 +22958,7 @@ async function saveStaart() {
     verstopInEenheidsprijs: document.getElementById('staartVerstop').checked,
     teltInWerkdagen: document.getElementById('staartTeltInWerkdagen').checked,
     btwPct: document.getElementById('staartBtw').value !== '' ? parseFloat(document.getElementById('staartBtw').value) : null,   // v4.76.0
+    kostensoort: document.getElementById('staartMaterieel').checked ? 'materieel' : null,   // v4.107.0
   };
   if (payload.btwPct != null) payload.verstopInEenheidsprijs = false;   // v4.76.0 — derden-post nooit verstopt
   if (!payload.naam) { alert('Geef een naam.'); return; }
@@ -24347,7 +24422,21 @@ async function _opnameMaakCalc(id) {
   renderCalcStructuur(); renderDashboard();
 }
 
+// v4.105.1 — Terugval tegen browser-autofill: Safari/Chrome zette het bewaarde inlog-
+// mailadres in het zoekveld van Onderhoudsplannen. autocomplete="off" op de velden is
+// laag 1; dit is laag 2 voor browsers die dat negeren. Staat er iets in het veld dat
+// niet via oninput in de zoekterm van de app terecht kwam, dan is het niet door de
+// gebruiker getypt en gaat het weg.
+function _dashZoekvelenOpschonen() {
+  const paren = [['calcZoek', _dashCalcZoek], ['planZoek', _dashPlanZoek]];
+  paren.forEach(([id, term]) => {
+    const el = document.getElementById(id);
+    if (el && el.value && !(term || '').trim()) el.value = '';
+  });
+}
+
 function renderDashboard() {
+  _dashZoekvelenOpschonen();
   document.getElementById('statMat').textContent = data.materialen.length;
   document.getElementById('statBew').textContent = data.bewerkingen.length;
   document.getElementById('statSys').textContent = data.systemen.length;
