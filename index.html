@@ -2421,8 +2421,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.104.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.104.2</h2>
       <div class="intro-body">
+        <p><strong>🔧 Openen op een planreactie ging naar het verkeerde venster (v4.104.2).</strong> Gaf een klant akkoord op een onderhoudsplan, dan opende <strong>Openen</strong> in het blok Reacties op offertes en plannen de bron-calculatie met het offerte-accordeervenster erbij, dat meldde dat er nog geen accordeerlink was en een groene knop bood om er een te maken: terwijl de klant net via het plan akkoord had gegeven. Voortaan brengt Openen je bij een planreactie naar de Onderhoudsplan-tab met dat plan geladen, zonder venster; het Accordeerlink-venster van het plan roep je daar zelf aan als je het getekende exemplaar wilt. Openen op een offertereactie blijft zoals het was: calculatie open plus het accordeervenster. Wordt het plan niet gevonden, dan zegt de app dat in plaats van stil iets anders te tonen. Geen SQL, geen Edge Function.</p>
         <p><strong>❓ Vragen en afwijsreden per eerdere versie (v4.104.1).</strong> In het lijstje Eerdere versies staan nu onder elke oudere accordeerlink de vragen die de klant op die versie stelde (tekst, naam, datum) en bij een afwijzing de opgegeven reden. Zo blijft bij een herziening het hele gesprek per versie terug te lezen. Geen SQL, geen Edge Function.</p>
         <p><strong>🗂️ Eerdere offerteversies bewaard en inzichtelijk (v4.104.0).</strong> Onderin het venster 🔗 Accordeerlink staat nu het blok <strong>Eerdere versies</strong>: elke oudere accordeerlink van deze offerte met offertenummer en V-aanduiding, datum, bedrag, wat de klant ermee deed (geaccordeerd, afgewezen, vervangen zonder reactie) en een knop die de bevroren PDF van die versie ophaalt via je eigen inlog (de bak accord-pdf is privé). Maak je een nieuwe link, dan wordt de oude onbeantwoorde link niet meer gewist maar op <em>vervangen</em> gezet, zodat elke verstuurde versie voor altijd bewaard blijft, los van de 30-dagen-inzage van de klant. Een klant die een oude link opent, ziet een nette melding dat die versie is vervangen en krijgt het mailadres; akkoord, afwijzen of vragen kan op zo'n link niet meer (de Edge Function offerte-accord weigerde dat al, de nachtelijke opvolging kijkt alleen naar open links). Eerlijk erbij: versies die vóór deze release zonder reactie zijn vervangen, waren al gewist en komen niet terug. <strong>Vereist</strong> de SQL <code>accord_04_vervangen.sql</code> (status-constraint uitgebreid; gedraaid 31-10). Geen Edge Function gewijzigd.</p>
         <p><strong>🔧 Melding van een houtrotopgave opende een verkeerd venster (v4.102.1).</strong> Een afwijzing of akkoord op een opgave uit de opleverapp stond op het dashboard als "(naamloos)", en Openen toonde het accordeerlink-venster van de calculatie die toevallig openstond. De melding heet nu "Houtrotopgave &lt;project&gt;" met de klantnaam en een oranje pil <strong>opgave</strong>; de knop heet <strong>Opleverapp</strong> en opent die app in een nieuw tabblad. Openen op een gewone melding kan het venster van een andere calculatie niet meer tonen. Geen SQL en geen Edge Function.</p>
@@ -3918,7 +3919,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.104.1';
+const APP_VERSION = 'v4.104.2';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4335,6 +4336,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.104.2', d: '2026-11-02', h: 'Fix: Openen op een planreactie in het meldingenblok gaat naar de Onderhoudsplan-tab met het plan, niet meer naar het offerte-accordeervenster van de bron-calculatie.' },
   { v: '4.104.1', d: '2026-11-01', h: 'Eerdere versies toont per oudere accordeerlink ook de gestelde vragen en de afwijsreden.' },
   { v: '4.104.0', d: '2026-11-01', h: 'Accordeerlink-venster toont onderin Eerdere versies (offertenummer/V, datum, bedrag, reactie, PDF via eigen inlog). Nieuwe link zet de oude onbeantwoorde link op vervangen i.p.v. wissen; klantpagina toont bij een vervangen link een melding zonder knoppen. SQL accord_04_vervangen.sql.' },
   { v: '4.102.1', d: '2026-11-01', h: 'Fix: een reactie op een houtrotopgave uit de opleverapp stond als "(naamloos)" op het dashboard en Openen toonde het accordeerlink-venster van een andere calculatie. Nu projectnaam, klant, pil opgave en een knop Opleverapp.' },
@@ -26792,7 +26794,7 @@ async function _accordMeldingenRender() {
       + '</div>'
       + (it.opgave
           ? '<a class="btn btn-sm" href="oplevering.html" target="_blank" rel="noopener">Opleverapp</a>' // v4.102.1 — geen calculatie om te openen
-          : '<button class="btn btn-sm" onclick="accordMeldingOpen(\'' + it.calcId + '\')">Openen</button>')
+          : '<button class="btn btn-sm" onclick="accordMeldingOpen(\'' + it.calcId + '\', ' + (it.plan ? 'true' : 'false') + ')">Openen</button>') // v4.104.2 — plan-vlag mee
       + '<button class="btn btn-secondary btn-sm" onclick="accordMarkGezien(\'' + it.accId + '\')">Gezien</button>'
       + '</div>';
   });
@@ -27035,11 +27037,22 @@ async function accordMarkAllesGezien() {
   _accordMeldingenRender();
 }
 
-async function accordMeldingOpen(calcId) {
+async function accordMeldingOpen(calcId, isPlan) {
   // v4.102.1 — Een melding zonder (bekende) calculatie opende via accordLinkBeheer het
   // accordeerlink-venster van de toevallig actieve calculatie: verkeerd venster. Nu stoppen.
   if (!calcId || calcId === 'null' || !data.calculaties.find(x => x.id === calcId)) {
     _toast('Deze reactie hoort niet bij een calculatie in deze app.');
+    return;
+  }
+  // v4.104.2 — Reactie op een onderhoudsplan: naar de Onderhoudsplan-tab met het plan
+  // geladen, geen venster. Voorheen opende dit het offerte-accordeervenster van de
+  // bron-calculatie, dat dan "nog geen accordeerlink" meldde terwijl de klant het plan
+  // net had geaccordeerd (God 2026-2036, 02-11-2026). Besluit Gian: alleen naar de tab.
+  if (isPlan === true) {
+    await openPlan(calcId);
+    if (!_ohpState.plan || !_ohpState.plan.id || _ohpState.calcId !== calcId) {
+      _toast('Het onderhoudsplan bij deze calculatie is niet gevonden.');
+    }
     return;
   }
   await openCalc(calcId);

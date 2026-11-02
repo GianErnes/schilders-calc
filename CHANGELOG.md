@@ -1,3 +1,21 @@
+## v4.104.2 — Openen op een planreactie ging naar het verkeerde venster (2026-11-02)
+
+**Aanleiding**
+- Gian 02-11: plan God 2026-2036 geaccordeerd door Nicolle God. Openen in het dashboardblok opende de calculatie Trilsbeek-God Buitenwerk met het offerte-accordeervenster: "Er is nog geen accordeerlink voor deze offerte" plus een groene aanmaakknop. "Dat is raar!" Zelfde familie als v4.102.1: `accordMeldingOpen` riep altijd `accordLinkBeheer()` (offerte) aan, ook bij een planreactie; de plan-vlag werd wel getekend (grijze pil) maar niet aan de knop doorgegeven.
+
+**Besluit (Gian, 02-11)**
+- Bij een planreactie: alleen naar de Onderhoudsplan-tab met het plan geladen, geen venster. Offertereacties ongewijzigd (calculatie + accordeervenster, daar bestaat de link wél).
+- Calculatiestatus niet aanraken: een basiscalculatie voor een plan is iets anders dan een offerte.
+- Vervolgstap apart: nieuwe status "Planbasis" voor calculaties die alleen als basis voor een onderhoudsplan dienen (vervuilen nu het bakje Verzonden, de win-ratio en staan standaard uit in de OHP-bronkiezer).
+
+**Gebouwd**
+- `_accordMeldingenRender`: de knop Openen geeft `it.plan` mee als tweede argument.
+- `accordMeldingOpen(calcId, isPlan)`: bij `isPlan === true` → bestaande `openPlan(calcId)`; staat daarna geen plan voor die calc in `_ohpState`, dan een toast "Het onderhoudsplan bij deze calculatie is niet gevonden."
+- Vijf versieankers bijgewerkt. Geen SQL, geen Edge Function.
+
+**Getest**
+- `node --check`: groen. Niet getest in de browser; test op de live app: Openen op de God-melding moet op de Onderhoudsplan-tab uitkomen met God 2026-2036 in beeld en zonder venster.
+
 ## v4.104.1 — Vragen en afwijsreden per eerdere versie (2026-11-01)
 
 **Aanleiding**
