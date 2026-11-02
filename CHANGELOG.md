@@ -1,3 +1,19 @@
+## v4.107.1 — Mailadres in het zoekveld van Onderhoudsplannen, tweede poging (2026-11-02)
+
+**Aanleiding**
+- Gian 02-11, screenshot met v4.105.1 live: nog steeds administratie@ernes.nl in het zoekveld, met Chrome's lichtblauwe autofill-kleur. Beide lagen uit v4.105.1 hielpen niet; laag 2 kon ook niet helpen, want Chrome vult pas in nádat `renderDashboard()` klaar is.
+
+**Oorzaak (aanname op basis van de DOM-volgorde in index.html, past precies)**
+- Het venster Wachtwoord wijzigen (`#cpCurrent`, `autocomplete="current-password"`) had geen gebruikersnaamveld. Chrome koppelt dan het dichtstbijzijnde zichtbare tekstveld vóór het wachtwoordveld als gebruikersnaam. Alle velden daartussen staan op verborgen tabs; het laatste zichtbare is `#planZoek` op het dashboard. Daarom wel plannen, niet calculaties (`#calcZoek` staat er net voor).
+
+**Gebouwd**
+- `#cpUsername` in het wachtwoordvenster: `type="text"`, `autocomplete="username"`, readonly, buiten beeld (niet `display:none`, anders telt het voor Chrome niet mee). `openChangePasswordModal()` is nu async en vult het met het sessie-mailadres.
+- `#calcZoek` en `#planZoek`: `readonly` tot `onfocus`; alleen-lezen velden worden niet ingevuld. Typen werkt gewoon na klikken.
+- Laag 2 uit v4.105.1 blijft staan. Versieankers bijgewerkt. Geen SQL, geen Edge Function.
+
+**Getest**
+- `node --check`: groen. Browser: niet getest; autofill is niet na te bootsen in Node. Test: dashboard openen in Chrome, zoekveld moet leeg zijn; klikken en typen moet werken; Wachtwoord-venster openen, Chrome mag het adres daar (onzichtbaar) invullen maar het venster moet er hetzelfde uitzien.
+
 ## v4.107.0 — Rekenverantwoording planbeurt klaar voor Yoobi (2026-11-02)
 
 **Aanleiding**
