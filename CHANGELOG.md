@@ -1,3 +1,29 @@
+## v4.105.0 — Nieuwe calculatiestatus Planbasis (2026-11-02)
+
+**Aanleiding**
+- Gian 02-11, na v4.104.2: "binnen een jaar weet Maud niet meer dat dat een basiscalculatie is en deze vervuilt de verzonden selectie." Bevestigd in de database (query 02-11): Trilsbeek-God Buitenwerk stond op Verzonden, telde als uitgebrachte offerte in de win-ratio en had via de trigger `offerte_taken_sync` een "Offerte uitbrengen"- en een "Stukken in Yoobi bij verkoop zetten"-taak gekregen, voor een calculatie die nooit een offerte was.
+- Alternatieven overwogen en afgewezen: een vinkje op de calculatie (twee dingen bepalen dan samen de plek) en basiscalcs op Gereed laten staan (niet vergrendeld, vermengt met wachtende offertes).
+
+**Gebouwd (index.html)**
+- Status `planbasis`, label "Planbasis", kleur #0f766e, in de vier calculatie-`STATUS_LABELS`-sets (offertedocument, Yoobi-overzicht, slotbanner, dashboard), `STATUS_COLORS`, `STATUS_ORDER` (tussen gereed en verzonden) en `_dashCollapsed`. De statuskeuzelijst op het dashboard volgt uit de labels.
+- `_isCalcLocked` sluit al alles behalve concept/afspraak; de slotbanner krijgt bij Planbasis de extra zin "Dit is de basis van een onderhoudsplan, geen offerte; het plan rekent erop."
+- Win-ratio: `_uitgebracht` blijft verzonden/geaccepteerd/verloren; tooltip noemt planbasis als niet-meetellend.
+- OHP-bronkiezer: vinkje Planbasis, standaard aan (`_ohpFilter.status.planbasis = true`).
+- Deadline-controle op het dashboard (op tijd / +n dg) kijkt alleen naar verzonden/geaccepteerd, dus Planbasis valt er al buiten; niet gewijzigd.
+- Buiten index.html leest niets de calculatiestatus: taken.html, planning.html, financieel.html, klanten.html nul treffers; oplevering.html gebruikt "verzonden" alleen voor opgaven (repo opgehaald 02-11).
+- Versieankers bijgewerkt.
+
+**Database — `sql/calc_01_planbasis.sql`**
+- `calculaties_status_check` opnieuw aangemaakt met `planbasis` erbij.
+- `offerte_taken_sync` ongemoeid: elke tak toetst op expliciete statuslijsten zonder planbasis, dus de functie doet bij Planbasis niets (geen uitbreng-taak, geen Yoobi-verkoop-taak, geen heropening op de terugweg).
+- Nieuwe kleine trigger `trg_planbasis_taken` → `planbasis_taken_sync()`: bij de wissel naar planbasis vervallen open taken met bron offerte en kenmerk uitbrengen, nabellen of opvolg-bel voor die calculatie. Plan-taken (kenmerken met -plan) blijven staan.
+
+**Bewust niet**
+- Automatisch Planbasis zetten zodra er een plan aan hangt: een calculatie kan ook offerte én planbron tegelijk zijn. Gian kiest zelf.
+
+**Getest**
+- `node --check`: groen. Migratie nog niet gedraaid op het moment van schrijven; wordt via de Supabase-koppeling toegepast na het lezen door Gian. Browsertest: Trilsbeek-God Buitenwerk op Planbasis zetten, dashboardgroep, slotbanner, bronkiezer en takenlijst controleren.
+
 ## v4.104.2 — Openen op een planreactie ging naar het verkeerde venster (2026-11-02)
 
 **Aanleiding**
@@ -14,7 +40,7 @@
 - Vijf versieankers bijgewerkt. Geen SQL, geen Edge Function.
 
 **Getest**
-- `node --check`: groen. Niet getest in de browser; test op de live app: Openen op de God-melding moet op de Onderhoudsplan-tab uitkomen met God 2026-2036 in beeld en zonder venster.
+- `node --check`: groen. Live getest door Gian op 02-11: Openen op de God-melding komt op de Onderhoudsplan-tab uit met het plan in beeld, zonder venster.
 
 ## v4.104.1 — Vragen en afwijsreden per eerdere versie (2026-11-01)
 
