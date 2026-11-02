@@ -22,7 +22,7 @@
 - Automatisch Planbasis zetten zodra er een plan aan hangt: een calculatie kan ook offerte én planbron tegelijk zijn. Gian kiest zelf.
 
 **Getest**
-- `node --check`: groen. Migratie nog niet gedraaid op het moment van schrijven; wordt via de Supabase-koppeling toegepast na het lezen door Gian. Browsertest: Trilsbeek-God Buitenwerk op Planbasis zetten, dashboardgroep, slotbanner, bronkiezer en takenlijst controleren.
+- `node --check`: groen. Migratie 02-11 via de Supabase-koppeling toegepast en met een query gecontroleerd (constraint en drie triggers). Proeftest in een teruggedraaide transactie op Trilsbeek-God: status geaccepteerd, geen nieuwe offertetaken, plantaken ongemoeid; de vervallen-tak van de nieuwe trigger is daarbij niet geraakt (alle offertetaken waren al afgevinkt). Live bevestigd door Gian op 02-11: "Werkt".
 
 ## v4.104.2 — Openen op een planreactie ging naar het verkeerde venster (2026-11-02)
 
