@@ -1,3 +1,19 @@
+## v4.107.3 — Reparatie op v4.107.2: offerte-PDF kon niet meer worden gemaakt (2026-11-03)
+
+**Aanleiding**
+- Gian 03-11, direct na uploaden van v4.107.2: geen offerte-PDF meer aan te maken.
+
+**Oorzaak (bevestigd in Node met pdfmake 0.2.20)**
+- In v4.107.2 kregen de koppen Kozijn-tekeningen en Foto-bijlage dezelfde `id: 'bijlageKop'`. pdfMake eist unieke node-ids (docPreprocessor gooit "Node id 'bijlageKop' already exists") en bouwt dan geen PDF. Dit raakt elke offerte met zowel kozijntekeningen als foto's, dus vrijwel alle offertes. Mijn Node-test van v4.107.2 had twee verschillende ids en ving dit niet; de test week daarmee af van de code die ik leverde.
+
+**Gebouwd**
+- `id: 'kozijnKop'` en `id: 'fotoKop'`; `pageBreakBefore` toetst op beide. Verder niets gewijzigd. Versieankers bijgewerkt. Geen SQL, geen Edge Function.
+
+**Getest**
+- `node --check`: groen.
+- Node-nabouw (pdfmake 0.2.20) met exact deze ids en toets: 360 varianten, 0 lege vellen, beide koppen altijd bovenaan een eigen pagina; de dubbele-id-fout van v4.107.2 is in dezelfde nabouw gereproduceerd.
+- Niet getest: in de browser. Controle na deploy met offerte 260142: Offerte + bijlagen opent weer een PDF, 7 pagina's, voet "Offerte 260142 · pagina x van y"; ook het losse offertedocument controleren.
+
 ## v4.107.2 — Geen los vel meer tussen offerte en kozijntekeningen/foto's (2026-11-03)
 
 **Aanleiding**
