@@ -2421,8 +2421,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.107.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.107.2</h2>
       <div class="intro-body">
+        <p><strong>📄 Geen los vel meer tussen offerte en bijlagen (v4.107.2).</strong> Onderaan het offertedocument stond nog een regel 'Offerte nr · Ernes schilders · datum', een overblijfsel van de oude HTML-print. Als ondertekening en slotzin de pagina net vulden, schoof die ene regel alleen naar een nieuw vel, en daarna begonnen de kozijntekeningen weer op een eigen pagina. Die regel is weg; het offertenummer staat nu in de paginavoet naast 'pagina x van y'. Daarnaast dwingen de koppen Kozijn-tekeningen en Foto-bijlage alleen nog een paginasprong af als ze niet al bovenaan een verse pagina staan. Alleen de PDF-opbouw; geen SQL, geen Edge Function.</p>
         <p><strong>🔧 Mailadres in het zoekveld van Onderhoudsplannen, tweede poging (v4.107.1).</strong> De fix uit v4.105.1 hielp niet, want de oorzaak zat ergens anders: het venster Wachtwoord wijzigen had wel een wachtwoordveld maar geen gebruikersnaamveld, en Chrome zoekt dan zelf het dichtstbijzijnde zichtbare tekstveld ervóór op om het inlogadres in te zetten. Dat was het zoekveld van de plannenlijst. Het wachtwoordvenster heeft nu een eigen (onzichtbaar) gebruikersnaamveld met je ingelogde adres, zodat Chrome daar terechtkan. Als extra slot zijn de twee zoekvelden alleen-lezen tot je erop klikt; alleen-lezen velden vult een browser niet in. Geen SQL, geen Edge Function.</p>
         <p><strong>🏗️ Rekenverantwoording van een planbeurt klaar voor Yoobi (v4.107.0).</strong> Het Σ-paneel van een beurt toonde losse uren zonder totaal en alleen materiaalverkoop, terwijl je voor het Yoobi-project uren, inkoop en materieel apart nodig hebt. Nu: het urenblok telt op naar "Totaal uren incl. toeslagen" (hetzelfde getal als in de calculatie) en daaronder met afrondings- en reisuren naar "Totaal uren voor Yoobi". Een staartpost kan het vinkje "Materieel" krijgen (steiger, hoogwerker, lift), in het staartpost-venster of rechtstreeks in het Σ-paneel, ook op een vergrendelde calculatie; het is alleen een label, de prijs verandert niet. Onderaan staat een nieuw blok "Overname naar Yoobi" met vier regels, op prijspeil en geïndexeerd naar het beurtjaar: uren, materiaal inkoop + klein materiaal, materieel en overige staartposten. Eenmalige SQL is al uitgevoerd (kolom kostensoort op staart en staart_lib); bestaande staartposten staan op overig tot je ze aanvinkt.</p>
         <p><strong>📊 Kolom Geïndexeerd excl. BTW in de beurtentabel (v4.106.0).</strong> In het detail van een onderhoudsplan staat tussen "Basis (excl. BTW)" en "Geïndexeerd (incl. BTW)" nu ook het geïndexeerde bedrag zonder BTW. Dat bedrag werd al berekend voor de rekenverantwoording (Σ), maar was in de tabel niet zichtbaar. Alleen weergave, geen rekenwijziging; print, offerte en VvE-bijlage zijn ongewijzigd. Geen SQL, geen Edge Function.</p>
@@ -3941,7 +3942,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.107.1';
+const APP_VERSION = 'v4.107.2';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4364,6 +4365,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.107.2', d: '2026-11-03', h: 'Fix: geen los vel meer tussen offerte en kozijntekeningen/foto\'s in de offerte-PDF; offertenummer in de paginavoet.' },
   { v: '4.107.1', d: '2026-11-02', h: 'Fix (2e poging): gebruikersnaamveld in het wachtwoordvenster, zodat Chrome het inlogadres niet meer in het zoekveld van Onderhoudsplannen zet; zoekvelden alleen-lezen tot aanraking.' },
   { v: '4.107.0', d: '2026-11-02', h: 'Σ-paneel planbeurt: totaal uren (calc-tab én Yoobi), materiaal inkoop, vinkje Materieel op staartposten en blok Overname naar Yoobi. SQL kostensoort uitgevoerd.' },
   { v: '4.106.0', d: '2026-11-02', h: 'Beurtentabel in Onderhoudsplannen toont nu ook de kolom Geïndexeerd (excl. BTW), tussen basis en incl. BTW. Alleen weergave.' },
@@ -16582,8 +16584,9 @@ function _bouwOfferteDocDef() {
     });
   }
 
-  // Afsluitende footerregel (zoals in het HTML-document)
-  content.push({ text: 'Offerte ' + offNr + ' · ' + BEDRIJF.naam + ' · ' + datumLang, fontSize: 8, color: MUTED, margin: [0, 14, 0, 0] });
+  // v4.107.2 — De afsluitende regel 'Offerte nr · Ernes schilders · datum' (overblijfsel van de
+  // HTML-print) is geschrapt: als ondertekening en slotzin de pagina net vulden, schoof die ene
+  // regel alleen naar een nieuw vel. Het offertenummer staat nu in de paginavoet (zie footer).
 
   return {
     pageSize: 'A4',
@@ -16604,7 +16607,7 @@ function _bouwOfferteDocDef() {
       margin: [42, 6, 42, 0],
       columns: [
         { image: LOGO_VAKWERK, width: 46 },
-        { text: 'pagina ' + currentPage + ' van ' + pageCount, alignment: 'right', fontSize: 8, color: MUTED, margin: [0, 16, 0, 0] }
+        { text: 'Offerte ' + offNr + ' · pagina ' + currentPage + ' van ' + pageCount, alignment: 'right', fontSize: 8, color: MUTED, margin: [0, 16, 0, 0] }   // v4.107.2 — offertenummer in de voet
       ]
     }),
     content
@@ -16716,6 +16719,7 @@ async function _bouwOfferteCompleetDocDef() {
   const cfg = _offCfg();
   const offDd = _bouwOfferteDocDef();
   if (!offDd) return null; // melding is al getoond
+  const offNr = _offerteNummer(c); // v4.107.2 — voor de paginavoet
   const MUTED = '#8a8a8a';
   const fmNl = (x) => (+x).toFixed(2).replace('.', ',');
   const content = offDd.content.slice();
@@ -16729,7 +16733,7 @@ async function _bouwOfferteCompleetDocDef() {
     (c.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => {
       _regelLocatie[r.id] = [hg.naam, od.naam].map(s => (s || '').trim()).filter(Boolean).join(' \u00b7 ');
     })));
-    content.push({ text: 'Kozijn-tekeningen', bold: true, fontSize: 13, pageBreak: 'before', margin: [0, 0, 0, 1] });
+    content.push({ text: 'Kozijn-tekeningen', bold: true, fontSize: 13, id: 'bijlageKop', margin: [0, 0, 0, 1] });   // v4.107.2 — paginasprong via pageBreakBefore, alleen als nodig
     content.push({ text: (c.naam || '') + (c.klant ? ' \u00b7 ' + c.klant : ''), color: MUTED, fontSize: 9, margin: [0, 0, 0, 8] });
     kozijnen.forEach(ms => {
       const tek = ms.tekening;
@@ -16785,7 +16789,7 @@ async function _bouwOfferteCompleetDocDef() {
     if (missing.length) await _signFotoUrls(missing);
     const fdata = [];
     for (const f of fotos) { let url = null; try { url = await _fotoNaarDataUrl(f); } catch (e) { url = null; } fdata.push({ f, url }); }
-    content.push({ text: 'Foto-bijlage', bold: true, fontSize: 13, pageBreak: 'before', margin: [0, 0, 0, 1] });
+    content.push({ text: 'Foto-bijlage', bold: true, fontSize: 13, id: 'bijlageKop', margin: [0, 0, 0, 1] });   // v4.107.2 — idem
     content.push({ text: (c.naam || '') + (c.klant ? ' \u00b7 ' + c.klant : '') + ' \u00b7 ' + fotos.length + ' foto' + (fotos.length === 1 ? '' : '\u2019s'), color: MUTED, fontSize: 9, margin: [0, 0, 0, 8] });
     const fGebruikt = {}; fotos.forEach(f => (f.markeringen || []).forEach(m => { fGebruikt[m.type] = true; }));
     const fTypes = Object.keys(_KOZIJN_DEFECTEN).filter(k => fGebruikt[k]);
@@ -16820,6 +16824,12 @@ async function _bouwOfferteCompleetDocDef() {
     defaultStyle: { fontSize: 10, lineHeight: 1.3, color: '#1a1a1a' },
     info: offDd.info,
     pageBreakBefore: function (currentNode, following) {
+      // v4.107.2 — Bijlagekoppen (kozijnen, foto's) beginnen op een eigen pagina, maar alleen als de kop
+      // niet al bovenaan een verse pagina staat (startpositie op de bovenmarge van 64 pt). Een harde
+      // pageBreak gaf anders een leeg vel wanneer het blok ervoor de pagina exact vulde: pdfMake maakt
+      // dan zelf al een nieuwe pagina en de harde sprong voegde er nog een aan toe. Getest in Node met
+      // pdfmake 0.2.20 (360 varianten): 0 lege vellen, koppen altijd bovenaan een eigen pagina.
+      if (currentNode.id === 'bijlageKop') return !(currentNode.startPosition && currentNode.startPosition.top <= 64.5);
       if (currentNode.id === 'avStart' && currentNode.startPosition) { avStartPage = currentNode.startPosition.pageNumber + 1; return true; }
       if (currentNode.id === 'offKostenKop' && currentNode.startPosition && currentNode.startPosition.pageInnerHeight) { if ((currentNode.startPosition.top / currentNode.startPosition.pageInnerHeight) > 0.62) return true; }
       if (currentNode.headlineLevel === 1 && Array.isArray(following) && following.length === 0) return true;
@@ -16833,7 +16843,7 @@ async function _bouwOfferteCompleetDocDef() {
     footer: function (currentPage) {
       if (avStartPage && currentPage >= avStartPage) return null;
       const tot = avStartPage ? (avStartPage - 1) : currentPage;
-      return { margin: [42, 6, 42, 0], columns: [{ image: LOGO_VAKWERK, width: 46 }, { text: 'pagina ' + currentPage + ' van ' + tot, alignment: 'right', fontSize: 8, color: MUTED, margin: [0, 16, 0, 0] }] };
+      return { margin: [42, 6, 42, 0], columns: [{ image: LOGO_VAKWERK, width: 46 }, { text: 'Offerte ' + offNr + ' · pagina ' + currentPage + ' van ' + tot, alignment: 'right', fontSize: 8, color: MUTED, margin: [0, 16, 0, 0] }] };   // v4.107.2
     },
     content
   };

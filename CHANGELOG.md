@@ -1,3 +1,22 @@
+## v4.107.2 — Geen los vel meer tussen offerte en kozijntekeningen/foto's (2026-11-03)
+
+**Aanleiding**
+- Gian 03-11: de offerte-PDF (knop Offerte + bijlagen) heeft meestal een leeg vel tussen de offerteteksten en de kozijntekeningen. Uit zijn PDF (offerte 260142, 8 pagina's): pagina 4 eindigt met de slotzin, pagina 5 bevat alleen de regel "Offerte 260142 · Ernes schilders · 3 november 2026", pagina 6 begint met Kozijn-tekeningen.
+
+**Oorzaak (uit index.html, bevestigd door de PDF)**
+- `_bouwOfferteDocDef()` sloot het offertedocument af met de regel `Offerte nr · Ernes schilders · datum` (14 pt marge erboven), een overblijfsel van de HTML-print. Als ondertekening en slotzin de pagina net vullen, schuift die ene regel alleen naar een nieuw vel, waarna de harde `pageBreak: 'before'` van de kop Kozijn-tekeningen een volgende pagina afdwingt. Omdat de vaste offerteteksten bijna altijd even lang zijn, valt het einde vaak precies daar.
+- Tweede, zeldzamer mechanisme (gereproduceerd in Node met pdfmake 0.2.20, 2 van 360 varianten): vult het laatste onsplitsbare kozijnblok een pagina exact, dan maakt pdfMake zelf al een nieuwe pagina én dwingt de harde sprong vóór Foto-bijlage er nog een af: een écht leeg vel.
+
+**Gebouwd**
+- De afsluitende regel is geschrapt (geldt ook voor het losse offertedocument). Het offertenummer staat nu in de paginavoet: "Offerte 260142 · pagina 4 van 8", in beide PDF-routes (`_bouwOfferteDocDef` en `_bouwOfferteCompleetDocDef`, met `offNr` via `_offerteNummer(c)`).
+- De koppen Kozijn-tekeningen en Foto-bijlage hebben geen harde `pageBreak` meer maar `id: 'bijlageKop'`; `pageBreakBefore` in `_bouwOfferteCompleetDocDef` dwingt de sprong alleen af als de kop niet al op de bovenmarge (64 pt) staat. Een toets op `previousNodesOnPage` bleek níet te werken: het onsplitsbare blok ervoor registreert ook een positie op het lege vel.
+- Versieankers bijgewerkt. Geen SQL, geen Edge Function.
+
+**Getest**
+- `node --check` op het scriptblok: groen.
+- Nabouw in Node (pdfmake 0.2.20, zelfde paginamarges en pagebreak-regels) met 360 combinaties van tekstlengte, aantal kozijnen, tekeninghoogte, infoteksten en legenda: vóór de fix 2 lege vellen, na de fix 0; beide koppen beginnen in alle gevallen bovenaan een eigen pagina.
+- Niet getest: in de browser met een echte calculatie. Controleer na deploy met offerte 260142: (1) Offerte + bijlagen moet 7 pagina's geven in plaats van 8, zonder vel met alleen een offerteregel; (2) paginavoet toont "Offerte 260142 · pagina x van y"; (3) kozijntekeningen en fotoblad beginnen elk bovenaan een eigen pagina; (4) het losse offertedocument eindigt zonder losse regel; (5) de AV-pagina's zitten er nog zonder kop/voet achteraan.
+
 ## v4.107.1 — Mailadres in het zoekveld van Onderhoudsplannen, tweede poging (2026-11-02)
 
 **Aanleiding**
