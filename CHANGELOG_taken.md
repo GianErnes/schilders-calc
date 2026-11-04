@@ -6,6 +6,50 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.26.2 — Offerte en Planning ook als chip kiesbaar, 04-11-2026
+
+**Aanleiding.** Gian 04-11-2026: een zelf getypte taak "offerte maken"
+kon niet in de categorie Offerte, die kwam alleen uit bron. Niet ideaal.
+
+**Gebouwd.** `bouwCatChips` zet de twee vaste categorieën uit `CAT_VAST`
+(Offerte, Planning) vooraan tussen de chips. Ze staan niet in
+`taak_categorieen` en zijn dus niet te verwijderen; een eigen taak krijgt
+`categorie = 'Offerte'` in de database, de pil heeft dezelfde kleur als
+de automatische Offerte-pil en in de filterbalk vallen handmatige en
+automatische Offerte-taken onder één knop. "+ Nieuw" weigert nu ook
+namen die met een vaste categorie botsen. `APP_VERSION` v0.26.2.
+Geen SQL, geen Edge Function. Gebouwd op v0.26.1, die op dat moment nog
+niet live stond (live was v0.26.0, ongewijzigd sinds de levering).
+
+**Getest.** `node --check` op beide scriptblokken; div-balans 110/110;
+Node-harness (vaste chips aanwezig en vooraan, selectie, `catVan` en
+kleur voor een eigen taak in Offerte). Niet in de browser.
+
+## v0.26.1 — Categorie slaat direct op bij aantikken, 04-11-2026
+
+**Aanleiding.** Gian 04-11-2026, direct na v0.26.0: categorie toegekend
+maar vergeten op Bewaren te tikken, dus niets opgeslagen en geen
+filterbalk. Een chip voelt als een directe actie; Bewaren erachter
+verwacht niemand.
+
+**Gebouwd.** `zetCategorieDirect(naam)`: bij een bestaande eigen taak
+gaat de chip-tik meteen als `update` naar `taken`, de kaart in de lijst
+wordt herbouwd en een toast meldt het. Mislukt het, dan springt de chip
+terug en komt de foutmelding. Bij een nieuwe taak is er nog geen rij;
+dan blijft de keuze staan en gaat hij mee met Toevoegen. "+ Nieuw" loopt
+via dezelfde weg, dus een nieuwe categorie staat meteen op de taak.
+Bewaren stuurt `categorie` nog steeds mee, dat blijft consistent.
+`APP_VERSION` v0.26.1. Geen SQL, geen Edge Function.
+
+**Opgeruimd in de database (op verzoek Gian).** Klantcontact, Inkoop en
+Kantoor verwijderd uit `taak_categorieen`; geen taak gebruikte ze.
+
+**Getest.** `node --check` op beide scriptblokken; div-balans 110/110;
+Node-harness op `zetCategorieDirect` uit het gepatchte bestand (update
+gestuurd, lokaal bijgewerkt, terugdraaien bij fout, leegmaken, nieuwe
+taak zonder update). Niet getest in de browser: dat is chip tikken,
+vel sluiten met ✕, pil op de kaart en filterbalk zichtbaar.
+
 ## v0.26.0 — Categorieën op taken, 04-11-2026
 
 **Aanleiding.** Gian 04-11-2026 ("take 26"): categorieën in de Taken-app.

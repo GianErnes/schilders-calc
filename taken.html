@@ -674,7 +674,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.26.0';
+const APP_VERSION = 'v0.26.2';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -1209,7 +1209,10 @@ function bouwCategoriefilter(){
 /* Chips in het vel. Tik om te kiezen, nog eens tikken om leeg te maken. */
 function bouwCatChips(){
   const bak = document.getElementById('s_catchips');
-  let h = CATEGORIEEN.map(c =>
+  /* v0.26.2: Offerte en Planning ook als chip voor eigen taken (Gian:
+     "ik moet een offerte maken" hoort in Offerte). Vast, niet in de tabel. */
+  const vast = Object.keys(CAT_VAST).map(k => CAT_VAST[k]);
+  let h = vast.concat(CATEGORIEEN).map(c =>
     '<button type="button" class="chip' + (VEL && VEL.categorie === c.naam ? ' sel' : '') + '" data-cat="' + esc(c.naam) + '">' +
     '<i class="d" style="background:' + esc(c.kleur) + '"></i>' + esc(c.naam) + '</button>').join('');
   if(magCategorieBeheren()) h += '<button type="button" class="chip" data-cat="__nieuw">+ Nieuw</button>';
@@ -1220,17 +1223,41 @@ async function voegCategorieToe(){
   const inp = document.getElementById('s_catnaam');
   const naam = inp.value.trim();
   if(!naam){ toast('Geef de categorie een naam'); return; }
-  if(CATEGORIEEN.some(c => c.naam.toLowerCase() === naam.toLowerCase())){ toast('Die categorie bestaat al'); return; }
+  const bestaat = CATEGORIEEN.some(c => c.naam.toLowerCase() === naam.toLowerCase()) ||
+    Object.keys(CAT_VAST).some(k => CAT_VAST[k].naam.toLowerCase() === naam.toLowerCase());
+  if(bestaat){ toast('Die categorie bestaat al'); return; }
   const kleur = CAT_PALET[CATEGORIEEN.length % CAT_PALET.length];
   const volgorde = CATEGORIEEN.reduce((m, c) => Math.max(m, c.volgorde || 0), 0) + 10;
   const { error } = await sb.from('taak_categorieen').insert({ naam: naam, kleur: kleur, volgorde: volgorde });
   if(error){ toast('Toevoegen lukt niet: ' + (error.message || '')); return; }
   try{ await laadCategorieen(); }catch(e){ toast('Herladen lukt niet: ' + (e.message || String(e))); return; }
-  if(VEL) VEL.categorie = naam;
   inp.value = '';
   document.getElementById('s_catnieuw').classList.remove('zie');
-  bouwCatChips();
   toast('Categorie "' + naam + '" toegevoegd');
+  await zetCategorieDirect(naam);
+}
+
+/* v0.26.1: een chip tikken slaat de categorie meteen op bij een bestaande
+   taak, los van Bewaren (Gian 04-11-2026: vergat op te slaan). Bij een
+   nieuwe taak is er nog geen rij; dan gaat hij mee met Toevoegen. */
+async function zetCategorieDirect(naam){
+  if(!VEL) return;
+  VEL.categorie = naam;
+  bouwCatChips();
+  if(VEL.modus !== 'eigen' || !VEL.taak) return;
+  const t = VEL.taak;
+  const vorige = t.categorie || null;
+  t.categorie = naam;
+  const { error } = await sb.from('taken').update({ categorie: naam }).eq('crmtaskid', t.crmtaskid);
+  if(error){
+    t.categorie = vorige;
+    VEL.categorie = vorige;
+    bouwCatChips();
+    toast('Categorie opslaan lukt niet: ' + (error.message || ''));
+    return;
+  }
+  render();
+  toast(naam ? 'Categorie: ' + naam : 'Categorie weggehaald');
 }
 
 /* Vel: tonen bij een eigen taak, tenzij de categorie uit bron komt. */
@@ -2763,8 +2790,7 @@ document.getElementById('s_catchips').addEventListener('click', function(ev){
     document.getElementById('s_catnaam').focus();
     return;
   }
-  VEL.categorie = (VEL.categorie === b.dataset.cat) ? null : b.dataset.cat;
-  bouwCatChips();
+  zetCategorieDirect(VEL.categorie === b.dataset.cat ? null : b.dataset.cat);
 });
 document.getElementById('s_cattoevoeg').addEventListener('click', voegCategorieToe);
 document.getElementById('s_catnaam').addEventListener('keydown', function(ev){
