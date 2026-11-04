@@ -142,6 +142,8 @@
     color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em;padding:4px 2px 0}
   .scheiding::before,.scheiding::after{content:'';flex:1;height:1px;background:var(--line)}
   .pill.schuif{background:#f4f0fa;color:#6b4fa8}
+  /* v0.26.0: categoriepil, kleur komt uit taak_categorieen */
+  .pill.cat{background:var(--catbg,#f0f2f5);color:var(--catfg,var(--ink-soft))}
   .kies{
     flex:none;width:30px;height:30px;border-radius:50%;
     display:inline-flex;align-items:center;justify-content:center;
@@ -275,6 +277,23 @@
   }
   .pfilter button.sel{border-color:var(--ink);color:var(--ink);background:#f4f6f8}
   .pfilter .d{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+  /* v0.26.0: categoriefilter, zelfde uiterlijk als het persoonsfilter */
+  .cfilter{display:none;gap:8px;flex-wrap:wrap;padding:2px 18px 10px}
+  .cfilter.zie{display:flex}
+  .cfilter button{
+    display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;font-weight:600;
+    color:var(--ink-soft);cursor:pointer
+  }
+  .cfilter button.sel{border-color:var(--ink);color:var(--ink);background:#f4f6f8}
+  .cfilter .d{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+  .catchips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .catchips .chip{display:inline-flex;align-items:center;gap:6px}
+  .catchips .chip.sel{border-color:var(--ink);color:var(--ink);background:#f4f6f8}
+  .catchips .d{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+  .catnieuw{display:none;gap:8px;margin-top:8px}
+  .catnieuw.zie{display:flex}
+  .catnieuw input{flex:1;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:15px}
   .note:focus{outline:2px solid var(--hero-line);border-color:var(--hero-line)}
   .photo{
     border:1.5px dashed #ccd3dc;border-radius:12px;padding:16px;text-align:center;color:var(--ink-faint);
@@ -476,6 +495,7 @@
     </div>
 
     <div class="pfilter" id="pfilter"></div>
+    <div class="cfilter" id="cfilter"></div>
 
     <div class="list" id="lijst">
       <div class="melding">Taken laden…</div>
@@ -532,6 +552,15 @@
           <option value="maand">maanden</option>
           <option value="jaar">jaar</option>
         </select>
+      </div>
+    </div>
+
+    <div class="fld" id="s_catwrap" style="display:none">
+      <div class="k">Categorie</div>
+      <div class="catchips" id="s_catchips"></div>
+      <div class="catnieuw" id="s_catnieuw">
+        <input type="text" id="s_catnaam" placeholder="Naam van de nieuwe categorie" autocomplete="off">
+        <button class="chip" type="button" id="s_cattoevoeg">Toevoegen</button>
       </div>
     </div>
 
@@ -645,7 +674,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.25.1';
+const APP_VERSION = 'v0.26.0';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -679,6 +708,8 @@ let UID = null;
 let MAP_YOOBI = {};       /* Yoobi-naam -> persoon */
 let ROLLEN = [];          /* alle rijen uit taken_rollen */
 let FILTER_PERSOON = 'alle';                 /* persoonsfilter, alleen rol 'alles' */
+let FILTER_CAT = 'alle';                     /* v0.26.0: categoriefilter, voor iedereen */
+let CATEGORIEEN = [];                        /* v0.26.0: rijen uit taak_categorieen */
 let TAKEN = [];
 let ZOEK = '';
 let LAATSTE_HERO = null;
@@ -999,6 +1030,9 @@ function pillen(t){
   if(t.foto_pad) p.push('<span class="pill foto">📷</span>');
   if(DOCS_TELLING[t.crmtaskid]) p.push('<span class="pill foto">📎' + (DOCS_TELLING[t.crmtaskid] > 1 ? ' ' + DOCS_TELLING[t.crmtaskid] : '') + '</span>');
   if(t.klantnaam && t.bron !== 'yoobi') p.push('<span class="pill klant">' + esc(t.klantnaam) + '</span>');
+  /* v0.26.0: categoriepil. Offerte en Yoobi hebben hierboven al een eigen pil. */
+  const ct = catVan(t);
+  if(ct && t.bron !== 'offerte' && t._rubriek !== 'vervallen') p.push(catPil(ct));
   if(t._rubriek === 'voltooid' && t._voltooid) p.push('<span class="pill date">✓ ' + esc(afvinkTekst(t, false)) + '</span>');
   if(t._rubriek === 'vervallen' && t._gepland) p.push('<span class="pill date">' + esc(datumTekst(t._gepland)) + '</span>');
   return p.join('');
@@ -1092,6 +1126,12 @@ function sorteer(lijst, rubriek){
                    daarnaast de volledige Klantopvolging.
    rol 'alles'  -> alles, eventueel versmald met het persoonsfilter bovenaan. */
 function zichtbareTaken(){
+  const basis = zichtbareTakenBasis();
+  if(FILTER_CAT === 'alle') return basis;
+  return basis.filter(t => catVan(t) === FILTER_CAT);
+}
+
+function zichtbareTakenBasis(){
   if(IK && IK.rol === 'eigen'){
     /* v0.13.2: ziet_klant komt uit taken_rollen — dezelfde vlag stuurt de
        RLS-policy op de server, dus client en server kunnen niet uiteenlopen.
@@ -1107,6 +1147,100 @@ function zichtbareTaken(){
       (FILTER_PERSOON === IK.persoon && MIJN_VANDAAG.has(String(t.crmtaskid))));
   }
   return TAKEN;
+}
+
+/* ────────────────────────────────────────────────────────
+   v0.26.0: categorieën
+   Vaste lijst in taak_categorieen, in de app aan te vullen door rol
+   'alles'. Offerte- en planningstaken krijgen hun categorie uit bron en
+   zijn niet handmatig te zetten; Yoobi-taken hebben geen categorie.
+   ──────────────────────────────────────────────────────── */
+const CAT_VAST = { offerte: { naam:'Offerte', kleur:'#c2410c' }, planning: { naam:'Planning', kleur:'#2b5bd0' } };
+const CAT_PALET = ['#2f7dd1','#d1842f','#6c6c6c','#3a9a5a','#9a4fb0','#c23b6a','#1f9aa8','#8a6d3b'];
+
+function catVan(t){
+  if(t.bron === 'yoobi') return null;
+  if(CAT_VAST[t.bron]) return CAT_VAST[t.bron].naam;
+  return t.categorie || null;
+}
+function catKleur(naam){
+  const v = Object.keys(CAT_VAST).map(k => CAT_VAST[k]).find(c => c.naam === naam);
+  if(v) return v.kleur;
+  const c = CATEGORIEEN.find(x => x.naam === naam);
+  return c ? c.kleur : '#8a8a8a';
+}
+function catPil(naam){
+  const k = catKleur(naam);
+  return '<span class="pill cat" style="--catbg:' + esc(k) + '22;--catfg:' + esc(k) + '">' + esc(naam) + '</span>';
+}
+function magCategorieBeheren(){ return !!(IK && IK.rol === 'alles'); }
+
+async function laadCategorieen(){
+  const res = await sb.from('taak_categorieen')
+    .select('id,naam,kleur,volgorde,actief')
+    .eq('actief', true)
+    .order('volgorde', { ascending: true })
+    .order('naam', { ascending: true });
+  if(res.error) throw res.error;
+  CATEGORIEEN = res.data || [];
+}
+
+/* Filterbalk: alleen de categorieën die in de zichtbare taken voorkomen,
+   zodat de balk op de telefoon niet volloopt met ongebruikte knoppen. */
+function bouwCategoriefilter(){
+  const bak = document.getElementById('cfilter');
+  const basis = zichtbareTakenBasis().filter(t => t._rubriek !== 'voltooid' && t._rubriek !== 'vervallen');
+  const inGebruik = {};
+  basis.forEach(t => { const c = catVan(t); if(c) inGebruik[c] = (inGebruik[c] || 0) + 1; });
+  const namen = CATEGORIEEN.map(c => c.naam)
+    .concat(Object.keys(CAT_VAST).map(k => CAT_VAST[k].naam))
+    .filter(n => inGebruik[n]);
+  if(FILTER_CAT !== 'alle' && namen.indexOf(FILTER_CAT) < 0) namen.push(FILTER_CAT);
+  if(!namen.length){ FILTER_CAT = 'alle'; bak.classList.remove('zie'); bak.innerHTML = ''; return; }
+  let h = '<button type="button" data-c="alle" class="' + (FILTER_CAT === 'alle' ? 'sel' : '') + '">Alle</button>';
+  h += namen.map(n =>
+    '<button type="button" data-c="' + esc(n) + '" class="' + (FILTER_CAT === n ? 'sel' : '') + '">' +
+    '<i class="d" style="background:' + esc(catKleur(n)) + '"></i>' + esc(n) +
+    (inGebruik[n] ? ' <span style="color:var(--ink-faint);font-weight:600">' + inGebruik[n] + '</span>' : '') + '</button>').join('');
+  bak.innerHTML = h;
+  bak.classList.add('zie');
+}
+
+/* Chips in het vel. Tik om te kiezen, nog eens tikken om leeg te maken. */
+function bouwCatChips(){
+  const bak = document.getElementById('s_catchips');
+  let h = CATEGORIEEN.map(c =>
+    '<button type="button" class="chip' + (VEL && VEL.categorie === c.naam ? ' sel' : '') + '" data-cat="' + esc(c.naam) + '">' +
+    '<i class="d" style="background:' + esc(c.kleur) + '"></i>' + esc(c.naam) + '</button>').join('');
+  if(magCategorieBeheren()) h += '<button type="button" class="chip" data-cat="__nieuw">+ Nieuw</button>';
+  bak.innerHTML = h;
+}
+
+async function voegCategorieToe(){
+  const inp = document.getElementById('s_catnaam');
+  const naam = inp.value.trim();
+  if(!naam){ toast('Geef de categorie een naam'); return; }
+  if(CATEGORIEEN.some(c => c.naam.toLowerCase() === naam.toLowerCase())){ toast('Die categorie bestaat al'); return; }
+  const kleur = CAT_PALET[CATEGORIEEN.length % CAT_PALET.length];
+  const volgorde = CATEGORIEEN.reduce((m, c) => Math.max(m, c.volgorde || 0), 0) + 10;
+  const { error } = await sb.from('taak_categorieen').insert({ naam: naam, kleur: kleur, volgorde: volgorde });
+  if(error){ toast('Toevoegen lukt niet: ' + (error.message || '')); return; }
+  try{ await laadCategorieen(); }catch(e){ toast('Herladen lukt niet: ' + (e.message || String(e))); return; }
+  if(VEL) VEL.categorie = naam;
+  inp.value = '';
+  document.getElementById('s_catnieuw').classList.remove('zie');
+  bouwCatChips();
+  toast('Categorie "' + naam + '" toegevoegd');
+}
+
+/* Vel: tonen bij een eigen taak, tenzij de categorie uit bron komt. */
+function zetCatVeld(modus, t){
+  const vast = t && CAT_VAST[t.bron];
+  const toon = (modus === 'nieuw' || modus === 'eigen') && !vast;
+  zet('s_catwrap', toon);
+  document.getElementById('s_catnieuw').classList.remove('zie');
+  document.getElementById('s_catnaam').value = '';
+  if(toon) bouwCatChips();
 }
 
 function bouwPersoonsfilter(){
@@ -1279,6 +1413,7 @@ function render(){
   try{
     const scrollY = window.scrollY;
     bouwPersoonsfilter();
+    bouwCategoriefilter();
     const zicht = zichtbareTaken();
     const lijst = document.getElementById('lijst');
     if(ZOEK){
@@ -1342,7 +1477,7 @@ function openTask(t){
   const isYoobi = t.bron === 'yoobi';
   const isKlaar = t._rubriek === 'voltooid' || t._rubriek === 'vervallen';
   const modus = isKlaar ? 'klaar' : (isYoobi ? 'yoobi' : 'eigen');
-  VEL = { modus: modus, taak: t, soort: t.soort === 'herhalend' ? 'herhalend' : 'eenmalig', persoon: t._persoon, fotoBlob: null, fotoWeg: false, docFiles: [] };
+  VEL = { modus: modus, taak: t, soort: t.soort === 'herhalend' ? 'herhalend' : 'eenmalig', persoon: t._persoon, fotoBlob: null, fotoWeg: false, docFiles: [], categorie: t.categorie || null };
 
   /* titel */
   zet('s_title', modus !== 'eigen');
@@ -1358,6 +1493,7 @@ function openTask(t){
     (t.klantnaam ? '<span class="pill klant">' + esc(t.klantnaam) + '</span>' : '') +
     (isYoobi ? '<span class="pill yoobi">Yoobi · alleen bekijken</span>' : '') +
     (t.bron === 'offerte' ? '<span class="pill offerte">Offerte</span>' : '') +
+    ((catVan(t) && t.bron !== 'offerte') ? catPil(catVan(t)) : '') +
     (t._voltooid ? '<span class="pill date">✓ Afgevinkt ' + esc(afvinkTekst(t, true)) + '</span>' : '');
 
   /* afvink-knop */
@@ -1384,6 +1520,7 @@ function openTask(t){
 
   /* soort en ritme */
   zetSjabloonKnoppen(modus);
+  zetCatVeld(modus, t);
   zet('s_soortwrap', modus === 'eigen');
   if(modus === 'eigen'){
     setSoort(VEL.soort);
@@ -1469,7 +1606,7 @@ function openTask(t){
 }
 
 function openNieuw(){
-  VEL = { modus:'nieuw', taak:null, soort:'eenmalig', persoon: IK ? IK.persoon : 'gian', fotoBlob:null, fotoWeg:false, docFiles: [] };
+  VEL = { modus:'nieuw', taak:null, soort:'eenmalig', persoon: IK ? IK.persoon : 'gian', fotoBlob:null, fotoWeg:false, docFiles: [], categorie: null };
 
   zet('s_title', false);
   zet('s_titelinput', true);
@@ -1482,6 +1619,7 @@ function openNieuw(){
   zet('s_meldwrap', false);
   document.getElementById('s_melding').value = '';
   zetSjabloonKnoppen('nieuw');
+  zetCatVeld('nieuw', null);
   zet('s_soortwrap', true);
   setSoort('eenmalig');
   document.getElementById('s_ritme_n').value = 1;
@@ -1763,6 +1901,9 @@ async function slaOp(){
     herhaling_eenheid: VEL.soort === 'herhalend' ? w.eenheid : null,
     toegewezen_aan: VEL.persoon,
   };
+  /* v0.26.0: categorie alleen meesturen als het veld in beeld stond;
+     offerte- en planningstaken halen hem uit bron. */
+  if(document.getElementById('s_catwrap').style.display !== 'none') rij.categorie = VEL.categorie || null;
 
   /* melding opnieuw scherpstellen als de piep-tijd nog in de toekomst ligt.
      v0.21.0: push_op mee, anders zou de verzendfunctie na een verzette
@@ -2341,6 +2482,7 @@ async function laadProfiel(){
 async function laadTaken(){
   try{
     await haalDagkeuze();
+    try{ await laadCategorieen(); }catch(e){ console.warn('categorieën laden:', e); CATEGORIEEN = []; }
     TAKEN = await haalTaken();
     DOCS_TELLING = {};
     const { data: docRijen } = await sb.from('taak_documenten').select('taak_id');
@@ -2608,6 +2750,25 @@ document.getElementById('pfilter').addEventListener('click', function(ev){
   const b = ev.target.closest('button'); if(!b) return;
   FILTER_PERSOON = b.dataset.p;
   render();
+});
+document.getElementById('cfilter').addEventListener('click', function(ev){
+  const b = ev.target.closest('button'); if(!b) return;
+  FILTER_CAT = b.dataset.c;
+  render();
+});
+document.getElementById('s_catchips').addEventListener('click', function(ev){
+  const b = ev.target.closest('button[data-cat]'); if(!b || !VEL) return;
+  if(b.dataset.cat === '__nieuw'){
+    document.getElementById('s_catnieuw').classList.toggle('zie');
+    document.getElementById('s_catnaam').focus();
+    return;
+  }
+  VEL.categorie = (VEL.categorie === b.dataset.cat) ? null : b.dataset.cat;
+  bouwCatChips();
+});
+document.getElementById('s_cattoevoeg').addEventListener('click', voegCategorieToe);
+document.getElementById('s_catnaam').addEventListener('keydown', function(ev){
+  if(ev.key === 'Enter'){ ev.preventDefault(); voegCategorieToe(); }
 });
 
 const zoekveldEl = document.getElementById('zoekveld');

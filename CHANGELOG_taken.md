@@ -6,6 +6,57 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.26.0 — Categorieën op taken, 04-11-2026
+
+**Aanleiding.** Gian 04-11-2026 ("take 26"): categorieën in de Taken-app.
+Keuzes in overleg: vaste lijst die in de app is aan te vullen; gekleurd
+label op de taak plus een filterbalk boven de lijst; offerte- en
+planningstaken krijgen hun categorie automatisch uit `bron`; Yoobi-taken
+geen categorie. Groeperen binnen Taken bewust niet gedaan: dat breekt de
+datumvolgorde en de rode arcering.
+
+**Database (gedraaid via de Supabase-koppeling, migratie
+`taken_26_categorieen`, bestand `taken_26_categorieen.sql`).** Nieuwe
+tabel `taak_categorieen` (id, naam uniek, kleur hex, volgorde, actief,
+aangemaakt) met startlijst Klantcontact, Inkoop, Kantoor, Werkplaats,
+Privé. Nieuwe kolom `taken.categorie` (text, leeg mag). RLS: ingelogd
+mag lezen; alleen rol `alles` uit `taken_rollen` mag categorieën
+toevoegen, wijzigen of verwijderen. Idempotent; controlequery na het
+draaien: 5 categorieën, kolom aanwezig, 2 policies.
+
+**Gebouwd in taken.html.**
+- `catVan(t)`: Yoobi → geen; bron offerte → "Offerte", bron planning →
+  "Planning" (vaste kleuren, niet handmatig te zetten); anders
+  `t.categorie`.
+- Categoriepil in de lijst en in de wie-regel van het vel, in de kleur
+  uit de tabel (lichte tint als achtergrond). Bij bron offerte blijft de
+  bestaande Offerte-pil staan, geen dubbele.
+- Filterbalk `#cfilter` onder het persoonsfilter, voor iedereen. Toont
+  "Alle" plus alleen de categorieën die in open taken voorkomen, met
+  aantal. Geen categorieën in gebruik: balk verborgen. Filter werkt door
+  in alle rubrieken en in de zoekresultaten (`zichtbareTaken` wikkelt
+  nu `zichtbareTakenBasis`).
+- Veld "Categorie" in het vel bij een nieuwe of eigen open taak, tenzij
+  de categorie uit bron komt. Chips: tik om te kiezen, nog eens tikken
+  om leeg te maken. Rol `alles` ziet "+ Nieuw": naam typen, Toevoegen of
+  Enter; kleur uit een vast palet, volgorde achteraan, direct gekozen.
+- Opslaan stuurt `categorie` alleen mee als het veld in beeld stond.
+- Categorieën laden in `laadTaken`; mislukt dat, dan draait de app door
+  zonder categorieën (waarschuwing in de console).
+- `APP_VERSION` v0.26.0. Geen Edge Function.
+
+**Niet gebouwd.** Categorie hernoemen, kleur kiezen of deactiveren in de
+app (kan in Supabase Studio in `taak_categorieen`); categorie in
+push/mail; categorie in andere apps.
+
+**Getest.** `node --check` op beide scriptblokken; div-balans 110/110,
+scripttags 3/3, CSS-accolades 233/233; Node-harness op code die uit het
+gepatchte bestand gesneden is (20 controles: catVan per bron, kleuren,
+filter, balk toont alleen in gebruik, chips, nieuw-knop per rol).
+SQL met pglast geparsed en live gedraaid. Niet getest: de echte app in
+de browser — dat is de test na deployen: taak openen, categorie kiezen,
+bewaren, pil zichtbaar, filterbalk verschijnt, "+ Nieuw" als Gian.
+
 ## v0.25.1 — Alle taken laden, ook boven de 1000 rijen, 01-11-2026
 
 **Aanleiding.** Gian 01-11-2026: de nieuwe taak "Roode-Wierda | Vocht
