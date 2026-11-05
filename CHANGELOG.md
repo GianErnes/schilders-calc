@@ -1,3 +1,23 @@
+## v4.109.0 — Nieuwe calculaties starten op prijsweergave Regels zonder hoeveelheden (2026-11-05)
+
+**Aanleiding**
+- Gian 05-11: de standaard prijsweergave in de offerte op Regels zetten, met hoeveelheden en eenheidsprijzen uit. De norm van de knop Controleer (v4.16.0) zei dat al; de terugval in `_offCfg()` stond nog op `onderdeel` + hoeveelheden aan.
+
+**Keuze**
+- Gian koos aanpak B: alleen nieuwe calculaties, bestaande ongemoeid. De terugval in `_offCfg()` loopt namelijk ook op oude calculaties zonder opgeslagen waarde (config wordt pas geschreven bij een gebruikerswijziging); omzetten daarvan zou een al verstuurde offerte bij het heropenen anders tonen.
+
+**Gebouwd**
+- Nieuwe functie `_offCfgNieuwStandaard()` → `{ prijsWeergave: 'regels', prijsRegelsHoeveelheden: false }`, elke aanroep een vers object.
+- `_insertCalcDB` schrijft die standaard als `offerte_config` mee in de insert. Dekt alle vijf aanmaakroutes (nieuwe calculatie, eerste calculatie bij lege state, nieuw vanuit klant, dupliceren, vanuit Yoobi-offerte). `_mapCalcHeaderToDB` blijft `offerte_config` bewust niet bevatten (v3.58.0).
+- Dupliceren (`_dupCalcUitvoeren`): standaard als onderlaag, witte-lijstwaarden van het origineel eroverheen. Een kopie van een oude calculatie zónder opgeslagen waarde krijgt dus de nieuwe standaard; mét opgeslagen waarde volgt de kopie het origineel.
+- Yoobi-route: `cfg` start vanaf de standaard in plaats van `{}`, zodat de gerichte config-update de standaard niet wist.
+- Terugval in `_offCfg()` ongewijzigd. Vier versieankers bijgewerkt (APP_VERSION, welkomsttitel, welkomsttekst, in-app versielijst). Geen SQL, geen Edge Function, SYSTEEM.md ongewijzigd.
+
+**Getest**
+- `node --check`: groen. Div- en scripttagbalans gelijk aan het live bestand (1416/1419, 6/6).
+- Node-testbank met functies rechtstreeks uit het gepatchte bestand (`_offCfgNieuwStandaard`, `_insertCalcDB`, `_offCfg`, `_dupCfgWitteLijst`) tegen een nagebouwde Supabase, 10 controles: insert schrijft beide waarden, headervelden intact, teruggemapte calc heeft de standaard, `_offCfg` laat expliciete waarde staan, oude calc zonder waarde blijft onderdeel + aan, oude calc met expliciet onderdeel blijft, dup zonder/met bronwaarde, vers object per aanroep.
+- Niet getest: in de echte omgeving. Te controleren na deploy: nieuwe calculatie aanmaken → Offerte-instellingen tonen Regels met vinkje uit; een oude calculatie openen → ongewijzigd.
+
 ## v4.108.0 — Bewerkingen van één regel toepassen op andere regels met hetzelfde verfsysteem (2026-11-05)
 
 **Aanleiding**
