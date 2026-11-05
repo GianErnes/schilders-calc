@@ -1,3 +1,20 @@
+## v4.108.0 — Bewerkingen van één regel toepassen op andere regels met hetzelfde verfsysteem (2026-11-05)
+
+**Aanleiding**
+- Gian 05-11: bij de opname alle gevels/kamers ingevuld; op kantoor de percentages van het verfsysteem op één gevel goed gezet en dat moet ook op de andere regels met hetzelfde systeem. Elke calc-regel heeft een eigen momentopname van het systeem (`calc_regel_stappen`), dus dat moest tot nu toe regel voor regel.
+
+**Gebouwd**
+- Knop ⧉ in de regelkop, naast 🔄. Opent een venster met alle andere regels in de open calculatie met hetzelfde `systeemId` (pad Hoofdgroep › Onderdeel › Regel). Standaard aangevinkt; regels waarvan de stappen al gelijk zijn aan de bron staan uit; regels met eigen afwijkingen (percentage ≠ 100 of ander aantal stappen) krijgen een oranje waarschuwing.
+- Per doelregel: bron-stappen kopiëren naar `calc_regel_stappen` met eigen ids, oude stappen wissen (bij fout de nieuwe weer weg), regel bijwerken. Zelfde patroon en terugval als `wisselRegelSysteem` (v4.65.0). Naam, hoeveelheid, toeslag, aan/uit, volgorde en meetstaat blijven; systeemvelden ongewijzigd, dus geen eenheidsconflict.
+- Vergrendelde calculatie geweigerd. Eén query vooraf op per-stap-percentages in een onderhoudsplan voor alle gekozen doelen samen; waarschuwing, geen blokkade. Mislukt een doelregel, dan gaan de andere door en noemt de melding welke.
+- Gian 05-11 (iPad): kopieersymbool is een waas. Nieuwe CSS-klasse `.kopieer-ico` (blauw, 700, 1.05rem, zoals het ⧉ op de onderdeel-balk al had) op alle zes afwijkende kopieersymbolen: ⧉ op de regel, ⎘ regel dupliceren, ⎘ bewerking dupliceren, ⎘ calculatie dupliceren, ⧉ in "Rijen overnemen uit…", en het kozijngalerij-kopieerknopje (dik en groter, kleur was al blauw).
+- Vijf versieankers bijgewerkt. Geen SQL, geen Edge Function, SYSTEEM.md ongewijzigd (geen infra-wijziging).
+
+**Getest**
+- `node --check`: groen. Div- en scripttagbalans gelijk aan het live bestand.
+- Node-testbank met code rechtstreeks uit het gepatchte bestand (`openStToepModal`, `stappenToepassen`, `_stToepSignatuur`, `_regelHeeftPerStapPlan`, mappers) tegen een nagebouwde Supabase en DOM, 25 controles: doelselectie (zelfde systeem, niet de bron, ander systeem valt af), labels gelijk/afwijkend, kopie met nieuwe ids, bron en niet-gekozen regels ongemoeid, regelvelden ongewijzigd, terugdraai bij mislukte delete zonder wezen in de database, foutmelding met regelnaam, geen doelen, niets aangevinkt, onderhoudsplan-waarschuwing.
+- Niet getest: in de browser. Controle na deploy: open een calculatie met meerdere gevels op hetzelfde systeem, zet op één regel een percentage, druk ⧉, controleer dat de doelregels na toepassen dezelfde bewerkingen tonen en dat de hoeveelheid en meetstaat staan; daarna de calculatie hard verversen en nogmaals kijken.
+
 ## v4.107.3 — Reparatie op v4.107.2: offerte-PDF kon niet meer worden gemaakt (2026-11-03)
 
 **Aanleiding**

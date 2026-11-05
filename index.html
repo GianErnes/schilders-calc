@@ -1394,6 +1394,9 @@
   .msov-status.los { color: var(--muted); font-style: italic; }
   .kozijn-galerij-copy { position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--paper-deep); border-radius: var(--radius); background: var(--paper); color: var(--blue); font-size: 0.9rem; cursor: pointer; }
   .kozijn-galerij-copy:hover { border-color: var(--blue); background: var(--paper-warm); }
+  /* v4.108.0 — Alle kopieersymbolen (⧉ ⎘) helder blauw en dik, zoals op de onderdeel-balk; op de iPad waren ze een waas. */
+  .kopieer-ico { color: var(--blue) !important; font-weight: 700; font-size: 1.05rem; line-height: 1; }
+  .kozijn-galerij-copy { font-weight: 700; font-size: 1.05rem; }
   .kozijn-galerij-tek { height: 72px; display: flex; align-items: center; justify-content: center; }
   .kozijn-galerij-naam { font-size: 0.75rem; font-weight: 600; margin-top: 0.35rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .kozijn-galerij-m1 { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent-deep); }
@@ -2421,8 +2424,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.107.3</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.108.0</h2>
       <div class="intro-body">
+        <p><strong>⧉ Bewerkingen van één regel toepassen op de andere regels met hetzelfde verfsysteem (v4.108.0).</strong> Je hebt bij de opname alle gevels of kamers ingevuld, en op kantoor zet je op één regel de percentages per bewerking goed, of een ander materiaal of verbruik. Dat hoefde je tot nu toe op elke andere regel met dat systeem opnieuw te doen, want elke regel heeft zijn eigen kopie van het verfsysteem. Naast 🔄 staat nu de knop <strong>⧉</strong>: die toont alle andere regels in deze calculatie met hetzelfde verfsysteem, standaard aangevinkt, en vervangt hun bewerkingen door een kopie van de bronregel: percentages, materialen en verbruik. Naam, hoeveelheid, toeslag, aan/uit en meetstaat van de doelregel blijven staan. Regels die al gelijk zijn staan standaard uit; regels met eigen afwijkingen krijgen een oranje waarschuwing, want die afwijkingen gaan verloren. Werkt alleen binnen de open calculatie en niet op een vergrendelde offerte. Heeft het onderhoudsplan per-stap-percentages op zo'n regel, dan krijg je dezelfde melding als bij 🔄. Mislukt een regel, dan gaan de andere door en zegt de melding welke. Verder zijn alle kopieersymbolen (⧉ en ⎘) in de app nu helder blauw en dik, zoals het ⧉ op de onderdeel-balk al was; op de iPad waren ze een waas. Geen SQL, geen Edge Function.</p>
         <p><strong>🔧 Reparatie op v4.107.2: offerte-PDF werkte niet meer (v4.107.3).</strong> De koppen Kozijn-tekeningen en Foto-bijlage hadden in v4.107.2 dezelfde interne id gekregen; pdfMake eist unieke ids en weigerde daardoor de PDF te maken zodra een offerte zowel kozijntekeningen als foto's had. Elke kop heeft nu een eigen id. Geen SQL, geen Edge Function.</p>
         <p><strong>📄 Geen los vel meer tussen offerte en bijlagen (v4.107.2).</strong> Onderaan het offertedocument stond nog een regel 'Offerte nr · Ernes schilders · datum', een overblijfsel van de oude HTML-print. Als ondertekening en slotzin de pagina net vulden, schoof die ene regel alleen naar een nieuw vel, en daarna begonnen de kozijntekeningen weer op een eigen pagina. Die regel is weg; het offertenummer staat nu in de paginavoet naast 'pagina x van y'. Daarnaast dwingen de koppen Kozijn-tekeningen en Foto-bijlage alleen nog een paginasprong af als ze niet al bovenaan een verse pagina staan. Alleen de PDF-opbouw; geen SQL, geen Edge Function.</p>
         <p><strong>🔧 Mailadres in het zoekveld van Onderhoudsplannen, tweede poging (v4.107.1).</strong> De fix uit v4.105.1 hielp niet, want de oorzaak zat ergens anders: het venster Wachtwoord wijzigen had wel een wachtwoordveld maar geen gebruikersnaamveld, en Chrome zoekt dan zelf het dichtstbijzijnde zichtbare tekstveld ervóór op om het inlogadres in te zetten. Dat was het zoekveld van de plannenlijst. Het wachtwoordvenster heeft nu een eigen (onzichtbaar) gebruikersnaamveld met je ingelogde adres, zodat Chrome daar terechtkan. Als extra slot zijn de twee zoekvelden alleen-lezen tot je erop klikt; alleen-lezen velden vult een browser niet in. Geen SQL, geen Edge Function.</p>
@@ -3583,6 +3587,22 @@ Hout binnen;Gronden;m²;6;0,10</div>
 </div>
 
 <!-- ADD SYSTEM TO ONDERDEEL MODAL -->
+<!-- v4.108.0 — STAPPEN VAN EEN REGEL TOEPASSEN OP ANDERE REGELS MET HETZELFDE VERFSYSTEEM -->
+<div class="modal-overlay" id="stToepModal">
+  <div class="modal" style="max-width: 640px;">
+    <div class="modal-head"><h3>Bewerkingen toepassen op andere regels</h3><button class="close-x" onclick="closeStToepModal()">✕</button></div>
+    <div class="modal-body">
+      <div id="stToepBron" style="font-size:0.85rem; margin-bottom:0.75rem;"></div>
+      <label style="margin:0 0 0.4rem 0;">Doelregels met hetzelfde verfsysteem in deze calculatie</label>
+      <div id="stToepLijst" style="max-height: 360px; overflow-y: auto; border: 1px solid var(--paper-deep);"></div>
+      <p style="font-size:0.78rem; color:var(--muted); margin:0.6rem 0 0 0;">Per aangevinkte regel worden de bewerkingen vervangen door een kopie van de bronregel: percentages, materialen en verbruik. Naam, hoeveelheid, toeslag, aan/uit en meetstaat van de doelregel blijven staan. Eigen afwijkingen op een doelregel gaan verloren.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary btn" onclick="closeStToepModal()">Annuleren</button>
+      <button class="btn" id="stToepKnop" onclick="stappenToepassen()">Toepassen</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="addSysModal">
   <div class="modal" style="max-width: 640px;">
     <div class="modal-head"><h3 id="addSysTitel">Verfsysteem toevoegen</h3><button class="close-x" onclick="closeAddSysModal()">✕</button></div>
@@ -3943,7 +3963,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.107.3';
+const APP_VERSION = 'v4.108.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4366,6 +4386,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.108.0', d: '2026-11-05', h: 'Knop ⧉ naast 🔄 op een calc-regel: bewerkingen (percentages, materialen, verbruik) van die regel toepassen op alle andere regels met hetzelfde verfsysteem in deze calculatie; naam, hoeveelheid, toeslag, aan/uit en meetstaat blijven. Geen SQL.' },
   { v: '4.107.3', d: '2026-11-03', h: 'Reparatie: offerte-PDF weigerde in v4.107.2 (dubbele node-id op de bijlagekoppen); ids nu uniek.' },
   { v: '4.107.2', d: '2026-11-03', h: 'Fix: geen los vel meer tussen offerte en kozijntekeningen/foto\'s in de offerte-PDF; offertenummer in de paginavoet.' },
   { v: '4.107.1', d: '2026-11-02', h: 'Fix (2e poging): gebruikersnaamveld in het wachtwoordvenster, zodat Chrome het inlogadres niet meer in het zoekveld van Onderhoudsplannen zet; zoekvelden alleen-lezen tot aanraking.' },
@@ -14185,7 +14206,7 @@ function renderBewerkingen() {
         <td class="num right" style="color:var(--accent-deep); font-weight:600;">€ ${fmt(totaal)}</td>
         <td>
           <select onchange="updBew('${b.id}','ondergrondId',this.value)" title="Verplaats naar andere ondergrond" style="margin-bottom:0.2rem; font-size:0.7rem; padding:0.2rem;">${ondOpts}</select>
-          <button class="btn-icon" onclick="dupBew('${b.id}')" title="Dupliceren">⎘</button>
+          <button class="btn-icon" onclick="dupBew('${b.id}')" title="Dupliceren"><span class="kopieer-ico">⎘</span></button>
           <button class="btn btn-danger btn-sm" onclick="delBew('${b.id}')">×</button>
         </td>
       </tr>`;
@@ -18236,7 +18257,7 @@ function renderMeetstaat() {
   });
   html += '</tbody></table></div>';
   const _msOvLock = (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc));   // v4.101.0
-  html += `<div style="margin-top:0.7rem; display:flex; gap:0.5rem; flex-wrap:wrap;"><button class="btn-secondary btn" onclick="addMeetstaat()">+ Regel</button>${_msOvLock ? '' : `<button class="btn-secondary btn" onclick="_msOvernemenOpen()" title="Meetstaat-rijen en kozijntekeningen overnemen uit een onderdeel of een andere calculatie">⧉ Rijen overnemen uit…</button>`}</div>`;
+  html += `<div style="margin-top:0.7rem; display:flex; gap:0.5rem; flex-wrap:wrap;"><button class="btn-secondary btn" onclick="addMeetstaat()">+ Regel</button>${_msOvLock ? '' : `<button class="btn-secondary btn" onclick="_msOvernemenOpen()" title="Meetstaat-rijen en kozijntekeningen overnemen uit een onderdeel of een andere calculatie"><span class="kopieer-ico">⧉</span> Rijen overnemen uit…</button>`}</div>`;
 
   // v3.36.0 — Overzicht "Getekende kozijnen": alle tekeningen in deze calculatie
   const _kozijnen = [];
@@ -20834,13 +20855,13 @@ function renderRegel(hgId, odId, r) {
   return `<div class="calc-regel-wrap ${actiefR?'':'is-inactief'} ${stappenOpen?'stappen-open':''}" id="rw_${r.id}">
     <div class="calc-regel">
       <div class="regel-kop-naam">${caretHtml}<input value="${r.naam||''}" placeholder="Locatie/omschrijving" onchange="updReg('${hgId}','${odId}','${r.id}','naam',this.value)"></div>
-      <div class="systeem-naam"><input type="checkbox" class="actief-toggle" ${actiefR?'checked':''} onchange="toggleRegelActief('${hgId}','${odId}','${r.id}')" title="Aan/uit voor offerte" style="margin-right:0.4rem; vertical-align:middle;"><strong>${sysNaam}</strong> <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span> <button class="btn-secondary btn btn-sm" onclick="openWisselSysModal('${hgId}','${odId}','${r.id}')" title="Verfsysteem van deze regel wisselen (naam, hoeveelheid, toeslag en meetstaat blijven)" style="margin-left:0.3rem; padding:0 0.35rem;">🔄</button></div>
+      <div class="systeem-naam"><input type="checkbox" class="actief-toggle" ${actiefR?'checked':''} onchange="toggleRegelActief('${hgId}','${odId}','${r.id}')" title="Aan/uit voor offerte" style="margin-right:0.4rem; vertical-align:middle;"><strong>${sysNaam}</strong> <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span> <button class="btn-secondary btn btn-sm" onclick="openWisselSysModal('${hgId}','${odId}','${r.id}')" title="Verfsysteem van deze regel wisselen (naam, hoeveelheid, toeslag en meetstaat blijven)" style="margin-left:0.3rem; padding:0 0.35rem;">🔄</button><button class="btn-secondary btn btn-sm" onclick="openStToepModal('${hgId}','${odId}','${r.id}')" title="Bewerkingen van deze regel (percentages, materialen, verbruik) toepassen op andere regels met hetzelfde verfsysteem in deze calculatie" style="margin-left:0.2rem; padding:0 0.35rem;"><span class="kopieer-ico">⧉</span></button></div>
       <div>${hoeveelHtml}</div>
       <div><input type="number" step="5" value="${r.toeslag||0}" onchange="updReg('${hgId}','${odId}','${r.id}','toeslag',parseFloat(this.value))" title="Toeslag voor staat (matig=15, slecht=30)"> <span style="color:var(--muted); font-size:0.7rem;">% staat</span></div>
       <div class="regel-stats">
         ${fmt(t.uren)} u<br>
         <span style="color:var(--ink-soft); font-size:0.7rem;">mat. ${eur(t.matVerkoop)}${(() => { const a = _matAandeel(t.arbeid, t.matVerkoop); if (a === null) return ''; const k = _matAandeelKlasse(a); return `<span class="mat-aandeel-tag ${k}" title="${_matAandeelTitel(a, t.arbeid, t.matVerkoop)}">${k === 'is-ok' ? '' : '⚠ '}${Math.round(a * 100)}%</span>`; })()}</span><br>
-        ${eur(t.verkoop)} <button class="btn-secondary btn btn-sm" onclick="dupRegel('${hgId}','${odId}','${r.id}')" title="Regel met verfsysteem dupliceren (zonder meetstaat)" style="margin-left:0.4rem;">⎘</button><button class="btn btn-danger btn-sm" onclick="delReg('${hgId}','${odId}','${r.id}')" style="margin-left:0.25rem;">×</button>
+        ${eur(t.verkoop)} <button class="btn-secondary btn btn-sm" onclick="dupRegel('${hgId}','${odId}','${r.id}')" title="Regel met verfsysteem dupliceren (zonder meetstaat)" style="margin-left:0.4rem;"><span class="kopieer-ico">⎘</span></button><button class="btn btn-danger btn-sm" onclick="delReg('${hgId}','${odId}','${r.id}')" style="margin-left:0.25rem;">×</button>
       </div>
     </div>
     <div class="regel-stappen">
@@ -21459,6 +21480,104 @@ async function wisselRegelSysteem(hgId, odId, rId, sysId) {
   } else {
     _toast(`Verfsysteem gewisseld naar ${snap.systeemNaam}`);
   }
+}
+// v4.108.0 — BEWERKINGEN VAN EEN REGEL TOEPASSEN OP ANDERE REGELS MET HETZELFDE SYSTEEM
+// Aanleiding (Gian 05-11-2026): op kantoor de percentages van het verfsysteem op
+// één gevel/kamer gezet, en dat moet ook op de andere regels met hetzelfde
+// systeem. Elke regel heeft een eigen momentopname van het systeem in
+// calc_regel_stappen, dus dat is per doelregel een vervanging, met dezelfde
+// stappen en dezelfde terugval als wisselRegelSysteem (v4.65.0): nieuwe stappen
+// schrijven, oude wissen (bij fout nieuwe weer weg), regel bijwerken.
+// Alleen binnen de open calculatie. Hetzelfde systeemId, dus de eenheid kan
+// niet botsen; meetstaat blijft staan.
+let _stToepCtx = null;
+function _stToepSignatuur(r) {
+  return (r.stappen || []).map(st => [st.bewerkingId || st.bewerkingNaam || '', st.percentage != null ? st.percentage : 100, st.materiaalId || '', Math.round((st.verbruik || 0) * 1000)].join('|')).join(';');
+}
+function openStToepModal(hgId, odId, rId) {
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) { _toast('Deze offerte is vergrendeld'); return; }
+  const od = _findOnderdeel(hgId, odId);
+  if (!od) return;
+  const bron = od.regels.find(x => x.id === rId);
+  if (!bron) return;
+  if (!bron.systeemId) { _toast('Deze regel heeft geen verfsysteem'); return; }
+  if (!(bron.stappen || []).length) { _toast('Deze regel heeft geen bewerkingen om toe te passen'); return; }
+  const bronSig = _stToepSignatuur(bron);
+  const doelen = [];
+  _ctlRegelLoop(data.calc, (r, hg, o) => {
+    if (r.id === bron.id || r.systeemId !== bron.systeemId) return;
+    const sig = _stToepSignatuur(r);
+    const eigenPct = (r.stappen || []).some(st => (st.percentage != null ? st.percentage : 100) !== 100);
+    const anderAantal = (r.stappen || []).length !== (bron.stappen || []).length;
+    doelen.push({ r, od: o, hg, pad: `${hg.naam || '?'} › ${o.naam || '?'} › ${r.naam || '(naamloos)'}`, gelijk: sig === bronSig, afwijkend: eigenPct || anderAantal });
+  });
+  if (!doelen.length) { _toast('Geen andere regels met dit verfsysteem in deze calculatie'); return; }
+  _stToepCtx = { bron, bronOd: od, doelen };
+  const stappenTekst = (bron.stappen || []).map(st => `${_escapeHtml(st.bewerkingNaam || '?')} ${st.percentage != null ? st.percentage : 100}%`).join(' · ');
+  document.getElementById('stToepBron').innerHTML =
+    `<strong>Bron:</strong> ${_escapeHtml(bron.naam || '(naamloos)')} — ${_escapeHtml(bron.systeemNaam || '')}<br><span style="color:var(--muted); font-size:0.78rem;">${stappenTekst}</span>`;
+  document.getElementById('stToepLijst').innerHTML = doelen.map((d, i) => `
+    <label style="display:flex; align-items:flex-start; gap:0.5rem; padding:0.45rem 0.6rem; border-bottom:1px solid var(--paper-deep); cursor:pointer; font-size:0.85rem; margin:0;">
+      <input type="checkbox" class="stToepDoel" data-i="${i}" ${d.gelijk ? '' : 'checked'} style="width:auto; margin-top:0.2rem;">
+      <span>${_escapeHtml(d.pad)}
+        ${d.gelijk ? '<span style="color:var(--muted); font-size:0.74rem;"> — al gelijk aan de bron</span>' : ''}
+        ${!d.gelijk && d.afwijkend ? '<span style="color:#b26a00; font-size:0.74rem;"> — heeft eigen afwijkingen, worden overschreven</span>' : ''}
+      </span>
+    </label>`).join('');
+  document.getElementById('stToepKnop').disabled = false;
+  document.getElementById('stToepKnop').textContent = 'Toepassen';
+  document.getElementById('stToepModal').classList.add('active');
+}
+function closeStToepModal() { document.getElementById('stToepModal').classList.remove('active'); _stToepCtx = null; }
+async function stappenToepassen() {
+  if (!_stToepCtx) return;
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) { _toast('Deze offerte is vergrendeld'); return; }
+  const { bron, doelen } = _stToepCtx;
+  const gekozen = Array.from(document.querySelectorAll('.stToepDoel:checked')).map(cb => doelen[parseInt(cb.dataset.i, 10)]).filter(Boolean);
+  if (!gekozen.length) { _toast('Geen doelregels aangevinkt'); return; }
+  const knop = document.getElementById('stToepKnop');
+  knop.disabled = true; knop.textContent = '⏳ Bezig…';
+  // Waarschuwing (geen blokkade), één query voor alle doelen samen.
+  const alleOudeIds = gekozen.flatMap(d => (d.r.stappen || []).map(st => st.id).filter(Boolean));
+  let perStapPlan = false;
+  try { perStapPlan = await _regelHeeftPerStapPlan(data.calc.id, alleOudeIds); } catch (e) { perStapPlan = false; }
+  let gelukt = 0; const mislukt = [];
+  for (const d of gekozen) {
+    const r = d.r;
+    const oudeIds = (r.stappen || []).map(st => st.id).filter(Boolean);
+    // 1) nieuwe stappen als kopie van de bron, met eigen ids
+    const rows = (bron.stappen || []).map((st, i) => _mapStapToDBSnapshot(st, r.id, i));
+    const { data: sRows, error: sErr } = await _sbQuery(_sb.from('calc_regel_stappen').insert(rows).select(), 'Bewerkingen kopiëren');
+    if (sErr || !sRows) { mislukt.push(d.pad); continue; }
+    const nieuweStappen = sRows.map(_mapStapFromDBSnapshot);
+    // 2) oude stappen weg; lukt dat niet, dan de nieuwe weer weg
+    if (oudeIds.length) {
+      const { error: dErr } = await _sbQuery(_sb.from('calc_regel_stappen').delete().in('id', oudeIds), 'Oude bewerkingen verwijderen');
+      if (dErr) {
+        const nIds = nieuweStappen.map(st => st.id).filter(Boolean);
+        if (nIds.length) await _sbQuery(_sb.from('calc_regel_stappen').delete().in('id', nIds), 'Terugdraaien gekopieerde bewerkingen');
+        mislukt.push(d.pad); continue;
+      }
+    }
+    // 3) regel zelf bijwerken (systeemvelden ongewijzigd, zelfde systeem)
+    const nieuweRegel = { ...r, stappen: nieuweStappen };
+    const ok = await _updateRegelDBAwait(nieuweRegel, d.od.id);
+    if (!ok) {
+      _toast('Bewerkingen zijn gekopieerd maar een regel is niet bijgewerkt; calculatie wordt herladen');
+      if (typeof openCalc === 'function' && data.calc && data.calc.id) { try { await openCalc(data.calc.id); } catch (e) {} }
+      closeStToepModal();
+      return;
+    }
+    Object.assign(r, nieuweRegel);
+    gelukt++;
+  }
+  _touchCalc(data.calc.id);
+  renderCalcStructuur();
+  closeStToepModal();
+  let msg = `Bewerkingen toegepast op ${gelukt} regel${gelukt === 1 ? '' : 's'}`;
+  if (mislukt.length) msg += `; mislukt bij ${mislukt.length}: ${mislukt.join(', ')}`;
+  if (perStapPlan) msg += '. Let op: het onderhoudsplan had per-stap-percentages voor een van deze regels; die gelden nu niet meer';
+  _toast(msg, mislukt.length ? 'err' : 'ok');
 }
 // v3.50.0 — Een calc-regel met zijn complete verfsysteem dupliceren binnen
 // hetzelfde onderdeel. De kopie krijgt alle stappen (snapshot plus percentages),
@@ -23947,7 +24066,7 @@ function renderCalculatiesArchief() {
       <td class="num right" style="color: var(--accent-deep); font-weight: 600;">${bedragHtml}</td>
       <td class="right">
         <button class="btn-secondary btn btn-sm" onclick="openCalc('${cl.id}')">Openen</button>
-        <button class="btn-secondary btn btn-sm" onclick="dupCalc('${cl.id}')" title="Dupliceren">⎘</button>
+        <button class="btn-secondary btn btn-sm" onclick="dupCalc('${cl.id}')" title="Dupliceren"><span class="kopieer-ico">⎘</span></button>
         <button class="btn btn-danger btn-sm" onclick="delCalc('${cl.id}')">×</button>
       </td>
     </tr>`;
