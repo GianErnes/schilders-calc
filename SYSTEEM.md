@@ -425,7 +425,7 @@ staan drie geheimen:
 |---|---|---|
 | `maandbericht_key` | **[TE CONTROLEREN]**, gaat mee als `Authorization: Bearer` | `maandbericht-maandelijks`, `yuki-vuller-dagelijks`, `yuki-vuller-middag`, `yuki-vuller-avond` |
 | | **Let op:** die laatste drie roepen `smooth-function` aan, niet `maandbericht`. Eén sleutel doet hier dus twee verschillende functies. Vervang je `maandbericht_key`, dan stopt óók je financiele dashboard met bijwerken, en cron blijft gewoon `succeeded` melden. Bevestigd uit `cron.job` op 30 juli 2026. | |
-| `aftap_secret` | de Edge Function secret `AFTAP_SECRET` | `backup-nachtelijk`, `taken-mail-melding`, `werkvoorraad-sync-wekelijks`, en de trigger `trg_taak_melding_signaal` |
+| `aftap_secret` | de Edge Function secret `AFTAP_SECRET` | `backup-nachtelijk`, `taken-mail-melding`, `werkvoorraad-sync-wekelijks`, `offerte-wachtrij-5min` (sinds 6 november 2026), en de trigger `trg_taak_melding_signaal` |
 | `opvolg_key` | de Edge Function secret `OPVOLG_KEY` | `offerte-opvolging-werkdagen` |
 
 **Elk van deze drie staat op twee plekken en die moeten gelijk blijven.**
@@ -541,6 +541,7 @@ Allemaal in `schilders-calc`, allemaal actief. (Negen tot 3 oktober 2026; de tie
 | `yuki-vuller-avond` | 17:00 | 19:00 | 18:00 | `smooth-function` | zelfde, derde keer op de dag. Bijgekomen 1 augustus 2026 |
 | `offerte-opvolging-werkdagen` | ma t/m vr 06:30 | 08:30 | 07:30 | `offerte-herinnering` | herinnert aan openstaande offertes |
 | `taken-mail-melding` | elke 2 minuten | | | `taken-mail-melding` | stuurt mail bij nieuwe of gewijzigde taken |
+| `offerte-wachtrij-5min` | elke 5 minuten | | | `offerte-wachtrij` | verstuurt ingeplande offertes (uitgesteld verzenden, v4.110.0). Sleutel uit `vault.aftap_secret`, header `x-aftap-key`. Bijgekomen 6 november 2026 |
 | `werkvoorraad-sync-wekelijks` | dinsdag 06:00 | 08:00 | 07:00 | `fin-werkvoorraad-sync` | haalt de werkvoorraad uit Yoobi. Enige job via `extensions.http`; sinds 27 september 2026 met 60 s wachttijd (`CURLOPT_TIMEOUT_MS`), zie de sectie van die datum |
 | `maandbericht-maandelijks` | de 7e, 07:00 | 09:00 | 08:00 | `maandbericht` | stelt het maandbericht op |
 | `planning-kennisgeving-taken-dagelijks` | 06:35 | 08:35 | 07:35 | `planning-kennisgeving-taken` | zet per kennisgevingssignaal uit de planning een taak bij Maud in de taken-app en sluit taken waarvan het signaal weg is. Bijgekomen 3 oktober 2026 als `…-werkdagen` (ma–vr), sinds 4 oktober dagelijks |
@@ -708,6 +709,7 @@ notitie tijdens de opname over. Dit is gekozen en geen vergeten risico.
 | `offerte-accord` | Calc | akkoordverklaring en ondertekende PDF; sinds 29-08-2026 ook planakkoorden |
 | `offerte-leescontrole` | Calc | controleert de offerte op fouten |
 | `offerte-verzenden` | Calc | verstuurt de offerte of het onderhoudsplan |
+| `offerte-wachtrij` | Calc | verstuurt ingeplande offertes uit `offerte_verzendwachtrij` door `offerte-verzenden` aan te roepen (v4.110.0, 6 november 2026) |
 | `onderaannemer-aanvraag` | Calc | offerteaanvraag per mail aan een vaste onderaannemer (steiger, timmerwerk, glas, installatie) met foto's; logrij in `calculatie_aanvragen` en opvolgtaak; sinds 29-10-2026, vervangt `steiger-aanvraag` (26-09) |
 | `reisafstand` | Calc | rijafstand naar het werkadres |
 | `yoobi-klant` | Calc | klantgegevens uit Yoobi |
@@ -6092,3 +6094,43 @@ niet groen na versturen → `log=false` in het antwoord, dan de insert in
 het een kolomnaam). Taak ontbreekt → `taak=false`, meestal de
 bron-constraint: `select pg_get_constraintdef(oid) from pg_constraint where
 conname = 'taken_bron_check'` moet `onderaannemer` bevatten.
+
+## Wat er op 6 november 2026 gedaan is: uitgesteld verzenden van offertes (index.html v4.110.0, SQL uitgesteld_01_wachtrij, Edge Function offerte-wachtrij, cronjob offerte-wachtrij-5min)
+
+**Waarom.** Gian werkt vaak 's avonds en in het weekend; een offerte die
+dan gemaild wordt, draagt dat tijdstip. Hij wilde kunnen inplannen.
+Keuzes van Gian: eigen wachtrij in Supabase (geen Resend-`scheduled_at`),
+vrije datum en tijd met standaard volgende werkdag 08:00, geen nieuwe
+calc-status maar een badge uit de wachtrij, cron elke 5 minuten.
+
+| Onderdeel | Wat | Hoe en waar op letten |
+|---|---|---|
+| Tabel `offerte_verzendwachtrij` | één rij per ingeplande verzending: `accord_id` → `offerte_accorderingen` (cascade), `token`, `calculatie_id` → `calculaties` (cascade), `tekst` (begeleidende tekst), `gepland_op` (timestamptz), `status` gepland/verstuurd/ingetrokken/mislukt, `verstuurd_op`, `fout`, `aangemaakt_door` | unieke index op `token` zolang status gepland: hooguit één geplande verzending per link. RLS: `offerte_verzendwachtrij_authenticated_alles`. SQL `uitgesteld_01_wachtrij.sql`, project-guard, idempotent; gedraaid 6 november via de Supabase-koppeling van Claude (migratie `uitgesteld_01_wachtrij_tabel` plus de cronregel apart als gewone query), vijf controles GOED |
+| Cronjob `offerte-wachtrij-5min` | `*/5 * * * *`, dag en nacht; `net.http_post` naar `offerte-wachtrij` met `x-aftap-key` uit `vault.aftap_secret` | zelfde patroon als `taken-mail-melding`. Sectie 3.1 telt nu tien cronjobs. De functie doet niets zolang er geen rij klaarstaat; het rapport in de logs toont elke ronde `bekeken: 0` |
+| Edge Function `offerte-wachtrij` | leest rijen gepland met `gepland_op <= now()` (max 20 per ronde); per rij: link nog open? → `offerte-verzenden` aanroepen met de service-rol als Bearer → rij op verstuurd, `calculaties.status` gereed→verzonden (alleen vanuit gereed), bij een planlink `onderhoudsplannen.status` gereed→verzonden. Fout of dichte link: rij op mislukt met reden, taak voor gian (bron offerte, kenmerk `wachtrij-mislukt-<id>`, vandaag 09:00) | **Verify JWT UIT**, deur via `AFTAP_SECRET`. Droogloop: `{"droog": true}`. `offerte-verzenden` ongewijzigd (v31); die zet het stempel `gemaild_op` dus op het echte verzendmoment en `offerte-herinnering` rekent daarmee. Broncode in `offerte-wachtrij/index.ts` met `test.ts` + `sbstub.ts` (16 Deno-mocktests; draaien met een import map die esm.sh naar `./sbstub.ts` wijst). Hoort in `ernes-edge-functions`. **Deploy via de koppeling kreeg geen goedkeuring; plakken in Studio** |
+| index.html v4.110.0 | venster Offerte mailen: veld Verstuur op + knop Inplannen naast Nu versturen; accordeervenster: blok Ingepland/Intrekken of laatste mislukte; dashboardblok `wachtrijBlok`; Nieuwe link maken en Nu versturen trekken een geplande verzending in. Functies `_wachtrij*`, `wachtrijDashIntrekken` | Inplannen zet een calc op afspraak/concept eerst via `setCalcStatus` op gereed, zodat tarieven en bedrag bevroren zijn vóór de rij bestaat. Zie `CHANGELOG.md` v4.110.0 voor de tests |
+
+**Nog te doen in het echt.** (1) `offerte-wachtrij` deployen in Studio,
+Verify JWT uit. (2) Eén proefofferte naar een eigen adres inplannen op
+5 minuten vooruit: mail komt, rij op verstuurd, calc op Verzonden,
+"Gemaild op" in het venster, rapport in de logs met `verstuurd: 1`. Dit
+is ook de test van de open aanname dat `offerte-verzenden` de
+service-rol-JWT als Bearer accepteert; weigert hij met 401, dan komt de
+rij op mislukt met die tekst en een taak voor Gian, en moet in
+`offerte-verzenden` Verify JWT uit met een eigen sleutelcheck, of de
+aanroep in `offerte-wachtrij` met een gebruikerstoken. (3) Intrekken
+testen vanuit venster en dashboard. (4) Sectie 3.2 bijwerken: 27 functies
+**[TE CONTROLEREN]**.
+
+**Als het stukgaat.** Offerte niet verstuurd op het geplande moment →
+logs van `offerte-wachtrij`: geen rapportregels betekent dat de cron hem
+niet bereikt (`select * from cron.job_run_details where jobid = (select
+jobid from cron.job where jobname = 'offerte-wachtrij-5min') order by
+start_time desc limit 5`, en kijk naar 401 = sleutel ongelijk, 404 =
+functie niet gedeployd); wel rapport maar `mislukt: 1` → de rij in
+`offerte_verzendwachtrij` heeft de reden in `fout` en er staat een taak
+bij Gian. Twee mails naar de klant → een geplande rij is niet ingetrokken
+bij direct versturen; controleer `status` van de rij. Rij blijft op
+gepland na het tijdstip → `gepland_op` is UTC; vergelijk met `now()` in
+SQL en niet met de klok aan de muur.
+

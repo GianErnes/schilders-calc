@@ -1,3 +1,26 @@
+## v4.110.0 — Offerte op een later moment laten versturen (2026-11-06)
+
+**Aanleiding**
+- Gian 06-11: werkt vaak 's avonds en in het weekend; een offerte die dan de deur uit gaat, draagt dat tijdstip in de mail. Vraag: uitgesteld verzenden.
+
+**Keuzes (Gian, 06-11)**
+- Eigen wachtrij in Supabase, niet Resends `scheduled_at`: alles blijft in het eigen systeem, zichtbaar en intrekbaar in de app, en `offerte-verzenden` blijft de enige plek met mailkennis.
+- Vrij datum en tijd kiezen, standaard de eerstvolgende werkdag 08:00.
+- Geen nieuwe calc-status: "Ingepland" is een badge uit de wachtrij-tabel, de calc blijft op Gereed (al bevroren sinds v3.7.0) en gaat pas op Verzonden als de mail echt weg is. Zo blijven de zes statuslijsten en de slotlogica in `setCalcStatus` ongemoeid.
+- Cron elke 5 minuten, dag en nacht; zonder rijen doet de functie niets.
+
+**Gebouwd**
+- SQL `uitgesteld_01_wachtrij.sql`: tabel `offerte_verzendwachtrij` (accord_id → offerte_accorderingen, token, calculatie_id, tekst, gepland_op, status gepland/verstuurd/ingetrokken/mislukt, verstuurd_op, fout, aangemaakt_door), unieke index op token zolang status gepland, RLS authenticated alles, cronjob `offerte-wachtrij-5min` (`*/5 * * * *`, sleutel uit `vault.aftap_secret`, header `x-aftap-key`). Project-guard, idempotent. **Gedraaid 06-11 via de Supabase-koppeling** in twee stappen (tabel+RLS als migratie `uitgesteld_01_wachtrij_tabel`, cron apart); vijf controles GOED.
+- Nieuwe Edge Function `offerte-wachtrij` (Verify JWT UIT, deur via `AFTAP_SECRET`): leest rijen met status gepland en `gepland_op <= now()`, controleert dat de accordeerlink nog open is, roept `offerte-verzenden` aan met de service-rol als Bearer, zet de rij op verstuurd en de calc (of bij een planlink het plan) van gereed naar verzonden. Bij een fout of een dichte link: rij op mislukt met reden, taak voor Gian (bron offerte, kenmerk `wachtrij-mislukt-<id>`, vandaag 09:00). Droogloop met `{"droog": true}`. Rapportregel in de logs per ronde. `offerte-verzenden` zelf ongewijzigd; het stempel `gemaild_op` wordt dus op het echte verzendmoment gezet en de opvolgautomaat rekent daarmee (beltaak Maud op de maandag ná de echte verzenddag).
+- index.html: in het venster Offerte mailen een veld Verstuur op (`datetime-local`, standaard `_wachtrijVolgendeWerkdag08()`) met knop Inplannen naast Nu versturen. Inplannen zet een calc op afspraak/concept eerst via `setCalcStatus` op gereed (bevriest tarieven en bedrag als altijd) en schrijft de rij. Nu versturen trekt een eventuele geplande verzending in; Nieuwe link maken ook (`_wachtrijIntrekkenVoorCalc`). Accordeerlink-venster: blok "Ingepland voor …" met Intrekken, of de laatste mislukte verzending met reden zolang er daarna niet gemaild is. Dashboard: blok "Ingeplande verzendingen" (alle geplande, mislukte van 7 dagen) met Openen en Intrekken, onder het reacties-blok. Vier versieankers bijgewerkt.
+
+**Getest**
+- SQL: pglast parse groen; na het draaien vijf controles GOED (tabel, RLS, policy, unieke index, cronjob).
+- Edge Function: `deno check` groen; 16 mocktests (`test.ts` met `sbstub.ts`): sleutel, lege ronde, toekomstige rij blijft liggen, geslaagde verzending (aanroep met token+tekst en service-bearer, rij verstuurd, calc gereed→verzonden, geen taak), droogloop, mislukte verzending (rij mislukt, taak gian met kenmerk, calc ongemoeid), dichte link, planlink, dubbele taak 23505 geen fout.
+- index.html: `node --check` op alle scriptblokken groen; div-balans 1425/1428 tegenover live 1416/1419 (zelfde verschil van 3), scripttags 6/6; 18 Node-tests op functies rechtstreeks uit het gepatchte bestand (volgende werkdag vanaf vrijdagavond/dinsdag 07:30/zaterdag, inputwaarde heen en terug, rommel, inplannen vanuit concept en gereed, niet-open link, 23505-melding, gereed mislukt → geen insert, intrekken per token en per calc, blok-html gepland/mislukt/ge-escaped/verdwijnt na mailen).
+- **Niet getest: in de echte omgeving.** Open aanname: `offerte-verzenden` (Verify JWT aan) accepteert de service-rol-JWT als Bearer. Te controleren na deploy: één proefofferte naar een eigen adres inplannen op 5 minuten vooruit → mail komt, rij op verstuurd, calc op Verzonden, "Gemaild op" in het venster, en in de logs van `offerte-wachtrij` het rapport met `verstuurd: 1`. Daarna Intrekken testen en de taak bij een bewust dichtgezette link.
+- Deploy van `offerte-wachtrij` via de koppeling kreeg tweemaal geen goedkeuring; de broncode staat in `offerte-wachtrij/index.ts` om in Studio te plakken (Verify JWT UIT). Tot de deploy krijgt de cron elke 5 minuten een 404; dat doet verder niets.
+
 ## v4.109.0 — Nieuwe calculaties starten op prijsweergave Regels zonder hoeveelheden (2026-11-05)
 
 **Aanleiding**

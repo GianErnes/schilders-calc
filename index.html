@@ -2424,8 +2424,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.109.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.110.0</h2>
       <div class="intro-body">
+        <p><strong>📅 Offerte op een later moment laten versturen (v4.110.0).</strong> Je werkt vaak 's avonds of in het weekend, en de klant zag dan ook dat tijdstip op de mail. In het venster Offerte mailen staat nu onder de begeleidende tekst een datum en tijd (standaard de eerstvolgende werkdag 08:00, vrij aan te passen) met de knop <strong>Inplannen</strong> naast <strong>Nu versturen</strong>. Inplannen zet de calculatie op Gereed (bevroren, als altijd) en legt de verzending in een wachtrij; elke vijf minuten kijkt de nieuwe Edge Function <code>offerte-wachtrij</code> of er iets verstuurd moet worden en roept dan de gewone <code>offerte-verzenden</code> aan. Daardoor krijgt de offerte de echte verzenddatum mee en start de opvolging (beltaak Maud, herinnering) vanaf dat moment, niet vanaf het inplannen. De calculatie gaat pas op Verzonden als de mail echt weg is. In het Accordeerlink-venster zie je "Ingepland voor …" met een knop <strong>Intrekken</strong>; op het dashboard staat een blok met alle ingeplande verzendingen. Maak je een nieuwe link, of verstuur je toch direct, dan wordt een geplande verzending automatisch ingetrokken. Mislukt een verzending, dan komt er een taak voor Gian en staat de reden in het venster. <strong>Vereist</strong> de SQL <code>uitgesteld_01_wachtrij.sql</code> (tabel en RLS gedraaid 06-11 via de koppeling; cronregel apart) en de nieuwe Edge Function <code>offerte-wachtrij</code> (Verify JWT uit, sleutel <code>AFTAP_SECRET</code>). Geen wijziging aan <code>offerte-verzenden</code>.</p>
         <p><strong>💶 Nieuwe calculaties starten op prijsweergave Regels zonder hoeveelheden (v4.109.0).</strong> Een nieuwe calculatie stond tot nu toe standaard op “Per onderdeel”, terwijl de norm bij Controleer al jaren “Regels zonder hoeveelheden en eenheidsprijzen” is. Elke nieuwe calculatie krijgt die norm nu direct mee: ook een kopie via ⎘ en een calculatie vanuit een Yoobi-offerte. Bestaande calculaties blijven precies zoals ze stonden, dus een al verstuurde offerte verandert niet. Je kunt per offerte nog altijd omschakelen. Geen SQL, geen Edge Function.</p>
         <p><strong>⧉ Bewerkingen van één regel toepassen op de andere regels met hetzelfde verfsysteem (v4.108.0).</strong> Je hebt bij de opname alle gevels of kamers ingevuld, en op kantoor zet je op één regel de percentages per bewerking goed, of een ander materiaal of verbruik. Dat hoefde je tot nu toe op elke andere regel met dat systeem opnieuw te doen, want elke regel heeft zijn eigen kopie van het verfsysteem. Naast 🔄 staat nu de knop <strong>⧉</strong>: die toont alle andere regels in deze calculatie met hetzelfde verfsysteem, standaard aangevinkt, en vervangt hun bewerkingen door een kopie van de bronregel: percentages, materialen en verbruik. Naam, hoeveelheid, toeslag, aan/uit en meetstaat van de doelregel blijven staan. Regels die al gelijk zijn staan standaard uit; regels met eigen afwijkingen krijgen een oranje waarschuwing, want die afwijkingen gaan verloren. Werkt alleen binnen de open calculatie en niet op een vergrendelde offerte. Heeft het onderhoudsplan per-stap-percentages op zo'n regel, dan krijg je dezelfde melding als bij 🔄. Mislukt een regel, dan gaan de andere door en zegt de melding welke. Verder zijn alle kopieersymbolen (⧉ en ⎘) in de app nu helder blauw en dik, zoals het ⧉ op de onderdeel-balk al was; op de iPad waren ze een waas. Geen SQL, geen Edge Function.</p>
         <p><strong>🔧 Reparatie op v4.107.2: offerte-PDF werkte niet meer (v4.107.3).</strong> De koppen Kozijn-tekeningen en Foto-bijlage hadden in v4.107.2 dezelfde interne id gekregen; pdfMake eist unieke ids en weigerde daardoor de PDF te maken zodra een offerte zowel kozijntekeningen als foto's had. Elke kop heeft nu een eigen id. Geen SQL, geen Edge Function.</p>
@@ -3964,7 +3965,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.109.0';
+const APP_VERSION = 'v4.110.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4387,6 +4388,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.110.0', d: '2026-11-06', h: 'Offerte mailen kan nu worden ingepland op een later moment (standaard volgende werkdag 08:00); wachtrij, Intrekken in het Accordeerlink-venster, dashboardblok. Vereist SQL uitgesteld_01_wachtrij.sql en Edge Function offerte-wachtrij.' },
   { v: '4.109.0', d: '2026-11-05', h: 'Nieuwe calculaties starten standaard op prijsweergave Regels zonder hoeveelheden en eenheidsprijzen; bestaande calculaties ongewijzigd.' },
   { v: '4.108.0', d: '2026-11-05', h: 'Knop ⧉ naast 🔄 op een calc-regel: bewerkingen (percentages, materialen, verbruik) van die regel toepassen op alle andere regels met hetzelfde verfsysteem in deze calculatie; naam, hoeveelheid, toeslag, aan/uit en meetstaat blijven. Geen SQL.' },
   { v: '4.107.3', d: '2026-11-03', h: 'Reparatie: offerte-PDF weigerde in v4.107.2 (dubbele node-id op de bijlagekoppen); ids nu uniek.' },
@@ -24628,6 +24630,7 @@ function renderDashboard() {
   renderPlannenArchief();  // v3.25.9 — plannen-archief onder calc-archief
   renderVersieGeschiedenis();  // v3.18.0
   _accordMeldingenRender();  // v3.63.0 — reacties-melding op het dashboard
+  _wachtrijDashRender();  // v4.110.0 — ingeplande verzendingen
   _opnameVerversen(false);  // v4.40.0 — opnameboekingen-blok
 }
 // ============================================================
@@ -25241,6 +25244,7 @@ async function accordLinkBeheer() {
   }
   const nabel = await _nabelTakenOphalen(c.id); // v4.68.0
   await _accordEerdereLaden(c.id, rij ? rij.id : null); // v4.104.0 — eerdere versies van deze offerte
+  await _wachtrijLaden(c.id); // v4.110.0 — ingeplande verzending
   _accordBeheerRender(body, c, rij, nabel);
   _calcSignaalVernieuw(c.id, nabel, rij); // v4.68.0 — badge bovenin meteen bijwerken
 }
@@ -25593,6 +25597,9 @@ function _accordBeheerRender(body, c, rij, nabel) {
     h += '<div class="acb-sub" style="margin-top:6px;">Nog niet door de klant geopend.</div>';
   }
 
+  // v4.110.0 — ingeplande (of mislukte) verzending uit de wachtrij.
+  h += _wachtrijBlokHtml(rij);
+
   // v4.35.0 — wat de opvolgautomaat met deze offerte gaat doen.
   h += _opvolgBlokHtml(c, rij);
 
@@ -25647,6 +25654,20 @@ function _accordBeheerRender(body, c, rij, nabel) {
   if (_btnGetekend) _btnGetekend.addEventListener('click', () => _accordDownloadGetekend(rij, c, _btnGetekend));
   const _btnMail = body.querySelector('#acbMail');
   if (_btnMail) _btnMail.addEventListener('click', () => _offerteMailen(c, rij, body));
+  // v4.110.0 — geplande verzending intrekken.
+  const _btnWachtrij = body.querySelector('#acbWachtrijIntrek');
+  if (_btnWachtrij) _btnWachtrij.addEventListener('click', async () => {
+    if (!confirm('De ingeplande verzending intrekken? De offerte wordt dan niet verstuurd.')) return;
+    _btnWachtrij.disabled = true;
+    try {
+      await _wachtrijIntrekken(rij.token, 'link');
+      _toast('Verzending ingetrokken', 'ok');
+      accordLinkBeheer();
+    } catch (e) {
+      _btnWachtrij.disabled = false;
+      _toast('Intrekken mislukt: ' + (e.message || e));
+    }
+  });
   // v4.35.0 — noodrem op de automatische opvolging, per offerte.
   const _btnOpvolg = body.querySelector('#acbOpvolg');
   if (_btnOpvolg) _btnOpvolg.addEventListener('click', async () => {
@@ -25713,19 +25734,26 @@ function _offerteMailen(c, rij, body) {
     + '<label style="display:block; font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Begeleidende tekst (komt bovenaan in de mail)</label>'
     + '<textarea id="acbMailTekst" style="width:100%; min-height:200px; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:6px; font:inherit; line-height:1.5; resize:vertical;">' + _accordEsc(std) + '</textarea>'
     + '<div class="acb-sub" style="margin:6px 0 12px; font-size:0.72rem;">Laat je het leeg, dan gebruikt de mail de vaste standaardaanhef.</div>'
-    + '<button class="acb-btn" id="acbMailVerstuur">\ud83d\udce7 Versturen</button>'
+    // v4.110.0 — uitgesteld verzenden: datum en tijd, standaard eerstvolgende werkdag 08:00.
+    + '<label style="display:block; font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Verstuur op</label>'
+    + '<input type="datetime-local" id="acbMailWanneer" value="' + _accordEsc(_wachtrijInputWaarde(_wachtrijVolgendeWerkdag08())) + '" step="300" style="padding:8px; border:1px solid #ccc; border-radius:6px; font:inherit; margin-bottom:4px;">'
+    + '<div class="acb-sub" style="margin:0 0 12px; font-size:0.72rem;">Inplannen legt de offerte vast (status Gereed) en verstuurt hem op dit moment via de wachtrij. De opvolging start dan vanaf de echte verzenddatum.</div>'
+    + '<button class="acb-btn" id="acbMailPlan">\ud83d\udcc5 Inplannen</button>'
+    + '<button class="acb-btn sec" id="acbMailVerstuur">\ud83d\udce7 Nu versturen</button>'
     + '<button class="acb-btn sec" id="acbMailTerug">Terug</button>';
   body.innerHTML = h;
   body.querySelector('#acbMailTerug').addEventListener('click', () => _accordBeheerRender(body, c, rij));
+  const _knoppen = () => ['acbMailPlan', 'acbMailVerstuur', 'acbMailTerug'].map(id => body.querySelector('#' + id)).filter(Boolean);
   body.querySelector('#acbMailVerstuur').addEventListener('click', async () => {
     const ta = body.querySelector('#acbMailTekst');
     const tekst = ta ? ta.value : '';
     const vbtn = body.querySelector('#acbMailVerstuur');
-    const tbtn = body.querySelector('#acbMailTerug');
-    if (vbtn) { vbtn.disabled = true; vbtn.textContent = 'Versturen\u2026'; }
-    if (tbtn) tbtn.disabled = true;
+    _knoppen().forEach(b => { b.disabled = true; });
+    if (vbtn) vbtn.textContent = 'Versturen\u2026';
     try {
       await _offerteVerzendCall(rij.token, tekst);
+      // v4.110.0 — stond er nog een geplande verzending, dan is die nu overbodig.
+      try { await _wachtrijIntrekken(rij.token, 'direct'); } catch (eW) { console.warn('Wachtrij intrekken na direct versturen mislukt:', eW); }
       // Calc op Verzonden, maar nooit een al verder gevorderde status terugzetten.
       if (c && ['afspraak', 'concept', 'gereed'].includes(c.status)) {
         try { await setCalcStatus(c.id, 'verzonden'); } catch (e) {}
@@ -25733,11 +25761,195 @@ function _offerteMailen(c, rij, body) {
       _toast('Offerte gemaild naar ' + email, 'ok');
       accordLinkBeheer(); // venster verversen met de nieuwe stand
     } catch (e) {
-      if (vbtn) { vbtn.disabled = false; vbtn.textContent = '\ud83d\udce7 Versturen'; }
-      if (tbtn) tbtn.disabled = false;
+      _knoppen().forEach(b => { b.disabled = false; });
+      if (vbtn) vbtn.textContent = '\ud83d\udce7 Nu versturen';
       _toast('Mailen mislukt: ' + (e.message || e));
     }
   });
+  // v4.110.0 — Inplannen: rij in offerte_verzendwachtrij, calc op Gereed.
+  body.querySelector('#acbMailPlan').addEventListener('click', async () => {
+    const ta = body.querySelector('#acbMailTekst');
+    const tekst = ta ? ta.value : '';
+    const inp = body.querySelector('#acbMailWanneer');
+    const wanneer = _wachtrijLeesInput(inp ? inp.value : '');
+    if (!wanneer) { _toast('Vul een geldige datum en tijd in.'); return; }
+    if (wanneer.getTime() < Date.now() + 60 * 1000) { _toast('Dat moment is al voorbij. Kies een later tijdstip of gebruik Nu versturen.'); return; }
+    const pbtn = body.querySelector('#acbMailPlan');
+    _knoppen().forEach(b => { b.disabled = true; });
+    if (pbtn) pbtn.textContent = 'Inplannen\u2026';
+    try {
+      await _wachtrijInplannen(c, rij, tekst, wanneer);
+      _toast('Verzending ingepland voor ' + _wachtrijTijdKort(wanneer.toISOString()), 'ok');
+      accordLinkBeheer();
+    } catch (e) {
+      _knoppen().forEach(b => { b.disabled = false; });
+      if (pbtn) pbtn.textContent = '\ud83d\udcc5 Inplannen';
+      _toast('Inplannen mislukt: ' + (e.message || e));
+    }
+  });
+}
+
+// =====================================================================
+// v4.110.0 — UITGESTELD VERZENDEN (wachtrij)
+// Tabel offerte_verzendwachtrij (sql/uitgesteld_01_wachtrij.sql). De app
+// schrijft en trekt in; de Edge Function offerte-wachtrij (cron elke 5 min)
+// verstuurt via offerte-verzenden en zet de calc daarna op Verzonden.
+// =====================================================================
+let _wachtrijCache = { calcId: null, rows: [] };
+
+// Eerstvolgende werkdag 08:00 lokale tijd. Vandaag voor 08:00 telt niet: wie
+// om 07:30 inplant, bedoelt vrijwel altijd een nette verzendtijd op een
+// gewone dag, en een "verstuur over 20 minuten" kies je dan gewoon zelf.
+function _wachtrijVolgendeWerkdag08(nu) {
+  const d = nu ? new Date(nu.getTime()) : new Date();
+  d.setHours(8, 0, 0, 0);
+  d.setDate(d.getDate() + 1);
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+  return d;
+}
+// Date → waarde voor <input type="datetime-local"> (lokale tijd, zonder zone).
+function _wachtrijInputWaarde(d) {
+  const p = (x) => String(x).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+// Inputwaarde (lokale tijd) → Date, of null bij rommel.
+function _wachtrijLeesInput(v) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(v || ''));
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], 0, 0);
+  return isNaN(d.getTime()) ? null : d;
+}
+function _wachtrijTijdKort(iso) {
+  try { return new Date(iso).toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  catch (e) { return String(iso || ''); }
+}
+async function _wachtrijLaden(calcId) {
+  _wachtrijCache = { calcId: calcId, rows: [] };
+  if (!calcId || !_sb) return;
+  try {
+    const { data: rows, error } = await _sb.from('offerte_verzendwachtrij')
+      .select('id, token, status, gepland_op, verstuurd_op, fout, created_at')
+      .eq('calculatie_id', calcId).order('created_at', { ascending: false }).limit(5);
+    if (error) throw error;
+    _wachtrijCache.rows = rows || [];
+  } catch (e) { console.warn('Wachtrij laden mislukt:', e); }
+}
+// Blok in het accordeervenster: de geplande verzending van deze link, of de
+// laatste mislukte zolang er daarna niets nieuws gebeurd is.
+function _wachtrijBlokHtml(rij) {
+  if (!rij) return '';
+  const vanLink = _wachtrijCache.rows.filter(r => r.token === rij.token);
+  const gepland = vanLink.find(r => r.status === 'gepland');
+  if (gepland) {
+    return '<div class="acb-status open" style="margin-top:6px; background:#eef4ff; border-color:#7aa2e3; color:#1a3d7a;">'
+      + '\ud83d\udcc5 Ingepland voor ' + _accordEsc(_wachtrijTijdKort(gepland.gepland_op)) + '.'
+      + '<br><span style="font-weight:400;">De wachtrij verstuurt hem dan via de gewone mailfunctie; de calculatie gaat daarna op Verzonden.</span>'
+      + '<br><button class="acb-btn sec" id="acbWachtrijIntrek" style="margin-top:6px;">Intrekken</button>'
+      + '</div>';
+  }
+  const laatste = vanLink[0];
+  if (laatste && laatste.status === 'mislukt' && !rij.gemaild_op) {
+    return '<div class="acb-status afgekeurd" style="margin-top:6px;">\u26a0\ufe0f De ingeplande verzending van ' + _accordEsc(_wachtrijTijdKort(laatste.gepland_op)) + ' is mislukt.'
+      + '<br><span style="font-weight:400;">' + _accordEsc(laatste.fout || 'onbekende reden') + '</span>'
+      + '<br><span style="font-weight:400;">Verstuur hieronder opnieuw of plan opnieuw in.</span></div>';
+  }
+  return '';
+}
+// Inplannen: calc naar Gereed (bevriest tarieven en bedrag via setCalcStatus),
+// daarna de rij. Mislukt de insert, dan blijft de calc op Gereed: dat is geen
+// schade, alleen een al vastgelegde offerte.
+async function _wachtrijInplannen(c, rij, tekst, wanneer) {
+  if (!rij || rij.status !== 'open') throw new Error('Alleen een open link kun je inplannen.');
+  if (!_sb) throw new Error('Geen verbinding.');
+  if (c && ['afspraak', 'concept'].includes(c.status)) {
+    await setCalcStatus(c.id, 'gereed');
+    if (c.status !== 'gereed') throw new Error('De calculatie kon niet op Gereed gezet worden.');
+  }
+  let uid = null;
+  try { const { data: { user } } = await _sb.auth.getUser(); uid = user ? user.id : null; } catch (e) {}
+  const { error } = await _sb.from('offerte_verzendwachtrij').insert({
+    accord_id: rij.id,
+    token: rij.token,
+    calculatie_id: c ? c.id : null,
+    tekst: String(tekst || '').slice(0, 5000),
+    gepland_op: wanneer.toISOString(),
+    status: 'gepland',
+    aangemaakt_door: uid
+  });
+  if (error) {
+    if (String(error.code) === '23505') throw new Error('Er staat al een verzending ingepland voor deze link. Trek die eerst in.');
+    throw error;
+  }
+}
+async function _wachtrijIntrekken(token, reden) {
+  if (!token || !_sb) return;
+  const { error } = await _sb.from('offerte_verzendwachtrij')
+    .update({ status: 'ingetrokken', fout: reden === 'direct' ? 'Ingetrokken: offerte direct verstuurd.' : null, updated_at: new Date().toISOString() })
+    .eq('token', token).eq('status', 'gepland');
+  if (error) throw error;
+}
+async function _wachtrijIntrekkenVoorCalc(calcId) {
+  if (!calcId || !_sb) return;
+  const { error } = await _sb.from('offerte_verzendwachtrij')
+    .update({ status: 'ingetrokken', fout: 'Ingetrokken: nieuwe accordeerlink gemaakt.', updated_at: new Date().toISOString() })
+    .eq('calculatie_id', calcId).eq('status', 'gepland');
+  if (error) throw error;
+}
+// Dashboardblok: alle ingeplande verzendingen, plus mislukte van de laatste
+// zeven dagen. Zelfde opzet als het reacties-blok (v3.63.0).
+async function _wachtrijDashRender() {
+  const dash = document.getElementById('dashboard');
+  if (!dash || !dash.classList.contains('active') || !_sb) return;
+  const _dubbels = document.querySelectorAll('#wachtrijBlok');
+  for (let i = 1; i < _dubbels.length; i++) _dubbels[i].remove();
+  let rows = [];
+  try {
+    const grens = new Date(Date.now() - 7 * 86400000).toISOString();
+    const { data: r, error } = await _sb.from('offerte_verzendwachtrij')
+      .select('id, token, calculatie_id, status, gepland_op, fout, updated_at, calculaties(naam, klant)')
+      .or('status.eq.gepland,and(status.eq.mislukt,updated_at.gte.' + grens + ')') // geplande altijd, mislukte 7 dagen
+      .order('gepland_op', { ascending: true });
+    if (error) throw error;
+    rows = (r || []).filter(x => x.status === 'gepland' || x.status === 'mislukt');
+  } catch (e) { return; }
+  let blk = document.getElementById('wachtrijBlok');
+  if (!rows.length) { if (blk) blk.remove(); return; }
+  if (!blk) {
+    blk = document.createElement('div');
+    blk.id = 'wachtrijBlok';
+    const na = document.getElementById('accordMeldingen');
+    if (na && na.parentNode === dash) dash.insertBefore(blk, na.nextSibling); else dash.insertBefore(blk, dash.firstChild);
+  }
+  const nGepland = rows.filter(x => x.status === 'gepland').length;
+  let h = '<div style="border:1px solid var(--border); border-radius:8px; margin:0 0 1rem; background:var(--paper); overflow:hidden;">'
+    + '<div style="padding:0.6rem 0.8rem; font-weight:700; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.5rem;">'
+    + '\ud83d\udcc5 Ingeplande verzendingen '
+    + '<span style="background:#1a5fb4; color:#fff; border-radius:10px; padding:0 0.5rem; font-size:0.8rem;">' + nGepland + '</span>'
+    + '</div>';
+  rows.forEach(it => {
+    const naam = (it.calculaties && it.calculaties.naam) || '(zonder naam)';
+    const klant = (it.calculaties && it.calculaties.klant) || '';
+    const mis = it.status === 'mislukt';
+    h += '<div style="display:flex; align-items:center; gap:0.6rem; padding:0.55rem 0.8rem; border-top:1px solid var(--border);">'
+      + '<span style="font-size:1.1rem;">' + (mis ? '\u26a0\ufe0f' : '\ud83d\udcc5') + '</span>'
+      + '<div style="flex:1; min-width:0;">'
+      + '<div style="font-weight:600;">' + _accordEsc(naam) + (klant ? ' <span style="color:var(--muted); font-weight:400;">\u00b7 ' + _accordEsc(klant) + '</span>' : '') + '</div>'
+      + '<div style="font-size:0.78rem; color:var(--muted);">' + (mis ? 'Mislukt (' + _accordEsc(_wachtrijTijdKort(it.gepland_op)) + '): ' + _accordEsc(it.fout || '') : 'Verstuurt ' + _accordEsc(_wachtrijTijdKort(it.gepland_op))) + '</div>'
+      + '</div>'
+      + '<button class="btn btn-sm" onclick="accordMeldingOpen(\'' + it.calculatie_id + '\', false)">Openen</button>'
+      + (mis ? '' : '<button class="btn btn-secondary btn-sm" onclick="wachtrijDashIntrekken(\'' + it.token + '\')">Intrekken</button>')
+      + '</div>';
+  });
+  h += '</div>';
+  blk.innerHTML = h;
+}
+async function wachtrijDashIntrekken(token) {
+  if (!confirm('De ingeplande verzending intrekken? De offerte wordt dan niet verstuurd.')) return;
+  try {
+    await _wachtrijIntrekken(token, 'dash');
+    _toast('Verzending ingetrokken', 'ok');
+    _wachtrijDashRender();
+  } catch (e) { _toast('Intrekken mislukt: ' + (e.message || e)); }
 }
 
 // v3.81.0 / v3.82.0 — Getekend exemplaar: de bevroren offerte-PDF ophalen en er een aparte
@@ -26094,6 +26306,8 @@ async function _accordNieuweLink(c, body, supersede) {
     const { error: eVerv } = await _sb.from('offerte_accorderingen').update({ status: 'vervangen' })
       .eq('calculatie_id', c.id).eq('status', 'open').is('onderhoudsplan_id', null); // v4.51.0 — een open planlink blijft staan
     if (eVerv) throw new Error('Oude link kon niet op vervangen gezet worden: ' + eVerv.message);
+    // v4.110.0 — een geplande verzending van de oude link mag niet alsnog de deur uit.
+    try { await _wachtrijIntrekkenVoorCalc(c.id); } catch (eW) { console.warn('Wachtrij intrekken bij nieuwe link mislukt:', eW); }
     const { error } = await _sb.from('offerte_accorderingen').insert({
       calculatie_id: c.id,
       token: token,
