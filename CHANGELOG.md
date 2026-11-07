@@ -14,7 +14,7 @@
 
 **Getest**
 - `node --check` groen; eenheidstest van de ontleding op acht namen uit de echte boekingen: Edwin Bierman → E. Bierman; Mevrouw Kuijpers → Mevr. Kuijpers; Bert van Duren → B. van Duren; Familie Troost → Fam. Troost; de heer J. Jansen → Dhr. J. Jansen; A.J.M. Kuijpers → A.J.M. Kuijpers; Kuijpers → Kuijpers.
-- **Niet getest in de echte omgeving.** Te controleren bij de eerstvolgende boeking: het veld Relatienaam staat goed voorgevuld na het kiezen van de aanhef, en de relatie in Yoobi krijgt die naam.
+- **Getest in de echte omgeving (08-11, 00:30)** op een tijdelijke testrij "Bert van Testduren" (daarna verwijderd): met aanhef Dhr. maakte de knop relatie 2610909 "Dhr. B. van Testduren" aan, met contactpersoon "Bert van Testduren" (voor- en achternaam apart), categorie Particuliere prospect, adres en contactgegevens compleet (schermfoto Gian). Testrelatie door Gian in Yoobi verwijderd.
 
 ## v4.112.0 — Nieuwe klant vanuit een boeking in Yoobi zetten (2026-11-07)
 
