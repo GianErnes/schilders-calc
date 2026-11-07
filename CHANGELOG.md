@@ -1,3 +1,21 @@
+## v4.112.1 — Relatienaam volgens de Yoobi-naamregel (2026-11-08)
+
+**Aanleiding**
+- Gian 08-11, direct na de eerste echte aanmaak: zijn particuliere relaties in Yoobi heten aanhef + initialen + achternaam (Dhr. A.J.M. Kuijpers, Mevrouw D.I. Kuijpers, Familie R.J.A.M. Kuijpers); de knop stuurde de boekingsnaam letterlijk (Edwin Bierman).
+
+**Keuzes (Gian, 08-11)**
+- Aanheffen afgekort: Dhr., Mevr., Fam., Dhr. en mevr. (hoofdletter aan het begin: aanname, veld is overtypbaar).
+- Geslacht is niet uit de boeking af te leiden, dus Gian kiest de aanhef zelf; zonder aanhef geen aanmaak.
+- Geen voornaam in de boeking → geen initialen. Tussenvoegsels blijven bij de achternaam (Dhr. B. van Duren).
+
+**Gebouwd**
+- index.html: in het venster Naar Yoobi een keuzelijst Aanhef en een veld Relatienaam in Yoobi. `_yoobiNaarOntleed()` haalt een aanhefwoord vooraan uit de boekingsnaam (mevrouw/mevr/mw → Mevr.; dhr/de heer/meneer → Dhr.; familie/fam → Fam.), maakt initialen uit de voornaam (bestaande initialen zoals A.J.M. blijven staan) en houdt de rest als achternaam. `_yoobiNaarRelatienaamBouw()` zet aanhef + initialen + achternaam in het veld en loopt mee als de aanhef wisselt. Aanmaken stuurt `relatienaam` mee; zonder aanhef of lege naam wordt het geblokkeerd. De regel "Relatienaam" in het venster heet nu "Naam in boeking". Vier versieankers bijgewerkt.
+- Edge Function `yoobi-klant` versie 37 (live 08-11): `bouwYoobiVerzoek` neemt `body.relatienaam` (max 120 tekens) als `name`, anders de boekingsnaam zoals voorheen. Verder ongewijzigd.
+
+**Getest**
+- `node --check` groen; eenheidstest van de ontleding op acht namen uit de echte boekingen: Edwin Bierman → E. Bierman; Mevrouw Kuijpers → Mevr. Kuijpers; Bert van Duren → B. van Duren; Familie Troost → Fam. Troost; de heer J. Jansen → Dhr. J. Jansen; A.J.M. Kuijpers → A.J.M. Kuijpers; Kuijpers → Kuijpers.
+- **Niet getest in de echte omgeving.** Te controleren bij de eerstvolgende boeking: het veld Relatienaam staat goed voorgevuld na het kiezen van de aanhef, en de relatie in Yoobi krijgt die naam.
+
 ## v4.112.0 — Nieuwe klant vanuit een boeking in Yoobi zetten (2026-11-07)
 
 **Aanleiding**
@@ -23,7 +41,10 @@
 **Getest**
 - `node --check` op het inline scriptblok groen; functie-bron parse-test groen.
 - Functie: na deploy van v34 twee echte zoekopdrachten uit de app (`?q=sluis`, `?q=Kuijpers`) met 200 in het logboek; Gian bevestigde Klant uit Yoobi intact. v35 voegt alleen `alleen_controle` toe.
-- **Niet getest: het venster in de echte omgeving en de POST naar Yoobi.** Open aannames: (1) veldnamen `addresses[].addressline1/postalcode/city` en `contactpersons[].firstname/lastname/contactinfo` worden door de POST geaccepteerd zoals de GET ze teruggeeft (spec zegt "GET array accepted", noemt de velden niet); (2) Yoobi genereert het relatienummer zelf (we sturen geen `code`); (3) `returnVars` is een array met een object met `customerCode`. Testplan: eerst droogloop op één echte boeking en het verzoek nalezen, dan `YOOBI_SCHRIJF_AAN=1`, één klant aanmaken, in Yoobi controleren (relatie, categorie, adres, contactpersoon met e-mail en telefoon), pas daarna vrijgeven.
+- **Getest in de echte omgeving (07-11, 23:40–00:00)** op twee tijdelijke testrijen in `opname_boekingen` (daarna verwijderd):
+  1. Droogloop (poort dicht) met het e-mailadres van een bestaande klant: de dubbelcontrole vond via `getCustomerByEmail` relatie 2610907 met contactpersoon, de naamcontrole gaf terecht niets, de confirm bij "Toch als nieuwe relatie aanmaken" verscheen, en het venster toonde het verzoek; het verzoek klopte met de spec.
+  2. Echte aanmaak (`YOOBI_SCHRIJF_AAN=1`) met Gians eigen gegevens: Yoobi maakte relatie 2610908 aan; het nummer stond direct op de boeking (`yoobi_aangemaakt_op` 22:56 UTC) en als groen `✓ Yoobi 2610908` in het blok. In Yoobi gecontroleerd (schermfoto Gian): categorie Particuliere prospect, bezoekadres met land Nederland (standaard van de organisatie), telefoon en e-mail op de relatie, contactpersoon met e-mail en telefoon als Werk, notitie met herkomst. Alle drie de aannames bewezen: GET-veldnamen worden door de POST geaccepteerd, Yoobi genereert het relatienummer, `returnVars` bevat `customerCode`. Testrelatie 2610908 door Gian in Yoobi verwijderd.
+- Bijvangst: Gians eigen e-mailadres bleek in Yoobi bij relatie 10390 (Mevrouw van Loo) te staan; de dubbelcontrole vond dat. Opschonen in Yoobi is aan Gian.
 
 **Open**
 - Klant uit Yoobi (`_yoobiVulIn`) zet het relatienummer nog niet op `calculaties.yoobi_relatienummer`; kan in een volgende versie.
