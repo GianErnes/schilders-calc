@@ -1,3 +1,25 @@
+## v4.111.0 — Sectiebalk en gekleurde sectiekoppen op de Calculatie-tab (2026-11-07)
+
+**Aanleiding**
+- Gian 07-11 (screenshot iPad, lange buitencalculatie): alle tekst op de Calculatie-tab lijkt op elkaar; hij veegt omhoog en omlaag zonder te zien waar hij moet zijn. Vraag: makkelijker naar de secties navigeren.
+
+**Keuzes (Gian, 07-11)**
+- Richting 1 + 2 samen: een vaste sectiebalk om te springen én herkenbare, gekleurde sectiekoppen om te zien waar je bent. Niet gekozen: een springknop rechts (richting 3).
+- Overal, dus iPad én iMac; niet alleen op het aanraakscherm.
+
+**Gebouwd**
+- `#calcSectieBalk` direct onder `<nav>`, buiten `#calculatie` zodat de iPad-zoom van v4.30.0 (`#calculatie { zoom: 1.3 }`) de sticky-positie niet verstoort. Sticky op `top: var(--nav-h)`; `--nav-h` wordt door JS gemeten (ResizeObserver op de nav). Zichtbaar via `body.calc-actief`, gezet door een MutationObserver op de class van `#calculatie`, omdat de tab op meer dan één plek wordt gewisseld (klik-handler, `openCalc`).
+- Zeven knoppen uit `CALC_SECTIES`: Klant (`sec_kop`) · Notities (`notitiesPaneel`) · Regels (`sec_regels`) · Staart (`sec_staart`) · Per bewerking (`bewerkingBlok`) · Totalen (`.totals`) · Offerte (`offerteBlok`). `calcSectieGa()` rolt naar de sectie, onder tabbalk + sectiebalk, en klapt de twee `<details>`-blokken open. `_calcSectieMarkeer()` (scroll-spy, via requestAnimationFrame) kleurt de knop van de sectie die bovenin staat; secties met een verborgen knop doen niet mee.
+- Nieuwe sectiekoppen `.calc-sectiekop` met kleurstreep links (`--sc`): "Klant en project" boven de drie kopblokken, "Regels" boven de klapbalk, "Staartkosten" vervangt de kale `<h3>`. `#bewerkingBlok`, `#offerteBlok` en `.totals` krijgen dezelfde streep in hun kleur. Kleuren als `--sec-*` in `:root`; het bolletje in de knop heeft dezelfde kleur.
+- Notities-rood (border, lichtrode kop, rode titel) stond alleen in de iPad-mediaquery en staat nu ook daarbuiten, dus overal.
+- Breed scherm (>1100px, waar `.totals` sticky rechts staat): knop Totalen verborgen. Print: balk verborgen.
+- Vijf versieankers bijgewerkt. Geen SQL, geen Edge Function.
+
+**Getest**
+- `node --check` op het inline scriptblok groen; CSS-accolades 672/672; div-balans 1429/1432 tegenover live 1425/1428 (zelfde verschil van 3, vier nieuwe divs); scripttags 6/6; vijf ankers op v4.111.0.
+- 13 jsdom-tests op de code rechtstreeks uit het gepatchte bestand: zeven knoppen, `--nav-h` gemeten, body-class volgt de tab via MutationObserver, scroll-spy markeert de juiste sectie en precies één knop, springen rekent `scrollY + top − (nav + balk) − 10` en niet onder 0, Per bewerking klapt open, onbekende sectie geeft geen fout, en op een breed scherm telt het sticky Totalen-paneel niet mee (bug gevonden door de test: zonder die uitsluiting stond Totalen op de iMac altijd gemarkeerd).
+- **Niet getest: in de echte omgeving.** Open aannames: (1) `getBoundingClientRect()` binnen de gezoomde `#calculatie` geeft op Safari/iPad schermpixels terug, zodat het springen onder de balk uitkomt; (2) de sectiebalk hangt op de iPad precies onder de tabbalk. Te controleren op de iPad: tik elke knop, de kop van de sectie moet net onder de balk verschijnen; veeg door de calculatie, de knop moet meekleuren. Daarna op de iMac: Totalen-knop afwezig, markering wisselt van Regels naar Staart naar Offerte bij scrollen.
+
 ## v4.110.0 — Offerte op een later moment laten versturen (2026-11-06)
 
 **Aanleiding**

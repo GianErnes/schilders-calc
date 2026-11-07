@@ -1600,6 +1600,51 @@
     body.ohpver-open #vraagbaakTab { right: 0; }
     #ohpVerPaneel { width: 100vw; }
   }
+  /* v4.111.0 — SECTIEBALK EN SECTIEKOPPEN op de Calculatie-tab. De balk staat buiten #calculatie
+     (dus buiten de iPad-zoom van v4.30.0) direct onder de tabbalk; --nav-h wordt door JS gemeten.
+     Per sectie één kleur, als bolletje in de knop en als streep links bij de kop. */
+  :root { --sec-kop: #2196f3; --sec-notities: #e63329; --sec-regels: #1a1d21; --sec-staart: #d97706;
+          --sec-bewerking: #7c3aed; --sec-totalen: #16a34a; --sec-offerte: #0d9488; --nav-h: 44px; }
+  #calcSectieBalk {
+    display: none; position: sticky; top: var(--nav-h); z-index: 49;
+    gap: 0.4rem; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    background: var(--paper); border-bottom: 1px solid var(--paper-deep);
+    padding: 0.45rem 1.5rem;
+  }
+  #calcSectieBalk::-webkit-scrollbar { display: none; }
+  body.calc-actief #calcSectieBalk { display: flex; }
+  #calcSectieBalk button {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.4rem;
+    border: 1px solid var(--paper-deep); background: var(--paper-warm); border-radius: 999px;
+    padding: 0.32rem 0.75rem; font-family: inherit; font-size: 0.8rem; font-weight: 600;
+    color: var(--ink-soft); cursor: pointer; white-space: nowrap;
+  }
+  #calcSectieBalk button::before { content: ''; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--sc); flex: 0 0 auto; }
+  #calcSectieBalk button:hover { color: var(--ink); border-color: var(--sc); }
+  #calcSectieBalk button.actief { background: var(--sc); border-color: var(--sc); color: #fff; }
+  #calcSectieBalk button.actief::before { background: #fff; }
+  @media (hover: none) and (pointer: coarse) and (min-width: 700px) and (min-height: 700px) {
+    #calcSectieBalk button { font-size: 1.02rem; padding: 0.45rem 0.95rem; }
+  }
+  @media (min-width: 1101px) { #calcSectieBalk button[data-sec="totalen"] { display: none; } }
+  @media print { #calcSectieBalk { display: none !important; } }
+  .calc-sectiekop {
+    display: flex; align-items: baseline; gap: 0.55rem; flex-wrap: wrap;
+    margin: 1.75rem 0 0.65rem; padding: 0.2rem 0 0.2rem 0.75rem;
+    border-left: 5px solid var(--sc);
+  }
+  .calc-sectiekop.eerste { margin-top: 0.25rem; }
+  .calc-sectiekop strong { font-size: 1.08rem; font-weight: 700; color: var(--ink); }
+  .calc-sectiekop span { font-size: 0.75rem; color: var(--muted); }
+  #bewerkingBlok { border-left: 5px solid var(--sec-bewerking) !important; }
+  #offerteBlok { border-left: 5px solid var(--sec-offerte) !important; }
+  .calc-layout .totals { border-left: 5px solid var(--sec-totalen); }
+  /* Notities-rood was tot v4.111.0 alleen iPad (zie hieronder); nu overal. */
+  #calculatie .notities-paneel { border: 2px solid var(--sec-notities); box-shadow: 0 0 0 3px rgba(230, 51, 41, 0.12); }
+  #calculatie .notities-header { background: #fdecea; border-bottom-color: var(--sec-notities); }
+  #calculatie .notities-paneel.collapsed .notities-header { border-bottom: none; }
+  #calculatie .notities-title { color: var(--accent-deep); }
+
   /* v4.30.0 - iPad: Calculatie en Meetstaat groter, iMac blijft ongemoeid.
      hover:none + pointer:coarse herkent een aanraakscherm, dus de iMac valt er altijd
      buiten, ook bij een smal browservenster. De eis van 700px in beide richtingen sluit
@@ -2419,13 +2464,16 @@
   <button data-tab="planning">Planning</button>
   <button data-tab="instellingen">Instellingen</button>
 </nav>
+<!-- v4.111.0 — sectiebalk Calculatie-tab; knoppen worden door calcSectieBalkInit() gevuld -->
+<div id="calcSectieBalk" aria-label="Secties van de calculatie"></div>
 
 <main>
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.110.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.111.0</h2>
       <div class="intro-body">
+        <p><strong>🧭 Sectiebalk en gekleurde sectiekoppen op de Calculatie-tab (v4.111.0).</strong> Op een lange calculatie leek alles op elkaar en zat je omhoog en omlaag te vegen zonder te zien waar je was. Onder de tabbalk staat nu, alleen op de Calculatie-tab, een vaste rij knoppen: <strong>Klant · Notities · Regels · Staart · Per bewerking · Totalen · Offerte</strong>. Tik op een knop en de pagina rolt naar die sectie; de knop van de sectie waar je nu bent is gekleurd. Elke sectie heeft daarnaast een eigen kleur als streep links bij de kop, dezelfde kleur als het bolletje in de knop, zodat je ook tijdens het vegen ziet waar je bent. Notities is overal rood, niet meer alleen op de iPad. Op een breed scherm, waar de totalen al rechts vast staan, staat de knop Totalen niet in de balk. Alleen weergave, aan de berekening verandert niets. Geen SQL nodig.</p>
         <p><strong>📅 Offerte op een later moment laten versturen (v4.110.0).</strong> Je werkt vaak 's avonds of in het weekend, en de klant zag dan ook dat tijdstip op de mail. In het venster Offerte mailen staat nu onder de begeleidende tekst een datum en tijd (standaard de eerstvolgende werkdag 08:00, vrij aan te passen) met de knop <strong>Inplannen</strong> naast <strong>Nu versturen</strong>. Inplannen zet de calculatie op Gereed (bevroren, als altijd) en legt de verzending in een wachtrij; elke vijf minuten kijkt de nieuwe Edge Function <code>offerte-wachtrij</code> of er iets verstuurd moet worden en roept dan de gewone <code>offerte-verzenden</code> aan. Daardoor krijgt de offerte de echte verzenddatum mee en start de opvolging (beltaak Maud, herinnering) vanaf dat moment, niet vanaf het inplannen. De calculatie gaat pas op Verzonden als de mail echt weg is. In het Accordeerlink-venster zie je "Ingepland voor …" met een knop <strong>Intrekken</strong>; op het dashboard staat een blok met alle ingeplande verzendingen. Maak je een nieuwe link, of verstuur je toch direct, dan wordt een geplande verzending automatisch ingetrokken. Mislukt een verzending, dan komt er een taak voor Gian en staat de reden in het venster. <strong>Vereist</strong> de SQL <code>uitgesteld_01_wachtrij.sql</code> (tabel en RLS gedraaid 06-11 via de koppeling; cronregel apart) en de nieuwe Edge Function <code>offerte-wachtrij</code> (Verify JWT uit, sleutel <code>AFTAP_SECRET</code>). Geen wijziging aan <code>offerte-verzenden</code>.</p>
         <p><strong>💶 Nieuwe calculaties starten op prijsweergave Regels zonder hoeveelheden (v4.109.0).</strong> Een nieuwe calculatie stond tot nu toe standaard op “Per onderdeel”, terwijl de norm bij Controleer al jaren “Regels zonder hoeveelheden en eenheidsprijzen” is. Elke nieuwe calculatie krijgt die norm nu direct mee: ook een kopie via ⎘ en een calculatie vanuit een Yoobi-offerte. Bestaande calculaties blijven precies zoals ze stonden, dus een al verstuurde offerte verandert niet. Je kunt per offerte nog altijd omschakelen. Geen SQL, geen Edge Function.</p>
         <p><strong>⧉ Bewerkingen van één regel toepassen op de andere regels met hetzelfde verfsysteem (v4.108.0).</strong> Je hebt bij de opname alle gevels of kamers ingevuld, en op kantoor zet je op één regel de percentages per bewerking goed, of een ander materiaal of verbruik. Dat hoefde je tot nu toe op elke andere regel met dat systeem opnieuw te doen, want elke regel heeft zijn eigen kopie van het verfsysteem. Naast 🔄 staat nu de knop <strong>⧉</strong>: die toont alle andere regels in deze calculatie met hetzelfde verfsysteem, standaard aangevinkt, en vervangt hun bewerkingen door een kopie van de bronregel: percentages, materialen en verbruik. Naam, hoeveelheid, toeslag, aan/uit en meetstaat van de doelregel blijven staan. Regels die al gelijk zijn staan standaard uit; regels met eigen afwijkingen krijgen een oranje waarschuwing, want die afwijkingen gaan verloren. Werkt alleen binnen de open calculatie en niet op een vergrendelde offerte. Heeft het onderhoudsplan per-stap-percentages op zo'n regel, dan krijg je dezelfde melding als bij 🔄. Mislukt een regel, dan gaan de andere door en zegt de melding welke. Verder zijn alle kopieersymbolen (⧉ en ⎘) in de app nu helder blauw en dik, zoals het ⧉ op de onderdeel-balk al was; op de iPad waren ze een waas. Geen SQL, geen Edge Function.</p>
@@ -2834,6 +2882,7 @@
       </div>
     </div>
     <div id="calcLockBanner"></div>
+    <div class="calc-sectiekop eerste" id="sec_kop" style="--sc: var(--sec-kop);"><strong>Klant en project</strong><span>project · klant en adres · offerte-instellingen</span></div>
     <div class="kblok-wrap dicht" id="kw_project">
     <div class="kblok-kop" onclick="kblokToggle('project')"><span class="kblok-caret">▼</span><span>Project en planning</span><span class="kblok-sum" id="kwsum_project"></span></div>
     <div class="kblok lock-open">
@@ -2851,10 +2900,11 @@
     <div id="notitiesPaneel" class="lock-open"></div>
     <div class="calc-layout">
       <div>
+        <div class="calc-sectiekop" id="sec_regels" style="--sc: var(--sec-regels);"><strong>Regels</strong><span>hoofdgroepen · onderdelen · regels</span></div>
         <div id="calcKlapBar" class="calc-klap-bar"></div>
         <div id="calcStructuur"></div>
         <button class="btn" onclick="addHoofdgroep()" style="margin-top: 0.5rem;">+ Hoofdgroep toevoegen</button>
-        <h3 style="margin-top: 2rem; margin-bottom: 0.75rem;">Staartkosten</h3>
+        <div class="calc-sectiekop" id="sec_staart" style="--sc: var(--sec-staart);"><strong>Staartkosten</strong><span>toeslagen · staartposten</span></div>
         <div id="normRefs" style="margin-bottom: 0.75rem;"></div>
         <div id="staartList"></div>
         <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
@@ -3965,7 +4015,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.110.0';
+const APP_VERSION = 'v4.111.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4388,6 +4438,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.111.0', d: '2026-11-07', h: 'Calculatie-tab: vaste sectiebalk onder de tabs (Klant · Notities · Regels · Staart · Per bewerking · Totalen · Offerte) die naar de sectie springt en de huidige sectie markeert; elke sectie een eigen kleurstreep. Alleen weergave, geen SQL.' },
   { v: '4.110.0', d: '2026-11-06', h: 'Offerte mailen kan nu worden ingepland op een later moment (standaard volgende werkdag 08:00); wachtrij, Intrekken in het Accordeerlink-venster, dashboardblok. Vereist SQL uitgesteld_01_wachtrij.sql en Edge Function offerte-wachtrij.' },
   { v: '4.109.0', d: '2026-11-05', h: 'Nieuwe calculaties starten standaard op prijsweergave Regels zonder hoeveelheden en eenheidsprijzen; bestaande calculaties ongewijzigd.' },
   { v: '4.108.0', d: '2026-11-05', h: 'Knop ⧉ naast 🔄 op een calc-regel: bewerkingen (percentages, materialen, verbruik) van die regel toepassen op alle andere regels met hetzelfde verfsysteem in deze calculatie; naam, hoeveelheid, toeslag, aan/uit en meetstaat blijven. Geen SQL.' },
@@ -9365,6 +9416,75 @@ document.querySelectorAll('nav button').forEach(b => {
     if (b.dataset.tab === 'instellingen')  { loadSettings(); vraagbaakLogLaden(); controleLogLaden(); houtrotTarievenLaden(); }
   });
 });
+
+// ============================================================
+// v4.111.0 — SECTIEBALK CALCULATIE-TAB
+// Vaste rij knoppen onder de tabbalk; springt naar een sectie en markeert
+// de sectie die bovenin beeld staat. Alleen weergave.
+// ============================================================
+const CALC_SECTIES = [
+  { sec: 'kop',       id: 'sec_kop',        lbl: 'Klant' },
+  { sec: 'notities',  id: 'notitiesPaneel', lbl: 'Notities' },
+  { sec: 'regels',    id: 'sec_regels',     lbl: 'Regels' },
+  { sec: 'staart',    id: 'sec_staart',     lbl: 'Staart' },
+  { sec: 'bewerking', id: 'bewerkingBlok',  lbl: 'Per bewerking' },
+  { sec: 'totalen',   id: 'totalsBody',     lbl: 'Totalen' },
+  { sec: 'offerte',   id: 'offerteBlok',    lbl: 'Offerte' },
+];
+function _calcSectieBovenrand() {
+  // Hoogte van tabbalk + sectiebalk in schermpixels: daaronder begint het zichtbare deel.
+  const nav = document.querySelector('nav');
+  const bar = document.getElementById('calcSectieBalk');
+  const nh = nav ? nav.getBoundingClientRect().height : 44;
+  const bh = (bar && bar.offsetParent !== null) ? bar.getBoundingClientRect().height : 0;
+  return nh + bh;
+}
+function calcSectieGa(sec) {
+  const d = CALC_SECTIES.find(x => x.sec === sec); if (!d) return;
+  let el = document.getElementById(d.id); if (!el) return;
+  if (sec === 'totalen') el = el.closest('.totals') || el;
+  if (sec === 'bewerking' || sec === 'offerte') { try { el.open = true; } catch (_) {} }
+  const y = window.scrollY + el.getBoundingClientRect().top - _calcSectieBovenrand() - 10;
+  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+}
+function _calcSectieMarkeer() {
+  const bar = document.getElementById('calcSectieBalk');
+  if (!bar || !document.body.classList.contains('calc-actief')) return;
+  const grens = _calcSectieBovenrand() + 40;
+  let actief = CALC_SECTIES[0].sec;
+  for (const d of CALC_SECTIES) {
+    // Een verborgen knop (Totalen op een breed scherm, waar het paneel sticky rechts staat) doet niet mee.
+    const knop = bar.querySelector(`button[data-sec="${d.sec}"]`);
+    if (knop && window.getComputedStyle(knop).display === 'none') continue;
+    let el = document.getElementById(d.id); if (!el) continue;
+    if (d.sec === 'totalen') el = el.closest('.totals') || el;
+    if (el.getBoundingClientRect().top <= grens) actief = d.sec;
+  }
+  bar.querySelectorAll('button').forEach(b => b.classList.toggle('actief', b.dataset.sec === actief));
+}
+function calcSectieBalkInit() {
+  const bar = document.getElementById('calcSectieBalk'); if (!bar) return;
+  bar.innerHTML = CALC_SECTIES.map(d =>
+    `<button type="button" data-sec="${d.sec}" style="--sc: var(--sec-${d.sec});" onclick="calcSectieGa('${d.sec}')">${d.lbl}</button>`
+  ).join('');
+  // Tabbalkhoogte meten en als --nav-h zetten, zodat de sectiebalk er precies onder blijft hangen.
+  const nav = document.querySelector('nav');
+  const meet = () => { if (nav) document.documentElement.style.setProperty('--nav-h', nav.getBoundingClientRect().height + 'px'); };
+  meet();
+  if (typeof ResizeObserver !== 'undefined' && nav) new ResizeObserver(meet).observe(nav);
+  window.addEventListener('resize', meet);
+  // Zichtbaar zolang de Calculatie-tab actief is; de tab wordt op meerdere plekken gewisseld, dus kijken naar de class.
+  const calc = document.getElementById('calculatie');
+  const sync = () => { document.body.classList.toggle('calc-actief', !!(calc && calc.classList.contains('active'))); _calcSectieMarkeer(); };
+  sync();
+  if (typeof MutationObserver !== 'undefined' && calc) new MutationObserver(sync).observe(calc, { attributes: true, attributeFilter: ['class'] });
+  let bezig = false;
+  window.addEventListener('scroll', () => {
+    if (bezig) return; bezig = true;
+    requestAnimationFrame(() => { bezig = false; _calcSectieMarkeer(); });
+  }, { passive: true });
+}
+try { calcSectieBalkInit(); } catch (e) { console.warn('sectiebalk niet gestart', e); }
 
 // === MODULE PLACEHOLDERS — filled by following steps ===
 // ============================================================
