@@ -712,7 +712,7 @@ notitie tijdens de opname over. Dit is gekozen en geen vergeten risico.
 | `offerte-wachtrij` | Calc | verstuurt ingeplande offertes uit `offerte_verzendwachtrij` door `offerte-verzenden` aan te roepen (v4.110.0, 6 november 2026) |
 | `onderaannemer-aanvraag` | Calc | offerteaanvraag per mail aan een vaste onderaannemer (steiger, timmerwerk, glas, installatie) met foto's; logrij in `calculatie_aanvragen` en opvolgtaak; sinds 29-10-2026, vervangt `steiger-aanvraag` (26-09) |
 | `reisafstand` | Calc | rijafstand naar het werkadres |
-| `yoobi-klant` | Calc | klantgegevens uit Yoobi |
+| `yoobi-klant` | Calc | klantgegevens uit Yoobi lezen; sinds v4.112.0 ook relatie + contactpersoon aanmaken vanuit een boeking (aparte schrijfkoppeling, alleen POST customers/getCustomerByEmail; poort `YOOBI_SCHRIJF_AAN=1`, anders droogloop) |
 | `yoobi-taken-sync` | Taken | taken en projectnamen uit Yoobi |
 
 `offerte-herinnering` wordt zowel door cron als vanuit de app aangeroepen.

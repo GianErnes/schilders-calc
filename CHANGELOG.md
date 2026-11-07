@@ -1,3 +1,34 @@
+## v4.112.0 — Nieuwe klant vanuit een boeking in Yoobi zetten (2026-11-07)
+
+**Aanleiding**
+- Gian 05-11: nieuwe klanten komen via de Google-boekingspagina binnen (tabel `opname_boekingen`) en worden door Maud handmatig in Yoobi overgetypt. Vraag: dat domme werkje veilig automatiseren.
+
+**Onderzoek (05-11 t/m 07-11)**
+- Mail aan Vincent (Yoobi) 06-11, antwoord 07-11: aanmaken kan met POST op `customers` (alleen naam verplicht), rechten zijn per endpoint én per werkwoord instelbaar voor een aparte koppeling, Yoobi controleert zelf níet op dubbele relaties, bij 429 geldt `Retry-After`.
+- OpenAPI-spec (`docs.json`, Yoobi OpenAPI 2.0.0, geleverd door Gian 07-11): `POST /api/v2/customers` neemt `contactpersons[]` in dezelfde aanroep mee (eerste wordt primair), `createOnly=true` werkt nooit bij (409 bij bestaande code), antwoord bevat `resultID` en `returnVars.customerCode`; `POST /getCustomerByEmail` matcht exact, geeft lege velden bij geen treffer. Valkuil uit de spec: een onbekende relatiecategorie wordt stilzwijgend aangemaakt.
+- Relatiecategorieën in Yoobi (schermfoto Gian 07-11): Prospects, Klanten, Particuliere prospect, Particuliere klant, Algemene relatie, Leverancier. Nieuwe klant = **"Particuliere prospect"** (niet "Prospect particulier" zoals eerst gezegd; daarom vaste lijst in de code).
+
+**Keuzes (Gian, 07-11)**
+- Alleen aanmaken, nooit bijwerken of verwijderen; altijd na bevestiging in een venster; geen achtergrondautomaat.
+- Aparte Yoobi-koppeling (API v2) met uitsluitend POST op `/customers` en `/getCustomerByEmail`; `yoobiernes2` blijft alleen-lezen. Secrets `YOOBI_SCHRIJF_CLIENT_ID` / `YOOBI_SCHRIJF_CLIENT_SECRET` door Gian gezet.
+- Categorie kiesbaar in het venster: "Particuliere prospect" (standaard) of "Prospects"; de andere vier niet.
+- Knop vrij voor iedereen die ingelogd is; of Maud drukt beslist Gian met haar.
+- Variant B: knop in de open lijst én een regel "Nog niet in Yoobi" voor boekingen die al een calculatie hebben maar nog geen relatienummer, beperkt tot boekingen van 2026-11-07 of later (`YOOBI_NAAR_START`), zodat de oude boekingen van augustus niet terugkomen.
+
+**Gebouwd**
+- SQL (migratie `yoobi_relatienummer_boekingen_calculaties`, **gedraaid 07-11 via de Supabase-koppeling**, nagekeken): `opname_boekingen.yoobi_relatienummer text`, `opname_boekingen.yoobi_aangemaakt_op timestamptz`, `calculaties.yoobi_relatienummer text`. Alleen toevoegen.
+- Edge Function `yoobi-klant` versie 35 (Verify JWT aan, bestaande routes `?q=` en `?code=` ongewijzigd): nieuwe routes `?email=` (dubbelcontrole), `POST {actie:"aanmaken"}` en `POST {actie:"koppelen"}`. Schrijfroutes eisen een ingelogde gebruiker (token gecontroleerd tegen `/auth/v1/user`; de anon-sleutel wordt geweigerd). Aanmaken: boeking uit de database (service-rol), dubbelcontrole op e-mail (schrijfkoppeling) en naam (leeskoppeling), verzoek opbouwen (naam, categorie, omschrijving, bezoekadres, contactinfo, contactpersoon met e-mail en telefoon), `createOnly=true`, 429 één keer wachten volgens `Retry-After`, relatienummer uit `returnVars` terugschrijven op boeking en calculatie. `alleen_controle` geeft alleen de dubbelcontrole en het verzoek terug. **Droogloop-poort:** zolang secret `YOOBI_SCHRIJF_AAN` niet "1" is, wordt niets naar Yoobi gestuurd en komt het verzoek terug ter controle. Komt er wél een relatie maar geen nummer terug, dan status 502 `aangemaakt_zonder_nummer` met de ruwe respons, nooit stil doorgaan.
+- index.html: knop **Naar Yoobi** per open boeking (of groen `✓ Yoobi <nr>` als hij er al staat), regel **Nog niet in Yoobi (n)** onder de open lijst, venster `yoobiNaarModal` met relatienaam, bezoekadres, e-mail, telefoon, voor-/achternaam contactpersoon (aanpasbaar, standaard eerste woord / rest), categorie, uitkomst dubbelcontrole (e-mailtreffer met knop "Dit is dezelfde, koppelen"; naamtreffers met koppellink), knop Aanmaken (of "Toch als nieuwe relatie aanmaken" na een e-mailtreffer, met confirm). Droogloop toont het verzoek als JSON in het venster. `_opnameMaakCalc` neemt een al aanwezig relatienummer mee naar de nieuwe calculatie. Select van `_opnameVerversen` uitgebreid met de twee nieuwe kolommen. Vier versieankers bijgewerkt.
+
+**Getest**
+- `node --check` op het inline scriptblok groen; functie-bron parse-test groen.
+- Functie: na deploy van v34 twee echte zoekopdrachten uit de app (`?q=sluis`, `?q=Kuijpers`) met 200 in het logboek; Gian bevestigde Klant uit Yoobi intact. v35 voegt alleen `alleen_controle` toe.
+- **Niet getest: het venster in de echte omgeving en de POST naar Yoobi.** Open aannames: (1) veldnamen `addresses[].addressline1/postalcode/city` en `contactpersons[].firstname/lastname/contactinfo` worden door de POST geaccepteerd zoals de GET ze teruggeeft (spec zegt "GET array accepted", noemt de velden niet); (2) Yoobi genereert het relatienummer zelf (we sturen geen `code`); (3) `returnVars` is een array met een object met `customerCode`. Testplan: eerst droogloop op één echte boeking en het verzoek nalezen, dan `YOOBI_SCHRIJF_AAN=1`, één klant aanmaken, in Yoobi controleren (relatie, categorie, adres, contactpersoon met e-mail en telefoon), pas daarna vrijgeven.
+
+**Open**
+- Klant uit Yoobi (`_yoobiVulIn`) zet het relatienummer nog niet op `calculaties.yoobi_relatienummer`; kan in een volgende versie.
+- Telefoonnummer gaat als `phone`; een mobiel nummer als `mobile` herkennen is niet gebouwd.
+
 ## v4.111.0 — Sectiebalk en gekleurde sectiekoppen op de Calculatie-tab (2026-11-07)
 
 **Aanleiding**
