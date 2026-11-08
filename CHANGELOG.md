@@ -1,3 +1,57 @@
+## Backup v7 — Voorraad mee in de nachtelijke backup, oplever-fotos gespiegeld (2026-11-08, Edge Function backup-dump, SQL voorraad_backup_01_functies)
+
+**Aanleiding**
+- Taak "Vervolg op backup test" (Gian): het project schilder-voorraad had geen enkele backup; de gespiegelde bakken gaan niet naar Drive. Gian koos om Voorraad vandaag te doen. Gemeten vooraf: 14 tabellen (niet 9 zoals in de taaktekst), 1,8 MB op schijf, 5.452 rijen, geen bakken, pg_cron uit, geen hulpfuncties. Bijvangst uit backup-dump v6: `oplever-fotos` (21 bestanden, 7,4 MB) en `personeel` (leeg) stonden niet in de spiegellijst.
+
+**Keuzes (Gian, 08-11)**
+- Alles in één keer: voorraaddump + schema_dump in het voorraadproject + oplever-fotos, 60 dagen bewaren, deploy via de koppeling. Spiegel naar Drive (punt 1b) blijft een aparte taak: hangt op de Workspace-ruimte (bronbakken samen ~754 MB).
+- Sleutel: de nieuwe `sb_secret_`-sleutel van Voorraad, niet de legacy service_role (Supabase trekt legacy-sleutels begin 2027 in).
+
+**Gebouwd**
+- `voorraad_backup_01_functies.sql` (project schilder-voorraad, migratie `voorraad_backup_01_functies`, door Claude live gedraaid): `backup_tabellen()`, `backup_dump_tabel(text)` (kopie van schilders-calc) en `schema_dump()` (kopie, met het cronblok voorwaardelijk omdat pg_cron daar uit staat, en een kopregel voor schilder-voorraad). Execute alleen voor service_role; anon en authenticated ingetrokken.
+- Edge Function `backup-dump` **v7** (functieversie 24, via de koppeling gedeployd, Verify JWT uit): nieuwe stap `voorraadBackup` tussen schema en Drive — via PostgREST (`/rest/v1/rpc/…`, secrets `VOORRAAD_URL` en `VOORRAAD_SERVICE_KEY`) tabellenlijst, per tabel de inhoud en het schema ophalen; `backup-voorraad-JJJJ-MM-DD.json` in de hoofdmap van de bak en `schema-voorraad-JJJJ-MM-DD.sql` in `schema/`; eigen opruiming op 60 dagen (bak en Drive), schema 30 dagen. `driveBackup` neemt de voorraadbestanden mee onder hetzelfde token; opruimpatroon uitgebreid. Mislukt de voorraadstap → hoofdbackup loopt door, directe mail "Voorraadbackup MISLUKT". Maandagmail krijgt een regel Voorraad en "plus voorraad" bij Drive. Spiegellijst + `oplever-fotos`, `personeel`. Nieuwe testaanroep `?voorraad=test` (alleen voorraad + Drive, geen mail).
+
+**Getest**
+- SQL lokaal in Postgres 16 op een nagebouwd schema (idempotent, lijst, dump van lege tabel `[]`, schema 16 kB met cronblok "staat niet aan", anon nee / service_role ja). Live na migratie: 14 tabellen, history 4.081 rijen, schema 49.564 tekens, JSON 1,56 M tekens, rechten alleen postgres/service_role.
+- Edge Function: Node-harnas met nep-Supabase, nep-PostgREST en nep-Drive, 21 van 21 groen: testroute, nachtelijke route, voorraad kapot (hoofd ok + mail), voorraadschema kapot (geen mail), Drive kapot (mail), secret ontbreekt (502 met naam), verkeerde sleutel (401), opruimen in bak en Drive raakt alleen de juiste namen, maandagmail noemt voorraad.
+- **Getest in de echte omgeving (08-11, 14:05):** eerste `?voorraad=test` gaf "Secret VOORRAAD_SERVICE_KEY ontbreekt" (secret was verkeerd ingevoerd; Gian opnieuw gezet). Tweede run: 200, 14 tabellen, 5.452 rijen (gelijk aan de telling in de voorraaddatabase), JSON 1.420.140 bytes en schema 49.566 bytes in de bak (gecontroleerd in `storage.objects`), beide op Drive (bestand-id 1JLU18NR7IlazjaAEn9CdU-nMSaZO9G2J). Daarmee bewezen: een `sb_secret_`-sleutel werkt in `apikey` én als Bearer op PostgREST.
+- **Nog te zien:** de maandagmail van 09-11 met de regel Voorraad en de eerste spiegeling van oplever-fotos.
+
+**Open (taken aangemaakt)**
+- Spiegel naar Drive (~754 MB eerste lading; Workspace-ruimte nagaan).
+- Overstap van alle Edge Functions en apps naar de nieuwe Supabase-sleutels vóór begin 2027.
+
+## v4.114.0 — Wissel verfsysteem en Bewerkingen toepassen: vervanging in één transactie (2026-11-08)
+
+**Aanleiding**
+- Controlerapport 2026-11-08, bevinding 3. Gelezen in index.html v4.113.0: `wisselRegelSysteem` (v4.65.0) en `stappenToepassen` (v4.108.0) deden per regel drie losse netwerkcalls: nieuwe stappen invoegen in `calc_regel_stappen`, oude wissen op id, regel bijwerken; bij een mislukte delete een vierde call om de nieuwe weer te wissen. Tussen call 1 en 2 had de regel beide sets. Viel de verbinding weg of liep de delete in de 30 s-timeout van `_sbQuery`, dan bleven beide staan en toonde de regel na herladen dubbele uren en dubbel materiaal, dus een verkeerd offertebedrag.
+- Gemeten 08-11 op de live database: 0 regels met dubbele `volgorde` per `calc_regel_id`. Nooit gebeurd; preventieve reparatie.
+- Bijvangst uit dezelfde meting: 305 losse stappen in de `prullenbak`, waarvan 89 bij een regel die nog bestaat (afkomstig van wisselen/toepassen/stap verwijderen). Onzichtbaar in de app (`prullenbak_overzicht` toont alleen calculaties, hoofdgroepen, onderdelen, regels) en na 90 dagen opgeruimd. Bestaand gedrag, niet gewijzigd.
+
+**Keuzes (Gian akkoord, 08-11)**
+- Databasefunctie (RPC) in plaats van alleen een controle-bij-laden met opruimknop: voorkomen in plaats van achteraf repareren.
+- De regel-update blijft een aparte call ná de RPC: `_updateRegelDBAwait` wordt op veel plekken gebruikt en de regelvelden verschillen per aanroep (wisselen wijzigt systeemvelden, toepassen niet). Mislukt die update na een geslaagde vervanging, dan staan hooguit oude systeemnaam-velden op de regel, geen dubbele uren; de app herlaadt dan (bestaand gedrag).
+- Timeout op de RPC wordt niet als "mislukt" behandeld: de transactie kan aan de serverkant wél zijn afgerond. De app herlaadt de calculatie en meldt dat, in plaats van een aanname te tonen.
+- Ontbreekt de RPC (SQL niet gedraaid), dan een duidelijke melding met de bestandsnaam en stoppen. Geen stille terugval op de oude route.
+
+**Gebouwd**
+- `calc_regel_stappen_vervangen.sql` (nieuw bestand, door Claude live gedraaid als migratie `calc_regel_stappen_vervangen`): functie `calc_regel_stappen_vervangen(p_regel_id uuid, p_stappen jsonb) returns setof calc_regel_stappen`, plpgsql, `security invoker`, `search_path = public`. Controleert regel-id, array-type en bestaan van de regel; `delete` op `calc_regel_id`, daarna `insert … select from jsonb_array_elements with ordinality` met dezelfde kolommen als `_mapStapToDBSnapshot`; `volgorde` uit de jsonb of anders uit de positie. `revoke … from public, anon`, `grant … to authenticated`. Idempotent (`create or replace`). De prullenbak-trigger op `calc_regel_stappen` vuurt gewoon binnen de functie.
+- index.html: nieuwe hulpfunctie `_stappenVervangenDB(regelId, stappen, label)` (bij `_mapStapToDBSnapshot`): bouwt de jsonb uit `_mapStapToDBSnapshot` zonder `calc_regel_id`, roept `_sb.rpc('calc_regel_stappen_vervangen', …)` aan via `_sbQuery`, classificeert het antwoord als `ok` / `ontbreekt` (PGRST202, 42883 of "could not find the function") / `timeout` / `fout` en sorteert de teruggegeven stappen op `volgorde`. `wisselRegelSysteem` en `stappenToepassen` gebruiken deze functie; de insert/delete/terugdraai-calls op `calc_regel_stappen` zijn uit beide functies weg. Bij `timeout`: toast en `openCalc` (bij toepassen ook venster dicht en stoppen). Bij `ontbreekt`: stoppen (bij toepassen venster dicht). Bij `fout`: wisselen meldt "er is niets gewijzigd"; toepassen telt de regel bij "mislukt bij …" en gaat door met de volgende.
+- Restpunt 1 van de overdracht: `_toast(… 'aangemaakt in Yoobi', 'ok')` en `_toast('Gekoppeld aan Yoobi-relatie …', 'ok')` — waren rood sinds v4.112.0.
+- Vier versieankers bijgewerkt (APP_VERSION, welkomstkop, welkomstalinea, versiegeschiedenis).
+
+**Getest**
+- SQL lokaal in Postgres 16 (bouwomgeving) op een nagebouwd schema met de prullenbak-trigger, 7 proeven: migratie twee keer gedraaid (idempotent); 3 oude → 2 nieuwe met prullenbak 3 rijen; **geforceerde fout halverwege** (ongeldige uuid in de tweede stap) → oude 2 stappen staan er nog, prullenbak niet gegroeid, dus de hele transactie teruggedraaid; `volgorde` weggelaten → 0,1,2 uit positie; lege array → regel zonder stappen; onbekende regel → fout; geen array → fout; rechten authenticated ja / anon nee (eerste versie gaf anon nog toegang via het standaardrecht voor public; hersteld met `revoke from public`).
+- App: Node-harnas met nep-Supabase op de echte functies uit work.html (14 van 14 groen): wisselen geslaagd (1 rpc, juiste argumenten, geen `calc_regel_id` in de jsonb, stappen gesorteerd, regel bijgewerkt); rpc-fout → niets gewijzigd; PGRST202 → melding met bestandsnaam; timeout → herladen zonder update; toepassen met 2 doelen waarvan 1 faalt → 1 bijgewerkt, 1 genoemd als mislukt, rode toast; timeout bij toepassen → stoppen, herladen, venster dicht; `_sb.from()` in geen enkele proef meer aangeroepen door deze functies.
+- Node parse-test groen; div-balans 1460/1463, gelijk aan v4.113.0.
+- **Getest in de echte omgeving (Gian, 08-11): geslaagd.** ⧉ en 🔄 op een testcalculatie, na hard herladen één set stappen. Controlequery daarna door Claude: 0 regels met dubbele `volgorde`, 0 weesstappen (stappen zonder regel), 15 oude stappen van de test in de `prullenbak` van de afgelopen twee uur (de trigger werkt binnen de functie).
+- Restpunt 6 van de overdracht (rolinstructie verwijst naar `docs/`) bleek al opgelost: r.43 van de live `rolinstructie_controleur.md` zegt root, en alle vijf bestanden staan in de root (HTTP 200; `docs/` geeft 404). Niets gewijzigd.
+- SYSTEEM.md aangevuld: versietabel (index.html stond nog op v4.68.0), kopje 3.2 (29 functies gemeten, incl. een niet-beschreven `bright-endpoint` van 29-10), datumsecties 7 en 8 november.
+
+**Niet gewijzigd**
+- `_insertRegelDB`, `dupRegel`, losse stap toevoegen/wijzigen/verwijderen: die hebben geen tussentoestand met twee sets en blijven zoals ze waren.
+- De prullenbak-SQL en de view `prullenbak_overzicht`.
+
 ## v4.113.0 — Naar Yoobi: slot tegen dubbel aanmaken, koppelknop bij terugschrijffout, naamontleding (2026-11-08)
 
 **Aanleiding**
