@@ -2471,8 +2471,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.113.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.114.0</h2>
       <div class="intro-body">
+        <p><strong>🛡️ Verfsysteem wisselen en Bewerkingen toepassen: geen dubbele uren meer mogelijk (v4.114.0).</strong> Uit de wekelijkse controle. Tot nu toe schreef de app bij 🔄 en ⧉ eerst de nieuwe bewerkingen, wiste daarna de oude en zette bij een fout de nieuwe weer weg; viel precies daartussen de verbinding weg, dan hield een regel beide sets en zag je na herladen dubbele uren en dubbel materiaal. Het is nooit gebeurd (0 gevallen gemeten), maar het kon. Nu doet de database wissen en invoegen in één transactie: óf alles, óf niets. Krijgt de app geen antwoord, dan wordt de calculatie herladen zodat je de werkelijke stand ziet in plaats van een aanname. Klein ertussendoor: de melding na een geslaagde Yoobi-aanmaak of -koppeling is nu groen in plaats van rood. Eenmalige SQL: <code>calc_regel_stappen_vervangen.sql</code>.</p>
         <p><strong>🔒 Naar Yoobi: nooit twee keer dezelfde klant (v4.113.0).</strong> Uit de wekelijkse controle. Vóór het aanmaken zet de koppeling nu een slot op de boeking; een tweede verzoek voor dezelfde boeking (venster gesloten en weer geopend, tweede browser, collega) krijgt "er loopt al een aanmaakverzoek" en er gaat niets naar Yoobi. Open je het venster opnieuw terwijl het verzoek nog loopt, dan zie je dat en werkt het venster zichzelf bij. Heeft Yoobi de relatie wél aangemaakt maar lukte het terugschrijven van het nummer niet, dan krijg je een knop <strong>Koppel relatie …</strong> in plaats van een tweede Aanmaken. Een verzoek dat na 60 seconden geen antwoord heeft, stopt met een melding. De naamontleding kent nu tussenvoegsels (<em>van Duren</em> krijgt geen valse initiaal V.), dubbele voornamen (<em>Jan Willem de Vries</em> → J.W. de Vries) en echtparen: <em>Peter en Ingrid Jansen</em> of <em>Dhr. en mevr. Jansen</em> krijgen aanhef Dhr. en mevr. zonder initialen, zoals de bestaande echtparen in Yoobi. Eenmalige SQL al uitgevoerd (kolom <code>yoobi_bezig_op</code>); Edge Function <code>yoobi-klant</code> v38.</p>
         <p><strong>🛡️ Wachtrij: geen dubbele mail, eerlijke meldingen (v4.112.2).</strong> Uit de wekelijkse controle. <strong>Nu versturen</strong> trekt eerst een eventuele ingeplande verzending in en mailt pas daarna; lukt het intrekken niet, dan gaat er niets uit en zie je waarom. Voorheen kon de wachtrij in dat geval dezelfde offerte later nog eens versturen. <strong>Intrekken</strong> zegt nu alleen "ingetrokken" als er echt iets ingetrokken is; was de offerte intussen al verstuurd of al ingetrokken, dan staat dat in de melding. Kan de wachtrij niet gelezen worden, dan tonen het accordeervenster en het dashboard dat als waarschuwing in plaats van een leeg blok. Een begeleidende tekst langer dan 5000 tekens wordt tegengehouden met een melding, niet meer stil afgekapt. Geen SQL nodig.</p>
         <p><strong>🔧 Relatienaam volgt de Yoobi-naamregel (v4.112.1).</strong> In het venster Naar Yoobi kies je nu eerst de aanhef (Dhr., Mevr., Fam. of Dhr. en mevr.); de app bouwt daaruit de relatienaam zoals je die in Yoobi gewend bent: aanhef, initialen uit de voornaam, tussenvoegsels en achternaam, bijvoorbeeld Dhr. B. van Duren. Staat er in de boeking geen voornaam, dan komen er geen initialen. Het veld Relatienaam in Yoobi kun je altijd overtypen. Zonder aanhef maakt de knop niets aan. Geen SQL nodig.</p>
@@ -4052,7 +4053,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.113.0';
+const APP_VERSION = 'v4.114.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4475,6 +4476,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.114.0', d: '2026-11-08', h: 'Wissel verfsysteem en Bewerkingen toepassen (controleronde, bevinding 3): oude en nieuwe bewerkingen worden nu in één databasetransactie vervangen via calc_regel_stappen_vervangen, zodat een wegvallende verbinding geen dubbele uren meer kan achterlaten; bij geen antwoord wordt de calculatie herladen. Groene melding bij geslaagde Yoobi-aanmaak en -koppeling. SQL: calc_regel_stappen_vervangen.sql.' },
   { v: '4.113.0', d: '2026-11-08', h: 'Naar Yoobi (controleronde): slot tegen dubbel aanmaken (ook over vensters en browsers heen), knop Koppel relatie als het terugschrijven mislukt, timeout 60 s; naamontleding met tussenvoegsels, dubbele voornamen en echtparen (Dhr. en mevr. Jansen). SQL al gedraaid; Edge Function yoobi-klant v38.' },
   { v: '4.112.2', d: '2026-11-08', h: 'Wachtrij (controleronde): Nu versturen trekt eerst de geplande verzending in en mailt dan pas (geen dubbele mail meer); Intrekken meldt eerlijk als er niets meer in te trekken was; leesfout van de wachtrij zichtbaar in venster en dashboard; tekst > 5000 tekens tegengehouden. Geen SQL.' },
   { v: '4.112.1', d: '2026-11-08', h: 'Naar Yoobi: aanhefkeuze en relatienaam volgens de Yoobi-naamregel (Dhr. B. van Duren), aanpasbaar veld; zonder aanhef geen aanmaak. Geen SQL.' },
@@ -8789,6 +8791,40 @@ function _mapStapToDBSnapshot(st, regelId, idx) {
     verbruik:           st.verbruik || 0,
     volgorde:           idx != null ? idx : (st.volgorde || 0)
   };
+}
+// v4.114.0 — Alle bewerkingen van een regel in één keer vervangen via de
+// databasefunctie calc_regel_stappen_vervangen (controlerapport 08-11-2026,
+// bevinding 3). Tot v4.113.0 deden wisselRegelSysteem en stappenToepassen dit
+// in drie losse calls (invoegen, oude wissen, terugdraaien bij fout); tussen
+// de eerste twee had de regel beide sets en kon een wegvallende verbinding
+// dubbele uren achterlaten. De RPC doet wissen en invoegen in één transactie.
+// Geeft terug: { stappen, status } met status 'ok' | 'ontbreekt' | 'timeout' | 'fout'.
+// 'ontbreekt' = de SQL (calc_regel_stappen_vervangen.sql) is niet gedraaid.
+// 'timeout' = geen antwoord binnen 30 s; de transactie kán aan de serverkant
+// wél zijn afgerond, dus de aanroeper moet herladen in plaats van aannemen
+// dat er niets gebeurd is.
+async function _stappenVervangenDB(regelId, stappen, label) {
+  const rows = (stappen || []).map((st, i) => {
+    const r = _mapStapToDBSnapshot(st, regelId, i);
+    delete r.calc_regel_id; // zit al in p_regel_id
+    return r;
+  });
+  const { data, error } = await _sbQuery(
+    _sb.rpc('calc_regel_stappen_vervangen', { p_regel_id: regelId, p_stappen: rows }),
+    label || 'Bewerkingen vervangen'
+  );
+  if (error) {
+    if (error.message === 'timeout') return { stappen: null, status: 'timeout' };
+    const code = String(error.code || '');
+    const msg = String(error.message || '');
+    if (code === 'PGRST202' || code === '42883' || /could not find the function|does not exist/i.test(msg)) {
+      _toast('Databasefunctie calc_regel_stappen_vervangen ontbreekt; voer calc_regel_stappen_vervangen.sql uit in Supabase');
+      return { stappen: null, status: 'ontbreekt' };
+    }
+    return { stappen: null, status: 'fout' };
+  }
+  const nieuw = (data || []).map(_mapStapFromDBSnapshot).sort((a, b) => (a.volgorde || 0) - (b.volgorde || 0));
+  return { stappen: nieuw, status: 'ok' };
 }
 async function _insertRegelDB(regel, odId) {
   // 1) parent regel
@@ -21606,30 +21642,19 @@ async function wisselRegelSysteem(hgId, odId, rId, sysId) {
   // Waarschuwing (geen blokkade): plan met per-stap-percentages voor deze regel.
   let perStapPlan = false;
   try { perStapPlan = await _regelHeeftPerStapPlan(data.calc.id, oudeIds); } catch (e) { perStapPlan = false; }
-  // 1) nieuwe stappen schrijven
-  let nieuweStappen = [];
-  if (snap.stappen && snap.stappen.length) {
-    const rows = snap.stappen.map((st, i) => _mapStapToDBSnapshot(st, rId, i));
-    const { data: sRows, error: sErr } = await _sbQuery(
-      _sb.from('calc_regel_stappen').insert(rows).select(),
-      'Nieuwe bewerkingen opslaan'
-    );
-    if (sErr || !sRows) { _toast('Wissel niet uitgevoerd: nieuwe bewerkingen konden niet worden opgeslagen'); return; }
-    nieuweStappen = sRows.map(_mapStapFromDBSnapshot);
+  // 1+2) oude stappen weg en nieuwe erin, in één transactie (v4.114.0).
+  // Tot v4.113.0 waren dit twee losse calls met een terugdraaicall bij fout.
+  const vv = await _stappenVervangenDB(rId, snap.stappen || [], 'Bewerkingen wisselen');
+  if (vv.status === 'timeout') {
+    _toast('Geen antwoord van de database; calculatie wordt herladen om de werkelijke stand te tonen');
+    if (typeof openCalc === 'function' && data.calc && data.calc.id) { try { await openCalc(data.calc.id); } catch (e) {} }
+    return;
   }
-  // 2) oude stappen verwijderen op id
-  if (oudeIds.length) {
-    const { error: dErr } = await _sbQuery(
-      _sb.from('calc_regel_stappen').delete().in('id', oudeIds),
-      'Oude bewerkingen verwijderen'
-    );
-    if (dErr) {
-      const nIds = nieuweStappen.map(st => st.id).filter(Boolean);
-      if (nIds.length) await _sbQuery(_sb.from('calc_regel_stappen').delete().in('id', nIds), 'Terugdraaien nieuwe bewerkingen');
-      _toast('Wissel teruggedraaid: oude bewerkingen konden niet worden verwijderd');
-      return;
-    }
+  if (vv.status !== 'ok') {
+    if (vv.status === 'fout') _toast('Wissel niet uitgevoerd: bewerkingen konden niet worden vervangen; er is niets gewijzigd');
+    return;
   }
+  const nieuweStappen = vv.stappen;
   // 3) regel-update, wachtend
   const nieuweRegel = {
     ...r,
@@ -21661,8 +21686,8 @@ async function wisselRegelSysteem(hgId, odId, rId, sysId) {
 // één gevel/kamer gezet, en dat moet ook op de andere regels met hetzelfde
 // systeem. Elke regel heeft een eigen momentopname van het systeem in
 // calc_regel_stappen, dus dat is per doelregel een vervanging, met dezelfde
-// stappen en dezelfde terugval als wisselRegelSysteem (v4.65.0): nieuwe stappen
-// schrijven, oude wissen (bij fout nieuwe weer weg), regel bijwerken.
+// stappen als wisselRegelSysteem (v4.65.0). Sinds v4.114.0 gaat de vervanging
+// via de RPC calc_regel_stappen_vervangen (één transactie), daarna regel bijwerken.
 // Alleen binnen de open calculatie. Hetzelfde systeemId, dus de eenheid kan
 // niet botsen; meetstaat blijft staan.
 let _stToepCtx = null;
@@ -21719,21 +21744,18 @@ async function stappenToepassen() {
   let gelukt = 0; const mislukt = [];
   for (const d of gekozen) {
     const r = d.r;
-    const oudeIds = (r.stappen || []).map(st => st.id).filter(Boolean);
-    // 1) nieuwe stappen als kopie van de bron, met eigen ids
-    const rows = (bron.stappen || []).map((st, i) => _mapStapToDBSnapshot(st, r.id, i));
-    const { data: sRows, error: sErr } = await _sbQuery(_sb.from('calc_regel_stappen').insert(rows).select(), 'Bewerkingen kopiëren');
-    if (sErr || !sRows) { mislukt.push(d.pad); continue; }
-    const nieuweStappen = sRows.map(_mapStapFromDBSnapshot);
-    // 2) oude stappen weg; lukt dat niet, dan de nieuwe weer weg
-    if (oudeIds.length) {
-      const { error: dErr } = await _sbQuery(_sb.from('calc_regel_stappen').delete().in('id', oudeIds), 'Oude bewerkingen verwijderen');
-      if (dErr) {
-        const nIds = nieuweStappen.map(st => st.id).filter(Boolean);
-        if (nIds.length) await _sbQuery(_sb.from('calc_regel_stappen').delete().in('id', nIds), 'Terugdraaien gekopieerde bewerkingen');
-        mislukt.push(d.pad); continue;
-      }
+    // 1+2) oude stappen weg en kopie van de bron erin, in één transactie (v4.114.0).
+    // Tot v4.113.0 waren dit twee losse calls met een terugdraaicall bij fout.
+    const vv = await _stappenVervangenDB(r.id, bron.stappen || [], 'Bewerkingen kopiëren');
+    if (vv.status === 'timeout') {
+      _toast('Geen antwoord van de database; calculatie wordt herladen om de werkelijke stand te tonen');
+      if (typeof openCalc === 'function' && data.calc && data.calc.id) { try { await openCalc(data.calc.id); } catch (e) {} }
+      closeStToepModal();
+      return;
     }
+    if (vv.status === 'ontbreekt') { closeStToepModal(); return; }
+    if (vv.status !== 'ok') { mislukt.push(d.pad); continue; }
+    const nieuweStappen = vv.stappen;
     // 3) regel zelf bijwerken (systeemvelden ongewijzigd, zelfde systeem)
     const nieuweRegel = { ...r, stappen: nieuweStappen };
     const ok = await _updateRegelDBAwait(nieuweRegel, d.od.id);
@@ -25030,7 +25052,7 @@ async function _yoobiNaarKoppel(relatienummer) {
   _yoobiNaarBezig = true;
   try {
     const d = await _yoobiPost({ actie: 'koppelen', boeking_id: r.id, relatienummer: relatienummer });
-    _toast('Gekoppeld aan Yoobi-relatie ' + (d.relatienummer || relatienummer));
+    _toast('Gekoppeld aan Yoobi-relatie ' + (d.relatienummer || relatienummer), 'ok'); // v4.114.0: was rood
     closeYoobiNaarModal();
     await _opnameVerversen(true);
   } catch (e) {
@@ -25069,7 +25091,7 @@ async function _yoobiNaarAanmaken() {
   try {
     const d = await lopend;
     if (d.status === 'aangemaakt') {
-      _toast('Relatie ' + (d.relatienummer || '') + ' aangemaakt in Yoobi');
+      _toast('Relatie ' + (d.relatienummer || '') + ' aangemaakt in Yoobi', 'ok'); // v4.114.0: was rood
       if (_yoobiNaarBoeking === r) closeYoobiNaarModal();
       await _opnameVerversen(true);
       return;
