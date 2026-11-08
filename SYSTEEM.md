@@ -6203,3 +6203,42 @@ ouder dan 2 minuten wordt bij het volgende verzoek overgenomen. Workflow
 in `functies-ophalen.yml` in plaats van latest; waarschuwingen uit run #17
 voor later: Node.js 20 deprecated (actions een versie omhoog) en
 ubuntu-latest naar Ubuntu 26 (in de gaten houden).
+
+## Ook op 8 november 2026: reservering in de dagvolgorde en als tijdblok in de agenda (planning.html v0.26.0, planning-ics v3, SQL planning_10)
+
+**Waarom.** Gian wilde zijn gereserveerde uren (bijv. "4,25 u Opmeten")
+in dezelfde volgorde kunnen zetten als de projecten van die dag, en ze
+zo in zijn agenda-abonnement zien. Besluit: zonder keuze staat een
+reservering laatst op de dag; de klant-dagmail schuift de starttijd mee.
+
+**Wat er is.**
+- SQL `planning_10_verlof_volgorde.sql` (migratie
+  `planning_10_verlof_volgorde`, door Claude live gedraaid via de
+  koppeling): `plan_verlof.volgorde smallint`, leeg = laatst. Alleen
+  betekenis bij een reservering (uren gevuld); hele dag vrij gebruikt
+  hem niet.
+- planning.html v0.26.0: de reservering staat als regel "Gereserveerd –
+  omschrijving" in het dagvenster, met dezelfde 1/2/3- en ▲▼-knoppen.
+  De sorteerregel staat nu op **twee plekken met drie onderdelen**:
+  `dagProjecten()` + `dagReservering()` in de app en `maakAfspraken()`
+  + `rang()` in de functie: handmatig nummer, anders project 999,
+  reservering 1000, dan grootste eerst, klant, code. **Wijzig je de
+  ene, wijzig dan de andere.** `startTijden()` (dagmail) leunt op
+  dezelfde lijst.
+- Edge Function `planning-ics` **v3** (functieversie 10, Verify JWT
+  uit, link en token ongewijzigd): reservering = tijdblok
+  "Gereserveerd – …", UID `verlof-<mw>-<datum>@ernes` zoals voorheen,
+  dus bestaande agenda-items worden bijgewerkt. Hele dag vrij blijft
+  een hele-dag-item. Bron van v2 is uit Supabase opgehaald (functie-
+  versie 9); v3 is door Claude via de koppeling uitgerold.
+
+**Nood.** Reservering staat in de agenda op een rare tijd → kijk in het
+dagvenster of er een nummer op staat (`plan_verlof.volgorde`); leeg =
+laatst. Agenda toont de reservering nog als hele dag → de agenda-app
+heeft v3 nog niet opgehaald (Google tot een dag). Terugvallen op v2:
+`planning-ics` functieversie 9 in Supabase (Edge Functions → versies).
+
+**Bewijs.** `CHANGELOG_planning.md` v0.26.0: Postgres-test SQL, 12
+Node-tests app, `deno check` + 7 mocktests functie, en een live
+aanroep vanuit de database (status 200, vr 13 nov 2026: project
+08:00–11:30, "Gereserveerd – Opmeten" 11:30–16:15).
