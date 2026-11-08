@@ -1,3 +1,25 @@
+## v4.113.0 — Naar Yoobi: slot tegen dubbel aanmaken, koppelknop bij terugschrijffout, naamontleding (2026-11-08)
+
+**Aanleiding**
+- Controlerapport 2026-11-08, bevindingen 7, 8 en 13. Nagelopen in de bron van `yoobi-klant` v37: de `al_gekoppeld`-controle kijkt naar `yoobi_relatienummer`, dat pas ná de POST naar Yoobi gevuld wordt; twee gelijktijdige verzoeken (venster sluiten en heropenen, tweede browser, collega) kwamen er dus allebei doorheen, en Yoobi controleert zelf niet op dubbelen (Vincent, 07-11). Bevinding 8 echt gedraaid op de v4.112.1-code: `van Duren` → "V. Duren", `Jan Willem de Vries` → "J. Willem de Vries", `Dhr. en mevr. Jansen` → "Dhr. E. mevr. Jansen".
+
+**Keuzes (Gian, 08-11)**
+- Echtpaar: aanhef "Dhr. en mevr." zónder initialen ("Dhr. en mevr. Jansen"). Onderbouwing uit `yoobi_klanten`: 342 relaties "Familie X. Achternaam", de twee bestaande "Dhr. en mevrouw …"-relaties hebben geen initialen.
+- Dubbele voornaam → twee initialen ("Jan Willem de Vries" → "J.W. de Vries"): aanname van Claude, veld blijft overtypbaar.
+
+**Gebouwd**
+- Migratie `yoobi_bezig_op_opname_boekingen` (door Claude live gedraaid, 08-11): kolom `opname_boekingen.yoobi_bezig_op timestamptz`.
+- Edge Function `yoobi-klant` **v38**: vóór de POST naar Yoobi één atomaire PATCH die het slot zet, alleen als er nog geen relatienummer én geen vers slot (< 2 min) staat (`slotZetten`, PostgREST-filter `yoobi_relatienummer=is.null&or=(yoobi_bezig_op.is.null,yoobi_bezig_op.lt.<grens>)`, `Prefer: return=representation` om de rijen te tellen). 0 rijen → boeking herlezen: `al_gekoppeld` of status `bezig` (HTTP 409). Slot wordt gewist bij succes (in `schrijfRelatienummerTerug`, ook bij `koppelen`), bij een Yoobi-fout en bij `aangemaakt_zonder_nummer`. Nieuw: status `aangemaakt_niet_teruggeschreven` (502) mét `relatienummer` als Yoobi de relatie wél heeft aangemaakt maar het terugschrijven mislukt. Een vers slot blokkeert ook `alleen_controle` (409 bezig). Leesroutes ongewijzigd.
+- index.html: `_yoobiPost` met 60 s timeout (AbortController) en doorlating van de statussen `bezig`/`aangemaakt_niet_teruggeschreven`/`aangemaakt_zonder_nummer` als object. `_yoobiNaarLopend[boeking_id]` houdt het lopende verzoek vast, los van het venster: `_yoobiNaarOpen` toont bij een lopend verzoek "⏳ loopt nog" zonder nieuwe controle of knop en werkt zichzelf bij als het klaar is; `_yoobiNaarAanmaken` weigert een tweede verzoek, tekent alleen in het venster als dat nog bij dezelfde boeking hoort, en toont bij `aangemaakt_niet_teruggeschreven` een knop **Koppel relatie <nr>** in plaats van Aanmaken. `_yoobiNaarOntleed` herschreven: tussenvoegsels (`YOOBI_TUSSENVOEGSELS`), meerdere voornamen → initialen (`_yoobiInitialen`), echtpaar-herkenning ("X en Y Achternaam", "Dhr./De heer en mevr./mevrouw …") → aanhef Dhr. en mevr., geen initialen, achternaam vanaf het eerste tussenvoegsel of het laatste woord.
+- Vier versieankers bijgewerkt.
+
+**Getest**
+- Edge Function: Node-harnas met nagemaakte database en Yoobi (11 controles, alle groen): twee gelijktijdige verzoeken → één POST, één 409 bezig; tweede verzoek na afloop → al_gekoppeld; terugschrijven mislukt → 502 met relatienummer en slot los; POST mislukt → slot los; controle bij vers slot → 409; verlopen slot (3 min) wordt overgenomen; koppelen wist slot. `deno check` niet beschikbaar in de bouwomgeving.
+- Naamontleding: 17 gevallen in Node, alle volgens verwachting (o.a. van Duren → "van Duren" zonder initiaal; J.W. de Vries; Dhr. en mevr. Jansen; Dhr. en mevr. van Dijk; A. van den Broek; K. 't Hart).
+- Venstergedrag: Node-harnas met DOM-stub (7 van 8 controles groen; de achtste eiste een toast waar geen knop bestaat): aanmaken → sluiten → heropenen toont "loopt nog" zonder tweede verzoek; na afloop sluit het venster en ververst de lijst; koppelknop bij terugschrijffout; bezig-melding met Opnieuw controleren.
+- Node parse-test groen; accolades in balans; div-verschil met v4.112.2 precies de toegevoegde blokken.
+- **Niet getest in de echte omgeving.** Aannames die daar bewezen moeten worden: de PostgREST-schrijfwijze van het `or=(…)`-filter; het 409-antwoord door de Supabase-gateway heen. Testscript: testrij in `opname_boekingen` (als 07/08-11), Naar Yoobi, aanhef, Aanmaken → relatie aangemaakt, `yoobi_bezig_op` leeg, ✓ Yoobi in de lijst; daarna testrelatie in Yoobi verwijderen. Dubbeltest: tweede testrij, netwerk op "Slow 3G", Aanmaken, ✕, Naar Yoobi opnieuw → "⏳ loopt nog", daarna sluit het venster zichzelf met de toast; in Yoobi precies één relatie.
+
 ## v4.112.2 — Wachtrij: geen dubbele mail, eerlijke meldingen (2026-11-08)
 
 **Aanleiding**

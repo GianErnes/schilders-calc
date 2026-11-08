@@ -2471,8 +2471,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.112.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.113.0</h2>
       <div class="intro-body">
+        <p><strong>🔒 Naar Yoobi: nooit twee keer dezelfde klant (v4.113.0).</strong> Uit de wekelijkse controle. Vóór het aanmaken zet de koppeling nu een slot op de boeking; een tweede verzoek voor dezelfde boeking (venster gesloten en weer geopend, tweede browser, collega) krijgt "er loopt al een aanmaakverzoek" en er gaat niets naar Yoobi. Open je het venster opnieuw terwijl het verzoek nog loopt, dan zie je dat en werkt het venster zichzelf bij. Heeft Yoobi de relatie wél aangemaakt maar lukte het terugschrijven van het nummer niet, dan krijg je een knop <strong>Koppel relatie …</strong> in plaats van een tweede Aanmaken. Een verzoek dat na 60 seconden geen antwoord heeft, stopt met een melding. De naamontleding kent nu tussenvoegsels (<em>van Duren</em> krijgt geen valse initiaal V.), dubbele voornamen (<em>Jan Willem de Vries</em> → J.W. de Vries) en echtparen: <em>Peter en Ingrid Jansen</em> of <em>Dhr. en mevr. Jansen</em> krijgen aanhef Dhr. en mevr. zonder initialen, zoals de bestaande echtparen in Yoobi. Eenmalige SQL al uitgevoerd (kolom <code>yoobi_bezig_op</code>); Edge Function <code>yoobi-klant</code> v38.</p>
         <p><strong>🛡️ Wachtrij: geen dubbele mail, eerlijke meldingen (v4.112.2).</strong> Uit de wekelijkse controle. <strong>Nu versturen</strong> trekt eerst een eventuele ingeplande verzending in en mailt pas daarna; lukt het intrekken niet, dan gaat er niets uit en zie je waarom. Voorheen kon de wachtrij in dat geval dezelfde offerte later nog eens versturen. <strong>Intrekken</strong> zegt nu alleen "ingetrokken" als er echt iets ingetrokken is; was de offerte intussen al verstuurd of al ingetrokken, dan staat dat in de melding. Kan de wachtrij niet gelezen worden, dan tonen het accordeervenster en het dashboard dat als waarschuwing in plaats van een leeg blok. Een begeleidende tekst langer dan 5000 tekens wordt tegengehouden met een melding, niet meer stil afgekapt. Geen SQL nodig.</p>
         <p><strong>🔧 Relatienaam volgt de Yoobi-naamregel (v4.112.1).</strong> In het venster Naar Yoobi kies je nu eerst de aanhef (Dhr., Mevr., Fam. of Dhr. en mevr.); de app bouwt daaruit de relatienaam zoals je die in Yoobi gewend bent: aanhef, initialen uit de voornaam, tussenvoegsels en achternaam, bijvoorbeeld Dhr. B. van Duren. Staat er in de boeking geen voornaam, dan komen er geen initialen. Het veld Relatienaam in Yoobi kun je altijd overtypen. Zonder aanhef maakt de knop niets aan. Geen SQL nodig.</p>
         <p><strong>📇 Nieuwe klant vanuit een boeking in Yoobi zetten (v4.112.0).</strong> In het blok Opnameboekingen staat bij elke boeking de knop <strong>Naar Yoobi</strong>. Die opent een venster met wat er aangemaakt gaat worden: naam, bezoekadres, e-mail, telefoon, de relatiecategorie (Particuliere prospect of Prospects) en voor- en achternaam van de contactpersoon, die je nog kunt aanpassen. De app controleert eerst of het e-mailadres of de naam al in Yoobi bestaat; is dat zo, dan kun je met één klik koppelen in plaats van aanmaken. Pas na jouw bevestiging wordt de relatie met contactpersoon aangemaakt en komt het relatienummer op de boeking en op de bijbehorende calculatie. Boekingen die al een calculatie hebben maar nog niet in Yoobi staan, vind je onder de open lijst bij <strong>Nog niet in Yoobi</strong>. De koppeling kan alleen aanmaken, nooit bijwerken of verwijderen, en werkt via een aparte Yoobi-gebruiker met uitsluitend dat recht. Eenmalige SQL al uitgevoerd.</p>
@@ -4051,7 +4052,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.112.2';
+const APP_VERSION = 'v4.113.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4474,6 +4475,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.113.0', d: '2026-11-08', h: 'Naar Yoobi (controleronde): slot tegen dubbel aanmaken (ook over vensters en browsers heen), knop Koppel relatie als het terugschrijven mislukt, timeout 60 s; naamontleding met tussenvoegsels, dubbele voornamen en echtparen (Dhr. en mevr. Jansen). SQL al gedraaid; Edge Function yoobi-klant v38.' },
   { v: '4.112.2', d: '2026-11-08', h: 'Wachtrij (controleronde): Nu versturen trekt eerst de geplande verzending in en mailt dan pas (geen dubbele mail meer); Intrekken meldt eerlijk als er niets meer in te trekken was; leesfout van de wachtrij zichtbaar in venster en dashboard; tekst > 5000 tekens tegengehouden. Geen SQL.' },
   { v: '4.112.1', d: '2026-11-08', h: 'Naar Yoobi: aanhefkeuze en relatienaam volgens de Yoobi-naamregel (Dhr. B. van Duren), aanpasbaar veld; zonder aanhef geen aanmaak. Geen SQL.' },
   { v: '4.112.0', d: '2026-11-07', h: 'Boekingenblok: knop Naar Yoobi maakt na bevestiging de relatie met contactpersoon aan in Yoobi (met dubbelcontrole op e-mail en naam) en zet het relatienummer op boeking en calculatie; lijst Nog niet in Yoobi. SQL al gedraaid.' },
@@ -24788,6 +24790,11 @@ const YOOBI_NAAR_START = '2026-11-07';
 let _yoobiNaarBoeking = null;
 let _yoobiNaarControle = null;
 let _yoobiNaarBezig = false;
+// v4.113.0 — lopend aanmaakverzoek per boeking, los van het venster. Sluiten en
+// opnieuw openen levert geen tweede verzoek op; het venster hangt zich aan
+// het lopende verzoek. (Controleronde 08-11, bevinding 7.)
+const _yoobiNaarLopend = {};
+const YOOBI_POST_TIMEOUT_MS = 60000; // v4.113.0 — de functie wacht zelf max 20 s bij een 429
 
 async function _yoobiPost(payload) {
   let token = SUPABASE_KEY;
@@ -24795,14 +24802,30 @@ async function _yoobiPost(payload) {
     const { data: { session } } = await _sb.auth.getSession();
     if (session && session.access_token) token = session.access_token;
   } catch (e) { /* val terug op anon; de functie weigert dan netjes */ }
-  const res = await fetch(YOOBI_FUNCTIE_URL, {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload || {})
-  });
+  // v4.113.0 — timeout (bevinding 13): een hangende verbinding blijft niet
+  // eindeloos op "Bezig…" staan.
+  const ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), YOOBI_POST_TIMEOUT_MS) : null;
+  let res;
+  try {
+    res = await fetch(YOOBI_FUNCTIE_URL, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {}),
+      signal: ctrl ? ctrl.signal : undefined
+    });
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw new Error('Geen antwoord van de Yoobi-functie binnen ' + Math.round(YOOBI_POST_TIMEOUT_MS / 1000) + ' seconden. Controleer in Yoobi of de relatie toch is aangemaakt voordat je het opnieuw probeert.');
+    throw e;
+  } finally { if (timer) clearTimeout(timer); }
   let d = null;
   try { d = await res.json(); } catch (e) { d = null; }
-  if (!res.ok) throw new Error((d && d.error) ? d.error : ('Yoobi ' + res.status));
+  if (!res.ok) {
+    // v4.113.0 — antwoorden met een eigen status (bezig, aangemaakt_niet_teruggeschreven)
+    // gaan als object door, zodat de aanroeper erop kan reageren.
+    if (d && d.status && (d.status === 'bezig' || d.status === 'aangemaakt_niet_teruggeschreven' || d.status === 'aangemaakt_zonder_nummer')) return d;
+    throw new Error((d && d.error) ? d.error : ('Yoobi ' + res.status));
+  }
   if (d && d.ok === false) throw new Error(d.error || 'Onbekende fout van de Yoobi-functie');
   return d || {};
 }
@@ -24829,11 +24852,35 @@ const YOOBI_AANHEF_WOORDEN = [
   [/^(dhr\.?|de heer|meneer|hr\.?|mr\.?)$/i, 'Dhr.'],
   [/^(familie|fam\.?)$/i, 'Fam.'],
 ];
+// v4.113.0 — tussenvoegsels: horen bij de achternaam en leveren nooit een initiaal.
+const YOOBI_TUSSENVOEGSELS = new Set(['van','de','der','den','het','ten','ter','te','op','in','aan','bij','onder','over','uit','voor','vd','v.d.','vd.','v/d','la','le','du','des','di','da','dos','del','della','von','zu','el','al','\'t','\'s','d\'']);
+function _yoobiIsTussenvoegsel(w) { return YOOBI_TUSSENVOEGSELS.has(String(w || '').toLowerCase()); }
+// v4.113.0 — voornaam/voornamen → initialen. "Jan Willem" → "J.W."; "A.J.M." blijft;
+// "J.P." blijft; "JP" → "J.P.".
+function _yoobiInitialen(voornamen) {
+  const uit = [];
+  for (const w of voornamen) {
+    if (!w) continue;
+    if (/\./.test(w) || /^[A-Z]{1,4}$/.test(w)) { w.replace(/\./g, '').toUpperCase().split('').forEach(l => { if (/[A-Z]/.test(l)) uit.push(l); }); }
+    else uit.push(w.charAt(0).toUpperCase());
+  }
+  return uit.length ? uit.join('.') + '.' : '';
+}
+// v4.113.0 — herschreven (controleronde 08-11, bevinding 8). Besluit Gian 08-11:
+// een echtpaar ("Peter en Ingrid Jansen", "Dhr. en mevr. Jansen") krijgt aanhef
+// "Dhr. en mevr." en GEEN initialen, zoals de bestaande echtparen in Yoobi
+// (gemeten in yoobi_klanten: "Dhr. en mevrouw Loog", "De heer en mevrouw Lorz").
 function _yoobiNaarOntleed(klant) {
   let delen = String(klant || '').trim().split(/\s+/).filter(Boolean);
   let aanhef = '';
-  if (delen.length) {
-    // "de heer" is twee woorden
+  let echtpaar = false;
+  const l = (i) => (delen[i] || '').toLowerCase().replace(/\.$/, '');
+  // "de heer en mevrouw X", "dhr. en mevr. X", "mevr. en dhr. X"
+  if (delen.length >= 4 && l(0) === 'de' && l(1) === 'heer' && l(2) === 'en' && /^(mevrouw|mevr|mw)$/.test(l(3))) { echtpaar = true; delen = delen.slice(4); }
+  else if (delen.length >= 3 && /^(dhr|hr|mr|meneer)$/.test(l(0)) && l(1) === 'en' && /^(mevrouw|mevr|mw)$/.test(l(2))) { echtpaar = true; delen = delen.slice(3); }
+  else if (delen.length >= 3 && /^(mevrouw|mevr|mw)$/.test(l(0)) && l(1) === 'en' && /^(dhr|hr|mr|meneer)$/.test(l(2))) { echtpaar = true; delen = delen.slice(3); }
+  else if (delen.length >= 4 && /^(mevrouw|mevr|mw)$/.test(l(0)) && l(1) === 'en' && l(2) === 'de' && l(3) === 'heer') { echtpaar = true; delen = delen.slice(4); }
+  else if (delen.length) {
     const twee = delen.slice(0, 2).join(' ').toLowerCase();
     if (twee === 'de heer') { aanhef = 'Dhr.'; delen = delen.slice(2); }
     else {
@@ -24842,21 +24889,37 @@ function _yoobiNaarOntleed(klant) {
       }
     }
   }
-  let voornaam = '', achternaam = '', initialen = '';
-  if (delen.length > 1) {
-    voornaam = delen[0];
-    achternaam = delen.slice(1).join(' ');
-    // Al initialen (bevat een punt of is 1-3 hoofdletters)? Dan overnemen.
-    if (/\./.test(voornaam) || /^[A-Z]{1,3}$/.test(voornaam)) {
-      initialen = voornaam.replace(/\./g, '').toUpperCase().split('').join('.') + '.';
-      voornaam = '';
-    } else {
-      initialen = voornaam.charAt(0).toUpperCase() + '.';
-    }
-  } else {
-    achternaam = delen[0] || '';
+  // "Peter en Ingrid Jansen": een los "en" tussen twee namen → echtpaar; de
+  // voornamen vervallen, de achternaam is wat na het laatste voornaam-blok komt.
+  const enIdx = delen.findIndex((w, i) => i > 0 && i < delen.length - 1 && w.toLowerCase() === 'en');
+  if (!echtpaar && enIdx > 0 && !aanhef) {
+    echtpaar = true;
+    // na "en" staat meestal "Ingrid Jansen": eerste woord is een voornaam, de rest achternaam
+    const na = delen.slice(enIdx + 1);
+    delen = na.length > 1 && !_yoobiIsTussenvoegsel(na[0]) ? na.slice(1) : na;
+  } else if (echtpaar && enIdx > 0) {
+    // "Dhr. en mevr. Peter en Ingrid Jansen" (zeldzaam): zelfde behandeling
+    const na = delen.slice(enIdx + 1);
+    delen = na.length > 1 && !_yoobiIsTussenvoegsel(na[0]) ? na.slice(1) : na;
   }
-  return { aanhef, voornaam, achternaam, initialen };
+  if (echtpaar) {
+    aanhef = 'Dhr. en mevr.';
+    // Achternaam = vanaf het eerste tussenvoegsel; zonder tussenvoegsel het laatste woord.
+    const tv = delen.findIndex(_yoobiIsTussenvoegsel);
+    const rest = tv >= 0 ? delen.slice(tv) : delen.slice(-1);
+    return { aanhef, voornaam: '', achternaam: rest.join(' '), initialen: '', echtpaar: true };
+  }
+  // Gewoon: voornamen zijn alle woorden vóór het eerste tussenvoegsel; is er geen
+  // tussenvoegsel, dan zijn alle woorden behalve het laatste de voornamen.
+  let voornamen = [], achternaamDelen = [];
+  const tvIdx = delen.findIndex(_yoobiIsTussenvoegsel);
+  if (tvIdx >= 0) { voornamen = delen.slice(0, tvIdx); achternaamDelen = delen.slice(tvIdx); }
+  else if (delen.length > 1) { voornamen = delen.slice(0, -1); achternaamDelen = delen.slice(-1); }
+  else { achternaamDelen = delen.slice(); }
+  const initialen = _yoobiInitialen(voornamen);
+  // voornaam voor de contactpersoon: alleen echte voornamen, geen initialen
+  const voornaam = voornamen.filter(w => !/\./.test(w) && !/^[A-Z]{1,4}$/.test(w)).join(' ');
+  return { aanhef, voornaam, achternaam: achternaamDelen.join(' '), initialen, echtpaar: false };
 }
 function _yoobiNaarRelatienaamBouw() {
   const aanhef = document.getElementById('ynAanhef').value;
@@ -24885,9 +24948,19 @@ function _yoobiNaarOpen(id) {
     + rij('E-mail', r.email)
     + rij('Telefoon', r.telefoon)
     + '</div>';
+  document.getElementById('yoobiNaarModal').classList.add('active');
+  // v4.113.0 — loopt er nog een aanmaakverzoek voor deze boeking (venster was
+  // gesloten terwijl het liep)? Dan geen nieuwe controle en geen nieuwe knop,
+  // maar wachten op dat verzoek.
+  if (_yoobiNaarLopend[r.id]) {
+    _yoobiNaarBezig = true;
+    document.getElementById('ynControle').innerHTML = '<div style="padding:0.5rem 0.6rem; border:1px solid #e0a800; border-radius:6px; background:rgba(224,168,0,0.08);">\u23f3 Er loopt nog een aanmaakverzoek voor deze boeking. Even geduld; het venster werkt zichzelf bij.</div>';
+    document.getElementById('ynActies').innerHTML = '<button class="btn" style="opacity:0.75;" onclick="closeYoobiNaarModal()">Sluiten</button>';
+    _yoobiNaarLopend[r.id].then(() => { if (_yoobiNaarBoeking === r) _yoobiNaarOpen(id); }).catch(() => { if (_yoobiNaarBoeking === r) _yoobiNaarOpen(id); });
+    return;
+  }
   document.getElementById('ynControle').innerHTML = '<span style="color:var(--muted);">Dubbelcontrole in Yoobi loopt…</span>';
   document.getElementById('ynActies').innerHTML = '';
-  document.getElementById('yoobiNaarModal').classList.add('active');
   _yoobiNaarControleer();
 }
 
@@ -24897,6 +24970,12 @@ async function _yoobiNaarControleer() {
   try {
     const d = await _yoobiPost({ actie: 'aanmaken', boeking_id: r.id, alleen_controle: true });
     if (_yoobiNaarBoeking !== r) return; // venster intussen gesloten
+    if (d.status === 'bezig') { // v4.113.0 — slot van een ander verzoek (andere browser/collega)
+      document.getElementById('ynControle').innerHTML = '<div style="padding:0.5rem 0.6rem; border:1px solid #e0a800; border-radius:6px; background:rgba(224,168,0,0.08);">\u23f3 ' + _escapeHtml(d.error || 'Er loopt al een aanmaakverzoek voor deze boeking.') + '</div>';
+      document.getElementById('ynActies').innerHTML = '<button class="btn" onclick="_yoobiNaarControleer()">Opnieuw controleren</button>'
+        + '<button class="btn" style="opacity:0.75;" onclick="closeYoobiNaarModal()">Sluiten</button>';
+      return;
+    }
     _yoobiNaarControle = d;
     _yoobiNaarTeken(d);
   } catch (e) {
@@ -24979,18 +25058,51 @@ async function _yoobiNaarAanmaken() {
     forceer: forceer
   };
   if (!payload.achternaam && !payload.voornaam) { _toast('Vul minstens een achternaam in voor de contactpersoon.'); return; }
+  if (_yoobiNaarLopend[r.id]) { _toast('Er loopt al een aanmaakverzoek voor deze boeking; even geduld.'); return; } // v4.113.0
   _yoobiNaarBezig = true;
   const knop = document.getElementById('ynAanmaakKnop');
   if (knop) { knop.disabled = true; knop.textContent = 'Bezig…'; }
+  // v4.113.0 — het verzoek leeft los van het venster; sluiten en heropenen
+  // maakt geen tweede verzoek (bevinding 7).
+  const lopend = _yoobiPost(payload);
+  _yoobiNaarLopend[r.id] = lopend;
   try {
-    const d = await _yoobiPost(payload);
+    const d = await lopend;
     if (d.status === 'aangemaakt') {
       _toast('Relatie ' + (d.relatienummer || '') + ' aangemaakt in Yoobi');
-      closeYoobiNaarModal();
+      if (_yoobiNaarBoeking === r) closeYoobiNaarModal();
       await _opnameVerversen(true);
       return;
     }
+    if (d.status === 'al_gekoppeld') { // v4.113.0 — een ander verzoek was ons voor
+      _toast('Deze boeking was intussen al gekoppeld aan relatie ' + (d.relatienummer || ''));
+      if (_yoobiNaarBoeking === r) closeYoobiNaarModal();
+      await _opnameVerversen(true);
+      return;
+    }
+    if (d.status === 'bezig') { // v4.113.0
+      if (_yoobiNaarBoeking !== r) return;
+      document.getElementById('ynControle').innerHTML = '<div style="padding:0.5rem 0.6rem; border:1px solid #e0a800; border-radius:6px; background:rgba(224,168,0,0.08);">\u23f3 ' + _escapeHtml(d.error || 'Er loopt al een aanmaakverzoek voor deze boeking.') + '</div>';
+      document.getElementById('ynActies').innerHTML = '<button class="btn" onclick="_yoobiNaarControleer()">Opnieuw controleren</button>'
+        + '<button class="btn" style="opacity:0.75;" onclick="closeYoobiNaarModal()">Sluiten</button>';
+      _yoobiNaarBezig = false;
+      return;
+    }
+    if (d.status === 'aangemaakt_niet_teruggeschreven' || d.status === 'aangemaakt_zonder_nummer') { // v4.113.0
+      // De relatie BESTAAT in Yoobi. Nooit een tweede Aanmaken aanbieden.
+      if (_yoobiNaarBoeking !== r) { _toast('Yoobi heeft de relatie aangemaakt maar de koppeling is niet gelukt. Open Naar Yoobi opnieuw.'); return; }
+      const nr = d.relatienummer || '';
+      document.getElementById('ynControle').innerHTML = '<div style="padding:0.5rem 0.6rem; border:1px solid #c0392b; border-radius:6px; background:rgba(192,57,43,0.06);">'
+        + '<strong>Let op:</strong> ' + _escapeHtml(d.error || 'De relatie is in Yoobi aangemaakt, maar niet aan de boeking gekoppeld.') + '</div>';
+      document.getElementById('ynActies').innerHTML = (nr
+        ? '<button class="btn" onclick="_yoobiNaarKoppel(\'' + _escapeHtml(nr) + '\')">Koppel relatie ' + _escapeHtml(nr) + '</button>'
+        : '<button class="btn" onclick="closeYoobiNaarModal(); _opnameVerversen(true);">Sluiten en in Yoobi opzoeken</button>')
+        + '<button class="btn" style="opacity:0.75;" onclick="closeYoobiNaarModal()">Sluiten</button>';
+      _yoobiNaarBezig = false;
+      return;
+    }
     if (d.status === 'droogloop') {
+      if (_yoobiNaarBoeking !== r) { _yoobiNaarBezig = false; return; } // v4.113.0
       document.getElementById('ynControle').innerHTML = '<div style="padding:0.5rem 0.6rem; border:1px solid var(--paper-deep); border-radius:6px;">'
         + '<strong>Droogloop:</strong> er is niets naar Yoobi gestuurd. Dit is het verzoek dat verstuurd zou worden:'
         + '<pre class="mono" style="white-space:pre-wrap; font-size:0.72rem; margin:0.4rem 0 0;">' + _escapeHtml(JSON.stringify(d.verzoek || {}, null, 2)) + '</pre></div>';
@@ -24998,12 +25110,15 @@ async function _yoobiNaarAanmaken() {
       _yoobiNaarBezig = false;
       return;
     }
-    if (d.status === 'dubbel') { _yoobiNaarControle = d; _yoobiNaarTeken(d); _yoobiNaarBezig = false; return; }
+    if (d.status === 'dubbel') { if (_yoobiNaarBoeking === r) { _yoobiNaarControle = d; _yoobiNaarTeken(d); } _yoobiNaarBezig = false; return; }
     throw new Error(d.melding || d.error || ('Onverwacht antwoord: ' + (d.status || '?')));
   } catch (e) {
     _yoobiNaarBezig = false;
+    if (_yoobiNaarBoeking !== r) { _toast('Aanmaken in Yoobi mislukt: ' + (e.message || e)); return; } // v4.113.0 — venster was dicht
     if (knop) { knop.disabled = false; knop.textContent = forceer ? 'Toch als nieuwe relatie aanmaken' : 'Aanmaken in Yoobi'; }
     document.getElementById('ynControle').insertAdjacentHTML('beforeend', '<div style="color:#c0392b; margin-top:0.4rem;">Mislukt: ' + _escapeHtml(e.message || String(e)) + '</div>');
+  } finally {
+    delete _yoobiNaarLopend[r.id]; // v4.113.0
   }
 }
 
