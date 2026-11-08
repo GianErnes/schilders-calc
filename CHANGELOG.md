@@ -1,3 +1,24 @@
+## v4.112.2 — Wachtrij: geen dubbele mail, eerlijke meldingen (2026-11-08)
+
+**Aanleiding**
+- Controlerapport 2026-11-08 (eerste geplande run van de kwaliteitscontroleur), bevindingen 4, 5, 9 en 10 over het uitgesteld versturen van v4.110.0. Vooraf nagelopen in de echte omgeving: Edge Function `offerte-wachtrij` staat live (v4) en de cron `offerte-wachtrij-5min` draait met status 200 (bevinding 2 vervalt); `offerte-verzenden` mailt een nog open link een tweede keer gewoon opnieuw (bron gelezen), dus een niet-ingetrokken rij ging echt dubbel de deur uit.
+
+**Gebouwd (alleen index.html)**
+- **Nu versturen** (bevinding 5): volgorde omgedraaid. Eerst een eventuele geplande verzending intrekken, dan pas `offerte-verzenden` aanroepen. Mislukt het intrekken, dan stopt de knop met de melding dat er niets verstuurd is. Mislukt daarna het mailen terwijl er wél iets ingetrokken was, dan zegt de melding dat erbij en ververst het venster.
+- **Intrekken** in het accordeervenster en op het dashboard (bevinding 4): `_wachtrijIntrekken()` geeft nu het aantal geraakte rijen terug (`.select('id')` op de update). Bij 0 rijen geen "Verzending ingetrokken" meer, maar "Er stond geen geplande verzending meer" plus de laatste stand uit `_wachtrijLaatsteStatus()` (al verstuurd op …, al ingetrokken, al mislukt).
+- **Leesfout zichtbaar** (bevinding 10): `_wachtrijLaden()` onthoudt de fout in `_wachtrijCache.fout`; `_wachtrijBlokHtml()` toont dan een waarschuwing in het venster in plaats van niets. `_wachtrijDashRender()` zet bij een leesfout een waarschuwingsblok op het dashboard in plaats van stil te verdwijnen.
+- **Tekstgrens** (bevinding 9): Inplannen én Nu versturen houden een begeleidende tekst langer dan 5000 tekens tegen met een melding (voorheen knipte Inplannen stil af; `offerte-verzenden` knipt zelf óók op 5000, bron gelezen, dus Nu versturen kwam ook afgekapt aan).
+- Vier versieankers bijgewerkt.
+
+**Niet gewijzigd**
+- `_wachtrijIntrekkenVoorCalc()` bij Nieuwe link maken (bevinding 6): de Edge Function weigert zelf elke rij waarvan de link niet meer `open` is en maakt dan een taak aan (bron gelezen); het vangnet bestaat, dus hier geen ingreep.
+- Geen Edge Function, geen SQL.
+
+**Getest**
+- Node parse-test van het scriptblok groen; accolades in balans; div-verschil met v4.112.1 precies de twee toegevoegde blokken.
+- Runtime-test met nagemaakte Supabase-client: `_wachtrijIntrekken` geeft 1 bij een geraakte rij, 0 bij geen rij, gooit bij een databasefout, 0 zonder token; `_wachtrijLaatsteStatus` geeft "De wachtrij heeft hem al verstuurd (zo 8 nov, 07:00)."
+- **Niet getest in de browser.** Testscript voor Gian: (1) offerte inplannen op nu+10 min, daarna in Supabase `update offerte_verzendwachtrij set status='verstuurd' where token='…'`, dan zonder verversen op Intrekken: verwacht rode melding "Er stond geen geplande verzending meer. De wachtrij heeft hem al verstuurd." (2) Inplannen, dan Nu versturen: één mail, groene melding met "(de ingeplande verzending is ingetrokken)", rij op `ingetrokken` met fout "direct verstuurd". (3) Netwerk-tab: request op `offerte_verzendwachtrij` blokkeren, accordeervenster openen: waarschuwingsblok i.p.v. leeg.
+
 ## v4.112.1 — Relatienaam volgens de Yoobi-naamregel (2026-11-08)
 
 **Aanleiding**
