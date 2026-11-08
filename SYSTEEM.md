@@ -34,7 +34,7 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.68.0 |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.114.0 (08-11-2026) |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.4.0 (12-10-2026; eerdere rijen staan nog op 14-09) |
@@ -558,7 +558,7 @@ waarom. Zie de opruimlijst.
 `taken-mail-melding` draait elke twee minuten, ruim 700 keer per dag. Dat
 kost geen geld van betekenis, maar het laat de logtabellen hard vollopen.
 
-### 3.2 De zestien Edge Functions
+### 3.2 De Edge Functions (GEMETEN 08-11-2026 via de functielijst: 28, inclusief `push-test` en de oude `steiger-aanvraag` die na de test van `onderaannemer-aanvraag` nog weg mag; het oude kopje zei "zestien", stand 9 augustus. Een naamloze kopie `bright-endpoint` van 29-10-2026, identiek aan `onderaannemer-aanvraag` en nooit aangeroepen vanuit de app, is op 08-11-2026 door Gian in Studio verwijderd)
 
 Het waren er achttien tot 27 juli 2026. Toen zijn `taken-meldingen`,
 `yoobi-kijkglas` en `yoobi-project-probe` verwijderd, alle drie na
@@ -712,7 +712,7 @@ notitie tijdens de opname over. Dit is gekozen en geen vergeten risico.
 | `offerte-wachtrij` | Calc | verstuurt ingeplande offertes uit `offerte_verzendwachtrij` door `offerte-verzenden` aan te roepen (v4.110.0, 6 november 2026) |
 | `onderaannemer-aanvraag` | Calc | offerteaanvraag per mail aan een vaste onderaannemer (steiger, timmerwerk, glas, installatie) met foto's; logrij in `calculatie_aanvragen` en opvolgtaak; sinds 29-10-2026, vervangt `steiger-aanvraag` (26-09) |
 | `reisafstand` | Calc | rijafstand naar het werkadres |
-| `yoobi-klant` | Calc | klantgegevens uit Yoobi lezen; sinds v4.112.0 ook relatie + contactpersoon aanmaken vanuit een boeking (aparte schrijfkoppeling, alleen POST customers/getCustomerByEmail; poort `YOOBI_SCHRIJF_AAN=1`, anders droogloop) |
+| `yoobi-klant` | Calc | klantgegevens uit Yoobi lezen; sinds v4.112.0 ook relatie + contactpersoon aanmaken vanuit een boeking (aparte schrijfkoppeling, alleen POST customers/getCustomerByEmail; poort `YOOBI_SCHRIJF_AAN=1`, anders droogloop). Functieversie 38 (08-11-2026): slot `opname_boekingen.yoobi_bezig_op` tegen dubbel aanmaken, status `aangemaakt_niet_teruggeschreven` |
 | `yoobi-taken-sync` | Taken | taken en projectnamen uit Yoobi |
 
 `offerte-herinnering` wordt zowel door cron als vanuit de app aangeroepen.
@@ -6134,3 +6134,67 @@ bij direct versturen; controleer `status` van de rij. Rij blijft op
 gepland na het tijdstip → `gepland_op` is UTC; vergelijk met `now()` in
 SQL en niet met de klok aan de muur.
 
+## Wat er op 7 november 2026 gedaan is: sectiebalk op de Calculatie-tab (index.html v4.111.0) en nieuwe klant vanuit een boeking in Yoobi zetten (index.html v4.112.0, Edge Function yoobi-klant v35, SQL)
+
+**Waarom.** (1) Op een lange buitencalculatie op de iPad lijkt alle tekst
+op elkaar; Gian veegt zonder te zien waar hij is. (2) Nieuwe klanten komen
+via de Google-boekingspagina binnen (`opname_boekingen`) en Maud typte ze
+handmatig over in Yoobi. Keuzes van Gian: alleen aanmaken, nooit bijwerken
+of verwijderen; altijd via een bevestigingsvenster; aparte Yoobi-koppeling
+met alleen POST op `customers` en `getCustomerByEmail`, de leeskoppeling
+`yoobiernes2` blijft alleen-lezen.
+
+| Onderdeel | Wat | Hoe en waar op letten |
+|---|---|---|
+| index.html v4.111.0 | sticky sectiebalk `#calcSectieBalk` onder de tabbalk met zeven knoppen (Klant, Notities, Regels, Staart, Per bewerking, Totalen, Offerte), scroll-spy kleurt de knop van de sectie die bovenin staat; gekleurde sectiekoppen `.calc-sectiekop` | staat buiten `#calculatie` vanwege de iPad-zoom (v4.30.0). Zie `CHANGELOG.md` v4.111.0 |
+| SQL (migratie `yoobi_relatienummer_boekingen_calculaties`, door Claude live gedraaid 07-11) | `opname_boekingen.yoobi_relatienummer text`, `opname_boekingen.yoobi_aangemaakt_op timestamptz`, `calculaties.yoobi_relatienummer text` | alleen toevoegen; niets verwijderd |
+| Edge Function `yoobi-klant` v35 | nieuwe routes `?email=` (dubbelcontrole), `POST {actie:"aanmaken"}`, `POST {actie:"koppelen"}`; schrijfroutes eisen een ingelogde gebruiker (token tegen `/auth/v1/user`, anon-sleutel geweigerd); `createOnly=true`; categorie uit een vaste lijst (Particuliere prospect, Prospects) | secrets `YOOBI_SCHRIJF_CLIENT_ID` / `YOOBI_SCHRIJF_CLIENT_SECRET` (Gian); poort `YOOBI_SCHRIJF_AAN=1`, anders droogloop die het verzoek als JSON toont. Yoobi controleert zelf niet op dubbelen (Vincent, 07-11); een onbekende categorie wordt door Yoobi stilzwijgend aangemaakt, daarom de vaste lijst |
+| index.html v4.112.0 | knop **Naar Yoobi** per open boeking (groen `✓ Yoobi <nr>` als hij er staat), regel "Nog niet in Yoobi (n)" voor boekingen met calculatie maar zonder relatienummer vanaf `YOOBI_NAAR_START` (07-11-2026), venster `yoobiNaarModal` met dubbelcontrole op e-mail en naam en koppelknoppen | echte aanmaak getest 07-11: relatie 2610908 (Gians eigen gegevens), nummer direct op de boeking |
+
+**Als het stukgaat.** Knop doet niets of rood → logboek van `yoobi-klant`
+in Studio; 401 is een verlopen of ontbrekende login, 409 bij `createOnly`
+betekent dat Yoobi de code al kent. Relatie wel in Yoobi, geen nummer op de
+boeking → zie de sectie van 8 november (koppelknop).
+
+## Wat er op 8 november 2026 gedaan is: controleronde verwerkt — relatienaam en slot bij Naar Yoobi (v4.112.1, v4.113.0, yoobi-klant v37/v38, kolom yoobi_bezig_op), wachtrij-meldingen (v4.112.2), stappen vervangen in één transactie (v4.114.0, SQL calc_regel_stappen_vervangen)
+
+**Waarom.** De eerste geplande run van de kwaliteitscontroleur
+(`rolinstructie_controleur.md`, rapport `claude_controlerapport_2026-11-08.md`,
+13 bevindingen). Vier vervielen na controle in database en functiebron
+(2, 6, 11, 12); de rest is op 08-11 verwerkt. Daarnaast wilde Gian de
+relatienaam in Yoobi volgens zijn eigen naamregel (aanhef + initialen +
+achternaam).
+
+| Onderdeel | Wat | Hoe en waar op letten |
+|---|---|---|
+| index.html v4.112.1 + `yoobi-klant` v37 | keuzelijst Aanhef (Dhr., Mevr., Fam.) en veld Relatienaam in het venster Naar Yoobi; `_yoobiNaarOntleed()` maakt initialen uit de voornaam, tussenvoegsels blijven bij de achternaam; zonder aanhef geen aanmaak | getest 08-11 00:30: relatie 2610909 "Dhr. B. van Testduren", daarna door Gian verwijderd |
+| index.html v4.112.2 | wachtrij (bevindingen 4, 5, 9, 10): Nu versturen trekt eerst de geplande verzending in en mailt dan pas; Intrekken meldt eerlijk als er niets meer in te trekken was; leesfout van de wachtrij zichtbaar; tekst > 5000 tekens tegengehouden | geen SQL. Drie testen in de echte omgeving geslaagd (08-11) |
+| SQL (migratie `yoobi_bezig_op_opname_boekingen`, door Claude live gedraaid 08-11) | kolom `opname_boekingen.yoobi_bezig_op timestamptz`: slot zolang een aanmaakverzoek loopt | leeg betekent geen verzoek bezig; een slot ouder dan 2 minuten geldt als verlopen |
+| Edge Function `yoobi-klant` v38 | vóór de POST naar Yoobi één atomaire PATCH die het slot zet, alleen als er nog geen relatienummer én geen vers slot staat; 0 rijen → 409 `al_gekoppeld` of `bezig`; nieuw antwoord `aangemaakt_niet_teruggeschreven` (502, mét relatienummer) als Yoobi wel aanmaakte maar het terugschrijven mislukte; slot wordt gewist bij succes, Yoobi-fout en koppelen | bevindingen 7, 8, 13. Bron ligt als bestand bij Gian voor `ernes-edge-functions/supabase/functions/`, omdat de workflow "Functies ophalen uit Supabase" op 08-11 mislukte (504 in `supabase/setup-cli@v1`, run #17) |
+| index.html v4.113.0 | `_yoobiPost` met 60 s timeout; lopend verzoek in `_yoobiNaarLopend[boeking_id]`, los van het venster ("⏳ loopt nog" bij heropenen); knop **Koppel relatie <nr>** bij `aangemaakt_niet_teruggeschreven`; naamontleding met tussenvoegsels, dubbele voornamen (J.W. de Vries) en echtparen (aanhef "Dhr. en mevr.", geen initialen, contactpersoon zonder voornaam, zoals Maud het doet) | getest 08-11 11:44: relatie **2610910** "Dhr. en mevr. van Testdijk"; slot gezet en losgelaten. **Nog te doen (Gian):** testrelatie 2610910 in Yoobi verwijderen, daarna de testrij `4a8d7e03-17b7-463c-9bf7-81321f43b6b2` in `opname_boekingen` weg. Dubbelproef in de browser (Slow 3G, sluiten, heropenen) nog niet gedaan; in Node wel |
+| SQL `calc_regel_stappen_vervangen.sql` (migratie `calc_regel_stappen_vervangen`, door Claude live gedraaid 08-11) | functie `calc_regel_stappen_vervangen(p_regel_id uuid, p_stappen jsonb) returns setof calc_regel_stappen`, security invoker: wist alle stappen van een regel en voegt de nieuwe in binnen één transactie, geeft de nieuwe rijen terug; `authenticated` mag, `anon` niet | bevinding 3: `wisselRegelSysteem` (🔄) en `stappenToepassen` (⧉) deden dit tot v4.113.0 in drie losse calls, met tussen de eerste twee een regel met beide sets. Nooit gebeurd (0 regels met dubbele `volgorde`, gemeten 08-11), preventief. De prullenbak-trigger op `calc_regel_stappen` vuurt gewoon binnen de functie; losse stappen zijn in `prullenbak_overzicht` niet zichtbaar (gemeten: 305 stappen in de prullenbak, 89 bij een nog bestaande regel, bestaand gedrag) |
+| index.html v4.114.0 | `_stappenVervangenDB()` roept de RPC aan en classificeert het antwoord (`ok` / `ontbreekt` / `timeout` / `fout`); beide functies gebruiken die. Bij timeout herlaadt de app de calculatie in plaats van aan te nemen dat er niets gebeurd is; ontbreekt de SQL, dan een melding met de bestandsnaam. Toast na Yoobi-aanmaak en -koppeling groen (was rood sinds v4.112.0) | **getest in de echte omgeving (Gian, 08-11):** ⧉ en 🔄 op een testcalculatie, na hard herladen één set stappen; controlequery daarna 0 dubbele `volgorde`, 0 weesstappen, 15 oude stappen van de test in de prullenbak |
+| Schema-exports | Kolommen.csv (834 kolommen, 73 tabellen) en FKS.csv (44 sleutels binnen public) door Claude uit de live database gegenereerd (bevinding 1) | **Nog niet geplaatst:** de live `Kolommen.csv` in de root is op 08-11 nog de export van 01-11 (810 regels, zonder `yoobi_relatienummer` en `yoobi_bezig_op`) en de projectkennis heeft nog de oude van 100 regels. Gian vervangt beide |
+
+**Opruiming.** Edge Function `bright-endpoint` (aangemaakt 29-10 19:06 UTC,
+naam door Supabase gegenereerd, bron regel voor regel gelijk aan
+`onderaannemer-aanvraag`, 0 verwijzingen in index.html, 0 aanroepen in de
+logs van 08-11) door Gian in Studio verwijderd; functielijst daarna 28.
+
+**Besluiten van 08-11 die vastliggen.** Echtpaar → aanhef "Dhr. en mevr."
+zonder initialen, ook in de offerte; contactpersoon zonder voornaam.
+Dubbele voornaam → twee initialen (aanname, veld overtypbaar). Nu versturen
+trekt eerst de geplande verzending in en mailt pas daarna; lukt het
+intrekken niet, dan gaat er niets uit.
+
+**Als het stukgaat.** Dubbele uren op een regel na 🔄 of ⧉ → `select
+calc_regel_id, volgorde, count(*) from calc_regel_stappen group by 1,2
+having count(*) > 1`; de melding "Databasefunctie calc_regel_stappen_vervangen
+ontbreekt" betekent dat de SQL niet in de database staat (controle: `select
+proname from pg_proc where proname = 'calc_regel_stappen_vervangen'`).
+Naar Yoobi blijft op "loopt nog" → `yoobi_bezig_op` van de boeking bekijken;
+ouder dan 2 minuten wordt bij het volgende verzoek overgenomen. Workflow
+"Functies ophalen" faalt opnieuw met 504 → Supabase-CLI-versie vastpinnen
+in `functies-ophalen.yml` in plaats van latest; waarschuwingen uit run #17
+voor later: Node.js 20 deprecated (actions een versie omhoog) en
+ubuntu-latest naar Ubuntu 26 (in de gaten houden).
