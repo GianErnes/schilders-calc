@@ -6,6 +6,58 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.26.3 — Herplan-taken afvinkbaar (SQL taken_27), eerlijke melding als een update geen rij raakt, 09-11-2026
+
+**Aanleiding.** Gian 09-11-2026: Maud kan de taken "Yoobi: project- en
+orderdata aanpassen, start verschoven · …" niet afvinken. Gemeten in de
+live database: deze taken hebben `bron = 'herplan'` (gemaakt door de
+databasetrigger `herplan_taak_maak` zodra de startdatum in de planning
+verschuift); 5 open, 0 ooit voltooid, eerste van 03-11-2026. De
+RLS-policies `taken_bijwerken`, `taken_lezen` (rol eigen) en
+`taken_verwijderen` kenden die bron niet, dus raakte een update nul
+rijen, voor rol `eigen` én rol `alles`. De API geeft daarbij geen fout,
+alleen een lege lijst; de app zei dus "Afgevinkt" terwijl er niets
+gebeurd was (aanname over de toast, niet in de browser gezien). Dit was
+een vergeten stap bij het bouwen van de herplan-taken, geen fout van Maud.
+
+**Database (gedraaid via de Supabase-koppeling, 09-11-2026, bestand
+`taken_27_herplan_rechten.sql`).** `herplan` toegevoegd aan de drie
+policies met `ALTER POLICY`; de teksten zijn letterlijk uit `pg_policies`
+overgenomen met alleen `'herplan'` erbij naast `'planning'`. Drop+create
+is geprobeerd via `apply_migration`, maar de goedkeuringsvraag van de
+koppeling kwam tweemaal niet aan; `ALTER POLICY` vraagt die niet. De
+migratie staat daardoor niet in `supabase_migrations`; het bestand is
+wel idempotent en draagt de projectguard.
+
+**Gebouwd in taken.html.**
+- `eisRij(res, wat)`: na een update op `taken` moet er een rij terugkomen
+  (`.select('crmtaskid')`); zo niet, dan een fout "… raakte geen rij:
+  geen rechten op deze taak, of hij bestaat niet meer". Toegepast op
+  afvinken, doorschuiven van een herhaler, terugzetten naar open en
+  bewaren. Andere updates (categorie, piep, foto, ongedaan maken) zijn
+  niet aangepast.
+- `catVast(bron)`: bron `herplan` valt onder de vaste categorie Planning
+  (pil, filterbalk, geen categorieveld in het vel). Niet als aparte
+  sleutel in `CAT_VAST`, anders zou de chip Planning twee keer verschijnen.
+- `APP_VERSION` v0.26.3. Geen Edge Function.
+
+**Getest.** SQL op lokale Postgres 16 met nagebootste `taken`, rolfuncties
+en de letterlijke oude policies: vóór de migratie raakt afvinken 0 rijen
+(als maud én als rol alles), erna 1 rij als maud, 0 bij andermans taak,
+Yoobi ongewijzigd, verwijderen mogelijk, twee keer draaien kan, guard
+stopt op een database zonder `fin_werkvoorraad`. **Live:** in een
+teruggedraaide transactie als Maud (`taken_rol()` = eigen, persoon maud)
+raakt afvinken van de Beekman-taak 1 rij, als Jens 0; daarna nog 5 open
+herplan-taken. taken.html: `node --check` op beide scriptblokken, div-balans
+110/110, Node-harness 13 controles (catVan per bron, herplan niet als
+dubbele chip, eisRij bij rij/leeg/null/fout, vier aanroepen met
+rijcontrole). Niet in de browser: dat is de test na deployen — Maud opent
+de Beekman-taak, ziet de pil Planning en vinkt af.
+
+**Open.** De vijf herplan-taken hebben alle `gepland_op` 09-11-2026 13:30
+en `piep = true` op hetzelfde moment; of dat de bedoeling van de trigger
+is, is niet onderzocht.
+
 ## v0.26.2 — Offerte en Planning ook als chip kiesbaar, 04-11-2026
 
 **Aanleiding.** Gian 04-11-2026: een zelf getypte taak "offerte maken"

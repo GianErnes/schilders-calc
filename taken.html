@@ -674,7 +674,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.26.2';
+const APP_VERSION = 'v0.26.3';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -729,6 +729,16 @@ let VEL = null;           /* { modus:'nieuw'|'eigen'|'yoobi'|'klaar', taak, soor
 
 /* Ongedaan maken van de laatste afvink. */
 let LAATSTE_AFVINK = null;
+
+/* v0.26.3: een update die door de rechten (RLS) geen rij raakt geeft van
+   de API geen fout terug, alleen een lege lijst. Tot v0.26.2 zei de app
+   dan toch "Afgevinkt" en stond de taak na herladen gewoon weer open
+   (herplan-taken, 09-11-2026). Nu: zonder geraakte rij is het een fout. */
+function eisRij(res, wat){
+  if(res.error) throw res.error;
+  if(!res.data || !res.data.length) throw new Error(wat + ' raakte geen rij: geen rechten op deze taak, of hij bestaat niet meer');
+  return res.data;
+}
 
 /* ────────────────────────────────────────────────────────
    Datum-gereedschap
@@ -1158,9 +1168,17 @@ function zichtbareTakenBasis(){
 const CAT_VAST = { offerte: { naam:'Offerte', kleur:'#c2410c' }, planning: { naam:'Planning', kleur:'#2b5bd0' } };
 const CAT_PALET = ['#2f7dd1','#d1842f','#6c6c6c','#3a9a5a','#9a4fb0','#c23b6a','#1f9aa8','#8a6d3b'];
 
+/* v0.26.3: de vaste categorie die bij een bron hoort. Bron 'herplan'
+   (databasetrigger herplan_taak_maak: startdatum in de planning verschoven)
+   valt onder Planning; hij staat niet apart in CAT_VAST, anders zou
+   bouwCatChips de chip Planning twee keer tonen. */
+function catVast(bron){
+  return CAT_VAST[bron === 'herplan' ? 'planning' : bron] || null;
+}
 function catVan(t){
   if(t.bron === 'yoobi') return null;
-  if(CAT_VAST[t.bron]) return CAT_VAST[t.bron].naam;
+  const vast = catVast(t.bron);
+  if(vast) return vast.naam;
   return t.categorie || null;
 }
 function catKleur(naam){
@@ -1262,7 +1280,7 @@ async function zetCategorieDirect(naam){
 
 /* Vel: tonen bij een eigen taak, tenzij de categorie uit bron komt. */
 function zetCatVeld(modus, t){
-  const vast = t && CAT_VAST[t.bron];
+  const vast = t && catVast(t.bron); /* v0.26.3: ook herplan */
   const toon = (modus === 'nieuw' || modus === 'eigen') && !vast;
   zet('s_catwrap', toon);
   document.getElementById('s_catnieuw').classList.remove('zie');
@@ -1958,8 +1976,7 @@ async function slaOp(){
       }
     } else {
       taakId = VEL.taak.crmtaskid;
-      const { error } = await sb.from('taken').update(rij).eq('crmtaskid', taakId);
-      if(error) throw error;
+      eisRij(await sb.from('taken').update(rij).eq('crmtaskid', taakId).select('crmtaskid'), 'Bewaren'); /* v0.26.3 */
     }
 
     /* foto: nieuw gekozen of weggehaald */
@@ -1996,8 +2013,7 @@ async function vinkAf(){
   try{
     if(VEL.modus === 'klaar'){
       /* terug naar open */
-      const { error } = await sb.from('taken').update({ voltooid_op: null, voltooid_door: null }).eq('crmtaskid', t.crmtaskid);
-      if(error) throw error;
+      eisRij(await sb.from('taken').update({ voltooid_op: null, voltooid_door: null }).eq('crmtaskid', t.crmtaskid).select('crmtaskid'), 'Terugzetten'); /* v0.26.3 */
       sluitVel();
       toast('Terug naar open');
       await laadTaken();
@@ -2034,8 +2050,7 @@ async function vinkAf(){
         mail_op: null,
         push_op: null, /* v0.22.0: mee gewist, zoals sinds v0.21.0 bij bewaren */
       });
-      const { error: e2 } = await sb.from('taken').update(herhalerUpdate).eq('crmtaskid', t.crmtaskid);
-      if(e2) throw e2;
+      eisRij(await sb.from('taken').update(herhalerUpdate).eq('crmtaskid', t.crmtaskid).select('crmtaskid'), 'Doorschuiven'); /* v0.26.3 */
       /* v0.15.0: de ronde is klaar, dus de doorschuifhistorie van deze taak
          gaat op nul. Anders telt de volgende ronde door op de vorige. */
       const stondInMijnVandaag = MIJN_VANDAAG.has(String(t.crmtaskid));
@@ -2050,8 +2065,7 @@ async function vinkAf(){
         gepland_op: w.ts, piep_op: w.piep_op, voltooid_op: nuTs, voltooid_door: IK ? IK.persoon : null,
         afvink_melding: w.melding || null,
       });
-      const { error } = await sb.from('taken').update(upd).eq('crmtaskid', t.crmtaskid);
-      if(error) throw error;
+      eisRij(await sb.from('taken').update(upd).eq('crmtaskid', t.crmtaskid).select('crmtaskid'), 'Afvinken'); /* v0.26.3 */
       LAATSTE_AFVINK = { type:'gewoon', taakId: t.crmtaskid };
       sluitVel();
       toastMetActie('Afgevinkt', 'Ongedaan maken', maakOngedaan);

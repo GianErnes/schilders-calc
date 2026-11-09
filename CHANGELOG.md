@@ -1,3 +1,27 @@
+## v4.115.0 — Rekenpaneel Calculatie-tab: inkoop materiaal en staartposten per regel (2026-11-09)
+
+**Aanleiding**
+- Gian 09-11, met schermafbeelding van het rekenpaneel: "We hadden toch geregeld dat in dit paneel voor Maud de inkoopprijzen getoond zouden worden van materiaal en ik zie in dit paneel de steiger niet apart benoemd terug die als toeslag is berekend met vaste prijs. Is dit misschien met een verkeerde versie-upload verloren gegaan?"
+- Gemeten in de live index.html v4.114.0 (`renderTotals`, r. ±23520–23600) en de volledige CHANGELOG: niets verloren gegaan, het heeft in dít paneel nooit gezeten. Inkoop voor Yoobi is in v4.107.0 gebouwd in het Σ-paneel van een planbeurt (`_ohpVerHtml`) en in het blok "Totaal per bewerking" (v4.98.0). Het rekenpaneel toonde alleen "Materiaal verkoop" en één somregel "Staartkosten"; alleen staartposten met het vinkje "telt in werkdagen" stonden apart, en dan als uren-regel (v3.16.1). Een steiger als vast bedrag zonder dat vinkje zat onzichtbaar in de som.
+
+**Keuzes (Gian akkoord, 09-11: "Beide")**
+- Inkoopbedrag klein grijs achter "Materiaal verkoop", zoals in het Σ-paneel.
+- Elke staartpost apart onder "Staartkosten", met 🏗️ bij `kostensoort === 'materieel'` (vinkje uit v4.107.0) en het label "derden" bij een post met eigen btw-tarief (v4.76.0).
+- Erbij, op initiatief van Claude en consistent met de keuze van 02-11 (materiaal voor Yoobi = inkoop + klein materiaal): een grijze regel "voor Yoobi: inkoop + klein mat." onder "Totaal materiaal incl. toeslagen". Zelfde grondslag als `tr.opslagen.kleinMat` in de trace (`t.matVerkoop × kleinMat%`, r. 10313).
+
+**Gebouwd**
+- `renderTotals`: `t.matInkoop` uit `calcProjectTotalen()` (bestond al, werd in dit paneel niet gelezen) achter Materiaal verkoop; nieuwe regel voor Yoobi; `data.calc.staart.map(...)` met `calcStaart(p)` per post onder Staartkosten (posten met het vinkje "telt in werkdagen" staan nu dus twee keer: als uren bovenaan en als euro's hier — bedoeld, het zijn twee gezichtspunten op dezelfde post).
+- Geen wijziging aan de rekenkern, aan de offerte-PDF, aan de database of aan Edge Functions. Vijf versieankers bijgewerkt (APP_VERSION, welkomstkop, welkomstalinea, versiegeschiedenis, CHANGELOG).
+
+**Getest**
+- Node parse-test op het volledige scriptblok: groen. Div-balans 1462/1465 (live 1460/1463, verschil van 3 bestond al). Ankers coherent.
+- `renderTotals`, `calcStaart`, `calcStaartTotaal`, `_isDerdenPost`, `_derdenTotaal` en `_extraUrenUitStaart` direct uit het gepatchte bestand gesneden en in Node gedraaid met stubs en vier staartposten (steiger vast + materieel, klimtoeslag 13% telt in werkdagen, glaszetter derden 21%, container per dag): 10 van 10 groen — inkoop € 280,50 getoond, Yoobi-regel 280,50 + 28,90 = 309,40, steiger met 🏗️, glaszetter met "derden", container 25 × 4 dagen = 100, klimtoeslag als uren én als euro's, Staartkosten 2.370,56 = 1.500 + 320,56 + 450 + 100, geen undefined/NaN, lege staart geeft geen regels en geen fout.
+- Het paneel met de echte CSS in Chromium gerenderd en bekeken: regels staan op hun plek, grijze tekst leesbaar.
+- **Niet getest in de echte omgeving.** Test op de live app: (1) calculatie met steiger als vaste staartpost openen; onder Staartkosten hoort "+ Steiger 🏗️" te staan als het vinkje Materieel aanstaat, anders zonder icoon; (2) inkoopbedrag achter Materiaal verkoop vergelijken met de kolom "Mat. inkoop" in het blok Totaal per bewerking (horen gelijk te zijn, dat blok rekent zonder staart en afronding); (3) regel "voor Yoobi" vergelijken met "Materiaal inkoop + klein materiaal" in het Σ-paneel van een 100%-beurt van dezelfde calculatie.
+
+**Niet gewijzigd**
+- Offerte-PDF, Σ-paneel planning, blok Totaal per bewerking, rekenkern.
+
 ## Backup v7 — Voorraad mee in de nachtelijke backup, oplever-fotos gespiegeld (2026-11-08, Edge Function backup-dump, SQL voorraad_backup_01_functies)
 
 **Aanleiding**

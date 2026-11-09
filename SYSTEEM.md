@@ -34,7 +34,7 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.114.0 (08-11-2026) |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.115.0 (09-11-2026) |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.4.0 (12-10-2026; eerdere rijen staan nog op 14-09) |
@@ -6242,3 +6242,29 @@ heeft v3 nog niet opgehaald (Google tot een dag). Terugvallen op v2:
 Node-tests app, `deno check` + 7 mocktests functie, en een live
 aanroep vanuit de database (status 200, vr 13 nov 2026: project
 08:00–11:30, "Gereserveerd – Opmeten" 11:30–16:15).
+
+## Wat er op 9 november 2026 gedaan is: inkoop en staartposten per regel in het rekenpaneel (index.html v4.115.0)
+
+**Waarom.** Gian zocht in het rekenpaneel van de Calculatie-tab de
+inkoopprijs van het materiaal (voor Maud, die het in Yoobi zet) en de
+steiger als aparte post, en vroeg of dat met een verkeerde upload
+verloren was gegaan. Gemeten: nooit in dit paneel geweest; de inkoop
+zat sinds v4.107.0 alleen in het Σ-paneel van een planbeurt en in het
+blok Totaal per bewerking.
+
+**Wat er is.**
+- index.html v4.115.0, alleen `renderTotals`: inkoopbedrag grijs achter
+  "Materiaal verkoop"; regel "voor Yoobi: inkoop + klein mat." onder
+  het materiaaltotaal (zelfde grondslag als het Σ-paneel); elke
+  staartpost apart onder "Staartkosten", 🏗️ bij vinkje Materieel,
+  label "derden" bij eigen btw-tarief. Geen database, geen Edge
+  Function, geen offerte-wijziging.
+
+**Nood.** Wijken inkoop in het rekenpaneel en in het Σ-paneel van een
+100%-beurt af → beide lezen `matInkoop` uit dezelfde regelsnapshots;
+verschil wijst op een beurt met een ander percentage of een gewijzigde
+calculatie na het plan. Terugvallen: vorige versie v4.114.0 uit de
+GitHub-geschiedenis, er is niets anders om terug te draaien.
+
+**Bewijs.** `CHANGELOG.md` v4.115.0: parse-test, div-balans, Node-harnas
+10/10 groen, Chromium-weergave bekeken. Live niet getest op 09-11.
