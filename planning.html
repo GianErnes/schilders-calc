@@ -145,6 +145,10 @@
   .kennis .krij .st.verschoven { color: var(--amber); }
   .kennis .krij .st.bounce { color: var(--accent); font-weight: 600; } /* v0.19.0 */
   .kennis .krij .st.nabellen { color: var(--amber); } /* v0.19.0 */
+  .kennis .opdrachtvia { font-size: 0.74rem; color: var(--muted); padding: 0.2rem 0; } /* v0.27.0 */
+  .paneelknoppen .vink { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; margin-right: 0.6rem; cursor: pointer; } /* v0.27.0 */
+  .paneelknoppen .vinkhint { display: block; font-size: 0.72rem; color: var(--amber); margin-top: 0.25rem; } /* v0.27.0 */
+  .hkop.vervallen .wanneer { color: var(--muted); text-decoration: line-through; } /* v0.27.0 */
   .kennis .krij .st .bevestigd { color: var(--green); font-weight: 600; } /* v0.19.0 */
   .kennis .krij .st .melding, .hkaart .hkop .wanneer .melding { color: var(--ink); font-style: italic; } /* v0.25.0 */
   .kennis .knop.klein { padding: 0.2rem 0.5rem; font-size: 0.74rem; }
@@ -625,7 +629,7 @@
       <p class="hsinds">Sinds v0.13.0; tijdblokken sinds v0.14.0; reservering als tijdblok sinds v0.26.0.</p>
     </section>
 
-    <section class="hsec" id="h11" data-trefwoorden="kennisgeving kennisgevingen klant mail maand week startdag aankondiging contactpersoon aanhef versturen overslaan correctie corrigeren afgeleverd geopend bevestigd bounce niet afgeleverd nabellen historie taak taken-app teller envelop afgehandeld melding afvinken iets te melden">
+    <section class="hsec" id="h11" data-trefwoorden="kennisgeving kennisgevingen klant mail maand week startdag onderhoudsplan beurt opdracht opdrachtbevestiging december uitvoeringsjaar vinkje aankondiging contactpersoon aanhef versturen overslaan correctie corrigeren afgeleverd geopend bevestigd bounce niet afgeleverd nabellen historie taak taken-app teller envelop afgehandeld melding afvinken iets te melden">
       <h3>11. Kennisgevingen aan de klant</h3>
       <p><b>Waar.</b> Op het bord een label ✉ bij de projectrij (of faserij) en een teller in de kop; klik op de teller en je springt langs de projecten waar iets te versturen is. In het paneel het blok <b>Kennisgevingen aan de klant</b> (bij fasen: per fase, het blok volgt de gekozen fase).</p>
       <p><b>Wat.</b> Drie mails per project of fase, elk na een klik en met de tekst in beeld, nooit automatisch:</p>
@@ -636,10 +640,11 @@
       </ul>
       <p><b>Hoe.</b> Klik <b>versturen</b> bij de regel. In het venster: contactpersoon kiezen (uit Yoobi of handmatig), aanhef (heer/mevrouw/echtpaar/familie/zakelijk plus achternaam; die gokt het bord uit de Yoobi-naam, controleer hem), onderwerp en tekst aanpassen, <b>Versturen</b>. Onder de tekst zet het systeem zelf een knop <i>"Ja, ik heb dit ontvangen"</i> en je volledige mailhandtekening. Afzender info@ernes.nl, antwoorden komen op info@, kopie naar administratie@. Wil je geen mail (korte termijn, al gebeld): <b>overslaan</b>; het signaal verdwijnt en er gaat niets weg.</p>
       <p><b>Status.</b> Achter "verstuurd …" komt: <i>afgeleverd</i>, <i>geopend</i> (alleen als open-tracking bij Resend aanstaat), <i>bevestigd</i> (groen, de klant klikte de knop), <i>nog niet bevestigd</i>, of <i>NIET afgeleverd (reden)</i> (rood, fout adres). Blijft een bevestiging 3 werkdagen uit, dan wordt het label oranje <b>✉ nabellen</b> en komt er een taak "nabellen" in de taken-app bij Maud. Bij een bounce meteen een taak "NIET afgeleverd". Nabellen vervalt vanzelf als een latere kennisgeving voor hetzelfde werk wél bevestigd is. Vink je de nabel- of bouncetaak zelf af in de taken-app (bijvoorbeeld na mailcontact), typ dan in het vak <i>Iets te melden?</i> wat er gebeurd is: het signaal verdwijnt en achter de kennisgeving komt <i>nabeltaak afgehandeld … door …</i> met jouw tekst, ook in de historie. Vinkt Gian zelf af, dan gaat daar geen mail van (sinds 27-10-2026; bij Maud en de anderen wel, naar Gian).</p>
-      <p><b>Correctie.</b> Verschuift de planning na een verzending, dan wordt het label oranje en staat er <b>corrigeren</b>: dezelfde mail, maar beginnend met wat er eerder is gezegd en wat het nu wordt. Ook een correctie kun je overslaan.</p>
+      <p><b>Onderhoudsplan-beurten.</b> Staat bij een project het vinkje <b>onderhoudsplan-beurt</b> aan (onderaan het paneel, naast Verbergen), dan komt het maandsignaal niet de maandag na het inplannen maar op z'n vroegst <b>1 december van het jaar vóór de start</b>; de maandmail zegt dan "Zoals afgesproken in uw onderhoudsplan …". Daarnaast krijgt zo'n klant één <b>Opdrachtbevestiging</b> (dank voor de opdracht, met alle uitvoeringsjaren van zijn aangevinkte beurten), op de rij van de beurt met de vroegste start; de andere beurten verwijzen daarnaar. Het signaal komt de maandag na de eerste ingeplande uren van welke beurt dan ook, en alleen zolang de klant nog geen enkele kennisgeving over een beurt van dit plan kreeg (bij een lopend plan dus niet meer). Zonder vinkje gelden de gewone regels, ook voor werk jaren vooruit — zet het vinkje dus bij het inplannen van een beurt. Lijkt de naam op een beurt, dan staat er een hint bij het vinkje; beslissen doe je zelf.</p>
+      <p><b>Correctie.</b> Verschuift de planning na een verzending, dan wordt het label oranje en staat er <b>corrigeren</b>: dezelfde mail, maar beginnend met wat er eerder is gezegd en wat het nu wordt. Ook een correctie kun je overslaan. Is de (nieuwe) start al voorbij, dan verdwijnt het correctiesignaal vanzelf: het werk is begonnen, een correctiemail heeft dan geen zin meer.</p>
       <p><b>Historie.</b> Knop <b>historie · n</b> in het paneel toont elke verstuurde en overgeslagen kennisgeving van het project met datum, adres, bezorgstatus, onderwerp en de volledige tekst. Alleen lezen.</p>
       <p><b>Let op.</b> Mails van vóór 9 oktober 2026 hadden geen bevestigingsknop en geven nooit een nabel-signaal. Elke fase heeft zijn eigen cyclus; fase 1 kondigt fase 2 niet aan. De taken in de taken-app sluiten vanzelf bij versturen, overslaan of bevestigen; ze hoef je daar niet af te vinken (nabel- en bouncetaken mag je wél handmatig afvinken). De begintijd in de startdagmail is een indeling van de geplande uren, geen afspraak die de planning vastlegt.</p>
-      <p class="hsinds">Sinds v0.15.0; aanhef v0.16.0; correctietekst v0.16.1; status, bevestigen en nabellen v0.19.x; historie v0.21.0; afzender info@ v0.21.1; per fase v0.22.0; afgehandelde nabeltaak met melding v0.25.0.</p>
+      <p class="hsinds">Sinds v0.15.0; aanhef v0.16.0; correctietekst v0.16.1; status, bevestigen en nabellen v0.19.x; historie v0.21.0; afzender info@ v0.21.1; per fase v0.22.0; afgehandelde nabeltaak met melding v0.25.0; correctiesignaal stopt bij een voorbije start v0.26.1; onderhoudsplan-beurten en opdrachtbevestiging v0.27.0.</p>
     </section>
 
     <section class="hsec" id="h12" data-trefwoorden="over datum rood knop herplannen sluiten yoobi werkdagen regen niet uitgevoerd">
@@ -657,7 +662,8 @@
       <p><b>Paraplu-projecten.</b> Hoofdprojecten in Yoobi met de naam "Onderhoud… plan jjjj-jjjj" (twee jaartallen met een streepje, zoals "Onderhoudsplan 2026-2032" of "Onderhouds garantie+ Plan 2026-2032") staan standaard niet op het bord: het werk zit in de jaarlijkse deelprojecten. Ze staan onder Verborgen projecten met het label <i>regel</i>; <b>toon</b> haalt ze alsnog op het bord, <b>Verbergen</b> zet die uitzondering weer uit.</p>
       <p><b>Nog geen datum in Yoobi.</b> Kaart rechts met projecten uit Yoobi zonder startdatum. Zet in Yoobi een datum en ververs, of verberg het project hier.</p>
       <p><b>Let op.</b> Een deelproject ("Onderhoudsplan 2027", één jaartal) valt niet onder de regel en staat gewoon op het bord.</p>
-      <p class="hsinds">Verbergen sinds v0.4.0; paraplu-regel sinds v0.17.0, verruimd in v0.17.1.</p>
+      <p><b>Onderhoudsplan-beurt.</b> Het vinkje naast Verbergen hoort bij de losse beurt-projecten (niet bij het paraplu-project) en stuurt de kennisgevingen, zie 11.</p>
+      <p class="hsinds">Verbergen sinds v0.4.0; paraplu-regel sinds v0.17.0, verruimd in v0.17.1; vinkje onderhoudsplan-beurt v0.27.0.</p>
     </section>
 
     <section class="hsec" id="h14" data-trefwoorden="yoobi verversen ophalen stand peildatum sync projecten nieuw">
@@ -717,7 +723,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.26.0';
+const APP_VERSION = '0.27.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -1481,8 +1487,9 @@ function tekenPaneel() {
     '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Nog te plannen = planbaar budget − ingepland over alle jaren (vanaf ' + PLAN_AFTREK_VANAF + ' uur gaat ' + PLAN_AFTREK_PCT + '% van het budget af voor indirecte uren, net als op de werkbon); nog te werken = volle budget − geboekt. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
     middelenHtml(p, null, d) +
     kennisHtml(p, null) +
-    '<div class="paneelknoppen"><button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
+    '<div class="paneelknoppen">' + onderhoudVinkHtml(p) + '<button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
+  koppelOnderhoudVink(el, p); // v0.27.0
   koppelMiddelen(el, p, null, d);
   koppelKennis(el, p, null);
   const inS = document.getElementById('pStart'), inE = document.getElementById('pEind');
@@ -1526,9 +1533,10 @@ function tekenFasePaneel(el, p) {
   h += middelenHtml(p, fAct, faseDatums(p, fAct)) +
     '<div class="voetnoot">Budget, geboekt, nog te plannen en nog te werken gelden voor het hele project, over alle jaren. Nog te plannen rekent met het planbare budget (vanaf ' + PLAN_AFTREK_VANAF + ' uur ' + PLAN_AFTREK_PCT + '% eraf voor indirecte uren, net als op de werkbon); nog te werken met het volle budget; per fase zie je wat erop staat, ook buiten dit jaar. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
     kennisHtml(p, fAct) + // v0.22.0: per fase
-    '<div class="paneelknoppen"><button class="knop" id="pVerberg">Verbergen</button></div>';
+    '<div class="paneelknoppen">' + onderhoudVinkHtml(p) + '<button class="knop" id="pVerberg">Verbergen</button></div>';
   el.innerHTML = h;
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
+  koppelOnderhoudVink(el, p); // v0.27.0
   koppelMiddelen(el, p, fAct, faseDatums(p, fAct));
   koppelKennis(el, p, fAct);
   el.querySelectorAll('.fase').forEach(div => {
@@ -2073,6 +2081,23 @@ async function zetZichtbaar(code, zichtbaar) {
     if (!zichtbaar) { uitgeklapt.delete(code); if (actiefCode === code) actiefCode = null; }
     toonStatus(zichtbaar ? 'Project weer op het bord' : 'Project verborgen');
   } catch (e) { toonStatus('Opslaan mislukt: ' + (e.message || e), true); }
+  hertekenMetScroll();
+}
+// v0.27.0: vinkje onderhoudsplan-beurt (planning_11). Iedereen die ingelogd is mag het zetten (besluit Gian 09-11-2026).
+function onderhoudVinkHtml(p) {
+  const aan = isOnderhoudsplan(p);
+  const hint = !aan && ONDERHOUD_HINT.test(String(p.naam || '')) ? '<span class="vinkhint">Lijkt een onderhoudsplan-beurt: vinkje zetten? Dan komt de maandmelding pas in december vóór het uitvoeringsjaar en telt de beurt mee in de opdrachtbevestiging.</span>' : '';
+  return '<label class="vink" title="Beurt uit een onderhoudsplan: maandmelding op z\'n vroegst 1 december van het jaar ervoor; één opdrachtbevestiging per klant met de uitvoeringsjaren"><input type="checkbox" id="pOnderhoud"' + (aan ? ' checked' : '') + '> onderhoudsplan-beurt</label>' + hint;
+}
+function koppelOnderhoudVink(el, p) { const v = el.querySelector('#pOnderhoud'); if (v) v.addEventListener('change', () => zetOnderhoudsplan(p.code, v.checked)); }
+async function zetOnderhoudsplan(code, aan) {
+  const velden = { yoobi_code: code, onderhoudsplan: !!aan };
+  try {
+    const r = await sb.from('plan_projecten').upsert(velden, { onConflict: 'yoobi_code' }).select();
+    if (r.error) throw r.error;
+    planProjecten[code] = (r.data && r.data[0]) || { ...(planProjecten[code] || {}), ...velden };
+    toonStatus(aan ? 'Onderhoudsplan-beurt: maandmelding in december vóór het uitvoeringsjaar' : 'Gewoon project: maandmelding na het inplannen');
+  } catch (e) { toonStatus('Opslaan mislukt: ' + (e.message || e) + (/onderhoudsplan/.test(String(e.message || e)) ? ' — staat planning_11_onderhoudsplan.sql er al?' : ''), true); }
   hertekenMetScroll();
 }
 function tekenVerborgen() {
@@ -2686,7 +2711,11 @@ async function herlaad() {
 const KENNIS_FUNCTIE_URL = SUPABASE_URL + '/functions/v1/planning-kennisgeving';
 const YOOBI_FUNCTIE_URL = SUPABASE_URL + '/functions/v1/yoobi-klant';
 const KENNIS_SOORTEN = ['maand', 'week', 'dag'];
-const KENNIS_NAAM = { maand: 'Maand', week: 'Week', dag: 'Startdag' };
+const KENNIS_ALLE = ['opdracht', 'maand', 'week', 'dag']; // v0.27.0: opdracht alleen bij onderhoudsplan-beurten, als eerste in de cyclus
+const KENNIS_NAAM = { opdracht: 'Opdrachtbevestiging', maand: 'Maand', week: 'Week', dag: 'Startdag' };
+// v0.27.0: 'Maandkennisgeving' maar 'Opdrachtbevestiging' (niet 'Opdrachtbevestigingkennisgeving').
+function kennisTitel(soort) { return soort === 'opdracht' ? 'Opdrachtbevestiging' : KENNIS_NAAM[soort] + 'kennisgeving'; }
+const ONDERHOUD_HINT = /onderhoud|beurt|inspectie|controle/i; // v0.27.0: alleen een hint bij het vinkje, beslist niets
 const MAANDEN_LANG = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
 const DAGEN_LANG = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
 // Werkdag zoals in planning-ics v2 (letterlijk overgenomen): blokken in minuten na middernacht.
@@ -2718,6 +2747,7 @@ function isEersteFase(code, f) { const fs = fasenVan(code); return !!(f && fs.le
 function kennisFasen(p) { const fs = fasenVan(p.code); return fs.length ? fs : [null]; }
 // Rij uit plan_kennisgevingen in de cache zetten (laden, versturen, overslaan).
 function kennisNoteer(r) {
+  if (r.vervallen_op) return; // v0.27.0: vervallen rij telt niet voor signaal/status, alleen in de historie
   const sl = r.fase_id || '';
   ((kennis[r.yoobi_code] = kennis[r.yoobi_code] || {})[sl] = kennis[r.yoobi_code][sl] || {})[r.soort] = r;
   if (!r.overgeslagen) ((kennisOoitVerstuurd[r.yoobi_code] = kennisOoitVerstuurd[r.yoobi_code] || {})[sl] = kennisOoitVerstuurd[r.yoobi_code][sl] || {})[r.soort] = true;
@@ -2728,7 +2758,7 @@ function kennisSleutels(code, f) { return f ? (isEersteFase(code, f) ? ['', f.id
 function kennisVan(code, f) {
   const alles = kennis[code] || {};
   const uit = {};
-  for (const sl of kennisSleutels(code, f)) for (const soort of KENNIS_SOORTEN) {
+  for (const sl of kennisSleutels(code, f)) for (const soort of KENNIS_ALLE) { // v0.27.0: ook opdracht
     const r = (alles[sl] || {})[soort];
     if (r && (!uit[soort] || String(r.verzonden_op) > String(uit[soort].verzonden_op))) uit[soort] = r;
   }
@@ -2773,7 +2803,7 @@ function zelfdePeriode(soort, a, b) {
 //                gebruikt (bevestigd_op leeg), geen bounce, geen correctie open, start niet voorbij;
 //                v0.19.2: alleen als de mail een knop had (bevestig_token gevuld) — mails van vóór
 //                v0.19.0 konden niet bevestigd worden en mogen geen nabel-signaal geven
-// Dezelfde regels staan in Edge Function planning-kennisgeving-taken (v1.4); wijzig je ze, wijzig beide.
+// Dezelfde regels staan in Edge Function planning-kennisgeving-taken (v1.4, uitgerold 09-11-2026); wijzig je ze, wijzig beide.
 const KENNIS_NABEL_WERKDAGEN = 3; // besluit Gian 09-10-2026
 // v0.25.0: de handmatig afgevinkte nabel- of bouncetaak die bij deze verzending hoort, of null.
 // Hoort erbij als hij ná de verzending is afgevinkt en (bij een oudere rij in de historie) vóór de
@@ -2806,6 +2836,39 @@ function werkdagenNa(van, tot) {
   for (const d = new Date(a); d < b;) { d.setDate(d.getDate() + 1); if (d.getDay() >= 1 && d.getDay() <= 5) n++; }
   return n;
 }
+// ---------- v0.27.0: onderhoudsplan-beurten (besluiten Gian 09-11-2026) ----------
+// Vinkje plan_projecten.onderhoudsplan (planning_11). Maandsignaal op z'n vroegst 1 december van
+// het jaar vóór de start; één opdrachtbevestiging per klant (klantcode uit de Yoobi-stand) met de
+// uitvoeringsjaren, gedragen door de beurt met de vroegste start. Zelfde regels in planning-kennisgeving-taken v1.5.
+function isOnderhoudsplan(p) { const pl = p && planProjecten[p.code]; return !!(pl && pl.onderhoudsplan === true); }
+function beurtenVanKlant(p) {
+  if (!stand || !p || !p.klantcode) return isOnderhoudsplan(p) ? [p] : [];
+  return stand.projecten.filter(q => q.code && q.klantcode === p.klantcode && isOnderhoudsplan(q) && !isVerborgen(q));
+}
+// De beurt met de vroegste start (bij gelijke start de laagste code); null zonder start.
+function opdrachtDrager(p) {
+  let beste = null, bs = null;
+  for (const q of beurtenVanKlant(p)) { const st = projectStart(q); if (!st) continue; if (!beste || st < bs || (st.getTime() === bs.getTime() && q.code < beste.code)) { beste = q; bs = st; } }
+  return beste;
+}
+function isOpdrachtDrager(p, f) { const d = isOnderhoudsplan(p) ? opdrachtDrager(p) : null; return !!(d && d.code === p.code && (!f || isEersteFase(p.code, f))); }
+function opdrachtJarenLijst(p) {
+  const jaren = new Set();
+  for (const q of beurtenVanKlant(p)) { const fs = fasenVan(q.code); if (fs.length) { for (const g of fs) if (g.van) jaren.add(vanIso(g.van).getFullYear()); } else { const st = projectStart(q); if (st) jaren.add(st.getFullYear()); } }
+  return [...jaren].sort((a, b) => a - b);
+}
+function jarenTekst(j) { return j.length <= 1 ? String(j[0] || '') : j.slice(0, -1).join(', ') + ' en ' + j[j.length - 1]; }
+function opdrachtJaren(p) { return jarenTekst(opdrachtJarenLijst(p)); }
+// Heeft deze klant al een kennisgeving (welke soort ook, ook overgeslagen; vervallen telt niet) over een beurt van dit plan?
+// Dan geen opdrachtbevestiging meer: het plan loopt al (bestaande klanten bij het aanzetten van het vinkje).
+function groepHeeftKennisgeving(p) { return beurtenVanKlant(p).some(q => { const k = kennis[q.code] || {}; return Object.keys(k).some(sl => Object.keys(k[sl] || {}).length > 0); }); }
+// Eerste uren van welke beurt van deze klant dan ook (voor het opdrachtsignaal).
+function opdrachtUrenEerste(p) { let m = null; for (const q of beurtenVanKlant(p)) { const u = urenEerste[q.code]; if (u && (!m || u < m)) m = u; } return m; }
+// Maandsignaal van een beurt: niet vóór 1 december van het jaar vóór de start.
+function decemberGrens(start) { return new Date(start.getFullYear() - 1, 11, 1); }
+// v0.27.0: periode-tekst met project erbij, voor de soort opdracht (jaren) — anders periodeTekst.
+function kennisPeriodeTekst(p, soort, start) { return soort === 'opdracht' ? opdrachtJaren(p) : periodeTekst(soort, start); }
+
 function kennisStatus(p, f) {
   const start = kennisStart(p, f);
   const vandaag = new Date(); vandaag.setHours(0, 0, 0, 0);
@@ -2819,13 +2882,14 @@ function kennisStatus(p, f) {
       // de maandag ná de dag waarop de eerste uren zijn ingepland
       const ue = urenEersteVan(p.code, f); // v0.22.0: per fase
       if (ue) { const e = vanIso(ue); vanaf = maandagVan(e); vanaf.setDate(vanaf.getDate() + 7); }
+      if (vanaf && start && isOnderhoudsplan(p)) { const g = decemberGrens(start); if (g > vanaf) vanaf = g; } // v0.27.0
     } else if (start) {
       vanaf = maandagVan(start); vanaf.setDate(vanaf.getDate() - (soort === 'week' ? 14 : 7));
     }
     const startVoorbij = start && start < vandaag;
     const nodig = !verborgen && !rij && !!vanaf && vandaag >= vanaf && !!start && !startVoorbij;
     const bijVerz = rij && !rij.overgeslagen && rij.start_bij_verzending ? vanIso(rij.start_bij_verzending) : null;
-    const verschoven = !!(bijVerz && start && !zelfdePeriode(soort, bijVerz, start));
+    const verschoven = !!(bijVerz && start && !zelfdePeriode(soort, bijVerz, start)) && !startVoorbij; // v0.26.1: geen correctie meer als de start voorbij is (besluit Gian 09-11-2026; ook in planning-kennisgeving-taken v1.4)
     // v0.19.0: status van een echt verstuurde mail (brok 8-kolommen; leeg zolang de webhook niet is ingesteld)
     const echt = !verborgen && rij && !rij.overgeslagen && !!start && !startVoorbij;
     const afgehandeld = echt ? nabelTaakVan(rij) : null; // v0.25.0: handmatig afgevinkte taak → geen signaal meer (de ochtendronde zet hem ook niet terug)
@@ -2834,25 +2898,43 @@ function kennisStatus(p, f) {
     const nabellen = !!(echt && !bounce && !afgehandeld && rij.bevestig_token && !rij.bevestigd_op && !verschoven && verz && !isNaN(verz.getTime()) && werkdagenNa(verz, vandaag) >= KENNIS_NABEL_WERKDAGEN);
     uit[soort] = { rij, nodig, verschoven, vanaf, start, bounce, nabellen, afgehandeld, gedektDoor: null };
   }
+  // v0.27.0: opdrachtbevestiging, alleen op de drager-beurt van een onderhoudsplan; geen correctie-variant.
+  if (isOpdrachtDrager(p, f)) {
+    const rij = k.opdracht || null;
+    let vanaf = null;
+    const ue = opdrachtUrenEerste(p);
+    if (ue) { const e = vanIso(ue); vanaf = maandagVan(e); vanaf.setDate(vanaf.getDate() + 7); }
+    const startVoorbij = start && start < vandaag;
+    const nodig = !verborgen && !rij && !groepHeeftKennisgeving(p) && !!vanaf && vandaag >= vanaf && !!start && !startVoorbij;
+    const echt = !verborgen && rij && !rij.overgeslagen && !!start && !startVoorbij;
+    const afgehandeld = echt ? nabelTaakVan(rij) : null;
+    const bounce = !!(echt && rij.bounce_op && !afgehandeld);
+    const verz = echt && rij.verzonden_op ? new Date(rij.verzonden_op) : null;
+    const nabellen = !!(echt && !bounce && !afgehandeld && rij.bevestig_token && !rij.bevestigd_op && verz && !isNaN(verz.getTime()) && werkdagenNa(verz, vandaag) >= KENNIS_NABEL_WERKDAGEN);
+    const o = { rij, nodig, verschoven: false, vanaf, start, bounce, nabellen, afgehandeld, gedektDoor: null };
+    for (const soort of KENNIS_SOORTEN) { const x = uit[soort]; delete uit[soort]; uit[soort] = x; } // opdracht vooraan
+    uit.opdracht = o; for (const soort of KENNIS_SOORTEN) { const x = uit[soort]; delete uit[soort]; uit[soort] = x; }
+  }
   // v0.22.0 (besluit Gian 22-10-2026): nabellen vervalt als een látere kennisgeving (week ná maand,
   // startdag ná maand/week) wél bevestigd is, die bevestiging dateert van ná de verzending van de
   // onbevestigde mail, en die latere kennisgeving zelf niet verschoven is. Een oude bevestiging van
   // een inmiddels verschoven startdag zegt niets over een later gestuurde weekmail.
-  for (let i = 0; i < KENNIS_SOORTEN.length; i++) {
-    const x = uit[KENNIS_SOORTEN[i]];
+  const volg = Object.keys(uit); // v0.27.0: opdracht (als aanwezig), maand, week, dag
+  for (let i = 0; i < volg.length; i++) {
+    const x = uit[volg[i]];
     if (!x.nabellen) continue;
     const verz = new Date(x.rij.verzonden_op);
-    for (let j = i + 1; j < KENNIS_SOORTEN.length; j++) {
-      const y = uit[KENNIS_SOORTEN[j]];
-      if (y.rij && !y.rij.overgeslagen && y.rij.bevestigd_op && !y.verschoven && new Date(y.rij.bevestigd_op) > verz) { x.nabellen = false; x.gedektDoor = KENNIS_SOORTEN[j]; break; }
+    for (let j = i + 1; j < volg.length; j++) {
+      const y = uit[volg[j]];
+      if (y.rij && !y.rij.overgeslagen && y.rij.bevestigd_op && !y.verschoven && new Date(y.rij.bevestigd_op) > verz) { x.nabellen = false; x.gedektDoor = volg[j]; break; }
     }
   }
   return uit;
 }
-function kennisTeNodig(p, f) { const s = kennisStatus(p, f); return KENNIS_SOORTEN.filter(x => s[x].nodig); }
-function kennisVerschoven(p, f) { const s = kennisStatus(p, f); return KENNIS_SOORTEN.filter(x => s[x].verschoven); }
-function kennisBounce(p, f) { const s = kennisStatus(p, f); return KENNIS_SOORTEN.filter(x => s[x].bounce); } // v0.19.0
-function kennisNabellen(p, f) { const s = kennisStatus(p, f); return KENNIS_SOORTEN.filter(x => s[x].nabellen); } // v0.19.0
+function kennisTeNodig(p, f) { const s = kennisStatus(p, f); return Object.keys(s).filter(x => s[x].nodig); } // v0.27.0: ook opdracht
+function kennisVerschoven(p, f) { const s = kennisStatus(p, f); return Object.keys(s).filter(x => s[x].verschoven); }
+function kennisBounce(p, f) { const s = kennisStatus(p, f); return Object.keys(s).filter(x => s[x].bounce); } // v0.19.0
+function kennisNabellen(p, f) { const s = kennisStatus(p, f); return Object.keys(s).filter(x => s[x].nabellen); } // v0.19.0
 function kennisIetsOpen(p, f) { return !!(kennisTeNodig(p, f).length || kennisVerschoven(p, f).length || kennisBounce(p, f).length || kennisNabellen(p, f).length); }
 // v0.22.0: lijst van { p, f } met een open signaal; één per fase (f = null zonder fasen).
 function projectenMetKennis() {
@@ -2906,7 +2988,9 @@ function kennisHtml(p, f) {
   let h = '<div class="kennis"><h3>Kennisgevingen aan de klant' + (f ? ' · ' + esc(f.naam) : '') + '</h3>' + // v0.22.0: per fase
     '<div class="contact">Aan: ' + contact + ' <button class="knop klein" data-kcontact title="Contactpersoon kiezen of wijzigen">wijzig</button>' +
     (nHist ? ' <button class="knop klein" data-khistorie title="Alle verstuurde en overgeslagen kennisgevingen van dit project, met onderwerp en tekst">historie · ' + nHist + '</button>' : '') + '</div>'; // v0.21.0
-  for (const soort of KENNIS_SOORTEN) {
+  const drager = isOnderhoudsplan(p) && !s.opdracht ? opdrachtDrager(p) : null; // v0.27.0: beurt die niet zelf de opdrachtbevestiging draagt
+  if (drager) h += '<div class="opdrachtvia">Opdrachtbevestiging van dit onderhoudsplan loopt via ' + esc(drager.naam) + ' (' + esc(drager.code) + ').</div>';
+  for (const soort of Object.keys(s)) { // v0.27.0: opdracht erbij als die er is
     const x = s[soort];
     let st, klasse = '';
     if (x.rij && x.rij.overgeslagen) st = (kennisOoitEcht(p.code, soort, f) ? 'correctie overgeslagen ' : 'overgeslagen ') + fmtDatum(new Date(x.rij.verzonden_op)) + (x.rij.door ? ' door ' + esc(x.rij.door.split('@')[0]) : '');
@@ -2921,8 +3005,9 @@ function kennisHtml(p, f) {
     }
     else if (x.nodig) { st = 'kan verstuurd worden'; klasse = ' nodig'; }
     else if (!x.start) st = 'nog geen startdatum';
-    else if (x.vanaf) st = 'vanaf ' + fmtDatum(x.vanaf);
-    else st = soort === 'maand' ? 'nog geen uren ingepland' : '—';
+    else if (x.vanaf) st = 'vanaf ' + fmtDatum(x.vanaf) + (soort === 'maand' && isOnderhoudsplan(p) && x.vanaf.getTime() === decemberGrens(x.start).getTime() ? ' (beurt: december vóór het uitvoeringsjaar)' : ''); // v0.27.0
+    else if (soort === 'opdracht' && groepHeeftKennisgeving(p)) st = 'niet meer nodig: klant kreeg al kennisgevingen over dit plan'; // v0.27.0
+    else st = soort === 'maand' || soort === 'opdracht' ? 'nog geen uren ingepland' : '—';
     h += '<div class="krij"><span class="soort">' + KENNIS_NAAM[soort] + '</span><span class="st' + klasse + '">' + st + '</span>' +
       (x.start ? '<button class="knop klein' + (x.nodig || x.verschoven ? ' primair' : '') + '" data-kverstuur="' + soort + '">' + (x.verschoven ? 'corrigeren' : x.rij && !x.rij.overgeslagen ? 'opnieuw' : 'versturen') + '</button>' : '') +
       ((!x.rij || x.verschoven) && x.start ? '<button class="knop klein" data-koverslaan="' + soort + '" title="' + (x.verschoven ? 'Geen correctiemail (klant al anders geïnformeerd), signaal weg' : 'Geen mail, wel afgehandeld') + '">overslaan</button>' : '') + // v0.18.2: ook bij corrigeren
@@ -3008,6 +3093,7 @@ function kennisAanhefVan(p) {
 }
 // v0.16.1: eerdere (niet-overgeslagen) verzending voor deze soort, als de periode sindsdien is veranderd.
 function kennisVorige(p, soort, f) {
+  if (soort === 'opdracht') return null; // v0.27.0: geen correctie-variant
   const rij = kennisVan(p.code, f)[soort]; // v0.22.0: per fase
   if (!rij || rij.overgeslagen || !rij.start_bij_verzending) return null;
   const start = kennisStart(p, f);
@@ -3040,6 +3126,12 @@ function kennisTekst(p, soort, aanhefRegel, f) {
     const tijden = startTijden(p.code, naarIso(start));
     const wie = startRegel(tijden); // v0.18.1
     kern = 'In afwijking van ons eerdere bericht: ' + werk + (ev ? ' start' : ' starten') + ' niet op ' + vorige.tekst + ' maar op ' + fmtDatumLang(start) + '.' + (wie ? ' ' + wie : '') + '\n\n' + thuisZin(tijden);
+  } else if (soort === 'opdracht') { // v0.27.0
+    kern = 'Hartelijk dank voor uw opdracht voor het onderhoudsplan. Wij hebben de onderhoudsbeurten voorlopig ingepland in ' + opdrachtJaren(p) + '.\n\n' +
+      'In december voorafgaand aan elk uitvoeringsjaar laten wij u weten in welke maand de beurt gepland staat. Ongeveer twee weken voor de start volgt de precieze week, en in de week ervoor de startdag. Heeft u tussentijds vragen of wijzigingen, laat het ons dan gerust weten.';
+  } else if (soort === 'maand' && isOnderhoudsplan(p)) { // v0.27.0: beurt uit een onderhoudsplan, geen 'dank voor uw opdracht' meer
+    kern = 'Zoals afgesproken in uw onderhoudsplan staat de onderhoudsbeurt (' + (p.naam || ('project ' + p.code)) + (faseLabel(p, f) ? ', ' + faseLabel(p, f) : '') + ') voor komend jaar voorlopig ingepland in ' + maandTekst(start) + '.\n\n' +
+      'Ongeveer twee weken voor de start laten wij u de precieze week weten en in de week ervoor de startdag. Heeft u in die periode al iets waar wij rekening mee moeten houden, laat het ons dan gerust weten.';
   } else if (soort === 'maand') {
     kern = (ev ? 'Wij hebben ' + werk : 'Hartelijk dank voor uw opdracht. Wij hebben ' + werk) + ' voorlopig ingepland in ' + maandTekst(start) + '.\n\n' +
       'Ongeveer twee weken voor de start laten wij u de precieze week weten en in de week ervoor de startdag. Heeft u in die periode al iets waar wij rekening mee moeten houden, laat het ons dan gerust weten.';
@@ -3056,6 +3148,8 @@ function kennisTekst(p, soort, aanhefRegel, f) {
 function kennisOnderwerp(p, soort, f) {
   const start = kennisStart(p, f);
   const proj = (p.naam || ('project ' + p.code)) + (faseLabel(p, f) ? ', ' + faseLabel(p, f) : ''); // v0.22.0
+  if (soort === 'opdracht') return 'Uw onderhoudsplan: planning van de beurten'; // v0.27.0
+  if (soort === 'maand' && isOnderhoudsplan(p)) return (kennisVorige(p, soort, f) ? 'Gewijzigd: ' : '') + 'Onderhoudsplan, beurt ' + start.getFullYear() + ': ' + maandTekst(start); // v0.27.0
   return (kennisVorige(p, soort, f) ? 'Gewijzigd: ' : '') + (soort === 'maand' ? 'Planning schilderwerk ' + proj + ': ' + maandTekst(start)
     : soort === 'week' ? 'Planning schilderwerk ' + proj + ': ' + weekTekst(start).replace(/ \(.*\)$/, '')
     : 'Start schilderwerk ' + proj + ': ' + fmtDatumLang(start));
@@ -3093,6 +3187,12 @@ function historieKaart(rij) {
   const wanneer = fmtDatum(new Date(rij.verzonden_op)) + (rij.door ? ' door ' + esc(rij.door.split('@')[0]) : '');
   const fz = rij.fase_id ? vindFase(rij.yoobi_code, rij.fase_id) : null; // v0.22.0
   const soort = (KENNIS_NAAM[rij.soort] || rij.soort) + (fz ? ' · ' + fz.naam : '');
+  if (rij.vervallen_op) { // v0.27.0: telt niet meer mee, staat er wel
+    return '<div class="hkaart"><div class="hkop vervallen"><span class="soort">' + esc(soort) + '</span><span class="wanneer">' + (rij.overgeslagen ? 'overgeslagen ' : 'verstuurd ') + wanneer + '</span></div>' +
+      '<div class="hperiode">vervallen ' + fmtDatum(new Date(rij.vervallen_op)) + (rij.vervallen_reden ? ': ' + esc(rij.vervallen_reden) : '') + ' · telt niet meer mee voor het signaal</div>' +
+      (rij.periode_tekst ? '<div class="hperiode">was voor ' + esc(rij.periode_tekst) + '</div>' : '') +
+      (rij.onderwerp ? '<div class="honderwerp">' + esc(rij.onderwerp) + '</div>' : '') + '</div>';
+  }
   if (rij.overgeslagen) {
     return '<div class="hkaart"><div class="hkop overgeslagen"><span class="soort">' + esc(soort) + '</span><span class="wanneer">overgeslagen ' + wanneer + '</span></div>' +
       (rij.periode_tekst ? '<div class="hperiode">signaal voor ' + esc(rij.periode_tekst) + ' · geen mail verstuurd</div>' : '<div class="hperiode">geen mail verstuurd</div>') + '</div>';
@@ -3170,7 +3270,7 @@ async function openKennisModaal(p, soort, f) {
   kennisTekstHandmatig = false;
   const pl = planProjecten[p.code] || {};
   const huidig = pl.contact_email ? { naam: pl.contact_naam || '', email: pl.contact_email, vorm: pl.contact_aanspreekvorm || '', achternaam: pl.contact_achternaam || '' } : (pl.contact_aanspreekvorm ? { naam: '', email: '', vorm: pl.contact_aanspreekvorm, achternaam: pl.contact_achternaam || '' } : null);
-  document.getElementById('kennisTitel').textContent = soort ? KENNIS_NAAM[soort] + 'kennisgeving · ' + p.klant + (f ? ' · ' + f.naam : '') : 'Contactpersoon · ' + p.klant; // v0.22.0: fase in de titel
+  document.getElementById('kennisTitel').textContent = soort ? kennisTitel(soort) + ' · ' + p.klant + (f ? ' · ' + f.naam : '') : 'Contactpersoon · ' + p.klant; // v0.22.0: fase in de titel
   document.getElementById('kennisMelding').textContent = '';
   document.getElementById('kennisVerstuur').textContent = soort ? 'Versturen' : 'Bewaren';
   document.getElementById('kennisVerstuur').disabled = false;
@@ -3211,7 +3311,7 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
     yoobi_code: p.code, soort, fase_id: f ? f.id : null, aan: c.email, aan_naam: c.naam || null,
     onderwerp: document.getElementById('kennisOnderwerp').value.trim(),
     tekst: document.getElementById('kennisTekst').value.trim(),
-    periode_tekst: periodeTekst(soort, start), start_bij_verzending: naarIso(start),
+    periode_tekst: kennisPeriodeTekst(p, soort, start), start_bij_verzending: naarIso(start), // v0.27.0: opdracht = jaren
   };
   if (!body.onderwerp || body.tekst.length < 20) { meld.textContent = 'Onderwerp en tekst zijn verplicht.'; knop.disabled = false; return; }
   meld.textContent = 'Versturen…';
@@ -3229,7 +3329,7 @@ document.getElementById('kennisVerstuur').addEventListener('click', async () => 
     sluitKennisModaal();
     hertekenMetScroll();
     const nTaak = await kennisSluitTaak(p.code, soort, f); // v0.18.0
-    toonStatus(js.vastgelegd === false ? 'Mail verstuurd, maar het vastleggen is mislukt: ' + (js.error || '') : KENNIS_NAAM[soort] + 'kennisgeving verstuurd aan ' + c.email + kennisTaakTekst(nTaak), js.vastgelegd === false);
+    toonStatus(js.vastgelegd === false ? 'Mail verstuurd, maar het vastleggen is mislukt: ' + (js.error || '') : kennisTitel(soort) + ' verstuurd aan ' + c.email + kennisTaakTekst(nTaak), js.vastgelegd === false);
   } catch (e) {
     meld.textContent = 'Versturen mislukt: ' + (e.message || e) + (/404|405/.test(String(e.message || e)) ? ' — is de Edge Function planning-kennisgeving uitgerold?' : '');
     knop.disabled = false;
@@ -3265,10 +3365,10 @@ async function kennisOverslaan(p, soort, f) {
   const correctie = !!kennisStatus(p, f)[soort].verschoven; // v0.18.2: overslaan kan nu ook een correctie zijn
   const vraag = correctie
     ? 'Correctie van de ' + KENNIS_NAAM[soort].toLowerCase() + 'kennisgeving voor ' + p.klant + ' overslaan? Er gaat geen mail; het signaal verdwijnt.'
-    : KENNIS_NAAM[soort] + 'kennisgeving voor ' + p.klant + ' overslaan? Er gaat geen mail; het signaal verdwijnt.';
+    : kennisTitel(soort) + ' voor ' + p.klant + ' overslaan? Er gaat geen mail; het signaal verdwijnt.';
   if (!confirm(vraag)) return;
   const start = kennisStart(p, f); // v0.22.0
-  const rij = { yoobi_code: p.code, soort, fase_id: f ? f.id : null, overgeslagen: true, door: await sessieEmail(), periode_tekst: start ? periodeTekst(soort, start) : null, start_bij_verzending: start ? naarIso(start) : null };
+  const rij = { yoobi_code: p.code, soort, fase_id: f ? f.id : null, overgeslagen: true, door: await sessieEmail(), periode_tekst: start ? kennisPeriodeTekst(p, soort, start) : null, start_bij_verzending: start ? naarIso(start) : null }; // v0.27.0
   const r = await sb.from('plan_kennisgevingen').insert(rij).select();
   if (r.error) { toonStatus('Overslaan mislukt: ' + r.error.message + (/kennisgevingen/.test(r.error.message) ? ' — staat planning_04_kennisgevingen.sql er al?' : ''), true); return; }
   const nieuweRij = r.data && r.data[0] ? r.data[0] : { ...rij, verzonden_op: new Date().toISOString() };
@@ -3276,7 +3376,7 @@ async function kennisOverslaan(p, soort, f) {
   (kennisHistorie[p.code] = kennisHistorie[p.code] || []).unshift(nieuweRij); // v0.21.0
   hertekenMetScroll();
   const nTaak = await kennisSluitTaak(p.code, soort, f); // v0.18.0
-  toonStatus((correctie ? 'Correctie ' + KENNIS_NAAM[soort].toLowerCase() : KENNIS_NAAM[soort]) + 'kennisgeving overgeslagen' + kennisTaakTekst(nTaak));
+  toonStatus((correctie ? 'Correctie ' + KENNIS_NAAM[soort].toLowerCase() + 'kennisgeving' : kennisTitel(soort)) + ' overgeslagen' + kennisTaakTekst(nTaak));
 }
 
 async function laadData() {

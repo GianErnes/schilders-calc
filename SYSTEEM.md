@@ -5996,7 +5996,7 @@ als een latere kennisgeving wél bevestigd is.
 | `planning_09_kennisgeving_fase.sql` | kolom `fase_id` op `plan_kennisgevingen` → `plan_fasen`, `on delete set null`, index | project-guard, idempotent; gedraaid 22 oktober, drie controles GOED. Rijen zonder `fase_id` horen bij de eerste fase |
 | planning.html v0.22.0 | fasen worden bijgewerkt in plaats van verwijderd+aangemaakt; bij samenvoegen gaan hulpmiddelen en kennisgevingen van de opgeslokte fase eerst over naar de blijvende; kennisgevingen, labels, teller, paneel en mailteksten per fase; nabelregel | signaalregels blijven dubbel (brok 7 en de taken-functie). Hernummeren in twee stappen (+1000, dan definitief) vanwege de unieke beperking `plan_fasen_yoobi_code_volgnr_key` op `(yoobi_code, volgnr)` (gemeten 22 oktober) |
 | Edge Function `planning-kennisgeving` v3.2 | als v3.1, plus `fase_id` in body en rij | **Verify JWT AAN** (ongewijzigd). **Is nooit live gekomen:** op 27 oktober stond v3.1 in dashboard en repo; zie de sectie van 27 oktober (v3.3) |
-| Edge Function `planning-kennisgeving-taken` v1.4 | signalen per fase; `bron_kenmerk` krijgt `#<fase-id>` erachter bij een fase; nabelregel; fase in onderwerp/notitie van de taak | **Verify JWT UIT** (ongewijzigd). Eenmalig: open taken van fase-projecten zonder achtervoegsel worden gesloten en met achtervoegsel opnieuw aangemaakt. `index_test.ts` moet mee (handtekening `gewensteTaken` veranderd) |
+| Edge Function `planning-kennisgeving-taken` v1.4 | signalen per fase; `bron_kenmerk` krijgt `#<fase-id>` erachter bij een fase; nabelregel; fase in onderwerp/notitie van de taak | **Verify JWT UIT** (ongewijzigd). **Is op 22 oktober nooit uitgerold en nergens bewaard** — v1.3 bleef live tot 9 november 2026; zie de sectie van 9 november (opnieuw geschreven en uitgerold). Eenmalig: open taken van fase-projecten zonder achtervoegsel worden gesloten en met achtervoegsel opnieuw aangemaakt. `index_test.ts` moet mee (handtekening `gewensteTaken` veranderd) |
 
 **Bekend.** `planning-kennisgeving-bevestig` v2 sluit de nabeltaak direct
 op het kenmerk zonder achtervoegsel; voor fase 2 en hoger doet de cron
@@ -6268,3 +6268,55 @@ GitHub-geschiedenis, er is niets anders om terug te draaien.
 
 **Bewijs.** `CHANGELOG.md` v4.115.0: parse-test, div-balans, Node-harnas
 10/10 groen, Chromium-weergave bekeken. Live niet getest op 09-11.
+
+## Wat er op 9 november 2026 gedaan is: taken en planbord weer gelijk (Edge Function planning-kennisgeving-taken v1.4, planning.html v0.26.1)
+
+**Waarom.** Gian: "de taak van plannen (doorgeven maand/dag etc.) loopt
+niet altijd helemaal synchroon met de planning." Gemeten via de
+Supabase-koppeling: de live functie was nog v1.3 van 9 oktober (versie 9).
+De v1.4 uit de uitrollijst van v0.22.0 (22 oktober, stap 3) is nooit
+uitgerold en stond ook niet in `ernes-edge-functions` — die map is de
+automatische spiegel van wat in Supabase staat, dus daar stond v1.3.
+Het bord rekende sinds 22 oktober per fase, de ochtendronde per project
+met de start van de eerste fase. In `taken` (laatste 14 dagen) zichtbaar
+als: spooktaken "Correctie maandaankondiging … (april 2027 → oktober
+2026)" bij Satijn, Göttgens, Beekman en Adriolo (3 en 7 nov aangemaakt,
+handmatig afgevinkt, elke ochtend terug); geen taken voor fase 2 zodra
+fase 1 voorbij was; taken zonder `#fase-id` die planning.html bij
+versturen niet terugvond.
+
+**Wat er is.**
+- Edge Function `planning-kennisgeving-taken` **v1.4** (versie 10 in
+  Supabase, dezelfde dag opgevolgd door v1.5 = versie 11, Verify JWT UIT, cron en `x-aftap-key` ongewijzigd): opnieuw
+  geschreven uit de live v1.3 plus brok 7 van planning.html. Per fase,
+  `#<fase-id>` in `bron_kenmerk` (oude vorm telt bij de eerste fase nog als
+  open), nabelregel "gedekt door latere bevestiging", handmatig afgevinkte
+  nabel-/bouncetaak (`voltooid_door` gevuld) telt als afgehandeld,
+  paraplu-regel zoals het bord, correctiesignaal stopt bij een voorbije
+  start, fase in onderwerp/notitie. Verslag noemt nu `versie` en
+  `gesloten_kenmerken`.
+- planning.html **v0.26.1**: `kennisStatus` geeft geen correctiesignaal
+  meer als de start voorbij is (besluit Gian 09-11); handleiding 11.
+- Bron en tests: `index.ts`, `index_test.mjs` (Node, 10 gevallen) en
+  `droogloop.mjs` (rekent v1.4 door op een JSON-uittreksel van de echte
+  tabellen) horen in `ernes-edge-functions/supabase/functions/
+  planning-kennisgeving-taken/`. De spiegel-actie haalt `index.ts` zelf op;
+  de twee `.mjs`-bestanden zet Gian er handmatig bij.
+
+**Gemeten.** Droogloop en echte ronde via `select net.http_post(...)` met
+de kluissleutel `aftap_secret`, antwoord in `net._http_response`
+(86257/86258): droog `gewenst 4, nieuw 2, gesloten 0`, identiek aan de
+lokale droogloop; echt `aangemaakt 2, gesloten 0, fouten []`. Eerste
+automatische run: 10-11 06:35 UTC.
+
+**Vervolg dezelfde dag: onderhoudsplan-beurten (planning.html v0.27.0, planning_11, planning-kennisgeving v3.4, planning-kennisgeving-taken v1.5, bevestig.html v1.4).**
+Maud verstuurde op 9 november maandaankondigingen voor Trilsbeek-God 2028, 2030 en 2033: de maandregel kende geen horizon. Besluiten Gian: vinkje `plan_projecten.onderhoudsplan` als bron van waarheid (geen naamregel; iedereen die ingelogd is mag het zetten); bij een aangevinkte beurt maandsignaal op z'n vroegst 1 december van het jaar vóór de start; nieuwe kennisgeving `opdracht` (dank voor de opdracht, uitvoeringsjaren van alle aangevinkte beurten van die klantcode, tekst aanpasbaar), één per klant op de beurt met de vroegste start, alleen zolang de klant nog geen kennisgeving over een beurt van dit plan kreeg; de drie te vroege mails "vervallen" (`plan_kennisgevingen.vervallen_op`, tellen niet mee, historie toont ze doorgestreept). Alles gemeten uitgerold door Claude via de koppeling: SQL (vier controles GOED), vinkje gezet bij 20261699–20261702, functies versie 17 en 11, droogloop en echte ronde (86283/86285: 1 opdrachttaak Trilsbeek erbij, de 2036-maandtaak dicht). Details en tests: CHANGELOG_planning.md v0.27.0. Nog open: Gian zet het vinkje bij de overige bestaande beurten (lijst in de chat van 09-11; bij een lopend plan komt er door de regel hierboven geen opdrachtmail meer, alleen de decembergrens gaat gelden).
+
+**Bijvangst.** Zie het vervolg hierboven; de bijvangst van de ochtend (Trilsbeek-mails jaren vooruit) is dezelfde dag opgelost.
+
+**Nood.** Spooktaken of ontbrekende taken na 10-11 → eerst
+`select content from net._http_response order by id desc limit 3` en de
+functielogs; verslag zonder `"versie":"1.4"` betekent dat een oudere
+versie draait. Terugvallen: v1.3 staat als commit c6fd484 in
+`ernes-edge-functions` (spiegel van 11-10-2026), maar die brengt de
+spooktaken terug — liever de fout in v1.4 herstellen.

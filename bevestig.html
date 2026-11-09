@@ -6,12 +6,13 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Ontvangst bevestigen · Ernes Schilders</title>
 <!--
+  v1.4 (09-11-2026): slotzin voor soort 'opdracht' (opdrachtbevestiging onderhoudsplan, planning.html v0.27.0);
   v1.3 (23-10-2026): komma voor 'en' weg in de maand-slotzin (Nederlandse zinsbouw);
   v1.2 (12-10-2026): slotzin per soort (maand/week/dag) met terugvaltekst;
   de oude vaste zin "op de afgesproken dag" klopte alleen bij de startdag.
 
-  bevestig.html v1.3 (23-10-2026) — hoort bij planning.html v0.22.x,
-  Edge Function planning-kennisgeving v3.1 (zet de link in de mail) en
+  bevestig.html v1.4 (09-11-2026) — hoort bij planning.html v0.27.x,
+  Edge Function planning-kennisgeving v3.4 (zet de link in de mail) en
   planning-kennisgeving-bevestig v2 (de API erachter).
 
   De klant komt hier via de knop "Ja, ik heb dit ontvangen" in een
@@ -76,6 +77,7 @@
   // v1.2: slotzin per soort, in lijn met de belofte in de mail zelf (kennisTekst in planning.html).
   // 'soort' komt van de functie (maand | week | dag); onbekend of leeg → neutrale terugvalzin.
   var SLOT = {
+    opdracht: 'In december voorafgaand aan elk uitvoeringsjaar hoort u van ons in welke maand de beurt gepland staat.', // v1.4
     maand: 'Ongeveer twee weken voor de start laten wij u de precieze week weten en in de week ervoor de startdag.',
     week: 'In de week voorafgaand ontvangt u van ons de exacte startdag.',
     dag: 'Wij zien u graag op de afgesproken dag.'
