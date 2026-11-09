@@ -1,3 +1,26 @@
+## v4.116.0 — Offerte-sectie Onderdelen stapelbaar (binnen én buiten in één offerte) (2026-11-09)
+
+**Aanleiding**
+- Gian 09-11, met schermafbeelding van het Offerte-blok: bij een gecombineerde binnen- en buitenofferte moeten onder Onderdelen twee blokken kunnen staan, één voor buiten en één voor binnen. Hij herinnerde zich dat dit eerder vandaag besproken was; in de doorzoekbare chats en in deze CHANGELOG was er niets over vastgelegd.
+- Oorzaak in de live index.html v4.115.0: `OFFERTE_SECTIES` had voor `onderdelen` de vlag `stapelbaar: false` (r. 5485, zo gezet in v3.57.0 en nooit gewijzigd), terwijl `werkzaamheden` `stapelbaar: true` heeft (r. 5486). De knop + Blok verschijnt alleen bij `sec.stapelbaar` (r. 6470), dus Onderdelen kon maar één tekst dragen.
+
+**Keuze (Gian akkoord, 09-11: "Graag")**
+- Alleen de vlag omzetten. Geen tussenkopje per blok in het document: beide blokken komen onder de ene kop "Welke onderdelen worden behandeld?", en de bibliotheektekst zelf begint met "Buiten:" of "Binnen:" (zelfde werkwijze als bij Werkzaamheden, waar de tekst met "- Houtwerk dekkend: …" begint). Een apart tussenkopje raakt beide documentbouwers en komt pas aan de orde als dit in de praktijk niet voldoet.
+
+**Gebouwd**
+- `OFFERTE_SECTIES`: `onderdelen` → `stapelbaar: true`. Daarmee werken + Blok (`_offCfgBlokAdd`) en × (`_offCfgBlokDel`, minimaal één blok blijft) voor deze sectie, zoals sinds v3.58.0 voor Werkzaamheden.
+- Verder niets: de HTML-voorbeeldweergave (r. ±16530) en de PDF-bouwer (r. ±16783) lopen al over alle blokken van een sectie; bestaande offertes houden hun ene blok (`_offCfg` vult `blokken` alleen aan als de lijst leeg is). Geen wijziging aan de rekenkern, de database of Edge Functions. Vijf versieankers bijgewerkt (APP_VERSION, welkomstkop, welkomstalinea, RELEASE_HIGHLIGHTS, CHANGELOG).
+
+**Wat Gian zelf doet**
+- In de tab Offerteteksten onder Onderdelen twee bibliotheekvarianten aanmaken, bijvoorbeeld "Onderdelen buiten" en "Onderdelen binnen", elk met als eerste regel "Buiten:" resp. "Binnen:" en daaronder de opsomming met streepjes.
+
+**Getest**
+- `node --check` op alle inline scriptblokken: geslaagd. Div- en scriptbalans gelijk aan v4.115.0 (1462/1465, 6/6).
+- Runtime-test (Node, 7 controles) op de uit het bestand geëxtraheerde `OFFERTE_SECTIES`, `_offCfgBlokAdd`, `_offCfgBlokDel` en `_offTekstNaarHtml`: onderdelen stapelbaar, bevindingen ongewijzigd, zes stapelbare secties (vijf oud + onderdelen), blok toevoegen/verwijderen met behoud van minimaal één blok, en een tekst "Binnen:\n- Plafonds\n- Wanden" wordt "Binnen:" gevolgd door een bulletlijst.
+
+**Niet getest**
+- In de browser/op de iPad: de knop + Blok onder Onderdelen in het Offerte-blok, het kiezen van twee varianten en de weergave in Voorbeeld en PDF. Controleer op een testcalculatie na upload.
+
 ## v4.115.0 — Rekenpaneel Calculatie-tab: inkoop materiaal en staartposten per regel (2026-11-09)
 
 **Aanleiding**
