@@ -34,7 +34,7 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.115.0 (09-11-2026) |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.117.0 (09-11-2026) |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.4.0 (12-10-2026; eerdere rijen staan nog op 14-09) |
@@ -6320,3 +6320,45 @@ functielogs; verslag zonder `"versie":"1.4"` betekent dat een oudere
 versie draait. Terugvallen: v1.3 staat als commit c6fd484 in
 `ernes-edge-functions` (spiegel van 11-10-2026), maar die brengt de
 spooktaken terug — liever de fout in v1.4 herstellen.
+
+## Ook op 9 november 2026: meetrij aan/uit en slot op de Meetstaat-tab (index.html v4.117.0, SQL meetstaat_02_actief)
+
+**Waarom.** Gian wilde per meetrij hetzelfde vinkje als op hoofdgroep,
+onderdeel en regel. Bij het lezen bleek bovendien dat de Meetstaat-tab
+geen slot had: in een verzonden offerte kon je maten wijzigen en liep
+het bedrag mee.
+
+**Wat er is.**
+- Kolom `meetstaat.actief` (boolean, default true, NULL toegestaan).
+  NULL en true tellen als aan. NULL is toegestaan omdat
+  `prullenbak_herstel()` rijen terugzet met `jsonb_populate_record`; een
+  rij van vóór 09-11-2026 heeft de sleutel niet. **Maak deze kolom nooit
+  NOT NULL zolang er oude meetstaat-rijen in de prullenbak staan** (90
+  dagen, dus tot na 7 februari 2027), anders mislukt terugzetten.
+- index.html v4.117.0: `_msIsAan` is de ene plek die bepaalt of een
+  meetrij meetelt. Een automatische rij (deur, paneel, roeden) volgt de
+  kozijnrij in `bron_meetstaat_id`; dat wordt afgeleid, niet opgeslagen.
+- Twee sompaden lezen die stand: `_meetstaatSomVoorRegel` (Calculatie-tab)
+  en de inline som in `_calcTotalForArchive` (dashboard, cache, bevroren
+  bedrag). Wijzigt de een, wijzig de ander.
+- `_msTeltMee` gebruikt `_msIsAan`, dus kozijntekeningen in
+  klantdocumenten en de telling van gebrekstippen volgen vanzelf.
+- Slot: `_msOpSlot()` bewaakt toevoegen, wijzigen, verwijderen en het
+  opslaan van een tekening bij elke status behalve concept en afspraak.
+  Alleen `toggleMsActief` schrijft dan nog, en alleen de kolom `actief`.
+- De v4.116.0 (offerte-sectie Onderdelen stapelbaar) had geen eigen
+  sectie in dit dossier; die wijziging was alleen een vlag in
+  `OFFERTE_SECTIES` en staat in `CHANGELOG.md`.
+
+**Nood.** Bedrag op het dashboard wijkt af van de Calculatie-tab → de
+twee sompaden lopen uiteen; open de calculatie één keer, en kijk of
+beide `_msIsAan` gebruiken. Vinkje springt terug met een melding → de
+database weigerde of raakte nul rijen: sessie verlopen of RLS; opnieuw
+inloggen. Terugvallen: v4.116.0 uit de GitHub-geschiedenis werkt met de
+nieuwe kolom, want die versie stuurt en leest hem niet; uitgezette rijen
+tellen dan wel weer mee. De kolom kan blijven staan.
+
+**Bewijs.** `CHANGELOG.md` v4.117.0: parse-test, balansen, Node-harnas
+41/41 en rooktest 11/11 groen. Migratie gedraaid via de
+Supabase-koppeling en nagemeten (1720 rijen, alle aan). Niet getest in
+de browser of op de iPad op 09-11.

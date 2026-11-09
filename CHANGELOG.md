@@ -1,3 +1,57 @@
+## v4.117.0 — Meetrij aan/uit en slot op de Meetstaat-tab (2026-11-09)
+
+**Aanleiding**
+- Gian 09-11: "De verfsystemen, onderdelen en zelfs hoofdgroepen kun je aan en uitzetten, dezelfde logica zou ik op meetstaat onderdelen wensen."
+- Gelezen in de live index.html v4.116.0: een meetrij had geen aan/uit-stand en aantal 0 werd bij opslaan weer 1 (`_mapMeetstaatToDB`: `parseInt(ms.aantal) || 1`). Het enige middel was verwijderen.
+- Bijvangst bij het lezen: de vergrendeling gold alleen op de tabs Calculatie en Onderhoudsplan (CSS `#calculatie.is-locked`, `#onderhoud.is-locked`); `updMeetstaat`, `addMeetstaat`, `delMeetstaat` en `saveKozijnTekenaar` keken niet naar de status. In een verzonden of geaccepteerde offerte kon je dus maten wijzigen en liep het bedrag mee. Gelezen in de code, niet in de browser nagespeeld. Gian: "kan niet zo bedoeld zijn, moeten we repareren".
+
+**Keuzes (Gian, 09-11)**
+- Elke meetrij apart een vinkje (geen vinkje per onderdeel).
+- Bij een vergrendelde offerte blijft het vinkje bedienbaar, zoals bij hoofdgroep, onderdeel en regel sinds v3.11.0.
+- In de meetstaat-bijlage staat een uitgezette rij doorgestreept met "(vervalt)".
+- Oranje waarschuwing als een regel negatief uitkomt.
+- Slot op de Meetstaat-tab nu meenemen; alleen het vinkje blijft open.
+
+**Database (door Claude gedraaid via de Supabase-koppeling, 09-11)**
+- `meetstaat_02_actief.sql`: `alter table public.meetstaat add column if not exists actief boolean default true`, met projectguard. Bewust NULL toegestaan: `prullenbak_herstel()` zet terug met `jsonb_populate_record(null::public.meetstaat, rij)` (functietekst opgehaald uit `pg_proc`); een rij die vóór de migratie is weggegooid heeft de sleutel niet en krijgt NULL, wat op een NOT NULL-kolom zou mislukken. Er stonden 33 meetstaat-rijen in de prullenbak. De app leest NULL als aan.
+- Gemeten na het draaien: kolom `boolean / nullable=YES / default=true`; 1720 rijen, alle 1720 aan.
+
+**Gebouwd**
+- `_msIsAan(ms, lijst)`: een rij staat aan als zijn eigen vinkje aan staat en, voor een automatische rij (`vulling_auto`, `roeden_auto`), ook de kozijnrij in `bronMeetstaatId`. De stand van een auto-rij wordt afgeleid en niet weggeschreven, omdat `_syncVullingMeetstaat` bij een vergrendelde offerte stilstaat.
+- Rekenkern, beide sompaden: `_meetstaatSomVoorRegel` en de inline som in `_calcTotalForArchive` (dashboard, bedragen-cache, bevroren bedrag) tellen alleen rijen die aan staan. `_meetstaatAantalVoorRegel` telt bewust alle rijen, zodat een regel met alleen uitgezette rijen op 0 komt en niet terugvalt op een oud handmatig getal.
+- `_msTeltMee` begint met `_msIsAan`. Daardoor volgen zonder verdere wijziging: de kozijntekeningen in bijlage, accordpagina en doorlopende PDF (`_kozijnenVoorDocument`) en de telling van gebrekstippen en deuronderkanten (`_telGebreken`, `_telDeurOnderkanten`).
+- Meetstaat-tab: vinkje vooraan elke handmatige rij (`toggleMsActief`), uitgezette rij grijs en doorgestreept met het label "uit"; auto-rijen hebben geen vinkje en volgen hun kozijn. `toggleMsActief` schrijft alleen de kolom `actief` en zet het vinkje terug met een melding als de database een fout geeft of nul rijen raakt.
+- Overzichten: "Totalen per calc-regel" telt alleen wat aan staat en meldt "n uit"; "Project-totaal per regel-type" idem; uitgezette tekening gedimd in "Getekende kozijnen".
+- Waarschuwing: `_msNegatieveRegels` / `_msNegBannerHtml`, oranje balk boven de tabel en ⚠ bij het regeltotaal; ververst ook bij het intikken van maten.
+- Meetstaat-PDF (`printMeetstaat`): uitgezette rij doorgestreept met "(vervalt)"; telling "met meetdetail" en "n metingen" tellen alleen rijen die aan staan.
+- Slot: `_msOpSlot()` in `addMeetstaat`, `updMeetstaat`, `delMeetstaat`, `saveKozijnTekenaar` en `dupliceerKozijn`; `msKey` doet niets bij slot. In de tab zijn de velden `disabled`, de knoppen + Regel en × weg, en staat er een slotbalk. Een tekening openen om te bekijken kan nog.
+- `_mapMeetstaatFromDB` / `_mapMeetstaatToDB` dragen `actief`. Bij het dupliceren van een calculatie gaat de stand mee (`...ms`); bij "Rijen overnemen uit…", kozijn kopiëren en kozijn dupliceren komt de nieuwe rij aan binnen.
+- Vijf versieankers bijgewerkt. Geen Edge Function.
+
+**Getest**
+- `node --check` op het inline scriptblok: geslaagd. Div-balans 1465/1468 (v4.116.0: 1462/1465, drie nieuwe div's open en dicht), scripttags 6/6, CSS-accolades 678/678.
+- Runtime-test in Node op functies die rechtstreeks uit het gepatchte bestand zijn gesneden, naast dezelfde functies uit v4.116.0, 41 controles groen:
+  1. alles aan: beide sompaden geven op 60 regels exact dezelfde hoeveelheden als v4.116.0; `true` en `NULL` tellen als aan;
+  2. één rij uit scheelt precies het totaal van die rij, in beide paden;
+  3. alle rijen van een regel uit: hoeveelheid 0;
+  4. kozijn uit: m¹ van het kozijn, m² van de deur en m¹ van de roeden vallen weg, tekening uit het document, `_msTeltMee` false, de auto-rij zelf niet weggeschreven; weer aan: alles terug;
+  5. 50 willekeurige calculaties met 35% rijen uit: pad 1 en pad 2 gelijk;
+  6. opslag-mapping (NULL, ontbrekend, false);
+  7. negatieve regel: gevel uit en aftrekrij aan geeft -2 m² en een waarschuwing, beide aan geeft geen waarschuwing;
+  8. vinkje: schrijft alleen `{actief}`, herrekent, gaat terug bij databasefout en bij nul geraakte rijen, doet niets op een auto-rij, werkt bij status verzonden;
+  9. slot: bij verzonden, gereed, planbasis, geaccepteerd en verloren wijzigen `updMeetstaat`, `addMeetstaat` en `delMeetstaat` niets en schrijven niets; bij concept en afspraak werkt alles nog.
+- Rooktest: `renderMeetstaat` en `printMeetstaat` echt uitgevoerd met stubs, 11 controles groen (vinkjes, markering, waarschuwing, slotbalk, velden disabled, vinkjes niet disabled, drie keer "(vervalt)" in de print).
+
+**Niet getest**
+- In de browser en op de iPad: het vinkje aantikken, de kaartweergave op een staande iPad (het vinkje staat daar links van het rijnummer), de slotbalk, en of het cijferblok dicht blijft op een vergrendeld veld.
+- De PDF-weergave van "(vervalt)" op papier en de bijlagen zonder de uitgezette tekening.
+- `saveKozijnTekenaar`, `dupliceerKozijn` en `msKey` onder slot: de bewaking is dezelfde `_msOpSlot`-regel als in de geteste functies, maar deze drie zijn niet afzonderlijk uitgevoerd.
+- Het gedrag van het bevroren offertebedrag wanneer je in een vergrendelde offerte een meetrij uitzet. Het loopt via dezelfde weg als het vinkje op een regel (`_syncCalcTotalToDB`), niet apart nagemeten.
+
+**Bekende beperkingen**
+- Bij een vergrendelde offerte volgen de automatische staartposten voor gebreken en deuronderkanten een uitgezet kozijn niet, omdat `_syncGebrekToeslagen` daar stilstaat. Dat was al zo bij het uitzetten van een gevel (v4.75.0).
+- Een aftrekrij is een losse rij. De app zet hem niet vanzelf mee uit; de waarschuwing meldt het als de regel daardoor negatief wordt, niet als hij alleen te laag uitkomt.
+
 ## v4.116.0 — Offerte-sectie Onderdelen stapelbaar (binnen én buiten in één offerte) (2026-11-09)
 
 **Aanleiding**

@@ -1259,6 +1259,15 @@
     cursor: not-allowed;
   }
   table.meetstaat-tbl tr.ms-auto { background: var(--paper-warm); }
+  /* v4.117.0 — meetrij aan/uit: een uitgezette rij telt niet mee in de hoeveelheid */
+  table.meetstaat-tbl input.actief-toggle { width: 1.1rem; height: 1.1rem; padding: 0; margin: 0 0.3rem 0 0; vertical-align: middle; flex: 0 0 auto; }
+  table.meetstaat-tbl tr.ms-uit input[type="text"],
+  table.meetstaat-tbl tr.ms-uit select,
+  table.meetstaat-tbl tr.ms-uit .ms-totaal { text-decoration: line-through; opacity: 0.5; }
+  .ms-uit-tag { display: inline-block; margin-left: 0.3rem; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .ms-neg-banner { margin: 0 0 0.7rem 0; padding: 0.6rem 0.8rem; background: #fff4e5; border: 1px solid #f59e0b; border-radius: var(--radius); color: #7c2d12; font-size: 0.85rem; }
+  .ms-neg-banner strong { color: #b45309; }
+  .ms-lock-banner { margin: 0 0 0.7rem 0; padding: 0.6rem 0.8rem; background: var(--paper-warm); border: 1px solid var(--paper-deep); border-radius: var(--radius); font-size: 0.85rem; }
   /* v4.81.0 — kozijntekening op een regel die geen m¹ is: het hout telt niet mee */
   table.meetstaat-tbl tr.ms-tek-fout { background: #fff4e5; }
   table.meetstaat-tbl tr.ms-tek-fout select { border-color: #d97706; }
@@ -2471,8 +2480,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.116.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.117.0</h2>
       <div class="intro-body">
+        <p><strong>☑️ Meetrij aan en uit zetten, en een slot op de Meetstaat (v4.117.0).</strong> Vooraan elke rij in de Meetstaat staat nu een vinkje, hetzelfde als op hoofdgroep, onderdeel en regel. Zet je het uit, dan telt die ene meting niet meer mee: de rij wordt grijs en doorgestreept, de hoeveelheid van de regel zakt en het bedrag loopt mee. Staan alle rijen van een regel uit, dan wordt de hoeveelheid nul. Zet je een getekend kozijn uit, dan gaan zijn deuren, panelen en roeden vanzelf mee uit, verdwijnt de tekening uit de bijlagen voor de klant en tellen zijn gebrekstippen niet meer. In de meetstaat-bijlage staat een uitgezette rij doorgestreept met (vervalt). Komt een regel negatief uit omdat een aftrekrij nog aan staat, dan zie je een oranje waarschuwing boven de tabel. <strong>Daarnaast een reparatie:</strong> bij een vergrendelde offerte kon je in de Meetstaat nog maten wijzigen, rijen toevoegen en weggooien, waardoor het bedrag van een verzonden offerte kon verschuiven. Dat zit nu op slot; alleen het vinkje aan/uit blijft open, net als in de Calculatie-tab. Een tekening kun je nog bekijken, niet meer opslaan. Vereist SQL (<code>meetstaat_02_actief.sql</code>, al gedraaid).</p>
         <p><strong>📚 Onderdelen stapelbaar: binnen én buiten in één offerte (v4.116.0).</strong> De sectie Onderdelen heeft nu, net als Werkzaamheden, de knop + Blok. Bij een gecombineerde binnen- en buitenofferte kies je het blok voor buiten en zet je er een blok voor binnen onder. Maak daarvoor in de tab Offerteteksten twee bibliotheekteksten aan, bijvoorbeeld "Onderdelen buiten" en "Onderdelen binnen", elk met als eerste regel "Buiten:" of "Binnen:" en daaronder de opsomming; in het document komen ze onder één kop "Welke onderdelen worden behandeld?" te staan. Bestaande offertes houden hun ene blok. Geen SQL nodig.</p>
         <p><strong>🏗️ Rekenpaneel: inkoop materiaal en staartposten per regel (v4.115.0).</strong> Achter "Materiaal verkoop" staat nu in klein grijs het inkoopbedrag, en onder "Totaal materiaal incl. toeslagen" het bedrag dat Yoobi wil (inkoop + klein materiaal, dezelfde regel als in het Σ-paneel van de planning). Onder "Staartkosten" staat voortaan elke staartpost apart met haar bedrag; posten met het vinkje Materieel (steiger, hoogwerker) krijgen 🏗️, posten van derden het label "derden". Puur weergave, aan de rekenkern verandert niets.</p>
         <p><strong>🛡️ Verfsysteem wisselen en Bewerkingen toepassen: geen dubbele uren meer mogelijk (v4.114.0).</strong> Uit de wekelijkse controle. Tot nu toe schreef de app bij 🔄 en ⧉ eerst de nieuwe bewerkingen, wiste daarna de oude en zette bij een fout de nieuwe weer weg; viel precies daartussen de verbinding weg, dan hield een regel beide sets en zag je na herladen dubbele uren en dubbel materiaal. Het is nooit gebeurd (0 gevallen gemeten), maar het kon. Nu doet de database wissen en invoegen in één transactie: óf alles, óf niets. Krijgt de app geen antwoord, dan wordt de calculatie herladen zodat je de werkelijke stand ziet in plaats van een aanname. Klein ertussendoor: de melding na een geslaagde Yoobi-aanmaak of -koppeling is nu groen in plaats van rood. Eenmalige SQL: <code>calc_regel_stappen_vervangen.sql</code>.</p>
@@ -4055,7 +4065,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.116.0';
+const APP_VERSION = 'v4.117.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4478,6 +4488,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.117.0', d: '2026-11-09', h: 'Meetrij aan/uit met een vinkje per rij (kozijn uit neemt deuren, panelen, roeden, tekening en gebrekstippen mee; oranje waarschuwing bij negatieve regel) en een slot op de Meetstaat-tab bij een vergrendelde offerte. Vereist SQL meetstaat_02_actief.sql.' },
   { v: '4.116.0', d: '2026-11-09', h: 'Offerte-sectie Onderdelen is stapelbaar (+ Blok), zodat een gecombineerde offerte een blok Buiten en een blok Binnen kan dragen; bestaande offertes ongewijzigd.' },
   { v: '4.115.0', d: '2026-11-09', h: 'Rekenpaneel Calculatie-tab: inkoopbedrag achter Materiaal verkoop, regel "voor Yoobi: inkoop + klein mat." onder het materiaaltotaal, en elke staartpost apart onder Staartkosten (🏗️ bij materieel, label derden). Alleen weergave; rekenkern ongewijzigd.' },
   { v: '4.114.0', d: '2026-11-08', h: 'Wissel verfsysteem en Bewerkingen toepassen (controleronde, bevinding 3): oude en nieuwe bewerkingen worden nu in één databasetransactie vervangen via calc_regel_stappen_vervangen, zodat een wegvallende verbinding geen dubbele uren meer kan achterlaten; bij geen antwoord wordt de calculatie herladen. Groene melding bij geslaagde Yoobi-aanmaak en -koppeling. SQL: calc_regel_stappen_vervangen.sql.' },
@@ -8267,11 +8278,26 @@ function _mapOdToDB(od, hgId) {
 function _isActief(item) {
   return !item || item.actief !== false;
 }
+// v4.117.0 — Staat een meetrij aan? Eigen vinkje (actief !== false), en voor een
+// automatische rij (deur, paneel, roeden) bovendien het vinkje van de kozijnrij waar
+// hij uit voortkomt. Dat laatste wordt hier afgeleid en nergens weggeschreven, zodat
+// het ook werkt bij een vergrendelde offerte, waar _syncVullingMeetstaat stilstaat.
+// lijst = de meetstaat waarin de bronrij gezocht wordt (standaard die van data.calc).
+function _msIsAan(ms, lijst) {
+  if (!ms || ms.actief === false) return false;
+  if ((ms.bron === 'vulling_auto' || ms.bron === 'roeden_auto') && ms.bronMeetstaatId) {
+    const rijen = lijst || (data.calc && data.calc.meetstaat) || [];
+    const bron = rijen.find(x => x.id === ms.bronMeetstaatId);
+    if (bron && bron.actief === false) return false;
+  }
+  return true;
+}
 // v4.74.1 — Telt een meetregel (kozijntekening) mee in klantdocumenten? Alleen als de
 // calc-regel waar hij aan hangt aan staat, én zijn onderdeel, én zijn hoofdgroep
 // (erfelijk, zoals de cijfers). Zonder koppeling: meetellen, want dan is er geen
 // aan/uit-stand om op te oordelen. Werkt op de meegegeven calculatie c, niet op data.calc.
 function _msTeltMee(c, ms) {
+  if (!_msIsAan(ms, c && c.meetstaat)) return false;   // v4.117.0 — de meetrij zelf (of zijn brontekening) staat uit
   const rid = ms && ms.calcRegelId;
   if (!rid) return true;
   for (const hg of (c && c.hoofdgroepen) || []) {
@@ -9283,7 +9309,8 @@ function _mapMeetstaatFromDB(row) {
     tekening:     row.tekening || null,
     volgorde:     row.volgorde != null ? row.volgorde : 0,
     bron:         row.bron || '',
-    bronMeetstaatId: row.bron_meetstaat_id || ''
+    bronMeetstaatId: row.bron_meetstaat_id || '',
+    actief:       row.actief !== false   // v4.117.0 — NULL of ontbrekend telt als aan
   };
 }
 function _mapMeetstaatToDB(ms, calcId, idx) {
@@ -9297,7 +9324,8 @@ function _mapMeetstaatToDB(ms, calcId, idx) {
     factor:         parseFloat(ms.factor) || 1,
     opmerking:      ms.opmerking || '',
     tekening:       ms.tekening || null,
-    volgorde:       idx != null ? idx : (ms.volgorde || 0)
+    volgorde:       idx != null ? idx : (ms.volgorde || 0),
+    actief:         ms.actief !== false   // v4.117.0 — vereist kolom meetstaat.actief (meetstaat_02_actief.sql)
   };
   if (ms.bron) out.bron = ms.bron;   // alleen meesturen bij auto-regels (kolom optioneel vóór migratie)
   out.bron_meetstaat_id = ms.bronMeetstaatId || null;   // v3.67.0 — bron-tekening van een auto-regel
@@ -15800,7 +15828,8 @@ function printMeetstaat() {
   const byRegel = {};
   meetstaat.forEach(ms => {
     if (!ms.calcRegelId) return;
-    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0 };
+    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0, uit: 0 };
+    if (!_msIsAan(ms)) { byRegel[ms.calcRegelId].uit++; return; }   // v4.117.0 — uitgezette rij telt niet mee
     const t = _meetstaatRijTotaal(ms);
     byRegel[ms.calcRegelId].count++;
     byRegel[ms.calcRegelId].totaal += t.totaal;
@@ -15809,7 +15838,7 @@ function printMeetstaat() {
   // v4.4.0 — Volledig overzicht: alle posten met een hoeveelheid, ongeacht of die
   // via de meetstaat is opgebouwd of rechtstreeks in de verfsysteem-post is ingevuld.
   const posten = allRegels.filter(x => (x.regel.hoeveelheid || 0) > 0);
-  const gemetenAantal = Object.keys(byRegel).length;
+  const gemetenAantal = Object.keys(byRegel).filter(k => byRegel[k].count > 0).length;   // v4.117.0 — regels met alleen uitgezette rijen tellen niet als gemeten
 
   let html = '';
 
@@ -15918,11 +15947,13 @@ function printMeetstaat() {
       const aantal = ms.aantal || 0;
       const factor = ms.factor != null ? ms.factor : 1;
       const isLeeg = (hCm === 0 && bCm === 0 && aantal === 0);
-      const rowStyle = isLeeg ? 'opacity:0.4;' : '';
+      const msUit = !_msIsAan(ms, meetstaat);   // v4.117.0 — uitgezette rij: doorgestreept met (vervalt)
+      const rowStyle = msUit ? 'opacity:0.5; text-decoration:line-through;' : (isLeeg ? 'opacity:0.4;' : '');
+      const vervaltMs = msUit ? ' <span style="font-size:7pt; color:#888; display:inline-block; text-decoration:none;">(vervalt)</span>' : '';
       html += `<tr style="border-bottom:1px solid #e5e0d0; ${rowStyle}">
         <td style="padding:0.12rem 0.3rem; color:#888; font-family:'JetBrains Mono', monospace;">${idx+1}</td>
         <td style="padding:0.12rem 0.3rem; overflow-wrap:anywhere;">${regelLabel}</td>
-        <td style="padding:0.12rem 0.3rem; overflow-wrap:anywhere;">${omschrijving}</td>
+        <td style="padding:0.12rem 0.3rem; overflow-wrap:anywhere;">${omschrijving}${vervaltMs}</td>
         <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${bCm > 0 ? bCm : '<span style="color:#bbb;">—</span>'}</td>
         <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${hCm > 0 ? hCm : '<span style="color:#bbb;">—</span>'}</td>
         <td style="padding:0.12rem 0.3rem; text-align:right; font-family:'JetBrains Mono', monospace;">${aantal > 0 ? aantal : '<span style="color:#bbb;">—</span>'}</td>
@@ -18393,10 +18424,13 @@ function _meetstaatRijTotaal(ms) {
 function _meetstaatSomVoorRegel(regelId) {
   // Sum totals for all meetstaat-rows belonging to this calc-regel
   if (!data.calc.meetstaat) return 0;
+  // v4.117.0 — alleen rijen die aan staan tellen mee
   return data.calc.meetstaat
-    .filter(ms => ms.calcRegelId === regelId)
+    .filter(ms => ms.calcRegelId === regelId && _msIsAan(ms))
     .reduce((sum, ms) => sum + _meetstaatRijTotaal(ms).totaal, 0);
 }
+// Telt bewust ALLE rijen, ook uitgezette: een regel met alleen uitgezette rijen blijft
+// 'gemeten' en krijgt hoeveelheid 0, in plaats van terug te vallen op een oud getal.
 function _meetstaatAantalVoorRegel(regelId) {
   if (!data.calc.meetstaat) return 0;
   return data.calc.meetstaat.filter(ms => ms.calcRegelId === regelId).length;
@@ -18420,7 +18454,7 @@ function renderMeetstaat() {
   ).join('');
 
   let html = `<div class="table-scroll"><table class="meetstaat-tbl"><thead><tr>
-    <th style="width:36px;">#</th>
+    <th style="width:62px;" title="Vinkje uit: de rij telt niet mee">#</th>
     <th style="min-width:200px;">Calc-regel</th>
     <th style="min-width:140px;">Omschrijving</th>
     <th style="width:70px;">b (cm)</th>
@@ -18436,6 +18470,12 @@ function renderMeetstaat() {
   const _tekFoutRijen = data.calc.meetstaat.map((ms, i) => _msTekeningOpNietM1(ms) ? i + 1 : 0).filter(Boolean);
   if (_tekFoutRijen.length) {
     html = `<div class="ms-tek-fout-banner">⚠ <strong>${_tekFoutRijen.length === 1 ? '1 kozijntekening hangt' : _tekFoutRijen.length + ' kozijntekeningen hangen'} aan een regel die geen m¹ is</strong> (rij ${_tekFoutRijen.join(', ')}). Het kozijnhout telt daar niet mee. Kies bij die rij een m¹-regel.</div>` + html;
+  }
+  // v4.117.0 — slot: bij een vergrendelde offerte staan de maten vast; alleen het aan/uit-vinkje blijft open.
+  const _msLock = (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc));
+  html = `<div id="msNegBanner">${_msNegBannerHtml()}</div>` + html;
+  if (_msLock) {
+    html = `<div class="ms-lock-banner">🔒 <strong>Deze offerte is vergrendeld.</strong> Maten, aantallen en tekeningen staan vast. Alleen het vinkje vooraan een rij (aan/uit) kun je nog omzetten. Wil je meten of wijzigen, zet de status dan terug op Concept.</div>` + html;
   }
   data.calc.meetstaat.forEach((ms, idx) => {
     const t = _meetstaatRijTotaal(ms);
@@ -18453,26 +18493,29 @@ function renderMeetstaat() {
       ? `<span class="kozijn-thumb-btn" title="Kozijn bewerken" onclick="openKozijnTekenaar(${idx})">${_thumb}</span>`
       : `<button class="${_tk ? 'btn' : 'btn-secondary btn'} btn-sm ms-tekenbtn" title="${_tk ? 'Kozijn bewerken' : 'Kozijn tekenen'}" onclick="openKozijnTekenaar(${idx})">${_tk ? '📐' : '✏️'}</button>`;
     const _auto = _isAutoMs(ms);
-    const _dis = _auto ? 'disabled' : '';
-    const _trCls = [_auto ? 'ms-auto' : '', _tekFout ? 'ms-tek-fout' : '', (ms.opmerking || '').trim() ? 'ms-opm-open' : ''].filter(Boolean).join(' ');
+    const _dis = (_auto || _msLock) ? 'disabled' : '';
+    const _aan = _msIsAan(ms);   // v4.117.0
+    const _vink = _auto ? '' : `<input type="checkbox" class="actief-toggle" ${ms.actief !== false ? 'checked' : ''} onchange="toggleMsActief(${idx})" title="Aan/uit: een uitgezette rij telt niet mee in de hoeveelheid">`;
+    const _uitTag = _aan ? '' : '<span class="ms-uit-tag" title="Deze rij telt niet mee">uit</span>';
+    const _trCls = [_auto ? 'ms-auto' : '', _aan ? '' : 'ms-uit', _tekFout ? 'ms-tek-fout' : '', (ms.opmerking || '').trim() ? 'ms-opm-open' : ''].filter(Boolean).join(' ');
     const opmBtn = `<button class="btn-secondary btn btn-sm ms-opmbtn${(ms.opmerking || '').trim() ? ' actief' : ''}" title="Opmerking tonen of verbergen" onclick="msToggleOpm(${idx})">💬</button> `;
     html += `<tr data-row="${idx}"${_trCls ? ` class="${_trCls}"` : ''}>
-      <td><span class="ms-num">${idx+1}</span></td>
+      <td style="white-space:nowrap;">${_vink}<span class="ms-num">${idx+1}</span></td>
       <td data-label="Calc-regel"><select data-field="calcRegelId" onchange="updMeetstaat(${idx},'calcRegelId',this.value)" onkeydown="msKey(event,${idx},0)" ${_dis}>${opts}</select></td>
       <td data-label="Omschrijving"><input type="text" data-field="omschrijving" placeholder="Omschrijving" value="${ms.omschrijving||''}" onchange="updMeetstaat(${idx},'omschrijving',this.value)" onkeydown="msKey(event,${idx},1)" ${_dis}></td>
       <td data-label="b (cm)" class="ms-getal"><input type="text" inputmode="none" class="np-field" data-np-label="Breedte (cm)" data-field="bCm" value="${ms.bCm||0}" onchange="updMeetstaat(${idx},'bCm',_npInt(this.value))" onkeydown="msKey(event,${idx},2)" ${_dis}></td>
       <td data-label="h (cm)" class="ms-getal"><input type="text" inputmode="none" class="np-field" data-np-label="Hoogte (cm)" data-field="hCm" value="${ms.hCm||0}" onchange="updMeetstaat(${idx},'hCm',_npInt(this.value))" onkeydown="msKey(event,${idx},3)" ${_dis}></td>
       <td data-label="aantal" class="ms-getal"><input type="text" inputmode="none" class="np-field" data-np-label="Aantal" data-field="aantal" data-np-sign value="${ms.aantal||0}" onchange="updMeetstaat(${idx},'aantal',_npInt(this.value))" onkeydown="msKey(event,${idx},4)" ${_dis}></td>
       <td data-label="factor" class="ms-getal"><input type="text" inputmode="none" class="np-field" data-dec data-np-label="Factor" data-field="factor" data-np-sign value="${String(ms.factor != null ? ms.factor : 1).replace('.', ',')}" onchange="updMeetstaat(${idx},'factor',_npFloat(this.value,1))" onkeydown="msKey(event,${idx},5)" ${_dis}></td>
-      <td class="num right ms-totaal" data-label="Totaal">${fmt(t.totaal)} ${t.eenheid}${_tekFout ? `<span class="ms-tek-fout-tag" title="${_msTekeningFoutTekst(ms)}">⚠</span>` : ''}</td>
+      <td class="num right ms-totaal" data-label="Totaal">${fmt(t.totaal)} ${t.eenheid}${_uitTag}${_tekFout ? `<span class="ms-tek-fout-tag" title="${_msTekeningFoutTekst(ms)}">⚠</span>` : ''}</td>
       <td data-label="Opmerking"><input type="text" data-field="opmerking" placeholder="Opmerking" value="${ms.opmerking||''}" onchange="updMeetstaat(${idx},'opmerking',this.value); _msOpmSync(this)" onkeydown="msKey(event,${idx},6)" ${_dis}></td>
-      <td class="right ms-acties" style="white-space:nowrap;">${opmBtn}${_auto ? '<span class="ms-auto-tag" title="Automatisch bijgehouden uit de kozijntekeningen">auto</span>' : (`<button class="btn btn-danger btn-sm" onclick="delMeetstaat(${idx})">×</button> ` + tekenBtn)}</td>
+      <td class="right ms-acties" style="white-space:nowrap;">${opmBtn}${_auto ? '<span class="ms-auto-tag" title="Automatisch bijgehouden uit de kozijntekeningen">auto</span>' : ((_msLock ? '' : `<button class="btn btn-danger btn-sm" onclick="delMeetstaat(${idx})">×</button> `) + tekenBtn)}</td>
       <td class="ms-break"></td>
     </tr>`;
   });
   html += '</tbody></table></div>';
   const _msOvLock = (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc));   // v4.101.0
-  html += `<div style="margin-top:0.7rem; display:flex; gap:0.5rem; flex-wrap:wrap;"><button class="btn-secondary btn" onclick="addMeetstaat()">+ Regel</button>${_msOvLock ? '' : `<button class="btn-secondary btn" onclick="_msOvernemenOpen()" title="Meetstaat-rijen en kozijntekeningen overnemen uit een onderdeel of een andere calculatie"><span class="kopieer-ico">⧉</span> Rijen overnemen uit…</button>`}</div>`;
+  html += `<div style="margin-top:0.7rem; display:flex; gap:0.5rem; flex-wrap:wrap;">${_msOvLock ? '' : '<button class="btn-secondary btn" onclick="addMeetstaat()">+ Regel</button>'}${_msOvLock ? '' : `<button class="btn-secondary btn" onclick="_msOvernemenOpen()" title="Meetstaat-rijen en kozijntekeningen overnemen uit een onderdeel of een andere calculatie"><span class="kopieer-ico">⧉</span> Rijen overnemen uit…</button>`}</div>`;
 
   // v3.36.0 — Overzicht "Getekende kozijnen": alle tekeningen in deze calculatie
   const _kozijnen = [];
@@ -18487,7 +18530,7 @@ function renderMeetstaat() {
       let m1 = ms.tekening.omtrekM1 != null ? (ms.tekening.omtrekM1.toFixed(2).replace('.', ',') + ' m¹') : '';
       if (ms.tekening.roedenRegelId && +ms.tekening.roedenM1 > 0.0001) m1 += ` + roeden ${(+ms.tekening.roedenM1).toFixed(2).replace('.', ',')}`;   // v4.73.0
       const copyBtn = _gLock ? '' : `<span class="kozijn-galerij-copy" title="Kopieer dit kozijn naar het onderdeel waar je mee bezig bent" onclick="event.stopPropagation(); kopieerKozijnNaarActief(${idx})">⧉</span>`;
-      html += `<div class="kozijn-galerij-item" onclick="openKozijnTekenaar(${idx})" title="Openen">
+      html += `<div class="kozijn-galerij-item" onclick="openKozijnTekenaar(${idx})" title="${_msIsAan(ms) ? 'Openen' : 'Openen (deze rij staat uit en telt niet mee)'}"${_msIsAan(ms) ? '' : ' style="opacity:0.45;"'}>
         ${copyBtn}
         <div class="kozijn-galerij-tek">${_kozijnThumbSvg(ms.tekening, 72)}</div>
         <div class="kozijn-galerij-naam">${naam}</div>
@@ -18500,7 +18543,8 @@ function renderMeetstaat() {
   // Per calc-regel summary
   const byRegel = {};
   data.calc.meetstaat.forEach(ms => {
-    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0 };
+    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0, uit: 0 };
+    if (!_msIsAan(ms)) { byRegel[ms.calcRegelId].uit++; return; }   // v4.117.0 — uitgezette rij telt niet mee
     const t = _meetstaatRijTotaal(ms);
     byRegel[ms.calcRegelId].count++;
     byRegel[ms.calcRegelId].totaal += t.totaal;
@@ -18514,8 +18558,8 @@ function renderMeetstaat() {
       const r = ctx.regel;
       const eenheid = r.systeemEenheid || '';
       html += `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px dashed color-mix(in srgb, var(--paper-deep), var(--muted)); font-size:0.85rem;">
-        <span>${_calcRegelLabel(r, ctx)} <span style="color:var(--muted);">(${byRegel[rid].count} regel${byRegel[rid].count===1?'':'s'})</span></span>
-        <span class="mono" style="font-weight:600;">${fmt(byRegel[rid].totaal)} ${eenheid}</span>
+        <span>${_calcRegelLabel(r, ctx)} <span style="color:var(--muted);">(${byRegel[rid].count} regel${byRegel[rid].count===1?'':'s'}${byRegel[rid].uit ? ', ' + byRegel[rid].uit + ' uit' : ''})</span></span>
+        <span class="mono" style="font-weight:600;${byRegel[rid].totaal < -0.0001 ? ' color:#b45309;' : ''}">${byRegel[rid].totaal < -0.0001 ? '⚠ ' : ''}${fmt(byRegel[rid].totaal)} ${eenheid}</span>
       </div>`;
     });
     html += `</div>`;
@@ -18527,6 +18571,7 @@ function renderMeetstaat() {
   // Groepering: regel.naam + systeemId — zelfde naam + zelfde systeem mag samen.
   const byType = {};
   data.calc.meetstaat.forEach(ms => {
+    if (!_msIsAan(ms)) return;   // v4.117.0 — uitgezette rij telt niet mee in het project-totaal
     const ctx = allRegels.find(x => x.regel.id === ms.calcRegelId);
     if (!ctx) return;
     const r = ctx.regel;
@@ -18590,6 +18635,63 @@ function _msOpmSync(inp) {
   const btn = row.querySelector('.ms-opmbtn');
   if (btn) btn.classList.toggle('actief', !!(inp.value || '').trim());
 }
+// v4.117.0 — Calc-regels waarvan de meetstaat-som negatief uitkomt. Dat gebeurt als een
+// aftrekrij (aantal of factor negatief) nog aan staat terwijl de rij waar hij vanaf gaat
+// is uitgezet of ontbreekt. Een negatieve hoeveelheid rekent als negatief bedrag door.
+function _msNegatieveRegels() {
+  const out = [];
+  if (!data.calc || !Array.isArray(data.calc.meetstaat)) return out;
+  _allCalcRegels().forEach(ctx => {
+    if (_meetstaatAantalVoorRegel(ctx.regel.id) === 0) return;
+    const som = _meetstaatSomVoorRegel(ctx.regel.id);
+    if (som < -0.0001) out.push({ ctx, som });
+  });
+  return out;
+}
+function _msNegBannerHtml() {
+  const neg = _msNegatieveRegels();
+  if (!neg.length) return '';
+  const lijst = neg.map(n => `${_calcRegelLabel(n.ctx.regel, n.ctx)}: ${fmt(n.som)}`).join('; ');
+  return `<div class="ms-neg-banner">⚠ <strong>${neg.length === 1 ? '1 regel komt' : neg.length + ' regels komen'} negatief uit</strong> (${lijst}). Er staat nog een aftrekrij aan terwijl de rij waar hij vanaf gaat uit staat. Zet de aftrekrij ook uit, of de andere rij weer aan.</div>`;
+}
+// v4.117.0 — Meetrij aan/uit. Bewust ook bij een vergrendelde offerte, zoals de vinkjes op
+// hoofdgroep, onderdeel en regel (v3.11.0). Schrijft alleen de kolom actief, niet de hele rij.
+// Mislukt het opslaan, dan gaat het vinkje terug: een stand die alleen op dit scherm bestaat
+// zou na herladen stil een ander bedrag geven.
+async function toggleMsActief(idx) {
+  const ms = data.calc && data.calc.meetstaat && data.calc.meetstaat[idx];
+  if (!ms) return;
+  if (_isAutoMs(ms)) { renderMeetstaat(); return; }   // auto-rij volgt zijn kozijnrij
+  const oud = ms.actief !== false;
+  ms.actief = !oud;
+  if (ms.id) {
+    const res = await _sbQuery(
+      _sb.from('meetstaat').update({ actief: ms.actief }).eq('id', ms.id).select('id'), 'Meetrij aan/uit'
+    );
+    if (!res || res.error || !res.data || !res.data.length) {
+      ms.actief = oud;
+      _toast('Let op: aan/uit kon niet worden opgeslagen. Het vinkje is teruggezet.');
+      renderMeetstaat();
+      return;
+    }
+  }
+  _touchCalc(data.calc.id);
+  renderMeetstaat();
+  renderCalcStructuur();
+  renderTotals();
+  _syncCalcTotalToDB(data.calc);
+  await _syncGebrekToeslagen();   // gebrekstippen op een uitgezette tekening tellen niet mee (niet bij slot)
+  renderDashboard();
+}
+// v4.117.0 — Slot op de Meetstaat-tab. Tot en met v4.116.0 gold de vergrendeling alleen op de
+// tabs Calculatie en Onderhoudsplan; in een verzonden offerte kon je hier nog maten wijzigen.
+function _msOpSlot() {
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) {
+    _toast('Deze offerte is vergrendeld. Alleen aan/uit kan nog; zet de status op Concept om te wijzigen.');
+    return true;
+  }
+  return false;
+}
 function _meetstaatScrollNaarEind() {
   setTimeout(() => {
     try {
@@ -18600,6 +18702,7 @@ function _meetstaatScrollNaarEind() {
   }, 60);
 }
 async function addMeetstaat() {
+  if (_msOpSlot()) return;   // v4.117.0
   if (!data.calc.meetstaat) data.calc.meetstaat = [];
   const allRegels = _allCalcRegels();
   if (!allRegels.length) { alert('Voeg eerst regels toe in de Calculatie-tab.'); return; }
@@ -18776,6 +18879,7 @@ const NumPad = {
 
 function updMeetstaat(idx, field, value) {
   if (!data.calc.meetstaat || !data.calc.meetstaat[idx]) return;
+  if (_msOpSlot()) { renderMeetstaat(); return; }   // v4.117.0
   if (_isAutoMs(data.calc.meetstaat[idx])) { renderMeetstaat(); return; } // auto-regel: niet handmatig wijzigen
   data.calc.meetstaat[idx][field] = value;
   if (data.calc.meetstaat[idx].id) _updateMeetstaatDB(data.calc.meetstaat[idx], data.calc.id);
@@ -18803,11 +18907,14 @@ function _updateMeetstaatSamenvatting() {
   // Find or rebuild the summary block (last child of #meetstaatLijst)
   const c = document.getElementById('meetstaatLijst');
   if (!c) return;
+  const _negEl = document.getElementById('msNegBanner');   // v4.117.0
+  if (_negEl) _negEl.innerHTML = _msNegBannerHtml();
   const oldSummary = c.querySelector('.ms-samenvatting');
   const allRegels = _allCalcRegels();
   const byRegel = {};
   data.calc.meetstaat.forEach(ms => {
-    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0 };
+    if (!byRegel[ms.calcRegelId]) byRegel[ms.calcRegelId] = { count: 0, totaal: 0, uit: 0 };
+    if (!_msIsAan(ms)) { byRegel[ms.calcRegelId].uit++; return; }   // v4.117.0 — uitgezette rij telt niet mee
     const t = _meetstaatRijTotaal(ms);
     byRegel[ms.calcRegelId].count++;
     byRegel[ms.calcRegelId].totaal += t.totaal;
@@ -18822,8 +18929,8 @@ function _updateMeetstaatSamenvatting() {
       const r = ctx.regel;
       const eenheid = r.systeemEenheid || '';
       html += `<div style="display:flex; justify-content:space-between; padding:0.3rem 0; border-bottom:1px dashed color-mix(in srgb, var(--paper-deep), var(--muted)); font-size:0.85rem;">
-        <span>${_calcRegelLabel(r, ctx)} <span style="color:var(--muted);">(${byRegel[rid].count} regel${byRegel[rid].count===1?'':'s'})</span></span>
-        <span class="mono" style="font-weight:600;">${fmt(byRegel[rid].totaal)} ${eenheid}</span>
+        <span>${_calcRegelLabel(r, ctx)} <span style="color:var(--muted);">(${byRegel[rid].count} regel${byRegel[rid].count===1?'':'s'}${byRegel[rid].uit ? ', ' + byRegel[rid].uit + ' uit' : ''})</span></span>
+        <span class="mono" style="font-weight:600;${byRegel[rid].totaal < -0.0001 ? ' color:#b45309;' : ''}">${byRegel[rid].totaal < -0.0001 ? '⚠ ' : ''}${fmt(byRegel[rid].totaal)} ${eenheid}</span>
       </div>`;
     });
     html += `</div>`;
@@ -18842,6 +18949,7 @@ function _updateMeetstaatSamenvatting() {
 }
 async function delMeetstaat(idx) {
   if (!data.calc.meetstaat || !data.calc.meetstaat[idx]) return;
+  if (_msOpSlot()) return;   // v4.117.0
   const ms = data.calc.meetstaat[idx];
   if (ms.id) {
     const ok = await _deleteMeetstaatDB(ms.id);
@@ -19826,6 +19934,7 @@ async function saveKozijnTekenaar() {
     closeKozijnTekenaar();
     return;
   }
+  if (_msOpSlot()) { closeKozijnTekenaar(); return; }   // v4.117.0 — bekijken mag, opslaan niet
   const ms = data.calc.meetstaat[_kozijnEditIdx];
   const b = _kozijnBouwTekening();
   ms.tekening = Object.assign({}, ms.tekening || {}, b.tekening);
@@ -19847,6 +19956,7 @@ async function saveKozijnTekenaar() {
 }
 async function dupliceerKozijn() {
   if (_kozijnEditIdx == null || !data.calc.meetstaat || !data.calc.meetstaat[_kozijnEditIdx]) return;
+  if (_msOpSlot()) return;   // v4.117.0
   const src = data.calc.meetstaat[_kozijnEditIdx];
   const b = _kozijnBouwTekening();
   // 1) bron eerst bijwerken, zodat die klopt
@@ -19962,6 +20072,7 @@ async function kopieerKozijnNaarActief(idx) {
 function msKey(e, rowIdx, fieldIdx) {
   if (e.key !== 'Enter') return;
   e.preventDefault();
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(data.calc)) return;   // v4.117.0 — slot
   // First save current field value (force change-event by blur)
   const target = e.target;
   // Sync data before moving focus
@@ -23874,7 +23985,9 @@ function _calcTotalForArchive(c, includeInactief = false) {
       const rijen = c.meetstaat.filter(ms => ms.calcRegelId === r.id);
       if (!rijen.length) return;
       const eenheid = r.systeemEenheid || 'm²';
-      const som = rijen.reduce((s, ms) => {
+      // v4.117.0 — uitgezette meetrijen tellen niet mee; 'rijen' zelf blijft alles tellen,
+      // zodat een regel met alleen uitgezette rijen op 0 komt (zelfde regel als _meetstaatSomVoorRegel).
+      const som = rijen.filter(ms => _msIsAan(ms, c.meetstaat)).reduce((s, ms) => {
         const hM = (ms.hCm || 0) / 100, bM = (ms.bCm || 0) / 100;
         const aant = ms.aantal || 0;
         const factor = ms.factor != null ? ms.factor : 1;
