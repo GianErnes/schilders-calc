@@ -1,3 +1,53 @@
+## v4.118.0 — Regie-offerte: kosten als tekst in plaats van een prijstabel (2026-11-10)
+
+**Aanleiding**
+- Gian 10-11: "Kan ik via de calculatie app ook een offerte uitbrengen met alleen tekst en geen maten of verfsystemen? Het gaat dan om een offerte waarin ik alleen een afspraak maak in de tekst over regiewerk."
+- Gelezen in de live index.html v4.117.0: dat kon niet. `_berekenOfferteCijfers` geeft `null` terug zonder regel met hoeveelheid, stappen en verkoop boven 0, en de drie documentbouwers stopten dan met "Deze calculatie bevat geen regels met inhoud". De sectie `prijsopgave` is `type: 'auto'` en had geen aan/uit. Het woord regie kwam in de code niet voor.
+- Vooraf nagekeken wat er verder aan het bedrag hangt. Edge Functions `offerte-accord` (v43) en `offerte-verzenden` (v37), opgehaald via de Supabase-koppeling: geen van beide gebruikt het bedrag in de logica. Trigger `offerte_taken_sync` (functietekst uit `pg_proc`): noemt geen bedrag of totaal. De accordeerpagina laat het bedrag al weg als het leeg is (zo werken planlinks sinds 29-08-2026).
+
+**Keuzes (Gian, 10-11)**
+- Lichte variant: tekst in plaats van de prijstabel, geen apart formulier met velden.
+- Het is het een of het ander: een offerte heeft een prijstabel of een kostentekst, niet beide.
+- Standaardtekst: EUR 75,- per uur per schilder exclusief 9% btw, reistijd en reiskosten inbegrepen, materiaal tegen de geldende verkoopprijs, richtprijs met de 10%-zin erin (per offerte weg te halen).
+
+**Gebouwd**
+- `OFFERTE_SECTIES`: nieuwe tekstsectie `prijstekst` ("Kosten als tekst (regie)", kop "Wat zijn de kosten?") vlak voor `prijsopgave`, met de vlaggen `standaardUit` en `alleenOfferte`. `_offCfg` zet een sectie met `standaardUit` op uit; een bestaande offerte zonder de sleutel in de opgeslagen config krijgt hem dus uit.
+- `_offKostenAlsTekst(cfg)`: de ene plek die bepaalt of een offerte een regie-offerte is. `_offKostenTekst(cfg)`: de tekst van de sectie met gevulde invulvelden.
+- `_offCijfersVoorDocument(c, cfg)`: één poort voor `_bouwOfferteDocHtml` en `_bouwOfferteDocDef` (en via die laatste `_bouwOfferteCompleetDocDef` en de accordeerlink). Regie aan en geen regels: lege cijferset `_offCijfersLeeg`. Regie aan zonder tekst: melding, geen document. Regie uit en geen regels: de oude melding, aangevuld met de verwijzing naar de nieuwe sectie.
+- Beide documentbouwers slaan `prijsopgave` over als de regiesectie aan staat; de tekst loopt mee als gewone tekstsectie.
+- Accordeerlink (`_accordNieuweLink`): bij regie blijft `bedrag` leeg, ook als er regels in de calculatie staan. De klant tekent dan voor de afspraak in de tekst.
+- Controleer (`_controleerVerzamel`): bij regie vervalt "Er is niets gecalculeerd", het punt over de prijsweergave en "De staart is leeg". Nieuw: blokkerend bij een lege kostentekst en bij een open invulplek zoals `[bedrag]`; controleer-punten als de betalingstekst een aanbetaling of totaalbedrag noemt, als Prijsbepalingen of Opmerkingen onder de prijs aan staan, en als er naast regie ook regels gecalculeerd zijn.
+- Offerte-blok en voorbeeldvenster: de regel Prijsopgave meldt "vervalt" zodra de regiesectie aan staat.
+- Planbrief: de regiesectie staat niet in het instelscherm en komt niet in het document (`alleenOfferte`).
+- Vijf versieankers bijgewerkt. Geen SQL-migratie, geen Edge Function.
+
+**Database (door Claude via de Supabase-koppeling, 10-11)**
+- Twee rijen in `offerte_teksten`: sectie `prijstekst`, naam "Regie particulier" (standaard voor particulier) en sectie `betaling`, naam "Regie | betaling achteraf" (geen standaard). `on conflict (sectie, naam) do nothing`. De tabel heeft geen beperking op sectienamen (gemeten in `pg_constraint`: alleen de primaire sleutel en uniek op sectie + naam).
+
+**Getest**
+- Parse-test van het inline scriptblok met Node: geslaagd. Div-balans 1465/1468, details 9/9 en CSS-accolades gelijk aan v4.117.0.
+- Runtime-test in Chromium (Playwright) op het hele bestand, met v4.117.0 ernaast en synthetische gegevens, 45 controles groen (`test_regie.js`):
+  1. gewone offerte met regels, regie uit: PDF-opbouw, HTML-document en controlepunten zijn letterlijk gelijk aan v4.117.0;
+  2. lege calculatie, regie uit: geen document, melding, controle blokkeert;
+  3. lege calculatie, regie aan: document gebouwd, kop "Wat zijn de kosten?" precies één keer, tekst erin, geen prijstabel of totaal, en de complete PDF met voorwaarden is echt gemaakt (4 pagina's) en bekeken;
+  4. eigen tekst zonder invulplek: geen blokkade;
+  5. regie aan zonder tekst: geen document, melding, controle blokkeert;
+  6. regels én regie aan: geen prijstabel, controle waarschuwt, bedrag voor de link leeg; regie uit: bedrag gevuld;
+  7. bij een lege regie-calculatie zonder fout: offerte-blok, voorbeeldvenster, tekstenbibliotheek, werkbon (HTML en PDF), `_calcTotaalGetoond` en de planbrief-config;
+  8. bestaande offerte zonder de sleutel in de config: regie uit.
+
+**Niet getest**
+- In de echte app met inlog: de sectie aanzetten, de accordeerlink aanmaken (opslag in `accord-pdf` en de rij in `offerte_accorderingen`), mailen, en het akkoord van de klant tot en met de taak voor Maud. De keten is gelezen, niet doorlopen.
+- De accordeerpagina met een leeg bedrag bij een offerte-link. Gelezen in `_accordFormHtml`: het bedrag valt weg uit de akkoordzin als het leeg is; bij planlinks is dat de dagelijkse praktijk.
+- De Craft-overdracht met een lege calculatie. De werkbon-PDF komt er zonder fout uit (alleen de kop), wat Craft met de lege inhoud doet is niet geprobeerd.
+- iPad.
+
+**Bekende beperkingen**
+- Een regie-opdracht heeft geen bedrag: in de overzichten staat 0 of een streepje en er is geen uren- of materiaalbudget voor Yoobi.
+- De knop Yoobi-print (`printOfferteYoobi`) weigert een lege calculatie nog steeds; bij regie valt daar niets te printen.
+- De standaardteksten Betaling ("aanbetaling 25%") en Prijsbepalingen ("prijzen staan vast") blijven bij een nieuwe particuliere offerte aan staan. De app zet ze niet vanzelf om; Controleer waarschuwt.
+- De invulplek-controle zoekt naar tekst tussen rechte haken in de kostentekst. Een bewust gebruikte haak geeft dus ook een blokkerend punt.
+
 ## v4.117.0 — Meetrij aan/uit en slot op de Meetstaat-tab (2026-11-09)
 
 **Aanleiding**

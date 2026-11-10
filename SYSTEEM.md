@@ -34,7 +34,7 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.117.0 (09-11-2026) |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.118.0 (10-11-2026) |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.4.0 (12-10-2026; eerdere rijen staan nog op 14-09) |
@@ -6362,3 +6362,44 @@ tellen dan wel weer mee. De kolom kan blijven staan.
 41/41 en rooktest 11/11 groen. Migratie gedraaid via de
 Supabase-koppeling en nagemeten (1720 rijen, alle aan). Niet getest in
 de browser of op de iPad op 09-11.
+
+## Wat er op 10 november 2026 gedaan is: regie-offerte, kosten als tekst (index.html v4.118.0)
+
+**Waarom.** Gian wilde een offerte kunnen uitbrengen met alleen een
+afspraak in tekst over regiewerk, zonder maten of verfsystemen. De app
+weigerde elke offerte zonder regel met bedrag en de prijstabel kon niet
+uit.
+
+**Wat er is.**
+- Een nieuwe tekstsectie `prijstekst` ("Kosten als tekst (regie)") in
+  `OFFERTE_SECTIES`, standaard uit. Staat ze aan, dan vervalt de
+  automatische prijsopgave en mag de calculatie leeg zijn.
+- `_offKostenAlsTekst(cfg)` is de ene plek die bepaalt of een offerte een
+  regie-offerte is. Documentbouwers, Controleer, het offerte-blok en de
+  accordeerlink lezen allemaal die functie.
+- `_offCijfersVoorDocument` is de poort voor de documentbouwers. Wie een
+  nieuwe documentbouwer toevoegt, roept die aan en niet rechtstreeks
+  `_berekenOfferteCijfers`.
+- De accordeerlink van een regie-offerte heeft `bedrag` leeg in
+  `offerte_accorderingen`, net als een planlink. Een lege `bedrag` bij een
+  offerte-link is dus geen fout meer.
+- Twee bibliotheekteksten in `offerte_teksten`: sectie `prijstekst`
+  "Regie particulier" en sectie `betaling` "Regie | betaling achteraf".
+- Geen SQL-migratie en geen wijziging in Edge Functions. `offerte-accord`
+  en `offerte-verzenden` gebruiken het bedrag niet in hun logica.
+
+**Nood.** Regie-offerte geeft "geen regels met inhoud" → de sectie
+"Kosten als tekst (regie)" staat uit of de sleutel `prijstekst` ontbreekt
+in `offerte_config.secties`; zet het vinkje onder Offerteteksten aan.
+Melding "nog geen tekst" → kies een variant of tik eigen tekst. Sectie
+ontbreekt in de keuzelijst → de rij "Regie particulier" is uit
+`offerte_teksten` verdwenen; maak onder de tab Offerteteksten een nieuwe
+variant aan. Terugvallen: v4.117.0 uit de GitHub-geschiedenis negeert de
+sleutel `prijstekst` en de bibliotheekrij; een regie-offerte kan dan niet
+meer gebouwd worden, bestaande getekende PDF's blijven staan.
+
+**Bewijs.** `CHANGELOG.md` v4.118.0: parse-test, balansen en een
+runtime-test in Chromium, 45/45 groen, waaronder de vergelijking van een
+gewone offerte met v4.117.0 (letterlijk gelijk) en een echt gemaakte
+PDF. Niet getest in de echte app met inlog op 10-11: accordeerlink,
+mail en akkoord.

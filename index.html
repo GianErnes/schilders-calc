@@ -2480,8 +2480,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.117.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.118.0</h2>
       <div class="intro-body">
+        <p><strong>📝 Regie-offerte: kosten als tekst in plaats van een prijstabel (v4.118.0).</strong> Onder Offerteteksten staat een nieuwe sectie "Kosten als tekst (regie)", standaard uit. Zet je haar aan, dan vervalt de prijstabel en komt onder de kop "Wat zijn de kosten?" jouw tekst te staan, bijvoorbeeld een regie-afspraak met uurtarief en richtprijs. De calculatie mag dan leeg zijn: je hoeft geen maten of verfsystemen in te voeren. De accordeerlink gaat zonder bedrag mee, de klant tekent voor de afspraak in de tekst. De knop Controleer waarschuwt als er nog een invulplek zoals [bedrag] in de tekst staat en als de teksten over aanbetaling of vaste prijzen nog aan staan. Bestaande offertes veranderen niet. Geen SQL nodig.</p>
         <p><strong>☑️ Meetrij aan en uit zetten, en een slot op de Meetstaat (v4.117.0).</strong> Vooraan elke rij in de Meetstaat staat nu een vinkje, hetzelfde als op hoofdgroep, onderdeel en regel. Zet je het uit, dan telt die ene meting niet meer mee: de rij wordt grijs en doorgestreept, de hoeveelheid van de regel zakt en het bedrag loopt mee. Staan alle rijen van een regel uit, dan wordt de hoeveelheid nul. Zet je een getekend kozijn uit, dan gaan zijn deuren, panelen en roeden vanzelf mee uit, verdwijnt de tekening uit de bijlagen voor de klant en tellen zijn gebrekstippen niet meer. In de meetstaat-bijlage staat een uitgezette rij doorgestreept met (vervalt). Komt een regel negatief uit omdat een aftrekrij nog aan staat, dan zie je een oranje waarschuwing boven de tabel. <strong>Daarnaast een reparatie:</strong> bij een vergrendelde offerte kon je in de Meetstaat nog maten wijzigen, rijen toevoegen en weggooien, waardoor het bedrag van een verzonden offerte kon verschuiven. Dat zit nu op slot; alleen het vinkje aan/uit blijft open, net als in de Calculatie-tab. Een tekening kun je nog bekijken, niet meer opslaan. Vereist SQL (<code>meetstaat_02_actief.sql</code>, al gedraaid).</p>
         <p><strong>📚 Onderdelen stapelbaar: binnen én buiten in één offerte (v4.116.0).</strong> De sectie Onderdelen heeft nu, net als Werkzaamheden, de knop + Blok. Bij een gecombineerde binnen- en buitenofferte kies je het blok voor buiten en zet je er een blok voor binnen onder. Maak daarvoor in de tab Offerteteksten twee bibliotheekteksten aan, bijvoorbeeld "Onderdelen buiten" en "Onderdelen binnen", elk met als eerste regel "Buiten:" of "Binnen:" en daaronder de opsomming; in het document komen ze onder één kop "Welke onderdelen worden behandeld?" te staan. Bestaande offertes houden hun ene blok. Geen SQL nodig.</p>
         <p><strong>🏗️ Rekenpaneel: inkoop materiaal en staartposten per regel (v4.115.0).</strong> Achter "Materiaal verkoop" staat nu in klein grijs het inkoopbedrag, en onder "Totaal materiaal incl. toeslagen" het bedrag dat Yoobi wil (inkoop + klein materiaal, dezelfde regel als in het Σ-paneel van de planning). Onder "Staartkosten" staat voortaan elke staartpost apart met haar bedrag; posten met het vinkje Materieel (steiger, hoogwerker) krijgen 🏗️, posten van derden het label "derden". Puur weergave, aan de rekenkern verandert niets.</p>
@@ -4065,7 +4066,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.117.0';
+const APP_VERSION = 'v4.118.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4488,6 +4489,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.118.0', d: '2026-11-10', h: 'Regie-offerte: nieuwe offertesectie "Kosten als tekst (regie)" vervangt de prijstabel door tekst; de calculatie mag dan leeg zijn en de accordeerlink gaat zonder bedrag mee. Standaard uit, bestaande offertes ongewijzigd. Geen SQL.' },
   { v: '4.117.0', d: '2026-11-09', h: 'Meetrij aan/uit met een vinkje per rij (kozijn uit neemt deuren, panelen, roeden, tekening en gebrekstippen mee; oranje waarschuwing bij negatieve regel) en een slot op de Meetstaat-tab bij een vergrendelde offerte. Vereist SQL meetstaat_02_actief.sql.' },
   { v: '4.116.0', d: '2026-11-09', h: 'Offerte-sectie Onderdelen is stapelbaar (+ Blok), zodat een gecombineerde offerte een blok Buiten en een blok Binnen kan dragen; bestaande offertes ongewijzigd.' },
   { v: '4.115.0', d: '2026-11-09', h: 'Rekenpaneel Calculatie-tab: inkoopbedrag achter Materiaal verkoop, regel "voor Yoobi: inkoop + klein mat." onder het materiaaltotaal, en elke staartpost apart onder Staartkosten (🏗️ bij materieel, label derden). Alleen weergave; rekenkern ongewijzigd.' },
@@ -5497,6 +5499,10 @@ const OFFERTE_SECTIES = [
   { code: 'bevindingen',      naam: 'Bevindingen',                   kop: 'Wat zijn onze bevindingen?',              type: 'tekst', stapelbaar: false },
   { code: 'onderdelen',       naam: 'Onderdelen',                    kop: 'Welke onderdelen worden behandeld?',      type: 'tekst', stapelbaar: true },   // v4.116.0 - stapelbaar voor gecombineerd binnen- en buitenwerk (blok Buiten + blok Binnen)
   { code: 'werkzaamheden',    naam: 'Werkzaamheden',                 kop: 'Welke werkzaamheden voeren wij uit?',     type: 'tekst', stapelbaar: true },
+  // v4.118.0 - regie-offerte: staat deze sectie aan, dan vervalt de automatische prijsopgave
+  // en staat onder dezelfde kop de tekst. standaardUit: op elke offerte uit tot je haar aanzet.
+  // alleenOfferte: hoort niet op de planbrief.
+  { code: 'prijstekst',       naam: 'Kosten als tekst (regie)',      kop: 'Wat zijn de kosten?',                     type: 'tekst', stapelbaar: false, standaardUit: true, alleenOfferte: true },
   { code: 'prijsopgave',      naam: 'Prijsopgave',                   kop: 'Wat zijn de kosten?',                     type: 'auto' },
   { code: 'prijsopmerkingen', naam: 'Opmerkingen onder de prijs',    kop: '',                                        type: 'tekst', stapelbaar: true },
   { code: 'betaling',         naam: 'Betaling',                      kop: 'Hoe en wanneer kunt u betalen?',          type: 'tekst', stapelbaar: true },  // v4.52.0 - stapelbaar voor de planbrief (mechanica + startbeurtvariant)
@@ -5799,7 +5805,7 @@ function _offCfg() {
         cfg.secties[s.code] = { aan: true, blokken: [{ variantId: null, tekst: '{bevindingen}' }] };
       } else {
         // v4.52.0 - alleenPlan-secties (planbrief) staan op een gewone offerte standaard uit.
-        cfg.secties[s.code] = { aan: s.alleenPlan ? false : true, blokken: [{ variantId: _offStandaardVariantId(s.code, cfg.klanttype), tekst: null }] };
+        cfg.secties[s.code] = { aan: (s.alleenPlan || s.standaardUit) ? false : true, blokken: [{ variantId: _offStandaardVariantId(s.code, cfg.klanttype), tekst: null }] };   // v4.118.0 - standaardUit
       }
     }
     const sec = cfg.secties[s.code];
@@ -5815,6 +5821,49 @@ function _offCfg() {
     if (_b0 && _b0.variantId == null && (_b0.tekst == null || _b0.tekst === '')) _b0.tekst = '{bevindingen}';
   }
   return cfg;
+}
+// v4.118.0 - Regie-offerte. Staat de sectie "Kosten als tekst" aan, dan vervalt de
+// automatische prijsopgave en hoeft de calculatie geen regels te hebben.
+function _offKostenAlsTekst(cfg) {
+  const s = cfg && cfg.secties && cfg.secties.prijstekst;
+  return !!(s && s.aan);
+}
+// De tekst van die sectie, met de invulvelden gevuld. Leeg als er niets gekozen is.
+function _offKostenTekst(cfg) {
+  const s = cfg && cfg.secties && cfg.secties.prijstekst;
+  if (!s || !Array.isArray(s.blokken)) return '';
+  return s.blokken.filter(b => b && (b.variantId || b.tekst != null))
+    .map(b => { try { return _offVulVelden(_offBlokTekst(b)); } catch (e) { return _offBlokTekst(b); } })
+    .filter(t => String(t || '').trim()).join('\n\n');
+}
+// Lege cijferset voor een regie-offerte zonder regels: de documentbouwers hebben
+// sett, eur en fmt nodig; de prijstabel zelf wordt bij regie niet gebouwd.
+function _offCijfersLeeg(c) {
+  return {
+    sett: _activeSettings(c), regels: [], staartZichtbaarRows: [], staartVerstopt: [],
+    reisTotaal: 0, reisZichtbaar: 0, reisAfstand: (c && c.reis) || 0,
+    dagenFactureerbaar: 0, weken: 0,
+    exBtwFinal: 0, btwBedrag: 0, totaalIncl: 0, afrondingsOverschot: 0,
+    btwPct: 0, btwRegels: [], btwGemengd: false,
+    fmt, eur, leeg: true
+  };
+}
+// Eén poort voor de drie documentbouwers. Geeft de cijfers terug, of null nadat de
+// melding al getoond is.
+function _offCijfersVoorDocument(c, cfg) {
+  const regie = _offKostenAlsTekst(cfg);
+  if (regie && !_offKostenTekst(cfg).trim()) {
+    alert('De sectie "Kosten als tekst (regie)" staat aan maar heeft nog geen tekst. Kies een tekst of zet de sectie uit.');
+    return null;
+  }
+  let cij = null;
+  try { cij = _berekenOfferteCijfers(c); } catch (e) { if (!regie) throw e; cij = null; }
+  if (!cij && regie) cij = _offCijfersLeeg(c);
+  if (!cij) {
+    alert('Deze calculatie bevat geen regels met inhoud. Voeg minimaal één regel met hoeveelheid en verfsysteem toe, of zet onder Offerteteksten de sectie "Kosten als tekst (regie)" aan.');
+    return null;
+  }
+  return cij;
 }
 // Label voor het klanttype in de UI: Particulier, VVE of Zakelijk.
 function _offKlanttypeLabel(kt) {
@@ -5866,7 +5915,24 @@ function _controleerVerzamel() {
   // Vangnet: is er überhaupt iets gecalculeerd?
   let regelsMetHoeveelheid = 0;
   _ctlRegelLoop(c, r => { if ((parseFloat(r.hoeveelheid) || 0) > 0) regelsMetHoeveelheid++; });
-  if (!regelsMetHoeveelheid) blok('Er is niets gecalculeerd: geen enkele regel heeft een hoeveelheid.');
+  // v4.118.0 - regie-offerte: kosten staan als tekst in de offerte, de calculatie mag leeg zijn.
+  const _regie = _offKostenAlsTekst(cfg);
+  if (!regelsMetHoeveelheid && !_regie) blok('Er is niets gecalculeerd: geen enkele regel heeft een hoeveelheid.');
+  if (_regie) {
+    const _kt = _offKostenTekst(cfg);
+    if (!_kt.trim()) blok('De sectie "Kosten als tekst (regie)" staat aan maar heeft geen tekst.');
+    const _open = _kt.match(/\[[^\]\n]{1,40}\]/g);
+    if (_open) blok('In de kostentekst staat nog een invulplek: ' + _open.slice(0, 3).join(', ') + '. Vul hem in of haal de zin weg.');
+    if (regelsMetHoeveelheid) check('"Kosten als tekst (regie)" staat aan terwijl er ook regels gecalculeerd zijn: de prijstabel en het totaalbedrag komen niet op de offerte en de klant tekent zonder bedrag.');
+    const _secTekst = (code) => {
+      const sc = cfg.secties && cfg.secties[code];
+      if (!sc || !sc.aan) return '';
+      return (sc.blokken || []).map(b => { try { return _offBlokTekst(b) || ''; } catch (e) { return ''; } }).join('\n');
+    };
+    if (/aanbetaling|totale bedrag|totaalbedrag/i.test(_secTekst('betaling'))) check('Regie-offerte: de betalingstekst noemt een aanbetaling of een totaalbedrag. Kies de regievariant of pas de tekst aan.');
+    if (_secTekst('prijsbepalingen').trim()) check('Regie-offerte: de sectie Prijsbepalingen staat aan. Past de tekst over vaste prijzen bij een regie-afspraak?');
+    if (_secTekst('prijsopmerkingen').trim()) check('Regie-offerte: de sectie Opmerkingen onder de prijs staat aan en verwijst mogelijk naar "bovenstaande prijs".');
+  }
 
   // 1. Klantnaam en werkadres (blokkerend), postcodeformaat en briefhoofd (controleer)
   if (!(c.klant || '').trim()) blok('De klantnaam is leeg.');
@@ -5939,7 +6005,9 @@ function _controleerVerzamel() {
   }
 
   // 7. Prijsweergave: regels zonder hoeveelheden en eenheidsprijzen
-  if (cfg.prijsWeergave !== 'regels') {
+  if (_regie) {
+    // v4.118.0 - geen prijstabel bij een regie-offerte
+  } else if (cfg.prijsWeergave !== 'regels') {
     check('De prijsweergave staat op "Per onderdeel"; de norm is "Regels" zonder hoeveelheden en eenheidsprijzen.');
   } else if (cfg.prijsRegelsHoeveelheden !== false) {
     check('De prijsweergave toont hoeveelheden en eenheidsprijzen; de norm is regels zonder die kolommen.');
@@ -5974,7 +6042,7 @@ function _controleerVerzamel() {
   }
 
   // 10. Toeslagen in de staart
-  if (!(c.staart || []).length) {
+  if (!(c.staart || []).length && !_regie) {
     overweeg('De staart is leeg: geen klimtoeslag, kleinschaligheid of andere toeslagen gekozen.');
   }
   // v4.91.0 — percent-post over hoofdgroep Buiten/Binnen zonder zo'n hoofdgroep rekent € 0
@@ -6461,8 +6529,10 @@ function renderOfferteBlok() {
     OFFERTE_SECTIES.forEach(sec => {
       if (sec.alleenPlan) return; // v4.52.0 - briefsecties horen niet in de offerte-UI
       if (sec.type === 'auto') {
-        html += `<div style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.8rem; margin-bottom:0.35rem; border:1px dashed #d1d5db; border-radius:8px; color:var(--muted); font-size:0.82rem;">
-          <span>⚙️</span><span><strong>${_offEsc(sec.naam)}</strong> — automatisch gegenereerd</span></div>`;
+        // v4.118.0 - bij een regie-offerte vervalt de prijstabel
+        const _vervalt = (sec.code === 'prijsopgave' && _offKostenAlsTekst(cfg));
+        html += `<div style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.8rem; margin-bottom:0.35rem; border:1px dashed #d1d5db; border-radius:8px; color:var(--muted); font-size:0.82rem;${_vervalt ? ' opacity:0.55;' : ''}">
+          <span>⚙️</span><span><strong>${_offEsc(sec.naam)}</strong> — ${_vervalt ? 'vervalt: "Kosten als tekst (regie)" staat aan' : 'automatisch gegenereerd'}</span></div>`;
         return;
       }
       const secCfg = cfg.secties[sec.code];
@@ -7995,6 +8065,7 @@ function openOffertePreview() {
   OFFERTE_SECTIES.forEach(sec => {
     if (sec.alleenPlan) return; // v4.52.0 - briefsecties horen niet in het offerte-voorbeeld
     if (sec.type === 'auto') {
+      if (sec.code === 'prijsopgave' && _offKostenAlsTekst(cfg)) return; // v4.118.0 - vervalt bij regie
       html += `<div style="margin:0.8rem 0; padding:0.5rem 0.7rem; border:1px dashed #d1d5db; border-radius:8px; color:var(--muted); font-size:0.82rem;">⚙️ ${_offEsc(sec.naam)} — wordt gegenereerd in het document</div>`;
       return;
     }
@@ -12977,7 +13048,7 @@ function _ohpBriefBlokken(plan, calc, cfgArg) {
       for (let i = 1; i < stukken.length; i++) uit.push('<div class="ob-block brief">' + stukken[i] + '</div>');
       return uit;
     };
-    const tekstSecs = OFFERTE_SECTIES.filter(x => x.type === 'tekst' && x.code !== 'slotzin');
+    const tekstSecs = OFFERTE_SECTIES.filter(x => x.type === 'tekst' && x.code !== 'slotzin' && !x.alleenOfferte);   // v4.118.0
     let secHtml = [];
     tekstSecs.forEach(x => { secHtml = secHtml.concat(sectieBlokken(x)); });
     if (!secHtml.length) return [];
@@ -16376,11 +16447,9 @@ function _bouwOfferteDocHtml() {
   const c = data.calc;
   if (!c) { _toast('Geen actieve calculatie'); return null; }
   const cfg = _offCfg();
-  const cij = _berekenOfferteCijfers(c);
-  if (!cij) {
-    alert('Deze calculatie bevat geen regels met inhoud. Voeg minimaal één regel met hoeveelheid en verfsysteem toe.');
-    return null;
-  }
+  const cij = _offCijfersVoorDocument(c, cfg);   // v4.118.0 - regie-offerte mag zonder regels
+  if (!cij) return null; // melding is al getoond
+  const _kostenAlsTekst = _offKostenAlsTekst(cfg);
   const sett = cij.sett;
   const eur = cij.eur, fmt = cij.fmt;
   _kenOfferteNummerToe(c); // nummer toekennen als dat nog niet gebeurd is
@@ -16541,6 +16610,7 @@ function _bouwOfferteDocHtml() {
     if (sec.alleenPlan) return; // v4.52.0 - briefsecties bestaan alleen op de planbrief
 
     if (sec.code === 'prijsopgave') {
+      if (_kostenAlsTekst) return; // v4.118.0 - de sectie Kosten als tekst staat ervoor in de plaats
       html += `<div class="section kosten-blok"><h2>${sec.kop}</h2>`;
       html += `<table class="kosten-kop"><thead><tr><th>Naam</th><th class="right">Totaal excl. BTW</th></tr></thead></table>`;
       html += (prijsWeergave === 'regels') ? bouwPrijsPerRegel() : bouwPrijsPerOnderdeel();
@@ -16626,11 +16696,9 @@ function _bouwOfferteDocDef() {
   const c = data.calc;
   if (!c) { _toast('Geen actieve calculatie'); return null; }
   const cfg = _offCfg();
-  const cij = _berekenOfferteCijfers(c);
-  if (!cij) {
-    alert('Deze calculatie bevat geen regels met inhoud. Voeg minimaal één regel met hoeveelheid en verfsysteem toe.');
-    return null;
-  }
+  const cij = _offCijfersVoorDocument(c, cfg);   // v4.118.0 - regie-offerte mag zonder regels
+  if (!cij) return null; // melding is al getoond
+  const _kostenAlsTekst = _offKostenAlsTekst(cfg);
   const sett = cij.sett;
   const eur = cij.eur, fmt = cij.fmt;
   _kenOfferteNummerToe(c); // nummer toekennen als dat nog niet gebeurd is
@@ -16797,6 +16865,7 @@ function _bouwOfferteDocDef() {
     if (sec.alleenPlan) return; // v4.52.0 - briefsecties bestaan alleen op de planbrief
 
     if (sec.code === 'prijsopgave') {
+      if (_kostenAlsTekst) return; // v4.118.0 - de sectie Kosten als tekst staat ervoor in de plaats
       content.push({ text: sec.kop, bold: true, fontSize: 10, margin: [0, 12, 0, 3], id: 'offKostenKop', headlineLevel: 1 });
       content.push({
         table: { widths: ['*', 'auto'], body: [[{ text: 'Naam', bold: true }, { text: 'Totaal excl. BTW', bold: true, alignment: 'right' }]] },
@@ -26984,7 +27053,10 @@ async function _accordNieuweLink(c, body, supersede) {
   // bevroren document; de klantpagina toonde de HTML toch al niet zodra er een PDF was.
   // Gemeten 14-09-2026: 44 offertelinks, 8,5 MB aan HTML die nooit getoond werd.
   let bedrag = null;
-  try { const cij = _berekenOfferteCijfers(c); if (cij) bedrag = cij.totaalIncl; } catch (e) {}
+  // v4.118.0 - regie-offerte: er staat geen bedrag op het document, dus de klant tekent er ook niet voor.
+  if (!_offKostenAlsTekst(_offCfg())) {
+    try { const cij = _berekenOfferteCijfers(c); if (cij) bedrag = cij.totaalIncl; } catch (e) {}
+  }
 
   let token;
   if (window.crypto && crypto.randomUUID) token = crypto.randomUUID().replace(/-/g, '') + Date.now().toString(36);
@@ -27565,7 +27637,7 @@ function _ohpBriefVariantenVan(code) {
 }
 function _ohpBriefCfgHtml() {
   const st = _ohpBriefCfgState;
-  const rijen = OFFERTE_SECTIES.filter(x => x.type === 'tekst').map(sec => {
+  const rijen = OFFERTE_SECTIES.filter(x => x.type === 'tekst' && !x.alleenOfferte).map(sec => {   // v4.118.0
     const c = st.secties[sec.code] || { aan: false, blokken: [] };
     const varianten = _ohpBriefVariantenVan(sec.code);
     const kies = (blok, i) => {
