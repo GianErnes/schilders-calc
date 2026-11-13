@@ -34,7 +34,7 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.118.0 (10-11-2026) |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.118.2 (13-11-2026) |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.4.0 (12-10-2026; eerdere rijen staan nog op 14-09) |
@@ -6434,3 +6434,25 @@ werkt zonder verdere stappen, met de oude zwakke naamcontrole.
 runtime-test in Node, 24/24 groen. Gemeten in `yoobi_klanten`: relatie
 10306 "Mevrouw M. Rongen", actief. Niet getest in de echte app met inlog
 op 13-11.
+
+## Ook op 13 november 2026: verfsysteem uit de prijstabel van de offerte (index.html v4.118.2)
+
+**Wat.** Bij Prijsweergave "Regels" met het vinkje "Hoeveelheden en
+eenheidsprijzen tonen" kreeg de klant een kolom Verfsysteem te zien. Het
+verfsysteem is alleen voor intern gebruik.
+
+**Stand.**
+- De prijstabel per regel (`bouwPrijsPerRegel` voor het scherm,
+  `prijsPerRegelContent` voor de pdf) toont met het vinkje aan vier
+  kolommen: Omschrijving, Hoeveelheid, Eenheidsprijs, Totaal. Met het
+  vinkje uit twee: Omschrijving en Totaal.
+- Het verfsysteem staat nog wel op de calculatieprint (`printCalc`), de
+  werkbon en de Yoobi-export (`printOfferteYoobi`).
+- Geen SQL, geen Edge Function.
+
+**Nood.** Terugvallen: v4.118.1 uit de GitHub-geschiedenis werkt zonder
+verdere stappen; de kolom Verfsysteem is dan terug.
+
+**Bewijs.** `CHANGELOG.md` v4.118.2: parse-test, balansen, runtime-test in
+Node 120/120 groen, tegenproef op v4.118.1 64 fouten, pdf-proef met
+pdfmake. Niet getest in de echte app met inlog op 13-11.

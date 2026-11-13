@@ -1,3 +1,29 @@
+## v4.118.2 — Offerte: kolom Verfsysteem uit de prijstabel (2026-11-13)
+
+**Aanleiding**
+- Gian 13-11, schermfoto van "Prijsweergave in offerte" met het vinkje "Hoeveelheden en eenheidsprijzen tonen": "Bij het aanvinken toont de app in de offerte ook de tekst van het verfsysteem. Dat hoeft niet en is alleen voor intern gebruik."
+- Gelezen in de live index.html v4.118.1: met het vinkje aan bouwen `bouwPrijsPerRegel` (voorbeeld op scherm) en `prijsPerRegelContent` (pdf) vijf kolommen: Omschrijving, Verfsysteem, Hoeveelheid, Eenheidsprijs, Totaal. Zo gebouwd in v3.72.0; geen bug maar een ontwerpkeuze van toen.
+
+**Gebouwd**
+- Kolom Verfsysteem weg uit beide functies. Met het vinkje aan: Omschrijving, Hoeveelheid, Eenheidsprijs, Totaal. De subtotaalrij en de kolombreedtes van de pdf-tabel zijn daarop aangepast (vier in plaats van vijf kolommen).
+- Vinkje uit: ongewijzigd (daar stond het verfsysteem al niet).
+- Uitlegtekst bij v3.72.0 in de app aangepast. Vier versieankers bijgewerkt (welkomstkop, welkomsttekst, `APP_VERSION`, `RELEASE_HIGHLIGHTS`).
+- Niet aangeraakt: calculatieprint (`printCalc`), werkbon en Yoobi-export (`printOfferteYoobi`); daar blijft het verfsysteem staan. Dat de Yoobi-export alleen intern is, is een aanname; Gian heeft er op 13-11 niet op gereageerd.
+- Geen SQL, geen Edge Function.
+
+**Getest**
+- Parse-test van het inline scriptblok met Node: geslaagd. Div-balans 1466/1469 en scripttags 6/6, gelijk aan v4.118.1.
+- Runtime-test in Node (`test.js`) op de twee functies, uit het gepatchte bestand gesneden, met verzonnen regels: 120 controles groen in drie standen (vinkje aan, instelling ontbreekt, vinkje uit). Gecontroleerd: geen kop Verfsysteem, geen systeemnaam en geen "onbekend" in scherm of pdf; elke rij heeft evenveel kolommen als de kop; subtotaal klopt. Tegenproef: dezelfde test op v4.118.1 geeft 64 fouten.
+- Pdf-proef: de uitvoer van `prijsPerRegelContent` door pdfmake 0.2.23 in Node gehaald (de app laadt 0.2.20 in de browser); de pdf wordt gebouwd en de tekst toont vier kolommen.
+
+**Niet getest**
+- In de echte app met inlog: een offerte met het vinkje aan, voorbeeld en pdf openen. Ook de pdf die via de accordeerlink bij de klant komt.
+- iPad.
+
+**Bekende beperkingen**
+- Reeds verstuurde offertes met de kolom Verfsysteem veranderen niet; een opgeslagen pdf blijft zoals hij was.
+- Staat een regel zonder eigen naam op de offerte, dan toont de omschrijving een streepje; de systeemnaam vulde dat eerder zichtbaar aan. De offertecontrole (punt 8) waarschuwt al voor regels zonder naam.
+
 ## v4.118.1 — Naar Yoobi: naamcontrole zoekt op achternaam (2026-11-13)
 
 **Aanleiding**

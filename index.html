@@ -2480,8 +2480,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.118.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.118.2</h2>
       <div class="intro-body">
+        <p><strong>💶 Offerte: verfsysteem niet meer in de prijstabel (v4.118.2).</strong> Stond bij Prijsweergave "Regels" het vinkje "Hoeveelheden en eenheidsprijzen tonen" aan, dan kreeg de klant ook een kolom Verfsysteem te zien. Die kolom is weg, op het scherm en in de pdf: de klant ziet omschrijving, hoeveelheid, eenheidsprijs en totaal. Het verfsysteem blijft staan op de calculatieprint, de werkbon en de Yoobi-export. Staat het vinkje uit, dan verandert er niets. Geen SQL.</p>
         <p><strong>🔎 Naar Yoobi: naamcontrole zoekt nu op achternaam (v4.118.1).</strong> Het venster Naar Yoobi meldde "Naam niet gevonden" terwijl de klant er wel stond: er werd gezocht op de hele boekingsnaam ("Mevr. M. Rongen"), en in Yoobi stond "Mevrouw M. Rongen". De controle zoekt nu alleen op de achternaam en toont de treffers ter controle, elk met een link koppelen. Is de klant al via het e-mailadres gevonden, dan staat er geen tegenstrijdige groene regel meer onder. Geen SQL, geen Edge Function.</p>
         <p><strong>📝 Regie-offerte: kosten als tekst in plaats van een prijstabel (v4.118.0).</strong> Onder Offerteteksten staat een nieuwe sectie "Kosten als tekst (regie)", standaard uit. Zet je haar aan, dan vervalt de prijstabel en komt onder de kop "Wat zijn de kosten?" jouw tekst te staan, bijvoorbeeld een regie-afspraak met uurtarief en richtprijs. De calculatie mag dan leeg zijn: je hoeft geen maten of verfsystemen in te voeren. De accordeerlink gaat zonder bedrag mee, de klant tekent voor de afspraak in de tekst. De knop Controleer waarschuwt als er nog een invulplek zoals [bedrag] in de tekst staat en als de teksten over aanbetaling of vaste prijzen nog aan staan. Bestaande offertes veranderen niet. Geen SQL nodig.</p>
         <p><strong>☑️ Meetrij aan en uit zetten, en een slot op de Meetstaat (v4.117.0).</strong> Vooraan elke rij in de Meetstaat staat nu een vinkje, hetzelfde als op hoofdgroep, onderdeel en regel. Zet je het uit, dan telt die ene meting niet meer mee: de rij wordt grijs en doorgestreept, de hoeveelheid van de regel zakt en het bedrag loopt mee. Staan alle rijen van een regel uit, dan wordt de hoeveelheid nul. Zet je een getekend kozijn uit, dan gaan zijn deuren, panelen en roeden vanzelf mee uit, verdwijnt de tekening uit de bijlagen voor de klant en tellen zijn gebrekstippen niet meer. In de meetstaat-bijlage staat een uitgezette rij doorgestreept met (vervalt). Komt een regel negatief uit omdat een aftrekrij nog aan staat, dan zie je een oranje waarschuwing boven de tabel. <strong>Daarnaast een reparatie:</strong> bij een vergrendelde offerte kon je in de Meetstaat nog maten wijzigen, rijen toevoegen en weggooien, waardoor het bedrag van een verzonden offerte kon verschuiven. Dat zit nu op slot; alleen het vinkje aan/uit blijft open, net als in de Calculatie-tab. Een tekening kun je nog bekijken, niet meer opslaan. Vereist SQL (<code>meetstaat_02_actief.sql</code>, al gedraaid).</p>
@@ -2704,7 +2705,7 @@
         <p><strong>🖼️ Groter logo en meer lucht in de offertekop (v3.72.3).</strong> Het Ernes-logo bovenaan het offertedocument is een derde groter, en tussen het klant-adres en het offertenummer zit nu meer witruimte. Geen SQL nodig.</p>
         <p><strong>🔡 Rustiger koppen en links uitgelijnde tekst in de offerte (v3.72.2).</strong> De koppen boven elke alinea in het offertedocument zijn nu even groot als de lopende tekst, maar wel vet, dus minder schreeuwerig. En de tekst is links uitgelijnd in plaats van uitgevuld over de breedte, zodat er geen rare witruimtes meer tussen de woorden vallen. Geen SQL nodig.</p>
         <p><strong>✂️ Geen streep meer onder de kolomkoppen in de offerte (v3.72.1).</strong> In het offertedocument is de lijn onder de kolomkop "Omschrijving" per onderdeel weg, voor een rustiger beeld. Alleen de sectiekop bovenaan ("Naam | Totaal excl. BTW") houdt zijn lijn. De subtotalen en het eindtotaal blijven zoals ze waren. Geen SQL nodig.</p>
-        <p><strong>💶 Prijsweergave regels: hoeveelheden aan of uit (v3.72.0).</strong> Kies je bij Prijsweergave voor Regels, dan staat er nu een schakelaar "Hoeveelheden en eenheidsprijzen tonen". Standaard staat die aan, dus net als voorheen zie je per regel de omschrijving, het verfsysteem, de hoeveelheid, de eenheidsprijs en het bedrag. Zet je hem uit, dan houd je per regel alleen de omschrijving en het regelbedrag over. Zo kun je een offerte per regel sturen zonder je hoeveelheden en eenheidsprijzen prijs te geven. De subtotalen per onderdeel en het eindtotaal blijven gewoon staan. Geen SQL nodig.</p>
+        <p><strong>💶 Prijsweergave regels: hoeveelheden aan of uit (v3.72.0).</strong> Kies je bij Prijsweergave voor Regels, dan staat er nu een schakelaar "Hoeveelheden en eenheidsprijzen tonen". Standaard staat die aan, dus zie je per regel de omschrijving, de hoeveelheid, de eenheidsprijs en het bedrag (het verfsysteem staat sinds v4.118.2 niet meer op de offerte). Zet je hem uit, dan houd je per regel alleen de omschrijving en het regelbedrag over. Zo kun je een offerte per regel sturen zonder je hoeveelheden en eenheidsprijzen prijs te geven. De subtotalen per onderdeel en het eindtotaal blijven gewoon staan. Geen SQL nodig.</p>
         <p><strong>🙋 Contactpersoon op de offerte met t.a.v. en juiste aanhef (v3.71.0).</strong> In het Offerte-blok kun je nu een contactpersoon invullen met voorletters, tussenvoegsel en achternaam. Staat die ingevuld, dan komt er in de kop van de offerte onder de organisatienaam een regel "t.a.v. ..." met de volledige naam, en gebruikt de aanhef de achternaam zonder voorletters, bijvoorbeeld "Geachte heer van der Berg,". Handig bij een bedrijf of VvE, waar de naam de organisatie is. Vul je geen contactpersoon in, dan blijft alles werken zoals voorheen met de klantnaam. Let op: de aanhef verschijnt alleen als je tekst de regel "Geachte {aanhef}," bevat. Geen SQL nodig.</p>
         <p><strong>📝 Offerteteksten vooraf gekozen, en bolletjes in de tekst (v3.70.0).</strong> Twee dingen rond de offerte. Bij een nieuwe offerte kiest de app per sectie nu automatisch de tekst die bij het klanttype past. Staat het klanttype op consument, dan staan de consument-teksten meteen klaar en hoef je ze niet meer stuk voor stuk aan te tikken. Heeft een sectie maar één variant, dan wordt die gekozen. Bestaande offertes blijven zoals ze waren. En je kunt opsommingstekens in de tekst zetten: laat een regel beginnen met een streepje en een spatie, dus "- ", en in het voorbeeld en in het offertedocument wordt dat een net bolletje. Geen SQL nodig.</p>
         <p><strong>💾 Archiveren begint leeg (v3.69.1).</strong> Het Archiveren-venster vinkt niet meer alles vooraf aan. Je kiest zelf de een of twee PDFs die je nodig hebt en tikt op Genereer. Niet-beschikbare opties blijven grijs.</p>
@@ -4067,7 +4068,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.118.1';
+const APP_VERSION = 'v4.118.2';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4490,6 +4491,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.118.2', d: '2026-11-13', h: 'Offerte met hoeveelheden en eenheidsprijzen: de kolom Verfsysteem staat niet meer in de prijstabel (scherm en pdf); het verfsysteem is alleen voor intern gebruik.' },
   { v: '4.118.1', d: '2026-11-13', h: 'Naar Yoobi: de naamcontrole zoekt op achternaam in plaats van op de hele boekingsnaam (Mevr. M. Rongen vond Mevrouw M. Rongen niet); geen tegenstrijdig groen vinkje meer als het e-mailadres al een relatie opleverde.' },
   { v: '4.118.0', d: '2026-11-10', h: 'Regie-offerte: nieuwe offertesectie "Kosten als tekst (regie)" vervangt de prijstabel door tekst; de calculatie mag dan leeg zijn en de accordeerlink gaat zonder bedrag mee. Standaard uit, bestaande offertes ongewijzigd. Geen SQL.' },
   { v: '4.117.0', d: '2026-11-09', h: 'Meetrij aan/uit met een vinkje per rij (kozijn uit neemt deuren, panelen, roeden, tekening en gebrekstippen mee; oranje waarschuwing bij negatieve regel) en een slot op de Meetstaat-tab bij een vergrendelde offerte. Vereist SQL meetstaat_02_actief.sql.' },
@@ -16499,9 +16501,10 @@ function _bouwOfferteDocHtml() {
 
   // b) Regels (Yoobi-stijl): elke regel met hoeveelheid, eenheidsprijs, totaal.
   function bouwPrijsPerRegel() {
-    // v3.72.0 — schakelaar prijsRegelsHoeveelheden. Aan: omschrijving, verfsysteem,
-    // hoeveelheid, eenheidsprijs en totaal. Uit: alleen omschrijving en regelbedrag,
-    // zodat de calculatie-details (hoeveelheid, eenheidsprijs, verfsysteem) niet zichtbaar zijn.
+    // v3.72.0 — schakelaar prijsRegelsHoeveelheden. Aan: omschrijving, hoeveelheid,
+    // eenheidsprijs en totaal. Uit: alleen omschrijving en regelbedrag.
+    // v4.118.2 — de kolom Verfsysteem staat in geen van beide standen meer op de
+    // offerte; het verfsysteem is alleen voor intern gebruik (calculatieprint, werkbon).
     const toonHvh = cfg.prijsRegelsHoeveelheden !== false;
     let h = '';
     c.hoofdgroepen.forEach(hg => {
@@ -16513,7 +16516,7 @@ function _bouwOfferteDocHtml() {
         const regelsInOd = regelsInHg.filter(y => y.odNaam === odNaam);
         h += `<h4>${odNaam}</h4><table><thead><tr>`;
         h += toonHvh
-          ? `<th>Omschrijving</th><th>Verfsysteem</th><th class="right">Hoeveelheid</th><th class="right">Eenheidsprijs</th><th class="right">Totaal</th>`
+          ? `<th>Omschrijving</th><th class="right">Hoeveelheid</th><th class="right">Eenheidsprijs</th><th class="right">Totaal</th>`
           : `<th>Omschrijving</th><th class="right">Totaal</th>`;
         h += `</tr></thead><tbody>`;
         let odSum = 0;
@@ -16522,7 +16525,6 @@ function _bouwOfferteDocHtml() {
           h += toonHvh
             ? `<tr>
             <td>${y.naam || '—'}</td>
-            <td>${y.systeemNaam || '<em>onbekend</em>'}</td>
             <td class="num right">${fmt(y.hoeveelheid)} ${y.eenheid}</td>
             <td class="num right">${eur(y.toonprijs)}</td>
             <td class="num right">${eur(y.toonRegelTotaal)}</td>
@@ -16532,7 +16534,7 @@ function _bouwOfferteDocHtml() {
             <td class="num right">${eur(y.toonRegelTotaal)}</td>
           </tr>`;
         });
-        h += `<tr class="totaal-row"><td colspan="${toonHvh ? 4 : 1}"><strong>Subtotaal ${odNaam}</strong></td><td class="num right">${eur(odSum)}</td></tr>`;
+        h += `<tr class="totaal-row"><td colspan="${toonHvh ? 3 : 1}"><strong>Subtotaal ${odNaam}</strong></td><td class="num right">${eur(odSum)}</td></tr>`;
         h += `</tbody></table>`;
       });
     });
@@ -16764,6 +16766,7 @@ function _bouwOfferteDocDef() {
 
   // Prijstabel b) per regel (Yoobi-stijl), met of zonder hoeveelheden/eenheidsprijs.
   function prijsPerRegelContent() {
+    // v4.118.2 — geen kolom Verfsysteem meer (alleen intern).
     const toonHvh = cfg.prijsRegelsHoeveelheden !== false;
     const blocks = [];
     c.hoofdgroepen.forEach(hg => {
@@ -16777,14 +16780,13 @@ function _bouwOfferteDocDef() {
         const rows = [];
         // Bij de regel-weergave zónder hoeveelheden labelt de bovenste regel
         // "Naam | Totaal excl. BTW" de kolommen al; geen herhaalde kop per gevel.
-        if (toonHvh) rows.push([{ text: 'Omschrijving', bold: true, fontSize: 9 }, { text: 'Verfsysteem', bold: true, fontSize: 9 }, { text: 'Hoeveelheid', bold: true, alignment: 'right', fontSize: 9 }, { text: 'Eenheidsprijs', bold: true, alignment: 'right', fontSize: 9 }, { text: 'Totaal', bold: true, alignment: 'right', fontSize: 9 }]);
+        if (toonHvh) rows.push([{ text: 'Omschrijving', bold: true, fontSize: 9 }, { text: 'Hoeveelheid', bold: true, alignment: 'right', fontSize: 9 }, { text: 'Eenheidsprijs', bold: true, alignment: 'right', fontSize: 9 }, { text: 'Totaal', bold: true, alignment: 'right', fontSize: 9 }]);
         let odSum = 0;
         regelsInOd.forEach(y => {
           odSum += y.toonRegelTotaal;
           if (toonHvh) {
             rows.push([
               { text: y.naam || '—' },
-              y.systeemNaam ? { text: y.systeemNaam } : { text: 'onbekend', italics: true },
               { text: fmt(y.hoeveelheid) + ' ' + y.eenheid, alignment: 'right' },
               { text: eur(y.toonprijs), alignment: 'right' },
               { text: eur(y.toonRegelTotaal), alignment: 'right' }
@@ -16794,13 +16796,13 @@ function _bouwOfferteDocDef() {
           }
         });
         if (toonHvh) {
-          rows.push([{ text: 'Subtotaal ' + odNaam, bold: true, colSpan: 4 }, {}, {}, {}, { text: eur(odSum), bold: true, alignment: 'right' }]);
+          rows.push([{ text: 'Subtotaal ' + odNaam, bold: true, colSpan: 3 }, {}, {}, { text: eur(odSum), bold: true, alignment: 'right' }]);
         } else {
           rows.push([{ text: 'Subtotaal ' + odNaam, bold: true }, { text: eur(odSum), bold: true, alignment: 'right' }]);
         }
         const subIdx = rows.length - 1;
         blocks.push({
-          table: { widths: (toonHvh ? ['*', 'auto', 'auto', 'auto', 'auto'] : ['*', 'auto']), body: rows },
+          table: { widths: (toonHvh ? ['*', 'auto', 'auto', 'auto'] : ['*', 'auto']), body: rows },
           layout: { hLineWidth: (i) => (i === subIdx ? 0.75 : 0), vLineWidth: () => 0, hLineColor: () => '#999', paddingTop: () => 2, paddingBottom: () => 2, paddingLeft: (i) => (i === 0 ? 0 : 8), paddingRight: () => 0 }
         });
       });
