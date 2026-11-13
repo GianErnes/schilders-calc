@@ -2480,8 +2480,10 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.118.2</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.120.0</h2>
       <div class="intro-body">
+        <p><strong>🔍 Herziene offerte: eerst vergelijken met de vorige versie (v4.120.0).</strong> Maak je een nieuwe accordeerlink terwijl er al een versie bij de klant is geweest, dan komt er eerst een venster met wat er verandert: de gefactureerde dagen, per regel het oude en nieuwe bedrag, en het totaal. Het venster kleurt rood als de dagen verspringen of als regels stijgen terwijl de hoeveelheid gelijk bleef. In hetzelfde venster wordt de versie opgehoogd (V2, V3, ...); dat hangt niet meer af van een reactie van de klant via de link. De regelvergelijking werkt vanaf de eerste offerte die met deze versie verstuurd is; bij oudere offertes zie je alleen het totaal. Eenmalig SQL: accord_05_cijfers.sql.</p>
+        <p><strong>🧮 De offerte is na te rekenen tot op de cent (v4.119.0).</strong> Op een offerte met hoeveelheden klopte hoeveelheid maal eenheidsprijs niet altijd met het regelbedrag, en de regels telden soms een cent anders op dan het subtotaal of het totaal. De app rekende met meer decimalen dan hij liet zien. Voortaan wordt de hoeveelheid uit de meetstaat afgerond op twee decimalen, elk regelbedrag op de cent, en ook reiskosten, staartposten en BTW. Het totaal is de som van wat er staat. Een bedrag kan hierdoor anders uitkomen dan voorheen: meestal centen, bij regels met een grote hoeveelheid soms een euro of twee. Dit geldt voor calculaties die nog niet op slot staan; wat al verstuurd is blijft rekenen zoals het verstuurd is. Geen SQL.</p>
         <p><strong>💶 Offerte: verfsysteem niet meer in de prijstabel (v4.118.2).</strong> Stond bij Prijsweergave "Regels" het vinkje "Hoeveelheden en eenheidsprijzen tonen" aan, dan kreeg de klant ook een kolom Verfsysteem te zien. Die kolom is weg, op het scherm en in de pdf: de klant ziet omschrijving, hoeveelheid, eenheidsprijs en totaal. Het verfsysteem blijft staan op de calculatieprint, de werkbon en de Yoobi-export. Staat het vinkje uit, dan verandert er niets. Geen SQL.</p>
         <p><strong>🔎 Naar Yoobi: naamcontrole zoekt nu op achternaam (v4.118.1).</strong> Het venster Naar Yoobi meldde "Naam niet gevonden" terwijl de klant er wel stond: er werd gezocht op de hele boekingsnaam ("Mevr. M. Rongen"), en in Yoobi stond "Mevrouw M. Rongen". De controle zoekt nu alleen op de achternaam en toont de treffers ter controle, elk met een link koppelen. Is de klant al via het e-mailadres gevonden, dan staat er geen tegenstrijdige groene regel meer onder. Geen SQL, geen Edge Function.</p>
         <p><strong>📝 Regie-offerte: kosten als tekst in plaats van een prijstabel (v4.118.0).</strong> Onder Offerteteksten staat een nieuwe sectie "Kosten als tekst (regie)", standaard uit. Zet je haar aan, dan vervalt de prijstabel en komt onder de kop "Wat zijn de kosten?" jouw tekst te staan, bijvoorbeeld een regie-afspraak met uurtarief en richtprijs. De calculatie mag dan leeg zijn: je hoeft geen maten of verfsystemen in te voeren. De accordeerlink gaat zonder bedrag mee, de klant tekent voor de afspraak in de tekst. De knop Controleer waarschuwt als er nog een invulplek zoals [bedrag] in de tekst staat en als de teksten over aanbetaling of vaste prijzen nog aan staan. Bestaande offertes veranderen niet. Geen SQL nodig.</p>
@@ -4068,7 +4070,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.118.2';
+const APP_VERSION = 'v4.120.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4491,6 +4493,8 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.120.0', d: '2026-11-13', h: 'Herziene offerte: vergelijkingsvenster met de vorige versie (dagen, regels, totaal; rood bij een dagsprong of regels die stijgen zonder gewijzigde hoeveelheid) en automatische versieophoging zodra een eerdere versie bij de klant is geweest. Eenmalig SQL: accord_05_cijfers.sql.' },
+  { v: '4.119.0', d: '2026-11-13', h: 'Offerte na te rekenen tot op de cent: hoeveelheid uit de meetstaat op twee decimalen, regelbedragen, reiskosten, staartposten en BTW op de cent; het totaal is de som van wat er staat. Alleen voor calculaties die nog niet op slot staan.' },
   { v: '4.118.2', d: '2026-11-13', h: 'Offerte met hoeveelheden en eenheidsprijzen: de kolom Verfsysteem staat niet meer in de prijstabel (scherm en pdf); het verfsysteem is alleen voor intern gebruik.' },
   { v: '4.118.1', d: '2026-11-13', h: 'Naar Yoobi: de naamcontrole zoekt op achternaam in plaats van op de hele boekingsnaam (Mevr. M. Rongen vond Mevrouw M. Rongen niet); geen tegenstrijdig groen vinkje meer als het e-mailadres al een relatie opleverde.' },
   { v: '4.118.0', d: '2026-11-10', h: 'Regie-offerte: nieuwe offertesectie "Kosten als tekst (regie)" vervangt de prijstabel door tekst; de calculatie mag dan leeg zijn en de accordeerlink gaat zonder bedrag mee. Standaard uit, bestaande offertes ongewijzigd. Geen SQL.' },
@@ -16114,9 +16118,10 @@ function _berekenOfferteCijfers(c) {
   const sumRegelVerkoop = allRegels.reduce((s, x) => s + x.regelVerkoop, 0);
 
   // 4. Zichtbare bedragen onderaan (incl. winst-aandeel)
-  const reisZichtbaar = reisTotaal * winstFactor;
+  const _af = _afrondCent(c);   // v4.119.0 — bedragen op de cent, zie _afrondCent
+  const reisZichtbaar = _af ? _r2(reisTotaal * winstFactor) : reisTotaal * winstFactor;
   const staartZichtbaarRows = staartZichtbaar.map(p => ({
-    naam: p.naam, type: p.type, bedrag: calcStaart(p) * (_isDerdenPost(p) ? 1 : winstFactor),   // v4.76.0 — derden-post zonder opslag
+    naam: p.naam, type: p.type, bedrag: (b => _af ? _r2(b) : b)(calcStaart(p) * (_isDerdenPost(p) ? 1 : winstFactor)),   // v4.76.0 — derden-post zonder opslag
     hoeveelheid: p.hoeveelheid, eenheid: p.eenheid, grondslag: p.grondslag,
     btwPct: _isDerdenPost(p) ? parseFloat(p.btwPct) : null
   }));
@@ -16129,15 +16134,18 @@ function _berekenOfferteCijfers(c) {
   const regelFactor = sumRegelVerkoop > 0 ? exBtwInRegels / sumRegelVerkoop : 1;
 
   // 7. Per regel: nieuwe eenheidsprijs, naar boven afgerond op 1 cent
-  const ceilToCent = (n) => Math.ceil(n * 100) / 100;
+  const ceilToCent = (n) => _af ? _ceilCent(n) : Math.ceil(n * 100) / 100;
   const regels = allRegels.map(x => {
     const echtRegelTotaal = x.regelVerkoop * regelFactor;
-    const echteEenheidsprijs = echtRegelTotaal / x.r.hoeveelheid;
+    // v4.119.0 — rekenen met de hoeveelheid zoals ze op de offerte staat (twee
+    // decimalen) en het regelbedrag op de cent: hoeveelheid x prijs = bedrag.
+    const hv = (_af && _r2(x.r.hoeveelheid) > 0) ? _r2(x.r.hoeveelheid) : x.r.hoeveelheid;
+    const echteEenheidsprijs = echtRegelTotaal / hv;
     const toonprijs = ceilToCent(echteEenheidsprijs);
-    const toonRegelTotaal = toonprijs * x.r.hoeveelheid;
+    const toonRegelTotaal = _af ? _r2(toonprijs * hv) : toonprijs * hv;
     return {
       r: x.r, hgNaam: x.hgNaam, odNaam: x.odNaam,
-      hoeveelheid: x.r.hoeveelheid,
+      hoeveelheid: hv,
       eenheid: x.r.systeemEenheid || '',
       systeemNaam: x.r.systeemNaam || '',
       naam: x.r.naam || '',
@@ -16147,10 +16155,15 @@ function _berekenOfferteCijfers(c) {
 
   // 8. Eindtotaal
   const sumRegels = regels.reduce((s, y) => s + y.toonRegelTotaal, 0);
-  const exBtwFinal = sumRegels + reisZichtbaar + staartZichtbaarRowsTot;
-  const btwVerd = _btwVerdeling(exBtwFinal, c, sett, staartLijst, calcStaart);   // v4.76.0 — BTW per tarief
+  const exBtwRuw = sumRegels + reisZichtbaar + staartZichtbaarRowsTot;
+  const exBtwFinal = _af ? _r2(exBtwRuw) : exBtwRuw;
+  const btwVerd = _btwVerdeling(exBtwFinal, c, sett, staartLijst, _af ? (p => _r2(calcStaart(p))) : calcStaart);   // v4.76.0 — BTW per tarief
+  if (_af) {   // v4.119.0 — BTW per tarief op de cent; het totaal is de som van wat er staat
+    btwVerd.regels.forEach(r => { r.grondslag = _r2(r.grondslag); r.btw = _r2(r.btw); });
+    btwVerd.btw = _r2(btwVerd.regels.reduce((s, r) => s + r.btw, 0));
+  }
   const btwBedrag = btwVerd.btw;
-  const totaalIncl = exBtwFinal + btwBedrag;
+  const totaalIncl = _af ? _r2(exBtwFinal + btwBedrag) : exBtwFinal + btwBedrag;
   const afrondingsOverschot = exBtwFinal - exBtw;
 
   return {
@@ -16265,11 +16278,12 @@ function printOfferteYoobi() {
   //    Reis en staart-zichtbaar zijn directe kosten; in het officiële totaal
   //    krijgen ze een aandeel van de risico-opslag. Voor een nette offerte tonen
   //    we ze incl. dat winst-aandeel zodat de klant de eindprijs van die post ziet.
-  const reisZichtbaar = reisTotaal * winstFactor;
+  const _af = _afrondCent(c);   // v4.119.0 — bedragen op de cent, zie _afrondCent
+  const reisZichtbaar = _af ? _r2(reisTotaal * winstFactor) : reisTotaal * winstFactor;
   const staartZichtbaarRows = staartZichtbaar.map(p => ({
     naam: p.naam,
     type: p.type,
-    bedrag: calcStaart(p) * (_isDerdenPost(p) ? 1 : winstFactor),   // v4.76.0 — derden-post zonder opslag
+    bedrag: (b => _af ? _r2(b) : b)(calcStaart(p) * (_isDerdenPost(p) ? 1 : winstFactor)),   // v4.76.0 — derden-post zonder opslag
     btwPct: _isDerdenPost(p) ? parseFloat(p.btwPct) : null
   }));
   const staartZichtbaarRowsTot = staartZichtbaarRows.reduce((s,p) => s + p.bedrag, 0);
@@ -16282,18 +16296,21 @@ function printOfferteYoobi() {
   const regelFactor = sumRegelVerkoop > 0 ? exBtwInRegels / sumRegelVerkoop : 1;
 
   // 7. Per regel: nieuwe eenheidsprijs, naar boven afgerond op 1 cent
-  const ceilToCent = (n) => Math.ceil(n * 100) / 100;
+  const ceilToCent = (n) => _af ? _ceilCent(n) : Math.ceil(n * 100) / 100;
   const yoobiRegels = allRegels.map(x => {
     const rt = calcRegelTotalen(x.r);
     const echtRegelTotaal = x.regelVerkoop * regelFactor;
-    const echteEenheidsprijs = echtRegelTotaal / x.r.hoeveelheid;
+    // v4.119.0 — rekenen met de hoeveelheid zoals ze op de offerte staat (twee
+    // decimalen) en het regelbedrag op de cent: hoeveelheid x prijs = bedrag.
+    const hv = (_af && _r2(x.r.hoeveelheid) > 0) ? _r2(x.r.hoeveelheid) : x.r.hoeveelheid;
+    const echteEenheidsprijs = echtRegelTotaal / hv;
     const toonprijs = ceilToCent(echteEenheidsprijs);
-    const toonRegelTotaal = toonprijs * x.r.hoeveelheid;
+    const toonRegelTotaal = _af ? _r2(toonprijs * hv) : toonprijs * hv;
     return {
       r: x.r,
       hgNaam: x.hgNaam,
       odNaam: x.odNaam,
-      hoeveelheid: x.r.hoeveelheid,
+      hoeveelheid: hv,
       eenheid: x.r.systeemEenheid || '',
       toonprijs,
       toonRegelTotaal
@@ -16302,10 +16319,15 @@ function printOfferteYoobi() {
 
   // 8. Eindtotaal Yoobi-versie (kan iets hoger uitvallen dan exBtw door afronding)
   const sumYoobiRegels = yoobiRegels.reduce((s, y) => s + y.toonRegelTotaal, 0);
-  const exBtwYoobi = sumYoobiRegels + reisZichtbaar + staartZichtbaarRowsTot;
-  const btwVerdYoobi = _btwVerdeling(exBtwYoobi, c, sett, staartLijst, calcStaart);   // v4.76.0
+  const exBtwYoobiRuw = sumYoobiRegels + reisZichtbaar + staartZichtbaarRowsTot;
+  const exBtwYoobi = _af ? _r2(exBtwYoobiRuw) : exBtwYoobiRuw;
+  const btwVerdYoobi = _btwVerdeling(exBtwYoobi, c, sett, staartLijst, _af ? (p => _r2(calcStaart(p))) : calcStaart);   // v4.76.0
+  if (_af) {   // v4.119.0 — zelfde afronding als de offerte
+    btwVerdYoobi.regels.forEach(r => { r.grondslag = _r2(r.grondslag); r.btw = _r2(r.btw); });
+    btwVerdYoobi.btw = _r2(btwVerdYoobi.regels.reduce((s, r) => s + r.btw, 0));
+  }
   const btwBedragYoobi = btwVerdYoobi.btw;
-  const totaalYoobi = exBtwYoobi + btwBedragYoobi;
+  const totaalYoobi = _af ? _r2(exBtwYoobi + btwBedragYoobi) : exBtwYoobi + btwBedragYoobi;
   const afrondingsOverschot = exBtwYoobi - exBtw;
 
   // 9. HTML opbouwen
@@ -18498,9 +18520,11 @@ function _meetstaatSomVoorRegel(regelId) {
   // Sum totals for all meetstaat-rows belonging to this calc-regel
   if (!data.calc.meetstaat) return 0;
   // v4.117.0 — alleen rijen die aan staan tellen mee
-  return data.calc.meetstaat
+  const som = data.calc.meetstaat
     .filter(ms => ms.calcRegelId === regelId && _msIsAan(ms))
     .reduce((sum, ms) => sum + _meetstaatRijTotaal(ms).totaal, 0);
+  // v4.119.0 — twee decimalen, gelijk aan wat de offerte toont en de database bewaart
+  return _afrondCent(data.calc) ? _r2(som) : som;
 }
 // Telt bewust ALLE rijen, ook uitgezette: een regel met alleen uitgezette rijen blijft
 // 'gemeten' en krijgt hoeveelheid 0, in plaats van terug te vallen op een oud getal.
@@ -22582,6 +22606,47 @@ function _isCalcLocked(c) {
   if (!c) return false;
   return c.status && c.status !== 'concept' && c.status !== 'afspraak';
 }
+// v4.119.0 — Afronden op de cent, zodat de klant de offerte kan narekenen.
+// _r2: rekenkundig afronden op twee decimalen (toPrecision haalt de ruis van
+// drijvende-kommagetallen weg, anders wordt 1,005 soms 1,00 in plaats van 1,01).
+function _r2(n) {
+  const x = Number(n);
+  if (!isFinite(x)) return 0;
+  const teken = x < 0 ? -1 : 1;
+  return (teken * Math.round(Number((Math.abs(x) * 100).toPrecision(12))) / 100) || 0;
+}
+// Naar boven afronden op de cent, zonder dat ruis een hele cent toevoegt.
+function _ceilCent(n) {
+  const x = Number(n);
+  if (!isFinite(x)) return 0;
+  return Math.ceil(Number((x * 100).toPrecision(12))) / 100;
+}
+// Geldt de afronding van v4.119.0 voor deze calculatie? Ja als de calculatie
+// niet op slot staat, of als ze met de nieuwe afronding op slot is gegaan
+// (vlag offerte_config.afrondCent). Een calculatie die vóór v4.119.0 op slot
+// ging heeft de vlag niet en blijft rekenen zoals ze verstuurd is.
+function _afrondCent(c) {
+  if (!c) return false;
+  const cfg = (c.offerteConfig && typeof c.offerteConfig === 'object') ? c.offerteConfig : null;
+  if (cfg && cfg.afrondCent === true) return true;
+  return !_isCalcLocked(c);
+}
+// Legt de vlag vast, op het moment dat de calculatie op slot gaat of er een
+// accordeerlink voor wordt gemaakt. Daarna blijft de afronding gelden, ook
+// als de status later (door de klant, via de accordeerpagina) verandert.
+function _afrondCentVastleggen(c) {
+  if (!c || !c.id) return;
+  if (!c.offerteConfig || typeof c.offerteConfig !== 'object') c.offerteConfig = {};
+  if (c.offerteConfig.afrondCent === true) return;
+  c.offerteConfig.afrondCent = true;
+  if (typeof _sb === 'undefined' || !_sb) return;
+  _sbQuery(
+    _sb.from('calculaties').update({ offerte_config: c.offerteConfig }).eq('id', c.id),
+    'Afronding vastleggen'
+  ).then(({ error }) => {
+    if (error) _toast('Let op: de afronding op de cent kon niet bij deze calculatie worden vastgelegd (' + (error.message || error) + '). Zet de status opnieuw.');
+  });
+}
 // Gebruik snapshot waar aanwezig, anders live settings.
 function _activeSettings(c) {
   if (c && c.settingsSnapshot) return c.settingsSnapshot;
@@ -22626,6 +22691,9 @@ async function setCalcStatus(id, status) {
   const oudSnapshot = c.settingsSnapshot;  // v4.11.1
   c.status = status;
   const isNowLocked = _isCalcLocked(c);
+  // v4.119.0 — gaat de calculatie nu op slot, dan de afronding op de cent vastleggen,
+  // vóór het totaal hieronder bevroren wordt.
+  if (isNowLocked && !wasLocked) _afrondCentVastleggen(c);
 
   if (isNowLocked && !c.settingsSnapshot) {
     // Bevries alle huidige settings — diep gekopieerd
@@ -24070,7 +24138,8 @@ function _calcTotalForArchive(c, includeInactief = false) {
         else t = hM * bM * aant;
         return s + t * factor;
       }, 0);
-      if (r.hoeveelheid !== som) r.hoeveelheid = som;
+      const somAf = _afrondCent(c) ? _r2(som) : som;   // v4.119.0
+      if (r.hoeveelheid !== somAf) r.hoeveelheid = somAf;
     })));
   }
   let arbeid = 0, matInkoop = 0, matVerkoop = 0, uren = 0, verkoop = 0;
@@ -27035,6 +27104,331 @@ function _accordOffertedatumNaarVandaag(c, vraagFn, vandaagIso) {
   return true;
 }
 
+/* ---------- v4.120.0 — Herziene offerte: vergelijking met de vorige versie, versie automatisch ---------- */
+// Aanleiding: offerte 260148 (M. Joosten, 13-11-2026). Een vergeten kozijn erbij schoof het
+// werk van 5,19 naar 5,75 dag; boven de drempel, dus 6 gefactureerde dagen, en de
+// afrondingstoeslag werd over alle regels verdeeld. De klant zag elk onderdeel stijgen en
+// vroeg of het een vergissing was. Bij het versturen was dat nergens te zien. Daarnaast
+// bleef het offertenummer drie keer zonder V-aanduiding, omdat de versievraag alleen kwam
+// als de klant via de link had gereageerd (zij reageerde per gewone mail).
+//
+// De cijfers van een verstuurde versie staan in de kolom offerte_accorderingen.cijfers
+// (sql/accord_05_cijfers.sql). NIET in snapshot: de Edge Function offerte-accord geeft de
+// hele snapshot door aan de browser van de klant (gelezen in v43, 13-11-2026), en dagen en
+// afrondingstoeslag zijn intern. De kolom cijfers staat niet in de select van die functie.
+// Ontbreekt de kolom, dan werkt alles door zonder regelvergelijking (alleen totaal).
+
+// De cijfers van de offerte zoals ze nu de deur uit zou gaan. null bij een regie-offerte
+// (geen prijstabel) of als er niets te rekenen valt.
+function _accordCijfersVoorLink(c) {
+  try {
+    if (_offKostenAlsTekst(_offCfg())) return null;
+    const cij = _berekenOfferteCijfers(c);
+    if (!cij) return null;
+    const sett = cij.sett || {};
+    const dw = _calcDays();
+    const df = cij.dagenFactureerbaar;
+    const volle = _useVolleDagen();
+    const uren = volle ? Math.max(0, df - dw) * (c.schilders || 0) * (c.uurDag || 7.5) : 0;
+    return {
+      v: 1, app: APP_VERSION,
+      dagenWerkelijk: dw, dagenFactureerbaar: df, volleDagen: volle,
+      afrondingsUren: _r2(uren), afrondingsToeslag: _r2(uren * (sett.uurloon || 0)),
+      exBtw: _r2(cij.exBtwFinal), btw: _r2(cij.btwBedrag), totaalIncl: _r2(cij.totaalIncl),
+      reis: _r2(cij.reisZichtbaar),
+      regels: cij.regels.map(x => ({
+        id: x.r.id, hg: x.hgNaam || '', od: x.odNaam || '', naam: x.naam || '',
+        hv: _r2(x.hoeveelheid), eenheid: x.eenheid || '',
+        prijs: _r2(x.toonprijs), bedrag: _r2(x.toonRegelTotaal)
+      })),
+      staart: cij.staartZichtbaarRows.map(p => ({ naam: p.naam || '', bedrag: _r2(p.bedrag) }))
+    };
+  } catch (e) {
+    console.warn('Cijfers voor de versievergelijking niet berekend:', e);
+    return null;
+  }
+}
+
+// Is deze eerdere link bij de klant geweest? Gemaild vanuit de app, door de klant geopend
+// (Zelf bekijken telt niet mee, dat regelt offerte-accord met ?intern=1) of beantwoord.
+// Een proeflink die nooit de deur uit ging telt niet als versie.
+function _accordBijKlantGeweest(r) {
+  if (!r) return false;
+  return !!(r.eerst_gemaild_op || r.gemaild_op || r.eerste_geopend_op || r.gereageerd_op
+    || r.status === 'akkoord' || r.status === 'afgekeurd'
+    || (Array.isArray(r.vragen) && r.vragen.length > 0));
+}
+
+// Het versienummer van de nieuwe offerte. Hoogste van drie:
+//   - de versie van de laatste offerte die bij de klant is geweest, plus 1;
+//   - het aantal versies dat bij de klant is geweest, plus 1 (Joosten: drie keer "260148"
+//     zonder V verstuurd, de volgende is dus V4 en niet V2);
+//   - het versieveld zelf, ongewijzigd. Zo telt een mislukte poging (versie al opgehoogd,
+//     link niet gemaakt) niet dubbel, en blijft een met de hand hoger gezet veld staan.
+function _accordNieuweVersieNr(huidig, aantalBijKlant, laatsteNummer) {
+  const h = Math.max(1, parseInt(huidig, 10) || 1);
+  const n = Math.max(0, parseInt(aantalBijKlant, 10) || 0);
+  const m = / V(\d+)\s*$/.exec(String(laatsteNummer || ''));
+  const laatste = m ? Math.max(1, parseInt(m[1], 10) || 1) : 1;
+  return Math.max(laatste + 1, n + 1, h);
+}
+
+// Vergelijkt de cijfers van de vorige versie (oud, mag null zijn) met de nieuwe (nieuw).
+// oudBedragIncl = het bewaarde totaal incl. BTW van de vorige link, voor de terugval.
+// Zuivere functie: geen DOM, geen database.
+function _accordVergelijk(oud, nieuw, oudBedragIncl) {
+  const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+  const r2 = n => Math.round((num(n) + Number.EPSILON) * 100) / 100;
+  const uit = {
+    volledig: false, regels: [], posten: [], dagen: null,
+    meegestegen: 0, meegedaald: 0, gewijzigd: 0, nieuw: 0, vervallen: 0,
+    dagenVerspringt: false, rood: false,
+    totaal: {
+      oudIncl: (oudBedragIncl == null || oudBedragIncl === '') ? null : r2(oudBedragIncl),
+      nieuwIncl: nieuw ? r2(nieuw.totaalIncl) : null,
+      oudExcl: null, nieuwExcl: nieuw ? r2(nieuw.exBtw) : null
+    }
+  };
+  if (!nieuw) return uit;
+  const oudOk = !!(oud && typeof oud === 'object' && Array.isArray(oud.regels));
+  if (!oudOk) return uit;
+  uit.volledig = true;
+  uit.totaal.oudExcl = r2(oud.exBtw);
+  if (uit.totaal.oudIncl == null && oud.totaalIncl != null) uit.totaal.oudIncl = r2(oud.totaalIncl);
+
+  // Dagen
+  const oF = num(oud.dagenFactureerbaar), nF = num(nieuw.dagenFactureerbaar);
+  uit.dagen = {
+    oudWerkelijk: num(oud.dagenWerkelijk), nieuwWerkelijk: num(nieuw.dagenWerkelijk),
+    oudFactureerbaar: oF, nieuwFactureerbaar: nF,
+    oudToeslag: r2(oud.afrondingsToeslag), nieuwToeslag: r2(nieuw.afrondingsToeslag)
+  };
+  uit.dagenVerspringt = Math.abs(oF - nF) > 0.004;
+
+  // Regels, gekoppeld op regel-id. Volgorde: die van de nieuwe offerte, daarna wat verviel.
+  const oudMap = {};
+  oud.regels.forEach(r => { if (r && r.id != null) oudMap[String(r.id)] = r; });
+  const gezien = {};
+  (nieuw.regels || []).forEach(n => {
+    const o = (n && n.id != null) ? oudMap[String(n.id)] : null;
+    const rij = {
+      naam: n.naam || '', od: n.od || '', hg: n.hg || '', eenheid: n.eenheid || '',
+      oudHv: o ? num(o.hv) : null, nieuwHv: num(n.hv),
+      oudPrijs: o ? num(o.prijs) : null, nieuwPrijs: num(n.prijs),
+      oudBedrag: o ? r2(o.bedrag) : null, nieuwBedrag: r2(n.bedrag),
+      verschil: r2(num(n.bedrag) - (o ? num(o.bedrag) : 0)), soort: 'gelijk'
+    };
+    if (!o) { rij.soort = 'nieuw'; uit.nieuw++; }
+    else {
+      gezien[String(n.id)] = true;
+      if (Math.abs(rij.oudHv - rij.nieuwHv) > 0.005) { rij.soort = 'gewijzigd'; uit.gewijzigd++; }
+      else {
+        // Drempel: meer dan 1 cent per eenheid. Eén cent verschil is afronding, geen signaal.
+        const dp = rij.nieuwPrijs - rij.oudPrijs;
+        if (dp > 0.0101) { rij.soort = 'meegestegen'; uit.meegestegen++; }
+        else if (dp < -0.0101) { rij.soort = 'meegedaald'; uit.meegedaald++; }
+      }
+    }
+    uit.regels.push(rij);
+  });
+  oud.regels.forEach(o => {
+    if (!o || o.id == null || gezien[String(o.id)]) return;
+    uit.regels.push({
+      naam: o.naam || '', od: o.od || '', hg: o.hg || '', eenheid: o.eenheid || '',
+      oudHv: num(o.hv), nieuwHv: null, oudPrijs: num(o.prijs), nieuwPrijs: null,
+      oudBedrag: r2(o.bedrag), nieuwBedrag: null, verschil: r2(-num(o.bedrag)), soort: 'vervallen'
+    });
+    uit.vervallen++;
+  });
+
+  // Reiskosten en zichtbare staartposten, gekoppeld op naam (en volgnummer bij dubbele namen).
+  const sleutels = lijst => {
+    const tel = {}, m = {}, volg = [];
+    (lijst || []).forEach(p => {
+      const naam = String((p && p.naam) || '');
+      tel[naam] = (tel[naam] || 0) + 1;
+      const k = naam + '#' + tel[naam];
+      m[k] = { naam: naam, bedrag: r2(p && p.bedrag) };
+      volg.push(k);
+    });
+    return { m, volg };
+  };
+  const so = sleutels([{ naam: 'Reiskosten', bedrag: oud.reis }].concat(oud.staart || []));
+  const sn = sleutels([{ naam: 'Reiskosten', bedrag: nieuw.reis }].concat(nieuw.staart || []));
+  sn.volg.forEach(k => {
+    const n = sn.m[k], o = so.m[k] || null;
+    uit.posten.push({ naam: n.naam, oudBedrag: o ? o.bedrag : null, nieuwBedrag: n.bedrag,
+      verschil: r2(n.bedrag - (o ? o.bedrag : 0)), soort: !o ? 'nieuw' : (Math.abs(n.bedrag - o.bedrag) > 0.004 ? 'gewijzigd' : 'gelijk') });
+  });
+  so.volg.forEach(k => {
+    if (sn.m[k]) return;
+    const o = so.m[k];
+    uit.posten.push({ naam: o.naam, oudBedrag: o.bedrag, nieuwBedrag: null, verschil: r2(-o.bedrag), soort: 'vervallen' });
+  });
+
+  uit.rood = uit.dagenVerspringt || uit.meegestegen > 0;
+  return uit;
+}
+
+// Eerdere offertelinks van deze calculatie, nieuwste eerst. Probeert eerst met de kolom
+// cijfers; bestaat die nog niet, dan zonder. Gooit een fout als ook dat mislukt.
+async function _accordVorigeLaden(calcId) {
+  const basis = 'id, status, bedrag, aangemaakt_op, gemaild_op, eerst_gemaild_op, eerste_geopend_op, gereageerd_op, vragen, pdf_path, snapshot->>offertenummer';
+  const haal = async (kolommen) => _sb.from('offerte_accorderingen')
+    .select(kolommen).eq('calculatie_id', calcId).is('onderhoudsplan_id', null)
+    .order('aangemaakt_op', { ascending: false });
+  let res = await haal(basis + ', cijfers');
+  let kolomOntbreekt = false;
+  if (res.error && /cijfers/i.test(String(res.error.message || ''))) {
+    kolomOntbreekt = true;
+    res = await haal(basis);
+  }
+  if (res.error) throw res.error;
+  return { rows: Array.isArray(res.data) ? res.data : [], kolomOntbreekt: kolomOntbreekt };
+}
+
+function _accordVglDagen(n) {
+  return (parseFloat(n) || 0).toLocaleString('nl-NL', { maximumFractionDigits: 2 });
+}
+function _accordVglVerschil(n) {
+  if (n == null) return '';
+  if (Math.abs(n) < 0.005) return '—';
+  return (n > 0 ? '+ ' : '− ') + eur(Math.abs(n));
+}
+
+// De HTML van het vergelijkingsvenster. info = { vorige, vgl, nieuwNr, huidigNr, aantalBijKlant,
+// dagenNorm, kolomOntbreekt, regie }.
+function _accordVergelijkHtml(c, info) {
+  const v = info.vorige, vgl = info.vgl;
+  const td = 'padding:3px 6px;border-bottom:1px solid #eee;';
+  const tdr = td + 'text-align:right;white-space:nowrap;';
+  let h = '<h3>🔍 Herziene offerte</h3>'
+    + '<div class="acb-sub">' + _accordEsc(c.naam || '') + '</div>';
+
+  h += '<div class="acb-sub" style="margin-top:8px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;">'
+    + '<span>Vorige versie: <strong>' + _accordEsc(v.offertenummer || 'zonder nummer') + '</strong> van ' + _accordDatum(v.aangemaakt_op)
+    + (v.bedrag != null ? ', ' + eur(parseFloat(v.bedrag) || 0) + ' incl. BTW' : '') + '</span>'
+    + (v.pdf_path ? '<button type="button" class="acb-btn sec" id="acbVglPdf" style="padding:4px 10px;font-size:13px;white-space:nowrap;margin-top:0;">⬇️ PDF</button>' : '')
+    + '</div>';
+
+  // Versie
+  h += '<div style="margin-top:12px;padding:10px 12px;border:1px solid #cfccc4;border-radius:8px;">'
+    + '<label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;">'
+    + '<input type="checkbox" id="acbVglOphogen" checked style="width:auto;margin:3px 0 0 0;">'
+    + '<span><strong>Versie ophogen naar V' + info.nieuwNr + '</strong>'
+    + '<br><span style="font-size:13px;color:#666;">Deze offerte gaat de deur uit als ' + _accordEsc(info.nummerNieuw)
+    + '. Offertedatum wordt vandaag, geldig-tot +' + info.dagenNorm + ' dagen. '
+    + (info.aantalBijKlant === 1 ? 'Er is al 1 versie bij de klant geweest.' : 'Er zijn al ' + info.aantalBijKlant + ' versies bij de klant geweest.')
+    + ' Vinkje uit = versie ' + info.huidigNr + ' en de datum blijven staan.</span></span></label></div>';
+
+  if (info.regie) {
+    h += '<div class="acb-sub" style="margin-top:12px;">Dit is een regie-offerte zonder prijstabel; er zijn geen bedragen te vergelijken.</div>';
+  } else if (!vgl || !vgl.volledig) {
+    // Terugval: de vorige versie heeft geen bewaarde cijfers.
+    const t = vgl ? vgl.totaal : { oudIncl: null, nieuwIncl: null };
+    const d = (t.oudIncl != null && t.nieuwIncl != null) ? (t.nieuwIncl - t.oudIncl) : null;
+    h += '<div style="margin-top:12px;padding:10px 12px;border-radius:8px;background:#fff8e1;border:1px solid #f6d365;color:#7a4a00;">'
+      + '<strong>Alleen het totaal is te vergelijken.</strong> Van de vorige versie zijn geen regelbedragen bewaard'
+      + (info.kolomOntbreekt ? ' (de kolom cijfers ontbreekt nog in de database: draai accord_05_cijfers.sql)' : ' (verstuurd vóór v4.120.0)')
+      + '. Open de vorige PDF om de regels zelf naast elkaar te leggen.</div>';
+    h += '<table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:10px;">'
+      + '<tr><td style="' + td + '">Totaal incl. BTW, was</td><td style="' + tdr + '">' + (t.oudIncl != null ? eur(t.oudIncl) : 'onbekend') + '</td></tr>'
+      + '<tr><td style="' + td + '">Totaal incl. BTW, wordt</td><td style="' + tdr + '">' + (t.nieuwIncl != null ? eur(t.nieuwIncl) : 'onbekend') + '</td></tr>'
+      + '<tr><td style="' + td + '"><strong>Verschil</strong></td><td style="' + tdr + '"><strong>' + (d != null ? _accordVglVerschil(d) : '') + '</strong></td></tr>'
+      + '</table>';
+  } else {
+    const dg = vgl.dagen;
+    // Banner
+    if (vgl.rood) {
+      let zinnen = [];
+      if (vgl.dagenVerspringt) {
+        zinnen.push('De gefactureerde dagen gaan van ' + _accordVglDagen(dg.oudFactureerbaar) + ' naar ' + _accordVglDagen(dg.nieuwFactureerbaar)
+          + ' (afrondingstoeslag van ' + eur(dg.oudToeslag) + ' naar ' + eur(dg.nieuwToeslag) + ').');
+      }
+      if (vgl.meegestegen > 0) {
+        zinnen.push((vgl.meegestegen === 1 ? '1 regel stijgt' : vgl.meegestegen + ' regels stijgen') + ' terwijl de hoeveelheid gelijk bleef. De klant ziet dat als "alles is duurder".');
+      }
+      h += '<div id="acbVglBanner" data-rood="1" style="margin-top:12px;padding:10px 12px;border-radius:8px;background:#fdecea;border:1px solid #b00020;color:#7a0016;">'
+        + '<strong>Let op.</strong> ' + zinnen.map(_accordEsc).join(' ') + '</div>';
+    } else {
+      h += '<div id="acbVglBanner" data-rood="0" style="margin-top:12px;padding:10px 12px;border-radius:8px;background:#e8f5e9;border:1px solid #16a34a;color:#14532d;">'
+        + 'Geen bijzonderheden: de gefactureerde dagen blijven gelijk en er stijgt geen regel zonder gewijzigde hoeveelheid.</div>';
+    }
+    h += '<div class="acb-sub" style="margin-top:8px;">Dagen werkelijk → gefactureerd: was '
+      + _accordVglDagen(dg.oudWerkelijk) + ' → ' + _accordVglDagen(dg.oudFactureerbaar)
+      + ', wordt ' + _accordVglDagen(dg.nieuwWerkelijk) + ' → ' + _accordVglDagen(dg.nieuwFactureerbaar) + '.</div>';
+
+    const label = {
+      gewijzigd: ['hoeveelheid gewijzigd', '#1a5fb4'], meegestegen: ['stijgt zonder wijziging', '#b00020'],
+      meegedaald: ['daalt zonder wijziging', '#666'], nieuw: ['nieuw', '#1a5fb4'], vervallen: ['vervallen', '#666'], gelijk: ['', '#666']
+    };
+    h += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;">'
+      + '<tr style="text-align:left;color:#666;"><th style="' + td + '">Regel</th><th style="' + tdr + '">Was</th><th style="' + tdr + '">Wordt</th><th style="' + tdr + '">Verschil</th></tr>';
+    vgl.regels.forEach(r => {
+      const l = label[r.soort] || label.gelijk;
+      let sub = _accordEsc(r.od || '');
+      if (r.soort === 'gewijzigd') sub += (sub ? ' · ' : '') + fmt(r.oudHv) + ' → ' + fmt(r.nieuwHv) + ' ' + _accordEsc(r.eenheid);
+      h += '<tr' + (r.soort === 'meegestegen' ? ' style="background:#fdecea;"' : '') + '>'
+        + '<td style="' + td + '">' + _accordEsc(r.naam)
+        + (sub ? '<br><span style="color:#888;font-size:12px;">' + sub + '</span>' : '')
+        + (l[0] ? '<br><span style="color:' + l[1] + ';font-size:12px;font-weight:600;">' + l[0] + '</span>' : '') + '</td>'
+        + '<td style="' + tdr + '">' + (r.oudBedrag != null ? eur(r.oudBedrag) : '') + '</td>'
+        + '<td style="' + tdr + '">' + (r.nieuwBedrag != null ? eur(r.nieuwBedrag) : '') + '</td>'
+        + '<td style="' + tdr + '">' + _accordVglVerschil(r.verschil) + '</td></tr>';
+    });
+    vgl.posten.forEach(p => {
+      if (p.soort === 'gelijk' && Math.abs(p.nieuwBedrag || 0) < 0.005) return; // lege post die leeg bleef
+      h += '<tr><td style="' + td + 'color:#555;">' + _accordEsc(p.naam)
+        + (p.soort === 'nieuw' || p.soort === 'vervallen' ? '<br><span style="color:#666;font-size:12px;font-weight:600;">' + p.soort + '</span>' : '') + '</td>'
+        + '<td style="' + tdr + '">' + (p.oudBedrag != null ? eur(p.oudBedrag) : '') + '</td>'
+        + '<td style="' + tdr + '">' + (p.nieuwBedrag != null ? eur(p.nieuwBedrag) : '') + '</td>'
+        + '<td style="' + tdr + '">' + _accordVglVerschil(p.verschil) + '</td></tr>';
+    });
+    const t = vgl.totaal;
+    const rijT = (naam, o, n) => '<tr><td style="' + td + '"><strong>' + naam + '</strong></td>'
+      + '<td style="' + tdr + '"><strong>' + (o != null ? eur(o) : '') + '</strong></td>'
+      + '<td style="' + tdr + '"><strong>' + (n != null ? eur(n) : '') + '</strong></td>'
+      + '<td style="' + tdr + '"><strong>' + ((o != null && n != null) ? _accordVglVerschil(n - o) : '') + '</strong></td></tr>';
+    h += rijT('Totaal excl. BTW', t.oudExcl, t.nieuwExcl) + rijT('Totaal incl. BTW', t.oudIncl, t.nieuwIncl) + '</table>';
+  }
+
+  h += '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">'
+    + '<button class="acb-btn" id="acbVglDoor">Doorgaan en link maken</button>'
+    + '<button class="acb-btn sec" id="acbVglStop" style="margin-top:0;">Annuleren</button></div>';
+  return h;
+}
+
+// Toont het venster in de acb-body en wacht op de keuze. Geeft { ophogen: true/false } terug,
+// of null bij Annuleren.
+function _accordVergelijkVenster(c, body, info) {
+  return new Promise(resolve => {
+    body.innerHTML = _accordVergelijkHtml(c, info);
+    const pdfBtn = body.querySelector('#acbVglPdf');
+    if (pdfBtn) pdfBtn.addEventListener('click', async () => {
+      const oud = pdfBtn.textContent; pdfBtn.disabled = true; pdfBtn.textContent = 'Bezig…';
+      try {
+        const { data: blob, error } = await _sb.storage.from(ACCORD_PDF_BUCKET).download(info.vorige.pdf_path);
+        if (error) throw error;
+        const naam = String((info.vorige.offertenummer || 'offerte') + ' - ' + (c.naam || '') + ' (vorige versie)').replace(/[\\/:*?"<>|]+/g, '-').trim();
+        _pdfBytesDownload(await blob.arrayBuffer(), naam + '.pdf');
+      } catch (e) {
+        _toast('PDF ophalen mislukt: ' + (e.message || e));
+      } finally { pdfBtn.disabled = false; pdfBtn.textContent = oud; }
+    });
+    body.querySelector('#acbVglDoor').addEventListener('click', () => {
+      const vink = body.querySelector('#acbVglOphogen');
+      resolve({ ophogen: !!(vink && vink.checked) });
+    });
+    body.querySelector('#acbVglStop').addEventListener('click', () => resolve(null));
+  });
+}
+
+// Het offertenummer zoals het met een gegeven versie op het document komt.
+function _accordNummerMetVersie(c, versie) {
+  const kaal = String(_offerteNummer(c) || '').replace(/ V\d+$/, '');
+  return versie > 1 ? kaal + ' V' + versie : kaal;
+}
+
 async function _accordNieuweLink(c, body, supersede) {
   // v4.26.0 — harde stop: geen accordeerlink zonder offertenummer (Yoobi-verkoopnummer).
   if (!_offerteNummer(c)) {
@@ -27044,42 +27438,59 @@ async function _accordNieuweLink(c, body, supersede) {
     return;
   }
   body.innerHTML = 'Bezig met aanmaken\u2026';
-  // v3.91.0 — Herziening: heeft de klant op een eerdere accordeerlink gereageerd
-  // (akkoord, afwijzing of een vraag), dan is deze nieuwe link een nieuwe versie.
-  // Sinds v4.14.3 na een bevestigingsvraag: OK hoogt op en schuift de offertedatum mee naar vandaag (geldig-tot
-  // opnieuw op +30 dagen), v\u00f3\u00f3r het document wordt gebouwd zodat het bevroren
-  // exemplaar de nieuwe versie en datum toont.
+  // v4.120.0 — Herziening: is er al een versie van deze offerte bij de klant geweest
+  // (gemaild, geopend of beantwoord), dan komt eerst het vergelijkingsvenster. Daarin staat
+  // wat er ten opzichte van de vorige versie verandert en wordt de versie opgehoogd
+  // (vinkje, standaard aan). Vervangt de bevestigingsvraag uit v3.91.0/v4.14.3, die alleen
+  // kwam als de klant via de link had gereageerd. De ophoging gebeurt v\u00f3\u00f3r het document
+  // wordt gebouwd, zodat het bevroren exemplaar de nieuwe versie en datum toont.
   let _herzieningGevraagd = false; // v4.77.0 — is de versievraag hieronder gesteld?
+  const _cijfersNu = _accordCijfersVoorLink(c); // v4.120.0 — gaat ook mee in de nieuwe rij
+  let _vorigeRes = null;
   try {
-    const { data: _prevAcc } = await _sb.from('offerte_accorderingen')
-      .select('status, gereageerd_op, vragen').eq('calculatie_id', c.id)
-      .is('onderhoudsplan_id', null); // v4.51.0 — een planreactie is geen offerteherziening
-    const _gereageerd = Array.isArray(_prevAcc) && _prevAcc.some(r =>
-      r.gereageerd_op != null || r.status === 'akkoord' || r.status === 'afgekeurd' ||
-      (Array.isArray(r.vragen) && r.vragen.length > 0));
-    if (_gereageerd) {
-      _herzieningGevraagd = true;
-      if (!c.offerteConfig || typeof c.offerteConfig !== 'object') c.offerteConfig = {};
-      const _cfgH = c.offerteConfig;
-      // v4.14.3 — de ophoging is een vraag geworden. Eigen testreacties dwongen
-      // anders altijd een hogere versie af, ook als de klant nooit iets ontving;
-      // het versieveld uit v4.14.0 werd daardoor bij elke nieuwe link overschreven.
-      const _huidig = parseInt(_cfgH.offerteVersie, 10) || 1;
-      const _dagenH = _offGeldigDagenNorm(_cfgH.klanttype); // v4.16.0 — norm per klanttype
-      const _ophogen = confirm(
-        'Op een eerdere accordeerlink van deze offerte is gereageerd.\n\n' +
-        'Is deze nieuwe link een herziene offerte?\n\n' +
-        'OK = versie ophogen naar V' + (_huidig + 1) + ', offertedatum vandaag, geldig-tot +' + _dagenH + ' dagen.\n' +
-        'Annuleren = versie ' + _huidig + ' houden' + (_huidig === 1 ? ' (offertenummer zonder V-aanduiding)' : '') + ', datum ongewijzigd.'
-      );
-      if (_ophogen) {
-        _cfgH.offerteVersie = _huidig + 1;
-        _cfgH.offertedatum = _offIsoVandaag();
-        _cfgH.geldigTot = _offIsoPlusDagen(_cfgH.offertedatum, _dagenH);
-        try { await _sb.from('calculaties').update({ offerte_config: _cfgH }).eq('id', c.id); } catch (e2) {}
-      }
+    _vorigeRes = await _accordVorigeLaden(c.id);
+  } catch (e) {
+    console.warn('Eerdere versies laden mislukt:', e);
+    if (!confirm('De eerdere versies van deze offerte konden niet worden opgehaald (' + (e && e.message ? e.message : e) + ').\n\n'
+      + 'Zonder die gegevens is er geen vergelijking en wordt de versie niet opgehoogd.\n\n'
+      + 'OK = toch een link maken.\nAnnuleren = stoppen en later opnieuw proberen.')) {
+      accordLinkBeheer();
+      return;
     }
-  } catch (e) { /* detectie mislukt, dan zonder ophogen doorgaan */ }
+  }
+  const _bijKlant = _vorigeRes ? _vorigeRes.rows.filter(_accordBijKlantGeweest) : [];
+  if (_bijKlant.length) {
+    _herzieningGevraagd = true;
+    if (!c.offerteConfig || typeof c.offerteConfig !== 'object') c.offerteConfig = {};
+    const _cfgH = c.offerteConfig;
+    const _huidig = Math.max(1, parseInt(_cfgH.offerteVersie, 10) || 1);
+    const _dagenH = _offGeldigDagenNorm(_cfgH.klanttype); // v4.16.0 — norm per klanttype
+    const _vorige = _bijKlant[0]; // nieuwste eerst
+    const _nieuwNr = _accordNieuweVersieNr(_huidig, _bijKlant.length, _vorige.offertenummer);
+    const _regie = _offKostenAlsTekst(_offCfg());
+    const _keuze = await _accordVergelijkVenster(c, body, {
+      vorige: _vorige,
+      vgl: _regie ? null : _accordVergelijk(_vorige.cijfers || null, _cijfersNu, _vorige.bedrag),
+      nieuwNr: _nieuwNr, huidigNr: _huidig, aantalBijKlant: _bijKlant.length,
+      nummerNieuw: _accordNummerMetVersie(c, _nieuwNr),
+      dagenNorm: _dagenH, kolomOntbreekt: !!_vorigeRes.kolomOntbreekt, regie: _regie
+    });
+    if (!_keuze) { accordLinkBeheer(); return; } // Annuleren: er is niets gewijzigd
+    body.innerHTML = 'Bezig met aanmaken\u2026';
+    if (_keuze.ophogen) {
+      _cfgH.offerteVersie = _nieuwNr;
+      _cfgH.offertedatum = _offIsoVandaag();
+      _cfgH.geldigTot = _offIsoPlusDagen(_cfgH.offertedatum, _dagenH);
+      try {
+        const { error: eCfg } = await _sb.from('calculaties').update({ offerte_config: _cfgH }).eq('id', c.id);
+        if (eCfg) throw eCfg;
+      } catch (e2) {
+        console.warn('Versie opslaan mislukt:', e2);
+        _toast('De nieuwe versie staat op dit document, maar opslaan in de calculatie mislukte. Controleer het versieveld bij Offerte-instellingen.');
+      }
+      try { renderOfferteBlok(); } catch (e3) {}
+    }
+  }
   // v4.77.0 — Eerste link met een oude offertedatum: vragen of hij op vandaag mag.
   // De datum wordt gezet bij het begin van de calculatie en schoof daarna niet mee;
   // bij De Vreede-Ernes ging zo een link van 23-09 met datum 11-09 de deur uit.
@@ -27097,6 +27508,9 @@ async function _accordNieuweLink(c, body, supersede) {
   // v4.69.0 \u2014 De HTML-momentopname gaat niet meer mee in de rij. De PDF hieronder is het
   // bevroren document; de klantpagina toonde de HTML toch al niet zodra er een PDF was.
   // Gemeten 14-09-2026: 44 offertelinks, 8,5 MB aan HTML die nooit getoond werd.
+  // v4.119.0 — de offerte achter deze link is met de afronding op de cent gemaakt; vastleggen,
+  // zodat dat zo blijft als de klant akkoord geeft en de status buiten de app om verandert.
+  if (_afrondCent(c)) _afrondCentVastleggen(c);
   let bedrag = null;
   // v4.118.0 - regie-offerte: er staat geen bedrag op het document, dus de klant tekent er ook niet voor.
   if (!_offKostenAlsTekst(_offCfg())) {
@@ -27154,7 +27568,7 @@ async function _accordNieuweLink(c, body, supersede) {
     if (eVerv) throw new Error('Oude link kon niet op vervangen gezet worden: ' + eVerv.message);
     // v4.110.0 — een geplande verzending van de oude link mag niet alsnog de deur uit.
     try { await _wachtrijIntrekkenVoorCalc(c.id); } catch (eW) { console.warn('Wachtrij intrekken bij nieuwe link mislukt:', eW); }
-    const { error } = await _sb.from('offerte_accorderingen').insert({
+    const _rijNieuw = {
       calculatie_id: c.id,
       token: token,
       snapshot: {
@@ -27167,7 +27581,17 @@ async function _accordNieuweLink(c, body, supersede) {
       },
       pdf_path: pdfPath,
       bedrag: bedrag
-    });
+    };
+    // v4.120.0 — de cijfers van deze versie in een eigen kolom (niet in snapshot: die gaat
+    // via offerte-accord naar de browser van de klant). Bestaat de kolom nog niet, dan de
+    // link toch maken, zonder cijfers, en dat melden.
+    if (_cijfersNu) _rijNieuw.cijfers = _cijfersNu;
+    let { error } = await _sb.from('offerte_accorderingen').insert(_rijNieuw);
+    if (error && _rijNieuw.cijfers && /cijfers/i.test(String(error.message || ''))) {
+      delete _rijNieuw.cijfers;
+      ({ error } = await _sb.from('offerte_accorderingen').insert(_rijNieuw));
+      if (!error) _toast('Link gemaakt. De cijfers voor de versievergelijking zijn niet bewaard: de kolom cijfers ontbreekt (accord_05_cijfers.sql).');
+    }
     if (error) throw error;
   } catch (e) {
     body.innerHTML = '<p class="acb-fout">Aanmaken mislukt: ' + _accordEsc(e.message || e) + '</p>';

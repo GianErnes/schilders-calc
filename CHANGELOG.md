@@ -1,3 +1,100 @@
+## v4.120.0 — Herziene offerte: vergelijking met de vorige versie, versie automatisch (2026-11-13)
+
+Gebouwd op v4.119.0 uit de projectknowledge. Live op GitHub stond op het moment van bouwen nog v4.118.2 (opgehaald 13-11); v4.119.0 gaat dus met deze versie mee de repo in.
+
+**Aanleiding**
+- Gian 13-11, offerte 260148 (M. Joosten). De klant wees zelf op een vergeten gevelkozijn (begane grond, binnen en buiten). In de herziene offerte stegen daarna alle onderdelen, en zij vroeg of dat een vergissing was. Vergeleken uit de twee pdf's en de database: excl. BTW van € 9.553,40 naar € 10.525,05. Twee hoeveelheden waren gewijzigd (Bg-kozijn 15,07 naar 30,14 m¹; buitenkozijnen circa 64,37 naar 72,98 m¹). Daardoor ging het werk van circa 5,19 naar 5,75 dag: boven de drempel van 0,55, dus 6 gefactureerde dagen in plaats van 5. De afrondingstoeslag (3,75 uur, € 281,25) werd over alle regels verdeeld, ongeveer 3,7% per regel. De 5,19 dag en de 64,37 m¹ zijn teruggerekend uit de oude pdf; de database bewaart geen oude hoeveelheden.
+- Gelezen in index.html: het rekenpaneel toont de dagafronding wel, maar nergens wordt vergeleken met de vorige verstuurde versie. Van een verstuurde versie werden alleen het totaal (`bedrag`) en de pdf bewaard.
+- Gian, zelfde dag: "Mij valt op dat steeds weer de versie ophoging niet werkt." Gemeten: drie verstuurde links bij Joosten, alle drie met nummer "260148", `offerteVersie` = 1. Gelezen in `_accordNieuweLink`: de versievraag kwam alleen als de klant via de accordeerlink had gereageerd (akkoord, afwijzing of vraag). Mevrouw Joosten reageerde per gewone mail.
+
+**Keuzes (Gian, 13-11)**
+- Waarschuwen, niet tegenhouden. Het venster komt altijd bij een herziening, niet alleen als er iets rood is.
+- "Regel stijgt zonder wijziging" = hoeveelheid gelijk en eenheidsprijs meer dan 1 cent hoger.
+- Alleen op het verzendmoment, niet ook in de offertecontrole.
+- Versie automatisch ophogen zodra een eerdere versie bij de klant is geweest; zichtbaar in het venster, met een vinkje om het niet te doen.
+
+**Afwijkingen van het voorstel, met reden**
+- De cijfers staan in een eigen kolom `offerte_accorderingen.cijfers`, niet in `snapshot`. Vooraf gecontroleerd in de Edge Function `offerte-accord` v43 (zelf opgehaald): GET geeft de hele snapshot door aan de browser van de klant. Dagen en afrondingstoeslag zouden daar zichtbaar zijn. De select van die functie noemt haar kolommen bij naam, een nieuwe kolom gaat niet mee. Daardoor is er toch SQL nodig (`accord_05_cijfers.sql`); zonder die kolom werkt de app door met alleen de totaalvergelijking.
+- "Bij de klant geweest" is ruimer dan "gemaild": gemaild vanuit de app, door de klant geopend, of beantwoord. Zo telt een link die buiten de app om is verstuurd mee zodra de klant hem opent (Zelf bekijken telt niet, dat regelt `offerte-accord` met `?intern=1`). Gemeten: 71 van de 110 offertelinks hebben `gemaild_op` gevuld.
+- Is er alleen een proeflink die nooit bij de klant is geweest, dan komt het venster niet en blijft alles zoals het was (datumvraag van v4.77.0).
+
+**Gebouwd**
+- `_accordCijfersVoorLink(c)`: de cijfers van de offerte zoals ze nu de deur uit gaat, uit `_berekenOfferteCijfers` plus `_calcDays`: per regel id, onderdeel, naam, hoeveelheid, eenheid, eenheidsprijs en bedrag; zichtbare staartposten; reiskosten; dagen werkelijk en gefactureerd; afrondingsuren en -toeslag; totalen. `null` bij een regie-offerte of als er niets te rekenen valt.
+- `_accordVergelijk(oud, nieuw, oudBedragIncl)`: zuivere functie. Koppelt regels op regel-id en geeft per regel: gewijzigd (hoeveelheid anders), meegestegen, meegedaald, gelijk, nieuw of vervallen. Staartposten en reiskosten op naam. `rood` als de gefactureerde dagen verschillen of minstens één regel is meegestegen. Zonder oude cijfers: `volledig: false` en alleen de totalen.
+- `_accordBijKlantGeweest(r)` en `_accordNieuweVersieNr(huidig, aantalBijKlant, laatsteNummer)`: de nieuwe versie is de hoogste van (versie van de laatste verstuurde offerte + 1), (aantal versies bij de klant + 1) en het versieveld zelf. Joosten: drie keer zonder V verstuurd, de volgende wordt V4. Een mislukte poging telt niet dubbel; een met de hand hoger gezet versieveld blijft staan.
+- `_accordVorigeLaden(calcId)`: eerdere offertelinks, nieuwste eerst; probeert met de kolom `cijfers`, valt terug zonder.
+- `_accordVergelijkHtml` en `_accordVergelijkVenster`: het venster in de bestaande accordeer-overlay. Vorige versie met PDF-knop; versieblok met vinkje; rode of groene balk; regel "dagen werkelijk → gefactureerd, was … wordt …"; tabel Regel / Was / Wordt / Verschil; totalen excl. en incl. BTW; knoppen Doorgaan en link maken, Annuleren. Terugval (geen oude cijfers): gele balk, alleen totaal incl. BTW was/wordt/verschil. Regie-offerte: alleen het versieblok.
+- `_accordNieuweLink`: het oude herzieningsblok (bevestigingsvraag bij een reactie via de link) is vervangen. Annuleren schrijft niets en gaat terug naar het linkbeheer. Kunnen de eerdere versies niet worden opgehaald, dan vraagt de app of je zonder vergelijking en zonder ophoging door wilt. Mislukt het opslaan van de nieuwe versie in de calculatie, dan volgt een melding. De nieuwe rij krijgt `cijfers`; weigert de database die kolom, dan een tweede poging zonder en een melding.
+- `sql/accord_05_cijfers.sql`: kolom `cijfers jsonb` (leeg toegestaan), met projectguard, commentaar op de kolom en een controle.
+- Vier versieankers bijgewerkt. Geen Edge Function gewijzigd. De planlinks (`_ohpAccordNieuweLink`) en de houtrot-opgaven zijn niet aangeraakt.
+
+**Getest**
+- Parse-test van het inline scriptblok met Node: geslaagd. Div-balans 1475/1478 (v4.119.0: 1466/1469; de negen erbij staan in balans in het nieuwe venster), scripttags 6/6.
+- `test1.js`, Node, de echte functies uit het gepatchte bestand gesneden: 62 controles groen. Versienummer (acht gevallen), bij-klant-geweest, de vergelijking met de bedragen uit de twee Joosten-pdf's (rood, dagen verspringen, 5 regels meegestegen, 2 gewijzigd, regels plus posten tellen op tot € 971,65), drempel van 1 cent, daling, alleen een dagsprong, nieuwe en vervallen regels en posten, dubbele staartnamen, terugval, kapotte invoer, en de HTML van het venster in vier toestanden (rood, groen, terugval, regie) met balans en escapen.
+- `test2.js`, Node, `_accordNieuweLink` als geheel met nagebootste database, pdf en scherm: 35 controles groen. Eerste link, proeflink, het Joosten-geval (venster met V4, niets geschreven zolang het venster open staat, daarna versie 4 opgeslagen en rij "260148 V4"), vinkje uit, Annuleren, volledige vergelijking, kolom ontbreekt, laden mislukt (beide antwoorden), versie opslaan mislukt, andere insertfout, regie-offerte, mislukte poging gevolgd door een tweede. Gecontroleerd dat er niets van de cijfers in `snapshot` terechtkomt.
+- `accord_05_cijfers.sql` op een lokale Postgres 16: stopt op een database zonder `fin_werkvoorraad`; eerste keer GOED; tweede keer GOED (idempotent); bestaande rijen houden `null`, een nieuwe rij bewaart de jsonb.
+- Gemeten in de database (13-11): tabelrechten voor authenticated en service_role, geen voor anon, geen afwijkende kolomrechten, geen view op de tabel, kolom `cijfers` bestaat nog niet.
+
+**Niet getest**
+- In de echte app met inlog. Testscript: (1) open calculatie Joosten → Accordeerlink → Nieuwe link maken; (2) er moet een venster Herziene offerte komen met "260148 V4" en een gele balk "Alleen het totaal is te vergelijken"; (3) kies Annuleren en controleer dat er niets veranderd is. Daarna op een proefcalculatie: link maken, mailen naar jezelf, een hoeveelheid wijzigen, nieuwe link maken: nu moet de tabel per regel verschijnen.
+- De echte PostgREST-foutmelding bij een ontbrekende kolom is nagebootst (`Could not find the 'cijfers' column ...`); dat die melding zo luidt is een aanname, niet opgezocht en niet opgewekt tegen de live database. De terugval kijkt alleen of het woord cijfers in de foutmelding staat.
+- De PDF-knop in het venster (zelfde route als de knop in Eerdere versies, niet apart gedraaid).
+- De breedte van de tabel in het venster op de iPad.
+- De Edge Functions `offerte-verzenden`, `offerte-herinnering` en `offerte-wachtrij` zijn niet gelezen. Ze worden niet geraakt: de nieuwe kolom staat buiten `snapshot` en deze functies zijn niet gewijzigd.
+
+**Bekende beperkingen**
+- De regelvergelijking werkt pas vanaf de eerste offerte die met v4.120.0 (en met de kolom) is verstuurd. Bij alles wat eerder de deur uit ging: alleen het totaal.
+- Het venster waarschuwt, het houdt niets tegen.
+- De offerte die nu bij mevrouw Joosten ligt blijft "260148" zonder V.
+- Een link die buiten de app om is verstuurd en die de klant nog niet heeft geopend, telt niet als versie. Het versieveld bij Offerte-instellingen blijft met de hand aan te passen.
+- Wordt een regel verwijderd en opnieuw aangemaakt, dan krijgt hij een nieuw id en staat hij er als "vervallen" plus "nieuw".
+- Sluit je het venster met het kruisje, dan gebeurt er niets (geen link, geen ophoging).
+
+## v4.119.0 — Offerte na te rekenen tot op de cent (2026-11-13)
+
+**Aanleiding**
+- Gian 13-11, schermfoto van een offerte-pdf met hoeveelheden en eenheidsprijzen (v4.118.2). Nagerekend op de schermfoto: Daklijsten 16,54 m² x € 92,19 = € 1.524,82, er stond € 1.524,64; de vier regels van Achtergevel tellen op tot € 12.632,41, er stond € 12.632,40; subtotalen plus reiskosten en klimtoeslag geven € 14.079,81, er stond € 14.079,82.
+- Gelezen in de live index.html v4.118.2, drie oorzaken:
+  1. De som van de meetstaat wordt onafgerond de regelhoeveelheid (`_meetstaatSomVoorRegel`, en dezelfde som inline in `_calcTotalForArchive`). De offerte toont twee decimalen; de kolom `calc_regels.hoeveelheid` is `numeric` met twee decimalen (gemeten in `information_schema.columns`, 13-11).
+  2. `_berekenOfferteCijfers` stap 7: `toonRegelTotaal = toonprijs * hoeveelheid`, onafgerond; subtotalen en totaal tellen die onafgeronde bedragen op.
+  3. Reiskosten en zichtbare staartposten gaan onafgerond het totaal in.
+- De 16,538 m² bij Daklijsten is teruggerekend uit de schermfoto (1.524,64 / 92,19), niet opgezocht in de calculatie.
+
+**Keuzes (Gian, 13-11: "alles akkoord")**
+- Alle drie afronden.
+- Alleen voor calculaties die nog niet op slot staan; wat verstuurd is blijft rekenen zoals het verstuurd is.
+- De Yoobi-export gaat mee.
+
+**Gebouwd**
+- `_r2(n)`: rekenkundig afronden op twee decimalen, zonder de ruis van drijvende-kommagetallen (1,005 wordt 1,01). `_ceilCent(n)`: naar boven op de cent zonder dat ruis een cent toevoegt.
+- `_afrondCent(c)`: geldt de nieuwe afronding? Ja als de calculatie niet op slot staat (status afspraak of concept), of als `offerte_config.afrondCent` waar is.
+- `_afrondCentVastleggen(c)`: zet die vlag en schrijft alleen de kolom `offerte_config`. Aangeroepen in `setCalcStatus` op het moment dat een calculatie op slot gaat (vóór het totaal bevroren wordt) en in `_accordNieuweLink` bij het maken van een accordeerlink. Reden voor de vlag: een calculatie die met de nieuwe afronding verstuurd is moet daarna, op slot, hetzelfde blijven rekenen; de status kan ook buiten de app om veranderen (akkoord van de klant).
+- Hoeveelheid: `_meetstaatSomVoorRegel` en de inline som in `_calcTotalForArchive` ronden af op twee decimalen als `_afrondCent` geldt.
+- `_berekenOfferteCijfers` en de eigen rekenroute van `printOfferteYoobi`, als `_afrondCent` geldt: eenheidsprijs = regelbedrag gedeeld door de hoeveelheid op twee decimalen, naar boven op de cent; regelbedrag = hoeveelheid x prijs, op de cent; reiskosten en elke zichtbare staartpost op de cent; totaal excl. BTW = som van die bedragen; BTW per tarief op de cent over een grondslag op de cent; totaal incl. = excl. plus de BTW-regels.
+- Geldt `_afrondCent` niet (op slot vóór v4.119.0), dan loopt alles door de oude formules.
+- Vier versieankers bijgewerkt. Geen SQL, geen Edge Function, geen nieuwe kolom (de vlag staat in de bestaande jsonb-kolom `offerte_config`).
+
+**Getest**
+- Parse-test van het inline scriptblok met Node: geslaagd. Div-balans 1466/1469 en scripttags 6/6, gelijk aan v4.118.2.
+- `test2.js`, Node, de echte functies uit het gepatchte bestand gesneden met nagebootste rekenkern: 247.890 controles groen. Onderdelen: `_r2`, `_ceilCent`, `_afrondCent`; meetstaatsom (concept 16,54, op slot 16,538); 3000 willekeurige calculaties, elk drie keer:
+  - op slot zonder vlag: uitkomst bit-voor-bit gelijk aan dezelfde functie uit v4.118.2 (alle regels, reis, staart, totalen);
+  - concept, en op slot mét vlag: elke hoeveelheid twee decimalen, elk bedrag op de cent, hoeveelheid x prijs = regelbedrag, totaal excl. = som van de regels, reis en staart, grondslagen tellen op tot het totaal, BTW = percentage over de grondslag, totaal incl. = excl. + BTW. Ook met gemengd BTW-tarief (derden-posten).
+- `test3.js`, 13 controles groen: de inline som in `_calcTotalForArchive` (concept en afspraak afgerond, op slot zonder vlag onafgerond, op slot met vlag afgerond, regel zonder meetstaat ongemoeid); `_afrondCentVastleggen` schrijft alleen `offerte_config`, behoudt de bestaande instellingen, schrijft geen tweede keer en geeft een melding als opslaan mislukt.
+- Gemeten (`meet.js`, 5000 nagebootste calculaties van 3 tot 14 regels): het totaal incl. BTW verschilt in 90% van de gevallen minder dan € 0,46 van de oude uitkomst, uitersten € 3,00 lager en € 1,92 hoger. Het verschil komt vooral doordat de eenheidsprijs naar boven op de cent gaat en een cent verschil op een regel met een grote hoeveelheid (184 m¹) al € 1,84 is.
+
+**Niet getest**
+- In de echte app met inlog: een conceptcalculatie openen, pdf met hoeveelheden maken en narekenen; een calculatie op slot zetten en controleren dat scherm en pdf gelijk blijven; een calculatie van vóór vandaag die al op slot staat openen en controleren dat het bedrag niet verandert.
+- `setCalcStatus` en `_accordNieuweLink` als geheel (alleen de aangeroepen functie is getest; de twee aanroepen zijn in de code nagelezen).
+- `printOfferteYoobi`: krijgt dezelfde tekstvervangingen als `_berekenOfferteCijfers` (elke vervanging is op precies twee plekken toegepast), maar is niet apart gedraaid.
+- Onderhoudsplannen: rekenen met de regelhoeveelheid van de bron-calculatie en schuiven dus mee met de afronding van de meetstaat; niet nagerekend.
+- iPad.
+
+**Bekende beperkingen**
+- Een bedrag kan anders uitkomen dan vóór deze versie: meestal centen, soms een paar euro (zie de meting). Dat geldt voor elke calculatie die niet op slot staat, zodra je haar opent.
+- Het verschil tussen het offertetotaal en het rekenkundige totaal (de regel "Afronding" in de Yoobi-export) bestond al en blijft: de eenheidsprijs gaat naar boven op de cent.
+- Mislukt het vastleggen van de vlag (geen verbinding) terwijl de calculatie op slot gaat, dan rekent ze na opnieuw laden met de oude formules en kan het scherm centen afwijken van de pdf. De app geeft daar een melding van; zet de status dan opnieuw.
+- Een calculatie die vóór v4.119.0 op slot ging en teruggezet wordt naar concept, rekent vanaf dat moment met de nieuwe afronding.
+
 ## v4.118.2 — Offerte: kolom Verfsysteem uit de prijstabel (2026-11-13)
 
 **Aanleiding**

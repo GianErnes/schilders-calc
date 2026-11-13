@@ -34,7 +34,7 @@ rechtstreeks met Supabase.
 
 | App | Bestand | Repo | Adres | Versie |
 |---|---|---|---|---|
-| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.118.2 (13-11-2026) |
+| Schilders Calc | `index.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/ | v4.119.0 (13-11-2026) |
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.4.0 (12-10-2026; eerdere rijen staan nog op 14-09) |
@@ -6456,3 +6456,85 @@ verdere stappen; de kolom Verfsysteem is dan terug.
 **Bewijs.** `CHANGELOG.md` v4.118.2: parse-test, balansen, runtime-test in
 Node 120/120 groen, tegenproef op v4.118.1 64 fouten, pdf-proef met
 pdfmake. Niet getest in de echte app met inlog op 13-11.
+
+## Ook op 13 november 2026: de offerte is na te rekenen tot op de cent (index.html v4.119.0)
+
+**Wat.** Op een offerte met hoeveelheden klopte hoeveelheid maal eenheidsprijs
+niet altijd met het regelbedrag, en regels telden soms een cent anders op dan
+subtotaal of totaal. De app rekende met meer decimalen dan hij toonde.
+
+**Stand.**
+- Regel: wat op de offerte staat is waarmee gerekend wordt. De hoeveelheid uit
+  de meetstaat gaat op twee decimalen de calculatie in. Regelbedragen,
+  reiskosten, zichtbare staartposten en BTW per tarief staan op de cent. Het
+  totaal is de som van wat er staat.
+- Of dit voor een calculatie geldt bepaalt `_afrondCent(c)`: ja als ze niet op
+  slot staat (status afspraak of concept), of als `offerte_config.afrondCent`
+  waar is. Die vlag wordt gezet door `_afrondCentVastleggen(c)` op het moment
+  dat de calculatie op slot gaat (`setCalcStatus`) en bij het maken van een
+  accordeerlink (`_accordNieuweLink`).
+- Een calculatie die vóór v4.119.0 op slot ging heeft de vlag niet en rekent
+  met de oude formules, zodat scherm en verstuurde pdf gelijk blijven.
+- De plekken waar het gebeurt: `_meetstaatSomVoorRegel`, de inline som in
+  `_calcTotalForArchive`, `_berekenOfferteCijfers` en de eigen rekenroute van
+  `printOfferteYoobi`. Wie een van die vier wijzigt, loopt de andere drie na.
+- Geen SQL, geen Edge Function, geen nieuwe kolom.
+
+**Nood.** Wijkt het bedrag op het scherm van een verstuurde offerte centen af
+van de pdf, kijk dan in `calculaties.offerte_config` of `afrondCent` op `true`
+staat. Staat het er niet terwijl de offerte na 13-11-2026 is gemaakt, dan is
+het vastleggen mislukt: zet de vlag met de hand op `true`. Terugvallen:
+v4.118.2 uit de GitHub-geschiedenis werkt zonder verdere stappen en negeert
+de vlag; calculaties rekenen dan weer onafgerond.
+
+**Bewijs.** `CHANGELOG.md` v4.119.0: parse-test, balansen, `test2.js`
+247.890 controles groen (waaronder: op slot zonder vlag bit-voor-bit gelijk
+aan v4.118.2), `test3.js` 13 controles groen, meting van het verschil in
+`meet.js`. Niet getest in de echte app met inlog op 13-11.
+
+## Ook op 13 november 2026: herziene offerte vergelijken met de vorige versie, versie automatisch (index.html v4.120.0, SQL accord_05_cijfers)
+
+**Wat.** Bij offerte 260148 (M. Joosten) schoof een toegevoegd kozijn het werk
+van 5 naar 6 gefactureerde dagen; de afrondingstoeslag werd over alle regels
+verdeeld en de klant zag elk onderdeel stijgen. Bij het versturen was dat niet
+te zien. Daarnaast bleef het offertenummer drie versies lang zonder
+V-aanduiding, omdat de versievraag alleen kwam na een reactie via de link.
+
+**Stand.**
+- Maak je een nieuwe accordeerlink terwijl een eerdere versie bij de klant is
+  geweest (gemaild vanuit de app, door de klant geopend, of beantwoord:
+  `_accordBijKlantGeweest`), dan toont `_accordNieuweLink` eerst het venster
+  Herziene offerte (`_accordVergelijkVenster`). Rood als de gefactureerde dagen
+  verspringen of als een regel stijgt terwijl de hoeveelheid gelijk bleef
+  (eenheidsprijs meer dan 1 cent hoger). Het venster waarschuwt en houdt niets
+  tegen. Annuleren schrijft niets.
+- Versie: in hetzelfde venster, vinkje standaard aan. Nieuwe versie =
+  hoogste van (versie van de laatste verstuurde offerte + 1), (aantal versies
+  bij de klant + 1) en het versieveld (`_accordNieuweVersieNr`). Bij ophogen
+  gaat de offertedatum naar vandaag en geldig-tot mee. De oude
+  bevestigingsvraag uit v3.91.0/v4.14.3 bestaat niet meer.
+- Elke nieuwe offertelink bewaart zijn cijfers in
+  `offerte_accorderingen.cijfers` (jsonb): regels, zichtbare staartposten,
+  reiskosten, dagen werkelijk en gefactureerd, afrondingstoeslag, totalen
+  (`_accordCijfersVoorLink`). Rijen van vóór v4.120.0 hebben `null`; daar
+  vergelijkt het venster alleen het totaal incl. BTW.
+- **Regel: interne cijfers horen niet in `snapshot`.** De Edge Function
+  `offerte-accord` geeft bij GET de hele `snapshot` door aan de browser van de
+  klant (gelezen in v43, 13-11-2026). Wat de klant niet mag zien (dagen,
+  afronding, toeslagen) gaat in een eigen kolom. De select van `offerte-accord`
+  noemt haar kolommen bij naam; wie die select ooit verbreedt, laat `cijfers`
+  erbuiten.
+- Planlinks en houtrot-opgaven zijn niet gewijzigd. Geen Edge Function
+  gewijzigd.
+
+**Nood.** Ontbreekt de kolom `cijfers`, dan maakt de app de link toch en meldt
+dat; draai `sql/accord_05_cijfers.sql` (idempotent, met projectguard). Staat
+een versienummer verkeerd, pas het versieveld bij Offerte-instellingen aan
+vóór je de link maakt: een hoger veld wordt overgenomen. Terugvallen:
+v4.119.0 werkt zonder verdere stappen en negeert de kolom.
+
+**Bewijs.** `CHANGELOG.md` v4.120.0: parse-test, balansen, `test1.js` 62
+controles groen (vergelijking met de bedragen uit de twee Joosten-pdf's),
+`test2.js` 35 controles groen (`_accordNieuweLink` als geheel met nagebootste
+database), SQL op lokale Postgres 16 inclusief tweede keer draaien. Niet
+getest in de echte app met inlog op 13-11.
