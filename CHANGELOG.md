@@ -1,3 +1,33 @@
+## v4.118.1 — Naar Yoobi: naamcontrole zoekt op achternaam (2026-11-13)
+
+**Aanleiding**
+- Gian 13-11, schermfoto van het venster Naar Yoobi bij de boeking "Mevr. M. Rongen": geel "dit e-mailadres hoort al bij relatie 10306 (Mevrouw M. Rongen)" en daaronder groen "✓ Naam niet gevonden in Yoobi". "Deze melding klopt niet."
+- Gelezen in Edge Function `yoobi-klant` versie 40 (opgehaald via de Supabase-koppeling): `actieAanmaken` zoekt met `searchCustomers(leesToken, b.klant)`, dus op de hele boekingsnaam inclusief aanhef en voorletter, en alleen bij actieve relaties (`&status=active`).
+- Gemeten in `yoobi_klanten` (query 13-11): `naam ilike '%rongen%'` geeft één rij, code 10306, naam "Mevrouw M. Rongen", actief. De tekst "Mevr. M. Rongen" komt in die naam niet voor.
+- Vermoeden, niet gemeten: Yoobi vergelijkt `name=` als "bevat". Steun: de zoekopdrachten `?q=sluis` en `?q=Kuijpers` van 07-11 gaven treffers op een deel van de naam.
+- Gevolg: zodra er een aanhef of voorletter in de boekingsnaam staat, vindt de naamcontrole vrijwel nooit iets. Bij een klant met een ander e-mailadres dan in Yoobi staan er dan twee groene regels en ontstaat een dubbele relatie.
+
+**Gebouwd**
+- `_yoobiNaarNaamcontrole(d)`: na de controle-aanroep doet de app een eigen zoekslag via de bestaande route `?q=` op de achternaam uit het venster en vervangt daarmee `dubbel.opNaam`. De zoekterm komt mee als `dubbel.naamTerm`.
+- `_yoobiNaarZoekterm(achternaam)`: laat voorop staande tussenvoegsels weg ("van der Berg" wordt "Berg").
+- `_yoobiNaarTeken`: de relatie die al via het e-mailadres gevonden is, staat niet nog eens in de naamlijst; de kop noemt de zoekterm; bij meer dan zes treffers staat erbij hoeveel er nog zijn; het groene vinkje voor de naam verschijnt alleen als ook het e-mailadres niets opleverde.
+- Mislukt de zoekslag, dan staat er "Naamcontrole niet gelukt (…)" en geen vinkje. Is er geen achternaam van minstens twee tekens, dan blijft het antwoord van de functie staan (oude gedrag).
+- Vijf versieankers bijgewerkt. Geen SQL, geen wijziging in de Edge Function: die blokkeert het aanmaken alleen op het e-mailadres, de naamlijst is alleen om te tonen.
+
+**Getest**
+- Parse-test van het inline scriptblok met Node: geslaagd. Div-balans 1466/1469 (v4.118.0: 1465/1468, één div erbij in een tekststring), scripttags 6/6.
+- Runtime-test in Node op de functies uit het gepatchte bestand gesneden, met een nagebootste zoekroute, 24 controles groen (`test.js`): het geval Rongen (geel blijft, geen groen vinkje, relatie niet dubbel), ander e-mailadres (naamtreffer met link koppelen), niets gevonden, zoekslag mislukt, `ok:false`, acht treffers, lege achternaam, al gekoppeld, tekens ontsnapt.
+
+**Niet getest**
+- In de echte app met inlog: het venster bij de boeking Rongen openen. De echte zoekroute `?q=Rongen` is op 13-11 niet aangeroepen; dat Yoobi daar relatie 10306 op teruggeeft is afgeleid uit `yoobi_klanten`, niet gezien.
+- iPad.
+
+**Bekende beperkingen**
+- Alleen actieve relaties. Een gearchiveerde relatie met dezelfde achternaam wordt niet gevonden.
+- Een veelvoorkomende achternaam geeft een lange lijst; de app toont er zes.
+- Pas je de achternaam in het venster aan, dan draait de controle niet vanzelf opnieuw; sluit en open het venster.
+- De naamcontrole in de Edge Function zelf is niet aangepast en zoekt nog op de hele boekingsnaam; de app gebruikt die uitkomst alleen nog als er geen achternaam is.
+
 ## v4.118.0 — Regie-offerte: kosten als tekst in plaats van een prijstabel (2026-11-10)
 
 **Aanleiding**

@@ -2480,8 +2480,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.118.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.118.1</h2>
       <div class="intro-body">
+        <p><strong>🔎 Naar Yoobi: naamcontrole zoekt nu op achternaam (v4.118.1).</strong> Het venster Naar Yoobi meldde "Naam niet gevonden" terwijl de klant er wel stond: er werd gezocht op de hele boekingsnaam ("Mevr. M. Rongen"), en in Yoobi stond "Mevrouw M. Rongen". De controle zoekt nu alleen op de achternaam en toont de treffers ter controle, elk met een link koppelen. Is de klant al via het e-mailadres gevonden, dan staat er geen tegenstrijdige groene regel meer onder. Geen SQL, geen Edge Function.</p>
         <p><strong>📝 Regie-offerte: kosten als tekst in plaats van een prijstabel (v4.118.0).</strong> Onder Offerteteksten staat een nieuwe sectie "Kosten als tekst (regie)", standaard uit. Zet je haar aan, dan vervalt de prijstabel en komt onder de kop "Wat zijn de kosten?" jouw tekst te staan, bijvoorbeeld een regie-afspraak met uurtarief en richtprijs. De calculatie mag dan leeg zijn: je hoeft geen maten of verfsystemen in te voeren. De accordeerlink gaat zonder bedrag mee, de klant tekent voor de afspraak in de tekst. De knop Controleer waarschuwt als er nog een invulplek zoals [bedrag] in de tekst staat en als de teksten over aanbetaling of vaste prijzen nog aan staan. Bestaande offertes veranderen niet. Geen SQL nodig.</p>
         <p><strong>☑️ Meetrij aan en uit zetten, en een slot op de Meetstaat (v4.117.0).</strong> Vooraan elke rij in de Meetstaat staat nu een vinkje, hetzelfde als op hoofdgroep, onderdeel en regel. Zet je het uit, dan telt die ene meting niet meer mee: de rij wordt grijs en doorgestreept, de hoeveelheid van de regel zakt en het bedrag loopt mee. Staan alle rijen van een regel uit, dan wordt de hoeveelheid nul. Zet je een getekend kozijn uit, dan gaan zijn deuren, panelen en roeden vanzelf mee uit, verdwijnt de tekening uit de bijlagen voor de klant en tellen zijn gebrekstippen niet meer. In de meetstaat-bijlage staat een uitgezette rij doorgestreept met (vervalt). Komt een regel negatief uit omdat een aftrekrij nog aan staat, dan zie je een oranje waarschuwing boven de tabel. <strong>Daarnaast een reparatie:</strong> bij een vergrendelde offerte kon je in de Meetstaat nog maten wijzigen, rijen toevoegen en weggooien, waardoor het bedrag van een verzonden offerte kon verschuiven. Dat zit nu op slot; alleen het vinkje aan/uit blijft open, net als in de Calculatie-tab. Een tekening kun je nog bekijken, niet meer opslaan. Vereist SQL (<code>meetstaat_02_actief.sql</code>, al gedraaid).</p>
         <p><strong>📚 Onderdelen stapelbaar: binnen én buiten in één offerte (v4.116.0).</strong> De sectie Onderdelen heeft nu, net als Werkzaamheden, de knop + Blok. Bij een gecombineerde binnen- en buitenofferte kies je het blok voor buiten en zet je er een blok voor binnen onder. Maak daarvoor in de tab Offerteteksten twee bibliotheekteksten aan, bijvoorbeeld "Onderdelen buiten" en "Onderdelen binnen", elk met als eerste regel "Buiten:" of "Binnen:" en daaronder de opsomming; in het document komen ze onder één kop "Welke onderdelen worden behandeld?" te staan. Bestaande offertes houden hun ene blok. Geen SQL nodig.</p>
@@ -4066,7 +4067,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.118.0';
+const APP_VERSION = 'v4.118.1';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4489,6 +4490,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.118.1', d: '2026-11-13', h: 'Naar Yoobi: de naamcontrole zoekt op achternaam in plaats van op de hele boekingsnaam (Mevr. M. Rongen vond Mevrouw M. Rongen niet); geen tegenstrijdig groen vinkje meer als het e-mailadres al een relatie opleverde.' },
   { v: '4.118.0', d: '2026-11-10', h: 'Regie-offerte: nieuwe offertesectie "Kosten als tekst (regie)" vervangt de prijstabel door tekst; de calculatie mag dan leeg zijn en de accordeerlink gaat zonder bedrag mee. Standaard uit, bestaande offertes ongewijzigd. Geen SQL.' },
   { v: '4.117.0', d: '2026-11-09', h: 'Meetrij aan/uit met een vinkje per rij (kozijn uit neemt deuren, panelen, roeden, tekening en gebrekstippen mee; oranje waarschuwing bij negatieve regel) en een slot op de Meetstaat-tab bij een vergrendelde offerte. Vereist SQL meetstaat_02_actief.sql.' },
   { v: '4.116.0', d: '2026-11-09', h: 'Offerte-sectie Onderdelen is stapelbaar (+ Blok), zodat een gecombineerde offerte een blok Buiten en een blok Binnen kan dragen; bestaande offertes ongewijzigd.' },
@@ -25192,12 +25194,47 @@ async function _yoobiNaarControleer() {
         + '<button class="btn" style="opacity:0.75;" onclick="closeYoobiNaarModal()">Sluiten</button>';
       return;
     }
+    // v4.118.1 — de naamcontrole van de functie zoekt op de hele boekingsnaam
+    // ("Mevr. M. Rongen") en vindt "Mevrouw M. Rongen" dan niet. Daarom hier
+    // opnieuw, op de achternaam, via de bestaande zoekroute ?q=.
+    await _yoobiNaarNaamcontrole(d);
+    if (_yoobiNaarBoeking !== r) return; // venster intussen gesloten
     _yoobiNaarControle = d;
     _yoobiNaarTeken(d);
   } catch (e) {
     document.getElementById('ynControle').innerHTML = '<div style="color:#c0392b;">Controle mislukt: ' + _escapeHtml(e.message || String(e)) + '</div>';
     document.getElementById('ynActies').innerHTML = '<button class="btn" onclick="_yoobiNaarControleer()">Opnieuw proberen</button>'
       + '<button class="btn" style="opacity:0.75;" onclick="closeYoobiNaarModal()">Sluiten</button>';
+  }
+}
+
+// v4.118.1 — zoekterm voor de naamcontrole: de achternaam zonder voorop staande
+// tussenvoegsels ("van der Berg" -> "Berg"), zodat ook "Berg, van der" gevonden wordt.
+function _yoobiNaarZoekterm(achternaam) {
+  const delen = String(achternaam || '').trim().split(/\s+/).filter(Boolean);
+  let i = 0;
+  while (i < delen.length - 1 && _yoobiIsTussenvoegsel(delen[i])) i++;
+  return delen.slice(i).join(' ');
+}
+
+// v4.118.1 — vervangt dubbel.opNaam door een zoekslag op achternaam. Lukt de
+// zoekslag niet, dan komt er een foutregel te staan en GEEN groen vinkje.
+// Is er geen bruikbare achternaam (korter dan 2 tekens), dan blijft het
+// antwoord van de functie staan.
+async function _yoobiNaarNaamcontrole(d) {
+  if (!d || d.status === 'al_gekoppeld') return;
+  const veld = document.getElementById('ynAchternaam');
+  const term = _yoobiNaarZoekterm((veld && veld.value) || (_yoobiNaarOntleding || {}).achternaam);
+  if (term.length < 2) return;
+  if (!d.dubbel) d.dubbel = {};
+  d.dubbel.naamTerm = term;
+  try {
+    const z = await _yoobiCall('q=' + encodeURIComponent(term));
+    if (!z || z.ok === false) throw new Error((z && z.error) || 'geen antwoord');
+    d.dubbel.opNaam = (Array.isArray(z.relaties) ? z.relaties : [])
+      .map(x => ({ naam: (x && x.naam) || '', relatienummer: (x && x.relatienummer) || '' }));
+  } catch (e) {
+    d.dubbel.opNaam = [{ fout: String((e && e.message) || e) }];
   }
 }
 
@@ -25211,7 +25248,10 @@ function _yoobiNaarTeken(d) {
   }
   const dub = d.dubbel || {};
   const opEmail = dub.opEmail || null;
-  const opNaam = Array.isArray(dub.opNaam) ? dub.opNaam.filter(x => x && x.relatienummer) : [];
+  // v4.118.1 — de relatie die al via het e-mailadres gevonden is, niet nog eens tonen
+  const opNaam = (Array.isArray(dub.opNaam) ? dub.opNaam.filter(x => x && x.relatienummer) : [])
+    .filter(x => !opEmail || String(x.relatienummer) !== String(opEmail.relatienummer));
+  const naamTerm = dub.naamTerm || '';
   const naamFout = Array.isArray(dub.opNaam) && dub.opNaam.length && dub.opNaam[0].fout ? dub.opNaam[0].fout : '';
   let html = '';
   if (opEmail) {
@@ -25226,13 +25266,16 @@ function _yoobiNaarTeken(d) {
   if (naamFout) {
     html += '<div style="color:var(--muted);">Naamcontrole niet gelukt (' + _escapeHtml(naamFout) + '); controleer zelf in Yoobi.</div>';
   } else if (opNaam.length) {
-    html += '<div style="margin-top:0.3rem;">Op naam gevonden, ter controle:</div>'
+    html += '<div style="margin-top:0.3rem;">' + (naamTerm ? 'Op achternaam \u201c' + _escapeHtml(naamTerm) + '\u201d ' + (opEmail ? 'ook ' : '') + 'gevonden' : 'Op naam gevonden') + ', ter controle:</div>'
       + opNaam.slice(0, 6).map(x => '<div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; padding:0.2rem 0;">'
         + '<span>' + _escapeHtml(x.naam) + ' <span class="mono" style="color:var(--muted); font-size:0.78rem;">' + _escapeHtml(x.relatienummer) + '</span></span>'
         + '<a href="#" style="font-size:0.8rem;" onclick="_yoobiNaarKoppel(\'' + _escapeHtml(x.relatienummer) + '\'); return false;">koppelen</a>'
-        + '</div>').join('');
-  } else {
-    html += '<div style="color:#2e7d32;">✓ Naam niet gevonden in Yoobi.</div>';
+        + '</div>').join('')
+      + (opNaam.length > 6 ? '<div style="color:var(--muted); font-size:0.8rem;">en nog ' + (opNaam.length - 6) + ' meer; zoek zelf in Yoobi.</div>' : '');
+  } else if (!opEmail) {
+    // v4.118.1 — alleen een groen vinkje als ook het e-mailadres niets opleverde;
+    // anders spreekt het venster zichzelf tegen.
+    html += '<div style="color:#2e7d32;">✓ ' + (naamTerm ? 'Achternaam \u201c' + _escapeHtml(naamTerm) + '\u201d niet gevonden bij de actieve relaties in Yoobi.' : 'Naam niet gevonden in Yoobi.') + '</div>';
   }
   ctrl.innerHTML = html;
   acties.innerHTML = '<button class="btn" id="ynAanmaakKnop" onclick="_yoobiNaarAanmaken()">' + (opEmail ? 'Toch als nieuwe relatie aanmaken' : 'Aanmaken in Yoobi') + '</button>'

@@ -6403,3 +6403,34 @@ runtime-test in Chromium, 45/45 groen, waaronder de vergelijking van een
 gewone offerte met v4.117.0 (letterlijk gelijk) en een echt gemaakte
 PDF. Niet getest in de echte app met inlog op 10-11: accordeerlink,
 mail en akkoord.
+
+## Wat er op 13 november 2026 gedaan is: naamcontrole in Naar Yoobi zoekt op achternaam (index.html v4.118.1)
+
+**Wat.** Het venster Naar Yoobi (boekingenblok) doet twee controles voordat
+er een relatie wordt aangemaakt: op e-mailadres en op naam. De naamcontrole
+vond bijna nooit iets, omdat de Edge Function `yoobi-klant` zoekt op de hele
+boekingsnaam met aanhef en voorletter ("Mevr. M. Rongen" tegenover "Mevrouw
+M. Rongen" in Yoobi).
+
+**Stand.**
+- De app doet na de controle-aanroep een eigen zoekslag op de achternaam via
+  de bestaande route `yoobi-klant?q=` (`_yoobiNaarNaamcontrole`) en toont die
+  treffers. De uitkomst van de functie zelf (`dubbel.opNaam`) wordt alleen
+  nog gebruikt als er geen achternaam van minstens twee tekens is.
+- `yoobi-klant` is niet gewijzigd (versie 40). De functie blokkeert het
+  aanmaken alleen op het e-mailadres; de naamlijst is alleen ter controle
+  voor de mens.
+- "Dit is dezelfde, koppelen" schrijft niets naar Yoobi. Het zet het
+  relatienummer op `opname_boekingen` en, als de boeking een calculatie
+  heeft, op `calculaties`.
+
+**Nood.** Regel "Naamcontrole niet gelukt (Yoobi …)" in het venster → de
+zoekroute `?q=` van `yoobi-klant` faalt; "Klant uit Yoobi" in de calculatie
+gebruikt dezelfde route en zal dan ook niet werken. Zoek de klant zelf in
+Yoobi voordat je aanmaakt. Terugvallen: v4.118.0 uit de GitHub-geschiedenis
+werkt zonder verdere stappen, met de oude zwakke naamcontrole.
+
+**Bewijs.** `CHANGELOG.md` v4.118.1: parse-test, balansen en een
+runtime-test in Node, 24/24 groen. Gemeten in `yoobi_klanten`: relatie
+10306 "Mevrouw M. Rongen", actief. Niet getest in de echte app met inlog
+op 13-11.
