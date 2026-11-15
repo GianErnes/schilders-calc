@@ -1498,6 +1498,13 @@ dat is nog niet gebouwd (besluit Gian 1 november: wel gewenst, nog niet
 ontworpen). Let daarbij op: de cronjobs en triggers van een reserve
 mogen nooit naar buiten mailen of naar live wijzen.
 
+**Stand 15 november 2026:** het oefenproject is verwijderd (besluit Gian,
+door hem zelf uitgevoerd; gemeten via de Supabase-koppeling: het project
+staat niet meer in de projectenlijst). Er is dus geen tweede project
+meer. Aanleiding: het bevatte een kopie van de echte gegevens en was
+slechter afgesloten dan live, zie de laatste punten van 4.9. Gian kiest
+voor de warme reserve een andere route; die is nog niet bepaald.
+
 ### 4.9 Herstel met de eigen backup, geoefend op 1 november 2026
 
 **Wat er is bewezen.** De Drive-JSON van 1 november (31,3 MB, 69 tabellen,
@@ -1601,6 +1608,26 @@ het herstelmoment zetten. `herstel_laad_tabel` regelt dit zelf.
   3), dan zijn de bestanden weg. Dit is het grootste overgebleven gat.
 - De inlogaccounts zelf (wachtwoorden): moeten opnieuw; dat is
   onvermijdelijk en bekend.
+
+**Gevonden op 15 november 2026: een herbouwd project is slechter
+afgesloten dan live.** Gemeten in het oefenproject, vlak voor het werd
+verwijderd. `schema_dump()` neemt drie dingen niet mee:
+
+- **uitvoerrechten op databasefuncties.** In het oefenproject kon de rol
+  `anon` (iemand zonder inlog) 36 functies met verhoogde rechten
+  aanroepen, waaronder `backup_dump_tabel`, die een hele tabel teruggeeft,
+  en `schema_dump` zelf. Op live zijn die twee dicht
+- **de beveiligingsoptie van views.** `pers_verzuim_dagen` en
+  `prullenbak_overzicht` hebben op live `security_invoker=true`; in het
+  oefenproject ontbrak die
+- **de standaardrechten.** Op live krijgt `anon` geen rechten op een
+  nieuwe tabel; in het oefenproject wel
+
+**Nog te repareren** in `schema_dump()`. Tot dat gedaan is geldt bij een
+echte herbouw: trek na het draaien van het herbouwbestand de
+uitvoerrechten van `anon` op alle functies in, zet de optie op de twee
+views en vergelijk met `sql/audit_query_periodiek.sql`, vóórdat er
+gegevens in het nieuwe project geladen worden.
 
 ---
 
@@ -1762,6 +1789,35 @@ bericht teruggehaald, dan gaat het label mee.
 
 Nooit bouwen na een diagnose van een regel. Eerst meten. Bij twijfel komt
 er een query en geen oplossing.
+
+### 5.7 Een nieuwe tabel krijgt altijd rijbeveiliging
+
+**Waarom deze bestaat:** op 10 november 2026 mailde Supabase dat in het
+oefenproject `schilders-calc-hersteltest` een tabel openstond:
+`herstel_oude_rollen`, een hulptabel die bij de hersteltest was aangemaakt
+zonder rijbeveiliging. Een tabel in `public` zonder rijbeveiliging is te
+lezen door iedereen die het projectadres en de publieke sleutel kent.
+
+De regel: elke nieuwe tabel krijgt in dezelfde opdracht rijbeveiliging,
+ook een hulptabel en ook in een oefenproject. Gebruik
+`sql/template_nieuwe_tabel.sql`.
+
+**Het slot.** Sinds 15 november 2026 dwingt de database dit zelf af. De
+event trigger `ensure_rls` (functie `public.rls_auto_enable`, bestand
+`sql/rls_auto_slot.sql`) gaat af na elke `create table`, `create table as`
+en `select into` in `public` en zet de rijbeveiliging aan. Lukt dat niet,
+dan wordt de tabel niet aangemaakt.
+
+Wat het slot niet doet:
+
+- het maakt geen policy. Een nieuwe tabel is dicht voor iedereen, ook voor
+  de app, tot er een policy op staat. Het sjabloon blijft dus nodig
+- het raakt bestaande tabellen niet aan
+- het werkt alleen in `public`
+
+Noodschakelaar, als het slot ooit in de weg zit:
+`alter event trigger ensure_rls disable;` en daarna weer `enable`.
+Zet hem niet uit zonder hem dezelfde dag weer aan te zetten.
 
 ---
 
@@ -6587,3 +6643,49 @@ offerte-verzenden versie 38: syntaxcontrole en 10 controles op de rem. Gemeten
 in het functielogboek op 15-11-2026 10:53 UTC: eerste klik gemaild, tweede klik
 8 seconden later tegengehouden. v4.121.0 is op 15-11 niet in de echte app
 getest.
+
+## Ook op 15 november 2026: automatisch slot voor rijbeveiliging, schema_dump v3, oefenproject verwijderd (geen app-versie)
+
+**Aanleiding.** Besluit van 10 november na de Supabase-mail over de open
+tabel `herstel_oude_rollen` in het oefenproject, zie 5.7.
+
+**Wat er nu staat.**
+
+| Onderdeel | Wat |
+|---|---|
+| `sql/rls_auto_slot.sql` | functie `public.rls_auto_enable` en event trigger `ensure_rls`: elke nieuwe tabel in `public` krijgt vanzelf rijbeveiliging. Projectwacht, idempotent, proef met een tabel die wordt teruggedraaid, vijf controles |
+| `public.schema_dump()` v3 | nieuwe sectie EVENT TRIGGERS, direct voor de opslagbakken. Zonder die sectie kwam de functie wel mee naar een herbouwd project maar het haakje niet, en deed het slot daar niets |
+| `sql/schema_dump.sql` | bijgewerkt naar v3. Het bestand in de repo was nog v1; live draaide sinds 1 november v2 |
+| oefenproject | verwijderd door Gian, zie 4.8 |
+
+Afwijkingen van het voorbeeld in de Supabase-documentatie, met opzet: de
+functie draait zonder verhoogde rechten (de maker is eigenaar van de
+tabel, meer is niet nodig) en slikt geen fouten in. Faalt het slot, dan
+wordt de tabel niet aangemaakt in plaats van stil open te blijven.
+
+**Geen codewijziging in de apps.** Geen versienummer, geen
+CHANGELOG-entry.
+
+**Bediening.** Een nieuwe tabel maak je nog steeds met
+`sql/template_nieuwe_tabel.sql`. Supabase Studio waarschuwt bij het
+draaien van `rls_auto_slot.sql` voor een tabel zonder rijbeveiliging; dat
+is de proeftabel, kies daar "Run without RLS". Noodschakelaar: zie 5.7.
+
+**Bewijs.** Lokaal op Postgres 16: 29 controles goed (gewone tabel,
+`create table as`, `select into`, `like`, partitie, gewone rol, tijdelijke
+tabel en ander schema ongemoeid, sjabloon twee keer vijf keer GOED,
+noodschakelaar, kapotte slotfunctie blokkeert het aanmaken, herbouw in een
+lege database met v3). Op live, 15 november: Gian draaide het bestand in
+Studio, vijf controles GOED, waaronder de proeftabel die rijbeveiliging
+kreeg. Daarna gemeten via de Supabase-koppeling: `ensure_rls` aanwezig en
+ingeschakeld, eigenaar `postgres`; `schema_dump()` heeft de vingerafdruk
+van de lokaal geteste v3 (`1a35c1bec97906e6d30373152c485287`); het
+herbouwbestand bevat de regel `create event trigger ensure_rls`; 71
+tabellen in `public`, geen zonder rijbeveiliging.
+
+**Niet getest.** Het aanmaken van een tabel met de tabel-knop van Studio.
+Een herbouw met v3 in een echt leeg Supabase-project.
+
+**Nog open.** De drie gaten in `schema_dump()` uit 4.9 (uitvoerrechten,
+view-optie, standaardrechten). Of de wekelijkse Supabase-mail het
+oefenproject niet meer noemt: te zien in de eerstvolgende mail.
