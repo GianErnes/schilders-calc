@@ -1,13 +1,24 @@
 -- =====================================================================
 --  public.schema_dump()   -- opruimlijst punt 15, brok 1 + brok 2
 --
+--  v3, 15 november 2026. Dit bestand is gelijk aan wat live draait
+--  (vingerafdruk van de functietekst: 1a35c1bec97906e6d30373152c485287).
+--    v2 (1 november 2026):  views erbij, check_function_bodies uit.
+--    v3 (15 november 2026): sectie EVENT TRIGGERS erbij, zodat het
+--                           automatische slot voor rijbeveiliging
+--                           (sql/rls_auto_slot.sql) meekomt bij een herbouw.
+--
 --  Leest de inrichting van de database en zet die om in SQL waarmee je
 --  hem opnieuw aanlegt. Alleen lezen. Idempotent: opnieuw draaien mag.
 --
 --  Volgorde van de uitvoer is vast: leegtecontrole, extensies, reeksen,
---  tabellen, sleutels en beperkingen, indexen, functies, triggers,
---  rijbeveiliging, policies, rechten, opslagbakken, opslagpolicies,
---  cronjobs, en als allerlaatste de verwijssleutels.
+--  tabellen, sleutels en beperkingen, indexen, functies, views, triggers,
+--  rijbeveiliging, policies, rechten, event triggers, opslagbakken,
+--  opslagpolicies, cronjobs, en als allerlaatste de verwijssleutels.
+--
+--  Wat er NIET in zit (gemeten 15 november 2026, zie SYSTEEM.md 4.9):
+--  uitvoerrechten op functies, de optie security_invoker op views en de
+--  standaardrechten voor nieuwe tabellen.
 --
 --  Let op: de opslagpolicies staan op storage.objects en niet in public.
 --  Ze tellen niet mee in een telling over schema public.
@@ -43,7 +54,7 @@ begin
     || '-- 3. DE EDGE FUNCTIONS ZITTEN HIER NIET IN. Die staan in de repo' || E'\n'
     || '--    ernes-edge-functions en moeten EERST uitgerold zijn, anders' || E'\n'
     || '--    wijzen de cronjobs naar adressen die nog niet bestaan.' || E'\n'
-    || '-- 4. DRIE TABELLEN HANGEN AAN auth.users. Na een herbouw zijn dat' || E'\n'
+    || '-- 4. VIER TABELLEN HANGEN AAN auth.users. Na een herbouw zijn dat' || E'\n'
     || '--    nieuwe id''s. Maak eerst de inlogaccounts opnieuw aan, zet dan' || E'\n'
     || '--    pas de gegevens terug, en koppel taken_rollen met de hand.' || E'\n'
     || '-- 5. DE REEKSEN MOETEN EEN setval KRIJGEN na het terugzetten van de' || E'\n'
@@ -160,7 +171,11 @@ begin
   end loop;
 
   ----------------------------------------------------------- functies
-  uit := uit || E'\n-- ---------- DATABASEFUNCTIES ----------\n';
+  -- v2: check_function_bodies uit, zodat een functie die naar een view
+  -- of een andere functie verwijst die verderop pas komt, niet
+  -- geweigerd wordt bij het aanmaken.
+  uit := uit || E'\n-- ---------- DATABASEFUNCTIES ----------\n'
+             || 'set check_function_bodies = off;' || E'\n\n';
   for r in
     select pg_catalog.pg_get_functiondef(p.oid) as def
       from pg_catalog.pg_proc p
@@ -171,6 +186,23 @@ begin
      order by p.proname, pg_catalog.pg_get_function_identity_arguments(p.oid)
   loop
     uit := uit || r.def || E';\n\n';
+  end loop;
+
+  -------------------------------------------------------------- views
+  -- v2: ontbrak in v1 (alleen relkind 'r' werd meegenomen). In volgorde
+  -- van aanmaak, zodat een view die op een andere view leunt erna komt.
+  uit := uit || E'\n-- ---------- VIEWS ----------\n';
+  for r in
+    select c.relname, pg_catalog.pg_get_viewdef(c.oid, true) as def
+      from pg_catalog.pg_class c
+      join pg_catalog.pg_namespace ns on ns.oid = c.relnamespace
+     where ns.nspname = 'public' and c.relkind = 'v'
+       and not exists (select 1 from pg_catalog.pg_depend dp
+                        where dp.objid = c.oid and dp.deptype = 'e')
+     order by c.oid
+  loop
+    uit := uit || format('create or replace view public.%I as', r.relname) || E'\n'
+               || r.def || E'\n\n';
   end loop;
 
   ----------------------------------------------------------- triggers
@@ -229,6 +261,33 @@ begin
      order by c.relname, 2, a.privilege_type
   loop
     uit := uit || format('grant %s on public.%I to %I;', lower(r.recht), r.tabel, r.ontvanger) || E'\n';
+  end loop;
+
+  ------------------------------------------------------ event triggers
+  -- v3: het automatische slot (ensure_rls, zie sql/rls_auto_slot.sql) en
+  -- elke andere event trigger waarvan de functie in public staat. De
+  -- functie zelf staat al bij DATABASEFUNCTIES; dit is het haakje dat hem
+  -- laat afgaan. Zonder deze sectie komt de functie wel mee naar een
+  -- herbouwd project maar doet hij daar niets.
+  uit := uit || E'\n-- ---------- EVENT TRIGGERS ----------\n';
+  for r in
+    select e.evtname, e.evtevent, e.evtenabled, e.evttags, p.proname
+      from pg_catalog.pg_event_trigger e
+      join pg_catalog.pg_proc p on p.oid = e.evtfoid
+      join pg_catalog.pg_namespace ns on ns.oid = p.pronamespace
+     where ns.nspname = 'public'
+     order by e.evtname
+  loop
+    uit := uit
+      || format('drop event trigger if exists %I;', r.evtname) || E'\n'
+      || format('create event trigger %I on %s', r.evtname, r.evtevent)
+      || coalesce(' when tag in ('
+                  || (select string_agg(quote_literal(t), ', ') from unnest(r.evttags) t)
+                  || ')', '')
+      || format(' execute function public.%I();', r.proname) || E'\n'
+      || case when r.evtenabled = 'D'
+              then format('alter event trigger %I disable;', r.evtname) || E'\n'
+              else '' end;
   end loop;
 
   ------------------------------------------------------- opslagbakken
