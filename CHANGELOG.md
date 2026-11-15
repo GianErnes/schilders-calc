@@ -1,3 +1,46 @@
+## v4.121.0 — Offerte-instellingen niet meer overschreven door een oud tabblad; "Verstuurd op" zichtbaar; geen dubbele offertemail (2026-11-15)
+
+Gebouwd op v4.120.0, live opgehaald van GitHub op 15-11-2026 bij sessiestart en opnieuw vlak voor het patchen (1.986.638 bytes, beide keren identiek). Hoort bij Edge Function offerte-verzenden versie 38 (zelfde dag, al live).
+
+**Aanleiding**
+- Controlerapport 15-11-2026, bevinding 1 (Hoog). Proef door Gian op calculatie De Vreede: in tabblad B het e-mailadres gewijzigd, in tabblad A (dat al openstond, op het dashboard) de status op Verzonden gezet. Daarna stond in de database het oude adres. Gelezen in v4.120.0: `_afrondCentVastleggen`, de versieophoging bij een herziene link en "offertedatum naar vandaag" schreven alle drie het hele blok `offerte_config` uit het browsergeheugen terug.
+- Gelezen in v4.120.0: het e-mailadres in een nieuwe accordeerlink (`snapshot.klantEmail`) komt uit het geheugen. Een oud tabblad maakte dus ook een link naar het oude adres. Niet in de app geprobeerd, alleen gelezen.
+- Bevinding 3: valt de verbinding weg nadat de mail al verstuurd is, dan meldt de app "Mailen mislukt" en stuurt een tweede klik de offerte nog een keer.
+- Gian 15-11, na de proef met offerte-verzenden versie 38: "Ik zag dat ik twee keer kon versturen binnen 2 minuten, niets wees erop dat ik al verstuurd had." Gemeten in het functielogboek: de tweede klik (8 seconden later) is door de rem tegengehouden, er ging één mail uit. De app liet dat alleen niet zien. Zijn voorstel: in het accordeerlink-venster "Verstuurd op ..." tonen.
+
+**Keuzes (Gian, 15-11)**
+- Reparatie plus een waarschuwing bij een tweede tabblad, niet een van de twee.
+- De functie antwoordt bij een tweede klik binnen twee minuten met ok en de vlag "al verstuurd", niet met een fout.
+
+**Wat is er veranderd**
+- Nieuw: `_offCfgVersLezen`, `_offCfgGerichtZetten`, `_offCfgGeheugenGelijk`, `_offCfgVerschil`, `_offCfgStabiel`, `_offCfgWachtOpSave`. Zelfde patroon als bij onderhoudsplannen (v4.52.0): vers lezen, alleen de eigen velden zetten, schrijven, geheugen gelijkzetten. Mislukt het lezen of schrijven, dan wordt er niets overschreven en komt er een melding.
+- `_afrondCentVastleggen`: zet alleen nog `afrondCent`.
+- Versieophoging bij een herziene link: zet alleen `offerteVersie`, `offertedatum`, `geldigTot`.
+- Offertedatum naar vandaag: zet alleen `offertedatum`, `geldigTot`; een mislukte opslag geeft nu een melding (was stil).
+- `_accordNieuweLink`: haalt eerst de nieuwste offerte-instellingen op en zet het geheugen gelijk. Was er elders iets gewijzigd, dan meldt de app welke velden. Lukt het ophalen niet, dan wordt er geen link gemaakt.
+- `_offCfgSave`: het opslaan zelf is ongewijzigd; er is alleen een teller bijgekomen (`_offCfgSaveLoopt`) zodat de gerichte rondes wachten tot een eigen wijziging in het Offerte-blok is opgeslagen (hooguit 5 seconden).
+- Tabbladwaarschuwing: gele balk boven de calculatie als dezelfde calculatie in een ander tabblad van dezelfde browser openstaat (BroadcastChannel), met Herladen en Sluiten.
+- Accordeerlink-venster (offerte en onderhoudsplan): "Verstuurd op 15 november om 11:53" in de opvolgtegel (was "Gemaild op 15 november"), dezelfde regel groen onder de mailknop, de knop heet dan "opnieuw mailen", en het mailvenster waarschuwt dat de offerte al verstuurd is.
+- Antwoordt offerte-verzenden met `alVerstuurd`, dan meldt de app dat de offerte al verstuurd was en dat er geen tweede mail is gestuurd.
+
+**Bekende grenzen**
+- De tabbladwaarschuwing ziet alleen tabbladen in dezelfde browser op hetzelfde apparaat, en alleen als de calculatie in beide tabbladen openstaat. Een tabblad op het dashboard (zoals in de proef) of een ander apparaat geeft geen balk; daar is de gerichte schrijfronde het vangnet.
+- Wie in een oud tabblad iets wijzigt in het Offerte-blok zelf, schrijft via `_offCfgSave` nog steeds het hele blok terug. Bewust niet in deze versie.
+- Standaardwaarden die alleen in het geheugen zijn bijgevuld (`_offCfg`) gaan niet meer als bijvangst mee naar de database bij op slot zetten; ze worden opgeslagen zodra er iets in het Offerte-blok wordt gewijzigd, zoals vóór v4.119.0.
+- De dubbele-mailrem werkt niet bij houtrot-opgaven (geen stempel `gemaild_op`) en niet bij twee klikken binnen dezelfde seconde.
+
+**Getest**
+- node --check op alle inline scripts, div-balans gelijk aan v4.120.0, scripttagbalans, vijf versieankers.
+- Tests op functies die uit het gepatchte bestand zijn gesneden, met een nagebootste database: de proef van 15-11 (oud tabblad zet op slot, nieuw adres blijft staan), mislukt lezen (niets geschreven), wachten op een lopende opslag, vergelijking zonder vals alarm door sleutelvolgorde of standaardwaarden, de tabbladbeslissing, de tijdweergave.
+- Niet getest: de echte app in de browser. Proef staat in de overdracht van 15-11 (klus 1) en hieronder.
+
+**Proef in de echte app**
+1. Proefcalculatie met status Concept. Tabblad A: dashboard. Tabblad B: calculatie open, e-mailadres wijzigen. Tabblad A: status op Verzonden. Verwacht: nieuwe adres blijft staan, `afrondCent` is true.
+2. Dezelfde calculatie in twee tabbladen openen: gele balk in beide.
+3. Accordeerlink-venster na het mailen: "Verstuurd op ... om ..." in de tegel en onder de knop.
+
+**SQL**: geen.
+
 ## v4.120.0 — Herziene offerte: vergelijking met de vorige versie, versie automatisch (2026-11-13)
 
 Gebouwd op v4.119.0 uit de projectknowledge. Live op GitHub stond op het moment van bouwen nog v4.118.2 (opgehaald 13-11); v4.119.0 gaat dus met deze versie mee de repo in.

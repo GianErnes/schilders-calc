@@ -6538,3 +6538,52 @@ controles groen (vergelijking met de bedragen uit de twee Joosten-pdf's),
 `test2.js` 35 controles groen (`_accordNieuweLink` als geheel met nagebootste
 database), SQL op lokale Postgres 16 inclusief tweede keer draaien. Niet
 getest in de echte app met inlog op 13-11.
+
+## Wat er op 15 november 2026 gedaan is: offerte-instellingen gericht schrijven, tabbladwaarschuwing, "Verstuurd op" en dubbele-mailrem (index.html v4.121.0, Edge Function offerte-verzenden versie 38)
+
+**Aanleiding.** Controlerapport van 15-11-2026. Proef door Gian op calculatie De
+Vreede: e-mailadres gewijzigd in tabblad B, daarna in tabblad A (dat al
+openstond) de status op Verzonden gezet; het oude adres stond terug. Drie
+plekken schreven het hele blok `calculaties.offerte_config` uit het
+browsergeheugen terug. Daarnaast: na "Mailen mislukt" door een weggevallen
+verbinding kon een tweede klik dezelfde offerte nog een keer mailen.
+
+**Wat geldt nu.**
+- **Regel: `offerte_config` wordt buiten het Offerte-blok nooit als geheel
+  teruggeschreven.** Op slot zetten (`_afrondCentVastleggen`), versie ophogen
+  en offertedatum naar vandaag gaan via `_offCfgGerichtZetten`: vers lezen,
+  alleen de eigen velden zetten, schrijven, geheugen gelijkzetten. Zelfde
+  patroon als bij onderhoudsplannen (v4.52.0). Mislukt het lezen of schrijven,
+  dan wordt er niets overschreven en komt er een melding.
+- `_accordNieuweLink` haalt eerst de nieuwste offerte-instellingen op. Lukt dat
+  niet, dan wordt er geen link gemaakt.
+- Uitzondering, bewust: `_offCfgSave` (wijziging in het Offerte-blok zelf)
+  schrijft nog het hele blok. Een oud tabblad waarin iemand het Offerte-blok
+  bewerkt, kan dus nog steeds een wijziging van elders overschrijven.
+- Tabbladwaarschuwing: gele balk als dezelfde calculatie in twee tabbladen van
+  dezelfde browser openstaat (BroadcastChannel `ernes-schilders-calc-tabs`).
+  Werkt niet tussen apparaten en niet voor een tabblad op het dashboard.
+- `offerte-verzenden` versie 38: is `gemaild_op` van de link jonger dan twee
+  minuten, dan gaat er geen mail uit en antwoordt de functie
+  `{ ok: true, alVerstuurd: true, gemaildOp }`. App en `offerte-wachtrij`
+  behandelen dat als gelukt. Na twee minuten mailt dezelfde link gewoon
+  opnieuw (opvolgreeks begint dan opnieuw, v4.35.0). Geldt niet voor
+  houtrot-opgaven (geen stempel). Logregel bij een tegengehouden mail:
+  "offerte-verzenden: offerte NIET opnieuw gemaild naar ...".
+- Het accordeerlink-venster toont "Verstuurd op <dag> om <tijd>" in de
+  opvolgtegel en onder de mailknop; de knop heet daarna "opnieuw mailen".
+
+**Nood.** Klaagt iemand dat een tweede mail niet aankomt: kijk in het
+accordeerlink-venster naar "Verstuurd op"; binnen twee minuten na die tijd
+wordt er bewust niet opnieuw gemaild. Wacht twee minuten of maak een nieuwe
+link. Meldt de app "De offerte-instellingen konden niet worden opgehaald", dan
+is er geen link gemaakt en niets gewijzigd; controleer de verbinding.
+Terugvallen: v4.120.0 werkt met offerte-verzenden versie 38 (toont dan gewoon
+"gemaild"); offerte-verzenden versie 37 werkt met v4.121.0.
+
+**Bewijs.** `CHANGELOG.md` v4.121.0: parse-test, balansen, 34 controles groen
+op functies uit het gepatchte bestand met een nagebootste database;
+offerte-verzenden versie 38: syntaxcontrole en 10 controles op de rem. Gemeten
+in het functielogboek op 15-11-2026 10:53 UTC: eerste klik gemaild, tweede klik
+8 seconden later tegengehouden. v4.121.0 is op 15-11 niet in de echte app
+getest.
