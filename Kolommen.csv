@@ -183,6 +183,7 @@ meetstaat,factor,numeric,NO,1
 meetstaat,tekening,jsonb,YES,null
 meetstaat,bron,text,YES,null
 meetstaat,bron_meetstaat_id,uuid,YES,null
+meetstaat,actief,boolean,YES,true
 offerte_accorderingen,id,uuid,NO,gen_random_uuid()
 offerte_accorderingen,calculatie_id,uuid,YES,null
 offerte_accorderingen,token,text,NO,null
@@ -211,6 +212,7 @@ offerte_accorderingen,eerst_gemaild_op,timestamp with time zone,YES,null
 offerte_accorderingen,onderhoudsplan_id,uuid,YES,null
 offerte_accorderingen,betaalkeuze,text,YES,null
 offerte_accorderingen,oplevering_id,uuid,YES,null
+offerte_accorderingen,cijfers,jsonb,YES,null
 offerte_controle_log,id,uuid,NO,gen_random_uuid()
 offerte_controle_log,aangemaakt_op,timestamp with time zone,NO,now()
 offerte_controle_log,gebruiker,text,YES,null
@@ -476,6 +478,8 @@ plan_kennisgevingen,bevestig_token,text,YES,null
 plan_kennisgevingen,webhook_laatste,text,YES,null
 plan_kennisgevingen,webhook_laatste_op,timestamp with time zone,YES,null
 plan_kennisgevingen,fase_id,uuid,YES,null
+plan_kennisgevingen,vervallen_op,timestamp with time zone,YES,null
+plan_kennisgevingen,vervallen_reden,text,YES,null
 plan_medewerkers,id,uuid,NO,gen_random_uuid()
 plan_medewerkers,naam,text,NO,null
 plan_medewerkers,norm_uren,numeric,NO,7.5
@@ -505,6 +509,7 @@ plan_projecten,contact_email,text,YES,null
 plan_projecten,contact_aanspreekvorm,text,YES,null
 plan_projecten,contact_achternaam,text,YES,null
 plan_projecten,toon_ondanks_regel,boolean,NO,false
+plan_projecten,onderhoudsplan,boolean,NO,false
 plan_uren,id,uuid,NO,gen_random_uuid()
 plan_uren,yoobi_code,text,NO,null
 plan_uren,medewerker_id,uuid,NO,null
@@ -520,6 +525,7 @@ plan_verlof,omschrijving,text,YES,null
 plan_verlof,created_at,timestamp with time zone,YES,now()
 plan_verlof,updated_at,timestamp with time zone,YES,now()
 plan_verlof,uren,numeric,YES,null
+plan_verlof,volgorde,smallint,YES,null
 planning_handmatig,id,uuid,NO,gen_random_uuid()
 planning_handmatig,klant,text,NO,null
 planning_handmatig,betaalmodel,text,NO,'contant'::text

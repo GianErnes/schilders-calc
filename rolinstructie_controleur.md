@@ -62,8 +62,11 @@ select 'kolommen', count(*) from information_schema.columns where table_schema =
 union all
 select 'tabellen', count(distinct table_name) from information_schema.columns where table_schema = 'public'
 union all
-select 'foreign keys', count(*) from information_schema.table_constraints where constraint_type = 'FOREIGN KEY' and table_schema = 'public';
+select 'foreign keys', count(*) from pg_constraint k join pg_class doel on doel.oid = k.confrelid
+  where k.contype = 'f' and k.connamespace = 'public'::regnamespace and doel.relnamespace = 'public'::regnamespace;
 ```
+
+De telling van foreign keys telt alleen relaties tussen tabellen in het schema public, want alleen die staan in FKS.csv. De vier verwijzingen naar auth.users (onderhoudsplan_beurten, onderhoudsplannen, push_subscriptions, taken_rollen, elk op user_id) tellen niet mee. Gemeten op 15 november 2026: 840 kolommen, 73 tabellen, 44 foreign keys; de oude telquery gaf 48 en meldde daardoor ten onrechte een achterstand in FKS.csv.
 
 Wijkt het antwoord af van de telling in de bestanden, dan is dat bevinding nummer 1 met ernst Midden: elke controle op kolomtypes en relaties in die ronde is dan op een verouderd beeld gedaan, en Gian moet de twee exports vernieuwen (de exportqueries staan in de rolinstructie van 1 november). Krijg je ooit zelf leestoegang tot de database via de Supabase-connector, dan draai je deze telling zelf en vervalt de vraag.
 
@@ -93,6 +96,25 @@ Vier lijsten, in deze volgorde van voorrang. De eerste drie zijn gericht, de vie
 - Afronding: waar wordt afgerond, hoe vaak, en telt het eindtotaal nog op uit de regels?
 - Kleinschaligheidstoeslag: klopt de staffel in de code met de regel in domeinregels, inclusief de grens waar hij 0 wordt?
 - Bevroren totalen: wat gebeurt er met een bevroren offerte als een norm of tarief later wijzigt?
+- De accordeerlink is de enige waarheid over wat de klant kreeg (besluit Gian, 15 november 2026). Vergelijk het bedrag in de app daarom met het bedrag van de laatste open of geaccordeerde link, met de query hieronder. Gebruik `calculaties.totaal_offerte_origineel` niet als meetlat: dat veld telt bij het vergrendelen alle onderdelen mee, ook de uitgezette (index.html, `_calcTotalForArchive(c, true)`), en wordt nergens in de apps gelezen.
+- Uitgezette hoofdgroepen, onderdelen en regels zijn bewust en nooit op zichzelf een bevinding. Gian neemt binnen- en buitenwerk vaak in één keer op en maakt er twee offertes van; in de ene staat het buitenwerk uit, in de andere het binnenwerk.
+
+```sql
+with l as (
+  select distinct on (calculatie_id) calculatie_id, bedrag
+  from offerte_accorderingen
+  where calculatie_id is not null and onderhoudsplan_id is null and oplevering_id is null
+    and status in ('open','akkoord')
+  order by calculatie_id, aangemaakt_op desc
+)
+select c.naam, c.status, c.totaal_incl_btw as app, round(l.bedrag, 2) as link
+from calculaties c join l on l.calculatie_id = c.id
+where c.status not in ('concept','afspraak')
+  and abs(coalesce(c.totaal_incl_btw, 0) - coalesce(l.bedrag, 0)) > 2
+order by abs(coalesce(c.totaal_incl_btw, 0) - coalesce(l.bedrag, 0)) desc;
+```
+
+De drempel van 2 euro is er omdat links van vóór september 2026 het bedrag onafgerond opslaan en daardoor tot ongeveer 2 euro van het app-bedrag afwijken (gemeten bij 14 calculaties; de oorzaak is een vermoeden). Elke rij die deze query teruggeeft is een bevinding met ernst Midden, behalve de rijen die Gian al verklaard heeft: de twee calculaties Laumen (werk onderling verschoven, bevestigd op 15 november 2026). Nog niet verklaard op die datum: Laven-Vermeer, Hesi Willemsen en Nacken. Een vergrendelde calculatie zonder link is zo niet te controleren; meld alleen het aantal.
 - Dupliceren en kopiëren: neemt de kopie alle stappen en toeslagen mee, of alleen de zichtbare velden?
 
 **4. Breed** (bij elke release kort, elk kwartaal grondig)
