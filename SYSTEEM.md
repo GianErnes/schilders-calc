@@ -6689,3 +6689,48 @@ Een herbouw met v3 in een echt leeg Supabase-project.
 **Nog open.** De drie gaten in `schema_dump()` uit 4.9 (uitvoerrechten,
 view-optie, standaardrechten). Of de wekelijkse Supabase-mail het
 oefenproject niet meer noemt: te zien in de eerstvolgende mail.
+
+## Ook op 15 november 2026: afdekvilt als automatische staartpost (index.html v4.122.0, kolom calculaties.afdekvilt_uit)
+
+**Wat het doet.** In een calculatie met binnenregels waar "plafon" in de
+naam staat, zet de Calculatie-app zelf de staartpost Afdekvilt erbij:
+m² plafond × 1,3, naar boven afgerond op hele rollen van 25 meter, maal
+de m²-prijs van de post "Afdekvilt" in de staartkosten-bibliotheek. Op de
+werkbon staat hoeveel meter en hoeveel rollen er mee moeten. Vuistregel
+en rolmaat komen van Gian (15-11); de factor en de rollengte staan onder
+Instellingen (`app_settings.data`: `afdekviltFactor`,
+`afdekviltRolLengte`).
+
+**Wat er in de database bij is gekomen.** Eén kolom:
+`calculaties.afdekvilt_uit` (boolean, niet leeg, standaard false).
+Betekenis: de afdekviltpost is in deze calculatie met de hand weggehaald
+en moet wegblijven. Aangemaakt op 15-11-2026 21:55 UTC met de migratie
+`calculaties_afdekvilt_uit` via de Supabase-koppeling; er is geen
+SQL-bestand van in de repo. Geen nieuwe tabel, geen trigger, geen
+cronjob, geen Edge Function.
+
+**Twee nieuwe waarden in een bestaande kolom.** `staart.gebrek_type`
+kende de gebrektypes en `deur_onderkant`. Erbij: `afdekvilt` (de app
+houdt de hoeveelheid bij) en `afdekvilt_hand` (eigen hoeveelheid, de app
+blijft eraf). Wie in Studio zo'n post ziet: het is geen gebrek.
+
+**Als het raar doet.** Komt de post er niet bij: kijk of de bibliotheek
+een post "Afdekvilt" van het type eenheid heeft met een prijs boven 0,
+of de calculatie op concept of afspraak staat, en of
+`calculaties.afdekvilt_uit` voor die calculatie op true staat (op false
+zetten of in de app Afdekvilt zelf toevoegen). Staat er een verkeerde
+hoeveelheid: onder de post staat de som; een eigen hoeveelheid invullen
+mag, de app laat die staan.
+
+**Bewijs.** `CHANGELOG.md` v4.122.0: parse-test, balansen, vijf ankers,
+41 controles groen op functies uit het gepatchte bestand. Gemeten op
+live, 15-11: kolom aanwezig, 133 calculaties op false; bibliotheekpost
+"Afdekvilt", eenheid, 1,02 per m²; geen open calculatie met een
+plafondregel, dus bij uitrol verandert geen bestaande calculatie.
+
+**Niet getest.** De echte app in de browser, de werkbon op papier en in
+Craft. Proef staat in de CHANGELOG.
+
+**Nog open.** Of "afronden op hele rollen" ook voor de prijs geldt, of
+alleen voor het aantal op de werkbon (gebouwd: ook de prijs). Een klus
+zonder geschilderd plafond krijgt geen post.

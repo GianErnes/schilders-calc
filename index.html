@@ -2480,8 +2480,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.121.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.122.0</h2>
       <div class="intro-body">
+        <p><strong>🧺 Afdekvilt rekent zichzelf uit (v4.122.0).</strong> Staat er in een binnencalculatie een regel met "plafond" in de naam, dan komt de staartpost Afdekvilt er vanzelf bij: m² plafond × 1,3, naar boven afgerond op hele rollen van 25 meter, maal de m²-prijs uit je staartkosten-bibliotheek. Onder de post staat de som, zodat je hem kunt narekenen. Vul je zelf een andere hoeveelheid in, dan blijft de app daar af en toont hij alleen wat hij zelf zou rekenen. Haal je de post weg, dan blijft hij in die calculatie weg tot je Afdekvilt zelf weer toevoegt. Op de werkbon staat onder het materiaal hoeveel meter en hoeveel rollen er mee moeten. De factor en de rollengte staan onder Instellingen. Bevroren offertes blijven ongemoeid. Geen SQL nodig.</p>
         <p><strong>🛡️ Offerte-instellingen worden niet meer overschreven door een oud tabblad, en je ziet wanneer een offerte verstuurd is (v4.121.0).</strong> Zette je een calculatie op slot of maakte je een accordeerlink vanuit een tabblad dat al een tijd openstond, dan schreef de app de offerte-instellingen terug zoals dat tabblad ze bij het opstarten had; een e-mailadres dat intussen elders was gewijzigd, was dan weg. De app haalt nu eerst de nieuwste instellingen op en zet daarin alleen het eigen veld. Bij een nieuwe accordeerlink worden de instellingen altijd eerst ververst, zodat de link naar het actuele adres gaat. Staat dezelfde calculatie in twee tabbladen van dezelfde browser open, dan komt er een gele balk. In het accordeerlink-venster staat nu "Verstuurd op ... om ..." met de tijd, en een tweede klik binnen twee minuten stuurt geen tweede mail meer (Edge Function offerte-verzenden versie 38). Geen SQL.</p>
         <p><strong>🔍 Herziene offerte: eerst vergelijken met de vorige versie (v4.120.0).</strong> Maak je een nieuwe accordeerlink terwijl er al een versie bij de klant is geweest, dan komt er eerst een venster met wat er verandert: de gefactureerde dagen, per regel het oude en nieuwe bedrag, en het totaal. Het venster kleurt rood als de dagen verspringen of als regels stijgen terwijl de hoeveelheid gelijk bleef. In hetzelfde venster wordt de versie opgehoogd (V2, V3, ...); dat hangt niet meer af van een reactie van de klant via de link. De regelvergelijking werkt vanaf de eerste offerte die met deze versie verstuurd is; bij oudere offertes zie je alleen het totaal. Eenmalig SQL: accord_05_cijfers.sql.</p>
         <p><strong>🧮 De offerte is na te rekenen tot op de cent (v4.119.0).</strong> Op een offerte met hoeveelheden klopte hoeveelheid maal eenheidsprijs niet altijd met het regelbedrag, en de regels telden soms een cent anders op dan het subtotaal of het totaal. De app rekende met meer decimalen dan hij liet zien. Voortaan wordt de hoeveelheid uit de meetstaat afgerond op twee decimalen, elk regelbedrag op de cent, en ook reiskosten, staartposten en BTW. Het totaal is de som van wat er staat. Een bedrag kan hierdoor anders uitkomen dan voorheen: meestal centen, bij regels met een grote hoeveelheid soms een euro of twee. Dit geldt voor calculaties die nog niet op slot staan; wat al verstuurd is blijft rekenen zoals het verstuurd is. Geen SQL.</p>
@@ -3293,6 +3294,12 @@
       <div class="cluster-grid" style="margin-top:0.75rem;"><div><label>🚪 Deuronderkant behandelen (€ / deur)</label><input type="number" step="0.50" min="0" id="setDeurOnderkantPrijs" onchange="updDeurOnderkantPrijs(this)"></div></div>
       <p style="color: var(--muted); font-size: 0.82rem; margin-top: 0.5rem;"><em>Vast bedrag per deur waarvan je in de kozijn-tekenaar "Onderkant behandelen" aanvinkt. Verschijnt automatisch als staartpost (aantal × prijs) en telt mee in de werkdagen.</em></p>
     </div>
+    <!-- v4.122.0 — afdekvilt -->
+    <div class="settings-section">
+      <h3>Afdekvilt</h3>
+      <div class="cluster-grid"><div><label>Factor op m² plafond</label><input type="number" step="0.05" min="0" id="setAfdekviltFactor" onchange="updAfdekvilt('afdekviltFactor', this)"></div><div><label>Lengte van een rol (m, 1 m breed)</label><input type="number" step="1" min="1" id="setAfdekviltRolLengte" onchange="updAfdekvilt('afdekviltRolLengte', this)"></div></div>
+      <p style="color: var(--muted); font-size: 0.82rem; margin-top: 0.5rem;"><em>In een calculatie met binnenregels waar "plafond" in de naam staat, komt de staartpost Afdekvilt er automatisch bij: m² plafond × factor, naar boven afgerond op hele rollen. De m²-prijs komt uit de post "Afdekvilt" in de staartkosten-bibliotheek; bestaat die niet of staat hij op 0, dan gebeurt er niets.</em></p>
+    </div>
     <div class="settings-section">
       <h3>Houtrot-tarieven</h3>
       <p style="color: var(--muted); font-size: 0.82rem; margin-bottom: 0.75rem;"><em>De herstelmethodes waaruit de buitendienst op de steiger kiest bij een houtrot-opgave. Prijs is een richtprijs per eenheid, excl. btw, en blijft per foto overschrijfbaar. De klanttekst komt op de opgave te staan. Wijzigingen worden meteen opgeslagen. <button class="btn-secondary btn btn-sm" onclick="houtrotTarievenLaden(true)" style="margin-left: 0.4rem;">🔄 Ververs</button></em></p>
@@ -4071,7 +4078,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.121.0';
+const APP_VERSION = 'v4.122.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4494,6 +4501,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.122.0', d: '2026-11-15', h: 'Afdekvilt als automatische staartpost: m² plafond (binnenregels met "plafond" in de naam) × factor 1,3, naar boven afgerond op hele rollen van 25 m, maal de m²-prijs uit de bibliotheek; eigen hoeveelheid blijft staan (met het verschil erbij), verwijderen onthoudt de calculatie (kolom afdekvilt_uit); meters en rollen op de werkbon; factor en rollengte onder Instellingen.' },
   { v: '4.121.0', d: '2026-11-15', h: 'Offerte-instellingen: op slot zetten, versie ophogen en offertedatum lezen eerst de nieuwste stand en schrijven alleen het eigen veld (een oud tabblad overschrijft het e-mailadres niet meer); nieuwe accordeerlink ververst de instellingen eerst; gele balk als dezelfde calculatie in twee tabbladen openstaat; "Verstuurd op ... om ..." in het accordeerlink-venster en geen dubbele mail binnen twee minuten (offerte-verzenden versie 38). Geen SQL.' },
   { v: '4.120.0', d: '2026-11-13', h: 'Herziene offerte: vergelijkingsvenster met de vorige versie (dagen, regels, totaal; rood bij een dagsprong of regels die stijgen zonder gewijzigde hoeveelheid) en automatische versieophoging zodra een eerdere versie bij de klant is geweest. Eenmalig SQL: accord_05_cijfers.sql.' },
   { v: '4.119.0', d: '2026-11-13', h: 'Offerte na te rekenen tot op de cent: hoeveelheid uit de meetstaat op twee decimalen, regelbedragen, reiskosten, staartposten en BTW op de cent; het totaal is de som van wat er staat. Alleen voor calculaties die nog niet op slot staan.' },
@@ -8287,6 +8295,7 @@ function _mapCalcHeaderFromDB(row) {
     opnameDatum:         row.opname_datum || null,
     deadlineDatum:       row.deadline_datum || null,
     craftGeexporteerdOp: row.craft_geexporteerd_op || null,
+    afdekviltUit:        row.afdekvilt_uit === true,   // v4.122.0 — bewust NIET in _mapCalcHeaderToDB: alleen gericht geschreven (_afdekviltZetUit)
     steigerAangevraagdOp: row.steiger_aangevraagd_op || null, // v4.78.0 — bewust NIET in _mapCalcHeaderToDB, zelfde reden als craft_geexporteerd_op
     // v4.43.0 — archiveer-markeringen. Bewust NIET in _mapCalcHeaderToDB, om
     // dezelfde reden als craft_geexporteerd_op en offerte_config hieronder.
@@ -9489,6 +9498,8 @@ async function loadData() {
         if (data.settings.gebrekPrijzen[k] === undefined) data.settings.gebrekPrijzen[k] = 0;
       });
       if (data.settings.deurOnderkantPrijs === undefined) data.settings.deurOnderkantPrijs = 0;   // v4.75.0
+      if (data.settings.afdekviltFactor === undefined) data.settings.afdekviltFactor = 1.3;        // v4.122.0
+      if (data.settings.afdekviltRolLengte === undefined) data.settings.afdekviltRolLengte = 25;   // v4.122.0
       // Ondergronden locatie migration
       if (data.ondergronden) {
         data.ondergronden.forEach(o => {
@@ -17586,6 +17597,7 @@ function _werkbonHtml(c) {
     html += _renderMateriaalTabel(matRowsTotaal, { metGroepen: true });
     html += `</div>`;
   }
+  html += _afdekviltWerkbonHtml(c);   // v4.122.0 — afdekvilt: meters en rollen om mee te nemen
 
   // v4.86.0 — Verf per verfsysteem, per hoofdgroep: hoeveel van welk systeem er per
   // hoofdgroep staat en hoeveel verf dat per materiaal vraagt. Bestelhulp per verfsysteem.
@@ -23207,6 +23219,201 @@ function _calcWeeks() {
 function calcStaartTotaal() { return data.calc.staart.reduce((s, p) => s + calcStaart(p), 0); }
 
 // ============================================================
+// AFDEKVILT → AUTOMATISCHE STAARTPOST (v4.122.0)
+// Vuistregel Gian: m² plafond × 1,3 = afdekvilt. Het vilt is 1 m breed
+// (m² = m¹) en zit 25 m op een rol; er wordt naar boven afgerond op hele
+// rollen, ook in de prijs. Zelfde patroon als de deuronderkant-post
+// (v4.75.0): een gewone 'eenheid'-post waarvan de app de hoeveelheid
+// bijhoudt, zodat de rekenkern ongemoeid blijft.
+//   gebrekType 'afdekvilt'      = de app houdt de hoeveelheid bij
+//   gebrekType 'afdekvilt_hand' = eigen hoeveelheid, de app blijft eraf
+//   calculaties.afdekvilt_uit   = post is in deze calculatie weggehaald
+// Plafond = actieve regel, niet buiten, eenheid m², "plafon" in de naam.
+// ============================================================
+const _AV_AUTO = 'afdekvilt', _AV_HAND = 'afdekvilt_hand';
+const _avNum = n => new Intl.NumberFormat('nl-NL', { maximumFractionDigits: 1 }).format(n || 0);
+function _afdekviltInst(c) {
+  const s = (typeof _activeSettings === 'function' ? _activeSettings(c) : null) || data.settings || {};
+  const f = parseFloat(s.afdekviltFactor), r = parseFloat(s.afdekviltRolLengte);
+  return { factor: (isFinite(f) && f > 0) ? f : 1.3, rol: (isFinite(r) && r > 0) ? r : 25 };
+}
+function _afdekviltPlafondM2(c) {
+  let m2 = 0;
+  ((c && c.hoofdgroepen) || []).forEach(hg => {
+    if (!_isActief(hg)) return;
+    (hg.onderdelen || []).forEach(od => {
+      if (!_isActief(od)) return;
+      (od.regels || []).forEach(r => {
+        if (!_isActief(r)) return;
+        if (r.systeemLocatie === 'buiten') return;
+        const eh = String(r.systeemEenheid || '').toLowerCase().replace(/\s/g, '');
+        if (eh !== 'm²' && eh !== 'm2') return;
+        if (!/plafon/i.test(r.naam || '')) return;
+        const h = parseFloat(r.hoeveelheid);
+        if (isFinite(h) && h > 0) m2 += h;
+      });
+    });
+  });
+  return m2;
+}
+function _afdekviltRollen(m, rol) {
+  if (!(m > 0) || !(rol > 0)) return 0;
+  return Math.ceil(m / rol - 1e-9);
+}
+function _afdekviltDoel(c) {
+  const inst = _afdekviltInst(c);
+  const plafond = _afdekviltPlafondM2(c);
+  const nodig = plafond * inst.factor;
+  const rollen = _afdekviltRollen(nodig, inst.rol);
+  return { plafond, factor: inst.factor, rol: inst.rol, nodig, rollen, hoev: rollen * inst.rol };
+}
+function _afdekviltIsPost(p) {
+  if (!p) return false;
+  if (p.gebrekType === _AV_AUTO || p.gebrekType === _AV_HAND) return true;
+  return !p.gebrekType && p.type === 'eenheid' && /afdekvilt/i.test(p.naam || '');
+}
+function _afdekviltPost(c) {
+  const lijst = (c && Array.isArray(c.staart)) ? c.staart : [];
+  return lijst.find(p => p && (p.gebrekType === _AV_AUTO || p.gebrekType === _AV_HAND)) || lijst.find(_afdekviltIsPost) || null;
+}
+function _afdekviltTemplate() {
+  const lib = (data.staartLib || []).filter(t => t && t.type === 'eenheid');
+  return lib.find(t => String(t.naam || '').trim().toLowerCase() === 'afdekvilt') || lib.find(t => /afdekvilt/i.test(t.naam || '')) || null;
+}
+function _afdekviltGelijk(a, b) { return Math.abs((parseFloat(a) || 0) - (parseFloat(b) || 0)) < 0.005; }
+// Na het bewerken van de post in het venster: eigen hoeveelheid = 'hand', gelijk aan de som = weer automatisch.
+function _afdekviltNaBewerken(p) {
+  if (!_afdekviltIsPost(p) || p.type !== 'eenheid' || !data.calc) return;
+  const doel = _afdekviltDoel(data.calc);
+  p.gebrekType = (doel.hoev > 0 && _afdekviltGelijk(p.hoeveelheid, doel.hoev)) ? _AV_AUTO : _AV_HAND;
+}
+function _afdekviltZetUit(c, uit) {
+  if (!c) return;
+  c.afdekviltUit = !!uit;
+  if (!_sb) return;
+  _sbQuery(_sb.from('calculaties').update({ afdekvilt_uit: !!uit }).eq('id', c.id), 'Afdekvilt aan/uit').then(() => {});
+}
+// Regel onder de naam in de staartlijst: de som, of het verschil met een eigen hoeveelheid.
+function _afdekviltInfoHtml(p) {
+  if (!_afdekviltIsPost(p) || !data.calc) return '';
+  const d = _afdekviltDoel(data.calc);
+  const stijl = 'font-size:0.72rem; margin-top:0.15rem;';
+  const som = `${_avNum(d.plafond)} m² plafond × ${_avNum(d.factor)} = ${_avNum(d.nodig)} m² → ${d.rollen} ${d.rollen === 1 ? 'rol' : 'rollen'} van ${_avNum(d.rol)} m`;
+  if (p.gebrekType === _AV_AUTO) return `<div style="${stijl} color:var(--muted);">automatisch · ${som}</div>`;
+  if (d.hoev > 0 && !_afdekviltGelijk(p.hoeveelheid, d.hoev)) return `<div style="${stijl} color:var(--accent-deep); font-weight:600;">eigen hoeveelheid · de app rekent ${_avNum(d.hoev)} m² (${som})</div>`;
+  return `<div style="${stijl} color:var(--muted);">eigen hoeveelheid</div>`;
+}
+function _afdekviltHoevExtra(p) {
+  if (!_afdekviltIsPost(p) || p.type !== 'eenheid' || !data.calc) return '';
+  const n = _afdekviltRollen(parseFloat(p.hoeveelheid) || 0, _afdekviltInst(data.calc).rol);
+  return n > 0 ? ` · ${n} ${n === 1 ? 'rol' : 'rollen'}` : '';
+}
+// Blokje op de werkbon: wat er mee moet. Leest de hoeveelheid van de post, dus een eigen hoeveelheid wint.
+function _afdekviltWerkbonHtml(c) {
+  const p = _afdekviltPost(c);
+  if (!p || p.type !== 'eenheid') return '';
+  const hoev = parseFloat(p.hoeveelheid) || 0;
+  if (!(hoev > 0)) return '';
+  const inst = _afdekviltInst(c);
+  const n = _afdekviltRollen(hoev, inst.rol);
+  const d = _afdekviltDoel(c);
+  let uitleg = '';
+  if (p.gebrekType === _AV_AUTO && d.plafond > 0) uitleg = `${_avNum(d.plafond)} m² plafond × ${_avNum(d.factor)} = ${_avNum(d.nodig)} m², afgerond op hele rollen.`;
+  else uitleg = 'Hoeveelheid zelf ingevuld in de calculatie.';
+  return `<div style="margin-top:12pt; padding:8pt 10pt; border:1pt solid #999; background:#f6f6f2; page-break-inside:avoid;">
+      <span style="font-size:11pt; font-weight:bold;">Afdekvilt meenemen: ${_avNum(hoev)} m¹ — ${n} ${n === 1 ? 'rol' : 'rollen'} van ${_avNum(inst.rol)} m</span>
+      <div style="font-size:8.5pt; color:#666; margin-top:2pt;"><em>Vilt van 1 m breed. ${uitleg}</em></div>
+    </div>`;
+}
+let _afdekviltTimer = null, _afdekviltBezig = false;
+function _afdekviltPlan() {
+  if (_afdekviltTimer) return;
+  _afdekviltTimer = setTimeout(() => { _afdekviltTimer = null; _syncAfdekvilt(); }, 0);
+}
+async function _syncAfdekvilt() {
+  const c = data.calc;
+  if (!c || !c.__loaded || _afdekviltBezig) return;
+  if (typeof _isCalcLocked === 'function' && _isCalcLocked(c)) return;   // bevroren offerte: niet aankomen
+  if (!Array.isArray(c.staart)) c.staart = [];
+  _afdekviltBezig = true;
+  let veranderd = false;
+  try {
+    const doel = _afdekviltDoel(c);
+    let post = _afdekviltPost(c);
+    // Dubbele automatische posten (twee tabbladen tegelijk): alleen de eerste blijft.
+    const dubbel = c.staart.filter(p => p && p.gebrekType === _AV_AUTO && p !== post);
+    for (const d of dubbel) {
+      if (await _deleteStaartCalcDB(d.id)) { c.staart = c.staart.filter(p => p.id !== d.id); veranderd = true; }
+    }
+    if (post) {
+      if (c.afdekviltUit) _afdekviltZetUit(c, false);   // de post staat er (weer): niet langer "uit"
+      if (post.gebrekType === _AV_AUTO) {
+        if (!(doel.hoev > 0)) {
+          if (await _deleteStaartCalcDB(post.id)) { c.staart = c.staart.filter(p => p.id !== post.id); veranderd = true; }
+        } else if (!_afdekviltGelijk(post.hoeveelheid, doel.hoev)) {
+          post.hoeveelheid = doel.hoev;
+          _updateStaartCalcDB(post, c.id);
+          veranderd = true;
+        }
+      } else if (!post.gebrekType && post.type === 'eenheid' && !(parseFloat(post.hoeveelheid) > 0) && doel.hoev > 0) {
+        // Zelf uit de bibliotheek gekozen en nog leeg: de app vult hem en houdt hem bij.
+        post.gebrekType = _AV_AUTO;
+        post.hoeveelheid = doel.hoev;
+        _updateStaartCalcDB(post, c.id);
+        veranderd = true;
+      }
+      // eigen hoeveelheid (hand, of een oude post zonder label): niet aankomen
+    } else if (doel.hoev > 0 && !c.afdekviltUit) {
+      const tpl = _afdekviltTemplate();
+      if (tpl && parseFloat(tpl.bedrag) > 0) {
+        // Eerst vers kijken: staat de post er al (ander tabblad) of is hij daar weggehaald?
+        const [rPost, rUit] = await Promise.all([
+          _sbQuery(_sb.from('staart').select('*').eq('calculatie_id', c.id).in('gebrek_type', [_AV_AUTO, _AV_HAND]), 'Afdekvilt controleren'),
+          _sbQuery(_sb.from('calculaties').select('afdekvilt_uit').eq('id', c.id).single(), 'Afdekvilt controleren')
+        ]);
+        if (rPost && !rPost.error && rUit && !rUit.error && rUit.data) {
+          if (rUit.data.afdekvilt_uit === true) {
+            c.afdekviltUit = true;
+          } else if (Array.isArray(rPost.data) && rPost.data.length) {
+            rPost.data.forEach(row => { if (!c.staart.some(p => p.id === row.id)) c.staart.push(_mapStaartFromDB(row)); });
+            veranderd = true;
+          } else {
+            const nieuw = {
+              naam: tpl.naam || 'Afdekvilt', type: 'eenheid', bedrag: parseFloat(tpl.bedrag) || 0,
+              eenheid: tpl.eenheid || 'm²', grondslag: '', hoeveelheid: doel.hoev,
+              verstopInEenheidsprijs: !!tpl.verstopInEenheidsprijs && !_isDerdenPost(tpl),
+              teltInWerkdagen: !!tpl.teltInWerkdagen,
+              btwPct: _isDerdenPost(tpl) ? parseFloat(tpl.btwPct) : null,
+              kostensoort: tpl.kostensoort || null,
+              gebrekType: _AV_AUTO
+            };
+            const saved = await _insertStaartCalcDB(nieuw, c.id, c.staart.length);
+            if (saved) {
+              c.staart.push(saved);
+              veranderd = true;
+              _toast(`Afdekvilt toegevoegd: ${_avNum(doel.hoev)} m¹ (${doel.rollen} ${doel.rollen === 1 ? 'rol' : 'rollen'}) bij ${_avNum(doel.plafond)} m² plafond.`, 'ok');
+            }
+          }
+        }
+        // lezen mislukt: deze ronde niets toevoegen, de volgende wijziging probeert het opnieuw
+      }
+    }
+  } catch (e) {
+    try { console.warn('Afdekvilt bijwerken mislukt', e); } catch (e2) {}
+  } finally {
+    _afdekviltBezig = false;
+  }
+  if (veranderd) {
+    _touchCalc(c.id);
+    saveData();
+    if (data.calc === c) {
+      if (typeof renderStaartList === 'function') renderStaartList();
+      if (typeof renderTotals === 'function') renderTotals();
+    }
+  }
+}
+
+// ============================================================
 // GEBREK-PRIJZEN → AUTOMATISCHE TOESLAGEN (v3.39.0)
 // Telt de gebrek-stippen over de hele calculatie en zet per
 // gebrek-type één staart-post ("eenheid": stuk × prijs).
@@ -23635,10 +23842,10 @@ function renderStaartList() {
       else if (p.type === 'week') hoev = _calcWeeks() + ' weken';
       else if (p.type === 'percent') hoev = '× ' + _grondslagLabel(p.grondslag);
       html += `<tr>
-        <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Wordt verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}${_isDerdenPost(p) ? ` <span title="Werk van derden: eigen BTW-tarief, geen risico-opslag" style="color:var(--ink-soft); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">BTW ${fmt(parseFloat(p.btwPct))}%</span>` : ''}</td>
+        <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Wordt verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}${_isDerdenPost(p) ? ` <span title="Werk van derden: eigen BTW-tarief, geen risico-opslag" style="color:var(--ink-soft); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">BTW ${fmt(parseFloat(p.btwPct))}%</span>` : ''}${_afdekviltInfoHtml(p)}</td>
         <td>${detail}</td>
         <td class="num right">${eur(p.bedrag)}</td>
-        <td>${hoev}</td>
+        <td>${hoev}${_afdekviltHoevExtra(p)}</td>
         <td class="num right" style="color:var(--accent-deep); font-weight:600;">${eur(sub)}</td>
         <td><button class="btn-secondary btn btn-sm" onclick="editStaart('${p.id}')">✎</button> <button class="btn btn-danger btn-sm" onclick="delStaart('${p.id}')">×</button></td>
       </tr>`;
@@ -23732,6 +23939,7 @@ async function saveStaart() {
     const p = data.calc.staart.find(x => x.id === staartCtx.id);
     if (p) {
       Object.assign(p, payload);
+      _afdekviltNaBewerken(p);   // v4.122.0 — eigen hoeveelheid of weer automatisch
       _updateStaartCalcDB(p, data.calc.id);
       _touchCalc(data.calc.id);
     }
@@ -23762,9 +23970,14 @@ async function saveStaart() {
 function closeStaartModal() { document.getElementById('staartModal').classList.remove('active'); }
 async function delStaart(id) {
   if (!confirm('Verwijderen?')) return;
+  const _wasAv = _afdekviltIsPost(data.calc.staart.find(p => p.id === id));   // v4.122.0
   const ok = await _deleteStaartCalcDB(id);
   if (!ok) { _toast('Verwijderen mislukt'); return; }
   data.calc.staart = data.calc.staart.filter(p => p.id !== id);
+  if (_wasAv && !_afdekviltPost(data.calc)) {   // v4.122.0 — weggehaald = blijft weg in deze calculatie
+    _afdekviltZetUit(data.calc, true);
+    _toast('Afdekvilt blijft uit in deze calculatie. Terugzetten: kies Afdekvilt opnieuw bij de staartkosten.', 'ok');
+  }
   _touchCalc(data.calc.id);
   renderStaartList(); renderTotals();
 }
@@ -23912,6 +24125,7 @@ function renderBewerkingTotalen() {
 function renderTotals() {
   // Eerst meetstaat-hoeveelheden syncen — dan kloppen alle berekeningen
   _syncMeetstaatHoeveelheden();
+  _afdekviltPlan();   // v4.122.0 — afdekvilt volgt de plafonds (loopt na deze ronde, niet erin)
   const t = calcProjectTotalen();
   const sett = _S();
   const arbeidWerkelijk = t.arbeid;
@@ -24150,6 +24364,20 @@ function loadSettings() {
   }
   const dk = document.getElementById('setDeurOnderkantPrijs');   // v4.75.0
   if (dk) dk.value = s.deurOnderkantPrijs != null ? s.deurOnderkantPrijs : 0;
+  const avF = document.getElementById('setAfdekviltFactor');       // v4.122.0
+  if (avF) avF.value = s.afdekviltFactor != null ? s.afdekviltFactor : 1.3;
+  const avR = document.getElementById('setAfdekviltRolLengte');
+  if (avR) avR.value = s.afdekviltRolLengte != null ? s.afdekviltRolLengte : 25;
+}
+function updAfdekvilt(veld, inputEl) {   // v4.122.0
+  if (veld !== 'afdekviltFactor' && veld !== 'afdekviltRolLengte') return;
+  const v = parseFloat(inputEl.value);
+  const std = veld === 'afdekviltFactor' ? 1.3 : 25;
+  data.settings[veld] = (isFinite(v) && v > 0) ? v : std;
+  inputEl.value = data.settings[veld];
+  saveData(); _saveSettingsDB();
+  if (data.calc) _afdekviltPlan();
+  showSavedTick(inputEl);
 }
 function updDeurOnderkantPrijs(inputEl) {   // v4.75.0
   data.settings.deurOnderkantPrijs = parseFloat(inputEl.value) || 0;

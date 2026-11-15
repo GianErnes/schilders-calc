@@ -1,3 +1,56 @@
+## v4.122.0 — Afdekvilt rekent zichzelf uit: automatische staartpost, hele rollen, meters op de werkbon (2026-11-15)
+
+Gebouwd op v4.121.0, live opgehaald van GitHub op 15-11-2026 bij sessiestart, opnieuw vlak voor het patchen en opnieuw voor het klaarzetten (2.000.693 bytes, alle keren identiek).
+
+**Aanleiding**
+- Gian 15-11: "Voor het bepalen van de hoeveelheid afdekvilt dat we moeten meenemen voor een binnenklus kijk ik altijd naar de aantal m2 plafond en vermenigvuldig dat met 1,3. Dat zou toch in een staartpost berekend kunnen worden." Het vilt is 1 meter breed en zit 25 meter op een rol.
+- Gemeten in de database (15-11, via de Supabase-koppeling): de app kent geen plafondveld; 71 calc-regels hebben "plafon" in de naam, waarvan 62 gewone binnenplafonds, 5 gecombineerd ("plafond en wanden"), 3 buiten en 1 "betimmering balk plafond". De meeste plafonds (31) hangen onder het verfsysteem "Muurwerk overschilderen", dus het verfsysteem is geen bruikbaar kenmerk. De bibliotheek heeft de post "Afdekvilt" (eenheid, 1,02 per m²), 11 keer met de hand gebruikt.
+
+**Keuzes (Gian, 15-11)**
+- Herkenning op de regelnaam; waar dat te veel of te weinig geeft corrigeert hij zelf.
+- De post komt er automatisch bij en is verwijderbaar.
+- Naar boven afronden op hele rollen. Zo gebouwd dat ook de prijs over hele rollen gaat (zie Bekende grenzen).
+- Het aantal meters en rollen op de werkbon.
+
+**Wat is er veranderd**
+- Nieuw blok "AFDEKVILT → AUTOMATISCHE STAARTPOST": `_afdekviltPlafondM2`, `_afdekviltDoel`, `_afdekviltPost`, `_afdekviltTemplate`, `_syncAfdekvilt`, `_afdekviltPlan`, `_afdekviltNaBewerken`, `_afdekviltZetUit`, `_afdekviltInfoHtml`, `_afdekviltHoevExtra`, `_afdekviltWerkbonHtml`. Zelfde patroon als de deuronderkant-post (v4.75.0): een gewone eenheid-post waarvan de app de hoeveelheid bijhoudt. De rekenkern (zes plekken waar staartposten worden uitgerekend) is niet aangeraakt.
+- Plafond = actieve regel in een actieve hoofdgroep en actief onderdeel, locatie niet "buiten", eenheid m², "plafon" in de naam (dus ook "spackplafonds").
+- Som: m² plafond × factor (1,3) = benodigd; naar boven op hele rollen (25 m); hoeveelheid van de post = rollen × rollengte. Voorbeeld: 52 m² → 67,6 m² → 3 rollen → 75 m².
+- Prijs: bij het aanmaken overgenomen van de bibliotheekpost "Afdekvilt". Daarna blijft de prijs op de post staan; alleen de hoeveelheid wordt bijgehouden.
+- `renderTotals` plant na elke rekenronde een afdekviltronde (`_afdekviltPlan`, buiten de rekenronde zelf). Een vlag voorkomt twee rondes tegelijk.
+- Label op de post via de bestaande kolom `staart.gebrek_type`: `afdekvilt` (de app houdt bij) of `afdekvilt_hand` (eigen hoeveelheid). `saveStaart` zet het label na bewerken: wijkt de hoeveelheid af van de som, dan hand; is hij gelijk, dan weer automatisch.
+- Een oude afdekviltpost zonder label met een hoeveelheid blijft ongemoeid. Een lege (net uit de bibliotheek gekozen) wordt gevuld en automatisch.
+- `delStaart`: wordt de afdekviltpost weggehaald, dan gaat `calculaties.afdekvilt_uit` op true en blijft de post in die calculatie weg. Zelf Afdekvilt weer toevoegen zet hem terug op false.
+- Vóór het toevoegen leest de app vers of de post er al staat of in een ander tabblad is weggehaald. Lukt dat lezen niet, dan wordt er die ronde niets toegevoegd. Twee automatische posten in één calculatie: alleen de eerste blijft.
+- Staartlijst: onder de naam de som ("automatisch · 52 m² plafond × 1,3 = 67,6 m² → 3 rollen van 25 m") of, bij een eigen hoeveelheid, wat de app zelf zou rekenen; in de kolom hoeveelheid het aantal rollen.
+- Werkbon: onder "Materiaal totaal voor project" een blokje "Afdekvilt meenemen: 75 m¹ — 3 rollen van 25 m", zonder bedrag. Leest de hoeveelheid van de post, dus een eigen hoeveelheid wint. De werkbon-PDF naar Craft gebruikt dezelfde opmaak.
+- Instellingen: nieuw blok Afdekvilt met factor (1,3) en rollengte (25). Opgeslagen in `app_settings.data`, zoals de deuronderkantprijs.
+- `_mapCalcHeaderFromDB` leest `afdekvilt_uit`; bewust niet in `_mapCalcHeaderToDB` (alleen gericht geschreven).
+- Bevroren calculaties (alles behalve concept en afspraak) worden niet aangeraakt.
+
+**Bekende grenzen**
+- "Afronden naar boven voor hele rollen" is gelezen als: ook de prijs over hele rollen. De klant betaalt in het voorbeeld 75 m², niet 67,6. Bedoelde Gian alleen het aantal op de werkbon, dan is dat één regel in `_afdekviltDoel`.
+- Een klus zonder geschilderd plafond (alleen wanden of houtwerk) geeft geen post: de app kent het vloeroppervlak niet. Zelf toevoegen en invullen.
+- Gecombineerde regels ("plafond en wanden") tellen in hun geheel mee en geven dus te veel vilt. Zelf corrigeren; de app blijft daarna van de hoeveelheid af.
+- Zet je alle plafondregels uit, dan verdwijnt een automatische post; zet je ze weer aan, dan komt hij terug met de prijs uit de bibliotheek. Een eigen prijs op de post is dan weg.
+- Een prijswijziging in de bibliotheek loopt niet door in posten die er al staan.
+- Dupliceren van een calculatie neemt "weggehaald" niet mee: de kopie krijgt de post weer.
+- Niet nagekeken: of een Edge Function iets doet met `staart.gebrek_type`. De waarden `deur_onderkant` en de gebrektypes stonden er al.
+
+**Getest**
+- node --check op alle inline scripts, div-balans gelijk aan v4.121.0 (verschil -3 in beide), scripttagbalans 6/6, vijf versieankers.
+- 41 controles op functies die uit het gepatchte bestand zijn gesneden, met een nagebootste database: som en afronding (ook precies een hele rol), herkenning (buiten, m¹, uitgezet, wanden), toevoegen, bijwerken, weghalen, eigen hoeveelheid en terug, oude post zonder label, verwijderd blijft weg (ook vanuit een ander tabblad), bevroren, bibliotheek zonder post of met prijs 0, mislukt lezen, dubbele post, drie rondes tegelijk, kapotte instellingen, werkbon.
+- Gemeten in de database op 15-11: geen enkele open calculatie (concept of afspraak) heeft nu een plafondregel; de 12 calculaties met plafond zijn bevroren. Bij uitrol verandert er dus geen bestaande calculatie.
+- Niet getest: de echte app in de browser, de werkbon op papier en in Craft.
+
+**Proef in de echte app**
+1. Nieuwe proefcalculatie, binnenregel "Plafond" met 52 m². Verwacht: melding "Afdekvilt toegevoegd: 75 m¹ (3 rollen)", post van 75 m² × 1,02, met de som eronder.
+2. Hoeveelheid van de post op 60 zetten. Verwacht: "eigen hoeveelheid · de app rekent 75 m²"; plafond wijzigen verandert de 60 niet.
+3. Post verwijderen, plafond wijzigen. Verwacht: post komt niet terug. Afdekvilt kiezen bij de staartkosten: post is terug en gevuld.
+4. Werkbon afdrukken: blokje "Afdekvilt meenemen" onder het materiaal.
+
+**SQL**: geen nieuw bestand. De kolom `calculaties.afdekvilt_uit` (boolean, niet leeg, standaard false) staat al op live: migratie `calculaties_afdekvilt_uit` van 15-11-2026 21:55 UTC via de Supabase-koppeling. Gemeten: alle 133 calculaties op false.
+
 ## v4.121.0 — Offerte-instellingen niet meer overschreven door een oud tabblad; "Verstuurd op" zichtbaar; geen dubbele offertemail (2026-11-15)
 
 Gebouwd op v4.120.0, live opgehaald van GitHub op 15-11-2026 bij sessiestart en opnieuw vlak voor het patchen (1.986.638 bytes, beide keren identiek). Hoort bij Edge Function offerte-verzenden versie 38 (zelfde dag, al live).
