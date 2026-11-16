@@ -793,6 +793,7 @@ Allemaal op tabellen in `schilders-calc`, allemaal actief. De twaalf hieronder z
 | `bevries_yoobi` | `taken` | beschermt velden die uit Yoobi komen |
 | `zet_bijgewerkt` | `taken` | zet de bijwerkdatum |
 | `trg_taak_melding_signaal` | `taken` | mailt Gian als iemand een taak afvinkt met een melding erbij; sinds 27 oktober 2026 niet als `voltooid_door` = gian (`planning_09_afvinkmelding_gian.sql`) |
+| `trg_taak_meldtaak_gian` | `taken` | sinds 16 november 2026: maakt van een afvinkmelding een taak op naam van Gian (`taken_28_meldtaak_gian.sql`); niet als `voltooid_door` = gian; staat naast `trg_taak_melding_signaal`, vervangt die niet |
 | `trg_bewerkingen_upd` | `bewerkingen` | zet de bijwerkdatum |
 | `trg_materialen_upd` | `materialen` | zet de bijwerkdatum |
 | `trg_ondergronden_upd` | `ondergronden` | zet de bijwerkdatum |
@@ -6734,3 +6735,91 @@ Craft. Proef staat in de CHANGELOG.
 **Nog open.** Of "afronden op hele rollen" ook voor de prijs geldt, of
 alleen voor het aantal op de werkbon (gebouwd: ook de prijs). Een klus
 zonder geschilderd plafond krijgt geen post.
+
+## Wat er op 16 november 2026 gedaan is: afvinkmelding wordt een taak voor Gian, uitkomst verplicht bij nabellen (taken.html v0.27.0, taken_28)
+
+**Waarom.** Wat iemand bij het afvinken in "Iets te melden?" schrijft,
+kwam bij Gian alleen als pushmelding binnen. Gemeten 16-11-2026 11:27 in
+`net._http_response`: `taak-afvinkmelding` antwoordde `kanaal: push,
+toestellen: 2` voor de nabeltaak Sluijsmans (offerte 260158). Gian had de
+tekst niet gezien. Een push is weg zodra hij gemist is; een taak blijft
+staan. Dezelfde ochtend bleek ook dat een nabeltaak zonder uitkomst
+afgevinkt kon worden en dat "verzetten" bij afvinken uitkwam.
+
+**Database: trigger `trg_taak_meldtaak_gian` op `taken`** (bestand
+`sql/taken_28_meldtaak_gian.sql`, na insert of update). Vinkt iemand
+anders dan Gian een taak af met een melding, dan maakt de functie
+`taak_meldtaak_upsert` een taak:
+
+| veld | waarde |
+|---|---|
+| `toegewezen_aan` | `gian` |
+| `bron` | `eigen` |
+| `bron_kenmerk` | `melding:` + de `crmtaskid` van de afgevinkte taak |
+| `bron_ref` | overgenomen (bij een offertetaak de calculatie) |
+| `onderwerp` | `Melding · ` + de titel zonder "Nabellen offerte" |
+| `notitie` | de melding, wie, wanneer, de oorspronkelijke titel, klant, telefoon |
+| `gepland_op` | het moment van afvinken (Nederlandse tijd), dus in Actueel |
+| `piep` | `false` |
+| `categorie` | `Offerte` bij een offertetaak, anders leeg |
+
+Eén meldtaak per afgevinkte taak, afgedwongen door de unieke index
+`taken_meldtaak_uidx` (op `bron_kenmerk`, alleen rijen die met `melding:`
+beginnen). Wordt de meldingstekst later aangepast, dan wordt de open
+meldtaak bijgewerkt; heeft Gian hem al afgevinkt, dan blijft hij zoals hij
+was. Wordt de oorspronkelijke taak teruggezet naar open, dan verdwijnt de
+nog open meldtaak. Een meldtaak maakt zelf nooit een meldtaak.
+
+**De push blijft.** `trg_taak_melding_signaal` en `taak-afvinkmelding`
+zijn niet aangeraakt. De meldtaak heeft `piep = false` en
+`taken-mail-melding` selecteert alleen `piep = true` (gelezen in de bron
+van v24, 16-11-2026), dus er komt geen tweede push. Geen Edge Function
+gewijzigd, geen cronjob, geen nieuwe tabel.
+
+**Terugvalgedrag.** Loopt het maken van de meldtaak op een fout, dan
+schrijft de trigger een WARNING (`taak_meldtaak_gian: meldtaak niet
+gemaakt voor taak …`) in het Postgres-logboek en gaat het afvinken zelf
+door. De melding staat dan nog wel in `taken.afvink_melding` en de push
+gaat ook nog.
+
+**taken.html v0.27.0.**
+- Een open nabeltaak kan niet afgevinkt worden zolang het meldingvak leeg
+  is. Het vak heet daar "Uitkomst van het gesprek (verplicht)". Geldt voor
+  iedereen, ook voor Gian (zijn besluit, 16-11-2026). Nabeltaak = bron
+  `offerte` met kenmerk `opvolg-bel` of `nabellen`, of een titel die met
+  "Nabellen offerte" begint (er bestaan handmatige kopieën met bron
+  `eigen`).
+- Knop "Later terugbellen · ma …" onder Afvinken, alleen bij een open
+  nabeltaak: de taak blijft open en schuift naar de eerstvolgende maandag
+  13:30 (nooit vandaag). Wat in het uitkomstvak stond komt met de datum
+  onderaan de notitie. Er gaat dan niets naar Gian.
+- **Het slot zit alleen in de app.** De database dwingt het niet af: een
+  toestel met een oude versie van taken.html, of een update buiten de app
+  om, kan een nabeltaak nog zonder uitkomst afvinken.
+
+**Eenmalig in hetzelfde SQL-bestand.** (1) Inhaalslag voor meldingen
+vanaf 16-11-2026, bij het draaien twee: Sluijsmans, en Bjorn ("Nee" op
+de vraagtaak over de foto's in Craft, 09:39). (2) Vier nabeltaken die
+Gian op 16-11-2026 om 07:56 afvinkte terwijl hij ze wilde verzetten, gaan
+terug naar open op maandag 23-11-2026 13:30: Reijnaerts (260151), Troost
+(260157), M. Joosten (260148), Parochie H. Cornelius (260162). De
+voorwaarde in het bestand raakt ze alleen als ze nog precies zo staan.
+
+**Als het raar doet.** Geen meldtaak na een afvinkmelding: kijk in
+`taken` of er een rij is met `bron_kenmerk = 'melding:<id>'`; zo niet,
+zoek de WARNING in het Postgres-logboek, of draai
+`select taak_meldtaak_upsert('<id>')` in Studio. Krijgt Gian een meldtaak
+van zichzelf: `voltooid_door` is dan niet `gian` (het administratie-account
+schrijft `administratie`).
+
+**Bewijs.** `CHANGELOG_taken.md` v0.27.0: SQL op lokale Postgres 16 (live
+is 17.6), 18 scenario's, twee keer draaien; taken.html parse-test,
+balansen, 34 controles op functies uit het gepatchte bestand.
+
+**Gedraaid.** Op 16-11-2026 rond 14:00 via de Supabase-koppeling
+(`execute_sql`, dus niet in `supabase_migrations`). Daarna gemeten: beide
+triggers aan, twee open meldtaken bij gian, vier nabeltaken open op
+23-11-2026 13:30.
+
+**Niet getest.** Een echte afvinkactie vanuit de app na het plaatsen van
+de trigger; de app in de browser.

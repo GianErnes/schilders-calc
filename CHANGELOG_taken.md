@@ -6,6 +6,110 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.27.0 — Afvinkmelding wordt een taak voor Gian (SQL taken_28), uitkomst verplicht bij nabellen, Later terugbellen, 16-11-2026
+
+**Aanleiding.** Gian 16-11-2026: "De opmerkingen die Maud schrijft bij de
+taken, waar krijg ik die te zien?" Gemeten in de live database: de
+nabeltaak Sluijsmans (offerte 260158) is om 11:27 afgevinkt met een
+melding; de trigger `trg_taak_melding_signaal` riep `taak-afvinkmelding`
+aan en die antwoordde `kanaal: push, toestellen: 2`. Mail gaat er dus
+niet meer, alleen een push, en die had Gian niet gezien. In de lijst van
+taken.html is aan een kaart niet te zien dat er een melding of notitie in
+zit. Dezelfde dag: Voncken (260061) zonder uitkomst afgevinkt (bewust,
+wordt niet nagebeld), en vier nabeltaken om 07:56 door Gian afgevinkt
+terwijl hij ze een latere datum wilde geven.
+
+**Besluiten (Gian, 16-11-2026).** Melding wordt een taak op zijn naam, in
+de app. Uitkomst verplicht bij nabellen, ook voor hemzelf. Knop Later
+terugbellen erbij. De vier taken terug naar open op volgende week maandag.
+
+**Database (bestand `taken_28_meldtaak_gian.sql`, op 16-11-2026 rond 14:00
+gedraaid via de Supabase-koppeling met `execute_sql`; staat daardoor niet
+in `supabase_migrations`).** Geen `DROP`: de trigger is met `create or
+replace trigger` gemaakt, omdat de koppeling bij DROP om een goedkeuring
+vraagt die niet altijd aankomt.
+- Functie `taak_meldtaak_upsert(taak-id)` en trigger
+  `trg_taak_meldtaak_gian` (na insert of update op `taken`): vinkt iemand
+  anders dan Gian af met een melding, dan komt er een taak voor Gian met
+  bron `eigen`, `bron_kenmerk = 'melding:<crmtaskid>'`, `bron_ref`
+  overgenomen, titel "Melding · <titel zonder 'Nabellen offerte'>", in de
+  notitie de melding, wie, wanneer, de oorspronkelijke titel, klant en
+  telefoon. `piep = false`, gepland op het moment zelf.
+- Unieke index `taken_meldtaak_uidx`: één meldtaak per afgevinkte taak.
+  Melding aangepast: open meldtaak wordt bijgewerkt, een afgevinkte niet.
+  Oorspronkelijke taak terug naar open: open meldtaak verdwijnt.
+- Fout bij het maken van de meldtaak: WARNING in het logboek, afvinken
+  gaat door.
+- De bestaande push is niet aangeraakt. `taken-mail-melding` (v24, bron
+  gelezen via de Supabase-koppeling) selecteert alleen `piep = true`, dus
+  geen tweede push voor de meldtaak.
+- Eenmalig: inhaalslag voor meldingen vanaf 16-11-2026 (bij het draaien
+  twee: Sluijsmans, en Bjorn die om 09:39 "Nee" antwoordde op de vraagtaak
+  over de foto's in Craft);
+  vier nabeltaken terug naar open op 23-11-2026 13:30 (Reijnaerts, Troost,
+  M. Joosten, Parochie H. Cornelius), alleen als ze nog staan zoals
+  gemeten.
+- Idempotent, met projectguard.
+
+**Gebouwd in taken.html.**
+- `isNabeltaak(t)`: bron `offerte` met kenmerk `opvolg-bel` of `nabellen`,
+  of een titel die met "Nabellen offerte" begint (handmatige kopieën met
+  bron `eigen`, gemeten: Boek 260137).
+- `vinkAf`: bij een nabeltaak zonder tekst in het meldingvak geen update;
+  vak rood, regel uitleg eronder, toast. Het vak heet daar "Uitkomst van
+  het gesprek (verplicht)". Terugzetten naar open valt er niet onder.
+- Knop `s_later` "↻ Later terugbellen · ma <datum>" met
+  `laterTerugbellen()`: `gepland_op` naar de eerstvolgende maandag 13:30
+  (`volgendeBelMaandag`, op maandag zelf die van de week erna), piep
+  opnieuw scherp (`mail_op` en `push_op` leeg), tekst uit het uitkomstvak
+  met datum onderaan de notitie (`laterNotitie`), uit Actueel als hij daar
+  met de hand stond. Via `eisRij`, dus een eerlijke fout als de update
+  geen rij raakt.
+- Tekst onder "Iets te melden?": "Wat je hier typt komt als taak bij
+  Gian." Bij een afgevinkte taak heet het vak "Gemeld bij afvinken".
+- `APP_VERSION` v0.27.0. Geen Edge Function.
+
+**Getest.** SQL op lokale Postgres 16 (live draait 17.6) met nagebouwde
+`taken`, de stand van 16-11 als zaaigegevens: twee keer draaien (4 taken
+terug bij de eerste keer, 0 bij de tweede; één meldtaak, geen dubbele),
+daarna 18 scenario's groen: velden van de meldtaak, bijwerken bij
+gewijzigde melding, geen ketting op meldtaken, afgevinkte meldtaak blijft,
+ongedaan maken ruimt de open meldtaak op, Gian zelf en lege melding geven
+niets, insert-pad van de herhaler, terugval bij een fout (afvinken slaagt,
+WARNING), oude meldingen niet ingehaald, `anon` en `authenticated` mogen
+de functie niet aanroepen. taken.html: `node --check` op beide
+scriptblokken, div-balans 111/111 (was 110/110, één regel uitleg erbij),
+knoppen 40/40, CSS-accolades 239/239, Node-harness 34 controles op
+functies die uit het gepatchte bestand gesneden zijn.
+
+**Live gemeten na het draaien (16-11-2026).** Beide triggers staan aan
+(`trg_taak_meldtaak_gian` en `trg_taak_melding_signaal`); twee meldtaken
+op naam van gian, open, `piep = false`, met tekst, melder, tijd en bij
+Sluijsmans klant, telefoon en categorie Offerte; de vier nabeltaken open
+bij maud op 23-11-2026 13:30.
+
+**Niet getest.** Een echte afvinkactie vanuit de app na het plaatsen van
+de trigger (alleen de inhaalslag heeft live gedraaid). De app in de browser: of het rode vak en de knop
+er op de iPhone goed uitzien, en of het vel naar het vak schuift.
+
+**Bewuste beperkingen.**
+- Het slot op afvinken zit alleen in de app, niet in de database. Een
+  toestel met een oude taken.html kan een nabeltaak nog leeg afvinken.
+- Vinkt Gian zelf een nabeltaak af, dan is de uitkomst verplicht maar komt
+  er geen meldtaak (hij meldt niet aan zichzelf); de tekst staat bij de
+  taak en in het Accordeerlink-venster van de Calculatie-app.
+- Later terugbellen kent één keuze: de eerstvolgende maandag 13:30. Een
+  andere datum kan nog steeds met Wanneer en Bewaren.
+- Op de kaart in de lijst is nog steeds niet te zien dat een taak een
+  notitie heeft. Niet gebouwd; de meldtaak dekt de afvinkmelding.
+
+**Proef na uitrol.** (1) SQL is gedraaid. (2) Gian opent Taken: de
+taak "Melding · 260158 | Sluijsmans | …" staat in Actueel. (3) Een open
+nabeltaak openen, leeg op Afvinken tikken: vak wordt rood, taak blijft
+open. (4) Op Later terugbellen tikken: taak staat op maandag. (5) Maud
+vinkt de eerstvolgende nabeltaak af met een uitkomst: binnen een paar
+seconden staat er een meldtaak bij Gian.
+
 ## v0.26.3 — Herplan-taken afvinkbaar (SQL taken_27), eerlijke melding als een update geen rij raakt, 09-11-2026
 
 **Aanleiding.** Gian 09-11-2026: Maud kan de taken "Yoobi: project- en
