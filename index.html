@@ -2480,8 +2480,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.122.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.123.0</h2>
       <div class="intro-body">
+        <p><strong>🧾 Subtotaal bijkomende kosten en een nette bestandsnaam voor de klant (v4.123.0).</strong> Staan er onder de onderdelen van een offerte twee of meer kostenposten (reiskosten, klimtoeslag, steiger, herstel van gebreken), dan krijgen die het kopje <strong>Bijkomende kosten</strong> en een eigen regel <strong>Subtotaal bijkomende kosten</strong>, net als de subtotalen per onderdeel. Een korting zoals de winterschilderpremie staat er apart onder en telt niet mee in dat subtotaal, zodat de klant haar blijft zien. Het totaal van de offerte verandert niet. Op de pagina van de accordeerlink heet de knop nu <strong>Offerte downloaden (PDF)</strong>; het bestand komt binnen als "Offerte 260148 - naam van het project.pdf" in plaats van een lange lettercode. Dat geldt ook voor links die al verstuurd zijn.</p>
         <p><strong>🧺 Afdekvilt rekent zichzelf uit (v4.122.0).</strong> Staat er in een binnencalculatie een regel met "plafond" in de naam, dan komt de staartpost Afdekvilt er vanzelf bij: m² plafond × 1,3, naar boven afgerond op hele rollen van 25 meter, maal de m²-prijs uit je staartkosten-bibliotheek. Onder de post staat de som, zodat je hem kunt narekenen. Vul je zelf een andere hoeveelheid in, dan blijft de app daar af en toont hij alleen wat hij zelf zou rekenen. Haal je de post weg, dan blijft hij in die calculatie weg tot je Afdekvilt zelf weer toevoegt. Op de werkbon staat onder het materiaal hoeveel meter en hoeveel rollen er mee moeten. De factor en de rollengte staan onder Instellingen. Bevroren offertes blijven ongemoeid. Geen SQL nodig.</p>
         <p><strong>🛡️ Offerte-instellingen worden niet meer overschreven door een oud tabblad, en je ziet wanneer een offerte verstuurd is (v4.121.0).</strong> Zette je een calculatie op slot of maakte je een accordeerlink vanuit een tabblad dat al een tijd openstond, dan schreef de app de offerte-instellingen terug zoals dat tabblad ze bij het opstarten had; een e-mailadres dat intussen elders was gewijzigd, was dan weg. De app haalt nu eerst de nieuwste instellingen op en zet daarin alleen het eigen veld. Bij een nieuwe accordeerlink worden de instellingen altijd eerst ververst, zodat de link naar het actuele adres gaat. Staat dezelfde calculatie in twee tabbladen van dezelfde browser open, dan komt er een gele balk. In het accordeerlink-venster staat nu "Verstuurd op ... om ..." met de tijd, en een tweede klik binnen twee minuten stuurt geen tweede mail meer (Edge Function offerte-verzenden versie 38). Geen SQL.</p>
         <p><strong>🔍 Herziene offerte: eerst vergelijken met de vorige versie (v4.120.0).</strong> Maak je een nieuwe accordeerlink terwijl er al een versie bij de klant is geweest, dan komt er eerst een venster met wat er verandert: de gefactureerde dagen, per regel het oude en nieuwe bedrag, en het totaal. Het venster kleurt rood als de dagen verspringen of als regels stijgen terwijl de hoeveelheid gelijk bleef. In hetzelfde venster wordt de versie opgehoogd (V2, V3, ...); dat hangt niet meer af van een reactie van de klant via de link. De regelvergelijking werkt vanaf de eerste offerte die met deze versie verstuurd is; bij oudere offertes zie je alleen het totaal. Eenmalig SQL: accord_05_cijfers.sql.</p>
@@ -4078,7 +4079,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.122.0';
+const APP_VERSION = 'v4.123.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4501,6 +4502,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.123.0', d: '2026-11-16', h: 'Offerte: twee of meer bijkomende kostenposten krijgen het kopje Bijkomende kosten en een Subtotaal bijkomende kosten, kortingen staan er apart onder (totaal ongewijzigd); klantpagina van de accordeerlink: knop Offerte downloaden geeft het bestand een leesbare naam (soort, nummer, projectnaam) in plaats van de opslagcode.' },
   { v: '4.122.0', d: '2026-11-15', h: 'Afdekvilt als automatische staartpost: m² plafond (binnenregels met "plafond" in de naam) × factor 1,3, naar boven afgerond op hele rollen van 25 m, maal de m²-prijs uit de bibliotheek; eigen hoeveelheid blijft staan (met het verschil erbij), verwijderen onthoudt de calculatie (kolom afdekvilt_uit); meters en rollen op de werkbon; factor en rollengte onder Instellingen.' },
   { v: '4.121.0', d: '2026-11-15', h: 'Offerte-instellingen: op slot zetten, versie ophogen en offertedatum lezen eerst de nieuwste stand en schrijven alleen het eigen veld (een oud tabblad overschrijft het e-mailadres niet meer); nieuwe accordeerlink ververst de instellingen eerst; gele balk als dezelfde calculatie in twee tabbladen openstaat; "Verstuurd op ... om ..." in het accordeerlink-venster en geen dubbele mail binnen twee minuten (offerte-verzenden versie 38). Geen SQL.' },
   { v: '4.120.0', d: '2026-11-13', h: 'Herziene offerte: vergelijkingsvenster met de vorige versie (dagen, regels, totaal; rood bij een dagsprong of regels die stijgen zonder gewijzigde hoeveelheid) en automatische versieophoging zodra een eerdere versie bij de klant is geweest. Eenmalig SQL: accord_05_cijfers.sql.' },
@@ -16491,6 +16493,23 @@ function printOfferteYoobi() {
 // ============================================================
 // v3.61.0 — bouwt alleen de offertedocument-HTML (geen print), zodat zowel
 // het losse document als de doorlopende PDF dezelfde opbouw delen.
+// v4.123.0 — Bijkomende kosten onder de onderdelen splitsen in kosten en kortingen.
+// Kosten = reiskosten plus elke zichtbare staartpost met een bedrag van 0 of hoger;
+// kortingen = zichtbare staartposten met een negatief bedrag (winterschilderpremie).
+// Het subtotaal telt alleen de kosten. Kop en subtotaal verschijnen pas bij twee of
+// meer kostenposten; daaronder blijft de lijst zoals hij was. Eén plek voor scherm
+// (bouwBijkomendEnTotaal) en pdf (bijkomendEnTotaalContent). Rekent niets om: de
+// bedragen komen ongewijzigd uit _berekenOfferteCijfers.
+function _offBijkomendSplits(cij) {
+  const kosten = [], kortingen = [];
+  if (cij && cij.reisTotaal > 0) kosten.push({ naam: 'Reiskosten', bedrag: cij.reisZichtbaar, btwPct: null });
+  ((cij && cij.staartZichtbaarRows) || []).forEach(p => {
+    if (Number(p.bedrag) < 0) kortingen.push(p); else kosten.push(p);
+  });
+  const subtotaal = kosten.reduce((s, p) => s + (Number(p.bedrag) || 0), 0);
+  return { kosten: kosten, kortingen: kortingen, subtotaal: subtotaal, toonSubtotaal: kosten.length >= 2 };
+}
+
 function _bouwOfferteDocHtml() {
   const c = data.calc;
   if (!c) { _toast('Geen actieve calculatie'); return null; }
@@ -16588,13 +16607,22 @@ function _bouwOfferteDocHtml() {
   // Bijkomende kosten + eindtotaal (gelijk voor beide weergaven).
   function bouwBijkomendEnTotaal() {
     // Bijkomende kosten lopen door in de hoofdlijst (reis + zichtbare staart)
-    let h = `<table class="kosten-extra"><tbody>`;
+    // v4.123.0 — bij twee of meer kostenposten: kop, kosten, subtotaal, daaronder de kortingen.
+    const _bk = _offBijkomendSplits(cij);
+    const _bkRij = p => `<tr><td>${p.naam}${(p.btwPct != null && cij.btwGemengd) ? ` <span style="color:#666; font-size:8.5pt;">(BTW ${fmt(p.btwPct)}%)</span>` : ''}</td><td class="num right">${eur(p.bedrag)}</td></tr>`;
+    let h = _bk.toonSubtotaal ? `<h3>Bijkomende kosten</h3><table class="kosten-extra"><tbody>` : `<table class="kosten-extra"><tbody>`;
+    if (_bk.toonSubtotaal) {
+      _bk.kosten.forEach(p => { h += _bkRij(p); });
+      h += `<tr class="totaal-row"><td><strong>Subtotaal bijkomende kosten</strong></td><td class="num right">${eur(_bk.subtotaal)}</td></tr>`;
+      _bk.kortingen.forEach(p => { h += _bkRij(p); });
+    } else {
     if (cij.reisTotaal > 0) {
       h += `<tr><td>Reiskosten</td><td class="num right">${eur(cij.reisZichtbaar)}</td></tr>`;
     }
     cij.staartZichtbaarRows.forEach(p => {
       h += `<tr><td>${p.naam}${(p.btwPct != null && cij.btwGemengd) ? ` <span style="color:#666; font-size:8.5pt;">(BTW ${fmt(p.btwPct)}%)</span>` : ''}</td><td class="num right">${eur(p.bedrag)}</td></tr>`;   // v4.76.0 — derden-post met eigen tarief
     });
+    }
     h += `</tbody></table>`;
     // Eindtotalen als apart, rechts ingesprongen blok (Yoobi-stijl) met EUR-kolom
     const f = n => cij.fmt(n);
@@ -16860,7 +16888,17 @@ function _bouwOfferteDocDef() {
     const extra = [];
     if (cij.reisTotaal > 0) extra.push([{ text: 'Reiskosten' }, { text: eur(cij.reisZichtbaar), alignment: 'right' }]);
     cij.staartZichtbaarRows.forEach(p => extra.push([{ text: p.naam + ((p.btwPct != null && cij.btwGemengd) ? ' (BTW ' + fmt(p.btwPct) + '%)' : '') }, { text: eur(p.bedrag), alignment: 'right' }]));   // v4.76.0
-    if (extra.length) {
+    // v4.123.0 — bij twee of meer kostenposten: kop, kosten, subtotaal met lijn erboven, daaronder de kortingen.
+    const _bk = _offBijkomendSplits(cij);
+    if (_bk.toonSubtotaal) {
+      const _bkRij = p => [{ text: p.naam + ((p.btwPct != null && cij.btwGemengd) ? ' (BTW ' + fmt(p.btwPct) + '%)' : '') }, { text: eur(p.bedrag), alignment: 'right' }];
+      const rijen = _bk.kosten.map(_bkRij);
+      rijen.push([{ text: 'Subtotaal bijkomende kosten', bold: true }, { text: eur(_bk.subtotaal), bold: true, alignment: 'right' }]);
+      const _bkSubIdx = rijen.length - 1;
+      _bk.kortingen.forEach(p => rijen.push(_bkRij(p)));
+      out.push({ text: 'Bijkomende kosten', bold: true, fontSize: 10, margin: [0, 8, 0, 2], headlineLevel: 1 });
+      out.push({ table: { widths: ['*', 'auto'], body: rijen }, layout: { hLineWidth: (i) => (i === _bkSubIdx ? 0.75 : 0), vLineWidth: () => 0, hLineColor: () => '#999', paddingTop: () => 2, paddingBottom: () => 2, paddingLeft: () => 0, paddingRight: () => 0 } });
+    } else if (extra.length) {
       out.push({ table: { widths: ['*', 'auto'], body: extra }, layout: { hLineWidth: () => 0, vLineWidth: () => 0, paddingTop: () => 2, paddingBottom: () => 2, paddingLeft: () => 0, paddingRight: () => 0 }, margin: [0, 6, 0, 0] });
     }
     const f = n => fmt(n);
@@ -26156,7 +26194,7 @@ function _accordRender(root, token, res) {
 
   const docHtml = pdfUrl
     ? ('<div id="acPdfDl" style="margin:0 0 12px;text-align:center;">'
-        + '<a href="' + _accordEsc(pdfUrl) + '" target="_blank" rel="noopener" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">' + docWoord + ' openen of downloaden (PDF)</a>'
+        + '<a href="' + _accordEsc(_accordDownloadUrl(pdfUrl, _accordPdfNaam(res))) + '" rel="noopener" style="display:inline-block;padding:11px 20px;background:#1a7a3a;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">' + docWoord + ' downloaden (PDF)</a>'   // v4.123.0 — download met leesbare naam; bekijken kan in het venster eronder
         + '</div>'
         + '<object id="acOffertePdf" class="ac-offerte" data="' + _accordEsc(pdfUrl) + '#view=FitH" type="application/pdf" style="width:100%;height:70vh;border:0;background:#fff;">'
         + '<div style="padding:24px;text-align:center;color:#555;">' + (isPlan ? 'Het onderhoudsplan' : 'De offerte') + ' kan hier niet in beeld getoond worden op dit toestel. '
@@ -27359,6 +27397,35 @@ async function _bouwGetekendePdfBytes(frozenBytes, info) {
     });
   }
   return await doc.save();
+}
+
+// v4.123.0 — leesbare bestandsnaam voor de pdf op de klantpagina van de accordeerlink.
+// In de opslag heet het bestand {token}.pdf; die code kwam als naam bij de klant binnen.
+// Naam: "<soort> <nummer> - <project>.pdf", tekens die in een bestandsnaam niet mogen
+// worden een streepje. res is het antwoord van de Edge Function offerte-accord.
+function _accordPdfNaam(res) {
+  const r = res || {};
+  const soort = r.soort === 'plan' ? 'Onderhoudsplan' : (r.soort === 'houtrot' ? 'Houtrot-opgave' : 'Offerte');
+  const nr = String((r.snapshot && r.snapshot.offertenummer) || '').trim();
+  const project = String(r.project || '').trim();
+  let naam = [(soort + ' ' + nr).trim(), project].filter(Boolean).join(' - ');
+  naam = naam.replace(/[\\/:*?"<>|]+/g, '-').replace(/[\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').replace(/(\s*-\s*){2,}/g, ' - ').trim();
+  if (naam.length > 120) naam = naam.slice(0, 120).trim();
+  return (naam || soort) + '.pdf';
+}
+
+// v4.123.0 — de link naar de opslag uitbreiden met download=<naam>. De opslag van
+// Supabase stuurt het bestand dan als download met die naam (opgezocht in de
+// Supabase-documentatie "Serving assets from Storage" en in de broncode van
+// storage-js, 16-11-2026: de toevoeging valt buiten de ondertekening van de link).
+// Terugval: is het geen http(s)-link, of staat download er al in, dan blijft de link
+// zoals hij is en opent de pdf gewoon in de browser.
+function _accordDownloadUrl(pdfUrl, naam) {
+  const u = String(pdfUrl || '');
+  if (!/^https?:\/\//i.test(u) || !naam) return u;
+  const kaal = u.split('#')[0];
+  if (/[?&]download=/.test(kaal)) return u;
+  return kaal + (kaal.indexOf('?') >= 0 ? '&' : '?') + 'download=' + encodeURIComponent(naam);
 }
 
 // Hulp: bytes als PDF-bestand laten downloaden.

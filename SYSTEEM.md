@@ -6823,3 +6823,41 @@ triggers aan, twee open meldtaken bij gian, vier nabeltaken open op
 
 **Niet getest.** Een echte afvinkactie vanuit de app na het plaatsen van
 de trigger; de app in de browser.
+
+## Ook op 16 november 2026: subtotaal bijkomende kosten op de offerte en leesbare bestandsnaam op de klantpagina (index.html v4.123.0)
+
+**Wat het doet.** Onder de onderdelen van een offerte krijgen reiskosten
+en zichtbare staartposten, zodra het er twee of meer zijn, het kopje
+"Bijkomende kosten" en een regel "Subtotaal bijkomende kosten". Posten
+met een negatief bedrag (kortingen, zoals de winterschilderpremie) staan
+onder dat subtotaal en tellen er niet in mee. Het offertetotaal en de
+rekenkern zijn niet veranderd. Op de klantpagina van de accordeerlink
+geeft de groene knop het bestand een leesbare naam: soort, nummer en
+projectnaam.
+
+**Waar het zit.** `_offBijkomendSplits` (één plek voor de verdeling),
+gebruikt door `bouwBijkomendEnTotaal` (scherm) en
+`bijkomendEnTotaalContent` (pdf). `_accordPdfNaam` en
+`_accordDownloadUrl` bij de klantpagina; de link uit de Edge Function
+`offerte-accord` (versie 43, ongewijzigd) krijgt in de browser
+`download=<naam>` erachter.
+
+**Wat er in de database bij is gekomen.** Niets. Geen SQL, geen Edge
+Function, geen kolom, geen instelling.
+
+**Afhankelijkheid.** De bestandsnaam leunt op gedrag van de opslag van
+Supabase: `download=<naam>` op een objectlink, ook op een ondertekende
+link. Opgezocht op 16-11-2026 in de Supabase-documentatie en de broncode
+van storage-js. Verandert Supabase dat, dan opent de pdf weer onder de
+codenaam uit de opslag (`{token}.pdf`); er gaat dan niets stuk.
+
+**Bewijs.** `CHANGELOG.md` v4.123.0: parse-test, balansen, 26.488
+controles op functies uit het gepatchte bestand (waarvan de vergelijking
+met v4.122.0 bij minder dan twee kostenposten letterlijk gelijk is), en
+een pdf-proef met pdfmake 0.2.20.
+
+**Niet getest.** De download met de nieuwe naam bij een echte link; de
+echte app in de browser, iPhone en iPad.
+
+**Bekende grens.** Opslaan vanuit het pdf-venster van de browser houdt de
+codenaam; alleen de knop geeft de leesbare naam.

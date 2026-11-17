@@ -1,3 +1,50 @@
+## v4.123.0 — Offerte: subtotaal bijkomende kosten, en een leesbare bestandsnaam op de klantpagina (2026-11-16)
+
+Gebouwd op v4.122.0, live opgehaald van GitHub op 16-11-2026 bij sessiestart en opnieuw vlak voor het klaarzetten (2.014.666 bytes, beide keren identiek).
+
+**Aanleiding**
+- Mail van mevrouw Joosten over offerte 260148 (door Gian geplakt, 16-11): "Er is geen subtotaal van de extra kosten te zien: €2.670,-." Nagerekend op de pdf van de derde offerte (door Gian geüpload): reiskosten 11,27 + scheurherstel 525,00 + klimtoeslag 313,07 + losse verf 450,00 + steiger 1.221,00 + hogedrukreiniger 150,00 = 2.670,34. Zij had het zelf opgeteld; de winterschilderpremie (-311,71) zat daar niet in.
+- Gian 16-11, bij het uploaden van de pdf die de klant via de accordeerlink downloadt: het bestand heet `eb9f874702cf433c8e4b6e9011efff17mwfbz13n.pdf`. "De omschrijving van die download beschrijft niet netjes wat het is."
+- Gelezen in de live index.html v4.122.0: `bouwBijkomendEnTotaal` (scherm) en `bijkomendEnTotaalContent` (pdf) zetten reiskosten en zichtbare staartposten als losse rijen onder de onderdelen, zonder kop en zonder subtotaal. De klantpagina (`_accordRender`, bij `docHtml`) zet de link uit het antwoord van de Edge Function ongewijzigd in de knop.
+- Gelezen in de Edge Function `offerte-accord` versie 43 (opgehaald via de Supabase-koppeling, 16-11): de functie maakt bij elke opening een ondertekende link op `pdf_path`; het bestand heet in de opslag `{token}.pdf`. Die naam krijgt de klant.
+
+**Keuzes (Gian, 16-11: "A1, B1")**
+- De winterschilderpremie staat apart onder het subtotaal en telt er niet in mee; de korting blijft zo zichtbaar en het subtotaal is het bedrag dat de klant zelf uitrekende.
+- Subtotaal en bestandsnaam in één versie.
+- Niet gebouwd (voorstel Claude, door Gian niet tegengesproken): aantallen ramen in de prijstabel (kan door de regel te hernoemen) en het verdelen van de bijkomende kosten over gevel en houtwerk (steiger en klimtoeslag horen bij allebei).
+
+**Wat is er veranderd**
+- Nieuw `_offBijkomendSplits(cij)`: verdeelt reiskosten en zichtbare staartposten in kosten (bedrag 0 of hoger, reiskosten voorop) en kortingen (negatief bedrag), en telt de kosten op. Rekent niets om; de bedragen komen ongewijzigd uit `_berekenOfferteCijfers`. De rekenkern en de totalen zijn niet aangeraakt.
+- `bouwBijkomendEnTotaal` en `bijkomendEnTotaalContent`: bij twee of meer kostenposten het kopje "Bijkomende kosten", de kostenposten, de regel "Subtotaal bijkomende kosten" (vet, lijn erboven, zoals de subtotalen per onderdeel) en daaronder de kortingen. Bij nul of één kostenpost blijft de lijst letterlijk zoals in v4.122.0.
+- De volgorde verandert daardoor in één opzicht: een korting die tussen de kosten stond, staat nu onder het subtotaal.
+- Geldt voor beide prijsweergaven (per regel en per onderdeel); het blok is gedeeld.
+- Nieuw `_accordPdfNaam(res)`: "<Offerte|Onderhoudsplan|Houtrot-opgave> <nummer> - <projectnaam>.pdf"; tekens die niet in een bestandsnaam mogen worden een streepje, maximaal 120 tekens. Voorbeeld: "Offerte 260148 - M. Joosten - Binnen en buitenwerk.pdf".
+- Nieuw `_accordDownloadUrl(pdfUrl, naam)`: hangt `download=<naam>` aan de link. De opslag van Supabase levert het bestand dan als download met die naam (opgezocht 16-11 in de Supabase-documentatie "Serving assets from Storage"; in de broncode van storage-js staat dat deze toevoeging ná het ondertekenen aan de link wordt gehangen, dus de ondertekening blijft geldig).
+- De groene knop op de klantpagina heet nu "<Offerte> downloaden (PDF)" (was "openen of downloaden") en gebruikt die link; hij opent geen nieuw tabblad meer. Bekijken blijft in het venster eronder; de terugvallink "Open de offerte (PDF)" voor toestellen zonder pdf-venster is niet veranderd.
+- Vier versieankers bijgewerkt. Geen SQL, geen Edge Function, geen nieuwe kolom.
+
+**Getest**
+- Parse-test van het inline scriptblok met Node: geslaagd. Div-balans 1488/1491 en scripttags 6/6, gelijk aan v4.122.0. CSS-accolades 890/890.
+- `test.js`, Node, de echte functies uit het gepatchte bestand gesneden: 26.488 controles groen.
+  - Joosten-bedragen uit de pdf: subtotaal 2.670,34, zes kostenposten boven en de premie onder het subtotaal, op scherm en in de pdf-opbouw; het eindtotaalblok is letterlijk gelijk aan dat van v4.122.0.
+  - Zeven gevallen met nul of één kostenpost: uitvoer letterlijk gelijk aan dezelfde functies uit v4.122.0.
+  - 3000 willekeurige lijsten (0 tot 6 staartposten, wel of geen reiskosten, wel of geen gemengd BTW-tarief): drempel, som, subtotaal plus kortingen = alle posten samen, elke post precies één keer, BTW-label behouden, eindtotaalblok gelijk aan v4.122.0.
+  - Bestandsnaam: offerte, plan, houtrot, leeg antwoord, verboden tekens, lange naam. Link: ondertekend en openbaar, token en pad blijven heel, speciale tekens komen na decoderen gelijk terug, geen dubbele toevoeging, terugval bij een lege of niet-http-link.
+- Pdf-proef: de uitvoer van `bijkomendEnTotaalContent` met de Joosten-bedragen door pdfmake 0.2.20 in Node gehaald en de tekst teruggelezen: kop, zes posten, subtotaal 2.670,34, premie, totalen 10.241,97 / 921,78 / 11.163,75.
+
+**Niet getest**
+- Of de opslag de downloadnaam bij een echte ondertekende link van dit project levert. De opslag is vanuit de bouwomgeving niet bereikbaar; dit steunt op de documentatie en de broncode van storage-js. Terugval als het niet werkt: de pdf opent of downloadt onder de oude naam, er gaat niets stuk.
+- In de echte app met inlog: voorbeeld en pdf van een offerte met meerdere staartposten; een offerte met één staartpost; de klantpagina via een accordeerlink (Zelf bekijken), knop Downloaden op computer, iPhone en iPad.
+- De weergave per onderdeel (`bouwPrijsPerOnderdeel`): het gedeelde blok is getest, de combinatie op papier niet bekeken.
+- De paginaovergang in de pdf als het blok precies op een paginagrens valt (de kop heeft `headlineLevel: 1`, zoals de andere koppen).
+
+**Bekende grenzen**
+- Slaat de klant de pdf op vanuit het pdf-venster op de pagina (het downloadpijltje van de browser zelf) of via de terugvallink, dan houdt het bestand de oude codenaam. Alleen de groene knop geeft de nieuwe naam. Wil je het overal goed, dan moet het bestand in de opslag zelf anders gaan heten; dat raakt het aanmaken van de link en is niet gebouwd.
+- Het subtotaal verschijnt pas bij twee kostenposten. Eén post plus een korting geeft geen subtotaal.
+- Een verstuurde offerte verandert niet: de pdf achter een bestaande accordeerlink is bevroren. De nieuwe opbouw staat pas in een nieuwe link. De bestandsnaam werkt wel meteen voor bestaande links, want die ontstaat op de pagina.
+- Bij calculaties die vóór v4.119.0 op slot gingen worden de bedragen onafgerond opgeteld en dan afgerond getoond, net als de subtotalen per onderdeel; het subtotaal kan daar een cent afwijken van de som van de getoonde bedragen.
+- Het getekende exemplaar (na akkoord) had al een eigen naam ("<project> - getekend.pdf") en is niet veranderd.
+
 ## v4.122.0 — Afdekvilt rekent zichzelf uit: automatische staartpost, hele rollen, meters op de werkbon (2026-11-15)
 
 Gebouwd op v4.121.0, live opgehaald van GitHub op 15-11-2026 bij sessiestart, opnieuw vlak voor het patchen en opnieuw voor het klaarzetten (2.000.693 bytes, alle keren identiek).
