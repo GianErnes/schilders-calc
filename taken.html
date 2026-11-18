@@ -336,6 +336,17 @@
     font:inherit;font-size:16px;color:var(--ink);padding:11px 12px;
   }
   .veldinput:focus{outline:2px solid var(--hero-line);border-color:var(--hero-line)}
+  /* v0.27.0: verplichte uitkomst bij een nabeltaak */
+  .veldinput.mist,.veldinput.mist:focus{border-color:#c0392b;outline:2px solid #f3c4bd;background:#fff7f6}
+  .meldhint{display:none;margin-top:6px;font-size:12.5px;font-weight:650;color:#c0392b;line-height:1.35}
+  .meldhint.zie{display:block}
+  .laterknop{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    background:#fbfcfd;color:var(--ink-soft);border:1px solid var(--line);border-radius:12px;
+    padding:12px;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer;margin-top:8px;
+  }
+  .laterknop:active{transform:scale(.985)}
+  .laterknop:disabled{opacity:.5;cursor:default}
 
   /* soortkeuze: drie knopjes */
   .segment{display:flex;gap:8px}
@@ -530,11 +541,13 @@
     </div>
 
     <div class="fld" id="s_meldwrap" style="display:none">
-      <div class="k">Iets te melden?</div>
-      <textarea class="veldinput" id="s_melding" rows="2" placeholder="Leeg laten mag. Wat je hier typt gaat naar Gian." style="resize:vertical;min-height:44px;font-family:inherit"></textarea>
+      <div class="k" id="s_meldkop">Iets te melden?</div>
+      <textarea class="veldinput" id="s_melding" rows="2" placeholder="Leeg laten mag. Wat je hier typt komt als taak bij Gian." style="resize:vertical;min-height:44px;font-family:inherit"></textarea>
+      <div class="meldhint" id="s_meldhint">Vul eerst in wat er uit het gesprek kwam. Niet bereikt? Kies dan Later terugbellen.</div>
     </div>
 
     <button class="klaarknop" id="s_klaar" style="display:none">✓ Afvinken</button>
+    <button class="laterknop" id="s_later" type="button" style="display:none">↻ Later terugbellen</button>
 
     <div class="fld" id="s_soortwrap" style="display:none">
       <div class="k">Soort</div>
@@ -674,7 +687,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.26.3';
+const APP_VERSION = 'v0.27.0';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -750,6 +763,28 @@ const MND_LANG = ['januari','februari','maart','april','mei','juni','juli','augu
 function datumKort(){
   const d = new Date();
   return WD[d.getDay()] + ' ' + d.getDate() + ' ' + MND_LANG[d.getMonth()];
+}
+/* v0.27.0: nabeltaak van een offerte. Herkend aan het kenmerk dat de
+   Calculatie-app meegeeft ('opvolg-bel', ouder: 'nabellen'). De titel
+   telt ook mee, omdat er handmatige kopieën met bron 'eigen' bestaan
+   (gemeten 16-11-2026: "Nabellen offerte 260137 | Boek", bron eigen). */
+function isNabeltaak(t){
+  if(!t || t.bron === 'yoobi') return false;
+  if(t.bron === 'offerte' && (t.bron_kenmerk === 'opvolg-bel' || t.bron_kenmerk === 'nabellen')) return true;
+  return /^\s*nabellen offerte\b/i.test(String(t.onderwerp || ''));
+}
+/* v0.27.0: de eerstvolgende maandag na vandaag, 13:30. Maandagmiddag is
+   het belmoment van de administratie (zelfde tijd als maud_maandag() in
+   de database). Op een maandag zelf is het altijd die van volgende week:
+   "later" is nooit vandaag. */
+function volgendeBelMaandag(nu){
+  const d = new Date(nu.getFullYear(), nu.getMonth(), nu.getDate(), 13, 30, 0, 0);
+  const stap = (8 - d.getDay()) % 7 || 7;
+  d.setDate(d.getDate() + stap);
+  return d;
+}
+function belMaandagTekst(d){
+  return 'ma ' + d.getDate() + ' ' + MND_KORT[d.getMonth()];
 }
 function lokaalISO(d){
   return d.getFullYear() + '-' +
@@ -1563,6 +1598,21 @@ function openTask(t){
   meldEl.readOnly = (modus !== 'eigen');
   zet('s_meldwrap', modus === 'eigen' || (modus === 'klaar' && !!meldEl.value));
 
+  /* v0.27.0: bij een open nabeltaak is de uitkomst verplicht (besluit Gian
+     16-11-2026, voor iedereen, ook voor Gian zelf) en staat er een knop om
+     de taak te verzetten in plaats van af te vinken. */
+  const nabelOpen = modus === 'eigen' && isNabeltaak(t);
+  zetMeldMist(false);
+  document.getElementById('s_meldkop').textContent =
+    nabelOpen ? 'Uitkomst van het gesprek (verplicht)'
+              : (modus === 'klaar' ? 'Gemeld bij afvinken' : 'Iets te melden?');
+  meldEl.placeholder = nabelOpen ? 'Wat zei de klant? Zonder uitkomst kun je niet afvinken.'
+                                 : 'Leeg laten mag. Wat je hier typt komt als taak bij Gian.';
+  const laterKnop = document.getElementById('s_later');
+  zet('s_later', nabelOpen);
+  laterKnop.disabled = false;
+  if(nabelOpen) laterKnop.textContent = '↻ Later terugbellen · ' + belMaandagTekst(volgendeBelMaandag(new Date()));
+
   /* soort en ritme */
   zetSjabloonKnoppen(modus);
   zetCatVeld(modus, t);
@@ -1661,7 +1711,9 @@ function openNieuw(){
     '<span style="font-size:13px;font-weight:600;color:var(--ink-faint)">Typ wat er moet gebeuren, kies eventueel datum en wie</span>';
 
   zet('s_klaar', false);
+  zet('s_later', false); /* v0.27.0 */
   zet('s_meldwrap', false);
+  zetMeldMist(false);
   document.getElementById('s_melding').value = '';
   zetSjabloonKnoppen('nieuw');
   zetCatVeld('nieuw', null);
@@ -2006,6 +2058,66 @@ async function slaOp(){
   }
 }
 
+/* v0.27.0: het meldingvak rood zetten of weer gewoon. */
+function zetMeldMist(aan){
+  const el = document.getElementById('s_melding');
+  const hint = document.getElementById('s_meldhint');
+  el.classList.toggle('mist', !!aan);
+  hint.classList.toggle('zie', !!aan);
+  if(aan){
+    try{ el.scrollIntoView({ block:'center', behavior:'smooth' }); }catch(e){}
+    try{ el.focus({ preventScroll:true }); }catch(e){}
+  }
+}
+
+/* v0.27.0: Later terugbellen. De taak blijft open en schuift naar de
+   eerstvolgende maandag 13:30. Wat in het vak "Uitkomst" stond gaat niet
+   verloren: het komt met de datum van vandaag onderaan de notitie, zodat
+   bij de volgende poging te zien is wat er eerder gebeurde. Er gaat geen
+   bericht naar Gian; dat gebeurt pas bij afvinken. */
+function laterNotitie(notitie, melding, nu){
+  const basis = String(notitie || '').trim();
+  const m = String(melding || '').trim();
+  if(!m) return basis || null;
+  const stempel = String(nu.getDate()).padStart(2,'0') + '-' + String(nu.getMonth()+1).padStart(2,'0') + '-' + nu.getFullYear();
+  return (basis ? basis + '\n\n' : '') + stempel + ': ' + m;
+}
+async function laterTerugbellen(){
+  if(!VEL || VEL.modus !== 'eigen' || !VEL.taak || !isNabeltaak(VEL.taak)) return;
+  const t = VEL.taak;
+  const knop = document.getElementById('s_later');
+  knop.disabled = true;
+  try{
+    const nu = new Date();
+    const w = velWaarden();
+    const doel = volgendeBelMaandag(nu);
+    const ts = timestampVan(doel);
+    const upd = {
+      notitie: laterNotitie(w.notitie, w.melding, nu),
+      tel: w.tel || null,
+      gepland_op: ts,
+      piep: w.piepAan,
+      piep_op: w.piepAan ? naarUTC(ts) : null,
+      mail_op: null,
+      push_op: null,
+    };
+    if(w.titel) upd.onderwerp = w.titel;
+    eisRij(await sb.from('taken').update(upd).eq('crmtaskid', t.crmtaskid).select('crmtaskid'), 'Verzetten');
+    /* Uit Actueel als hij daar met de hand in gezet was; lukt dat niet,
+       dan is de taak wel verzet en staat hij hooguit nog in Actueel. */
+    if(MIJN_VANDAAG.has(String(t.crmtaskid))){
+      try{ await zetDagkeuze(t.crmtaskid, false); }catch(e){}
+    }
+    sluitVel();
+    toast('Verzet naar ' + belMaandagTekst(doel) + ', 13:30');
+    await laadTaken();
+  }catch(e){
+    toast('Verzetten lukt niet: ' + (e.message || e));
+  }finally{
+    knop.disabled = false;
+  }
+}
+
 async function vinkAf(){
   const t = VEL.taak;
   const nuTs = new Date().toISOString();
@@ -2022,6 +2134,13 @@ async function vinkAf(){
 
     /* Wat in het vel staat is de waarheid: afvinken bewaart eerst. */
     const w = velWaarden();
+
+    /* v0.27.0: een nabeltaak gaat niet dicht zonder uitkomst. */
+    if(isNabeltaak(t) && !w.melding){
+      zetMeldMist(true);
+      toast('Vul eerst de uitkomst van het gesprek in');
+      return;
+    }
     const vers = {
       notitie: w.notitie || null,
       tel: w.tel || null,
@@ -2882,6 +3001,8 @@ document.getElementById('sjabloonlijst').addEventListener('click', function(e){
 });
 document.getElementById('s_bewaar').addEventListener('click', slaOp);
 document.getElementById('s_klaar').addEventListener('click', vinkAf);
+document.getElementById('s_later').addEventListener('click', laterTerugbellen); /* v0.27.0 */
+document.getElementById('s_melding').addEventListener('input', function(){ if(this.value.trim()) zetMeldMist(false); }); /* v0.27.0 */
 document.getElementById('s_weg').addEventListener('click', verwijderTaak);
 document.getElementById('l_knop').addEventListener('click', meldAan);
 document.getElementById('l_wachtwoord').addEventListener('keydown', function(e){
