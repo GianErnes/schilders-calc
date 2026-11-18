@@ -6861,3 +6861,43 @@ echte app in de browser, iPhone en iPad.
 
 **Bekende grens.** Opslaan vanuit het pdf-venster van de browser houdt de
 codenaam; alleen de knop geeft de leesbare naam.
+
+## Wat er op 18 november 2026 gedaan is: deuronderkant per beurt geteld in het onderhoudsplan (index.html v4.124.0)
+
+**Wat het doet.** In een beurt van een onderhoudsplan rekent de
+staartpost "Deuronderkant behandelen" niet meer met het gemiddelde
+percentage van alle regels, maar met het aandeel van de deuren dat in
+die beurt meedoet. Een deur telt mee naar rato van het percentage van
+de calculatieregel waar zijn tekening aan hangt. In het bewerkvenster
+van een beurt noemt het veld "Eigen aantal" de eenheid, toont het de
+uitkomst in euro en waarschuwt het als het aantal hoger is dan de
+calculatie telt.
+
+**Waar het zit.** `_ohpDeurOnderkantTelling` (de telling), aangeroepen
+in de staartlus van `_ohpBeurtBasisBedrag` voor de post met
+`gebrekType` 'deur_onderkant'. `_ohpStEigenUitkomst` en de aanpassing
+in `_ohpMbRenderStaart` voor het veld. De uitleg in de
+rekenverantwoording staat bij de staartposten in dezelfde functie als
+voorheen.
+
+**Wat er in de database bij is gekomen.** Niets. Geen SQL, geen Edge
+Function, geen kolom, geen instelling.
+
+**Afhankelijkheid.** De telling leunt op de koppeling tussen meetrij en
+calculatieregel (`meetstaat.calc_regel_id`) en op de tekening
+(`deurOnderkanten`). Ontbreekt de meetstaat of de koppeling, dan rekent
+de post zoals in v4.123.0 (gemiddeld percentage); er gaat niets stuk.
+Andere posten per stuk, zoals herstel van gebreken, schalen nog steeds
+met het gemiddelde percentage. Dat is een bewuste keuze van Gian
+(18-11-2026), geen vergeten plek.
+
+**Gevolg.** Bestaande plannen met deze post en een beurt per regel of
+per stap tonen na deze versie een ander bedrag voor die post, tenzij er
+een eigen aantal op staat.
+
+**Bewijs.** `CHANGELOG.md` v4.124.0: parse-test, balansen, 14.032
+controles op functies uit het gepatchte bestand naast die uit v4.123.0,
+en 9 schermcontroles in jsdom.
+
+**Niet getest.** Het echte plan van VvE Villa Banning; de echte app in
+de browser, iPhone en iPad; print en pdf van het onderhoudsplan.

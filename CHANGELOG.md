@@ -1,3 +1,45 @@
+## v4.124.0 — Onderhoudsplan: deuronderkant telt de deuren van de beurt, en het veld Eigen aantal toont de uitkomst (2026-11-18)
+
+Gebouwd op v4.123.0, live opgehaald van GitHub op 18-11-2026 bij sessiestart en opnieuw vlak voor het patchen (2.020.526 bytes, beide keren identiek en gelijk aan de projectkopie).
+
+**Aanleiding**
+- Gian 18-11, onderhoudsplan VvE Villa Banning: een beurt met 2 gevels waarin 3 deuren met "Onderkant behandelen" zitten (samen 105 euro). In de rekenverantwoording van de beurt 2037 stond bij Deuronderkant behandelen 3.675,00 met de uitleg "eigen aantal: 105 deur × € 35,00 · automatisch: € 57,27" (schermfoto van Gian).
+- Gelezen in de live index.html v4.123.0: een eigen aantal rekent letterlijk aantal × brontarief (`_ohpBeurtBasisBedrag`, staartlus). Het getal 105 komt alleen uit het veld "Eigen aantal" in het bewerkvenster van de beurt of uit "Kopieer uit andere beurt"; geen code zet het automatisch. Aanname (niet gemeten in de database): er is 105 als bedrag getypt in een veld dat een aantal vraagt.
+- Het automatische bedrag 57,27 is 105 × 54,5% (nagerekend uit de schermfoto: 57,27 / 105). Gelezen in de code: staartposten van het type eenheid schalen met `extraFactor`, het gemiddelde percentage van alle regels van de beurt. De app telde niet welke deuren in de beurt meedoen. Voor drie deuren die alle drie in de gekozen gevels zitten is 105 het juiste bedrag.
+
+**Keuzes (Gian, 18-11: "A", daarna "1 B, 2A")**
+- Beide bouwen: het veld verduidelijken en de deuren per beurt tellen.
+- 1b: een deur telt mee naar rato van het percentage van zijn regel (regel op 15% geeft 15% van het deurbedrag), niet als hele deur zodra de regel meedoet.
+- 2a: alleen de deuronderkant. De herstelposten uit gebrek-stippen (ook per stuk) blijven met het gemiddelde percentage schalen.
+
+**Wat is er veranderd**
+- Nieuw `_ohpDeurOnderkantTelling(calc, regelScaling, stapScaling, extraFactor)`: loopt de meetstaat van de bron-calculatie na op tekeningen met `deurOnderkanten`, met dezelfde telregel als de calculatie (`_msTeltMee`, vinkjes × aantal van de meetrij). Elke deur krijgt de factor van zijn regel (`calcRegelId`) in deze beurt. Bij de modus per stap is dat het gemiddelde van de stapfactoren van die regel (keuze van Claude, niet aan Gian voorgelegd).
+- `_ohpBeurtBasisBedrag`: voor de staartpost met `gebrekType` 'deur_onderkant' is het automatische bedrag nu bronbedrag × (meetellende deuren / getekende deuren). Gerekend als aandeel van het bronbedrag, zodat een bron-post die niet meer gelijk loopt met de tekeningen de bron blijft volgen.
+- Terugval op het gedrag van v4.123.0: geen meetstaat of geen getekende deur met het vinkje (hele post), deur zonder vindbare regel (die deur), een handmatige post zonder `gebrekType`.
+- Een eigen aantal of "uit" op de post blijft voorgaan, zoals sinds v4.57.0. Bestaande ingrepen in plannen zijn niet aangeraakt; de 105 in het plan van Villa Banning moet Gian zelf op 3 of op Automatisch zetten.
+- Rekenverantwoording: bij de deuronderkant staat "3 van 3 deuren in deze beurt · € 105,00 × 100%". Bij een eigen aantal dat hoger is dan het aantal in de bron-post staat erbij "let op: de calculatie telt er 3".
+- Bewerkvenster van een beurt (`_ohpMbRenderStaart`): het keuzerondje heet "Eigen aantal deuren" (of dagen, weken, de eenheid van de post); achter het veld staat de uitkomst "× € 35,00 = € 105,00" die meeloopt bij het typen; bij een post per eenheid verschijnt een oranje regel als het aantal hoger is dan de calculatie telt. Nieuw `_ohpStEigenUitkomst` en `_ohpDeurTelTekst`.
+- Vijf versieankers bijgewerkt. Geen SQL, geen Edge Function, geen nieuwe kolom.
+
+**Gevolg voor bestaande plannen**
+- Beurten zonder de post Deuronderkant behandelen rekenen hetzelfde.
+- Beurten met die post en modus algemeen rekenen hetzelfde (elke regel heeft daar hetzelfde percentage).
+- Beurten met die post en modus per regel of per stap krijgen een ander automatisch bedrag voor die ene post, tenzij er een eigen aantal of "uit" op staat. Niet gemeten: hoeveel bestaande plannen dit raakt en of vergrendelde plannen hun bedragen bevroren houden.
+
+**Getest**
+- Parse-test van het inline scriptblok met Node: geslaagd. Div-balans 1489/1492 (v4.123.0: 1488/1491, één div erbij voor de waarschuwing), scripttags 6/6, CSS-accolades 890/890.
+- `test.js`, Node, de echte functies uit het gepatchte bestand gesneden, naast dezelfde functies uit v4.123.0: 14.032 controles groen.
+  - Nagebouwd geval: 5 gevels, 3 deuren in 2 gevels, beurt met alleen die 2 gevels. v4.123.0 geeft 42,00 (105 × 40%), v4.124.0 geeft 105,00; het eindbedrag verschilt precies dat bedrag; hoogwerker, vaste post en houtrotpost zijn gelijk.
+  - Naar rato: 2 deuren op 15% plus 1 op 100% geeft 45,50; beurt zonder deuren geeft 0; per stap met gemiddeld 25% geeft 52,50.
+  - Terugval: geen meetstaat, deur zonder regel, bron-post met een ander aantal dan de tekening, uitgezette meetrij, handmatige post.
+  - Eigen aantal 105 geeft 3.675,00, eigen aantal 3 geeft 105,00, uit geeft 0.
+  - 4.000 willekeurige beurten (drie modi, volle dagen aan/uit, risico 0 of 8%): zonder de post letterlijk gelijk aan v4.123.0; met de post verschilt alleen die post, blijft hij tussen 0 en het bronbedrag en zijn de werkdagen gelijk.
+- `test_dom.js`, jsdom, `_ohpMbRenderStaart` uit het gepatchte bestand: 9 controles groen (label, uitkomst en waarschuwing bij openen met 105, na wijzigen naar 3, terug naar Automatisch, hoogwerker per dag, vaste post ongewijzigd).
+
+**Niet getest**
+- Het echte plan van Villa Banning: de testcalculatie is nagebouwd, niet de echte. De echte gevelindeling en percentages zijn niet uitgelezen.
+- De echte app in de browser, iPhone en iPad; de print en pdf van het onderhoudsplan (die gebruiken dezelfde rekenkern, maar zijn niet gedraaid).
+
 ## v4.123.0 — Offerte: subtotaal bijkomende kosten, en een leesbare bestandsnaam op de klantpagina (2026-11-16)
 
 Gebouwd op v4.122.0, live opgehaald van GitHub op 16-11-2026 bij sessiestart en opnieuw vlak voor het klaarzetten (2.014.666 bytes, beide keren identiek).
