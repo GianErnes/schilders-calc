@@ -1,6 +1,28 @@
 # CHANGELOG planning.html
 
-> **Handleiding meebewegen.** Sinds v0.23.0 staat er een handleiding in planning.html (knop *Handleiding* in de kop, 16 secties). Wie een functie wijzigt, past in dezelfde wijziging de bijbehorende alinea in de handleiding aan en de *Sinds*-regel eronder. Een handleiding die achterloopt is erger dan geen: iemand handelt ernaar.
+> **Handleiding meebewegen.** Sinds v0.23.0 staat er een handleiding in planning.html (knop *Handleiding* in de kop, 17 secties). Wie een functie wijzigt, past in dezelfde wijziging de bijbehorende alinea in de handleiding aan en de *Sinds*-regel eronder. Een handleiding die achterloopt is erger dan geen: iemand handelt ernaar.
+
+## v0.28.0 + taken_29 — Voorbereidingstaken per project: blok in het paneel, standaardlijstje, teller op de balk, 19-11-2026
+
+**Aanleiding.** Gian 18-11: voorbereidingstaken (materiaal bestellen, toilet of steiger regelen) stonden vooral in Yoobi; de Takenapp werkt sneller. Wens: taken aan een project op de planning hangen, zichtbaar en afvinkbaar in planning én Takenapp. Besluiten 18-11: X kalenderdagen vóór de start en meeschuiven, project of fase, standaardlijstje én los intikken, teller op de balk (rood bij te laat), Yoobi-archief later beslissen.
+
+**Wijziging.**
+1. **SQL `claude_taken_29_projecttaken.sql`** (projectguard, idempotent, geen DROP; door Claude live gedraaid 19-11 via de koppeling). Zie CHANGELOG_taken.md v0.28.0 voor de onderdelen. Voor de planning van belang: de database zet de taakdatum en schuift open taken mee via triggers op `plan_fasen` (insert, delete, wijziging van `van`), `plan_projecten` (insert, wijziging van `plan_start`) en `fin_werkvoorraad`. Het bord rekent zelf geen taakdatums uit.
+2. **planning.html v0.28.0.**
+   - `laadAlles` haalt er vier dingen bij: taken met `plan_code` (niet vervallen), `plan_taak_sjablonen`, `taken_rollen` (voor "voor wie" en wie er ingelogd is) en de sessie. Elk faalt zacht met een console-waarschuwing.
+   - Blok **Voorbereiding** in het paneel (gewoon én fasepaneel), onder Hulpmiddelen: vinkje, naam (link naar `taken.html?taak=…`), voor wie, datum, dagen vóór start of vaste datum, te laat, en bij gedaan wanneer en door wie. Toevoegen met naam, dagen (standaard 14, leeg = zonder datum) en persoon. Kruisje verwijdert de taak, ook uit de Takenapp.
+   - **Standaardlijstje toevoegen** hangt het lijstje aan het project en slaat over wat er op naam al staat. **Lijstje beheren** klapt het lijstje uit in het paneel (naam, dagen, voor wie, weghalen, erbij).
+   - Bij fasen: taken van de fase, plus taken zonder fase bij de eerste fase (zelfde regel als hulpmiddelen). Een nieuwe taak in het fasepaneel hangt aan die fase.
+   - **Teller** `☑ 2/3` in de linkerkolom naast de kennisgevingslabels; rood als een open taak over zijn datum is.
+   - `schrijfFasen`: bij samenvoegen gaan de taken van de fase die verdwijnt mee naar de fase die blijft. Lukt dat niet, dan zet de database de fase op leeg en vallen ze terug op het project; de fasen worden wel opgeslagen.
+   - Elke schrijfactie eist minstens één geraakte rij: nul rijen (rijbeveiliging) is een rode melding, geen stil succes.
+   - Handleiding: nieuwe sectie 17 plus een regel in het register.
+
+**Getest.** `node --check`, div- en accoladebalans. Looptest in jsdom met nagebootste database: 39 van 39 geslaagd (telling en labels per project en fase, afvinken en terugzetten, toevoegen, ongeldige invoer, lijstje beheren, standaardlijstje zonder dubbelen, fasepaneel, verwijderen, nul-rijen-melding, samenvoegen van fasen). SQL: zie CHANGELOG_taken.md.
+
+**Niet getest.** Niets in een echte browser: opmaak van het blok en de teller in de smalle linkerkolom zijn niet gezien. Slepen van een balk met een echte taak eraan (de database-kant is wel getest). Projecten waarvan de balk als aanname op vandaag begint: een taak met dagen krijgt daar bewust geen datum tot er een eigen start staat. Bij meer dan 1000 gekoppelde taken valt een deel weg (API-grens); nu staan er 0.
+
+**Bewuste grens.** Wie in de Takenapp de rol `eigen` heeft, ziet hier alleen zijn eigen taken en kan alleen taken op eigen naam toevoegen. In de praktijk opent alleen rol `alles` het bord, want `fin_werkvoorraad` is alleen voor die rol leesbaar.
 
 ## v0.27.0 + planning_11 + Edge Functions planning-kennisgeving v3.4 / planning-kennisgeving-taken v1.5 + bevestig.html v1.4 — Onderhoudsplan-beurten: maandmelding in december, opdrachtbevestiging per klant, 09-11-2026
 

@@ -6,6 +6,75 @@ wat daar niet in stond, staat hier ook niet. Datums zijn alleen genoemd
 waar ze uit de code of uit de sessie bekend zijn. Geschiedenis vóór
 v0.13.2 is niet vastgelegd.
 
+## v0.28.0 — Taak aan een project op de planning hangen (SQL taken_29), 19-11-2026
+
+**Aanleiding.** Gian 18-11-2026: voorbereidingstaken bij een project
+(materiaal bestellen, toilet of steiger regelen) stonden hoofdzakelijk in
+Yoobi, maar de Takenapp werkt sneller. Wens: taken koppelen aan een project
+op de planning, op beide plekken zichtbaar en afvinkbaar, en in de Takenapp
+op het juiste moment naar voren.
+
+**Besluiten (Gian, 18-11-2026).** Taak staat op X kalenderdagen vóór de
+start en schuift mee als de start verschuift. Koppelen aan project of fase.
+Standaardlijstje in één tik én los intikken. Teller op de projectbalk, rood
+bij te laat. Yoobi-archief nu niet: eerst gebruiken, later beslissen.
+
+**Database (bestand `claude_taken_29_projecttaken.sql`, op 19-11-2026
+gedraaid via de Supabase-koppeling met `execute_sql`; staat daardoor niet
+in `supabase_migrations`).** Geen `DROP`, idempotent, projectguard.
+- `taken` krijgt `plan_code` (Yoobi-projectcode), `plan_fase_id`
+  (verwijst naar `plan_fasen`, wordt leeg als de fase verdwijnt) en
+  `plan_dagen_voor` (0 t/m 365; leeg = vaste datum).
+- Functie `plan_taak_start(code, fase)`: de start waar een taak aan hangt.
+  Volgorde: gekozen fase, vroegste fase, eigen `plan_start`, Yoobi-start
+  uit de laatste `fin_werkvoorraad` (niet als die in een eerder jaar ligt).
+- Trigger `taken_plan_zet` (voor insert/update): bij gevulde dagen zet de
+  database `gepland_op` (tijd blijft, anders 17:00), `piep_op` in
+  Nederlandse tijd, en wist `mail_op`/`push_op` als de melding in de
+  toekomst ligt. Vult `projectnaam`. Yoobi-taken blijven buiten schot.
+- Functie `plan_taken_herreken(code)` plus triggers op `plan_fasen`,
+  `plan_projecten` en `fin_werkvoorraad`: open taken met dagen schuiven
+  mee. Elke trigger vangt zijn eigen fout af, zodat opslaan in de planning
+  en de werkvoorraad-sync nooit blokkeren.
+- Tabel `plan_taak_sjablonen` (standaardlijstje, leeg aangemaakt) met
+  rijbeveiliging: lezen met een rol, beheren alleen rol `alles`.
+- Functie `plan_taak_projecten()`: projectlijst (code, naam, klant, start,
+  fasen) zonder bedragen, voor iedereen met een rol. `fin_werkvoorraad`
+  zelf blijft alleen leesbaar voor rol `alles`.
+
+**Wijziging in taken.html.**
+- Nieuw veld **Project (planning)** in het vel van een eigen taak: zoeken
+  op project of klant (zonder zoekterm de eerstvolgende starts), bij een
+  project met fasen een fasekeuze, en **Dagen vóór start**.
+- Met dagen ingevuld toont het vel de berekende datum en is het datumveld
+  vergrendeld; de uitleg eronder noemt de start. Dagen leeg = vaste datum.
+- De kaart toont de projectnaam als tweede regel, zoals bij Yoobi-taken.
+- Een ongeldig aantal dagen (geen heel getal 0 t/m 365) wordt niet bewaard.
+- Lukt de projectlijst niet, dan werkt de rest door en zegt het zoekvak dat
+  de lijst niet geladen is.
+
+**Getest.**
+- SQL lokaal op Postgres 16: twee keer gedraaid (idempotent), 36 controles
+  geslaagd (start-volgorde, meeschuiven per project en per fase, afgevinkt
+  en vaste datum blijven staan, zomer- en wintertijd van de melding,
+  rijbeveiliging lijstje, fout in de schuif-trigger blokkeert opslaan niet).
+  Syntax met pglast.
+- SQL live: proefrit in een teruggedraaide transactie naast de bestaande
+  triggers op `taken` (insert 14 dagen vóór 1 maart 2027 gaf 15 februari
+  17:00, na verschuiven 22 februari, afgevinkt bleef staan); daarna
+  gecontroleerd dat er geen testrijen zijn achtergebleven.
+- taken.html: `node --check` op beide scriptblokken, div- en
+  accoladebalans, en een looptest in jsdom met nagebootste database:
+  36 van 36 geslaagd (kiezen, rekenen, vergrendelen, opslaan, vaste datum,
+  kruisje, bestaande taak, Yoobi-taak, afvinken).
+
+**Niet getest.**
+- Niets in een echte browser of op de iPhone: hoe het veld eruitziet en
+  tikt is niet gezien.
+- Een herhalende taak aan een project: niet uitgesloten en niet getest.
+- De pushmelding van een verschoven taak op het nieuwe moment.
+- Rol `eigen` (Max, Bjorn, Jens, Maud) met een echt account.
+
 ## v0.27.0 — Afvinkmelding wordt een taak voor Gian (SQL taken_28), uitkomst verplicht bij nabellen, Later terugbellen, 16-11-2026
 
 **Aanleiding.** Gian 16-11-2026: "De opmerkingen die Maud schrijft bij de

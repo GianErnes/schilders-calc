@@ -200,6 +200,19 @@
   .middeltekst { position: absolute; bottom: var(--m-bodem, 1px); left: 5px; height: 11px; line-height: 11px; white-space: nowrap; font-size: 0.6rem; font-weight: 700; color: #000; z-index: 2; pointer-events: none; }
   .middeltekst .mo { font-weight: 500; opacity: 0.9; }
   .middelen { margin-top: 0.7rem; }
+  /* v0.28.0: voorbereidingstaken per project (taken_29) */
+  .taaklabel { display: inline-block; background: #fff; color: var(--ink-soft); border: 1px solid var(--paper-deep); font-size: 0.6rem; font-weight: 700; padding: 0 5px; border-radius: 3px; margin-left: 6px; vertical-align: middle; line-height: 1.25; }
+  .taaklabel.laat { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .taaklabel.klaar { color: var(--muted); }
+  .voorb .tnaam { flex: 1; min-width: 0; color: inherit; text-decoration: none; font-weight: 600; }
+  .voorb .tnaam:hover { text-decoration: underline; }
+  .voorb .tsub { font-size: 0.72rem; color: var(--muted); padding-left: 1.5rem; }
+  .voorb li.tklaar .tnaam { color: var(--muted); text-decoration: line-through; }
+  .voorb li.tlaat .tsub { color: var(--accent); font-weight: 600; }
+  .voorb .thint { font-size: 0.72rem; color: var(--muted); margin-top: 0.35rem; }
+  .voorb .tkl { font-size: 0.74rem; color: var(--muted); }
+  .voorb input[type=number] { width: 4.2rem; font-size: 0.78rem; }
+  .voorb .tbeheer { margin-top: 0.5rem; padding: 0.5rem; border: 1px solid var(--paper-deep); border-radius: var(--radius); }
   .middelen h3 { margin: 0 0 0.4rem; font-size: 0.8rem; color: var(--ink-soft); }
   .middelen ul { list-style: none; margin: 0; padding: 0; font-size: 0.78rem; }
   .middelen li { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.4rem 0; border-top: 1px solid var(--paper-deep); }
@@ -524,6 +537,7 @@
         <li><a href="#h14" data-hga="h14">Yoobi verversen</a></li>
         <li><a href="#h15" data-hga="h15">Als iets misgaat</a></li>
         <li><a href="#h16" data-hga="h16">Ik wil… (register op taak)</a></li>
+        <li><a href="#h17" data-hga="h17">Voorbereidingstaken per project</a></li>
       </ol>
       <div class="hint">Elk onderdeel heeft dezelfde opbouw: <b>Waar</b> vind je het · <b>Wat</b> doet het · <b>Hoe</b> doe je het · <b>Let op</b> · <b>Sinds</b> welke versie. Typ in het zoekveld om alleen de passende onderdelen te zien.</div>
     </section>
@@ -710,8 +724,20 @@
         <li>… een project zonder werk van het bord halen → <a href="#h13" data-hga="h13">13</a></li>
         <li>… een nieuw project uit Yoobi op het bord krijgen → <a href="#h14" data-hga="h14">14</a></li>
         <li>… weten wat een rode melding betekent → <a href="#h15" data-hga="h15">15</a></li>
+        <li>… een voorbereidingstaak aan een project hangen (materiaal, steiger, toilet) → <a href="#h17" data-hga="h17">17</a></li>
       </ul>
       <div class="hint" style="margin-top:0.6rem">Deze handleiding hoort bij de versie die bovenin staat. Wie een functie in planning.html wijzigt, past in dezelfde wijziging de bijbehorende alinea hier aan; anders loopt de handleiding binnen een paar versies achter op het bord.</div>
+    </section>
+
+    <section class="hsec" id="h17" data-trefwoorden="voorbereiding taak taken takenapp afvinken materiaal bestellen steiger toilet standaardlijstje lijstje dagen voor start teller">
+      <h3>17. Voorbereidingstaken per project</h3>
+      <p><b>Waar.</b> Klik op een project (of fase); in het paneel rechts staat het blok <b>Voorbereiding</b>.</p>
+      <p><b>Wat.</b> Taken die bij het project horen, zoals materiaal bestellen of een steiger regelen. Het zijn gewone taken uit de Takenapp: ze staan op beide plekken en je kunt ze op beide plekken afvinken. Klik op de naam om de taak in de Takenapp te openen.</p>
+      <p><b>Dagen vóór start.</b> Een taak met een aantal dagen (kalenderdagen) krijgt zijn datum van de database: start van het project of de fase min dat aantal. Verschuift de start, dan schuift een open taak mee. Afgevinkte taken en taken met een vaste datum blijven staan. Een vaste datum zet je in de Takenapp door het veld Dagen vóór start leeg te maken.</p>
+      <p><b>Standaardlijstje.</b> <b>Standaardlijstje toevoegen</b> hangt in één keer de vaste taken aan het project; wat er al staat wordt overgeslagen. Met <b>Lijstje beheren</b> pas je het lijstje aan. Dat geldt voor alle projecten en verandert bestaande taken niet.</p>
+      <p><b>Teller.</b> In de linkerkolom staat bij het project <i>☑ 2/3</i>: gedaan van totaal. Rood betekent dat er een open taak over zijn datum is.</p>
+      <p><b>Let op.</b> Heeft een project alleen een Yoobi-start in een eerder jaar (de balk begint dan als aanname op vandaag), dan krijgt een taak pas een datum als je zelf een start zet. Wie in de Takenapp de rol "eigen" heeft ziet hier alleen zijn eigen taken.</p>
+      <p class="hsinds">Sinds v0.28.0.</p>
     </section>
   </div>
 </div>
@@ -723,7 +749,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.27.0';
+const APP_VERSION = '0.28.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -790,6 +816,11 @@ let fasen = {};              // yoobi_code -> [fase-rijen op volgnr]
 let middelen = {};           // yoobi_code -> [hulpmiddel-rijen]
 let kennis = {};             // v0.15.0: yoobi_code -> { maand, week, dag } -> laatste rij uit plan_kennisgevingen
 let kennisHistorie = {};     // v0.21.0: yoobi_code -> alle rijen uit plan_kennisgevingen, nieuwste eerst (voor het historievenster)
+let projTaken = {};           // v0.28.0: yoobi_code -> taken uit `taken` met plan_code (voorbereidingstaken)
+let taakSjablonen = [];       // v0.28.0: standaardlijstje (plan_taak_sjablonen)
+let taakPersonen = [];        // v0.28.0: personen uit taken_rollen, voor "voor wie"
+let ikPersoon = null, ikUid = null; // v0.28.0: wie er ingelogd is, voor aangemaakt_door en voltooid_door
+let sjabloonBeheerOpen = false;     // v0.28.0: lijstje beheren uitgeklapt in het paneel
 let nabelAfgehandeld = {};    // v0.25.0: bron_kenmerk -> handmatig afgevinkte nabel-/bouncetaken uit `taken` (voltooid_door gevuld), nieuwste eerst
 let kennisOoitVerstuurd = {};  // v0.18.2: yoobi_code -> fasesleutel -> soort -> true als er ooit een echte mail (niet overgeslagen) is gegaan; voor het label "correctie overgeslagen" (v0.22.0: per fase)
 let urenEerste = {};         // v0.15.0: yoobi_code -> 'YYYY-MM-DD' van de eerste ingeplande uren (plan_uren.created_at), voor het maandsignaal
@@ -1034,7 +1065,7 @@ function projectenOverDatum() {
 // ---------- laden ----------
 async function laadAlles() {
   const j1 = jaar + '-01-01', j2 = jaar + '-12-31';
-  const [wv, mw, pp, pu, gd, vlRes, fsRes, mdRes, zkRes, puBuiten, knRes, ntRes] = await Promise.all([
+  const [wv, mw, pp, pu, gd, vlRes, fsRes, mdRes, zkRes, puBuiten, knRes, ntRes, ptRes, tsRes, trRes, sesRes] = await Promise.all([
     sb.from('fin_werkvoorraad').select('peildatum,data').order('peildatum', { ascending: false }).limit(1),
     sb.from('plan_medewerkers').select('*').order('volgorde'),
     sb.from('plan_projecten').select('*'),
@@ -1051,6 +1082,11 @@ async function laadAlles() {
     // v0.25.0: handmatig afgevinkte planningstaken (nabellen/bounce), voor "nabeltaak afgehandeld … door …: melding".
     // Alleen rijen met voltooid_door: een taak die het bord of de ochtendronde zelf sloot heeft die kolom leeg.
     sb.from('taken').select('crmtaskid,bron_kenmerk,voltooid_op,voltooid_door,afvink_melding').eq('bron', 'planning').not('voltooid_op', 'is', null).not('voltooid_door', 'is', null).order('voltooid_op', { ascending: false }),
+    // v0.28.0: voorbereidingstaken (taken met plan_code), het standaardlijstje, en wie er in de Takenapp bestaan.
+    sb.from('taken').select('crmtaskid,onderwerp,toegewezen_aan,gepland_op,voltooid_op,voltooid_door,status,plan_code,plan_fase_id,plan_dagen_voor').not('plan_code', 'is', null).neq('status', 'vervallen').order('gepland_op', { ascending: true, nullsFirst: false }),
+    sb.from('plan_taak_sjablonen').select('*').order('volgorde').order('naam'),
+    sb.from('taken_rollen').select('user_id,persoon'),
+    sb.auth.getSession(),
   ]);
   for (const r of [wv, mw, pp, pu, gd]) if (r.error) throw r.error;
   // plan_verlof kan ontbreken zolang planning_02_verlof.sql niet is gedraaid: dan zonder verlof verder.
@@ -1087,6 +1123,18 @@ async function laadAlles() {
   nabelAfgehandeld = {}; // v0.25.0
   if (ntRes.error) { console.warn('taken (afgevinkte nabeltaken) niet leesbaar: ' + ntRes.error.message); }
   else for (const t of (ntRes.data || [])) { if (!t.bron_kenmerk || !/^(nabellen|bounce)-/.test(t.bron_kenmerk)) continue; (nabelAfgehandeld[t.bron_kenmerk] = nabelAfgehandeld[t.bron_kenmerk] || []).push(t); }
+  projTaken = {}; // v0.28.0
+  if (ptRes.error) { console.warn('voorbereidingstaken niet leesbaar (claude_taken_29_projecttaken.sql nog niet gedraaid?): ' + ptRes.error.message); }
+  else for (const t of (ptRes.data || [])) (projTaken[t.plan_code] = projTaken[t.plan_code] || []).push(t);
+  if (tsRes.error) { console.warn('plan_taak_sjablonen niet leesbaar: ' + tsRes.error.message); taakSjablonen = []; }
+  else taakSjablonen = tsRes.data || [];
+  ikUid = (sesRes && sesRes.data && sesRes.data.session && sesRes.data.session.user) ? sesRes.data.session.user.id : null;
+  if (trRes.error) { console.warn('taken_rollen niet leesbaar: ' + trRes.error.message); taakPersonen = []; ikPersoon = null; }
+  else {
+    taakPersonen = [...new Set((trRes.data || []).map(r => r.persoon).filter(Boolean))];
+    const ik = (trRes.data || []).find(r => r.user_id === ikUid);
+    ikPersoon = ik ? ik.persoon : null;
+  }
   gesloten = {};
   for (const r of (gd.data || [])) gesloten[r.datum] = r;
   verlof = {};
@@ -1285,7 +1333,7 @@ function tekenProjectRij(p, d, f) {
   const bodemVanLaag = (l) => (l === 0 ? 1 : 27 + (l - 1) * 12) + 'px';
   const over = isOverDatum(p, naarIso(new Date()));
   let h = '<tr class="project' + (isActief ? ' actief' : '') + (over ? ' overdatum' : '') + '" data-code="' + esc(p.code) + '"' + (f ? ' data-fase="' + esc(f.id) + '"' : '') + (extraHoogte ? ' style="height:' + (40 + extraHoogte) + 'px"' : '') + '>';
-  h += '<td class="label" title="' + esc(p.klant + ' — ' + naamTekst) + (over ? ' — over datum: herplannen (balk slepen) of sluiten in Yoobi' : '') + '"><span class="klant">' + esc(p.klant) + (over ? '<span class="overlabel">Over datum</span>' : '') + kennisLabelHtml(p, f) + '</span><span class="naam">' + esc(naamTekst) + '</span></td>';
+  h += '<td class="label" title="' + esc(p.klant + ' — ' + naamTekst) + (over ? ' — over datum: herplannen (balk slepen) of sluiten in Yoobi' : '') + '"><span class="klant">' + esc(p.klant) + (over ? '<span class="overlabel">Over datum</span>' : '') + kennisLabelHtml(p, f) + takenLabelHtml(p, f) + '</span><span class="naam">' + esc(naamTekst) + '</span></td>';
   // Naam + afspraak vóór de start van de lijn. Geen ruimte links (start in
   // de eerste week, of overloopwerk vanaf 1 januari): dan achter het eind,
   // en loopt ook dat het jaar uit, dan rechts van het eerste zichtbare stuk.
@@ -1486,11 +1534,13 @@ function tekenPaneel() {
     '</div>' +
     '<div class="voetnoot">Aanneemsom, budget en geboekt komen uit Yoobi (stand ' + (peildatum ? fmtDatum(vanIso(peildatum)) : '—') + '). Ingepland telt onze uren in ' + jaar + '. Nog te plannen = planbaar budget − ingepland over alle jaren (vanaf ' + PLAN_AFTREK_VANAF + ' uur gaat ' + PLAN_AFTREK_PCT + '% van het budget af voor indirecte uren, net als op de werkbon); nog te werken = volle budget − geboekt. Datums hier gelden alleen voor ons bord; Yoobi pas je zelf aan.</div>' +
     middelenHtml(p, null, d) +
+    voorbereidingHtml(p, null) + // v0.28.0
     kennisHtml(p, null) +
     '<div class="paneelknoppen">' + onderhoudVinkHtml(p) + '<button class="knop" id="pVerberg" title="Van het bord halen, bv. een kapstokproject zonder werk">Verbergen</button></div>';
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
   koppelOnderhoudVink(el, p); // v0.27.0
   koppelMiddelen(el, p, null, d);
+  koppelVoorbereiding(el, p, null); // v0.28.0
   koppelKennis(el, p, null);
   const inS = document.getElementById('pStart'), inE = document.getElementById('pEind');
   inS.addEventListener('change', () => datumsUitPaneel(p, d));
@@ -1531,6 +1581,7 @@ function tekenFasePaneel(el, p) {
   });
   const fAct = fs.find(f => f.id === actiefFase) || fs[0];
   h += middelenHtml(p, fAct, faseDatums(p, fAct)) +
+    voorbereidingHtml(p, fAct) + // v0.28.0
     '<div class="voetnoot">Budget, geboekt, nog te plannen en nog te werken gelden voor het hele project, over alle jaren. Nog te plannen rekent met het planbare budget (vanaf ' + PLAN_AFTREK_VANAF + ' uur ' + PLAN_AFTREK_PCT + '% eraf voor indirecte uren, net als op de werkbon); nog te werken met het volle budget; per fase zie je wat erop staat, ook buiten dit jaar. Een dag hoort bij de fase waarin hij valt, anders bij de dichtstbijzijnde. Hulpmiddelen horen bij de gekozen fase.</div>' +
     kennisHtml(p, fAct) + // v0.22.0: per fase
     '<div class="paneelknoppen">' + onderhoudVinkHtml(p) + '<button class="knop" id="pVerberg">Verbergen</button></div>';
@@ -1538,6 +1589,7 @@ function tekenFasePaneel(el, p) {
   document.getElementById('pVerberg').addEventListener('click', () => zetZichtbaar(p.code, false));
   koppelOnderhoudVink(el, p); // v0.27.0
   koppelMiddelen(el, p, fAct, faseDatums(p, fAct));
+  koppelVoorbereiding(el, p, fAct); // v0.28.0
   koppelKennis(el, p, fAct);
   el.querySelectorAll('.fase').forEach(div => {
     const f = vindFase(p.code, div.dataset.fase); if (!f) return;
@@ -1554,6 +1606,186 @@ function tekenFasePaneel(el, p) {
     div.querySelector('.fknipknop').addEventListener('click', () => knipFase(p.code, div.querySelector('.fknip').value, f.id));
     const sam = div.querySelector('.fsamen');
     if (sam) sam.addEventListener('click', () => voegFaseSamen(p.code, f.id));
+  });
+}
+
+// ---------- voorbereidingstaken (v0.28.0, SQL taken_29) ----------
+// Gewone taken uit de Takenapp (bron 'eigen') met plan_code = projectcode, optioneel plan_fase_id
+// en plan_dagen_voor. De database zet de datum (trigger taken_plan_zet) en schuift open taken mee
+// als de start verschuift (plan_taken_herreken); dit bord rekent zelf geen taakdatums uit.
+function takenVan(code, f) {
+  // Bij fasen: taken van deze fase, plus taken zonder fase bij de eerste fase (zelfde regel als hulpmiddelen).
+  const alle = projTaken[code] || [];
+  if (!f) return alle;
+  const fs = fasenVan(code);
+  return alle.filter(t => t.plan_fase_id === f.id || (!t.plan_fase_id && fs.length && fs[0].id === f.id));
+}
+function taakDatumIso(t) { return t.gepland_op ? String(t.gepland_op).slice(0, 10) : null; }
+function taakTeLaat(t, vandaagIso) { const d = taakDatumIso(t); return !t.voltooid_op && !!d && d < vandaagIso; }
+function takenTelling(code, f, vandaagIso) {
+  const l = takenVan(code, f);
+  return { totaal: l.length, klaar: l.filter(t => t.voltooid_op).length, laat: l.filter(t => taakTeLaat(t, vandaagIso)).length };
+}
+function takenLabelHtml(p, f) {
+  const t = takenTelling(p.code, f, naarIso(new Date()));
+  if (!t.totaal) return '';
+  return '<span class="taaklabel' + (t.laat ? ' laat' : (t.klaar === t.totaal ? ' klaar' : '')) + '" title="Voorbereiding: ' + t.klaar + ' van ' + t.totaal + ' taken gedaan' + (t.laat ? ', ' + t.laat + ' te laat' : '') + '">☑ ' + t.klaar + '/' + t.totaal + '</span>';
+}
+// De start waar de database een taak aan hangt (zelfde volgorde als plan_taak_start), alleen voor de uitleg in het paneel.
+function taakStartIso(p, f) {
+  if (f) return f.van;
+  const fs = fasenVan(p.code);
+  if (fs.length) { let m = null; for (const x of fs) if (x.van && (!m || x.van < m)) m = x.van; return m; }
+  const pl = planProjecten[p.code] || {};
+  if (pl.plan_start) return pl.plan_start;
+  const y = yoobiDatum(p.startdatum);
+  return (y && y.getFullYear() >= new Date().getFullYear()) ? naarIso(y) : null;
+}
+function taakPersoonOpties(gekozen) {
+  const lijst = taakPersonen.length ? taakPersonen.slice() : [ikPersoon || 'gian'];
+  if (gekozen && lijst.indexOf(gekozen) < 0) lijst.push(gekozen);
+  const kies = gekozen || (lijst.indexOf('gian') >= 0 ? 'gian' : lijst[0]);
+  return lijst.map(x => '<option value="' + esc(x) + '"' + (x === kies ? ' selected' : '') + '>' + esc(x) + '</option>').join('');
+}
+// Leeg = null (geen datum volgen), getal 0 t/m 365, anders NaN.
+function taakDagenUit(ruw) {
+  const r = String(ruw == null ? '' : ruw).trim();
+  if (r === '') return null;
+  if (!/^\d+$/.test(r)) return NaN;
+  const n = parseInt(r, 10);
+  return n > 365 ? NaN : n;
+}
+function nieuweTaakRij(code, f, naam, dagen, wie) {
+  return { onderwerp: naam, bron: 'eigen', status: 'actueel', soort: 'eenmalig', toegewezen_aan: wie, aangemaakt_door: ikUid, piep: true,
+    categorie: 'Werkvoorbereiding', plan_code: code, plan_fase_id: f ? f.id : null, plan_dagen_voor: dagen };
+}
+// Wat van het standaardlijstje nog niet bij dit project (of deze fase) staat; vergelijkt op naam, hoofdletters tellen niet.
+function sjablonenNogNiet(code, f) {
+  const er = new Set(takenVan(code, f).map(t => String(t.onderwerp || '').trim().toLowerCase()));
+  return taakSjablonen.filter(sj => !er.has(String(sj.naam || '').trim().toLowerCase()));
+}
+function voorbereidingHtml(p, f) {
+  const vandaag = naarIso(new Date());
+  const lijst = takenVan(p.code, f).slice().sort((a, b) => {
+    const ak = a.voltooid_op ? 1 : 0, bk = b.voltooid_op ? 1 : 0;
+    if (ak !== bk) return ak - bk;
+    const ad = taakDatumIso(a) || '9999', bd = taakDatumIso(b) || '9999';
+    return ad < bd ? -1 : ad > bd ? 1 : 0;
+  });
+  let h = '<div class="middelen voorb"><h3>Voorbereiding' + (f ? ' · ' + esc(f.naam) : '') + '</h3><ul>';
+  for (const t of lijst) {
+    const d = taakDatumIso(t), klaar = !!t.voltooid_op, laat = taakTeLaat(t, vandaag);
+    const wanneer = klaar
+      ? 'gedaan ' + fmtDatum(new Date(t.voltooid_op)) + (t.voltooid_door ? ' door ' + t.voltooid_door : '')
+      : (d ? fmtDatum(vanIso(d)) : 'nog geen datum') + (t.plan_dagen_voor != null ? ' · ' + t.plan_dagen_voor + (Number(t.plan_dagen_voor) === 1 ? ' dag' : ' dagen') + ' vóór start' : ' · vaste datum') + (laat ? ' · te laat' : '');
+    h += '<li data-taak="' + esc(t.crmtaskid) + '" class="' + (klaar ? 'tklaar' : '') + (laat ? ' tlaat' : '') + '"><div class="rij">' +
+      '<input type="checkbox" class="tvink"' + (klaar ? ' checked' : '') + ' title="' + (klaar ? 'Terug naar open' : 'Afvinken') + '">' +
+      '<a class="tnaam" href="./taken.html?taak=' + encodeURIComponent(t.crmtaskid) + '" target="_blank" rel="noopener" title="Open in de Takenapp">' + esc(t.onderwerp || 'taak') + '</a>' +
+      '<button class="knop klein twis" title="Taak verwijderen">✕</button></div>' +
+      '<div class="tsub">' + esc((t.toegewezen_aan || 'niemand') + ' · ' + wanneer) + '</div></li>';
+  }
+  if (!lijst.length) h += '<li style="color:var(--muted)">Nog geen voorbereidingstaken.</li>';
+  h += '</ul>';
+  if (!taakStartIso(p, f)) h += '<div class="thint">Dit project heeft nog geen eigen startdatum. Een taak met dagen vóór start krijgt zijn datum zodra die er is.</div>';
+  const nog = sjablonenNogNiet(p.code, f).length;
+  h += '<div class="rij" style="margin-top:0.5rem"><input type="text" id="tNieuwNaam" placeholder="Nieuwe taak, bv. materiaal bestellen"></div>' +
+    '<div class="rij"><input type="number" id="tNieuwDagen" min="0" max="365" step="1" value="14" title="Kalenderdagen vóór de start. Leeg = taak zonder datum."><span class="tkl">dagen vóór start</span>' +
+    '<select id="tNieuwWie" title="Voor wie">' + taakPersoonOpties(null) + '</select><button class="knop primair klein" id="tNieuw">Toevoegen</button></div>' +
+    '<div class="rij"><button class="knop klein" id="tStandaard"' + (nog ? '' : ' disabled') + ' title="' + (taakSjablonen.length ? (nog ? 'Hangt de taken van het standaardlijstje aan dit project' : 'Alles van het lijstje staat er al') : 'Het lijstje is nog leeg: vul het via Lijstje beheren') + '">Standaardlijstje toevoegen' + (nog ? ' (' + nog + ')' : '') + '</button>' +
+    '<button class="knop klein" id="tBeheer">' + (sjabloonBeheerOpen ? 'Lijstje sluiten' : 'Lijstje beheren') + '</button></div>';
+  if (sjabloonBeheerOpen) {
+    h += '<div class="tbeheer"><ul>';
+    for (const sj of taakSjablonen) {
+      h += '<li data-sj="' + esc(sj.id) + '"><div class="rij"><input type="text" class="sjnaam" value="' + esc(sj.naam) + '">' +
+        '<input type="number" class="sjdagen" min="0" max="365" step="1" value="' + esc(sj.dagen_voor) + '" title="dagen vóór start">' +
+        '<select class="sjwie" title="Voor wie">' + taakPersoonOpties(sj.toegewezen_aan) + '</select><button class="knop klein sjwis" title="Uit het lijstje halen">✕</button></div></li>';
+    }
+    if (!taakSjablonen.length) h += '<li style="color:var(--muted)">Het lijstje is nog leeg.</li>';
+    h += '</ul><div class="rij" style="margin-top:0.4rem"><input type="text" id="sjNieuwNaam" placeholder="Nieuwe regel, bv. steiger regelen">' +
+      '<input type="number" id="sjNieuwDagen" min="0" max="365" step="1" value="14" title="dagen vóór start"><select id="sjNieuwWie" title="Voor wie">' + taakPersoonOpties(null) + '</select>' +
+      '<button class="knop primair klein" id="sjNieuw">Erbij</button></div>' +
+      '<div class="thint">Het lijstje geldt voor alle projecten. Een wijziging hier verandert bestaande taken niet.</div></div>';
+  }
+  return h + '</div>';
+}
+// Een schrijfactie op `taken` of het lijstje die nul rijen raakt is geen succes (rijbeveiliging geeft dan geen fout).
+function eisTaakRij(r, wat) {
+  if (r && r.error) throw r.error;
+  if (!r || !r.data || !r.data.length) throw new Error(wat + ': niets gewijzigd (geen rechten op deze rij?)');
+  return r.data;
+}
+async function naTaakWijziging(fn, melding) {
+  try { await fn(); toonStatus(melding); }
+  catch (e) { toonStatus('Taak opslaan mislukt: ' + (e.message || e), true); }
+  await laadAlles().catch(() => {});
+  hertekenMetScroll();
+}
+function koppelVoorbereiding(el, p, f) {
+  const blok = el.querySelector('.voorb'); if (!blok) return;
+  blok.querySelectorAll('li[data-taak]').forEach(li => {
+    const id = li.dataset.taak;
+    const t = (projTaken[p.code] || []).find(x => x.crmtaskid === id); if (!t) return;
+    li.querySelector('.tvink').addEventListener('change', e => {
+      const aan = e.target.checked;
+      naTaakWijziging(async () => {
+        eisTaakRij(await sb.from('taken').update(aan ? { voltooid_op: new Date().toISOString(), voltooid_door: ikPersoon } : { voltooid_op: null, voltooid_door: null }).eq('crmtaskid', id).select('crmtaskid'), aan ? 'Afvinken' : 'Terugzetten');
+      }, aan ? 'Taak afgevinkt: ' + t.onderwerp : 'Taak weer open: ' + t.onderwerp);
+    });
+    li.querySelector('.twis').addEventListener('click', () => {
+      if (!confirm('Taak "' + t.onderwerp + '" verwijderen? Hij verdwijnt ook uit de Takenapp.')) return;
+      naTaakWijziging(async () => {
+        eisTaakRij(await sb.from('taken').delete().eq('crmtaskid', id).select('crmtaskid'), 'Verwijderen');
+      }, 'Taak verwijderd');
+    });
+  });
+  blok.querySelector('#tNieuw').addEventListener('click', () => {
+    const naam = blok.querySelector('#tNieuwNaam').value.trim();
+    const dagen = taakDagenUit(blok.querySelector('#tNieuwDagen').value);
+    const wie = blok.querySelector('#tNieuwWie').value;
+    if (!naam) { toonStatus('Geef de taak een naam', true); return; }
+    if (Number.isNaN(dagen)) { toonStatus('Dagen vóór start: een heel getal van 0 t/m 365, of leeg', true); return; }
+    naTaakWijziging(async () => {
+      eisTaakRij(await sb.from('taken').insert(nieuweTaakRij(p.code, f, naam, dagen, wie)).select('crmtaskid'), 'Toevoegen');
+    }, 'Taak toegevoegd: ' + naam);
+  });
+  blok.querySelector('#tNieuwNaam').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); blok.querySelector('#tNieuw').click(); } });
+  blok.querySelector('#tStandaard').addEventListener('click', () => {
+    const nog = sjablonenNogNiet(p.code, f);
+    if (!nog.length) { toonStatus(taakSjablonen.length ? 'Alles van het lijstje staat er al' : 'Het standaardlijstje is nog leeg', true); return; }
+    naTaakWijziging(async () => {
+      eisTaakRij(await sb.from('taken').insert(nog.map(sj => nieuweTaakRij(p.code, f, sj.naam, sj.dagen_voor, sj.toegewezen_aan))).select('crmtaskid'), 'Standaardlijstje');
+    }, nog.length + (nog.length === 1 ? ' taak' : ' taken') + ' van het standaardlijstje toegevoegd');
+  });
+  blok.querySelector('#tBeheer').addEventListener('click', () => { sjabloonBeheerOpen = !sjabloonBeheerOpen; tekenPaneel(); });
+  if (!sjabloonBeheerOpen) return;
+  blok.querySelectorAll('li[data-sj]').forEach(li => {
+    const id = li.dataset.sj;
+    const zet = () => {
+      const naam = li.querySelector('.sjnaam').value.trim(), dagen = taakDagenUit(li.querySelector('.sjdagen').value), wie = li.querySelector('.sjwie').value;
+      if (!naam) { toonStatus('Een regel in het lijstje heeft een naam nodig', true); return; }
+      if (dagen === null || Number.isNaN(dagen)) { toonStatus('Dagen vóór start: een heel getal van 0 t/m 365', true); return; }
+      naTaakWijziging(async () => {
+        eisTaakRij(await sb.from('plan_taak_sjablonen').update({ naam, dagen_voor: dagen, toegewezen_aan: wie }).eq('id', id).select('id'), 'Lijstje bijwerken');
+      }, 'Standaardlijstje bijgewerkt');
+    };
+    li.querySelector('.sjnaam').addEventListener('change', zet);
+    li.querySelector('.sjdagen').addEventListener('change', zet);
+    li.querySelector('.sjwie').addEventListener('change', zet);
+    li.querySelector('.sjwis').addEventListener('click', () => {
+      naTaakWijziging(async () => {
+        eisTaakRij(await sb.from('plan_taak_sjablonen').delete().eq('id', id).select('id'), 'Uit het lijstje halen');
+      }, 'Regel uit het standaardlijstje gehaald');
+    });
+  });
+  blok.querySelector('#sjNieuw').addEventListener('click', () => {
+    const naam = blok.querySelector('#sjNieuwNaam').value.trim(), dagen = taakDagenUit(blok.querySelector('#sjNieuwDagen').value), wie = blok.querySelector('#sjNieuwWie').value;
+    if (!naam) { toonStatus('Geef de regel een naam', true); return; }
+    if (dagen === null || Number.isNaN(dagen)) { toonStatus('Dagen vóór start: een heel getal van 0 t/m 365', true); return; }
+    if (taakSjablonen.some(sj => String(sj.naam).trim().toLowerCase() === naam.toLowerCase())) { toonStatus('Die regel staat al in het lijstje', true); return; }
+    const volgorde = taakSjablonen.reduce((a, sj) => Math.max(a, sj.volgorde || 0), 0) + 10;
+    naTaakWijziging(async () => {
+      eisTaakRij(await sb.from('plan_taak_sjablonen').insert({ naam, dagen_voor: dagen, toegewezen_aan: wie, volgorde }).select('id'), 'Aan het lijstje toevoegen');
+    }, 'Regel aan het standaardlijstje toegevoegd');
   });
 }
 
@@ -1645,6 +1877,10 @@ async function schrijfFasen(code, lijst, herkoppel) {
       r = await sb.from(tabel).update({ fase_id: h.naar }).eq('fase_id', h.van);
       if (r && r.error) throw r.error;
     }
+    // v0.28.0: voorbereidingstaken van de fase die verdwijnt gaan mee naar de fase die blijft.
+    // Lukt dat niet, dan zet de database plan_fase_id op leeg (taak valt terug op het project); de fasen worden wel opgeslagen.
+    r = await sb.from('taken').update({ plan_fase_id: h.naar }).eq('plan_fase_id', h.van);
+    if (r && r.error) console.warn('voorbereidingstaken herkoppelen mislukt: ' + r.error.message);
   }
   for (const f of oud) {
     if (blijven.has(f.id)) continue;

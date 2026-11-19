@@ -6901,3 +6901,32 @@ en 9 schermcontroles in jsdom.
 
 **Niet getest.** Het echte plan van VvE Villa Banning; de echte app in
 de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
+
+## Wat er op 19 november 2026 gedaan is: voorbereidingstaken per planningsproject (taken.html v0.28.0, planning.html v0.28.0, SQL taken_29)
+
+**Wat het is.** Een taak in de Takenapp kan aan een project op de planning hangen (materiaal bestellen, steiger of toilet regelen). Hij is dan in beide apps zichtbaar en afvinkbaar. Het is en blijft een gewone taak met bron `eigen`; er is geen aparte takentabel bijgekomen.
+
+**Waar het staat.**
+
+| Onderdeel | Plek |
+|---|---|
+| Koppeling | `taken.plan_code` (Yoobi-projectcode), `taken.plan_fase_id` (naar `plan_fasen.id`, `on delete set null`), `taken.plan_dagen_voor` (0 t/m 365, leeg = vaste datum) |
+| Startdatum van een taak | functie `plan_taak_start(code, fase)`: gekozen fase, anders vroegste fase, anders `plan_projecten.plan_start`, anders Yoobi-start uit de laatste `fin_werkvoorraad` (niet als die in een eerder jaar ligt) |
+| Datum zetten | trigger `taken_plan_zet` op `taken` (before insert/update) |
+| Meeschuiven | functie `plan_taken_herreken(code)`, aangeroepen door `trg_plan_fasen_taken_schuif`, `trg_plan_projecten_taken_schuif` en `trg_fin_werkvoorraad_taken_schuif` |
+| Standaardlijstje | tabel `plan_taak_sjablonen` (rijbeveiliging: lezen met een rol, beheren rol `alles`) |
+| Projectlijst voor de Takenapp | functie `plan_taak_projecten()`, zonder bedragen |
+| SQL-bestand | `claude_taken_29_projecttaken.sql`, live gedraaid op 19-11-2026 via de Supabase-koppeling (`execute_sql`, dus niet in `supabase_migrations`) |
+
+**Regels die de database afdwingt.**
+- Staat er een aantal dagen, dan is de datum van de taak altijd start min dat aantal kalenderdagen. De tijd van de taak blijft; zonder tijd wordt het 17:00.
+- Verschuift de start (balk slepen, fase wijzigen, nieuwe Yoobi-stand), dan schuiven alleen open taken met dagen mee. Afgevinkt en vaste datum blijven staan.
+- Is de start onbekend, dan blijft de datum zoals hij was (of leeg).
+- De melding (`piep_op`) gaat mee en `mail_op`/`push_op` worden gewist als het nieuwe moment in de toekomst ligt.
+- Een fout in het meeschuiven wordt als waarschuwing gelogd en blokkeert het opslaan in de planning of de werkvoorraad-sync niet. Gevolg: blijft een taak onverwacht staan, kijk dan in de Postgres-log naar `plan_taken_schuif_trg`.
+
+**Wat er niet is.**
+- Geen terugschrijven naar Yoobi. Afgevinkte taken blijven in `taken` staan. Het Yoobi-archief is uitgesteld (besluit Gian 18-11-2026: eerst gebruiken, later beslissen); of de Yoobi-API een uitgevoerde taak op een project kan zetten is niet onderzocht.
+- De bestaande taken met bron `steiger` en `onderaannemer` zijn niet aan projecten gekoppeld.
+
+**Bij nood.** Het onderdeel uitzetten zonder gegevens te verliezen: in Supabase Studio de vier triggers uitschakelen (`alter table … disable trigger …` voor `taken_plan_zet` op `taken` en de drie `…_taken_schuif`-triggers). Taken houden dan hun laatste datum en gedragen zich als gewone taken; de apps blijven werken.

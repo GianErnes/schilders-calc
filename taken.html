@@ -293,6 +293,20 @@
   .catchips .d{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
   .catnieuw{display:none;gap:8px;margin-top:8px}
   .catnieuw.zie{display:flex}
+  /* v0.28.0: project uit de planning */
+  .projkeuze{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fbfcfd;font-size:15px;font-weight:700}
+  .projkeuze .nm{flex:1;min-width:0}
+  .projkeuze .sub{display:block;font-size:12px;font-weight:600;color:var(--ink-faint);margin-top:2px}
+  .projkeuze .weg{border:0;background:none;font-size:18px;color:var(--ink-faint);padding:4px 8px;cursor:pointer}
+  .projzoek{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:16px;background:#fff;color:var(--ink)}
+  .projlijst{margin-top:6px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .projlijst:empty{display:none}
+  .projlijst .pr{padding:9px 11px;border-top:1px solid var(--line);cursor:pointer;font-size:14px;font-weight:700}
+  .projlijst .pr:first-child{border-top:0}
+  .projlijst .pr small{display:block;font-weight:600;color:var(--ink-faint);font-size:12px}
+  .projhint{font-size:12px;font-weight:600;color:var(--ink-faint);margin-top:6px;line-height:1.35}
+  .row2 select{width:100%;border:none;background:transparent;font:inherit;font-size:16px;font-weight:650;color:var(--ink);padding:2px 0 0;margin-top:1px}
+  .row2 input:disabled{opacity:.6}
   .catnieuw input{flex:1;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:15px}
   .note:focus{outline:2px solid var(--hero-line);border-color:var(--hero-line)}
   .photo{
@@ -577,6 +591,27 @@
       </div>
     </div>
 
+    <!-- v0.28.0: taak aan een project op de planning hangen -->
+    <div class="fld" id="s_projwrap" style="display:none">
+      <div class="k">Project (planning)</div>
+      <div class="projkeuze" id="s_projlees" style="display:none"></div>
+      <div id="s_projkies">
+        <div class="projkeuze" id="s_projgekozen" style="display:none">
+          <span class="nm" id="s_projnaam"></span>
+          <button type="button" class="weg" id="s_projweg" aria-label="Koppeling met project weghalen">✕</button>
+        </div>
+        <div id="s_projzoekwrap">
+          <input type="search" class="projzoek" id="s_projzoek" placeholder="Zoek project of klant…" autocomplete="off">
+          <div class="projlijst" id="s_projlijst"></div>
+        </div>
+        <div class="row2" id="s_projextra" style="display:none;margin-top:8px">
+          <div class="box" id="s_projfasebox"><div class="kk">Fase</div><select id="s_projfase"></select></div>
+          <div class="box"><div class="kk">Dagen vóór start</div><input type="number" id="s_projdagen" min="0" max="365" step="1" inputmode="numeric" placeholder="vaste datum"></div>
+        </div>
+        <div class="projhint" id="s_projhint"></div>
+      </div>
+    </div>
+
     <div class="fld" id="s_notewrap">
       <div class="k">Notitie</div>
       <textarea class="note" id="s_note" placeholder="Typ hier je aantekeningen, maten, kleurcodes…" oninput="groeiNotitie(this)"></textarea>
@@ -687,7 +722,7 @@
 /* ════════════════════════════════════════════════════════
    Taken — Ernes Schilders
    ════════════════════════════════════════════════════════ */
-const APP_VERSION = 'v0.27.0';
+const APP_VERSION = 'v0.28.0';
 /* v0.20.0: web push. Publieke VAPID-sleutel; de private staat als secret
    VAPID_PRIVATE_KEY in Supabase en komt nergens in de code. */
 const VAPID_PUBLIC_KEY = 'BJbfjpOe8ytIbmj_TMXhAkSMlYxFrkgsJctnz5Cx8eB5r2MDxXILtjESaCc3GBEKOsKPOMIgUYA5hvVD0CWoNuY';
@@ -1088,7 +1123,7 @@ function kaart(t, hero){
   const titel = metKlant ? esc(t.onderwerp) + ' — ' + esc(t.klantnaam) : esc(t.onderwerp);
   /* v0.16.4: de projectnaam uit Yoobi als tweede regel, alleen als de
      sync hem heeft kunnen vullen. Volledige naam, zoals Yoobi hem kent. */
-  const project = (t.bron === 'yoobi' && t.projectnaam) ? esc(t.projectnaam) : '';
+  const project = ((t.bron === 'yoobi' || t.plan_code) && t.projectnaam) ? esc(t.projectnaam) : ''; /* v0.28.0: ook bij een taak aan een planningsproject */
   const meta = pillen(t);
   const bel = (t._rubriek === 'voltooid' || t._rubriek === 'vervallen') ? '' :
     '<span class="bell' + (t.piep ? ' on' : '') + '">' + (t.piep ? '🔔' : '🔕') + '</span>';
@@ -1314,6 +1349,138 @@ async function zetCategorieDirect(naam){
 }
 
 /* Vel: tonen bij een eigen taak, tenzij de categorie uit bron komt. */
+/* ────────────────────────────────────────────────────────
+   v0.28.0: taak aan een project op de planning (SQL taken_29)
+   De projectlijst komt uit de databasefunctie plan_taak_projecten():
+   code, naam, klant, start en fasen, zonder bedragen. De database
+   rekent de datum zelf uit (trigger taken_plan_zet) en schuift open
+   taken mee als de start verschuift; wat hier gerekend wordt is
+   dezelfde som, zodat het vel en de melding meteen kloppen.
+   ──────────────────────────────────────────────────────── */
+let PROJECTEN = [];
+let PROJECTEN_FOUT = '';
+async function laadProjecten(){
+  const { data, error } = await sb.rpc('plan_taak_projecten');
+  if(error) throw error;
+  PROJECTEN = Array.isArray(data) ? data : [];
+  PROJECTEN_FOUT = '';
+}
+function projVan(code){
+  return PROJECTEN.find(p => p.code === code) || null;
+}
+function projStartISO(code, faseId){
+  const p = projVan(code);
+  if(!p) return null;
+  if(faseId){
+    const f = (p.fasen || []).find(x => x.id === faseId);
+    if(f && f.van) return f.van;
+  }
+  return p.start || null;
+}
+function isoMinDagen(iso, n){
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() - n);
+  return lokaalISO(d);
+}
+function isoTekst(iso){
+  const d = new Date(iso + 'T12:00:00');
+  return isNaN(d) ? iso : d.getDate() + ' ' + MND_KORT[d.getMonth()] + ' ' + d.getFullYear();
+}
+/* Wat er in het dagenveld staat: getal 0 t/m 365, null bij leeg,
+   NaN bij iets wat geen geldig aantal is. */
+function projDagenUit(ruw){
+  const r = String(ruw == null ? '' : ruw).trim();
+  if(r === '') return null;
+  if(!/^\d+$/.test(r)) return NaN;
+  const n = parseInt(r, 10);
+  return n > 365 ? NaN : n;
+}
+function projDagen(){
+  return projDagenUit(document.getElementById('s_projdagen').value);
+}
+function projTreffers(zoek, vandaagISO){
+  const q = normaliseer(zoek).trim();
+  if(!q){
+    /* zonder zoekterm: wat het eerst begint */
+    return PROJECTEN.filter(p => p.start && p.start >= vandaagISO)
+      .slice().sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : 0).slice(0, 8);
+  }
+  return PROJECTEN.filter(p => normaliseer((p.naam || '') + ' ' + (p.klant || '') + ' ' + (p.code || '')).indexOf(q) !== -1).slice(0, 8);
+}
+function toonProjTreffers(){
+  const el = document.getElementById('s_projlijst');
+  if(PROJECTEN_FOUT){ el.innerHTML = '<div class="pr">Projectlijst niet geladen<small>' + esc(PROJECTEN_FOUT) + '</small></div>'; return; }
+  const lijst = projTreffers(document.getElementById('s_projzoek').value, lokaalISO(new Date()));
+  el.innerHTML = lijst.map(p =>
+    '<div class="pr" data-code="' + esc(p.code) + '">' + esc(p.naam || p.code) +
+    '<small>' + esc(p.klant || '') + (p.start ? ' · start ' + esc(isoTekst(p.start)) : ' · nog geen start') + '</small></div>').join('');
+}
+/* De som zelf, los van het scherm zodat hij te testen is. */
+function projUitkomst(code, faseId, dagen){
+  if(!code) return { tekst: '', datum: null };
+  if(dagen === null) return { tekst: 'Vaste datum. Vul dagen vóór start in en de taak schuift mee als de start verschuift.', datum: null };
+  if(isNaN(dagen)) return { tekst: 'Dagen vóór start: een heel getal van 0 t/m 365.', datum: null };
+  const start = projStartISO(code, faseId);
+  if(!start) return { tekst: 'Dit project heeft nog geen startdatum. De taak krijgt zijn datum zodra die er is.', datum: null };
+  return { tekst: 'Start ' + isoTekst(start) + '. De taak staat ' + dagen + (dagen === 1 ? ' dag' : ' dagen') + ' eerder en schuift mee als de start verschuift.', datum: isoMinDagen(start, dagen) };
+}
+function projHerreken(){
+  const datumIn = document.getElementById('s_datum_in');
+  const kan = VEL && (VEL.modus === 'nieuw' || VEL.modus === 'eigen');
+  const u = kan ? projUitkomst(VEL.plan_code, VEL.plan_fase_id, projDagen()) : { tekst: '', datum: null };
+  document.getElementById('s_projhint').textContent = u.tekst;
+  if(u.datum) datumIn.value = u.datum;
+  datumIn.disabled = !!u.datum;   /* datum volgt de start: niet met de hand te zetten */
+}
+function toonProjKeuze(){
+  const code = VEL.plan_code;
+  const p = code ? projVan(code) : null;
+  zet('s_projgekozen', !!code);
+  zet('s_projzoekwrap', !code);
+  zet('s_projextra', !!code);
+  if(code){
+    const naam = p ? (p.naam || code) : ((VEL.taak && VEL.taak.projectnaam) || code);
+    document.getElementById('s_projnaam').innerHTML = esc(naam) +
+      '<span class="sub">' + esc(p ? (p.klant || '') : 'staat niet (meer) in de projectlijst') + '</span>';
+    const fasen = p ? (p.fasen || []) : [];
+    const sel = document.getElementById('s_projfase');
+    zet('s_projfasebox', fasen.length > 0);
+    sel.innerHTML = '<option value="">Hele project</option>' +
+      fasen.map(f => '<option value="' + esc(f.id) + '">' + esc(f.naam) + '</option>').join('');
+    /* Is de lijst niet geladen, dan blijft de fase van de taak staan zoals hij was. */
+    if(p){
+      sel.value = fasen.some(f => f.id === VEL.plan_fase_id) ? VEL.plan_fase_id : '';
+      VEL.plan_fase_id = sel.value || null;
+    }
+  } else {
+    document.getElementById('s_projzoek').value = '';
+    document.getElementById('s_projlijst').innerHTML = '';
+  }
+  projHerreken();
+}
+/* Aanroepen NADAT datum en tijd in het vel staan: projHerreken zet de datum. */
+function zetProjVeld(modus, t){
+  const kan = modus === 'nieuw' || modus === 'eigen';
+  const code = (t && t.bron !== 'yoobi' && t.plan_code) || null;
+  VEL.plan_code = code;
+  VEL.plan_fase_id = (code && t.plan_fase_id) || null;
+  document.getElementById('s_datum_in').disabled = false;
+  zet('s_projwrap', kan || (modus === 'klaar' && !!code));
+  zet('s_projlees', !kan);
+  zet('s_projkies', kan);
+  if(!kan){
+    document.getElementById('s_projlees').textContent = code ? ((t && t.projectnaam) || code) : '';
+    return;
+  }
+  document.getElementById('s_projdagen').value = (t && t.plan_dagen_voor != null) ? t.plan_dagen_voor : '';
+  toonProjKeuze();
+}
+/* De drie planvelden voor de rij die naar de database gaat. */
+function projRijVelden(code, faseId, dagen){
+  if(!code) return { plan_code: null, plan_fase_id: null, plan_dagen_voor: null };
+  return { plan_code: code, plan_fase_id: faseId || null, plan_dagen_voor: (dagen === null || isNaN(dagen)) ? null : dagen };
+}
+
 function zetCatVeld(modus, t){
   const vast = t && catVast(t.bron); /* v0.26.3: ook herplan */
   const toon = (modus === 'nieuw' || modus === 'eigen') && !vast;
@@ -1697,6 +1864,7 @@ function openTask(t){
   document.getElementById('s_bewaar').textContent = 'Bewaren';
   zet('s_weg', modus === 'eigen');
 
+  zetProjVeld(modus, t); /* v0.28.0: na datum en tijd, want dit kan de datum zetten */
   toonVel();
 }
 
@@ -1767,6 +1935,7 @@ function openNieuw(){
   document.getElementById('s_bewaar').textContent = 'Toevoegen';
   zet('s_weg', false);
 
+  zetProjVeld('nieuw', null); /* v0.28.0 */
   toonVel();
   setTimeout(() => document.getElementById('s_titelinput').focus(), 350);
 }
@@ -1982,6 +2151,8 @@ async function slaOp(){
   const w = velWaarden();
   if(!w.titel){ toast('Geef de taak eerst een naam'); return; }
   if(VEL.soort === 'herhalend' && !w.ts){ toast('Een herhaler heeft een datum als anker nodig'); return; }
+  /* v0.28.0: een ongeldig aantal dagen niet stil als vaste datum bewaren. */
+  if(VEL.plan_code && isNaN(projDagen())){ toast('Dagen vóór start: een heel getal van 0 t/m 365'); return; }
 
   const knop = document.getElementById('s_bewaar');
   knop.disabled = true;
@@ -2001,6 +2172,9 @@ async function slaOp(){
   /* v0.26.0: categorie alleen meesturen als het veld in beeld stond;
      offerte- en planningstaken halen hem uit bron. */
   if(document.getElementById('s_catwrap').style.display !== 'none') rij.categorie = VEL.categorie || null;
+  /* v0.28.0: project uit de planning. De database rekent de datum na
+     (trigger taken_plan_zet) en houdt hem bij als de start verschuift. */
+  Object.assign(rij, projRijVelden(VEL.plan_code, VEL.plan_fase_id, projDagen()));
 
   /* melding opnieuw scherpstellen als de piep-tijd nog in de toekomst ligt.
      v0.21.0: push_op mee, anders zou de verzendfunctie na een verzette
@@ -2643,6 +2817,8 @@ async function laadTaken(){
   try{
     await haalDagkeuze();
     try{ await laadCategorieen(); }catch(e){ console.warn('categorieën laden:', e); CATEGORIEEN = []; }
+    /* v0.28.0: projectlijst voor het veld Project. Lukt dit niet, dan werkt de rest gewoon door. */
+    try{ await laadProjecten(); }catch(e){ console.warn('projectlijst laden:', e); PROJECTEN = []; PROJECTEN_FOUT = (e && e.message) || String(e); }
     TAKEN = await haalTaken();
     DOCS_TELLING = {};
     const { data: docRijen } = await sb.from('taak_documenten').select('taak_id');
@@ -2926,6 +3102,27 @@ document.getElementById('s_catchips').addEventListener('click', function(ev){
   zetCategorieDirect(VEL.categorie === b.dataset.cat ? null : b.dataset.cat);
 });
 document.getElementById('s_cattoevoeg').addEventListener('click', voegCategorieToe);
+/* v0.28.0: project uit de planning */
+document.getElementById('s_projzoek').addEventListener('input', toonProjTreffers);
+document.getElementById('s_projzoek').addEventListener('focus', toonProjTreffers);
+document.getElementById('s_projlijst').addEventListener('click', function(ev){
+  const r = ev.target.closest('.pr[data-code]'); if(!r || !VEL) return;
+  VEL.plan_code = r.dataset.code;
+  VEL.plan_fase_id = null;
+  toonProjKeuze();
+});
+document.getElementById('s_projweg').addEventListener('click', function(){
+  if(!VEL) return;
+  VEL.plan_code = null; VEL.plan_fase_id = null;
+  document.getElementById('s_projdagen').value = '';
+  toonProjKeuze();
+});
+document.getElementById('s_projfase').addEventListener('change', function(){
+  if(!VEL) return;
+  VEL.plan_fase_id = this.value || null;
+  projHerreken();
+});
+document.getElementById('s_projdagen').addEventListener('input', projHerreken);
 document.getElementById('s_catnaam').addEventListener('keydown', function(ev){
   if(ev.key === 'Enter'){ ev.preventDefault(); voegCategorieToe(); }
 });
