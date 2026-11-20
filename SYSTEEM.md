@@ -6930,3 +6930,30 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 - De bestaande taken met bron `steiger` en `onderaannemer` zijn niet aan projecten gekoppeld.
 
 **Bij nood.** Het onderdeel uitzetten zonder gegevens te verliezen: in Supabase Studio de vier triggers uitschakelen (`alter table … disable trigger …` voor `taken_plan_zet` op `taken` en de drie `…_taken_schuif`-triggers). Taken houden dan hun laatste datum en gedragen zich als gewone taken; de apps blijven werken.
+
+## Wat er op 20 november 2026 gedaan is: opties voor de klant in de offerte (index.html v4.125.0, SQL opties_01)
+
+**Wat het is.** Een offerte kan naast de basis maximaal vier opties bevatten. De basis is de goedkoopste uitvoering. Elke optie heeft één meerprijs: het verschil tussen twee volledig doorgerekende totalen. Ontwerp: memo van 19-11-2026 (automodel). Dit is stap 1; online kiezen door de klant (stap 2) bestaat nog niet.
+
+| Onderdeel | Plek |
+|---|---|
+| Koppeling regel ↔ optie | `calc_regels.optie_id` (text, id uit `offerte_config.opties`) en `calc_regels.alternatief_voor` (uuid van de basisregel, zonder verwijssleutel) |
+| Controle in de database | `calc_regels_alternatief_bij_optie`: een alternatief hoort bij een optie en verwijst niet naar zichzelf |
+| Titel, klanttekst, soort, volgorde | `calculaties.offerte_config.opties` (lijst van `{id, soort: 'vervang' of 'erbij', titel, klanttekst}`) |
+| Vastgelegde keuze | `calculaties.offerte_config.optiesKeuze` (`op`, `door`, `gekozen`, `totaalIncl`, `basisIncl`); leeg = nog geen keuze |
+| Zin onder de opties | `calculaties.offerte_config.optiesSlot` (ontbreekt = standaardzin, lege tekst = geen zin) |
+| Tabel bij een accordeerlink | `offerte_accorderingen.cijfers.opties` (intern, gaat niet naar de klantpagina) |
+| Code | blok "OPTIES IN DE OFFERTE" in `index.html`, alle functies beginnen met `_opt` of `opt` |
+| SQL-bestand | `sql/opties_01_calc_regels.sql`, live gedraaid op 20-11-2026 via de Supabase-koppeling (`apply_migration`) |
+
+**De regel waar alles op rust.** De kolom `calc_regels.actief` is de enige waarheid voor wat meetelt. Een optieregel staat uit tot de optie gekozen is; bij "in plaats van" gaat de basisregel dan uit. Alles wat al op `actief` lette (rekenkern, werkbon, Yoobi-export, planning) rekent daardoor vanzelf met de gekozen uitvoering. De rekenkern `_berekenOfferteCijfers` is niet gewijzigd.
+
+**Uit door een optie is niet vervallen.** `_optRegelUit(regel, calculatie)` zegt of een regel uit staat door het optiemechanisme: een niet-gekozen optieregel, of een basisregel met een gekozen alternatief. Die regels tellen niet in het oorspronkelijke offertebedrag, staan niet doorgestreept op de werkbon en doen niet mee in het onderhoudsplan. Een regel die met de hand is uitgezet gedraagt zich zoals voorheen.
+
+**Als het misgaat.**
+- Een calculatie toont een verkeerd totaal na een keuze: open het blok Opties voor de klant. Staat er "staat half aan", leg de keuze dan opnieuw vast of kies Keuze wissen; dat zet de vinkjes van basisregel en optieregel weer in de pas.
+- Een regel is onzichtbaar in alle totalen: zoek in de calculatie naar het label "optie onbekend". De regel heeft een `optie_id` dat niet meer in `offerte_config.opties` staat. De knop "gewone regel" op die regel maakt de kolommen leeg en zet hem aan.
+- Het onderdeel uitzetten zonder gegevens te verliezen: `update calc_regels set actief = false where optie_id is not null` en `update calc_regels set actief = true where id in (select alternatief_voor from calc_regels where alternatief_voor is not null)` zet elke calculatie terug op de basis. De kolommen laten staan: v4.124.0 en ouder noemt ze niet.
+- Terug naar v4.124.0 kan zonder de database aan te raken. Calculaties met opties tonen dan de optieregels als gewone uitgezette regels.
+
+**Wat er niet is.** Online kiezen op de klantpagina; automatisch wisselen als een optie goedkoper is dan de basis; een waarschuwing als de basisregel wijzigt nadat er een kopie met extra bewerking van is gemaakt. Zie CHANGELOG v4.125.0 onder Bekende beperkingen.

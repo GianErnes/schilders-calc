@@ -1,3 +1,71 @@
+## v4.125.0 — Opties voor de klant: basis met per optie één meerprijs, totaal per samenstelling, keuze vastleggen (2026-11-20)
+
+Gebouwd op v4.124.0, live opgehaald van GitHub op 20-11-2026 bij sessiestart en opnieuw vlak voor het afronden (2.027.323 bytes, beide keren identiek en gelijk aan de projectkopie). Stap 1 uit het ontwerpmemo "Opties in de offerte volgens het automodel" van 19-11-2026. Stap 2 (de klant kiest online) is niet gebouwd.
+
+**Aanleiding**
+- Gian 19-11: klanten vragen bij de opname vaker een alternatieve prijs voor een onderdeel (wanden overschilderen, of na stucwerk door derden voorstrijken en 2x sauzen). Besluit: het automodel. De basis is de goedkoopste uitvoering, de klant kiest er opties bij, elke optie heeft één meerprijs. Gian 20-11: "ik laat het bouwen aan jou over, bouw maar".
+
+**Wat er in de database veranderd is**
+- `sql/opties_01_calc_regels.sql`, live gedraaid op 20-11-2026 via de Supabase-koppeling (`apply_migration`, naam `opties_01_calc_regels`). Twee kolommen op `calc_regels`: `optie_id` (text) en `alternatief_voor` (uuid), beide leeg toegestaan, plus de controle `calc_regels_alternatief_bij_optie`. Nagemeten na het draaien: 828 regels, 0 met een optie.
+- Bewust geen verwijssleutel op `alternatief_voor`. Gelezen in `prullenbak_herstel`: rijen van dezelfde tabel gaan terug op volgorde van verwijderen; met een verwijssleutel kan het terugzetten van een onderdeel mislukken als de optieregel vóór zijn basisregel komt. De app bewaakt de koppeling.
+- Titel, klanttekst, soort en volgorde van een optie staan in `calculaties.offerte_config.opties`, de vastgelegde keuze in `offerte_config.optiesKeuze`, de zin onder de opties in `offerte_config.optiesSlot`. Geen Edge Function gewijzigd.
+
+**Hoe het werkt**
+- Een optie is een gekoppelde regel die in de basis uit staat (kolom `actief`). "In plaats van": een optieregel met `alternatief_voor` = de basisregel, gemaakt met een ander verfsysteem of als kopie van de regel waar je een bewerking aan toevoegt. "Erbij": een bestaande regel die optie wordt. Een optie kan meerdere regels hebben. Maximaal vier opties, per basisregel één alternatief.
+- De rekenkern (`_berekenOfferteCijfers`) is niet gewijzigd. `_optMetStand` zet in het geheugen de vinkjes van een samenstelling om, laat de kern rekenen en zet alles terug. `_optBereken` doet dat voor de basis en alle combinaties (2, 4, 8 of 16). De meerprijs van een optie is het verschil tussen twee zo berekende totalen.
+- De hoeveelheid van een alternatief volgt de basisregel (`_optSyncHoeveelheden`, in het geheugen, zoals de meetstaat-som).
+- Automatische staartposten (gebrek-herstel, deuronderkant, afdekvilt) rekenen per samenstelling mee (`_optSimStaart`): een post verandert alleen als de samenstelling zijn telling verandert en krijgt dan de waarde die `_syncGebrekToeslagen` en `_syncAfdekvilt` zouden geven. Een bestaande post houdt zijn eigen prijs.
+- Meetrijen van een basisregel die door een gekozen optie vervangen is blijven meetellen (`_msTeltMee`): kozijntekeningen, gebrek-stippen en deuronderkanten verdwijnen niet.
+
+**Wat je ziet**
+- Bij elke gewone regel een knop ◇ om een optie te maken. Optieregels hebben een blauwe rand en een label ("OPTIE 1 · in plaats van · niet gekozen"); hun vinkje is niet met de hand om te zetten.
+- Nieuw blok "Opties voor de klant" onder de regels (ook in de sectiebalk): titel en klanttekst per optie, meerprijs excl. en incl. BTW, alle samenstellingen met werkdagen (werkelijk → gefactureerd) en totalen, de zin onder de opties, en het vastleggen van de keuze.
+- Offertedocument (scherm en PDF): het kostenoverzicht toont de basis ("Totaal basisuitvoering …"). Daaronder "Opties" met per optie titel, klanttekst en meerprijs. Bij één of twee opties ook "Totaal per samenstelling". Bij drie of vier alleen de meerprijzen, met de zin dat het exacte totaal bij de keuze wordt bevestigd.
+- Na het vastleggen: het document toont de basis, daaronder "Uw keuze" met de gekozen opties, één gezamenlijke meerprijs en het nieuwe totaal.
+- Knop Controleer: fouten bij opties zijn blokkerend, waarschuwingen staan onder controleer.
+
+**Keuze vastleggen**
+- `optLegVast` schrijft de vinkjes van de betrokken regels (alleen de kolom `actief`), werkt de automatische staartposten bij en bewaart de keuze in `offerte_config.optiesKeuze` (tijdstip, gebruiker, opties, totaal). Werkt ook op een vergrendelde offerte, net als de aan/uit-vinkjes sinds v3.11.0. Mislukt het schrijven van een regel, dan gaat alles terug.
+- Na het vastleggen rekent de app het totaal opnieuw en vergelijkt het met het vooraf berekende bedrag; bij een verschil komt er een melding.
+- Een accordeerlink bewaart voortaan de tabel met alle samenstellingen in de interne kolom `cijfers` (`_optTabelVoorLink`). Bij het vastleggen wordt het bedrag daarmee vergeleken; een verschil staat in de bevestigingsvraag.
+- "Keuze wissen" zet de calculatie terug op de basis.
+
+**Bestaand gedrag dat is aangepast, alleen voor calculaties met opties**
+- Onderhoudsplan: `_ohpProjectRauw`, de schaalfactoren per regel en per stap en de twee invulschermen slaan een regel over die door een optie uit staat. Gemeten in v4.124.0: het plan-pad keek helemaal niet naar aan/uit; een niet-gekozen optie zou voor 100% meetellen. Een met de hand uitgezette regel telt in het plan nog steeds mee, zoals voorheen.
+- "Oorspronkelijk volledig offertebedrag" (`_calcTotalForArchive(c, true)`, `calcOnderdeelTotalenOrigineel`), het blok "Oorspronkelijk / aangepast / vervalt" op het paneel en de calculatieprint, en de doorgestreepte regels op de werkbon van een vergrendelde calculatie: een regel die door een optie uit staat telt niet als vervallen (`_optRegelUit`, `_optHeeftVervallen`).
+- Dupliceren van een calculatie: opties gaan mee (witte lijst `opties`, `optiesSlot`), de koppeling wordt omgezet naar de nieuwe regel-id's, optieregels staan in de kopie uit. De vastgelegde keuze gaat niet mee.
+- Regels kopiëren naar andere onderdelen: optieregels gaan niet mee.
+- Regel verwijderen: een basisregel neemt na een vraag zijn optieregel mee.
+- `_mapRegelToDB` schrijft `optie_id` en `alternatief_voor` alleen bij een regel die bij een optie hoort. Een gewone regel raakt de kolommen nooit.
+
+**Keuzes van Claude, niet vooraf aan Gian voorgelegd**
+- Meerprijs excl. BTW met het bedrag incl. BTW eronder.
+- Het vastleggen van een keuze hoogt de offerteversie niet op; dat doet de volgende accordeerlink.
+- Een optie die goedkoper is dan de basis blokkeert het offertedocument. Automatisch wisselen is niet gebouwd.
+- Na de keuze geen los bedrag per optie op het document, alleen de gezamenlijke meerprijs.
+- Onder de opties staat standaard de zin "Uw digitale akkoord geldt voor de basisuitvoering. Kiest u een of meer opties, laat het ons dan weten; u ontvangt van ons een aangepaste bevestiging." Aanpasbaar per offerte.
+- Opties maken en wijzigen kan alleen in Concept en zolang er geen keuze is vastgelegd.
+
+**Bekende beperkingen**
+- Online akkoord geldt voor de basis, of voor de keuze die Gian heeft vastgelegd. De klantpagina en de Edge Function `offerte-accord` weten niets van opties.
+- Het percentage kleinschaligheidstoeslag is een handmatig ingevulde staartpost; het schuift niet mee als een optie het werk groter maakt.
+- Is een automatische staartpost in de basis afwezig en komt hij pas door een optie, dan gebruikt hij de prijs uit de instellingen van dat moment. Wijzigt die prijs tussen versturen en vastleggen, dan verschilt het bedrag; de vergelijking met de link meldt dat.
+- Wordt een basisregel aangepast nadat er een kopie met extra bewerking van gemaakt is, dan volgt de kopie alleen de hoeveelheid, niet de bewerkingen. Er is geen waarschuwing voor.
+- De bijlage met kozijntekeningen volgt de stand van de calculatie: tekeningen van een niet-gekozen optie "erbij" staan er niet in.
+- Het bijwerken van een bestaande staartpost bij het vastleggen wacht niet op antwoord van de database (bestaande functie `_updateStaartCalcDB`); een mislukte opslag daarvan komt als gewone foutmelding en niet in de controle na het vastleggen.
+
+**Getest**
+- Alle scripts geparsed met acorn: geslaagd. Div-balans 1513/1516 (v4.124.0: 1489/1492, verschil in beide -3), scripttags 6/6, CSS-accolades in balans.
+- 221 geautomatiseerde controles in Node (`test_opties_v4.125.0.js`), met de functies uit het echte bestand en verzonnen testgegevens, alle geslaagd:
+  - Geen neveneffect: zeven varianten van een calculatie zonder opties (alles aan, regel/onderdeel/hoofdgroep uit, vergrendeld, 9% BTW, binnen rayon zonder volle dagen) geven in v4.124.0 en v4.125.0 exact dezelfde uitkomst van de rekenkern, het archieftotaal, het oorspronkelijke bedrag, de gebrek- en deurtelling, het plan-rekenpad en de documentpoort.
+  - Op de cent gelijk: drie opties (twee "in plaats van", één "erbij" met plafond en kozijn met stippen), acht samenstellingen, elk vergeleken met een onafhankelijke berekening door de rekenkern van v4.124.0 op een calculatie waaruit de niet-gekozen regels zijn verwijderd.
+  - Keuze vastleggen en wissen, open en vergrendeld, vier keuzes achter elkaar: het totaal na het vastleggen is gelijk aan het vooraf berekende en aan de onafhankelijke referentie; de gewone bijwerkroutine verandert daarna niets.
+  - Bewaking: optie goedkoper dan de basis, basisregel met de hand uit, oorspronkelijk bedrag, onderhoudsplan, afwijking met de verstuurde link.
+  - Scherm en acties met een nagebootste database: optie maken (drie soorten), regelweergave, dupliceren, basisregel verwijderen, opheffen.
+- Niet getest: de echte browser, het uiterlijk van blok en venster op de iPad, de PDF zelf (alleen de opbouw van de inhoud), de echte database buiten de migratie, een accordeerlink met opties, de schermen van het onderhoudsplan.
+
+---
+
 ## v4.124.0 — Onderhoudsplan: deuronderkant telt de deuren van de beurt, en het veld Eigen aantal toont de uitkomst (2026-11-18)
 
 Gebouwd op v4.123.0, live opgehaald van GitHub op 18-11-2026 bij sessiestart en opnieuw vlak voor het patchen (2.020.526 bytes, beide keren identiek en gelijk aan de projectkopie).

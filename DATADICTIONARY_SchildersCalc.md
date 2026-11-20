@@ -281,6 +281,10 @@ De calculatieregels binnen een onderdeel. Niveau 3 van de boom. Het gekozen verf
 | `volgorde` | integer | nee | 0 |  |
 | `created_at` | timestamp with time zone | ja | now() |  |
 | `actief` | boolean | nee | true |  |
+| `optie_id` | text | ja |  | id in `calculaties.offerte_config.opties` (JSON, geen foreign key) |
+| `alternatief_voor` | uuid | ja |  | `calc_regels.id` (bewust zonder foreign key) |
+
+*Opties (v4.125.0, 20-11-2026):* een regel met `optie_id` hoort bij een optie voor de klant en staat in de basis uit. Met `alternatief_voor` vervangt hij de genoemde basisregel. Controle `calc_regels_alternatief_bij_optie`: een alternatief hoort bij een optie en verwijst niet naar zichzelf. Deze twee kolommen zijn met de hand toegevoegd aan dit document; de tellingen bovenaan zijn niet opnieuw gegenereerd.
 
 #### `calc_regel_stappen`
 
