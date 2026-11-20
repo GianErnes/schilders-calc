@@ -795,6 +795,26 @@
   .calc-regel-wrap.is-inactief .regel-stappen {
     opacity: 0.55;
   }
+  /* v4.127.0 — regel waarvan alle meetrijen uit staan: zelfde beeld als een uitgevinkte regel */
+  .calc-regel-wrap.is-ms-uit .calc-regel input[type="text"],
+  .calc-regel-wrap.is-ms-uit .calc-regel .systeem-naam,
+  .calc-regel-wrap.is-ms-uit .calc-regel .regel-stats {
+    opacity: 0.45;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  .calc-regel-wrap.is-ms-uit .regel-stappen {
+    opacity: 0.55;
+  }
+  .ms-uit-tag {
+    display: inline-block;
+    margin-top: 0.2rem;
+    margin-left: 0.25rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #b45309;
+    white-space: nowrap;
+  }
   /* Sober "verschil-bedragen"-blok onderaan calc-tab */
   .calc-scenario-block {
     margin-top: 0.6rem;
@@ -2502,8 +2522,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.126.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.127.0</h2>
       <div class="intro-body">
+        <p><strong>⊘ Uitgezette meetrijen zie je nu ook in de calculatie (v4.127.0).</strong> Zet je in de Meetstaat een rij uit, dan stond dat tot nu toe nergens in de Calculatie-tab: de regel toonde alleen een lagere hoeveelheid of 0. Voortaan staat op de regel <em>📐 3 metingen · 1 uit</em> met erachter hoeveel er vervalt. Staan alle metingen van een regel uit, dan wordt de regel grijs en doorgestreept met <em>vervalt via meetstaat</em>, net als een uitgevinkte regel. Onder Totaal incl. verschijnt hetzelfde blok als bij uitgezette onderdelen: <em>Oorspronkelijk volledig</em>, <em>Aangepast</em> en <em>Verschil (vervalt)</em>; het oorspronkelijke bedrag rekent met alle meetrijen aan. De calculatie-PDF toont dezelfde drie regels en zet bij de regel wat er via de meetstaat vervalt. Op de werkbon van een vergrendelde calculatie staat een regel waarvan alle metingen uit staan grijs en doorgestreept met zijn oorspronkelijke hoeveelheid; staat een deel uit, dan staat dat deel eronder. In concept en afspraak blijft zo'n regel weg van de werkbon. De prijs verandert niet: uitgezette rijen telden al niet mee. Geen SQL, geen deploy.</p>
         <p><strong>📉 Kleinschaligheidstoeslag automatisch en glijdend (v4.126.0).</strong> In een nieuwe calculatie komt de post <strong>Kleinschaligheidstoeslag</strong> vanzelf bij de staartkosten zodra er uren schilderwerk zijn, en het percentage loopt mee als de uren veranderen. Het springt niet meer in trapjes: elke trede van het normenboek geldt in het midden van zijn urenvak (5 uur 30%, 17,5 uur 25%, 37,5 uur 20%, 75 uur 15%, 125 uur 10%) en daartussen loopt het gelijkmatig, tot 0% bij 175 uur. Een uur werk erbij maakt de offerte zo nooit goedkoper. Vul je zelf een ander percentage in, dan blijft dat staan en toont de app eronder wat hij zelf zou rekenen; met <em>laat meelopen</em> geef je het weer uit handen. Weggehaald blijft weg. Calculaties van vóór 20-11-2026 en bestaande posten veranderen niet vanzelf. Bij opties rekent elke samenstelling met het percentage dat bij zijn eigen uren hoort. Ook hersteld: de losstaande vinkjes bij <em>Doorlopende balkons / galerij</em> en bij het vastleggen van een optiekeuze.</p>
         <p><strong>◇ Opties voor de klant (v4.125.0).</strong> De basis is de goedkoopste uitvoering; de klant kiest er opties bij. Klik in de calculatie bij een regel op <strong>◇</strong> en maak een optie: <em>in plaats van</em> (een ander verfsysteem, of dezelfde regel met een extra bewerking) of <em>erbij</em> (extra werk dat in de basis uit staat). Het nieuwe blok <strong>Opties voor de klant</strong> onder de regels toont per optie één meerprijs en alle samenstellingen, elk door de rekenkern uitgerekend. Op de offerte staat het kostenoverzicht van de basis, daaronder de opties met hun meerprijs en, bij één of twee opties, het totaal per samenstelling. Kiest de klant, dan leg je dat in hetzelfde blok vast; calculatie, werkbon, planning en Yoobi-export rekenen daarna met de gekozen uitvoering. Online zelf kiezen volgt in een volgende versie: een digitaal akkoord geldt nu voor de basis, of voor de keuze die jij hebt vastgelegd. Maximaal vier opties per offerte.</p>
         <p><strong>🚪 Deuronderkant in het onderhoudsplan telt de deuren van de beurt (v4.124.0).</strong> De post <strong>Deuronderkant behandelen</strong> rekende in een beurt met het gemiddelde percentage van alle regels. Drie deuren in twee gevels die volledig meedoen gaven daardoor geen € 105 maar ruim de helft. Nu telt de app per beurt de deuren waarvan de regel meedoet, naar rato van het percentage van die regel; de rekenverantwoording toont "3 van 3 deuren in deze beurt". Beurten zonder deze post rekenen hetzelfde als voorheen; bestaande plannen mét deze post krijgen bij een deelbeurt een ander bedrag. In het bewerkvenster van een beurt heet het veld nu <strong>Eigen aantal deuren</strong> (of dagen, weken), staat de uitkomst in euro's er direct achter en waarschuwt de app als het aantal hoger is dan de calculatie telt.</p>
@@ -4113,7 +4134,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.126.0';
+const APP_VERSION = 'v4.127.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4536,6 +4557,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.127.0', d: '2026-11-20', h: 'Uitgezette meetrijen zichtbaar in de calculatie: op de regel "📐 3 metingen · 1 uit", regel grijs met "vervalt via meetstaat" als alle metingen uit staan, en het blok Oorspronkelijk volledig / Aangepast / Verschil (vervalt) onder het totaal en op de calculatie-PDF; werkbon van een vergrendelde calculatie toont wat via de meetstaat vervalt.' },
   { v: '4.126.0', d: '2026-11-20', h: 'Kleinschaligheidstoeslag komt vanzelf in de calculatie en volgt de uren, glijdend tussen de treden van het normenboek in plaats van in trapjes' },
   { v: '4.125.0', d: '2026-11-20', h: 'Opties voor de klant: de offerte toont de basis met per optie één meerprijs en het totaal per samenstelling; de gekozen optie leg je vast in de calculatie' },
   { v: '4.124.0', d: '2026-11-18', h: 'Onderhoudsplan: de post Deuronderkant behandelen telt per beurt de deuren waarvan de regel meedoet (naar rato van het regelpercentage) in plaats van het gemiddelde percentage van de beurt; bewerkvenster van een beurt: veld Eigen aantal noemt de eenheid, toont de uitkomst in euro en waarschuwt als het aantal hoger is dan de calculatie telt.' },
@@ -8448,6 +8470,55 @@ function _msIsAan(ms, lijst) {
     if (bron && bron.actief === false) return false;
   }
   return true;
+}
+// v4.127.0 — Totaal van één meetrij, los van de actieve calculatie. Zelfde formule als
+// _meetstaatRijTotaal en de inline som in _calcTotalForArchive.
+function _msRijRaw(ms, eenheid) {
+  const hM = (ms.hCm || 0) / 100, bM = (ms.bCm || 0) / 100;
+  const aant = ms.aantal || 0;
+  const factor = ms.factor != null ? ms.factor : 1;
+  let t = 0;
+  if (eenheid === 'stuk') t = aant;
+  else if (eenheid === 'm¹') t = (hM === 0 || bM === 0) ? (hM + bM) * aant : (2 * hM + 2 * bM) * aant;
+  else t = hM * bM * aant;
+  return t * factor;
+}
+// v4.127.0 — Stand van de meetstaat voor één calc-regel: hoeveel rijen, hoeveel daarvan uit,
+// de som van wat aan staat, de som met alles aan (somVol) en het verschil (somUit).
+// Leest alleen; schrijft niets weg en raakt r.hoeveelheid niet aan.
+function _msRegelStand(c, r) {
+  const uit = { n: 0, uit: 0, somAan: 0, somVol: 0, somUit: 0, rijenUit: [], allesUit: false };
+  const lijst = (c && c.meetstaat) || [];
+  if (!r || !lijst.length) return uit;
+  const eenheid = r.systeemEenheid || 'm²';
+  lijst.forEach(ms => {
+    if (ms.calcRegelId !== r.id) return;
+    const t = _msRijRaw(ms, eenheid);
+    uit.n++;
+    uit.somVol += t;
+    if (_msIsAan(ms, lijst)) uit.somAan += t;
+    else { uit.uit++; uit.rijenUit.push({ ms, totaal: t }); }
+  });
+  if (_afrondCent(c)) { uit.somAan = _r2(uit.somAan); uit.somVol = _r2(uit.somVol); }
+  uit.somUit = _r2(uit.somVol - uit.somAan);
+  uit.allesUit = uit.n > 0 && uit.uit === uit.n;
+  return uit;
+}
+// v4.127.0 — Staat er een meetrij uit die de hoeveelheid van een regel verandert? Een
+// optieregel die niet gekozen is telt niet (die is niet "vervallen", zie _optRegelUit).
+function _msHeeftVervallen(c) {
+  const lijst = (c && c.meetstaat) || [];
+  if (!lijst.some(ms => !_msIsAan(ms, lijst))) return false;
+  return ((c && c.hoofdgroepen) || []).some(hg => (hg.onderdelen || []).some(od => (od.regels || []).some(r => {
+    if (r.optieId && _optRegelUit(r, c)) return false;
+    const st = _msRegelStand(c, r);
+    return st.uit > 0 && Math.abs(st.somVol - st.somAan) > 0.00005;
+  })));
+}
+// v4.127.0 — Is er iets vervallen: met de hand uitgezet (hoofdgroep, onderdeel, regel) of
+// via een uitgezette meetrij.
+function _heeftVervallen(c) {
+  return _optHeeftVervallen(c) || _msHeeftVervallen(c);
 }
 // v4.74.1 — Telt een meetregel (kozijntekening) mee in klantdocumenten? Alleen als de
 // calc-regel waar hij aan hangt aan staat, én zijn onderdeel, én zijn hoofdgroep
@@ -15877,8 +15948,13 @@ function printCalc() {
             const rActief = _isActief(r) && odActief; // erfelijk
             const rStyle = rActief ? '' : 'style="opacity:0.5; text-decoration:line-through;"';
             const vervaltLabel = (!_isActief(r) && odActief) ? ' <span style="font-size:7pt; color:#888;">(' + (_optRegelUit(r, c) ? (r.optieId ? 'optie, niet gekozen' : 'vervangen door gekozen optie') : 'vervalt') + ')</span>' : ((r.optieId && odActief) ? ' <span style="font-size:7pt; color:#888;">(gekozen optie)</span>' : '');   // v4.125.0
-            html += `<tr ${rStyle}>
-              <td>${r.naam||'—'}${vervaltLabel}</td>
+            // v4.127.0 — wat via de meetstaat vervalt (alleen bij een regel die zelf aan staat)
+            const _msSt = rActief ? _msRegelStand(c, r) : null;
+            const msLabel = (_msSt && _msSt.uit > 0)
+              ? ' <span style="font-size:7pt; color:#b45309;">(' + (_msSt.allesUit ? 'vervalt via meetstaat: ' : 'via meetstaat vervalt ') + fmt(_msSt.somUit) + ' ' + (r.systeemEenheid || '') + ')</span>'
+              : '';
+            html += `<tr ${(_msSt && _msSt.allesUit) ? 'style="opacity:0.5;"' : rStyle}>
+              <td>${r.naam||'—'}${vervaltLabel}${msLabel}</td>
               <td>${r.systeemNaam || '<em>onbekend</em>'}</td>
               <td class="num right">${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</td>
               <td class="num right">${r.toeslag||0}%</td>
@@ -15956,11 +16032,11 @@ function printCalc() {
       <tr class="grand-row"><td><strong>Totaal incl. BTW</strong></td><td class="num right"><strong>${eur(totaal)}</strong></td></tr>
       ${(() => {
         // v3.11.0 — Oorspronkelijk vs aangepast op PDF
-        const hasInactive = _optHeeftVervallen(c);   // v4.125.0 — uit door een optie telt niet als vervallen
+        const hasInactive = _heeftVervallen(c);   // v4.125.0 — uit door een optie telt niet als vervallen · v4.127.0 — uitgezette meetrij telt wel
         if (!hasInactive) return '';
         let origineel;
         try {
-          const oT = _calcTotalForArchive(c, true);
+          const oT = _calcTotalForArchive(c, 'volledig');
           origineel = (oT && isFinite(oT.totaal)) ? oT.totaal : null;
         } catch(e) { origineel = null; }
         if (origineel == null) return '';
@@ -18653,7 +18729,9 @@ function _werkbonHtml(c) {
   // vergrendeld (gereed/verzonden/geaccepteerd/verloren), dan staan ze er wél op: grijs en
   // doorgestreept met een label, zodat de schilder ziet wat erbij hoorde maar niet doorgaat.
   // De vinkjes zelf blijven werken op een vergrendelde calc (v3.11.0); alleen de weergave wijzigt.
-  const _wbOdRegels = od => _isActief(od) ? (od.regels || []).filter(_isActief) : [];
+  // v4.127.0 — een regel waarvan alle meetrijen uit staan is vervallen via de meetstaat:
+  // in concept/afspraak weg van de bon, bij een vergrendelde calculatie grijs en doorgestreept.
+  const _wbOdRegels = od => _isActief(od) ? (od.regels || []).filter(r => _isActief(r) && (_wbToonVervallen || !_msRegelStand(c, r).allesUit)) : [];
   const _wbToonVervallen = _isCalcLocked(c);
   const _wbVervalTekst = c.status === 'geaccepteerd' ? 'vervallen na akkoord' : 'uitgezet, niet in offerte';
   const _wbVervalLabel = `<span class="wb-verval-label">⊘ ${_wbVervalTekst}</span>`;
@@ -18674,8 +18752,13 @@ function _werkbonHtml(c) {
       if (!_odToon.length) return;
       if (hgAan && !odAan) html += `<div class="wb-vervallen">`;
       html += `<h3>${odAan || !hgAan ? od.naam : `<span class="wb-strike">${od.naam}</span>${_wbVervalLabel}`}</h3>`;
-      _odToon.forEach(r => {
-        const rAan = odAan && _isActief(r);
+      _odToon.forEach(r0 => {
+        // v4.127.0 — stand van de meetstaat voor deze regel
+        const _wbMs = _msRegelStand(c, r0);
+        const _wbMsWeg = odAan && _isActief(r0) && _wbMs.allesUit;
+        const rAan = odAan && _isActief(r0) && !_wbMsWeg;
+        // een via de meetstaat vervallen regel toont zijn oorspronkelijke hoeveelheid (kopie, r0 blijft ongemoeid)
+        const r = _wbMsWeg ? Object.assign({}, r0, { hoeveelheid: _wbMs.somVol }) : r0;
         if (odAan && !rAan) html += `<div class="wb-vervallen">`;
         // Sub-titel: regelnaam — verfsysteemnaam, met hoeveelheid eronder
         const regelLabel = (r.naam && r.naam.trim()) ? r.naam : '—';
@@ -18686,6 +18769,13 @@ function _werkbonHtml(c) {
         html += `<div class="wb-strike" style="font-size:10pt; color:#333; margin-bottom:4pt;">
           <strong>${fmt(r.hoeveelheid||0)} ${r.systeemEenheid||''}</strong>${r.toeslag ? ` · ${r.toeslag}% staat-toeslag` : ''} · <strong>${fmt1(calcRegelTotalen(r).uren * _urenFactor)} u</strong>
         </div>`;
+        // v4.127.0 — een deel van de metingen staat uit: toon wat er niet meer bij hoort
+        if (rAan && _wbToonVervallen && _wbMs.uit > 0 && Math.abs(_wbMs.somUit) > 0.00005) {
+          const _wbOms = [...new Set(_wbMs.rijenUit.map(x => String(x.ms.omschrijving || '').trim()).filter(Boolean))].map(_escapeHtml).join(', ');
+          html += `<div class="wb-vervallen" style="font-size:9pt; margin-bottom:4pt;">
+            <span class="wb-strike">${fmt(_wbMs.somUit)} ${r.systeemEenheid||''}${_wbOms ? ' · ' + _wbOms : ''}</span>${_wbVervalLabel}
+          </div>`;
+        }
         // v3.94.0 — stappen niet meer per regel; recept staat één keer in het opbouw-blok onderaan
         if (rAan && r.stappen && r.stappen.length) _wbSpecRegels.push({ r, hgNaam: hg.naam, odNaam: od.naam });
         // Materiaal-overzicht voor deze regel (kleurzone-niveau)
@@ -22388,6 +22478,7 @@ function renderRegel(hgId, odId, r) {
   if (msSom !== null && r.hoeveelheid !== msSom) {
     r.hoeveelheid = msSom;
   }
+  const msStand = _msRegelStand(data.calc, r);   // v4.127.0 — hoeveel metingen staan uit
   const t = calcRegelTotalen(r);
   // Build stappen-detail block (always visible)
   const stappenHtml = (r.stappen || []).map((st, i) => {
@@ -22465,10 +22556,11 @@ function renderRegel(hgId, odId, r) {
   const hoeveelHtml = (r.alternatiefVoor && _optZoekRegel(data.calc, r.alternatiefVoor))
     ? `<div class="ms-hoeveelheid-display" title="De hoeveelheid volgt de basisregel">${fmt(r.hoeveelheid||0)} <span style="color:var(--muted); font-size:0.7rem; font-weight:400;">${eenheid}</span></div><span class="opt-volgt">volgt basisregel</span>`
     : msSom !== null
-    ? `<div class="ms-hoeveelheid-display" title="Hoeveelheid uit meetstaat — wijzig in Meetstaat-tab">${fmt(msSom)} <span style="color:var(--muted); font-size:0.7rem; font-weight:400;">${eenheid}</span></div><span class="ms-badge" onclick="goToMeetstaat('${r.id}')" title="Open in Meetstaat">📐 ${msAantal} meting${msAantal===1?'':'en'}</span>`
+    ? `<div class="ms-hoeveelheid-display" title="Hoeveelheid uit meetstaat — wijzig in Meetstaat-tab">${fmt(msSom)} <span style="color:var(--muted); font-size:0.7rem; font-weight:400;">${eenheid}</span></div><span class="ms-badge" onclick="goToMeetstaat('${r.id}')" title="${msStand.uit ? msStand.uit + ' van de ' + msAantal + ' metingen ' + (msStand.uit === 1 ? 'staat' : 'staan') + ' uit en ' + (msStand.uit === 1 ? 'telt' : 'tellen') + ' niet mee. Open in Meetstaat' : 'Open in Meetstaat'}">📐 ${msAantal} meting${msAantal===1?'':'en'}${msStand.uit ? ' · ' + msStand.uit + ' uit' : ''}</span>${msStand.uit ? `<span class="ms-uit-tag" title="Uitgezet in de Meetstaat; telt niet mee in de prijs">⊘ ${msStand.allesUit ? 'vervalt via meetstaat' : fmt(msStand.somUit) + ' ' + eenheid + ' vervalt'}</span>` : ''}`
     : `<input type="number" step="0.1" value="${r.hoeveelheid||0}" onchange="updReg('${hgId}','${odId}','${r.id}','hoeveelheid',parseFloat(this.value))"> <span style="color:var(--muted); font-size:0.7rem;">${eenheid}</span>`;
 
   const actiefR = _isActief(r);
+  const msAllesUit = actiefR && msStand.allesUit;   // v4.127.0 — alle metingen uit: regel oogt als uitgevinkt
   // v4.41.0 — Inklapstand. Een regel zonder bewerkingen staat altijd open,
   // anders zou het plus-stap-veld onbereikbaar worden en kun je er nooit meer
   // een bewerking in krijgen.
@@ -22477,7 +22569,7 @@ function renderRegel(hgId, odId, r) {
   const caretHtml = heeftStappen
     ? `<span class="regel-caret" onclick="toggleRegelStappen('${r.id}')" title="${(r.stappen||[]).length} bewerking${(r.stappen||[]).length===1?'':'en'} tonen of verbergen">&#9660;</span>`
     : '';
-  return `<div class="calc-regel-wrap ${actiefR?'':'is-inactief'} ${r.optieId?'is-optie':''} ${stappenOpen?'stappen-open':''}" id="rw_${r.id}">
+  return `<div class="calc-regel-wrap ${actiefR?'':'is-inactief'} ${msAllesUit?'is-ms-uit':''} ${r.optieId?'is-optie':''} ${stappenOpen?'stappen-open':''}" id="rw_${r.id}">
     <div class="calc-regel">
       <div class="regel-kop-naam">${caretHtml}<input value="${r.naam||''}" placeholder="Locatie/omschrijving" onchange="updReg('${hgId}','${odId}','${r.id}','naam',this.value)"></div>
       <div class="systeem-naam">${_optRegelVinkHtml(hgId, odId, r, actiefR)}<strong>${sysNaam}</strong>${_optRegelTagHtml(hgId, odId, r)} <span style="color:var(--muted); font-size:0.7rem;">(${r.systeemOndergrond || '?'})</span> <button class="btn-secondary btn btn-sm" onclick="openWisselSysModal('${hgId}','${odId}','${r.id}')" title="Verfsysteem van deze regel wisselen (naam, hoeveelheid, toeslag en meetstaat blijven)" style="margin-left:0.3rem; padding:0 0.35rem;">🔄</button><button class="btn-secondary btn btn-sm" onclick="openStToepModal('${hgId}','${odId}','${r.id}')" title="Bewerkingen van deze regel (percentages, materialen, verbruik) toepassen op andere regels met hetzelfde verfsysteem in deze calculatie" style="margin-left:0.2rem; padding:0 0.35rem;"><span class="kopieer-ico">⧉</span></button></div>
@@ -25668,11 +25760,11 @@ function renderTotals() {
     <div class="grand"><span class="label">Totaal incl.</span><span class="value">${eur(totaal)}</span></div>`}
     ${(() => {
       // v3.11.0 — Scenario-blok: toon alleen als er iets uitgezet is
-      const hasInactive = _optHeeftVervallen(data.calc);   // v4.125.0 — uit door een optie telt niet als vervallen
+      const hasInactive = _heeftVervallen(data.calc);   // v4.125.0 — uit door een optie telt niet als vervallen · v4.127.0 — uitgezette meetrij telt wel
       if (!hasInactive) return '';
       let origineel;
       try {
-        const origT = _calcTotalForArchive(data.calc, true);
+        const origT = _calcTotalForArchive(data.calc, 'volledig');
         origineel = (origT && isFinite(origT.totaal)) ? origT.totaal : null;
       } catch(e) { origineel = null; }
       if (origineel == null) return '';
@@ -25944,6 +26036,13 @@ function _calcTotalForArchive(c, includeInactief = false) {
   // De rijsom staat inline (zelfde formule als _meetstaatRijTotaal) omdat die
   // helper via _allCalcRegels aan de actieve calc hangt en dit voor élke calc
   // moet werken.
+  // v4.127.0 — includeInactief === 'volledig': ook uitgezette meetrijen tellen mee (het
+  // "oorspronkelijk volledig"-bedrag van het vervallen-blok). De volle hoeveelheid staat
+  // alleen in _hvVol; r.hoeveelheid blijft de som van wat aan staat, want die waarde wordt
+  // door de rest van de app gelezen. includeInactief === true (het bevroren origineel bij
+  // vergrendelen) rekent ongewijzigd, zonder uitgezette meetrijen.
+  const _metMs = includeInactief === 'volledig';
+  const _hvVol = new Map();
   if (c.meetstaat && c.meetstaat.length && c.hoofdgroepen) {
     c.hoofdgroepen.forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => {
       const rijen = c.meetstaat.filter(ms => ms.calcRegelId === r.id);
@@ -25963,6 +26062,7 @@ function _calcTotalForArchive(c, includeInactief = false) {
       }, 0);
       const somAf = _afrondCent(c) ? _r2(som) : som;   // v4.119.0
       if (r.hoeveelheid !== somAf) r.hoeveelheid = somAf;
+      if (_metMs) { const _st = _msRegelStand(c, r); if (_st.uit > 0) _hvVol.set(r.id, _st.somVol); }
     })));
   }
   _optSyncHoeveelheden(c);   // v4.125.0 — alternatief volgt de basisregel
@@ -25976,7 +26076,14 @@ function _calcTotalForArchive(c, includeInactief = false) {
     hg.onderdelen.forEach(od => {
       if (!includeInactief && !_isActief(od)) return;
       od.regels.forEach(r => {
-    if (!r.hoeveelheid || !r.stappen || !r.stappen.length) return;
+    // v4.127.0 — hv = de hoeveelheid waarmee gerekend wordt; alleen in de stand 'volledig'
+    // wijkt die af van r.hoeveelheid (een alternatief volgt ook hier zijn basisregel).
+    let hv = r.hoeveelheid;
+    if (_metMs) {
+      if (_hvVol.has(r.id)) hv = _hvVol.get(r.id);
+      else if (r.alternatiefVoor && _hvVol.has(r.alternatiefVoor)) hv = _hvVol.get(r.alternatiefVoor);
+    }
+    if (!hv || !r.stappen || !r.stappen.length) return;
     if (!includeInactief && !_isActief(r)) return;
     if (includeInactief && _optRegelUit(r, c)) return;   // v4.125.0 — uit door een optie is niet "vervallen"
     let sm = 0, smI = 0, smV = 0;
@@ -25998,13 +26105,13 @@ function _calcTotalForArchive(c, includeInactief = false) {
     const rAfval = (sysArbeid + smV) * (sett.afval || 0) / 100;
     const rArbo = sysArbeid * (sett.arbo || 0) / 100;
     const rVerkoop = (sysArbeid + smV + rKleinMat + rAfval + rArbo) * (1 + (sett.winst || 0) / 100);
-    arbeid += sysArbeid * r.hoeveelheid * tF;
-    if (hgBuiten) arbeidBuiten += sysArbeid * r.hoeveelheid * tF;   // v4.91.0
-    if (hgBinnen) arbeidBinnen += sysArbeid * r.hoeveelheid * tF;   // v4.91.0
-    matInkoop += smI * r.hoeveelheid;
-    matVerkoop += smV * r.hoeveelheid;
-    uren += sysUren * r.hoeveelheid * tF;
-    verkoop += rVerkoop * r.hoeveelheid * tF;
+    arbeid += sysArbeid * hv * tF;
+    if (hgBuiten) arbeidBuiten += sysArbeid * hv * tF;   // v4.91.0
+    if (hgBinnen) arbeidBinnen += sysArbeid * hv * tF;   // v4.91.0
+    matInkoop += smI * hv;
+    matVerkoop += smV * hv;
+    uren += sysUren * hv * tF;
+    verkoop += rVerkoop * hv * tF;
       });
     });
   });

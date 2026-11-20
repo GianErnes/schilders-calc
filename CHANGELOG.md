@@ -1,3 +1,40 @@
+## v4.127.0 — Uitgezette meetrijen zichtbaar in de calculatie, de calculatie-PDF en de werkbon (2026-11-20)
+
+Gebouwd op v4.126.0, live opgehaald van GitHub op 20-11-2026 bij de start van deze bouw en opnieuw vlak voor het afronden (2.112.131 bytes, beide keren identiek en gelijk aan de projectkopie).
+
+**Aanleiding**
+- Gian 20-11, met twee schermfoto's van calculatie Van Duren: "In de meetstaat heb ik twee meetregels uitgezet, dat geeft de app in de rekentabel in de calculatie niet aan, bij het uitzetten van onderdelen staat er netjes wel wat is vervallen."
+- Gelezen in de live index.html v4.126.0 (niet in de browser nagespeeld): het blok Oorspronkelijk volledig / Aangepast / Verschil (vervalt) verscheen alleen via `_optHeeftVervallen`, die naar hoofdgroep, onderdeel en regel kijkt en niet naar meetrijen. `_calcTotalForArchive(c, true)` sloeg uitgezette meetrijen ook in de stand "alles meetellen" over. Op de calc-regel stond alleen "0,00 m¹ 📐 1 meting".
+- Het is een gat uit v4.117.0 (meetrij aan/uit), geen rekenfout: de prijs klopte al.
+- Besluiten Gian 20-11: blok, zichtbaar op de regel én de werkbon; elke uitgezette meetrij telt als vervallen, in elke status, net als bij onderdelen.
+
+**Gebouwd**
+- `_msRijRaw(ms, eenheid)`: totaal van één meetrij, los van de actieve calculatie (zelfde formule als `_meetstaatRijTotaal`).
+- `_msRegelStand(c, r)`: per calc-regel het aantal meetrijen, hoeveel er uit staan, de som van wat aan staat, de som met alles aan en het verschil. Leest alleen.
+- `_msHeeftVervallen(c)` en `_heeftVervallen(c)`: er is iets vervallen als er met de hand iets is uitgezet (zoals voorheen) of als een uitgezette meetrij de hoeveelheid van een regel verandert. Een uitgezette rij zonder maat telt niet. Een optieregel die niet gekozen is telt niet.
+- `_calcTotalForArchive(c, 'volledig')`: nieuwe stand waarin ook uitgezette meetrijen meetellen. De volle hoeveelheid staat alleen in een lokale lijst; `r.hoeveelheid` blijft de som van wat aan staat. Een alternatief (optie) volgt ook hier zijn basisregel.
+- Calculatie-tab, totalenkaart en calculatie-PDF: het vervallen-blok gebruikt `_heeftVervallen` en de stand `'volledig'`.
+- Calculatie-tab, regel: badge "📐 3 metingen · 1 uit" met erachter "⊘ 17,00 m² vervalt"; staan alle metingen uit, dan "⊘ vervalt via meetstaat" en de regel grijs en doorgestreept (klasse `is-ms-uit`, zelfde beeld als `is-inactief`).
+- Calculatie-PDF, regel: "(via meetstaat vervalt 17,00 m²)" of "(vervalt via meetstaat: 66,80 m¹)"; in het tweede geval staat de rij grijs.
+- Werkbon (`_werkbonHtml`, dus ook de PDF naar Craft): een regel waarvan alle metingen uit staan is in concept en afspraak weg van de bon; bij een vergrendelde calculatie staat hij grijs en doorgestreept met zijn oorspronkelijke hoeveelheid, uren en materiaal en het label van v4.87.0. Staat een deel van de metingen uit, dan staat bij een vergrendelde calculatie onder de regel wat vervalt, met de omschrijvingen van die meetrijen.
+
+**Niet gewijzigd (bewust)**
+- De prijs. Uitgezette meetrijen telden sinds v4.117.0 al niet mee.
+- Het bevroren oorspronkelijke bedrag bij vergrendelen (`calculaties.totaal_offerte_origineel`, aanroep `_calcTotalForArchive(c, true)`) rekent zoals voorheen, zonder uitgezette meetrijen. Die waarde wordt weggeschreven en in index.html nergens getoond; wie hem verder leest is niet nagegaan, dus niet aangeraakt.
+- De klantofferte en de meetstaat-bijlage. De bijlage toont een uitgezette rij al doorgestreept met "(vervalt)" sinds v4.117.0.
+- De subtotalen per onderdeel en hoofdgroep op de calculatie-PDF tellen het vervallen deel van een meetstaat niet mee; alleen het blok onderaan doet dat.
+
+**Bekende beperking**
+- "Oorspronkelijk volledig" rekent de staartposten met de waarden van nu. Een kleinschaligheidstoeslag die meeloopt (v4.126.0) of afdekvilt (v4.122.0) zou bij de volle hoeveelheid een ander percentage of aantal hebben. Dat gold al voor uitgezette onderdelen. Het verschil dat het blok toont is daardoor een benadering van wat vervalt, niet een tweede offerte.
+
+**Getest**
+- Poorten op het gepatchte bestand: het inline script parseert in Node; div-tags 1520 open / 1523 dicht tegen 1519 / 1522 in v4.126.0 (één blok erbij, gebalanceerd); script-tags 6 / 6; CSS-accolades 914 / 914.
+- Node-harnas met functies die rechtstreeks uit het gepatchte bestand zijn gesneden, naast dezelfde functies uit v4.126.0; 40 controles, alle goed. Onder meer: zonder uitgezette rijen is het totaal op de cent gelijk aan v4.126.0 en is `'volledig'` gelijk aan het gewone totaal; met twee rijen uit (één regel helemaal, één regel deels) is het gewone totaal gelijk aan v4.126.0, is `'volledig'` gelijk aan het totaal met alles aan, en blijft `r.hoeveelheid` daarna 0 respectievelijk 1; de stand `true` is ongewijzigd; alternatief met basisregel; automatische rij volgt zijn kozijnrij; werkbon in concept en geaccepteerd, met div-balans.
+
+**Niet getest**
+- De weergave op het scherm (badge, grijze regel) en de labels op de calculatie-PDF: alleen geparseerd, niet gerenderd.
+- De echte calculatie Van Duren, de iPad-weergave en de werkbon-PDF naar Craft.
+
 ## v4.126.0 — Kleinschaligheidstoeslag komt vanzelf, volgt de uren en loopt glijdend in plaats van in trapjes (2026-11-20)
 
 Gebouwd op v4.125.0, live opgehaald van GitHub op 20-11-2026 bij de start van deze bouw en opnieuw vlak voor het afronden (2.098.752 bytes, beide keren identiek en gelijk aan de projectkopie).

@@ -6986,6 +6986,28 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 
 **Bijvangst.** Een calculatie die vóór 15-11-2026 is verwijderd heeft in de prullenbak geen `afdekvilt_uit` in haar bewaarde rij, en die kolom is verplicht. Afgeleid, niet uitgeprobeerd: `prullenbak_herstel` mislukt voor zo'n calculatie. Gemeten 20-11-2026: 10 van de 11 calculaties in de prullenbak. Herstel door `afdekvilt_uit` leeg toe te staan of door `prullenbak_herstel` de standaardwaarde te laten invullen.
 
+## Ook op 20 november 2026: uitgezette meetrijen zichtbaar in de calculatie (index.html v4.127.0, geen SQL)
+
+**Wat het is.** Een meetrij die in de Meetstaat uit staat (kolom `meetstaat.actief`, v4.117.0) is nu ook te zien buiten de Meetstaat-tab: op de calc-regel, in het vervallen-blok onder het totaal, op de calculatie-PDF en op de werkbon. De prijs is niet veranderd.
+
+| Onderdeel | Plek |
+|---|---|
+| Stand van de meetstaat per regel | `_msRegelStand(c, r)` in `index.html`: aantal rijen, aantal uit, som aan, som met alles aan, verschil |
+| Is er iets vervallen | `_heeftVervallen(c)` = met de hand uitgezet (`_optHeeftVervallen`) of via een meetrij (`_msHeeftVervallen`) |
+| Bedrag "oorspronkelijk volledig" | `_calcTotalForArchive(c, 'volledig')`: alle hoofdgroepen, onderdelen, regels en meetrijen aan |
+| Bevroren bedrag bij vergrendelen | `_calcTotalForArchive(c, true)` naar `calculaties.totaal_offerte_origineel`: ongewijzigd, zonder uitgezette meetrijen |
+| Regel grijs in de Calculatie-tab | CSS-klasse `is-ms-uit` (alle metingen van de regel uit) |
+| Werkbon | `_werkbonHtml`: regel met alle metingen uit is weg in concept/afspraak en grijs met label bij een vergrendelde calculatie |
+
+**Regels.**
+- `'volledig'` schrijft niets weg en verandert `r.hoeveelheid` niet; die blijft de som van de meetrijen die aan staan.
+- Een uitgezette rij zonder maat en een optieregel die niet gekozen is tellen niet als vervallen.
+- Het blok rekent de staartposten met de waarden van nu; het verschil is een benadering.
+
+**Als het misgaat.**
+- Het blok verschijnt onterecht of met een vreemd bedrag: in de twee aanroepen (totalenkaart en calculatie-PDF) `_heeftVervallen` terugzetten naar `_optHeeftVervallen` en `'volledig'` naar `true`. Dan gedraagt het blok zich weer als in v4.126.0; de rest blijft werken.
+- De werkbon mist een regel in concept: kijk in de Meetstaat of alle rijen van die regel uit staan.
+
 ## Wat er op 20 november 2026 gedaan is: afsluitmail na de laatste geplande dag (planning.html v0.29.0, SQL claude_planning_12, planning-kennisgeving v3.5, planning-kennisgeving-taken v1.6)
 
 **Wat het is.** Een vijfde kennisgeving aan de klant, na afloop van het werk: een bedankje met de vraag ons te beoordelen. Onder de tekst staan twee knoppen, Google en Klantenvertellen. Zoals elke kennisgeving gaat hij pas weg na een klik in de planning, met de tekst in beeld. Besluiten Gian 20-11-2026: taak na de laatste geplande dag, de klant kiest zelf het platform, onderhoudsplan-beurten krijgen hem na elke beurt.
