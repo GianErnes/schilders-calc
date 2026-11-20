@@ -38,7 +38,7 @@ rechtstreeks met Supabase.
 | Taken | `taken.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/taken.html | v0.18.2 |
 | Financieel | `financieel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/financieel.html | v1.1.1 |
 | Oplevering | `oplevering.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/oplevering.html | v0.4.0 (12-10-2026; eerdere rijen staan nog op 14-09) |
-| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.22.0 |
+| Planning | `planning.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/planning.html | v0.29.0 |
 | Personeel | `personeel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/personeel.html | v0.5.0 |
 | Klanten | `klanten.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/klanten.html | v0.4.0 |
 | Klantenkaart | `kaart.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/kaart.html | v0.1.0 (15-10-2026) |
@@ -544,7 +544,7 @@ Allemaal in `schilders-calc`, allemaal actief. (Negen tot 3 oktober 2026; de tie
 | `offerte-wachtrij-5min` | elke 5 minuten | | | `offerte-wachtrij` | verstuurt ingeplande offertes (uitgesteld verzenden, v4.110.0). Sleutel uit `vault.aftap_secret`, header `x-aftap-key`. Bijgekomen 6 november 2026 |
 | `werkvoorraad-sync-wekelijks` | dinsdag 06:00 | 08:00 | 07:00 | `fin-werkvoorraad-sync` | haalt de werkvoorraad uit Yoobi. Enige job via `extensions.http`; sinds 27 september 2026 met 60 s wachttijd (`CURLOPT_TIMEOUT_MS`), zie de sectie van die datum |
 | `maandbericht-maandelijks` | de 7e, 07:00 | 09:00 | 08:00 | `maandbericht` | stelt het maandbericht op |
-| `planning-kennisgeving-taken-dagelijks` | 06:35 | 08:35 | 07:35 | `planning-kennisgeving-taken` | zet per kennisgevingssignaal uit de planning een taak bij Maud in de taken-app en sluit taken waarvan het signaal weg is. Bijgekomen 3 oktober 2026 als `…-werkdagen` (ma–vr), sinds 4 oktober dagelijks |
+| `planning-kennisgeving-taken-dagelijks` | 06:35 | 08:35 | 07:35 | `planning-kennisgeving-taken` | zet per kennisgevingssignaal uit de planning een taak bij Maud in de taken-app en sluit taken waarvan het signaal weg is. Bijgekomen 3 oktober 2026 als `…-werkdagen` (ma–vr), sinds 4 oktober dagelijks. Sinds 20 november 2026 (v1.6) ook de taak *Afsluitmail sturen* bij Gian, de werkdag na de laatste geplande dag van een project |
 | `prullenbak-opruimen` | maandag 03:15 | 05:15 | 04:15 | de SQL-functie `prullenbak_opruimen(90)`, geen Edge Function | gooit kopieën in de tabel `prullenbak` weg die ouder zijn dan 90 dagen. Bijgekomen 19 oktober 2026 |
 
 **Twee dingen om te weten.**
@@ -6985,3 +6985,40 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 - Terug naar de trapjes: in `_ksPct` de regel `return _normPctKleineObj(u)` als eerste regel zetten. De rest blijft werken.
 
 **Bijvangst.** Een calculatie die vóór 15-11-2026 is verwijderd heeft in de prullenbak geen `afdekvilt_uit` in haar bewaarde rij, en die kolom is verplicht. Afgeleid, niet uitgeprobeerd: `prullenbak_herstel` mislukt voor zo'n calculatie. Gemeten 20-11-2026: 10 van de 11 calculaties in de prullenbak. Herstel door `afdekvilt_uit` leeg toe te staan of door `prullenbak_herstel` de standaardwaarde te laten invullen.
+
+## Wat er op 20 november 2026 gedaan is: afsluitmail na de laatste geplande dag (planning.html v0.29.0, SQL claude_planning_12, planning-kennisgeving v3.5, planning-kennisgeving-taken v1.6)
+
+**Wat het is.** Een vijfde kennisgeving aan de klant, na afloop van het werk: een bedankje met de vraag ons te beoordelen. Onder de tekst staan twee knoppen, Google en Klantenvertellen. Zoals elke kennisgeving gaat hij pas weg na een klik in de planning, met de tekst in beeld. Besluiten Gian 20-11-2026: taak na de laatste geplande dag, de klant kiest zelf het platform, onderhoudsplan-beurten krijgen hem na elke beurt.
+
+**Waar het staat.**
+
+| Onderdeel | Plek |
+|---|---|
+| Soort | `plan_kennisgevingen.soort = 'afsluiting'` (check verruimd in `claude_planning_12_afsluiting.sql`, live gedraaid op 20-11-2026 via de Supabase-koppeling met `execute_sql`, dus niet in `supabase_migrations`) |
+| Vorm van de rij | altijd zonder `fase_id` en zonder `bevestig_token`; `start_bij_verzending` = de laatste geplande dag; `periode_tekst` = "laatste dag <datum>" |
+| Signaalregel op het bord | `planning.html`, `kennisStatus` (rij `afsluiting`), met `laatsteUrenDag`, `werkdagNa`, `AFSLUIT_VANAF` |
+| Dezelfde regel voor de taken | Edge Function `planning-kennisgeving-taken` v1.6 (versie 12, Verify JWT uit), blok "v1.6: afsluitmail" in `gewensteTaken` |
+| De mail en de knoppen | Edge Function `planning-kennisgeving` v3.5 (versie 18, Verify JWT aan), `beoordeelBlokHtml` en `beoordeelBlokTekst` |
+| De twee links | constanten `REVIEW_GOOGLE` en `REVIEW_KLANTENVERTELLEN` bovenin `planning-kennisgeving` |
+| Tests | `bord_test.mjs` (repo), `taken_test.mjs` en `mail_test.mjs` (bij de functies in `ernes-edge-functions`) |
+
+**Regels.**
+- Laatste geplande dag = de laatste dag met ingeplande uren in `plan_uren` (uren > 0). Het einde van de balk telt niet. Zonder uren komt er geen signaal.
+- Signaal en taak op de eerste werkdag (ma–vr) na die dag, alleen als die dag op of na 23-11-2026 ligt (`AFSLUIT_VANAF`, in planning.html én in de functie) en er nog geen afsluitrij is (verstuurd of overgeslagen).
+- Eén per project. Bij fasen staat de regel op de laatste fase.
+- Komen er uren bij, dan verdwijnen signaal en taak en komen ze terug na de nieuwe laatste dag.
+- Geen bevestigingsknop, dus geen nabellen en geen correctie. Een bounce geeft wel een taak (`bounce-afsluiting:<code>`, bij Maud).
+- De taak *Afsluitmail sturen* (`kennis-afsluiting:<code>`) staat bij Gian (`TOEGEWEZEN_AFSLUITING` in de functie). De andere planningstaken blijven bij Maud.
+
+**Wat er niet is.**
+- Geen automatische verzending en geen meting van wie er werkelijk een beoordeling schreef.
+- Een project dat in Yoobi gesloten is, verdwijnt bij de werkvoorraad-sync van dinsdag 06:00 UTC uit de stand. De open afsluittaak sluit dan vanzelf en de mail kan niet meer vanuit de planning. Volgorde dus: eerst de afsluitmail, dan sluiten in Yoobi.
+- Het ontwerp van 20-09-2026 (taak met bron `review`, WhatsApp-knop in de Takenapp) is nooit gebouwd en is hiermee vervangen.
+
+**Ook gewijzigd.** `planning-kennisgeving-taken` haalt `plan_uren` nu op in stukken van 1000 rijen (`restAlles`). Eén verzoek gaf boven die grens (aanname: standaard van de Supabase-API) de nieuwste rijen niet meer terug. Gemeten 20-11-2026: 699 rijen. Het verslag van de ronde noemt `uren_rijen`; wijkt dat af van `select count(*) from plan_uren where uren > 0`, dan klopt het ophalen niet.
+
+**Als het misgaat.**
+- Een link wijzigen (nieuw Google-profiel, ander platform): de constante bovenin `planning-kennisgeving` aanpassen en de functie opnieuw uitrollen met Verify JWT aan. De app hoeft niet mee.
+- De afsluittaken stoppen zonder de rest te raken: `AFSLUIT_VANAF` in `planning-kennisgeving-taken` op een datum ver in de toekomst zetten en uitrollen met Verify JWT uit. Open afsluittaken sluiten dan bij de volgende ronde. Het bord toont het signaal nog tot dezelfde constante in planning.html is aangepast.
+- De taak komt niet: draai de ronde droog (`?droog=1`, zelfde aanroep als de cronjob) en kijk in `nieuw`. Controleer of het project in de laatste `fin_werkvoorraad` staat, niet verborgen is, en of de laatste dag met uren op of na 23-11-2026 ligt.
+- Mail verstuurd maar de knoppen ontbreken: dan draait er een versie van `planning-kennisgeving` van vóór v3.5. Een verzoek met een onbestaande soort geeft bij v3.5 de fout "soort moet opdracht, maand, week, dag of afsluiting zijn".
