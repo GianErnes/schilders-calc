@@ -1,3 +1,60 @@
+## v4.126.0 — Kleinschaligheidstoeslag komt vanzelf, volgt de uren en loopt glijdend in plaats van in trapjes (2026-11-20)
+
+Gebouwd op v4.125.0, live opgehaald van GitHub op 20-11-2026 bij de start van deze bouw en opnieuw vlak voor het afronden (2.098.752 bytes, beide keren identiek en gelijk aan de projectkopie).
+
+**Aanleiding**
+- Gian 20-11, tijdens het testen van de opties: "iedere keer opnieuw zet ik de kleinschaligheidstoeslag met het geadviseerde percentage. Kun je het ook automatisch en aanpasbaar maken?" Daarna: "kun je een voorstel maken om de trapjes geleidelijker te maken?"
+- Besluiten Gian 20-11: de post komt vanzelf en weghalen blijft weg (zoals afdekvilt); bij opties loopt het percentage mee per samenstelling; de staffel blijft vast in de code; de lijn is glijdend en gemiddeld gelijk aan het normenboek; de toeslag loopt uit tot 175 uur.
+
+**De glijdende lijn**
+- Elke trede van het normenboek (`NORM_KLEIN_OBJ`, ongewijzigd) geldt in het midden van zijn urenvak: 5 uur 30%, 17,5 uur 25%, 37,5 uur 20%, 75 uur 15%, 125 uur 10%. Daartussen loopt het percentage in een rechte lijn. Tot 5 uur blijft het 30%. Na 125 uur loopt het af tot 0% bij 175 uur. `_ksAnkers` leidt de punten af uit de tabel, `_ksPct` geeft het percentage op twee decimalen.
+- Grondslag: de uren schilderwerk van de regels die aan staan (`calcProjectTotalen().uren`), zonder uren uit staartposten. Dat is dezelfde grondslag als het richtwaardeblok al gebruikte; de toeslag beïnvloedt zichzelf daardoor niet.
+- Dit wijkt af van het normenboek en van de regel "vanaf 150 uur is hij 0": tussen 125 en 150 uur is de toeslag lager dan voorheen, tussen 150 en 175 uur hoger.
+
+**De automatische post**
+- Zelfde patroon als het afdekvilt (v4.122.0): een gewone staartpost van het type percent, met een label in `staart.gebrek_type`. `kleinschalig` = de app houdt het percentage bij, `kleinschalig_hand` = eigen percentage. De rekenkern is niet gewijzigd.
+- `_syncKleinschalig` loopt na elke herberekening (`_ksPlan` in `renderTotals`). Een post met het label `kleinschalig` krijgt het percentage van de lijn. Hij wordt nooit vanzelf verwijderd, ook niet bij 0%: zo blijft hij volgen als de uren weer zakken.
+- In een calculatie die op of na 20-11-2026 is aangemaakt (`KS_AUTO_VANAF`) komt de post vanzelf zodra er uren zijn, uit de template "Kleinschaligheidstoeslag" in de staartbibliotheek (gemeten 20-11: percent, 0%, grondslag arbeid, in prijs verwerkt, telt mee in werkdagen).
+- Haal je de post weg, dan blijft hij weg (`calculaties.kleinschalig_uit`). Terugzetten: de post opnieuw uit de bibliotheek kiezen.
+- Vul je zelf een ander percentage in, dan wordt het een eigen percentage; de staartlijst toont eronder wat de app zou rekenen, met de knop "laat meelopen". Zet je het percentage gelijk aan de lijn, dan loopt het weer mee.
+- Een vergrendelde offerte blijft onaangeroerd.
+- Het richtwaardeblok toont het percentage dat de app rekent, de trede van het normenboek ernaast, en de punten van de lijn.
+
+**Bestaande calculaties veranderen niet vanzelf (keuze Claude)**
+- Gemeten 20-11 in de database: 94 posten "Kleinschaligheidstoeslag", alle zonder label, percentages van 10 tot 50; 14 calculaties in concept of afspraak, waarvan 11 zonder de post.
+- Een bestaande post zonder label blijft staan zoals hij is en geldt als eigen percentage, tot je op "laat meelopen" klikt. Vooraf was afgesproken dat een post die gelijk staat aan de staffel vanzelf zou gaan meelopen; met de glijdende lijn zou dat de prijs van een open concept stil veranderen (20% wordt bijvoorbeeld 20,53%), dus dat is een knop geworden.
+- In een calculatie van vóór 20-11-2026 komt de post niet vanzelf. Kies je hem daar uit de bibliotheek (de template staat op 0%), dan vult de app het percentage en houdt het bij.
+
+**Opties (v4.125.0)**
+- Elke samenstelling rekent met het percentage dat bij zijn eigen uren hoort (`_optStaartDoelen`, `_optSimStaart`). Bij het vastleggen van een keuze wordt het percentage meegeschreven, ook op een vergrendelde offerte (`_optSchrijfStaart` vergelijkt nu ook het bedrag van een post, niet alleen de hoeveelheid).
+- Geldt alleen voor een post met het label `kleinschalig`. Met een eigen percentage rekent elke samenstelling met dat ene percentage, zoals in v4.125.0.
+
+**Hersteld**
+- De vinkjes bij "Doorlopende balkons / galerij" (richtwaardeblok klimtijd) en bij het vastleggen van een optiekeuze stonden los in het midden. Oorzaak: de algemene regel `input { width: 100% }` gold ook voor vinkjes. Opgelost met een gerichte regel voor `#normRefs`, `#optiesBlokBody` en `#optModal`. Bij de galerij was dit ouder dan v4.125.0.
+
+**Database**
+- `sql/kleinschalig_01_uit.sql`, live gedraaid op 20-11-2026 via de Supabase-koppeling (`apply_migration`, naam `kleinschalig_01_uit`): kolom `calculaties.kleinschalig_uit` (boolean, standaard false, leeg toegestaan). Nagemeten: 136 calculaties, geen enkele op true.
+- Zonder de kolom werkt v4.126.0 ook, behalve dat de post dan niet vanzelf in een nieuwe calculatie komt.
+
+**Bekende beperkingen**
+- Het onderhoudsplan rekent een beurt met het percentage van de hele calculatie, niet met het percentage dat bij de uren van die beurt hoort.
+- "Gemiddeld gelijk aan het normenboek" klopt als de klussen gelijk over elk urenvak verdeeld zijn. Dat is niet gemeten aan de echte calculaties.
+- De post komt vanzelf in calculaties die op 20-11-2026 vóór deze versie zijn aangemaakt en nog geen post hebben (gemeten: 2 calculaties in concept van die dag). Dat gebeurt bij het openen, met een melding.
+- Een post met 0% die je zichtbaar maakt op de offerte zou als regel van 0 euro verschijnen. De template is in de prijs verwerkt, dus standaard speelt dit niet.
+
+**Bijvangst, niet opgelost**
+- Gemeten 20-11: van de 11 calculaties in de prullenbak hebben er 10 geen sleutel `afdekvilt_uit` in hun bewaarde rij. `prullenbak_herstel` vult dan leeg in, en `calculaties.afdekvilt_uit` is een verplichte kolom. Afgeleid, niet uitgeprobeerd: het terugzetten van die 10 calculaties mislukt. De nieuwe kolom `kleinschalig_uit` is daarom leeg toegestaan.
+
+**Getest**
+- Alle scripts geparsed met acorn: geslaagd. Div-balans 1519/1522 (v4.125.0: 1513/1516, verschil in beide -3), scripttags 6/6, CSS-accolades in balans.
+- 287 geautomatiseerde controles in Node (`test_opties_v4.126.0.js`), alle geslaagd. De 221 van v4.125.0 draaien nu met v4.125.0 als vergelijking en v4.126.0 als nieuw; daarbij 66 nieuwe:
+  - De lijn: 19 punten nagerekend, de ankerpunten, en van 0 tot 200 uur in stappen van 0,1 uur stijgt werk plus toeslag altijd (kleinste stijging 0,65 uur per uur werk).
+  - De post: vanzelf toegevoegd, tweede ronde verandert niets, volgt de uren, eigen percentage blijft staan, laat meelopen, boven 175 uur 0% en weer terug, weggehaald blijft weg, oude calculatie krijgt niets vanzelf, uit de bibliotheek gekozen gaat meelopen, bestaande post zonder label ongemoeid, vergrendeld ongemoeid.
+  - Opties: acht samenstellingen, open en vergrendeld, elk op de cent gelijk aan een onafhankelijke berekening met het percentage van de eigen uren; vastleggen schrijft het percentage en het totaal klopt.
+- Niet getest: de echte browser, het uiterlijk van de vinkjes na de opmaakregel, de echte database buiten de migratie.
+
+---
+
 ## v4.125.0 — Opties voor de klant: basis met per optie één meerprijs, totaal per samenstelling, keuze vastleggen (2026-11-20)
 
 Gebouwd op v4.124.0, live opgehaald van GitHub op 20-11-2026 bij sessiestart en opnieuw vlak voor het afronden (2.027.323 bytes, beide keren identiek en gelijk aan de projectkopie). Stap 1 uit het ontwerpmemo "Opties in de offerte volgens het automodel" van 19-11-2026. Stap 2 (de klant kiest online) is niet gebouwd.

@@ -205,6 +205,8 @@ De projectheader. Dit is de spil van de hele database. Bevat de status, de bevro
 
 *Hieraan gekoppeld:* `calculatie_documenten.calculatie_id`, `calculatie_fotos.calculatie_id`, `hoofdgroepen.calculatie_id`, `meetstaat.calculatie_id`, `offerte_accorderingen.calculatie_id`, `onderhoudsplannen.calculatie_id`, `staart.calculatie_id`, `todos.calculatie_id`.
 
+*Met de hand toegevoegd op 20-11-2026 (gemeten in de database):* `afdekvilt_uit` (v4.122.0) en `kleinschalig_uit` (v4.126.0): true = de automatische staartpost is in deze calculatie weggehaald en komt niet vanzelf terug. De tellingen bovenaan dit document zijn niet opnieuw gegenereerd.
+
 | Kolom | Type | Leeg toegestaan | Default | Verwijst naar |
 |---|---|---|---|---|
 | `id` | uuid | nee | gen_random_uuid() | PK |
@@ -223,6 +225,8 @@ De projectheader. Dit is de spil van de hele database. Bevat de status, de bevro
 | `opname_datum` | date | ja |  |  |
 | `deadline_datum` | date | ja |  |  |
 | `totaal_offerte_origineel` | numeric | ja |  |  |
+| `afdekvilt_uit` | boolean | nee | false |  |
+| `kleinschalig_uit` | boolean | ja | false |  |
 | `postcode` | text | ja |  |  |
 | `huisnummer` | text | ja |  |  |
 | `offerte_config` | jsonb | nee | '{}'::jsonb |  |
@@ -347,7 +351,7 @@ Staartkosten gekoppeld aan één calculatie. Meestal een kopie uit staart_lib, s
 | `hoeveelheid` | numeric | ja | 0 |  |
 | `verstop_in_eenheidsprijs` | boolean | nee | false |  |
 | `telt_in_werkdagen` | boolean | ja | false |  |
-| `gebrek_type` | text | ja |  |  |
+| `gebrek_type` | text | ja |  | label van een automatische post: een gebrektype, `deur_onderkant`, `afdekvilt`, `afdekvilt_hand`, `kleinschalig` of `kleinschalig_hand` |
 
 #### `calculatie_fotos`
 

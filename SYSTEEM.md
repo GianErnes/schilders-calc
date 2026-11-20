@@ -6957,3 +6957,31 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 - Terug naar v4.124.0 kan zonder de database aan te raken. Calculaties met opties tonen dan de optieregels als gewone uitgezette regels.
 
 **Wat er niet is.** Online kiezen op de klantpagina; automatisch wisselen als een optie goedkoper is dan de basis; een waarschuwing als de basisregel wijzigt nadat er een kopie met extra bewerking van is gemaakt. Zie CHANGELOG v4.125.0 onder Bekende beperkingen.
+
+## Ook op 20 november 2026: kleinschaligheidstoeslag automatisch en glijdend (index.html v4.126.0, SQL kleinschalig_01)
+
+**Wat het is.** De staartpost Kleinschaligheidstoeslag komt vanzelf in een nieuwe calculatie en het percentage volgt de uren schilderwerk. Het percentage springt niet meer in trapjes maar loopt in een rechte lijn tussen de treden van het normenboek: 5 uur 30%, 17,5 uur 25%, 37,5 uur 20%, 75 uur 15%, 125 uur 10%, 175 uur 0%. Dit is een eigen keuze van Gian en wijkt af van het normenboek.
+
+| Onderdeel | Plek |
+|---|---|
+| Tabel van het normenboek | `NORM_KLEIN_OBJ` in `index.html` (ongewijzigd); de lijn wordt eruit afgeleid door `_ksAnkers` |
+| Percentage bij een aantal uren | `_ksPct(uren)`, twee decimalen |
+| Label op de post | `staart.gebrek_type`: `kleinschalig` (app houdt bij) of `kleinschalig_hand` (eigen percentage); leeg = post van vóór v4.126.0 |
+| Weggehaald in deze calculatie | `calculaties.kleinschalig_uit` (boolean, leeg toegestaan) |
+| Vanaf welke calculaties vanzelf | constante `KS_AUTO_VANAF` = 2026-11-20, vergeleken met `calculaties.aangemaakt` |
+| Template | rij "Kleinschaligheidstoeslag" in `staart_lib` (type percent). Zonder die rij komt de post niet vanzelf |
+| Bijwerken | `_syncKleinschalig`, gestart door `_ksPlan` in `renderTotals` |
+| SQL-bestand | `sql/kleinschalig_01_uit.sql`, live gedraaid op 20-11-2026 via de Supabase-koppeling (`apply_migration`) |
+
+**Regels.**
+- De app verandert alleen een post met het label `kleinschalig`, en alleen in een calculatie die niet vergrendeld is.
+- Een post zonder label of met `kleinschalig_hand` blijft staan. De knop "laat meelopen" in de staartlijst zet het label op `kleinschalig`.
+- De post wordt nooit vanzelf verwijderd; boven 175 uur staat hij op 0%.
+- Bij opties (v4.125.0) rekent elke samenstelling met het percentage van zijn eigen uren.
+
+**Als het misgaat.**
+- De post komt niet vanzelf: kijk of de template "Kleinschaligheidstoeslag" (type percent) nog in de staartbibliotheek staat, of de calculatie van vóór 20-11-2026 is, en of `calculaties.kleinschalig_uit` op true staat.
+- Het onderdeel uitzetten zonder gegevens te verliezen: `update staart set gebrek_type = 'kleinschalig_hand' where gebrek_type = 'kleinschalig'` bevriest elk percentage op de waarde van dat moment. Voor nieuwe calculaties de template in de staartbibliotheek hernoemen, dan komt de post niet meer vanzelf.
+- Terug naar de trapjes: in `_ksPct` de regel `return _normPctKleineObj(u)` als eerste regel zetten. De rest blijft werken.
+
+**Bijvangst.** Een calculatie die vóór 15-11-2026 is verwijderd heeft in de prullenbak geen `afdekvilt_uit` in haar bewaarde rij, en die kolom is verplicht. Afgeleid, niet uitgeprobeerd: `prullenbak_herstel` mislukt voor zo'n calculatie. Gemeten 20-11-2026: 10 van de 11 calculaties in de prullenbak. Herstel door `afdekvilt_uit` leeg toe te staan of door `prullenbak_herstel` de standaardwaarde te laten invullen.
