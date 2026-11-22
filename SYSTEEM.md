@@ -7186,3 +7186,18 @@ De naam op het scherm komt uit `_optSoortLabel(optie)`.
 - Terug naar v4.128.1 kan zonder de database aan te raken. Een post bij een niet-gekozen optie bestaat daar niet (de meerprijs is dan zonder de post). Een echte post van een vastgelegde keuze is daar een gewone staartpost; let op dat Keuze wissen hem in v4.128.1 niet weghaalt. Wis daarom eerst de keuze in v4.129.0, of haal de post na het wissen met de hand weg.
 
 **Wat er niet is.** Een post per dag, per week of als percentage bij een optie (besluit Gian 22-11-2026); de post apart zichtbaar op de offerte; online kiezen op de klantpagina.
+
+## Ook op 22 november 2026: de optieregel oogt niet meer als vervallen (index.html v4.129.1, geen SQL)
+
+**Wat het is.** Alleen weergave. Een niet-gekozen optieregel stond sinds v4.125.0 grijs en doorgestreept en leek daardoor niet te bewerken; dat was hij wel. Nu: een dunne rode lijn om elke optie (regel, onderdeel of hoofdgroep), niet grijs, niet doorgestreept, een uitlegzin boven de bewerkingen, en bij de soort Extra bewerking de labels "extra" en "anders dan basis" achter de bewerkingen die afwijken van de basisregel.
+
+| Onderdeel | Plek |
+|---|---|
+| Rode lijn en niet grijs | opmaak `.calc-regel-wrap.is-optie`, `.hoofdgroep.is-keuze`, `.onderdeel.is-keuze` in `index.html` |
+| Vergelijking met de basisregel | `_optStapVerschillen(calculatie, regel)`: alleen als de optieregel hetzelfde verfsysteem heeft als zijn basisregel (`alternatief_voor`); leest alleen |
+| Labels en uitleg | `_optStapTagHtml`, `_optRegelHintHtml`, aangeroepen in `renderRegel` |
+| Ruitje | klasse `opt-ruit` op de knoppen ◇ |
+| Tekst bij de posten | `_optPostenHtml` |
+| Tests | `test_optieregel_v4.129.1.js` (23 controles): `node test_optieregel_v4.129.1.js <index.html v4.129.0> <index.html v4.129.1>` |
+
+**Als het misgaat.** De labels "extra" en "anders dan basis" zijn alleen een hulp bij het lezen; ze rekenen nergens mee. Klopt een label niet, dan is de meerprijs in het blok Opties voor de klant leidend: die komt uit de rekenkern voor de samenstelling met en zonder de optie.

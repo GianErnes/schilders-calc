@@ -1,3 +1,39 @@
+## v4.129.1 — Opties: de optieregel oogt niet meer als vervallen, rode lijn, verschillen met de basis zichtbaar (2026-11-22)
+
+Gebouwd op v4.129.0, live opgehaald van GitHub op 22-11-2026 bij de start van deze bouw (2.168.280 bytes, gelijk aan de levering van 22-11). Alleen weergave; geen SQL, geen andere berekening.
+
+**Aanleiding**
+- Gian 22-11, met twee schermafbeeldingen van een optie van de soort Extra bewerking: "de optie regel werkt niet goed bij een keuze voor een extra bewerking. Alleen de basis is aan te passen terwijl juist het optie verfbewerkingen schema een extra bewerking moet krijgen."
+- Gelezen in de live v4.129.0: de optieregel was wel te bewerken. De opmaak maakte een niet-gekozen optieregel grijs (doorzichtigheid 0,55 op de bewerkingen) en doorgestreept, hetzelfde beeld als een vervallen regel; er zat geen blokkade in de opmaak en geen in `updRegelStap`, `addRegelStap`, `delRegelStap`. Gian heeft daarna bevestigd dat bewerken werkt ("werkt inderdaad"). Het beeld was dus de fout; het stamt uit v4.125.0.
+- Besluiten Gian 22-11: geen blauwe rand maar een subtiel rood lijntje om de optie; de uitlegzin boven de bewerkingen; afwijkingen van de basisregel markeren (keuze b); het ruitje dikker en rood; een tekst bij de posten van een optie dat de omschrijving ze moet noemen.
+
+**Gewijzigd**
+- Een niet-gekozen optieregel is niet meer grijs en niet meer doorgestreept. Een basisregel die door een gekozen optie vervangen is blijft dat wel.
+- Om een optieregel staat een dunne rode lijn in plaats van de blauwe rand links en de blauwe achtergrond.
+- Boven de bewerkingen van een optieregel staat een uitlegzin (`_optRegelHintHtml`). Bij Extra bewerking: "Dit is de optie. Pas hier aan wat de klant extra krijgt; de basisregel erboven blijft de uitvoering zonder de optie." Is de kopie nog gelijk aan de basis, dan staat dat erbij. Bij Ander verfsysteem en bij Hele regel als optie een eigen zin.
+- Bij de soort Extra bewerking (optieregel met hetzelfde verfsysteem als zijn basisregel) vergelijkt `_optStapVerschillen` de bewerkingen met die van de basisregel. Achter een bewerking die niet in de basis staat komt het label "extra"; achter een bewerking met een ander percentage, andere minuten, ander materiaal of ander verbruik komt "anders dan basis" met wat de basis heeft, bijvoorbeeld "basis 25%". Staat een bewerking wel in de basis en niet in de optie, dan noemt de uitlegzin die.
+- Het ruitje ◇ op een regel en in de kop van een hoofdgroep of onderdeel is dikker en rood (klasse `opt-ruit`).
+- Blok Opties voor de klant, bij "Posten bij deze optie": zodra er een post staat, de tekst "De klant ziet deze post niet apart op de offerte. Noem hem in de omschrijving hierboven, anders weet de klant niet dat hij in de meerprijs zit." Het venster van de post en de melding na het toevoegen zeggen hetzelfde.
+
+**Keuzes Claude**
+- De rode lijn en het niet meer grijs zijn geldt ook voor een hoofdgroep of onderdeel als optie. De regels daarin zijn net zo goed te bewerken, en twee soorten randen voor hetzelfde begrip zou verwarren.
+- De vergelijking met de basis staat alleen bij Extra bewerking. Bij een ander verfsysteem wijkt elke bewerking af en zegt een label niets.
+- Bewerkingen worden aan elkaar gekoppeld op de bewerking uit de bibliotheek (of op naam), eerst de exact gelijke en dan de eerste met dezelfde naam. Staat een bewerking twee keer in de regel, zoals Gronden in het voorbeeld van Gian, dan krijgt precies één van de twee het label.
+
+**Niet gewijzigd (bewust)**
+- Elke berekening, de database en de offerte voor de klant.
+- Het blauwe label "OPTIE 1 · in plaats van · niet gekozen"; groen bij gekozen.
+
+**Getest**
+- Poorten: het inline script parseert in Node; div-tags 1533 / 1536 tegen 1531 / 1534 in v4.129.0 (twee erbij, gebalanceerd); script-tags 6 / 6; CSS-accolades 931 / 931 tegen 923 / 923.
+- `test_optieregel_v4.129.1.js` (nieuw), v4.129.0 naast v4.129.1: 23 controles, alle goed. De vergelijking met de basisregel (gelijk, extra, anders met "basis 25%", ontbrekend, twee keer dezelfde bewerking), de uitlegzinnen, de labels in de weergave van een regel, de tekst bij de posten in enkelvoud en meervoud, en dat een gewone regel en de kop van een deel op het ruitje na gelijk zijn aan v4.129.0.
+- v4.129.0 naast v4.129.1: 30 controles, alle goed (totaal, alle samenstellingen, documenten, werkbon, calculatieprint, Controleer, cijfers voor de link, plan-rekenpad).
+- `test_posten_v4.129.0.js` tegen v4.127.0 en v4.129.1: 69 controles, alle goed. `test_keuzes_v4.128.0.js` tegen v4.127.0 en v4.129.1: 189 controles, alle goed.
+- Statische weergave van een optieregel en een onderdeel als optie met de echte opmaak, als schermafbeelding bekeken: rode lijn, uitlegzin, labels en ruitje staan er.
+
+**Niet getest**
+- In een echte browser. Hoe dik het ruitje op het scherm van Gian uitvalt is een kwestie van smaak en van het lettertype op dat apparaat.
+
 ## v4.129.0 — Opties: vaste posten bij een optie (steiger, hoogwerker, container) (2026-11-22)
 
 Gebouwd op v4.128.1, live opgehaald van GitHub op 22-11-2026 bij de start van deze bouw en opnieuw vlak voor het afronden (2.148.702 bytes, beide keren identiek). Dit is release 2 uit het ontwerpmemo "Keuzes voor de klant, online samenstellen" van 20-11-2026: stap B. Stap D (online kiezen door de klant) is niet gebouwd.
