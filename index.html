@@ -780,6 +780,12 @@
   .onderdeel.is-keuze.is-inactief > .onderdeel-head .stats { text-decoration: none; }
   .opt-deel-tag { flex: 0 0 auto; white-space: nowrap; margin: 0 0.4rem; }
   .opt-deel-tag:empty { display: none; }
+  /* v4.129.0 — vaste posten bij een optie */
+  .opt-posten { margin-top: 0.3rem; font-size: 0.78rem; }
+  .opt-posten-kop { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); font-weight: 700; }
+  .opt-post { margin: 0.15rem 0; }
+  .opt-post .mono { font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+  #optModal input[type="checkbox"] { width: auto; padding: 0; margin: 0 0.4rem 0 0; vertical-align: middle; flex: 0 0 auto; }
   .hoofdgroep.is-inactief > .hoofdgroep-head .title input,
   .hoofdgroep.is-inactief > .hoofdgroep-head .stats,
   .onderdeel.is-inactief > .onderdeel-head .title input,
@@ -2530,8 +2536,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.128.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.129.0</h2>
       <div class="intro-body">
+        <p><strong>◇ Steiger, hoogwerker of container bij een optie (v4.129.0).</strong> In het blok <em>Opties voor de klant</em> staat bij elke optie nu <strong>Posten bij deze optie</strong> met de knop <strong>+ post</strong>. Kies een post uit de staartbibliotheek of maak een eigen post: een vast bedrag, of aantal × prijs (een hoogwerker voor twee dagen is 2 × de dagprijs). De post telt alleen mee als de klant die optie kiest en zit in de meerprijs; de klant ziet hem niet apart. Zolang de optie niet gekozen is staat de post niet bij de staartkosten, niet op de werkbon en niet in de Yoobi-export. Leg je de keuze vast, dan komt hij als echte staartpost in de calculatie, met het label van de optie; bij <em>Keuze wissen</em> gaat hij daar weer uit en blijft hij bij de optie staan. Een post per dag of per week en een percentage kunnen niet bij een optie.</p>
         <p><strong>◇ Duidelijker namen bij het maken van een optie (v4.128.1).</strong> Het woord <em>erbij</em> is van het scherm verdwenen, omdat het te lezen was als "een bewerking erbij". Bij een regel kies je nu uit <strong>Ander verfsysteem</strong>, <strong>Extra bewerking</strong> (dezelfde regel zonder of met een extra laag) en <strong>Hele regel als optie</strong> (het hele werk van die regel staat uit in de basis). Op de labels staat <em>hele regel</em>, <em>heel onderdeel</em> of <em>hele hoofdgroep</em>. Aan de bedragen en aan de offerte voor de klant verandert niets.</p>
         <p><strong>◇ Een gevel, ruimte of onderdeel als keuze voor de klant, en acht opties per offerte (v4.128.0).</strong> Klik op <strong>◇</strong> in de kop van een hoofdgroep of onderdeel: dat deel staat dan uit in de basis en komt als optie op de offerte, met één meerprijs. De titel is de naam van het deel; de omschrijving voor de klant vul je in het blok <em>Opties voor de klant</em> in. Met <strong>↩</strong> maak je er weer een gewoon deel van. Een keuze binnen een keuze kan niet. Een deel dat als keuze uit staat is niet vervallen: het staat niet op de werkbon, telt niet mee in een onderhoudsplan en niet in het oorspronkelijke bedrag. Kozijntekeningen van een aangeboden deel staan wel in de bijlage van de offerte, met het optienummer erbij. Er kunnen nu acht opties op één offerte (was vier). Bij meer dan vier rekent het blok direct alleen de basis, elke optie los en de aangevinkte samenstelling; de knop <em>Alle samenstellingen doorrekenen</em> toont de rest en hoe lang het rekenen duurde. Online kiezen door de klant volgt in een latere versie.</p>
         <p><strong>⊘ Uitgezette meetrijen zie je nu ook in de calculatie (v4.127.0).</strong> Zet je in de Meetstaat een rij uit, dan stond dat tot nu toe nergens in de Calculatie-tab: de regel toonde alleen een lagere hoeveelheid of 0. Voortaan staat op de regel <em>📐 3 metingen · 1 uit</em> met erachter hoeveel er vervalt. Staan alle metingen van een regel uit, dan wordt de regel grijs en doorgestreept met <em>vervalt via meetstaat</em>, net als een uitgevinkte regel. Onder Totaal incl. verschijnt hetzelfde blok als bij uitgezette onderdelen: <em>Oorspronkelijk volledig</em>, <em>Aangepast</em> en <em>Verschil (vervalt)</em>; het oorspronkelijke bedrag rekent met alle meetrijen aan. De calculatie-PDF toont dezelfde drie regels en zet bij de regel wat er via de meetstaat vervalt. Op de werkbon van een vergrendelde calculatie staat een regel waarvan alle metingen uit staan grijs en doorgestreept met zijn oorspronkelijke hoeveelheid; staat een deel uit, dan staat dat deel eronder. In concept en afspraak blijft zo'n regel weg van de werkbon. De prijs verandert niet: uitgezette rijen telden al niet mee. Geen SQL, geen deploy.</p>
@@ -4144,7 +4151,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.128.1';
+const APP_VERSION = 'v4.129.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4567,6 +4574,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.129.0', d: '2026-11-22', h: 'Opties: vaste posten bij een optie (steiger, hoogwerker, container) als vast bedrag of aantal × prijs; de post zit in de meerprijs, staat tot de keuze niet in de staart en komt bij het vastleggen van de keuze als echte staartpost in de calculatie.' },
   { v: '4.128.1', d: '2026-11-22', h: 'Opties: duidelijker namen bij het maken van een optie (Ander verfsysteem, Extra bewerking, Hele regel als optie) en op de labels hele regel, heel onderdeel of hele hoofdgroep in plaats van het woord erbij.' },
   { v: '4.128.0', d: '2026-11-22', h: 'Een hoofdgroep of onderdeel (gevel, ruimte) in één klik als keuze erbij voor de klant, met één meerprijs; maximaal acht opties per offerte in plaats van vier; een deel dat als keuze uit staat is niet vervallen (werkbon, onderhoudsplan, oorspronkelijk bedrag); kozijntekeningen van een aangeboden deel staan in de offertebijlage met het optienummer.' },
   { v: '4.127.0', d: '2026-11-20', h: 'Uitgezette meetrijen zichtbaar in de calculatie: op de regel "📐 3 metingen · 1 uit", regel grijs met "vervalt via meetstaat" als alle metingen uit staan, en het blok Oorspronkelijk volledig / Aangepast / Verschil (vervalt) onder het totaal en op de calculatie-PDF; werkbon van een vergrendelde calculatie toont wat via de meetstaat vervalt.' },
@@ -5431,7 +5439,9 @@ function _mapStaartFromDB(row) {
     teltInWerkdagen: !!row.telt_in_werkdagen,
     gebrekType: row.gebrek_type || null,
     btwPct: (row.btw_pct != null) ? parseFloat(row.btw_pct) : null,  // v4.76.0 — derden-post met eigen BTW-tarief
-    kostensoort: row.kostensoort || null   // v4.107.0 — 'materieel' (steiger, hoogwerker) of null = overig
+    kostensoort: row.kostensoort || null,   // v4.107.0 — 'materieel' (steiger, hoogwerker) of null = overig
+    optieId: row.optie_id || null,       // v4.129.0 — echte staartpost van een vastgelegde keuze: de optie
+    optiePost: row.optie_post || null    // v4.129.0 — en de post binnen die optie (offerte_config.opties[].posten[].id)
   };
 }
 function _mapStaartToDB(s) {
@@ -9525,7 +9535,10 @@ async function _deleteDocFolder(calcId) {
 // STAART PER CALC — MAPPING & DB (zelfde velden als staart_lib + calculatie_id + volgorde)
 // ============================================================
 function _mapStaartCalcToDB(s, calcId, idx) {
+  // v4.129.0 — optie_id en optie_post gaan alleen mee bij een post die bij een optie hoort.
+  // Een gewone staartpost raakt die kolommen nooit.
   return {
+    ...(s.optieId ? { optie_id: s.optieId, optie_post: s.optiePost || null } : {}),
     calculatie_id: calcId,
     naam:        s.naam      || '',
     type:        s.type      || 'vast',
@@ -16453,8 +16466,57 @@ function _optTekLabels(c) {
   } catch (e) {}
   return uit;
 }
+// ---------- v4.129.0 — Vaste posten bij een optie (steiger, hoogwerker, container) ----------
+// Zolang de optie niet gekozen is staan de posten bij de optie zelf, in
+// offerte_config.opties[].posten, en niet in de staart: de rekenkern, de basis, de werkbon
+// en de Yoobi-export zien ze dan niet. _optMetStand telt ze mee in elke samenstelling
+// waarin de optie aan staat, zodat ze in de meerprijs zitten. Wordt de keuze vastgelegd,
+// dan schrijft _optSchrijfStaart ze als echte staartpost met optie_id en optie_post; bij
+// Keuze wissen gaan precies die rijen weer weg. Alleen een vast bedrag of aantal × prijs:
+// een post per dag of per week rekent met de werkdagen van het hele werk (calcStaart).
+const OPT_POST_SOORTEN = ['vast', 'eenheid'];
+const OPT_POST_MAX = 6;
+function _optPosten(o) {
+  const l = (o && Array.isArray(o.posten)) ? o.posten : [];
+  return l.filter(q => q && typeof q === 'object' && q.id && OPT_POST_SOORTEN.indexOf(q.type) >= 0);
+}
+function _optPostBedrag(q) {
+  if (!q) return 0;
+  return q.type === 'eenheid' ? (parseFloat(q.bedrag) || 0) * (parseFloat(q.hoeveelheid) || 0) : (parseFloat(q.bedrag) || 0);
+}
+// De post zoals hij in de staart komt te staan (zelfde velden als een gewone staartpost).
+function _optPostAlsStaart(optieId, q) {
+  const derden = q.btwPct != null && q.btwPct !== '' && isFinite(parseFloat(q.btwPct));
+  return {
+    id: null, __optSim: true, naam: String(q.naam || ''), type: q.type === 'eenheid' ? 'eenheid' : 'vast',
+    bedrag: parseFloat(q.bedrag) || 0, eenheid: q.type === 'eenheid' ? String(q.eenheid || '') : '', grondslag: '',
+    hoeveelheid: q.type === 'eenheid' ? (parseFloat(q.hoeveelheid) || 0) : 0,
+    verstopInEenheidsprijs: false, teltInWerkdagen: false, gebrekType: null,
+    btwPct: derden ? parseFloat(q.btwPct) : null, kostensoort: q.kostensoort === 'materieel' ? 'materieel' : null,
+    optieId: optieId, optiePost: q.id
+  };
+}
+// Echte staartposten die bij een optie horen terwijl die optie niet aan staat of niet meer
+// bestaat. Die horen er niet te zijn: ze tellen mee in het totaal van de basis.
+function _optZwerfPosten(c, aanbod) {
+  const aan = new Set(((aanbod && aanbod.opties) || []).filter(o => o.status === 'aan').map(o => o.id));
+  return ((c && c.staart) || []).filter(p => p && p.optieId && !aan.has(p.optieId));
+}
+// De optie (uit de config) waar een echte staartpost bij hoort, of null.
+function _optPostOptie(p) {
+  if (!p || !p.optieId || !data.calc) return null;
+  return _optCfgLijst(data.calc).find(o => o.id === p.optieId) || null;
+}
+function _optPostInfoHtml(p) {
+  if (!p || !p.optieId) return '';
+  const o = _optPostOptie(p);
+  return o
+    ? ' <span class="opt-tag is-gekozen" title="Deze post hoort bij een gekozen optie. Wijzigen of weghalen doe je bij de optie, na Keuze wissen in het blok Opties voor de klant.">optie: ' + _escapeHtml(o.titel || 'zonder titel') + '</span>'
+    : ' <span class="opt-tag is-fout" title="De optie waar deze post bij hoorde bestaat niet meer. Je kunt de post hier wijzigen of weghalen.">optie onbekend</span>';
+}
 function _optHeeftIets(c) {
   if (_optCfgLijst(c).length) return true;
+  if (((c && c.staart) || []).some(p => p && p.optieId)) return true;   // v4.129.0
   if (_optAlleDelen(c).some(e => !!e.d.optieId)) return true;   // v4.128.0
   return _optAlleRegels(c).some(e => !!e.r.optieId);
 }
@@ -16565,7 +16627,7 @@ function _optAanbod(c) {
       status = (aan === 0) ? 'uit' : (aan === mee.length ? 'aan' : 'gemengd');
       if (mee.some(x => x.dubbel)) status = 'gemengd';
     }
-    uit.opties.push({ id: o.id, soort: soort, titel: String(o.titel || ''), klanttekst: String(o.klanttekst || ''), nr: 0, regels: regels, mee: mee, status: status });
+    uit.opties.push({ id: o.id, soort: soort, titel: String(o.titel || ''), klanttekst: String(o.klanttekst || ''), nr: 0, regels: regels, mee: mee, status: status, posten: _optPosten(o) });   // v4.129.0 — posten bij de optie
   });
   uit.aangeboden = uit.opties.filter(o => o.mee.length > 0).slice(0, OPT_MAX);
   uit.aangeboden.forEach((o, i) => { o.nr = i + 1; });
@@ -16675,7 +16737,21 @@ function _optMetStand(c, aanbod, gekozenIds, fn) {
         if (o.soort === 'vervang' && x.basis) zet(x.basis, !aan);
       });
     });
-    c.staart = _optSimStaart(c, staartOud, nu, _optStaartDoelen(c));
+    // v4.129.0 — vaste posten bij een optie. Echte posten van een eerder vastgelegde keuze
+    // gaan er eerst uit; daarna komen de posten erbij van de opties die in deze
+    // samenstelling aan staan. Een post die al echt in de staart staat houdt zijn id.
+    const _metOptiePost = (staartOud || []).some(p => p && p.optieId);
+    const _lijst = _optSimStaart(c, _metOptiePost ? staartOud.filter(p => !(p && p.optieId)) : staartOud, nu, _optStaartDoelen(c));
+    aanbod.aangeboden.forEach(o => {
+      if (!kies.has(o.id)) return;
+      (o.posten || []).forEach(q => {
+        const sim = _optPostAlsStaart(o.id, q);
+        const echt = _metOptiePost ? staartOud.find(p => p && p.optieId === o.id && p.optiePost === q.id) : null;
+        if (echt) { sim.id = echt.id; sim.__optSim = false; sim.volgorde = echt.volgorde; }
+        _lijst.push(sim);
+      });
+    });
+    c.staart = _lijst;
     return fn();
   } finally {
     for (let i = terug.length - 1; i >= 0; i--) terug[i][0].actief = terug[i][1];
@@ -16701,7 +16777,12 @@ function _optBereken(c, wens) {
   const opties = aanbod.aangeboden;
   const n = opties.length;
   const uit = { aanbod: aanbod, opties: opties, n: n, combi: [], basis: null, huidig: null, fouten: [], waarsch: [], keuze: _optKeuze(c),
-    volledig: false, aantal: 0, totaalAantal: (n ? Math.pow(2, n) : 0), ms: 0, kiesMasker: null, rij: () => undefined };
+    volledig: false, aantal: 0, totaalAantal: (n ? Math.pow(2, n) : 0), ms: 0, kiesMasker: null, rij: () => undefined, zwerfPosten: 0 };
+
+  // v4.129.0 — een echte staartpost van een optie die niet (meer) gekozen is telt mee in de basis.
+  const _zwerf = _optZwerfPosten(c, aanbod);
+  uit.zwerfPosten = _zwerf.length;
+  if (_zwerf.length) uit.fouten.push('In de staartkosten ' + (_zwerf.length === 1 ? 'staat een post die hoort' : 'staan ' + _zwerf.length + ' posten die horen') + ' bij een optie die niet gekozen is: ' + _zwerf.map(p => '"' + (p.naam || 'zonder naam') + '"').join(', ') + '. Het totaal is daardoor te hoog. ' + (n ? 'Kies Keuze wissen in het blok Opties voor de klant, of leg de keuze opnieuw vast.' : 'Haal de post weg bij de staartkosten.'));
 
   aanbod.wezen.forEach(e => uit.waarsch.push('Regel "' + (e.r.naam || e.r.systeemNaam || 'zonder naam') + '" (' + (e.od.naam || '?') + ') hoort bij een optie die niet meer bestaat. Hij staat uit en telt nergens mee. Maak er een gewone regel van of verwijder hem.'));
   aanbod.wezenDelen.forEach(e => uit.waarsch.push((e.soort === 'hg' ? 'Hoofdgroep' : 'Onderdeel') + ' "' + _optDeelNaam(e) + '" hoort bij een optie die niet meer bestaat. ' + (_isActief(e.d) ? 'Maak er met ↩ weer een gewoon deel van.' : 'Het staat uit en telt nergens mee. Maak er met ↩ weer een gewoon deel van of verwijder het.')));
@@ -17009,7 +17090,7 @@ function renderOptiesBlok(alles) {
   } catch (e) { body.innerHTML = '<p style="color:var(--accent-deep);">Opties konden niet worden doorgerekend: ' + _escapeHtml(e && e.message ? e.message : String(e)) + '</p>'; return; }
   if (!ber) {
     if (kort) kort.textContent = 'geen opties';
-    body.innerHTML = '<p style="color:var(--ink-soft); font-size:0.85rem; margin:0.4rem 0;">Nog geen opties. Klik bij een regel op <strong>◇</strong> om er een optie van te maken: <em>ander verfsysteem</em>, <em>extra bewerking</em> (dezelfde regel zonder of met een extra laag) of <em>hele regel als optie</em> (werk dat in de basis uit staat). Klik op <strong>◇</strong> in de kop van een hoofdgroep of onderdeel om die hele gevel, die ruimte of dat onderdeel in één keer een optie te maken. De basis is altijd de goedkoopste uitvoering; de klant ziet per optie één meerprijs. Maximaal ' + OPT_MAX + ' opties per offerte.</p>';
+    body.innerHTML = '<p style="color:var(--ink-soft); font-size:0.85rem; margin:0.4rem 0;">Nog geen opties. Klik bij een regel op <strong>◇</strong> om er een optie van te maken: <em>ander verfsysteem</em>, <em>extra bewerking</em> (dezelfde regel zonder of met een extra laag) of <em>hele regel als optie</em> (werk dat in de basis uit staat). Klik op <strong>◇</strong> in de kop van een hoofdgroep of onderdeel om die hele gevel, die ruimte of dat onderdeel in één keer een optie te maken. De basis is altijd de goedkoopste uitvoering; de klant ziet per optie één meerprijs. Bij een optie kun je daarna vaste posten zetten, zoals een steiger of hoogwerker; die zitten in de meerprijs. Maximaal ' + OPT_MAX + ' opties per offerte.</p>';
     return;
   }
   const E = _escapeHtml;
@@ -17032,7 +17113,7 @@ function renderOptiesBlok(alles) {
     h += '<tr>'
       + '<td><strong>' + (o.nr || '–') + '</strong><br><span style="font-size:0.68rem; color:var(--ink-soft);">' + _optSoortLabel(o) + '</span></td>'
       + '<td><input type="text" value="' + E(o.titel) + '" placeholder="Titel, bv. Wanden na stucwerk voorstrijken en 2x sauzen" onchange="optZetVeld(\'' + o.id + '\',\'titel\',this.value)" style="width:100%; margin-bottom:0.25rem;">'
-      + '<textarea rows="2" placeholder="Omschrijving voor de klant (het verfsysteem staat niet op de offerte)" onchange="optZetVeld(\'' + o.id + '\',\'klanttekst\',this.value)" style="width:100%; font-size:0.8rem;">' + E(o.klanttekst) + '</textarea></td>'
+      + '<textarea rows="2" placeholder="Omschrijving voor de klant (het verfsysteem staat niet op de offerte)" onchange="optZetVeld(\'' + o.id + '\',\'klanttekst\',this.value)" style="width:100%; font-size:0.8rem;">' + E(o.klanttekst) + '</textarea>' + _optPostenHtml(o, locked || !!keuze) + '</td>'
       + '<td style="font-size:0.78rem;">' + regelsTxt + '</td>'
       + '<td class="right mono">' + (o.meerExcl != null ? eur(o.meerExcl) : '—') + '</td>'
       + '<td class="right mono">' + (o.meerIncl != null ? eur(o.meerIncl) : '—') + '</td>'
@@ -17084,7 +17165,7 @@ function renderOptiesBlok(alles) {
     });
     h += '<div style="margin:0.4rem 0; font-size:0.9rem;">Totaal van deze samenstelling: <strong>' + ((doel && doel.ok) ? eur(doel.incl) + ' incl. BTW</strong> (' + eur(doel.excl) + ' excl.)' : 'niet te berekenen</strong>') + '</div>';
     h += '<button class="btn btn-sm lock-allowed" onclick="optLegVast(false)">Leg deze keuze vast</button> '
-      + ((keuze || ber.huidig !== 0) ? '<button class="btn-secondary btn btn-sm lock-allowed" onclick="optLegVast(true)" title="Terug naar de open offerte: basis, met de opties als aanbod">Keuze wissen</button>' : '')
+      + ((keuze || ber.huidig !== 0 || ber.zwerfPosten) ? '<button class="btn-secondary btn btn-sm lock-allowed" onclick="optLegVast(true)" title="Terug naar de open offerte: basis, met de opties als aanbod">Keuze wissen</button>' : '')
       + '<div style="font-size:0.72rem; color:var(--ink-soft); margin-top:0.3rem;">Na het vastleggen rekenen calculatie, werkbon, planning en Yoobi-export met de gekozen uitvoering. Het offertedocument blijft de basis tonen, met de keuze en het nieuwe totaal eronder.' + (locked ? ' De offerte is vergrendeld; vastleggen kan gewoon.' : '') + '</div>';
     h += '</div>';
   }
@@ -17169,7 +17250,8 @@ async function optOpheffen(id) {
   const tekst = o.soort === 'vervang'
     ? 'Optie "' + (o.titel || 'zonder titel') + '" opheffen?\n\n' + (nAlt ? nAlt + (nAlt === 1 ? ' optieregel wordt' : ' optieregels worden') + ' verwijderd (terug te halen via de prullenbak). De basisregels blijven staan.' : 'Er hangen geen regels meer aan.')
     : 'Optie "' + (o.titel || 'zonder titel') + '" opheffen?\n\n' + (o.regels.length ? watTerug + ((nDeel + nReg) === 1 ? ' wordt' : ' worden') + ' weer gewoon werk in de basis (aan).' : 'Er hangen geen regels of delen meer aan.');
-  if (!confirm(tekst)) return;
+  const _nPost = (o.posten || []).length;   // v4.129.0
+  if (!confirm(tekst + (_nPost ? '\n\nDe ' + (_nPost === 1 ? 'post' : _nPost + ' posten') + ' bij deze optie ' + (_nPost === 1 ? 'gaat' : 'gaan') + ' ook weg.' : ''))) return;
   _optBezig = true;
   let mis = 0;
   try {
@@ -17304,8 +17386,8 @@ async function optDeelLos(hgId, odId) {
   const cfgO = _optCfgLijst(c).find(o => o.id === optieId) || null;
   if (cfgO && _optKeuze(c)) { _toast('Er is een keuze vastgelegd. Wis eerst de keuze in het blok Opties voor de klant.'); return; }
   const laatste = !!cfgO && !_optAlleDelen(c).some(x => x.d !== e.d && x.d.optieId === optieId) && !_optAlleRegels(c).some(x => x.r.optieId === optieId);
-  if (laatste && String(cfgO.klanttekst || '').trim()) {
-    if (!confirm('"' + _optDeelNaam(e) + '" wordt weer een gewoon deel in de basis. De optie "' + (cfgO.titel || 'zonder titel') + '" en de omschrijving voor de klant gaan weg.\n\nDoorgaan?')) return;
+  if (laatste && (String(cfgO.klanttekst || '').trim() || _optPosten(cfgO).length)) {
+    if (!confirm('"' + _optDeelNaam(e) + '" wordt weer een gewoon deel in de basis. De optie "' + (cfgO.titel || 'zonder titel') + '", de omschrijving voor de klant en de posten bij de optie gaan weg.\n\nDoorgaan?')) return;
   }
   _optBezig = true;
   let cfgOk = true;
@@ -17317,6 +17399,174 @@ async function optDeelLos(hgId, odId) {
     await _optNaDeelWijziging(c);
   } finally { _optBezig = false; }
   if (cfgOk) _toast('"' + _optDeelNaam(e) + '" is weer een gewoon deel in de basis.' + (laatste ? ' De optie is opgeheven.' : ''), 'ok');
+}
+
+// ---------- v4.129.0 — Posten bij een optie: tonen, toevoegen, wijzigen, weghalen ----------
+function _optPostenHtml(o, vast) {
+  const E = _escapeHtml;
+  const posten = o.posten || [];
+  let h = '<div class="opt-posten"><span class="opt-posten-kop">Posten bij deze optie</span>';
+  if (!posten.length) h += ' <span style="color:var(--ink-soft);">geen</span>';
+  posten.forEach(q => {
+    const det = q.type === 'eenheid'
+      ? fmt(parseFloat(q.hoeveelheid) || 0).replace(/,00$/, '') + ' ' + E(q.eenheid || 'x') + ' × ' + eur(parseFloat(q.bedrag) || 0) + ' = ' + eur(_optPostBedrag(q))
+      : eur(_optPostBedrag(q));
+    const derden = q.btwPct != null && q.btwPct !== '' && isFinite(parseFloat(q.btwPct));
+    h += '<div class="opt-post">' + E(q.naam || 'zonder naam') + ' · <span class="mono">' + det + '</span>' + (derden ? ' · BTW ' + fmt(parseFloat(q.btwPct)).replace(/,00$/, '') + '%' : '')
+      + (vast ? '' : ' <button class="btn-secondary btn btn-sm" onclick="optPostOpen(\'' + o.id + '\',\'' + q.id + '\')" title="Post wijzigen">✎</button> <button class="btn btn-danger btn-sm" onclick="optPostWeg(\'' + o.id + '\',\'' + q.id + '\')" title="Post weghalen">×</button>')
+      + '</div>';
+  });
+  if (!vast && posten.length < OPT_POST_MAX) h += ' <button class="btn-secondary btn btn-sm" onclick="optPostOpen(\'' + o.id + '\',null)" title="Vaste post bij deze optie, bijvoorbeeld een steiger of hoogwerker. De post zit in de meerprijs.">+ post</button>';
+  return h + '</div>';
+}
+// Controleert wat er is ingevuld. Geeft { fout } of { post } terug.
+function _optPostControle(v) {
+  v = v || {};
+  const naam = String(v.naam == null ? '' : v.naam).trim();
+  if (!naam) return { fout: 'Geef de post een naam.' };
+  if (/afdekvilt|kleinschalig/i.test(naam)) return { fout: 'Die naam is van een post die de app zelf bijhoudt. Kies een andere naam.' };
+  if (OPT_POST_SOORTEN.indexOf(v.type) < 0) return { fout: 'Bij een optie kan alleen een vast bedrag of aantal × prijs. Een post per dag of per week rekent met de werkdagen van het hele werk.' };
+  const bedrag = parseFloat(v.bedrag);
+  if (!isFinite(bedrag) || bedrag <= 0) return { fout: 'Vul een bedrag boven nul in.' };
+  const post = { naam: naam, type: v.type, bedrag: _r2(bedrag) };
+  if (v.type === 'eenheid') {
+    const hv = parseFloat(v.hoeveelheid);
+    if (!isFinite(hv) || hv <= 0) return { fout: 'Vul een aantal boven nul in.' };
+    post.hoeveelheid = hv;
+    post.eenheid = String(v.eenheid == null ? '' : v.eenheid).trim();
+  }
+  if (v.btwPct != null && v.btwPct !== '') {
+    const b = parseFloat(v.btwPct);
+    if (!isFinite(b) || b < 0) return { fout: 'Het BTW-tarief klopt niet.' };
+    post.btwPct = b;
+  }
+  if (v.kostensoort === 'materieel') post.kostensoort = 'materieel';
+  return { post: post };
+}
+// Kern: zet een post bij een optie (postId leeg = nieuw) en bewaart de opties.
+async function optPostZet(optieId, postId, velden) {
+  const c = data.calc;
+  if (!c || _optBezig) return false;
+  if (!_optMagWijzigen(c)) return false;
+  const lijst = _optCfgLijst(c).map(o => Object.assign({}, o));
+  const o = lijst.find(x => x.id === optieId);
+  if (!o) { _toast('De optie bestaat niet meer.'); return false; }
+  const res = _optPostControle(velden);
+  if (res.fout) { _toast(res.fout); return false; }
+  const posten = _optPosten(o).map(q => Object.assign({}, q));
+  if (postId) {
+    const i = posten.findIndex(q => q.id === postId);
+    if (i < 0) { _toast('De post bestaat niet meer.'); return false; }
+    posten[i] = Object.assign({ id: postId }, res.post);
+  } else {
+    if (posten.length >= OPT_POST_MAX) { _toast('Er staan al ' + OPT_POST_MAX + ' posten bij deze optie.'); return false; }
+    posten.push(Object.assign({ id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }, res.post));
+  }
+  o.posten = posten;
+  let ok = false;
+  _optBezig = true;
+  try { ok = await _optZetCfg(c, { opties: lijst }, 'Post opslaan'); } finally { _optBezig = false; }
+  if (ok) _optNaWijziging(c);
+  return ok;
+}
+async function optPostWeg(optieId, postId) {
+  const c = data.calc;
+  if (!c || _optBezig) return false;
+  if (!_optMagWijzigen(c)) return false;
+  const lijst = _optCfgLijst(c).map(o => Object.assign({}, o));
+  const o = lijst.find(x => x.id === optieId);
+  if (!o) return false;
+  const q = _optPosten(o).find(x => x.id === postId);
+  if (!q) return false;
+  if (!confirm('Post "' + (q.naam || 'zonder naam') + '" weghalen bij deze optie?')) return false;
+  o.posten = _optPosten(o).filter(x => x.id !== postId).map(x => Object.assign({}, x));
+  let ok = false;
+  _optBezig = true;
+  try { ok = await _optZetCfg(c, { opties: lijst }, 'Post weghalen'); } finally { _optBezig = false; }
+  if (ok) _optNaWijziging(c);
+  return ok;
+}
+let _optPostCtx = null;
+// Templates uit de staartbibliotheek die bij een optie passen. Een template per dag of per
+// week komt als aantal × prijs, met dag of week als eenheid; percentages doen niet mee.
+function _optPostTemplates() {
+  return (data.staartLib || []).filter(t => t && (t.type === 'vast' || t.type === 'eenheid' || t.type === 'dag' || t.type === 'week') && !/afdekvilt|kleinschalig/i.test(t.naam || ''));
+}
+function optPostOpen(optieId, postId) {
+  const c = data.calc;
+  if (!_optMagWijzigen(c)) return;
+  const o = _optCfgLijst(c).find(x => x.id === optieId);
+  if (!o) return;
+  const q = postId ? (_optPosten(o).find(x => x.id === postId) || null) : null;
+  if (postId && !q) return;
+  const E = _escapeHtml;
+  const p = q || { naam: '', type: 'vast', bedrag: '', hoeveelheid: 1, eenheid: '', btwPct: null, kostensoort: 'materieel' };
+  const btw = (p.btwPct != null && p.btwPct !== '') ? String(parseFloat(p.btwPct)) : '';
+  const tpl = _optPostTemplates().slice().sort((a, b) => (a.naam || '').localeCompare(b.naam || '', 'nl'));
+  _optPostCtx = { optieId: optieId, postId: postId || null };
+  _optModal(
+    '<h3 style="margin:0 0 0.2rem;">' + (q ? 'Post wijzigen' : 'Post bij deze optie') + '</h3>'
+    + '<div style="font-size:0.85rem; color:var(--ink-soft); margin-bottom:0.7rem;">Bij optie: <strong>' + E(o.titel || 'zonder titel') + '</strong>. De post telt alleen mee als de klant deze optie kiest en zit in de meerprijs; de klant ziet hem niet apart.</div>'
+    + (q ? '' : '<label style="font-size:0.8rem;">Uit de staartbibliotheek</label><select id="optPoTpl" onchange="optPostTpl()" style="width:100%; margin-bottom:0.5rem;"><option value="">— eigen post —</option>' + tpl.map(t => '<option value="' + t.id + '">' + E(t.naam || '?') + '</option>').join('') + '</select>')
+    + '<label style="font-size:0.8rem;">Naam</label><input type="text" id="optPoNaam" value="' + E(p.naam || '') + '" placeholder="bv. Steiger achtergevel" style="width:100%;">'
+    + '<label style="display:block; margin:0.6rem 0 0.2rem;"><input type="radio" name="optPoSoort" value="vast" ' + (p.type === 'eenheid' ? '' : 'checked') + ' onchange="optPostSoort()"> <strong>Vast bedrag</strong></label>'
+    + '<label style="display:block; margin:0.2rem 0;"><input type="radio" name="optPoSoort" value="eenheid" ' + (p.type === 'eenheid' ? 'checked' : '') + ' onchange="optPostSoort()"> <strong>Aantal × prijs</strong>, bv. hoogwerker 2 dagen × dagprijs</label>'
+    + '<div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:0.5rem;">'
+    + '<div id="optPoHoevWrap" style="flex:1 1 6rem;"><label style="font-size:0.8rem;">Aantal</label><input type="number" step="0.5" min="0" id="optPoHoev" value="' + E(String(p.hoeveelheid == null ? 1 : p.hoeveelheid)) + '" style="width:100%;"></div>'
+    + '<div id="optPoEenhWrap" style="flex:1 1 6rem;"><label style="font-size:0.8rem;">Eenheid</label><input type="text" id="optPoEenh" value="' + E(p.eenheid || '') + '" placeholder="dag, week, stuk" style="width:100%;"></div>'
+    + '<div style="flex:1 1 8rem;"><label style="font-size:0.8rem;" id="optPoBedragLbl">Bedrag excl. BTW</label><input type="number" step="0.01" min="0" id="optPoBedrag" value="' + E(String(p.bedrag == null ? '' : p.bedrag)) + '" style="width:100%;"></div>'
+    + '</div>'
+    + '<label style="font-size:0.8rem; display:block; margin-top:0.6rem;">BTW-tarief</label><select id="optPoBtw" style="width:100%;"><option value=""' + (btw === '' ? ' selected' : '') + '>Volg calculatie</option><option value="9"' + (btw === '9' ? ' selected' : '') + '>9% — derden-post, geen opslag</option><option value="21"' + (btw === '21' ? ' selected' : '') + '>21% — derden-post, geen opslag</option></select>'
+    + '<label style="display:block; margin-top:0.6rem; font-size:0.85rem;"><input type="checkbox" id="optPoMat" ' + (p.kostensoort === 'materieel' ? 'checked' : '') + '> Materieel (steiger, hoogwerker)</label>'
+    + '<div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;"><button class="btn-secondary btn" onclick="optSluitModal()">Annuleren</button><button class="btn" id="optPoKnop" onclick="optPostBevestig()">' + (q ? 'Opslaan' : 'Post toevoegen') + '</button></div>'
+  );
+  optPostSoort();
+}
+function optPostSoort() {
+  const gek = document.querySelector('input[name="optPoSoort"]:checked');
+  const eenheid = !!gek && gek.value === 'eenheid';
+  const a = document.getElementById('optPoHoevWrap'), b = document.getElementById('optPoEenhWrap'), l = document.getElementById('optPoBedragLbl');
+  if (a) a.style.display = eenheid ? '' : 'none';
+  if (b) b.style.display = eenheid ? '' : 'none';
+  if (l) l.textContent = eenheid ? 'Prijs per eenheid excl. BTW' : 'Bedrag excl. BTW';
+}
+// Wat een template uit de bibliotheek in het venster invult.
+function _optPostUitTemplate(t) {
+  if (!t) return null;
+  const perTijd = t.type === 'dag' || t.type === 'week';
+  const eenheid = perTijd || t.type === 'eenheid';
+  return {
+    naam: t.naam || '', type: eenheid ? 'eenheid' : 'vast', bedrag: parseFloat(t.bedrag) || 0,
+    hoeveelheid: 1, eenheid: perTijd ? t.type : (t.eenheid || ''),
+    btwPct: _isDerdenPost(t) ? parseFloat(t.btwPct) : null, kostensoort: t.kostensoort === 'materieel' ? 'materieel' : null
+  };
+}
+function optPostTpl() {
+  const sel = document.getElementById('optPoTpl');
+  const t = sel ? (data.staartLib || []).find(x => x.id === sel.value) : null;
+  const v = _optPostUitTemplate(t);
+  if (!v) return;
+  const zet = (id, w) => { const el = document.getElementById(id); if (el) el.value = w; };
+  zet('optPoNaam', v.naam); zet('optPoBedrag', v.bedrag || ''); zet('optPoHoev', v.hoeveelheid); zet('optPoEenh', v.eenheid);
+  zet('optPoBtw', v.btwPct != null ? String(v.btwPct) : '');
+  const mat = document.getElementById('optPoMat'); if (mat) mat.checked = v.kostensoort === 'materieel';
+  document.querySelectorAll('input[name="optPoSoort"]').forEach(r => { r.checked = (r.value === v.type); });
+  optPostSoort();
+}
+async function optPostBevestig() {
+  const ctx = _optPostCtx;
+  if (!ctx) return;
+  const w = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const gek = document.querySelector('input[name="optPoSoort"]:checked');
+  const mat = document.getElementById('optPoMat');
+  const ok = await optPostZet(ctx.optieId, ctx.postId, {
+    naam: w('optPoNaam'), type: gek ? gek.value : 'vast', bedrag: w('optPoBedrag'), hoeveelheid: w('optPoHoev'), eenheid: w('optPoEenh'),
+    btwPct: w('optPoBtw'), kostensoort: (mat && mat.checked) ? 'materieel' : null
+  });
+  if (!ok) return;
+  _optPostCtx = null;
+  optSluitModal();
+  _toast(ctx.postId ? 'Post gewijzigd. De meerprijs is bijgewerkt.' : 'Post toegevoegd. Hij zit in de meerprijs van de optie.', 'ok');
 }
 
 // ---------- Venster: optie maken bij een regel ----------
@@ -17564,7 +17814,7 @@ async function optLegVast(wissen) {
   const masker = ber.opties.reduce((m, o, i) => m | (ids.indexOf(o.id) >= 0 ? (1 << i) : 0), 0);
   const doel = ber.rij(masker);
   if (!ber.basis || ber.combi.some(x => !x.ok) || !doel || !doel.ok) { _toast('De samenstellingen zijn niet te berekenen; los eerst de meldingen in het blok Opties op.'); return; }
-  if (wissen && !ber.keuze && ber.huidig === 0) { _toast('Er is geen keuze vastgelegd.'); return; }
+  if (wissen && !ber.keuze && ber.huidig === 0 && !ber.zwerfPosten) { _toast('Er is geen keuze vastgelegd.'); return; }
   let extra = '';
   if (!wissen) {
     try {
@@ -24155,6 +24405,7 @@ async function _dupCalcUitvoeren(id, metKlant, metPlan, metFotos) {
   fresh.staart = [];
   for (let i = 0; i < (orig.staart || []).length; i++) {
     const s = orig.staart[i];
+    if (s && s.optieId) continue;   // v4.129.0 — echte post van een vastgelegde keuze gaat niet mee; de post bij de optie (offerte_config) wel
     const saved = await _insertStaartCalcDB(s, fresh.id, i);
     if (saved) { fresh.staart.push(saved); if (s.id) staartIdMap[s.id] = saved.id; } // v4.92.1
   }
@@ -25708,12 +25959,12 @@ function renderStaartList() {
       else if (p.type === 'week') hoev = _calcWeeks() + ' weken';
       else if (p.type === 'percent') hoev = '× ' + _grondslagLabel(p.grondslag);
       html += `<tr>
-        <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Wordt verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}${_isDerdenPost(p) ? ` <span title="Werk van derden: eigen BTW-tarief, geen risico-opslag" style="color:var(--ink-soft); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">BTW ${fmt(parseFloat(p.btwPct))}%</span>` : ''}${_afdekviltInfoHtml(p)}${_ksInfoHtml(p)}</td>
+        <td>${p.naam}${p.verstopInEenheidsprijs ? ' <span title="Wordt verwerkt in eenheidsprijs bij Yoobi-export" style="color:var(--accent); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">↩ in prijs</span>' : ''}${_isDerdenPost(p) ? ` <span title="Werk van derden: eigen BTW-tarief, geen risico-opslag" style="color:var(--ink-soft); font-size:0.72rem; font-weight:600; margin-left:0.25rem;">BTW ${fmt(parseFloat(p.btwPct))}%</span>` : ''}${_afdekviltInfoHtml(p)}${_ksInfoHtml(p)}${_optPostInfoHtml(p)}</td>
         <td>${detail}</td>
         <td class="num right">${eur(p.bedrag)}</td>
         <td>${hoev}${_afdekviltHoevExtra(p)}</td>
         <td class="num right" style="color:var(--accent-deep); font-weight:600;">${eur(sub)}</td>
-        <td><button class="btn-secondary btn btn-sm" onclick="editStaart('${p.id}')">✎</button> <button class="btn btn-danger btn-sm" onclick="delStaart('${p.id}')">×</button></td>
+        <td>${_optPostOptie(p) ? '<span style="font-size:0.72rem; color:var(--ink-soft);">bij de optie</span>' : `<button class="btn-secondary btn btn-sm" onclick="editStaart('${p.id}')">✎</button> <button class="btn btn-danger btn-sm" onclick="delStaart('${p.id}')">×</button>`}</td>
       </tr>`;
     });
     html += '</tbody></table>';
@@ -25772,7 +26023,12 @@ function openStaartModal(p, mode) {
   updateStaartFields();
   document.getElementById('staartModal').classList.add('active');
 }
-function editStaart(id) { const p = data.calc.staart.find(x=>x.id===id); if(p) openStaartModal(p, 'editCalc'); }
+function editStaart(id) {
+  const p = data.calc.staart.find(x=>x.id===id);
+  // v4.129.0 — een post van een gekozen optie wijzig je bij de optie.
+  if (p && _optPostOptie(p)) { _toast('Deze post hoort bij een gekozen optie. Wis eerst de keuze in het blok Opties voor de klant en wijzig de post daar.'); return; }
+  if(p) openStaartModal(p, 'editCalc');
+}
 function editStaartLib(id) { const p = data.staartLib.find(x=>x.id===id); if(p) openStaartModal(p, 'editLib'); }
 function updateStaartFields() {
   const type = document.getElementById('staartType').value;
@@ -25836,6 +26092,8 @@ async function saveStaart() {
 }
 function closeStaartModal() { document.getElementById('staartModal').classList.remove('active'); }
 async function delStaart(id) {
+  // v4.129.0 — een post van een gekozen optie haal je weg bij de optie.
+  if (_optPostOptie(data.calc.staart.find(p => p.id === id))) { _toast('Deze post hoort bij een gekozen optie. Wis eerst de keuze in het blok Opties voor de klant en haal de post daar weg.'); return; }
   if (!confirm('Verwijderen?')) return;
   const _wasAv = _afdekviltIsPost(data.calc.staart.find(p => p.id === id));   // v4.122.0
   const _wasKs = _ksIsPost(data.calc.staart.find(p => p.id === id));   // v4.126.0

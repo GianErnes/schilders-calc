@@ -1,5 +1,6 @@
 // test_keuzes_v4.128.0.js — hoort bij index.html v4.128.0 en v4.128.1 (delen als keuze, acht keuzes;
-// in v4.128.1 alleen andere namen op het scherm). Bijgewerkt op 22-11-2026 voor v4.128.1.
+// in v4.128.1 alleen andere namen op het scherm). Bijgewerkt op 22-11-2026 voor v4.128.1 en v4.129.0
+// (de vergelijking kijkt niet meer naar het versienummer in voetregels).
 // Laadt de echte code uit twee bestanden (oud = v4.127.0, nieuw = v4.128.0) in een eigen
 // vm-context en legt ze naast elkaar. Gebruik:
 //   node test_keuzes_v4.128.0.js <oud index.html> <nieuw index.html>
@@ -18,7 +19,7 @@ function check(naam, voorwaarde, detail) {
 const J = x => JSON.stringify(x);
 const cent = (a, b) => Math.abs((a || 0) - (b || 0)) < 0.005;
 // De voetregel van werkbon en afdrukken noemt het versienummer; dat verschil hoort erbij en wordt weggestreept.
-const vX = t => String(t).replace(/v4\.12[78]\.\d/g, 'vX');
+const vX = t => String(t).replace(/v4\.\d+\.\d+/g, 'vX');
 function vers(pad, variant) {
   const L = laad(pad);
   L.run(FIX);
@@ -433,7 +434,7 @@ const HAND = { oA: m => [['r8b', m], ['r8', !m]], oB: m => [['r13', m]], oC: m =
   console.log('10. Hele documenten: calculatieprint, offerte, Controleer, link, planbeurt');
   {
     // De voetregel van een afdruk noemt het versienummer; dat verschil hoort erbij en wordt weggestreept.
-    const pa = L => L.document.getElementById('printArea').innerHTML.replace(/v4\.12[78]\.\d/g, 'vX');
+    const pa = L => L.document.getElementById('printArea').innerHTML.replace(/v4\.\d+\.\d+/g, 'vX');
     for (const variant of [false, 'regels']) {
       const O = vers(padOud, variant), N = vers(padNieuw, variant);
       await O.run("__syncAlles()"); await N.run("__syncAlles()");
@@ -464,7 +465,7 @@ const HAND = { oA: m => [['r8b', m], ['r8', !m]], oB: m => [['r13', m]], oC: m =
     const ctl = N.run("_controleerVerzamel()");
     check('Controleer met acht keuzes: geen blokkade over opties', Array.isArray(ctl) && !ctl.some(x => x.n === 0 && /^Opties/.test(x.t)), J(ctl.filter(x => /^Opties/.test(x.t))));
     const lk = N.run("_accordCijfersVoorLink(data.calc)");
-    check('cijfers voor de link: basisbedrag en 256 samenstellingen', cent(lk.totaalIncl, ber8.combi[0].incl) && lk.opties.combi.length === 256 && /^v4\.128\.\d$/.test(lk.app), lk.app);
+    check('cijfers voor de link: basisbedrag en 256 samenstellingen', cent(lk.totaalIncl, ber8.combi[0].incl) && lk.opties.combi.length === 256 && /^v4\.\d+\.\d+$/.test(lk.app), lk.app);
     N.run("printOfferteYoobi()");
     check('Yoobi-export met delen: alleen de basis', !/Garagedeur|Dakkapel|Achtergevel|Zijgevel/.test(pa(N)) && /Voorgevel/.test(pa(N)));
     // planbeurt: per regel en per stap, naast dezelfde calculatie zonder de niet-gekozen delen

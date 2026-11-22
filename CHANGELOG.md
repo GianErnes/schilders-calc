@@ -1,3 +1,63 @@
+## v4.129.0 — Opties: vaste posten bij een optie (steiger, hoogwerker, container) (2026-11-22)
+
+Gebouwd op v4.128.1, live opgehaald van GitHub op 22-11-2026 bij de start van deze bouw en opnieuw vlak voor het afronden (2.148.702 bytes, beide keren identiek). Dit is release 2 uit het ontwerpmemo "Keuzes voor de klant, online samenstellen" van 20-11-2026: stap B. Stap D (online kiezen door de klant) is niet gebouwd.
+
+**Aanleiding**
+- Besluit Gian 20-11 (memo): een vaste post zoals een steiger of hoogwerker moet bij een keuze kunnen horen; dat komt regelmatig voor.
+- Gian 22-11, na de eerste test van v4.128.0 en v4.128.1 in echt gebruik: "Deze versie bevalt en je mag door."
+- Besluiten Gian 22-11 op het voorstel: alleen een vast bedrag of aantal × prijs, geen post per dag of per week (keuze a); een post bij een optie wordt nooit verwerkt in de eenheidsprijs; geen percentageposten bij een optie.
+
+**Database (eerst gedraaid)**
+- `sql/opties_03_staart.sql`: kolommen `optie_id` en `optie_post` (text, niet verplicht) op `staart`, met de controle `staart_optie_post_bij_optie` (een post binnen een optie hoort bij een optie). Live gedraaid op 22-11-2026 via de Supabase-koppeling (`apply_migration`). Nagemeten: beide kolommen en de controle bestaan, 336 staartrijen, geen enkele met een waarde.
+- v4.128.1 en ouder noemt de kolommen niet en merkt er niets van.
+
+**Hoe het werkt**
+- In het blok Opties voor de klant staat bij elke optie "Posten bij deze optie" met de knop + post. Het venster (`optPostOpen`) biedt de staartbibliotheek of een eigen post: naam, vast bedrag of aantal × prijs, BTW-tarief (volg calculatie, of 9% of 21% als derden-post) en het vinkje Materieel. Een template per dag of per week uit de bibliotheek komt als aantal × prijs met dag of week als eenheid; het aantal vul je zelf in. Percentage-templates, Afdekvilt en Kleinschaligheidstoeslag staan niet in de lijst.
+- Zolang de optie niet gekozen is staat de post bij de optie zelf: `calculaties.offerte_config.opties[].posten` (lijst van `{id, naam, type: 'vast' of 'eenheid', bedrag, hoeveelheid, eenheid, btwPct, kostensoort}`). Niet in de tabel `staart`. De rekenkern, de basis, de staartlijst, de werkbon, de Yoobi-export en het onderhoudsplan zien hem dan niet.
+- `_optMetStand` telt de posten mee in elke samenstelling waarin de optie aan staat. Ze zitten daardoor in de meerprijs en in de tabel van de accordeerlink. Op de offerte staat de post niet apart; de klant ziet één meerprijs.
+- Keuze vastleggen (`_optSchrijfStaart`, ongewijzigd): de posten van de gekozen opties worden echte staartposten, met `staart.optie_id` en `staart.optie_post` gevuld. Calculatie, werkbon, planning en Yoobi-export rekenen er dan mee. Het offertedocument blijft de basis tonen (zonder die posten) met de keuze en het nieuwe totaal eronder.
+- In de staartlijst draagt zo'n post het label van de optie en heeft hij geen knoppen; `editStaart` en `delStaart` weigeren. Wijzigen doe je bij de optie, na Keuze wissen.
+- Keuze wissen haalt precies die rijen weer uit de staart; de posten blijven bij de optie staan. Leg je een andere keuze vast, dan houden de posten die blijven hun rij.
+- Maximaal zes posten per optie (`OPT_POST_MAX`).
+
+**Ook gewijzigd**
+- Dupliceren: de posten bij een optie gaan mee met de optie (ze staan in `offerte_config.opties`); de echte staartposten van een vastgelegde keuze gaan niet mee, net als de keuze zelf.
+- Een optie opheffen, of een deel met ↩ weer gewoon maken, neemt de posten bij die optie mee; de bevestiging noemt dat.
+- Vangnet: staat er in de staart een post met een `optie_id` terwijl die optie niet gekozen is, dan meldt het blok dat als fout (het totaal is te hoog), wordt het offertedocument niet gemaakt, en ruimt Keuze wissen de post op. Bestaat de optie niet meer, dan heeft de post in de staartlijst het label "optie onbekend" en gewone knoppen.
+- De namen "afdekvilt" en "kleinschalig" worden bij een optiepost geweigerd, omdat de app posten met die naam als de automatische post behandelt.
+
+**Keuzes Claude**
+- Een nieuwe post staat in het venster standaard op Materieel aangevinkt, omdat het meestal een steiger of hoogwerker is.
+- Een optie die alleen posten heeft en geen regel of deel staat niet op de offerte (bestaande regel: "heeft geen regels of delen meer").
+- De echte post houdt de waarden van de post bij de optie; die is de bron. Daarom is bewerken in de staartlijst afgesloten.
+
+**Niet gewijzigd (bewust)**
+- De rekenkern `_berekenOfferteCijfers`, `_optSimStaart` en `_optSchrijfStaart`.
+- De klantpagina en de Edge Function `offerte-accord`.
+- De offerte voor de klant: geen nieuwe regels of teksten.
+
+**Bekende beperkingen**
+- Geen post per dag of per week en geen percentage bij een optie (besluit). Een hoogwerker voor twee dagen is 2 × de dagprijs.
+- De klant ziet de post niet apart. Moet hij weten dat er een steiger in de meerprijs zit, dan hoort dat in de omschrijving van de optie.
+- De post telt niet mee in de werkdagen en wordt niet verwerkt in de eenheidsprijs.
+- Het onderhoudsplan rekent met de staart van de calculatie: een post bij een niet-gekozen optie zit daar niet in, een post van een vastgelegde keuze wel.
+
+**Getest**
+- Poorten op het gepatchte bestand: het inline script parseert in Node; div-tags 1531 open / 1534 dicht tegen 1523 / 1526 in v4.128.1 (acht erbij, gebalanceerd); script-tags 6 / 6; CSS-accolades 923 / 923 tegen 918 / 918.
+- `test_posten_v4.129.0.js` (nieuw), 69 controles, alle goed. De referentie is het echte v4.127.0, waar opties met delen en posten niet bestaan: elke stand is daar met de hand gezet, de posten als gewone staartposten, en de staart is bijgewerkt met de echte routines van de app. Proefcalculatie op 9% BTW met een steiger van derden op 21%, een hoogwerker van 2 dagen, een container en een post bij een "in plaats van"-optie.
+  - Alle 256 samenstellingen zijn op de cent gelijk in bedrag exclusief, BTW en inclusief, en gelijk in werkdagen.
+  - Posten toevoegen verandert de basis en de staart niet; alleen de meerprijs van de opties met een post stijgt.
+  - Vastleggen: het totaal is de voorspelde samenstelling, de rijen staan met `optie_id` en `optie_post` in de database, de echte bijwerkroutines veranderen daarna niets, en de hele tabel van 256 is na het vastleggen nog dezelfde.
+  - Andere keuze, wissen, dupliceren, post wijzigen en weghalen, optie opheffen, en het vangnet voor een post die niet bij een gekozen optie hoort.
+- v4.128.1 naast v4.129.0 zonder posten: 30 controles, alle goed (totaal, alle samenstellingen, documenten, werkbon, calculatieprint, Controleer, cijfers voor de link, plan-rekenpad).
+- `test_keuzes_v4.128.0.js` tegen v4.127.0 en v4.129.0: 189 controles, alle goed. Het bestand is bijgewerkt zodat het versienummer in voetregels niet meer meetelt.
+- Statische weergave van het blok en het venster met de echte opmaak, als schermafbeelding bekeken.
+
+**Niet getest**
+- In een echte browser met de echte database. In de nagebootste pagina werkt het wisselen tussen "Vast bedrag" en "Aantal × prijs" (velden tonen en verbergen) niet; dat deel van het venster is alleen gelezen.
+- De offerte-PDF als bestand en een echte accordeerlink met posten.
+- Terugzetten uit de prullenbak van een staartpost met een `optie_id`.
+
 ## v4.128.1 — Opties: duidelijker namen op het scherm, het woord "erbij" verdwijnt (2026-11-22)
 
 Gebouwd op v4.128.0, live opgehaald van GitHub op 22-11-2026 bij de start van deze bouw (2.146.913 bytes, gelijk aan de levering van 22-11). Alleen teksten op het scherm; geen SQL.

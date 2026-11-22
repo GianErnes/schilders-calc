@@ -7162,3 +7162,27 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 De naam op het scherm komt uit `_optSoortLabel(optie)`.
 
 **Als het misgaat.** Staat een hele regel als optie waar een extra bewerking bedoeld was (de basis is dan te laag en de meerprijs is het hele werk van die regel): hef de optie op met × in het blok Opties voor de klant, de regel staat dan weer aan in de basis. Maak daarna vanaf de regel met ◇ de soort Extra bewerking en voeg de bewerking toe in de kopie die eronder verschijnt.
+
+## Ook op 22 november 2026: vaste posten bij een optie (index.html v4.129.0, SQL opties_03)
+
+**Wat het is.** Bij een optie kunnen vaste posten horen, zoals een steiger, hoogwerker of container. De post telt alleen mee als de klant die optie kiest en zit in de meerprijs. Ontwerp: memo "Keuzes voor de klant, online samenstellen" van 20-11-2026, release 2 (stap B). Online kiezen (stap D) bestaat nog niet.
+
+| Onderdeel | Plek |
+|---|---|
+| Post zolang de optie niet gekozen is | `calculaties.offerte_config.opties[].posten`: lijst van `{id, naam, type, bedrag, hoeveelheid, eenheid, btwPct, kostensoort}`; `type` is `vast` of `eenheid` |
+| Post nadat de keuze is vastgelegd | een gewone rij in `staart`, met `staart.optie_id` (de optie) en `staart.optie_post` (de post binnen die optie) gevuld |
+| Controle in de database | `staart_optie_post_bij_optie`: een `optie_post` zonder `optie_id` kan niet |
+| Maximum per optie | constante `OPT_POST_MAX` = 6 in `index.html` |
+| Code | blok "OPTIES IN DE OFFERTE": `_optPosten`, `_optPostAlsStaart`, `_optPostControle`, `optPostZet`, `optPostWeg`, `optPostOpen`, `_optPostenHtml`, `_optZwerfPosten`, `_optPostOptie`; het meerekenen zit in `_optMetStand` |
+| SQL-bestand | `sql/opties_03_staart.sql`, live gedraaid op 22-11-2026 via de Supabase-koppeling (`apply_migration`). GEMETEN daarna: beide kolommen en de controle bestaan, 336 staartrijen, geen met een waarde |
+| Tests | `test_posten_v4.129.0.js` (69 controles), naast `test_keuzes_v4.128.0.js` (189); beide vragen `test_keuzes_laad.js`, `test_keuzes_fixture.js` en `npm install acorn` |
+
+**De regel waar het op rust.** Een post staat op precies één plek tegelijk mee te tellen. Niet gekozen: alleen bij de optie, en `_optMetStand` telt hem mee in de samenstellingen waarin de optie aan staat. Gekozen en vastgelegd: als echte staartpost, en `_optMetStand` haalt bij het doorrekenen van andere samenstellingen eerst alle staartposten met een `optie_id` weg en zet dan de posten van de aangezette opties erbij. De rekenkern weet van niets.
+
+**Als het misgaat.**
+- Het totaal van de basis is te hoog en het blok meldt "In de staartkosten staat een post die hoort bij een optie die niet gekozen is": kies Keuze wissen in het blok Opties voor de klant. Dat haalt die rijen uit de staart. Met SQL, voor één calculatie: `delete from staart where calculatie_id = '<id>' and optie_id is not null;` De posten bij de opties blijven staan in `offerte_config`.
+- Een staartpost heeft het label "optie onbekend": de optie staat niet meer in `offerte_config.opties`. De post telt gewoon mee. In de staartlijst is hij te wijzigen of weg te halen.
+- Een post in de staartlijst is niet te bewerken ("bij de optie"): hij hoort bij een gekozen optie. Wis eerst de keuze, pas de post aan bij de optie, en leg de keuze opnieuw vast.
+- Terug naar v4.128.1 kan zonder de database aan te raken. Een post bij een niet-gekozen optie bestaat daar niet (de meerprijs is dan zonder de post). Een echte post van een vastgelegde keuze is daar een gewone staartpost; let op dat Keuze wissen hem in v4.128.1 niet weghaalt. Wis daarom eerst de keuze in v4.129.0, of haal de post na het wissen met de hand weg.
+
+**Wat er niet is.** Een post per dag, per week of als percentage bij een optie (besluit Gian 22-11-2026); de post apart zichtbaar op de offerte; online kiezen op de klantpagina.
