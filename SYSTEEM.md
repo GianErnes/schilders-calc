@@ -7147,3 +7147,18 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 - Het blok rekent traag: het aantal opties is hoger dan vier en iemand heeft "Alle samenstellingen doorrekenen" gebruikt, of Controleer of het maken van een link loopt. Dat is één keer rekenen; de tijd staat daarna in het blok.
 
 **Wat er niet is.** Vaste posten bij een keuze; online kiezen op de klantpagina; een keuze die uit meerdere delen bestaat via de knop ◇. Zie CHANGELOG v4.128.0 onder Bekende beperkingen en Bijvangst (dubbele gebrekposten als twee bijwerkrondes door elkaar lopen, niet gerepareerd).
+
+## Ook op 22 november 2026: andere namen voor de soorten opties op het scherm (index.html v4.128.1, geen SQL)
+
+**Wat het is.** Het woord "erbij" staat niet meer op het scherm; het werd gelezen als "een bewerking erbij" (Gian 22-11-2026, eerste test van v4.128.0). In de database en in de code is niets van naam veranderd.
+
+| Op het scherm | In `offerte_config.opties[].soort` | Rondje in het venster (`optMkSoort`) | Wat het doet |
+|---|---|---|---|
+| Ander verfsysteem (label: in plaats van) | `vervang` | `systeem` | optieregel met een ander systeem, vervangt de basisregel |
+| Extra bewerking (label: in plaats van) | `vervang` | `kopie` | kopie van de basisregel waarin een bewerking wordt toegevoegd, vervangt de basisregel |
+| Hele regel als optie (label: hele regel) | `erbij` | `erbij` | de regel zelf staat uit in de basis |
+| Heel onderdeel, hele hoofdgroep (knop ◇ in de kop) | `erbij` | geen venster | het deel staat uit in de basis |
+
+De naam op het scherm komt uit `_optSoortLabel(optie)`.
+
+**Als het misgaat.** Staat een hele regel als optie waar een extra bewerking bedoeld was (de basis is dan te laag en de meerprijs is het hele werk van die regel): hef de optie op met × in het blok Opties voor de klant, de regel staat dan weer aan in de basis. Maak daarna vanaf de regel met ◇ de soort Extra bewerking en voeg de bewerking toe in de kopie die eronder verschijnt.

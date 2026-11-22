@@ -1,3 +1,34 @@
+## v4.128.1 — Opties: duidelijker namen op het scherm, het woord "erbij" verdwijnt (2026-11-22)
+
+Gebouwd op v4.128.0, live opgehaald van GitHub op 22-11-2026 bij de start van deze bouw (2.146.913 bytes, gelijk aan de levering van 22-11). Alleen teksten op het scherm; geen SQL.
+
+**Aanleiding**
+- Gian 22-11, bij de eerste test van v4.128.0, met twee schermafbeeldingen: hij wilde "Gevelkozijnen omkleuren naar antraciet, een extra grondlaag" als optie en koos in het venster "Erbij". Daardoor stond de hele regel Gevelkozijnen en -ramen uit in de basis, met een meerprijs van € 5.774,79 voor al het kozijnwerk. Bedoeld was de middelste soort: dezelfde regel met een extra bewerking.
+- Gian: "verwarrende term dan wel voor deze keuze. Dat blijf ik verwarren ben ik bang." "Erbij" las als "een bewerking erbij". Voorstel van Claude met drie namen, door Gian goedgekeurd op 22-11.
+
+**Gewijzigd**
+- Venster "Optie voor de klant" bij een regel (`optOpenMaak`), de drie rondjes:
+  - "In plaats van: een ander verfsysteem op hetzelfde oppervlak" heet nu **Ander verfsysteem.** De klant kiest tussen het systeem van nu en een ander systeem op hetzelfde oppervlak.
+  - "In plaats van: dezelfde regel met een extra bewerking" heet nu **Extra bewerking.** De klant kiest dezelfde regel zonder of met een extra laag of bewerking.
+  - "Erbij: deze regel is extra werk en staat uit in de basis" heet nu **Hele regel als optie.** Dit werk staat uit in de basis; de klant kan het laten doen.
+- Label op een regel: "OPTIE 1 · hele regel · niet gekozen" in plaats van "· erbij ·". De eerste twee soorten houden "in plaats van".
+- Label in de kop van een deel: "OPTIE 3 · heel onderdeel · niet gekozen" of "· hele hoofdgroep ·".
+- Blok Opties voor de klant, onder het nummer: `_optSoortLabel` (nieuw) noemt de optie naar wat ze omvat: in plaats van, hele regel, heel onderdeel, hele hoofdgroep, of bij een mengsel "hele delen en regels". Dezelfde naam staat in de lijst "Hoort bij" van het venster.
+- De uitleg in het lege blok, de hulpteksten op de knoppen ◇ en twee alinea's van de welkomsttekst gebruiken dezelfde namen.
+
+**Niet gewijzigd (bewust)**
+- De waarde in de database: `offerte_config.opties[].soort` blijft `erbij` of `vervang`, en de rondjes houden hun waarden `systeem`, `kopie` en `erbij`. Bestaande opties veranderen niet.
+- De offerte voor de klant: daar stond het woord niet.
+- Elke berekening.
+
+**Getest**
+- Poorten: het inline script parseert in Node; div-tags 1523 / 1526, script-tags 6 / 6, CSS-accolades 918 / 918, alle drie gelijk aan v4.128.0.
+- v4.128.0 naast v4.128.1 in het testharnas, voor een calculatie zonder opties, met regel-opties en met acht opties waaronder delen: 30 controles, alle goed. Totaal, alle samenstellingen, de meldingen in het blok, offertedocument (scherm en PDF), werkbon, calculatieprint, cijfers voor de accordeerlink, Controleer en het plan-rekenpad zijn gelijk, op het versienummer in de voetregel na.
+- `test_keuzes_v4.128.0.js` (bijgewerkt, zelfde bestandsnaam) tegen v4.127.0 en v4.128.1: 189 controles, alle goed. Zes nieuwe voor de namen: de soort per optie in het blok, de drie namen in het venster, de ongewijzigde waarden achter de rondjes, en dat het woord "erbij" niet meer in het blok, de koppen en de regellabels staat.
+
+**Niet getest**
+- In een echte browser of op de iPad. Het venster is alleen als tekst gecontroleerd, niet als beeld.
+
 ## v4.128.0 — Een gevel, ruimte of onderdeel als keuze voor de klant, en acht opties per offerte (2026-11-22)
 
 Gebouwd op v4.127.0, live opgehaald van GitHub op 21-11-2026 bij de start van deze bouw en opnieuw op 22-11-2026 vlak voor het afronden (2.120.034 bytes, beide keren identiek en gelijk aan de projectkopie). Dit is release 1 uit het ontwerpmemo "Keuzes voor de klant, online samenstellen" van 20-11-2026: stap A (delen als keuze) en stap C (acht keuzes). Stap B (vaste posten bij een keuze) en stap D (online kiezen) zijn niet gebouwd.

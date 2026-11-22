@@ -1,4 +1,5 @@
-// test_keuzes_v4.128.0.js — hoort bij index.html v4.128.0 (delen als keuze, acht keuzes).
+// test_keuzes_v4.128.0.js — hoort bij index.html v4.128.0 en v4.128.1 (delen als keuze, acht keuzes;
+// in v4.128.1 alleen andere namen op het scherm). Bijgewerkt op 22-11-2026 voor v4.128.1.
 // Laadt de echte code uit twee bestanden (oud = v4.127.0, nieuw = v4.128.0) in een eigen
 // vm-context en legt ze naast elkaar. Gebruik:
 //   node test_keuzes_v4.128.0.js <oud index.html> <nieuw index.html>
@@ -17,7 +18,7 @@ function check(naam, voorwaarde, detail) {
 const J = x => JSON.stringify(x);
 const cent = (a, b) => Math.abs((a || 0) - (b || 0)) < 0.005;
 // De voetregel van werkbon en afdrukken noemt het versienummer; dat verschil hoort erbij en wordt weggestreept.
-const vX = t => String(t).replace(/v4\.12[78]\.0/g, 'vX');
+const vX = t => String(t).replace(/v4\.12[78]\.\d/g, 'vX');
 function vers(pad, variant) {
   const L = laad(pad);
   L.run(FIX);
@@ -306,7 +307,7 @@ const HAND = { oA: m => [['r8b', m], ['r8', !m]], oB: m => [['r13', m]], oC: m =
     check('gekozen deel telt niet als vervallen', N.run("_heeftVervallen(data.calc)") === false);
     check('gekozen deel staat op de werkbon', /Garagedeur/.test(N.run("_werkbonHtml(data.calc)")) && /Achtergevel/.test(N.run("_werkbonHtml(data.calc)")));
     check('gekozen deel telt mee in het plan', N.run("_ohpProjectRauw(data.calc, data.settings, null, null).uren") > 0 && cent(N.run("_ohpProjectRauw(data.calc, data.settings, null, null).uren"), N.run("calcProjectTotalen().uren")));
-    check('gekozen deel: kop toont "gekozen"', /erbij · gekozen/.test(N.run("_optDeelKop('hgG', null, __vind('hgG')).tag")));
+    check('gekozen deel: kop toont "gekozen"', /hele hoofdgroep · gekozen/.test(N.run("_optDeelKop('hgG', null, __vind('hgG')).tag")));
     // verwijderen en terugdraaien geblokkeerd bij een vastgelegde keuze
     N.meldingen.toast.length = 0;
     await N.run("delOd('hgB', 'odAG')"); await N.run("delHg('hgG')"); await N.run("optDeelLos('hgG', null)");
@@ -375,10 +376,26 @@ const HAND = { oA: m => [['r8b', m], ['r8', !m]], oB: m => [['r13', m]], oC: m =
     N.run("_optKiesConcept = null;");
     // koppen in de calculatie
     const kopHg = N.run("renderHoofdgroep(__vind('hgG'))"), kopB = N.run("renderHoofdgroep(__vind('hgB'))");
-    check('kop hoofdgroep-keuze: label, vast vinkje, terugknop, geen ◇', /OPTIE 5 · erbij · niet gekozen/.test(kopHg) && /class="hoofdgroep[^"]*is-inactief[^"]*is-keuze/.test(kopHg) && /disabled title="Dit deel is een keuze/.test(kopHg) && /optDeelLos\('hgG',null\)/.test(kopHg) && !/optDeelMaak\('hgG',null\)/.test(kopHg));
+    check('kop hoofdgroep-keuze: label, vast vinkje, terugknop, geen ◇', /OPTIE 5 · hele hoofdgroep · niet gekozen/.test(kopHg) && /class="hoofdgroep[^"]*is-inactief[^"]*is-keuze/.test(kopHg) && /disabled title="Dit deel is een keuze/.test(kopHg) && /optDeelLos\('hgG',null\)/.test(kopHg) && !/optDeelMaak\('hgG',null\)/.test(kopHg));
     check('kop gewone hoofdgroep: ◇ en vrij vinkje', /optDeelMaak\('hgB',null\)/.test(kopB) && /onchange="toggleHgActief\('hgB'\)"/.test(kopB));
-    check('kop onderdeel-keuze binnen Buiten', /OPTIE 3 · erbij · niet gekozen/.test(kopB) && /optDeelLos\('hgB','odAG'\)/.test(kopB) && /optDeelMaak\('hgB','odVG'\)/.test(kopB));
+    check('kop onderdeel-keuze binnen Buiten', /OPTIE 3 · heel onderdeel · niet gekozen/.test(kopB) && /optDeelLos\('hgB','odAG'\)/.test(kopB) && /optDeelMaak\('hgB','odVG'\)/.test(kopB));
     check('koppen: div-balans', balans(kopHg) === 0 && balans(kopB) === 0);
+    // v4.128.1 — namen op het scherm: het woord "erbij" komt niet meer voor
+    N.run("renderOptiesBlok()");
+    const hb = N.document.getElementById('optiesBlokBody').innerHTML;
+    const soorten = (hb.match(/font-size:0\.68rem; color:var\(--ink-soft\);">([^<]+)<\/span><\/td>/g) || []).map(x => x.replace(/^.*">/, '').replace(/<.*$/, ''));
+    check('blok: soort per optie heet naar wat ze omvat', J(soorten) === J(['in plaats van', 'hele regel', 'heel onderdeel', 'heel onderdeel', 'hele hoofdgroep', 'heel onderdeel', 'heel onderdeel', 'hele regel']), J(soorten));
+    const alleKoppen = N.run("data.calc.hoofdgroepen.map(hg => renderHoofdgroep(hg)).join('')");
+    check('scherm: het woord "erbij" staat niet meer in het blok of in de koppen en regels', !/\berbij\b/i.test(hb.replace(/optienummer erbij/g, '')) && !/·\s*erbij\s*·/.test(alleKoppen) && !/>erbij</.test(alleKoppen), (hb.match(/.{30}\berbij\b.{20}/i) || [''])[0]);
+    check('regel-label: "hele regel" en "in plaats van"', /OPTIE 8 · hele regel · niet gekozen/.test(alleKoppen) && /OPTIE 1 · in plaats van · niet gekozen/.test(alleKoppen));
+    const V = vers(padNieuw, false);
+    V.document.body.appendChild = function (d) { V.document.__modal = d; };
+    Object.assign(V.document.getElementById('optMkOptie'), { options: [], selectedOptions: [] });   // de nagebootste pagina kent geen keuzelijsten
+    try { V.run("optOpenMaak('hgB', 'odVG', 'r1')"); } catch (e) { /* het venster staat er al; optMaakSoort vraagt een echte keuzelijst en die heeft het harnas niet */ }
+    const mh = (V.document.__modal && V.document.__modal.innerHTML) || '';
+    check('venster optie maken: drie nieuwe namen', /<strong>Ander verfsysteem\.<\/strong>/.test(mh) && /<strong>Extra bewerking\.<\/strong>/.test(mh) && /<strong>Hele regel als optie\.<\/strong>/.test(mh) && !/Erbij:/.test(mh) && !/In plaats van:/.test(mh), mh.slice(0, 120));
+    check('venster optie maken: de waarden achter de rondjes zijn ongewijzigd', /value="systeem"/.test(mh) && /value="kopie"/.test(mh) && /value="erbij"/.test(mh));
+    check('_optSoortLabel', J([{ soort: 'vervang', regels: [{}] }, { soort: 'erbij', regels: [{ deel: null }] }, { soort: 'erbij', regels: [{ deel: 'od' }] }, { soort: 'erbij', regels: [{ deel: 'hg' }] }, { soort: 'erbij', regels: [{ deel: 'hg' }, { deel: null }] }, { soort: 'erbij', regels: [] }].map(o => N.run("_optSoortLabel(" + J(o) + ")"))) === J(['in plaats van', 'hele regel', 'heel onderdeel', 'hele hoofdgroep', 'hele delen en regels', 'hele regel']));
     // twee opties: tabel op papier blijft
     const T = vers(padNieuw, false);
     await T.run("__syncAlles()");
@@ -416,7 +433,7 @@ const HAND = { oA: m => [['r8b', m], ['r8', !m]], oB: m => [['r13', m]], oC: m =
   console.log('10. Hele documenten: calculatieprint, offerte, Controleer, link, planbeurt');
   {
     // De voetregel van een afdruk noemt het versienummer; dat verschil hoort erbij en wordt weggestreept.
-    const pa = L => L.document.getElementById('printArea').innerHTML.replace(/v4\.12[78]\.0/g, 'vX');
+    const pa = L => L.document.getElementById('printArea').innerHTML.replace(/v4\.12[78]\.\d/g, 'vX');
     for (const variant of [false, 'regels']) {
       const O = vers(padOud, variant), N = vers(padNieuw, variant);
       await O.run("__syncAlles()"); await N.run("__syncAlles()");
@@ -447,7 +464,7 @@ const HAND = { oA: m => [['r8b', m], ['r8', !m]], oB: m => [['r13', m]], oC: m =
     const ctl = N.run("_controleerVerzamel()");
     check('Controleer met acht keuzes: geen blokkade over opties', Array.isArray(ctl) && !ctl.some(x => x.n === 0 && /^Opties/.test(x.t)), J(ctl.filter(x => /^Opties/.test(x.t))));
     const lk = N.run("_accordCijfersVoorLink(data.calc)");
-    check('cijfers voor de link: basisbedrag en 256 samenstellingen', cent(lk.totaalIncl, ber8.combi[0].incl) && lk.opties.combi.length === 256 && lk.app === 'v4.128.0', lk.app);
+    check('cijfers voor de link: basisbedrag en 256 samenstellingen', cent(lk.totaalIncl, ber8.combi[0].incl) && lk.opties.combi.length === 256 && /^v4\.128\.\d$/.test(lk.app), lk.app);
     N.run("printOfferteYoobi()");
     check('Yoobi-export met delen: alleen de basis', !/Garagedeur|Dakkapel|Achtergevel|Zijgevel/.test(pa(N)) && /Voorgevel/.test(pa(N)));
     // planbeurt: per regel en per stap, naast dezelfde calculatie zonder de niet-gekozen delen
