@@ -110,6 +110,16 @@ dag, `planning_02_verlof.sql`, vijf controleregels GOED) en `plan_fasen`
 (hulpmiddelen per project of fase, `planning_05_middelen.sql`). Op 4 oktober 2026 kreeg `plan_projecten` de kolom `toon_ondanks_regel` (`planning_06_paraplu.sql`): overrule op de naamregel in `planning.html` v0.17.0 die hoofdprojecten "Onderhoudsplan jjjj-jjjj" en "Onderhouds garantie+ Plan jjjj-jjjj" standaard van het bord houdt (regel verruimd in v0.17.1). Op 12 oktober 2026 kwam `houtrot_tarieven` erbij (`sql/houtrot_01_tarieven.sql`, herstelmethodes met richtprijs, beheerd in Calc v4.90.0 onder Instellingen) en kregen `opleveringen` en `oplever_punten` de houtrot-opgave erbij (`sql/houtrot_02_opgaven.sql`): kolom `soort` ('oplevering'/'houtrot') op beide, op `opleveringen` `klant_email`, `btw_pct` (9/21), `opgave_nummer`, `verzonden_op`, en op `oplever_punten` `plek`, `tarief_id` → houtrot_tarieven (on delete set null), `methode`, `methode_tekst`, `eenheid`, `aantal`, `prijs_eenheid`, `bedrag`. Daarbij is de check op `opleveringen.status` vervangen door `opleveringen_status_check`, die naast lopend/afgerond ook concept/verzonden/akkoord/afgewezen toestaat. Geen nieuwe tabel voor de opgave zelf: bewust besluit van Gian, zodat `oplevering.html` v0.3.0 de camera-, foto- en ringcode hergebruikt. Die getallen zijn opgeteld bij de meting van 2 augustus en niet
 opnieuw geteld.
 
+Op 21 november 2026 kwamen `wp_voertuigen`, `wp_logboek`, `wp_bijlagen`,
+`wp_aandachtspunten` en `wp_termijnen` erbij voor het wagenpark, met de bak
+`wagenpark` en negen triggers (vier keer `set_updated_at`, vijf eigen),
+aangelegd met `wagenpark_01_tabellen.sql` (elf controleregels, alle GOED).
+GEMETEN op 21-11-2026 direct na die aanleg: 77 tabellen in `public`
+(`information_schema.tables`, `BASE TABLE`), 9 opslagbakken
+(`storage.buckets`) en 76 triggers op tabellen in `public` (`pg_trigger`
+zonder de interne). De getallen aan het begin van deze alinea zijn dus
+verouderd. Zie de sectie van 21 november 2026 achteraan.
+
 > **Twee triggertellingen spreken elkaar tegen.** Hier staat 14, de
 > herbouwtabel in 4.8 komt op 13. Dat verschil bestond al voor de
 > opleverapp (12 tegen 11) en is nooit verklaard. Bij beide is dezelfde
@@ -147,7 +157,11 @@ Alleen in schilders-calc.
 | `taken-documenten` | nee | 1 bestand |
 | `taken-fotos` | nee | 2 bestanden |
 | `oplever-fotos` | nee | foto's bij de opleverpunten, leeg bij aanleg |
+| `wagenpark` | nee | facturen en foto's bij het wagenpark, leeg bij aanleg (21-11-2026). **Staat nog niet in de spiegelbackup**, zie de sectie van 21 november 2026 |
 | `backups` | nee | nachtelijke dumps, 156 bestanden |
+
+GEMETEN 21-11-2026 (`storage.buckets`): er zijn 9 bakken. Deze tabel telt
+er 8; de negende is `personeel`, die hier nooit is bijgeschreven.
 
 `accord-pdf` staat openbaar omdat de klant er met een link bij moet.
 **[TE CONTROLEREN sinds 1 november 2026]** Het herbouwbestand van die dag
@@ -801,6 +815,8 @@ Allemaal op tabellen in `schilders-calc`, allemaal actief. De twaalf hieronder z
 | `trg_verfsystemen_upd` | `verfsystemen` | zet de bijwerkdatum |
 
 **De vijftien prullenbak-triggers** heten `<tabel>_prullenbak` en staan als `before delete` op `calculaties`, `hoofdgroepen`, `onderdelen`, `calc_regels`, `calc_regel_stappen`, `meetstaat`, `staart`, `calculatie_documenten`, `calculatie_fotos`, `offerte_accorderingen`, `onderhoudsplannen`, `onderhoudsplan_beurten`, `onderhoudsplan_externe_posten`, `todos` en `calculatie_tijd`. Ze roepen allemaal dezelfde functie `prullenbak_vang()` aan, die de rij als JSON in de tabel `prullenbak` legt en daarna het verwijderen gewoon laat doorgaan; gaat het kopiëren mis, dan komt er een NOTICE in het logboek en wordt er tóch verwijderd. Terugzetten: `prullenbak_herstel(id)`; opruimen: `prullenbak_opruimen(dagen)`; de app leest de view `prullenbak_overzicht`. Aangelegd met `prullenbak_01_tabellen.sql`, `_02_externe_posten.sql` en `_03_calculatie_tijd.sql`. Zie de sectie van 19 oktober 2026.
+
+**De vijf wagenpark-triggers** (sinds 21 november 2026, `wagenpark_01_tabellen.sql`) staan allemaal op de `wp_`-tabellen, geen enkele op `taken`: `wp_logboek_voor_insert` (before insert op `wp_logboek`: vult de melder in en maakt bij een incident een taak voor Gian), `wp_termijn_taak_zet` (before insert/update op `wp_termijnen`: maakt of werkt de gekoppelde taak bij), `wp_termijn_taak_weg` (after delete op `wp_termijnen`: haalt de open taak weg), `wp_aandachtspunt_voor_insert` (before insert op `wp_aandachtspunten`: vult de melder in) en `wp_aandachtspunten_naar_taak` (after insert/update/delete op `wp_aandachtspunten`: zet de open punten onderaan de notitie van de open onderhoudstaak). Ze schrijven wel ín `taken`, als `security definer`. Zie de sectie van 21 november 2026 achteraan.
 
 Triggers zijn het makkelijkst te vergeten onderdeel van dit systeem,
 omdat ze nergens zichtbaar zijn en geen logboek bijhouden. Ze doen werk
@@ -7044,3 +7060,57 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 - De afsluittaken stoppen zonder de rest te raken: `AFSLUIT_VANAF` in `planning-kennisgeving-taken` op een datum ver in de toekomst zetten en uitrollen met Verify JWT uit. Open afsluittaken sluiten dan bij de volgende ronde. Het bord toont het signaal nog tot dezelfde constante in planning.html is aangepast.
 - De taak komt niet: draai de ronde droog (`?droog=1`, zelfde aanroep als de cronjob) en kijk in `nieuw`. Controleer of het project in de laatste `fin_werkvoorraad` staat, niet verborgen is, en of de laatste dag met uren op of na 23-11-2026 ligt.
 - Mail verstuurd maar de knoppen ontbreken: dan draait er een versie van `planning-kennisgeving` van vóór v3.5. Een verzoek met een onbestaande soort geeft bij v3.5 de fout "soort moet opdracht, maand, week, dag of afsluiting zijn".
+
+## Wat er op 21 november 2026 gedaan is: wagenpark stap 1, alleen de database (SQL wagenpark_01_tabellen, nog geen pagina)
+
+**Wat het is.** Beheer van de vier eigen bussen als onderdeel van de suite (besluit Gian 21-11-2026: geen losse app). Op deze dag is alleen de database aangelegd. De pagina `wagenpark.html` bestaat nog niet; tot die er is kan niemand iets invoeren en zijn alle vijf tabellen leeg (GEMETEN 21-11-2026 na de aanleg: 0 rijen in elke tabel, 0 taken met een `wagenpark-`kenmerk).
+
+**Omvang stap 1 (akkoord Gian 21-11-2026).** Voertuigkaart per bus, logboek met onderhoudsfacturen, incident melden door de mannen (wordt een taak voor Gian), aandachtspunten per bus voor de eerstvolgende onderhoudsbeurt, termijnen als taak. Stap 2, niet gebouwd: banden, vloeistoffen, documenten, sleutels en tankpas. Bewust niet: rittenregistratie.
+
+**Waar het staat.**
+
+| Onderdeel | Plek |
+|---|---|
+| Bussen | tabel `wp_voertuigen` (kenteken uniek ongeacht streepjes, spaties en hoofdletters: index `wp_voertuigen_kenteken_uidx`) |
+| Onderhoud, reparatie, incident | tabel `wp_logboek` (`soort`: onderhoud, reparatie, incident, overig; `status`: open of afgehandeld; `taak_id` bij een incident) |
+| Facturen en foto's | tabel `wp_bijlagen` plus opslagbak `wagenpark` (besloten) |
+| Aandachtspunten | tabel `wp_aandachtspunten` (`afgehandeld_op` leeg = open) |
+| Termijnen | tabel `wp_termijnen` (`soort`: apk, onderhoud, verzekering, belasting, banden, vloeistoffen, overig; `dagen_vooraf` standaard 14; `taak_id`) |
+| Incident wordt taak | trigger `wp_logboek_voor_insert` |
+| Termijn wordt taak | triggers `wp_termijn_taak_zet` en `wp_termijn_taak_weg` |
+| Aandachtspunten in de onderhoudstaak | trigger `wp_aandachtspunten_naar_taak`, hulpfuncties `wp_aandachtspunten_blok` en `wp_notitie_met_blok` |
+| Stand van termijn en taak voor de pagina | functie `wp_termijnen_stand()` (uitvoerbaar voor `authenticated`, geeft niets terug zonder rol in `taken_rollen`) |
+| SQL-bestand | `wagenpark_01_tabellen.sql`, live gedraaid op 21-11-2026 via de Supabase-koppeling (`execute_sql`, dus niet in `supabase_migrations`), zonder de commentaarregels. Het bestand hoort in de repo in de map `sql/`; op het moment van schrijven nog niet geupload |
+
+**Rechten.** Het huismodel (besluit Gian 21-11-2026, keuze A): wie is ingelogd mag alles in de vijf tabellen en in de bak, wie niet is ingelogd mag niets. De mannen zien dus ook bedragen, facturen en aanschafprijs. Policies heten `<tabel>_authenticated_alles`, op de bak `wagenpark_authenticated_alles`.
+
+**De tabel `taken` is niet gewijzigd.** Geen kolom, geen regel, geen trigger, geen policy. Wagenparktaken zijn gewone taken met bron `eigen`, zoals de projecttaken van 19 november. Herkenbaar aan `bron_kenmerk` `wagenpark-incident:<id van de logboekregel>` of `wagenpark-termijn:<id van de termijn>`; `bron_ref` is de bus. De triggers draaien als `security definer`, omdat iemand met rol `eigen` zelf geen taak voor een ander mag aanmaken (policy `taken_aanmaken`, GEMETEN 21-11-2026).
+
+**Regels die de database afdwingt.**
+- Een incident krijgt een eenmalige taak op naam van Gian, gepland op het moment van melden, `piep` uit. Een gewone logboekregel krijgt geen taak en staat meteen op afgehandeld.
+- Een termijn krijgt een taak op vervaldatum min `dagen_vooraf`, om 08:00, voor de gekozen persoon. Met `herhaling_n` en `herhaling_eenheid` wordt het een herhaler (dezelfde eenheden als `taken`: dag, werkdag, week, maand, jaar). Een persoon die geen taken kan krijgen (onbekend of `administratie`) wordt Gian.
+- De datum van een bestaande taak wordt alleen aangeraakt als de vervaldatum of het aantal dagen vooraf wijzigt. Een tekstwijziging laat de datum met rust, anders zou een herhaler die de Takenapp al had doorgeschoven worden teruggezet.
+- Termijn uitgezet of verwijderd: de open taak verdwijnt, een afgevinkte blijft als logregel staan.
+- Open aandachtspunten staan onderaan de notitie van de open onderhoudstaak van die bus, onder de regel "— Aandachtspunten voor de garage —". Tekst boven die regel blijft behouden. Afgehandeld of verwijderd: uit de taak.
+- Een bus met logboek, bijlagen, termijnen of aandachtspunten is niet te verwijderen (`on delete restrict`); zet hem op `actief = false`.
+
+**Bekende grenzen.**
+- Vinkt iemand een herhalende termijntaak af, dan schuift de Takenapp die taak zelf door. `wp_termijnen.vervaldatum` schuift niet mee. De pagina moet de actuele taakdatum lezen via `wp_termijnen_stand()`. Hoe dit bij de APK moet werken (nieuwe datum invullen na de keuring) is nog niet ontworpen.
+- `wp_logboek.status` en de taak zijn twee plekken voor dezelfde vraag (is het incident afgehandeld). Er is geen koppeling tussen die twee in de database. De pagina moet dat oplossen; iemand met rol `eigen` kan de taak van Gian niet lezen, dus daarvoor is waarschijnlijk een tweede functie nodig (VERMOEDEN; beslist bij het ontwerp van de pagina).
+- Onderhoud op kilometerstand kan niet automatisch: de Takenapp kent alleen datums.
+
+**OPEN, vóór de eerste factuur of foto: de bak `wagenpark` heeft geen backup.** GEMETEN 21-11-2026 in de broncode van Edge Function `backup-dump` v7 (versie 25): de constante `SPIEGEL_BRONNEN` is een vaste lijst van zeven bakken en `wagenpark` staat er niet in. De vijf tabellen gaan wél vanzelf mee in de nachtelijke dump, want `backup_tabellen()` leest alle tabellen in `public` (GEMETEN, functiedefinitie). Te doen: `backup-dump` naar v8 met `'wagenpark'` in `SPIEGEL_BRONNEN`, uitrollen met Verify JWT uit, en de eerstvolgende maandagmail naleggen. De bak is nu leeg, dus er is nog niets verloren.
+
+**Getest.**
+- Lokaal op een nagebouwde database (Postgres 16; live draait 17.6): het bestand drie keer achter elkaar gedraaid, gedrag getest als Gian, als Max (rol `eigen`), als niet-ingelogde en als ingelogde zonder rol, en de twee terugvalpaden. Syntaxis gevalideerd met pglast (84 statements, 8 PL/pgSQL-blokken).
+- Live: de zelftest in het bestand maakt een proefbus (kenteken ZZ-TEST-99), controleert negen punten tegen de echte tabel `taken` met al haar triggers en draait alles terug. Uitkomst 21-11-2026: elf controleregels GOED, niets achtergebleven.
+- Niet getest: gebruik door een mens via een pagina. Die is er nog niet.
+
+**Terugvalgedrag.**
+- Lukt de taak bij een incident niet, dan wordt het incident wel opgeslagen (`taak_id` leeg) en staat er een WARNING in het Postgres-logboek (`wp_logboek_voor_insert`).
+- Lukt de taak bij een termijn niet, dan wordt de termijn niet opgeslagen en ziet de gebruiker de fout. Een termijn zonder herinnering is erger dan een foutmelding.
+
+**Bij nood.**
+- De koppeling met de Takenapp uitzetten zonder gegevens te verliezen: `alter table public.wp_logboek disable trigger wp_logboek_voor_insert;`, `alter table public.wp_termijnen disable trigger wp_termijn_taak_zet;`, `alter table public.wp_termijnen disable trigger wp_termijn_taak_weg;` en `alter table public.wp_aandachtspunten disable trigger wp_aandachtspunten_naar_taak;`. Bestaande taken blijven gewone taken. Let op: zonder `wp_logboek_voor_insert` wordt `status` niet meer gevuld en weigert de tabel nieuwe logboekregels tenzij de pagina zelf een status meestuurt.
+- Een termijn heeft geen taak (meer): sla de termijn opnieuw op met een gewijzigde vervaldatum, dan maakt de trigger een nieuwe taak.
+- Het bestand `wagenpark_01_tabellen.sql` mag opnieuw gedraaid worden; het is idempotent en de zelftest draait zichzelf terug.
