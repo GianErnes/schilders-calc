@@ -5,6 +5,10 @@ synchroon-check tegen de changelog, drie ochtendtellers na inloggen, en het
 systeemstatus-blok "Achter de schermen" (opruimpunt 5 uit SYSTEEM.md).
 Hoort bij `sql/start_01_systeem_status.sql`.
 
+## v0.4.0 — Tegel Wagenpark (22-11-2026)
+
+- Nieuwe tegel **Wagenpark** (`wagenpark.html`, changelog `CHANGELOG_wagenpark.md`) na Personeel. Verder ongewijzigd.
+
 ## v0.3.0 — Tegel Klantenkaart (15-10-2026)
 
 - Nieuwe tegel **Klantenkaart** (`kaart.html`, changelog `CHANGELOG_kaart.md`) na Klanten. Verder ongewijzigd.

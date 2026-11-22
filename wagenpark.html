@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Wagenpark">
+<meta name="theme-color" content="#f5f6f7">
+<title>Wagenpark — Ernes</title>
+<link rel="apple-touch-icon" href="./apple-touch-icon-wagenpark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#1a1d21; --ink-soft:#4b5563; --muted:#6b7280;
+    --paper:#ffffff; --paper-warm:#f9fafb; --paper-deep:#e5e7eb; --page:#f5f6f7;
+    --accent:#e63329; --accent-deep:#c62828; --accent-zacht:#fff4f3;
+    --green:#15803d; --green-zacht:#ecfdf3; --amber:#b45309; --amber-zacht:#fff7ed;
+    --plaat:#f7c600; --plaat-blauw:#1d3f94;
+    --radius:6px; --radius-lg:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--page);color:var(--ink);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;font-size:16px;line-height:1.45;
+    -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+  button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
+  :focus-visible{outline:3px solid #2563eb;outline-offset:2px}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+  .wrap{max-width:760px;margin:0 auto;
+    padding:calc(14px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
+  .kop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .kop h1{margin:0;font-size:1.45rem;font-weight:700;letter-spacing:-0.015em}
+  .kop .wie{color:var(--muted);font-size:0.85rem}
+  .kop-knoppen{display:flex;gap:8px}
+
+  .knop{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 16px;
+    border-radius:var(--radius);border:1px solid var(--paper-deep);background:var(--paper);color:var(--ink);
+    font-weight:600;font-size:0.95rem;cursor:pointer;text-align:center}
+  .knop.rood{background:var(--accent);border-color:var(--accent);color:#fff}
+  .knop.donker{background:var(--ink);border-color:var(--ink);color:#fff}
+  .knop.klein{min-height:36px;padding:6px 11px;font-size:0.85rem;font-weight:500}
+  .knop.groot{min-height:60px;font-size:1.05rem;padding:14px 12px}
+  .knop:disabled{opacity:.55;cursor:wait}
+  .terug{background:none;border:none;padding:8px 0;min-height:44px;color:var(--ink-soft);font-weight:600;cursor:pointer}
+
+  .melding{background:var(--accent-zacht);border:1px solid #f6cfcc;color:var(--accent-deep);border-radius:var(--radius);
+    padding:12px 14px;font-size:0.92rem;margin-bottom:14px}
+  .melding.rustig{background:var(--amber-zacht);border-color:#fed7aa;color:#9a3412}
+  .leeg{color:var(--muted);font-size:0.93rem;padding:6px 0}
+
+  /* het kenteken als plaat: het ene herkenbare element van deze pagina */
+  .plaat{display:inline-flex;align-items:stretch;background:var(--plaat);border:2px solid var(--ink);border-radius:5px;
+    font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:700;letter-spacing:0.04em;line-height:1;
+    font-size:1.02rem;overflow:hidden;white-space:nowrap;vertical-align:middle}
+  .plaat i{display:flex;align-items:flex-end;justify-content:center;background:var(--plaat-blauw);color:#fff;
+    font-style:normal;font-size:0.5em;font-weight:600;letter-spacing:0;padding:0 3px 3px;min-width:1.5em}
+  .plaat b{padding:6px 9px 5px;font-weight:700}
+  .plaat.groot{font-size:1.45rem}
+  .plaat.uit{background:#e5e7eb}
+
+  .kaart{background:var(--paper);border:1px solid var(--paper-deep);border-radius:var(--radius-lg);padding:16px;margin-bottom:14px}
+  .kaart.mijn{border-color:var(--ink);border-width:2px}
+  .busregel{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .busnaam{font-weight:600;font-size:1.05rem}
+  .bussub{color:var(--muted);font-size:0.88rem}
+  .twee{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  @media (max-width:380px){ .twee{grid-template-columns:1fr} }
+  .stand{display:flex;flex-wrap:wrap;gap:6px 8px;margin-top:12px}
+  .stand:empty{display:none}
+  .tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:0.8rem;font-weight:500;
+    background:var(--paper-warm);border:1px solid var(--paper-deep);color:var(--ink-soft);white-space:nowrap}
+  .tag.open,.tag.let{background:var(--accent-zacht);border-color:#f6cfcc;color:var(--accent-deep)}
+  .tag.klaar{background:var(--green-zacht);border-color:#bbf7d0;color:var(--green)}
+  .tag.bijna{background:var(--amber-zacht);border-color:#fed7aa;color:var(--amber)}
+  h2.tussen{font-size:0.95rem;font-weight:600;color:var(--ink-soft);margin:22px 0 8px}
+  .buslijst{background:var(--paper);border:1px solid var(--paper-deep);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px}
+  .buslijst button{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--paper-deep);
+    padding:14px 16px;cursor:pointer}
+  .buslijst button:last-child{border-bottom:none}
+  .onderknoppen{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  details.stil{margin-top:18px}
+  details.stil summary{cursor:pointer;color:var(--ink-soft);font-size:0.9rem;font-weight:500;padding:8px 0}
+
+  /* vier tabbladen: op de telefoon twee aan twee, zodat er geen een buiten beeld valt */
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:18px 0 14px}
+  @media (min-width:600px){ .tabs{grid-template-columns:repeat(4,1fr)} }
+  .tabs button{background:var(--paper);border:1px solid var(--paper-deep);border-radius:var(--radius);padding:8px 6px;min-height:44px;
+    font-weight:600;font-size:0.9rem;color:var(--ink-soft);cursor:pointer}
+  .tabs button.aan{background:var(--ink);border-color:var(--ink);color:#fff}
+
+  .regel{background:var(--paper);border:1px solid var(--paper-deep);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:10px}
+  .regel-kop{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .regel-datum{font-weight:600;font-size:0.92rem}
+  .regel-tekst{white-space:pre-wrap;overflow-wrap:anywhere}
+  .regel-meta{display:flex;flex-wrap:wrap;gap:4px 16px;color:var(--ink-soft);font-size:0.86rem;margin-top:8px}
+  .regel-uitleg{color:var(--accent-deep);font-size:0.86rem;margin-top:8px}
+  .regel-knoppen{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .bijlagen{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .bijlage{display:inline-flex;align-items:center;border:1px solid var(--paper-deep);border-radius:var(--radius);overflow:hidden;background:var(--paper-warm)}
+  .bijlage button{background:none;border:none;padding:8px 10px;min-height:38px;cursor:pointer;font-size:0.86rem;max-width:230px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:underline;color:var(--ink)}
+  .bijlage button.weg{text-decoration:none;color:var(--muted);border-left:1px solid var(--paper-deep);padding:8px 10px}
+  .som{color:var(--ink-soft);font-size:0.9rem;margin:0 0 12px}
+  table.gegevens{width:100%;border-collapse:collapse;font-size:0.95rem}
+  table.gegevens th{text-align:left;font-weight:500;color:var(--muted);padding:8px 12px 8px 0;vertical-align:top;width:42%}
+  table.gegevens td{padding:8px 0;vertical-align:top;overflow-wrap:anywhere}
+  table.gegevens tr+tr th,table.gegevens tr+tr td{border-top:1px solid var(--paper-deep)}
+
+  /* invoerblad */
+  .laag{position:fixed;inset:0;background:rgba(26,29,33,.45);display:none;align-items:flex-end;justify-content:center;z-index:200}
+  .laag.zie{display:flex}
+  .blad{background:var(--paper);width:100%;max-width:560px;max-height:92vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column}
+  @media (min-width:640px){ .laag{align-items:center} .blad{border-radius:14px} }
+  .blad-kop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 10px}
+  .blad-kop h2{margin:0;font-size:1.12rem;font-weight:700}
+  .blad-sluit{background:none;border:none;min-width:44px;min-height:44px;font-size:1.5rem;line-height:1;color:var(--muted);cursor:pointer}
+  .blad-body{padding:4px 18px 8px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .blad-voet{padding:10px 18px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--paper-deep)}
+  .blad-fout{color:var(--accent-deep);font-size:0.9rem;min-height:1.2em;margin-bottom:8px;overflow-wrap:anywhere}
+  .blad-knoppen{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+  .veld{display:block;margin-bottom:14px}
+  .veld > span{display:block;font-size:0.86rem;font-weight:500;color:var(--ink-soft);margin-bottom:5px}
+  .veld input,.veld select,.veld textarea{width:100%;padding:11px 12px;border:1px solid #cfd4da;border-radius:var(--radius);background:#fff;min-height:46px}
+  .veld textarea{min-height:104px;resize:vertical}
+  .veld small{display:block;color:var(--muted);font-size:0.82rem;margin-top:5px}
+  .naast{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .vinklijst{border:1px solid var(--paper-deep);border-radius:var(--radius);margin-bottom:14px}
+  .vinklijst label{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-bottom:1px solid var(--paper-deep);cursor:pointer}
+  .vinklijst label:last-child{border-bottom:none}
+  .vinklijst input{width:20px;height:20px;margin-top:2px;flex:none}
+  #vraag{z-index:300;align-items:center}
+  #vraag .blad{border-radius:14px;max-width:420px;margin:0 16px}
+  #vraag_tekst{padding:20px 18px 6px;white-space:pre-wrap}
+
+  #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:400;
+    background:var(--ink);color:#fff;padding:12px 16px;border-radius:8px;font-size:0.92rem;max-width:min(92vw,520px);
+    display:none;overflow-wrap:anywhere}
+  #toast.zie{display:block}
+  #toast.fout{background:var(--accent-deep)}
+
+  #lightbox{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  #lightbox.zie{display:flex}
+  #lightbox img{max-width:100%;max-height:100%}
+  #lightbox button{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;background:rgba(255,255,255,.16);color:#fff;
+    border:none;border-radius:8px;min-height:44px;padding:8px 14px;font-weight:600;cursor:pointer}
+
+  #app-loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);background:var(--page);z-index:90}
+  #login{position:fixed;inset:0;background:var(--page);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+  #login .box{background:#fff;border:1px solid var(--paper-deep);border-radius:10px;padding:28px;width:100%;max-width:340px}
+  #login h2{margin:0 0 4px;font-size:1.15rem}
+  #login p{margin:0 0 18px;font-size:0.88rem;color:var(--muted)}
+  #login input{width:100%;padding:11px 12px;margin-bottom:10px;border:1px solid #cfd4da;border-radius:6px;min-height:46px}
+  #login .err{color:var(--accent-deep);font-size:0.85rem;margin-top:8px;min-height:1.2em}
+  .voet{color:var(--muted);font-size:0.8rem;margin-top:28px;text-align:center}
+  @media (prefers-reduced-motion:no-preference){
+    .laag.zie .blad{animation:op .16s ease-out}
+    @keyframes op{from{transform:translateY(14px)}to{transform:none}}
+  }
+</style>
+</head>
+<body>
+<div id="app-loading">Laden…</div>
+
+<div id="login">
+  <div class="box">
+    <h2>Wagenpark</h2>
+    <p>Log in met je account van Ernes Schilders.</p>
+    <input id="email" type="email" placeholder="E-mailadres" autocomplete="username" autocapitalize="off">
+    <input id="wachtwoord" type="password" placeholder="Wachtwoord" autocomplete="current-password">
+    <button class="knop rood" id="loginBtn" style="width:100%">Inloggen</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="wrap" id="wrap" style="display:none">
+  <div class="kop">
+    <div>
+      <h1>Wagenpark</h1>
+      <div class="wie" id="wieIngelogd"></div>
+    </div>
+    <div class="kop-knoppen">
+      <button class="knop klein" id="verversBtn">Verversen</button>
+      <button class="knop klein" id="uitlogBtn">Uitloggen</button>
+    </div>
+  </div>
+  <div id="geenToegang" class="melding" style="display:none"></div>
+  <div id="fout" class="melding" style="display:none"></div>
+  <div id="scherm"></div>
+  <div class="voet">wagenpark.html <span id="appVersie"></span></div>
+</div>
+
+<div class="laag" id="blad_laag">
+  <div class="blad" role="dialog" aria-modal="true" aria-labelledby="blad_titel">
+    <div class="blad-kop">
+      <h2 id="blad_titel"></h2>
+      <button class="blad-sluit" id="blad_sluit" aria-label="Sluiten">×</button>
+    </div>
+    <div class="blad-body" id="blad_body"></div>
+    <div class="blad-voet">
+      <div class="blad-fout" id="blad_fout"></div>
+      <div class="blad-knoppen">
+        <button class="knop" id="blad_extra" style="display:none"></button>
+        <button class="knop" id="blad_annuleer">Annuleren</button>
+        <button class="knop rood" id="blad_ok">Opslaan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="laag" id="vraag">
+  <div class="blad" role="alertdialog" aria-modal="true">
+    <div id="vraag_tekst"></div>
+    <div class="blad-voet" style="border-top:none">
+      <div class="blad-knoppen">
+        <button class="knop" id="vraag_nee">Annuleren</button>
+        <button class="knop rood" id="vraag_ja">Ja</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="lightbox"><button id="lightbox_sluit">Sluiten</button><img id="lightbox_img" alt="Bijlage"></div>
+<div id="toast" role="status"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   wagenpark.html — de vier bussen van Ernes Schilders
+   Stap 1: voertuigkaart, logboek met facturen, incident melden,
+   aandachtspunten voor de eerstvolgende beurt, termijnen als taak.
+   De database doet het werk rond taken en kilometerstand
+   (sql/wagenpark_01_tabellen.sql en sql/wagenpark_02_incident_taak_km.sql);
+   deze pagina leest en schrijft alleen de vijf wp_-tabellen en de bak wagenpark.
+   ════════════════════════════════════════════════════════ */
+const APP_VERSION = 'v0.1.0';
+const SUPABASE_URL = 'https://gjcjpigirqbpkjkymbio.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Hwl9kLXKLN6xQ3qoxDjqOw_QgH8ksOQ';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'sb-wagenpark-auth' } });
+
+const BUCKET = 'wagenpark';
+const MAX_MB = 25;            /* zelfde grens als personeel.html */
+const KM_SPRONG = 20000;      /* meer dan dit boven de vorige stand: eerst vragen */
+const BIJNA_DAGEN = 30;       /* termijn binnen zoveel dagen kleurt oranje */
+
+const SOORT_LOG = { onderhoud:'Onderhoud', reparatie:'Reparatie', incident:'Incident', overig:'Overig' };
+const INCIDENT  = { schade:'Schade', pech:'Pech', inbraak:'Inbraak', boete:'Boete', overig:'Overig' };
+const TERMIJN   = { apk:'APK', onderhoud:'Onderhoudsbeurt', verzekering:'Verzekering', belasting:'Motorrijtuigenbelasting',
+                    banden:'Banden', vloeistoffen:'Vloeistoffen controleren', overig:'Overig' };
+const TERMIJN_KEUZE = ['apk', 'onderhoud', 'verzekering', 'belasting', 'overig'];   /* banden en vloeistoffen: stap 2 */
+
+/* Kolommen die de pagina leest. Vast uitgeschreven, zodat de test ze naast het echte schema kan leggen. */
+const KOLOMMEN = {
+  wp_voertuigen: 'id, kenteken, naam, merk, type, bouwjaar, aanschafdatum, aanschafprijs, vaste_rijder, km_stand, km_stand_op, actief, notitie, created_at',
+  wp_logboek: 'id, voertuig_id, soort, datum, omschrijving, garage, bedrag, km_stand, incident_soort, status, gemeld_door, taak_id, created_at',
+  wp_bijlagen: 'id, voertuig_id, logboek_id, soort, storage_path, bestandsnaam, grootte, created_at',
+  wp_aandachtspunten: 'id, voertuig_id, tekst, gemeld_door, afgehandeld_op, afgehandeld_in, created_at'
+};
+
+/* ═══ PUUR-BEGIN ═══ functies zonder scherm en zonder database; de tests snijden dit blok uit het bestand */
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function isoVan(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function vandaagISO(){ return isoVan(new Date()); }
+function datumNl(iso){ if(!iso) return ''; const [j, m, d] = String(iso).slice(0, 10).split('-'); return `${d}-${m}-${j}`; }
+function geldigeDatum(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ''))) return false;
+  const [j, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(j, m - 1, d));
+  return dt.getUTCFullYear() === j && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+}
+function plusDagen(iso, n){ const [j, m, d] = iso.split('-').map(Number); return new Date(Date.UTC(j, m - 1, d + n)).toISOString().slice(0, 10); }
+function dagenTussen(a, b){ const p = s => { const [j, m, d] = s.split('-').map(Number); return Date.UTC(j, m - 1, d); }; return Math.round((p(b) - p(a)) / 86400000); }
+
+function kentekenKaal(k){ return String(k || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+/* Alleen voor de weergave. Zes tekens die in drie groepen vallen krijgen streepjes; in elk ander geval
+   blijft staan wat er is ingetikt. De database bewaart het kenteken zoals ingevoerd. */
+function kentekenToon(k){
+  const ruw = String(k || '').trim().toUpperCase();
+  const kaal = kentekenKaal(ruw);
+  if(kaal.length !== 6) return ruw;
+  const delen = [];
+  (kaal.match(/[A-Z]+|[0-9]+/g) || []).forEach(r => { if(r.length === 4) delen.push(r.slice(0, 2), r.slice(2)); else delen.push(r); });
+  return delen.length === 3 ? delen.join('-') : ruw;
+}
+
+/* Leeg veld geeft null, onleesbare invoer geeft NaN. */
+function kmUitTekst(s){
+  const t = String(s ?? '').replace(/\s|km/gi, '');
+  if(t === '') return null;
+  const kaal = t.replace(/[.,]/g, '');
+  return /^\d{1,7}$/.test(kaal) ? parseInt(kaal, 10) : NaN;
+}
+function bedragUitTekst(s){
+  let t = String(s ?? '').replace(/\s|€/g, '');
+  if(t === '') return null;
+  if(t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+  else if(/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+  return /^\d+(\.\d{1,2})?$/.test(t) ? Number(t) : NaN;
+}
+function jaarUitTekst(s){
+  const t = String(s ?? '').trim();
+  if(t === '') return null;
+  return /^\d{4}$/.test(t) ? parseInt(t, 10) : NaN;
+}
+function euro(n){ return n == null ? '' : '€ ' + Number(n).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function kmTekst(n){ return n == null ? '' : Number(n).toLocaleString('nl-NL') + ' km'; }
+function persoonNaam(p){ const t = String(p || ''); return t ? t.charAt(0).toUpperCase() + t.slice(1) : ''; }
+
+function veiligeNaam(naam){ return String(naam || 'bestand').replace(/[^A-Za-z0-9._-]+/g, '_'); }
+function uploadPad(voertuigId, logboekId, naam, nu){ return `${voertuigId}/${logboekId || 'los'}/${nu}_${veiligeNaam(naam)}`; }
+function isAfbeelding(naam){ return /\.(jpe?g|png|gif|webp)$/i.test(String(naam || '')); }
+
+/* Hoe verhoudt een ingetikte stand zich tot de stand van de bus? */
+function kmOordeel(nieuw, huidig, grens){
+  if(nieuw == null) return 'leeg';
+  if(Number.isNaN(nieuw)) return 'ongeldig';
+  if(huidig == null) return 'ok';
+  if(nieuw < huidig) return 'lager';
+  if(nieuw - huidig > grens) return 'sprong';
+  return 'ok';
+}
+
+function herhalingTekst(n, eenheid){
+  if(!n || !eenheid) return 'eenmalig';
+  const enkel = { dag:'elke dag', werkdag:'elke werkdag', week:'elke week', maand:'elke maand', jaar:'elk jaar' };
+  const meer  = { dag:'dagen', werkdag:'werkdagen', week:'weken', maand:'maanden', jaar:'jaar' };
+  return n === 1 ? (enkel[eenheid] || eenheid) : `elke ${n} ${meer[eenheid] || eenheid}`;
+}
+
+/* Wat toont de pagina bij een termijn? Besluit Gian 22-11-2026: is de vervaldatum verstreken en is de
+   herhaler in de Takenapp al doorgeschoven, dan tonen we de datum van de open taak plus dagen_vooraf als
+   "geschat". Is de taak niet doorgeschoven, dan is de termijn echt verlopen. */
+function termijnBeeld(t, vandaag){
+  const uit = { datum: t.vervaldatum, geschat: false, verlopen: false, dagen: null, taak: 'open' };
+  if(!t.actief){ uit.taak = 'gestopt'; return uit; }
+  if(!t.taak_bestaat) uit.taak = 'geen';
+  else if(!t.taak_open) uit.taak = 'klaar';
+  if(t.vervaldatum < vandaag){
+    const g = (t.taak_open && t.taak_gepland_op) ? plusDagen(String(t.taak_gepland_op).slice(0, 10), t.dagen_vooraf || 0) : null;
+    if(g && g > t.vervaldatum){ uit.datum = g; uit.geschat = true; }
+    else if(uit.taak !== 'klaar') uit.verlopen = true;
+  }
+  uit.dagen = dagenTussen(vandaag, uit.datum);
+  return uit;
+}
+/* ═══ PUUR-EIND ═══ */
+
+const el = id => document.getElementById(id);
+
+let IK = null;            /* { persoon, rol } */
+let ROLLEN = [];
+let BUSSEN = [], LOGBOEK = [], BIJLAGEN = [], PUNTEN = [], TERMIJNEN = [];
+let TAB = 'logboek';
+let BLAD = null, BEZIG = false;
+
+const isGian = () => !!IK && IK.persoon === 'gian';
+const bus = id => BUSSEN.find(b => b.id === id) || null;
+const busLabel = b => (b.naam && b.naam.trim()) || kentekenToon(b.kenteken);
+const personen = () => ROLLEN.map(r => r.persoon).filter(p => p && p !== 'administratie').sort();
+
+/* ────────────────────────────────────────────────────────
+   Meldingen
+   ──────────────────────────────────────────────────────── */
+function toast(tekst, fout){
+  const t = el('toast');
+  t.textContent = tekst;
+  t.className = 'zie' + (fout ? ' fout' : '');
+  clearTimeout(t._w);
+  t._w = setTimeout(() => { t.className = ''; }, fout ? 7000 : 2800);
+}
+function toonFout(e){ const f = el('fout'); f.style.display = ''; f.textContent = 'Laden mislukt: ' + ((e && e.message) || e); console.error(e); }
+function wisFout(){ el('fout').style.display = 'none'; }
+
+function bevestig(tekst, jaTekst){
+  return new Promise(klaar => {
+    el('vraag_tekst').textContent = tekst;
+    el('vraag_ja').textContent = jaTekst || 'Ja';
+    el('vraag').classList.add('zie');
+    const sluit = antwoord => { el('vraag').classList.remove('zie'); el('vraag_ja').onclick = null; el('vraag_nee').onclick = null; klaar(antwoord); };
+    el('vraag_ja').onclick = () => sluit(true);
+    el('vraag_nee').onclick = () => sluit(false);
+  });
+}
+
+/* ────────────────────────────────────────────────────────
+   Invoerblad
+   ──────────────────────────────────────────────────────── */
+function openBlad(o){
+  BLAD = o;
+  el('blad_titel').textContent = o.titel;
+  el('blad_body').innerHTML = o.html;
+  el('blad_fout').textContent = '';
+  el('blad_ok').textContent = o.knop || 'Opslaan';
+  el('blad_ok').disabled = false;
+  const x = el('blad_extra');
+  x.style.display = o.extra ? '' : 'none';
+  x.textContent = o.extra ? o.extra.tekst : '';
+  el('blad_annuleer').style.display = o.extra ? 'none' : '';
+  el('blad_laag').classList.add('zie');
+  el('blad_body').scrollTop = 0;
+  if(o.na) o.na();
+}
+function sluitBlad(){ el('blad_laag').classList.remove('zie'); el('blad_body').innerHTML = ''; BLAD = null; }
+async function bladOpslaan(){
+  if(!BLAD || BEZIG) return;
+  BEZIG = true; el('blad_ok').disabled = true; el('blad_fout').textContent = '';
+  try{
+    const uitkomst = await BLAD.opslaan();
+    if(uitkomst !== false){
+      sluitBlad();
+      if(typeof uitkomst === 'function') uitkomst();
+    }
+  }catch(e){
+    el('blad_fout').textContent = (e && e.message) || String(e);
+    console.error(e);
+  }finally{
+    BEZIG = false; el('blad_ok').disabled = false;
+  }
+}
+const veld = (label, binnen, hint) => `<label class="veld"><span>${esc(label)}</span>${binnen}${hint ? `<small>${esc(hint)}</small>` : ''}</label>`;
+const opties = (lijst, gekozen) => lijst.map(([w, t]) => `<option value="${esc(w)}"${String(w) === String(gekozen ?? '') ? ' selected' : ''}>${esc(t)}</option>`).join('');
+const waarde = id => { const e = el(id); return e ? String(e.value).trim() : ''; };
+const busOpties = gekozen => opties(BUSSEN.filter(b => b.actief || b.id === gekozen).map(b => [b.id, kentekenToon(b.kenteken) + (b.naam ? ' · ' + b.naam : '')]), gekozen);
+
+/* ────────────────────────────────────────────────────────
+   Foto: verkleinen naar telefoonmaat (overgenomen uit oplevering.html v0.4.0)
+   Langste zijde 1600 px, JPEG kwaliteit 0,8. Lukt het verkleinen niet,
+   dan gaat het origineel mee in plaats van niets.
+   ──────────────────────────────────────────────────────── */
+async function verkleinFoto(file){
+  try {
+    const dataUrl = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = () => rej(new Error('lezen mislukt'));
+      r.readAsDataURL(file);
+    });
+    const img = await new Promise((res, rej) => {
+      const im = new Image();
+      im.onload = () => res(im);
+      im.onerror = () => rej(new Error('laden mislukt'));
+      im.src = dataUrl;
+    });
+    let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    const max = 1600;
+    if (w > max || h > max) {
+      if (w >= h) { h = Math.round(h * max / w); w = max; }
+      else        { w = Math.round(w * max / h); h = max; }
+    }
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.8));
+    return blob || file;
+  } catch (e) {
+    console.warn('[verkleinen]', e);
+    return file;
+  }
+}
+
+/* Eerst naar de bak, dan de rij in wp_bijlagen (patroon van personeel.html). Geeft terug wat lukte en wat niet. */
+async function uploadBijlagen(files, voertuigId, logboekId, soort){
+  let ok = 0; const fouten = [];
+  for(const f of files){
+    let inhoud = f, naam = f.name || 'bestand', type = f.type || 'application/octet-stream';
+    if(soort === 'foto' && /^image\//.test(type)){
+      const klein = await verkleinFoto(f);
+      if(klein !== f){ inhoud = klein; type = 'image/jpeg'; naam = naam.replace(/\.[^.]+$/, '') + '.jpg'; }
+    }
+    if(inhoud.size > MAX_MB * 1048576){ fouten.push(`${naam} is groter dan ${MAX_MB} MB`); continue; }
+    const pad = uploadPad(voertuigId, logboekId, naam, Date.now());
+    const { error: e1 } = await sb.storage.from(BUCKET).upload(pad, inhoud, { contentType: type });
+    if(e1){ fouten.push(`${naam}: ${e1.message}`); continue; }
+    const { error: e2 } = await sb.from('wp_bijlagen').insert({
+      voertuig_id: voertuigId, logboek_id: logboekId || null, soort: soort, storage_path: pad, bestandsnaam: naam, grootte: inhoud.size
+    });
+    if(e2){ fouten.push(`${naam} staat in de opslag maar is niet geregistreerd: ${e2.message}`); continue; }
+    ok++;
+  }
+  return { ok, fouten };
+}
+async function openBijlage(id){
+  const x = BIJLAGEN.find(b => b.id === id);
+  if(!x) return;
+  const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(x.storage_path, 300);
+  if(error || !data || !data.signedUrl){ toast('Bijlage openen mislukt: ' + ((error && error.message) || 'geen link ontvangen'), true); return; }
+  if(isAfbeelding(x.bestandsnaam || x.storage_path)){
+    const img = el('lightbox_img');
+    img.onerror = () => { el('lightbox').classList.remove('zie'); opent(data.signedUrl); };
+    img.src = data.signedUrl;
+    el('lightbox').classList.add('zie');
+    return;
+  }
+  opent(data.signedUrl);
+}
+/* Een nieuw venster na een wachtende aanroep wordt op de telefoon soms tegengehouden; dan in hetzelfde venster. */
+function opent(url){ const w = window.open(url, '_blank'); if(!w) window.location.href = url; }
+
+async function verwijderBijlage(id){
+  const x = BIJLAGEN.find(b => b.id === id);
+  if(!x) return;
+  if(!(await bevestig(`Bijlage "${x.bestandsnaam || 'zonder naam'}" verwijderen? Dit kan niet ongedaan worden gemaakt.`, 'Verwijderen'))) return;
+  const { error: e1 } = await sb.storage.from(BUCKET).remove([x.storage_path]);
+  if(e1){ toast('Bestand verwijderen mislukt: ' + e1.message, true); return; }
+  const { error: e2 } = await sb.from('wp_bijlagen').delete().eq('id', id);
+  if(e2){ toast('Registratie verwijderen mislukt: ' + e2.message, true); return; }
+  toast('Bijlage verwijderd');
+  await herlaad();
+}
+
+/* ────────────────────────────────────────────────────────
+   Laden
+   ──────────────────────────────────────────────────────── */
+async function alles(tabel, orde){
+  const uit = []; const stap = 1000;
+  for(let van = 0; ; van += stap){
+    let q = sb.from(tabel).select(KOLOMMEN[tabel]);
+    orde.forEach(([kolom, oplopend]) => { q = q.order(kolom, { ascending: oplopend }); });
+    const { data, error } = await q.range(van, van + stap - 1);
+    if(error) throw new Error(tabel + ': ' + error.message);
+    uit.push(...(data || []));
+    if(!data || data.length < stap) break;
+  }
+  return uit;
+}
+async function laadAlles(){
+  const [b, l, bij, p, t] = await Promise.all([
+    alles('wp_voertuigen', [['kenteken', true]]),
+    alles('wp_logboek', [['datum', false], ['created_at', false]]),
+    alles('wp_bijlagen', [['created_at', true]]),
+    alles('wp_aandachtspunten', [['created_at', true]]),
+    sb.rpc('wp_termijnen_stand')
+  ]);
+  if(t.error) throw new Error('wp_termijnen_stand: ' + t.error.message);
+  BUSSEN = b; LOGBOEK = l; BIJLAGEN = bij; PUNTEN = p; TERMIJNEN = t.data || [];
+}
+async function herlaad(){
+  try{ await laadAlles(); wisFout(); }catch(e){ toonFout(e); }
+  teken();
+}
+
+/* ────────────────────────────────────────────────────────
+   Tekenen
+   ──────────────────────────────────────────────────────── */
+const plaat = (b, groot) => `<span class="plaat${groot ? ' groot' : ''}${b.actief ? '' : ' uit'}"><i>NL</i><b>${esc(kentekenToon(b.kenteken))}</b></span>`;
+const openIncidenten = id => LOGBOEK.filter(l => l.voertuig_id === id && l.soort === 'incident' && l.status === 'open');
+const openPunten = id => PUNTEN.filter(p => p.voertuig_id === id && !p.afgehandeld_op);
+function eerstvolgende(id){
+  const vandaag = vandaagISO();
+  const lijst = TERMIJNEN.filter(t => t.voertuig_id === id && t.actief)
+    .map(t => ({ t, beeld: termijnBeeld(t, vandaag) }))
+    .filter(x => x.beeld.taak !== 'klaar')
+    .sort((a, b) => a.beeld.datum < b.beeld.datum ? -1 : a.beeld.datum > b.beeld.datum ? 1 : 0);
+  return lijst[0] || null;
+}
+function termijnTag(x){
+  const naam = TERMIJN[x.t.soort] || x.t.soort;
+  if(x.beeld.verlopen) return `<span class="tag let">${esc(naam)} verlopen op ${datumNl(x.beeld.datum)}</span>`;
+  const klasse = x.beeld.dagen <= BIJNA_DAGEN ? ' bijna' : '';
+  return `<span class="tag${klasse}">${esc(naam)} ${x.beeld.geschat ? 'geschat ' : ''}${datumNl(x.beeld.datum)}</span>`;
+}
+function standTags(b){
+  const uit = [];
+  const inc = openIncidenten(b.id).length, pt = openPunten(b.id).length, ev = eerstvolgende(b.id);
+  if(inc) uit.push(`<span class="tag open">${inc} open ${inc === 1 ? 'incident' : 'incidenten'}</span>`);
+  if(pt) uit.push(`<span class="tag">${pt} ${pt === 1 ? 'aandachtspunt' : 'aandachtspunten'}</span>`);
+  if(ev) uit.push(termijnTag(ev));
+  return uit.join('');
+}
+function busSub(b){
+  const delen = [];
+  const mt = [b.merk, b.type].filter(Boolean).join(' ');
+  if(mt) delen.push(esc(mt));
+  if(b.km_stand != null) delen.push(esc(kmTekst(b.km_stand)));
+  if(b.vaste_rijder) delen.push('rijder ' + esc(persoonNaam(b.vaste_rijder)));
+  return delen.join(', ');
+}
+
+function teken(){
+  if(!IK) return;
+  const m = (location.hash || '').match(/^#bus-(.+)$/);
+  const b = m ? bus(m[1]) : null;
+  el('scherm').innerHTML = b ? htmlBus(b) : htmlOverzicht();
+}
+
+function htmlOverzicht(){
+  const actief = BUSSEN.filter(b => b.actief), uit = BUSSEN.filter(b => !b.actief);
+  if(!BUSSEN.length){
+    return `<div class="kaart"><div class="busnaam">Nog geen bussen</div>
+      <p class="leeg">Voer de eerste bus in. Daarna kan iedereen er incidenten en aandachtspunten bij melden.</p>
+      <button class="knop rood" data-actie="busNieuw">Bus toevoegen</button></div>`;
+  }
+  const mijn = actief.filter(b => b.vaste_rijder && b.vaste_rijder === IK.persoon);
+  const rest = actief.filter(b => !mijn.includes(b));
+  let h = '';
+  mijn.forEach(b => {
+    h += `<div class="kaart mijn">
+      <div class="busregel">${plaat(b, true)}<div><div class="busnaam">${esc(b.naam || 'Jouw bus')}</div><div class="bussub">${busSub(b)}</div></div></div>
+      <div class="stand">${standTags(b)}</div>
+      <div class="twee">
+        <button class="knop rood groot" data-actie="incident" data-bus="${b.id}">Incident melden</button>
+        <button class="knop donker groot" data-actie="punt" data-bus="${b.id}">Aandachtspunt noteren</button>
+      </div>
+      <div class="onderknoppen" style="margin-top:12px"><button class="knop klein" data-actie="open" data-bus="${b.id}">Logboek en gegevens bekijken</button></div>
+    </div>`;
+  });
+  if(!mijn.length && actief.length){
+    h += `<div class="kaart"><div class="bussub">Er staat geen bus op jouw naam. Kies bij het melden zelf de bus.</div>
+      <div class="twee">
+        <button class="knop rood groot" data-actie="incident">Incident melden</button>
+        <button class="knop donker groot" data-actie="punt">Aandachtspunt noteren</button>
+      </div></div>`;
+  }
+  if(rest.length){
+    h += `<h2 class="tussen">${mijn.length ? 'De andere bussen' : 'Alle bussen'}</h2><div class="buslijst">`;
+    rest.forEach(b => {
+      h += `<button data-actie="open" data-bus="${b.id}">
+        <div class="busregel">${plaat(b)}<div><div class="busnaam">${esc(b.naam || '')}</div><div class="bussub">${busSub(b)}</div></div></div>
+        <div class="stand">${standTags(b)}</div></button>`;
+    });
+    h += `</div>`;
+  }
+  h += `<div class="onderknoppen"><button class="knop" data-actie="busNieuw">Bus toevoegen</button></div>`;
+  if(uit.length){
+    h += `<details class="stil"><summary>Uit gebruik (${uit.length})</summary><div class="buslijst">`;
+    uit.forEach(b => { h += `<button data-actie="open" data-bus="${b.id}"><div class="busregel">${plaat(b)}<div><div class="busnaam">${esc(b.naam || '')}</div><div class="bussub">${busSub(b)}</div></div></div></button>`; });
+    h += `</div></details>`;
+  }
+  return h;
+}
+
+function htmlBus(b){
+  const nPunten = openPunten(b.id).length;
+  const tabs = [['logboek', 'Logboek'], ['punten', 'Aandachtspunten' + (nPunten ? ` (${nPunten})` : '')], ['termijnen', 'Termijnen'], ['gegevens', 'Gegevens']];
+  let h = `<button class="terug" data-actie="terug">‹ Alle bussen</button>
+    <div class="kaart">
+      <div class="busregel">${plaat(b, true)}<div><div class="busnaam">${esc(b.naam || '')}</div><div class="bussub">${busSub(b)}</div></div></div>
+      ${b.actief ? '' : '<div class="melding rustig" style="margin:12px 0 0">Deze bus is uit gebruik. Het logboek blijft bewaard.</div>'}
+      <div class="twee">
+        <button class="knop rood" data-actie="incident" data-bus="${b.id}">Incident melden</button>
+        <button class="knop donker" data-actie="punt" data-bus="${b.id}">Aandachtspunt noteren</button>
+      </div>
+    </div>
+    <div class="tabs" role="tablist">${tabs.map(([k, t]) => `<button role="tab" aria-selected="${TAB === k}" class="${TAB === k ? 'aan' : ''}" data-actie="tab" data-tab="${k}">${esc(t)}</button>`).join('')}</div>`;
+  if(TAB === 'punten') h += htmlPunten(b);
+  else if(TAB === 'termijnen') h += htmlTermijnen(b);
+  else if(TAB === 'gegevens') h += htmlGegevens(b);
+  else h += htmlLogboek(b);
+  return h;
+}
+
+function htmlBijlagen(logboekId){
+  const lijst = BIJLAGEN.filter(x => x.logboek_id === logboekId);
+  if(!lijst.length) return '';
+  return `<div class="bijlagen">${lijst.map(x => `<span class="bijlage">
+      <button data-actie="bijlageOpen" data-id="${x.id}" title="${esc(x.bestandsnaam || '')}">${esc(x.soort === 'factuur' ? 'Factuur: ' : x.soort === 'foto' ? 'Foto: ' : '')}${esc(x.bestandsnaam || 'bestand')}</button>
+      ${isGian() ? `<button class="weg" data-actie="bijlageWeg" data-id="${x.id}" aria-label="Bijlage verwijderen">×</button>` : ''}
+    </span>`).join('')}</div>`;
+}
+
+function htmlLogboek(b){
+  const regels = LOGBOEK.filter(l => l.voertuig_id === b.id);
+  const jaar = vandaagISO().slice(0, 4);
+  const som = regels.filter(l => l.bedrag != null && String(l.datum).slice(0, 4) === jaar).reduce((s, l) => s + Number(l.bedrag), 0);
+  let h = `<div class="onderknoppen" style="margin:0 0 14px"><button class="knop" data-actie="logNieuw" data-bus="${b.id}">Onderhoud of reparatie invoeren</button></div>`;
+  if(!regels.length) return h + `<div class="leeg">Nog niets in het logboek van deze bus.</div>`;
+  if(som) h += `<p class="som">Kosten in ${jaar}: <span class="mono">${esc(euro(som))}</span></p>`;
+  regels.forEach(l => {
+    const inc = l.soort === 'incident';
+    let tags = `<span class="tag">${esc(SOORT_LOG[l.soort] || l.soort)}${inc && l.incident_soort ? ': ' + esc((INCIDENT[l.incident_soort] || l.incident_soort).toLowerCase()) : ''}</span>`;
+    if(inc) tags += l.status === 'open' ? `<span class="tag open">open</span>` : `<span class="tag klaar">afgehandeld</span>`;
+    const zonderTaak = inc && l.status === 'open' && !l.taak_id;
+    if(zonderTaak) tags += `<span class="tag let">zonder taak</span>`;
+    const meta = [];
+    if(l.garage) meta.push(`<span>${esc(l.garage)}</span>`);
+    if(l.bedrag != null) meta.push(`<span class="mono">${esc(euro(l.bedrag))}</span>`);
+    if(l.km_stand != null) meta.push(`<span class="mono">${esc(kmTekst(l.km_stand))}</span>`);
+    if(l.gemeld_door) meta.push(`<span>door ${esc(persoonNaam(l.gemeld_door))}</span>`);
+    let knoppen = `<button class="knop klein" data-actie="bijlageNieuw" data-id="${l.id}">Bijlage toevoegen</button>
+      <button class="knop klein" data-actie="logWijzig" data-id="${l.id}">Wijzigen</button>`;
+    if(isGian()){
+      if(inc) knoppen += l.status === 'open'
+        ? `<button class="knop klein donker" data-actie="incidentKlaar" data-id="${l.id}">Afgehandeld</button>`
+        : `<button class="knop klein" data-actie="incidentOpen" data-id="${l.id}">Weer openzetten</button>`;
+      knoppen += `<button class="knop klein" data-actie="logWeg" data-id="${l.id}">Verwijderen</button>`;
+    }
+    h += `<div class="regel">
+      <div class="regel-kop"><span class="regel-datum">${datumNl(l.datum)}</span>${tags}</div>
+      <div class="regel-tekst">${esc(l.omschrijving)}</div>
+      ${meta.length ? `<div class="regel-meta">${meta.join('')}</div>` : ''}
+      ${zonderTaak ? `<div class="regel-uitleg">Voor dit incident staat geen taak in de Takenapp. Het komt dus alleen hier in beeld.</div>` : ''}
+      ${htmlBijlagen(l.id)}
+      <div class="regel-knoppen">${knoppen}</div>
+    </div>`;
+  });
+  return h;
+}
+
+function htmlPunten(b){
+  const open = openPunten(b.id);
+  const klaar = PUNTEN.filter(p => p.voertuig_id === b.id && p.afgehandeld_op).sort((x, y) => x.afgehandeld_op < y.afgehandeld_op ? 1 : -1);
+  let h = `<p class="som">Dingen om mee te geven bij de eerstvolgende beurt. Ze staan ook onderaan de onderhoudstaak van deze bus in de Takenapp.</p>
+    <div class="onderknoppen" style="margin:0 0 14px"><button class="knop" data-actie="punt" data-bus="${b.id}">Aandachtspunt noteren</button></div>`;
+  if(!open.length) h += `<div class="leeg">Geen open aandachtspunten.</div>`;
+  open.forEach(p => {
+    h += `<div class="regel"><div class="regel-tekst">${esc(p.tekst)}</div>
+      <div class="regel-meta"><span>${datumNl(p.created_at)}</span>${p.gemeld_door ? `<span>door ${esc(persoonNaam(p.gemeld_door))}</span>` : ''}</div>
+      <div class="regel-knoppen"><button class="knop klein" data-actie="puntKlaar" data-id="${p.id}">Vervalt, hoeft niet meer</button></div></div>`;
+  });
+  if(klaar.length){
+    h += `<details class="stil"><summary>Afgehandeld (${klaar.length})</summary>`;
+    klaar.forEach(p => {
+      const regel = p.afgehandeld_in ? LOGBOEK.find(l => l.id === p.afgehandeld_in) : null;
+      h += `<div class="regel"><div class="regel-tekst">${esc(p.tekst)}</div>
+        <div class="regel-meta"><span>${regel ? 'meegenomen bij ' + esc((SOORT_LOG[regel.soort] || regel.soort).toLowerCase()) + ' van ' + datumNl(regel.datum) : 'vervallen op ' + datumNl(p.afgehandeld_op)}</span></div>
+        <div class="regel-knoppen"><button class="knop klein" data-actie="puntOpen" data-id="${p.id}">Terugzetten</button></div></div>`;
+    });
+    h += `</details>`;
+  }
+  return h;
+}
+
+function htmlTermijnen(b){
+  const vandaag = vandaagISO();
+  const lijst = TERMIJNEN.filter(t => t.voertuig_id === b.id).map(t => ({ t, beeld: termijnBeeld(t, vandaag) }))
+    .sort((x, y) => (x.t.actief === y.t.actief) ? (x.beeld.datum < y.beeld.datum ? -1 : 1) : (x.t.actief ? -1 : 1));
+  let h = `<p class="som">Elke termijn staat als taak in de Takenapp, een aantal dagen voor de vervaldatum.</p>
+    <div class="onderknoppen" style="margin:0 0 14px"><button class="knop" data-actie="termijnNieuw" data-bus="${b.id}">Termijn toevoegen</button></div>`;
+  if(b.actief && !lijst.some(x => x.t.soort === 'apk' && x.t.actief)){
+    h += `<div class="melding rustig">Deze bus heeft nog geen APK-termijn.
+      <div style="margin-top:10px"><button class="knop klein" data-actie="termijnNieuw" data-bus="${b.id}" data-soort="apk">APK-termijn toevoegen</button></div></div>`;
+  }
+  if(!lijst.length) return h + `<div class="leeg">Nog geen termijnen bij deze bus.</div>`;
+  lijst.forEach(({ t, beeld }) => {
+    let tags = '';
+    if(beeld.taak === 'gestopt') tags += `<span class="tag">gestopt</span>`;
+    else {
+      if(beeld.verlopen) tags += `<span class="tag let">verlopen</span>`;
+      else if(beeld.geschat) tags += `<span class="tag bijna">geschat</span>`;
+      else if(beeld.taak !== 'klaar' && beeld.dagen <= BIJNA_DAGEN) tags += `<span class="tag bijna">over ${beeld.dagen} ${beeld.dagen === 1 ? 'dag' : 'dagen'}</span>`;
+      if(beeld.taak === 'geen') tags += `<span class="tag let">geen taak</span>`;
+      if(beeld.taak === 'klaar') tags += `<span class="tag klaar">taak afgevinkt</span>`;
+    }
+    const meta = [`<span>${esc(herhalingTekst(t.herhaling_n, t.herhaling_eenheid))}</span>`,
+      `<span>taak ${t.dagen_vooraf} ${t.dagen_vooraf === 1 ? 'dag' : 'dagen'} vooraf, voor ${esc(persoonNaam(t.toegewezen_aan || 'gian'))}</span>`];
+    let uitleg = '';
+    if(beeld.geschat) uitleg = `De vervaldatum van ${datumNl(t.vervaldatum)} is voorbij en de taak is doorgeschoven. ${datumNl(beeld.datum)} is een schatting; vul de echte nieuwe datum in.`;
+    else if(beeld.verlopen) uitleg = `De vervaldatum is voorbij en de taak staat nog open.`;
+    if(beeld.taak === 'geen') uitleg += (uitleg ? ' ' : '') + `De taak is in de Takenapp verwijderd. Vul een nieuwe vervaldatum in, dan maakt de database een nieuwe taak.`;
+    let knoppen = '';
+    if(t.actief){
+      knoppen += `<button class="knop klein${beeld.geschat || beeld.verlopen ? ' donker' : ''}" data-actie="termijnDatum" data-id="${t.id}">Nieuwe vervaldatum invullen</button>
+        <button class="knop klein" data-actie="termijnWijzig" data-id="${t.id}">Wijzigen</button>
+        <button class="knop klein" data-actie="termijnStop" data-id="${t.id}">Stoppen</button>`;
+    } else {
+      knoppen += `<button class="knop klein" data-actie="termijnStart" data-id="${t.id}">Weer aanzetten</button>`;
+    }
+    h += `<div class="regel">
+      <div class="regel-kop"><span class="regel-datum">${esc(TERMIJN[t.soort] || t.soort)}${t.omschrijving ? ', ' + esc(t.omschrijving) : ''}</span>${tags}</div>
+      <div class="regel-tekst"><span class="mono">${datumNl(beeld.datum)}</span>${beeld.geschat ? ' (geschat)' : ''}</div>
+      <div class="regel-meta">${meta.join('')}</div>
+      ${uitleg ? `<div class="regel-uitleg">${esc(uitleg)}</div>` : ''}
+      <div class="regel-knoppen">${knoppen}</div>
+    </div>`;
+  });
+  return h;
+}
+
+function htmlGegevens(b){
+  const rij = (k, v) => `<tr><th>${esc(k)}</th><td>${v || '<span class="leeg">niet ingevuld</span>'}</td></tr>`;
+  return `<div class="kaart">
+    <table class="gegevens">
+      ${rij('Kenteken', esc(kentekenToon(b.kenteken)))}
+      ${rij('Naam', esc(b.naam || ''))}
+      ${rij('Merk en type', esc([b.merk, b.type].filter(Boolean).join(' ')))}
+      ${rij('Bouwjaar', b.bouwjaar ? String(b.bouwjaar) : '')}
+      ${rij('Aanschafdatum', datumNl(b.aanschafdatum))}
+      ${rij('Aanschafprijs', b.aanschafprijs != null ? `<span class="mono">${esc(euro(b.aanschafprijs))}</span>` : '')}
+      ${rij('Vaste rijder', esc(persoonNaam(b.vaste_rijder)))}
+      ${rij('Kilometerstand', b.km_stand != null ? `<span class="mono">${esc(kmTekst(b.km_stand))}</span>${b.km_stand_op ? ' op ' + datumNl(b.km_stand_op) : ''}` : '')}
+      ${rij('Notitie', b.notitie ? `<span style="white-space:pre-wrap">${esc(b.notitie)}</span>` : '')}
+    </table>
+    <div class="regel-knoppen">
+      <button class="knop klein" data-actie="kmCorrigeer" data-bus="${b.id}">Kilometerstand corrigeren</button>
+      <button class="knop klein" data-actie="busWijzig" data-bus="${b.id}">Gegevens wijzigen</button>
+      ${b.actief ? `<button class="knop klein" data-actie="busUit" data-bus="${b.id}">Uit gebruik nemen</button>`
+                 : `<button class="knop klein" data-actie="busAan" data-bus="${b.id}">Weer in gebruik nemen</button>`}
+    </div>
+  </div>
+  <p class="leeg">Een bus met een logboek kan niet verwijderd worden. "Uit gebruik nemen" haalt hem uit de lijst en bewaart alles.</p>`;
+}
+
+/* ────────────────────────────────────────────────────────
+   Formulieren
+   ──────────────────────────────────────────────────────── */
+function formBus(b){
+  const nieuw = !b; b = b || {};
+  openBlad({
+    titel: nieuw ? 'Bus toevoegen' : 'Gegevens wijzigen',
+    html:
+      veld('Kenteken', `<input id="f_kenteken" value="${esc(b.kenteken || '')}" autocapitalize="characters" autocomplete="off">`) +
+      veld('Naam', `<input id="f_naam" value="${esc(b.naam || '')}" autocomplete="off">`, 'Hoe jullie de bus noemen, bijvoorbeeld "bus Max". Mag leeg blijven.') +
+      `<div class="naast">` + veld('Merk', `<input id="f_merk" value="${esc(b.merk || '')}">`) + veld('Type', `<input id="f_type" value="${esc(b.type || '')}">`) + `</div>` +
+      `<div class="naast">` + veld('Bouwjaar', `<input id="f_bouwjaar" inputmode="numeric" value="${esc(b.bouwjaar || '')}">`) +
+        veld('Vaste rijder', `<select id="f_rijder">${opties([['', 'geen']].concat(personen().map(p => [p, persoonNaam(p)])), b.vaste_rijder || '')}</select>`) + `</div>` +
+      `<div class="naast">` + veld('Aanschafdatum', `<input id="f_aanschafdatum" type="date" value="${esc(b.aanschafdatum || '')}">`) +
+        veld('Aanschafprijs', `<input id="f_aanschafprijs" inputmode="decimal" value="${b.aanschafprijs != null ? esc(String(b.aanschafprijs).replace('.', ',')) : ''}">`) + `</div>` +
+      (nieuw ? veld('Kilometerstand nu', `<input id="f_km" inputmode="numeric">`) : '') +
+      veld('Notitie', `<textarea id="f_notitie">${esc(b.notitie || '')}</textarea>`),
+    opslaan: async () => {
+      const kenteken = waarde('f_kenteken').toUpperCase();
+      if(!kentekenKaal(kenteken)) throw new Error('Vul het kenteken in.');
+      const bouwjaar = jaarUitTekst(waarde('f_bouwjaar'));
+      if(Number.isNaN(bouwjaar) || (bouwjaar != null && (bouwjaar < 1950 || bouwjaar > 2100))) throw new Error('Bouwjaar: vul een jaartal van vier cijfers in.');
+      const prijs = bedragUitTekst(waarde('f_aanschafprijs'));
+      if(Number.isNaN(prijs)) throw new Error('Aanschafprijs: vul een bedrag in, bijvoorbeeld 24500 of 24.500,00.');
+      const rij = {
+        kenteken: kenteken, naam: waarde('f_naam') || null, merk: waarde('f_merk') || null, type: waarde('f_type') || null,
+        bouwjaar: bouwjaar, aanschafdatum: waarde('f_aanschafdatum') || null, aanschafprijs: prijs,
+        vaste_rijder: waarde('f_rijder') || null, notitie: waarde('f_notitie') || null
+      };
+      if(nieuw){
+        const km = kmUitTekst(waarde('f_km'));
+        if(Number.isNaN(km)) throw new Error('Kilometerstand: vul alleen cijfers in.');
+        if(km != null){ rij.km_stand = km; rij.km_stand_op = vandaagISO(); }
+        const { data, error } = await sb.from('wp_voertuigen').insert(rij).select('id').single();
+        if(error) throw new Error((error.code === '23505' ? 'Dit kenteken staat er al in. ' : '') + 'Opslaan mislukt: ' + error.message);
+        await herlaad();
+        toast('Bus toegevoegd');
+        const id = data && data.id;
+        return () => { if(id){ TAB = 'termijnen'; location.hash = 'bus-' + id; formTermijn(id, null, 'apk', true); } };
+      }
+      const { error } = await sb.from('wp_voertuigen').update(rij).eq('id', b.id);
+      if(error) throw new Error((error.code === '23505' ? 'Dit kenteken staat er al in. ' : '') + 'Opslaan mislukt: ' + error.message);
+      await herlaad();
+      toast('Gegevens opgeslagen');
+    }
+  });
+}
+
+function formKm(b){
+  openBlad({
+    titel: 'Kilometerstand corrigeren',
+    html: `<p class="som">De stand van ${esc(busLabel(b))} is nu ${b.km_stand != null ? '<span class="mono">' + esc(kmTekst(b.km_stand)) + '</span>' : 'niet ingevuld'}. Hier zet je hem direct goed, ook naar beneden.</p>` +
+      veld('Juiste kilometerstand', `<input id="f_km" inputmode="numeric" value="${b.km_stand != null ? b.km_stand : ''}">`),
+    opslaan: async () => {
+      const km = kmUitTekst(waarde('f_km'));
+      if(km == null || Number.isNaN(km)) throw new Error('Vul de kilometerstand in, alleen cijfers.');
+      if(kmOordeel(km, b.km_stand, KM_SPRONG) === 'sprong' &&
+         !(await bevestig(`${kmTekst(km)} is ${kmTekst(km - b.km_stand)} meer dan de vorige stand. Klopt dat?`, 'Ja, klopt'))) return false;
+      const { error } = await sb.from('wp_voertuigen').update({ km_stand: km, km_stand_op: vandaagISO() }).eq('id', b.id);
+      if(error) throw new Error('Opslaan mislukt: ' + error.message);
+      await herlaad();
+      toast('Kilometerstand opgeslagen');
+    }
+  });
+}
+
+/* Vraagt om bevestiging bij een stand die veel hoger is dan die van de bus. Geeft false als de gebruiker terug wil. */
+async function kmAkkoord(km, voertuigId){
+  const b = bus(voertuigId);
+  if(!b || kmOordeel(km, b.km_stand, KM_SPRONG) !== 'sprong') return true;
+  return bevestig(`${kmTekst(km)} is ${kmTekst(km - b.km_stand)} meer dan de stand van de bus (${kmTekst(b.km_stand)}). Klopt dat?`, 'Ja, klopt');
+}
+function foutenNaUpload(uit, goed){
+  if(uit.fouten.length) toast(goed + ' Let op, bijlage niet gelukt: ' + uit.fouten.join('; '), true);
+  else toast(goed);
+}
+
+function formIncident(busId){
+  const keuze = busId || (BUSSEN.filter(b => b.actief).length === 1 ? BUSSEN.find(b => b.actief).id : '');
+  openBlad({
+    titel: 'Incident melden',
+    knop: 'Melden',
+    html:
+      veld('Welke bus', `<select id="f_bus">${keuze ? '' : '<option value="">kies een bus</option>'}${busOpties(keuze)}</select>`) +
+      veld('Wat voor incident', `<select id="f_isoort">${opties(Object.entries(INCIDENT), 'schade')}</select>`) +
+      veld('Wat is er gebeurd', `<textarea id="f_tekst" placeholder="Waar, wanneer en wat er aan de hand is"></textarea>`) +
+      `<div class="naast">` + veld('Datum', `<input id="f_datum" type="date" value="${vandaagISO()}">`) +
+        veld('Kilometerstand', `<input id="f_km" inputmode="numeric">`, 'Als je hem weet.') + `</div>` +
+      veld("Foto's", `<input id="f_fotos" type="file" accept="image/*" multiple>`, "Mag ook later, bij de regel in het logboek.") +
+      `<p class="som">Gian krijgt hiervan direct een taak in de Takenapp.</p>`,
+    opslaan: async () => {
+      const voertuigId = waarde('f_bus');
+      if(!voertuigId) throw new Error('Kies de bus.');
+      const tekst = waarde('f_tekst');
+      if(!tekst) throw new Error('Schrijf kort op wat er gebeurd is.');
+      const datum = waarde('f_datum');
+      if(!geldigeDatum(datum)) throw new Error('Vul een datum in.');
+      const km = kmUitTekst(waarde('f_km'));
+      if(Number.isNaN(km)) throw new Error('Kilometerstand: vul alleen cijfers in.');
+      if(km != null && !(await kmAkkoord(km, voertuigId))) return false;
+      const files = [...(el('f_fotos').files || [])];
+      const { data, error } = await sb.from('wp_logboek').insert({
+        voertuig_id: voertuigId, soort: 'incident', datum: datum, omschrijving: tekst, incident_soort: waarde('f_isoort') || null, km_stand: km
+      }).select('id, taak_id').single();
+      if(error) throw new Error('Melden mislukt: ' + error.message);
+      const uit = files.length ? await uploadBijlagen(files, voertuigId, data.id, 'foto') : { ok: 0, fouten: [] };
+      await herlaad();
+      if(!data.taak_id) toast('Incident gemeld, maar er is geen taak voor Gian gemaakt. Geef het hem zelf even door.', true);
+      else foutenNaUpload(uit, 'Incident gemeld');
+    }
+  });
+}
+
+function formPunt(busId){
+  const keuze = busId || (BUSSEN.filter(b => b.actief).length === 1 ? BUSSEN.find(b => b.actief).id : '');
+  openBlad({
+    titel: 'Aandachtspunt noteren',
+    knop: 'Noteren',
+    html:
+      veld('Welke bus', `<select id="f_bus">${keuze ? '' : '<option value="">kies een bus</option>'}${busOpties(keuze)}</select>`) +
+      veld('Wat moet de garage bij de volgende beurt bekijken', `<textarea id="f_tekst" placeholder="Bijvoorbeeld: piept bij remmen, linker schuifdeur klemt"></textarea>`),
+    opslaan: async () => {
+      const voertuigId = waarde('f_bus');
+      if(!voertuigId) throw new Error('Kies de bus.');
+      const tekst = waarde('f_tekst');
+      if(!tekst) throw new Error('Schrijf het aandachtspunt op.');
+      const { error } = await sb.from('wp_aandachtspunten').insert({ voertuig_id: voertuigId, tekst: tekst });
+      if(error) throw new Error('Noteren mislukt: ' + error.message);
+      await herlaad();
+      toast('Aandachtspunt genoteerd');
+    }
+  });
+}
+
+function formLog(busId, l){
+  const nieuw = !l; l = l || {};
+  const inc = l.soort === 'incident';
+  const punten = nieuw ? openPunten(busId) : [];
+  openBlad({
+    titel: nieuw ? 'Onderhoud of reparatie invoeren' : (inc ? 'Incident wijzigen' : 'Regel wijzigen'),
+    html:
+      (inc ? veld('Wat voor incident', `<select id="f_isoort">${opties(Object.entries(INCIDENT), l.incident_soort || 'overig')}</select>`)
+           : veld('Soort', `<select id="f_soort">${opties([['onderhoud', 'Onderhoud'], ['reparatie', 'Reparatie'], ['overig', 'Overig']], l.soort || 'onderhoud')}</select>`)) +
+      veld('Omschrijving', `<textarea id="f_tekst">${esc(l.omschrijving || '')}</textarea>`) +
+      `<div class="naast">` + veld('Datum', `<input id="f_datum" type="date" value="${esc(l.datum || vandaagISO())}">`) +
+        veld('Kilometerstand', `<input id="f_km" inputmode="numeric" value="${l.km_stand != null ? l.km_stand : ''}">`) + `</div>` +
+      `<div class="naast">` + veld('Garage', `<input id="f_garage" value="${esc(l.garage || '')}">`) +
+        veld('Bedrag', `<input id="f_bedrag" inputmode="decimal" value="${l.bedrag != null ? esc(String(l.bedrag).replace('.', ',')) : ''}">`) + `</div>` +
+      (nieuw ? veld('Factuur of foto', `<input id="f_bestanden" type="file" multiple>`, `Mag ook later. Maximaal ${MAX_MB} MB per bestand.`) +
+               veld('Soort bijlage', `<select id="f_bsoort">${opties([['factuur', 'Factuur'], ['foto', 'Foto'], ['overig', 'Overig']], 'factuur')}</select>`) : '') +
+      (punten.length ? `<label class="veld" style="margin-bottom:5px"><span>Aandachtspunten die bij deze beurt zijn meegenomen</span></label>
+        <div class="vinklijst">${punten.map(p => `<label><input type="checkbox" class="f_punt" value="${p.id}"><span>${esc(p.tekst)}</span></label>`).join('')}</div>` : ''),
+    opslaan: async () => {
+      const tekst = waarde('f_tekst');
+      if(!tekst) throw new Error('Vul een omschrijving in.');
+      const datum = waarde('f_datum');
+      if(!geldigeDatum(datum)) throw new Error('Vul een datum in.');
+      const km = kmUitTekst(waarde('f_km'));
+      if(Number.isNaN(km)) throw new Error('Kilometerstand: vul alleen cijfers in.');
+      const bedrag = bedragUitTekst(waarde('f_bedrag'));
+      if(Number.isNaN(bedrag)) throw new Error('Bedrag: vul een bedrag in, bijvoorbeeld 312,50.');
+      if(km != null && km !== l.km_stand && !(await kmAkkoord(km, busId))) return false;
+      const rij = { datum: datum, omschrijving: tekst, garage: waarde('f_garage') || null, bedrag: bedrag, km_stand: km };
+      if(inc) rij.incident_soort = waarde('f_isoort') || null; else rij.soort = waarde('f_soort');
+      if(!nieuw){
+        const { error } = await sb.from('wp_logboek').update(rij).eq('id', l.id);
+        if(error) throw new Error('Opslaan mislukt: ' + error.message);
+        await herlaad();
+        toast('Regel opgeslagen');
+        return;
+      }
+      rij.voertuig_id = busId;
+      const files = [...(el('f_bestanden').files || [])];
+      const bsoort = waarde('f_bsoort') || 'factuur';
+      const gekozen = [...document.querySelectorAll('.f_punt:checked')].map(c => c.value);
+      const { data, error } = await sb.from('wp_logboek').insert(rij).select('id').single();
+      if(error) throw new Error('Opslaan mislukt: ' + error.message);
+      const uit = files.length ? await uploadBijlagen(files, busId, data.id, bsoort) : { ok: 0, fouten: [] };
+      if(gekozen.length){
+        const { error: e3 } = await sb.from('wp_aandachtspunten').update({ afgehandeld_op: new Date().toISOString(), afgehandeld_in: data.id }).in('id', gekozen);
+        if(e3) uit.fouten.push('aandachtspunten niet afgevinkt: ' + e3.message);
+      }
+      await herlaad();
+      if(uit.fouten.length) toast('Regel opgeslagen. Let op, niet alles is gelukt: ' + uit.fouten.join('; '), true);
+      else toast('Regel opgeslagen');
+    }
+  });
+}
+
+function formBijlage(l){
+  openBlad({
+    titel: 'Bijlage toevoegen',
+    knop: 'Toevoegen',
+    html:
+      veld('Bestand', `<input id="f_bestanden" type="file" multiple>`, `Maximaal ${MAX_MB} MB per bestand. Een foto wordt verkleind, een factuur niet.`) +
+      veld('Soort bijlage', `<select id="f_bsoort">${opties([['factuur', 'Factuur'], ['foto', 'Foto'], ['overig', 'Overig']], l.soort === 'incident' ? 'foto' : 'factuur')}</select>`),
+    opslaan: async () => {
+      const files = [...(el('f_bestanden').files || [])];
+      if(!files.length) throw new Error('Kies eerst een bestand.');
+      const uit = await uploadBijlagen(files, l.voertuig_id, l.id, waarde('f_bsoort') || 'overig');
+      await herlaad();
+      if(uit.fouten.length){
+        if(!uit.ok) throw new Error(uit.fouten.join('; '));
+        toast(`${uit.ok} toegevoegd, niet gelukt: ` + uit.fouten.join('; '), true);
+      } else toast(uit.ok === 1 ? 'Bijlage toegevoegd' : `${uit.ok} bijlagen toegevoegd`);
+    }
+  });
+}
+
+function herhalingKeuze(t){
+  if(!t.herhaling_n || !t.herhaling_eenheid) return 'eenmalig';
+  if(t.herhaling_eenheid === 'jaar' && t.herhaling_n === 1) return 'jaar1';
+  if(t.herhaling_eenheid === 'jaar' && t.herhaling_n === 2) return 'jaar2';
+  return 'anders';
+}
+function formTermijn(busId, t, soort, naNieuweBus){
+  const nieuw = !t; t = t || {};
+  const b = bus(busId);
+  const start = t.soort || soort || 'apk';
+  const keuzes = TERMIJN_KEUZE.includes(start) ? TERMIJN_KEUZE : TERMIJN_KEUZE.concat([start]);
+  const toonAnders = () => { el('f_anders').style.display = el('f_herh').value === 'anders' ? '' : 'none'; };
+  openBlad({
+    titel: nieuw ? (naNieuweBus ? `APK-termijn voor ${b ? busLabel(b) : 'de nieuwe bus'}` : 'Termijn toevoegen') : 'Termijn wijzigen',
+    extra: naNieuweBus ? { tekst: 'Later invullen' } : null,
+    html:
+      (naNieuweBus ? `<p class="som">De bus staat erin. Vul nu de APK-vervaldatum in, dan zet de database er een taak voor klaar. Neem de datum over van het laatste keuringsrapport of uit de kentekencheck van de RDW; daar staat ook hoe vaak de keuring terugkomt.</p>` : '') +
+      veld('Soort', `<select id="f_soort">${opties(keuzes.map(k => [k, TERMIJN[k] || k]), start)}</select>`) +
+      veld('Omschrijving', `<input id="f_oms" value="${esc(t.omschrijving || '')}">`, 'Mag leeg blijven.') +
+      `<div class="naast">` + veld('Vervaldatum', `<input id="f_verval" type="date" value="${esc(t.vervaldatum || '')}">`) +
+        veld('Taak hoeveel dagen vooraf', `<input id="f_vooraf" inputmode="numeric" value="${t.dagen_vooraf != null ? t.dagen_vooraf : 14}">`) + `</div>` +
+      veld('Komt terug', `<select id="f_herh">${opties((nieuw ? [['', 'kies hoe vaak']] : []).concat([['eenmalig', 'Eenmalig'], ['jaar1', 'Elk jaar'], ['jaar2', 'Elke twee jaar'], ['anders', 'Anders']]), nieuw ? '' : herhalingKeuze(t))}</select>`) +
+      `<div class="naast" id="f_anders" style="display:none">` +
+        veld('Elke', `<input id="f_n" inputmode="numeric" value="${t.herhaling_n || 6}">`) +
+        veld('Eenheid', `<select id="f_eenheid">${opties([['dag', 'dagen'], ['werkdag', 'werkdagen'], ['week', 'weken'], ['maand', 'maanden'], ['jaar', 'jaar']], t.herhaling_eenheid || 'maand')}</select>`) + `</div>` +
+      veld('Taak voor', `<select id="f_voor">${opties(personen().map(p => [p, persoonNaam(p)]), t.toegewezen_aan || 'gian')}</select>`),
+    na: () => { el('f_herh').addEventListener('change', toonAnders); toonAnders(); },
+    opslaan: async () => {
+      const verval = waarde('f_verval');
+      if(!geldigeDatum(verval)) throw new Error('Vul de vervaldatum in.');
+      const vooraf = kmUitTekst(waarde('f_vooraf'));
+      if(vooraf == null || Number.isNaN(vooraf) || vooraf > 365) throw new Error('Dagen vooraf: een getal van 0 tot en met 365.');
+      const h = waarde('f_herh');
+      if(!h) throw new Error('Kies hoe vaak de termijn terugkomt.');
+      let n = null, eenheid = null;
+      if(h === 'jaar1'){ n = 1; eenheid = 'jaar'; }
+      else if(h === 'jaar2'){ n = 2; eenheid = 'jaar'; }
+      else if(h === 'anders'){
+        n = kmUitTekst(waarde('f_n')); eenheid = waarde('f_eenheid');
+        if(!n || Number.isNaN(n)) throw new Error('Vul in om de hoeveel dagen, weken, maanden of jaar de termijn terugkomt.');
+      }
+      const rij = { soort: waarde('f_soort'), omschrijving: waarde('f_oms') || null, vervaldatum: verval, dagen_vooraf: vooraf,
+                    herhaling_n: n, herhaling_eenheid: eenheid, toegewezen_aan: waarde('f_voor') || 'gian' };
+      let error;
+      if(nieuw){ rij.voertuig_id = busId; ({ error } = await sb.from('wp_termijnen').insert(rij)); }
+      else ({ error } = await sb.from('wp_termijnen').update(rij).eq('id', t.id));
+      if(error) throw new Error('Opslaan mislukt: ' + error.message);
+      await herlaad();
+      toast(nieuw ? 'Termijn toegevoegd, de taak staat in de Takenapp' : 'Termijn opgeslagen');
+    }
+  });
+}
+function formTermijnDatum(t){
+  openBlad({
+    titel: 'Nieuwe vervaldatum invullen',
+    html: `<p class="som">${esc(TERMIJN[t.soort] || t.soort)}. De vorige vervaldatum was ${datumNl(t.vervaldatum)}. De taak in de Takenapp schuift mee naar ${t.dagen_vooraf} ${t.dagen_vooraf === 1 ? 'dag' : 'dagen'} voor de nieuwe datum.</p>` +
+      veld('Nieuwe vervaldatum', `<input id="f_verval" type="date">`),
+    opslaan: async () => {
+      const verval = waarde('f_verval');
+      if(!geldigeDatum(verval)) throw new Error('Vul de nieuwe vervaldatum in.');
+      const { error } = await sb.from('wp_termijnen').update({ vervaldatum: verval }).eq('id', t.id);
+      if(error) throw new Error('Opslaan mislukt: ' + error.message);
+      await herlaad();
+      toast('Vervaldatum opgeslagen');
+    }
+  });
+}
+
+/* ────────────────────────────────────────────────────────
+   Losse handelingen (zonder formulier)
+   ──────────────────────────────────────────────────────── */
+async function zet(tabel, id, rij, gelukt){
+  const { error } = await sb.from(tabel).update(rij).eq('id', id);
+  if(error){ toast('Opslaan mislukt: ' + error.message, true); return false; }
+  await herlaad();
+  if(gelukt) toast(gelukt);
+  return true;
+}
+async function verwijderLog(l){
+  const bij = BIJLAGEN.filter(x => x.logboek_id === l.id);
+  const extra = (bij.length ? ` De ${bij.length === 1 ? 'bijlage gaat' : bij.length + ' bijlagen gaan'} mee weg.` : '') +
+    (l.soort === 'incident' && l.status === 'open' && l.taak_id ? ' De open taak in de Takenapp verdwijnt ook.' : '');
+  if(!(await bevestig(`Deze regel van ${datumNl(l.datum)} verwijderen?${extra} Dit kan niet ongedaan worden gemaakt.`, 'Verwijderen'))) return;
+  if(bij.length){
+    const { error: e1 } = await sb.storage.from(BUCKET).remove(bij.map(x => x.storage_path));
+    if(e1){ toast('Bijlagen verwijderen mislukt, de regel staat er nog: ' + e1.message, true); return; }
+  }
+  const { error } = await sb.from('wp_logboek').delete().eq('id', l.id);
+  if(error){ toast('Verwijderen mislukt: ' + error.message, true); await herlaad(); return; }
+  await herlaad();
+  toast('Regel verwijderd');
+}
+
+const ACTIES = {
+  open: d => { TAB = 'logboek'; location.hash = 'bus-' + d.bus; },
+  terug: () => { location.hash = ''; },
+  tab: d => { TAB = d.tab; teken(); },
+  busNieuw: () => formBus(null),
+  busWijzig: d => formBus(bus(d.bus)),
+  kmCorrigeer: d => formKm(bus(d.bus)),
+  busUit: async d => {
+    const b = bus(d.bus);
+    if(await bevestig(`${busLabel(b)} uit gebruik nemen? Het logboek blijft bewaard. Lopende termijnen blijven staan tot je ze stopt.`, 'Uit gebruik nemen')) zet('wp_voertuigen', b.id, { actief: false }, 'Bus is uit gebruik');
+  },
+  busAan: d => zet('wp_voertuigen', d.bus, { actief: true }, 'Bus is weer in gebruik'),
+  incident: d => formIncident(d.bus || null),
+  punt: d => formPunt(d.bus || null),
+  logNieuw: d => formLog(d.bus, null),
+  logWijzig: d => { const l = LOGBOEK.find(x => x.id === d.id); if(l) formLog(l.voertuig_id, l); },
+  logWeg: d => { const l = LOGBOEK.find(x => x.id === d.id); if(l && isGian()) verwijderLog(l); },
+  incidentKlaar: d => { if(isGian()) zet('wp_logboek', d.id, { status: 'afgehandeld' }, 'Incident afgehandeld, de taak is afgevinkt'); },
+  incidentOpen: d => { if(isGian()) zet('wp_logboek', d.id, { status: 'open' }, 'Incident staat weer open'); },
+  bijlageNieuw: d => { const l = LOGBOEK.find(x => x.id === d.id); if(l) formBijlage(l); },
+  bijlageOpen: d => openBijlage(d.id),
+  bijlageWeg: d => { if(isGian()) verwijderBijlage(d.id); },
+  puntKlaar: d => zet('wp_aandachtspunten', d.id, { afgehandeld_op: new Date().toISOString(), afgehandeld_in: null }, 'Aandachtspunt vervallen'),
+  puntOpen: d => zet('wp_aandachtspunten', d.id, { afgehandeld_op: null, afgehandeld_in: null }, 'Aandachtspunt staat weer open'),
+  termijnNieuw: d => formTermijn(d.bus, null, d.soort || 'apk', false),
+  termijnWijzig: d => { const t = TERMIJNEN.find(x => x.id === d.id); if(t) formTermijn(t.voertuig_id, t, null, false); },
+  termijnDatum: d => { const t = TERMIJNEN.find(x => x.id === d.id); if(t) formTermijnDatum(t); },
+  termijnStop: async d => {
+    if(await bevestig('Deze termijn stoppen? De open taak in de Takenapp verdwijnt. Je kunt de termijn later weer aanzetten.', 'Stoppen')) zet('wp_termijnen', d.id, { actief: false }, 'Termijn gestopt');
+  },
+  termijnStart: d => zet('wp_termijnen', d.id, { actief: true }, 'Termijn staat weer aan')
+};
+
+/* ────────────────────────────────────────────────────────
+   Inloggen en rol (rolpatroon van taken.html: de rij met de eigen user_id)
+   ──────────────────────────────────────────────────────── */
+async function laadProfiel(userId){
+  const { data, error } = await sb.from('taken_rollen').select('user_id, persoon, rol');
+  if(error) return { fout: 'De rollentabel is niet leesbaar: ' + error.message };
+  ROLLEN = data || [];
+  const rij = ROLLEN.find(r => r.user_id === userId);
+  if(!rij) return { fout: 'Dit account is aangemeld maar nog niet gekoppeld in taken_rollen. Gian kan de koppeling in Supabase Studio zetten.' };
+  IK = { persoon: rij.persoon, rol: rij.rol };
+  return {};
+}
+async function laadApp(){
+  el('app-loading').style.display = 'flex';
+  const { data } = await sb.auth.getSession();
+  const session = data && data.session;
+  if(!session){ toonLogin(); return; }
+  el('login').style.display = 'none';
+  el('wrap').style.display = '';
+  IK = null;
+  const p = await laadProfiel(session.user.id);
+  el('app-loading').style.display = 'none';
+  if(p.fout){
+    el('geenToegang').style.display = ''; el('geenToegang').textContent = p.fout;
+    el('scherm').innerHTML = ''; el('wieIngelogd').textContent = session.user.email || '';
+    return;
+  }
+  el('geenToegang').style.display = 'none';
+  el('wieIngelogd').textContent = 'Ingelogd als ' + persoonNaam(IK.persoon);
+  await herlaad();
+}
+function toonLogin(){ IK = null; el('app-loading').style.display = 'none'; el('wrap').style.display = 'none'; el('login').style.display = 'flex'; }
+async function inloggen(){
+  const email = el('email').value.trim(), wachtwoord = el('wachtwoord').value, err = el('loginErr');
+  err.textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email, password: wachtwoord });
+  if(error){ err.textContent = 'Inloggen mislukt: ' + error.message; return; }
+  el('wachtwoord').value = '';
+  laadApp();
+}
+
+document.addEventListener('click', e => {
+  const k = e.target.closest && e.target.closest('[data-actie]');
+  if(!k) return;
+  const f = ACTIES[k.dataset.actie];
+  if(f) f(k.dataset);
+});
+window.addEventListener('hashchange', teken);
+document.addEventListener('visibilitychange', () => { if(!document.hidden && IK && !BLAD) herlaad(); });
+el('loginBtn').addEventListener('click', inloggen);
+el('wachtwoord').addEventListener('keydown', e => { if(e.key === 'Enter') inloggen(); });
+el('uitlogBtn').addEventListener('click', async () => { await sb.auth.signOut(); location.hash = ''; toonLogin(); });
+el('verversBtn').addEventListener('click', async () => { if(IK){ await herlaad(); toast('Ververst'); } });
+el('blad_ok').addEventListener('click', bladOpslaan);
+el('blad_annuleer').addEventListener('click', () => { if(!BEZIG) sluitBlad(); });
+el('blad_sluit').addEventListener('click', () => { if(!BEZIG) sluitBlad(); });
+el('blad_extra').addEventListener('click', () => { if(!BEZIG) sluitBlad(); });
+el('lightbox_sluit').addEventListener('click', () => { el('lightbox').classList.remove('zie'); el('lightbox_img').removeAttribute('src'); });
+el('appVersie').textContent = APP_VERSION;
+laadApp();
+</script>
+</body>
+</html>

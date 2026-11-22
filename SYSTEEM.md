@@ -42,7 +42,8 @@ rechtstreeks met Supabase.
 | Personeel | `personeel.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/personeel.html | v0.5.0 |
 | Klanten | `klanten.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/klanten.html | v0.4.0 |
 | Klantenkaart | `kaart.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/kaart.html | v0.1.0 (15-10-2026) |
-| Start | `start.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/start.html | v0.3.0 (15-10-2026) |
+| Start | `start.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/start.html | v0.4.0 (22-11-2026) |
+| Wagenpark | `wagenpark.html` | `GianErnes/schilders-calc` | https://gianernes.github.io/schilders-calc/wagenpark.html | v0.1.0 (22-11-2026) |
 | Voorraad | `voorraad-app_2.html` | `GianErnes/voorraad-app` | https://gianernes.github.io/voorraad-app/voorraad-app_2.html | [TE CONTROLEREN] |
 
 Versies in deze tabel zijn op 14 september 2026 uit de live bestanden
@@ -74,6 +75,15 @@ Yoobi's eigen planning wordt niet meer gebruikt en er wordt niets naar
 Yoobi teruggeschreven: een verschoven datum zet Gian zelf in Yoobi.
 Eigen changelog: `CHANGELOG_planning.md`. Zie het dagverslag van
 6 september onderaan.
+
+**Wagenpark** is er op 22 november 2026 bij gekomen. Beheer van de vier
+eigen bussen: voertuigkaart, logboek met onderhoudsfacturen, incidenten
+die de mannen zelf melden, aandachtspunten voor de eerstvolgende beurt en
+termijnen (APK, onderhoud, verzekering). Incidenten en termijnen worden
+taken in de Takenapp; dat regelt de database, niet de pagina. Eigen
+changelog: `CHANGELOG_wagenpark.md`. Eigen beginscherm-icoon:
+`apple-touch-icon-wagenpark.png`. Zie de drie secties over het wagenpark
+van 21 en 22 november onderaan.
 
 **Gevelscanner** is op 26 juli 2026 bewust buiten dit document gelaten.
 Dat is een besluit en geen vergissing. Bestaat die app nog en raakt hij
@@ -7320,3 +7330,51 @@ join public.taken t on t.crmtaskid = l.taak_id
 where l.soort = 'incident'
   and (l.status = 'afgehandeld') is distinct from (t.voltooid_op is not null);
 ```
+
+## Ook op 22 november 2026: de pagina wagenpark.html v0.1.0 (start.html v0.4.0)
+
+**Wat het is.** De pagina bij de database van 21 en 22 november. Eén bestand, `wagenpark.html`, in de repo `GianErnes/schilders-calc`, adres https://gianernes.github.io/schilders-calc/wagenpark.html. Geen nieuwe tabel, geen SQL, geen Edge Function, geen cronjob. De pagina leest en schrijft de vijf `wp_`-tabellen, leest `taken_rollen`, roept `wp_termijnen_stand()` aan en gebruikt de bak `wagenpark`. De tabel `taken` raakt de pagina niet aan; dat doen de triggers.
+
+**Bestanden van deze release.** `wagenpark.html` (v0.1.0), `CHANGELOG_wagenpark.md`, `apple-touch-icon-wagenpark.png` (180 bij 180, gemaakt uit `apple-touch-icon-oplevering.png` met een andere tekst in de balk), `start.html` v0.4.0 met `CHANGELOG_start.md` (tegel Wagenpark na Personeel), en dit document.
+
+**Besluiten van Gian, 22-11-2026.**
+- De mannen komen op de pagina via een eigen icoon op het beginscherm van de telefoon, zoals bij Oplevering. `taken.html` is niet gewijzigd.
+- Een incident op afgehandeld zetten of weer openzetten kan in de pagina alleen Gian (persoon `gian`). Dat is een regel van de pagina: de database staat het iedereen toe (keuze A van 21-11-2026). Een bericht bij afhandelen door een ander is daarmee niet nodig en niet gebouwd.
+- Nog niet door Gian bevestigd, wel zo gebouwd: geen automatische termijnen bij een nieuwe bus (de pagina vraagt direct om de APK-vervaldatum, met "Later invullen"); verwijderen van een logboekregel of bijlage alleen door Gian; bevestiging vragen bij een kilometerstand die meer dan 20.000 km boven de bus ligt (constante `KM_SPRONG`).
+
+**Hoe de pagina werkt, voor wie hem moet herstellen.**
+- Inloggen: `sb.auth.signInWithPassword`, eigen sessie onder `sb-wagenpark-auth`. De rol komt uit `taken_rollen` (de rij met de eigen `user_id`). Geen rij: melding, en de `wp_`-tabellen worden niet gelezen.
+- Laden: alle bussen, het hele logboek, alle bijlagen, alle aandachtspunten en `wp_termijnen_stand()` in één keer, per 1000 rijen. Bij vier bussen is dat klein. Verversen gebeurt bij openen, na elke handeling, als de pagina weer in beeld komt en met de knop.
+- Schrijven bij een incident: de pagina stuurt `voertuig_id`, `soort`, `datum`, `omschrijving`, `incident_soort`, `km_stand`. Niet `status`, `gemeld_door` of `taak_id`; die vult `wp_logboek_voor_insert`.
+- Afhandelen: de pagina stuurt alleen `status`. `wp_logboek_status_naar_taak` vinkt de taak af.
+- "Geschat" bij een termijn: is `vervaldatum` voorbij en is de open taak later gepland dan de oude vervaldatum min `dagen_vooraf`, dan toont de pagina `taak_gepland_op` plus `dagen_vooraf` (functie `termijnBeeld`). "Nieuwe vervaldatum invullen" stuurt alleen `vervaldatum`; `wp_termijn_taak_zet` zet de taak goed.
+- Bijlagen: eerst naar de bak (`<voertuig_id>/<logboek_id>/<Date.now()>_<veilige naam>`), dan de rij in `wp_bijlagen`. Mislukt de upload, dan blijft de logboekregel staan en toont de pagina de fout. Mislukt alleen de rij, dan staat er een bestand in de bak zonder rij; de melding zegt dat.
+- Verwijderen van een logboekregel: eerst de bestanden uit de bak, dan de regel. `wp_bijlagen` gaat mee door de database.
+
+**Getest, 22-11-2026.**
+- Kwaliteitspoorten op het geleverde bestand: `node --check` op het inline scriptblok, div-balans, scripttagbalans, `APP_VERSION` gelijk aan de bovenste entry van `CHANGELOG_wagenpark.md`; hetzelfde voor `start.html` en `CHANGELOG_start.md`.
+- `test_puur.js`: 16 groepen op de functies tussen `PUUR-BEGIN` en `PUUR-EIND`, gesneden uit het bestand (datums, kenteken, bedragen, kilometerstand, uploadpad, `termijnBeeld`).
+- `test_pagina.js` met `nepdb.js`: de hele pagina in jsdom tegen een nagebootste database, 9 scenario's volgens het testplan plus de foutpaden. De nabootsing kent de kolomnamen, de keuzelijsten en de triggers zoals die op 22-11-2026 live gemeten zijn (`information_schema.columns`, `pg_constraint`, `pg_get_functiondef`) en weigert een onbekende kolom. Drie opzettelijke fouten (verkeerde kolomnaam, knop Afgehandeld voor iedereen, de geschat-regel) werden gevangen.
+- Chromium 157 op 390 px breed: geen scriptfouten, geen zijwaarts schuiven; een foto van 4000 bij 3000 ging als JPEG van 1600 bij 1200 de bak in.
+- GEMETEN in de live database, alleen structuur: de vijf `wp_`-tabellen met hun kolommen en regels, de bak `wagenpark` met policy `wagenpark_authenticated_alles`, `wp_termijnen_stand()`, de policy `rollen_lezen` op `taken_rollen` (elke ingelogde leest alle rijen), en alle triggers van bestand 01 en 02. `backup-dump` staat op functieversie 26.
+- **Niet getest:** de pagina tegen de echte database, op een echte iPhone, door Gian en een van de mannen. Vanuit de bouwomgeving is Supabase niet bereikbaar. Tot het testplan hieronder is gelopen heet de pagina niet werkend.
+
+**Testplan in echt gebruik (nog te doen).**
+1. Gian voert de vier bussen in, met vaste rijder en kilometerstand.
+2. Gian vult bij één bus de APK-termijn in en ziet de taak in de Takenapp.
+3. Een van de mannen zet het icoon op zijn telefoon, meldt een proefincident met foto; Gian ziet de taak, vinkt hem af, en de man ziet het incident als afgehandeld.
+4. Gian voert een onderhoudsbeurt in met een factuur en een kilometerstand; de bus toont de nieuwe stand.
+5. De volgende ochtend moet deze query meer dan 0 geven. Dat is het bewijs dat de bak `wagenpark` in de spiegelbackup zit; tot dan is dat niet bewezen met een echt bestand. Zet de uitkomst hier neer.
+
+```sql
+select count(*) from storage.objects
+where bucket_id = 'backups' and name like 'bestanden/wagenpark/%';
+```
+
+**Open na deze release.**
+- `sql/wagenpark_01_tabellen.sql` en `sql/wagenpark_02_incident_taak_km.sql` staan niet in de repo (GEMETEN 22-11-2026, 15:08 UTC: beide geven 404). De database is zonder die bestanden niet opnieuw op te bouwen.
+- Stap 2: banden, vloeistoffen, documenten, sleutels, tankpas. Later: vervangingssignaal, kenteken aanvullen via open data van de RDW (AANNAME dat dit kan, eerst opzoeken en testen), kosten per bus naar `financieel.html`.
+
+**Bij nood.**
+- De pagina uitzetten: `wagenpark.html` uit de repo halen of terugzetten naar een vorige versie via de geschiedenis op GitHub. De gegevens blijven in de database staan en de taken blijven werken; die hangen niet aan de pagina.
+- De tegel weghalen: in `start.html` de regel met `id:'wagenpark'` uit de lijst `APPS` halen.
