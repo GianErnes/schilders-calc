@@ -119,6 +119,10 @@ GEMETEN op 21-11-2026 direct na die aanleg: 77 tabellen in `public`
 (`storage.buckets`) en 76 triggers op tabellen in `public` (`pg_trigger`
 zonder de interne). De getallen aan het begin van deze alinea zijn dus
 verouderd. Zie de sectie van 21 november 2026 achteraan.
+Op 22 november 2026 kwamen daar vijf triggers bij met
+`wagenpark_02_incident_taak_km.sql`, waarvan twee op `taken`. GEMETEN op
+22-11-2026 na die aanleg: 77 tabellen, 9 opslagbakken, 81 triggers op
+tabellen in `public`. Zie de sectie van die dag over bestand 02.
 
 > **Twee triggertellingen spreken elkaar tegen.** Hier staat 14, de
 > herbouwtabel in 4.8 komt op 13. Dat verschil bestond al voor de
@@ -157,7 +161,8 @@ Alleen in schilders-calc.
 | `taken-documenten` | nee | 1 bestand |
 | `taken-fotos` | nee | 2 bestanden |
 | `oplever-fotos` | nee | foto's bij de opleverpunten, leeg bij aanleg |
-| `wagenpark` | nee | facturen en foto's bij het wagenpark, leeg bij aanleg (21-11-2026). **Staat nog niet in de spiegelbackup**, zie de sectie van 21 november 2026 |
+| `personeel` | nee | bestanden bij `personeel.html` (constante `BUCKET`), 0 bestanden (GEMETEN 22-11-2026 in `storage.buckets`; deze rij ontbrak tot die dag in deze tabel) |
+| `wagenpark` | nee | facturen en foto's bij het wagenpark, leeg bij aanleg (21-11-2026). In de spiegelbackup vanaf `backup-dump` v8, zie de sectie van 22 november 2026 |
 | `backups` | nee | nachtelijke dumps, 156 bestanden |
 
 GEMETEN 21-11-2026 (`storage.buckets`): er zijn 9 bakken. Deze tabel telt
@@ -548,7 +553,7 @@ Allemaal in `schilders-calc`, allemaal actief. (Negen tot 3 oktober 2026; de tie
 
 | Naam | UTC | Bij ons, zomer | Bij ons, winter | Roept aan | Wat het doet |
 |---|---|---|---|---|---|
-| `backup-nachtelijk` | 02:00 | 04:00 | 03:00 | `backup-dump` | dump van de database en het schema naar de bak `backups`, kopie van beide naar Google Drive, spiegel van de vijf bestandsbakken. Stuurt maandag een statusmail en bij een mislukte Drive-kopie of schemadump direct een foutmail |
+| `backup-nachtelijk` | 02:00 | 04:00 | 03:00 | `backup-dump` | dump van de database en het schema naar de bak `backups`, kopie van beide naar Google Drive, spiegel van de acht bestandsbakken uit `SPIEGEL_BRONNEN` (stand v8, 22 november 2026). Stuurt maandag een statusmail en bij een mislukte Drive-kopie of schemadump direct een foutmail |
 | `opname-boekingen-dagelijks` | 03:45 | 05:45 | 04:45 | `opname-boekingen` | leest de klantboekingen uit de Google agenda en werkt de tabel `opname_boekingen` bij. Bijgekomen 9 augustus 2026 |
 | `yuki-vuller-dagelijks` | 05:00 | 07:00 | 06:00 | `smooth-function` | haalt de standen uit Yuki en vult het financiele dashboard |
 | `yuki-vuller-middag` | 10:00 | 12:00 | 11:00 | `smooth-function` | zelfde, tweede keer op de dag |
@@ -816,7 +821,7 @@ Allemaal op tabellen in `schilders-calc`, allemaal actief. De twaalf hieronder z
 
 **De vijftien prullenbak-triggers** heten `<tabel>_prullenbak` en staan als `before delete` op `calculaties`, `hoofdgroepen`, `onderdelen`, `calc_regels`, `calc_regel_stappen`, `meetstaat`, `staart`, `calculatie_documenten`, `calculatie_fotos`, `offerte_accorderingen`, `onderhoudsplannen`, `onderhoudsplan_beurten`, `onderhoudsplan_externe_posten`, `todos` en `calculatie_tijd`. Ze roepen allemaal dezelfde functie `prullenbak_vang()` aan, die de rij als JSON in de tabel `prullenbak` legt en daarna het verwijderen gewoon laat doorgaan; gaat het kopiëren mis, dan komt er een NOTICE in het logboek en wordt er tóch verwijderd. Terugzetten: `prullenbak_herstel(id)`; opruimen: `prullenbak_opruimen(dagen)`; de app leest de view `prullenbak_overzicht`. Aangelegd met `prullenbak_01_tabellen.sql`, `_02_externe_posten.sql` en `_03_calculatie_tijd.sql`. Zie de sectie van 19 oktober 2026.
 
-**De vijf wagenpark-triggers** (sinds 21 november 2026, `wagenpark_01_tabellen.sql`) staan allemaal op de `wp_`-tabellen, geen enkele op `taken`: `wp_logboek_voor_insert` (before insert op `wp_logboek`: vult de melder in en maakt bij een incident een taak voor Gian), `wp_termijn_taak_zet` (before insert/update op `wp_termijnen`: maakt of werkt de gekoppelde taak bij), `wp_termijn_taak_weg` (after delete op `wp_termijnen`: haalt de open taak weg), `wp_aandachtspunt_voor_insert` (before insert op `wp_aandachtspunten`: vult de melder in) en `wp_aandachtspunten_naar_taak` (after insert/update/delete op `wp_aandachtspunten`: zet de open punten onderaan de notitie van de open onderhoudstaak). Ze schrijven wel ín `taken`, als `security definer`. Zie de sectie van 21 november 2026 achteraan.
+**De vijf wagenpark-triggers** (sinds 21 november 2026, `wagenpark_01_tabellen.sql`) staan allemaal op de `wp_`-tabellen, geen enkele op `taken`: `wp_logboek_voor_insert` (before insert op `wp_logboek`: vult de melder in en maakt bij een incident een taak voor Gian), `wp_termijn_taak_zet` (before insert/update op `wp_termijnen`: maakt of werkt de gekoppelde taak bij), `wp_termijn_taak_weg` (after delete op `wp_termijnen`: haalt de open taak weg), `wp_aandachtspunt_voor_insert` (before insert op `wp_aandachtspunten`: vult de melder in) en `wp_aandachtspunten_naar_taak` (after insert/update/delete op `wp_aandachtspunten`: zet de open punten onderaan de notitie van de open onderhoudstaak). Ze schrijven wel ín `taken`, als `security definer`. Zie de sectie van 21 november 2026 achteraan. **Sinds 22 november 2026 klopt "geen enkele op `taken`" niet meer:** `wagenpark_02_incident_taak_km.sql` zet er twee op `taken` (`wp_incident_taak_gewijzigd`, after update of `voltooid_op`; `wp_incident_taak_verwijderd`, after delete), beide met een WHEN-voorwaarde op `bron_kenmerk like 'wagenpark-incident:%'`, en drie op `wp_logboek` (`wp_logboek_status_naar_taak`, `wp_logboek_taak_weg`, `wp_logboek_km_naar_voertuig`). Zie de sectie van 22 november 2026 over bestand 02.
 
 Triggers zijn het makkelijkst te vergeten onderdeel van dit systeem,
 omdat ze nergens zichtbaar zijn en geen logboek bijhouden. Ze doen werk
@@ -1194,8 +1199,9 @@ Bijgewerkt 15 september 2026, na de bouw van `backup-dump` v6.
 volledige inhoud van de database weg als `backup-JJJJ-MM-DD.json` in de
 bak `backups` (60 dagen bewaard) en het herbouwbestand van de structuur
 als `schema/schema-JJJJ-MM-DD.sql` (30 dagen). Daarna zet hij beide
-bestanden ook in Google Drive, en tot slot spiegelt hij de vijf
-bestandsbakken (`accord-pdf` voorop) naar `bestanden/` in dezelfde bak.
+bestanden ook in Google Drive, en tot slot spiegelt hij de acht
+bestandsbakken uit `SPIEGEL_BRONNEN` (`accord-pdf` voorop, `wagenpark`
+achteraan; stand v8 van 22 november 2026) naar `bestanden/` in dezelfde bak.
 
 **Waar de kopie buiten Supabase staat.** In de Google Drive van
 `administratie@ernes.nl`, map **Backups Schilders Calc**, sinds
@@ -7084,7 +7090,7 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 
 **Rechten.** Het huismodel (besluit Gian 21-11-2026, keuze A): wie is ingelogd mag alles in de vijf tabellen en in de bak, wie niet is ingelogd mag niets. De mannen zien dus ook bedragen, facturen en aanschafprijs. Policies heten `<tabel>_authenticated_alles`, op de bak `wagenpark_authenticated_alles`.
 
-**De tabel `taken` is niet gewijzigd.** Geen kolom, geen regel, geen trigger, geen policy. Wagenparktaken zijn gewone taken met bron `eigen`, zoals de projecttaken van 19 november. Herkenbaar aan `bron_kenmerk` `wagenpark-incident:<id van de logboekregel>` of `wagenpark-termijn:<id van de termijn>`; `bron_ref` is de bus. De triggers draaien als `security definer`, omdat iemand met rol `eigen` zelf geen taak voor een ander mag aanmaken (policy `taken_aanmaken`, GEMETEN 21-11-2026).
+**De tabel `taken` is op 21-11 niet gewijzigd** (sinds 22-11-2026 staan er twee wagenpark-triggers op, zie de sectie over `wagenpark_02_incident_taak_km.sql`). Op 21-11: geen kolom, geen regel, geen trigger, geen policy. Wagenparktaken zijn gewone taken met bron `eigen`, zoals de projecttaken van 19 november. Herkenbaar aan `bron_kenmerk` `wagenpark-incident:<id van de logboekregel>` of `wagenpark-termijn:<id van de termijn>`; `bron_ref` is de bus. De triggers draaien als `security definer`, omdat iemand met rol `eigen` zelf geen taak voor een ander mag aanmaken (policy `taken_aanmaken`, GEMETEN 21-11-2026).
 
 **Regels die de database afdwingt.**
 - Een incident krijgt een eenmalige taak op naam van Gian, gepland op het moment van melden, `piep` uit. Een gewone logboekregel krijgt geen taak en staat meteen op afgehandeld.
@@ -7095,11 +7101,11 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 - Een bus met logboek, bijlagen, termijnen of aandachtspunten is niet te verwijderen (`on delete restrict`); zet hem op `actief = false`.
 
 **Bekende grenzen.**
-- Vinkt iemand een herhalende termijntaak af, dan schuift de Takenapp die taak zelf door. `wp_termijnen.vervaldatum` schuift niet mee. De pagina moet de actuele taakdatum lezen via `wp_termijnen_stand()`. Hoe dit bij de APK moet werken (nieuwe datum invullen na de keuring) is nog niet ontworpen.
-- `wp_logboek.status` en de taak zijn twee plekken voor dezelfde vraag (is het incident afgehandeld). Er is geen koppeling tussen die twee in de database. De pagina moet dat oplossen; iemand met rol `eigen` kan de taak van Gian niet lezen, dus daarvoor is waarschijnlijk een tweede functie nodig (VERMOEDEN; beslist bij het ontwerp van de pagina).
+- Vinkt iemand een herhalende termijntaak af, dan schuift de Takenapp die taak zelf door. `wp_termijnen.vervaldatum` schuift niet mee. De pagina moet de actuele taakdatum lezen via `wp_termijnen_stand()`. Hoe dit bij de APK moet werken (nieuwe datum invullen na de keuring) is nog niet ontworpen. **Besloten 22-11-2026:** de herhaler blijft, de pagina toont de berekende datum als "geschat" en krijgt een knop "nieuwe vervaldatum invullen". Nog niet gebouwd; hoort bij de pagina.
+- `wp_logboek.status` en de taak zijn twee plekken voor dezelfde vraag (is het incident afgehandeld). Er is geen koppeling tussen die twee in de database. De pagina moet dat oplossen; iemand met rol `eigen` kan de taak van Gian niet lezen, dus daarvoor is waarschijnlijk een tweede functie nodig (VERMOEDEN; beslist bij het ontwerp van de pagina). **Opgelost 22-11-2026 in de database** met `wagenpark_02_incident_taak_km.sql`; een tweede leesfunctie is niet nodig.
 - Onderhoud op kilometerstand kan niet automatisch: de Takenapp kent alleen datums.
 
-**OPEN, vóór de eerste factuur of foto: de bak `wagenpark` heeft geen backup.** GEMETEN 21-11-2026 in de broncode van Edge Function `backup-dump` v7 (versie 25): de constante `SPIEGEL_BRONNEN` is een vaste lijst van zeven bakken en `wagenpark` staat er niet in. De vijf tabellen gaan wél vanzelf mee in de nachtelijke dump, want `backup_tabellen()` leest alle tabellen in `public` (GEMETEN, functiedefinitie). Te doen: `backup-dump` naar v8 met `'wagenpark'` in `SPIEGEL_BRONNEN`, uitrollen met Verify JWT uit, en de eerstvolgende maandagmail naleggen. De bak is nu leeg, dus er is nog niets verloren.
+~~**OPEN, vóór de eerste factuur of foto: de bak `wagenpark` heeft geen backup.**~~ **Opgelost op 22 november 2026: `backup-dump` v8 heeft `wagenpark` in `SPIEGEL_BRONNEN`, zie de sectie van die dag.** Wat hier op 21-11 stond: GEMETEN 21-11-2026 in de broncode van Edge Function `backup-dump` v7 (versie 25): de constante `SPIEGEL_BRONNEN` is een vaste lijst van zeven bakken en `wagenpark` staat er niet in. De vijf tabellen gaan wél vanzelf mee in de nachtelijke dump, want `backup_tabellen()` leest alle tabellen in `public` (GEMETEN, functiedefinitie). Te doen: `backup-dump` naar v8 met `'wagenpark'` in `SPIEGEL_BRONNEN`, uitrollen met Verify JWT uit, en de eerstvolgende maandagmail naleggen. De bak is nu leeg, dus er is nog niets verloren.
 
 **Getest.**
 - Lokaal op een nagebouwde database (Postgres 16; live draait 17.6): het bestand drie keer achter elkaar gedraaid, gedrag getest als Gian, als Max (rol `eigen`), als niet-ingelogde en als ingelogde zonder rol, en de twee terugvalpaden. Syntaxis gevalideerd met pglast (84 statements, 8 PL/pgSQL-blokken).
@@ -7111,7 +7117,7 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 - Lukt de taak bij een termijn niet, dan wordt de termijn niet opgeslagen en ziet de gebruiker de fout. Een termijn zonder herinnering is erger dan een foutmelding.
 
 **Bij nood.**
-- De koppeling met de Takenapp uitzetten zonder gegevens te verliezen: `alter table public.wp_logboek disable trigger wp_logboek_voor_insert;`, `alter table public.wp_termijnen disable trigger wp_termijn_taak_zet;`, `alter table public.wp_termijnen disable trigger wp_termijn_taak_weg;` en `alter table public.wp_aandachtspunten disable trigger wp_aandachtspunten_naar_taak;`. Bestaande taken blijven gewone taken. Let op: zonder `wp_logboek_voor_insert` wordt `status` niet meer gevuld en weigert de tabel nieuwe logboekregels tenzij de pagina zelf een status meestuurt.
+- De koppeling met de Takenapp uitzetten zonder gegevens te verliezen: `alter table public.wp_logboek disable trigger wp_logboek_voor_insert;`, `alter table public.wp_termijnen disable trigger wp_termijn_taak_zet;`, `alter table public.wp_termijnen disable trigger wp_termijn_taak_weg;` en `alter table public.wp_aandachtspunten disable trigger wp_aandachtspunten_naar_taak;`. Bestaande taken blijven gewone taken. Sinds 22-11-2026 horen daar vier triggers bij, zie "Bij nood" in de sectie over `wagenpark_02_incident_taak_km.sql`. Let op: zonder `wp_logboek_voor_insert` wordt `status` niet meer gevuld en weigert de tabel nieuwe logboekregels tenzij de pagina zelf een status meestuurt.
 - Een termijn heeft geen taak (meer): sla de termijn opnieuw op met een gewijzigde vervaldatum, dan maakt de trigger een nieuwe taak.
 - Het bestand `wagenpark_01_tabellen.sql` mag opnieuw gedraaid worden; het is idempotent en de zelftest draait zichzelf terug.
 
@@ -7201,3 +7207,116 @@ De naam op het scherm komt uit `_optSoortLabel(optie)`.
 | Tests | `test_optieregel_v4.129.1.js` (23 controles): `node test_optieregel_v4.129.1.js <index.html v4.129.0> <index.html v4.129.1>` |
 
 **Als het misgaat.** De labels "extra" en "anders dan basis" zijn alleen een hulp bij het lezen; ze rekenen nergens mee. Klopt een label niet, dan is de meerprijs in het blok Opties voor de klant leidend: die komt uit de rekenkern voor de samenstelling met en zonder de optie.
+
+## Wat er op 22 november 2026 gedaan is: de bak wagenpark in de spiegelbackup (Edge Function backup-dump v8, functieversie 26)
+
+**Waarom.** Het open punt van 21 november: de bak `wagenpark` stond niet in `SPIEGEL_BRONNEN`, dus facturen en foto's van het wagenpark zouden op precies één plek hebben gestaan. Besluit Gian 22-11-2026: eerst de backup, daarna pas de pagina `wagenpark.html`. De bak was en is leeg (GEMETEN 22-11-2026, `storage.objects`: 0 bestanden), er is dus niets verloren gegaan.
+
+**Wat er gewijzigd is.** Eén regel in de lijst, de kop van het bestand en één commentaarregel. Geen andere code.
+
+| Onderdeel | Was (v7) | Is (v8) |
+|---|---|---|
+| `SPIEGEL_BRONNEN` | zeven bakken | acht bakken, in deze volgorde: `accord-pdf`, `taken-documenten`, `calculatie-documenten`, `taken-fotos`, `calculatie-fotos`, `oplever-fotos`, `personeel`, `wagenpark` |
+| Waar de kopie komt | n.v.t. | `bestanden/wagenpark/<zelfde pad als in de bak>` in de bak `backups`, zoals bij de andere bakken |
+| Naar Google Drive | de spiegel gaat niet naar Drive | ongewijzigd: de spiegel gaat niet naar Drive (zie de sectie van 8 november 2026) |
+
+GEMETEN 22-11-2026 in `storage.buckets`: er zijn negen bakken, te weten `backups` zelf en precies deze acht. De lijst is daarmee volledig. Blok 5 van de kwartaalaudit hoort vanaf nu 8 bakken in `SPIEGEL_BRONNEN` te vinden.
+
+**Waarom achteraan.** De limiet van honderd bestanden per nacht geldt over alle bakken samen en de volgorde bepaalt wie voorgaat. `accord-pdf` blijft vooraan. Komen er op één dag meer dan honderd nieuwe bestanden bij, dan gaat het wagenpark een nacht later mee; de weekmail toont dat als achterstand.
+
+**Uitgerold.** Op 22-11-2026 door Claude via de Supabase-koppeling (`deploy_edge_function`), op verzoek van Gian, Verify JWT uit. GEMETEN direct daarna: functieversie 26 (was 25, dus niemand heeft tussendoor uitgerold), `verify_jwt` false, de teruggelezen code begint met `Edge Function "backup-dump" v8` en heeft `'wagenpark'` als achtste in de lijst. De bron hoort ook in de besloten repo `ernes-edge-functions`; dat is op het moment van schrijven nog niet gedaan.
+
+**Hoe de bron is verkregen (let op).** De broncode van v7 is opgehaald via de Supabase-koppeling (`get_edge_function`, functieversie 25) en door Claude overgenomen in het bestand `backup-dump_v8_index.ts`. De koppeling levert en ontvangt de bron als tekst in het gesprek en niet als bestand. Gevolg: v8 is niet byte voor byte naast v7 gelegd, en de uitgerolde code is niet mechanisch naast het bestand gelegd, alleen door teruglezen. Wat daarvoor in de plaats is gedaan staat onder Getest. Wie zekerheid wil: leg de v8 naast de v7 uit `ernes-edge-functions`; het verschil hoort te bestaan uit de kop, de regel `'wagenpark',       // v8` en de commentaarregel `// 6. Spiegelbackup van de bakken (v3, lijst v8)`.
+
+**Getest op het bestand (22-11-2026, lokaal).**
+- `node --check` op het hele bestand: goed. 958 regels, 36.984 bytes.
+- Nagespeelde nachtrun: het bestand is ingelezen, alleen de importregel van de Supabase-client is vervangen door een nagebouwde opslag, en daarna is de echte code van de functie aangeroepen. 15 controles, alle goed: 401 zonder en met een verkeerde sleutel; volledige run geeft ok; een factuur en een foto in submappen van `wagenpark` staan daarna byte-gelijk onder `bestanden/wagenpark/`; `accord-pdf` wordt nog gespiegeld; een tweede run kopieert niets dubbel; een bestand dat uit `wagenpark` verdwijnt blijft in `backups` staan; bij 152 nieuwe bestanden op één dag 100 gekopieerd en achterstand 52, de nacht erna ingehaald; de lijst is gelijk aan de acht live gemeten bakken; `?drive=test` en `?voorraad=test` werken nog.
+
+**Getest in de echte omgeving (22-11-2026, na de uitrol, via `extensions.http` zoals in 4.7 punt 3).**
+1. Aanroep zonder sleutel: status 401 met `{"fout":"Geen toegang"}`. Dat antwoord komt uit de functie zelf, dus hij start op en Verify JWT staat uit.
+2. Eerste echte run, 11:17 UTC: **status 500**, fout `Lijst backups/bestanden/calculatie-fotos/<map>: Too many connections issued to the database`. De dump (11:17:38), het schema (11:17:40) en de voorraad (11:17:42) stonden toen al in de bak (GEMETEN in `storage.objects`). De run struikelde in de spiegelstap bij de vijfde bak, dus vóór `wagenpark` en in code die sinds v7 niet gewijzigd is. Er is één mail "Backup MISLUKT" naar info@ gegaan.
+3. Tweede echte run, 11:34 UTC: **status 200**, `ok: true`, 77 tabellen, dump 36.437.882 bytes, schema goed, voorraad goed (14 tabellen, 5.960 rijen), Drive goed (vier bestanden), `gespiegeld: 0`, `spiegel_achterstand: 0`, geen mail. De spiegelstap heeft dus alle acht bakken doorlopen, ook de lege bak `wagenpark`.
+4. De spiegel was vóór en na volledig: 0 bestanden in de bronbakken zonder kopie onder `bestanden/` (GEMETEN). De nachtrun van 02:00 UTC had die nacht 18 bestanden gespiegeld.
+
+**Bevinding uit de echte test: één tijdelijke opslagfout laat de hele run mislukt heten.** De fout van 11:17 kwam van de opslag van Supabase en was bij de tweede run weg. VERMOEDEN: tijdelijke drukte op de verbindingen van de opslagdienst; op het moment van de meting kort daarna waren 24 van de 60 databaseverbindingen in gebruik. Beslissende meting: komt de fout terug in een nachtrun, dan staat hij in de mail "Backup MISLUKT" van die nacht. Het gedrag zelf is GEMETEN en zat ook in v7: `lijstRecursief` gooit bij de eerste fout, de spiegelstap stopt, en de run meldt "Backup MISLUKT" terwijl de dump, het schema, de voorraad en (in die volgorde) de Drive-kopie al gemaakt zijn. Of de Drive-kopie bij de run van 11:17 gelukt is, is niet gemeten: het foutantwoord zegt daar niets over. Een bestand dat door zo'n fout niet gespiegeld wordt, gaat de volgende geslaagde nacht alsnog mee. Mogelijke verbetering, niet gebouwd en niet besloten: een mislukte lijstopvraag één keer herhalen, en een mislukte spiegelstap als eigen melding mailen in plaats van als mislukte backup.
+
+**Lees je de mail "Backup MISLUKT" met `Lijst ...` in de fouttekst:** de gegevens zijn dan wel veiliggesteld. Controleer het met de query hieronder en start zo nodig een run volgens 4.7 punt 3.
+
+```sql
+select name, updated_at, (metadata->>'size')::bigint as bytes
+from storage.objects
+where bucket_id = 'backups' and name like 'backup-%' order by updated_at desc limit 3;
+```
+
+**Nog te meten.**
+1. De nachtrun van 23-11-2026 02:00 UTC: de drie bestanden van die dag in de bak, geen mail "Backup MISLUKT".
+2. De nacht na het eerste echte bestand in de bak `wagenpark` geeft deze query meer dan 0 (op 22-11-2026 is het 0, want de bak is leeg):
+
+```sql
+select count(*) from storage.objects
+where bucket_id = 'backups' and name like 'bestanden/wagenpark/%';
+```
+
+Zolang punt 2 niet gemeten is, is het kopiëren van een echt wagenparkbestand alleen in de nagespeelde run bewezen en niet in Supabase.
+
+**Bekende grens.** Haal een bak nooit weg zonder hem ook uit `SPIEGEL_BRONNEN` te halen. Of Supabase bij een niet-bestaande bak een fout geeft of een lege lijst is een AANNAME; geeft het een fout, dan gaat het zoals hierboven beschreven: elke nacht een mail "Backup MISLUKT" en geen spiegel meer.
+
+**Bij nood.** Terug naar v7: de regel `'wagenpark',       // v8` uit `SPIEGEL_BRONNEN` halen en opnieuw uitrollen, of de v7 uit `ernes-edge-functions` terugzetten. Wat al naar `bestanden/wagenpark/` gekopieerd is blijft staan; de opruimstappen raken de map `bestanden/` nooit.
+
+**Ook op deze dag vastgesteld.** Het bestand `sql/wagenpark_01_tabellen.sql` staat niet in de repo (GEMETEN 22-11-2026: de map `sql/` telde 32 bestanden, dit bestand was er niet bij); Gian uploadt het. In de tabel van 1.3 ontbrak de bak `personeel`; die rij is toegevoegd. De aantallen bestanden in de andere rijen van die tabel zijn oud en zijn niet bijgewerkt. Tijdens deze klus heeft een andere chat vier secties aan dit document toegevoegd (index.html v4.128.0 tot en met v4.129.1). Dit document is daarom drie keer opnieuw opgebouwd, de laatste keer op de live versie van 22-11-2026 14:46 UTC (427.095 bytes).
+
+## Ook op 22 november 2026: incident en taak gelijk in de database, kilometerstand naar de bus (SQL wagenpark_02_incident_taak_km, nog geen pagina)
+
+**Waarom.** Twee bekende grenzen uit de sectie van 21 november. Besluiten Gian 22-11-2026: de database houdt incident en taak gelijk, in beide richtingen, en niet de pagina; een logboekregel met een hogere kilometerstand werkt de bus bij. De reden voor de database: iemand met rol `eigen` kan de taak van Gian niet lezen en niet bijwerken (policies `taken_lezen` en `taken_bijwerken`, GEMETEN 22-11-2026), dus een pagina kan dit voor de mannen niet oplossen.
+
+**Wat er bij is gekomen.** Vijf functies en vijf triggers. Geen tabel, geen kolom, geen policy.
+
+| Trigger | Op | Wanneer | Wat |
+|---|---|---|---|
+| `wp_incident_taak_gewijzigd` | `taken` | after update of `voltooid_op`, alleen als `bron_kenmerk like 'wagenpark-incident:%'` en de taak van open naar afgevinkt gaat of andersom | zet `wp_logboek.status` op afgehandeld of open |
+| `wp_incident_taak_verwijderd` | `taken` | after delete, alleen bij `bron_kenmerk like 'wagenpark-incident:%'` | maakt `wp_logboek.taak_id` leeg; het incident en zijn status blijven |
+| `wp_logboek_status_naar_taak` | `wp_logboek` | after update of `status`, alleen bij een incident met een `taak_id` en een gewijzigde status | vinkt de taak af (`voltooid_op` nu, `voltooid_door` de ingelogde persoon) of zet hem terug |
+| `wp_logboek_taak_weg` | `wp_logboek` | after delete van een incident | haalt de open taak weg; een afgevinkte taak blijft als logregel staan |
+| `wp_logboek_km_naar_voertuig` | `wp_logboek` | after insert, en after update of `km_stand`, `datum`, `voertuig_id` | zet `km_stand` en `km_stand_op` van de bus, alleen als de stand hoger is |
+
+De functies heten zoals de triggers. Vier draaien als `security definer`; `wp_logboek_km_naar_voertuig` niet, want elke ingelogde mag de bus bijwerken.
+
+**De tabel `taken` heeft nu twaalf triggers (was tien).** GEMETEN 22-11-2026 na de aanleg. De twee nieuwe worden door de WHEN-voorwaarde voor geen enkele andere taak aangeroepen. Op 22-11-2026 bestond er geen enkele taak met een `wagenpark-`kenmerk, dus bij aanleg raakte dit niets. GEMETEN in de definities van de tien bestaande triggers: geen daarvan reageert op een taak met bron `eigen` en een wagenparkkenmerk op een manier die iets buiten de taak zelf wijzigt (`taken_akkoord_keten` en `taken_todo_terug` hebben een WHEN op bron `offerte`; `taak_spiegel_naar_todo` keert terug bij een andere bron dan `calculatie`; `taak_melding_signaal` en `taak_meldtaak_gian` doen alleen iets bij een ingevulde afvinkmelding).
+
+**Regels die de database nu afdwingt.**
+- Gian vinkt de incidenttaak af in de Takenapp: het incident staat op afgehandeld. Zet hij de taak terug: het incident staat weer open.
+- Iemand zet in de pagina het incident op afgehandeld: de taak van Gian is afgevinkt, met de naam van wie het deed in `voltooid_door`. Er gaat geen afvinkmelding mee, dus Gian krijgt daar geen aparte taak of mail van.
+- Een fout in de richting taak naar incident houdt het afvinken of verwijderen van de taak nooit tegen; er komt een WARNING in het Postgres-logboek (`wp_incident_taak_gewijzigd` of `wp_incident_taak_verwijderd`).
+- Een fout in de richting incident naar taak laat het opslaan van de status mislukken, met de werkelijke fout. Bewust: anders lopen incident en taak stil uit elkaar.
+- De kilometerstand van de bus gaat alleen omhoog. Een lagere stand blijft op de logboekregel staan.
+
+**Bekende grenzen.**
+- Een incident zonder taak (taak verwijderd, of de taak kon bij het melden niet gemaakt worden) dat weer op open wordt gezet krijgt geen nieuwe taak. De pagina moet een open incident met een leeg `taak_id` zichtbaar markeren.
+- Een te hoog ingetikte kilometerstand zet de bus te hoog; latere, juiste standen zijn dan lager en veranderen niets. Herstellen op de voertuigkaart zelf.
+- Verandert iemand in de Takenapp een incidenttaak in een herhaler, dan schuift die taak bij afvinken door en wordt hij niet "afgevinkt"; het incident blijft dan open. Niet getest, volgt uit de code van `taken.html` v0.28.0.
+- Voor de APK en andere termijnen met een echte vervaldatum is besloten (Gian 22-11-2026): de herhaler blijft, de pagina toont de berekende datum als "geschat" en krijgt een knop "nieuwe vervaldatum invullen". Dat is werk voor de pagina, niet voor de database.
+
+**SQL-bestand.** `wagenpark_02_incident_taak_km.sql` (456 regels), hoort in de repo in de map `sql/`. Live aangelegd op 22-11-2026 door Claude via de Supabase-koppeling (`apply_migration`, staat in `supabase_migrations.schema_migrations` als `20261122115522`, naam `wagenpark_02_incident_taak_km`), zonder de kopregels en zonder de controleregels onderaan. Idempotent; de zelftest draait zichzelf terug.
+
+**Getest.**
+- pglast: 17 statements, 6 PL/pgSQL-blokken, geen fouten.
+- Lokaal op een nagebouwde database (Postgres 16; tabellen, policies en `wp_logboek_voor_insert` overgenomen uit de live definities van 22-11-2026): het bestand drie keer achter elkaar gedraaid, elke keer 14 punten van de zelftest en negen controleregels goed.
+- Lokaal met rollen, 13 controles goed: Max (rol `eigen`) meldt een incident, ziet de taak van Gian niet, kan die taak niet rechtstreeks afvinken, en kan het incident wel op afgehandeld zetten waarna de taak is afgevinkt met `voltooid_door` max; Gian zet terug en vinkt af in de Takenapp en het incident volgt; niet ingelogd kan niets; een taak met een kapot kenmerk is toch af te vinken en te verwijderen; bij een nagebootste storing in `taken` mislukt het opslaan van de status met de werkelijke fout en blijven incident en taak open; Max verwijdert een open incident en de taak is weg; een lagere stand en een regel zonder stand laten de bus met rust.
+- Live: de zelftest in het bestand (proefbus ZZ-TEST-98, 14 punten tegen de echte tabel `taken` met al haar triggers) is geslaagd en teruggedraaid. GEMETEN daarna: 0 bussen, 0 logboekregels, 0 taken met een `wagenpark-`kenmerk.
+- Live naast het geteste bestand gelegd: de md5 van de code van alle vijf functies is live gelijk aan die op de lokale testdatabase, en de vijf triggerdefinities zijn woordelijk gelijk.
+- Niet getest: gebruik door een mens via een pagina. Die is er nog niet.
+
+**Tellingen, GEMETEN 22-11-2026 na de aanleg.** 77 tabellen in `public`, 9 opslagbakken, 81 triggers op tabellen in `public` (was 76), waarvan 12 op `taken` en 5 op `wp_logboek`.
+
+**Bij nood.**
+- De koppeling tussen incident en taak uitzetten zonder gegevens te verliezen: `alter table public.taken disable trigger wp_incident_taak_gewijzigd;`, `alter table public.taken disable trigger wp_incident_taak_verwijderd;`, `alter table public.wp_logboek disable trigger wp_logboek_status_naar_taak;` en `alter table public.wp_logboek disable trigger wp_logboek_taak_weg;`. Incident en taak staan daarna weer los van elkaar, zoals op 21 november.
+- De kilometerkoppeling uitzetten: `alter table public.wp_logboek disable trigger wp_logboek_km_naar_voertuig;`.
+- Controleren of incident en taak ergens uit elkaar lopen (hoort niets terug te geven):
+
+```sql
+select l.id, l.status, l.taak_id, t.voltooid_op
+from public.wp_logboek l
+join public.taken t on t.crmtaskid = l.taak_id
+where l.soort = 'incident'
+  and (l.status = 'afgehandeld') is distinct from (t.voltooid_op is not null);
+```
