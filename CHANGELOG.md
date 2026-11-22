@@ -1,3 +1,88 @@
+## v4.128.0 — Een gevel, ruimte of onderdeel als keuze voor de klant, en acht opties per offerte (2026-11-22)
+
+Gebouwd op v4.127.0, live opgehaald van GitHub op 21-11-2026 bij de start van deze bouw en opnieuw op 22-11-2026 vlak voor het afronden (2.120.034 bytes, beide keren identiek en gelijk aan de projectkopie). Dit is release 1 uit het ontwerpmemo "Keuzes voor de klant, online samenstellen" van 20-11-2026: stap A (delen als keuze) en stap C (acht keuzes). Stap B (vaste posten bij een keuze) en stap D (online kiezen) zijn niet gebouwd.
+
+**Aanleiding**
+- Besluiten Gian 20-11 (memo): de klant kan ook gevels, ruimtes of onderdelen erbij kiezen, alleen wat Gian klaarzet; basis klein, klant zet erbij; maximaal acht keuzes per offerte.
+- Besluiten Gian 21-11 bij de start van de bouw: op de offerte heet alles "Optie" en nummert door in één lijst; kozijntekeningen van een gevel die als keuze wordt aangeboden staan wel in de offertebijlage; zonder de oude testbestanden verder (die staan niet in de repo, gemeten 21-11 in de repo-boom).
+
+**Database (eerst gedraaid)**
+- `sql/opties_02_delen.sql`: kolom `optie_id` (text, niet verplicht) op `hoofdgroepen` en op `onderdelen`. Live gedraaid op 21-11-2026 via de Supabase-koppeling (`apply_migration`), daarna een tweede keer als proef op idempotentie. Nagemeten: beide kolommen bestaan, 146 hoofdgroepen en 341 onderdelen, geen enkele met een waarde.
+- Geen verwijssleutel en geen constraint, net als `calc_regels.optie_id`: de optie zelf staat in `calculaties.offerte_config.opties`.
+- Prullenbak: `prullenbak_herstel` zet terug met `jsonb_populate_record` (gelezen 21-11); een bewaarde rij van vóór deze migratie krijgt een lege `optie_id` en blijft terug te zetten.
+- v4.127.0 en ouder noemt de kolom niet en laadt met `select *`; die versies merken er niets van.
+
+**Gebouwd: een deel als keuze (stap A)**
+- Knop **◇** in de kop van een hoofdgroep of onderdeel (`optDeelMaak`): één klik, het deel staat uit in de basis (`actief = false`) en hangt met `optie_id` aan een nieuwe optie van de soort "erbij". De titel is de naam van het deel (bij een onderdeel "Hoofdgroep · Onderdeel"); titel en klanttekst pas je aan in het blok Opties voor de klant. Alleen in concept en zonder vastgelegde keuze, zoals bij regels.
+- De koppeling staat op het deel, niet op de regels. Regels in het deel houden hun eigen vinkje; een regel die later in het deel komt hoort er vanzelf bij.
+- Knop **↩** (`optDeelLos`): weer een gewoon deel, aan. Blijft de optie daardoor leeg achter, dan gaat die mee weg; staat er een klanttekst in, dan vraagt de app eerst om bevestiging.
+- Het vinkje van een deel dat een keuze is, is niet met de hand om te zetten (`toggleHgActief`, `toggleOdActief`): het volgt de keuze, net als bij een optieregel.
+- Niet nesten (`_optDeelBlokkade`, `_optAanbod`): een onderdeel in een hoofdgroep die zelf een keuze is, een hoofdgroep met een onderdeel-keuze erin, en een deel met een optieregel erin worden geweigerd met een melding. Bij een regel in een keuze-deel ontbreekt de knop ◇. Ontstaat zo'n stand toch (bijvoorbeeld via de prullenbak), dan doet het geneste item niet mee en meldt het blok waarom.
+- `_optAanbod` kent nu naast regels ook delen. Een item heeft een tabel (`calc_regels`, `hoofdgroepen` of `onderdelen`); `_optMetStand` en `_optPasStandToe` zetten regels en delen op dezelfde manier om. Vastleggen en wissen van een keuze schrijven elk vinkje naar zijn eigen tabel.
+- Een deel waarvan de optie niet meer bestaat krijgt het label "optie onbekend" met ↩, en het blok meldt het.
+- Dupliceren: een deel dat een keuze is blijft dat in de kopie en staat daar uit (basis), ook als het in het origineel gekozen was. De vastgelegde keuze gaat niet mee (ongewijzigd).
+- Verwijderen van een deel dat een keuze is wordt geweigerd zolang er een keuze is vastgelegd (zoals `delReg`).
+
+**Gebouwd: uit door een keuze is niet vervallen**
+- Nieuwe functie `_optDeelUit(deel)`: het deel heeft een `optie_id` en staat uit.
+- Blok Oorspronkelijk volledig / Aangepast / Verschil (vervalt): `_optHeeftVervallen` en `_msHeeftVervallen` slaan zo'n deel en alles erin over; `_calcTotalForArchive(c, true)` en `(c, 'volledig')` tellen het niet mee. Het bevroren oorspronkelijke bedrag bij vergrendelen is daardoor de basis.
+- `calcHoofdgroepTotalenOrigineel` en `calcProjectTotalenOrigineel` tellen een deel dat als keuze uit staat niet mee.
+- Werkbon (`_werkbonHtml`): zo'n deel staat niet op de bon, ook niet doorgestreept bij een vergrendelde calculatie.
+- Calculatie-PDF (`printCalc`): grijs, niet doorgestreept, met "(keuze voor de klant, niet gekozen)"; een gekozen deel krijgt "(gekozen optie)".
+- Onderhoudsplan: `_ohpProjectRauw`, de gemiddelden bij per regel en per stap in `_ohpBeurtBasisBedrag`, en de twee invulschermen slaan zo'n deel over.
+- Opmaak in de calculatie: blauwe rand links, grijs, niet doorgestreept (klasse `is-keuze`).
+
+**Gebouwd: tekeningen van een aangeboden deel (besluit Gian 21-11)**
+- `_kozijnenVoorOfferte(c)`: de kozijntekeningen voor de klantofferte, inclusief die van een deel dat als keuze wordt aangeboden. Gebruikt in de offerte-PDF, de doorlopende print en het vinkje Bijlage kozijnen. Bij de locatie staat het optienummer: "Buiten · Achtergevel · Optie 3" (`_optTekLabels`).
+- Is er een keuze vastgelegd, dan staan alleen de tekeningen van wat gekozen is in de bijlage.
+- Intern verandert niets: de losse kozijnen-print, het archief en de werkvoorbereiding naar Craft (`_kozijnenVoorDocument`) tonen alleen wat aan staat. Gebreken en deuronderkanten tellen alleen wat aan staat.
+- Correctie op de vraag van 21-11: de klantofferte heeft als bijlage alleen kozijntekeningen en foto's, geen meetstaat (`offerte_config.bijlageKozijnen`, `bijlageFotos`). Er is dus alleen iets voor de tekeningen gebouwd. Voor een losse optieregel "erbij" verandert niets.
+
+**Gebouwd: acht opties (stap C)**
+- `OPT_MAX` van 4 naar 8: maximaal 256 samenstellingen.
+- `_optBereken(c, wens)`: tot en met vier opties (`OPT_VOL_AUTO`) rekent het alles direct door, zoals in v4.125.0. Daarboven alleen de basis, elke optie los en de samenstelling die nu aan staat of in het blok is aangevinkt. `wens.volledig` rekent alle samenstellingen door; `wens.kies` rekent één samenstelling gericht mee.
+- Alle samenstellingen worden doorgerekend bij Controleer (`_controleerVerzamel`), bij het maken van de accordeerlink (`_optTabelVoorLink`) en op de knop "Alle N samenstellingen doorrekenen" in het blok. Na die knop toont het blok hoeveel samenstellingen er zijn doorgerekend en in hoeveel tijd. De tabel verdwijnt bij de volgende wijziging, zodat hij altijd bij de stand van dat moment hoort.
+- `optKiesToggle` en `optLegVast` rekenen niet meer alles door om alleen de vinkjes te lezen.
+- Papier: ongewijzigd. Bij één of twee opties de tabel per samenstelling, daarboven alleen de losse meerprijzen.
+
+**Keuzes Claude**
+- Tot en met vier opties blijft het blok alles direct doorrekenen. Het memo stelde licht rekenen voor elke omvang voor; zo verandert er niets aan wat sinds v4.125.0 in gebruik is.
+- De knoppen ◇ en ↩ op een deel houden de bewerking vast tot de automatische staartposten zijn bijgewerkt (`_optNaDeelWijziging`). Een tweede tik in die tijd wordt genegeerd. Zie Bijvangst.
+- Wordt een deel verwijderd dat een keuze is, dan blijft de optie staan met de melding "heeft geen regels of delen meer" (zoals bij regels). Zo sluit het deel weer aan als het uit de prullenbak terugkomt.
+
+**Niet gewijzigd (bewust)**
+- De rekenkern `_berekenOfferteCijfers` en de staartsimulatie `_optSimStaart`.
+- De zin onder de opties en de klantpagina: online akkoord geldt nog steeds voor de basis of voor een keuze die Gian heeft vastgelegd.
+- De Edge Function `offerte-accord`.
+
+**Bekende beperkingen**
+- Rekentijd, gemeten in Node op 21-11 (niet in een browser, niet op de iPad): 256 samenstellingen kosten ongeveer 0,3 seconde op een calculatie van 15 regels en 2,9 seconden op een van 141 regels met 50 meetrijen. De rekenkern zelf kost op die grote calculatie 8,8 ms per keer. Bij Controleer en bij het maken van een link met acht opties op een groot werk staat het scherm dus even stil. Het blok toont de gemeten tijd na de knop.
+- Boven vier opties controleert het maken van het offertedocument alleen de samenstellingen die het direct doorrekent. Of elke samenstelling te berekenen is, blijkt bij Controleer.
+- Een keuze kan niet uit meerdere delen bestaan via de knop ◇: één klik is één deel is één optie. Een losse regel aan een bestaande optie "erbij" hangen kan wel (venster bij de regel).
+- Een gekozen deel is op een vergrendelde calculatie niet met het vinkje uit te zetten; dat kan met Keuze wissen, of met de vinkjes van de onderdelen of regels erin.
+- Gebrek-stippen op foto's hangen niet aan een hoofdgroep en tellen altijd mee (bestaand gedrag).
+- "Oorspronkelijk volledig" rekent de staartposten met de waarden van nu (bestaande beperking uit v4.127.0).
+
+**Bijvangst (niet gerepareerd)**
+- Lopen twee rondes van `_syncGebrekToeslagen` door elkaar, dan kunnen ze allebei dezelfde ontbrekende gebrekpost toevoegen. Gemeten in het testharnas op 21-11 met twee rondes direct na elkaar: "Scheur / naad herstel" en "Kit vervangen herstel" stonden dubbel in de staart. De routine heeft geen bezig-vlag, anders dan `_syncAfdekvilt` en `_syncKleinschalig`. Of dit in gebruik voorkomt is niet gemeten; het vraagt twee wijzigingen binnen de tijd van één databaseronde. De routine is niet aangeraakt; alleen de twee nieuwe knoppen wachten op hun eigen ronde.
+
+**Getest**
+- Poorten op het gepatchte bestand: het inline script parseert in Node; div-tags 1523 open / 1526 dicht tegen 1520 / 1523 in v4.127.0 (drie erbij, gebalanceerd); script-tags 6 / 6; CSS-accolades 918 / 918 tegen 914 / 914.
+- Testharnas `test_keuzes_v4.128.0.js` met `test_keuzes_laad.js` en `test_keuzes_fixture.js`: laadt alle functies uit het echte v4.127.0 en het echte v4.128.0 in een eigen omgeving, met een nagebootste database. 183 controles, alle goed. Onder meer:
+  - Alle 256 samenstellingen van acht opties (twee regel-opties uit v4.125.0, vier onderdelen, één hoofdgroep, één losse regel) zijn op de cent en op de werkdag gelijk aan dezelfde stand met de hand gezet in v4.127.0, waarbij de echte bijwerkroutines van de app de staartposten zetten (gebrek-herstel, deuronderkant, afdekvilt, kleinschaligheid). In de proef zitten sprongen van 2 naar 3 en 4 werkdagen.
+  - Zonder opties en met de regel-opties van v4.125.0 zijn totaal, vervallen-bedragen, werkbon, calculatie-PDF, offertedocument (scherm en PDF), Controleer, de cijfers voor de accordeerlink, de Yoobi-export en het plan-rekenpad gelijk aan v4.127.0, op het versienummer in de voetregel na.
+  - Maken, vastleggen, wissen en terugdraaien van een hoofdgroep en twee onderdelen: het totaal na vastleggen is op de cent de voorspelde samenstelling, de echte bijwerkroutines veranderen daarna niets meer, en na terugdraaien zijn totaal en staart weer als aan het begin.
+  - Werkbon en planbeurt (algemeen, per regel, per stap) van een calculatie met niet-gekozen delen zijn gelijk aan dezelfde calculatie waarin die delen niet bestaan.
+  - Dupliceren met de echte functie tegen de nagebootste database.
+- Statische weergave van de koppen en het blok met de echte opmaak, als schermafbeelding op 820 en 1180 pixels breed, naast dezelfde weergave van v4.127.0.
+
+**Niet getest**
+- De app in een echte browser, op de iPad, met de echte database. De eerste echte test is van Gian.
+- De rekentijd op de iPad.
+- De offerte-PDF als bestand (alleen de opbouw is vergeleken) en de werkvoorbereiding naar Craft.
+- Terugzetten uit de prullenbak van een deel dat een keuze is (afgeleid uit de functie, niet uitgeprobeerd).
+
+
 ## v4.127.0 — Uitgezette meetrijen zichtbaar in de calculatie, de calculatie-PDF en de werkbon (2026-11-20)
 
 Gebouwd op v4.126.0, live opgehaald van GitHub op 20-11-2026 bij de start van deze bouw en opnieuw vlak voor het afronden (2.112.131 bytes, beide keren identiek en gelijk aan de projectkopie).

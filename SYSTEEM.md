@@ -157,8 +157,7 @@ Alleen in schilders-calc.
 | `taken-documenten` | nee | 1 bestand |
 | `taken-fotos` | nee | 2 bestanden |
 | `oplever-fotos` | nee | foto's bij de opleverpunten, leeg bij aanleg |
-| `personeel` | nee | bestanden bij `personeel.html` (constante `BUCKET`), 0 bestanden (GEMETEN 22-11-2026 in `storage.buckets`; deze rij ontbrak tot die dag in deze tabel) |
-| `wagenpark` | nee | facturen en foto's bij het wagenpark, leeg bij aanleg (21-11-2026). In de spiegelbackup vanaf `backup-dump` v8, zie de sectie van 22 november 2026 |
+| `wagenpark` | nee | facturen en foto's bij het wagenpark, leeg bij aanleg (21-11-2026). **Staat nog niet in de spiegelbackup**, zie de sectie van 21 november 2026 |
 | `backups` | nee | nachtelijke dumps, 156 bestanden |
 
 GEMETEN 21-11-2026 (`storage.buckets`): er zijn 9 bakken. Deze tabel telt
@@ -549,7 +548,7 @@ Allemaal in `schilders-calc`, allemaal actief. (Negen tot 3 oktober 2026; de tie
 
 | Naam | UTC | Bij ons, zomer | Bij ons, winter | Roept aan | Wat het doet |
 |---|---|---|---|---|---|
-| `backup-nachtelijk` | 02:00 | 04:00 | 03:00 | `backup-dump` | dump van de database en het schema naar de bak `backups`, kopie van beide naar Google Drive, spiegel van de acht bestandsbakken uit `SPIEGEL_BRONNEN` (stand v8, 22 november 2026). Stuurt maandag een statusmail en bij een mislukte Drive-kopie of schemadump direct een foutmail |
+| `backup-nachtelijk` | 02:00 | 04:00 | 03:00 | `backup-dump` | dump van de database en het schema naar de bak `backups`, kopie van beide naar Google Drive, spiegel van de vijf bestandsbakken. Stuurt maandag een statusmail en bij een mislukte Drive-kopie of schemadump direct een foutmail |
 | `opname-boekingen-dagelijks` | 03:45 | 05:45 | 04:45 | `opname-boekingen` | leest de klantboekingen uit de Google agenda en werkt de tabel `opname_boekingen` bij. Bijgekomen 9 augustus 2026 |
 | `yuki-vuller-dagelijks` | 05:00 | 07:00 | 06:00 | `smooth-function` | haalt de standen uit Yuki en vult het financiele dashboard |
 | `yuki-vuller-middag` | 10:00 | 12:00 | 11:00 | `smooth-function` | zelfde, tweede keer op de dag |
@@ -1195,9 +1194,8 @@ Bijgewerkt 15 september 2026, na de bouw van `backup-dump` v6.
 volledige inhoud van de database weg als `backup-JJJJ-MM-DD.json` in de
 bak `backups` (60 dagen bewaard) en het herbouwbestand van de structuur
 als `schema/schema-JJJJ-MM-DD.sql` (30 dagen). Daarna zet hij beide
-bestanden ook in Google Drive, en tot slot spiegelt hij de acht
-bestandsbakken uit `SPIEGEL_BRONNEN` (`accord-pdf` voorop, `wagenpark`
-achteraan; stand v8 van 22 november 2026) naar `bestanden/` in dezelfde bak.
+bestanden ook in Google Drive, en tot slot spiegelt hij de vijf
+bestandsbakken (`accord-pdf` voorop) naar `bestanden/` in dezelfde bak.
 
 **Waar de kopie buiten Supabase staat.** In de Google Drive van
 `administratie@ernes.nl`, map **Backups Schilders Calc**, sinds
@@ -7101,7 +7099,7 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 - `wp_logboek.status` en de taak zijn twee plekken voor dezelfde vraag (is het incident afgehandeld). Er is geen koppeling tussen die twee in de database. De pagina moet dat oplossen; iemand met rol `eigen` kan de taak van Gian niet lezen, dus daarvoor is waarschijnlijk een tweede functie nodig (VERMOEDEN; beslist bij het ontwerp van de pagina).
 - Onderhoud op kilometerstand kan niet automatisch: de Takenapp kent alleen datums.
 
-~~**OPEN, vóór de eerste factuur of foto: de bak `wagenpark` heeft geen backup.**~~ **Opgelost op 22 november 2026: `backup-dump` v8 heeft `wagenpark` in `SPIEGEL_BRONNEN`, zie de sectie van die dag.** Wat hier op 21-11 stond: GEMETEN 21-11-2026 in de broncode van Edge Function `backup-dump` v7 (versie 25): de constante `SPIEGEL_BRONNEN` is een vaste lijst van zeven bakken en `wagenpark` staat er niet in. De vijf tabellen gaan wél vanzelf mee in de nachtelijke dump, want `backup_tabellen()` leest alle tabellen in `public` (GEMETEN, functiedefinitie). Te doen: `backup-dump` naar v8 met `'wagenpark'` in `SPIEGEL_BRONNEN`, uitrollen met Verify JWT uit, en de eerstvolgende maandagmail naleggen. De bak is nu leeg, dus er is nog niets verloren.
+**OPEN, vóór de eerste factuur of foto: de bak `wagenpark` heeft geen backup.** GEMETEN 21-11-2026 in de broncode van Edge Function `backup-dump` v7 (versie 25): de constante `SPIEGEL_BRONNEN` is een vaste lijst van zeven bakken en `wagenpark` staat er niet in. De vijf tabellen gaan wél vanzelf mee in de nachtelijke dump, want `backup_tabellen()` leest alle tabellen in `public` (GEMETEN, functiedefinitie). Te doen: `backup-dump` naar v8 met `'wagenpark'` in `SPIEGEL_BRONNEN`, uitrollen met Verify JWT uit, en de eerstvolgende maandagmail naleggen. De bak is nu leeg, dus er is nog niets verloren.
 
 **Getest.**
 - Lokaal op een nagebouwde database (Postgres 16; live draait 17.6): het bestand drie keer achter elkaar gedraaid, gedrag getest als Gian, als Max (rol `eigen`), als niet-ingelogde en als ingelogde zonder rol, en de twee terugvalpaden. Syntaxis gevalideerd met pglast (84 statements, 8 PL/pgSQL-blokken).
@@ -7117,53 +7115,35 @@ de browser, iPhone en iPad; print en pdf van het onderhoudsplan.
 - Een termijn heeft geen taak (meer): sla de termijn opnieuw op met een gewijzigde vervaldatum, dan maakt de trigger een nieuwe taak.
 - Het bestand `wagenpark_01_tabellen.sql` mag opnieuw gedraaid worden; het is idempotent en de zelftest draait zichzelf terug.
 
-## Wat er op 22 november 2026 gedaan is: de bak wagenpark in de spiegelbackup (Edge Function backup-dump v8)
+## Wat er op 21 en 22 november 2026 gedaan is: een gevel, ruimte of onderdeel als keuze voor de klant, en acht opties (index.html v4.128.0, SQL opties_02)
 
-**Waarom.** Het open punt van 21 november: de bak `wagenpark` stond niet in `SPIEGEL_BRONNEN`, dus facturen en foto's van het wagenpark zouden op precies één plek hebben gestaan. Besluit Gian 22-11-2026: eerst de backup, daarna pas de pagina `wagenpark.html`. De bak was op dat moment leeg (GEMETEN 22-11-2026, `storage.objects`: 0 bestanden), er is dus niets verloren gegaan.
+**Wat het is.** Naast een regel kan nu ook een hele hoofdgroep of een heel onderdeel een optie "erbij" zijn. Het deel staat in de basis uit en komt met één meerprijs op de offerte. Een offerte kan maximaal acht opties bevatten (was vier), regels en delen samen. Ontwerp: memo "Keuzes voor de klant, online samenstellen" van 20-11-2026, release 1 (stap A en C). Vaste posten bij een keuze (stap B) en online kiezen door de klant (stap D) bestaan nog niet. Dit hoofdstuk vult het hoofdstuk van 20 november 2026 over v4.125.0 aan; waar dat "maximaal vier" zegt, geldt nu acht.
 
-**Stand bij levering, zo controleer je of v8 draait.** v8 is op 22-11-2026 geleverd als bestand `backup-dump_v8_index.ts`; Gian rolt uit via de browser van Supabase, Verify JWT uit. Vóór de uitrol stond de functie op functieversie 25 met de code van v7 (GEMETEN 22-11-2026 via de Supabase-koppeling). Staat er in de functielijst van Supabase nog functieversie 25, of begint de code met `Edge Function "backup-dump" v7`, dan is v8 **niet** uitgerold en heeft de bak `wagenpark` geen backup.
+| Onderdeel | Plek |
+|---|---|
+| Koppeling deel ↔ optie | `hoofdgroepen.optie_id` en `onderdelen.optie_id` (text, id uit `offerte_config.opties`, zonder verwijssleutel) |
+| Staat het deel aan | `hoofdgroepen.actief` en `onderdelen.actief`, zoals altijd. Een deel met `optie_id` staat uit tot de optie gekozen is |
+| Titel, klanttekst, soort | `calculaties.offerte_config.opties`; een deel is altijd soort `erbij` |
+| Maximum | constante `OPT_MAX` = 8 in `index.html` |
+| Direct alles doorrekenen tot | constante `OPT_VOL_AUTO` = 4; daarboven rekent het blok licht |
+| Code | blok "OPTIES IN DE OFFERTE" in `index.html`; voor delen: `_optDeelUit`, `_optDeelAangeboden`, `_optDeelZoek`, `_optDeelBlokkade`, `_optDeelKop`, `optDeelMaak`, `optDeelLos`, `_optNaDeelWijziging`, `_optTekLabels` |
+| Tekeningen op de klantofferte | `_kozijnenVoorOfferte` (ook van een aangeboden deel); intern blijft `_kozijnenVoorDocument` |
+| SQL-bestand | `sql/opties_02_delen.sql`, live gedraaid op 21-11-2026 via de Supabase-koppeling (`apply_migration`). GEMETEN daarna: beide kolommen bestaan, 146 hoofdgroepen en 341 onderdelen, geen met een waarde |
+| Tests | `test_keuzes_v4.128.0.js`, `test_keuzes_laad.js`, `test_keuzes_fixture.js`: `node test_keuzes_v4.128.0.js <index.html v4.127.0> <index.html v4.128.0>`, vraagt `npm install acorn`. 183 controles |
 
-**Wat er gewijzigd is.** Eén regel in de lijst, de kop van het bestand en één commentaarregel. Geen andere code.
+**De regel waar alles op rust, ongewijzigd.** De kolom `actief` is de enige waarheid voor wat meetelt, nu op drie niveaus: hoofdgroep, onderdeel en regel. De rekenkern `_berekenOfferteCijfers` is niet aangeraakt. `_optMetStand` zet voor een samenstelling de vinkjes van regels en delen tijdelijk in het geheugen om, rekent, en zet ze terug. Vastleggen van een keuze (`_optPasStandToe`) schrijft elk vinkje naar zijn eigen tabel.
 
-| Onderdeel | Was (v7) | Is (v8) |
-|---|---|---|
-| `SPIEGEL_BRONNEN` | zeven bakken | acht bakken, in deze volgorde: `accord-pdf`, `taken-documenten`, `calculatie-documenten`, `taken-fotos`, `calculatie-fotos`, `oplever-fotos`, `personeel`, `wagenpark` |
-| Waar de kopie komt | n.v.t. | `bestanden/wagenpark/<zelfde pad als in de bak>` in de bak `backups`, zoals bij de andere bakken |
-| Naar Google Drive | de spiegel gaat niet naar Drive | ongewijzigd: de spiegel gaat niet naar Drive (zie de sectie van 8 november 2026) |
+**Uit door een keuze is niet vervallen.** `_optDeelUit(deel)` zegt of een deel uit staat doordat het een niet-gekozen optie is. Zo'n deel telt niet in het oorspronkelijke bedrag en het vervallen-blok, staat niet op de werkbon, doet niet mee in een onderhoudsplan en staat op de calculatie-PDF grijs met "(keuze voor de klant, niet gekozen)". De regels in het deel houden hun eigen vinkje.
 
-GEMETEN 22-11-2026 in `storage.buckets`: er zijn negen bakken, te weten `backups` zelf en precies deze acht. De lijst is daarmee volledig. Blok 5 van de kwartaalaudit hoort vanaf nu 8 bakken in `SPIEGEL_BRONNEN` te vinden.
+**Niet nesten.** Een optie binnen een deel dat zelf een keuze is kan niet: de app weigert het bij het maken, en `_optAanbod` laat een genest item niet meedoen als het toch ontstaat.
 
-**Waarom achteraan.** De limiet van honderd bestanden per nacht geldt over alle bakken samen en de volgorde bepaalt wie voorgaat. `accord-pdf` blijft vooraan. Komen er op één dag meer dan honderd nieuwe bestanden bij, dan gaat het wagenpark een nacht later mee; de weekmail toont dat als achterstand.
+**Licht rekenen.** `_optBereken(c, wens)` rekent tot en met vier opties alle samenstellingen direct door. Daarboven alleen de basis, elke optie los en de samenstelling die aan staat of is aangevinkt. Alle samenstellingen (tot 256) worden doorgerekend bij Controleer, bij het maken van de accordeerlink en op de knop in het blok. Gemeten in Node op 21-11-2026: 0,3 seconde op 15 regels, 2,9 seconden op 141 regels. Niet gemeten op de iPad.
 
-**Hoe de bron is verkregen (let op).** De broncode van v7 is opgehaald via de Supabase-koppeling (`get_edge_function`, functieversie 25) en door Claude overgenomen in het nieuwe bestand. De koppeling levert de bron als tekst in het gesprek en niet als bestand, dus een vergelijking byte voor byte met v7 was niet mogelijk. Wat daarvoor in de plaats is gedaan staat onder Getest. Wie zekerheid wil: leg `backup-dump_v8_index.ts` naast de v7 uit de besloten repo `ernes-edge-functions`; het verschil hoort te bestaan uit de kop, de regel `'wagenpark',       // v8` en de commentaarregel `// 6. Spiegelbackup van de bakken (v3, lijst v8)`.
+**Als het misgaat.**
+- Een gevel of onderdeel is grijs en het vinkje reageert niet: het is een keuze voor de klant (blauwe rand, label "OPTIE n"). Met ↩ in de kop wordt het weer een gewoon deel. Staat er een keuze vastgelegd, wis die dan eerst in het blok Opties voor de klant.
+- Een deel is onzichtbaar in alle totalen en heeft het label "optie onbekend": het `optie_id` staat niet meer in `offerte_config.opties`. ↩ maakt de kolom leeg en zet het deel aan.
+- Alle delen in één keer terug naar gewoon, zonder gegevens te verliezen: `update hoofdgroepen set optie_id = null, actief = true where optie_id is not null;` en hetzelfde voor `onderdelen`. De opties die daardoor leeg zijn meldt het blok; hef ze daar op. Doe dit niet bij een calculatie met een vastgelegde keuze zonder eerst de keuze te wissen: het totaal verandert.
+- Terug naar v4.127.0 kan zonder de database aan te raken. Een deel dat een keuze is toont dan als een gewoon uitgezet deel en telt als "vervallen". Zet in v4.127.0 het vinkje van zo'n deel niet om en hernoem het niet: die versie schrijft `actief` en laat `optie_id` staan, waardoor het deel na terugkeer naar v4.128.0 "gekozen" lijkt zonder dat er een keuze is vastgelegd. Het blok Opties voor de klant toont dan "optie staat aan"; de knop Keuze wissen zet de calculatie terug op de basis.
+- Het blok rekent traag: het aantal opties is hoger dan vier en iemand heeft "Alle samenstellingen doorrekenen" gebruikt, of Controleer of het maken van een link loopt. Dat is één keer rekenen; de tijd staat daarna in het blok.
 
-**Getest (22-11-2026, op het geleverde bestand).**
-- `node --check` op het hele bestand: goed. 958 regels, 36.984 bytes.
-- Nagespeelde nachtrun: het geleverde bestand is ingelezen, alleen de importregel van de Supabase-client is vervangen door een nagebouwde opslag, en daarna is de echte code van de functie aangeroepen. 15 controles, alle goed:
-  - zonder sleutel en met een verkeerde sleutel: status 401;
-  - volledige run: dump, schema, voorraad en Drive geven ok;
-  - een factuur en een foto in submappen van `wagenpark` staan daarna byte-gelijk onder `bestanden/wagenpark/`, de submappen blijven behouden;
-  - `accord-pdf` wordt nog steeds gespiegeld;
-  - een tweede run kopieert niets dubbel; een bestand dat uit `wagenpark` verdwijnt blijft in `backups` staan;
-  - 152 nieuwe bestanden op één dag: 100 gekopieerd, achterstand 52, het wagenpark wacht; de nacht erna is alles ingehaald;
-  - de lijst in het bestand is gelijk aan de acht live gemeten bakken, zonder dubbele;
-  - `?drive=test` en `?voorraad=test` werken nog.
-- **Niet getest: een echte run in Supabase.** Google Drive, Resend, de opslag en het voorraadproject waren in deze test nagebouwd.
-
-**Nog te meten na de uitrol.**
-1. De functieversie is hoger dan 25 en de code bevat `'wagenpark'`.
-2. De eerstvolgende nacht komt er geen mail "Backup MISLUKT".
-3. De nacht na het eerste echte bestand in de bak `wagenpark` geeft deze query meer dan 0:
-
-```sql
-select count(*) from storage.objects
-where bucket_id = 'backups' and name like 'bestanden/wagenpark/%';
-```
-
-Zolang punt 3 niet gemeten is, is de backup van deze bak aangenomen en niet bewezen.
-
-**Bekende grens.** Geeft het opvragen van de bestandslijst van een bak uit `SPIEGEL_BRONNEN` een fout, dan stopt de spiegelstap en eindigt de run met de mail "Backup MISLUKT" en de tekst `Lijst <bak>/: ...`. De dump, het schema, de voorraad en de Drive-kopie zijn dan al wel gemaakt, want die komen eerder in de run (gemeten in de nagespeelde run met een ontbrekende bak). Of Supabase bij een niet-bestaande bak werkelijk een fout geeft of een lege lijst is een AANNAME; de bak `wagenpark` bestaat, dus het speelt nu niet. Dit gedrag zat ook in v7. Gevolg voor het beheer: haal een bak nooit weg zonder hem ook uit de lijst te halen.
-
-**Bij nood.** Terug naar v7: de regel `'wagenpark',       // v8` uit `SPIEGEL_BRONNEN` halen en opnieuw uitrollen, of de v7 uit `ernes-edge-functions` terugzetten. Wat al naar `bestanden/wagenpark/` gekopieerd is blijft staan; de opruimstappen raken de map `bestanden/` nooit.
-
-**Ook op deze dag vastgesteld, niet opgelost.** Het bestand `sql/wagenpark_01_tabellen.sql` staat niet in de repo (GEMETEN 22-11-2026: de map `sql/` telt 32 bestanden, dit bestand is er niet bij). Gian uploadt het. In de tabel van 1.3 ontbrak de bak `personeel`; die rij is toegevoegd. De aantallen bestanden in de andere rijen van die tabel zijn oud en zijn niet bijgewerkt.
+**Wat er niet is.** Vaste posten bij een keuze; online kiezen op de klantpagina; een keuze die uit meerdere delen bestaat via de knop ◇. Zie CHANGELOG v4.128.0 onder Bekende beperkingen en Bijvangst (dubbele gebrekposten als twee bijwerkrondes door elkaar lopen, niet gerepareerd).

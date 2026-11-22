@@ -772,6 +772,14 @@
   .opt-meld.is-fout { border-color:#e0a0a0; background:#fdf0f0; }
   .opt-meld ul { margin:0.2rem 0 0 1.1rem; padding:0; }
   .opt-keuze { border:1px solid var(--border); border-radius:8px; padding:0.6rem 0.7rem; margin-top:0.9rem; background:var(--bg); }
+  /* v4.128.0 — een hoofdgroep of onderdeel als keuze voor de klant: blauwe rand, niet doorgestreept */
+  .hoofdgroep.is-keuze, .onderdeel.is-keuze { border-left: 3px solid var(--blue, #2563eb); }
+  .hoofdgroep.is-keuze.is-inactief > .hoofdgroep-head .title input,
+  .hoofdgroep.is-keuze.is-inactief > .hoofdgroep-head .stats,
+  .onderdeel.is-keuze.is-inactief > .onderdeel-head .title input,
+  .onderdeel.is-keuze.is-inactief > .onderdeel-head .stats { text-decoration: none; }
+  .opt-deel-tag { flex: 0 0 auto; white-space: nowrap; margin: 0 0.4rem; }
+  .opt-deel-tag:empty { display: none; }
   .hoofdgroep.is-inactief > .hoofdgroep-head .title input,
   .hoofdgroep.is-inactief > .hoofdgroep-head .stats,
   .onderdeel.is-inactief > .onderdeel-head .title input,
@@ -2522,8 +2530,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.127.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.128.0</h2>
       <div class="intro-body">
+        <p><strong>◇ Een gevel, ruimte of onderdeel als keuze voor de klant, en acht opties per offerte (v4.128.0).</strong> Klik op <strong>◇</strong> in de kop van een hoofdgroep of onderdeel: dat deel staat dan uit in de basis en komt als optie <em>erbij</em> op de offerte, met één meerprijs. De titel is de naam van het deel; de omschrijving voor de klant vul je in het blok <em>Opties voor de klant</em> in. Met <strong>↩</strong> maak je er weer een gewoon deel van. Een keuze binnen een keuze kan niet. Een deel dat als keuze uit staat is niet vervallen: het staat niet op de werkbon, telt niet mee in een onderhoudsplan en niet in het oorspronkelijke bedrag. Kozijntekeningen van een aangeboden deel staan wel in de bijlage van de offerte, met het optienummer erbij. Er kunnen nu acht opties op één offerte (was vier). Bij meer dan vier rekent het blok direct alleen de basis, elke optie los en de aangevinkte samenstelling; de knop <em>Alle samenstellingen doorrekenen</em> toont de rest en hoe lang het rekenen duurde. Online kiezen door de klant volgt in een latere versie.</p>
         <p><strong>⊘ Uitgezette meetrijen zie je nu ook in de calculatie (v4.127.0).</strong> Zet je in de Meetstaat een rij uit, dan stond dat tot nu toe nergens in de Calculatie-tab: de regel toonde alleen een lagere hoeveelheid of 0. Voortaan staat op de regel <em>📐 3 metingen · 1 uit</em> met erachter hoeveel er vervalt. Staan alle metingen van een regel uit, dan wordt de regel grijs en doorgestreept met <em>vervalt via meetstaat</em>, net als een uitgevinkte regel. Onder Totaal incl. verschijnt hetzelfde blok als bij uitgezette onderdelen: <em>Oorspronkelijk volledig</em>, <em>Aangepast</em> en <em>Verschil (vervalt)</em>; het oorspronkelijke bedrag rekent met alle meetrijen aan. De calculatie-PDF toont dezelfde drie regels en zet bij de regel wat er via de meetstaat vervalt. Op de werkbon van een vergrendelde calculatie staat een regel waarvan alle metingen uit staan grijs en doorgestreept met zijn oorspronkelijke hoeveelheid; staat een deel uit, dan staat dat deel eronder. In concept en afspraak blijft zo'n regel weg van de werkbon. De prijs verandert niet: uitgezette rijen telden al niet mee. Geen SQL, geen deploy.</p>
         <p><strong>📉 Kleinschaligheidstoeslag automatisch en glijdend (v4.126.0).</strong> In een nieuwe calculatie komt de post <strong>Kleinschaligheidstoeslag</strong> vanzelf bij de staartkosten zodra er uren schilderwerk zijn, en het percentage loopt mee als de uren veranderen. Het springt niet meer in trapjes: elke trede van het normenboek geldt in het midden van zijn urenvak (5 uur 30%, 17,5 uur 25%, 37,5 uur 20%, 75 uur 15%, 125 uur 10%) en daartussen loopt het gelijkmatig, tot 0% bij 175 uur. Een uur werk erbij maakt de offerte zo nooit goedkoper. Vul je zelf een ander percentage in, dan blijft dat staan en toont de app eronder wat hij zelf zou rekenen; met <em>laat meelopen</em> geef je het weer uit handen. Weggehaald blijft weg. Calculaties van vóór 20-11-2026 en bestaande posten veranderen niet vanzelf. Bij opties rekent elke samenstelling met het percentage dat bij zijn eigen uren hoort. Ook hersteld: de losstaande vinkjes bij <em>Doorlopende balkons / galerij</em> en bij het vastleggen van een optiekeuze.</p>
         <p><strong>◇ Opties voor de klant (v4.125.0).</strong> De basis is de goedkoopste uitvoering; de klant kiest er opties bij. Klik in de calculatie bij een regel op <strong>◇</strong> en maak een optie: <em>in plaats van</em> (een ander verfsysteem, of dezelfde regel met een extra bewerking) of <em>erbij</em> (extra werk dat in de basis uit staat). Het nieuwe blok <strong>Opties voor de klant</strong> onder de regels toont per optie één meerprijs en alle samenstellingen, elk door de rekenkern uitgerekend. Op de offerte staat het kostenoverzicht van de basis, daaronder de opties met hun meerprijs en, bij één of twee opties, het totaal per samenstelling. Kiest de klant, dan leg je dat in hetzelfde blok vast; calculatie, werkbon, planning en Yoobi-export rekenen daarna met de gekozen uitvoering. Online zelf kiezen volgt in een volgende versie: een digitaal akkoord geldt nu voor de basis, of voor de keuze die jij hebt vastgelegd. Maximaal vier opties per offerte.</p>
@@ -4134,7 +4143,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.127.0';
+const APP_VERSION = 'v4.128.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4557,6 +4566,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.128.0', d: '2026-11-22', h: 'Een hoofdgroep of onderdeel (gevel, ruimte) in één klik als keuze erbij voor de klant, met één meerprijs; maximaal acht opties per offerte in plaats van vier; een deel dat als keuze uit staat is niet vervallen (werkbon, onderhoudsplan, oorspronkelijk bedrag); kozijntekeningen van een aangeboden deel staan in de offertebijlage met het optienummer.' },
   { v: '4.127.0', d: '2026-11-20', h: 'Uitgezette meetrijen zichtbaar in de calculatie: op de regel "📐 3 metingen · 1 uit", regel grijs met "vervalt via meetstaat" als alle metingen uit staan, en het blok Oorspronkelijk volledig / Aangepast / Verschil (vervalt) onder het totaal en op de calculatie-PDF; werkbon van een vergrendelde calculatie toont wat via de meetstaat vervalt.' },
   { v: '4.126.0', d: '2026-11-20', h: 'Kleinschaligheidstoeslag komt vanzelf in de calculatie en volgt de uren, glijdend tussen de treden van het normenboek in plaats van in trapjes' },
   { v: '4.125.0', d: '2026-11-20', h: 'Opties voor de klant: de offerte toont de basis met per optie één meerprijs en het totaal per samenstelling; de gekozen optie leg je vast in de calculatie' },
@@ -6129,7 +6139,7 @@ function _controleerVerzamel() {
 
   // v4.125.0 — Opties voor de klant
   try {
-    const _ob = _optBereken(c);
+    const _ob = _optBereken(c, { volledig: true });   // v4.128.0 — hier altijd alle samenstellingen (tot 256)
     if (_ob) {
       _ob.fouten.forEach(t => blok('Opties: ' + t));
       _ob.waarsch.forEach(t => check('Opties: ' + t));
@@ -6597,7 +6607,7 @@ function renderOfferteBlok() {
 
   // ---- 2. OFFERTE-INSTELLINGEN ----
   if (instBlok) {
-    const _kozAanwezig = _kozijnenVoorDocument(c).length > 0;   // v4.74.1
+    const _kozAanwezig = _kozijnenVoorOfferte(c).length > 0;   // v4.74.1 · v4.128.0 — ook tekeningen van een aangeboden deel
     const _fotoAanwezig = (c.fotos || []).length > 0;
     let inst = _kblokKopHtml('offerte', 'Offerte-instellingen') + `<div class="kblok"><div class="kgrid kgrid-vrij">
       <div class="k-datum"><label>Offertedatum</label><input type="date" value="${cfg.offertedatum}" onchange="_offCfgDatum(this.value)"></div>
@@ -8419,11 +8429,15 @@ function _mapHgFromDB(row, ods) {
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
     actief:    row.actief !== false, // defensief: null/undefined → true
+    optieId:   row.optie_id || null,   // v4.128.0 — dit deel is een keuze "erbij" (offerte_config.opties)
     onderdelen: (ods || []).map(_mapOdFromDB)
   };
 }
 function _mapHgToDB(hg, calcId) {
+  // v4.128.0 — optie_id gaat alleen mee als het deel een keuze is. Een gewoon deel raakt
+  // die kolom nooit; leegmaken gebeurt gericht (optDeelLos, optOpheffen).
   return {
+    ...(hg.optieId ? { optie_id: hg.optieId } : {}),
     calculatie_id: calcId,
     naam: hg.naam || '',
     collapsed: !!hg.collapsed,
@@ -8438,11 +8452,13 @@ function _mapOdFromDB(row) {
     collapsed: !!row.collapsed,
     volgorde:  row.volgorde != null ? row.volgorde : 0,
     actief:    row.actief !== false, // defensief: null/undefined → true
+    optieId:   row.optie_id || null,   // v4.128.0 — dit deel is een keuze "erbij" (offerte_config.opties)
     regels:    [] // wordt later gevuld vanuit localStorage in v3.5.3
   };
 }
 function _mapOdToDB(od, hgId) {
   return {
+    ...(od.optieId ? { optie_id: od.optieId } : {}),   // v4.128.0 — zie _mapHgToDB
     hoofdgroep_id: hgId,
     naam: od.naam || '',
     collapsed: !!od.collapsed,
@@ -8509,7 +8525,7 @@ function _msRegelStand(c, r) {
 function _msHeeftVervallen(c) {
   const lijst = (c && c.meetstaat) || [];
   if (!lijst.some(ms => !_msIsAan(ms, lijst))) return false;
-  return ((c && c.hoofdgroepen) || []).some(hg => (hg.onderdelen || []).some(od => (od.regels || []).some(r => {
+  return ((c && c.hoofdgroepen) || []).some(hg => !_optDeelUit(hg) && (hg.onderdelen || []).some(od => !_optDeelUit(od) && (od.regels || []).some(r => {   // v4.128.0 — niet in een deel dat als keuze uit staat
     if (r.optieId && _optRegelUit(r, c)) return false;
     const st = _msRegelStand(c, r);
     return st.uit > 0 && Math.abs(st.somVol - st.somAan) > 0.00005;
@@ -8524,7 +8540,10 @@ function _heeftVervallen(c) {
 // calc-regel waar hij aan hangt aan staat, én zijn onderdeel, én zijn hoofdgroep
 // (erfelijk, zoals de cijfers). Zonder koppeling: meetellen, want dan is er geen
 // aan/uit-stand om op te oordelen. Werkt op de meegegeven calculatie c, niet op data.calc.
-function _msTeltMee(c, ms) {
+// v4.128.0 — metAanbod: ook de meetrijen van een deel (hoofdgroep of onderdeel) dat als
+// keuze aan de klant wordt aangeboden en dus in de basis uit staat. Alleen voor de
+// tekeningen op de klantofferte; tellingen (gebreken, deuronderkanten) vragen dit nooit.
+function _msTeltMee(c, ms, metAanbod) {
   if (!_msIsAan(ms, c && c.meetstaat)) return false;   // v4.117.0 — de meetrij zelf (of zijn brontekening) staat uit
   const rid = ms && ms.calcRegelId;
   if (!rid) return true;
@@ -8533,13 +8552,23 @@ function _msTeltMee(c, ms) {
       const r = (od.regels || []).find(x => x.id === rid);
       // v4.125.0 — een basisregel die door een gekozen optie vervangen is: zijn meetrijen
       // (kozijntekeningen, gebrek-stippen, deuronderkanten) blijven meetellen.
-      if (r) return _isActief(hg) && _isActief(od) && (_isActief(r) || (!r.optieId && _optRegelUit(r, c)));
+      if (r) {
+        const hgOk = _isActief(hg) || (metAanbod && _optDeelAangeboden(c, hg));
+        const odOk = _isActief(od) || (metAanbod && _optDeelAangeboden(c, od));
+        return hgOk && odOk && (_isActief(r) || (!r.optieId && _optRegelUit(r, c)));
+      }
     }
   }
   return true;   // regel niet gevonden: niet stil verbergen
 }
-function _kozijnenVoorDocument(c) {
-  return ((c && c.meetstaat) || []).filter(ms => ms.tekening && ms.tekening.vorm && _msTeltMee(c, ms));
+function _kozijnenVoorDocument(c, metAanbod) {
+  return ((c && c.meetstaat) || []).filter(ms => ms.tekening && ms.tekening.vorm && _msTeltMee(c, ms, metAanbod));
+}
+// v4.128.0 — De tekeningen voor de klantofferte: ook die van een gevel of onderdeel dat
+// als keuze wordt aangeboden (besluit Gian 21-11-2026). Is de keuze vastgelegd, dan
+// alleen wat gekozen is.
+function _kozijnenVoorOfferte(c) {
+  return _kozijnenVoorDocument(c, !_optKeuze(c));
 }
 
 // ============================================================
@@ -10417,10 +10446,12 @@ function _ohpRegelRauw(r, sett, stappenOverride, stapTrace) {
 function _ohpProjectRauw(calc, sett, regelScaling, stapScaling, trace) {
   const tot = { uren:0, minuten:0, matInkoop:0, matVerkoop:0, arbeid:0, arbeidBuiten:0, arbeidBinnen:0 };
   (calc.hoofdgroepen || []).forEach(hg => {
+    if (_optDeelUit(hg)) return;   // v4.128.0 — een deel dat als keuze uit staat hoort niet in het plan
     // v4.91.0 — grondslag per hoofdgroep: arbeid van Buiten/Binnen apart bijhouden
     const hgBuiten = _hgIsLocatie(hg, 'buiten');
     const hgBinnen = _hgIsLocatie(hg, 'binnen');
     (hg.onderdelen || []).forEach(od => {
+      if (_optDeelUit(od)) return;   // v4.128.0
       (od.regels || []).forEach(r => {
         if (_optRegelUit(r, calc)) return;   // v4.125.0 — niet-gekozen optie of vervangen basisregel hoort niet in het plan
         const rFactor = (regelScaling && regelScaling.has(r.id)) ? regelScaling.get(r.id) : 1;
@@ -10562,7 +10593,7 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
     regelScaling = new Map();
     const regels = sc.regels || {};
     let som = 0, n = 0;
-    (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).filter(r => !_optRegelUit(r, calc)).forEach(r => {   // v4.125.0
+    (calc.hoofdgroepen || []).filter(hg => !_optDeelUit(hg)).forEach(hg => (hg.onderdelen || []).filter(od => !_optDeelUit(od)).forEach(od => (od.regels || []).filter(r => !_optRegelUit(r, calc)).forEach(r => {   // v4.125.0 · v4.128.0 — ook geen deel dat als keuze uit staat
       const v = regels[r.id];
       // Default: regel die niet in scaling.regels staat → 100% (volledig mee in beurt).
       const f = (v == null) ? 1 : (v / 100);
@@ -10574,7 +10605,7 @@ function _ohpBeurtBasisBedrag(beurt, metTrace) {
     stapScaling = new Map();
     const stappen = sc.stappen || {};
     let som = 0, n = 0;
-    (calc.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).filter(r => !_optRegelUit(r, calc)).forEach(r => (r.stappen || []).forEach(st => {   // v4.125.0
+    (calc.hoofdgroepen || []).filter(hg => !_optDeelUit(hg)).forEach(hg => (hg.onderdelen || []).filter(od => !_optDeelUit(od)).forEach(od => (od.regels || []).filter(r => !_optRegelUit(r, calc)).forEach(r => (r.stappen || []).forEach(st => {   // v4.125.0 · v4.128.0
       const v = stappen[st.id];
       // Default: stap die niet in scaling.stappen staat → 100% (volledig mee in beurt).
       const f = (v == null) ? 1 : (v / 100);
@@ -12476,7 +12507,7 @@ function _ohpMbRenderPerRegel(container) {
   const regelsMap = sc.regels || {};
 
   let html = '';
-  (calc.hoofdgroepen || []).forEach((hg, hgIdx) => {
+  (calc.hoofdgroepen || []).filter(hg => !_optDeelUit(hg)).forEach((hg, hgIdx) => {   // v4.128.0 — zonder delen die als keuze uit staan
     html += `<div style="margin-bottom: 1rem; ${hgIdx > 0 ? 'border-top: 1px solid var(--border); padding-top: 0.8rem;' : ''}">`;
     // Hoofdgroep-kop met snelinvuller
     html += `<div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
@@ -12488,7 +12519,7 @@ function _ohpMbRenderPerRegel(container) {
       </span>
     </div>`;
 
-    (hg.onderdelen || []).forEach(od => {
+    (hg.onderdelen || []).filter(od => !_optDeelUit(od)).forEach(od => {   // v4.128.0
       html += `<div style="margin-left: 0.6rem; margin-bottom: 0.5rem;">
         <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 0.2rem;">${_escapeHtml(od.naam || '(zonder naam)')}</div>`;
       (od.regels || []).forEach(r => {
@@ -12591,7 +12622,7 @@ function _ohpMbRenderPerStap(container) {
   const stappenMap = sc.stappen || {};
 
   let html = '';
-  (calc.hoofdgroepen || []).forEach((hg, hgIdx) => {
+  (calc.hoofdgroepen || []).filter(hg => !_optDeelUit(hg)).forEach((hg, hgIdx) => {   // v4.128.0 — zonder delen die als keuze uit staan
     html += `<div style="margin-bottom: 1rem; ${hgIdx > 0 ? 'border-top: 1px solid var(--border); padding-top: 0.8rem;' : ''}">`;
     html += `<div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
       <strong style="font-size: 1rem;">${_escapeHtml(hg.naam || '(zonder naam)')}</strong>
@@ -12602,7 +12633,7 @@ function _ohpMbRenderPerStap(container) {
       </span>
     </div>`;
 
-    (hg.onderdelen || []).forEach(od => {
+    (hg.onderdelen || []).filter(od => !_optDeelUit(od)).forEach(od => {   // v4.128.0
       html += `<div style="margin-left: 0.6rem; margin-bottom: 0.5rem;">
         <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 0.2rem;">${_escapeHtml(od.naam || '(zonder naam)')}</div>`;
       (od.regels || []).forEach(r => {
@@ -15681,10 +15712,11 @@ function _bouwKozijnenHtml(c, kozijnen) {
   // Uit de meegegeven calculatie c gehaald, niet uit data.calc, zodat de doorlopende
   // PDF en het archief ook voor een niet-actieve calculatie de juiste plek tonen.
   const _regelLocatie = {};
+  const _optTek = _optTekLabels(c);   // v4.128.0 — "Optie N" bij tekeningen van een aangeboden deel
   (c.hoofdgroepen || []).forEach(hg => {
     (hg.onderdelen || []).forEach(od => {
       (od.regels || []).forEach(r => {
-        _regelLocatie[r.id] = [hg.naam, od.naam].map(s => (s || '').trim()).filter(Boolean).join(' · ');
+        _regelLocatie[r.id] = [hg.naam, od.naam, _optTek[r.id]].map(s => (s || '').trim()).filter(Boolean).join(' · ');
       });
     });
   });
@@ -15920,17 +15952,20 @@ function printCalc() {
   c.hoofdgroepen.forEach(hg => {
     const hgT = calcHoofdgroepTotalenOrigineel(hg); // toon altijd origineel-bedrag op PDF
     const hgActief = _isActief(hg);
-    const hgStyle = hgActief ? '' : 'style="opacity:0.5; text-decoration:line-through;"';
+    // v4.128.0 — een deel dat als keuze uit staat is niet vervallen: grijs, niet doorgestreept.
+    const _lblKeuze = d => ' <span style="font-size:8pt; color:#888; font-weight:normal;">(' + (_optDeelUit(d) ? 'keuze voor de klant, niet gekozen' : 'gekozen optie') + ')</span>';
+    const hgStyle = hgActief ? '' : (_optDeelUit(hg) ? 'style="opacity:0.5;"' : 'style="opacity:0.5; text-decoration:line-through;"');
     html += `<div class="section">
-      <h2 ${hgStyle}>${hg.naam}${hgActief ? '' : ' <span style="font-size:8pt; color:#888; font-weight:normal;">(vervalt)</span>'}</h2>`;
+      <h2 ${hgStyle}>${hg.naam}${hg.optieId ? _lblKeuze(hg) : (hgActief ? '' : ' <span style="font-size:8pt; color:#888; font-weight:normal;">(vervalt)</span>')}</h2>`;
     if (!hg.onderdelen.length) {
       html += `<div class="meta"><em>Geen onderdelen</em></div>`;
     } else {
       hg.onderdelen.forEach(od => {
         const odT = calcOnderdeelTotalenOrigineel(od);
         const odActief = _isActief(od) && hgActief; // erfelijk: uitgezette hg trekt alles mee
-        const odStyle = odActief ? '' : 'style="opacity:0.5; text-decoration:line-through;"';
-        html += `<h3 ${odStyle}>${od.naam}${(!_isActief(od) && hgActief) ? ' <span style="font-size:8pt; color:#888; font-weight:normal;">(vervalt)</span>' : ''}</h3>`;
+        const _odKeuzeUit = _optDeelUit(od) || _optDeelUit(hg);   // v4.128.0
+        const odStyle = odActief ? '' : (_odKeuzeUit ? 'style="opacity:0.5;"' : 'style="opacity:0.5; text-decoration:line-through;"');
+        html += `<h3 ${odStyle}>${od.naam}${od.optieId ? _lblKeuze(od) : ((!_isActief(od) && hgActief) ? ' <span style="font-size:8pt; color:#888; font-weight:normal;">(vervalt)</span>' : '')}</h3>`;
         if (!od.regels.length) {
           html += `<div class="meta" style="margin-left:8pt;"><em>Geen regels</em></div>`;
         } else {
@@ -15946,7 +15981,7 @@ function printCalc() {
           od.regels.forEach(r => {
             const rt = calcRegelTotalen(r);
             const rActief = _isActief(r) && odActief; // erfelijk
-            const rStyle = rActief ? '' : 'style="opacity:0.5; text-decoration:line-through;"';
+            const rStyle = rActief ? '' : ((_odKeuzeUit && _isActief(r)) ? 'style="opacity:0.5;"' : 'style="opacity:0.5; text-decoration:line-through;"');   // v4.128.0 — regel in een niet-gekozen deel: grijs
             const vervaltLabel = (!_isActief(r) && odActief) ? ' <span style="font-size:7pt; color:#888;">(' + (_optRegelUit(r, c) ? (r.optieId ? 'optie, niet gekozen' : 'vervangen door gekozen optie') : 'vervalt') + ')</span>' : ((r.optieId && odActief) ? ' <span style="font-size:7pt; color:#888;">(gekozen optie)</span>' : '');   // v4.125.0
             // v4.127.0 — wat via de meetstaat vervalt (alleen bij een regel die zelf aan staat)
             const _msSt = rActief ? _msRegelStand(c, r) : null;
@@ -16325,8 +16360,21 @@ function printMeetstaat() {
 // totaal dat de klant ziet komt uit die kern voor precies die samenstelling:
 // _optMetStand zet de vinkjes tijdelijk in het geheugen om, rekent, en zet
 // ze terug. Er wordt daarbij niets opgeslagen of getekend.
+//
+// v4.128.0 (ontwerpmemo 20-11-2026, stap A en C):
+//   hoofdgroepen.optie_id / onderdelen.optie_id   een gevel, ruimte of onderdeel als
+//   keuze "erbij". Het deel staat in de basis uit (actief = false); de regels erin
+//   houden hun eigen vinkje. De koppeling staat op het deel, zodat regels die later
+//   in het deel komen er vanzelf bij horen. Niet nesten: geen keuze binnen een deel
+//   dat zelf een keuze is.
+//   Maximaal acht keuzes (256 samenstellingen). Tot en met OPT_VOL_AUTO keuzes rekent
+//   _optBereken alle samenstellingen direct door, zoals in v4.125.0. Daarboven alleen
+//   de basis, de losse meerprijzen en de samenstelling die nu aan staat of aangevinkt
+//   is; de volledige tabel komt bij Controleer, bij het maken van de accordeerlink en
+//   op de knop in het blok.
 // ============================================================
-const OPT_MAX = 4;
+const OPT_MAX = 8;
+const OPT_VOL_AUTO = 4;   // t/m dit aantal keuzes direct alle samenstellingen (16)
 const OPT_SLOT_STD = 'Uw digitale akkoord geldt voor de basisuitvoering. Kiest u een of meer opties, laat het ons dan weten; u ontvangt van ons een aangepaste bevestiging.';
 let _optBezig = false;
 let _optKiesConcept = null;   // { calcId, ids:Set } — vinkjes in het blok Opties die nog niet zijn vastgelegd
@@ -16364,8 +16412,48 @@ function _optZoekRegel(c, id) {
   }
   return null;
 }
+// v4.128.0 — Alle delen (hoofdgroepen en onderdelen) in één lijst. d = het deel zelf.
+function _optAlleDelen(c) {
+  const out = [];
+  ((c && c.hoofdgroepen) || []).forEach(hg => {
+    out.push({ d: hg, soort: 'hg', hg: hg, od: null });
+    (hg.onderdelen || []).forEach(od => out.push({ d: od, soort: 'od', hg: hg, od: od }));
+  });
+  return out;
+}
+// v4.128.0 — Staat dit deel uit doordat het een keuze "erbij" is die (nog) niet gekozen is?
+// Dan is het niet "vervallen": het hoort niet bij het oorspronkelijke bedrag, niet op de
+// werkbon en niet in een onderhoudsplan. Zonder optie_id is het antwoord altijd nee.
+function _optDeelUit(d) {
+  return !!d && !!d.optieId && d.actief === false;
+}
+// v4.128.0 — Wordt dit deel als keuze aangeboden: uit door een optie die nog bestaat.
+function _optDeelAangeboden(c, d) {
+  return _optDeelUit(d) && _optCfgLijst(c).some(o => o.id === d.optieId);
+}
+function _optDeelNaam(e) {
+  if (!e) return '';
+  if (e.soort === 'hg') return String(e.hg.naam || '').trim() || 'hoofdgroep';
+  return [e.hg.naam, e.od.naam].map(x => String(x || '').trim()).filter(Boolean).join(' · ') || 'onderdeel';
+}
+// v4.128.0 — Voor de tekeningen op de klantofferte: per calc-regel het label "Optie N" als
+// de regel in een deel zit dat als keuze wordt aangeboden. Leeg object zonder zulke delen.
+function _optTekLabels(c) {
+  const uit = {};
+  try {
+    if (!c || !_optAlleDelen(c).some(e => _optDeelUit(e.d))) return uit;
+    const aanbod = _optAanbod(c);
+    const nr = id => { const o = aanbod.opties.find(x => x.id === id); return (o && o.nr) ? 'Optie ' + o.nr : ''; };
+    (c.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => {
+      const lab = _optDeelUit(hg) ? nr(hg.optieId) : (_optDeelUit(od) ? nr(od.optieId) : '');
+      if (lab) (od.regels || []).forEach(r => { uit[r.id] = lab; });
+    }));
+  } catch (e) {}
+  return uit;
+}
 function _optHeeftIets(c) {
   if (_optCfgLijst(c).length) return true;
+  if (_optAlleDelen(c).some(e => !!e.d.optieId)) return true;   // v4.128.0
   return _optAlleRegels(c).some(e => !!e.r.optieId);
 }
 // Staat deze regel uit door het optiemechanisme? Dan is hij niet "vervallen".
@@ -16388,11 +16476,16 @@ function _optRegelUit(r, c) {
 // Is er iets met de hand uitgezet (hoofdgroep, onderdeel of regel)? Uitgezet door een
 // optie telt niet: dat is geen "vervalt op verzoek".
 function _optHeeftVervallen(c) {
-  return ((c && c.hoofdgroepen) || []).some(hg =>
-    !_isActief(hg) || (hg.onderdelen || []).some(od =>
-      !_isActief(od) || (od.regels || []).some(r => !_isActief(r) && !_optRegelUit(r, c))
-    )
-  );
+  // v4.128.0 — een deel dat als keuze uit staat is niet vervallen, en wat erin zit ook niet.
+  return ((c && c.hoofdgroepen) || []).some(hg => {
+    if (_optDeelUit(hg)) return false;
+    if (!_isActief(hg)) return true;
+    return (hg.onderdelen || []).some(od => {
+      if (_optDeelUit(od)) return false;
+      if (!_isActief(od)) return true;
+      return (od.regels || []).some(r => !_isActief(r) && !_optRegelUit(r, c));
+    });
+  });
 }
 // De hoeveelheid van een alternatief volgt de basisregel. Alleen in het geheugen, net
 // als de meetstaat-som (_syncMeetstaatHoeveelheden): er wordt hier niets weggeschreven.
@@ -16409,16 +16502,24 @@ function _optSyncHoeveelheden(c) {
   });
 }
 
-// Overzicht van de opties in deze calculatie: welke regels erbij horen, welke meedoen,
-// en in welke stand de optie nu staat ('uit', 'aan', 'gemengd' of 'leeg').
+// Overzicht van de opties in deze calculatie: welke regels en delen erbij horen, welke
+// meedoen, en in welke stand de optie nu staat ('uit', 'aan', 'gemengd' of 'leeg').
+// v4.128.0 — een item is een regel (tabel calc_regels) of een deel (tabel hoofdgroepen of
+// onderdelen, deel = 'hg' of 'od'). In beide gevallen is x.r het object met het vinkje
+// actief, zodat _optMetStand en _optPasStandToe regels en delen op dezelfde manier omzetten.
 function _optAanbod(c) {
   const lijst = _optAlleRegels(c);
+  const delen = _optAlleDelen(c);
   const opId = new Map(), altVan = new Map(), perOptie = new Map();
   lijst.forEach(e => opId.set(e.r.id, e));
+  const bij = (id, item) => { if (!perOptie.has(id)) perOptie.set(id, []); perOptie.get(id).push(item); };
+  delen.forEach(e => {
+    if (!e.d.optieId) return;
+    bij(e.d.optieId, { r: e.d, hg: e.hg, od: e.od, deel: e.soort, tabel: e.soort === 'hg' ? 'hoofdgroepen' : 'onderdelen' });
+  });
   lijst.forEach(e => {
     if (!e.r.optieId) return;
-    if (!perOptie.has(e.r.optieId)) perOptie.set(e.r.optieId, []);
-    perOptie.get(e.r.optieId).push(e);
+    bij(e.r.optieId, { r: e.r, hg: e.hg, od: e.od, deel: null, tabel: 'calc_regels' });
     if (e.r.alternatiefVoor) {
       if (!altVan.has(e.r.alternatiefVoor)) altVan.set(e.r.alternatiefVoor, []);
       altVan.get(e.r.alternatiefVoor).push(e);
@@ -16426,14 +16527,24 @@ function _optAanbod(c) {
   });
   const cfgL = _optCfgLijst(c);
   const bekend = new Set(cfgL.map(o => o.id));
-  const uit = { idx: { opId: opId, altVan: altVan, perOptie: perOptie }, opties: [], aangeboden: [], wezen: [], fouten: [] };
+  const uit = { idx: { opId: opId, altVan: altVan, perOptie: perOptie }, opties: [], aangeboden: [], wezen: [], wezenDelen: [], fouten: [] };
   lijst.forEach(e => { if (e.r.optieId && !bekend.has(e.r.optieId)) uit.wezen.push(e); });
+  delen.forEach(e => { if (e.d.optieId && !bekend.has(e.d.optieId)) uit.wezenDelen.push(e); });
   cfgL.forEach(o => {
     const soort = o.soort === 'erbij' ? 'erbij' : 'vervang';
     const regels = (perOptie.get(o.id) || []).map(e => {
+      if (e.deel) {
+        // Een gevel, ruimte of onderdeel als keuze "erbij".
+        const item = { r: e.r, hg: e.hg, od: e.od, deel: e.deel, tabel: e.tabel, basis: null, doetMee: true, reden: '', dubbel: false };
+        if (soort !== 'erbij') { item.doetMee = false; item.reden = 'een deel kan alleen een keuze "erbij" zijn'; }
+        else if (e.deel === 'od' && e.hg.optieId) { item.doetMee = false; item.reden = 'de hoofdgroep is zelf een keuze'; }
+        else if (e.deel === 'od' && !_isActief(e.hg)) { item.doetMee = false; item.reden = 'de hoofdgroep staat uit'; }
+        return item;
+      }
       const be = e.r.alternatiefVoor ? (opId.get(e.r.alternatiefVoor) || null) : null;
-      const item = { r: e.r, hg: e.hg, od: e.od, basis: be ? be.r : null, doetMee: true, reden: '', dubbel: false };
-      if (!(_isActief(e.hg) && _isActief(e.od))) { item.doetMee = false; item.reden = 'hoofdgroep of onderdeel staat uit'; }
+      const item = { r: e.r, hg: e.hg, od: e.od, deel: null, tabel: 'calc_regels', basis: be ? be.r : null, doetMee: true, reden: '', dubbel: false };
+      if (e.hg.optieId || e.od.optieId) { item.doetMee = false; item.reden = 'het deel waar hij in zit is zelf een keuze'; }   // v4.128.0 — niet nesten
+      else if (!(_isActief(e.hg) && _isActief(e.od))) { item.doetMee = false; item.reden = 'hoofdgroep of onderdeel staat uit'; }
       if (soort === 'vervang') {
         if (!item.basis) { item.doetMee = false; item.reden = 'de basisregel bestaat niet meer'; }
         else if ((altVan.get(item.basis.id) || []).length > 1) { item.doetMee = false; item.reden = 'de basisregel heeft meer dan één alternatief'; }
@@ -16457,6 +16568,12 @@ function _optAanbod(c) {
   uit.aangeboden = uit.opties.filter(o => o.mee.length > 0).slice(0, OPT_MAX);
   uit.aangeboden.forEach((o, i) => { o.nr = i + 1; });
   return uit;
+}
+// v4.128.0 — Hoe een item (regel of deel) in meldingen en in het blok heet.
+function _optItemNaam(x) {
+  if (x.deel === 'hg') return 'hoofdgroep "' + (x.hg.naam || 'zonder naam') + '"';
+  if (x.deel === 'od') return 'onderdeel "' + (x.od.naam || 'zonder naam') + '" (' + (x.hg.naam || '?') + ')';
+  return 'regel "' + (x.r.naam || x.r.systeemNaam || 'zonder naam') + '"';
 }
 function _optLabel(o) {
   return 'Optie ' + (o.nr || '?') + (o.titel ? ': ' + o.titel : '');
@@ -16551,29 +16668,60 @@ function _optMetStand(c, aanbod, gekozenIds, fn) {
   }
 }
 
-// Rekent de basis en alle combinaties door (2, 4, 8 of 16). null als de calculatie
-// geen opties heeft: dan verandert er nergens iets ten opzichte van v4.124.0.
-function _optBereken(c) {
+// Rekent de basis en de samenstellingen door. null als de calculatie geen opties heeft:
+// dan verandert er nergens iets ten opzichte van v4.124.0.
+// v4.128.0 — wens (optioneel):
+//   volledig: true   alle samenstellingen (2 tot 256), ook boven OPT_VOL_AUTO keuzes;
+//   kies: [ids]      deze samenstelling in elk geval doorrekenen (de vinkjes in het blok).
+// Zonder wens: t/m OPT_VOL_AUTO keuzes alles, zoals voorheen; daarboven alleen de basis,
+// elke keuze los, en de samenstelling die nu aan staat. uit.combi is de lijst van wat
+// is doorgerekend, oplopend op masker; uit.rij(masker) zoekt er één op (undefined als die
+// niet is doorgerekend). uit.volledig zegt of de lijst compleet is.
+function _optBereken(c, wens) {
   if (!c || c !== data.calc || !c.__loaded) return null;
   if (!_optHeeftIets(c)) return null;
+  wens = wens || {};
   _optSyncHoeveelheden(c);
   const aanbod = _optAanbod(c);
   const opties = aanbod.aangeboden;
   const n = opties.length;
-  const uit = { aanbod: aanbod, opties: opties, n: n, combi: [], basis: null, huidig: null, fouten: [], waarsch: [], keuze: _optKeuze(c) };
+  const uit = { aanbod: aanbod, opties: opties, n: n, combi: [], basis: null, huidig: null, fouten: [], waarsch: [], keuze: _optKeuze(c),
+    volledig: false, aantal: 0, totaalAantal: (n ? Math.pow(2, n) : 0), ms: 0, kiesMasker: null, rij: () => undefined };
 
   aanbod.wezen.forEach(e => uit.waarsch.push('Regel "' + (e.r.naam || e.r.systeemNaam || 'zonder naam') + '" (' + (e.od.naam || '?') + ') hoort bij een optie die niet meer bestaat. Hij staat uit en telt nergens mee. Maak er een gewone regel van of verwijder hem.'));
+  aanbod.wezenDelen.forEach(e => uit.waarsch.push((e.soort === 'hg' ? 'Hoofdgroep' : 'Onderdeel') + ' "' + _optDeelNaam(e) + '" hoort bij een optie die niet meer bestaat. ' + (_isActief(e.d) ? 'Maak er met ↩ weer een gewoon deel van.' : 'Het staat uit en telt nergens mee. Maak er met ↩ weer een gewoon deel van of verwijder het.')));
   aanbod.opties.forEach(o => {
     const naam = o.titel || '(zonder titel)';
-    if (!o.regels.length) uit.waarsch.push('Optie "' + naam + '" heeft geen regels meer en staat niet op de offerte. Hef hem op.');
-    o.regels.filter(x => !x.doetMee).forEach(x => uit.waarsch.push('Optie "' + naam + '": regel "' + (x.r.naam || x.r.systeemNaam || 'zonder naam') + '" doet niet mee, want ' + x.reden + '.'));
+    if (!o.regels.length) uit.waarsch.push('Optie "' + naam + '" heeft geen regels of delen meer en staat niet op de offerte. Hef hem op.');
+    o.regels.filter(x => !x.doetMee).forEach(x => uit.waarsch.push('Optie "' + naam + '": ' + _optItemNaam(x) + ' doet niet mee, want ' + x.reden + '.'));
     if (o.regels.length && !o.mee.length) uit.waarsch.push('Optie "' + naam + '" staat daardoor niet op de offerte.');
   });
   if (aanbod.opties.filter(o => o.mee.length > 0).length > OPT_MAX) uit.waarsch.push('Er zijn meer dan ' + OPT_MAX + ' opties; alleen de eerste ' + OPT_MAX + ' staan op de offerte.');
   if (!n) return uit;
 
   const ids = opties.map(o => o.id);
-  for (let m = 0; m < (1 << n); m++) {
+  if (!opties.some(o => o.status === 'gemengd')) {
+    uit.huidig = opties.reduce((m, o, i) => m | (o.status === 'aan' ? (1 << i) : 0), 0);
+  }
+  if (wens.kies) {
+    const kies = new Set(wens.kies);
+    uit.kiesMasker = opties.reduce((m, o, i) => m | (kies.has(o.id) ? (1 << i) : 0), 0);
+  }
+  const totaal = 1 << n;
+  uit.volledig = !!wens.volledig || n <= OPT_VOL_AUTO;
+  let maskers;
+  if (uit.volledig) {
+    maskers = []; for (let m = 0; m < totaal; m++) maskers.push(m);
+  } else {
+    const set = new Set([0]);
+    for (let i = 0; i < n; i++) set.add(1 << i);
+    if (uit.huidig != null) set.add(uit.huidig);
+    if (uit.kiesMasker != null) set.add(uit.kiesMasker);
+    maskers = Array.from(set).sort((a, b) => a - b);
+  }
+  const opMasker = new Map();
+  const _t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  maskers.forEach(m => {
     const gek = ids.filter((id, i) => m & (1 << i));
     const rij = { masker: m, ids: gek, ok: false };
     try {
@@ -16591,12 +16739,16 @@ function _optBereken(c) {
       rij.fout = (e && e.message) ? e.message : String(e);
     }
     uit.combi.push(rij);
-  }
+    opMasker.set(m, rij);
+  });
+  uit.ms = Math.round(((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - _t0);
+  uit.aantal = uit.combi.length;
+  uit.rij = m => opMasker.get(m);
   if (!uit.basis) uit.fouten.push('De basisuitvoering is niet te berekenen: zonder de opties heeft de calculatie geen regels met inhoud.');
-  if (uit.combi.some(x => !x.ok)) uit.fouten.push('Niet elke combinatie van opties is te berekenen.');
+  if (uit.combi.some(x => !x.ok)) uit.fouten.push(uit.volledig ? 'Niet elke combinatie van opties is te berekenen.' : 'Niet elke doorgerekende samenstelling is te berekenen.');
 
   opties.forEach((o, i) => {
-    const alleen = uit.combi[1 << i];
+    const alleen = opMasker.get(1 << i);
     o.meerExcl = (uit.basis && alleen && alleen.ok) ? _r2(alleen.excl - uit.basis.excl) : null;
     o.meerIncl = (uit.basis && alleen && alleen.ok) ? _r2(alleen.incl - uit.basis.incl) : null;
     if (!o.titel.trim()) uit.fouten.push('Optie ' + o.nr + ' heeft nog geen titel.');
@@ -16607,9 +16759,6 @@ function _optBereken(c) {
       uit.waarsch.push(_optLabel(o) + ' heeft geen meerprijs (' + eur(0) + ').');
     }
   });
-  if (!opties.some(o => o.status === 'gemengd')) {
-    uit.huidig = opties.reduce((m, o, i) => m | (o.status === 'aan' ? (1 << i) : 0), 0);
-  }
   if (uit.keuze && uit.huidig != null) {
     const a = opties.filter(o => o.status === 'aan').map(o => o.id).sort().join(',');
     const b = uit.keuze.gekozen.filter(id => ids.indexOf(id) >= 0).slice().sort().join(',');
@@ -16641,8 +16790,8 @@ function _optVoorDocument(c, cijNu) {
       meerExcl: o.meerExcl, meerIncl: o.meerIncl, gekozen: !!(ber.huidig & (1 << i))
     })),
     basis: { excl: ber.basis.excl, btw: ber.basis.btw, incl: ber.basis.incl },
-    combi: ber.combi.map(x => ({ label: _optCombiLabel(ber.opties, x.masker), excl: x.excl, incl: x.incl })),
-    toonCombi: n <= 2,
+    combi: (n <= 2 && ber.volledig) ? ber.combi.map(x => ({ label: _optCombiLabel(ber.opties, x.masker), excl: x.excl, incl: x.incl })) : [],   // v4.128.0 — boven twee opties staat de tabel niet op papier
+    toonCombi: n <= 2 && ber.volledig,
     intro: n <= 2
       ? 'De meerprijs van een optie komt bovenop het totaal van de basisuitvoering hierboven.'
       : 'De meerprijzen gelden per optie ten opzichte van de basisuitvoering hierboven. Het exacte totaal van uw samenstelling bevestigen wij bij uw keuze.',
@@ -16757,10 +16906,10 @@ function _optDocContent(cij) {
 // Bij het vastleggen van een keuze wordt het bedrag hiermee vergeleken.
 function _optTabelVoorLink(c) {
   try {
-    const b = _optBereken(c);
+    const b = _optBereken(c, { volledig: true });   // v4.128.0 — ook boven vier keuzes alle samenstellingen (tot 256)
     if (!b || !b.n || !b.basis) return null;
     return {
-      n: b.n, huidig: b.huidig,
+      n: b.n, huidig: b.huidig, ms: b.ms,
       basis: { excl: b.basis.excl, incl: b.basis.incl },
       opties: b.opties.map(o => ({ id: o.id, soort: o.soort, titel: o.titel })),
       combi: b.combi.filter(x => x.ok).map(x => ({ ids: x.ids, excl: x.excl, incl: x.incl }))
@@ -16800,6 +16949,9 @@ function _optRegelTagHtml(hgId, odId, r) {
 }
 function _optRegelKnopHtml(hgId, odId, r) {
   if (r.optieId) return '';
+  // v4.128.0 — niet nesten: geen optie binnen een deel dat zelf een keuze is.
+  const _dl = _optDeelZoek(hgId, odId);
+  if (_dl && (_dl.hg.optieId || (_dl.od && _dl.od.optieId))) return '';
   // Een regel die al de basis van een optie is, krijgt geen tweede optie (één alternatief per regel).
   if (_optAlleRegels(data.calc).some(e => e.r.alternatiefVoor === r.id)) return '';
   return `<button class="btn-secondary btn btn-sm" onclick="optOpenMaak('${hgId}','${odId}','${r.id}')" title="Optie voor de klant maken bij deze regel: in plaats van (ander systeem of extra bewerking) of erbij" style="margin-left:0.4rem;">◇</button>`;
@@ -16812,15 +16964,18 @@ function _optKiesHuidig(c, ber) {
 }
 function optKiesToggle(id, aan) {
   const c = data.calc;
-  if (!c) return;
-  const ber = _optBereken(c);
-  if (!ber) return;
-  const ids = new Set(_optKiesHuidig(c, ber));
+  if (!c || !c.__loaded || !_optHeeftIets(c)) return;
+  // v4.128.0 — alleen de stand van de opties is nodig; het doorrekenen doet renderOptiesBlok.
+  const ids = new Set(_optKiesHuidig(c, { opties: _optAanbod(c).aangeboden }));
   if (aan) ids.add(id); else ids.delete(id);
   _optKiesConcept = { calcId: c.id, ids: ids };
   renderOptiesBlok();
 }
-function renderOptiesBlok() {
+// v4.128.0 — alles = true: ook boven OPT_VOL_AUTO keuzes alle samenstellingen doorrekenen en
+// tonen (knop in het blok). Eenmalig: de eerstvolgende gewone hertekening rekent weer licht,
+// zodat een getoonde tabel altijd bij de stand van dat moment hoort.
+function optToonAlles() { renderOptiesBlok(true); }
+function renderOptiesBlok(alles) {
   const body = document.getElementById('optiesBlokBody');
   const kort = document.getElementById('optiesBlokKort');
   if (!body) return;
@@ -16831,10 +16986,15 @@ function renderOptiesBlok() {
   if (act && body.contains(act) && (act.tagName === 'TEXTAREA' || (act.tagName === 'INPUT' && act.type !== 'checkbox'))) return;
   if (_optKiesConcept && _optKiesConcept.calcId !== c.id) _optKiesConcept = null;
   let ber = null;
-  try { ber = _optBereken(c); } catch (e) { body.innerHTML = '<p style="color:var(--accent-deep);">Opties konden niet worden doorgerekend: ' + _escapeHtml(e && e.message ? e.message : String(e)) + '</p>'; return; }
+  try {
+    // v4.128.0 — de aangevinkte samenstelling rekent altijd mee; alles alleen op verzoek.
+    const _w = { volledig: alles === true };
+    if (_optKiesConcept && _optKiesConcept.calcId === c.id) _w.kies = Array.from(_optKiesConcept.ids);
+    ber = _optBereken(c, _w);
+  } catch (e) { body.innerHTML = '<p style="color:var(--accent-deep);">Opties konden niet worden doorgerekend: ' + _escapeHtml(e && e.message ? e.message : String(e)) + '</p>'; return; }
   if (!ber) {
     if (kort) kort.textContent = 'geen opties';
-    body.innerHTML = '<p style="color:var(--ink-soft); font-size:0.85rem; margin:0.4rem 0;">Nog geen opties. Klik bij een regel op <strong>◇</strong> om er een optie van te maken: <em>in plaats van</em> (een ander verfsysteem of dezelfde regel met een extra bewerking) of <em>erbij</em> (extra werk dat in de basis uit staat). De basis is altijd de goedkoopste uitvoering; de klant ziet per optie één meerprijs.</p>';
+    body.innerHTML = '<p style="color:var(--ink-soft); font-size:0.85rem; margin:0.4rem 0;">Nog geen opties. Klik bij een regel op <strong>◇</strong> om er een optie van te maken: <em>in plaats van</em> (een ander verfsysteem of dezelfde regel met een extra bewerking) of <em>erbij</em> (extra werk dat in de basis uit staat). Klik op <strong>◇</strong> in de kop van een hoofdgroep of onderdeel om die gevel, die ruimte of dat onderdeel in één keer een keuze <em>erbij</em> te maken. De basis is altijd de goedkoopste uitvoering; de klant ziet per optie één meerprijs. Maximaal ' + OPT_MAX + ' opties per offerte.</p>';
     return;
   }
   const E = _escapeHtml;
@@ -16846,11 +17006,14 @@ function renderOptiesBlok() {
   if (ber.waarsch.length) h += '<div class="opt-meld"><ul>' + ber.waarsch.map(t => '<li>' + E(t) + '</li>').join('') + '</ul></div>';
 
   // 1. De opties
-  h += '<table class="opt-tabel"><thead><tr><th style="width:3.2rem;">Nr</th><th>Titel en klanttekst (zo staat het op de offerte)</th><th>Regels</th><th class="right">Meerprijs excl.</th><th class="right">incl. BTW</th><th></th></tr></thead><tbody>';
+  h += '<table class="opt-tabel"><thead><tr><th style="width:3.2rem;">Nr</th><th>Titel en klanttekst (zo staat het op de offerte)</th><th>Wat</th><th class="right">Meerprijs excl.</th><th class="right">incl. BTW</th><th></th></tr></thead><tbody>';
   ber.aanbod.opties.forEach((o, pos) => {
     const regelsTxt = o.regels.length
-      ? o.regels.map(x => E((x.od.naam || '?') + ' · ' + (x.r.naam || x.r.systeemNaam || 'regel')) + (o.soort === 'vervang' ? ' <span style="color:var(--ink-soft);">→ ' + E(x.r.systeemNaam || '?') + '</span>' : '') + (x.doetMee ? '' : ' <span style="color:var(--accent-deep);">(doet niet mee)</span>')).join('<br>')
-      : '<em style="color:var(--accent-deep);">geen regels</em>';
+      ? o.regels.map(x => (x.deel
+          ? '<strong>' + E(x.deel === 'hg' ? (x.hg.naam || '?') : ((x.hg.naam || '?') + ' · ' + (x.od.naam || '?'))) + '</strong> <span style="color:var(--ink-soft);">(' + (x.deel === 'hg' ? 'hele hoofdgroep' : 'heel onderdeel') + ')</span>'   // v4.128.0
+          : E((x.od.naam || '?') + ' · ' + (x.r.naam || x.r.systeemNaam || 'regel')) + (o.soort === 'vervang' ? ' <span style="color:var(--ink-soft);">→ ' + E(x.r.systeemNaam || '?') + '</span>' : ''))
+          + (x.doetMee ? '' : ' <span style="color:var(--accent-deep);">(doet niet mee)</span>')).join('<br>')
+      : '<em style="color:var(--accent-deep);">geen regels of delen</em>';
     h += '<tr>'
       + '<td><strong>' + (o.nr || '–') + '</strong><br><span style="font-size:0.68rem; color:var(--ink-soft);">' + (o.soort === 'erbij' ? 'erbij' : 'in plaats van') + '</span></td>'
       + '<td><input type="text" value="' + E(o.titel) + '" placeholder="Titel, bv. Wanden na stucwerk voorstrijken en 2x sauzen" onchange="optZetVeld(\'' + o.id + '\',\'titel\',this.value)" style="width:100%; margin-bottom:0.25rem;">'
@@ -16864,10 +17027,14 @@ function renderOptiesBlok() {
   h += '</tbody></table>';
 
   if (ber.n) {
-    // 2. Alle combinaties
+    // 2. De samenstellingen
     const kies = _optKiesHuidig(c, ber);
     const kiesMasker = ber.opties.reduce((m, o, i) => m | (kies.has(o.id) ? (1 << i) : 0), 0);
-    h += '<div class="opt-subkop">Alle samenstellingen' + (ber.n <= 2 ? ' (deze tabel staat ook op de offerte)' : ' (op de offerte staan bij drie of vier opties alleen de meerprijzen)') + '</div>';
+    // v4.128.0 — boven OPT_VOL_AUTO keuzes staat hier eerst alleen wat direct is doorgerekend.
+    const opPapier = ber.n <= 2 ? ' (deze tabel staat ook op de offerte)' : ' (op de offerte staan bij drie of meer opties alleen de meerprijzen)';
+    h += '<div class="opt-subkop">' + (ber.volledig ? 'Alle ' + ber.totaalAantal + ' samenstellingen' : 'Samenstellingen: ' + ber.aantal + ' van de ' + ber.totaalAantal + ' doorgerekend') + opPapier + '</div>';
+    if (ber.totaalAantal > 16 && ber.volledig) h += '<div style="font-size:0.72rem; color:var(--ink-soft);">' + ber.aantal + ' samenstellingen doorgerekend in ' + (ber.ms < 1000 ? ber.ms + ' ms' : fmt(ber.ms / 1000) + ' s') + '. Deze tabel verdwijnt bij de volgende wijziging; de knop haalt hem terug.</div>';
+    if (ber.totaalAantal > 16 && ber.volledig) h += '<div style="max-height:22rem; overflow:auto; border:1px solid var(--border); border-radius:6px;">';
     h += '<table class="opt-tabel"><thead><tr><th>Samenstelling</th><th class="right">Werkdagen</th><th class="right">Totaal excl.</th><th class="right">Totaal incl.</th><th class="right">Meer dan basis (incl.)</th></tr></thead><tbody>';
     ber.combi.forEach(x => {
       const cls = (x.masker === ber.huidig ? ' is-huidig' : '') + (x.masker === kiesMasker && kiesMasker !== ber.huidig ? ' is-concept' : '');
@@ -16879,6 +17046,11 @@ function renderOptiesBlok() {
         + '<td class="right mono">' + (ber.basis ? (x.masker === 0 ? '—' : eur(_r2(x.incl - ber.basis.incl))) : '—') + '</td></tr>';
     });
     h += '</tbody></table>';
+    if (ber.totaalAantal > 16 && ber.volledig) h += '</div>';
+    if (!ber.volledig) {
+      h += '<div style="margin:0.4rem 0;"><button class="btn-secondary btn btn-sm lock-allowed" onclick="optToonAlles()">Alle ' + ber.totaalAantal + ' samenstellingen doorrekenen</button> '
+        + '<span style="font-size:0.72rem; color:var(--ink-soft);">Bij meer dan ' + OPT_VOL_AUTO + ' opties rekent dit blok direct alleen de basis, elke optie los en de samenstelling die aan staat of aangevinkt is. Alle samenstellingen worden doorgerekend bij Controleer en bij het maken van de accordeerlink.</span></div>';
+    }
     h += '<div style="font-size:0.72rem; color:var(--ink-soft); margin-top:0.2rem;">Werkdagen: werkelijk → gefactureerd. Elk totaal is door de rekenkern berekend voor precies die samenstelling; meerprijzen van twee opties tellen daardoor niet altijd exact op.</div>';
 
     // 3. Zin onder de opties
@@ -16887,7 +17059,7 @@ function renderOptiesBlok() {
       + '<div style="font-size:0.72rem; color:var(--ink-soft);">Leeg laten = geen zin. Online akkoord geven kan nu alleen op de basis (of op een keuze die jij hieronder hebt vastgelegd); online zelf kiezen volgt in stap 2.</div>';
 
     // 4. Keuze vastleggen — werkt ook op een vergrendelde offerte
-    const doel = ber.combi[kiesMasker];
+    const doel = ber.rij(kiesMasker);   // v4.128.0 — de aangevinkte samenstelling is altijd doorgerekend (wens.kies of de huidige stand)
     h += '<div class="opt-keuze lock-open"><div class="opt-subkop" style="margin-top:0;">Keuze van de klant vastleggen</div>';
     if (keuze) {
       h += '<div style="font-size:0.8rem; margin-bottom:0.35rem;">Vastgelegd op ' + E(_offDatumLang(String(keuze.op || '').slice(0, 10))) + (keuze.door ? ' door ' + E(keuze.door) : '') + ': <strong>' + (keuze.gekozen.length ? E(ber.opties.filter(o => keuze.gekozen.indexOf(o.id) >= 0).map(_optLabel).join(', ') || 'opties die niet meer bestaan') : 'alleen de basis') + '</strong>' + (keuze.totaalIncl != null ? ', ' + eur(keuze.totaalIncl) + ' incl. BTW' : '') + '.</div>';
@@ -16976,15 +17148,21 @@ async function optOpheffen(id) {
   const o = aanbod.opties.find(x => x.id === id);
   if (!o) return;
   const nAlt = o.regels.length;
+  // v4.128.0 — een optie "erbij" kan ook uit delen bestaan (hoofdgroep, onderdeel).
+  const nDeel = o.regels.filter(x => x.deel).length, nReg = o.regels.length - nDeel;
+  const watTerug = [nDeel ? nDeel + (nDeel === 1 ? ' deel' : ' delen') : '', nReg ? nReg + (nReg === 1 ? ' regel' : ' regels') : ''].filter(Boolean).join(' en ');
   const tekst = o.soort === 'vervang'
     ? 'Optie "' + (o.titel || 'zonder titel') + '" opheffen?\n\n' + (nAlt ? nAlt + (nAlt === 1 ? ' optieregel wordt' : ' optieregels worden') + ' verwijderd (terug te halen via de prullenbak). De basisregels blijven staan.' : 'Er hangen geen regels meer aan.')
-    : 'Optie "' + (o.titel || 'zonder titel') + '" opheffen?\n\n' + (o.regels.length ? 'De ' + o.regels.length + (o.regels.length === 1 ? ' regel wordt' : ' regels worden') + ' weer gewoon werk in de basis (aan).' : 'Er hangen geen regels meer aan.');
+    : 'Optie "' + (o.titel || 'zonder titel') + '" opheffen?\n\n' + (o.regels.length ? watTerug + ((nDeel + nReg) === 1 ? ' wordt' : ' worden') + ' weer gewoon werk in de basis (aan).' : 'Er hangen geen regels of delen meer aan.');
   if (!confirm(tekst)) return;
   _optBezig = true;
   let mis = 0;
   try {
     for (const x of o.regels) {
-      if (o.soort === 'vervang') {
+      if (x.deel) {
+        const res = await _sbQuery(_sb.from(x.tabel).update({ optie_id: null, actief: true }).eq('id', x.r.id).select('id'), 'Deel uit optie halen');
+        if (res && !res.error && res.data && res.data.length) { x.r.optieId = null; x.r.actief = true; } else mis++;
+      } else if (o.soort === 'vervang') {
         const ok = await _deleteRegelDB(x.r.id);
         if (!ok) { mis++; continue; }
         x.od.regels = x.od.regels.filter(r => r.id !== x.r.id);
@@ -17002,7 +17180,128 @@ async function optOpheffen(id) {
   } finally { _optBezig = false; }
   try { if (typeof _pbVervers === 'function') _pbVervers(); } catch (e) {}
   _optNaWijziging(c);
-  _toast(mis ? 'Let op: ' + mis + ' regel(s) konden niet worden bijgewerkt; de optie is blijven staan.' : 'Optie opgeheven.', mis ? undefined : 'ok');
+  _toast(mis ? 'Let op: ' + mis + ' regel(s) of deel/delen konden niet worden bijgewerkt; de optie is blijven staan.' : 'Optie opgeheven.', mis ? undefined : 'ok');
+}
+
+// ---------- v4.128.0 — Een deel (hoofdgroep of onderdeel) als keuze "erbij" ----------
+function _optDeelZoek(hgId, odId) {
+  const c = data.calc;
+  if (!c) return null;
+  const hg = (c.hoofdgroepen || []).find(x => x.id === hgId);
+  if (!hg) return null;
+  if (!odId) return { d: hg, soort: 'hg', hg: hg, od: null, tabel: 'hoofdgroepen' };
+  const od = (hg.onderdelen || []).find(x => x.id === odId);
+  return od ? { d: od, soort: 'od', hg: hg, od: od, tabel: 'onderdelen' } : null;
+}
+// Waarom kan dit deel geen keuze worden? Lege tekst = het kan.
+function _optDeelBlokkade(c, e) {
+  if (e.d.optieId) return 'Dit deel is al een keuze.';
+  if (!_isActief(e.d)) return 'Dit deel staat uit. Zet het eerst aan.';
+  if (e.soort === 'od') {
+    if (e.hg.optieId) return 'De hoofdgroep is zelf een keuze. Een keuze binnen een keuze kan niet.';
+    if (!_isActief(e.hg)) return 'De hoofdgroep staat uit. Zet die eerst aan.';
+  }
+  const ods = e.soort === 'hg' ? (e.hg.onderdelen || []) : [e.od];
+  if (e.soort === 'hg' && ods.some(od => !!od.optieId)) return 'In deze hoofdgroep is een onderdeel al een keuze. Een keuze binnen een keuze kan niet: maak daar eerst met ↩ weer een gewoon onderdeel van.';
+  const regels = [];
+  ods.forEach(od => (od.regels || []).forEach(r => regels.push(r)));
+  const ids = new Set(regels.map(r => r.id));
+  if (regels.some(r => !!r.optieId) || _optAlleRegels(c).some(x => x.r.alternatiefVoor && ids.has(x.r.alternatiefVoor))) {
+    return 'In dit deel zit een regel die bij een optie hoort. Een optie binnen een keuze kan niet: hef die optie eerst op in het blok Opties voor de klant.';
+  }
+  return '';
+}
+// Wat de kop van een hoofdgroep of onderdeel over de keuze toont: het vinkje (vast of
+// vrij), het label en de knop.
+function _optDeelKop(hgId, odId, d) {
+  const arg = "'" + hgId + "'," + (odId ? "'" + odId + "'" : 'null');
+  const wat = odId ? 'dit onderdeel' : 'deze hoofdgroep';
+  if (!d.optieId) {
+    return { vast: '', klasse: '', tag: '',
+      knop: `<button class="btn-secondary btn btn-sm" onclick="optDeelMaak(${arg})" title="Maak van ${wat} een keuze voor de klant: staat uit in de basis, de klant kan het erbij kiezen" style="margin-right:0.25rem;">◇</button>` };
+  }
+  const los = ` <button class="btn-secondary btn btn-sm" onclick="optDeelLos(${arg})" title="Maak er weer een gewoon deel van: het staat dan aan in de basis">↩</button>`;
+  let o = null;
+  try { o = _optAanbod(data.calc).opties.find(x => x.id === d.optieId) || null; } catch (e) { o = null; }
+  if (!o) {
+    return { vast: 'De optie waar dit deel bij hoorde bestaat niet meer. Maak er met ↩ weer een gewoon deel van.', klasse: 'is-keuze', knop: '',
+      tag: ` <span class="opt-tag is-fout" title="De optie waar dit deel bij hoorde bestaat niet meer.">optie onbekend</span>${los}` };
+  }
+  const aan = _isActief(d);
+  return { vast: 'Dit deel is een keuze voor de klant en volgt die keuze (blok Opties voor de klant).', klasse: 'is-keuze', knop: '',
+    tag: ` <span class="opt-tag${aan ? ' is-gekozen' : ''}" title="${_escapeHtml(o.titel || '')}">OPTIE ${o.nr || '–'} · erbij · ${aan ? 'gekozen' : 'niet gekozen'}</span>${los}` };
+}
+function _optDeelVinkHtml(kop, actief, onchange) {
+  if (kop.vast) return `<input type="checkbox" class="actief-toggle" ${actief ? 'checked' : ''} disabled title="${kop.vast}" style="opacity:0.45;">`;
+  return `<input type="checkbox" class="actief-toggle" ${actief ? 'checked' : ''} onchange="${onchange}" title="Aan/uit voor offerte">`;
+}
+// Als _optNaWijziging, maar wacht tot de automatische staartposten (gebrek-herstel,
+// deuronderkant) zijn bijgewerkt. De aanroeper houdt _optBezig zolang vast, zodat twee
+// snelle tikken op ◇ of ↩ geen twee bijwerkrondes door elkaar laten lopen.
+async function _optNaDeelWijziging(c) {
+  try { _touchCalc(c.id); } catch (e) {}
+  try { _syncCalcTotalToDB(c); } catch (e) {}
+  try { renderCalcStructuur(); } catch (e) { console.warn('Opties: hertekenen mislukt', e); }
+  try { await _syncGebrekToeslagen(); } catch (e) {}
+  try { renderDashboard(); } catch (e) {}
+}
+// Eén klik: het deel wordt een keuze "erbij" en staat uit in de basis. De titel is de
+// naam van het deel; titel en klanttekst zijn daarna aan te passen in het blok.
+async function optDeelMaak(hgId, odId) {
+  const c = data.calc;
+  if (!c || _optBezig) return;
+  if (!_optMagWijzigen(c)) return;
+  const e = _optDeelZoek(hgId, odId);
+  if (!e) return;
+  const blok = _optDeelBlokkade(c, e);
+  if (blok) { _toast(blok); return; }
+  const lijst = _optCfgLijst(c).map(o => Object.assign({}, o));
+  if (lijst.length >= OPT_MAX) { _toast('Er zijn al ' + OPT_MAX + ' opties. Meer dan ' + OPT_MAX + ' kan niet op één offerte.'); return; }
+  const optie = { id: 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), soort: 'erbij', titel: _optDeelNaam(e), klanttekst: '' };
+  lijst.push(optie);
+  _optBezig = true;
+  try {
+    await _offCfgGerichtZetten(c, { opties: lijst });
+    const res = await _sbQuery(_sb.from(e.tabel).update({ optie_id: optie.id, actief: false }).eq('id', e.d.id).select('id, optie_id'), 'Keuze opslaan');
+    if (!res || res.error || !res.data || !res.data.length) throw new Error((res && res.error && res.error.message) || 'het deel kon niet worden opgeslagen');
+    if (res.data[0].optie_id !== optie.id) throw new Error('de koppeling met de optie is niet opgeslagen (kolom optie_id, sql/opties_02_delen.sql)');
+    e.d.optieId = optie.id; e.d.actief = false;
+  } catch (err) {
+    try { await _offCfgGerichtZetten(c, { opties: _optCfgLijst(c).filter(o => o.id !== optie.id).map(o => Object.assign({}, o)) }); } catch (e2) {}
+    _optBezig = false;
+    _toast('Keuze maken mislukt: ' + (err && err.message ? err.message : err));
+    return;
+  }
+  try { await _optNaDeelWijziging(c); } finally { _optBezig = false; }
+  const blokEl = document.getElementById('optiesBlok');
+  if (blokEl) blokEl.open = true;
+  _toast('"' + optie.titel + '" is nu een keuze voor de klant en staat uit in de basis. De meerprijs staat in het blok Opties voor de klant; vul daar de omschrijving voor de klant in.', 'ok');
+}
+// Terug naar een gewoon deel (aan, in de basis). Blijft de optie daardoor leeg achter,
+// dan gaat die mee weg.
+async function optDeelLos(hgId, odId) {
+  const c = data.calc;
+  if (!c || _optBezig) return;
+  if (_isCalcLocked(c)) { _toast('Deze offerte is vergrendeld.'); return; }
+  const e = _optDeelZoek(hgId, odId);
+  if (!e || !e.d.optieId) return;
+  const optieId = e.d.optieId;
+  const cfgO = _optCfgLijst(c).find(o => o.id === optieId) || null;
+  if (cfgO && _optKeuze(c)) { _toast('Er is een keuze vastgelegd. Wis eerst de keuze in het blok Opties voor de klant.'); return; }
+  const laatste = !!cfgO && !_optAlleDelen(c).some(x => x.d !== e.d && x.d.optieId === optieId) && !_optAlleRegels(c).some(x => x.r.optieId === optieId);
+  if (laatste && String(cfgO.klanttekst || '').trim()) {
+    if (!confirm('"' + _optDeelNaam(e) + '" wordt weer een gewoon deel in de basis. De optie "' + (cfgO.titel || 'zonder titel') + '" en de omschrijving voor de klant gaan weg.\n\nDoorgaan?')) return;
+  }
+  _optBezig = true;
+  let cfgOk = true;
+  try {
+    const res = await _sbQuery(_sb.from(e.tabel).update({ optie_id: null, actief: true }).eq('id', e.d.id).select('id'), 'Deel uit optie halen');
+    if (!res || res.error || !res.data || !res.data.length) { _toast('Niet gelukt: het deel is niet gewijzigd.'); return; }
+    e.d.optieId = null; e.d.actief = true;
+    if (laatste) cfgOk = await _optZetCfg(c, { opties: _optCfgLijst(c).filter(o => o.id !== optieId).map(o => Object.assign({}, o)) }, 'Optie opheffen');
+    await _optNaDeelWijziging(c);
+  } finally { _optBezig = false; }
+  if (cfgOk) _toast('"' + _optDeelNaam(e) + '" is weer een gewoon deel in de basis.' + (laatste ? ' De optie is opgeheven.' : ''), 'ok');
 }
 
 // ---------- Venster: optie maken bij een regel ----------
@@ -17028,6 +17327,9 @@ function optOpenMaak(hgId, odId, rId) {
   if (!r) return;
   if (r.optieId) { _toast('Deze regel hoort al bij een optie.'); return; }
   if (!_isActief(r)) { _toast('Deze regel staat uit. Zet hem eerst aan.'); return; }
+  // v4.128.0 — niet nesten
+  const _dlN = _optDeelZoek(hgId, odId);
+  if (_dlN && (_dlN.hg.optieId || (_dlN.od && _dlN.od.optieId))) { _toast('Deze regel zit in een deel dat zelf een keuze is. Een optie binnen een keuze kan niet.'); return; }
   const E = _escapeHtml;
   const aanbod = _optAanbod(c);
   const heeftAlt = (aanbod.idx.altVan.get(r.id) || []).length > 0;
@@ -17082,6 +17384,8 @@ async function optMaakBevestig() {
   const od = _findOnderdeel(ctx.hgId, ctx.odId);
   const r = od ? od.regels.find(x => x.id === ctx.rId) : null;
   if (!r) { _toast('De regel is niet meer gevonden.'); optSluitModal(); return; }
+  const _dlN = _optDeelZoek(ctx.hgId, ctx.odId);   // v4.128.0 — niet nesten
+  if (_dlN && (_dlN.hg.optieId || (_dlN.od && _dlN.od.optieId))) { _toast('Deze regel zit in een deel dat zelf een keuze is. Een optie binnen een keuze kan niet.'); optSluitModal(); return; }
   const gek = document.querySelector('input[name="optMkSoort"]:checked');
   const soortK = gek ? gek.value : '';
   if (!soortK) { _toast('Kies eerst wat voor optie het is.'); return; }
@@ -17209,18 +17513,18 @@ async function _optPasStandToe(c, ber, gekozenIds) {
   ber.opties.forEach(o => {
     const aan = kies.has(o.id);
     o.mee.forEach(x => {
-      wens.push({ r: x.r, aan: aan });
-      if (o.soort === 'vervang' && x.basis) wens.push({ r: x.basis, aan: !aan });
+      wens.push({ r: x.r, aan: aan, tabel: x.tabel || 'calc_regels' });   // v4.128.0 — een deel staat in hoofdgroepen of onderdelen
+      if (o.soort === 'vervang' && x.basis) wens.push({ r: x.basis, aan: !aan, tabel: 'calc_regels' });
     });
   });
   const doelStaart = _optMetStand(c, ber.aanbod, gekozenIds, () => c.staart.map(p => Object.assign({}, p)));
   const gedaan = [];
   for (const w of wens) {
     if (_isActief(w.r) === w.aan) continue;
-    const res = await _sbQuery(_sb.from('calc_regels').update({ actief: w.aan }).eq('id', w.r.id).select('id'), 'Keuze opslaan');
+    const res = await _sbQuery(_sb.from(w.tabel).update({ actief: w.aan }).eq('id', w.r.id).select('id'), 'Keuze opslaan');
     if (!res || res.error || !res.data || !res.data.length) {
       for (const g of gedaan) {
-        await _sbQuery(_sb.from('calc_regels').update({ actief: !g.aan }).eq('id', g.r.id), 'Keuze terugdraaien');
+        await _sbQuery(_sb.from(g.tabel).update({ actief: !g.aan }).eq('id', g.r.id), 'Keuze terugdraaien');
         g.r.actief = !g.aan;
       }
       return { ok: false, fout: (res && res.error && res.error.message) || 'geen antwoord van de database' };
@@ -17234,14 +17538,17 @@ async function _optPasStandToe(c, ber, gekozenIds) {
 async function optLegVast(wissen) {
   const c = data.calc;
   if (!c || _optBezig) return;
-  let ber = null;
-  try { ber = _optBereken(c); } catch (e) { ber = null; }
+  let ber = null, kiesSet = new Set();
+  try {
+    // v4.128.0 — eerst de vinkjes lezen, dan precies die samenstelling (laten) doorrekenen.
+    if (!wissen && c.__loaded && _optHeeftIets(c)) kiesSet = new Set(_optKiesHuidig(c, { opties: _optAanbod(c).aangeboden }));
+    ber = _optBereken(c, { kies: Array.from(kiesSet) });
+  } catch (e) { ber = null; }
   if (!ber || !ber.n) { _toast('Deze calculatie heeft geen opties om uit te kiezen.'); return; }
-  if (!ber.basis || ber.combi.some(x => !x.ok)) { _toast('De samenstellingen zijn niet te berekenen; los eerst de meldingen in het blok Opties op.'); return; }
-  const kiesSet = wissen ? new Set() : _optKiesHuidig(c, ber);
   const ids = ber.opties.filter(o => kiesSet.has(o.id)).map(o => o.id);
   const masker = ber.opties.reduce((m, o, i) => m | (ids.indexOf(o.id) >= 0 ? (1 << i) : 0), 0);
-  const doel = ber.combi[masker];
+  const doel = ber.rij(masker);
+  if (!ber.basis || ber.combi.some(x => !x.ok) || !doel || !doel.ok) { _toast('De samenstellingen zijn niet te berekenen; los eerst de meldingen in het blok Opties op.'); return; }
   if (wissen && !ber.keuze && ber.huidig === 0) { _toast('Er is geen keuze vastgelegd.'); return; }
   let extra = '';
   if (!wissen) {
@@ -18363,11 +18670,12 @@ async function _bouwOfferteCompleetDocDef() {
   const legendaRij = (types) => ({ columns: types.map(k => ({ width: 'auto', fontSize: 8.5, text: [{ text: '\u25cf ', color: _KOZIJN_DEFECTEN[k].kleur }, _KOZIJN_DEFECTEN[k].label] })), columnGap: 14, margin: [0, 8, 0, 0] });
 
   // --- Getekende kozijnen ---
-  const kozijnen = _kozijnenVoorDocument(c);   // v4.74.1 — alleen kozijnen in gevels die aan staan
+  const kozijnen = _kozijnenVoorOfferte(c);   // v4.74.1 — alleen kozijnen in gevels die aan staan · v4.128.0 — en van een deel dat als keuze wordt aangeboden
   if (cfg.bijlageKozijnen !== false && kozijnen.length) {
     const _regelLocatie = {};
+    const _optTek = _optTekLabels(c);   // v4.128.0 — "Optie N" bij tekeningen van een aangeboden deel
     (c.hoofdgroepen || []).forEach(hg => (hg.onderdelen || []).forEach(od => (od.regels || []).forEach(r => {
-      _regelLocatie[r.id] = [hg.naam, od.naam].map(s => (s || '').trim()).filter(Boolean).join(' \u00b7 ');
+      _regelLocatie[r.id] = [hg.naam, od.naam, _optTek[r.id]].map(s => (s || '').trim()).filter(Boolean).join(' \u00b7 ');
     })));
     content.push({ text: 'Kozijn-tekeningen', bold: true, fontSize: 13, id: 'kozijnKop', margin: [0, 0, 0, 1] });   // v4.107.2 — paginasprong via pageBreakBefore, alleen als nodig
     content.push({ text: (c.naam || '') + (c.klant ? ' \u00b7 ' + c.klant : ''), color: MUTED, fontSize: 9, margin: [0, 0, 0, 8] });
@@ -18567,7 +18875,7 @@ async function printOfferteCompleet() {
   let html = `<div class="dpv-blok">${offHtml}</div>`;
 
   // 2. Getekende kozijnen (indien aan en aanwezig).
-  const kozijnen = _kozijnenVoorDocument(c);   // v4.74.1 — alleen kozijnen in gevels die aan staan
+  const kozijnen = _kozijnenVoorOfferte(c);   // v4.74.1 — alleen kozijnen in gevels die aan staan · v4.128.0 — en van een deel dat als keuze wordt aangeboden
   if (cfg.bijlageKozijnen !== false && kozijnen.length) {
     html += `<div class="dpv-blok dpv-pagebreak">${_bouwKozijnenHtml(c, kozijnen)}</div>`;
   }
@@ -18736,14 +19044,16 @@ function _werkbonHtml(c) {
   const _wbVervalTekst = c.status === 'geaccepteerd' ? 'vervallen na akkoord' : 'uitgezet, niet in offerte';
   const _wbVervalLabel = `<span class="wb-verval-label">⊘ ${_wbVervalTekst}</span>`;
   c.hoofdgroepen.forEach(hg => {
+    if (_optDeelUit(hg)) return;   // v4.128.0 — keuze voor de klant, niet gekozen: niet "vervallen"
     const hgAan = _isActief(hg);
     if (!hgAan && !_wbToonVervallen) return;
     if (!hg.onderdelen || !hg.onderdelen.length) return;
-    const heeftRegels = hg.onderdelen.some(od => hgAan ? (_wbToonVervallen ? (od.regels || []).length : _wbOdRegels(od).length) : (od.regels || []).length);
+    const heeftRegels = hg.onderdelen.some(od => !_optDeelUit(od) && (hgAan ? (_wbToonVervallen ? (od.regels || []).length : _wbOdRegels(od).length) : (od.regels || []).length));   // v4.128.0
     if (!heeftRegels) return;
     if (!hgAan) html += `<div class="wb-vervallen">`;
     html += `<h2>${hgAan ? hg.naam : `<span class="wb-strike">${hg.naam}</span>${_wbVervalLabel}`}</h2>`;
     hg.onderdelen.forEach(od => {
+      if (_optDeelUit(od)) return;   // v4.128.0
       const odAan = hgAan && _isActief(od);
       if (!odAan && !_wbToonVervallen) return;
       const _odAlle = (od.regels || []).filter(r => !_optRegelUit(r, c));   // v4.125.0 — niet-gekozen optie of vervangen basisregel is niet "vervallen"
@@ -19348,7 +19658,8 @@ function calcHoofdgroepTotalen(hg) {
 }
 function calcHoofdgroepTotalenOrigineel(hg) {
   // Telt ALLE onderdelen + regels mee, ongeacht actief-status. Voor PDF/dashboard-historie.
-  return _sumTotals(hg.onderdelen || [], calcOnderdeelTotalenOrigineel);
+  // v4.128.0 — een onderdeel dat als keuze uit staat hoort niet bij het oorspronkelijke bedrag.
+  return _sumTotals((hg.onderdelen || []).filter(od => !_optDeelUit(od)), calcOnderdeelTotalenOrigineel);
 }
 function calcProjectTotalen() {
   // Filter inactieve hoofdgroepen uit het actuele totaal.
@@ -19357,7 +19668,7 @@ function calcProjectTotalen() {
 }
 function calcProjectTotalenOrigineel() {
   // Telt ALLE hoofdgroepen+onderdelen mee, ongeacht actief-status.
-  return _sumTotals(data.calc.hoofdgroepen || [], calcHoofdgroepTotalenOrigineel);
+  return _sumTotals((data.calc.hoofdgroepen || []).filter(hg => !_optDeelUit(hg)), calcHoofdgroepTotalenOrigineel);   // v4.128.0
 }
 function _calcDays() {
   // werkelijke dagen op basis van uren / schilders / uur per dag
@@ -22411,18 +22722,20 @@ function renderHoofdgroep(hg) {
   const onderdelenHtml = hg.onderdelen.length ? hg.onderdelen.map(od => renderOnderdeel(hg.id, od)).join('') :
     '<p style="color:var(--muted); font-style:italic; padding: 0.5rem;">Geen onderdelen.</p>';
   // Toon stats: bij inactief het origineel-bedrag tussen haakjes
+  const _ok = _optDeelKop(hg.id, null, hg);   // v4.128.0 — hoofdgroep als keuze voor de klant
   const statsHtml = actief
     ? `${fmt(t.uren)} u · ${eur(t.verkoop)}`
-    : `<span title="Uitgezet — telt niet mee in actuele offerte">${fmt(tOrig.uren)} u · ${eur(tOrig.verkoop)}</span>`;
-  return `<div class="hoofdgroep ${hg.collapsed?'collapsed':''} ${actief?'':'is-inactief'}">
+    : `<span title="${_ok.klasse ? 'Keuze voor de klant, niet gekozen: telt niet mee in de basis' : 'Uitgezet — telt niet mee in actuele offerte'}">${fmt(tOrig.uren)} u · ${eur(tOrig.verkoop)}</span>`;
+  return `<div class="hoofdgroep ${hg.collapsed?'collapsed':''} ${actief?'':'is-inactief'} ${_ok.klasse}">
     <div class="hoofdgroep-head">
       <span class="title">
-        <input type="checkbox" class="actief-toggle" ${actief?'checked':''} onchange="toggleHgActief('${hg.id}')" title="Aan/uit voor offerte">
+        ${_optDeelVinkHtml(_ok, actief, `toggleHgActief('${hg.id}')`)}
         <span class="caret" onclick="toggleHg('${hg.id}')">▼</span>
         <input value="${hg.naam}" onchange="updHg('${hg.id}','naam',this.value)">
       </span>
+      <span class="opt-deel-tag">${_ok.tag}</span>
       <span class="stats">${statsHtml}</span>
-      <button class="btn btn-danger btn-sm" onclick="delHg('${hg.id}')">×</button>
+      ${_ok.knop}<button class="btn btn-danger btn-sm" onclick="delHg('${hg.id}')">×</button>
     </div>
     <div class="hoofdgroep-body">
       ${onderdelenHtml}
@@ -22435,14 +22748,17 @@ function renderOnderdeel(hgId, od) {
   const actief = _isActief(od);
   const regelsHtml = od.regels.length ? od.regels.map(r => renderRegel(hgId, od.id, r)).join('') :
     '<p style="color:var(--muted); font-style:italic; padding: 0.4rem; font-size: 0.85rem;">Nog geen regels in dit onderdeel.</p>';
-  return `<div class="onderdeel ${od.collapsed?'collapsed':''} ${actief?'':'is-inactief'}">
+  const _ok = _optDeelKop(hgId, od.id, od);   // v4.128.0 — onderdeel als keuze voor de klant
+  return `<div class="onderdeel ${od.collapsed?'collapsed':''} ${actief?'':'is-inactief'} ${_ok.klasse}">
     <div class="onderdeel-head">
       <span class="title">
-        <input type="checkbox" class="actief-toggle" ${actief?'checked':''} onchange="toggleOdActief('${hgId}','${od.id}')" title="Aan/uit voor offerte">
+        ${_optDeelVinkHtml(_ok, actief, `toggleOdActief('${hgId}','${od.id}')`)}
         <span class="caret" onclick="toggleOd('${hgId}','${od.id}')">▼</span>
         <input value="${od.naam}" onchange="updOd('${hgId}','${od.id}','naam',this.value)">
       </span>
+      <span class="opt-deel-tag">${_ok.tag}</span>
       <span class="stats">${fmt(t.uren)} u · ${eur(t.verkoop)}</span>
+      ${_ok.knop}
       <button class="btn-secondary btn btn-sm" onclick="openKopieerRegelsModal('${hgId}','${od.id}')" title="Regels kopiëren naar andere onderdelen" style="margin-right:0.25rem; color: var(--blue); font-weight: 700; font-size: 1.05rem; line-height: 1;">⧉</button>
       <button class="btn btn-danger btn-sm" onclick="delOd('${hgId}','${od.id}')">×</button>
     </div>
@@ -22765,6 +23081,11 @@ function updHg(id, f, v) {
 async function delHg(id) {
   // v4.96.0 — Hoofdgroep met inhoud: naam intypen (Amkreutz, 10-10-2026). Leeg: gewone bevestiging.
   const hgDel = data.calc.hoofdgroepen.find(x => x.id === id);
+  // v4.128.0 — een deel dat een keuze is: bij een vastgelegde keuze eerst de keuze wissen.
+  if (hgDel && (hgDel.optieId || (hgDel.onderdelen || []).some(od => od.optieId)) && _optKeuze(data.calc)) {
+    _toast('Er is een keuze vastgelegd. Wis eerst de keuze in het blok Opties voor de klant.');
+    return;
+  }
   const nOd = hgDel ? (hgDel.onderdelen || []).length : 0;
   const nRg = hgDel ? (hgDel.onderdelen || []).reduce((n, od) => n + (od.regels || []).length, 0) : 0;
   if (nOd > 0) {
@@ -22812,6 +23133,12 @@ function updOd(hgId, odId, f, v) {
   if (f === 'naam') renderTotals(); else renderCalcStructuur();
 }
 async function delOd(hgId, odId) {
+  // v4.128.0 — een deel dat een keuze is: bij een vastgelegde keuze eerst de keuze wissen.
+  const _odDel = _findOnderdeel(hgId, odId);
+  if (_odDel && _odDel.optieId && _optKeuze(data.calc)) {
+    _toast('Er is een keuze vastgelegd. Wis eerst de keuze in het blok Opties voor de klant.');
+    return;
+  }
   if (!confirm('Onderdeel verwijderen (incl. regels en meetstaat)? Je vindt het 90 dagen terug onderaan de calculatielijst (Prullenbak).')) return;
   const ok = await _deleteOdDB(odId);
   if (!ok) { _toast('Verwijderen mislukt'); return; }
@@ -22970,6 +23297,8 @@ function toggleOd(hgId, odId) {
 function toggleHgActief(hgId) {
   const hg = data.calc.hoofdgroepen.find(x => x.id === hgId);
   if (!hg) return;
+  // v4.128.0 — een deel dat een keuze voor de klant is volgt die keuze.
+  if (hg.optieId) { _toast('Deze hoofdgroep is een keuze voor de klant en volgt die keuze. Leg de keuze vast in het blok Opties voor de klant, of maak er met ↩ weer een gewoon deel van.'); renderCalcStructuur(); return; }
   hg.actief = !_isActief(hg); // huidige state inverteren, defensief
   _updateHgDB(hg, data.calc.id);
   // Actuele bedrag mee in dashboard-cache; gebruik centrale helper.
@@ -22984,6 +23313,8 @@ function toggleHgActief(hgId) {
 function toggleOdActief(hgId, odId) {
   const od = _findOnderdeel(hgId, odId);
   if (!od) return;
+  // v4.128.0 — een deel dat een keuze voor de klant is volgt die keuze.
+  if (od.optieId) { _toast('Dit onderdeel is een keuze voor de klant en volgt die keuze. Leg de keuze vast in het blok Opties voor de klant, of maak er met ↩ weer een gewoon deel van.'); renderCalcStructuur(); return; }
   od.actief = !_isActief(od);
   _updateOdDB(od, hgId);
   _syncCalcTotalToDB(data.calc);
@@ -23752,11 +24083,13 @@ async function _dupCalcUitvoeren(id, metKlant, metPlan, metFotos) {
   const stapIdMap  = {};   // v4.92.1 — oude stap-id → nieuwe, voor beurt-scaling per stap
   const staartIdMap = {};  // v4.92.1 — oude staartpost-id → nieuwe, voor de staartingreep per beurt
   for (const hg of (orig.hoofdgroepen || [])) {
-    const newHg = await _insertHgDB({ naam: hg.naam, collapsed: hg.collapsed, volgorde: hg.volgorde }, fresh.id);
+    // v4.128.0 — een deel dat een keuze is blijft een keuze en staat in de kopie uit (basis);
+    // alle andere delen staan aan, zoals altijd bij een kopie.
+    const newHg = await _insertHgDB({ naam: hg.naam, collapsed: hg.collapsed, volgorde: hg.volgorde, ...(hg.optieId ? { optieId: hg.optieId, actief: false } : {}) }, fresh.id);
     if (!newHg) continue;
     newHg.onderdelen = [];
     for (const od of (hg.onderdelen || [])) {
-      const newOd = await _insertOdDB({ naam: od.naam, collapsed: od.collapsed, volgorde: od.volgorde }, newHg.id);
+      const newOd = await _insertOdDB({ naam: od.naam, collapsed: od.collapsed, volgorde: od.volgorde, ...(od.optieId ? { optieId: od.optieId, actief: false } : {}) }, newHg.id);   // v4.128.0
       if (!newOd) continue;
       newOd.regels = [];
       for (const r of (od.regels || [])) {
@@ -26071,10 +26404,12 @@ function _calcTotalForArchive(c, includeInactief = false) {
   c.hoofdgroepen.forEach(hg => {
     // v3.11.0: skip inactieve hoofdgroepen + onderdelen + regels (tenzij includeInactief)
     if (!includeInactief && !_isActief(hg)) return;
+    if (includeInactief && _optDeelUit(hg)) return;   // v4.128.0 — een deel dat als keuze uit staat is niet "vervallen"
     const hgBuiten = _hgIsLocatie(hg, 'buiten');
     const hgBinnen = _hgIsLocatie(hg, 'binnen');
     hg.onderdelen.forEach(od => {
       if (!includeInactief && !_isActief(od)) return;
+      if (includeInactief && _optDeelUit(od)) return;   // v4.128.0
       od.regels.forEach(r => {
     // v4.127.0 — hv = de hoeveelheid waarmee gerekend wordt; alleen in de stand 'volledig'
     // wijkt die af van r.hoeveelheid (een alternatief volgt ook hier zijn basisregel).
