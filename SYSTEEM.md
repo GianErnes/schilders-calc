@@ -7335,7 +7335,7 @@ where l.soort = 'incident'
 
 **Wat het is.** De pagina bij de database van 21 en 22 november. Eén bestand, `wagenpark.html`, in de repo `GianErnes/schilders-calc`, adres https://gianernes.github.io/schilders-calc/wagenpark.html. Geen nieuwe tabel, geen SQL, geen Edge Function, geen cronjob. De pagina leest en schrijft de vijf `wp_`-tabellen, leest `taken_rollen`, roept `wp_termijnen_stand()` aan en gebruikt de bak `wagenpark`. De tabel `taken` raakt de pagina niet aan; dat doen de triggers.
 
-**Bestanden van deze release.** `wagenpark.html` (v0.1.0), `CHANGELOG_wagenpark.md`, `apple-touch-icon-wagenpark.png` (180 bij 180, gemaakt uit `apple-touch-icon-oplevering.png` met een andere tekst in de balk), `start.html` v0.4.0 met `CHANGELOG_start.md` (tegel Wagenpark na Personeel), en dit document.
+**Bestanden van deze release.** `wagenpark.html` (v0.1.0), `CHANGELOG_wagenpark.md`, `apple-touch-icon-wagenpark.png` (180 bij 180, gemaakt uit `apple-touch-icon-oplevering.png` met een andere tekst in de balk; de balk is op verzoek van Gian dezelfde avond zilvergrijs gemaakt, `#868d96`, omdat het oranje op het beginscherm niet van Oplevering te onderscheiden was), `start.html` v0.4.0 met `CHANGELOG_start.md` (tegel Wagenpark na Personeel), en dit document.
 
 **Besluiten van Gian, 22-11-2026.**
 - De mannen komen op de pagina via een eigen icoon op het beginscherm van de telefoon, zoals bij Oplevering. `taken.html` is niet gewijzigd.
@@ -7372,7 +7372,7 @@ where bucket_id = 'backups' and name like 'bestanden/wagenpark/%';
 ```
 
 **Open na deze release.**
-- `sql/wagenpark_01_tabellen.sql` en `sql/wagenpark_02_incident_taak_km.sql` staan niet in de repo (GEMETEN 22-11-2026, 15:08 UTC: beide geven 404). De database is zonder die bestanden niet opnieuw op te bouwen.
+- `sql/wagenpark_01_tabellen.sql` en `sql/wagenpark_02_incident_taak_km.sql` staan sinds de avond van 22-11-2026 in de repo, door Gian geupload (GEMETEN 20:55 UTC: 36.415 en 19.859 bytes; om 15:08 UTC gaven beide nog 404). De namen van de 5 tabellen, 14 functies en 14 triggers in de bestanden komen overeen met wat live gemeten is. De inhoud van de functies is niet regel voor regel naast de database gelegd.
 - Stap 2: banden, vloeistoffen, documenten, sleutels, tankpas. Later: vervangingssignaal, kenteken aanvullen via open data van de RDW (AANNAME dat dit kan, eerst opzoeken en testen), kosten per bus naar `financieel.html`.
 
 **Bij nood.**
