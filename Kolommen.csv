@@ -58,6 +58,8 @@ calc_regels,systeem_locatie,text,YES,'beide'::text
 calc_regels,volgorde,integer,NO,0
 calc_regels,created_at,timestamp with time zone,YES,now()
 calc_regels,actief,boolean,NO,true
+calc_regels,optie_id,text,YES,null
+calc_regels,alternatief_voor,uuid,YES,null
 calculatie_aanvragen,id,uuid,NO,gen_random_uuid()
 calculatie_aanvragen,calculatie_id,uuid,NO,null
 calculatie_aanvragen,vakgebied,text,NO,null
@@ -119,6 +121,8 @@ calculaties,arch_getekend_op,timestamp with time zone,YES,null
 calculaties,btw_pct_override,numeric,YES,null
 calculaties,steiger_aangevraagd_op,timestamp with time zone,YES,null
 calculaties,yoobi_relatienummer,text,YES,null
+calculaties,afdekvilt_uit,boolean,NO,false
+calculaties,kleinschalig_uit,boolean,YES,false
 fin_berichten,id,text,NO,null
 fin_berichten,maand,text,NO,null
 fin_berichten,bericht,text,NO,null
@@ -136,6 +140,7 @@ hoofdgroepen,collapsed,boolean,YES,false
 hoofdgroepen,volgorde,integer,NO,0
 hoofdgroepen,created_at,timestamp with time zone,YES,now()
 hoofdgroepen,actief,boolean,NO,true
+hoofdgroepen,optie_id,text,YES,null
 houtrot_tarieven,id,uuid,NO,gen_random_uuid()
 houtrot_tarieven,naam,text,NO,null
 houtrot_tarieven,omschrijving,text,NO,''::text
@@ -252,6 +257,7 @@ onderdelen,collapsed,boolean,YES,false
 onderdelen,volgorde,integer,NO,0
 onderdelen,created_at,timestamp with time zone,YES,now()
 onderdelen,actief,boolean,NO,true
+onderdelen,optie_id,text,YES,null
 ondergronden,id,uuid,NO,gen_random_uuid()
 ondergronden,naam,text,NO,null
 ondergronden,locatie,text,NO,'beide'::text
@@ -510,6 +516,12 @@ plan_projecten,contact_aanspreekvorm,text,YES,null
 plan_projecten,contact_achternaam,text,YES,null
 plan_projecten,toon_ondanks_regel,boolean,NO,false
 plan_projecten,onderhoudsplan,boolean,NO,false
+plan_taak_sjablonen,id,uuid,NO,gen_random_uuid()
+plan_taak_sjablonen,naam,text,NO,null
+plan_taak_sjablonen,dagen_voor,integer,NO,14
+plan_taak_sjablonen,toegewezen_aan,text,NO,'gian'::text
+plan_taak_sjablonen,volgorde,integer,NO,0
+plan_taak_sjablonen,aangemaakt,timestamp with time zone,NO,now()
 plan_uren,id,uuid,NO,gen_random_uuid()
 plan_uren,yoobi_code,text,NO,null
 plan_uren,medewerker_id,uuid,NO,null
@@ -681,6 +693,9 @@ taken,afvink_melding,text,YES,null
 taken,projectnaam,text,YES,null
 taken,push_op,timestamp with time zone,YES,null
 taken,categorie,text,YES,null
+taken,plan_code,text,YES,null
+taken,plan_fase_id,uuid,YES,null
+taken,plan_dagen_voor,integer,YES,null
 taken_rollen,user_id,uuid,NO,null
 taken_rollen,persoon,text,NO,null
 taken_rollen,rol,text,NO,null
@@ -708,6 +723,66 @@ verfsystemen,eenheid,text,YES,'m²'::text
 verfsystemen,created_at,timestamp with time zone,YES,now()
 verfsystemen,updated_at,timestamp with time zone,YES,now()
 verfsystemen,notities,text,YES,''::text
+wp_aandachtspunten,id,uuid,NO,gen_random_uuid()
+wp_aandachtspunten,voertuig_id,uuid,NO,null
+wp_aandachtspunten,tekst,text,NO,null
+wp_aandachtspunten,gemeld_door,text,YES,null
+wp_aandachtspunten,aangemaakt_door,uuid,YES,null
+wp_aandachtspunten,afgehandeld_op,timestamp with time zone,YES,null
+wp_aandachtspunten,afgehandeld_in,uuid,YES,null
+wp_aandachtspunten,created_at,timestamp with time zone,YES,now()
+wp_aandachtspunten,updated_at,timestamp with time zone,YES,now()
+wp_bijlagen,id,uuid,NO,gen_random_uuid()
+wp_bijlagen,voertuig_id,uuid,NO,null
+wp_bijlagen,logboek_id,uuid,YES,null
+wp_bijlagen,soort,text,NO,'overig'::text
+wp_bijlagen,storage_path,text,NO,null
+wp_bijlagen,bestandsnaam,text,YES,''::text
+wp_bijlagen,grootte,bigint,YES,null
+wp_bijlagen,created_at,timestamp with time zone,YES,now()
+wp_logboek,id,uuid,NO,gen_random_uuid()
+wp_logboek,voertuig_id,uuid,NO,null
+wp_logboek,soort,text,NO,null
+wp_logboek,datum,date,NO,CURRENT_DATE
+wp_logboek,omschrijving,text,NO,null
+wp_logboek,garage,text,YES,null
+wp_logboek,bedrag,numeric,YES,null
+wp_logboek,km_stand,integer,YES,null
+wp_logboek,incident_soort,text,YES,null
+wp_logboek,status,text,NO,null
+wp_logboek,gemeld_door,text,YES,null
+wp_logboek,aangemaakt_door,uuid,YES,null
+wp_logboek,taak_id,text,YES,null
+wp_logboek,created_at,timestamp with time zone,YES,now()
+wp_logboek,updated_at,timestamp with time zone,YES,now()
+wp_termijnen,id,uuid,NO,gen_random_uuid()
+wp_termijnen,voertuig_id,uuid,NO,null
+wp_termijnen,soort,text,NO,null
+wp_termijnen,omschrijving,text,YES,null
+wp_termijnen,vervaldatum,date,NO,null
+wp_termijnen,dagen_vooraf,integer,NO,14
+wp_termijnen,herhaling_n,integer,YES,null
+wp_termijnen,herhaling_eenheid,text,YES,null
+wp_termijnen,toegewezen_aan,text,YES,null
+wp_termijnen,actief,boolean,NO,true
+wp_termijnen,taak_id,text,YES,null
+wp_termijnen,created_at,timestamp with time zone,YES,now()
+wp_termijnen,updated_at,timestamp with time zone,YES,now()
+wp_voertuigen,id,uuid,NO,gen_random_uuid()
+wp_voertuigen,kenteken,text,NO,null
+wp_voertuigen,naam,text,YES,null
+wp_voertuigen,merk,text,YES,null
+wp_voertuigen,type,text,YES,null
+wp_voertuigen,bouwjaar,integer,YES,null
+wp_voertuigen,aanschafdatum,date,YES,null
+wp_voertuigen,aanschafprijs,numeric,YES,null
+wp_voertuigen,vaste_rijder,text,YES,null
+wp_voertuigen,km_stand,integer,YES,null
+wp_voertuigen,km_stand_op,date,YES,null
+wp_voertuigen,actief,boolean,NO,true
+wp_voertuigen,notitie,text,YES,null
+wp_voertuigen,created_at,timestamp with time zone,YES,now()
+wp_voertuigen,updated_at,timestamp with time zone,YES,now()
 yoobi_contacten,id,text,NO,null
 yoobi_contacten,bron,text,NO,'contacts'::text
 yoobi_contacten,klant_code,text,YES,null
