@@ -2550,8 +2550,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.129.1</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.130.0</h2>
       <div class="intro-body">
+        <p><strong>📅 Geldigheid van een verstuurde offerte verlengen (v4.130.0).</strong> Vraagt een klant om meer bedenktijd, dan hoef je geen nieuwe link meer te maken. In het venster <strong>Accordeerlink</strong> staat bij een open link nu tot wanneer de offerte geldig is, met de knop <strong>Geldigheid verlengen</strong>. Je kiest een nieuwe datum en de bestaande link blijft werken; ook een link die al verlopen was gaat daarmee weer open. De calculatie blijft op slot en de tarieven blijven bevroren. De herinnering en de verlopen-mail rekenen vanaf dat moment met de nieuwe datum. Met het vinkje <strong>Klant een mail sturen</strong> gaat er een bericht naar de klant met de nieuwe datum en de knop naar dezelfde link; de tekst pas je vooraf aan. Twee dingen om te weten: de PDF die de klant ziet is bevroren, dus staat daar een datum in, dan blijft dat de oude (de mail zegt dat de nieuwe datum geldt). En de mail gaat via dezelfde weg als de offerte zelf: het onderwerp blijft "Offerte" met het nummer, en de herinnering en de verlopen-mail beginnen opnieuw vanaf de dag van die mail. Na een verlenging komt er geen nieuwe beltaak voor Maud; een beltaak die al in de Takenapp staat blijft staan. Alleen voor offertes, niet voor onderhoudsplannen. Geen SQL en geen wijziging aan een Edge Function.</p>
         <p><strong>◇ De optieregel ziet er niet meer uit als vervallen (v4.129.1).</strong> Een optieregel die nog niet gekozen is stond grijs en doorgestreept, alsof je er niets aan kon doen. Hij was wel te bewerken. Voortaan is hij gewoon leesbaar, met een dunne rode lijn eromheen en bovenaan de zin <em>Dit is de optie. Pas hier aan wat de klant extra krijgt.</em> Bij de soort <strong>Extra bewerking</strong> staat achter elke bewerking die afwijkt van de basisregel het label <em>extra</em> of <em>anders dan basis</em>, met wat de basis heeft. Ook een gevel of onderdeel als optie heeft nu de rode lijn in plaats van de blauwe rand en is niet meer grijs. Het ruitje <strong>◇</strong> is dikker en rood. Bij de posten van een optie staat dat je ze in de omschrijving moet noemen, omdat de klant ze niet apart ziet.</p>
         <p><strong>◇ Steiger, hoogwerker of container bij een optie (v4.129.0).</strong> In het blok <em>Opties voor de klant</em> staat bij elke optie nu <strong>Posten bij deze optie</strong> met de knop <strong>+ post</strong>. Kies een post uit de staartbibliotheek of maak een eigen post: een vast bedrag, of aantal × prijs (een hoogwerker voor twee dagen is 2 × de dagprijs). De post telt alleen mee als de klant die optie kiest en zit in de meerprijs; de klant ziet hem niet apart. Zolang de optie niet gekozen is staat de post niet bij de staartkosten, niet op de werkbon en niet in de Yoobi-export. Leg je de keuze vast, dan komt hij als echte staartpost in de calculatie, met het label van de optie; bij <em>Keuze wissen</em> gaat hij daar weer uit en blijft hij bij de optie staan. Een post per dag of per week en een percentage kunnen niet bij een optie.</p>
         <p><strong>◇ Duidelijker namen bij het maken van een optie (v4.128.1).</strong> Het woord <em>erbij</em> is van het scherm verdwenen, omdat het te lezen was als "een bewerking erbij". Bij een regel kies je nu uit <strong>Ander verfsysteem</strong>, <strong>Extra bewerking</strong> (dezelfde regel zonder of met een extra laag) en <strong>Hele regel als optie</strong> (het hele werk van die regel staat uit in de basis). Op de labels staat <em>hele regel</em>, <em>heel onderdeel</em> of <em>hele hoofdgroep</em>. Aan de bedragen en aan de offerte voor de klant verandert niets.</p>
@@ -4166,7 +4167,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.129.1';
+const APP_VERSION = 'v4.130.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4589,6 +4590,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.130.0', d: '2026-11-24', h: 'Accordeerlink: geldigheid van een verstuurde offerte verlengen zonder nieuwe link (knop Geldigheid verlengen); de opvolging rekent met de nieuwe datum en maakt geen beltaak meer; optioneel een mail naar de klant. Geen SQL, geen Edge Function.' },
   { v: '4.129.1', d: '2026-11-22', h: 'Opties: een niet-gekozen optieregel is niet meer grijs en doorgestreept; dunne rode lijn om een optie in plaats van de blauwe rand; uitleg boven de bewerkingen en de labels extra en anders dan basis bij wat afwijkt van de basisregel; ruitje dikker en rood; tekst bij de posten dat de omschrijving ze moet noemen.' },
   { v: '4.129.0', d: '2026-11-22', h: 'Opties: vaste posten bij een optie (steiger, hoogwerker, container) als vast bedrag of aantal × prijs; de post zit in de meerprijs, staat tot de keuze niet in de staart en komt bij het vastleggen van de keuze als echte staartpost in de calculatie.' },
   { v: '4.128.1', d: '2026-11-22', h: 'Opties: duidelijker namen bij het maken van een optie (Ander verfsysteem, Extra bewerking, Hele regel als optie) en op de labels hele regel, heel onderdeel of hele hoofdgroep in plaats van het woord erbij.' },
@@ -28956,7 +28958,10 @@ function _opvolgBlokHtml(c, rij) {
     h += '<div class="acb-sub" style="margin-top:6px;">Start zodra je de offerte hieronder naar de klant mailt. Een link die je zelf deelt telt niet mee.</div></div>';
     return h;
   }
-  const cfg = (c && c.offerte_config) ? c.offerte_config : {};
+  // v4.130.0 — de calculatie in het geheugen heet offerteConfig; hier stond offerte_config,
+  // waardoor het klanttype nooit gelezen werd en een VvE het schema van een particulier kreeg.
+  const cfg = (c && c.offerteConfig && typeof c.offerteConfig === 'object') ? c.offerteConfig
+    : ((c && c.offerte_config && typeof c.offerte_config === 'object') ? c.offerte_config : {});
   const snap = rij.snapshot || {};
   const gt = _opvolgIsYmd(snap.geldigTot) ? String(snap.geldigTot).trim()
     : (_opvolgIsYmd(cfg.geldigTot) ? String(cfg.geldigTot).trim() : '');
@@ -28968,7 +28973,10 @@ function _opvolgBlokHtml(c, rij) {
   h += '<div class="acb-sub" style="margin-top:6px;">Verstuurd op ' + _accordEsc(_opvolgDagTijd(rij.gemaild_op) || _opvolgDatumKort(gemaild)) + '.</div>'; // v4.121.0 — met tijd
   // v4.35.1 — nabellen op de eerstvolgende maandag na het mailen.
   const belDatum = gemaild ? _opvolgEersteMaandagNa(gemaild) : '';
-  h += _opvolgRegel('Nabellen door Maud', rij.beltaak_op, belDatum, '');
+  // v4.130.0 — na een verlenging komt er geen beltaak meer. Stond er nog geen, dan is
+  // het stempel bij het verlengen gevuld en zegt snapshot.belVervalt dat het geen echte taak was.
+  const belVervalt = !!(snap.belVervalt && rij.beltaak_op);
+  h += _opvolgRegel('Nabellen door Maud', belVervalt ? null : rij.beltaak_op, belDatum, belVervalt ? 'vervalt na de verlenging' : '');
   // v4.35.1 — de herinnering vertrekt nooit voor de dag na het nabellen. Past
   // hij daardoor niet meer voor de vervaldatum, dan gaat hij helemaal niet.
   const herNorm = gt ? _opvolgYmdPlus(gt, -7) : '';
@@ -29066,6 +29074,7 @@ function _accordBeheerRender(body, c, rij, nabel) {
   const link = _accordLinkVoor(rij.token);
   if (rij.status === 'open') {
     h += '<div class="acb-status open">Actief. Wacht op reactie van de klant.</div>';
+    h += _verlengRegelHtml(c, rij); // v4.130.0 — tot wanneer de link open staat
   } else if (rij.status === 'akkoord') {
     h += '<div class="acb-status akkoord">Geaccordeerd'
       + (rij.klant_naam ? ' door ' + _accordEsc(rij.klant_naam) : '')
@@ -29126,6 +29135,9 @@ function _accordBeheerRender(body, c, rij, nabel) {
               ? '<div style="margin:0 0 12px;color:#2e7d32;font-weight:600;">\u2713 Verstuurd op ' + _accordEsc(_alGemaild) + ' naar ' + _accordEsc(_email) + '</div>'
               : '<div class="acb-sub" style="margin:0 0 12px;">Naar ' + _accordEsc(_email) + '</div>')
           : '<div class="acb-sub" style="margin:0 0 12px;color:#b00020;">Geen e-mailadres in deze link. Vul het e-mailveld in het Offerte-blok in en maak daarna een nieuwe link.</div>');
+    // v4.130.0 — zelfde link, nieuwe geldig-tot-datum.
+    h += '<div style="margin:0 0 4px;"><button class="acb-btn sec" id="acbVerleng" style="margin-top:0;">\ud83d\udcc5 Geldigheid verlengen</button></div>'
+      + '<div class="acb-sub" style="margin:0 0 12px;">Dezelfde link, een latere datum. De calculatie blijft op slot.</div>';
   }
   h += '<button class="acb-btn sec" id="acbNieuw">Nieuwe link maken</button>';
   h += _accordEerdereHtml(c); // v4.104.0 — eerdere versies van deze offerte
@@ -29151,6 +29163,8 @@ function _accordBeheerRender(body, c, rij, nabel) {
   if (_btnGetekend) _btnGetekend.addEventListener('click', () => _accordDownloadGetekend(rij, c, _btnGetekend));
   const _btnMail = body.querySelector('#acbMail');
   if (_btnMail) _btnMail.addEventListener('click', () => _offerteMailen(c, rij, body));
+  const _btnVerleng = body.querySelector('#acbVerleng'); // v4.130.0
+  if (_btnVerleng) _btnVerleng.addEventListener('click', () => _accordVerlengen(c, rij, body, nabel));
   // v4.110.0 — geplande verzending intrekken.
   const _btnWachtrij = body.querySelector('#acbWachtrijIntrek');
   if (_btnWachtrij) _btnWachtrij.addEventListener('click', async () => {
@@ -29300,6 +29314,298 @@ function _offerteMailen(c, rij, body) {
       _knoppen().forEach(b => { b.disabled = false; });
       if (pbtn) pbtn.textContent = '\ud83d\udcc5 Inplannen';
       _toast('Inplannen mislukt: ' + (e.message || e));
+    }
+  });
+}
+
+// =====================================================================
+// v4.130.0 — GELDIGHEID VAN EEN VERSTUURDE OFFERTE VERLENGEN
+//
+// Aanleiding (Gian, 24-11-2026): "Kan ik de termijn van een verzonden offerte
+// voor de klant verlengen zonder een nieuwe link te hoeven maken?"
+//
+// Hoe het al werkte (gelezen 24-11-2026 in de Edge Functions zelf):
+//   * offerte-accord (versie 43) bepaalt of een offerte-link verlopen is aan de
+//     hand van calculaties.offerte_config.geldigTot, bij elke opening opnieuw.
+//     Schuift die datum op, dan gaat dezelfde link weer open.
+//   * offerte-herinnering (versie 29) rekent voor de herinnering, de verlopen-
+//     mail en de afsluittaak eerst met snapshot.geldigTot op de link en pas
+//     daarna met de calculatie. Wie alleen de calculatie aanpast, laat de
+//     automaat dus op de oude datum lopen.
+//   * offerte-verzenden (versie 38) leest de zin "De offerte is geldig tot"
+//     uit snapshot.geldigTot en wist bij opnieuw mailen de vier opvolgstempels.
+// Het veld Geldig tot zit bij een verzonden calculatie op slot, en terug naar
+// Concept gooit de bevroren tarieven weg (setCalcStatus). Vandaar deze knop.
+//
+// Wat de knop doet, in deze volgorde:
+//   1. de link vers lezen; staat hij niet meer open, dan stoppen (niets gewijzigd)
+//   2. calculaties.offerte_config.geldigTot gericht zetten (_offCfgGerichtZetten)
+//   3. op de link: snapshot.geldigTot bijwerken, de verlenging noteren in
+//      snapshot.verlengingen, de stempels herinnering_op, verlopen_mail_op
+//      en afsluittaak_op wissen zodat die stappen de nieuwe datum volgen, en
+//      beltaak_op gevuld houden of vullen (zie hieronder)
+//   4. als gevraagd: mailen via de bestaande offerte-verzenden
+//   5. na de mail beltaak_op terugzetten: offerte-verzenden wist dat stempel
+//
+// Besluit Gian 24-11-2026: "geen beltaken meer na verlenging". De automaat maakt
+// een beltaak zolang beltaak_op leeg is. Daarom blijft dat stempel na een
+// verlenging altijd gevuld: stond het er al, dan blijft het; stond het er niet,
+// dan komt het tijdstip van de verlenging erin en zet het snapshot belVervalt
+// op true, zodat het venster "vervalt na de verlenging" toont en niet "gedaan".
+// Een beltaak die al in de Takenapp staat blijft staan.
+// Mislukt stap 3, dan is de link wel verlengd maar loopt de automaat nog op de
+// oude datum; de melding zegt dat en er gaat dan geen mail uit. Mislukt stap 4,
+// dan staat de verlenging en zegt de melding dat de mail niet weg is.
+//
+// Bewust niet: de status van de calculatie, de offertedatum en de bevroren PDF
+// blijven ongemoeid. Alleen offerte-links; plan- en
+// houtrot-links hebben een eigen venster en een eigen bron voor de datum.
+// =====================================================================
+
+// Echte kalenderdatum in de vorm yyyy-mm-dd (31 februari telt niet).
+function _verlengGeldigeDatum(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const p = s.split('-').map(Number);
+  const d = new Date(p[0], p[1] - 1, p[2]);
+  return d.getFullYear() === p[0] && d.getMonth() === p[1] - 1 && d.getDate() === p[2];
+}
+
+// Voorstel voor de nieuwe datum: vandaag plus de norm voor het klanttype
+// (particulier 21, zakelijk 30, VvE 180). Ligt dat niet na de huidige datum,
+// dan de huidige datum plus de norm.
+function _verlengStandaardDatum(huidig, klanttype, vandaag) {
+  const dagen = _offGeldigDagenNorm(klanttype);
+  let nieuw = _offIsoPlusDagen(vandaag, dagen);
+  if (_verlengGeldigeDatum(huidig) && nieuw <= huidig) nieuw = _offIsoPlusDagen(huidig, dagen);
+  return nieuw;
+}
+
+// Mag deze datum? korter = eerder dan de datum die er nu staat (dan vraagt het venster om bevestiging).
+function _verlengControle(nieuw, huidig, vandaag) {
+  if (!_verlengGeldigeDatum(nieuw)) return { ok: false, fout: 'Vul een geldige datum in.' };
+  const n = String(nieuw).trim();
+  if (n < vandaag) return { ok: false, fout: 'Die datum is al voorbij. Kies vandaag of later.' };
+  const h = _verlengGeldigeDatum(huidig) ? String(huidig).trim() : '';
+  if (h && n === h) return { ok: false, fout: 'Dat is de datum die er al staat.' };
+  return { ok: true, korter: !!(h && n < h) };
+}
+
+// De tekst die in de mail boven de knop komt. offerte-verzenden zet er zelf de
+// knop, de zin "De offerte is geldig tot ..." en de handtekening onder.
+function _verlengMailTekst(aanhef, nieuwIso) {
+  const a = (aanhef && String(aanhef).trim()) ? String(aanhef).trim() : 'heer, mevrouw';
+  return 'Geachte ' + a + ',\n\n'
+    + 'De geldigheid van onze offerte hebben wij voor u verlengd tot ' + _offDatumLang(nieuwIso) + '. '
+    + 'Aan de offerte zelf is niets gewijzigd. Staat in het document nog de eerdere datum, dan geldt de datum uit deze mail.\n\n'
+    + 'Via onderstaande knop kunt u de offerte opnieuw bekijken en akkoord geven.';
+}
+
+// Kan er bij het verlengen een mail mee? Zo niet, dan de reden voor in het venster.
+function _verlengMailKan(rij, wachtrij) {
+  const snap = (rij && rij.snapshot && typeof rij.snapshot === 'object') ? rij.snapshot : {};
+  const email = String(snap.klantEmail || '').trim();
+  if (!email) return { kan: false, reden: 'Er staat geen e-mailadres in deze link, dus er kan geen mail mee.' };
+  const w = wachtrij || {};
+  if (w.fout) return { kan: false, reden: 'De wachtrij kon niet gelezen worden; of er nog een verzending ingepland staat is onbekend. Sluit het venster en open het opnieuw als je ook wilt mailen.' };
+  const gepland = (Array.isArray(w.rows) ? w.rows : []).some(r => r && r.token === rij.token && r.status === 'gepland');
+  if (gepland) return { kan: false, reden: 'Er staat nog een verzending ingepland. Die mail noemt vanzelf de nieuwe datum.' };
+  if (!rij.gemaild_op) return { kan: false, reden: 'Deze offerte is nog niet vanuit de app gemaild. Mail hem na het verlengen met de gewone knop; die mail noemt de nieuwe datum.' };
+  return { kan: true, reden: '', email: email };
+}
+
+// De snapshot van de link met de nieuwe datum en een regel in het logje van verlengingen.
+// Geeft een nieuw object terug; het origineel blijft zoals het was.
+function _verlengSnapshot(snap, oud, nieuw, nuIso, belVervalt) {
+  const uit = (snap && typeof snap === 'object' && !Array.isArray(snap)) ? Object.assign({}, snap) : {};
+  const eerder = Array.isArray(uit.verlengingen) ? uit.verlengingen.slice() : [];
+  eerder.push({ op: nuIso, van: oud || null, tot: nieuw });
+  uit.geldigTot = nieuw;
+  uit.verlengingen = eerder;
+  if (belVervalt) uit.belVervalt = true; // er was nog geen beltaak; die komt er ook niet meer
+  return uit;
+}
+
+// De regel "Geldig tot ..." in het accordeerlink-venster, alleen bij een open link.
+// De datum komt uit de calculatie: dat is de datum waar offerte-accord op toetst.
+function _verlengRegelHtml(c, rij, vandaagIso) {
+  const cfg = (c && c.offerteConfig && typeof c.offerteConfig === 'object') ? c.offerteConfig : {};
+  const vandaag = vandaagIso || _offIsoVandaag();
+  const gt = _verlengGeldigeDatum(cfg.geldigTot) ? String(cfg.geldigTot).trim() : '';
+  let h;
+  if (!gt) {
+    h = '<div class="acb-sub" style="margin-top:6px;">Geen geldig-tot-datum in de calculatie: deze link verloopt niet.</div>';
+  } else if (gt < vandaag) {
+    h = '<div style="margin-top:6px;color:#b42318;font-weight:600;">Verlopen op ' + _accordEsc(_offDatumLang(gt))
+      + '. De klant kan niet meer akkoord geven.</div>';
+  } else {
+    h = '<div class="acb-sub" style="margin-top:6px;">Geldig tot ' + _accordEsc(_offDatumLang(gt)) + '.</div>';
+  }
+  const snap = (rij && rij.snapshot && typeof rij.snapshot === 'object') ? rij.snapshot : {};
+  const v = Array.isArray(snap.verlengingen) ? snap.verlengingen : [];
+  const laatste = v.length ? v[v.length - 1] : null;
+  if (laatste && laatste.op) {
+    h += '<div class="acb-sub" style="margin-top:2px;">Verlengd op ' + _accordEsc(_opvolgDagTijd(laatste.op) || '')
+      + (_verlengGeldigeDatum(laatste.van) ? ' (was ' + _accordEsc(_offDatumLang(laatste.van)) + ')' : '')
+      + (v.length > 1 ? ', ' + v.length + ' keer in totaal' : '')
+      + '. In de PDF van de klant staat de datum van het aanmaken van de link.</div>';
+  }
+  return h;
+}
+
+// Het eigenlijke werk. Gooit alleen als er nog NIETS geschreven is (stap 1 en 2);
+// daarna komt alles terug in het resultaat, zodat de melding precies kan zeggen
+// wat wel en wat niet gelukt is.
+async function _verlengUitvoeren(c, rij, nieuw, metMail, tekst) {
+  if (!_sb) throw new Error('Geen verbinding.');
+  if (!c || !c.id || !rij || !rij.id) throw new Error('Geen calculatie of link.');
+  // 1. De link vers lezen: de klant kan intussen gereageerd hebben.
+  const { data: vers, error: e0 } = await _sb.from('offerte_accorderingen')
+    .select('id, status, snapshot, beltaak_op, onderhoudsplan_id, oplevering_id').eq('id', rij.id).maybeSingle();
+  if (e0) throw e0;
+  if (!vers) throw new Error('Deze link bestaat niet meer. Sluit het venster en open het opnieuw.');
+  if (vers.onderhoudsplan_id || vers.oplevering_id) throw new Error('Dit is geen offerte-link.');
+  if (vers.status !== 'open') throw new Error('De link staat niet meer open (status ' + vers.status + '): de klant heeft intussen gereageerd of er is een nieuwe link gemaakt.');
+  // 2. De calculatie: dit is de datum waar de link op toetst.
+  const cfgVoor = await _offCfgVersLezen(c);
+  const oud = _verlengGeldigeDatum(cfgVoor.geldigTot) ? String(cfgVoor.geldigTot).trim() : '';
+  await _offCfgGerichtZetten(c, { geldigTot: nieuw });
+  const uit = { oud: oud, nieuw: nieuw, linkBij: false, linkFout: '', mail: 'geen', mailFout: '', mailGevraagd: !!metMail, belFout: '' };
+  // Geen beltaken meer na een verlenging: het stempel blijft gevuld (bestaand, of nu).
+  const nuIso = new Date().toISOString();
+  const belStempel = vers.beltaak_op || nuIso;
+  // 3. De link: de opvolgautomaat en de mail lezen de datum hier.
+  try {
+    const snapNieuw = _verlengSnapshot(vers.snapshot, oud, nieuw, nuIso, !vers.beltaak_op);
+    const { data: rows, error } = await _sb.from('offerte_accorderingen')
+      .update({ snapshot: snapNieuw, herinnering_op: null, verlopen_mail_op: null, afsluittaak_op: null, beltaak_op: belStempel })
+      .eq('id', rij.id).eq('status', 'open').select('id');
+    if (error) throw error;
+    if (!rows || !rows.length) throw new Error('de link stond niet meer open');
+    uit.linkBij = true;
+    rij.snapshot = snapNieuw;
+    rij.herinnering_op = null; rij.verlopen_mail_op = null; rij.afsluittaak_op = null; rij.beltaak_op = belStempel;
+  } catch (e) {
+    uit.linkFout = String((e && e.message) || e);
+    return uit; // geen mail: die zou de oude datum noemen
+  }
+  // 4. De mail, via dezelfde weg als de offerte zelf.
+  if (metMail) {
+    try {
+      const r = await _offerteVerzendCall(rij.token, tekst);
+      uit.mail = (r && r.alVerstuurd) ? 'al' : 'ok';
+    } catch (e) {
+      uit.mail = 'mislukt';
+      uit.mailFout = String((e && e.message) || e);
+    }
+    // 5. offerte-verzenden wist beltaak_op bij elke verzending. Terugzetten, ook na een
+    // gemelde fout: de mail kan dan toch de deur uit zijn en het stempel gewist.
+    try {
+      const { data: rows2, error: e2 } = await _sb.from('offerte_accorderingen')
+        .update({ beltaak_op: belStempel }).eq('id', rij.id).select('id');
+      if (e2) throw e2;
+      if (!rows2 || !rows2.length) throw new Error('de link is niet gevonden');
+    } catch (e) {
+      uit.belFout = String((e && e.message) || e);
+    }
+  }
+  return uit;
+}
+
+// Wat er na afloop in de melding komt. soort 'ok' = groen, 'err' = rood.
+function _verlengMelding(uit, email) {
+  const tot = _offDatumLang(uit.nieuw);
+  if (!uit.linkBij) {
+    return { soort: 'err', tekst: 'De link is verlengd tot ' + tot + ', maar de opvolging kon niet worden bijgewerkt (' + (uit.linkFout || 'onbekende reden')
+      + '). De herinnering en de verlopen-mail rekenen nog met de oude datum. Verleng opnieuw of zet de opvolging voor deze offerte uit.'
+      + (uit.mailGevraagd ? ' Er is geen mail verstuurd.' : '') };
+  }
+  const bel = uit.belFout ? ' Let op: het stempel van de beltaak kon niet worden teruggezet (' + uit.belFout + '); Maud kan daardoor toch een beltaak krijgen. Zet zo nodig de opvolging voor deze offerte uit.' : '';
+  if (bel && uit.mail === 'ok') return { soort: 'err', tekst: 'Geldigheid verlengd tot ' + tot + ' en gemaild naar ' + email + '.' + bel };
+  if (uit.mail === 'ok') return { soort: 'ok', tekst: 'Geldigheid verlengd tot ' + tot + ' en gemaild naar ' + email + '.' };
+  if (uit.mail === 'al') return { soort: 'err', tekst: 'Geldigheid verlengd tot ' + tot + '. Er is geen mail gestuurd: deze offerte was minder dan twee minuten geleden al gemaild. Gebruik zo nodig Offerte opnieuw mailen.' + bel };
+  if (uit.mail === 'mislukt') return { soort: 'err', tekst: 'Geldigheid verlengd tot ' + tot + ', maar de mail is niet verstuurd (' + (uit.mailFout || 'onbekende reden') + '). Gebruik Offerte opnieuw mailen; die mail noemt de nieuwe datum.' + bel };
+  return { soort: 'ok', tekst: 'Geldigheid verlengd tot ' + tot + '.' };
+}
+
+// Het venster zelf, in de body van het accordeerlink-venster.
+function _accordVerlengen(c, rij, body, nabel) {
+  if (!rij || rij.status !== 'open') { _toast('Alleen een open link kun je verlengen.'); return; }
+  if (!body) { _toast('Kan het venster niet openen.'); return; }
+  const cfg = (c && c.offerteConfig && typeof c.offerteConfig === 'object') ? c.offerteConfig : {};
+  const vandaag = _offIsoVandaag();
+  const huidig = _verlengGeldigeDatum(cfg.geldigTot) ? String(cfg.geldigTot).trim() : '';
+  const voorstel = _verlengStandaardDatum(huidig, cfg.klanttype, vandaag);
+  const snap = (rij.snapshot && typeof rij.snapshot === 'object') ? rij.snapshot : {};
+  const aanhef = String(snap.aanhef || '').trim();
+  const mk = _verlengMailKan(rij, _wachtrijCache);
+  let laatsteStd = _verlengMailTekst(aanhef, voorstel);
+  const nuRegel = !huidig ? 'Er staat nu geen geldig-tot-datum; de link verloopt niet.'
+    : (huidig < vandaag ? 'Verlopen op ' + _offDatumLang(huidig) + '.' : 'Nu geldig tot ' + _offDatumLang(huidig) + '.');
+  const veld = 'width:100%; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:6px; font:inherit;';
+  let h = '<h3>\ud83d\udcc5 Geldigheid verlengen</h3>'
+    + '<div class="acb-sub">' + _accordEsc(c.naam || '') + (c.klant ? ' \u2014 ' + _accordEsc(c.klant) : '') + '</div>'
+    + '<div style="margin:0 0 12px;' + (huidig && huidig < vandaag ? 'color:#b42318;font-weight:600;' : '') + '">' + _accordEsc(nuRegel) + '</div>'
+    + '<label style="display:block; font-size:0.8rem; color:var(--muted); margin-bottom:4px;">Nieuwe datum geldig tot</label>'
+    + '<input type="date" id="acbVerlDatum" value="' + _accordEsc(voorstel) + '" min="' + _accordEsc(vandaag) + '" style="padding:8px; border:1px solid #ccc; border-radius:6px; font:inherit; margin-bottom:4px;">'
+    + '<div class="acb-sub" style="margin:0 0 12px; font-size:0.72rem;">Voorstel: ' + _offGeldigDagenNorm(cfg.klanttype) + ' dagen (norm ' + _accordEsc(_offKlanttypeLabel(cfg.klanttype)) + '). Op de datum zelf kan de klant nog akkoord geven.</div>'
+    + '<div class="acb-vragen" style="margin:0 0 12px;">De link blijft dezelfde en de calculatie blijft op slot. De herinnering en de verlopen-mail rekenen voortaan met de nieuwe datum. Er komt na een verlenging geen nieuwe beltaak voor Maud.'
+    + '<div style="margin-top:6px;">De PDF die de klant ziet is bevroren. Staat daar een geldig-tot-datum in, dan blijft dat de oude. Moet het document zelf kloppen, maak dan een nieuwe link.</div>'
+    + (c.status && c.status !== 'verzonden' ? '<div style="margin-top:6px;color:#9a6700;">De calculatie staat op ' + _accordEsc(String(c.status).charAt(0).toUpperCase() + String(c.status).slice(1)) + '. De automatische opvolging loopt alleen bij status Verzonden.</div>' : '')
+    + '</div>';
+  if (mk.kan) {
+    h += '<label style="display:block; margin:0 0 6px; cursor:pointer;"><input type="checkbox" id="acbVerlMail" checked style="margin-right:6px;">Klant een mail sturen dat de offerte langer geldig is</label>'
+      + '<div id="acbVerlMailBlok">'
+      + '<div class="acb-sub" style="margin:0 0 6px;">Naar ' + _accordEsc(mk.email) + '</div>'
+      + '<textarea id="acbVerlTekst" style="' + veld + ' min-height:170px; line-height:1.5; resize:vertical;">' + _accordEsc(laatsteStd) + '</textarea>'
+      + '<div class="acb-sub" style="margin:6px 0 12px; font-size:0.72rem;">Onder deze tekst komen vanzelf de knop naar de link, de zin \u201cDe offerte is geldig tot\u201d met de nieuwe datum en je handtekening. Het onderwerp van de mail is \u201cOfferte\u201d met het nummer, zoals bij de eerste mail. De herinnering en de verlopen-mail beginnen opnieuw vanaf vandaag; een beltaak komt er niet meer.</div>'
+      + '</div>';
+  } else {
+    h += '<div class="acb-sub" style="margin:0 0 12px;">Er gaat geen mail mee. ' + _accordEsc(mk.reden) + '</div>';
+  }
+  h += '<button class="acb-btn" id="acbVerlOk">Verlengen</button>'
+    + '<button class="acb-btn sec" id="acbVerlTerug" style="margin-left:6px;">Terug</button>';
+  body.innerHTML = h;
+
+  const inp = body.querySelector('#acbVerlDatum');
+  const vink = body.querySelector('#acbVerlMail');
+  const ta = body.querySelector('#acbVerlTekst');
+  const blok = body.querySelector('#acbVerlMailBlok');
+  const okBtn = body.querySelector('#acbVerlOk');
+  const terugBtn = body.querySelector('#acbVerlTerug');
+  const _knopTekst = () => { okBtn.textContent = (vink && vink.checked) ? 'Verlengen en mailen' : 'Verlengen'; };
+  _knopTekst();
+  if (vink) vink.addEventListener('change', () => { if (blok) blok.style.display = vink.checked ? '' : 'none'; _knopTekst(); });
+  // Verandert de datum en is de tekst nog de voorgestelde, dan gaat de datum in de tekst mee.
+  inp.addEventListener('change', () => {
+    if (!ta || !_verlengGeldigeDatum(inp.value)) return;
+    const nieuwStd = _verlengMailTekst(aanhef, inp.value);
+    if (ta.value === laatsteStd) ta.value = nieuwStd;
+    laatsteStd = nieuwStd;
+  });
+  terugBtn.addEventListener('click', () => _accordBeheerRender(body, c, rij, nabel));
+  okBtn.addEventListener('click', async () => {
+    const nieuw = String(inp.value || '').trim();
+    const ctl = _verlengControle(nieuw, huidig, vandaag);
+    if (!ctl.ok) { _toast(ctl.fout); return; }
+    const metMail = !!(mk.kan && vink && vink.checked);
+    const tekst = (metMail && ta) ? ta.value : '';
+    if (metMail && !tekst.trim()) { _toast('Vul een tekst in voor de mail, of zet het vinkje uit.'); return; }
+    if (metMail && tekst.length > 5000) { _toast('De tekst is langer dan 5000 tekens (' + tekst.length + '); kort hem in, anders wordt hij afgekapt.'); return; }
+    if (metMail && tekst.indexOf(_offDatumLang(nieuw)) < 0
+      && !confirm('In je tekst staat de nieuwe datum (' + _offDatumLang(nieuw) + ') niet. Onder de tekst komt hij wel vanzelf te staan.\n\nToch zo versturen?')) return;
+    if (ctl.korter && !confirm('De nieuwe datum (' + _offDatumLang(nieuw) + ') ligt v\u00f3\u00f3r de datum die er nu staat (' + _offDatumLang(huidig) + '). Dat is inkorten, niet verlengen.\n\nToch doorgaan?')) return;
+    okBtn.disabled = true; terugBtn.disabled = true;
+    okBtn.textContent = 'Bezig\u2026';
+    try {
+      const uit = await _verlengUitvoeren(c, rij, nieuw, metMail, tekst);
+      const m = _verlengMelding(uit, mk.email || '');
+      _toast(m.tekst, m.soort);
+      accordLinkBeheer(); // venster verversen met de nieuwe stand
+    } catch (e) {
+      okBtn.disabled = false; terugBtn.disabled = false;
+      _knopTekst();
+      _toast('Verlengen mislukt: ' + ((e && e.message) || e) + ' Er is niets gewijzigd.');
     }
   });
 }

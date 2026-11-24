@@ -7378,3 +7378,59 @@ where bucket_id = 'backups' and name like 'bestanden/wagenpark/%';
 **Bij nood.**
 - De pagina uitzetten: `wagenpark.html` uit de repo halen of terugzetten naar een vorige versie via de geschiedenis op GitHub. De gegevens blijven in de database staan en de taken blijven werken; die hangen niet aan de pagina.
 - De tegel weghalen: in `start.html` de regel met `id:'wagenpark'` uit de lijst `APPS` halen.
+
+## Wat er op 24 november 2026 gedaan is: geldigheid van een verstuurde offerte verlengen (index.html v4.130.0, geen SQL, geen Edge Function)
+
+**Wat het is.** In het venster Accordeerlink staat bij een open offerte-link de regel Geldig tot en de knop **Geldigheid verlengen**. Een nieuwe datum zet dezelfde link weer open, ook als hij al verlopen was. De calculatie blijft op slot, de tarieven blijven bevroren, de status verandert niet. Optioneel gaat er een mail naar de klant. Na een verlenging maakt de automaat geen beltaak meer voor Maud (besluit Gian 24-11-2026).
+
+**Waar de datum van een offerte-link leeft. Drie plekken, elk met een eigen lezer.** GEMETEN 24-11-2026, gelezen in de bron van de functies via de Supabase-koppeling.
+
+| Plek | Wie leest het | Waarvoor |
+|---|---|---|
+| `calculaties.offerte_config.geldigTot` | Edge Function `offerte-accord` (versie 43), `geldigTotVoor` | Of de link open of verlopen is; akkoord na deze datum wordt geweigerd (HTTP 410) |
+| `offerte_accorderingen.snapshot.geldigTot` | `offerte-herinnering` (versie 29), met de calculatie als tweede bron | Herinnering (7 dagen ervoor), verlopen-mail (10 dagen erna), afsluittaak (20 dagen erna) |
+| `offerte_accorderingen.snapshot.geldigTot` | `offerte-verzenden` (versie 38) | De zin "De offerte is geldig tot" in de mail |
+
+Wie alleen de eerste plek aanpast, zet de link open maar laat de automaat op de oude datum lopen: de klant krijgt dan een verlopen-mail over een offerte die nog open staat. De knop schrijft daarom alle plekken. Voor plan- en houtrot-links geldt een andere bron (zie de secties van 29 augustus en 12 oktober 2026); de knop weigert die.
+
+**Wat de knop schrijft**, functie `_verlengUitvoeren` in `index.html`:
+
+| Stap | Wat | Mislukt het |
+|---|---|---|
+| 1 | Link vers lezen; moet status `open` hebben en geen `onderhoudsplan_id` of `oplevering_id` | Stopt, niets gewijzigd |
+| 2 | `calculaties.offerte_config.geldigTot` via `_offCfgGerichtZetten` (alleen dit veld) | Stopt, niets gewijzigd |
+| 3 | Op de link: `snapshot.geldigTot`, een regel in `snapshot.verlengingen` (`op`, `van`, `tot`), `herinnering_op`, `verlopen_mail_op` en `afsluittaak_op` leeg, `beltaak_op` gevuld (bestaande waarde, anders nu; dan ook `snapshot.belVervalt = true`) | Link is verlengd, automaat rekent nog met de oude datum; rode melding, geen mail |
+| 4 | Mail via `offerte-verzenden` met de tekst uit het venster | Verlenging staat; rode melding dat de mail niet weg is |
+| 5 | `beltaak_op` terugzetten (`offerte-verzenden` wist dat stempel bij elke verzending) | Rode melding dat Maud toch een beltaak kan krijgen |
+
+**Geen beltaken meer na een verlenging.** `offerte-herinnering` maakt een beltaak zolang `beltaak_op` leeg is. De knop houdt dat stempel gevuld. `snapshot.belVervalt` zegt dat het stempel geen echte beltaak was; het venster toont dan "vervalt na de verlenging". Een beltaak die al in de Takenapp staat blijft staan. Let op: de gewone knop Offerte opnieuw mailen wist het stempel opnieuw; stond er voor die calculatie nog nooit een beltaak in `taken`, dan komt er daarna alsnog een (index `taken_offerte_uniek`: één taak `opvolg-bel` per calculatie, GEMETEN 24-11-2026).
+
+**Wat niet verandert.** De PDF die de klant ziet (bevroren bij het aanmaken van de link; een datum daarin blijft de oude), de offertedatum, de status, het onderwerp van de mail ("Offerte" met nummer en projectnaam; een eigen onderwerp vraagt een wijziging van `offerte-verzenden`).
+
+**Ook hersteld.** `_opvolgBlokHtml` las `c.offerte_config`, maar de calculatie in het geheugen heet `offerteConfig`. Het klanttype werd in het venster dus nooit gelezen en een VvE kreeg daar datums voor mails die de automaat bij een VvE niet stuurt. Alleen weergave; de automaat zelf las het klanttype al goed uit de database.
+
+**Tests.** `test_verlengen_v4.130.0.js` (128 controles): `node test_verlengen_v4.130.0.js <index.html v4.129.1> <index.html v4.130.0>`; vraagt `npm install acorn jsdom`. De test bootst de database en `offerte-verzenden` na; de regels van de Edge Functions zijn overgenomen uit de bron van 24-11-2026. Wijzigt een van die drie functies de bron van de datum of het wissen van stempels, dan moet deze knop mee.
+
+**Rechten.** GEMETEN 24-11-2026: policy `ingelogd alles offerte_accorderingen` (ALL, authenticated, using true, check true). De app mag `snapshot` en de stempels schrijven.
+
+**Testplan in echt gebruik (nog te doen; tot dan heet dit niet werkend).**
+1. Maak een proefcalculatie met je eigen e-mailadres, maak een link en mail hem.
+2. Zet in het venster de geldigheid op een latere datum, met mail. Controleer: de mail komt binnen en noemt de nieuwe datum; de link opent; het venster toont "Geldig tot" met de nieuwe datum en "Verlengd op".
+3. Kijk in het schema Automatische opvolging: Nabellen door Maud zegt "vervalt na de verlenging" (of "gedaan op" als de beltaak er al was), de herinnering en de verlopen-mail hebben datums bij de nieuwe datum.
+4. Deze query moet voor de proeflink een gevulde `beltaak_op`, drie lege stempels en de nieuwe datum geven:
+
+```sql
+select snapshot->>'geldigTot' as geldig_tot, snapshot->'verlengingen' as verlengingen,
+       snapshot->>'belVervalt' as bel_vervalt, gemaild_op, beltaak_op,
+       herinnering_op, verlopen_mail_op, afsluittaak_op
+from offerte_accorderingen
+where status = 'open' and snapshot ? 'verlengingen'
+order by aangemaakt_op desc;
+```
+
+5. De maandag erna: er is geen nieuwe taak "Nabellen offerte" voor de proefcalculatie bijgekomen.
+
+**Als het misgaat.**
+- Een klant krijgt een verlopen-mail over een verlengde offerte: `snapshot.geldigTot` op de link is niet meegegaan. Verleng opnieuw, of zet de opvolging voor die offerte uit in het venster.
+- Maud krijgt toch een beltaak: `beltaak_op` stond leeg. Kijk met de query hierboven; de taak afvinken met een korte uitkomst is genoeg.
+- Terug naar v4.129.1 kan zonder de database aan te raken. De extra sleutels `verlengingen` en `belVervalt` in het snapshot leest die versie niet; een verlengde datum blijft gewoon gelden.

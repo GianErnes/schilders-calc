@@ -1,3 +1,63 @@
+## v4.130.0 — Geldigheid van een verstuurde offerte verlengen zonder nieuwe link (2026-11-24)
+
+Gebouwd op v4.129.1, live opgehaald van GitHub op 24-11-2026 bij de start van deze bouw en opnieuw vlak voor het afronden (2.175.600 bytes, beide keren identiek). De projectkopie stond op v4.128.0 en is niet gebruikt. Geen SQL, geen wijziging aan een Edge Function.
+
+**Aanleiding**
+- Gian 24-11: "Kan ik de termijn van een verzonden offerte voor de klant verlengen zonder een nieuwe link te hoeven maken?"
+- Gelezen op 24-11-2026 in de Edge Functions zelf, opgehaald via de Supabase-koppeling:
+  - `offerte-accord` (versie 43) toetst een offerte-link bij elke opening aan `calculaties.offerte_config.geldigTot` (functie `geldigTotVoor`), niet aan het snapshot. Een latere datum daar zet dezelfde link weer open.
+  - `offerte-herinnering` (versie 29) rekent voor de herinnering, de verlopen-mail en de afsluittaak eerst met `snapshot.geldigTot` op de link en pas daarna met de calculatie.
+  - `offerte-verzenden` (versie 38) haalt de zin "De offerte is geldig tot" uit `snapshot.geldigTot`, en wist bij opnieuw mailen van dezelfde link de vier opvolgstempels.
+- Gelezen in de live `index.html` v4.129.1: het veld Geldig tot zit bij een verzonden calculatie op slot. De omweg via Concept gooit de bevroren tarieven weg en legt bij opnieuw vergrendelen de tarieven van die dag vast (`setCalcStatus`); bovendien bleef de automaat dan op de oude datum lopen.
+- Besluiten Gian 24-11: de knop bouwen, met een mail naar de klant, alleen voor offertes. Tijdens de bouw: "geen beltaken meer na verlenging".
+
+**Gebouwd**
+- Venster Accordeerlink, bij een open link: een regel **Geldig tot** met de datum uit de calculatie (`_verlengRegelHtml`). Is die datum voorbij, dan staat er in rood "Verlopen op ... De klant kan niet meer akkoord geven." Na een verlenging staat eronder wanneer er verlengd is en wat de datum was.
+- Knop **Geldigheid verlengen** (`_accordVerlengen`), onder de mailknop. Het venster vraagt een nieuwe datum; het voorstel is vandaag plus de norm van het klanttype (particulier 21, zakelijk 30, VvE 180 dagen), of de huidige datum plus die norm als dat later is.
+- Verlengen (`_verlengUitvoeren`) doet in deze volgorde:
+  1. de link vers lezen; staat hij niet meer open, dan stopt het en is er niets gewijzigd;
+  2. `calculaties.offerte_config.geldigTot` zetten via `_offCfgGerichtZetten` (vers lezen, alleen dit veld, schrijven);
+  3. op de link `snapshot.geldigTot` bijwerken, de verlenging noteren in `snapshot.verlengingen` (`op`, `van`, `tot`), de stempels `herinnering_op`, `verlopen_mail_op` en `afsluittaak_op` wissen, en `beltaak_op` gevuld houden of vullen;
+  4. als het vinkje aan staat: mailen via de bestaande `offerte-verzenden`;
+  5. na de mail `beltaak_op` terugzetten, omdat `offerte-verzenden` dat stempel bij elke verzending wist.
+- **Geen beltaken meer na een verlenging** (besluit Gian). De automaat maakt een beltaak zolang `beltaak_op` leeg is. Na een verlenging is dat stempel altijd gevuld: stond het er al, dan blijft het; stond het er niet, dan komt het tijdstip van de verlenging erin en zet `snapshot.belVervalt` dat het geen echte beltaak was. Het schema in het venster toont dan bij Nabellen door Maud "vervalt na de verlenging" in plaats van "gedaan op". Een beltaak die al in de Takenapp staat blijft staan.
+- Vinkje **Klant een mail sturen dat de offerte langer geldig is**, standaard aan, met een voorgevulde tekst die de nieuwe datum noemt en zegt dat de datum uit de mail geldt als in het document nog de eerdere staat. Wijzig je de datum en is de tekst nog de voorgestelde, dan gaat de datum in de tekst mee. Eigen tekst wordt niet overschreven.
+- Het vinkje ontbreekt, met de reden erbij, als er geen e-mailadres in de link staat, als de offerte nog niet vanuit de app gemaild is, als er nog een verzending ingepland staat, of als de wachtrij niet gelezen kon worden.
+- Meldingen na afloop zeggen wat gelukt is en wat niet (`_verlengMelding`): verlengd en gemaild; verlengd maar mail niet verstuurd; verlengd maar de opvolging niet bijgewerkt (dan gaat er geen mail uit, die zou de oude datum noemen); gemaild maar het stempel van de beltaak niet teruggezet (dan kan Maud toch een beltaak krijgen).
+- Een datum in het verleden, dezelfde datum en een ongeldige datum worden geweigerd. Een datum vóór de huidige vraagt om bevestiging ("dat is inkorten").
+
+**Ook gewijzigd**
+- `_opvolgBlokHtml` toont bij Nabellen door Maud "vervalt na de verlenging" als `snapshot.belVervalt` gezet is en het stempel er staat (zie hierboven).
+- `_opvolgBlokHtml` (het schema Automatische opvolging in het venster) las `c.offerte_config`. De calculatie in het geheugen heet `offerteConfig` (`_mapCalcHeaderFromDB`), dus het klanttype werd daar nooit gelezen. Bij een VvE toonde het venster daardoor datums voor de herinnering en de verlopen-mail, terwijl de automaat bij een VvE geen mails stuurt. Nu staat er "niet bij een VvE". Het schema voor een particuliere klant is letterlijk gelijk gebleven (test E1). Dit is alleen weergave in het venster; de automaat zelf deed het al goed.
+
+**Keuzes Claude**
+- De mail gaat via `offerte-verzenden` zoals die is. Gevolg: het onderwerp blijft "Offerte" met nummer en projectnaam, onder de tekst staan de knop "Offerte bekijken en akkoord geven" en de zin "De offerte is geldig tot" met de nieuwe datum, en de herinnering en de verlopen-mail beginnen opnieuw vanaf de dag van die mail. Een eigen onderwerpregel vraagt een wijziging van de Edge Function en is niet gebouwd.
+- "Geen beltaken meer" is gebouwd door het stempel gevuld te houden, niet door de Edge Function te wijzigen. Het terugzetten na de mail gebeurt ook als de mail een fout meldt: de mail kan dan toch de deur uit zijn en het stempel gewist.
+- Het stempel wordt na de mail teruggezet in een aparte schrijfronde. In de tussentijd kan de automaat geen beltaak maken: die draait alleen op werkdagochtenden en maakt een beltaak op zijn vroegst de maandag na de dag van mailen (gelezen in `offerte-herinnering` versie 29).
+- De verlenging wordt genoteerd in het snapshot van de link en niet in een nieuwe kolom, zodat er geen SQL nodig is. `offerte-accord` stuurt het snapshot door naar de browser van de klant; er staan alleen datums in.
+- De status van de calculatie, de offertedatum en de bevroren tarieven blijven ongemoeid.
+
+**Niet gewijzigd (bewust)**
+- Onderhoudsplannen en houtrot-opgaven: die hebben een eigen venster en een eigen bron voor de datum. `_verlengUitvoeren` weigert een link met een `onderhoudsplan_id` of `oplevering_id`.
+- De PDF die de klant ziet. Die is bevroren bij het aanmaken van de link; staat daar een geldig-tot-datum in, dan blijft dat de oude. Het venster zegt dat.
+- De Edge Functions en de database.
+
+**Bekende beperkingen**
+- Mail je na een verlenging dezelfde link opnieuw met de gewone knop **Offerte opnieuw mailen**, dan wist `offerte-verzenden` het stempel van de beltaak weer. Stond er voor deze calculatie nog nooit een beltaak in de tabel `taken`, dan maakt de automaat er de maandag daarna alsnog een (de index `taken_offerte_uniek`, gemeten 24-11-2026, laat er per calculatie één toe). Het venster toont in dat geval weer de geplande maandag.
+- Knop Controleer meldt na een verlenging dat de geldigheid langer is dan de norm voor het klanttype. Dat klopt en is geen fout.
+- Mislukt stap 3 (de link bijwerken) nadat stap 2 (de calculatie) gelukt is, dan is de link wel verlengd maar rekent de automaat nog met de oude datum. De melding zegt dat; opnieuw verlengen of de opvolging uitzetten lost het op.
+- Wordt er verlengd zonder mail terwijl de nieuwe datum minder dan zeven dagen weg ligt, dan stuurt de automaat de eerstvolgende werkdagochtend een herinnering met de nieuwe datum.
+
+**Getest**
+- Poorten: het inline script parseert in Node; div-tags 1549 / 1552 tegen 1533 / 1536 in v4.129.1 (zestien erbij aan beide kanten); script-tags 6 / 6; CSS-accolades 931 / 931, ongewijzigd.
+- `test_verlengen_v4.130.0.js` (nieuw), v4.129.1 naast v4.130.0, functies met acorn uit het bestand gesneden: 128 controles, alle goed. De losse functies (38), het verlengen tegen een nagebootste database met alle foutpaden (30), geen beltaken na een verlenging (17), de aansluiting op de regels van de drie Edge Functions zoals op 24-11 gelezen (6), het venster in jsdom (28), het opvolgblok oud naast nieuw (5) en wat niet mocht veranderen (4: veertien bestaande functies letterlijk gelijk, precies twee gewijzigd, precies tien nieuw, geen verdwenen).
+- De test op de proef gesteld met drie opzettelijke fouten in een kopie (stempels niet wissen; de controle op een open link weghalen; het stempel van de beltaak na de mail niet terugzetten): alle drie gevonden.
+- Gemeten in de live database op 24-11-2026: de policy op `offerte_accorderingen` staat een ingelogde gebruiker alles toe, dus de app mag `snapshot` en de stempels schrijven; 33 open offerte-links, waarvan 23 gemaild en 32 met een leesbare `snapshot.geldigTot`.
+- Statische weergave van beide vensters met de echte opmaak, als schermafbeelding bekeken.
+
+**Niet getest**
+- In de echte app tegen de echte database, en de mail naar een echte klant. De Edge Functions zijn gelezen, niet aangeroepen. Tot het testplan in SYSTEEM.md gelopen is heet dit niet werkend.
+
 ## v4.129.1 — Opties: de optieregel oogt niet meer als vervallen, rode lijn, verschillen met de basis zichtbaar (2026-11-22)
 
 Gebouwd op v4.129.0, live opgehaald van GitHub op 22-11-2026 bij de start van deze bouw (2.168.280 bytes, gelijk aan de levering van 22-11). Alleen weergave; geen SQL, geen andere berekening.
