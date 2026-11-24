@@ -495,6 +495,12 @@
     <section>
       <label class="hint" style="margin:0 0 0.2rem">Onderwerp</label>
       <input type="text" id="kennisOnderwerp">
+      <div id="kennisVariantRij" style="display:none;margin:0.6rem 0 0">
+        <label class="hint" style="margin:0 0 0.2rem;display:block">Aandachtspunten in de mail voor</label>
+        <label style="margin-right:0.9rem;font-size:0.85rem"><input type="radio" name="kennisVariant" value="beide" checked> binnen- en buitenwerk</label>
+        <label style="margin-right:0.9rem;font-size:0.85rem"><input type="radio" name="kennisVariant" value="binnen"> alleen binnenwerk</label>
+        <label style="font-size:0.85rem"><input type="radio" name="kennisVariant" value="buiten"> alleen buitenwerk</label>
+      </div>
       <label class="hint" style="margin:0.6rem 0 0.2rem">Tekst (pas aan wat je wilt; dit is precies wat de klant krijgt)</label>
       <textarea id="kennisTekst"></textarea>
       <div class="hint" id="kennisOnderHint">Onder de tekst komt automatisch een knop <b>"Ja, ik heb dit ontvangen"</b> (de klant bevestigt daarmee de ontvangst; blijft dat 3 werkdagen uit, dan komt er een nabel-signaal) en daaronder je volledige mailhandtekening (groet, logo's, keurmerken), dezelfde als onder de offertemail. Afzender info@ernes.nl (sinds 20-10-2026, was planning@) · antwoorden komen op info@ernes.nl · kopie naar administratie@ernes.nl. Elke verzending wordt vastgelegd met datum, adres en tekst.</div>
@@ -643,7 +649,7 @@
       <p class="hsinds">Sinds v0.13.0; tijdblokken sinds v0.14.0; reservering als tijdblok sinds v0.26.0.</p>
     </section>
 
-    <section class="hsec" id="h11" data-trefwoorden="kennisgeving kennisgevingen klant mail maand week startdag onderhoudsplan beurt opdracht opdrachtbevestiging december uitvoeringsjaar vinkje aankondiging contactpersoon aanhef versturen overslaan correctie corrigeren afgeleverd geopend bevestigd bounce niet afgeleverd nabellen historie taak taken-app teller envelop afgehandeld melding afvinken iets te melden afsluiting afsluitmail afgerond klaar beoordelen beoordeling review google klantenvertellen laatste dag bedankje">
+    <section class="hsec" id="h11" data-trefwoorden="kennisgeving kennisgevingen klant mail maand week startdag onderhoudsplan beurt opdracht opdrachtbevestiging december uitvoeringsjaar vinkje aankondiging contactpersoon aanhef versturen overslaan correctie corrigeren afgeleverd geopend bevestigd bounce niet afgeleverd nabellen historie taak taken-app teller envelop afgehandeld melding afvinken iets te melden afsluiting afsluitmail afgerond klaar beoordelen beoordeling review google klantenvertellen laatste dag bedankje aandachtspunten uitharding uitharden reinigen ventilatie condens binnen buiten binnenwerk buitenwerk">
       <h3>11. Kennisgevingen aan de klant</h3>
       <p><b>Waar.</b> Op het bord een label ✉ bij de projectrij (of faserij) en een teller in de kop; klik op de teller en je springt langs de projecten waar iets te versturen is. In het paneel het blok <b>Kennisgevingen aan de klant</b> (bij fasen: per fase, het blok volgt de gekozen fase).</p>
       <p><b>Wat.</b> Drie mails per project of fase, plus één afsluitmail per project (zie <i>Afsluiting</i> hieronder), elk na een klik en met de tekst in beeld, nooit automatisch:</p>
@@ -655,11 +661,11 @@
       <p><b>Hoe.</b> Klik <b>versturen</b> bij de regel. In het venster: contactpersoon kiezen (uit Yoobi of handmatig), aanhef (heer/mevrouw/echtpaar/familie/zakelijk plus achternaam; die gokt het bord uit de Yoobi-naam, controleer hem), onderwerp en tekst aanpassen, <b>Versturen</b>. Onder de tekst zet het systeem zelf een knop <i>"Ja, ik heb dit ontvangen"</i> en je volledige mailhandtekening. Afzender info@ernes.nl, antwoorden komen op info@, kopie naar administratie@. Wil je geen mail (korte termijn, al gebeld): <b>overslaan</b>; het signaal verdwijnt en er gaat niets weg.</p>
       <p><b>Status.</b> Achter "verstuurd …" komt: <i>afgeleverd</i>, <i>geopend</i> (alleen als open-tracking bij Resend aanstaat), <i>bevestigd</i> (groen, de klant klikte de knop), <i>nog niet bevestigd</i>, of <i>NIET afgeleverd (reden)</i> (rood, fout adres). Blijft een bevestiging 3 werkdagen uit, dan wordt het label oranje <b>✉ nabellen</b> en komt er een taak "nabellen" in de taken-app bij Maud. Bij een bounce meteen een taak "NIET afgeleverd". Nabellen vervalt vanzelf als een latere kennisgeving voor hetzelfde werk wél bevestigd is. Vink je de nabel- of bouncetaak zelf af in de taken-app (bijvoorbeeld na mailcontact), typ dan in het vak <i>Iets te melden?</i> wat er gebeurd is: het signaal verdwijnt en achter de kennisgeving komt <i>nabeltaak afgehandeld … door …</i> met jouw tekst, ook in de historie. Vinkt Gian zelf af, dan gaat daar geen mail van (sinds 27-10-2026; bij Maud en de anderen wel, naar Gian).</p>
       <p><b>Onderhoudsplan-beurten.</b> Staat bij een project het vinkje <b>onderhoudsplan-beurt</b> aan (onderaan het paneel, naast Verbergen), dan komt het maandsignaal niet de maandag na het inplannen maar op z'n vroegst <b>1 december van het jaar vóór de start</b>; de maandmail zegt dan "Zoals afgesproken in uw onderhoudsplan …". Daarnaast krijgt zo'n klant één <b>Opdrachtbevestiging</b> (dank voor de opdracht, met alle uitvoeringsjaren van zijn aangevinkte beurten), op de rij van de beurt met de vroegste start; de andere beurten verwijzen daarnaar. Het signaal komt de maandag na de eerste ingeplande uren van welke beurt dan ook, en alleen zolang de klant nog geen enkele kennisgeving over een beurt van dit plan kreeg (bij een lopend plan dus niet meer). Zonder vinkje gelden de gewone regels, ook voor werk jaren vooruit — zet het vinkje dus bij het inplannen van een beurt. Lijkt de naam op een beurt, dan staat er een hint bij het vinkje; beslissen doe je zelf.</p>
-      <p><b>Afsluiting.</b> Een vierde mail, na afloop: een bedankje met de vraag ons te beoordelen. Het signaal <b>✉ afsluiting</b> en de taak <i>Afsluitmail sturen</i> (in de taken-app, bij Gian) komen op de eerste werkdag na de <b>laatste dag waarop uren zijn ingepland</b>. Zonder ingeplande uren komt er geen signaal. Bij fasen één keer, op de laatste fase. Onder de tekst zet het systeem twee knoppen, <i>Beoordeel ons op Google</i> en <i>Beoordeel ons op Klantenvertellen</i>; er is geen bevestigingsknop en dus geen nabellen. Loopt het werk uit, plan dan de resterende uren in: het signaal en de taak verdwijnen en komen terug na de nieuwe laatste dag. Is het werk eerder klaar, haal dan de overgebleven uren weg; vanaf de laatste geplande dag zelf staan <b>versturen</b> en <b>overslaan</b> er. Niet tevreden klant of geen mail gewenst: <b>overslaan</b>. Bij een onderhoudsplan-beurt krijgt elke beurt zijn eigen afsluitmail ("De onderhoudsbeurt van 2028 is afgerond"). <b>Verstuur de afsluitmail vóór het project in Yoobi gesloten wordt</b>: een gesloten project verdwijnt bij de eerstvolgende Yoobi-verversing (dinsdagochtend) van het bord en dan vervalt ook de taak. Het signaal geldt voor werk met een laatste geplande dag op of na 23 november 2026; bij ouder werk kun je de mail wel zelf versturen.</p>
+      <p><b>Afsluiting.</b> Een vierde mail, na afloop: een bedankje, de vraag ons te beoordelen en de aandachtspunten voor vers schilderwerk (uitharding, reiniging, ventilatie, condens, ramen en deuren). Deze mail vervangt de afsluitmail uit Yoobi. Het signaal <b>✉ afsluiting</b> en de taak <i>Afsluitmail sturen</i> (in de taken-app, bij Gian) komen op de eerste werkdag na de <b>laatste dag waarop uren zijn ingepland</b>. Zonder ingeplande uren komt er geen signaal. Bij fasen één keer, op de laatste fase. In het verzendvenster kies je <b>binnen- en buitenwerk</b>, <b>alleen binnenwerk</b> of <b>alleen buitenwerk</b>; bij alleen buitenwerk vervallen de punten over ventilatie en condens. Kies eerst en pas daarna de tekst aan: een andere keuze zet de standaardtekst terug (het venster vraagt het eerst). Op de plek van de regel <i>[beoordelingsknoppen]</i>, bovenaan in de tekst, zet het systeem twee knoppen, <i>Beoordeel ons op Google</i> en <i>Beoordeel ons op Klantenvertellen</i>. Laat die regel staan of verplaats hem; zonder de regel komen de knoppen onder de tekst. Er is geen bevestigingsknop en dus geen nabellen. Loopt het werk uit, plan dan de resterende uren in: het signaal en de taak verdwijnen en komen terug na de nieuwe laatste dag. Is het werk eerder klaar, haal dan de overgebleven uren weg; vanaf de laatste geplande dag zelf staan <b>versturen</b> en <b>overslaan</b> er. Niet tevreden klant of geen mail gewenst: <b>overslaan</b>. Bij een onderhoudsplan-beurt krijgt elke beurt zijn eigen afsluitmail ("De onderhoudsbeurt van 2028 is afgerond"). <b>Verstuur de afsluitmail vóór het project in Yoobi gesloten wordt</b>: een gesloten project verdwijnt bij de eerstvolgende Yoobi-verversing (dinsdagochtend) van het bord en dan vervalt ook de taak. Het signaal geldt voor werk met een laatste geplande dag op of na 23 november 2026; bij ouder werk kun je de mail wel zelf versturen.</p>
       <p><b>Correctie.</b> Verschuift de planning na een verzending, dan wordt het label oranje en staat er <b>corrigeren</b>: dezelfde mail, maar beginnend met wat er eerder is gezegd en wat het nu wordt. Ook een correctie kun je overslaan. Is de (nieuwe) start al voorbij, dan verdwijnt het correctiesignaal vanzelf: het werk is begonnen, een correctiemail heeft dan geen zin meer.</p>
       <p><b>Historie.</b> Knop <b>historie · n</b> in het paneel toont elke verstuurde en overgeslagen kennisgeving van het project met datum, adres, bezorgstatus, onderwerp en de volledige tekst. Alleen lezen.</p>
       <p><b>Let op.</b> Mails van vóór 9 oktober 2026 hadden geen bevestigingsknop en geven nooit een nabel-signaal. Elke fase heeft zijn eigen cyclus; fase 1 kondigt fase 2 niet aan. De taken in de taken-app sluiten vanzelf bij versturen, overslaan of bevestigen; ze hoef je daar niet af te vinken (nabel- en bouncetaken mag je wél handmatig afvinken). De begintijd in de startdagmail is een indeling van de geplande uren, geen afspraak die de planning vastlegt.</p>
-      <p class="hsinds">Sinds v0.15.0; aanhef v0.16.0; correctietekst v0.16.1; status, bevestigen en nabellen v0.19.x; historie v0.21.0; afzender info@ v0.21.1; per fase v0.22.0; afgehandelde nabeltaak met melding v0.25.0; correctiesignaal stopt bij een voorbije start v0.26.1; onderhoudsplan-beurten en opdrachtbevestiging v0.27.0; afsluitmail met beoordelingsknoppen v0.29.0.</p>
+      <p class="hsinds">Sinds v0.15.0; aanhef v0.16.0; correctietekst v0.16.1; status, bevestigen en nabellen v0.19.x; historie v0.21.0; afzender info@ v0.21.1; per fase v0.22.0; afgehandelde nabeltaak met melding v0.25.0; correctiesignaal stopt bij een voorbije start v0.26.1; onderhoudsplan-beurten en opdrachtbevestiging v0.27.0; afsluitmail met beoordelingsknoppen v0.29.0; aandachtspunten, keuze binnen/buiten en knoppen bovenaan v0.30.0.</p>
     </section>
 
     <section class="hsec" id="h12" data-trefwoorden="over datum rood knop herplannen sluiten yoobi werkdagen regen niet uitgevoerd">
@@ -750,7 +756,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.29.0';
+const APP_VERSION = '0.30.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -2948,7 +2954,7 @@ async function herlaad() {
 const KENNIS_FUNCTIE_URL = SUPABASE_URL + '/functions/v1/planning-kennisgeving';
 // v0.29.0: de hint onder het tekstvak in het verzendvenster, per soort (bij afsluiting geen bevestigingsknop maar beoordelingsknoppen).
 const KENNIS_HINT_BEVESTIG = 'Onder de tekst komt automatisch een knop <b>"Ja, ik heb dit ontvangen"</b> (de klant bevestigt daarmee de ontvangst; blijft dat 3 werkdagen uit, dan komt er een nabel-signaal) en daaronder je volledige mailhandtekening (groet, logo\'s, keurmerken), dezelfde als onder de offertemail. Afzender info@ernes.nl (sinds 20-10-2026, was planning@) · antwoorden komen op info@ernes.nl · kopie naar administratie@ernes.nl. Elke verzending wordt vastgelegd met datum, adres en tekst.';
-const KENNIS_HINT_AFSLUITING = 'Onder de tekst komen automatisch twee knoppen, <b>"Beoordeel ons op Google"</b> en <b>"Beoordeel ons op Klantenvertellen"</b>, en daaronder je volledige mailhandtekening (groet, logo\'s, keurmerken). Geen bevestigingsknop en dus geen nabel-signaal. Afzender info@ernes.nl (sinds 20-10-2026, was planning@) · antwoorden komen op info@ernes.nl · kopie naar administratie@ernes.nl. Elke verzending wordt vastgelegd met datum, adres en tekst.';
+const KENNIS_HINT_AFSLUITING = 'Op de plek van de regel <b>[beoordelingsknoppen]</b> komen automatisch twee knoppen, <b>"Beoordeel ons op Google"</b> en <b>"Beoordeel ons op Klantenvertellen"</b>. Laat die regel staan of verplaats hem; haal je hem weg, dan komen de knoppen onder de tekst. Onder de tekst komt je volledige mailhandtekening (groet, logo\'s, keurmerken). Geen bevestigingsknop en dus geen nabel-signaal. Afzender info@ernes.nl (sinds 20-10-2026, was planning@) · antwoorden komen op info@ernes.nl · kopie naar administratie@ernes.nl. Elke verzending wordt vastgelegd met datum, adres en tekst.';
 const YOOBI_FUNCTIE_URL = SUPABASE_URL + '/functions/v1/yoobi-klant';
 const KENNIS_SOORTEN = ['maand', 'week', 'dag'];
 const KENNIS_ALLE = ['opdracht', 'maand', 'week', 'dag', 'afsluiting']; // v0.27.0: opdracht alleen bij onderhoudsplan-beurten, als eerste in de cyclus; v0.29.0: afsluiting als laatste
@@ -3381,7 +3387,51 @@ function kennisWerk(p, f) {
   const fl = faseLabel(p, f);
   return fl ? { werk: fl + ' van de werkzaamheden aan ' + proj, ev: true } : { werk: 'de werkzaamheden aan ' + proj, ev: false };
 }
-function kennisTekst(p, soort, aanhefRegel, f) {
+// ---------- v0.30.0: afsluitmail met aandachtspunten (tekst Gian 24-11-2026) ----------
+// De tekst vervangt de afsluitmail uit Yoobi. Besluiten Gian 24-11-2026: keuze binnen / buiten / beide in het
+// verzendvenster; platte tekst (geen vette kopjes); de vraag om te beoordelen en de knoppen bovenaan.
+// De regel KENNIS_KNOPPEN_MERK is de plek van de knoppen: de Edge Function planning-kennisgeving v3.6 zet ze daar.
+// Ontbreekt de regel (weggehaald, of een oudere tekst), dan zet de functie de knoppen onder de tekst, zoals v3.5 deed.
+const KENNIS_KNOPPEN_MERK = '[beoordelingsknoppen]';
+const AFSLUIT_VARIANTEN = ['beide', 'binnen', 'buiten'];
+// waar: 'altijd' of 'binnen' (een punt met 'binnen' vervalt bij alleen buitenwerk). advies mag een functie van de variant zijn.
+const AFSLUIT_PUNTEN = [
+  { titel: 'Uitharding van de verf', waar: 'altijd',
+    tekst: 'Hoewel de verf na enkele uren droog aanvoelt, is het belangrijk te weten dat de uiteindelijke uitharding langer duurt. Afhankelijk van het type verf en de omstandigheden (zoals temperatuur en luchtvochtigheid) kan dit tussen de 1 en 4 weken duren.',
+    advies: v => 'Vermijd intensief gebruik van geschilderde delen in de eerste dagen (zoals het dichtgooien van deuren/ramen of het plaatsen van voorwerpen tegen muren).' +
+      (v === 'buiten' ? '' : v === 'binnen' ? ' Ventileer goed, maar voorkom tocht die stof op vers schilderwerk kan blazen.' : ' Bij binnenschilderwerk: ventileer goed, maar voorkom tocht die stof op vers schilderwerk kan blazen.') },
+  { titel: 'Reiniging van het schilderwerk', waar: 'altijd',
+    tekst: 'Het is belangrijk om het schilderwerk de eerste weken niet schoon te maken. De verflaag is nog niet volledig uitgehard en kan hierdoor beschadigen.',
+    advies: 'Na de uithardingsperiode kunt u indien nodig voorzichtig reinigen met een zachte doek of spons en lauw water.\nGebruik geen agressieve of schurende schoonmaakmiddelen.' },
+  { titel: 'Ventilatie en omgevingstemperatuur', waar: 'binnen',
+    tekst: 'Een goede ventilatie helpt bij het drogen en uitharden van de verf, zeker bij binnenwerk. Te koude of vochtige ruimtes vertragen dit proces.',
+    advies: 'Houd ramen en deuren (waar mogelijk) op een kier voor voldoende luchtcirculatie. Vermijd extreme kou of hitte in de ruimte waar pas geschilderd is.' },
+  { titel: 'Condens en vochtbelasting', waar: 'binnen',
+    tekst: 'Bij schilderwerk in natte ruimtes zoals keukens of badkamers is het belangrijk om de ruimte goed droog te houden tijdens de eerste weken. Condens kan de verflaag aantasten.',
+    advies: 'Zorg voor extra ventilatie bij douchen/koken. Vermijd directe waterbelasting van pas geschilderde oppervlakken.' },
+  { titel: 'Raam- en deurafdichting', waar: 'altijd',
+    tekst: 'Bij recent geschilderde ramen en deuren bestaat het risico dat deze \'kleven\' wanneer ze te snel gesloten worden.',
+    advies: 'Laat ramen/deuren na het schilderen bij voorkeur een paar dagen op een kier staan. Als dit niet mogelijk is: open en sluit ze voorzichtig en regelmatig om vastplakken te voorkomen.' },
+];
+function afsluitPunten(variant) {
+  const v = AFSLUIT_VARIANTEN.includes(variant) ? variant : 'beide'; // onbekende keuze: de volledige tekst
+  return AFSLUIT_PUNTEN.filter(x => x.waar === 'altijd' || v !== 'buiten')
+    .map((x, i) => (i + 1) + '. ' + x.titel + '\n' + x.tekst + '\nAdvies:\n' + (typeof x.advies === 'function' ? x.advies(v) : x.advies))
+    .join('\n\n');
+}
+function afsluitKern(p, laatste, variant) {
+  const proj = p.naam || ('project ' + p.code);
+  return (isOnderhoudsplan(p)
+    ? 'De onderhoudsbeurt van ' + (laatste || new Date()).getFullYear() + ' (' + proj + ') is succesvol afgerond.'
+    : 'Het schilderwerk is succesvol afgerond.') + ' Hartelijk dank voor de prettige samenwerking en het vertrouwen in ons werk.\n\n' +
+    'Bent u tevreden over ons werk? Dan zouden wij het erg waarderen als u ons wilt beoordelen. Dat kan via Google of via Klantenvertellen, met de knoppen hieronder. Het helpt andere klanten bij hun keuze en ons om scherp te blijven.\n\n' +
+    KENNIS_KNOPPEN_MERK + '\n\n' +
+    'Hieronder vindt u enkele belangrijke aandachtspunten om het schilderwerk in goede staat te houden en het de kans te geven optimaal uit te harden.\n\n' +
+    'Aandachtspunten na afronding schilderwerk:\n\n' +
+    afsluitPunten(variant) + '\n\n' +
+    'Valt u toch nog iets op, laat het ons dan weten. Dan komen wij het in orde maken.';
+}
+function kennisTekst(p, soort, aanhefRegel, f, variant) {
   const start = kennisStart(p, f);
   const { werk, ev } = kennisWerk(p, f);
   const Werk = werk.charAt(0).toUpperCase() + werk.slice(1);
@@ -3398,14 +3448,8 @@ function kennisTekst(p, soort, aanhefRegel, f) {
     const tijden = startTijden(p.code, naarIso(start));
     const wie = startRegel(tijden); // v0.18.1
     kern = 'In afwijking van ons eerdere bericht: ' + werk + (ev ? ' start' : ' starten') + ' niet op ' + vorige.tekst + ' maar op ' + fmtDatumLang(start) + '.' + (wie ? ' ' + wie : '') + '\n\n' + thuisZin(tijden);
-  } else if (soort === 'afsluiting') { // v0.29.0: de beoordelingsknoppen zet de functie eronder
-    const proj = p.naam || ('project ' + p.code);
-    const laatste = kennisPeil(p, soort, f);
-    kern = (isOnderhoudsplan(p)
-      ? 'De onderhoudsbeurt van ' + (laatste || new Date()).getFullYear() + ' (' + proj + ') is afgerond. Hartelijk dank voor uw vertrouwen.'
-      : 'De werkzaamheden aan ' + proj + ' zijn afgerond. Hartelijk dank voor uw vertrouwen en de prettige samenwerking.') + '\n\n' +
-      'Valt u toch nog iets op, laat het ons dan weten. Dan komen wij het in orde maken.\n\n' +
-      'Bent u tevreden over ons werk? Dan zouden wij het erg waarderen als u ons wilt beoordelen. Dat kan via Google of via Klantenvertellen, met de knoppen hieronder. Het helpt andere klanten bij hun keuze en ons om scherp te blijven.';
+  } else if (soort === 'afsluiting') { // v0.29.0; v0.30.0: tekst van Gian (24-11-2026) met aandachtspunten, knoppen bovenaan
+    kern = afsluitKern(p, kennisPeil(p, soort, f), variant);
   } else if (soort === 'opdracht') { // v0.27.0
     kern = 'Hartelijk dank voor uw opdracht voor het onderhoudsplan. Wij hebben de onderhoudsbeurten voorlopig ingepland in ' + opdrachtJaren(p) + '.\n\n' +
       'In december voorafgaand aan elk uitvoeringsjaar laten wij u weten in welke maand de beurt gepland staat. Ongeveer twee weken voor de start volgt de precieze week, en in de week ervoor de startdag. Heeft u tussentijds vragen of wijzigingen, laat het ons dan gerust weten.';
@@ -3484,7 +3528,7 @@ function historieKaart(rij) {
     (rij.periode_tekst ? '<div class="hperiode">voor ' + esc(rij.periode_tekst) + '</div>' : '') +
     '<div class="honderwerp">' + esc(rij.onderwerp || '(geen onderwerp vastgelegd)') + '</div>' +
     '<div class="htekst">' + esc(rij.tekst || '(geen tekst vastgelegd)') + '</div>' +
-    '<div class="hvoet">Groet, ' + (rij.soort === 'afsluiting' ? 'beoordelingsknoppen (Google en Klantenvertellen)' : 'bevestigingsknop') + ' en handtekening stonden er in de mail automatisch onder.</div></div>';
+    '<div class="hvoet">' + (rij.soort === 'afsluiting' ? 'Groet en handtekening stonden er in de mail automatisch onder; de beoordelingsknoppen (Google en Klantenvertellen) op de plek van de regel [beoordelingsknoppen], of onder de tekst als die regel ontbreekt.' : 'Groet, bevestigingsknop en handtekening stonden er in de mail automatisch onder.') + '</div></div>';
 }
 function historieHtml(code) {
   const rijen = kennisHistorie[code] || [];
@@ -3534,6 +3578,7 @@ function tekenKennisContact(lijst, huidig, melding) {
   ['kcNaam', 'kcEmail'].forEach(id => document.getElementById(id).addEventListener('input', () => { kennisOverlay.querySelector('input[name=kcontact][value=hand]').checked = true; kennisVulTekst(); }));
 }
 let kennisTekstHandmatig = false;
+let kennisAfsluitVariant = 'beide'; // v0.30.0: keuze binnen / buiten / beide in het verzendvenster van de afsluitmail
 function kennisAanhefKeuze() {
   const v = document.getElementById('kcVorm'), a = document.getElementById('kcAchternaam');
   if (!v) return null;
@@ -3544,11 +3589,14 @@ function kennisVulTekst() {
   const vb = document.getElementById('kcVoorbeeld');
   if (vb) vb.textContent = k && k.vorm ? 'De mail begint met: ' + aanhef(k.vorm, k.achternaam) : '';
   if (!kennisHuidig || !kennisHuidig.soort || kennisTekstHandmatig) return;
-  document.getElementById('kennisTekst').value = kennisTekst(kennisHuidig.p, kennisHuidig.soort, k && k.vorm ? aanhef(k.vorm, k.achternaam) : '', kennisHuidig.f);
+  document.getElementById('kennisTekst').value = kennisTekst(kennisHuidig.p, kennisHuidig.soort, k && k.vorm ? aanhef(k.vorm, k.achternaam) : '', kennisHuidig.f, kennisAfsluitVariant);
 }
 async function openKennisModaal(p, soort, f) {
   kennisHuidig = { p, soort, f: f || null };
   kennisTekstHandmatig = false;
+  kennisAfsluitVariant = 'beide'; // v0.30.0: elk venster begint met de volledige tekst
+  document.getElementById('kennisVariantRij').style.display = soort === 'afsluiting' ? '' : 'none';
+  document.querySelectorAll('input[name="kennisVariant"]').forEach(r => { r.checked = r.value === kennisAfsluitVariant; });
   const pl = planProjecten[p.code] || {};
   const huidig = pl.contact_email ? { naam: pl.contact_naam || '', email: pl.contact_email, vorm: pl.contact_aanspreekvorm || '', achternaam: pl.contact_achternaam || '' } : (pl.contact_aanspreekvorm ? { naam: '', email: '', vorm: pl.contact_aanspreekvorm, achternaam: pl.contact_achternaam || '' } : null);
   document.getElementById('kennisTitel').textContent = soort ? kennisTitel(soort) + ' · ' + p.klant + (f && soort !== 'afsluiting' ? ' · ' + f.naam : '') : 'Contactpersoon · ' + p.klant; // v0.22.0: fase in de titel; v0.29.0: afsluiting is van het hele project
@@ -3560,7 +3608,7 @@ async function openKennisModaal(p, soort, f) {
   tekstSectie.style.display = soort ? '' : 'none';
   if (soort) {
     document.getElementById('kennisOnderwerp').value = kennisOnderwerp(p, soort, f);
-    document.getElementById('kennisTekst').value = kennisTekst(p, soort, kennisAanhefVan(p), f);
+    document.getElementById('kennisTekst').value = kennisTekst(p, soort, kennisAanhefVan(p), f, kennisAfsluitVariant);
   }
   document.getElementById('kennisContact').innerHTML = '<div class="hint">Contactpersonen ophalen uit Yoobi…</div>';
   kennisOverlay.classList.add('open');
@@ -3571,6 +3619,17 @@ async function openKennisModaal(p, soort, f) {
   tekenKennisContact(lijst, huidig, melding);
 }
 document.getElementById('kennisTekst').addEventListener('input', () => { kennisTekstHandmatig = true; });
+// v0.30.0: een andere keuze binnen/buiten zet de standaardtekst opnieuw; eigen aanpassingen gaan dan verloren, dus eerst vragen.
+document.querySelectorAll('input[name="kennisVariant"]').forEach(r => r.addEventListener('change', () => {
+  if (!kennisHuidig || kennisHuidig.soort !== 'afsluiting' || !r.checked) return;
+  if (kennisTekstHandmatig && !confirm('Je hebt de tekst zelf aangepast. Een andere keuze zet de standaardtekst terug; je aanpassingen gaan verloren. Doorgaan?')) {
+    document.querySelectorAll('input[name="kennisVariant"]').forEach(x => { x.checked = x.value === kennisAfsluitVariant; });
+    return;
+  }
+  kennisAfsluitVariant = r.value;
+  kennisTekstHandmatig = false;
+  kennisVulTekst();
+}));
 document.getElementById('kennisVerstuur').addEventListener('click', async () => {
   if (!kennisHuidig) return;
   const { p, soort, f } = kennisHuidig;

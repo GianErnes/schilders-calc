@@ -2,6 +2,38 @@
 
 > **Handleiding meebewegen.** Sinds v0.23.0 staat er een handleiding in planning.html (knop *Handleiding* in de kop, 17 secties). Wie een functie wijzigt, past in dezelfde wijziging de bijbehorende alinea in de handleiding aan en de *Sinds*-regel eronder. Een handleiding die achterloopt is erger dan geen: iemand handelt ernaar.
 
+## v0.30.0 + Edge Function planning-kennisgeving v3.6 — Afsluitmail met aandachtspunten voor vers schilderwerk, keuze binnen/buiten, beoordelingsknoppen bovenaan, 24-11-2026
+
+Gebouwd op v0.29.0, live opgehaald van GitHub op 24-11-2026 bij de start, opnieuw na de pauze en opnieuw vlak voor het afronden (268.154 bytes, drie keer identiek). De projectkopie stond nog op v0.27.0.
+
+**Aanleiding.** Gian 24-11: "Planning versturen afsluitmail. Deze zou de Yoobi mail kunnen vervangen als hij onderstaande tekst zou bevatten", met de tekst van de Yoobi-afsluitmail: opening, vijf aandachtspunten (uitharding, reiniging, ventilatie en omgevingstemperatuur, condens en vochtbelasting, raam- en deurafdichting) en een regel met de twee beoordelingslinks. Besluiten Gian 24-11: keuze **binnen / buiten / beide** in het verzendvenster; **platte tekst** (geen vette kopjes); de vraag om te beoordelen **bovenaan**; op advies van Claude daarvoor de functie aanpassen zodat de knoppen zelf bovenaan staan (in plaats van kale links in de tekst).
+
+**Keuzes Claude (niet door Gian besloten, terug te draaien).**
+- De regel met de twee links uit Gians tekst is vervallen: de functie zet de knoppen al, anders staat de vraag er twee keer.
+- De zin "Valt u toch nog iets op, laat het ons dan weten. Dan komen wij het in orde maken." uit v0.29.0 blijft, als laatste alinea. Gians tekst had geen ingang voor een klacht.
+- De alinea "Bent u tevreden over ons werk? …" uit v0.29.0 blijft, direct boven de knoppen.
+- *Alleen buitenwerk* laat punt 3 (ventilatie) en punt 4 (condens) weg en de zin "Bij binnenschilderwerk: ventileer goed …" in punt 1; de punten nummeren door (1, 2, 3). *Alleen binnenwerk* is gelijk aan *beide*, op die ene zin na die dan zonder "Bij binnenschilderwerk:" begint: de tekst van Gian heeft geen punt dat alleen voor buiten geldt. De indeling staat per punt in `AFSLUIT_PUNTEN` (`waar: 'altijd'` of `'binnen'`).
+- Het venster opent altijd op *binnen- en buitenwerk* (de volledige tekst, gelijk aan wat Yoobi stuurde). De planning weet niet of een project binnen of buiten is.
+- De plek van de knoppen is een zichtbare regel `[beoordelingsknoppen]` in de tekst. Te verplaatsen of weg te halen; zonder die regel staan de knoppen onderaan zoals in v3.5.
+- Opening bij een gewoon project is letterlijk Gians zin "Het schilderwerk is succesvol afgerond." (zonder projectnaam; die staat in het onderwerp). Bij een onderhoudsplan-beurt "De onderhoudsbeurt van 2028 (…) is succesvol afgerond."
+
+**Wijziging.**
+1. **Edge Function `planning-kennisgeving` v3.6** (versie 19, Verify JWT AAN; door Claude uitgerold 24-11 via de Supabase-koppeling, vóór planning.html): nieuw `splitsOpMerk` en `afsluitTekst`; `tekstNaarHtml` en de tekstversie zetten bij soort `afsluiting` het blok "Wilt u ons beoordelen?" op de plek van de eerste regel die alleen `[beoordelingsknoppen]` bevat (hoofdletters en spaties eromheen maken niet uit; een tweede merkregel vervalt). Zonder merkregel: blok onder de tekst, gelijk aan v3.5, dus planning.html v0.29.0 blijft werken. `beoordeelBlokHtml(midden)` heeft een andere marge als er tekst onder staat. De rij in `plan_kennisgevingen` bewaart de tekst mét merkregel. Andere soorten ongewijzigd.
+2. **planning.html v0.30.0.** Nieuw: `KENNIS_KNOPPEN_MERK`, `AFSLUIT_VARIANTEN`, `AFSLUIT_PUNTEN`, `afsluitPunten(variant)`, `afsluitKern(p, laatste, variant)`; `kennisTekst` heeft een vijfde parameter `variant` (onbekend of leeg = beide). Verzendvenster: rij *Aandachtspunten in de mail voor* met drie keuzerondjes (`kennisVariantRij`, alleen bij de afsluitmail, `kennisAfsluitVariant`); een andere keuze zet de standaardtekst opnieuw en vraagt eerst om bevestiging als de tekst al met de hand is aangepast. `KENNIS_HINT_AFSLUITING` legt de merkregel uit. Historie: voetregel bij een afsluitmail noemt de plek van de knoppen. Handleiding 11: alinea *Afsluiting*, trefwoorden, Sinds-regel.
+3. Geen SQL. `planning-kennisgeving-taken` en bevestig.html niet gewijzigd.
+
+**Test.** `test.mjs` 16/16 groen in Node 22: tekst per keuze (beide: vijf punten met Gians zinnen letterlijk; buiten: drie punten zonder binnen-zinnen; binnen; onbekende keuze = beide; merkregel één keer en op de goede plek; onderhoudsplan-opening; lengte 2.548 tekens tegen een grens van 20.000), de functie (blok op de plek van de merkregel in html en tekst, het woord zelf nergens in de mail; terugval zonder merkregel gelijk aan v3.5; merkregel verplaatst, met spaties, in hoofdletters, dubbel, als laatste regel, en midden in een zin; regressie weekmail), en `verwerk` met een nagebootste fetch (afsluiting: geen token, rij met merkregel; week: token en bevestigingsblok; zonder JWT 401 en geen verzending; onbekende soort 400). planning.html: parse-test, accolades 867/867, div-balans 161/161 (was 160/160, één rij erbij), scripttags 2/2.
+
+**Live gemeten (24-11-2026, via de Supabase-koppeling).** Functie staat op versie 19, ACTIVE, Verify JWT aan. Een verzoek met een onbestaande soort (`net._http_response` 101216) geeft 400 "soort moet opdracht, maand, week, dag of afsluiting zijn": de functie start op. `plan_kennisgevingen` had op dat moment één afsluitmail (20261632, verstuurd 20-11 door administratie@, nog met de tekst van v0.29.0).
+
+**Niet getest.** planning.html v0.30.0 is niet in de browser bekeken (de keuzerondjes, de vraag bij een aangepaste tekst, de hint). De uitgerolde functie is overgetypt uit het geteste bestand en niet byte voor byte met dat bestand vergeleken; live is alleen het opstarten gemeten, niet het plaatsen van de knoppen. Er is nog geen mail met de nieuwe tekst verstuurd: hoe de lange tekst en het blok bovenaan eruitzien in een mailprogramma is alleen uit de html afgeleid. Eerste echte verzending: een proefmail van Gian aan zichzelf.
+
+**Bekende beperking.** De afsluitmail komt alleen bij projecten met ingeplande uren en na een klik. Werk dat nooit in de planning stond krijgt geen afsluitmail meer als de Yoobi-mail uit gaat. Hoe en wanneer Yoobi zijn mail verstuurt is niet nagezocht.
+
+**Niet bijgewerkt.** SYSTEEM.md: op 24-11 staat er een SYSTEEM.md klaar in de uploadtaak van v4.130.0 (andere chat). Om geen derde versie in omloop te brengen is hij hier niet aangeraakt; deze entry is de bron.
+
+**Let op bij uitrol.** De functie staat al live en werkt met v0.29.0 en v0.30.0. planning.html v0.30.0 uploaden, verversen, en eerst één afsluitmail naar je eigen adres sturen vóór er een naar een klant gaat.
+
 ## v0.29.0 + claude_planning_12 + Edge Functions planning-kennisgeving v3.5 / planning-kennisgeving-taken v1.6 — Afsluitmail na de laatste geplande dag, met de vraag ons te beoordelen, 20-11-2026
 
 Gebouwd op v0.28.0, live opgehaald van GitHub op 20-11-2026 bij de start en opnieuw vlak voor het afronden (260.232 bytes, beide keren identiek). De projectkopie stond nog op v0.27.0.
