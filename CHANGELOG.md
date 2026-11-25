@@ -1,3 +1,79 @@
+## v4.131.0 — Opties: de klant kiest online en geeft akkoord op zijn samenstelling (2026-11-25)
+
+Gebouwd op v4.130.0, live opgehaald van GitHub op 25-11-2026 bij de start van deze bouw (2.198.087 bytes). De projectkopie stond op v4.128.0 en is niet gebruikt. Dit is release 3 uit het ontwerpmemo "Keuzes voor de klant, online samenstellen" van 20-11-2026 (stap D en hoofdstuk 7), gebouwd vanaf de overdrachtsbriefing van 22-11-2026. Drie delen die in deze volgorde live moeten: SQL (gedraaid), Edge Function `offerte-accord` (versie 44, uitgerold op 25-11-2026 rond 11:45 uur), `index.html`.
+
+**Uitrol van de Edge Function, 25-11-2026.** Besluit Gian 25-11: overdag in plaats van op een avond, met Gian op kantoor. Versie 43 vlak ervoor opnieuw volledig opgehaald via de koppeling. Uitgerold via de koppeling: versie 44, status ACTIVE, `verify_jwt` aan (antwoord van Supabase). De koppeling kan geen bestand uploaden; de tekst is overgenomen uit het geteste bestand en niet machinaal met dat bestand vergeleken. Controle: Gian opende een geaccordeerde link in een incognitovenster (document, stempel en downloadknop in beeld, schermafbeelding); in de database drie openingen van na de uitrol geregistreerd (twee open links, één geaccordeerde; query 11:52 uur). Het logboek van de functie is niet gelezen. Een akkoord, een afwijzing of een vraag via versie 44 is nog niet in het echt gedaan.
+
+**Aanleiding en besluiten**
+- Besluiten Gian 20-11 (memo): de klant vinkt aan, ziet zijn exacte totaal en geeft akkoord op zijn samenstelling; een online keuze wordt vanzelf verwerkt bij het openen van de calculatie.
+- Besluiten Gian 22-11 (briefing): bedragen op de klantpagina volgen het klanttype; nieuwe standaardzin onder de opties; één lijst met dezelfde nummering als op de offerte; niets aanvinken is akkoord op de basis; na het akkoord kan de klant niet meer wijzigen; een link zonder opties gedraagt zich exact als nu; de app controleert het bedrag op de cent en verwerkt niets als het niet klopt.
+- Besluiten Gian 25-11 ("1A 2A 3A"): bij akkoord komt het gekozen totaal in `bedrag` (1a); de zin bij drie of meer opties wordt aangepast (2a); dubbel versturen gaat dicht (3a).
+
+**Gemeten op 25-11-2026, vóór de bouw**
+- Edge Function `offerte-accord` versie 43, `verify_jwt` aan, volledig gelezen via de Supabase-koppeling. Ze las `cijfers` niet, raakte `bedrag` bij akkoord niet aan, stelt mail B en mail C zelf op, en schreef het akkoord zonder de voorwaarde dat de link nog open staat.
+- Eén echte open link met opties bij een klant: gemaakt 20-11 met v4.126.0, gemaild, één keer geopend, twee opties, particulier, basis € 4.741,16. In die bevroren PDF staat de oude slotzin. Daarnaast één ongemailde open proeflink van 22-11 waarbij al een keuze aanstond, en twee vervangen proeflinks.
+- `offerte_accorderingen.bedrag` wordt in `index.html` op vier plekken gelezen (akkoordzin, akkoordbevestiging op het getekende exemplaar, lijstje Eerdere versies, versievergelijking). `financieel.html`, `planning.html`, `taken.html`, `start.html`, `klanten.html`, `personeel.html` en `bevestig.html` noemen de tabel niet (0 treffers in de bestanden van 25-11). Geen view leest de tabel; van de databasefuncties alleen `prullenbak_herstel`.
+- `calculaties.totaal_incl_btw` wordt alleen door `index.html` gelezen. Geen view of functie gebruikt de kolom; de triggers `trg_offerte_taken` en `trg_planbasis_taken` reageren op status en datums. Tussen akkoord en openen toont dus alleen het dashboard van de calculatie-app nog het basisbedrag. De aanvulling "ook verwerken bij Reacties op offertes" is daarom niet gebouwd.
+- Niet gelezen: `offerte-verzenden` (v38), `offerte-herinnering` (v29), `offerte-leescontrole` (v28), `offerte-wachtrij` (v7) en de live versie van `fin-werkvoorraad-sync`. De projectkopie van die sync (v5) noemt de tabel niet.
+
+**Database (gedraaid)**
+- `sql/opties_04_online.sql`: kolommen `optiekeuze` (jsonb) en `optie_verwerkt_op` (timestamptz) op `offerte_accorderingen`. Live gedraaid op 25-11-2026 via de Supabase-koppeling. Nagemeten: beide kolommen bestaan, 129 links, geen enkele met een waarde. Policy `ingelogd alles offerte_accorderingen [ALL]`.
+
+**Edge Function `offerte-accord` (versie 44, bestand `offerte-accord_index.ts`)**
+- Online kiezen geldt alleen voor een offerte-link waarvan `cijfers.opties.online` de waarde 1 heeft. Links van vóór deze versie, planlinks en houtrot-opgaven hebben dat merkteken niet.
+- Ophalen: bij een open, niet verlopen link met merkteken gaat het veld `opties` mee: klanttype, basis, per optie `id`, `nr`, `titel`, `klanttekst`, `meerExcl`, `meerIncl`, en per samenstelling `ids`, `excl`, `incl`. De rest van `cijfers` (regels, staart, uren) gaat niet naar de browser. Na een akkoord geeft ophalen `optiekeuze` terug.
+- Akkoord: de browser stuurt alleen ids (veld `opties`). De functie controleert elke id tegen de tabel van de link, zoekt het bedrag zelf op en schrijft `optiekeuze` en `bedrag`. Geweigerd met HTTP 400, zonder iets te schrijven of te mailen: een onbekende id, een dubbele id, een id die geen tekst is, iets anders dan een lijst, meer ids dan opties, een samenstelling die niet of twee keer in de tabel staat, een bedrag van nul of onleesbaar. Geen veld `opties` is akkoord op de basis. Een meegestuurd bedrag wordt nergens gelezen.
+- Dubbel versturen dicht: het akkoord of de afwijzing wordt geschreven met de voorwaarde `status = open` in de schrijfopdracht zelf. Schrijft die nul rijen, dan stopt de functie met "reeds afgehandeld" (HTTP 409), zonder gevolgen en zonder mail. Dit geldt voor alle drie de soorten links.
+- Mail B noemt de gekozen opties en het totaal; mail C krijgt de regels Keuze klant en Totaal samenstelling. Particulier: inclusief btw voorop; zakelijk en VvE: exclusief voorop.
+- De calculatie wordt door de functie op geaccepteerd gezet zoals altijd, maar niet in de gekozen samenstelling: dat doet de app.
+
+**Gebouwd in `index.html`**
+- Link maken (`_optTabelVoorLink`): de tabel krijgt `online`, `klanttype` en per optie `nr`, `klanttekst`, `meerExcl`, `meerIncl`. Het merkteken is 1 als de offerte op de basis staat (geen vastgelegde keuze, niets aangevinkt), er geen fouten zijn en alle samenstellingen zijn doorgerekend; anders 0.
+- Klantpagina: tussen het document en de knoppen het blok **Stel uw offerte samen** met per optie een vinkje, nummer, titel, omschrijving en meerprijs, en daaronder het totaal van de samenstelling. Elk totaal komt uit de tabel; de pagina telt nergens op. De akkoordzin noemt de samenstelling en het bedrag en loopt mee; wijzigt de klant een vinkje, dan gaat het akkoordvinkje uit. Na het akkoord staat er **Uw keuze** met wat de server heeft vastgelegd, ook als de klant de link later opnieuw opent.
+- Akkoordbevestiging op het getekende exemplaar (`_bouwGetekendePdfBytes`): het bedrag is het gekozen totaal; daaronder de gekozen opties, en bij zakelijk en VvE een regel met het bedrag exclusief btw. Geldt voor het exemplaar van de klant en voor het archiefexemplaar.
+- Verwerken (`_optOnlineVerwerk`, nieuw blok "ONLINE KEUZE VAN DE KLANT VERWERKEN"): bij het openen van een calculatie met opties kijkt de app of er een akkoord met een keuze ligt dat nog niet verwerkt is. Hij rekent die samenstelling door en vergelijkt inclusief en exclusief met het akkoord.
+  - Gelijk op de cent: stempel `optie_verwerkt_op` opeisen, `_optPasStandToe`, `optiesKeuze` vullen met de klant als bron, melden wat er gedaan is.
+  - Bedrag wijkt af, of er staat al een andere keuze in de calculatie: niets verwerkt; de app vraagt OK (toch in deze samenstelling zetten) of Annuleren (nu niets doen).
+  - Niet te verwerken (een gekozen optie bestaat niet meer, fouten in de opties): niets verwerkt; de app vraagt OK (ik regel het met de hand, niet meer melden) of Annuleren.
+  - Mislukt het opslaan onderweg, dan komt het stempel weer vrij.
+- Dezelfde controle loopt ook mee als het tabblad Calculatie in beeld is, hooguit eens per vijf minuten, zodat een akkoord dat binnenkomt terwijl de calculatie open staat ook wordt opgepikt.
+- Venster Accordeerlink: bij een open link met opties staat of de klant op die link online kan kiezen; na een akkoord wat de klant koos en of het verwerkt is. Reacties op offertes toont achter "Geaccordeerd door" de samenstelling.
+- Standaardzin onder de opties (`OPT_SLOT_STD`): "Bij uw digitale akkoord kiest u zelf welke opties u wilt laten uitvoeren; u ziet daar direct het totaal van uw samenstelling." Een calculatie met een eigen zin houdt die.
+- Zin bij drie of meer opties: "Het exacte totaal van uw samenstelling ziet u bij uw digitale akkoord."
+
+**Keuzes Claude**
+- Het merkteken `online` op de link, zodat de offerte die al bij een klant ligt geen vinkjes krijgt terwijl zijn document zegt dat het akkoord voor de basis geldt.
+- Een eigen kolom `optie_verwerkt_op` als stempel, opgeëist met een voorwaardelijke schrijfopdracht. Openen twee mensen de calculatie tegelijk, dan verwerkt er één.
+- Bij een afwijking is OK "toch verwerken" en niet alleen een melding. Zonder die weg zou de melding bij elke start terugkomen en moest de keuze met de hand worden nagebouwd. De afwijking wordt bewaard in `optiesKeuze.akkoordIncl`.
+- Na een geslaagde verwerking met opties een venster (alert) en geen korte melding: de calculatie is zonder klik veranderd, dat mag niet gemist worden. Bij alleen de basis een korte melding.
+- Het akkoordvinkje gaat uit bij elke wijziging van de vinkjes.
+- De akkoordzin staat bij een link met opties in één span naast het vinkje. Het label is een flexbox; zonder die span brak de zin in drie kolommen (gezien op de schermafbeelding, hersteld, controle toegevoegd).
+- De meerprijs per optie volgt op de klantpagina het klanttype. Op het document staat de meerprijs zoals in v4.130.0 (exclusief groot, inclusief klein, voor elk klanttype); dat is niet gewijzigd.
+
+**Niet gewijzigd (bewust)**
+- De rekenkern `_berekenOfferteCijfers`, `_optBereken`, `_optMetStand`, `_optPasStandToe`, `optLegVast`, `_accordNieuweLink` en `_accordCijfersVoorLink`: letterlijk gelijk aan v4.130.0 (getest).
+- Het bevroren document: dat blijft de basis met het aanbod van opties.
+- Planlinks en houtrot-opgaven, op de bescherming tegen dubbel versturen na.
+
+**Bekende beperkingen**
+- Tussen het akkoord en het eerste openen van de calculatie staat de calculatie op geaccepteerd met de vinkjes, uren en werkbon van de basis. Het afgesproken bedrag staat wel goed op de link en in de mails.
+- Sluit de browser precies tijdens het verwerken, dan kan het stempel gezet zijn terwijl niet alle vinkjes zijn omgezet. Het blok Opties meldt dan dat de vinkjes niet kloppen; zie SYSTEEM.md, "als het misgaat".
+- Maak je na een akkoord met online keuze nog een nieuwe versie, dan vergelijkt de versievergelijking het nieuwe bedrag met het gekozen totaal van de vorige link (gevolg van keuze 1a).
+- Een offerte waarvan het bedrag als tekst staat (regie) krijgt geen tabel en dus geen online keuze; dat was al zo voor de tabel.
+- De standaardzin belooft online kiezen. Bij een link waarop dat niet kan terwijl er wel opties als aanbod op het document staan (niet elke samenstelling was te berekenen) klopt de zin niet; het venster Accordeerlink meldt dan "Online kiezen: niet op deze link". In de tests niet voorgekomen.
+- De andere vier offertefuncties zijn niet gelezen op het gebruik van `bedrag`.
+
+**Getest**
+- Poorten: het inline script parseert in Node; div-tags 1566 / 1569 tegen 1549 / 1552 in v4.130.0 (zeventien erbij aan beide kanten); script-tags 6 / 6; accolades 9673 / 9673. De Edge Function is door de typecontrole van TypeScript gehaald; de enige meldingen zijn de import van supabase-js en de naam Deno, die buiten Supabase niet bestaan.
+- `test_online_v4.131.0.js` (nieuw), v4.130.0 naast v4.131.0, met de echte Edge Function in Node (`test_online_edge.js`: typen eraf, database en mail nagebootst, geen netwerk): 270 controles, alle goed. De tabel bij de link, de toetsing van een keuze, ophalen, akkoord met alle weigeringen, plan, houtrot, verlopen, vervangen en twee gelijktijdige klikken, de keten op de cent voor elf samenstellingen (4 van 4 bij twee opties, 7 van 256 bij acht opties, met delen als optie en posten waaronder een steiger van derden met 21% btw naast 9%): tabel, server en calculatie na verwerken gelijk in exclusief, btw en inclusief, en gelijk aan het echte v4.130.0 waar dezelfde samenstelling met de knop is vastgelegd; verwerken gebeurt één keer, ook met twee gebruikers tegelijk; een calculatie zonder online keuze wordt niet aangeraakt; afwijking; niet te verwerken; mislukken onderweg; de klantpagina in jsdom met het echte antwoord van de functie; het getekende exemplaar met pdf-lib; en wat niet mocht veranderen.
+- In de test met twee opties telt basis plus beide meerprijzen op tot € 7.100,70 terwijl de samenstelling € 7.099,41 is. De pagina toont het bedrag uit de tabel.
+- De test op de proef gesteld met zes opzettelijke fouten in een kopie: een bedrag uit de browser vertrouwen; de voorwaarde "nog open" uit de schrijfopdracht halen; een onbekende id door de vingers zien; het stempel niet voorwaardelijk zetten; het bedrag inclusief niet vergelijken; de klantpagina meerprijzen laten optellen. Alle zes gevonden (35, 3, 3, 3, 1 en 3 missers).
+- De bestaande sets opnieuw gedraaid tegen v4.131.0: `test_posten_v4.129.0.js` 69 van 69; `test_optieregel_v4.129.1.js` 23 van 23; `test_verlengen_v4.130.0.js` 126 van 128, de twee missers zijn de tellingen van gewijzigde en nieuwe functies (F2, F3), en de set vraagt nu ook `_optOnlineLinkHtml`, `_optOnlineAkkoordHtml` en `_accordOptNrs` in zijn selectie (gedraaid met een tijdelijke kopie; het bestand in de repo is niet aangepast en loopt op v4.131.0 vast); `test_keuzes_v4.128.0.js` 182 van 189, de zeven missers vergelijken het document en de tabel van de link letterlijk met v4.127.0. Nagemeten: het document is gelijk na het omwisselen van de slotzin, en de cijfers van de link zijn gelijk na het weglaten van de nieuwe velden.
+- Statische weergave van de klantpagina met de echte opmaak, als schermafbeelding bekeken.
+
+**Niet getest**
+- De Edge Function op Supabase zelf, met een echte link, echte mail en een echte browser. De klantpagina op een telefoon. Het verwerken tegen de echte database. Tot het testplan in SYSTEEM.md gelopen is heet dit niet werkend.
+
 ## v4.130.0 — Geldigheid van een verstuurde offerte verlengen zonder nieuwe link (2026-11-24)
 
 Gebouwd op v4.129.1, live opgehaald van GitHub op 24-11-2026 bij de start van deze bouw en opnieuw vlak voor het afronden (2.175.600 bytes, beide keren identiek). De projectkopie stond op v4.128.0 en is niet gebruikt. Geen SQL, geen wijziging aan een Edge Function.

@@ -7434,3 +7434,94 @@ order by aangemaakt_op desc;
 - Een klant krijgt een verlopen-mail over een verlengde offerte: `snapshot.geldigTot` op de link is niet meegegaan. Verleng opnieuw, of zet de opvolging voor die offerte uit in het venster.
 - Maud krijgt toch een beltaak: `beltaak_op` stond leeg. Kijk met de query hierboven; de taak afvinken met een korte uitkomst is genoeg.
 - Terug naar v4.129.1 kan zonder de database aan te raken. De extra sleutels `verlengingen` en `belVervalt` in het snapshot leest die versie niet; een verlengde datum blijft gewoon gelden.
+
+## Wat er op 25 november 2026 gedaan is: de klant kiest zijn opties online (index.html v4.131.0, SQL opties_04_online, Edge Function offerte-accord versie 44)
+
+**Wat het is.** Release 3 van de opties. Een offerte met opties krijgt op de accordeerpagina het blok Stel uw offerte samen. De klant vinkt aan, ziet het totaal van zijn samenstelling en geeft daar akkoord op. De Edge Function legt keuze en bedrag vast; de app zet de calculatie bij het openen in de gekozen samenstelling en rekent na op de cent. Ontwerp: memo "Keuzes voor de klant, online samenstellen" van 20-11-2026 (stap D, hoofdstuk 7) en de overdrachtsbriefing van 22-11-2026. Besluiten Gian 25-11-2026: 1a, 2a, 3a (zie CHANGELOG v4.131.0).
+
+**De drie delen en hun volgorde.** De volgorde is hard: elk deel leunt op het vorige.
+
+| Stap | Wat | Stand op 25-11-2026 |
+|---|---|---|
+| 1 | `sql/opties_04_online.sql`: kolommen `optiekeuze` en `optie_verwerkt_op` op `offerte_accorderingen` | Gedraaid via de koppeling; 2 kolommen, 129 links, 0 met een waarde |
+| 2 | Edge Function `offerte-accord`, bestand `offerte-accord_index.ts` | Versie 44, uitgerold op 25-11-2026 rond 11:45 uur via de koppeling; een bestaande link geopend door Gian, drie openingen geregistreerd |
+| 3 | `index.html` v4.131.0 | Mag nu geüpload worden |
+
+Waarom deze volgorde: de nieuwe functie leest `optiekeuze` bij elke opening van elke link, dus de kolom moet er zijn. En v4.131.0 zet de zin "Bij uw digitale akkoord kiest u zelf..." op het document; staat de oude functie nog live, dan ziet de klant geen vinkjes terwijl het document ze belooft. Andersom is veilig: de nieuwe functie met de oude app (v4.130.0) gedraagt zich als versie 43, want v4.130.0 zet het merkteken niet.
+
+**Waar het leeft.**
+
+| Gegeven | Plek | Wie schrijft | Wie leest |
+|---|---|---|---|
+| Wat er te kiezen valt | `offerte_accorderingen.cijfers.opties`: `online`, `klanttype`, `basis`, `opties[]` (`id`, `soort`, `titel`, `nr`, `klanttekst`, `meerExcl`, `meerIncl`), `combi[]` (`ids`, `excl`, `incl`) | De app bij het maken van de link (`_optTabelVoorLink`) | `offerte-accord` (ophalen en akkoord); de app (`_optVerstuurdeTabel`, venster Accordeerlink) |
+| Wat de klant koos | `offerte_accorderingen.optiekeuze`: `v`, `ids`, `nrs`, `titels`, `excl`, `incl`, `basisExcl`, `basisIncl`, `klanttype`, `op` | `offerte-accord` bij akkoord | De klantpagina, het getekende exemplaar, Reacties op offertes, `_optOnlineVerwerk` |
+| Waarvoor getekend is | `offerte_accorderingen.bedrag` | Bij het maken: de app (totaal van dat moment). Bij akkoord met online keuze: `offerte-accord` (gekozen totaal incl. btw) | Akkoordzin, akkoordbevestiging, Eerdere versies, versievergelijking |
+| Of de keuze verwerkt is | `offerte_accorderingen.optie_verwerkt_op` | De app (`_optOnlineEis`, `_optOnlineGeefVrij`) | De app |
+| De stand van de calculatie | `actief` op `hoofdgroepen`, `onderdelen`, `calc_regels`; rijen in `staart`; `calculaties.offerte_config.optiesKeuze` met `bron: 'klant'`, `accordId`, `akkoordOp`, `akkoordIncl` | De app (`_optPasStandToe`, `_optZetCfg`) | Alles wat rekent |
+
+**Het merkteken `online`.** Alleen een link waarvan `cijfers.opties.online` precies 1 is krijgt vinkjes. De app zet 1 als de offerte op de basis staat (geen vastgelegde keuze, geen optie aan), er geen fouten in de opties zijn en alle 2^n samenstellingen zijn doorgerekend. Alle links van vóór v4.131.0 hebben het merkteken niet. GEMETEN 25-11-2026: daar zit één echte open offerte bij (20-11, twee opties, basis € 4.741,16); die klant geeft akkoord op de basis, zoals zijn document zegt. Wil je hem alsnog online laten kiezen, maak dan een nieuwe link (nieuwe versie).
+
+**Wat de Edge Function doet bij akkoord** (functie `kiesSamenstelling`, zonder netwerk te testen):
+
+1. Leest de tabel van de link. Geen merkteken of een onleesbare tabel: geen online keuze, alles als voorheen; een meegestuurd veld `opties` wordt genegeerd.
+2. Neemt uit de browser alleen het veld `opties` (lijst van ids). Ontbreekt het, dan geldt de basis.
+3. Weigert met HTTP 400 en schrijft niets bij: geen lijst, een id die geen tekst is, een onbekende of dubbele id, meer ids dan opties, een samenstelling die niet precies één keer in de tabel staat, een bedrag dat nul, onleesbaar of lager dan het bedrag exclusief is.
+4. Schrijft `status`, naam, tijdstip, `optiekeuze` en `bedrag` in één opdracht met de voorwaarde `status = open`. Nul rijen geraakt: HTTP 409 "reeds afgehandeld", geen gevolgen, geen mail.
+5. Zet de calculatie op geaccepteerd en verstuurt mail B (met de gekozen opties en het totaal) en mail C (regels Keuze klant en Totaal samenstelling).
+
+**Wat de app doet bij het openen** (`_optOnlineVerwerk`, aangeroepen door `_optOnlineTrigger` in `openCalc` en, hooguit eens per vijf minuten, in `renderCalcStructuur` als het tabblad Calculatie in beeld is):
+
+| Situatie | Wat er gebeurt |
+|---|---|
+| Calculatie zonder opties | Niets, ook geen vraag aan de database |
+| Geen akkoord met een onverwerkte keuze | Eén leesvraag, verder niets |
+| Bedrag gelijk op de cent (incl. en excl.), calculatie op de basis | Stempel opeisen, vinkjes en staartposten omzetten, `optiesKeuze` vullen, venster met wat er gedaan is |
+| Dezelfde keuze stond al met de hand vastgelegd | Alleen het stempel |
+| Bedrag wijkt af, of er staat al een andere keuze | Niets verwerkt. Vraag: OK = toch in deze samenstelling zetten, Annuleren = nu niets doen |
+| Gekozen optie bestaat niet meer, of fouten in het blok Opties | Niets verwerkt. Vraag: OK = met de hand regelen en niet meer melden (alleen het stempel), Annuleren = nu niets doen |
+| Opslaan mislukt onderweg | Vinkjes terug (`_optPasStandToe`), stempel weer vrij, melding |
+| Een ander had het stempel al | Melding dat het elders verwerkt is; niets geschreven |
+
+Annuleren onthoudt de app tot de pagina opnieuw geladen wordt; daarna komt de vraag terug.
+
+**De klantpagina.** Functies `_accordOpt*` in `index.html`. Het totaal komt altijd uit `combi`, nooit uit optellen: in de test is basis plus twee meerprijzen € 7.100,70 en de samenstelling € 7.099,41. Particulier: inclusief btw groot. Zakelijk en VvE: exclusief groot. Wijzigt de klant een vinkje, dan gaat het akkoordvinkje uit. Na het akkoord zijn er geen vinkjes meer.
+
+**Rechten.** GEMETEN 25-11-2026: policy `ingelogd alles offerte_accorderingen [ALL]`; de app mag het stempel schrijven. De klantpagina praat alleen met de Edge Function.
+
+**Tests.** `test_online_v4.131.0.js`: `node test_online_v4.131.0.js <index.html v4.130.0> <index.html v4.131.0> <offerte-accord_index.ts>`. Vraagt `npm install acorn jsdom pdf-lib`, Node 22.13 of nieuwer, en in dezelfde map `test_keuzes_laad.js`, `test_keuzes_fixture.js` en `test_online_edge.js`. De set doet er enkele minuten over. `test_online_edge.js` laadt de echte Edge Function in Node: de typen gaan eraf, de import van supabase-js wordt een nagebootste database, mail wordt opgevangen. Wijzigt de functie, draai deze set dan opnieuw voordat ze wordt uitgerold.
+
+**Uitrollen van de Edge Function (besluit Gian 22-11-2026; op 25-11-2026 overdag gedaan, Gian op kantoor).** Door Claude via de Supabase-koppeling, `verify_jwt` aan laten. De koppeling neemt alleen tekst aan, geen bestand: de uitgerolde tekst is niet machinaal met het geteste bestand vergeleken. Vooraf versie 43 volledig ophalen en bewaren. Direct daarna:
+1. Een bestaande link openen (bijvoorbeeld via Zelf bekijken bij een open offerte): het document moet verschijnen zoals altijd, zonder vinkjes.
+2. Deze query moet na het openen een bijgewerkte `laatst_geopend_op` tonen als de link niet met Zelf bekijken is geopend:
+
+```sql
+select status, laatst_geopend_op, geopend_aantal, optiekeuze, optie_verwerkt_op
+from offerte_accorderingen order by laatst_geopend_op desc nulls last limit 5;
+```
+
+Gaat het mis: versie 43 terugzetten. De twee kolommen mogen blijven staan.
+
+**Testplan in echt gebruik (nog te doen; tot dan heet dit niet werkend).**
+1. Proefcalculatie met je eigen e-mailadres, twee opties (één "in plaats van", één gevel met een post erbij). Maak een link. In het venster Accordeerlink staat: "Online kiezen: de klant kan op de pagina uit 2 opties kiezen".
+2. Open de link uit de mail op je telefoon. Vink aan en uit: het totaal loopt mee en is bij elke samenstelling gelijk aan wat het blok Opties voor de klant in de app toont.
+3. Geef akkoord met één optie. Controleer mail B (de optie en het totaal), mail C (Keuze klant, Totaal samenstelling) en het getekende exemplaar (laatste pagina: bedrag en de gekozen optie).
+4. Open de calculatie in de app. Er komt een venster dat de klant online gekozen heeft en dat de calculatie in die samenstelling is gezet, op de cent gelijk. Het blok Opties toont de vastgelegde keuze met "klant ... (online akkoord)". De post staat bij de staartkosten.
+5. Open de calculatie nog eens: er gebeurt niets meer.
+6. Tweede proef: maak een link, wijzig daarna een hoeveelheid in de calculatie, geef via de link akkoord met een optie. Bij het openen moet de app melden dat het niet klopt en vragen wat je wilt.
+7. Derde proef: een offerte zonder opties. De link, het akkoord en de mails zijn precies als voorheen.
+
+**Als het misgaat.**
+- De klant ziet geen vinkjes terwijl het document ze belooft: de link heeft het merkteken niet (venster Accordeerlink zegt "Online kiezen: niet op deze link"), of de Edge Function is nog versie 43. Maak een nieuwe link, of rol de functie uit.
+- De klant krijgt "Deze samenstelling is niet beschikbaar": de tabel van de link mist die samenstelling. Maak een nieuwe link.
+- De keuze wordt niet verwerkt bij het openen. Kijk wat er ligt:
+
+```sql
+select a.id, a.status, a.bedrag, a.optiekeuze, a.optie_verwerkt_op, c.naam,
+       c.offerte_config->'optiesKeuze' as keuze_in_calculatie
+from offerte_accorderingen a join calculaties c on c.id = a.calculatie_id
+where a.optiekeuze is not null order by a.gereageerd_op desc;
+```
+
+- Het stempel staat er maar de vinkjes kloppen niet (browser gesloten tijdens het verwerken): het blok Opties voor de klant meldt dat de vinkjes niet overeenkomen. Leg de keuze met de hand vast (knop Leg deze keuze vast), of haal het stempel weg zodat de app het opnieuw doet: `update offerte_accorderingen set optie_verwerkt_op = null where id = '...';` en open de calculatie opnieuw.
+- De klant koos iets anders dan hij bedoelde: na het akkoord kan hij niet meer wijzigen. Pas de keuze aan in het blok Opties voor de klant (Keuze wissen, opnieuw vastleggen) en bevestig het hem zelf.
+- Terug naar v4.130.0 en versie 43 kan zonder de database aan te raken. Een link die met v4.131.0 is gemaakt draagt dan nog het merkteken, maar versie 43 leest het niet: de klant geeft akkoord op de basis. Let op de slotzin in zo'n document.
