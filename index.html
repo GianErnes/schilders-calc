@@ -2550,8 +2550,9 @@
 
   <section class="panel active" id="dashboard">
     <div class="intro intro-collapsible collapsed" id="introBlock">
-      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.130.0</h2>
+      <h2 onclick="document.getElementById('introBlock').classList.toggle('collapsed')" style="cursor:pointer; user-select:none;"><span class="intro-caret">▸</span> Welkom bij v4.131.0</h2>
       <div class="intro-body">
+        <p><strong>◇ De klant kiest zijn opties online (v4.131.0).</strong> Een offerte met opties krijgt op de accordeerpagina een blok <strong>Stel uw offerte samen</strong>. De klant vinkt aan welke opties hij wil, ziet direct het totaal van zijn samenstelling en geeft daar akkoord op. Vinkt hij niets aan, dan is het akkoord op de basisuitvoering. Bij een particulier staat het bedrag inclusief btw groot, bij zakelijk en VvE exclusief. De bevestigingsmail, het seintje naar info@ en de akkoordbevestiging op het getekende exemplaar noemen de gekozen opties en het totaal. Open je daarna de calculatie, dan zet de app haar vanzelf in de gekozen samenstelling en rekent na of het totaal op de cent gelijk is aan het akkoord; klopt het niet, dan gebeurt er niets en vraagt de app wat je wilt. Dit geldt alleen voor links die je vanaf deze versie maakt: een offerte met opties die al bij een klant ligt blijft werken zoals hij was. In het venster <strong>Accordeerlink</strong> staat of de klant op die link online kan kiezen. De zin onder de opties op het document is aangepast.</p>
         <p><strong>📅 Geldigheid van een verstuurde offerte verlengen (v4.130.0).</strong> Vraagt een klant om meer bedenktijd, dan hoef je geen nieuwe link meer te maken. In het venster <strong>Accordeerlink</strong> staat bij een open link nu tot wanneer de offerte geldig is, met de knop <strong>Geldigheid verlengen</strong>. Je kiest een nieuwe datum en de bestaande link blijft werken; ook een link die al verlopen was gaat daarmee weer open. De calculatie blijft op slot en de tarieven blijven bevroren. De herinnering en de verlopen-mail rekenen vanaf dat moment met de nieuwe datum. Met het vinkje <strong>Klant een mail sturen</strong> gaat er een bericht naar de klant met de nieuwe datum en de knop naar dezelfde link; de tekst pas je vooraf aan. Twee dingen om te weten: de PDF die de klant ziet is bevroren, dus staat daar een datum in, dan blijft dat de oude (de mail zegt dat de nieuwe datum geldt). En de mail gaat via dezelfde weg als de offerte zelf: het onderwerp blijft "Offerte" met het nummer, en de herinnering en de verlopen-mail beginnen opnieuw vanaf de dag van die mail. Na een verlenging komt er geen nieuwe beltaak voor Maud; een beltaak die al in de Takenapp staat blijft staan. Alleen voor offertes, niet voor onderhoudsplannen. Geen SQL en geen wijziging aan een Edge Function.</p>
         <p><strong>◇ De optieregel ziet er niet meer uit als vervallen (v4.129.1).</strong> Een optieregel die nog niet gekozen is stond grijs en doorgestreept, alsof je er niets aan kon doen. Hij was wel te bewerken. Voortaan is hij gewoon leesbaar, met een dunne rode lijn eromheen en bovenaan de zin <em>Dit is de optie. Pas hier aan wat de klant extra krijgt.</em> Bij de soort <strong>Extra bewerking</strong> staat achter elke bewerking die afwijkt van de basisregel het label <em>extra</em> of <em>anders dan basis</em>, met wat de basis heeft. Ook een gevel of onderdeel als optie heeft nu de rode lijn in plaats van de blauwe rand en is niet meer grijs. Het ruitje <strong>◇</strong> is dikker en rood. Bij de posten van een optie staat dat je ze in de omschrijving moet noemen, omdat de klant ze niet apart ziet.</p>
         <p><strong>◇ Steiger, hoogwerker of container bij een optie (v4.129.0).</strong> In het blok <em>Opties voor de klant</em> staat bij elke optie nu <strong>Posten bij deze optie</strong> met de knop <strong>+ post</strong>. Kies een post uit de staartbibliotheek of maak een eigen post: een vast bedrag, of aantal × prijs (een hoogwerker voor twee dagen is 2 × de dagprijs). De post telt alleen mee als de klant die optie kiest en zit in de meerprijs; de klant ziet hem niet apart. Zolang de optie niet gekozen is staat de post niet bij de staartkosten, niet op de werkbon en niet in de Yoobi-export. Leg je de keuze vast, dan komt hij als echte staartpost in de calculatie, met het label van de optie; bij <em>Keuze wissen</em> gaat hij daar weer uit en blijft hij bij de optie staan. Een post per dag of per week en een percentage kunnen niet bij een optie.</p>
@@ -4167,7 +4168,7 @@ Hout binnen;Gronden;m²;6;0,10</div>
 // ============================================================
 // VERSIE — één plek voor alle UI-versie-displays
 // ============================================================
-const APP_VERSION = 'v4.130.0';
+const APP_VERSION = 'v4.131.0';
 // v4.64.0 - Alleen dit account mag de Calculatie-app gebruiken. Andere accounts
 // worden bij inloggen of sessieherstel direct weer uitgelogd (zie _showApp).
 // Dit is een controle in de app, geen database-beveiliging: de policies op de
@@ -4590,6 +4591,7 @@ const MATERIAAL_GROEPEN = [
 // v3.18.0 — Versie-geschiedenis: 1-regel highlights per versie sinds v3.8.
 // Newest first. Bij elke nieuwe versie 1 regel BOVENAAN toevoegen.
 const RELEASE_HIGHLIGHTS = [
+  { v: '4.131.0', d: '2026-11-25', h: 'Opties: de klant kiest online op de accordeerpagina, ziet het totaal van zijn samenstelling en geeft daar akkoord op; de app verwerkt de keuze bij het openen van de calculatie en rekent na op de cent. Twee kolommen (sql/opties_04_online.sql) en een nieuwe versie van Edge Function offerte-accord.' },
   { v: '4.130.0', d: '2026-11-24', h: 'Accordeerlink: geldigheid van een verstuurde offerte verlengen zonder nieuwe link (knop Geldigheid verlengen); de opvolging rekent met de nieuwe datum en maakt geen beltaak meer; optioneel een mail naar de klant. Geen SQL, geen Edge Function.' },
   { v: '4.129.1', d: '2026-11-22', h: 'Opties: een niet-gekozen optieregel is niet meer grijs en doorgestreept; dunne rode lijn om een optie in plaats van de blauwe rand; uitleg boven de bewerkingen en de labels extra en anders dan basis bij wat afwijkt van de basisregel; ruitje dikker en rood; tekst bij de posten dat de omschrijving ze moet noemen.' },
   { v: '4.129.0', d: '2026-11-22', h: 'Opties: vaste posten bij een optie (steiger, hoogwerker, container) als vast bedrag of aantal × prijs; de post zit in de meerprijs, staat tot de keuze niet in de staart en komt bij het vastleggen van de keuze als echte staartpost in de calculatie.' },
@@ -15403,7 +15405,7 @@ async function openArchiveerModal() {
   _archAccordRij = null;
   try {
     const { data: accRows } = await _sb.from('offerte_accorderingen')
-      .select('pdf_path, snapshot->>pdf, klant_naam, gereageerd_op, bedrag, notitie')
+      .select('pdf_path, snapshot->>pdf, klant_naam, gereageerd_op, bedrag, notitie, optiekeuze') // v4.131.0 — online keuze voor het archiefexemplaar
       .eq('calculatie_id', data.calc.id)
       .is('onderhoudsplan_id', null) // planakkoorden hebben sinds v4.63.0 hun eigen regel (geaccordeerdplan)
       .eq('status', 'akkoord')
@@ -15416,7 +15418,8 @@ async function openArchiveerModal() {
         klant_naam: acc.klant_naam,
         gereageerd_op: acc.gereageerd_op,
         bedrag: acc.bedrag,
-        notitie: acc.notitie
+        notitie: acc.notitie,
+        optiekeuze: acc.optiekeuze || null // v4.131.0
       };
     }
   } catch (e) {
@@ -16408,7 +16411,8 @@ function printMeetstaat() {
 // ============================================================
 const OPT_MAX = 8;
 const OPT_VOL_AUTO = 4;   // t/m dit aantal keuzes direct alle samenstellingen (16)
-const OPT_SLOT_STD = 'Uw digitale akkoord geldt voor de basisuitvoering. Kiest u een of meer opties, laat het ons dan weten; u ontvangt van ons een aangepaste bevestiging.';
+// v4.131.0 — nieuwe standaardzin (besluit Gian 22-11-2026): de klant kiest online bij zijn akkoord.
+const OPT_SLOT_STD = 'Bij uw digitale akkoord kiest u zelf welke opties u wilt laten uitvoeren; u ziet daar direct het totaal van uw samenstelling.';
 let _optBezig = false;
 let _optKiesConcept = null;   // { calcId, ids:Set } — vinkjes in het blok Opties die nog niet zijn vastgelegd
 let _optMaakCtx = null;
@@ -16908,7 +16912,7 @@ function _optVoorDocument(c, cijNu) {
     toonCombi: n <= 2 && ber.volledig,
     intro: n <= 2
       ? 'De meerprijs van een optie komt bovenop het totaal van de basisuitvoering hierboven.'
-      : 'De meerprijzen gelden per optie ten opzichte van de basisuitvoering hierboven. Het exacte totaal van uw samenstelling bevestigen wij bij uw keuze.',
+      : 'De meerprijzen gelden per optie ten opzichte van de basisuitvoering hierboven. Het exacte totaal van uw samenstelling ziet u bij uw digitale akkoord.',
     slot: _optSlotTekst(c),
     nu: {
       excl: _r2(nuCij.exBtwFinal), btw: _r2(nuCij.btwBedrag), incl: _r2(nuCij.totaalIncl),
@@ -17022,11 +17026,21 @@ function _optTabelVoorLink(c) {
   try {
     const b = _optBereken(c, { volledig: true });   // v4.128.0 — ook boven vier keuzes alle samenstellingen (tot 256)
     if (!b || !b.n || !b.basis) return null;
+    const combi = b.combi.filter(x => x.ok).map(x => ({ ids: x.ids, excl: x.excl, incl: x.incl }));
+    // v4.131.0 — online kiezen (release 3). Het merkteken online = 1 zegt tegen de Edge
+    // Function offerte-accord dat de klant op de pagina mag kiezen. Alleen als de offerte
+    // op de basis staat (geen vastgelegde keuze, niets aangevinkt), er geen fouten zijn en
+    // elke samenstelling is doorgerekend. Anders 0: de link gedraagt zich als voorheen.
+    const cfg = _optCfgObj(c) || {};
+    const kt = (cfg.klanttype === 'zakelijk' || cfg.klanttype === 'vve') ? cfg.klanttype : 'consument';
+    const online = (b.huidig === 0 && !b.keuze && !b.fouten.length && b.volledig
+      && combi.length === Math.pow(2, b.n)
+      && b.opties.every(o => o.meerExcl != null && o.meerIncl != null)) ? 1 : 0;
     return {
-      n: b.n, huidig: b.huidig, ms: b.ms,
+      n: b.n, huidig: b.huidig, ms: b.ms, online: online, klanttype: kt,
       basis: { excl: b.basis.excl, incl: b.basis.incl },
-      opties: b.opties.map(o => ({ id: o.id, soort: o.soort, titel: o.titel })),
-      combi: b.combi.filter(x => x.ok).map(x => ({ ids: x.ids, excl: x.excl, incl: x.incl }))
+      opties: b.opties.map(o => ({ id: o.id, soort: o.soort, titel: o.titel, nr: o.nr, klanttekst: o.klanttekst, meerExcl: o.meerExcl, meerIncl: o.meerIncl })),
+      combi: combi
     };
   } catch (e) { return null; }
 }
@@ -17935,6 +17949,216 @@ async function optLegVast(wissen) {
   } else {
     _toast(wissen ? 'Keuze gewist. De calculatie staat weer op de basis.' : 'Keuze vastgelegd: ' + eur(doel.incl) + ' incl. BTW.', 'ok');
   }
+}
+
+// ============================================================
+// ONLINE KEUZE VAN DE KLANT VERWERKEN (v4.131.0, release 3)
+// Ontwerpmemo 20-11-2026 (stap D, hoofdstuk 7) en overdrachtsbriefing 22-11-2026.
+// De klant kiest op de accordeerpagina zijn opties en geeft akkoord. De Edge Function
+// offerte-accord legt keuze en bedrag vast op de link (kolom optiekeuze) en zet de
+// calculatie op geaccepteerd; de calculatie zelf staat dan nog op de basis. Het omzetten
+// gebeurt hier, met dezelfde routines als de knop "Leg deze keuze vast":
+//   1. is er een akkoord met een keuze die nog niet verwerkt is (optie_verwerkt_op leeg)?
+//   2. de samenstelling doorrekenen en vergelijken met het bedrag van het akkoord;
+//   3. gelijk op de cent: het stempel opeisen, _optPasStandToe, optiesKeuze vullen met de
+//      klant als bron, melden wat er gedaan is;
+//   4. niet gelijk, of niet te verwerken: niets doen en om een beslissing vragen.
+// Het stempel wordt opgeëist met een voorwaardelijke schrijfopdracht (alleen als het nog
+// leeg is). Openen twee mensen de calculatie tegelijk, dan krijgt er één het stempel en
+// verwerkt; de ander doet niets. Mislukt het verwerken, dan komt het stempel weer vrij.
+// Een calculatie zonder opties wordt niet aangeraakt en kost geen vraag aan de database.
+// ============================================================
+let _optOnlineLoopt = false;
+let _optOnlineLater = {};                    // link-id → true: in deze sessie niet opnieuw vragen
+let _optOnlineCheck = { id: null, ts: 0 };   // laatste controle, voor de rem in renderCalcStructuur
+const OPT_ONLINE_PAUZE_MS = 300000;
+
+// Start de controle. force = bij het openen van een calculatie; anders hooguit eens per
+// vijf minuten en alleen als het tabblad Calculatie in beeld is.
+function _optOnlineTrigger(force) {
+  const c = data.calc;
+  if (!c || !c.__loaded || typeof _sb === 'undefined' || !_sb || _optOnlineLoopt) return;
+  if (!_optCfgLijst(c).length) return;
+  if (!force) {
+    const p = document.getElementById('calculatie');
+    if (!p || !p.classList || !p.classList.contains('active')) return;
+    if (_optOnlineCheck.id === c.id && (Date.now() - _optOnlineCheck.ts) < OPT_ONLINE_PAUZE_MS) return;
+  }
+  _optOnlineCheck = { id: c.id, ts: Date.now() };
+  _optOnlineVerwerk(c).catch(e => { console.warn('Online keuze verwerken mislukt:', e); });
+}
+
+// Vergelijkt de keuze van het akkoord (k = optiekeuze van de link) met wat de calculatie
+// nu rekent (ber = _optBereken met die samenstelling). Raakt niets aan.
+//   gelijk      de samenstelling bestaat en het bedrag is op de cent gelijk
+//   afwijking   te verwerken, maar het bedrag of de stand van de calculatie wijkt af
+//   onmogelijk  niet te verwerken (optie weg, fouten in de opties, niet te berekenen)
+function _optOnlineOordeel(ber, k) {
+  const ids = (k && Array.isArray(k.ids)) ? k.ids.map(String) : null;
+  const uit = { soort: 'onmogelijk', ids: ids || [], masker: 0, doel: null, redenen: [], alGedaan: false };
+  if (!ids) { uit.redenen.push('de keuze bij het akkoord is niet leesbaar'); return uit; }
+  if (!ber || !ber.n || !ber.basis) { uit.redenen.push('de calculatie heeft geen opties meer of de basis is niet te berekenen'); return uit; }
+  const bekend = ber.opties.map(o => o.id);
+  const weg = ids.filter(id => bekend.indexOf(id) < 0);
+  if (weg.length) { uit.redenen.push((weg.length === 1 ? 'een gekozen optie bestaat' : weg.length + ' gekozen opties bestaan') + ' niet meer in de calculatie'); return uit; }
+  uit.masker = ber.opties.reduce((m, o, i) => m | (ids.indexOf(o.id) >= 0 ? (1 << i) : 0), 0);
+  const zelfde = !!ber.keuze && ber.keuze.gekozen.slice().sort().join(',') === ids.slice().sort().join(',');
+  if (ber.fouten.length) { ber.fouten.forEach(f => uit.redenen.push(f)); return uit; }
+  const doel = ber.rij(uit.masker);
+  if (!doel || !doel.ok) { uit.redenen.push('de gekozen samenstelling is niet te berekenen'); return uit; }
+  uit.doel = doel;
+  uit.soort = 'gelijk';
+  const inclA = parseFloat(k.incl), exclA = parseFloat(k.excl);
+  if (!isFinite(inclA) || Math.abs(doel.incl - inclA) >= 0.005) {
+    uit.soort = 'afwijking';
+    uit.redenen.push('het akkoord is gegeven op ' + (isFinite(inclA) ? eur(inclA) : 'een onleesbaar bedrag') + ' incl. BTW; de calculatie rekent voor deze samenstelling nu ' + eur(doel.incl));
+  } else if (isFinite(exclA) && Math.abs(doel.excl - exclA) >= 0.005) {
+    uit.soort = 'afwijking';
+    uit.redenen.push('het bedrag excl. BTW wijkt af: akkoord ' + eur(exclA) + ', calculatie ' + eur(doel.excl));
+  }
+  uit.alGedaan = (ber.huidig === uit.masker && zelfde);
+  if (!uit.alGedaan && (ber.keuze || (ber.huidig != null && ber.huidig !== 0 && ber.huidig !== uit.masker))) {
+    uit.soort = 'afwijking';
+    uit.redenen.push(ber.keuze ? 'in de calculatie is al een andere keuze vastgelegd' : 'in de calculatie staat al een andere samenstelling aan');
+  }
+  return uit;
+}
+async function _optOnlineEis(id) {
+  try {
+    const r = await _sb.from('offerte_accorderingen').update({ optie_verwerkt_op: new Date().toISOString() })
+      .eq('id', id).is('optie_verwerkt_op', null).select('id');
+    return !!(r && !r.error && r.data && r.data.length === 1);
+  } catch (e) { return false; }
+}
+async function _optOnlineGeefVrij(id) {
+  try { await _sb.from('offerte_accorderingen').update({ optie_verwerkt_op: null }).eq('id', id); } catch (e) {}
+}
+// Het eigenlijke werk. Geeft terug wat er gebeurd is (voor de test en het logboek):
+// geen · later · elders · verwerkt · verwerkt-afwijking · gemarkeerd · mislukt.
+async function _optOnlineVerwerk(c) {
+  if (!c || c !== data.calc || !c.__loaded || typeof _sb === 'undefined' || !_sb) return { status: 'geen' };
+  if (_optBezig || _optOnlineLoopt) return { status: 'geen' };
+  if (!_optCfgLijst(c).length) return { status: 'geen' };   // geen opties: de database wordt niet gevraagd
+  _optOnlineLoopt = true;
+  try {
+    let rij = null;
+    try {
+      const res = await _sb.from('offerte_accorderingen')
+        .select('id, klant_naam, gereageerd_op, bedrag, optiekeuze, optie_verwerkt_op')
+        .eq('calculatie_id', c.id).is('onderhoudsplan_id', null).eq('status', 'akkoord').is('optie_verwerkt_op', null)
+        .order('gereageerd_op', { ascending: false });
+      if (!res || res.error) return { status: 'geen' };   // stil: de calculatie opent gewoon
+      rij = (res.data || []).find(r => r && r.optiekeuze && typeof r.optiekeuze === 'object' && Array.isArray(r.optiekeuze.ids)) || null;
+    } catch (e) { return { status: 'geen' }; }
+    if (!rij) return { status: 'geen' };
+    if (_optOnlineLater[rij.id]) return { status: 'later' };
+    if (c !== data.calc) return { status: 'geen' };
+
+    const k = rij.optiekeuze;
+    const ids = k.ids.map(String);
+    let ber = null;
+    try { ber = _optBereken(c, { kies: ids }); } catch (e) { ber = null; }
+    const oordeel = _optOnlineOordeel(ber, k);
+    const wie = (rij.klant_naam ? rij.klant_naam : 'De klant') + ' gaf' + (rij.gereageerd_op ? ' op ' + _accordDatum(rij.gereageerd_op) : '') + ' online akkoord op:';
+    const lijst = (Array.isArray(k.titels) && k.titels.length) ? k.titels.join('\n') : 'Alleen de basisuitvoering, zonder opties';
+
+    if (oordeel.soort === 'onmogelijk') {
+      const ja = confirm('De klant heeft online gekozen, maar de app kan die keuze niet verwerken.\n\n' + wie + '\n' + lijst
+        + '\nBedrag van het akkoord: ' + eur(parseFloat(k.incl)) + ' incl. BTW.\n\n- ' + oordeel.redenen.join('\n- ')
+        + '\n\nEr is niets gewijzigd. De calculatie staat nog zoals zij stond.\n\n'
+        + 'OK = ik regel dit met de hand; deze melding niet meer tonen.\nAnnuleren = nu niets doen. De melding komt terug als je de app opnieuw laadt.');
+      if (!ja) { _optOnlineLater[rij.id] = true; return { status: 'later', oordeel: oordeel }; }
+      const eis = await _optOnlineEis(rij.id);
+      return { status: eis ? 'gemarkeerd' : 'elders', oordeel: oordeel };
+    }
+    if (oordeel.alGedaan && oordeel.soort === 'gelijk') {
+      // De keuze stond al zo vastgelegd (met de hand); alleen het stempel zetten.
+      const eis = await _optOnlineEis(rij.id);
+      if (eis) _toast('De online keuze van de klant stond al in de calculatie; dat is nu afgetekend.', 'ok');
+      return { status: eis ? 'gemarkeerd' : 'elders', oordeel: oordeel };
+    }
+    if (oordeel.soort === 'afwijking') {
+      const ja = confirm('De klant heeft online gekozen, maar het klopt niet met de calculatie.\n\n' + wie + '\n' + lijst
+        + '\n\n- ' + oordeel.redenen.join('\n- ')
+        + '\n\nEr is nog niets verwerkt.\n\n'
+        + 'OK = de calculatie toch in deze samenstelling zetten (' + eur(oordeel.doel.incl) + ' incl. BTW). Het verschil met het akkoord bespreek je zelf met de klant.\n'
+        + 'Annuleren = nu niets doen. De vraag komt terug als je de app opnieuw laadt.');
+      if (!ja) { _optOnlineLater[rij.id] = true; return { status: 'later', oordeel: oordeel }; }
+    }
+    if (c !== data.calc || _optBezig) return { status: 'geen' };
+
+    // Stempel opeisen: wie het krijgt verwerkt, de ander doet niets.
+    if (!(await _optOnlineEis(rij.id))) {
+      _toast('De online keuze van de klant is zojuist elders verwerkt. Laad de app opnieuw om de nieuwe stand te zien.');
+      return { status: 'elders', oordeel: oordeel };
+    }
+    const doel = oordeel.doel;
+    const namen = ber.opties.filter(o => ids.indexOf(o.id) >= 0).map(_optLabel);
+    let res = null, cfgOk = true, nu = null, gegooid = null;
+    _optBezig = true;
+    try {
+      res = await _optPasStandToe(c, ber, ids);
+      if (res && res.ok) {
+        const keuze = {
+          op: new Date().toISOString(),
+          door: 'klant' + (rij.klant_naam ? ' ' + rij.klant_naam : '') + ' (online akkoord)',
+          bron: 'klant', accordId: rij.id, akkoordOp: rij.gereageerd_op || null,
+          gekozen: ids, titels: namen, totaalIncl: doel.incl, totaalExcl: doel.excl, basisIncl: ber.basis.incl,
+          akkoordIncl: isFinite(parseFloat(k.incl)) ? parseFloat(k.incl) : null, app: APP_VERSION
+        };
+        cfgOk = await _optZetCfg(c, { optiesKeuze: keuze }, 'Keuze van de klant vastleggen');
+        _optKiesConcept = null;
+        try { const cij = _berekenOfferteCijfers(c); nu = cij ? _r2(cij.totaalIncl) : null; } catch (e) { nu = null; }
+      }
+    } catch (e) { gegooid = e; }
+    finally { _optBezig = false; }
+    if (gegooid || !res || !res.ok) {
+      await _optOnlineGeefVrij(rij.id);
+      _toast('De online keuze van de klant kon niet worden verwerkt (' + (gegooid ? (gegooid.message || gegooid) : (res && res.fout) || 'onbekende fout') + '). ' + ((res && !res.ok) ? 'Er is niets gewijzigd.' : 'Controleer de vinkjes in het blok Opties voor de klant.'));
+      return { status: 'mislukt', oordeel: oordeel };
+    }
+    try { _syncCalcTotalToDB(c); } catch (e) {}
+    try { _touchCalc(c.id); } catch (e) {}
+    try { renderCalcStructuur(); } catch (e) { console.warn('Online keuze: hertekenen mislukt', e); }
+    try { _syncGebrekToeslagen(); } catch (e) {}
+    try { renderDashboard(); } catch (e) {}
+    const akkoordIncl = parseFloat(k.incl);
+    const naGelijk = (nu != null && isFinite(akkoordIncl) && Math.abs(nu - akkoordIncl) < 0.005);
+    const kop = 'De klant heeft online gekozen.\n\n' + wie + '\n' + lijst + '\n\n';
+    if (res.staartMis || !cfgOk || nu == null || Math.abs(nu - doel.incl) >= 0.005) {
+      alert(kop + 'LET OP, controleer deze calculatie.\n'
+        + ((nu == null || Math.abs(nu - doel.incl) >= 0.005) ? 'Het totaal na het verwerken is ' + (nu == null ? 'niet te berekenen' : eur(nu)) + ', terwijl voor deze samenstelling ' + eur(doel.incl) + ' was berekend.\n' : '')
+        + (res.staartMis ? res.staartMis + ' staartpost(en) konden niet worden bijgewerkt.\n' : '')
+        + (!cfgOk ? 'De vinkjes zijn omgezet, maar de aantekening van de keuze is niet opgeslagen. Leg de keuze opnieuw vast in het blok Opties voor de klant.\n' : ''));
+    } else if (!naGelijk) {
+      alert(kop + 'De calculatie is op jouw aanwijzing in deze samenstelling gezet: ' + eur(nu) + ' incl. BTW.\nHet akkoord van de klant is gegeven op ' + (isFinite(akkoordIncl) ? eur(akkoordIncl) : 'een onleesbaar bedrag') + '. Bespreek het verschil met de klant.');
+    } else if (!ids.length) {
+      _toast('De klant koos online de basisuitvoering, zonder opties (' + eur(nu) + ' incl. BTW). Dat is vastgelegd.', 'ok');
+    } else {
+      alert(kop + 'De calculatie is in deze samenstelling gezet: ' + eur(nu) + ' incl. BTW, op de cent gelijk aan het akkoord.\n\nCalculatie, werkbon, planning en Yoobi-export rekenen hiermee.');
+    }
+    return { status: naGelijk ? 'verwerkt' : 'verwerkt-afwijking', oordeel: oordeel, totaal: nu };
+  } finally { _optOnlineLoopt = false; }
+}
+// Venster Accordeerlink, open link: kan de klant op deze link online kiezen?
+function _optOnlineLinkHtml(rij) {
+  const t = rij && rij.cijfers && rij.cijfers.opties;
+  if (!t || typeof t !== 'object' || !Array.isArray(t.opties) || !t.opties.length) return '';
+  const n = t.opties.length;
+  if (t.online === 1) return '<div class="acb-sub" style="margin-top:6px;">Online kiezen: de klant kan op de pagina uit ' + n + (n === 1 ? ' optie' : ' opties') + ' kiezen en ziet het totaal van zijn samenstelling.</div>';
+  return '<div class="acb-sub" style="margin-top:6px;">Online kiezen: niet op deze link. '
+    + (t.huidig ? 'Bij het maken van de link was er al een keuze aangevinkt of vastgelegd.' : 'De link is gemaakt v\u00f3\u00f3r v4.131.0 of de samenstellingen waren niet allemaal te berekenen.')
+    + ' De klant geeft akkoord op wat er op het document staat. Maak een nieuwe link om online kiezen aan te zetten.</div>';
+}
+// Venster Accordeerlink, na akkoord: wat de klant online koos en of het verwerkt is.
+function _optOnlineAkkoordHtml(rij) {
+  const k = rij && rij.optiekeuze;
+  if (!k || typeof k !== 'object' || !Array.isArray(k.ids)) return '';
+  const incl = parseFloat(k.incl);
+  return '<br><span style="font-weight:400;">Keuze van de klant: ' + _accordEsc(_accordOptNrs(k.nrs))
+    + (isFinite(incl) ? ', ' + _accordEsc(_accordEur(incl)) + ' incl. btw' : '') + '. '
+    + (rij.optie_verwerkt_op ? 'Verwerkt in de calculatie op ' + _accordEsc(_accordDatum(rij.optie_verwerkt_op)) + '.' : 'Nog niet verwerkt in de calculatie; dat gebeurt bij het openen van de calculatie.')
+    + '</span>';
 }
 
 // ============================================================
@@ -23023,6 +23247,7 @@ function _syncMeetstaatHoeveelheden() {
   _optSyncHoeveelheden(data.calc);   // v4.125.0 — een alternatief (optie) volgt de hoeveelheid van zijn basisregel
 }
 function renderCalcStructuur() {
+  try { _optOnlineTrigger(false); } catch (e) {} // v4.131.0 — hooguit eens per vijf minuten, alleen op het tabblad Calculatie
   // Eerst alle hoeveelheden syncen vanuit meetstaat — dan kloppen alle calc-totalen
   _syncMeetstaatHoeveelheden();
   const lbl = document.getElementById('calcActieveLabel');
@@ -24198,6 +24423,7 @@ async function openCalc(id) {
   document.getElementById('calculatie').classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
   try { _tabMeldOpen(id); } catch (e) {} // v4.121.0 — staat deze calculatie ook in een ander tabblad open?
+  try { _optOnlineTrigger(true); } catch (e) {} // v4.131.0 — heeft de klant online gekozen? Dan nu verwerken.
 }
 
 // Centrale helper: bereken het actuele totaal van een geladen calc en
@@ -28226,6 +28452,20 @@ const _ACCORD_UI_CSS = `
 #accordRoot .ac-melding { margin-top:12px; border-radius:10px; padding:12px 14px; }
 #accordRoot .ac-melding.ac-ok { background:#e6f5ec; color:#15803d; }
 #accordRoot .ac-voet { text-align:center; color:#999; font-size:.8rem; margin-top:22px; }
+#accordRoot .ac-opt-uitleg { color:#555; font-size:.92rem; line-height:1.45; margin:0 0 12px; text-align:center; }
+#accordRoot .ac-opt { display:flex; gap:12px; align-items:flex-start; padding:12px; border:1px solid #d8d5cd; border-radius:10px; margin-top:8px; cursor:pointer; }
+#accordRoot .ac-opt.aan { border-color:#16a34a; background:#f1faf4; }
+#accordRoot .ac-opt input { flex:0 0 auto; width:22px; height:22px; margin:2px 0 0; accent-color:#16a34a; }
+#accordRoot .ac-opt-tekst { flex:1 1 auto; min-width:0; font-size:.95rem; color:#222; line-height:1.4; }
+#accordRoot .ac-opt-tekst span { color:#555; font-size:.9rem; }
+#accordRoot .ac-opt-prijs { flex:0 0 auto; text-align:right; font-size:.95rem; font-weight:600; color:#222; white-space:nowrap; line-height:1.35; }
+#accordRoot .ac-opt-prijs small { display:block; font-weight:400; color:#777; font-size:.78rem; }
+#accordRoot .ac-opt-totaal { margin-top:14px; padding:14px; border-radius:10px; background:#f4f3ef; text-align:center; }
+#accordRoot .ac-opt-tot-lbl { color:#555; font-size:.9rem; }
+#accordRoot .ac-opt-tot-groot { font-size:1.5rem; font-weight:700; color:#15803d; margin-top:2px; }
+#accordRoot .ac-opt-tot-klein { color:#777; font-size:.85rem; margin-top:2px; }
+#accordRoot .ac-opt-vast { margin:6px 0 0; padding-left:20px; color:#222; font-size:.95rem; line-height:1.5; }
+@media (max-width:520px) { #accordRoot .ac-opt { flex-wrap:wrap; } #accordRoot .ac-opt-prijs { flex:1 1 100%; text-align:left; padding-left:34px; } }
 
 #accordBeheerOverlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:9999; padding:16px; }
 #accordBeheerOverlay, #accordBeheerOverlay * { box-sizing:border-box; }
@@ -28322,6 +28562,125 @@ function _accordInjectStyles() {
   document.head.appendChild(s);
 }
 
+/* ---------- v4.131.0 — Online kiezen: de klant stelt zijn offerte samen ---------- */
+// De Edge Function offerte-accord geeft bij een open, niet verlopen offerte-link met het
+// merkteken "online" de opties en het totaal per samenstelling mee (res.opties). De pagina
+// telt nooit zelf op: elk totaal komt uit die tabel, want meerprijzen van twee opties
+// tellen niet altijd exact op. Bij akkoord gaan alleen de gekozen ids naar de server; die
+// zoekt het bedrag zelf op en legt keuze en bedrag vast. Na het akkoord kan de klant niet
+// meer wijzigen. Een link zonder res.opties gedraagt zich exact als voorheen.
+let _accordOpt = null;   // { t, ids: [] } zolang de klant kan kiezen; anders null
+function _accordOptZakelijk(kt) { return kt === 'zakelijk' || kt === 'vve'; }
+// Het totaal van een samenstelling uit de tabel; null als die er niet in staat.
+function _accordOptCombi(t, ids) {
+  const sleutel = (ids || []).map(String).sort().join(',');
+  const x = ((t && t.combi) || []).find(k => k && Array.isArray(k.ids) && k.ids.map(String).sort().join(',') === sleutel);
+  if (!x) return null;
+  const excl = parseFloat(x.excl), incl = parseFloat(x.incl);
+  return (isFinite(excl) && isFinite(incl)) ? { excl: excl, incl: incl } : null;
+}
+// De tabel uit het antwoord van de server, of null als er niets te kiezen valt.
+function _accordOptTabel(res) {
+  const t = res && res.opties;
+  if (!t || typeof t !== 'object' || !Array.isArray(t.opties) || !t.opties.length || !Array.isArray(t.combi)) return null;
+  if (!_accordOptCombi(t, [])) return null;   // zonder basis geen keuze
+  return t;
+}
+// De gekozen ids in de volgorde van de offerte, wat de klant ook eerst aanvinkt.
+function _accordOptIds(t, gekozen) {
+  const g = (gekozen || []).map(String);
+  return t.opties.filter(o => g.indexOf(String(o.id)) >= 0).map(o => String(o.id));
+}
+function _accordOptNrs(nrs) {
+  const n = (nrs || []).filter(x => x != null);
+  if (!n.length) return 'basisuitvoering, zonder opties';
+  if (n.length === 1) return 'basisuitvoering met optie ' + n[0];
+  return 'basisuitvoering met optie ' + n.slice(0, -1).join(', ') + ' en ' + n[n.length - 1];
+}
+function _accordOptNaam(t, ids) {
+  const g = (ids || []).map(String);
+  return _accordOptNrs(t.opties.filter(o => g.indexOf(String(o.id)) >= 0).map(o => o.nr));
+}
+// Groot en klein volgen het klanttype (besluit Gian 22-11-2026): particulier incl. btw
+// groot, zakelijk en VvE excl. btw groot.
+function _accordOptGrootKlein(kt, excl, incl) {
+  return _accordOptZakelijk(kt)
+    ? { groot: _accordEur(excl) + ' excl. btw', klein: _accordEur(incl) + ' incl. btw' }
+    : { groot: _accordEur(incl) + ' incl. btw', klein: _accordEur(excl) + ' excl. btw' };
+}
+function _accordOptBedragTekst(kt, excl, incl) {
+  const gk = _accordOptGrootKlein(kt, excl, incl);
+  return _accordOptZakelijk(kt) ? gk.groot + ' (' + gk.klein + ')' : gk.groot;
+}
+function _accordOptTotHtml(kt, naam, excl, incl) {
+  const gk = _accordOptGrootKlein(kt, excl, incl);
+  return '<div class="ac-opt-tot-lbl">Totaal ' + _accordEsc(naam) + '</div>'
+    + '<div class="ac-opt-tot-groot">' + _accordEsc(gk.groot) + '</div>'
+    + '<div class="ac-opt-tot-klein">' + _accordEsc(gk.klein) + '</div>';
+}
+function _accordOptTotaalHtml(t, ids) {
+  const x = _accordOptCombi(t, ids);
+  if (!x) return '<div class="ac-opt-tot-lbl" style="color:#b42318;">Deze samenstelling is niet beschikbaar. Neem contact op met Ernes schilders.</div>';
+  return _accordOptTotHtml(t.klanttype, _accordOptNaam(t, ids), x.excl, x.incl);
+}
+// Het blok onder het document: de opties als vinkjes, met dezelfde nummering als op de offerte.
+function _accordOptBlokHtml(t) {
+  let h = '<div class="ac-kaart ac-opties" id="acOpties">'
+    + '<div class="ac-acties-titel">Stel uw offerte samen</div>'
+    + '<div class="ac-opt-uitleg">De offerte hierboven gaat uit van de basisuitvoering. Vink aan welke opties u wilt laten uitvoeren; het totaal hieronder loopt mee. Vinkt u niets aan, dan geeft u akkoord op de basisuitvoering.</div>';
+  t.opties.forEach(o => {
+    const heeftPrijs = o.meerExcl != null && o.meerIncl != null && isFinite(parseFloat(o.meerExcl)) && isFinite(parseFloat(o.meerIncl));
+    const gk = heeftPrijs ? _accordOptGrootKlein(t.klanttype, parseFloat(o.meerExcl), parseFloat(o.meerIncl)) : null;
+    h += '<label class="ac-opt"><input type="checkbox" data-opt="' + _accordEsc(o.id) + '">'
+      + '<div class="ac-opt-tekst"><strong>Optie ' + _accordEsc(o.nr) + (o.titel ? ': ' + _accordEsc(o.titel) : '') + '</strong>'
+      + (o.klanttekst ? '<br><span>' + _accordEsc(o.klanttekst).replace(/\n/g, '<br>') + '</span>' : '') + '</div>'
+      + (gk ? '<div class="ac-opt-prijs">meerprijs ' + _accordEsc(gk.groot) + '<small>' + _accordEsc(gk.klein) + '</small></div>' : '')
+      + '</label>';
+  });
+  h += '<div class="ac-opt-totaal" id="acOptTotaal">' + _accordOptTotaalHtml(t, []) + '</div></div>';
+  return h;
+}
+// Het stuk van de akkoordzin dat met de vinkjes meeloopt.
+function _accordOptAkkZin(t, ids) {
+  const x = _accordOptCombi(t, ids);
+  if (!x) return '';
+  return ', ' + _accordOptNaam(t, ids) + ', bedrag ' + _accordOptBedragTekst(t.klanttype, x.excl, x.incl);
+}
+// Na het akkoord: wat de server heeft vastgelegd, in woorden (banner) en als blok.
+function _accordOptKeuzeZin(ok) {
+  if (!ok) return '';
+  const excl = parseFloat(ok.excl), incl = parseFloat(ok.incl);
+  return ', ' + _accordOptNrs(ok.nrs) + ((isFinite(excl) && isFinite(incl)) ? ', totaal ' + _accordOptBedragTekst(ok.klanttype, excl, incl) : '');
+}
+function _accordOptVastHtml(ok) {
+  const titels = (ok && Array.isArray(ok.titels)) ? ok.titels : [];
+  const excl = parseFloat(ok && ok.excl), incl = parseFloat(ok && ok.incl);
+  return '<div class="ac-acties-titel">Uw keuze</div>'
+    + (titels.length
+        ? '<div style="color:#555;">Basisuitvoering met:</div><ul class="ac-opt-vast">' + titels.map(x => '<li>' + _accordEsc(x) + '</li>').join('') + '</ul>'
+        : '<div class="ac-opt-uitleg" style="margin:0;">Basisuitvoering, zonder opties.</div>')
+    + ((isFinite(excl) && isFinite(incl)) ? '<div class="ac-opt-totaal">' + _accordOptTotHtml(ok.klanttype, 'van uw samenstelling', excl, incl) + '</div>' : '');
+}
+// Vinkjes bedraden: totaal en akkoordzin lopen mee; het akkoordvinkje gaat uit zodra de
+// samenstelling verandert, zodat de klant altijd tekent voor wat er op dat moment staat.
+function _accordOptWire(root) {
+  const blok = root.querySelector('#acOpties');
+  if (!blok || !_accordOpt) return;
+  const vinkjes = Array.prototype.slice.call(blok.querySelectorAll('input[data-opt]'));
+  const bij = () => {
+    if (!_accordOpt) return;
+    _accordOpt.ids = _accordOptIds(_accordOpt.t, vinkjes.filter(v => v.checked).map(v => v.dataset.opt));
+    vinkjes.forEach(v => { const l = v.closest ? v.closest('.ac-opt') : null; if (l) l.classList.toggle('aan', v.checked); });
+    const tot = root.querySelector('#acOptTotaal');
+    if (tot) tot.innerHTML = _accordOptTotaalHtml(_accordOpt.t, _accordOpt.ids);
+    const zin = root.querySelector('#acAkkBedrag');
+    if (zin) zin.textContent = _accordOptAkkZin(_accordOpt.t, _accordOpt.ids);
+    const akk = root.querySelector('#acAkkVink');
+    if (akk) akk.checked = false;
+  };
+  vinkjes.forEach(v => v.addEventListener('change', bij));
+}
+
 /* ---------- Publieke accord-pagina (klantkant) ---------- */
 async function _accordPaginaTonen(token) {
   document.title = 'Offerte ter goedkeuring \u2014 Ernes schilders';
@@ -28359,6 +28718,11 @@ function _accordRender(root, token, res) {
   const bedrag = res.bedrag;
   const reedsAf = res.status === 'akkoord' || res.status === 'afgekeurd';
   const _keuzeEff = isPlan ? _accordEffectieveKeuze(res.betaalkeuze, res.snapshot, res.betaalmodel) : null; // v4.83.0
+  // v4.131.0 — online kiezen: de tabel komt van de Edge Function, alleen bij een open,
+  // niet verlopen offerte-link met het merkteken. Anders null en verandert er niets.
+  const _optT = (!isPlan && !reedsAf && !res.verlopen) ? _accordOptTabel(res) : null;
+  _accordOpt = _optT ? { t: _optT, ids: [] } : null;
+  const _optVast = (!isPlan && res.status === 'akkoord' && res.optiekeuze && typeof res.optiekeuze === 'object' && Array.isArray(res.optiekeuze.titels)) ? res.optiekeuze : null;
 
   // v4.12.0 — verlopen en nog onbeantwoord: geen document en geen accord-knoppen,
   // alleen de verlopen-melding met het vraagformulier. Al beantwoorde links
@@ -28372,7 +28736,7 @@ function _accordRender(root, token, res) {
     banner = '<div class="ac-banner ac-ok">' + _docLidwoord + ' is geaccordeerd'
       + (res.klant_naam ? ' door ' + _accordEsc(res.klant_naam) : '')
       + (res.gereageerd_op ? ' op ' + _accordDatum(res.gereageerd_op) : '')
-      + (isPlan ? _accordBetaalWoord(_keuzeEff) : '') + '.</div>'; // v4.51.0 — de gekozen weg in woorden; v4.83.0 — ook zonder keuze
+      + (isPlan ? _accordBetaalWoord(_keuzeEff) : '') + (_optVast ? _accordOptKeuzeZin(_optVast) : '') + '.</div>'; // v4.51.0 — de gekozen weg in woorden; v4.83.0 — ook zonder keuze; v4.131.0 — de online gekozen samenstelling
   } else if (res.status === 'afgekeurd') {
     banner = '<div class="ac-banner ac-nee">' + _docLidwoord + ' is afgewezen'
       + (res.klant_naam ? ' door ' + _accordEsc(res.klant_naam) : '')
@@ -28395,6 +28759,8 @@ function _accordRender(root, token, res) {
     + '<div class="ac-kop-sub">' + _accordEsc(res.project || '') + (res.klant ? ' \u2014 ' + _accordEsc(res.klant) : '') + '</div></div>'
     + banner
     + docHtml
+    + (_optT ? _accordOptBlokHtml(_optT) : '')   // v4.131.0 — de klant stelt zijn offerte samen
+    + (_optVast ? '<div class="ac-kaart ac-opties" id="acOpties">' + _accordOptVastHtml(_optVast) + '</div>' : '')
     + (reedsAf ? '' : _accordActiesHtml(bedrag))
     + '<div class="ac-voet">Ernes schilders \u00b7 info@ernes.nl \u00b7 045 5321471</div>'
     + '</div>';
@@ -28418,7 +28784,7 @@ function _accordRender(root, token, res) {
   }
 
   if (pdfUrl) {
-    _accordCtx = { pdfUrl: pdfUrl, project: res.project, klant: res.klant, bedrag: res.bedrag, isPlan: isPlan, betaalkeuze: _keuzeEff }; // v4.63.0 — plan-velden voor het getekende exemplaar; v4.83.0 — effectieve betaalweg
+    _accordCtx = { pdfUrl: pdfUrl, project: res.project, klant: res.klant, bedrag: res.bedrag, isPlan: isPlan, betaalkeuze: _keuzeEff, optiekeuze: _optVast }; // v4.63.0 — plan-velden voor het getekende exemplaar; v4.83.0 — effectieve betaalweg
     // Heropent de klant een al geaccordeerde link, dan meteen de getekende offerte aanbieden.
     if (res.status === 'akkoord') {
       _accordZetGetekendKnop(root.querySelector('#acPdfDl'), { naam: res.klant_naam, datumIso: res.gereageerd_op, notitie: res.notitie });
@@ -28427,7 +28793,8 @@ function _accordRender(root, token, res) {
     }
   }
 
-  if (!reedsAf) _accordWireActies(root, token, bedrag, { isPlan: isPlan, keuzeNodig: !!res.keuze_nodig, betaalweg: _keuzeEff }); // v4.51.0; v4.83.0 — betaalweg zonder keuze
+  if (_optT) _accordOptWire(root); // v4.131.0
+  if (!reedsAf) _accordWireActies(root, token, bedrag, { isPlan: isPlan, keuzeNodig: !!res.keuze_nodig, betaalweg: _keuzeEff, optZin: _optT ? (() => (_accordOpt ? _accordOptAkkZin(_accordOpt.t, _accordOpt.ids) : '')) : null }); // v4.51.0; v4.83.0 — betaalweg zonder keuze
 }
 
 // v4.12.0 / v4.35.0 — pagina voor een verlopen, nog onbeantwoorde offerte.
@@ -28538,11 +28905,13 @@ function _accordFormHtml(mode, bedrag, opts) {
       + '<label class="ac-lbl">Opmerking (optioneel)</label>'
       + '<textarea class="ac-input" id="acNotitie" rows="2" placeholder="Eventuele opmerking"></textarea>'
       + keuzeHtml
-      + '<label class="ac-check"><input type="checkbox" id="acAkkVink"> Ik ga akkoord met '
+      + '<label class="ac-check"><input type="checkbox" id="acAkkVink">' + (_o.optZin ? '<span>' : '') + ' Ik ga akkoord met '   // v4.131.0 — één span om de zin: het label is een flexbox en zou de zin anders in kolommen breken
       + (_o.isPlan ? 'dit onderhoudsplan' : 'deze offerte') + ' van Ernes schilders'
-      + (bedrag != null ? ', bedrag ' + _accordEur(bedrag) + ' incl. btw' : '')
+      + (_o.optZin
+          ? '<span id="acAkkBedrag">' + _accordEsc(_o.optZin()) + '</span>'   // v4.131.0 — samenstelling en totaal lopen mee met de vinkjes
+          : (bedrag != null ? ', bedrag ' + _accordEur(bedrag) + ' incl. btw' : ''))
       + (_o.isPlan ? '<span id="acAkkWeg"></span>' : '')
-      + ', inclusief de algemene voorwaarden.</label>'
+      + ', inclusief de algemene voorwaarden.' + (_o.optZin ? '</span>' : '') + '</label>'
       + '<button class="ac-submit ac-submit-ok">Akkoord bevestigen</button>';
   }
   if (mode === 'afkeuren') {
@@ -28578,6 +28947,9 @@ async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
   }
   if (mode === 'afkeuren' && !notitie) { alert('Geef kort de reden van afwijzing.'); return; }
   if (mode === 'vraag' && !notitie) { alert('Typ uw vraag.'); return; }
+  // v4.131.0 — online kiezen: alleen de gekozen ids gaan mee. De server zoekt het bedrag zelf op.
+  const _optMee = (mode === 'akkoord' && _accordOpt) ? _accordOpt.ids.slice() : null;
+  if (_optMee && !_accordOptCombi(_accordOpt.t, _optMee)) { alert('Deze samenstelling is niet beschikbaar. Laad de pagina opnieuw of neem contact op met Ernes schilders.'); return; }
 
   const labels = { akkoord: 'Akkoord bevestigen', afkeuren: 'Afwijzing bevestigen', vraag: 'Vraag versturen' };
   submit.disabled = true; submit.textContent = 'Bezig\u2026';
@@ -28585,6 +28957,7 @@ async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
   try {
     const _body = { token: token, actie: mode, naam: naam, notitie: notitie };
     if (betaalkeuze) _body.betaalkeuze = betaalkeuze; // v4.51.0
+    if (_optMee) _body.opties = _optMee; // v4.131.0
     const r = await fetch(ACCORD_FN_URL, {
       method: 'POST', headers: _accordHeaders(),
       body: JSON.stringify(_body)
@@ -28610,6 +28983,20 @@ async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
       : 'Uw vraag is verstuurd. Ernes schilders neemt contact met u op. U kunt deze offerte daarna alsnog accorderen of afwijzen.';
     return;
   }
+  // v4.131.0 — wat de server heeft vastgelegd (keuze en bedrag) is leidend voor de
+  // bevestiging in beeld en voor het getekende exemplaar.
+  let _optNa = null;
+  if (mode === 'akkoord' && _optMee) {
+    _optNa = (res.optiekeuze && typeof res.optiekeuze === 'object' && Array.isArray(res.optiekeuze.titels)) ? res.optiekeuze : null;
+    if (_accordCtx && _optNa) {
+      _accordCtx.optiekeuze = _optNa;
+      if (isFinite(parseFloat(_optNa.incl))) _accordCtx.bedrag = parseFloat(_optNa.incl);
+    }
+    const _blok = root.querySelector('#acOpties');
+    if (_blok) { if (_optNa) _blok.innerHTML = _accordOptVastHtml(_optNa); else _blok.remove(); }
+    _accordOpt = null;
+  }
+  if (mode === 'afkeuren') { const _blokW = root.querySelector('#acOpties'); if (_blokW) _blokW.remove(); _accordOpt = null; } // v4.131.0
   if (mode === 'akkoord') {
     const ifr = root.querySelector('#acOfferte');
     if (ifr && !_o.isPlan) _accordStempel(ifr, naam, new Date().toISOString()); // v4.51.0 — de planbijlage heeft geen ondertekenvak
@@ -28626,7 +29013,7 @@ async function _accordVerstuur(root, token, mode, form, melding, submit, opts) {
   const heeftPdfDl = !!(mode === 'akkoord' && _accordCtx && _accordCtx.pdfUrl);
   acties.innerHTML = '<div class="ac-banner ' + (mode === 'akkoord' ? 'ac-ok' : 'ac-nee') + '">'
     + (mode === 'akkoord'
-        ? 'Bedankt. Uw akkoord is vastgelegd' + _accordBetaalWoord(_keuzeNa) + '.' + (heeftPdfDl ? ' U kunt hierboven uw getekende ' + (_o.isPlan ? 'onderhoudsplan' : 'offerte') + ' downloaden.' : '')
+        ? 'Bedankt. Uw akkoord is vastgelegd' + _accordBetaalWoord(_keuzeNa) + (_optNa ? _accordOptKeuzeZin(_optNa) : '') + '.' + (heeftPdfDl ? ' U kunt hierboven uw getekende ' + (_o.isPlan ? 'onderhoudsplan' : 'offerte') + ' downloaden.' : '')
         : 'Bedankt. Uw reactie is vastgelegd.')
     + '</div>';
 }
@@ -29075,11 +29462,13 @@ function _accordBeheerRender(body, c, rij, nabel) {
   if (rij.status === 'open') {
     h += '<div class="acb-status open">Actief. Wacht op reactie van de klant.</div>';
     h += _verlengRegelHtml(c, rij); // v4.130.0 — tot wanneer de link open staat
+    h += _optOnlineLinkHtml(rij); // v4.131.0 — kan de klant op deze link online kiezen?
   } else if (rij.status === 'akkoord') {
     h += '<div class="acb-status akkoord">Geaccordeerd'
       + (rij.klant_naam ? ' door ' + _accordEsc(rij.klant_naam) : '')
       + (rij.gereageerd_op ? ' op ' + _accordDatum(rij.gereageerd_op) : '') + '.'
       + (rij.notitie ? '<br><span style="font-weight:400;">Opmerking: ' + _accordEsc(rij.notitie) + '</span>' : '')
+      + _optOnlineAkkoordHtml(rij) // v4.131.0 — wat de klant online koos en of het verwerkt is
       + '</div>';
   } else if (rij.status === 'afgekeurd') {
     h += '<div class="acb-status afgekeurd">Afgewezen'
@@ -29838,6 +30227,14 @@ async function _bouwGetekendePdfBytes(frozenBytes, info) {
   if (info.datumIso) { try { datum = new Date(info.datumIso).toLocaleString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { datum = String(info.datumIso); } }
   const regels = [['Geaccordeerd door', info.naam || ''], ['Datum en tijd', datum], ['Project', info.project || ''], ['Klant', info.klant || '']];
   if (info.bedrag != null) regels.push(['Bedrag', _accordEur(info.bedrag) + ' incl. btw']);
+  // v4.131.0 — online gekozen samenstelling: de gekozen opties en, bij zakelijk en VvE, het bedrag excl. btw.
+  const _ok = (!_isPlan && info.optiekeuze && typeof info.optiekeuze === 'object' && Array.isArray(info.optiekeuze.titels)) ? info.optiekeuze : null;
+  if (_ok) {
+    if (_accordOptZakelijk(_ok.klanttype) && isFinite(parseFloat(_ok.excl))) regels.push(['Bedrag excl. btw', _accordEur(parseFloat(_ok.excl))]);
+    const _past = (t) => { let u = enc(t); const mw = W - (ml + 130) - mr; if (font.widthOfTextAtSize(u, 11) <= mw) return u; while (u.length > 4 && font.widthOfTextAtSize(u + '\u2026', 11) > mw) u = u.slice(0, -1); return u + '\u2026'; };
+    if (!_ok.titels.length) regels.push(['Uitvoering', 'Basisuitvoering, zonder opties']);
+    else { regels.push(['Uitvoering', 'Basisuitvoering met:']); _ok.titels.forEach(function (t) { regels.push(['', _past(t)]); }); }
+  }
   if (_isPlan && _accordBetaalLabel(info.betaalkeuze)) regels.push(['Betaling', _accordBetaalLabel(info.betaalkeuze)]); // v4.63.0
   regels.forEach(function (kv) {
     page.drawText(enc(kv[0]), { x: ml, y: y, size: 11, font: fontB, color: ink });
@@ -29950,7 +30347,7 @@ async function _accordDownloadGetekend(rij, c, btn, opts) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       bytes = await r.arrayBuffer();
     }
-    const uit = await _bouwGetekendePdfBytes(bytes, { naam: rij.klant_naam, datumIso: rij.gereageerd_op, project: _o.naam || c.naam, klant: c.klant, bedrag: rij.bedrag, notitie: rij.notitie, isPlan: !!_o.isPlan, betaalkeuze: _o.betaalkeuze || rij.betaalkeuze || null });
+    const uit = await _bouwGetekendePdfBytes(bytes, { naam: rij.klant_naam, datumIso: rij.gereageerd_op, project: _o.naam || c.naam, klant: c.klant, bedrag: rij.bedrag, notitie: rij.notitie, isPlan: !!_o.isPlan, betaalkeuze: _o.betaalkeuze || rij.betaalkeuze || null, optiekeuze: rij.optiekeuze || null }); // v4.131.0 — online keuze
     _pdfBytesDownload(uit, String(_o.naam || c.naam || (_o.isPlan ? 'onderhoudsplan' : 'offerte')).replace(/[\\/:*?"<>|]+/g, '-') + ' - getekend.pdf');
     _toast('Getekend exemplaar gedownload');
   } catch (e) {
@@ -29979,7 +30376,7 @@ async function _accordKlantDownloadGetekend(info, btn) {
       const r = await fetch(pdfUrl);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const bytes = await r.arrayBuffer();
-      const volledig = Object.assign({ project: _accordCtx.project, klant: _accordCtx.klant, bedrag: _accordCtx.bedrag, isPlan: !!_accordCtx.isPlan, betaalkeuze: _accordCtx.betaalkeuze || null }, info); // v4.63.0
+      const volledig = Object.assign({ project: _accordCtx.project, klant: _accordCtx.klant, bedrag: _accordCtx.bedrag, isPlan: !!_accordCtx.isPlan, betaalkeuze: _accordCtx.betaalkeuze || null, optiekeuze: _accordCtx.optiekeuze || null }, info); // v4.63.0; v4.131.0 — online keuze
       uit = await _bouwGetekendePdfBytes(bytes, volledig);
       _accordGetekendBytes = uit;
     }
@@ -30021,7 +30418,7 @@ async function _accordToonGetekendInViewer(root, info) {
       const r = await fetch(_accordCtx.pdfUrl);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const bytes = await r.arrayBuffer();
-      const volledig = Object.assign({ project: _accordCtx.project, klant: _accordCtx.klant, bedrag: _accordCtx.bedrag, isPlan: !!_accordCtx.isPlan, betaalkeuze: _accordCtx.betaalkeuze || null }, info); // v4.63.0
+      const volledig = Object.assign({ project: _accordCtx.project, klant: _accordCtx.klant, bedrag: _accordCtx.bedrag, isPlan: !!_accordCtx.isPlan, betaalkeuze: _accordCtx.betaalkeuze || null, optiekeuze: _accordCtx.optiekeuze || null }, info); // v4.63.0; v4.131.0 — online keuze
       _accordGetekendBytes = await _bouwGetekendePdfBytes(bytes, volledig);
     }
     const blob = new Blob([_accordGetekendBytes], { type: 'application/pdf' });
@@ -31455,7 +31852,7 @@ async function _accordMeldingenRender() {
   let rows;
   try {
     const { data: r, error } = await _sb.from('offerte_accorderingen')
-      .select('id, calculatie_id, onderhoudsplan_id, oplevering_id, opgave_project:snapshot->>projectnaam, opgave_klant:snapshot->>aanhef, status, klant_naam, notitie, vragen, gereageerd_op, gezien_op, aangemaakt_op, calculaties(naam, klant)') // v4.102.1 — ook opgaven uit de opleverapp
+      .select('id, calculatie_id, onderhoudsplan_id, oplevering_id, opgave_project:snapshot->>projectnaam, opgave_klant:snapshot->>aanhef, status, klant_naam, notitie, vragen, gereageerd_op, gezien_op, aangemaakt_op, optiekeuze, calculaties(naam, klant)') // v4.131.0 — optiekeuze; v4.102.1 — ook opgaven uit de opleverapp
       .order('aangemaakt_op', { ascending: false });
     if (error) throw error;
     rows = r || [];
@@ -31489,7 +31886,8 @@ async function _accordMeldingenRender() {
     let type, tekst;
     if (tReactie >= tVraag && tReactie > 0) {
       type = (row.status === 'akkoord') ? 'akkoord' : 'afgekeurd';
-      tekst = (type === 'akkoord' ? 'Geaccordeerd' : 'Afgewezen') + (row.klant_naam ? ' door ' + row.klant_naam : '');
+      tekst = (type === 'akkoord' ? 'Geaccordeerd' : 'Afgewezen') + (row.klant_naam ? ' door ' + row.klant_naam : '')
+        + ((type === 'akkoord' && row.optiekeuze && Array.isArray(row.optiekeuze.nrs)) ? ' \u00b7 ' + _accordOptNrs(row.optiekeuze.nrs) : ''); // v4.131.0 — online gekozen samenstelling
     } else {
       type = 'vraag';
       tekst = 'Nieuwe vraag' + (laatsteVraag && laatsteVraag.naam ? ' van ' + laatsteVraag.naam : '');
