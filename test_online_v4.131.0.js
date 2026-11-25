@@ -6,6 +6,10 @@
 // De referentie voor de bedragen is het echte v4.130.0: daar wordt dezelfde samenstelling met
 // de knop "Leg deze keuze vast" gezet. De Edge Function draait als echte code in Node, met een
 // nagebootste database en zonder netwerk.
+// Bijgewerkt op 25-11-2026 voor v4.131.1: daar staan de vinkjes in het akkoordformulier. Krijgt
+// deze set een index.html van v4.131.1 of nieuwer, dan slaat hij sectie 10 (de klantpagina) en de
+// drie tellingen van gewijzigde functies over; die zitten in test_online_v4.131.1.js. De
+// secties over de tabel, de Edge Function, de keten op de cent en het verwerken draaien altijd.
 const fs = require('fs'), vm = require('vm'), acorn = require('acorn');
 const { laad } = require('./test_keuzes_laad.js');
 const FIX = require('./test_keuzes_fixture.js');
@@ -77,6 +81,8 @@ function ontleed(pad) {
 (async () => {
   console.log('oud:   ' + padOud + '\nnieuw: ' + padNieuw + '\nedge:  ' + padEdge + '\n');
   const ontOud = ontleed(padOud), ontNieuw = ontleed(padNieuw);
+  const LATER = !!ontNieuw.functies._accordOptWijzer;   // v4.131.1 of nieuwer
+  if (LATER) console.log('(index.html is v4.131.1 of nieuwer: sectie 10 en de functietellingen worden overgeslagen, zie test_online_v4.131.1.js)\n');
 
   console.log('1. De tabel bij de link');
   let TAB2, TAB8;
@@ -468,8 +474,8 @@ function ontleed(pad) {
     check('oordeel onmogelijk bij onleesbare keuze', oordeel({ ids: 'oA', incl: 1, excl: 1 }).soort === 'onmogelijk');
   }
 
-  console.log('10. De klantpagina (jsdom), met het echte antwoord van de Edge Function');
-  {
+  console.log('10. De klantpagina (jsdom), met het echte antwoord van de Edge Function' + (LATER ? ' (overgeslagen)' : ''));
+  if (!LATER) {
     const { JSDOM } = require('jsdom');
     function pagina(ont) {
       const dom = new JSDOM('<!doctype html><html><body></body></html>', { runScripts: 'outside-only', pretendToBeVisual: true });
@@ -654,13 +660,13 @@ function ontleed(pad) {
     const nieuw = Object.keys(ontNieuw.functies).filter(n => !ontOud.functies[n]).sort();
     const weg = Object.keys(ontOud.functies).filter(n => !ontNieuw.functies[n]);
     const VERWACHT_GEWIJZIGD = ['_accordBeheerRender', '_accordDownloadGetekend', '_accordFormHtml', '_accordKlantDownloadGetekend', '_accordMeldingenRender', '_accordRender', '_accordToonGetekendInViewer', '_accordVerstuur', '_bouwGetekendePdfBytes', '_optTabelVoorLink', '_optVoorDocument', 'openArchiveerModal', 'openCalc', 'renderCalcStructuur'];
-    check('precies de verwachte functies gewijzigd', J(gewijzigd) === J(VERWACHT_GEWIJZIGD), J(gewijzigd));
+    if (!LATER) check('precies de verwachte functies gewijzigd', J(gewijzigd) === J(VERWACHT_GEWIJZIGD), J(gewijzigd));
     check('geen functie verdwenen', weg.length === 0, J(weg));
-    check('nieuwe functies: alleen _accordOpt* en _optOnline*', nieuw.length > 0 && nieuw.every(n => /^_accordOpt|^_optOnline/.test(n)), J(nieuw));
+    if (!LATER) check('nieuwe functies: alleen _accordOpt* en _optOnline*', nieuw.length > 0 && nieuw.every(n => /^_accordOpt|^_optOnline/.test(n)), J(nieuw));
     console.log('     gewijzigd: ' + gewijzigd.length + ', nieuw: ' + nieuw.length + ' (' + nieuw.join(', ') + ')');
-    for (const n of ['_berekenOfferteCijfers', '_optBereken', '_optMetStand', '_optPasStandToe', '_optSchrijfStaart', 'optLegVast', '_optAanbod', '_optSimStaart', '_accordCijfersVoorLink', '_accordNieuweLink', '_accordVergelijk', '_verlengUitvoeren', '_accordWireActies', '_accordRenderVerlopen', '_accordRenderVervangen'])
+    for (const n of ['_berekenOfferteCijfers', '_optBereken', '_optMetStand', '_optPasStandToe', '_optSchrijfStaart', 'optLegVast', '_optAanbod', '_optSimStaart', '_accordCijfersVoorLink', '_accordNieuweLink', '_accordVergelijk', '_verlengUitvoeren', '_accordRenderVerlopen', '_accordRenderVervangen'].concat(LATER ? [] : ['_accordWireActies']))
       check('ongewijzigd: ' + n, !!ontOud.functies[n] && ontOud.functies[n] === ontNieuw.functies[n]);
-    check('versienummer v4.131.0 op drie plekken', N.run("APP_VERSION") === 'v4.131.0' && fs.readFileSync(padNieuw, 'utf8').indexOf('Welkom bij v4.131.0</h2>') > 0 && N.run("RELEASE_HIGHLIGHTS[0].v") === '4.131.0');
+    if (!LATER) check('versienummer v4.131.0 op drie plekken', N.run("APP_VERSION") === 'v4.131.0' && fs.readFileSync(padNieuw, 'utf8').indexOf('Welkom bij v4.131.0</h2>') > 0 && N.run("RELEASE_HIGHLIGHTS[0].v") === '4.131.0');
     // de documentbouwer zelf: de offerte op de basis is, op de twee zinnen na, gelijk
     const docN = N.run("(function(){ data.calc.offerteConfig.optiesSlot = undefined; delete data.calc.offerteConfig.optiesSlot; const cij = _optVoorDocument(data.calc, null); return cij ? JSON.stringify([cij.opt.opties, cij.opt.basis, cij.opt.combi, cij.opt.toonCombi]) : null; })()");
     const docO = O.run("(function(){ const cij = _optVoorDocument(data.calc, null); return cij ? JSON.stringify([cij.opt.opties, cij.opt.basis, cij.opt.combi, cij.opt.toonCombi]) : null; })()");

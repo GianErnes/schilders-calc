@@ -1,3 +1,45 @@
+## v4.131.1 — Opties staan bij Akkoord geven; mailzin, miniaturen, sessiemelding (2026-11-25)
+
+Gebouwd op v4.131.0, live opgehaald van GitHub op 25-11-2026 bij de start van deze bouw en byte voor byte gelijk aan de levering van die ochtend. Alleen `index.html`. Geen SQL, geen wijziging aan een Edge Function.
+
+**Aanleiding**
+- Eerste echte proef met v4.131.0 en `offerte-accord` versie 44, door Gian op 25-11-2026 met "TESTEN Calculatie 140" op zijn eigen mailadres: link 12:17, akkoord 12:21 met één optie, verwerkt in de calculatie om 12:25:01. Bedrag op de link, bedrag van het akkoord en totaal van de calculatie alle drie € 1.935,40 (query 25-11). Het venster "De klant heeft online gekozen" verscheen met "op de cent gelijk". Ook na verwijderen en terugzetten van de calculatie klopte alles.
+- Opmerking Gian bij die proef: het blok met de vinkjes staat helemaal onderaan, onder het document en de algemene voorwaarden. Daarbij komt dat de balk met Akkoord geven altijd in beeld blijft: een klant kon akkoord geven op de basis zonder de opties gezien te hebben. Besluit Gian 25-11: keuze c, de vinkjes verhuizen naar het akkoord zelf, met een regel bovenaan de pagina en een zin in de mail.
+- Tijdens de proef mislukte het mailen met "Geen toegang: sessie ongeldig (403)". GEMETEN 25-11 in het logboek van Supabase: `offerte-verzenden` (versie 38) vroeg de inlogdienst wie er aanklopte en kreeg vier keer `session_not_found`. Om 11:52:55 was als administratie@ernes.nl uitgelogd met `logout?scope=global`; dat wist alle sessies van dat account, ook die van het tabblad Calculatie. Databasevragen bleven werken tot het inlogbewijs verliep, de mail niet. Afgeleid, niet gemeten: de uitlog kwam uit `taken.html` of `start.html`, die een eigen inlog bewaren (`sb-taken-auth`, `sb-start-auth`).
+- Opmerking Gian: de PDF opent bij de klant met de strook paginaminiaturen links open.
+
+**Gebouwd**
+- De keuze staat in het akkoordformulier. Het blok "Stel uw offerte samen" staat niet meer onder het document. Drukt de klant op Akkoord geven, dan staan de vinkjes en het meelopende totaal bovenaan het formulier, boven zijn naam. Wat hij aanvinkte blijft staan als hij tussendoor naar Afwijzen of Vraag stellen wisselt. Het formulier schuift met de bovenkant in beeld.
+- Regel bovenaan de pagina, onder de kop: "Deze offerte heeft 2 opties. U kiest ze onderaan bij Akkoord geven; daar ziet u direct het totaal van uw samenstelling." Bij één optie in het enkelvoud. Boven de knoppen: "U kiest uw opties na Akkoord geven." Beide verdwijnen na een akkoord of afwijzing.
+- Na het akkoord komt het blok "Uw keuze" als eigen kaart boven de bevestiging.
+- Venster Offerte mailen: bij een link met online opties krijgt de standaardtekst een eigen alinea: "De offerte bevat 2 opties. Bij uw akkoord kiest u zelf welke u wilt laten uitvoeren; u ziet dan direct het totaal." Bij één optie: "bevat 1 optie" en "of u die wilt laten uitvoeren". De tekst blijft aanpasbaar. Zonder online opties is de tekst letterlijk die van v4.131.0.
+- PDF op de klantpagina: de aanwijzing `navpanes=0` op de twee plekken waar de PDF getoond wordt, zodat de strook met miniaturen dicht blijft waar de browser dat ondersteunt.
+- Mailen met een gewiste sessie: weigert `offerte-verzenden` met 401 en "Geen toegang: …", dan meldt de app: "Mailen mislukt: je bent in dit tabblad niet meer ingelogd. Log uit en opnieuw in, en probeer het nog eens." met de oorspronkelijke melding erachter. Dit loopt via `_offerteVerzendCall` en geldt dus ook voor de mail bij Geldigheid verlengen.
+
+**Keuzes Claude**
+- De aanwijzing boven de knoppen blijft staan als het formulier open is.
+- De mailzin staat als tweede alinea, vóór "U kunt de offerte hieronder bekijken".
+- De wijzer telt de opties van de link; hij noemt geen titels of bedragen.
+
+**Niet gewijzigd**
+- De rekenkern, `_optBereken`, `_optPasStandToe`, `optLegVast`, `_optTabelVoorLink`, `_optOnlineVerwerk`, de akkoordbevestiging op het getekende exemplaar en de Edge Functions (getest: letterlijk gelijk aan v4.131.0). Een link zonder opties, een planlink en een houtrot-opgave geven dezelfde pagina als in v4.131.0, op `navpanes=0` bij een PDF na.
+- Uitloggen geldt nog steeds voor alle tabbladen en apparaten van het account (`signOut()` zonder beperking in `index.html`, `taken.html`, `start.html` en `klanten.html`). Dat krijgt een eigen voorstel.
+
+**Bekende beperkingen**
+- `navpanes=0`: opgezocht, niet zelf in een browser getest. Volgens de bronnen leest Chrome de aanwijzing en negeert Firefox hem; Safari en telefoons zijn niet nagegaan. Een browser die hem niet kent doet wat hij altijd deed.
+- De klant ziet het totaal met opties pas na Akkoord geven. De meerprijzen per optie staan in het document.
+- Bij Inplannen (wachtrij) is de melding bij een gewiste sessie niet aangepast; daar loopt het versturen niet via `_offerteVerzendCall`.
+
+**Getest**
+- Poorten: het inline script parseert in Node; div-tags 1569 / 1572 tegen 1566 / 1569 in v4.131.0 (drie erbij aan beide kanten); script-tags 6 / 6; accolades 9681 / 9681.
+- `test_online_v4.131.1.js` (nieuw), v4.131.0 naast v4.131.1, met de echte Edge Function in Node: 94 controles, alle goed. Welke functies gewijzigd zijn (negen) en nieuw (twee); pagina's zonder opties gelijk aan v4.131.0 in acht varianten, met de drie formulieren; de keuze in het formulier met het echte antwoord van de functie (geen vinkjes vóór Akkoord geven, blok boven de naam, elke samenstelling uit de tabel, vinkjes overleven het wisselen, akkoordvinkje uit bij wijzigen, alleen ids verstuurd, basis bij niets aangevinkt, afwijzen, vraag, weigering door de server, één optie, acht opties, zakelijk, tekst als tekst); de mailzin; de sessiemelding.
+- De test op de proef gesteld met vijf opzettelijke fouten in een kopie (blok ook onder het document; vinkjes vergeten bij wisselen; mailzin ook zonder opties; sessiemelding op de verkeerde statuscode; geen kaart Uw keuze na akkoord): alle vijf gevonden.
+- `test_online_v4.131.0.js` bijgewerkt: krijgt hij v4.131.1 of nieuwer, dan slaat hij sectie 10 (de klantpagina op de oude plek) en de tellingen van gewijzigde functies over. Tegen v4.131.1: 228 controles, alle goed (tabel, Edge Function, de keten op de cent voor elf samenstellingen, verwerken, getekend exemplaar). Ter controle tegen v4.131.0: 270 controles, alle goed.
+- Statische weergave van de pagina bij openen en met het formulier open, als schermafbeelding bekeken.
+
+**Niet getest**
+- In een echte browser of op een telefoon. De mail met de nieuwe zin. De strook miniaturen. Tot Gian het in gebruik gezien heeft heet dit niet werkend.
+
 ## v4.131.0 — Opties: de klant kiest online en geeft akkoord op zijn samenstelling (2026-11-25)
 
 Gebouwd op v4.130.0, live opgehaald van GitHub op 25-11-2026 bij de start van deze bouw (2.198.087 bytes). De projectkopie stond op v4.128.0 en is niet gebruikt. Dit is release 3 uit het ontwerpmemo "Keuzes voor de klant, online samenstellen" van 20-11-2026 (stap D en hoofdstuk 7), gebouwd vanaf de overdrachtsbriefing van 22-11-2026. Drie delen die in deze volgorde live moeten: SQL (gedraaid), Edge Function `offerte-accord` (versie 44, uitgerold op 25-11-2026 rond 11:45 uur), `index.html`.

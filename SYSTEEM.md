@@ -7525,3 +7525,35 @@ where a.optiekeuze is not null order by a.gereageerd_op desc;
 - Het stempel staat er maar de vinkjes kloppen niet (browser gesloten tijdens het verwerken): het blok Opties voor de klant meldt dat de vinkjes niet overeenkomen. Leg de keuze met de hand vast (knop Leg deze keuze vast), of haal het stempel weg zodat de app het opnieuw doet: `update offerte_accorderingen set optie_verwerkt_op = null where id = '...';` en open de calculatie opnieuw.
 - De klant koos iets anders dan hij bedoelde: na het akkoord kan hij niet meer wijzigen. Pas de keuze aan in het blok Opties voor de klant (Keuze wissen, opnieuw vastleggen) en bevestig het hem zelf.
 - Terug naar v4.130.0 en versie 43 kan zonder de database aan te raken. Een link die met v4.131.0 is gemaakt draagt dan nog het merkteken, maar versie 43 leest het niet: de klant geeft akkoord op de basis. Let op de slotzin in zo'n document.
+
+## Ook op 25 november 2026: de opties staan bij Akkoord geven (index.html v4.131.1, geen SQL, geen Edge Function)
+
+**Wat er veranderd is.** In v4.131.0 stond het blok met de vinkjes onder het document. De balk met Akkoord geven blijft altijd in beeld, dus een klant kon akkoord geven op de basis zonder de opties gezien te hebben (gezien in de eerste proef, 25-11-2026). Sinds v4.131.1 staan de vinkjes in het akkoordformulier zelf: `_accordFormHtml` zet `_accordOptBlokHtml` boven het naamveld, `_accordWireActies` bedraadt ze. De stand van de vinkjes leeft in `_accordOpt.ids` en overleeft het wisselen tussen Akkoord geven, Afwijzen en Vraag stellen. De wijzer bovenaan (`#acOptWijzer`, tekst uit `_accordOptWijzer`) en de aanwijzing boven de knoppen (`#acOptHint`) zegt de klant waar hij kiest. De Edge Function `offerte-accord` (versie 44) is niet gewijzigd: zij krijgt nog steeds alleen ids en zoekt het bedrag zelf op.
+
+**De mail.** `_offerteMailStandaardtekst(aanhef, nOpties)` voegt een alinea over de opties toe als `_optOnlineAantal(rij)` groter is dan nul, dat wil zeggen als `cijfers.opties.online` op de link 1 is. De tekst in het venster blijft aanpasbaar; wat er in het venster staat gaat naar `offerte-verzenden`.
+
+**Wat de eerste proef heeft aangetoond (25-11-2026, TESTEN Calculatie 140).** Link 12:17, gemaild 12:18, akkoord met één optie 12:21, verwerkt 12:25:01. Bedrag op de link, bedrag van het akkoord en totaal van de calculatie alle drie € 1.935,40; basis € 405,70. `optiesKeuze.door` = "klant gian (online akkoord)". Niet geraakt door de proef: twee of meer opties tegelijk, een optie met een post, een afwijking, zakelijk of VvE, een telefoon.
+
+**Inloggen in de suite: wie deelt wat.** GEMETEN 25-11-2026 in de bestanden op GitHub.
+
+| Pagina | Waar de sessie bewaard wordt | Uitloggen |
+|---|---|---|
+| `index.html`, `planning.html`, `financieel.html`, `klanten.html` | Gedeeld (standaardnaam van supabase-js) | `signOut()` in `index.html` en `klanten.html`; `planning.html` en `financieel.html` hebben geen uitlogknop in de code |
+| `taken.html` | Eigen: `sb-taken-auth` | `signOut()` |
+| `start.html` | Eigen: `sb-start-auth` | `signOut()` |
+
+`signOut()` zonder beperking logt het account overal uit (in het logboek: `logout?scope=global`): alle sessies van die gebruiker worden gewist, ook in andere tabbladen en op andere apparaten. Een tabblad waarvan de sessie zo gewist is, merkt dat niet meteen: gewone databasevragen werken tot het inlogbewijs verloopt (een uur na de laatste verversing). Functies die de sessie zelf controleren weigeren direct. Dat zijn in elk geval `offerte-verzenden` (versie 38, gelezen 25-11) en volgens de toelichting in die functie ook `yoobi-klant` (niet gelezen).
+
+**Als het misgaat.**
+- "Mailen mislukt: je bent in dit tabblad niet meer ingelogd": log in dat tabblad uit en opnieuw in. Alleen verversen helpt niet. Oorzaak is bijna altijd dat in een ander tabblad of op een ander apparaat met hetzelfde account is uitgelogd. Nakijken kan in het logboek van Supabase: zoek op `session_not_found` en op `/logout`.
+- De klant zegt dat hij geen opties zag: hij heeft niet op Akkoord geven gedrukt, of de link heeft het merkteken niet (venster Accordeerlink: "Online kiezen: niet op deze link").
+- De strook met miniaturen staat toch open: de browser van de klant leest `navpanes=0` niet. Daar is niets aan te doen zonder een eigen PDF-weergave.
+- Terug naar v4.131.0 kan zonder iets anders aan te raken: de vinkjes staan dan weer onder het document.
+
+**Tests.** `test_online_v4.131.1.js` (94 controles): `node test_online_v4.131.1.js <index.html v4.131.0> <index.html v4.131.1> <offerte-accord_index.ts>`; vraagt `npm install acorn jsdom` en dezelfde hulpbestanden als `test_online_v4.131.0.js`. Die oudere set is bijgewerkt en slaat bij v4.131.1 of nieuwer zijn sectie over de klantpagina over; de rekenkant (tabel, Edge Function, keten op de cent, verwerken) blijft daar getest.
+
+**Testplan in echt gebruik (nog te doen).**
+1. Proefcalculatie met twee opties, link maken, venster Offerte mailen openen: de tekst bevat de alinea "De offerte bevat 2 opties…".
+2. Link openen in een privévenster: de blauwe regel bovenaan, geen vinkjes onder het document, de PDF zonder strook miniaturen (in Chrome).
+3. Akkoord geven: de vinkjes staan boven het naamveld en het totaal loopt mee. Een optie aanvinken, naar Vraag stellen en terug: het vinkje staat er nog.
+4. Akkoord bevestigen en de calculatie openen: verwerkt, op de cent gelijk.
