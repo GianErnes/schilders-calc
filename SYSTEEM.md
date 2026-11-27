@@ -7613,3 +7613,16 @@ De tekst op de link is een momentopname van het maken van de link. Wijzig je daa
 - Groene knop staat op **✓ !**: de bevestigingen konden niet geladen worden, de reden staat in de tooltip.
 - Knop weg terwijl er wel nieuwe bevestigingen zijn: kijk of je als Gian bent ingelogd (`taken_rollen`).
 - Terug naar de oude toestand: planning.html v0.30.0 negeert de kolom; de functie kan terug naar v2.1 (versie 9) door de oude bron opnieuw te deployen, maar dan vervalt alleen het mailtje.
+
+## Wat er op 27 november 2026 gedaan is: de planning alleen met het administratie-account (planning.html v0.31.1)
+
+**Wat er veranderd is.** De planning laat net als de calculatie alleen administratie@ernes.nl toe; een ander account wordt bij inloggen of openen uitgelogd met de melding "De planning werkt alleen met het administratie-account." De groene knop voor nieuwe bevestigingen (v0.31.0) is daarom voor het account `administratie` in plaats van `gian`. Besluit Gian 27-11-2026, nadat bleek dat hij in Chrome alleen als administratie kan werken (de calculatie dwingt dat af en deelt de inlog met de planning).
+
+**Waar het zit.** planning.html: `TOEGESTANE_ACCOUNTS`, `accountToegestaan`, `poortOpen` (bij `inloggen` en bij het openen in `start`), `BEV_PERSOON = 'administratie'`. De lijst is dezelfde als `TOEGESTANE_ACCOUNTS` in index.html; wie hem verandert, verandert beide.
+
+**Wat er niet verandert.** De Takenapp houdt een eigen inlog per persoon (opslagsleutel `sb-taken-auth`). Het mailtje bij een bevestigde startdag gaat nog steeds naar gian@ernes.nl (Edge Function `planning-kennisgeving-bevestig` v2.2, adres uit `taken_rollen`).
+
+**Als het misgaat.**
+- Iemand kan de planning niet meer in: alleen administratie@ernes.nl werkt. Een extra account toelaten = het adres toevoegen aan `TOEGESTANE_ACCOUNTS` in planning.html.
+- Groene knop verschijnt niet terwijl er een nieuwe bevestiging is: controleer of `taken_rollen` voor administratie@ernes.nl de persoon `administratie` heeft; de knop leest die koppeling.
+- Uitloggen of wisselen in de planning: via Uitloggen in de calculatie (gedeelde inlog). De planning heeft zelf geen uitlogknop.

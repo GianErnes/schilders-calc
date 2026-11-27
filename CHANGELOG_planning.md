@@ -2,6 +2,21 @@
 
 > **Handleiding meebewegen.** Sinds v0.23.0 staat er een handleiding in planning.html (knop *Handleiding* in de kop, 17 secties). Wie een functie wijzigt, past in dezelfde wijziging de bijbehorende alinea in de handleiding aan en de *Sinds*-regel eronder. Een handleiding die achterloopt is erger dan geen: iemand handelt ernaar.
 
+## v0.31.1 — De planning werkt alleen met het administratie-account; de bevestigingsknop is voor dat account, 27-11-2026
+
+**Aanleiding.** Op 27-11 kwam de eerste echte startdagbevestiging binnen (Schelling, 20261714, 10:13). Het mailtje kwam aan, maar in de planning verscheen geen groene knop. Gemeten: de bevestiging stond goed (bevestigd, niet gezien) en de planning in Chrome laadde om 15:06 alles opnieuw, maar die sessie was van **administratie@ernes.nl** (auth.sessions, zelfde seconde). De knop van v0.31.0 was alleen voor persoon `gian`. Gian kan in Chrome niet als zichzelf inloggen: de calculatie laat alleen het administratie-account toe (`TOEGESTANE_ACCOUNTS`, index.html v4.64.0) en deelt de inlog met de planning (beide de standaardopslag van supabase-js). **Besluit Gian 27-11:** "planning functies allemaal tonen en alleen inloggen met administratie account ook op planning."
+
+**Wijziging.**
+1. **Accountpoort** zoals in de calculatie: `TOEGESTANE_ACCOUNTS = ['administratie@ernes.nl']`, `accountToegestaan` (puur), `poortOpen`. Bij inloggen én bij een bewaarde sessie bij het openen: ander account → uitloggen, inlogscherm met "De planning werkt alleen met het administratie-account." Inlogtekst aangepast.
+2. `BEV_PERSOON` = `'administratie'` (was `'gian'`). Andere functies die alleen voor één persoon waren, heeft de planning niet (gemeten: `bevVoorMij` was de enige).
+3. Handleiding: sectie 1 alinea *Inloggen* + Sinds-regel + trefwoorden; sectie 11 ("dan krijg je een groene knop") en Sinds-regel.
+
+**Gevolgen (besproken met Gian vóór de bouw).** Wie in de planning met een eigen account zat (Gians iPhone als gian@ernes.nl), wordt bij openen uitgelogd en moet inloggen als administratie. De Takenapp verandert niet: eigen opslagsleutel `sb-taken-auth` (gemeten in taken.html). Taken die in de planning worden afgevinkt, krijgen voortaan `voltooid_door = 'administratie'` (gebeurde in Chrome al: 18 keer, tegen 51 keer `gian`, gemeten in `taken`). Geen aanwijzing dat Max, Bjorn, Jens of Maud de planning gebruikten (geen taken van hen aangemaakt of afgevinkt vanuit de planning, gemeten). Het startdagmailtje gaat ongewijzigd naar gian@ernes.nl.
+
+**Test.** Parse-test, CSS 291/291, div 169/169, scripttags 2/2. `bev_test.mjs` uitgebreid, 37 controles goed: de bestaande 28 met administratie als account (plus: account `gian` ziet de knop niet meer) en 8 nieuwe voor de poort, gesneden uit het bestand (administratie logt in en laadt; hoofdletters en spaties; gian geweigerd en uitgelogd met melding; fout wachtwoord ongewijzigd; bewaarde sessie administratie laadt; bewaarde sessie gian uitgelogd met melding; geen sessie; sessie zonder e-mail).
+
+**Niet getest.** In de browser. Dat de bevestiging van Schelling na het verversen als ✓ 1 verschijnt (verwacht: ja, hij staat nog op niet gezien).
+
 ## v0.31.0 + claude_planning_13 + Edge Function planning-kennisgeving-bevestig v2.2 — Melding als de klant een kennisgeving bevestigt, 26-11-2026
 
 **Aanleiding.** Gian 26-11: "Op dit moment kunnen klanten aangeven dat de kennisgeving van een planning ontvangen is. Dan zie ik dat in de planning bij de klant. Ik moet ernaartoe. Kunnen we iets maken dat ik een melding krijg zoals bij een geopende offerte?" Gemeten (query op `plan_kennisgevingen`, 26-11): 6 à 12 bevestigingen per week, piek 21 in de week van 2 november; startdag 2 à 6 per week. Claude wees erop dat een bevestiging goed nieuws is en dat het signaal dat werk vraagt (geen bevestiging) al via de nabeltaak loopt; een mail per bevestiging zou 1 à 3 per werkdag in de bus geven. **Besluiten Gian 26-11:** B + C samen (een melding op het bord voor alle soorten, plus een mail alleen bij een bevestigde startdag), alleen voor Gian.

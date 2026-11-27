@@ -371,7 +371,7 @@
 <div id="login">
   <div class="box">
     <h2>Planning</h2>
-    <p>Log in met je Schilders Calc account.</p>
+    <p>Log in met het administratie-account.</p>
     <input id="email" type="email" placeholder="E-mailadres" autocomplete="username">
     <input id="wachtwoord" type="password" placeholder="Wachtwoord" autocomplete="current-password">
     <button id="loginBtn">Inloggen</button>
@@ -561,7 +561,7 @@
       <div class="hint">Elk onderdeel heeft dezelfde opbouw: <b>Waar</b> vind je het · <b>Wat</b> doet het · <b>Hoe</b> doe je het · <b>Let op</b> · <b>Sinds</b> welke versie. Typ in het zoekveld om alleen de passende onderdelen te zien.</div>
     </section>
 
-    <section class="hsec" id="h1" data-trefwoorden="bord jaar jaarkiezer vandaag weekend gesloten ziek legenda lijn blok gestreept oranje aanname rood zoeken zoekveld kolom inklappen weeknummer">
+    <section class="hsec" id="h1" data-trefwoorden="bord jaar jaarkiezer vandaag weekend gesloten ziek legenda lijn blok gestreept oranje aanname rood zoeken zoekveld kolom inklappen weeknummer inloggen account administratie uitloggen">
       <h3>1. Het bord lezen</h3>
       <p><b>Waar.</b> Het hoofdscherm. Links de projecten, rechts het jaarrooster met dagkolommen en weeknummers; rechts daarvan het paneel.</p>
       <p><b>Wat.</b> Elke rij is een project uit Yoobi (of een fase ervan). De dunne blauwe <i>lijn</i> is de periode van start tot eind; alleen dagen waarop iemand uren heeft, krijgen een vol <i>blok</i>. Zo zie je het werk en niet de contractperiode.</p>
@@ -574,7 +574,8 @@
       </ul>
       <p><b>Hoe.</b> Jaar kiezen met ‹ › in de kop; <b>Vandaag</b> scrolt naar de huidige dag. Het <b>zoekveld</b> (boven de linkerkolom, of in de kop als de kolom is ingeklapt) filtert op klant, projectnaam of Yoobi-code terwijl je typt. Met ‹ › linksboven in het rooster klap je de linkerkolom in of uit; die keuze onthoudt de browser.</p>
       <p><b>Let op.</b> De totaaltelling onderaan rekent altijd over alle projecten, ook als het zoekveld er maar een paar toont. Werk van een ander jaar staat niet op dit bord; wissel van jaar.</p>
-      <p class="hsinds">Sinds v0.1.0; lijn-en-blokken sinds v0.6.0; zoeken en inklappen sinds v0.7.0; ziekdagen sinds v0.10.0.</p>
+      <p><b>Inloggen.</b> De planning werkt alleen met het administratie-account, net als de calculatie. Met een ander account word je meteen weer uitgelogd met die melding. Planning en calculatie delen de inlog in de browser: uitloggen of wisselen doe je via <b>Uitloggen</b> in de calculatie. De Takenapp heeft een eigen inlog en blijft per persoon.</p>
+      <p class="hsinds">Sinds v0.1.0; lijn-en-blokken sinds v0.6.0; zoeken en inklappen sinds v0.7.0; ziekdagen sinds v0.10.0; alleen het administratie-account sinds v0.31.1.</p>
     </section>
 
     <section class="hsec" id="h2" data-trefwoorden="paneel cijfers aanneemsom budget ingepland geboekt nog te plannen nog te werken wijkt af yoobi planbaar indirecte uren 10% 30 uur werkbon">
@@ -676,10 +677,10 @@
       <p><b>Onderhoudsplan-beurten.</b> Staat bij een project het vinkje <b>onderhoudsplan-beurt</b> aan (onderaan het paneel, naast Verbergen), dan komt het maandsignaal niet de maandag na het inplannen maar op z'n vroegst <b>1 december van het jaar vóór de start</b>; de maandmail zegt dan "Zoals afgesproken in uw onderhoudsplan …". Daarnaast krijgt zo'n klant één <b>Opdrachtbevestiging</b> (dank voor de opdracht, met alle uitvoeringsjaren van zijn aangevinkte beurten), op de rij van de beurt met de vroegste start; de andere beurten verwijzen daarnaar. Het signaal komt de maandag na de eerste ingeplande uren van welke beurt dan ook, en alleen zolang de klant nog geen enkele kennisgeving over een beurt van dit plan kreeg (bij een lopend plan dus niet meer). Zonder vinkje gelden de gewone regels, ook voor werk jaren vooruit — zet het vinkje dus bij het inplannen van een beurt. Lijkt de naam op een beurt, dan staat er een hint bij het vinkje; beslissen doe je zelf.</p>
       <p><b>Afsluiting.</b> Een vierde mail, na afloop: een bedankje, de vraag ons te beoordelen en de aandachtspunten voor vers schilderwerk (uitharding, reiniging, ventilatie, condens, ramen en deuren). Deze mail vervangt de afsluitmail uit Yoobi. Het signaal <b>✉ afsluiting</b> en de taak <i>Afsluitmail sturen</i> (in de taken-app, bij Gian) komen op de eerste werkdag na de <b>laatste dag waarop uren zijn ingepland</b>. Zonder ingeplande uren komt er geen signaal. Bij fasen één keer, op de laatste fase. In het verzendvenster kies je <b>binnen- en buitenwerk</b>, <b>alleen binnenwerk</b> of <b>alleen buitenwerk</b>; bij alleen buitenwerk vervallen de punten over ventilatie en condens. Kies eerst en pas daarna de tekst aan: een andere keuze zet de standaardtekst terug (het venster vraagt het eerst). Op de plek van de regel <i>[beoordelingsknoppen]</i>, bovenaan in de tekst, zet het systeem twee knoppen, <i>Beoordeel ons op Google</i> en <i>Beoordeel ons op Klantenvertellen</i>. Laat die regel staan of verplaats hem; zonder de regel komen de knoppen onder de tekst. Er is geen bevestigingsknop en dus geen nabellen. Loopt het werk uit, plan dan de resterende uren in: het signaal en de taak verdwijnen en komen terug na de nieuwe laatste dag. Is het werk eerder klaar, haal dan de overgebleven uren weg; vanaf de laatste geplande dag zelf staan <b>versturen</b> en <b>overslaan</b> er. Niet tevreden klant of geen mail gewenst: <b>overslaan</b>. Bij een onderhoudsplan-beurt krijgt elke beurt zijn eigen afsluitmail ("De onderhoudsbeurt van 2028 is afgerond"). <b>Verstuur de afsluitmail vóór het project in Yoobi gesloten wordt</b>: een gesloten project verdwijnt bij de eerstvolgende Yoobi-verversing (dinsdagochtend) van het bord en dan vervalt ook de taak. Het signaal geldt voor werk met een laatste geplande dag op of na 23 november 2026; bij ouder werk kun je de mail wel zelf versturen.</p>
       <p><b>Correctie.</b> Verschuift de planning na een verzending, dan wordt het label oranje en staat er <b>corrigeren</b>: dezelfde mail, maar beginnend met wat er eerder is gezegd en wat het nu wordt. Ook een correctie kun je overslaan. Is de (nieuwe) start al voorbij, dan verdwijnt het correctiesignaal vanzelf: het werk is begonnen, een correctiemail heeft dan geen zin meer.</p>
-      <p><b>Bevestigd door de klant.</b> Klikt een klant op de knop in de mail, dan krijg jij (Gian, alleen jij) een groene knop <b>✓ n</b> in de kop van de planning: het aantal bevestigingen dat je nog niet als gezien hebt gemarkeerd. Klik erop voor de lijst: klant en project, welke mail (maand, week of startdag) en wanneer bevestigd. <b>Toon</b> springt naar het project op het bord en opent het paneel; <b>Gezien</b> haalt de regel weg, <b>Alles gezien</b> alle regels. De knop ververst zichzelf elke 2 minuten en als je terugkomt in het venster. Bij een bevestigde <b>startdag</b> krijg je daarnaast een kort mailtje op gian@ernes.nl ("Startdag bevestigd: …"). Maand- en weekbevestigingen geven geen mail. Bevestigingen van vóór 26-11-2026 staan al op gezien. Staat er <b>✓ !</b>, dan konden de bevestigingen niet geladen worden; ga met de muis op de knop staan voor de reden.</p>
+      <p><b>Bevestigd door de klant.</b> Klikt een klant op de knop in de mail, dan krijg je een groene knop <b>✓ n</b> in de kop van de planning: het aantal bevestigingen dat je nog niet als gezien hebt gemarkeerd. Klik erop voor de lijst: klant en project, welke mail (maand, week of startdag) en wanneer bevestigd. <b>Toon</b> springt naar het project op het bord en opent het paneel; <b>Gezien</b> haalt de regel weg, <b>Alles gezien</b> alle regels. De knop ververst zichzelf elke 2 minuten en als je terugkomt in het venster. Bij een bevestigde <b>startdag</b> krijg je daarnaast een kort mailtje op gian@ernes.nl ("Startdag bevestigd: …"). Maand- en weekbevestigingen geven geen mail. Bevestigingen van vóór 26-11-2026 staan al op gezien. Staat er <b>✓ !</b>, dan konden de bevestigingen niet geladen worden; ga met de muis op de knop staan voor de reden.</p>
       <p><b>Historie.</b> Knop <b>historie · n</b> in het paneel toont elke verstuurde en overgeslagen kennisgeving van het project met datum, adres, bezorgstatus, onderwerp en de volledige tekst. Alleen lezen.</p>
       <p><b>Let op.</b> Mails van vóór 9 oktober 2026 hadden geen bevestigingsknop en geven nooit een nabel-signaal. Elke fase heeft zijn eigen cyclus; fase 1 kondigt fase 2 niet aan. De taken in de taken-app sluiten vanzelf bij versturen, overslaan of bevestigen; ze hoef je daar niet af te vinken (nabel- en bouncetaken mag je wél handmatig afvinken). De begintijd in de startdagmail is een indeling van de geplande uren, geen afspraak die de planning vastlegt.</p>
-      <p class="hsinds">Sinds v0.15.0; aanhef v0.16.0; correctietekst v0.16.1; status, bevestigen en nabellen v0.19.x; historie v0.21.0; afzender info@ v0.21.1; per fase v0.22.0; afgehandelde nabeltaak met melding v0.25.0; correctiesignaal stopt bij een voorbije start v0.26.1; onderhoudsplan-beurten en opdrachtbevestiging v0.27.0; afsluitmail met beoordelingsknoppen v0.29.0; aandachtspunten, keuze binnen/buiten en knoppen bovenaan v0.30.0; groene knop voor nieuwe bevestigingen en mailtje bij een bevestigde startdag v0.31.0.</p>
+      <p class="hsinds">Sinds v0.15.0; aanhef v0.16.0; correctietekst v0.16.1; status, bevestigen en nabellen v0.19.x; historie v0.21.0; afzender info@ v0.21.1; per fase v0.22.0; afgehandelde nabeltaak met melding v0.25.0; correctiesignaal stopt bij een voorbije start v0.26.1; onderhoudsplan-beurten en opdrachtbevestiging v0.27.0; afsluitmail met beoordelingsknoppen v0.29.0; aandachtspunten, keuze binnen/buiten en knoppen bovenaan v0.30.0; groene knop voor nieuwe bevestigingen en mailtje bij een bevestigde startdag v0.31.0; knop voor het administratie-account v0.31.1.</p>
     </section>
 
     <section class="hsec" id="h12" data-trefwoorden="over datum rood knop herplannen sluiten yoobi werkdagen regen niet uitgevoerd">
@@ -770,7 +771,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.31.0';
+const APP_VERSION = '0.31.1';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -3559,12 +3560,13 @@ function openHistorie(p) {
   historieOverlay.classList.add('open');
 }
 // ---------- v0.31.0: nieuwe bevestigingen van klanten, alleen voor Gian ----------
+// v0.31.1: voor het account 'administratie' (was 'gian'); de planning kent sindsdien alleen dat account.
 // Besluit Gian 26-11-2026 ("B + C samen, alleen ik"): een groene knop in de kop met het aantal
 // bevestigingen die hij nog niet als gezien markeerde; klik = lijst met Toon en Gezien.
 // Bron: plan_kennisgevingen.bevestigd_op (gezet door planning-kennisgeving-bevestig) en
-// bevestiging_gezien_op (claude_planning_13_bevestiging_gezien.sql). Wie Gian is: taken_rollen.persoon.
+// bevestiging_gezien_op (claude_planning_13_bevestiging_gezien.sql). Welk account: taken_rollen.persoon.
 // De startdag krijgt daarnaast een mailtje van de functie zelf (v2.2); dat staat hier los van.
-const BEV_PERSOON = 'gian';
+const BEV_PERSOON = 'administratie'; // v0.31.1, was 'gian'
 const BEV_VERVERS_MS = 2 * 60 * 1000;
 let bevNieuw = [];        // rijen: bevestigd, niet gezien, niet vervallen, niet overgeslagen; nieuwste eerst
 let bevFout = null;       // laatste foutmelding bij het verversen, anders null
@@ -3867,9 +3869,29 @@ async function laadData() {
   }
 }
 
-function toonLogin() {
+function toonLogin(melding) {
   document.getElementById('app-loading').style.display = 'none';
   document.getElementById('login').style.display = 'flex';
+  if (melding) document.getElementById('loginErr').textContent = melding; // v0.31.1
+}
+
+// v0.31.1 - Accountpoort, zoals de calculatie-app (index.html v4.64.0, zelfde lijst).
+// Besluit Gian 27-11-2026: de planning werkt alleen met het administratie-account.
+// Beide routes naar de planning (inloggen en een bewaarde sessie bij openen) komen hier langs;
+// een ander account wordt uitgelogd. Let op: de planning en de calculatie delen de inlog in de
+// browser; de Takenapp niet (eigen opslagsleutel), die blijft per persoon.
+const TOEGESTANE_ACCOUNTS = ['administratie@ernes.nl'];
+const ACCOUNT_MELDING = 'De planning werkt alleen met het administratie-account.';
+// Puur, los getest.
+function accountToegestaan(email) {
+  const e = String(email || '').trim().toLowerCase();
+  return !!e && TOEGESTANE_ACCOUNTS.map(a => a.toLowerCase()).includes(e);
+}
+async function poortOpen(session) {
+  const email = session && session.user ? session.user.email : '';
+  if (accountToegestaan(email)) return true;
+  try { await sb.auth.signOut(); } catch (e) {}
+  return false;
 }
 
 async function inloggen() {
@@ -3877,8 +3899,9 @@ async function inloggen() {
   const wachtwoord = document.getElementById('wachtwoord').value;
   const err = document.getElementById('loginErr');
   err.textContent = '';
-  const { error } = await sb.auth.signInWithPassword({ email, password: wachtwoord });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: wachtwoord });
   if (error) { err.textContent = 'Inloggen mislukt. Controleer je e-mailadres en wachtwoord.'; return; }
+  if (!(await poortOpen(data && data.session))) { err.textContent = ACCOUNT_MELDING; return; } // v0.31.1
   document.getElementById('login').style.display = 'none';
   laadData();
 }
@@ -3889,7 +3912,8 @@ document.getElementById('appVersie').textContent = 'v' + APP_VERSION;
 
 (async function start() {
   const { data: { session } } = await sb.auth.getSession();
-  if (session) laadData(); else toonLogin();
+  if (!session) { toonLogin(); return; }
+  if (await poortOpen(session)) laadData(); else toonLogin(ACCOUNT_MELDING); // v0.31.1
 })();
 </script>
 </body>
