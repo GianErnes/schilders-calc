@@ -166,7 +166,7 @@ function ontleed(pad) {
     check('open link met merkteken: opties gaan mee', r.status === 200 && r.body.opties && r.body.opties.opties.length === 2 && r.body.opties.combi.length === 4);
     check('alle velden van versie 43 staan er nog, plus opties en optiekeuze', J(Object.keys(r.body)) === J(V43_GET.concat(['opties', 'optiekeuze'])), J(Object.keys(r.body)));
     check('alleen wat de pagina nodig heeft: klanttype, basis, opties, combi', J(Object.keys(r.body.opties).sort()) === J(['basis', 'combi', 'klanttype', 'opties']));
-    check('per optie alleen id, nr, titel, klanttekst, meerExcl, meerIncl', r.body.opties.opties.every(o => J(Object.keys(o).sort()) === J(['id', 'klanttekst', 'meerExcl', 'meerIncl', 'nr', 'titel'])));
+    check('per optie alleen id, nr, titel, klanttekst, meerExcl, meerIncl', r.body.opties.opties.every(o => J(Object.keys(o).filter(k => k !== 'waar').sort()) === J(['id', 'klanttekst', 'meerExcl', 'meerIncl', 'nr', 'titel'])));   // waar: erbij sinds versie 45 van de functie
     check('regels en staart uit cijfers gaan niet naar de browser', J(r.body).indexOf('GEHEIM') < 0);
     check('bedrag bij een open link is de basis', cent(r.body.bedrag, TAB2.basis.incl) && r.body.optiekeuze === null);
     const zonder = K(TAB2); delete zonder.online;
@@ -668,7 +668,7 @@ function ontleed(pad) {
       check('ongewijzigd: ' + n, !!ontOud.functies[n] && ontOud.functies[n] === ontNieuw.functies[n]);
     if (!LATER) check('versienummer v4.131.0 op drie plekken', N.run("APP_VERSION") === 'v4.131.0' && fs.readFileSync(padNieuw, 'utf8').indexOf('Welkom bij v4.131.0</h2>') > 0 && N.run("RELEASE_HIGHLIGHTS[0].v") === '4.131.0');
     // de documentbouwer zelf: de offerte op de basis is, op de twee zinnen na, gelijk
-    const docN = N.run("(function(){ data.calc.offerteConfig.optiesSlot = undefined; delete data.calc.offerteConfig.optiesSlot; const cij = _optVoorDocument(data.calc, null); return cij ? JSON.stringify([cij.opt.opties, cij.opt.basis, cij.opt.combi, cij.opt.toonCombi]) : null; })()");
+    const docN = N.run("(function(){ data.calc.offerteConfig.optiesSlot = undefined; delete data.calc.offerteConfig.optiesSlot; const cij = _optVoorDocument(data.calc, null); return cij ? JSON.stringify([cij.opt.opties.map(function (o) { var k = Object.assign({}, o); delete k.waar; return k; }), cij.opt.basis, cij.opt.combi, cij.opt.toonCombi]) : null; })()");   // waar: erbij sinds v4.131.2
     const docO = O.run("(function(){ const cij = _optVoorDocument(data.calc, null); return cij ? JSON.stringify([cij.opt.opties, cij.opt.basis, cij.opt.combi, cij.opt.toonCombi]) : null; })()");
     check('opties, basis en tabel op het document gelijk aan v4.130.0', !!docN && docN === docO);
   }
