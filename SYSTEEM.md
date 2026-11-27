@@ -7557,3 +7557,43 @@ where a.optiekeuze is not null order by a.gereageerd_op desc;
 2. Link openen in een privévenster: de blauwe regel bovenaan, geen vinkjes onder het document, de PDF zonder strook miniaturen (in Chrome).
 3. Akkoord geven: de vinkjes staan boven het naamveld en het totaal loopt mee. Een optie aanvinken, naar Vraag stellen en terug: het vinkje staat er nog.
 4. Akkoord bevestigen en de calculatie openen: verwerkt, op de cent gelijk.
+
+## Ook op 25 november 2026: bij elke optie staat waar ze voor geldt (index.html v4.131.2, Edge Function offerte-accord versie 45, geen SQL)
+
+**Wat het is.** Onder de titel van elke optie staat de regel "Geldt voor: hoofdgroep › onderdeel › omschrijving van de regel". De app maakt die tekst zelf uit de calculatie (`_optWaar` in `index.html`). Aanleiding: twee opties met bijna dezelfde titel waren voor de klant niet uit elkaar te houden (proef 25-11-2026).
+
+**Waar de tekst vandaan komt.**
+
+| Soort optie | Wat er staat |
+|---|---|
+| Andere uitvoering van een regel, of een hele regel als optie | hoofdgroep › onderdeel › Locatie/omschrijving van de optieregel; is die leeg, dan die van de basisregel; zijn beide leeg, dan stopt het bij het onderdeel |
+| Heel onderdeel als optie | hoofdgroep › onderdeel |
+| Hele hoofdgroep als optie | hoofdgroep |
+| Optie op meer plekken | de plekken na elkaar, gescheiden door een puntkomma; hooguit drie, daarna "en N andere" |
+
+De naam van het verfsysteem komt er nooit in. Een deel zonder naam wordt overgeslagen; heeft niets een naam, dan is de tekst leeg en staat de regel er niet. In het blok Opties voor de klant staat onder de omschrijving wat de klant te lezen krijgt.
+
+**Waar de tekst getoond wordt, en waar hij bewaard wordt.**
+
+| Plek | Bron |
+|---|---|
+| Offertedocument, scherm en PDF (`_optDocHtml`, `_optDocContent`) | Vers berekend bij het maken van het document |
+| Vinkjes op de klantpagina (`_accordOptBlokHtml`) | `cijfers.opties.opties[].waar` op de link, doorgegeven door `offerte-accord` |
+| "Uw keuze" op de klantpagina, mail B, mail C, akkoordbevestiging | `optiekeuze.waar` op de link: een lijst naast `titels`, zelfde volgorde, vastgelegd door `offerte-accord` bij het akkoord |
+
+De tekst op de link is een momentopname van het maken van de link. Wijzig je daarna een naam in de calculatie, dan verandert de link niet.
+
+**Edge Function.** Versie 45, uitgerold op 25-11-2026. Enige verschil met versie 44: het veld `waar` gaat mee bij ophalen, wordt vastgelegd bij akkoord en staat in mail B en C. Een link zonder het veld gedraagt zich als onder versie 44. Terugzetten naar versie 44 kan zonder gevolgen: de pagina toont dan geen "Geldt voor" bij de vinkjes en de mails noemen het niet; het document heeft het nog wel.
+
+**Als het misgaat.**
+- "Geldt voor" staat niet bij de vinkjes maar wel op het document: de link is gemaakt voor v4.131.2, of de functie staat niet op versie 45. Maak een nieuwe link; kijk in Supabase welke versie van `offerte-accord` actief is.
+- De tekst klopt niet met wat je bedoelt: hij volgt de namen van hoofdgroep en onderdeel en het veld Locatie/omschrijving van de regel. Pas die aan en maak een nieuwe link.
+- Twee opties zijn nog steeds moeilijk uit elkaar te houden: geef ze een eigen titel; het blok Opties voor de klant meldt het als twee titels gelijk zijn.
+
+**Tests.** `test_online_v4.131.2.js` (73 controles): `node test_online_v4.131.2.js <index.html v4.131.1> <index.html v4.131.2> <offerte-accord versie 44 .ts> <offerte-accord versie 45 .ts>`. De bron van versie 44 staat niet in de openbare repo; bewaar hem naast die van versie 45.
+
+**Testplan in echt gebruik (nog te doen).**
+1. Open de proefcalculatie. In het blok Opties voor de klant staat onder elke omschrijving "De klant ziet onder de titel: Geldt voor: …". Hebben twee opties dezelfde titel, dan staat daar een melding.
+2. Bekijk het offertedocument: onder elke optie "Geldt voor: …".
+3. Maak een nieuwe link en open hem op je telefoon. Na Akkoord geven staat het vinkje naast de titel en "Geldt voor" eronder.
+4. Geef akkoord met een optie: "Geldt voor" staat in "Uw keuze", in mail B, in het seintje naar info@ en op de laatste pagina van het getekende exemplaar.

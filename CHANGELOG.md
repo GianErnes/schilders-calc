@@ -1,3 +1,52 @@
+## v4.131.2 — Bij elke optie staat waar ze voor geldt (2026-11-25)
+
+Gebouwd op v4.131.1, live opgehaald van GitHub op 25-11-2026 bij de start van deze bouw en byte voor byte gelijk aan de levering. `index.html` en een nieuwe versie van Edge Function `offerte-accord` (45). Geen SQL.
+
+**Aanleiding**
+- Proef Gian op de telefoon, 25-11-2026 12:55 uur, met v4.131.1: twee opties met bijna dezelfde titel ("Extra grondlaag i.v.m. kleurwissel" en dezelfde met een punt erachter), de tweede zonder omschrijving. Opmerking Gian: de opties vermelden na Akkoord geven niet op welke post ze van toepassing zijn; de klant moet terug naar het document.
+- GEMETEN 25-11 in de code van v4.131.1: een optie kreeg overal alleen haar titel, de omschrijving en de meerprijs mee, ook op het offertedocument (`_optVoorDocument`, `_optDocHtml`, `_optDocContent`). De app weet per optie wel bij welke hoofdgroep, welk onderdeel en welke regel ze hoort (`_optAanbod`, lijst `mee`).
+- Besluit Gian 25-11 ("1 b 2 c"): hoofdgroep › onderdeel › omschrijving van de regel als die is ingevuld (1b); overal waar de optie genoemd wordt, ook in mail B, mail C en op de akkoordbevestiging (2c).
+
+**Gebouwd in `index.html`**
+- `_optWaar(o)`: per optie de tekst "hoofdgroep › onderdeel › omschrijving". De omschrijving is het veld Locatie/omschrijving van de optieregel, anders dat van de basisregel; is dat leeg, dan stopt het pad bij het onderdeel. Bij een heel onderdeel als optie: hoofdgroep › onderdeel. Bij een hele hoofdgroep: alleen de hoofdgroep. Slaat een optie op meer plekken, dan worden ze opgesomd, hooguit drie en dan "en N andere". Nooit langer dan 240 tekens. De naam van het verfsysteem komt er nooit in (besluit 13-11).
+- Offertedocument (scherm en PDF): onder de titel van elke optie de regel "Geldt voor: …", bij het aanbod en bij "Uw keuze".
+- Tabel van de link (`_optTabelVoorLink`): per optie het veld `waar`.
+- Klantpagina: bij elk vinkje onder de titel "Geldt voor: …"; ook in het blok "Uw keuze" na het akkoord.
+- Akkoordbevestiging op het getekende exemplaar: onder elke gekozen optie een regel "Geldt voor: …" (met > in plaats van ›, dat het lettertype daar niet heeft; te lange tekst wordt afgekapt).
+- Blok Opties voor de klant: onder de omschrijving staat wat de klant te lezen krijgt ("De klant ziet onder de titel: Geldt voor: …"), of dat er niets staat omdat hoofdgroep en onderdeel geen naam hebben. Nieuwe melding als twee opties dezelfde titel hebben (hoofdletters en leestekens tellen niet mee).
+- Telefoon: het vinkje stond los boven de titel. De tekst van een optie krijgt nu de resterende breedte naast het vinkje (`flex: 1 1 0`).
+
+**Edge Function `offerte-accord` versie 45**
+- Uitgerold op 25-11-2026 via de Supabase-koppeling: versie 45, status ACTIVE, `verify_jwt` aan (antwoord van Supabase). De tekst is overgenomen uit het geteste bestand en niet machinaal met dat bestand vergeleken. Bij het schrijven van deze entry was er na de uitrol (rond 13:24 uur) nog geen verzoek door versie 45 gegaan (logboek van de functie, 25-11); het openen van een bestaande link door Gian is de eerste controle en staat in het testplan in SYSTEEM.md.
+- Ophalen geeft `waar` per optie mee. Akkoord legt het vast in `optiekeuze.waar`, een lijst naast `titels` in dezelfde volgorde. Mail B zet onder elke gekozen optie "Geldt voor: …"; mail C zet het erachter tussen haakjes.
+- Een link zonder het veld (gemaakt voor v4.131.2) geeft een lege tekst; de regel staat er dan niet.
+- Ten opzichte van versie 44: 25 regels erbij, 3 regels vervangen, alle over `waar` (geteld door de test).
+
+**Keuzes Claude**
+- `waar` staat los naast `titels` in de vastgelegde keuze en zit niet in de titel zelf. Zo blijft "Optie 1: titel" overal gelijk en kan elke plek zelf bepalen hoe de regel getoond wordt.
+- De server kapt `waar` af op 300 tekens en zet het in de mail als tekst (geen opmaak uit de calculatie).
+- De regel staat ook op het document bij een offerte zonder link.
+
+**Niet gewijzigd**
+- De rekenkern, `_optBereken`, `_optAanbod`, `_optPasStandToe`, `optLegVast`, `_optOnlineVerwerk`, `_accordRender`, `_accordFormHtml`, `_accordVerstuur` en de mailtekst (getest: letterlijk gelijk aan v4.131.1). Bedragen, de controle van ids en de voorwaarde "nog open" in de functie.
+- Links zonder opties, planlinks en houtrot-opgaven: ophalen, akkoord, de geschreven rij en de mails zijn bij versie 45 gelijk aan versie 44 (getest naast elkaar).
+
+**Bekende beperkingen**
+- Links die voor v4.131.2 gemaakt zijn tonen de regel niet; maak een nieuwe link.
+- De tekst volgt de namen in de calculatie. Heet een onderdeel "Nieuw onderdeel", dan staat dat er.
+- Bij meer dan drie plekken ziet de klant er drie en "en N andere".
+- Het bevroren document van een bestaande link verandert niet.
+
+**Getest**
+- Poorten: het inline script parseert in Node; div-tags 1571 / 1574 tegen 1569 / 1572 in v4.131.1 (twee erbij aan beide kanten); script-tags 6 / 6; accolades 9689 / 9689. De Edge Function door de typecontrole van TypeScript, met alleen de bekende meldingen over de import en Deno.
+- `test_online_v4.131.2.js` (nieuw), v4.131.1 naast v4.131.2 en versie 44 naast versie 45 van de functie, beide als echte code in Node: 73 controles, alle goed. Wat `_optWaar` geeft voor een andere uitvoering, een hele regel, een heel onderdeel, een hele hoofdgroep, lege omschrijvingen, meer plekken en te lange namen; nooit het verfsysteem; de tabel en het document verder letterlijk gelijk aan v4.131.1; versie 45 gelijk aan 44 voor links zonder `waar`, zonder opties, plan en houtrot; `waar` uit de tabel en niet uit de browser; mail B en C; tekst als tekst; de klantpagina; de akkoordbevestiging; welke functies gewijzigd zijn (acht) en nieuw (twee).
+- De test op de proef gesteld met vier opzettelijke fouten in een kopie (het verfsysteem als terugval; `waar` van alle opties in plaats van de gekozen; `waar` zonder ontsnappen in de mail; zonder ontsnappen op de pagina): alle vier gevonden.
+- `test_online_v4.131.0.js` (bijgewerkt: laat het veld `waar` toe) tegen v4.131.2 met versie 45 van de functie: 228 controles, alle goed. De keten op de cent voor elf samenstellingen zit daarin.
+- Statische weergave op telefoonbreedte als schermafbeelding bekeken: vinkje naast de titel, "Geldt voor" eronder.
+
+**Niet getest**
+- In een echte browser of op een telefoon. De mails met de nieuwe regel. Het document als PDF. Tot Gian het in gebruik gezien heeft heet dit niet werkend.
+
 ## v4.131.1 — Opties staan bij Akkoord geven; mailzin, miniaturen, sessiemelding (2026-11-25)
 
 Gebouwd op v4.131.0, live opgehaald van GitHub op 25-11-2026 bij de start van deze bouw en byte voor byte gelijk aan de levering van die ochtend. Alleen `index.html`. Geen SQL, geen wijziging aan een Edge Function.
