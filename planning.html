@@ -134,6 +134,12 @@
   .kennislabel.nabellen { background: #fff; color: var(--amber); border: 1px solid var(--amber); line-height: 1.25; } /* v0.19.0 */
   .kennislabel.bounce { background: var(--accent); } /* v0.19.0 */
   .knop.kennisknop { background: var(--amber); color: #fff; border-color: var(--amber); }
+  .knop.bevknop { background: var(--green); color: #fff; border-color: var(--green); } /* v0.31.0 */
+  .bevrij { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; border: 1px solid var(--paper-deep); border-radius: var(--radius-lg); padding: 0.6rem 0.8rem; margin-bottom: 0.6rem; font-size: 0.85rem; } /* v0.31.0 */
+  .bevrij .bevtekst { flex: 1 1 14rem; min-width: 0; }
+  .bevrij .bevkop { font-weight: 600; }
+  .bevrij .bevsub { color: var(--muted); font-size: 0.8rem; margin-top: 0.1rem; }
+  .bevbalk { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; font-size: 0.85rem; color: var(--muted); }
   .kennis { margin-top: 0.8rem; border-top: 1px solid var(--paper-deep); padding-top: 0.6rem; }
   .kennis h3 { margin: 0 0 0.3rem; font-size: 0.8rem; }
   .kennis .contact { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.4rem; }
@@ -384,6 +390,7 @@
       <span class="status" id="status"></span>
       <button class="knop overknop" id="overDatumKnop" style="display:none" title="Nog open in Yoobi, maar de planning is voorbij: herplannen (balk slepen) of sluiten in Yoobi. Klik om er langs te gaan."></button>
       <button class="knop kennisknop" id="kennisKnop" style="display:none" title="Kennisgevingen aan klanten die nu verstuurd kunnen worden (maand, week of startdag). Klik om er langs te gaan."></button>
+      <button class="knop bevknop" id="bevKnop" style="display:none" title="Nieuwe bevestigingen van klanten (maand, week of startdag). Klik voor de lijst."></button>
       <button class="knop" id="verversKnop" title="Projecten opnieuw uit Yoobi halen">Yoobi verversen</button>
       <button class="knop" id="beheerKnop">Vrije dagen &amp; medewerkers</button>
       <button class="knop" id="handleidingKnop" title="Hoe werkt de planning? Uitleg per onderdeel, met zoekveld">Handleiding</button>
@@ -509,6 +516,12 @@
       <span class="hint" id="kennisMelding" style="margin:0"></span>
       <button class="knop primair" id="kennisVerstuur">Versturen</button>
     </section>
+  </div>
+</div>
+<div class="overlay" id="bevOverlay"><!-- v0.31.0 -->
+  <div class="modaal kmodaal">
+    <header><h2>Bevestigd door de klant</h2><button class="sluit" id="bevSluit" title="Sluiten">×</button></header>
+    <section id="bevInhoud"></section>
   </div>
 </div>
 <div class="overlay" id="historieOverlay">
@@ -649,7 +662,7 @@
       <p class="hsinds">Sinds v0.13.0; tijdblokken sinds v0.14.0; reservering als tijdblok sinds v0.26.0.</p>
     </section>
 
-    <section class="hsec" id="h11" data-trefwoorden="kennisgeving kennisgevingen klant mail maand week startdag onderhoudsplan beurt opdracht opdrachtbevestiging december uitvoeringsjaar vinkje aankondiging contactpersoon aanhef versturen overslaan correctie corrigeren afgeleverd geopend bevestigd bounce niet afgeleverd nabellen historie taak taken-app teller envelop afgehandeld melding afvinken iets te melden afsluiting afsluitmail afgerond klaar beoordelen beoordeling review google klantenvertellen laatste dag bedankje aandachtspunten uitharding uitharden reinigen ventilatie condens binnen buiten binnenwerk buitenwerk">
+    <section class="hsec" id="h11" data-trefwoorden="kennisgeving kennisgevingen klant mail maand week startdag onderhoudsplan beurt opdracht opdrachtbevestiging december uitvoeringsjaar vinkje aankondiging contactpersoon aanhef versturen overslaan correctie corrigeren afgeleverd geopend bevestigd bounce niet afgeleverd nabellen historie taak taken-app teller envelop afgehandeld melding afvinken iets te melden afsluiting afsluitmail afgerond klaar groen vinkje gezien alles gezien seintje startdag bevestigd beoordelen beoordeling review google klantenvertellen laatste dag bedankje aandachtspunten uitharding uitharden reinigen ventilatie condens binnen buiten binnenwerk buitenwerk">
       <h3>11. Kennisgevingen aan de klant</h3>
       <p><b>Waar.</b> Op het bord een label ✉ bij de projectrij (of faserij) en een teller in de kop; klik op de teller en je springt langs de projecten waar iets te versturen is. In het paneel het blok <b>Kennisgevingen aan de klant</b> (bij fasen: per fase, het blok volgt de gekozen fase).</p>
       <p><b>Wat.</b> Drie mails per project of fase, plus één afsluitmail per project (zie <i>Afsluiting</i> hieronder), elk na een klik en met de tekst in beeld, nooit automatisch:</p>
@@ -663,9 +676,10 @@
       <p><b>Onderhoudsplan-beurten.</b> Staat bij een project het vinkje <b>onderhoudsplan-beurt</b> aan (onderaan het paneel, naast Verbergen), dan komt het maandsignaal niet de maandag na het inplannen maar op z'n vroegst <b>1 december van het jaar vóór de start</b>; de maandmail zegt dan "Zoals afgesproken in uw onderhoudsplan …". Daarnaast krijgt zo'n klant één <b>Opdrachtbevestiging</b> (dank voor de opdracht, met alle uitvoeringsjaren van zijn aangevinkte beurten), op de rij van de beurt met de vroegste start; de andere beurten verwijzen daarnaar. Het signaal komt de maandag na de eerste ingeplande uren van welke beurt dan ook, en alleen zolang de klant nog geen enkele kennisgeving over een beurt van dit plan kreeg (bij een lopend plan dus niet meer). Zonder vinkje gelden de gewone regels, ook voor werk jaren vooruit — zet het vinkje dus bij het inplannen van een beurt. Lijkt de naam op een beurt, dan staat er een hint bij het vinkje; beslissen doe je zelf.</p>
       <p><b>Afsluiting.</b> Een vierde mail, na afloop: een bedankje, de vraag ons te beoordelen en de aandachtspunten voor vers schilderwerk (uitharding, reiniging, ventilatie, condens, ramen en deuren). Deze mail vervangt de afsluitmail uit Yoobi. Het signaal <b>✉ afsluiting</b> en de taak <i>Afsluitmail sturen</i> (in de taken-app, bij Gian) komen op de eerste werkdag na de <b>laatste dag waarop uren zijn ingepland</b>. Zonder ingeplande uren komt er geen signaal. Bij fasen één keer, op de laatste fase. In het verzendvenster kies je <b>binnen- en buitenwerk</b>, <b>alleen binnenwerk</b> of <b>alleen buitenwerk</b>; bij alleen buitenwerk vervallen de punten over ventilatie en condens. Kies eerst en pas daarna de tekst aan: een andere keuze zet de standaardtekst terug (het venster vraagt het eerst). Op de plek van de regel <i>[beoordelingsknoppen]</i>, bovenaan in de tekst, zet het systeem twee knoppen, <i>Beoordeel ons op Google</i> en <i>Beoordeel ons op Klantenvertellen</i>. Laat die regel staan of verplaats hem; zonder de regel komen de knoppen onder de tekst. Er is geen bevestigingsknop en dus geen nabellen. Loopt het werk uit, plan dan de resterende uren in: het signaal en de taak verdwijnen en komen terug na de nieuwe laatste dag. Is het werk eerder klaar, haal dan de overgebleven uren weg; vanaf de laatste geplande dag zelf staan <b>versturen</b> en <b>overslaan</b> er. Niet tevreden klant of geen mail gewenst: <b>overslaan</b>. Bij een onderhoudsplan-beurt krijgt elke beurt zijn eigen afsluitmail ("De onderhoudsbeurt van 2028 is afgerond"). <b>Verstuur de afsluitmail vóór het project in Yoobi gesloten wordt</b>: een gesloten project verdwijnt bij de eerstvolgende Yoobi-verversing (dinsdagochtend) van het bord en dan vervalt ook de taak. Het signaal geldt voor werk met een laatste geplande dag op of na 23 november 2026; bij ouder werk kun je de mail wel zelf versturen.</p>
       <p><b>Correctie.</b> Verschuift de planning na een verzending, dan wordt het label oranje en staat er <b>corrigeren</b>: dezelfde mail, maar beginnend met wat er eerder is gezegd en wat het nu wordt. Ook een correctie kun je overslaan. Is de (nieuwe) start al voorbij, dan verdwijnt het correctiesignaal vanzelf: het werk is begonnen, een correctiemail heeft dan geen zin meer.</p>
+      <p><b>Bevestigd door de klant.</b> Klikt een klant op de knop in de mail, dan krijg jij (Gian, alleen jij) een groene knop <b>✓ n</b> in de kop van de planning: het aantal bevestigingen dat je nog niet als gezien hebt gemarkeerd. Klik erop voor de lijst: klant en project, welke mail (maand, week of startdag) en wanneer bevestigd. <b>Toon</b> springt naar het project op het bord en opent het paneel; <b>Gezien</b> haalt de regel weg, <b>Alles gezien</b> alle regels. De knop ververst zichzelf elke 2 minuten en als je terugkomt in het venster. Bij een bevestigde <b>startdag</b> krijg je daarnaast een kort mailtje op gian@ernes.nl ("Startdag bevestigd: …"). Maand- en weekbevestigingen geven geen mail. Bevestigingen van vóór 26-11-2026 staan al op gezien. Staat er <b>✓ !</b>, dan konden de bevestigingen niet geladen worden; ga met de muis op de knop staan voor de reden.</p>
       <p><b>Historie.</b> Knop <b>historie · n</b> in het paneel toont elke verstuurde en overgeslagen kennisgeving van het project met datum, adres, bezorgstatus, onderwerp en de volledige tekst. Alleen lezen.</p>
       <p><b>Let op.</b> Mails van vóór 9 oktober 2026 hadden geen bevestigingsknop en geven nooit een nabel-signaal. Elke fase heeft zijn eigen cyclus; fase 1 kondigt fase 2 niet aan. De taken in de taken-app sluiten vanzelf bij versturen, overslaan of bevestigen; ze hoef je daar niet af te vinken (nabel- en bouncetaken mag je wél handmatig afvinken). De begintijd in de startdagmail is een indeling van de geplande uren, geen afspraak die de planning vastlegt.</p>
-      <p class="hsinds">Sinds v0.15.0; aanhef v0.16.0; correctietekst v0.16.1; status, bevestigen en nabellen v0.19.x; historie v0.21.0; afzender info@ v0.21.1; per fase v0.22.0; afgehandelde nabeltaak met melding v0.25.0; correctiesignaal stopt bij een voorbije start v0.26.1; onderhoudsplan-beurten en opdrachtbevestiging v0.27.0; afsluitmail met beoordelingsknoppen v0.29.0; aandachtspunten, keuze binnen/buiten en knoppen bovenaan v0.30.0.</p>
+      <p class="hsinds">Sinds v0.15.0; aanhef v0.16.0; correctietekst v0.16.1; status, bevestigen en nabellen v0.19.x; historie v0.21.0; afzender info@ v0.21.1; per fase v0.22.0; afgehandelde nabeltaak met melding v0.25.0; correctiesignaal stopt bij een voorbije start v0.26.1; onderhoudsplan-beurten en opdrachtbevestiging v0.27.0; afsluitmail met beoordelingsknoppen v0.29.0; aandachtspunten, keuze binnen/buiten en knoppen bovenaan v0.30.0; groene knop voor nieuwe bevestigingen en mailtje bij een bevestigde startdag v0.31.0.</p>
     </section>
 
     <section class="hsec" id="h12" data-trefwoorden="over datum rood knop herplannen sluiten yoobi werkdagen regen niet uitgevoerd">
@@ -756,7 +770,7 @@
 // Bron van projecten: laatste stand in fin_werkvoorraad (Yoobi).
 // Van ons: plan_medewerkers, plan_projecten, plan_uren, plan_gesloten_dagen.
 // =====================================================================
-const APP_VERSION = '0.30.0';
+const APP_VERSION = '0.31.0';
 
 // ---------- paraplu-projecten (v0.17.0) ----------
 // Hoofdprojecten in Yoobi waar jaarlijkse deelprojecten onder hangen, zoals
@@ -1127,6 +1141,7 @@ async function laadAlles() {
   kennis = {}; kennisHistorie = {}; kennisOoitVerstuurd = {}; // v0.21.0; v0.22.0: kennis[code][fasesleutel][soort], sleutel '' = zonder fase
   if (knRes.error) { console.warn('plan_kennisgevingen niet leesbaar (planning_04_kennisgevingen.sql nog niet gedraaid?): ' + knRes.error.message); }
   else for (const r of (knRes.data || [])) { kennisNoteer(r); (kennisHistorie[r.yoobi_code] = kennisHistorie[r.yoobi_code] || []).unshift(r); }
+  bevUitLaden = knRes.error ? null : (knRes.data || []); // v0.31.0: nieuwe bevestigingen, afgeleid na het bepalen van ikPersoon
   nabelAfgehandeld = {}; // v0.25.0
   if (ntRes.error) { console.warn('taken (afgevinkte nabeltaken) niet leesbaar: ' + ntRes.error.message); }
   else for (const t of (ntRes.data || [])) { if (!t.bron_kenmerk || !/^(nabellen|bounce)-/.test(t.bron_kenmerk)) continue; (nabelAfgehandeld[t.bron_kenmerk] = nabelAfgehandeld[t.bron_kenmerk] || []).push(t); }
@@ -1142,6 +1157,8 @@ async function laadAlles() {
     const ik = (trRes.data || []).find(r => r.user_id === ikUid);
     ikPersoon = ik ? ik.persoon : null;
   }
+  if (bevUitLaden) { bevNieuw = bevVoorMij() ? bevFilter(bevUitLaden) : []; bevFout = null; } // v0.31.0
+  bevUitLaden = null;
   gesloten = {};
   for (const r of (gd.data || [])) gesloten[r.datum] = r;
   verlof = {};
@@ -1260,6 +1277,7 @@ function tekenBord() {
   tekenVerborgen();
   tekenOverDatum();
   tekenKennisTeller();
+  tekenBevKnop(); // v0.31.0
   tekenPaneel();
   document.getElementById('jaarLabel').textContent = jaar;
 }
@@ -3540,6 +3558,115 @@ function openHistorie(p) {
   document.getElementById('historieInhoud').innerHTML = historieHtml(p.code);
   historieOverlay.classList.add('open');
 }
+// ---------- v0.31.0: nieuwe bevestigingen van klanten, alleen voor Gian ----------
+// Besluit Gian 26-11-2026 ("B + C samen, alleen ik"): een groene knop in de kop met het aantal
+// bevestigingen die hij nog niet als gezien markeerde; klik = lijst met Toon en Gezien.
+// Bron: plan_kennisgevingen.bevestigd_op (gezet door planning-kennisgeving-bevestig) en
+// bevestiging_gezien_op (claude_planning_13_bevestiging_gezien.sql). Wie Gian is: taken_rollen.persoon.
+// De startdag krijgt daarnaast een mailtje van de functie zelf (v2.2); dat staat hier los van.
+const BEV_PERSOON = 'gian';
+const BEV_VERVERS_MS = 2 * 60 * 1000;
+let bevNieuw = [];        // rijen: bevestigd, niet gezien, niet vervallen, niet overgeslagen; nieuwste eerst
+let bevFout = null;       // laatste foutmelding bij het verversen, anders null
+let bevUitLaden = null;   // tijdelijk: de rijen uit laadAlles, tot ikPersoon bekend is
+function bevVoorMij() { return ikPersoon === BEV_PERSOON; }
+// Puur, los getest: welke rijen tellen als nieuwe bevestiging.
+function bevFilter(rijen) {
+  return (rijen || []).filter(r => r && r.bevestigd_op && !r.bevestiging_gezien_op && !r.vervallen_op && !r.overgeslagen)
+    .sort((a, b) => String(b.bevestigd_op).localeCompare(String(a.bevestigd_op)));
+}
+function bevTijd(iso) {
+  try { return new Date(iso).toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  catch (e) { return String(iso || ''); }
+}
+// Eén regel in de lijst. Los getest.
+function bevRijHtml(r) {
+  const p = vindProject(r.yoobi_code);
+  const fz = r.fase_id ? vindFase(r.yoobi_code, r.fase_id) : null;
+  const kop = p ? esc(p.klant) + ' <span style="color:var(--muted);font-weight:400">· ' + esc(p.naam) + '</span>' : esc(r.onderwerp || r.yoobi_code);
+  const soort = (KENNIS_NAAM[r.soort] || r.soort) + (fz ? ' · ' + fz.naam : '') + (r.periode_tekst ? ' voor ' + r.periode_tekst : '');
+  const wie = r.aan_naam || r.aan || '';
+  return '<div class="bevrij" data-bevid="' + esc(r.id) + '">' +
+    '<div class="bevtekst"><div class="bevkop">' + kop + '</div>' +
+    '<div class="bevsub">' + esc(soort) + ' · bevestigd ' + esc(bevTijd(r.bevestigd_op)) + (wie ? ' door ' + esc(wie) : '') + '</div></div>' +
+    '<button class="knop klein" data-bevtoon="' + esc(r.id) + '">Toon</button>' +
+    '<button class="knop klein" data-bevgezien="' + esc(r.id) + '">Gezien</button></div>';
+}
+function tekenBevKnop() {
+  const knop = document.getElementById('bevKnop');
+  if (!knop) return;
+  const n = bevNieuw.length;
+  const zichtbaar = bevVoorMij() && (n > 0 || !!bevFout);
+  knop.style.display = zichtbaar ? '' : 'none';
+  knop.textContent = '✓ ' + (n || '!');
+  knop.title = bevFout && !n ? 'Bevestigingen konden niet geladen worden: ' + bevFout
+    : 'Nieuwe bevestigingen van klanten (maand, week of startdag). Klik voor de lijst.';
+}
+const bevOverlay = document.getElementById('bevOverlay');
+function tekenBevLijst() {
+  const el = document.getElementById('bevInhoud');
+  if (!bevNieuw.length) {
+    el.innerHTML = '<div class="hint">' + (bevFout ? 'Bevestigingen konden niet geladen worden: ' + esc(bevFout) : 'Geen nieuwe bevestigingen.') + '</div>';
+    return;
+  }
+  el.innerHTML = '<div class="bevbalk"><span>' + bevNieuw.length + (bevNieuw.length === 1 ? ' nieuwe bevestiging' : ' nieuwe bevestigingen') + '</span>' +
+    '<button class="knop klein" id="bevAllesGezien">Alles gezien</button></div>' + bevNieuw.map(bevRijHtml).join('');
+}
+async function bevLaad() {
+  if (!bevVoorMij()) { bevNieuw = []; tekenBevKnop(); return; }
+  try {
+    const { data, error } = await sb.from('plan_kennisgevingen')
+      .select('id,yoobi_code,fase_id,soort,periode_tekst,aan,aan_naam,onderwerp,bevestigd_op,bevestiging_gezien_op,vervallen_op,overgeslagen')
+      .not('bevestigd_op', 'is', null).is('bevestiging_gezien_op', null);
+    if (error) throw error;
+    bevNieuw = bevFilter(data); bevFout = null;
+  } catch (e) {
+    bevFout = (e && e.message) || String(e);   // lijst laten staan; knop toont "!" als er niets in staat
+    console.warn('Bevestigingen niet geladen: ' + bevFout);
+  }
+  tekenBevKnop();
+  if (bevOverlay.classList.contains('open')) tekenBevLijst();
+}
+async function bevGezien(ids) {
+  if (!ids.length) return;
+  const { error } = await sb.from('plan_kennisgevingen').update({ bevestiging_gezien_op: new Date().toISOString() }).in('id', ids);
+  if (error) { toonStatus('Gezien zetten mislukt: ' + error.message, true); return; }
+  const weg = new Set(ids);
+  bevNieuw = bevNieuw.filter(r => !weg.has(r.id));
+  tekenBevKnop();
+  tekenBevLijst();
+  if (!bevNieuw.length) bevOverlay.classList.remove('open');
+}
+function bevToon(id) {
+  const r = bevNieuw.find(x => x.id === id);
+  if (!r) return;
+  const sel = '#bord tbody tr.project[data-code="' + CSS.escape(r.yoobi_code) + '"]' + (r.fase_id ? '[data-fase="' + CSS.escape(r.fase_id) + '"]' : '');
+  const tr = document.querySelector(sel + ':not(.verborgen-zoek)') || document.querySelector('#bord tbody tr.project[data-code="' + CSS.escape(r.yoobi_code) + '"]:not(.verborgen-zoek)');
+  if (!tr) { toonStatus('Dit project staat niet op het bord van ' + jaar + ' (of is verborgen of weggezocht)', true); return; }
+  bevOverlay.classList.remove('open');
+  document.querySelectorAll('#bord tbody tr.uitgelicht').forEach(x => x.classList.remove('uitgelicht'));
+  tr.classList.add('uitgelicht');
+  setTimeout(() => tr.classList.remove('uitgelicht'), 2500);
+  tr.scrollIntoView({ block: 'center', inline: 'nearest' });
+  actiefCode = tr.dataset.code; actiefFase = tr.dataset.fase || null;
+  tekenPaneel();
+}
+document.getElementById('bevKnop').addEventListener('click', () => { tekenBevLijst(); bevOverlay.classList.add('open'); bevLaad(); });
+document.getElementById('bevSluit').addEventListener('click', () => bevOverlay.classList.remove('open'));
+bevOverlay.addEventListener('click', e => {
+  if (e.target === bevOverlay) { bevOverlay.classList.remove('open'); return; }
+  const t = e.target.closest('button');
+  if (!t) return;
+  if (t.id === 'bevAllesGezien') { bevGezien(bevNieuw.map(r => r.id)); return; }
+  if (t.dataset.bevgezien) { bevGezien([t.dataset.bevgezien]); return; }
+  if (t.dataset.bevtoon) bevToon(t.dataset.bevtoon);
+});
+// Verversen zonder herladen: elke 2 minuten en bij terugkeer naar het venster, alleen als de planning in beeld is.
+function bevMagVerversen() { return !document.hidden && document.querySelector('.wrap') && document.querySelector('.wrap').style.display !== 'none'; }
+setInterval(() => { if (bevMagVerversen()) bevLaad(); }, BEV_VERVERS_MS);
+document.addEventListener('visibilitychange', () => { if (bevMagVerversen()) bevLaad(); });
+window.addEventListener('focus', () => { if (bevMagVerversen()) bevLaad(); });
+
 function kennisContactKeuze() {
   const r = kennisOverlay.querySelector('input[name=kcontact]:checked');
   if (!r) return null;

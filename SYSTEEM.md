@@ -7597,3 +7597,19 @@ De tekst op de link is een momentopname van het maken van de link. Wijzig je daa
 2. Bekijk het offertedocument: onder elke optie "Geldt voor: …".
 3. Maak een nieuwe link en open hem op je telefoon. Na Akkoord geven staat het vinkje naast de titel en "Geldt voor" eronder.
 4. Geef akkoord met een optie: "Geldt voor" staat in "Uw keuze", in mail B, in het seintje naar info@ en op de laatste pagina van het getekende exemplaar.
+
+## Wat er op 26 november 2026 gedaan is: melding als de klant een kennisgeving bevestigt (planning.html v0.31.0, SQL claude_planning_13, Edge Function planning-kennisgeving-bevestig v2.2)
+
+**Wat er veranderd is.** Een bevestiging van een klant (knop in de kennisgevingsmail → bevestig.html → `planning-kennisgeving-bevestig`) was alleen te zien in het paneel van het project. Nu krijgt Gian een groene knop **✓ n** in de kop van planning.html met de bevestigingen die hij nog niet als gezien markeerde, en bij een bevestigde startdag een mailtje op gian@ernes.nl. Besluit Gian 26-11-2026: melding op het bord voor alle soorten, mail alleen bij de startdag, alleen voor Gian.
+
+**Waar het zit.**
+- Kolom `plan_kennisgevingen.bevestiging_gezien_op` (leeg = nog niet gezien). Gezet door planning.html (Gezien / Alles gezien). De 74 bevestigingen van vóór 26-11-2026 staan op gezien.
+- planning.html: brok "v0.31.0: nieuwe bevestigingen" (`bevFilter`, `bevLaad`, `tekenBevKnop`, `bevGezien`, `bevToon`). Alleen zichtbaar voor de gebruiker met `taken_rollen.persoon = 'gian'`. Ververst elke 2 minuten en bij terugkeer naar het venster.
+- `planning-kennisgeving-bevestig` v2.2 (functieversie 10, Verify JWT UIT): na het vastleggen bij soort `dag` een mail via Resend (`RESEND_API_KEY`) aan `taken_rollen.mail` van `gian`, terugval gian@ernes.nl. De code is via de Supabase-koppeling op te halen; een kopie is meegeleverd als `planning-kennisgeving-bevestig_v2.2_index.ts` voor het archief `ernes-edge-functions`.
+
+**Als het misgaat.**
+- Geen mailtje bij een bevestigde startdag: Supabase → Edge Functions → `planning-kennisgeving-bevestig` → Logs. "seintje verstuurd aan …" = Resend heeft hem aangenomen (dan spam of inbox nakijken); "seintje mislukt" of "geen RESEND_API_KEY" staat er met de reden bij. De bevestiging zelf staat in alle gevallen gewoon vast.
+- Ander adres gewenst: `taken_rollen.mail` van persoon `gian` aanpassen; de functie leest het bij elk seintje.
+- Groene knop staat op **✓ !**: de bevestigingen konden niet geladen worden, de reden staat in de tooltip.
+- Knop weg terwijl er wel nieuwe bevestigingen zijn: kijk of je als Gian bent ingelogd (`taken_rollen`).
+- Terug naar de oude toestand: planning.html v0.30.0 negeert de kolom; de functie kan terug naar v2.1 (versie 9) door de oude bron opnieuw te deployen, maar dan vervalt alleen het mailtje.
